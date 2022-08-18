@@ -9,15 +9,12 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  CI:
-    name: CI
+  run:
+    name: Run CI Check
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          submodules: true
 
       - name: Use node version 16
         uses: actions/setup-node@v2
@@ -25,7 +22,7 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org
 
-      - name: Run CI Check
+      - name: Check CI
         run: |
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
