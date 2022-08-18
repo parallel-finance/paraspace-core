@@ -1,0 +1,6 @@
+artifacts
+types
+coverage/
+contracts/dependencies
+contracts/deployments
+contracts/mocks

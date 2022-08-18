@@ -1,0 +1,68 @@
+{
+  "name": "@paraspace/core-v1",
+  "version": "1.1.0",
+  "description": "ParaSpace Protocol V1 core smart contracts",
+  "files": [
+    "contracts",
+    "artifacts",
+    "types"
+  ],
+  "scripts": {
+    "size": "hardhat size-contracts",
+    "compile": "SKIP_LOAD=true hardhat compile",
+    "lint": "solhint 'contracts/**/*.sol' && prettier -c 'contracts/**/*.sol' && eslint . --ext .ts",
+    "format": "prettier --write 'contracts/**/*.sol'",
+    "clean": "hardhat clean && rm -rf ./artifacts ./cache ./types"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.3",
+    "@commitlint/config-conventional": "^17.0.3",
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@typechain/ethers-v5": "^10.1.0",
+    "@typechain/hardhat": "^6.1.2",
+    "@types/node": "^18.0.6",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
+    "dotenv": "^16.0.1",
+    "eslint": "^8.19.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "ethers": "^5.0.19",
+    "hardhat": "^2.6.4",
+    "hardhat-contract-sizer": "^2.6.1",
+    "hardhat-typechain": "^0.3.3",
+    "husky": "^4.2.5",
+    "prettier": "^2.4.1",
+    "prettier-plugin-solidity": "^1.0.0-alpha.53",
+    "pretty-quick": "^3.1.1",
+    "solhint": "^3.3.6",
+    "typechain": "^8.1.0",
+    "typescript": "^4.0.5"
+  },
+  "author": "ParaSpace-MM Team",
+  "contributors": [],
+  "license": "AGPLv3",
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged --pattern 'contracts/**/*.sol'",
+      "commit-msg": "commitlint --edit"
+    }
+  },
+  "keywords": [
+    "paraspace",
+    "nft",
+    "marketplace",
+    "money-market",
+    "protocol",
+    "protocol-v1",
+    "ethereum",
+    "solidity"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/para-space/paraspace-core"
+  }
+}

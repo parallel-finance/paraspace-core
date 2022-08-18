@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "no-unused-vars": "warn",
+    "const-name-snakecase": "warn",
+    "contract-name-camelcase": "error",
+    "event-name-camelcase": "error",
+    "func-name-mixedcase": "off",
+    "func-param-name-mixedcase": "off",
+    "modifier-name-mixedcase": "error",
+    "private-vars-leading-underscore": "off",
+    "var-name-mixedcase": "off",
+    "imports-on-top": "error"
+  }
+}
