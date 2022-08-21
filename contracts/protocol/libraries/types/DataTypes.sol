@@ -292,6 +292,9 @@ library DataTypes {
         uint256 tokenBDecimal;
         uint256 amountA;
         uint256 amountB;
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        uint160 sqrtPriceX96;
     }
 
     struct Credit {
