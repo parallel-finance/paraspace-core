@@ -39,7 +39,7 @@ import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/Reentra
 contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 3;
+    uint256 public constant POOL_REVISION = 1;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     /**
