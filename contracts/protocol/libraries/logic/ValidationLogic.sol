@@ -935,12 +935,14 @@ library ValidationLogic {
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
         require(params.credit.amount != 0, Errors.CREDIT_NOT_USED);
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
     }
 
     function validateAcceptBidWithCredit(
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
         require(params.credit.amount != 0, Errors.CREDIT_NOT_USED);
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
         require(
             keccak256(abi.encodePacked(params.orderInfo.id)) ==
                 keccak256(abi.encodePacked(params.credit.orderId)),
