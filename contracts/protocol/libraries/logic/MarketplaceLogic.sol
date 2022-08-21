@@ -199,7 +199,7 @@ library MarketplaceLogic {
                 actualPayment
             );
 
-            // TODO
+            // TODO this consumes too much gas
             uint256 allowance = IERC20(item.token).allowance(
                 address(this),
                 params.marketplace.operator
