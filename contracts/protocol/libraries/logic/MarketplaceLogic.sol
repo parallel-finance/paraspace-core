@@ -162,10 +162,12 @@ library MarketplaceLogic {
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal returns (uint256) {
+        address token = params.credit.token;
         uint256 value = 0;
+        bool isETH = token == address(0);
+
         for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
             ConsiderationItem memory item = params.orderInfo.consideration[i];
-            bool isETH = item.token == address(0);
             require(
                 item.startAmount == item.endAmount,
                 Errors.INVALID_MARKETPLACE_ORDER
@@ -175,42 +177,26 @@ library MarketplaceLogic {
                     (isETH && item.itemType == ItemType.NATIVE),
                 Errors.INVALID_ASSET_TYPE
             );
-            uint256 actualPayment = item.startAmount;
-            if (i == 0) {
-                require(
-                    params.credit.token == item.token,
-                    Errors.CREDIT_DOES_NOT_MATCH_ORDER
-                );
-                actualPayment -= params.credit.amount;
-            }
-            if (isETH) {
-                require(msg.value == actualPayment, Errors.PAYNOW_NOT_ENOUGH);
-                value += item.startAmount;
-                params.credit.token = params.WETH;
-                // Set to WETH for minting debt in WETH
-                // ETH should already be sent together via transaction
-                // No need to do transfer
-                continue;
-            }
+            require(item.token == token, Errors.CREDIT_DOES_NOT_MATCH_ORDER);
+            value += item.startAmount;
+        }
 
-            IERC20(item.token).safeTransferFrom(
+        uint256 actualPayment = value - params.credit.amount;
+        if (!isETH) {
+            IERC20(token).safeTransferFrom(
                 msg.sender,
                 address(this),
                 actualPayment
             );
-
-            // TODO this consumes too much gas
-            uint256 allowance = IERC20(item.token).allowance(
-                address(this),
-                params.marketplace.operator
-            );
             // reset to be compatible with USDT
-            IERC20(item.token).approve(params.marketplace.operator, 0);
-            IERC20(item.token).approve(
-                params.marketplace.operator,
-                allowance + item.startAmount
-            );
+            IERC20(token).approve(params.marketplace.operator, 0);
+            IERC20(token).approve(params.marketplace.operator, value);
+            value = 0;
+        } else {
+            require(msg.value == value - params.cred., Errors.PAYNOW_NOT_ENOUGH);
+            params.credit.token = params.WETH;
         }
+
         return value;
     }
 
