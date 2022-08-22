@@ -61,9 +61,15 @@ library MarketplaceLogic {
     ) external {
         ValidationLogic.validateBuyWithCredit(params);
 
-        _borrow(reservesData, reservesList, userConfig, params, address(this));
+        _borrowTo(
+            reservesData,
+            reservesList,
+            userConfig,
+            params,
+            address(this)
+        );
 
-        uint256 value = _beforeExchange(
+        uint256 value = _delegateToPool(
             reservesData,
             reservesList,
             userConfig,
@@ -114,7 +120,7 @@ library MarketplaceLogic {
     ) external {
         ValidationLogic.validateAcceptBidWithCredit(params);
 
-        _borrow(
+        _borrowTo(
             reservesData,
             reservesList,
             userConfig,
@@ -156,7 +162,7 @@ library MarketplaceLogic {
      * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      */
-    function _beforeExchange(
+    function _delegateToPool(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
@@ -181,19 +187,15 @@ library MarketplaceLogic {
             value += item.startAmount;
         }
 
-        uint256 actualPayment = value - params.credit.amount;
+        uint256 payNow = value - params.credit.amount;
         if (!isETH) {
-            IERC20(token).safeTransferFrom(
-                msg.sender,
-                address(this),
-                actualPayment
-            );
+            IERC20(token).safeTransferFrom(msg.sender, address(this), payNow);
             // reset to be compatible with USDT
             IERC20(token).approve(params.marketplace.operator, 0);
             IERC20(token).approve(params.marketplace.operator, value);
             value = 0;
         } else {
-            require(msg.value == actualPayment, Errors.PAYNOW_NOT_ENOUGH);
+            require(msg.value == payNow, Errors.PAYNOW_NOT_ENOUGH);
             params.credit.token = params.WETH;
         }
 
@@ -210,21 +212,20 @@ library MarketplaceLogic {
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param to The receiver of borrowed tokens
      */
-    function _borrow(
+    function _borrowTo(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteMarketplaceParams memory params,
         address to
     ) internal {
-        DataTypes.ReserveData storage reserve;
         bool isETH = params.credit.token == address(0);
-
+        address underlyingAsset = params.credit.token;
         if (isETH) {
-            reserve = reservesData[params.WETH];
-        } else {
-            reserve = reservesData[params.credit.token];
+            underlyingAsset = params.WETH;
         }
+
+        DataTypes.ReserveData storage reserve = reservesData[underlyingAsset];
 
         require(reserve.xTokenAddress != address(0), Errors.ASSET_NOT_LISTED);
         ValidationLogic.validateFlashloanSimple(reserve);
@@ -234,7 +235,6 @@ library MarketplaceLogic {
         );
 
         if (isETH) {
-            require(to == address(this));
             // No re-entrancy because it sent to our contract address
             IWETH(params.WETH).withdraw(params.credit.amount);
         }
