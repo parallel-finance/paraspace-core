@@ -331,23 +331,4 @@ library DataTypes {
         address operator;
         bool paused;
     }
-
-    function hash(Credit memory credit) external pure returns (bytes32) {
-        bytes32 typeHash = keccak256(
-            abi.encodePacked(
-                "Credit(address token,uint256 amount,bytes orderId)"
-            )
-        );
-
-        // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#definition-of-encodedata
-        return
-            keccak256(
-                abi.encode(
-                    typeHash,
-                    credit.token,
-                    credit.amount,
-                    keccak256(abi.encodePacked(credit.orderId))
-                )
-            );
-    }
 }
