@@ -193,7 +193,7 @@ library MarketplaceLogic {
             IERC20(token).approve(params.marketplace.operator, value);
             value = 0;
         } else {
-            require(msg.value == value - params.cred., Errors.PAYNOW_NOT_ENOUGH);
+            require(msg.value == actualPayment, Errors.PAYNOW_NOT_ENOUGH);
             params.credit.token = params.WETH;
         }
 
