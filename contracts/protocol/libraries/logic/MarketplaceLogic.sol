@@ -274,7 +274,7 @@ library MarketplaceLogic {
                 reserve = reservesData[underlyingAsset];
                 bool isNToken = reserve.xTokenAddress == token;
 
-                require(isNToken, Errors.INVALID_ASSET_TYPE);
+                require(isNToken, Errors.ASSET_NOT_LISTED);
                 userConfig.setUsingAsCollateral(reserve.id, true);
                 // No need to supply anymore because it's already NToken
                 continue;
