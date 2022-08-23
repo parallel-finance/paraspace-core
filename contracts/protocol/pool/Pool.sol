@@ -10,6 +10,7 @@ import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
+import {AuctionLiquidationLogic} from "../libraries/logic/AuctionLiquidationLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
@@ -483,6 +484,63 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             useAsCollateral,
             _reservesCount,
             ADDRESSES_PROVIDER.getPriceOracle()
+        );
+    }
+
+    function auctionLiquidationStart(
+        address token,
+        uint256 tokenId,
+        address user
+    ) external virtual {
+        AuctionLiquidationLogic.executeAuctionLiquidationStart(
+            _auctions,
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.ExecuteAuctionLiquidationStartParams({
+                reservesCount: _reservesCount,
+                collateralTokenId: tokenId,
+                collateralAsset: token,
+                user: user,
+                priceOracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
+        );
+    }
+
+    function auctionLiquidationBid(
+        address token,
+        uint256 tokenId,
+        uint256 amount
+    ) external virtual {
+        AuctionLiquidationLogic.executeAuctionLiquidationBid(
+            _auctions,
+            DataTypes.ExecuteAuctionLiquidationBidParams({
+                collateralTokenId: tokenId,
+                collateralAsset: token,
+                bidAmount: amount,
+                bidder: msg.sender
+            })
+        );
+    }
+
+    function auctionLiquidationEnd(
+        address token,
+        uint256 tokenId,
+        address user
+    ) external virtual {
+        AuctionLiquidationLogic.executeAuctionLiquidationEnd(
+            _auctions,
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.ExecuteAuctionLiquidationEndParams({
+                reservesCount: _reservesCount,
+                collateralTokenId: tokenId,
+                collateralAsset: token,
+                user: user,
+                priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                bidder: msg.sender
+            })
         );
     }
 

@@ -23,6 +23,10 @@ contract PoolStorage {
     // It is structured as a mapping for gas savings reasons, using the reserve id as index
     mapping(uint256 => address) internal _reservesList;
 
+    // Map of token actions (tokenAddress => tokenId => auction)
+    mapping(address => mapping(uint256 => DataTypes.Auction))
+        internal _auctions;
+
     // Available liquidity that can be borrowed at once at stable rate, expressed in bps
     uint64 internal _maxStableRateBorrowSizePercent;
 

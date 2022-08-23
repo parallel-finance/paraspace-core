@@ -132,6 +132,30 @@ library DataTypes {
     //     address priceOracleSentinel;
     // }
 
+    struct ExecuteAuctionLiquidationStartParams {
+        uint256 reservesCount;
+        uint256 collateralTokenId;
+        address collateralAsset;
+        address user;
+        address priceOracle;
+    }
+
+    struct ExecuteAuctionLiquidationBidParams {
+        uint256 collateralTokenId;
+        address collateralAsset;
+        uint256 bidAmount;
+        address bidder;
+    }
+
+    struct ExecuteAuctionLiquidationEndParams {
+        uint256 reservesCount;
+        uint256 collateralTokenId;
+        address collateralAsset;
+        address user;
+        address priceOracle;
+        address bidder;
+    }
+
     struct ExecuteLiquidationCallParams {
         uint256 reservesCount;
         uint256 liquidationAmount;
@@ -330,5 +354,12 @@ library DataTypes {
         address adapter;
         address operator;
         bool paused;
+    }
+
+    struct Auction {
+        uint256 endTime;
+        bool isResolved;
+        uint256 highestBid;
+        address highestBidder;
     }
 }
