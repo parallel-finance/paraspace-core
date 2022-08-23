@@ -112,18 +112,6 @@ interface IPool {
     );
 
     /**
-     * @dev Emitted on swapBorrowRateMode()
-     * @param reserve The address of the underlying asset of the reserve
-     * @param user The address of the user swapping his rate mode
-     * @param interestRateMode The current interest rate mode of the position being swapped: 1 for Stable, 2 for Variable
-     **/
-    event SwapBorrowRateMode(
-        address indexed reserve,
-        address indexed user,
-        DataTypes.InterestRateMode interestRateMode
-    );
-
-    /**
      * @dev Emitted on setUserUseReserveAsCollateral()
      * @param reserve The address of the underlying asset of the reserve
      * @param user The address of the user enabling the usage as collateral
@@ -139,16 +127,6 @@ interface IPool {
      * @param user The address of the user enabling the usage as collateral
      **/
     event ReserveUsedAsCollateralDisabled(
-        address indexed reserve,
-        address indexed user
-    );
-
-    /**
-     * @dev Emitted on rebalanceStableBorrowRate()
-     * @param reserve The address of the underlying asset of the reserve
-     * @param user The address of the user for which the rebalance has been executed
-     **/
-    event RebalanceStableBorrowRate(
         address indexed reserve,
         address indexed user
     );
@@ -522,25 +500,6 @@ interface IPool {
     ) external;
 
     /**
-     * @notice Allows a borrower to swap his debt between stable and variable mode, or vice versa
-     * @param asset The address of the underlying asset borrowed
-     * @param interestRateMode The current interest rate mode of the position being swapped: 1 for Stable, 2 for Variable
-     **/
-    function swapBorrowRateMode(address asset, uint256 interestRateMode)
-        external;
-
-    /**
-     * @notice Rebalances the stable interest rate of a user to the current stable rate defined on the reserve.
-     * - Users can be rebalanced if the following conditions are satisfied:
-     *     1. Usage ratio is above 95%
-     *     2. the current supply APY is below REBALANCE_UP_THRESHOLD * maxVariableBorrowRate, which means that too
-     *        much has been borrowed at a stable rate and suppliers are not earning enough
-     * @param asset The address of the underlying asset borrowed
-     * @param user The address of the user to be rebalanced
-     **/
-    function rebalanceStableBorrowRate(address asset, address user) external;
-
-    /**
      * @notice Allows suppliers to enable/disable a specific supplied asset as collateral
      * @param asset The address of the underlying asset supplied
      * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
@@ -751,15 +710,6 @@ interface IPool {
         external
         view
         returns (IPoolAddressesProvider);
-
-    /**
-     * @notice Returns the percentage of available liquidity that can be borrowed at once at stable rate
-     * @return The percentage of available liquidity to borrow, expressed in bps
-     */
-    function MAX_STABLE_RATE_BORROW_SIZE_PERCENT()
-        external
-        view
-        returns (uint256);
 
     /**
      * @notice Returns the maximum number of reserves supported to be listed in this Pool

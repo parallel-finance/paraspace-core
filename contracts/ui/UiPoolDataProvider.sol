@@ -168,14 +168,12 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             DataTypes.ReserveConfigurationMap
                 memory reserveConfigurationMap = baseData.configuration;
-            //uint256 eModeCategoryId;
             (
                 reserveData.baseLTVasCollateral,
                 reserveData.reserveLiquidationThreshold,
                 reserveData.reserveLiquidationBonus,
                 reserveData.decimals,
                 reserveData.reserveFactor
-                // eModeCategoryId
             ) = reserveConfigurationMap.getParams();
             reserveData.usageAsCollateralEnabled =
                 reserveData.baseLTVasCollateral != 0;
@@ -205,30 +203,13 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 .baseVariableBorrowRate;
             reserveData.optimalUsageRatio = interestRates.optimalUsageRatio;
 
-            // v3 only
-            reserveData.eModeCategoryId = 0;
-            // reserveData.debtCeiling = reserveConfigurationMap.getDebtCeiling();
-            // reserveData.debtCeilingDecimals = poolDataProvider
-            //     .getDebtCeilingDecimals();
             (
                 reserveData.borrowCap,
                 reserveData.supplyCap
             ) = reserveConfigurationMap.getCaps();
 
             reserveData.isPaused = isPaused;
-            reserveData.unbacked = 0;
-            reserveData.isolationModeTotalDebt = 0;
             reserveData.accruedToTreasury = baseData.accruedToTreasury;
-
-            //DataTypes.EModeCategory memory categoryData = pool.getEModeCategoryData(reserveData.eModeCategoryId);
-            reserveData.eModeLtv = 0;
-            reserveData.eModeLiquidationThreshold = 0;
-            reserveData.eModeLiquidationBonus = 0;
-            // each eMode category may or may not have a custom oracle to override the individual assets price oracles
-            reserveData.eModePriceSource = address(0);
-            reserveData.eModeLabel = "";
-
-            reserveData.borrowableInIsolation = false; // reserveConfigurationMap.getBorrowableInIsolation();
         }
 
         BaseCurrencyInfo memory baseCurrencyInfo;

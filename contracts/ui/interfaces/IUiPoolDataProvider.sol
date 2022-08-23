@@ -58,21 +58,9 @@ interface IUiPoolDataProvider {
         // v3 only
         bool isPaused;
         uint128 accruedToTreasury;
-        uint128 unbacked;
-        uint128 isolationModeTotalDebt;
         //
-        uint256 debtCeiling;
-        uint256 debtCeilingDecimals;
-        uint8 eModeCategoryId;
         uint256 borrowCap;
         uint256 supplyCap;
-        // eMode
-        uint16 eModeLtv;
-        uint16 eModeLiquidationThreshold;
-        uint16 eModeLiquidationBonus;
-        address eModePriceSource;
-        string eModeLabel;
-        bool borrowableInIsolation;
         //AssetType
         DataTypes.AssetType assetType;
     }

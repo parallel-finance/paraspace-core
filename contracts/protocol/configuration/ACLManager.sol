@@ -16,9 +16,6 @@ contract ACLManager is AccessControl, IACLManager {
     bytes32 public constant override EMERGENCY_ADMIN_ROLE =
         keccak256("EMERGENCY_ADMIN");
     bytes32 public constant override RISK_ADMIN_ROLE = keccak256("RISK_ADMIN");
-    bytes32 public constant override FLASH_BORROWER_ROLE =
-        keccak256("FLASH_BORROWER");
-    bytes32 public constant override BRIDGE_ROLE = keccak256("BRIDGE");
     bytes32 public constant override ASSET_LISTING_ADMIN_ROLE =
         keccak256("ASSET_LISTING_ADMIN");
 
@@ -93,41 +90,6 @@ contract ACLManager is AccessControl, IACLManager {
     /// @inheritdoc IACLManager
     function isRiskAdmin(address admin) external view override returns (bool) {
         return hasRole(RISK_ADMIN_ROLE, admin);
-    }
-
-    /// @inheritdoc IACLManager
-    function addFlashBorrower(address borrower) external override {
-        grantRole(FLASH_BORROWER_ROLE, borrower);
-    }
-
-    /// @inheritdoc IACLManager
-    function removeFlashBorrower(address borrower) external override {
-        revokeRole(FLASH_BORROWER_ROLE, borrower);
-    }
-
-    /// @inheritdoc IACLManager
-    function isFlashBorrower(address borrower)
-        external
-        view
-        override
-        returns (bool)
-    {
-        return hasRole(FLASH_BORROWER_ROLE, borrower);
-    }
-
-    /// @inheritdoc IACLManager
-    function addBridge(address bridge) external override {
-        grantRole(BRIDGE_ROLE, bridge);
-    }
-
-    /// @inheritdoc IACLManager
-    function removeBridge(address bridge) external override {
-        revokeRole(BRIDGE_ROLE, bridge);
-    }
-
-    /// @inheritdoc IACLManager
-    function isBridge(address bridge) external view override returns (bool) {
-        return hasRole(BRIDGE_ROLE, bridge);
     }
 
     /// @inheritdoc IACLManager

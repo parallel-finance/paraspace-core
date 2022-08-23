@@ -177,18 +177,6 @@ interface IPoolConfigurator {
     );
 
     /**
-     * @dev Emitted when the the siloed borrowing state for an asset is changed.
-     * @param asset The address of the underlying asset of the reserve
-     * @param oldState The old siloed borrowing state
-     * @param newState The new siloed borrowing state
-     **/
-    event SiloedBorrowingChanged(
-        address indexed asset,
-        bool oldState,
-        bool newState
-    );
-
-    /**
      * @notice Initializes multiple reserves.
      * @param input The array of initialization parameters
      **/
@@ -326,10 +314,4 @@ interface IPoolConfigurator {
      * @param asset The address of the reserve to drop
      **/
     function dropReserve(address asset) external;
-
-    /**
-     * @notice Sets siloed borrowing for an asset
-     * @param siloed The new siloed borrowing state
-     */
-    function setSiloedBorrowing(address asset, bool siloed) external;
 }

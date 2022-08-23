@@ -37,18 +37,6 @@ interface IACLManager {
     function RISK_ADMIN_ROLE() external view returns (bytes32);
 
     /**
-     * @notice Returns the identifier of the FlashBorrower role
-     * @return The id of the FlashBorrower role
-     */
-    function FLASH_BORROWER_ROLE() external view returns (bytes32);
-
-    /**
-     * @notice Returns the identifier of the Bridge role
-     * @return The id of the Bridge role
-     */
-    function BRIDGE_ROLE() external view returns (bytes32);
-
-    /**
      * @notice Returns the identifier of the AssetListingAdmin role
      * @return The id of the AssetListingAdmin role
      */
@@ -118,44 +106,6 @@ interface IACLManager {
      * @return True if the given address is RiskAdmin, false otherwise
      */
     function isRiskAdmin(address admin) external view returns (bool);
-
-    /**
-     * @notice Adds a new address as FlashBorrower
-     * @param borrower The address of the new FlashBorrower
-     */
-    function addFlashBorrower(address borrower) external;
-
-    /**
-     * @notice Removes an admin as FlashBorrower
-     * @param borrower The address of the FlashBorrower to remove
-     */
-    function removeFlashBorrower(address borrower) external;
-
-    /**
-     * @notice Returns true if the address is FlashBorrower, false otherwise
-     * @param borrower The address to check
-     * @return True if the given address is FlashBorrower, false otherwise
-     */
-    function isFlashBorrower(address borrower) external view returns (bool);
-
-    /**
-     * @notice Adds a new address as Bridge
-     * @param bridge The address of the new Bridge
-     */
-    function addBridge(address bridge) external;
-
-    /**
-     * @notice Removes an address as Bridge
-     * @param bridge The address of the bridge to remove
-     */
-    function removeBridge(address bridge) external;
-
-    /**
-     * @notice Returns true if the address is Bridge, false otherwise
-     * @param bridge The address to check
-     * @return True if the given address is Bridge, false otherwise
-     */
-    function isBridge(address bridge) external view returns (bool);
 
     /**
      * @notice Adds a new admin as AssetListingAdmin
