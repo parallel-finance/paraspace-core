@@ -503,7 +503,7 @@ interface IPool {
     ) external;
 
     /**
-     * @notice Implements the acceptBidWithCredit feature. AcceptBidWithCredit allows users to
+     * @notice Implements the batchAcceptBidWithCredit feature. AcceptBidWithCredit allows users to
      * accept a leveraged bid on ParaSpace NFT marketplace. Users can submit leveraged bid and pay
      * at most (1 - LTV) * $NFT
      * @dev The nft receiver just needs to do the downpayment

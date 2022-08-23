@@ -42,8 +42,15 @@ interface IWETHGateway {
 
     function buyWithCredit(
         bytes32 marketplaceId,
-        bytes calldata data,
+        bytes calldata payload,
         DataTypes.Credit calldata credit,
+        uint16 referralCode
+    ) external payable;
+
+    function batchBuyWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
         uint16 referralCode
     ) external payable;
 }

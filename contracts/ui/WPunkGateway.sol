@@ -121,9 +121,19 @@ contract WPunkGateway is
         }
     }
 
+    /**
+     * @notice Implements the acceptBidWithCredit feature. AcceptBidWithCredit allows users to
+     * accept a leveraged bid on ParaSpace NFT marketplace. Users can submit leveraged bid and pay
+     * at most (1 - LTV) * $NFT
+     * @dev The nft receiver just needs to do the downpayment
+     * @param marketplaceId The marketplace identifier
+     * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
+     * @param credit The credit that user would like to use for this purchase
+     * @param referralCode The referral code used
+     */
     function acceptBidWithCredit(
         bytes32 marketplaceId,
-        bytes calldata data,
+        bytes calldata payload,
         DataTypes.Credit calldata credit,
         uint256[] calldata punkIndexes,
         uint16 referralCode
@@ -143,8 +153,47 @@ contract WPunkGateway is
         }
         Pool.acceptBidWithCredit(
             marketplaceId,
-            data,
+            payload,
             credit,
+            msg.sender,
+            referralCode
+        );
+    }
+
+    /**
+     * @notice Implements the batchAcceptBidWithCredit feature. AcceptBidWithCredit allows users to
+     * accept a leveraged bid on ParaSpace NFT marketplace. Users can submit leveraged bid and pay
+     * at most (1 - LTV) * $NFT
+     * @dev The nft receiver just needs to do the downpayment
+     * @param marketplaceIds The marketplace identifiers
+     * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
+     * @param credits The credits that the makers have approved to use for this purchase
+     * @param referralCode The referral code used
+     */
+    function batchAcceptBidWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        uint256[] calldata punkIndexes,
+        uint16 referralCode
+    ) external nonReentrant {
+        for (uint256 i = 0; i < punkIndexes.length; i++) {
+            Punk.buyPunk(punkIndexes[i]);
+            Punk.transferPunk(proxy, punkIndexes[i]);
+            // gatewayProxy is the sender of this function, not the original gateway
+            WPunk.mint(punkIndexes[i]);
+
+            IERC721(address(WPunk)).safeTransferFrom(
+                address(this),
+                msg.sender,
+                punkIndexes[i]
+            );
+            IERC721(address(WPunk)).approve(address(Pool), punkIndexes[i]);
+        }
+        Pool.batchAcceptBidWithCredit(
+            marketplaceIds,
+            payloads,
+            credits,
             msg.sender,
             referralCode
         );
