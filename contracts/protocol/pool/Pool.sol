@@ -103,7 +103,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             provider == ADDRESSES_PROVIDER,
             Errors.INVALID_ADDRESSES_PROVIDER
         );
-        _maxStableRateBorrowSizePercent = 0.25e4;
     }
 
     /// @inheritdoc IPool
@@ -259,7 +258,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                 interestRateMode: DataTypes.InterestRateMode(interestRateMode),
                 referralCode: referralCode,
                 releaseUnderlying: true,
-                maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                 reservesCount: _reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
@@ -381,7 +379,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                 orderInfo: orderInfo,
                 WETH: WETH,
                 referralCode: referralCode,
-                maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                 reservesCount: _reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
@@ -429,7 +426,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                     orderInfo: orderInfo,
                     WETH: WETH,
                     referralCode: referralCode,
-                    maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
@@ -467,7 +463,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                     orderInfo: orderInfo,
                     WETH: WETH,
                     referralCode: referralCode,
-                    maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
@@ -515,7 +510,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                     orderInfo: orderInfo,
                     WETH: WETH,
                     referralCode: referralCode,
-                    maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER

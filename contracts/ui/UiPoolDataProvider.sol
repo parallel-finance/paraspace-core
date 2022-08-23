@@ -270,14 +270,12 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         external
         view
         override
-        returns (UserReserveData[] memory, uint8)
+        returns (UserReserveData[] memory)
     {
         IPool pool = IPool(provider.getPool());
         address[] memory reserves = pool.getReservesList();
         DataTypes.UserConfigurationMap memory userConfig = pool
             .getUserConfiguration(user);
-
-        uint8 userEmodeCategoryId = 0;
 
         UserReserveData[] memory userReservesData = new UserReserveData[](
             user != address(0) ? reserves.length : 0
@@ -325,7 +323,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             }
         }
 
-        return (userReservesData, userEmodeCategoryId);
+        return userReservesData;
     }
 
     function bytes32ToString(bytes32 _bytes32)

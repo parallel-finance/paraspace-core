@@ -73,7 +73,6 @@ library BorrowLogic {
                 userAddress: params.onBehalfOf,
                 amount: params.amount,
                 interestRateMode: params.interestRateMode,
-                maxStableLoanPercent: params.maxStableRateBorrowSizePercent,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
                 priceOracleSentinel: params.priceOracleSentinel,
@@ -84,30 +83,15 @@ library BorrowLogic {
         uint256 currentStableRate = 0;
         bool isFirstBorrowing = false;
 
-        if (params.interestRateMode == DataTypes.InterestRateMode.STABLE) {
-            currentStableRate = reserve.currentStableBorrowRate;
-
-            (
-                isFirstBorrowing,
-                reserveCache.nextTotalStableDebt,
-                reserveCache.nextAvgStableBorrowRate
-            ) = IStableDebtToken(reserveCache.stableDebtTokenAddress).mint(
-                params.user,
-                params.onBehalfOf,
-                params.amount,
-                currentStableRate
-            );
-        } else {
-            (
-                isFirstBorrowing,
-                reserveCache.nextScaledVariableDebt
-            ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
-                params.user,
-                params.onBehalfOf,
-                params.amount,
-                reserveCache.nextVariableBorrowIndex
-            );
-        }
+        (
+            isFirstBorrowing,
+            reserveCache.nextScaledVariableDebt
+        ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
+            params.user,
+            params.onBehalfOf,
+            params.amount,
+            reserveCache.nextVariableBorrowIndex
+        );
 
         if (isFirstBorrowing) {
             userConfig.setBorrowing(reserve.id, true);
@@ -133,9 +117,7 @@ library BorrowLogic {
             params.onBehalfOf,
             params.amount,
             params.interestRateMode,
-            params.interestRateMode == DataTypes.InterestRateMode.STABLE
-                ? currentStableRate
-                : reserve.currentVariableBorrowRate,
+            reserve.currentVariableBorrowRate,
             params.referralCode
         );
     }
@@ -190,23 +172,13 @@ library BorrowLogic {
             paybackAmount = params.amount;
         }
 
-        if (params.interestRateMode == DataTypes.InterestRateMode.STABLE) {
-            (
-                reserveCache.nextTotalStableDebt,
-                reserveCache.nextAvgStableBorrowRate
-            ) = IStableDebtToken(reserveCache.stableDebtTokenAddress).burn(
+        reserveCache.nextScaledVariableDebt = IVariableDebtToken(
+            reserveCache.variableDebtTokenAddress
+        ).burn(
                 params.onBehalfOf,
-                paybackAmount
+                paybackAmount,
+                reserveCache.nextVariableBorrowIndex
             );
-        } else {
-            reserveCache.nextScaledVariableDebt = IVariableDebtToken(
-                reserveCache.variableDebtTokenAddress
-            ).burn(
-                    params.onBehalfOf,
-                    paybackAmount,
-                    reserveCache.nextVariableBorrowIndex
-                );
-        }
 
         reserve.updateInterestRates(
             reserveCache,

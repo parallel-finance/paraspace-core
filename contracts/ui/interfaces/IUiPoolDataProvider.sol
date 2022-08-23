@@ -96,7 +96,7 @@ interface IUiPoolDataProvider {
     function getUserReservesData(IPoolAddressesProvider provider, address user)
         external
         view
-        returns (UserReserveData[] memory, uint8);
+        returns (UserReserveData[] memory);
 
     function getNTokenData(
         address user,

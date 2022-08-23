@@ -167,7 +167,6 @@ library DataTypes {
         InterestRateMode interestRateMode;
         uint16 referralCode;
         bool releaseUnderlying;
-        uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
@@ -223,7 +222,6 @@ library DataTypes {
         address userAddress;
         uint256 amount;
         InterestRateMode interestRateMode;
-        uint256 maxStableLoanPercent;
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
@@ -312,7 +310,6 @@ library DataTypes {
         OrderInfo orderInfo;
         address WETH;
         uint16 referralCode;
-        uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;

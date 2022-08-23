@@ -31,6 +31,7 @@ library ConfiguratorLogic {
         address indexed proxy,
         address indexed implementation
     );
+
     // TODO can we get rid of StableDebtToken?
     event StableDebtTokenUpgraded(
         address indexed asset,

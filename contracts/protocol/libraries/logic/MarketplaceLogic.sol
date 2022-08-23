@@ -320,8 +320,6 @@ library MarketplaceLogic {
                 ),
                 referralCode: params.referralCode,
                 releaseUnderlying: false,
-                maxStableRateBorrowSizePercent: params
-                    .maxStableRateBorrowSizePercent,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
                 priceOracleSentinel: params.priceOracleSentinel
