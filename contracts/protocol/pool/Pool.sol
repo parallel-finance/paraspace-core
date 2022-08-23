@@ -20,6 +20,7 @@ import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
+import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 
 /**
  * @title Pool contract
@@ -35,10 +36,10 @@ import {IMarketplace} from "../../interfaces/IMarketplace.sol";
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider
  **/
-contract Pool is VersionedInitializable, PoolStorage, IPool {
+contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 3;
+    uint256 public constant POOL_REVISION = 1;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     /**
@@ -110,7 +111,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint256 amount,
         address onBehalfOf,
         uint16 referralCode
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         SupplyLogic.executeSupply(
             _reserves,
             _usersConfig[onBehalfOf],
@@ -129,7 +130,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         DataTypes.ERC721SupplyParams[] calldata tokenData,
         address onBehalfOf,
         uint16 referralCode
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         SupplyLogic.executeSupplyERC721(
             _reserves,
             _usersConfig[onBehalfOf],
@@ -148,7 +149,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         DataTypes.ERC721SupplyParams[] calldata tokenData,
         address onBehalfOf
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         SupplyLogic.executeSupplyERC721FromNToken(
             _reserves,
             _usersConfig[onBehalfOf],
@@ -172,7 +173,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         // Need to accommodate ERC721 and ERC1155 here
         IERC20WithPermit(asset).permit(
             msg.sender,
@@ -200,7 +201,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         uint256 amount,
         address to
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             SupplyLogic.executeWithdraw(
                 _reserves,
@@ -221,7 +222,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         uint256[] calldata tokenIds,
         address to
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             SupplyLogic.executeWithdrawERC721(
                 _reserves,
@@ -244,7 +245,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint256 interestRateMode,
         uint16 referralCode,
         address onBehalfOf
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         BorrowLogic.executeBorrow(
             _reserves,
             _reservesList,
@@ -271,7 +272,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint256 amount,
         uint256 interestRateMode,
         address onBehalfOf
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
                 _reserves,
@@ -298,7 +299,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         {
             IERC20WithPermit(asset).permit(
                 msg.sender,
@@ -335,7 +336,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         uint256 amount,
         uint256 interestRateMode
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
                 _reserves,
@@ -359,7 +360,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         DataTypes.Credit calldata credit,
         address onBehalfOf,
         uint16 referralCode
-    ) external payable virtual override {
+    ) external payable virtual override nonReentrant {
         address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
@@ -395,7 +396,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         DataTypes.Credit calldata credit,
         address onBehalfOf,
         uint16 referralCode
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);

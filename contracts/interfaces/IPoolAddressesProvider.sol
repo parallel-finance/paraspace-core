@@ -129,6 +129,22 @@ interface IPoolAddressesProvider {
     );
 
     /**
+     * @dev Emitted when the marketplace registered is updated
+     * @param id The identifier of the marketplace
+     * @param marketplace The address of the marketplace contract
+     * @param adapter The address of the marketplace adapter contract
+     * @param operator The address of the marketplace transfer helper
+     * @param paused Is the marketplace adapter paused
+     */
+    event MarketplaceSet(
+        bytes32 indexed id,
+        address indexed marketplace,
+        address indexed adapter,
+        address operator,
+        bool paused
+    );
+
+    /**
      * @notice Returns the id of the ParaSpace market to which this contract points to.
      * @return The market id
      **/
@@ -288,6 +304,7 @@ interface IPoolAddressesProvider {
         bytes32 id,
         address marketplace,
         address adapter,
-        address operator
+        address operator,
+        bool paused
     ) external;
 }

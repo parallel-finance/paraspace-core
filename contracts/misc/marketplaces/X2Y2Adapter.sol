@@ -20,7 +20,7 @@ import {PoolStorage} from "../../protocol/pool/PoolStorage.sol";
  *
  * @notice Implements the NFT <=> ERC20 exchange logic via X2Y2 marketplace
  */
-contract X2Y2Adapter is IMarketplace, PoolStorage {
+contract X2Y2Adapter is IMarketplace {
     constructor() {}
 
     struct ERC721Pair {
