@@ -33,6 +33,7 @@ library LiquidationLogic {
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using GPv2SafeERC20 for IERC20;
+    using WadRayMath for uint256;
 
     // See `IPool` for descriptions
     event ReserveUsedAsCollateralEnabled(
@@ -213,6 +214,15 @@ library LiquidationLogic {
 
         // Transfer fee to treasury if it is non-zero
         if (vars.liquidationProtocolFeeAmount != 0) {
+            uint256 index = collateralReserve.getNormalizedIncome();
+            uint256 pTokenAmount = vars.liquidationProtocolFeeAmount.rayDiv(
+                index
+            );
+            uint256 pTokenBalance = IPToken(vars.collateralXToken)
+                .scaledBalanceOf(params.user);
+            if (pTokenAmount > pTokenBalance) {
+                vars.liquidationProtocolFeeAmount = pTokenBalance.rayMul(index);
+            }
             IPToken(vars.collateralXToken).transferOnLiquidation(
                 params.user,
                 IPToken(vars.collateralXToken).RESERVE_TREASURY_ADDRESS(),
