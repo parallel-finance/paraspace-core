@@ -788,6 +788,19 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
+    function setReserveLTVStrategyAddress(
+        address asset,
+        address ltvStrategyAddress
+    ) external virtual override onlyPoolConfigurator {
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        _reserves[asset].ltvStrategyAddress = ltvStrategyAddress;
+    }
+
+    /// @inheritdoc IPool
     function setConfiguration(
         address asset,
         DataTypes.ReserveConfigurationMap calldata configuration

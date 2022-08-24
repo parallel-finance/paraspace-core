@@ -726,4 +726,9 @@ interface IPool {
         address to,
         uint256 amount
     ) external;
+
+    function setReserveLTVStrategyAddress(
+        address asset,
+        address ltvStrategyAddress
+    ) external;
 }

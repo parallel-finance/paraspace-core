@@ -143,7 +143,8 @@ contract MockReserveConfiguration {
             uint256,
             uint256,
             uint256,
-            uint256
+            uint256,
+            bool
         )
     {
         return configuration.getParams();

@@ -39,6 +39,7 @@ library DataTypes {
         address interestRateStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
+        address ltvStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
