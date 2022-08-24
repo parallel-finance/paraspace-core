@@ -305,11 +305,12 @@ library DataTypes {
 
     struct ExecuteMarketplaceParams {
         bytes32 marketplaceId;
-        DataTypes.Marketplace marketplace;
-        bytes data;
-        address WETH;
+        bytes payload;
         Credit credit;
+        uint256 ethLeft;
+        DataTypes.Marketplace marketplace;
         OrderInfo orderInfo;
+        address WETH;
         uint16 referralCode;
         uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;

@@ -58,7 +58,7 @@ library MarketplaceLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteMarketplaceParams memory params
-    ) external {
+    ) external returns (uint256) {
         ValidationLogic.validateBuyWithCredit(params);
 
         _borrowTo(
@@ -69,7 +69,7 @@ library MarketplaceLogic {
             address(this)
         );
 
-        uint256 value = _delegateToPool(
+        (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
             reservesData,
             reservesList,
             userConfig,
@@ -82,8 +82,8 @@ library MarketplaceLogic {
             abi.encodeWithSelector(
                 IMarketplace.matchAskWithTakerBid.selector,
                 params.marketplace.marketplace,
-                params.data,
-                value
+                params.payload,
+                priceEth
             )
         );
 
@@ -100,6 +100,8 @@ library MarketplaceLogic {
             params.orderInfo,
             params.credit
         );
+
+        return downpaymentEth;
     }
 
     /**
@@ -134,7 +136,7 @@ library MarketplaceLogic {
             abi.encodeWithSelector(
                 IMarketplace.matchBidWithTakerAsk.selector,
                 params.marketplace.marketplace,
-                params.data
+                params.payload
             )
         );
 
@@ -167,9 +169,9 @@ library MarketplaceLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteMarketplaceParams memory params
-    ) internal returns (uint256) {
+    ) internal returns (uint256, uint256) {
         address token = params.credit.token;
-        uint256 value = 0;
+        uint256 price = 0;
         bool isETH = token == address(0);
 
         for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
@@ -184,22 +186,28 @@ library MarketplaceLogic {
                 Errors.INVALID_ASSET_TYPE
             );
             require(item.token == token, Errors.CREDIT_DOES_NOT_MATCH_ORDER);
-            value += item.startAmount;
+            price += item.startAmount;
         }
 
-        uint256 payNow = value - params.credit.amount;
+        uint256 downpayment = price - params.credit.amount;
         if (!isETH) {
-            IERC20(token).safeTransferFrom(msg.sender, address(this), payNow);
+            IERC20(token).safeTransferFrom(
+                msg.sender,
+                address(this),
+                downpayment
+            );
             // reset to be compatible with USDT
             IERC20(token).approve(params.marketplace.operator, 0);
-            IERC20(token).approve(params.marketplace.operator, value);
-            value = 0;
+            IERC20(token).approve(params.marketplace.operator, price);
+            // convert to (priceEth, downpaymentEth)
+            price = 0;
+            downpayment = 0;
         } else {
-            require(msg.value == payNow, Errors.PAYNOW_NOT_ENOUGH);
+            require(params.ethLeft >= downpayment, Errors.PAYNOW_NOT_ENOUGH);
             params.credit.token = params.WETH;
         }
 
-        return value;
+        return (price, downpayment);
     }
 
     /**
@@ -275,7 +283,9 @@ library MarketplaceLogic {
                 bool isNToken = reserve.xTokenAddress == token;
 
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                userConfig.setUsingAsCollateral(reserve.id, true);
+                if (!userConfig.isUsingAsCollateral(reserve.id)) {
+                    userConfig.setUsingAsCollateral(reserve.id, true);
+                }
                 // No need to supply anymore because it's already NToken
                 continue;
             }
