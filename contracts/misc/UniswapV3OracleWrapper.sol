@@ -41,98 +41,145 @@ contract UniswapV3OracleWrapper is IAtomicPriceAggregator {
         uint256 unclaimedTokenBFee;
     }
 
-    // get token price
-    function getTokenPrice(uint256 tokenId) public view returns (uint256) {
-        DataTypes.UinswapV3PositionData memory positionData;
+    struct PairOracleData {
+        uint256 tokenAPrice;
+        uint256 tokenBPrice;
+        uint8 tokenADecimal;
+        uint8 tokenBDecimal;
+        uint160 sqrtPriceX96;
+    }
 
+    function getPositionData(uint256 tokenId)
+        public
+        view
+        returns (DataTypes.UinswapV3PositionData memory)
+    {
+        DataTypes.UinswapV3PositionData memory positionData;
         (
             ,
             ,
-            positionData.tokenA,
-            positionData.tokenB,
-            positionData.fee,
-            positionData.tickLower,
-            positionData.tickUpper,
-            positionData.liquidity,
-            positionData.feeGrowthInside0LastX128,
-            positionData.feeGrowthInside1LastX128,
-            ,
-
+            address token0,
+            address token1,
+            uint24 fee,
+            int24 tickLower,
+            int24 tickUpper,
+            uint128 liquidity,
+            uint256 positionFeeGrowthInside0LastX128,
+            uint256 positionFeeGrowthInside1LastX128,
+            uint256 tokensOwed0,
+            uint256 tokensOwed1
         ) = UNISWAP_V3_POSITION_MANAGER.positions(tokenId);
 
-        positionData.priceA = PARASPACE_ORACLE.getAssetPrice(
+        return
+            DataTypes.UinswapV3PositionData({
+                tokenA: token0,
+                tokenB: token1,
+                fee: fee,
+                tickLower: tickLower,
+                tickUpper: tickUpper,
+                liquidity: liquidity,
+                positionFeeGrowthInsideALastX128: positionFeeGrowthInside0LastX128,
+                positionFeeGrowthInsideBLastX128: positionFeeGrowthInside1LastX128,
+                tokensOwedA: tokensOwed0,
+                tokensOwedB: tokensOwed1
+            });
+    }
+
+    function getOracleData(DataTypes.UinswapV3PositionData memory positionData)
+        public
+        view
+        returns (PairOracleData memory)
+    {
+        PairOracleData memory oracleData;
+        oracleData.tokenAPrice = PARASPACE_ORACLE.getAssetPrice(
             positionData.tokenA
         );
-        positionData.priceB = PARASPACE_ORACLE.getAssetPrice(
+        oracleData.tokenBPrice = PARASPACE_ORACLE.getAssetPrice(
             positionData.tokenB
         );
 
-        positionData.tokenADecimal = IERC20Detailed(positionData.tokenA)
+        oracleData.tokenADecimal = IERC20Detailed(positionData.tokenA)
             .decimals();
-        positionData.tokenBDecimal = IERC20Detailed(positionData.tokenB)
+        oracleData.tokenBDecimal = IERC20Detailed(positionData.tokenB)
             .decimals();
 
         // TODO using bit shifting for the 2^96
         // positionData.sqrtPriceX96;
 
-        if (positionData.tokenBDecimal == positionData.tokenADecimal) {
+        if (oracleData.tokenBDecimal == oracleData.tokenADecimal) {
             // multiply by 10^18 then divide by 10^9 to preserve price in wei
-            positionData.sqrtPriceX96 = uint160(
+            oracleData.sqrtPriceX96 = uint160(
                 (SqrtLib.sqrt(
-                    ((positionData.priceA * (10**18)) / (positionData.priceB))
+                    ((oracleData.tokenAPrice * (10**18)) /
+                        (oracleData.tokenBPrice))
                 ) * 2**96) / 10E9
             );
-        } else if (positionData.tokenBDecimal > positionData.tokenADecimal) {
+        } else if (oracleData.tokenBDecimal > oracleData.tokenADecimal) {
             // multiple by 10^(decimalB - decimalA) to preserve price in wei
-            positionData.sqrtPriceX96 = uint160(
+            oracleData.sqrtPriceX96 = uint160(
                 (SqrtLib.sqrt(
-                    (positionData.priceA *
+                    (oracleData.tokenAPrice *
                         (10 **
                             (18 +
-                                positionData.tokenBDecimal -
-                                positionData.tokenADecimal))) /
-                        (positionData.priceB)
+                                oracleData.tokenBDecimal -
+                                oracleData.tokenADecimal))) /
+                        (oracleData.tokenBPrice)
                 ) * 2**96) / 10E9
             );
         } else {
             // multiple by 10^(decimalA - decimalB) to preserve price in wei then divid by the same number
-            positionData.sqrtPriceX96 = uint160(
+            oracleData.sqrtPriceX96 = uint160(
                 (SqrtLib.sqrt(
-                    (positionData.priceA *
+                    (oracleData.tokenAPrice *
                         (10 **
                             (18 +
-                                positionData.tokenADecimal -
-                                positionData.tokenBDecimal))) /
-                        (positionData.priceB)
+                                oracleData.tokenADecimal -
+                                oracleData.tokenBDecimal))) /
+                        (oracleData.tokenBPrice)
                 ) * 2**96) /
                     10 **
                         (9 +
-                            positionData.tokenADecimal -
-                            positionData.tokenBDecimal)
+                            oracleData.tokenADecimal -
+                            oracleData.tokenBDecimal)
             );
         }
 
-        (positionData.amountA, positionData.amountB) = LiquidityAmounts
+        return oracleData;
+    }
+
+    // get token price
+    function getTokenPrice(uint256 tokenId) public view returns (uint256) {
+        DataTypes.UinswapV3PositionData memory positionData = getPositionData(
+            tokenId
+        );
+
+        PairOracleData memory oracleData = getOracleData(positionData);
+
+        (uint256 liquidityAmountA, uint256 liquidityAmountB) = LiquidityAmounts
             .getAmountsForLiquidity(
-                positionData.sqrtPriceX96,
+                oracleData.sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(positionData.tickLower),
                 TickMath.getSqrtRatioAtTick(positionData.tickUpper),
                 positionData.liquidity
             );
 
-        (
-            uint256 unclaimedTokenAFee,
-            uint256 unclaimedTokenBFee
-        ) = getFeeAmounts(positionData);
+        (uint256 feeAmountA, uint256 feeAmountB) = getPendingFeeAmounts(
+            positionData
+        );
+
+        feeAmountA += positionData.tokensOwedA;
+        feeAmountB += positionData.tokensOwedB;
 
         return
-            (((positionData.amountA + unclaimedTokenAFee) *
-                positionData.priceA) / 10**positionData.tokenADecimal) +
-            (((positionData.amountB + unclaimedTokenBFee) *
-                positionData.priceB) / 10**positionData.tokenBDecimal);
+            (((liquidityAmountA + feeAmountA) * oracleData.tokenAPrice) /
+                10**oracleData.tokenADecimal) +
+            (((liquidityAmountB + feeAmountB) * oracleData.tokenBPrice) /
+                10**oracleData.tokenBDecimal);
     }
 
-    function getFeeAmounts(DataTypes.UinswapV3PositionData memory positionData)
+    function getPendingFeeAmounts(
+        DataTypes.UinswapV3PositionData memory positionData
+    )
         internal
         view
         returns (uint256 unclaimedTokenAFees, uint256 unclaimedTokenBFees)
@@ -170,9 +217,7 @@ contract UniswapV3OracleWrapper is IAtomicPriceAggregator {
         uint256 feeGrowthGlobal0X128 = pool.feeGrowthGlobal0X128();
         uint256 feeGrowthGlobal1X128 = pool.feeGrowthGlobal1X128();
 
-        int24 tickCurrent = TickMath.getTickAtSqrtRatio(
-            positionData.sqrtPriceX96
-        );
+        (, int24 tickCurrent, , , , , ) = pool.slot0();
 
         unchecked {
             // calculate fee growth below
@@ -218,13 +263,13 @@ contract UniswapV3OracleWrapper is IAtomicPriceAggregator {
 
             unclaimedTokenAFees =
                 ((feeGrowthInside0X128 -
-                    positionData.feeGrowthInside0LastX128) *
+                    positionData.positionFeeGrowthInsideALastX128) *
                     positionData.liquidity) /
                 Q128;
 
-            unclaimedTokenAFees =
+            unclaimedTokenBFees =
                 ((feeGrowthInside1X128 -
-                    positionData.feeGrowthInside1LastX128) *
+                    positionData.positionFeeGrowthInsideBLastX128) *
                     positionData.liquidity) /
                 Q128;
         }

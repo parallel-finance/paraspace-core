@@ -286,15 +286,10 @@ library DataTypes {
         int24 tickLower;
         int24 tickUpper;
         uint128 liquidity;
-        uint256 priceA;
-        uint256 priceB;
-        uint256 tokenADecimal;
-        uint256 tokenBDecimal;
-        uint256 amountA;
-        uint256 amountB;
-        uint256 feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128;
-        uint160 sqrtPriceX96;
+        uint256 positionFeeGrowthInsideALastX128;
+        uint256 positionFeeGrowthInsideBLastX128;
+        uint256 tokensOwedA;
+        uint256 tokensOwedB;
     }
 
     struct Credit {
