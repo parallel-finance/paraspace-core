@@ -279,19 +279,6 @@ library DataTypes {
         bytes params;
     }
 
-    struct UinswapV3PositionData {
-        address tokenA;
-        address tokenB;
-        uint24 fee;
-        int24 tickLower;
-        int24 tickUpper;
-        uint128 liquidity;
-        uint256 positionFeeGrowthInsideALastX128;
-        uint256 positionFeeGrowthInsideBLastX128;
-        uint256 tokensOwedA;
-        uint256 tokensOwedB;
-    }
-
     struct Credit {
         address token;
         uint256 amount;

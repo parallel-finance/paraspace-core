@@ -22,6 +22,7 @@ import {IEACAggregatorProxy} from "./interfaces/IEACAggregatorProxy.sol";
 import {IERC20DetailedBytes} from "./interfaces/IERC20DetailedBytes.sol";
 import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
+import {IUniswapV3PositionInfoProvider} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -283,6 +284,46 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         }
 
         return (tokenData);
+    }
+
+    function getUniswapV3LpTokenData(
+        IPoolAddressesProvider provider,
+        address lpTokenAddress,
+        uint256 tokenId
+    ) external view override returns (UniswapV3LpTokenInfo memory) {
+        UniswapV3LpTokenInfo memory lpTokenInfo;
+
+        IParaSpaceOracle oracle = IParaSpaceOracle(provider.getPriceOracle());
+        address sourceAddress = oracle.getSourceOfAsset(lpTokenAddress);
+        if (sourceAddress != address(0)) {
+            IUniswapV3PositionInfoProvider source = IUniswapV3PositionInfoProvider(
+                    sourceAddress
+                );
+
+            (
+                lpTokenInfo.token0,
+                lpTokenInfo.token1,
+                lpTokenInfo.feeRate,
+                lpTokenInfo.positionTickLower,
+                lpTokenInfo.positionTickUpper,
+                lpTokenInfo.currentTick
+            ) = source.getPositionBaseInfo(tokenId);
+
+            (
+                lpTokenInfo.liquidityToken0Amount,
+                lpTokenInfo.liquidityToken1Amount
+            ) = source.getLiquidityAmount(tokenId);
+
+            (
+                lpTokenInfo.lpFeeToken0Amount,
+                lpTokenInfo.lpFeeToken1Amount
+            ) = source.getLpFeeAmount(tokenId);
+
+            lpTokenInfo.baseLTVasCollateral = 7500;
+            lpTokenInfo.reserveLiquidationThreshold = 8000;
+        }
+
+        return lpTokenInfo;
     }
 
     function getUserReservesData(IPoolAddressesProvider provider, address user)

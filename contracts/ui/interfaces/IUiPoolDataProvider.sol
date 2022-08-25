@@ -95,6 +95,21 @@ interface IUiPoolDataProvider {
         uint8 networkBaseTokenPriceDecimals;
     }
 
+    struct UniswapV3LpTokenInfo {
+        address token0;
+        address token1;
+        uint24 feeRate;
+        int24 positionTickLower;
+        int24 positionTickUpper;
+        int24 currentTick;
+        uint256 liquidityToken0Amount;
+        uint256 liquidityToken1Amount;
+        uint256 lpFeeToken0Amount;
+        uint256 lpFeeToken1Amount;
+        uint256 baseLTVasCollateral;
+        uint256 reserveLiquidationThreshold;
+    }
+
     function getReservesList(IPoolAddressesProvider provider)
         external
         view
@@ -115,4 +130,10 @@ interface IUiPoolDataProvider {
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view returns (DataTypes.ERC721SupplyParams[][] memory);
+
+    function getUniswapV3LpTokenData(
+        IPoolAddressesProvider provider,
+        address lpTokenAddress,
+        uint256 tokenId
+    ) external view returns (UniswapV3LpTokenInfo memory);
 }
