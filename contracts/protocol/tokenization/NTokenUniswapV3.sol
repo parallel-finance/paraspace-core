@@ -47,13 +47,11 @@ contract NTokenUniswapV3 is NToken {
             revert(Errors.OPERATION_NOT_SUPPORTED);
         }
 
-        DataTypes.UinswapV3PositionData memory positionData;
-
         (
             ,
             ,
-            positionData.tokenA,
-            positionData.tokenB,
+            address tokenA,
+            address tokenB,
             ,
             ,
             ,
@@ -67,10 +65,8 @@ contract NTokenUniswapV3 is NToken {
         //TODO should we check for 0 balance tokens?
 
         require(
-            POOL.getReserveData(positionData.tokenA).xTokenAddress !=
-                address(0) &&
-                POOL.getReserveData(positionData.tokenB).xTokenAddress !=
-                address(0),
+            POOL.getReserveData(tokenA).xTokenAddress != address(0) &&
+                POOL.getReserveData(tokenB).xTokenAddress != address(0),
             Errors.ASSET_NOT_LISTED
         );
 
