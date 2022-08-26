@@ -270,6 +270,12 @@ library LiquidationLogic {
         DataTypes.ExecuteLiquidationCallParams memory params
     ) external {
         LiquidationCallLocalVars memory vars;
+
+        // /// params.liquidationAmount
+        // if (higestbid > params.liquidationAmount) {
+
+        // }
+
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
         ];

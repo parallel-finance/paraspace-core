@@ -11,6 +11,8 @@ library DataTypes {
     }
 
     struct ReserveData {
+        //stores the auction configuration
+        AuctionLiquidationConfigurationMap auctionConfiguration;
         //stores the reserve configuration
         ReserveConfigurationMap configuration;
         //the liquidity index. Expressed in ray
@@ -61,6 +63,14 @@ library DataTypes {
         //bit 176-211 unbacked mint cap in whole tokens, unbackedMintCap == 0 => minting disabled
         //bit 212-251 debt ceiling for isolation mode with (ReserveConfiguration::DEBT_CEILING_DECIMALS) decimals
         //bit 252-255 unused
+
+        uint256 data;
+    }
+
+    struct AuctionLiquidationConfigurationMap {
+        //bit 0-1: Auction Start Threshold (0-255) ~110
+        //bit 2-3: Auction Duration Hour (0-255) ~48
+        //bit 4-5: Floor Threshold Percentage (0-25) ~100
 
         uint256 data;
     }
@@ -145,15 +155,22 @@ library DataTypes {
         address collateralAsset;
         uint256 bidAmount;
         address bidder;
+        address user;
+        address liquidationAsset;
+        uint256 liquidationAmount;
     }
 
     struct ExecuteAuctionLiquidationEndParams {
         uint256 reservesCount;
+        uint256 liquidationAmount;
         uint256 collateralTokenId;
         address collateralAsset;
+        address liquidationAsset;
         address user;
-        address priceOracle;
         address bidder;
+        bool receiveXToken;
+        address priceOracle;
+        address priceOracleSentinel;
     }
 
     struct ExecuteLiquidationCallParams {
@@ -359,7 +376,7 @@ library DataTypes {
     struct Auction {
         uint256 endTime;
         bool isResolved;
-        uint256 highestBid;
+        uint256 highestBid; // goes from 0 -> address (never back)
         address highestBidder;
     }
 }

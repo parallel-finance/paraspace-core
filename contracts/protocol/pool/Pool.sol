@@ -508,25 +508,35 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     function auctionLiquidationBid(
+        address debtAsset,
         address token,
         uint256 tokenId,
-        uint256 amount
-    ) external virtual {
+        uint256 debtToCover,
+        uint256 amount,
+        address user
+    ) external payable virtual {
         AuctionLiquidationLogic.executeAuctionLiquidationBid(
             _auctions,
+            _reserves,
             DataTypes.ExecuteAuctionLiquidationBidParams({
                 collateralTokenId: tokenId,
                 collateralAsset: token,
                 bidAmount: amount,
-                bidder: msg.sender
+                user: user,
+                bidder: msg.sender,
+                liquidationAsset: debtAsset,
+                liquidationAmount: debtToCover
             })
         );
     }
 
     function auctionLiquidationEnd(
+        address debtAsset,
         address token,
         uint256 tokenId,
-        address user
+        uint256 debtToCover,
+        address user,
+        bool receiveNToken
     ) external virtual {
         AuctionLiquidationLogic.executeAuctionLiquidationEnd(
             _auctions,
@@ -535,11 +545,15 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             _usersConfig,
             DataTypes.ExecuteAuctionLiquidationEndParams({
                 reservesCount: _reservesCount,
+                liquidationAmount: debtToCover,
                 collateralTokenId: tokenId,
                 collateralAsset: token,
+                liquidationAsset: debtAsset,
                 user: user,
+                bidder: msg.sender,
+                receiveXToken: receiveNToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                bidder: msg.sender
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
         );
     }
