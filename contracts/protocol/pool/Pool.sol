@@ -526,33 +526,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
-    function swapBorrowRateMode(address asset, uint256 interestRateMode)
-        external
-        virtual
-        override
-    {
-        BorrowLogic.executeSwapBorrowRateMode(
-            _reserves[asset],
-            _usersConfig[msg.sender],
-            asset,
-            DataTypes.InterestRateMode(interestRateMode)
-        );
-    }
-
-    /// @inheritdoc IPool
-    function rebalanceStableBorrowRate(address asset, address user)
-        external
-        virtual
-        override
-    {
-        BorrowLogic.executeRebalanceStableBorrowRate(
-            _reserves[asset],
-            asset,
-            user
-        );
-    }
-
-    /// @inheritdoc IPool
     function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
         external
         virtual
