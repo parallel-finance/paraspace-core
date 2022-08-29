@@ -9,6 +9,7 @@ import {INonfungiblePositionManager} from "../dependencies/uniswap/INonfungibleP
 import {LiquidityAmounts} from "../dependencies/uniswap/LiquidityAmounts.sol";
 import {TickMath} from "../dependencies/uniswap/libraries/TickMath.sol";
 import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
+import {FullMath} from "../dependencies/uniswap/libraries/FullMath.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 
 contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
@@ -28,37 +29,31 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     }
 
     struct FeeParams {
-        uint256 faTokenA;
-        uint256 fbTokenA;
-        uint256 faTokenB;
-        uint256 fbTokenB;
         uint256 feeGrowthOutside0X128Lower;
         uint256 feeGrowthOutside1X128Lower;
         uint256 feeGrowthOutside0X128Upper;
         uint256 feeGrowthOutside1X128Upper;
-        uint256 unclaimedTokenAFee;
-        uint256 unclaimedTokenBFee;
     }
 
     struct PairOracleData {
-        uint256 tokenAPrice;
-        uint256 tokenBPrice;
-        uint8 tokenADecimal;
-        uint8 tokenBDecimal;
+        uint256 token0Price;
+        uint256 token1Price;
+        uint8 token0Decimal;
+        uint8 token1Decimal;
         uint160 sqrtPriceX96;
     }
 
     struct UinswapV3PositionData {
-        address tokenA;
-        address tokenB;
+        address token0;
+        address token1;
         uint24 fee;
         int24 tickLower;
         int24 tickUpper;
         uint128 liquidity;
-        uint256 positionFeeGrowthInsideALastX128;
-        uint256 positionFeeGrowthInsideBLastX128;
-        uint256 tokensOwedA;
-        uint256 tokensOwedB;
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        uint256 tokensOwed0;
+        uint256 tokensOwed1;
     }
 
     function getPositionBaseInfo(uint256 tokenId)
@@ -123,19 +118,19 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         PairOracleData memory oracleData = _getOracleData(positionData);
 
         (
-            uint256 liquidityAmountA,
-            uint256 liquidityAmountB
+            uint256 liquidityAmount0,
+            uint256 liquidityAmount1
         ) = _getLiquidityAmount(oracleData.sqrtPriceX96, positionData);
 
-        (uint256 feeAmountA, uint256 feeAmountB) = _getLpFeeAmount(
+        (uint256 feeAmount0, uint256 feeAmount1) = _getLpFeeAmount(
             positionData
         );
 
         return
-            (((liquidityAmountA + feeAmountA) * oracleData.tokenAPrice) /
-                10**oracleData.tokenADecimal) +
-            (((liquidityAmountB + feeAmountB) * oracleData.tokenBPrice) /
-                10**oracleData.tokenBDecimal);
+            (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
+                10**oracleData.token0Decimal) +
+            (((liquidityAmount1 + feeAmount1) * oracleData.token1Price) /
+                10**oracleData.token1Decimal);
     }
 
     // get list of tokens prices
@@ -177,56 +172,56 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         returns (PairOracleData memory)
     {
         PairOracleData memory oracleData;
-        oracleData.tokenAPrice = PARASPACE_ORACLE.getAssetPrice(
-            positionData.tokenA
+        oracleData.token0Price = PARASPACE_ORACLE.getAssetPrice(
+            positionData.token0
         );
-        oracleData.tokenBPrice = PARASPACE_ORACLE.getAssetPrice(
-            positionData.tokenB
+        oracleData.token1Price = PARASPACE_ORACLE.getAssetPrice(
+            positionData.token1
         );
 
-        oracleData.tokenADecimal = IERC20Detailed(positionData.tokenA)
+        oracleData.token0Decimal = IERC20Detailed(positionData.token0)
             .decimals();
-        oracleData.tokenBDecimal = IERC20Detailed(positionData.tokenB)
+        oracleData.token1Decimal = IERC20Detailed(positionData.token1)
             .decimals();
 
         // TODO using bit shifting for the 2^96
         // positionData.sqrtPriceX96;
 
-        if (oracleData.tokenBDecimal == oracleData.tokenADecimal) {
+        if (oracleData.token1Decimal == oracleData.token0Decimal) {
             // multiply by 10^18 then divide by 10^9 to preserve price in wei
             oracleData.sqrtPriceX96 = uint160(
                 (SqrtLib.sqrt(
-                    ((oracleData.tokenAPrice * (10**18)) /
-                        (oracleData.tokenBPrice))
+                    ((oracleData.token0Price * (10**18)) /
+                        (oracleData.token1Price))
                 ) * 2**96) / 10E9
             );
-        } else if (oracleData.tokenBDecimal > oracleData.tokenADecimal) {
+        } else if (oracleData.token1Decimal > oracleData.token0Decimal) {
             // multiple by 10^(decimalB - decimalA) to preserve price in wei
             oracleData.sqrtPriceX96 = uint160(
                 (SqrtLib.sqrt(
-                    (oracleData.tokenAPrice *
+                    (oracleData.token0Price *
                         (10 **
                             (18 +
-                                oracleData.tokenBDecimal -
-                                oracleData.tokenADecimal))) /
-                        (oracleData.tokenBPrice)
+                                oracleData.token1Decimal -
+                                oracleData.token0Decimal))) /
+                        (oracleData.token1Price)
                 ) * 2**96) / 10E9
             );
         } else {
-            // multiple by 10^(decimalA - decimalB) to preserve price in wei then divid by the same number
+            // multiple by 10^(decimalA - decimalB) to preserve price in wei then divide by the same number
             oracleData.sqrtPriceX96 = uint160(
                 (SqrtLib.sqrt(
-                    (oracleData.tokenAPrice *
+                    (oracleData.token0Price *
                         (10 **
                             (18 +
-                                oracleData.tokenADecimal -
-                                oracleData.tokenBDecimal))) /
-                        (oracleData.tokenBPrice)
+                                oracleData.token0Decimal -
+                                oracleData.token1Decimal))) /
+                        (oracleData.token1Price)
                 ) * 2**96) /
                     10 **
                         (9 +
-                            oracleData.tokenADecimal -
-                            oracleData.tokenBDecimal)
+                            oracleData.token0Decimal -
+                            oracleData.token1Decimal)
             );
         }
 
@@ -248,24 +243,24 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
-            uint256 positionFeeGrowthInside0LastX128,
-            uint256 positionFeeGrowthInside1LastX128,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
             uint256 tokensOwed0,
             uint256 tokensOwed1
         ) = UNISWAP_V3_POSITION_MANAGER.positions(tokenId);
 
         return
             UinswapV3PositionData({
-                tokenA: token0,
-                tokenB: token1,
+                token0: token0,
+                token1: token1,
                 fee: fee,
                 tickLower: tickLower,
                 tickUpper: tickUpper,
                 liquidity: liquidity,
-                positionFeeGrowthInsideALastX128: positionFeeGrowthInside0LastX128,
-                positionFeeGrowthInsideBLastX128: positionFeeGrowthInside1LastX128,
-                tokensOwedA: tokensOwed0,
-                tokensOwedB: tokensOwed1
+                feeGrowthInside0LastX128: feeGrowthInside0LastX128,
+                feeGrowthInside1LastX128: feeGrowthInside1LastX128,
+                tokensOwed0: tokensOwed0,
+                tokensOwed1: tokensOwed1
             });
     }
 
@@ -288,19 +283,19 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     {
         (token0Amount, token1Amount) = _getPendingFeeAmounts(positionData);
 
-        token0Amount += positionData.tokensOwedA;
-        token1Amount += positionData.tokensOwedB;
+        token0Amount += positionData.tokensOwed0;
+        token1Amount += positionData.tokensOwed1;
     }
 
     function _getPendingFeeAmounts(UinswapV3PositionData memory positionData)
         internal
         view
-        returns (uint256 unclaimedTokenAFees, uint256 unclaimedTokenBFees)
+        returns (uint256 token0Amount, uint256 token1Amount)
     {
         IUniswapV3PoolState pool = IUniswapV3PoolState(
             UNISWAP_V3_FACTORY.getPool(
-                positionData.tokenA,
-                positionData.tokenB,
+                positionData.token0,
+                positionData.token1,
                 positionData.fee
             )
         );
@@ -374,17 +369,23 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
                 feeGrowthBelow1X128 -
                 feeGrowthAbove1X128;
 
-            unclaimedTokenAFees =
-                ((feeGrowthInside0X128 -
-                    positionData.positionFeeGrowthInsideALastX128) *
-                    positionData.liquidity) /
-                Q128;
+            token0Amount = uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside0X128 -
+                        positionData.feeGrowthInside0LastX128,
+                    positionData.liquidity,
+                    Q128
+                )
+            );
 
-            unclaimedTokenBFees =
-                ((feeGrowthInside1X128 -
-                    positionData.positionFeeGrowthInsideBLastX128) *
-                    positionData.liquidity) /
-                Q128;
+            token1Amount = uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside1X128 -
+                        positionData.feeGrowthInside1LastX128,
+                    positionData.liquidity,
+                    Q128
+                )
+            );
         }
     }
 }
