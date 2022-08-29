@@ -106,6 +106,7 @@ interface IUiPoolDataProvider {
         uint256 liquidityToken1Amount;
         uint256 lpFeeToken0Amount;
         uint256 lpFeeToken1Amount;
+        uint256 tokenPrice;
         uint256 baseLTVasCollateral;
         uint256 reserveLiquidationThreshold;
     }

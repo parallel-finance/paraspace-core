@@ -22,7 +22,7 @@ import {IEACAggregatorProxy} from "./interfaces/IEACAggregatorProxy.sol";
 import {IERC20DetailedBytes} from "./interfaces/IERC20DetailedBytes.sol";
 import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
-import {IUniswapV3PositionInfoProvider} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -296,9 +296,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         IParaSpaceOracle oracle = IParaSpaceOracle(provider.getPriceOracle());
         address sourceAddress = oracle.getSourceOfAsset(lpTokenAddress);
         if (sourceAddress != address(0)) {
-            IUniswapV3PositionInfoProvider source = IUniswapV3PositionInfoProvider(
-                    sourceAddress
-                );
+            IUniswapV3OracleWrapper source = IUniswapV3OracleWrapper(
+                sourceAddress
+            );
 
             (
                 lpTokenInfo.token0,
@@ -318,6 +318,8 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 lpTokenInfo.lpFeeToken0Amount,
                 lpTokenInfo.lpFeeToken1Amount
             ) = source.getLpFeeAmount(tokenId);
+
+            lpTokenInfo.tokenPrice = source.getTokenPrice(tokenId);
 
             lpTokenInfo.baseLTVasCollateral = 7500;
             lpTokenInfo.reserveLiquidationThreshold = 8000;

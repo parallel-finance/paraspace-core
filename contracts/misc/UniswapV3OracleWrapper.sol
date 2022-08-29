@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {IAtomicPriceAggregator} from "../interfaces/IAtomicPriceAggregator.sol";
-import {IUniswapV3PositionInfoProvider} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IUniswapV3Factory} from "../dependencies/uniswap/IUniswapV3Factory.sol";
 import {IUniswapV3PoolState} from "../dependencies/uniswap/IUniswapV3PoolState.sol";
@@ -12,10 +11,7 @@ import {TickMath} from "../dependencies/uniswap/libraries/TickMath.sol";
 import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 
-contract UniswapV3OracleWrapper is
-    IAtomicPriceAggregator,
-    IUniswapV3PositionInfoProvider
-{
+contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     IUniswapV3Factory immutable UNISWAP_V3_FACTORY;
     INonfungiblePositionManager immutable UNISWAP_V3_POSITION_MANAGER;
     IParaSpaceOracle immutable PARASPACE_ORACLE;
