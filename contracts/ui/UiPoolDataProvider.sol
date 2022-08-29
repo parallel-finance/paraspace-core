@@ -293,12 +293,22 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     ) external view override returns (UniswapV3LpTokenInfo memory) {
         UniswapV3LpTokenInfo memory lpTokenInfo;
 
-        IParaSpaceOracle oracle = IParaSpaceOracle(provider.getPriceOracle());
-        address sourceAddress = oracle.getSourceOfAsset(lpTokenAddress);
-        if (sourceAddress != address(0)) {
-            IUniswapV3OracleWrapper source = IUniswapV3OracleWrapper(
-                sourceAddress
+        IUniswapV3OracleWrapper source;
+        //avoid stack too deep
+        {
+            IParaSpaceOracle oracle = IParaSpaceOracle(
+                provider.getPriceOracle()
             );
+            address sourceAddress = oracle.getSourceOfAsset(lpTokenAddress);
+            if (sourceAddress == address(0)) {
+                return lpTokenInfo;
+            }
+            source = IUniswapV3OracleWrapper(sourceAddress);
+        }
+
+        //try to catch invalid tokenId
+        try source.getTokenPrice(tokenId) returns (uint256 tokenPrice) {
+            lpTokenInfo.tokenPrice = tokenPrice;
 
             (
                 lpTokenInfo.token0,
@@ -319,11 +329,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 lpTokenInfo.lpFeeToken1Amount
             ) = source.getLpFeeAmount(tokenId);
 
-            lpTokenInfo.tokenPrice = source.getTokenPrice(tokenId);
-
             lpTokenInfo.baseLTVasCollateral = 7500;
             lpTokenInfo.reserveLiquidationThreshold = 8000;
-        }
+        } catch {}
 
         return lpTokenInfo;
     }
