@@ -11,6 +11,7 @@ import {TickMath} from "../dependencies/uniswap/libraries/TickMath.sol";
 import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
 import {FullMath} from "../dependencies/uniswap/libraries/FullMath.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
+import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
 
 contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     IUniswapV3Factory immutable UNISWAP_V3_FACTORY;
@@ -43,50 +44,46 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         uint160 sqrtPriceX96;
     }
 
-    struct UinswapV3PositionData {
-        address token0;
-        address token1;
-        uint24 fee;
-        int24 tickLower;
-        int24 tickUpper;
-        uint128 liquidity;
-        uint256 feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128;
-        uint256 tokensOwed0;
-        uint256 tokensOwed1;
-    }
-
-    function getPositionBaseInfo(uint256 tokenId)
-        external
+    function getOnchainPositionData(uint256 tokenId)
+        public
         view
-        returns (
+        returns (UinswapV3PositionData memory)
+    {
+        UinswapV3PositionData memory positionData;
+        (
+            ,
+            ,
             address token0,
             address token1,
             uint24 fee,
             int24 tickLower,
             int24 tickUpper,
-            int24 currentTick
-        )
-    {
-        (
-            ,
-            ,
-            token0,
-            token1,
-            fee,
-            tickLower,
-            tickUpper,
-            ,
-            ,
-            ,
-            ,
-
+            uint128 liquidity,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            uint256 tokensOwed0,
+            uint256 tokensOwed1
         ) = UNISWAP_V3_POSITION_MANAGER.positions(tokenId);
 
         IUniswapV3PoolState pool = IUniswapV3PoolState(
             UNISWAP_V3_FACTORY.getPool(token0, token1, fee)
         );
-        (, currentTick, , , , , ) = pool.slot0();
+        (, int24 currentTick, , , , , ) = pool.slot0();
+
+        return
+            UinswapV3PositionData({
+                token0: token0,
+                token1: token1,
+                fee: fee,
+                tickLower: tickLower,
+                tickUpper: tickUpper,
+                currentTick: currentTick,
+                liquidity: liquidity,
+                feeGrowthInside0LastX128: feeGrowthInside0LastX128,
+                feeGrowthInside1LastX128: feeGrowthInside1LastX128,
+                tokensOwed0: tokensOwed0,
+                tokensOwed1: tokensOwed1
+            });
     }
 
     function getLiquidityAmount(uint256 tokenId)
@@ -94,11 +91,22 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         view
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        UinswapV3PositionData memory positionData = _getPositionData(tokenId);
-        PairOracleData memory oracleData = _getOracleData(positionData);
-        (token0Amount, token1Amount) = _getLiquidityAmount(
-            oracleData.sqrtPriceX96,
+        UinswapV3PositionData memory positionData = getOnchainPositionData(
+            tokenId
+        );
+        (token0Amount, token1Amount) = getLiquidityAmountFromPositionData(
             positionData
+        );
+    }
+
+    function getLiquidityAmountFromPositionData(
+        UinswapV3PositionData memory positionData
+    ) public view returns (uint256 token0Amount, uint256 token1Amount) {
+        (token0Amount, token1Amount) = LiquidityAmounts.getAmountsForLiquidity(
+            TickMath.getSqrtRatioAtTick(positionData.currentTick),
+            TickMath.getSqrtRatioAtTick(positionData.tickLower),
+            TickMath.getSqrtRatioAtTick(positionData.tickUpper),
+            positionData.liquidity
         );
     }
 
@@ -107,24 +115,43 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         view
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        UinswapV3PositionData memory positionData = _getPositionData(tokenId);
-        (token0Amount, token1Amount) = _getLpFeeAmount(positionData);
+        UinswapV3PositionData memory positionData = getOnchainPositionData(
+            tokenId
+        );
+        (token0Amount, token1Amount) = getLpFeeAmountFromPositionData(
+            positionData
+        );
+    }
+
+    function getLpFeeAmountFromPositionData(
+        UinswapV3PositionData memory positionData
+    ) public view returns (uint256 token0Amount, uint256 token1Amount) {
+        (token0Amount, token1Amount) = _getPendingFeeAmounts(positionData);
+
+        token0Amount += positionData.tokensOwed0;
+        token1Amount += positionData.tokensOwed1;
     }
 
     // get token price
     function getTokenPrice(uint256 tokenId) public view returns (uint256) {
-        UinswapV3PositionData memory positionData = _getPositionData(tokenId);
+        UinswapV3PositionData memory positionData = getOnchainPositionData(
+            tokenId
+        );
 
         PairOracleData memory oracleData = _getOracleData(positionData);
 
-        (
-            uint256 liquidityAmount0,
-            uint256 liquidityAmount1
-        ) = _getLiquidityAmount(oracleData.sqrtPriceX96, positionData);
+        (uint256 liquidityAmount0, uint256 liquidityAmount1) = LiquidityAmounts
+            .getAmountsForLiquidity(
+                oracleData.sqrtPriceX96,
+                TickMath.getSqrtRatioAtTick(positionData.tickLower),
+                TickMath.getSqrtRatioAtTick(positionData.tickUpper),
+                positionData.liquidity
+            );
 
-        (uint256 feeAmount0, uint256 feeAmount1) = _getLpFeeAmount(
-            positionData
-        );
+        (
+            uint256 feeAmount0,
+            uint256 feeAmount1
+        ) = getLpFeeAmountFromPositionData(positionData);
 
         return
             (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
@@ -228,65 +255,6 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         return oracleData;
     }
 
-    function _getPositionData(uint256 tokenId)
-        internal
-        view
-        returns (UinswapV3PositionData memory)
-    {
-        UinswapV3PositionData memory positionData;
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
-            uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128,
-            uint256 tokensOwed0,
-            uint256 tokensOwed1
-        ) = UNISWAP_V3_POSITION_MANAGER.positions(tokenId);
-
-        return
-            UinswapV3PositionData({
-                token0: token0,
-                token1: token1,
-                fee: fee,
-                tickLower: tickLower,
-                tickUpper: tickUpper,
-                liquidity: liquidity,
-                feeGrowthInside0LastX128: feeGrowthInside0LastX128,
-                feeGrowthInside1LastX128: feeGrowthInside1LastX128,
-                tokensOwed0: tokensOwed0,
-                tokensOwed1: tokensOwed1
-            });
-    }
-
-    function _getLiquidityAmount(
-        uint160 sqrtRatioX96,
-        UinswapV3PositionData memory positionData
-    ) internal pure returns (uint256 token0Amount, uint256 token1Amount) {
-        (token0Amount, token1Amount) = LiquidityAmounts.getAmountsForLiquidity(
-            sqrtRatioX96,
-            TickMath.getSqrtRatioAtTick(positionData.tickLower),
-            TickMath.getSqrtRatioAtTick(positionData.tickUpper),
-            positionData.liquidity
-        );
-    }
-
-    function _getLpFeeAmount(UinswapV3PositionData memory positionData)
-        internal
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
-        (token0Amount, token1Amount) = _getPendingFeeAmounts(positionData);
-
-        token0Amount += positionData.tokensOwed0;
-        token1Amount += positionData.tokensOwed1;
-    }
-
     function _getPendingFeeAmounts(UinswapV3PositionData memory positionData)
         internal
         view
@@ -325,13 +293,11 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         uint256 feeGrowthGlobal0X128 = pool.feeGrowthGlobal0X128();
         uint256 feeGrowthGlobal1X128 = pool.feeGrowthGlobal1X128();
 
-        (, int24 tickCurrent, , , , , ) = pool.slot0();
-
         unchecked {
             // calculate fee growth below
             uint256 feeGrowthBelow0X128;
             uint256 feeGrowthBelow1X128;
-            if (tickCurrent >= positionData.tickLower) {
+            if (positionData.currentTick >= positionData.tickLower) {
                 feeGrowthBelow0X128 = feeParams.feeGrowthOutside0X128Lower;
                 feeGrowthBelow1X128 = feeParams.feeGrowthOutside1X128Lower;
             } else {
@@ -346,7 +312,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
             // calculate fee growth above
             uint256 feeGrowthAbove0X128;
             uint256 feeGrowthAbove1X128;
-            if (tickCurrent < positionData.tickUpper) {
+            if (positionData.currentTick < positionData.tickUpper) {
                 feeGrowthAbove0X128 = feeParams.feeGrowthOutside0X128Upper;
                 feeGrowthAbove1X128 = feeParams.feeGrowthOutside1X128Upper;
             } else {
