@@ -220,7 +220,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
                 (SqrtLib.sqrt(
                     ((oracleData.token0Price * (10**18)) /
                         (oracleData.token1Price))
-                ) * 2**96) / 10E9
+                ) * 2**96) / 1E9
             );
         } else if (oracleData.token1Decimal > oracleData.token0Decimal) {
             // multiple by 10^(decimalB - decimalA) to preserve price in wei
@@ -232,7 +232,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
                                 oracleData.token1Decimal -
                                 oracleData.token0Decimal))) /
                         (oracleData.token1Price)
-                ) * 2**96) / 10E9
+                ) * 2**96) / 1E9
             );
         } else {
             // multiple by 10^(decimalA - decimalB) to preserve price in wei then divide by the same number
