@@ -2,7 +2,8 @@
 pragma solidity 0.8.10;
 
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
-import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
+import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
+import {IPriceOracleGetter} from "../interfaces/IPriceOracleGetter.sol";
 import {IUniswapV3Factory} from "../dependencies/uniswap/IUniswapV3Factory.sol";
 import {IUniswapV3PoolState} from "../dependencies/uniswap/IUniswapV3PoolState.sol";
 import {INonfungiblePositionManager} from "../dependencies/uniswap/INonfungiblePositionManager.sol";
@@ -16,17 +17,17 @@ import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvide
 contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     IUniswapV3Factory immutable UNISWAP_V3_FACTORY;
     INonfungiblePositionManager immutable UNISWAP_V3_POSITION_MANAGER;
-    IParaSpaceOracle immutable PARASPACE_ORACLE;
+    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     constructor(
         address _factory,
         address _manager,
-        address _oracle
+        address _addressProvider
     ) {
         UNISWAP_V3_FACTORY = IUniswapV3Factory(_factory);
         UNISWAP_V3_POSITION_MANAGER = INonfungiblePositionManager(_manager);
-        PARASPACE_ORACLE = IParaSpaceOracle(_oracle);
+        ADDRESSES_PROVIDER = IPoolAddressesProvider(_addressProvider);
     }
 
     struct FeeParams {
@@ -199,12 +200,11 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         returns (PairOracleData memory)
     {
         PairOracleData memory oracleData;
-        oracleData.token0Price = PARASPACE_ORACLE.getAssetPrice(
-            positionData.token0
+        IPriceOracleGetter oracle = IPriceOracleGetter(
+            ADDRESSES_PROVIDER.getPriceOracle()
         );
-        oracleData.token1Price = PARASPACE_ORACLE.getAssetPrice(
-            positionData.token1
-        );
+        oracleData.token0Price = oracle.getAssetPrice(positionData.token0);
+        oracleData.token1Price = oracle.getAssetPrice(positionData.token1);
 
         oracleData.token0Decimal = IERC20Detailed(positionData.token0)
             .decimals();
