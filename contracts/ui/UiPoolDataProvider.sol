@@ -316,6 +316,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             lpTokenInfo.token0 = positionData.token0;
             lpTokenInfo.token1 = positionData.token1;
             lpTokenInfo.feeRate = positionData.fee;
+            lpTokenInfo.liquidity = positionData.liquidity;
             lpTokenInfo.positionTickLower = positionData.tickLower;
             lpTokenInfo.positionTickUpper = positionData.tickUpper;
             lpTokenInfo.currentTick = positionData.currentTick;
