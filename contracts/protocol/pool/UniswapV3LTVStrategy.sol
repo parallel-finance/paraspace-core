@@ -30,10 +30,13 @@ contract UniswapV3LTVStrategy is ILTVStrategy {
     }
 
     function setLTV(
-        address token0,
-        address token1,
+        address tokenA,
+        address tokenB,
         uint16 _ltv
     ) external onlyPoolAdmin {
+        (address token0, address token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         ltv[token0][token1] = _ltv;
     }
 
