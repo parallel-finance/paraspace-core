@@ -7,8 +7,12 @@ import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
 
 contract UniswapV3LTVStrategy is ILTVStrategy {
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+
     mapping(address => mapping(address => uint16)) ltv;
 
     IPoolAddressesProvider internal immutable _addressesProvider;
@@ -55,7 +59,19 @@ contract UniswapV3LTVStrategy is ILTVStrategy {
             ,
 
         ) = UNISWAP_V3_POSITION_MANAGER.positions(tokenId);
-        return ltv[token0][token1];
+
+        uint256 retLtv = ltv[token0][token1];
+        if (retLtv == 0) {
+            DataTypes.ReserveConfigurationMap memory configuration0 = _pool
+                .getConfiguration(token0);
+            (uint256 ltv0, , , , , ) = configuration0.getParams();
+
+            DataTypes.ReserveConfigurationMap memory configuration1 = _pool
+                .getConfiguration(token1);
+            (uint256 ltv1, , , , , ) = configuration1.getParams();
+            retLtv = ltv0 > ltv1 ? ltv1 : ltv0;
+        }
+        return retLtv;
     }
 
     function _onlyPoolAdmin() internal view {
