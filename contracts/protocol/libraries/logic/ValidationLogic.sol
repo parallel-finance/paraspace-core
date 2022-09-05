@@ -35,7 +35,6 @@ library ValidationLogic {
     using PercentageMath for uint256;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
-    using DataTypes for DataTypes.Credit;
 
     // Factor to apply to "only-variable-debt" liquidity rate to get threshold for rebalancing, expressed in bps
     // A value of 0.9e4 results in 90%
@@ -935,19 +934,21 @@ library ValidationLogic {
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
         require(params.credit.amount != 0, Errors.CREDIT_NOT_USED);
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
     }
 
     function validateAcceptBidWithCredit(
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
         require(params.credit.amount != 0, Errors.CREDIT_NOT_USED);
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
         require(
             keccak256(abi.encodePacked(params.orderInfo.id)) ==
                 keccak256(abi.encodePacked(params.credit.orderId)),
             Errors.CREDIT_DOES_NOT_MATCH_ORDER
         );
         require(
-            verifySignature(
+            verifyCreditSignature(
                 params.credit,
                 params.orderInfo.maker,
                 params.credit.v,
@@ -958,7 +959,7 @@ library ValidationLogic {
         );
     }
 
-    function verifySignature(
+    function verifyCreditSignature(
         DataTypes.Credit memory credit,
         address signer,
         uint8 v,
@@ -967,12 +968,35 @@ library ValidationLogic {
     ) private view returns (bool) {
         return
             SignatureChecker.verify(
-                credit.hash(),
+                hashCredit(credit),
                 signer,
                 v,
                 r,
                 s,
                 getDomainSeparator()
+            );
+    }
+
+    function hashCredit(DataTypes.Credit memory credit)
+        private
+        pure
+        returns (bytes32)
+    {
+        bytes32 typeHash = keccak256(
+            abi.encodePacked(
+                "Credit(address token,uint256 amount,bytes orderId)"
+            )
+        );
+
+        // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#definition-of-encodedata
+        return
+            keccak256(
+                abi.encode(
+                    typeHash,
+                    credit.token,
+                    credit.amount,
+                    keccak256(abi.encodePacked(credit.orderId))
+                )
             );
     }
 
@@ -982,7 +1006,7 @@ library ValidationLogic {
                 abi.encode(
                     0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f, // keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
                     0x88d989289235fb06c18e3c2f7ea914f41f773e86fb0073d632539f566f4df353, // keccak256("ParaSpace")
-                    0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes("1")),
+                    0x722c0e0c80487266e8c6a45e3a1a803aab23378a9c32e6ebe029d4fad7bfc965, // keccak256(bytes("1.1")),
                     block.chainid,
                     address(this)
                 )

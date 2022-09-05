@@ -280,21 +280,6 @@ library DataTypes {
         bytes params;
     }
 
-    struct UinswapV3PositionData {
-        address tokenA;
-        address tokenB;
-        uint24 fee;
-        int24 tickLower;
-        int24 tickUpper;
-        uint128 liquidity;
-        uint256 priceA;
-        uint256 priceB;
-        uint256 tokenADecimal;
-        uint256 tokenBDecimal;
-        uint256 amountA;
-        uint256 amountB;
-    }
-
     struct Credit {
         address token;
         uint256 amount;
@@ -306,11 +291,12 @@ library DataTypes {
 
     struct ExecuteMarketplaceParams {
         bytes32 marketplaceId;
-        DataTypes.Marketplace marketplace;
-        bytes data;
-        address WETH;
+        bytes payload;
         Credit credit;
+        uint256 ethLeft;
+        DataTypes.Marketplace marketplace;
         OrderInfo orderInfo;
+        address WETH;
         uint16 referralCode;
         uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;
@@ -331,24 +317,5 @@ library DataTypes {
         address adapter;
         address operator;
         bool paused;
-    }
-
-    function hash(Credit memory credit) external pure returns (bytes32) {
-        bytes32 typeHash = keccak256(
-            abi.encodePacked(
-                "Credit(address token,uint256 amount,bytes orderId)"
-            )
-        );
-
-        // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md#definition-of-encodedata
-        return
-            keccak256(
-                abi.encode(
-                    typeHash,
-                    credit.token,
-                    credit.amount,
-                    keccak256(abi.encodePacked(credit.orderId))
-                )
-            );
     }
 }

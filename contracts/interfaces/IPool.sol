@@ -112,18 +112,6 @@ interface IPool {
     );
 
     /**
-     * @dev Emitted on swapBorrowRateMode()
-     * @param reserve The address of the underlying asset of the reserve
-     * @param user The address of the user swapping his rate mode
-     * @param interestRateMode The current interest rate mode of the position being swapped: 1 for Stable, 2 for Variable
-     **/
-    event SwapBorrowRateMode(
-        address indexed reserve,
-        address indexed user,
-        DataTypes.InterestRateMode interestRateMode
-    );
-
-    /**
      * @dev Emitted on setUserUseReserveAsCollateral()
      * @param reserve The address of the underlying asset of the reserve
      * @param user The address of the user enabling the usage as collateral
@@ -139,16 +127,6 @@ interface IPool {
      * @param user The address of the user enabling the usage as collateral
      **/
     event ReserveUsedAsCollateralDisabled(
-        address indexed reserve,
-        address indexed user
-    );
-
-    /**
-     * @dev Emitted on rebalanceStableBorrowRate()
-     * @param reserve The address of the underlying asset of the reserve
-     * @param user The address of the user for which the rebalance has been executed
-     **/
-    event RebalanceStableBorrowRate(
         address indexed reserve,
         address indexed user
     );
@@ -447,40 +425,79 @@ interface IPool {
         uint256 interestRateMode
     ) external returns (uint256);
 
+    /**
+     * @notice Implements the buyWithCredit feature. BuyWithCredit allows users to buy NFT from various NFT marketplaces
+     * including OpenSea, LooksRare, X2Y2 etc. Users can use NFT's credit and will need to pay at most (1 - LTV) * $NFT
+     * @dev
+     * @param marketplaceId The marketplace identifier
+     * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
+     * @param credit The credit that user would like to use for this purchase
+     * @param onBehalfOf Address of the user who will buy the NFT and do the downpayment
+     * @param referralCode The referral code used
+     */
     function buyWithCredit(
         bytes32 marketplaceId,
-        bytes calldata data,
+        bytes calldata payload,
         DataTypes.Credit calldata credit,
         address onBehalfOf,
         uint16 referralCode
     ) external payable;
 
+    /**
+     * @notice Implements the batchBuyWithCredit feature. BuyWithCredit allows users to buy NFT from various NFT marketplaces
+     * including OpenSea, LooksRare, X2Y2 etc. Users can use NFT's credit and will need to pay at most (1 - LTV) * $NFT
+     * @dev marketplaceIds[i] should match payload[i] and credits[i]
+     * @param marketplaceIds The marketplace identifiers
+     * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
+     * @param credits The credits that user would like to use for this purchase
+     * @param onBehalfOf Address of the user who will buy the NFTs and do the downpayment
+     * @param referralCode The referral code used
+     */
+    function batchBuyWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external payable;
+
+    /**
+     * @notice Implements the acceptBidWithCredit feature. AcceptBidWithCredit allows users to
+     * accept a leveraged bid on ParaSpace NFT marketplace. Users can submit leveraged bid and pay
+     * at most (1 - LTV) * $NFT
+     * @dev The nft receiver just needs to do the downpayment
+     * @param marketplaceId The marketplace identifier
+     * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
+     * @param credit The credit that user would like to use for this purchase
+     * @param onBehalfOf Address of the user who will sell the NFT
+     * @param referralCode The referral code used
+     */
     function acceptBidWithCredit(
         bytes32 marketplaceId,
-        bytes calldata data,
+        bytes calldata payload,
         DataTypes.Credit calldata credit,
         address onBehalfOf,
         uint16 referralCode
     ) external;
 
     /**
-     * @notice Allows a borrower to swap his debt between stable and variable mode, or vice versa
-     * @param asset The address of the underlying asset borrowed
-     * @param interestRateMode The current interest rate mode of the position being swapped: 1 for Stable, 2 for Variable
-     **/
-    function swapBorrowRateMode(address asset, uint256 interestRateMode)
-        external;
-
-    /**
-     * @notice Rebalances the stable interest rate of a user to the current stable rate defined on the reserve.
-     * - Users can be rebalanced if the following conditions are satisfied:
-     *     1. Usage ratio is above 95%
-     *     2. the current supply APY is below REBALANCE_UP_THRESHOLD * maxVariableBorrowRate, which means that too
-     *        much has been borrowed at a stable rate and suppliers are not earning enough
-     * @param asset The address of the underlying asset borrowed
-     * @param user The address of the user to be rebalanced
-     **/
-    function rebalanceStableBorrowRate(address asset, address user) external;
+     * @notice Implements the batchAcceptBidWithCredit feature. AcceptBidWithCredit allows users to
+     * accept a leveraged bid on ParaSpace NFT marketplace. Users can submit leveraged bid and pay
+     * at most (1 - LTV) * $NFT
+     * @dev The nft receiver just needs to do the downpayment
+     * @param marketplaceIds The marketplace identifiers
+     * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
+     * @param credits The credits that the makers have approved to use for this purchase
+     * @param onBehalfOf Address of the user who will sell the NFTs
+     * @param referralCode The referral code used
+     */
+    function batchAcceptBidWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external;
 
     /**
      * @notice Allows suppliers to enable/disable a specific supplied asset as collateral

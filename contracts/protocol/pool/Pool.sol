@@ -20,6 +20,8 @@ import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
+import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 
 /**
  * @title Pool contract
@@ -35,10 +37,10 @@ import {IMarketplace} from "../../interfaces/IMarketplace.sol";
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider
  **/
-contract Pool is VersionedInitializable, PoolStorage, IPool {
+contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 3;
+    uint256 public constant POOL_REVISION = 1;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     /**
@@ -110,7 +112,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint256 amount,
         address onBehalfOf,
         uint16 referralCode
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         SupplyLogic.executeSupply(
             _reserves,
             _usersConfig[onBehalfOf],
@@ -129,7 +131,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         DataTypes.ERC721SupplyParams[] calldata tokenData,
         address onBehalfOf,
         uint16 referralCode
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         SupplyLogic.executeSupplyERC721(
             _reserves,
             _usersConfig[onBehalfOf],
@@ -148,7 +150,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         DataTypes.ERC721SupplyParams[] calldata tokenData,
         address onBehalfOf
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         SupplyLogic.executeSupplyERC721FromNToken(
             _reserves,
             _usersConfig[onBehalfOf],
@@ -172,7 +174,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         // Need to accommodate ERC721 and ERC1155 here
         IERC20WithPermit(asset).permit(
             msg.sender,
@@ -200,7 +202,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         uint256 amount,
         address to
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             SupplyLogic.executeWithdraw(
                 _reserves,
@@ -221,7 +223,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         uint256[] calldata tokenIds,
         address to
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             SupplyLogic.executeWithdrawERC721(
                 _reserves,
@@ -244,7 +246,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint256 interestRateMode,
         uint16 referralCode,
         address onBehalfOf
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         BorrowLogic.executeBorrow(
             _reserves,
             _reservesList,
@@ -271,7 +273,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint256 amount,
         uint256 interestRateMode,
         address onBehalfOf
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
                 _reserves,
@@ -298,7 +300,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         {
             IERC20WithPermit(asset).permit(
                 msg.sender,
@@ -335,7 +337,7 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
         address asset,
         uint256 amount,
         uint256 interestRateMode
-    ) external virtual override returns (uint256) {
+    ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
                 _reserves,
@@ -355,29 +357,77 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
     /// @inheritdoc IPool
     function buyWithCredit(
         bytes32 marketplaceId,
-        bytes calldata data,
+        bytes calldata payload,
         DataTypes.Credit calldata credit,
         address onBehalfOf,
         uint16 referralCode
-    ) external payable virtual override {
+    ) external payable virtual override nonReentrant {
         address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(data, WETH);
+            .getAskOrderInfo(payload, WETH);
         orderInfo.taker = onBehalfOf;
-        return
-            MarketplaceLogic.executeBuyWithCredit(
+        MarketplaceLogic.executeBuyWithCredit(
+            _reserves,
+            _reservesList,
+            _usersConfig[onBehalfOf],
+            DataTypes.ExecuteMarketplaceParams({
+                marketplaceId: marketplaceId,
+                payload: payload,
+                credit: credit,
+                ethLeft: msg.value,
+                marketplace: marketplace,
+                orderInfo: orderInfo,
+                WETH: WETH,
+                referralCode: referralCode,
+                maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
+                reservesCount: _reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+            })
+        );
+    }
+
+    /// @inheritdoc IPool
+    function batchBuyWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external payable virtual override nonReentrant {
+        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        require(
+            marketplaceIds.length == payloads.length &&
+                payloads.length == credits.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
+        uint256 ethLeft = msg.value;
+        for (uint256 i = 0; i < marketplaceIds.length; i++) {
+            bytes32 marketplaceId = marketplaceIds[i];
+            bytes memory payload = payloads[i];
+            DataTypes.Credit memory credit = credits[i];
+
+            DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
+                .getMarketplace(marketplaceId);
+            DataTypes.OrderInfo memory orderInfo = IMarketplace(
+                marketplace.adapter
+            ).getAskOrderInfo(payload, WETH);
+            orderInfo.taker = onBehalfOf;
+
+            ethLeft -= MarketplaceLogic.executeBuyWithCredit(
                 _reserves,
                 _reservesList,
                 _usersConfig[onBehalfOf],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
-                    marketplace: marketplace,
-                    data: data,
-                    WETH: WETH,
+                    payload: payload,
                     credit: credit,
+                    ethLeft: ethLeft,
+                    marketplace: marketplace,
                     orderInfo: orderInfo,
+                    WETH: WETH,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
@@ -386,21 +436,22 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
                         .getPriceOracleSentinel()
                 })
             );
+        }
     }
 
     /// @inheritdoc IPool
     function acceptBidWithCredit(
         bytes32 marketplaceId,
-        bytes calldata data,
+        bytes calldata payload,
         DataTypes.Credit calldata credit,
         address onBehalfOf,
         uint16 referralCode
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getBidOrderInfo(data);
+            .getBidOrderInfo(payload);
         require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
         return
             MarketplaceLogic.executeAcceptBidWithCredit(
@@ -409,11 +460,12 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
                 _usersConfig[orderInfo.maker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
-                    marketplace: marketplace,
-                    data: data,
-                    WETH: WETH,
+                    payload: payload,
                     credit: credit,
+                    ethLeft: 0,
+                    marketplace: marketplace,
                     orderInfo: orderInfo,
+                    WETH: WETH,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
@@ -425,30 +477,52 @@ contract Pool is VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
-    function swapBorrowRateMode(address asset, uint256 interestRateMode)
-        external
-        virtual
-        override
-    {
-        BorrowLogic.executeSwapBorrowRateMode(
-            _reserves[asset],
-            _usersConfig[msg.sender],
-            asset,
-            DataTypes.InterestRateMode(interestRateMode)
+    function batchAcceptBidWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external virtual override nonReentrant {
+        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        require(
+            marketplaceIds.length == payloads.length &&
+                payloads.length == credits.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
         );
-    }
+        for (uint256 i = 0; i < marketplaceIds.length; i++) {
+            bytes32 marketplaceId = marketplaceIds[i];
+            bytes memory payload = payloads[i];
+            DataTypes.Credit memory credit = credits[i];
 
-    /// @inheritdoc IPool
-    function rebalanceStableBorrowRate(address asset, address user)
-        external
-        virtual
-        override
-    {
-        BorrowLogic.executeRebalanceStableBorrowRate(
-            _reserves[asset],
-            asset,
-            user
-        );
+            DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
+                .getMarketplace(marketplaceId);
+            DataTypes.OrderInfo memory orderInfo = IMarketplace(
+                marketplace.adapter
+            ).getBidOrderInfo(payload);
+            require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
+
+            MarketplaceLogic.executeAcceptBidWithCredit(
+                _reserves,
+                _reservesList,
+                _usersConfig[orderInfo.maker],
+                DataTypes.ExecuteMarketplaceParams({
+                    marketplaceId: marketplaceId,
+                    payload: payload,
+                    credit: credit,
+                    ethLeft: 0,
+                    marketplace: marketplace,
+                    orderInfo: orderInfo,
+                    WETH: WETH,
+                    referralCode: referralCode,
+                    maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
+                    reservesCount: _reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                    priceOracleSentinel: ADDRESSES_PROVIDER
+                        .getPriceOracleSentinel()
+                })
+            );
+        }
     }
 
     /// @inheritdoc IPool

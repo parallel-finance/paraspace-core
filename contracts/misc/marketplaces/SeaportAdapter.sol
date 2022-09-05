@@ -19,7 +19,7 @@ import {PoolStorage} from "../../protocol/pool/PoolStorage.sol";
  *
  * @notice Implements the NFT <=> ERC20 exchange logic via OpenSea Seaport marketplace
  */
-contract SeaportAdapter is IMarketplace, PoolStorage {
+contract SeaportAdapter is IMarketplace {
     constructor() {}
 
     function getAskOrderInfo(bytes memory params, address WETH)

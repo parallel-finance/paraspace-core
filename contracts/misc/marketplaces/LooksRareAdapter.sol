@@ -19,7 +19,7 @@ import {PoolStorage} from "../../protocol/pool/PoolStorage.sol";
  *
  * @notice Implements the NFT <=> ERC20 exchange logic via LooksRare marketplace
  */
-contract LooksRareAdapter is IMarketplace, PoolStorage {
+contract LooksRareAdapter is IMarketplace {
     constructor() {}
 
     function getAskOrderInfo(bytes memory params, address WETH)

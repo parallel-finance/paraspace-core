@@ -235,15 +235,16 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
         bytes32 id,
         address marketplace,
         address adapter,
-        address operator
+        address operator,
+        bool paused
     ) external override onlyOwner {
         _marketplaces[id] = DataTypes.Marketplace(
             marketplace,
             adapter,
             operator,
-            false
+            paused
         );
-        // TODO: emit event
+        emit MarketplaceSet(id, marketplace, adapter, operator, paused);
     }
 
     /**

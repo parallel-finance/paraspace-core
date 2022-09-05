@@ -102,4 +102,5 @@ library Errors {
     string public constant PAYNOW_NOT_ENOUGH = "107"; //paynow not enough.
     string public constant INVALID_CREDIT_SIGNATURE = "108"; //invalid credit signature.
     string public constant INVALID_ORDER_TAKER = "109"; //invalid order taker.
+    string public constant MARKETPLACE_PAUSED = "110"; //marketplace paused.
 }
