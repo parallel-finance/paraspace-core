@@ -744,8 +744,14 @@ interface IPool {
         uint256 amount
     ) external;
 
-    function setReserveLTVStrategyAddress(
+    /**
+     * @notice Updates the address of the dynamic configs strategy contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param dynamicConfigsStrategyAddress The address of the interest rate strategy contract
+     **/
+    function setReserveDynamicConfigsStrategyAddress(
         address asset,
-        address ltvStrategyAddress
+        address dynamicConfigsStrategyAddress
     ) external;
 }

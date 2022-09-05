@@ -344,7 +344,7 @@ library GenericLogic {
         uint256 liquidationThreshold;
         uint256 tmpLTV;
         uint256 tmpLiquidationThreshold;
-        address ltvStrategyAddress;
+        address dynamicConfigsStrategyAddress;
         address xTokenAddress;
         uint256 balance;
     }
@@ -381,7 +381,8 @@ library GenericLogic {
         if (INToken(vars.xTokenAddress).getAtomicPricingConfig()) {
             uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(user);
             if (dynamicLTV) {
-                vars.ltvStrategyAddress = reserve.ltvStrategyAddress;
+                vars.dynamicConfigsStrategyAddress = reserve
+                    .dynamicConfigsStrategyAddress;
                 for (uint256 index = 0; index < totalBalance; index++) {
                     vars.tokenId = IERC721Enumerable(vars.xTokenAddress)
                         .tokenOfOwnerByIndex(user, index);
@@ -400,8 +401,9 @@ library GenericLogic {
                             vars.tmpLTV,
                             vars.tmpLiquidationThreshold,
 
-                        ) = IDynamicConfigsStrategy(vars.ltvStrategyAddress)
-                            .getConfigParams(vars.tokenId);
+                        ) = IDynamicConfigsStrategy(
+                            vars.dynamicConfigsStrategyAddress
+                        ).getConfigParams(vars.tokenId);
 
                         vars.ltv += vars.tmpLTV * assetPrice;
                         vars.liquidationThreshold +=

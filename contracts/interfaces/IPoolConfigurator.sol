@@ -141,6 +141,18 @@ interface IPoolConfigurator {
     );
 
     /**
+     * @dev Emitted when a reserve dyanmic configs strategy contract is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param oldStrategy The address of the old interest strategy contract
+     * @param newStrategy The address of the new interest strategy contract
+     **/
+    event ReserveDynamicConfigsStrategyChanged(
+        address indexed asset,
+        address oldStrategy,
+        address newStrategy
+    );
+
+    /**
      * @dev Emitted when an xToken implementation is upgraded.
      * @param asset The address of the underlying asset of the reserve
      * @param proxy The xToken proxy address
@@ -291,6 +303,16 @@ interface IPoolConfigurator {
     function setReserveInterestRateStrategyAddress(
         address asset,
         address newRateStrategyAddress
+    ) external;
+
+    /**
+     * @notice Sets the dynamic configs strategy of a reserve.
+     * @param asset The address of the underlying asset of the reserve
+     * @param newDyanmicConfigsStrategyAddress The address of the new interest strategy contract
+     **/
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address newDyanmicConfigsStrategyAddress
     ) external;
 
     /**
