@@ -26,8 +26,8 @@ library ReserveConfiguration {
     uint256 internal constant SUPPLY_CAP_MASK =                0xFFFFFFFFFFFFFFFFFFFFFFFFFF000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant LIQUIDATION_PROTOCOL_FEE_MASK =  0xFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     // uint256 internal constant EMODE_CATEGORY_MASK =            0xFFFFFFFFFFFFFFFFFFFF00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
-    uint256 internal constant DYNAMIC_LTV_MASK =               0xFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
-    uint256 internal constant DYNAMIC_LT_MASK =                0xFFFFFFFFFFFFFFFFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
+    uint256 internal constant DYNAMIC_CONFIGS_MASK =               0xFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
+    // uint256 internal constant DYNAMIC_LT_MASK =                0xFFFFFFFFFFFFFFFFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant UNBACKED_MINT_CAP_MASK =         0xFFFFFFFFFFF000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant DEBT_CEILING_MASK =              0xF0000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
 
@@ -48,8 +48,8 @@ library ReserveConfiguration {
     uint256 internal constant BORROW_CAP_START_BIT_POSITION = 80;
     uint256 internal constant SUPPLY_CAP_START_BIT_POSITION = 116;
     uint256 internal constant LIQUIDATION_PROTOCOL_FEE_START_BIT_POSITION = 152;
-    uint256 internal constant IS_DYNAMIC_LTV_START_BIT_POSITION = 168;
-    uint256 internal constant IS_DYNAMIC_LT_START_BIT_POSITION = 169;
+    uint256 internal constant IS_DYNAMIC_CONFIGS_START_BIT_POSITION = 168;
+    // uint256 internal constant IS_DYNAMIC_LT_START_BIT_POSITION = 169;
     // uint256 internal constant EMODE_CATEGORY_START_BIT_POSITION = 168;
     uint256 internal constant UNBACKED_MINT_CAP_START_BIT_POSITION = 176;
     uint256 internal constant DEBT_CEILING_START_BIT_POSITION = 212;
@@ -516,7 +516,7 @@ library ReserveConfiguration {
      * @return The state param representing liquidation bonus
      * @return The state param representing reserve decimals
      * @return The state param representing reserve factor
-     * @return The state param representing dynamic ltv
+     * @return The state param representing dynamic configs
      **/
     function getParams(DataTypes.ReserveConfigurationMap memory self)
         internal
@@ -541,7 +541,7 @@ library ReserveConfiguration {
             (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
             (dataLocal & ~RESERVE_FACTOR_MASK) >>
                 RESERVE_FACTOR_START_BIT_POSITION,
-            (dataLocal & ~DYNAMIC_LTV_MASK) != 0
+            (dataLocal & ~DYNAMIC_CONFIGS_MASK) != 0
         );
     }
 
@@ -569,13 +569,13 @@ library ReserveConfiguration {
      * @param self The reserve configuration
      * @param active The active state
      **/
-    function setDynamicLTV(
+    function setDynamicConfigs(
         DataTypes.ReserveConfigurationMap memory self,
         bool active
     ) internal pure {
         self.data =
-            (self.data & DYNAMIC_LTV_MASK) |
-            (uint256(active ? 1 : 0) << IS_DYNAMIC_LTV_START_BIT_POSITION);
+            (self.data & DYNAMIC_CONFIGS_MASK) |
+            (uint256(active ? 1 : 0) << IS_DYNAMIC_CONFIGS_START_BIT_POSITION);
     }
 
     /**
@@ -583,11 +583,11 @@ library ReserveConfiguration {
      * @param self The reserve configuration
      * @return The active state
      **/
-    function getDynamicLTV(DataTypes.ReserveConfigurationMap memory self)
+    function getDynamicConfigs(DataTypes.ReserveConfigurationMap memory self)
         internal
         pure
         returns (bool)
     {
-        return (self.data & ~DYNAMIC_LTV_MASK) != 0;
+        return (self.data & ~DYNAMIC_CONFIGS_MASK) != 0;
     }
 }

@@ -48,8 +48,8 @@ library GenericLogic {
         uint256 avgERC721LiquidationThreshold;
         address currentReserveAddress;
         bool hasZeroLtvCollateral;
-        bool dynamicLTV;
-        uint256 dynamicLTVValue;
+        bool dynamicConfigs;
+        uint256 dynamicLTV;
         uint256 dynamicLiquidationThreshold;
     }
 
@@ -134,7 +134,7 @@ library GenericLogic {
                 vars.liquidationBonus,
                 vars.decimals,
                 ,
-                vars.dynamicLTV
+                vars.dynamicConfigs
             ) = currentReserve.configuration.getParams();
 
             unchecked {
@@ -146,13 +146,13 @@ library GenericLogic {
             );
 
             if (
-                (vars.liquidationThreshold != 0 || vars.dynamicLTV) &&
+                (vars.liquidationThreshold != 0 || vars.dynamicConfigs) &&
                 params.userConfig.isUsingAsCollateral(vars.i)
             ) {
                 if (vars.assetType == DataTypes.AssetType.ERC721) {
                     (
                         vars.userBalanceInBaseCurrency,
-                        vars.dynamicLTVValue,
+                        vars.dynamicLTV,
                         vars.dynamicLiquidationThreshold
                     ) = _getUserBalanceInBaseCurrencyERC721(
                         params.user,
@@ -161,13 +161,13 @@ library GenericLogic {
                         vars.currentReserveAddress,
                         vars.assetUnit,
                         vars.assetPrice,
-                        vars.dynamicLTV
+                        vars.dynamicConfigs
                     );
 
-                    if (vars.dynamicLTV) {
+                    if (vars.dynamicConfigs) {
                         vars.liquidationThreshold = vars
                             .dynamicLiquidationThreshold;
-                        vars.avgLtv += vars.dynamicLTVValue;
+                        vars.avgLtv += vars.dynamicLTV;
                     } else {
                         vars.liquidationThreshold =
                             vars.userBalanceInBaseCurrency *
@@ -365,7 +365,7 @@ library GenericLogic {
         address currentReserveAddress,
         uint256 assetUnit,
         uint256 assetPrice,
-        bool dynamicLTV
+        bool dynamicConfigs
     )
         private
         view
@@ -380,7 +380,7 @@ library GenericLogic {
 
         if (INToken(vars.xTokenAddress).getAtomicPricingConfig()) {
             uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(user);
-            if (dynamicLTV) {
+            if (dynamicConfigs) {
                 vars.dynamicConfigsStrategyAddress = reserve
                     .dynamicConfigsStrategyAddress;
                 for (uint256 index = 0; index < totalBalance; index++) {
