@@ -6,7 +6,7 @@ import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IERC721Metadata} from "../../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
-import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
@@ -21,6 +21,8 @@ import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungib
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
 contract NTokenUniswapV3 is NToken {
+    using SafeERC20 for IERC20;
+
     bool internal constant ATOMIC_PRICING_VALUE = true;
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
@@ -50,8 +52,8 @@ contract NTokenUniswapV3 is NToken {
         (
             ,
             ,
-            address tokenA,
-            address tokenB,
+            address token0,
+            address token1,
             ,
             ,
             ,
@@ -65,8 +67,8 @@ contract NTokenUniswapV3 is NToken {
         //TODO should we check for 0 balance tokens?
 
         require(
-            POOL.getReserveData(tokenA).xTokenAddress != address(0) &&
-                POOL.getReserveData(tokenB).xTokenAddress != address(0),
+            POOL.getReserveData(token0).xTokenAddress != address(0) &&
+                POOL.getReserveData(token1).xTokenAddress != address(0),
             Errors.ASSET_NOT_LISTED
         );
 
@@ -76,8 +78,6 @@ contract NTokenUniswapV3 is NToken {
     /**
      * @notice A function that decreases the current liquidity.
      * @param tokenId The id of the erc721 token
-     * @param token0Address The address of the underylying tokens
-     * @param token1Address The address of the underylying tokens
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
      * @return amount0 The amount received back in token0
@@ -85,38 +85,44 @@ contract NTokenUniswapV3 is NToken {
      */
     function _decreaseLiquidity(
         uint256 tokenId,
-        address token0Address,
-        address token1Address,
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min
     ) internal returns (uint256 amount0, uint256 amount1) {
-        // amount0Min and amount1Min are price slippage checks
-        // if the amount received after burning is not greater than these minimums, transaction will fail
-        INonfungiblePositionManager.DecreaseLiquidityParams
-            memory params = INonfungiblePositionManager
-                .DecreaseLiquidityParams({
-                    tokenId: tokenId,
-                    liquidity: liquidityDecrease,
-                    amount0Min: amount0Min,
-                    amount1Min: amount1Min,
-                    deadline: block.timestamp
-                });
+        if (liquidityDecrease > 0) {
+            // amount0Min and amount1Min are price slippage checks
+            // if the amount received after burning is not greater than these minimums, transaction will fail
+            INonfungiblePositionManager.DecreaseLiquidityParams
+                memory params = INonfungiblePositionManager
+                    .DecreaseLiquidityParams({
+                        tokenId: tokenId,
+                        liquidity: liquidityDecrease,
+                        amount0Min: amount0Min,
+                        amount1Min: amount1Min,
+                        deadline: block.timestamp
+                    });
+
+            INonfungiblePositionManager(_underlyingAsset).decreaseLiquidity(
+                params
+            );
+        }
+
+        INonfungiblePositionManager.CollectParams
+            memory collectParams = INonfungiblePositionManager.CollectParams({
+                tokenId: tokenId,
+                recipient: _msgSender(),
+                amount0Max: 2**128 - 1,
+                amount1Max: 2**128 - 1
+            });
 
         (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
-            .decreaseLiquidity(params);
-
-        // send liquidity back to caller
-        IERC20(token0Address).transfer(_msgSender(), amount0);
-        IERC20(token1Address).transfer(_msgSender(), amount1);
+            .collect(collectParams);
     }
 
     /**
      * @notice Increases liquidity in the current range
      * @dev Pool must be initialized already to add liquidity
      * @param tokenId The id of the erc721 token
-     * @param token0Address The address of the underylying tokens
-     * @param token1Address The address of the underylying tokens
      * @param amount0 The amount to add of token0
      * @param amount1 The amount to add of token1
      * @param amount0Min The minimum amount to add of token0
@@ -127,8 +133,6 @@ contract NTokenUniswapV3 is NToken {
      */
     function _increaseLiquidityCurrentRange(
         uint256 tokenId,
-        address token0Address,
-        address token1Address,
         uint256 amountAdd0,
         uint256 amountAdd1,
         uint256 amount0Min,
@@ -141,19 +145,50 @@ contract NTokenUniswapV3 is NToken {
             uint256 amount1
         )
     {
-        // move underlyings into this contract
-        IERC20(token0Address).transferFrom(
+        (
+            ,
+            ,
+            address token0,
+            address token1,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+
+        ) = INonfungiblePositionManager(_underlyingAsset).positions(tokenId);
+
+        // move underlying into this contract
+        IERC20(token0).safeTransferFrom(
             _msgSender(),
             address(this),
             amountAdd0
         );
-        IERC20(token1Address).transferFrom(
+        IERC20(token1).safeTransferFrom(
             _msgSender(),
             address(this),
             amountAdd1
         );
 
-        // move underlyings from this contract to Uniswap
+        uint256 token0Allownance = IERC20(token0).allowance(
+            address(this),
+            _underlyingAsset
+        );
+        if (token0Allownance == 0) {
+            IERC20(token0).safeApprove(_underlyingAsset, 2**256 - 1);
+        }
+
+        uint256 token1Allownance = IERC20(token1).allowance(
+            address(this),
+            _underlyingAsset
+        );
+        if (token1Allownance == 0) {
+            IERC20(token1).safeApprove(_underlyingAsset, 2**256 - 1);
+        }
+
+        // move underlying from this contract to Uniswap
         INonfungiblePositionManager.IncreaseLiquidityParams
             memory params = INonfungiblePositionManager
                 .IncreaseLiquidityParams({
@@ -173,12 +208,12 @@ contract NTokenUniswapV3 is NToken {
         // refund unused tokens
         if (amount0 < amountAdd0) {
             uint256 refund0 = amountAdd0 - amount0;
-            IERC20(token0Address).transfer(_msgSender(), refund0);
+            IERC20(token0).safeTransfer(_msgSender(), refund0);
         }
 
         if (amount1 < amountAdd1) {
             uint256 refund1 = amountAdd1 - amount1;
-            IERC20(token1Address).transfer(_msgSender(), refund1);
+            IERC20(token1).safeTransfer(_msgSender(), refund1);
         }
     }
 
@@ -186,8 +221,6 @@ contract NTokenUniswapV3 is NToken {
      * @notice Increases liquidity for underlying Uniswap V3 NFT LP
      * @dev Pool must be initialized already to add liquidity
      * @param tokenId The id of the erc721 token
-     * @param token0Address The address of the underylying tokens
-     * @param token1Address The address of the underylying tokens
      * @param amountAdd0 The amount to add of token0
      * @param amountAdd1 The amount to add of token1
      * @param amount0Min The minimum amount to add of token0
@@ -195,8 +228,6 @@ contract NTokenUniswapV3 is NToken {
      */
     function increaseUniswapV3Liquidity(
         uint256 tokenId,
-        address token0Address,
-        address token1Address,
         uint256 amountAdd0,
         uint256 amountAdd1,
         uint256 amount0Min,
@@ -205,8 +236,6 @@ contract NTokenUniswapV3 is NToken {
         // interact with Uniswap V3
         _increaseLiquidityCurrentRange(
             tokenId,
-            token0Address,
-            token1Address,
             amountAdd0,
             amountAdd1,
             amount0Min,
@@ -219,16 +248,12 @@ contract NTokenUniswapV3 is NToken {
      * that the user respects liquidation checks.
      * @dev Pool must be initialized already to add liquidity
      * @param tokenId The id of the erc721 token
-     * @param token0Address The address of the underylying tokens
-     * @param token1Address The address of the underylying tokens
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
      */
     function decreaseUniswapV3Liquidity(
         uint256 tokenId,
-        address token0Address,
-        address token1Address,
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min
@@ -237,14 +262,7 @@ contract NTokenUniswapV3 is NToken {
         require(_msgSender() == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
         // interact with Uniswap V3
-        _decreaseLiquidity(
-            tokenId,
-            token0Address,
-            token1Address,
-            liquidityDecrease,
-            amount0Min,
-            amount1Min
-        );
+        _decreaseLiquidity(tokenId, liquidityDecrease, amount0Min, amount1Min);
 
         // return data about the users healthFactor after decrease
         (

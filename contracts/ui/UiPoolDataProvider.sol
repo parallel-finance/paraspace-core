@@ -22,7 +22,8 @@ import {IEACAggregatorProxy} from "./interfaces/IEACAggregatorProxy.sol";
 import {IERC20DetailedBytes} from "./interfaces/IERC20DetailedBytes.sol";
 import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
-import {IUniswapV3PositionInfoProvider} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
+import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -293,35 +294,46 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     ) external view override returns (UniswapV3LpTokenInfo memory) {
         UniswapV3LpTokenInfo memory lpTokenInfo;
 
-        IParaSpaceOracle oracle = IParaSpaceOracle(provider.getPriceOracle());
-        address sourceAddress = oracle.getSourceOfAsset(lpTokenAddress);
-        if (sourceAddress != address(0)) {
-            IUniswapV3PositionInfoProvider source = IUniswapV3PositionInfoProvider(
-                    sourceAddress
-                );
+        IUniswapV3OracleWrapper source;
+        //avoid stack too deep
+        {
+            IParaSpaceOracle oracle = IParaSpaceOracle(
+                provider.getPriceOracle()
+            );
+            address sourceAddress = oracle.getSourceOfAsset(lpTokenAddress);
+            if (sourceAddress == address(0)) {
+                return lpTokenInfo;
+            }
+            source = IUniswapV3OracleWrapper(sourceAddress);
+        }
 
-            (
-                lpTokenInfo.token0,
-                lpTokenInfo.token1,
-                lpTokenInfo.feeRate,
-                lpTokenInfo.positionTickLower,
-                lpTokenInfo.positionTickUpper,
-                lpTokenInfo.currentTick
-            ) = source.getPositionBaseInfo(tokenId);
+        //try to catch invalid tokenId
+        try source.getTokenPrice(tokenId) returns (uint256 tokenPrice) {
+            lpTokenInfo.tokenPrice = tokenPrice;
+
+            UinswapV3PositionData memory positionData = source
+                .getOnchainPositionData(tokenId);
+            lpTokenInfo.token0 = positionData.token0;
+            lpTokenInfo.token1 = positionData.token1;
+            lpTokenInfo.feeRate = positionData.fee;
+            lpTokenInfo.liquidity = positionData.liquidity;
+            lpTokenInfo.positionTickLower = positionData.tickLower;
+            lpTokenInfo.positionTickUpper = positionData.tickUpper;
+            lpTokenInfo.currentTick = positionData.currentTick;
 
             (
                 lpTokenInfo.liquidityToken0Amount,
                 lpTokenInfo.liquidityToken1Amount
-            ) = source.getLiquidityAmount(tokenId);
+            ) = source.getLiquidityAmountFromPositionData(positionData);
 
             (
                 lpTokenInfo.lpFeeToken0Amount,
                 lpTokenInfo.lpFeeToken1Amount
-            ) = source.getLpFeeAmount(tokenId);
+            ) = source.getLpFeeAmountFromPositionData(positionData);
 
             lpTokenInfo.baseLTVasCollateral = 7500;
             lpTokenInfo.reserveLiquidationThreshold = 8000;
-        }
+        } catch {}
 
         return lpTokenInfo;
     }

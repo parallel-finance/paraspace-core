@@ -102,10 +102,12 @@ interface IUiPoolDataProvider {
         int24 positionTickLower;
         int24 positionTickUpper;
         int24 currentTick;
+        uint128 liquidity;
         uint256 liquidityToken0Amount;
         uint256 liquidityToken1Amount;
         uint256 lpFeeToken0Amount;
         uint256 lpFeeToken1Amount;
+        uint256 tokenPrice;
         uint256 baseLTVasCollateral;
         uint256 reserveLiquidationThreshold;
     }
