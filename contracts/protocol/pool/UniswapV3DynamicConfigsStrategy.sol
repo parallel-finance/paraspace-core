@@ -27,32 +27,14 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
         uint256 liquidationBonus;
     }
 
-    mapping(address => mapping(address => uint16)) ltv;
-
     IPoolAddressesProvider internal immutable _addressesProvider;
     IPool internal immutable _pool;
     INonfungiblePositionManager immutable UNISWAP_V3_POSITION_MANAGER;
-
-    /**
-     * @dev Only pool admin can call functions marked by this modifier.
-     **/
-    modifier onlyPoolAdmin() {
-        _onlyPoolAdmin();
-        _;
-    }
 
     constructor(address _manager, IPoolAddressesProvider provider) {
         _addressesProvider = provider;
         _pool = IPool(_addressesProvider.getPool());
         UNISWAP_V3_POSITION_MANAGER = INonfungiblePositionManager(_manager);
-    }
-
-    function setLTV(
-        address token0,
-        address token1,
-        uint16 _ltv
-    ) external onlyPoolAdmin {
-        ltv[token0][token1] = _ltv;
     }
 
     function getConfigParams(uint256 tokenId)
@@ -115,15 +97,5 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
             : vars.token1LiquidationBonus;
 
         return (vars.ltv, vars.liquidationThreshold, vars.liquidationBonus);
-    }
-
-    function _onlyPoolAdmin() internal view {
-        IACLManager aclManager = IACLManager(
-            _addressesProvider.getACLManager()
-        );
-        require(
-            aclManager.isPoolAdmin(msg.sender),
-            Errors.CALLER_NOT_POOL_ADMIN
-        );
     }
 }
