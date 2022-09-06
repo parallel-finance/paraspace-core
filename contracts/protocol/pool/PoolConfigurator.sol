@@ -364,19 +364,19 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     /// @inheritdoc IPoolConfigurator
     function setReserveDynamicConfigsStrategyAddress(
         address asset,
-        address newDyanmicConfigsStrategyAddress
+        address newDynamicConfigsStrategyAddress
     ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
-        address oldDyanmicConfigsStrategyAddress = reserve
+        address oldDynamicConfigsStrategyAddress = reserve
             .dynamicConfigsStrategyAddress;
         _pool.setReserveDynamicConfigsStrategyAddress(
             asset,
-            newDyanmicConfigsStrategyAddress
+            newDynamicConfigsStrategyAddress
         );
         emit ReserveDynamicConfigsStrategyChanged(
             asset,
-            oldDyanmicConfigsStrategyAddress,
-            newDyanmicConfigsStrategyAddress
+            oldDynamicConfigsStrategyAddress,
+            newDynamicConfigsStrategyAddress
         );
     }
 

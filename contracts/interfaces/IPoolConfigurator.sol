@@ -148,7 +148,7 @@ interface IPoolConfigurator {
     );
 
     /**
-     * @dev Emitted when a reserve dyanmic configs strategy contract is updated.
+     * @dev Emitted when a reserve dynamic configs strategy contract is updated.
      * @param asset The address of the underlying asset of the reserve
      * @param oldStrategy The address of the old interest strategy contract
      * @param newStrategy The address of the new interest strategy contract
@@ -290,7 +290,7 @@ interface IPoolConfigurator {
     /**
      * @notice enable or disable dynamic configs
      * @param asset The address of the underlying asset of the reserve
-     * @param enabled True if the reserve needs to enable dyanmic configs
+     * @param enabled True if the reserve needs to enable dynamic configs
      **/
     function setDynamicConfigsEnabled(address asset, bool enabled) external;
 
@@ -322,11 +322,11 @@ interface IPoolConfigurator {
     /**
      * @notice Sets the dynamic configs strategy of a reserve.
      * @param asset The address of the underlying asset of the reserve
-     * @param newDyanmicConfigsStrategyAddress The address of the new interest strategy contract
+     * @param newDynamicConfigsStrategyAddress The address of the new interest strategy contract
      **/
     function setReserveDynamicConfigsStrategyAddress(
         address asset,
-        address newDyanmicConfigsStrategyAddress
+        address newDynamicConfigsStrategyAddress
     ) external;
 
     /**

@@ -2,6 +2,9 @@
 pragma solidity 0.8.10;
 
 interface IDynamicConfigsStrategy {
+    /**
+     * @dev get the dynamic config params
+     **/
     function getConfigParams(uint256 data)
         external
         view
