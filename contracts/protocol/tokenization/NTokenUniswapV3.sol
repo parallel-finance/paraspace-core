@@ -89,7 +89,7 @@ contract NTokenUniswapV3 is NToken {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool recevieEthAsWeth
+        bool receiveEthAsWeth
     ) internal returns (uint256 amount0, uint256 amount1) {
         if (liquidityDecrease > 0) {
             // amount0Min and amount1Min are price slippage checks
@@ -125,12 +125,12 @@ contract NTokenUniswapV3 is NToken {
         ) = INonfungiblePositionManager(_underlyingAsset).positions(tokenId);
 
         address weth = _addressesProvider.getWETH();
-        recevieEthAsWeth = (recevieEthAsWeth && (token0 == weth || token1 == weth));
+        receiveEthAsWeth = (receiveEthAsWeth && (token0 == weth || token1 == weth));
 
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
-                recipient: recevieEthAsWeth ? address(this) : _msgSender(),
+                recipient: receiveEthAsWeth ? address(this) : _msgSender(),
                 amount0Max: 2**128 - 1,
                 amount1Max: 2**128 - 1
             });
@@ -141,7 +141,7 @@ contract NTokenUniswapV3 is NToken {
         require(amount0>=amount0Min, "Insufficient amount0");
         require(amount1>=amount1Min, "Insufficient amount1");
 
-        if (recevieEthAsWeth) {
+        if (receiveEthAsWeth) {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
             if (balanceWeth > 0) {
                 IWETH(weth).withdraw(balanceWeth);
@@ -306,13 +306,13 @@ contract NTokenUniswapV3 is NToken {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool recevieEthAsWeth
+        bool receiveEthAsWeth
     ) external {
         // only the token owner of the NToken can decrease the underlying
         require(_msgSender() == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
         // interact with Uniswap V3
-        _decreaseLiquidity(tokenId, liquidityDecrease, amount0Min, amount1Min, recevieEthAsWeth);
+        _decreaseLiquidity(tokenId, liquidityDecrease, amount0Min, amount1Min, receiveEthAsWeth);
 
         // return data about the users healthFactor after decrease
         (
