@@ -205,7 +205,7 @@ library GenericLogic {
                 vars.totalCollateralInBaseCurrency += vars
                     .userBalanceInBaseCurrency;
 
-                if (vars.ltv == 0) {
+                if (vars.ltv == 0 && vars.dynamicLTV) {
                     vars.hasZeroLtvCollateral = true;
                 }
 
