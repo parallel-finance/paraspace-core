@@ -40,10 +40,11 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
     function getConfigParams(uint256 tokenId)
         external
         view
+        override
         returns (
-            uint256,
-            uint256,
-            uint256
+            uint256 ltv,
+            uint256 liquidationThreshold,
+            uint256 liquidationBonus
         )
     {
         DynamicConfigsParams memory vars;

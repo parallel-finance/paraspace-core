@@ -9,8 +9,8 @@ interface IDynamicConfigsStrategy {
         external
         view
         returns (
-            uint256,
-            uint256,
-            uint256
+            uint256 ltv,
+            uint256 liquidationThreshold,
+            uint256 liquidationBonus
         );
 }
