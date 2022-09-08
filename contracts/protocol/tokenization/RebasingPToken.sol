@@ -14,7 +14,7 @@ contract RebasingPToken is PToken {
     using WadRayMath for uint256;
 
     constructor(IPool pool) PToken(pool) {
-        //intentially empty
+        //intentionally empty
     }
 
     /**
