@@ -125,7 +125,8 @@ contract NTokenUniswapV3 is NToken {
         ) = INonfungiblePositionManager(_underlyingAsset).positions(tokenId);
 
         address weth = _addressesProvider.getWETH();
-        receiveEthAsWeth = (receiveEthAsWeth && (token0 == weth || token1 == weth));
+        receiveEthAsWeth = (receiveEthAsWeth &&
+            (token0 == weth || token1 == weth));
 
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
@@ -138,18 +139,20 @@ contract NTokenUniswapV3 is NToken {
         (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
             .collect(collectParams);
 
-        require(amount0>=amount0Min, "Insufficient amount0");
-        require(amount1>=amount1Min, "Insufficient amount1");
+        require(amount0 >= amount0Min, "Insufficient amount0");
+        require(amount1 >= amount1Min, "Insufficient amount1");
 
         if (receiveEthAsWeth) {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
             if (balanceWeth > 0) {
                 IWETH(weth).withdraw(balanceWeth);
-                (bool success, ) = _msgSender().call{value: balanceWeth}(new bytes(0));
-                require(success, 'Transfer ETH failed');
+                (bool success, ) = _msgSender().call{value: balanceWeth}(
+                    new bytes(0)
+                );
+                require(success, "Transfer ETH failed");
             }
 
-            address pairToken = (token0 == weth)? token1: token0;
+            address pairToken = (token0 == weth) ? token1 : token0;
             uint256 balanceToken = IERC20(pairToken).balanceOf(address(this));
             if (balanceToken > 0) {
                 IERC20(pairToken).safeTransfer(_msgSender(), balanceToken);
@@ -260,8 +263,10 @@ contract NTokenUniswapV3 is NToken {
             INonfungiblePositionManager(_underlyingAsset).refundETH();
             uint256 ethBalance = address(this).balance;
             if (ethBalance > 0) {
-                (bool success, ) = msg.sender.call{value: ethBalance}(new bytes(0));
-                require(success, 'Refund ETH failed');
+                (bool success, ) = msg.sender.call{value: ethBalance}(
+                    new bytes(0)
+                );
+                require(success, "Refund ETH failed");
             }
         }
     }
@@ -312,7 +317,13 @@ contract NTokenUniswapV3 is NToken {
         require(_msgSender() == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
         // interact with Uniswap V3
-        _decreaseLiquidity(tokenId, liquidityDecrease, amount0Min, amount1Min, receiveEthAsWeth);
+        _decreaseLiquidity(
+            tokenId,
+            liquidityDecrease,
+            amount0Min,
+            amount1Min,
+            receiveEthAsWeth
+        );
 
         // return data about the users healthFactor after decrease
         (
@@ -338,6 +349,5 @@ contract NTokenUniswapV3 is NToken {
         );
     }
 
-    receive() external payable {
-    }
+    receive() external payable {}
 }
