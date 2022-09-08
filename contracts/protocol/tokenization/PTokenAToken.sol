@@ -18,7 +18,7 @@ interface AToken {
  */
 contract PTokenAToken is RebasingPToken {
     constructor(IPool pool) RebasingPToken(pool) {
-        //intentially empty
+        //intentionally empty
     }
 
     /**

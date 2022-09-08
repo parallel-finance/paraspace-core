@@ -19,7 +19,7 @@ interface ILido {
  */
 contract PTokenStETH is RebasingPToken {
     constructor(IPool pool) RebasingPToken(pool) {
-        //intentially empty
+        //intentionally empty
     }
 
     /**
