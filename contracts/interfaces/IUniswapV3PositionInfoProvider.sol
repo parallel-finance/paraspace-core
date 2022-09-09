@@ -8,6 +8,7 @@ struct UinswapV3PositionData {
     int24 tickLower;
     int24 tickUpper;
     int24 currentTick;
+    uint160 currentPrice;
     uint128 liquidity;
     uint256 feeGrowthInside0LastX128;
     uint256 feeGrowthInside1LastX128;
