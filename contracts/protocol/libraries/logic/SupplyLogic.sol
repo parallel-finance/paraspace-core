@@ -321,7 +321,18 @@ library SupplyLogic {
 
         ValidationLogic.validateWithdrawERC721(reserveCache);
 
-        if (userConfig.isUsingAsCollateral(reserve.id)) {
+        bool hasAnyCollateralAsset = false;
+        for (uint256 index = 0; index < params.tokenIds.length; index++) {
+            if (
+                ICollaterizableERC721(reserveCache.xTokenAddress)
+                    .isUsedAsCollateral(params.tokenIds[index])
+            ) {
+                hasAnyCollateralAsset = true;
+                break;
+            }
+        }
+
+        if (hasAnyCollateralAsset) {
             if (userConfig.isBorrowingAny()) {
                 ValidationLogic.validateHFAndLtv(
                     reservesData,
