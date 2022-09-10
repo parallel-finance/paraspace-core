@@ -38,7 +38,7 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
     /**
      * Expressed in PRBMath.SCALE
      **/
-    uint256 internal immutable _stepLinearMultiplier;
+    uint256 internal immutable _stepLinear;
 
     /**
      * Expressed in PRBMath.SCALE
@@ -51,14 +51,14 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
         uint256 maxPriceMultiplier,
         uint256 minExpPriceMultiplier,
         uint256 minPriceMultiplier,
-        uint256 stepLinearMultiplier,
+        uint256 stepLinear,
         uint256 stepExp,
         uint256 tickLength
     ) {
         _maxPriceMultiplier = maxPriceMultiplier;
         _minExpPriceMultiplier = minExpPriceMultiplier;
         _minPriceMultiplier = minPriceMultiplier;
-        _stepLinearMultiplier = stepLinearMultiplier;
+        _stepLinear = stepLinear;
         _stepExp = stepExp;
         _tickLength = tickLength;
     }
@@ -75,8 +75,8 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
         return _minPriceMultiplier;
     }
 
-    function getStepLinearMultiplier() external view returns (uint256) {
-        return _stepLinearMultiplier;
+    function getStepLinear() external view returns (uint256) {
+        return _stepLinear;
     }
 
     function getStepExp() external view returns (uint256) {
@@ -84,7 +84,7 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
     }
 
     function getTickLength() external view returns (uint256) {
-        return _stepExp;
+        return _tickLength;
     }
 
     function calculateAuctionPriceMultiplier(
@@ -119,7 +119,7 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
         uint256 priceLastExpMultiplier = _calculateAuctionPriceMultiplierByTicks(
                 ticks - PRBMath.SCALE
             );
-        uint256 priceLinear = priceLastExpMultiplier - _stepLinearMultiplier;
+        uint256 priceLinear = priceLastExpMultiplier - _stepLinear;
         if (
             priceLinear > _minPriceMultiplier &&
             priceLinear < _minExpPriceMultiplier

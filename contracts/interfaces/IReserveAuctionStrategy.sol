@@ -13,7 +13,7 @@ interface IReserveAuctionStrategy {
 
     function getMinPriceMultiplier() external view returns (uint256);
 
-    function getStepLinearMultiplier() external view returns (uint256);
+    function getStepLinear() external view returns (uint256);
 
     function getStepExp() external view returns (uint256);
 
