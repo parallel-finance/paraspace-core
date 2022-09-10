@@ -862,6 +862,19 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
+    function setReserveAuctionStrategyAddress(
+        address asset,
+        address auctionStrategyAddress
+    ) external virtual override onlyPoolConfigurator {
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        _reserves[asset].auctionStrategyAddress = auctionStrategyAddress;
+    }
+
+    /// @inheritdoc IPool
     function setConfiguration(
         address asset,
         DataTypes.ReserveConfigurationMap calldata configuration
@@ -872,6 +885,30 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             Errors.ASSET_NOT_LISTED
         );
         _reserves[asset].configuration = configuration;
+    }
+
+    /// @inheritdoc IPool
+    function setAuctionConfiguration(
+        address asset,
+        DataTypes.ReserveAuctionConfigurationMap calldata auctionConfiguration
+    ) external virtual override onlyPoolConfigurator {
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        _reserves[asset].auctionConfiguration = auctionConfiguration;
+    }
+
+    /// @inheritdoc IPool
+    function getAuctionConfiguration(address asset)
+        external
+        view
+        virtual
+        override
+        returns (DataTypes.ReserveAuctionConfigurationMap memory)
+    {
+        return _reserves[asset].auctionConfiguration;
     }
 
     /// @inheritdoc IPool

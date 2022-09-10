@@ -14,7 +14,7 @@ library DataTypes {
         //stores the reserve configuration
         ReserveConfigurationMap configuration;
         // //stores the reserve auction configuration
-        // ReserveAuctionConfigurationMap auctionConfiguration;
+        ReserveAuctionConfigurationMap auctionConfiguration;
         //the liquidity index. Expressed in ray
         uint128 liquidityIndex;
         //the current supply rate. Expressed in ray
@@ -39,6 +39,8 @@ library DataTypes {
         address variableDebtTokenAddress;
         //address of the interest rate strategy
         address interestRateStrategyAddress;
+        //address of the auction strategy
+        address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
     }

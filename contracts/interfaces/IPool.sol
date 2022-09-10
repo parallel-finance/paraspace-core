@@ -608,6 +608,17 @@ interface IPool {
     ) external;
 
     /**
+     * @notice Updates the address of the auction strategy contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param auctionStrategyAddress The address of the auction strategy contract
+     **/
+    function setReserveAuctionStrategyAddress(
+        address asset,
+        address auctionStrategyAddress
+    ) external;
+
+    /**
      * @notice Sets the configuration bitmap of the reserve as a whole
      * @dev Only callable by the PoolConfigurator contract
      * @param asset The address of the underlying asset of the reserve
@@ -619,6 +630,17 @@ interface IPool {
     ) external;
 
     /**
+     * @notice Sets the auction configuration bitmap of the reserve as a whole
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param auctionConfiguration The new auction configuration bitmap
+     **/
+    function setAuctionConfiguration(
+        address asset,
+        DataTypes.ReserveAuctionConfigurationMap calldata auctionConfiguration
+    ) external;
+
+    /**
      * @notice Returns the configuration of the reserve
      * @param asset The address of the underlying asset of the reserve
      * @return The configuration of the reserve
@@ -627,6 +649,16 @@ interface IPool {
         external
         view
         returns (DataTypes.ReserveConfigurationMap memory);
+
+    /**
+     * @notice Returns the auction configuration of the reserve
+     * @param asset The address of the underlying asset of the reserve
+     * @return The auction configuration of the reserve
+     **/
+    function getAuctionConfiguration(address asset)
+        external
+        view
+        returns (DataTypes.ReserveAuctionConfigurationMap memory);
 
     /**
      * @notice Returns the configuration of the user across all the reserves
