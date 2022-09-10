@@ -19,7 +19,7 @@ library AuctionConfiguration {
     uint256 internal constant AUCTION_TWAP_PRICE_ENABLED_START_BIT_POSITION =
         17;
 
-    uint256 internal constant MAX_AUCTION_RECOVERY_HEALTH_FACTOR = 65535;
+    uint256 internal constant MAX_VALID_AUCTION_RECOVERY_HEALTH_FACTOR = 65535;
 
     /**
      * @notice Sets the auction flag for the reserve.
@@ -56,7 +56,8 @@ library AuctionConfiguration {
         uint256 auctionRecoveryHealthFactor
     ) internal pure {
         require(
-            auctionRecoveryHealthFactor <= MAX_AUCTION_RECOVERY_HEALTH_FACTOR,
+            auctionRecoveryHealthFactor <=
+                MAX_VALID_AUCTION_RECOVERY_HEALTH_FACTOR,
             Errors.INVALID_AUCTION_RECOVERY_HEALTH_FACTOR
         );
 
@@ -84,7 +85,7 @@ library AuctionConfiguration {
      * @param self The reserve auction configuration
      * @param enabled True if the twap price needs to be enabled, false otherwise
      **/
-    function setTwapPriceEnabled(
+    function setAuctionTwapPriceEnabled(
         DataTypes.ReserveAuctionConfigurationMap memory self,
         bool enabled
     ) internal pure {
@@ -99,7 +100,7 @@ library AuctionConfiguration {
      * @param self The reserve auction configuration
      * @return The twap price flag
      **/
-    function getTwapPriceEnabled(
+    function getAuctionTwapPriceEnabled(
         DataTypes.ReserveAuctionConfigurationMap memory self
     ) internal pure returns (bool) {
         return (self.data & ~AUCTION_TWAP_PRICE_ENABLED_MASK) != 0;
