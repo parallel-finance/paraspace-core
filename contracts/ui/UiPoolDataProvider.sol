@@ -10,6 +10,7 @@ import {IPool} from "../interfaces/IPool.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
 import {IStableDebtToken} from "../interfaces/IStableDebtToken.sol";
@@ -258,6 +259,39 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return (reservesData, baseCurrencyInfo);
     }
 
+    function getAuctionData(
+        IPoolAddressesProvider provider,
+        address user,
+        address[] memory nTokenAddresses,
+        uint256[][] memory tokenIds
+    ) external view override returns (DataTypes.AuctionData[][] memory) {
+        uint256[] memory userBalances = new uint256[](nTokenAddresses.length);
+
+        uint256 tokenDataSize;
+
+        DataTypes.AuctionData[][]
+            memory tokenData = new DataTypes.AuctionData[][](
+                nTokenAddresses.length
+            );
+        IPool pool = IPool(provider.getPool());
+
+        for (uint256 i = 0; i < nTokenAddresses.length; i++) {
+            address asset = nTokenAddresses[i];
+            address underlyingAsset = INToken(asset).UNDERLYING_ASSET_ADDRESS();
+            uint256 userTotalBalance = INToken(asset).balanceOf(user);
+            tokenData[i] = new DataTypes.AuctionData[](userTotalBalance);
+
+            for (uint256 j = 0; j < userTotalBalance; j++) {
+                tokenData[i][j] = pool.getAuctionData(
+                    underlyingAsset,
+                    tokenIds[i][j]
+                );
+            }
+        }
+
+        return (tokenData);
+    }
+
     function getNTokenData(
         address user,
         address[] memory nTokenAddresses,
@@ -281,6 +315,8 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 tokenData[i][j].tokenId = tokenIds[i][j];
                 tokenData[i][j].useAsCollateral = ICollaterizableERC721(asset)
                     .isUsedAsCollateral(tokenIds[i][j]);
+                tokenData[i][j].isAuctioned = IAuctionableERC721(asset)
+                    .isAuctioned(tokenIds[i][j]);
             }
         }
 

@@ -93,6 +93,7 @@ library DataTypes {
     struct NTokenData {
         uint256 tokenId;
         bool useAsCollateral;
+        bool isAuctioned;
     }
 
     enum InterestRateMode {
@@ -332,8 +333,6 @@ library DataTypes {
     }
 
     struct AuctionData {
-        address asset;
-        uint256 tokenId;
         uint256 startTime;
         uint256 currentPriceMultiplier;
         uint256 maxPriceMultiplier;

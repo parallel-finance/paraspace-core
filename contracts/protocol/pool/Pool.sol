@@ -22,6 +22,8 @@ import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
+import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
 /**
  * @title Pool contract
@@ -949,6 +951,47 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
         returns (DataTypes.ReserveAuctionConfigurationMap memory)
     {
         return _reserves[asset].auctionConfiguration;
+    }
+
+    /// @inheritdoc IPool
+    function getAuctionData(address asset, uint256 tokenId)
+        external
+        view
+        virtual
+        override
+        returns (DataTypes.AuctionData memory auctionData)
+    {
+        DataTypes.ReserveData storage reserve = _reserves[asset];
+        require(
+            reserve.id != 0 || _reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        uint256 startTime = IAuctionableERC721(reserve.xTokenAddress)
+            .getAuctionData(tokenId);
+        auctionData.startTime = startTime;
+        auctionData.currentPriceMultiplier = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        ).calculateAuctionPriceMultiplier(startTime, block.timestamp);
+
+        // TODO: limit contract call and use reserveCache
+        auctionData.maxPriceMultiplier = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        ).getMaxPriceMultiplier();
+        auctionData.minExpPriceMultiplier = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        ).getMinExpPriceMultiplier();
+        auctionData.minPriceMultiplier = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        ).getMinPriceMultiplier();
+        auctionData.stepLinear = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        ).getStepLinear();
+        auctionData.stepExp = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        ).getStepExp();
+        auctionData.tickLength = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        ).getTickLength();
     }
 
     /// @inheritdoc IPool

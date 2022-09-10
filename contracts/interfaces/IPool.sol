@@ -746,6 +746,12 @@ interface IPool {
      **/
     function getReserveAddressById(uint16 id) external view returns (address);
 
+    function getAuctionData(address asset, uint256 tokenId)
+        external
+        view
+        returns (DataTypes.AuctionData memory);
+
+    // function getAuctionData(address user, address) external view returns (DataTypes.AuctionData memory);
     /**
      * @notice Returns the PoolAddressesProvider connected to this contract
      * @return The address of the PoolAddressesProvider

@@ -133,6 +133,13 @@ interface IUiPoolDataProvider {
         uint256[][] memory tokenIds
     ) external view returns (DataTypes.NTokenData[][] memory);
 
+    function getAuctionData(
+        IPoolAddressesProvider provider,
+        address user,
+        address[] memory nTokenAddresses,
+        uint256[][] memory tokenIds
+    ) external view returns (DataTypes.AuctionData[][] memory);
+
     function getUniswapV3LpTokenData(
         IPoolAddressesProvider provider,
         address lpTokenAddress,
