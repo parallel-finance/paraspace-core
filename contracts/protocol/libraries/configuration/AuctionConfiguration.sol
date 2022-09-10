@@ -75,7 +75,7 @@ library AuctionConfiguration {
     function getAuctionRecoveryHealthFactor(
         DataTypes.ReserveAuctionConfigurationMap memory self
     ) internal pure returns (uint256) {
-        self.data =
+        return
             (self.data & ~AUCTION_RECOVERY_HEALTH_FACTOR_MASK) >>
             AUCTION_RECOVERY_HEALTH_FACTOR_START_BIT_POSITION;
     }
