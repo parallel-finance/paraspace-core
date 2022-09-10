@@ -7,13 +7,13 @@ pragma solidity 0.8.10;
  * @notice Interface for the calculation of current auction price
  */
 interface IReserveAuctionStrategy {
-    function getMaxPriceRatio() external view returns (uint256);
+    function getMaxPriceMultiplier() external view returns (uint256);
 
-    function getMinExpPriceRatio() external view returns (uint256);
+    function getMinExpPriceMultiplier() external view returns (uint256);
 
-    function getMinPriceRatio() external view returns (uint256);
+    function getMinPriceMultiplier() external view returns (uint256);
 
-    function getStepLinearRatio() external view returns (uint256);
+    function getStepLinearMultiplier() external view returns (uint256);
 
     function getStepExp() external view returns (uint256);
 
@@ -25,7 +25,7 @@ interface IReserveAuctionStrategy {
      * @param currentTimestamp The current block timestamp
      * @return auctionPrice The current auction price
      **/
-    function calculateAuctionPrice(
+    function calculateAuctionPriceMultiplier(
         uint256 auctionStartTimestamp,
         uint256 currentTimestamp
     ) external view returns (uint256);

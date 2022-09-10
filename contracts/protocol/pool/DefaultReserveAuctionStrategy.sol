@@ -23,22 +23,22 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
     /**
      * Expressed in PRBMath.SCALE
      **/
-    uint256 internal immutable _maxPriceRatio;
+    uint256 internal immutable _maxPriceMultiplier;
 
     /**
      * Expressed in PRBMath.SCALE
      **/
-    uint256 internal immutable _minExpPriceRatio;
+    uint256 internal immutable _minExpPriceMultiplier;
 
     /**
      * Expressed in PRBMath.SCALE
      **/
-    uint256 internal immutable _minPriceRatio;
+    uint256 internal immutable _minPriceMultiplier;
 
     /**
      * Expressed in PRBMath.SCALE
      **/
-    uint256 internal immutable _stepLinearRatio;
+    uint256 internal immutable _stepLinearMultiplier;
 
     /**
      * Expressed in PRBMath.SCALE
@@ -48,35 +48,35 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
     uint256 internal immutable _tickLength;
 
     constructor(
-        uint256 maxPriceRatio,
-        uint256 minExpPriceRatio,
-        uint256 minPriceRatio,
-        uint256 stepLinearRatio,
+        uint256 maxPriceMultiplier,
+        uint256 minExpPriceMultiplier,
+        uint256 minPriceMultiplier,
+        uint256 stepLinearMultiplier,
         uint256 stepExp,
         uint256 tickLength
     ) {
-        _maxPriceRatio = maxPriceRatio;
-        _minExpPriceRatio = minExpPriceRatio;
-        _minPriceRatio = minPriceRatio;
-        _stepLinearRatio = stepLinearRatio;
+        _maxPriceMultiplier = maxPriceMultiplier;
+        _minExpPriceMultiplier = minExpPriceMultiplier;
+        _minPriceMultiplier = minPriceMultiplier;
+        _stepLinearMultiplier = stepLinearMultiplier;
         _stepExp = stepExp;
         _tickLength = tickLength;
     }
 
-    function getMaxPriceRatio() external view returns (uint256) {
-        return _maxPriceRatio;
+    function getMaxPriceMultiplier() external view returns (uint256) {
+        return _maxPriceMultiplier;
     }
 
-    function getMinExpPriceRatio() external view returns (uint256) {
-        return _minExpPriceRatio;
+    function getMinExpPriceMultiplier() external view returns (uint256) {
+        return _minExpPriceMultiplier;
     }
 
-    function getMinPriceRatio() external view returns (uint256) {
-        return _minPriceRatio;
+    function getMinPriceMultiplier() external view returns (uint256) {
+        return _minPriceMultiplier;
     }
 
-    function getStepLinearRatio() external view returns (uint256) {
-        return _stepLinearRatio;
+    function getStepLinearMultiplier() external view returns (uint256) {
+        return _stepLinearMultiplier;
     }
 
     function getStepExp() external view returns (uint256) {
@@ -87,7 +87,7 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
         return _stepExp;
     }
 
-    function calculateAuctionPrice(
+    function calculateAuctionPriceMultiplier(
         uint256 auctionStartTimestamp,
         uint256 currentTimestamp
     ) public view override returns (uint256) {
@@ -95,28 +95,38 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
             currentTimestamp - auctionStartTimestamp,
             _tickLength
         );
+        return _calculateAuctionPriceMultiplierByTicks(ticks);
+    }
+
+    function _calculateAuctionPriceMultiplierByTicks(uint256 ticks)
+        internal
+        view
+        returns (uint256)
+    {
         if (ticks < PRBMath.SCALE) {
-            return _maxPriceRatio;
+            return _maxPriceMultiplier;
         }
 
-        uint256 priceExpRatio = PRBMathUD60x18.div(
-            _maxPriceRatio,
+        uint256 priceExpMultiplier = PRBMathUD60x18.div(
+            _maxPriceMultiplier,
             PRBMathUD60x18.exp(_stepExp.mul(ticks))
         );
 
-        if (priceExpRatio >= _minExpPriceRatio) {
-            return priceExpRatio;
+        if (priceExpMultiplier >= _minExpPriceMultiplier) {
+            return priceExpMultiplier;
         }
 
-        uint256 priceLastExpRatio = calculateAuctionPrice(
-            auctionStartTimestamp,
-            currentTimestamp - _tickLength
-        );
-        uint256 priceLinear = priceLastExpRatio - _stepLinearRatio;
-        if (priceLinear > _minPriceRatio && priceLinear < _minExpPriceRatio) {
+        uint256 priceLastExpMultiplier = _calculateAuctionPriceMultiplierByTicks(
+                ticks - PRBMath.SCALE
+            );
+        uint256 priceLinear = priceLastExpMultiplier - _stepLinearMultiplier;
+        if (
+            priceLinear > _minPriceMultiplier &&
+            priceLinear < _minExpPriceMultiplier
+        ) {
             return priceLinear;
         }
 
-        return _minPriceRatio;
+        return _minPriceMultiplier;
     }
 }
