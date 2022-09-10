@@ -12,6 +12,7 @@ import {IERC721Metadata} from "../../../dependencies/openzeppelin/contracts/IERC
 import {IERC721Receiver} from "../../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
@@ -29,6 +30,7 @@ import {DataTypes} from "../../libraries/types/DataTypes.sol";
  **/
 abstract contract MintableIncentivizedERC721 is
     ICollaterizableERC721,
+    IAuctionableERC721,
     Context,
     IERC721Metadata,
     IERC721Enumerable,
@@ -96,6 +98,8 @@ abstract contract MintableIncentivizedERC721 is
     IPool public immutable POOL;
 
     mapping(uint256 => bool) _isUsedAsCollateral;
+
+    mapping(uint256 => DataTypes.Auction) _auctions;
 
     /**
      * @dev Constructor.
@@ -662,6 +666,45 @@ abstract contract MintableIncentivizedERC721 is
         returns (bool)
     {
         return _isUsedAsCollateral[tokenId];
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function isAuctioned(uint256 tokenId)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return _auctions[tokenId].startTime != 0;
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function startAuction(uint256 tokenId) external virtual override onlyPool {
+        require(
+            _auctions[tokenId].startTime == 0,
+            Errors.AUCTION_ALREADY_STARTED
+        );
+        DataTypes.Auction memory auction = DataTypes.Auction({
+            startTime: block.timestamp
+        });
+        _auctions[tokenId] = auction;
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function endAuction(uint256 tokenId) external virtual override onlyPool {
+        require(_auctions[tokenId].startTime != 0, Errors.AUCTION_NOT_STARTED);
+        delete _auctions[tokenId];
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function getAuctionData(uint256 tokenId)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        DataTypes.Auction memory auction = _auctions[tokenId];
+        return (auction.startTime);
     }
 
     // Mapping from owner to list of owned token IDs

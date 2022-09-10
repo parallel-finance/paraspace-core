@@ -90,6 +90,11 @@ library DataTypes {
         bool useAsCollateral;
     }
 
+    struct NTokenData {
+        uint256 tokenId;
+        bool useAsCollateral;
+    }
+
     enum InterestRateMode {
         NONE,
         STABLE,
@@ -327,5 +332,22 @@ library DataTypes {
         address adapter;
         address operator;
         bool paused;
+    }
+
+    struct Auction {
+        uint256 startTime;
+    }
+
+    struct AuctionData {
+        address asset;
+        uint256 tokenId;
+        uint256 startTime;
+        uint256 currentPriceMultiplier;
+        uint256 maxPriceMultiplier;
+        uint256 minExpPriceMultiplier;
+        uint256 minPriceMultiplier;
+        uint256 stepLinear;
+        uint256 stepExp;
+        uint256 tickLength;
     }
 }

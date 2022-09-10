@@ -262,20 +262,20 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         address user,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
-    ) external view override returns (DataTypes.ERC721SupplyParams[][] memory) {
+    ) external view override returns (DataTypes.NTokenData[][] memory) {
         uint256[] memory userBalances = new uint256[](nTokenAddresses.length);
 
         uint256 tokenDataSize;
 
-        DataTypes.ERC721SupplyParams[][]
-            memory tokenData = new DataTypes.ERC721SupplyParams[][](
+        DataTypes.NTokenData[][]
+            memory tokenData = new DataTypes.NTokenData[][](
                 nTokenAddresses.length
             );
 
         for (uint256 i = 0; i < nTokenAddresses.length; i++) {
             address asset = nTokenAddresses[i];
             uint256 userTotalBalance = INToken(asset).balanceOf(user);
-            tokenData[i] = new DataTypes.ERC721SupplyParams[](userTotalBalance);
+            tokenData[i] = new DataTypes.NTokenData[](userTotalBalance);
 
             for (uint256 j = 0; j < userTotalBalance; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
