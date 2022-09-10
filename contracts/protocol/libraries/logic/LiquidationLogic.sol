@@ -13,10 +13,14 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {UserConfiguration} from "../../libraries/configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../../libraries/configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../../libraries/configuration/AuctionConfiguration.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
+import {PRBMath} from "../../../dependencies/math/PRBMath.sol";
+import {PRBMathUD60x18} from "../../../dependencies/math/PRBMathUD60x18.sol";
+import {IReserveAuctionStrategy} from "../../../interfaces/IReserveAuctionStrategy.sol";
 
 import {IStableDebtToken} from "../../../interfaces/IStableDebtToken.sol";
 import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
@@ -33,6 +37,8 @@ library LiquidationLogic {
     using ReserveLogic for DataTypes.ReserveData;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
+    using PRBMathUD60x18 for uint256;
     using GPv2SafeERC20 for IERC20;
 
     // See `IPool` for descriptions
@@ -831,6 +837,9 @@ library LiquidationLogic {
         uint256 actualLiquidationBonus;
         uint256 liquidationProtocolFeePercentage;
         uint256 liquidationProtocolFee;
+        address collateralAsset;
+        uint256 multiplier;
+        uint256 startTime;
     }
 
     /**
@@ -971,9 +980,34 @@ library LiquidationLogic {
         )
     {
         AvailableCollateralToLiquidateLocalVars memory vars;
+        vars.collateralAsset = collateralAsset;
 
         // price of the asset that is used as collateral
-        if (INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()) {
+        if (
+            collateralReserve.auctionConfiguration.getAuctionEnabled() &&
+            IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
+                collateralTokenId
+            )
+        ) {
+            {
+                vars.startTime = IAuctionableERC721(
+                    collateralReserve.xTokenAddress
+                ).getAuctionData(collateralTokenId);
+                vars.multiplier = IReserveAuctionStrategy(
+                    collateralReserve.auctionStrategyAddress
+                ).calculateAuctionPriceMultiplier(
+                        vars.startTime,
+                        block.timestamp
+                    );
+                {
+                    vars.collateralPrice = oracle
+                        .getAssetPrice(vars.collateralAsset)
+                        .mul(vars.multiplier);
+                }
+            }
+        } else if (
+            INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()
+        ) {
             vars.collateralPrice = oracle.getTokenPrice(
                 collateralAsset,
                 collateralTokenId

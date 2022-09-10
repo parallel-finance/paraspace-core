@@ -738,6 +738,13 @@ library ValidationLogic {
         );
 
         require(
+            !collateralReserve.auctionConfiguration.getAuctionEnabled() ||
+                IAuctionableERC721(params.xTokenAddress).isAuctioned(
+                    params.tokenId
+                )
+        );
+
+        require(
             params.priceOracleSentinel == address(0) ||
                 params.healthFactor <
                 MINIMUM_HEALTH_FACTOR_LIQUIDATION_THRESHOLD ||
