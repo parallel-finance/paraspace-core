@@ -613,6 +613,46 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
+    function startAuction(
+        address collateralAsset,
+        uint256 collateralTokenId,
+        address user
+    ) external override {
+        LiquidationLogic.executeStartAuction(
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.ExecuteAuctionParams({
+                reservesCount: _reservesCount,
+                collateralAsset: collateralAsset,
+                collateralTokenId: collateralTokenId,
+                user: user,
+                priceOracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
+        );
+    }
+
+    /// @inheritdoc IPool
+    function endAuction(
+        address collateralAsset,
+        uint256 collateralTokenId,
+        address user
+    ) external override {
+        LiquidationLogic.executeEndAuction(
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.ExecuteAuctionParams({
+                reservesCount: _reservesCount,
+                collateralAsset: collateralAsset,
+                collateralTokenId: collateralTokenId,
+                user: user,
+                priceOracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
+        );
+    }
+
+    /// @inheritdoc IPool
     function flashClaim(
         address receiverAddress,
         address nftAsset,

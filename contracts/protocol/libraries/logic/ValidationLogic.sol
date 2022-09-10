@@ -11,10 +11,13 @@ import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {SignatureChecker} from "../../../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 import {IPriceOracleSentinel} from "../../../interfaces/IPriceOracleSentinel.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../configuration/AuctionConfiguration.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {WadRayMath} from "../math/WadRayMath.sol";
@@ -34,6 +37,7 @@ library ValidationLogic {
     using WadRayMath for uint256;
     using PercentageMath for uint256;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
 
     // Factor to apply to "only-variable-debt" liquidity rate to get threshold for rebalancing, expressed in bps
@@ -613,6 +617,12 @@ library ValidationLogic {
         bool isCollateralEnabled;
     }
 
+    struct ValidateAuctionLocalVars {
+        bool collateralReserveActive;
+        bool collateralReservePaused;
+        bool isCollateralEnabled;
+    }
+
     /**
      * @notice Validates the liquidation action.
      * @param userConfig The user configuration mapping
@@ -676,7 +686,7 @@ library ValidationLogic {
         //if collateral isn't enabled as collateral by user, it cannot be liquidated
         require(
             vars.isCollateralEnabled,
-            Errors.COLLATERAL_CANNOT_BE_LIQUIDATED
+            Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
         );
         require(
             params.totalDebt != 0,
@@ -756,7 +766,7 @@ library ValidationLogic {
         //if collateral isn't enabled as collateral by user, it cannot be liquidated
         require(
             vars.isCollateralEnabled,
-            Errors.COLLATERAL_CANNOT_BE_LIQUIDATED
+            Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
         );
         require(
             params.totalDebt != 0,
@@ -809,6 +819,98 @@ library ValidationLogic {
         );
 
         return (healthFactor, hasZeroLtvCollateral);
+    }
+
+    function validateStartAuction(
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ReserveData storage collateralReserve,
+        DataTypes.ValidateAuctionParams memory params
+    ) internal view {
+        require(
+            params.assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
+
+        ValidateAuctionLocalVars memory vars;
+
+        (
+            vars.collateralReserveActive,
+            ,
+            ,
+            ,
+            vars.collateralReservePaused
+        ) = collateralReserve.configuration.getFlags();
+
+        require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
+        require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
+
+        require(
+            !IAuctionableERC721(params.xTokenAddress).isAuctioned(
+                params.tokenId
+            ),
+            Errors.AUCTION_ALREADY_STARTED
+        );
+        require(
+            collateralReserve.auctionConfiguration.getAuctionEnabled(),
+            Errors.AUCTION_NOT_ENABLED
+        );
+
+        require(
+            params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+        );
+
+        vars.isCollateralEnabled =
+            collateralReserve.configuration.getLiquidationThreshold() != 0 &&
+            userConfig.isUsingAsCollateral(collateralReserve.id) &&
+            ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
+                params.tokenId
+            );
+
+        //if collateral isn't enabled as collateral by user, it cannot be auctioned
+        require(
+            vars.isCollateralEnabled,
+            Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
+        );
+    }
+
+    function validateEndAuction(
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ReserveData storage collateralReserve,
+        DataTypes.ValidateAuctionParams memory params
+    ) internal view {
+        require(
+            params.assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
+
+        ValidateAuctionLocalVars memory vars;
+
+        (
+            vars.collateralReserveActive,
+            ,
+            ,
+            ,
+            vars.collateralReservePaused
+        ) = collateralReserve.configuration.getFlags();
+
+        require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
+        require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
+
+        require(
+            IAuctionableERC721(params.xTokenAddress).isAuctioned(
+                params.tokenId
+            ),
+            Errors.AUCTION_NOT_STARTED
+        );
+
+        require(
+            params.healthFactor >=
+                collateralReserve
+                    .auctionConfiguration
+                    .getAuctionRecoveryHealthFactor(),
+            Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
+        );
     }
 
     /**

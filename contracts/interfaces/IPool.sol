@@ -547,6 +547,18 @@ interface IPool {
         bool receiveNToken
     ) external;
 
+    function startAuction(
+        address collateralAsset,
+        uint256 collateralTokenId,
+        address user
+    ) external;
+
+    function endAuction(
+        address collateralAsset,
+        uint256 collateralTokenId,
+        address user
+    ) external;
+
     /**
      * @notice Returns the user account data across all the reserves
      * @param user The address of the user

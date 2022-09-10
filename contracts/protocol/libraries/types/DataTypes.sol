@@ -118,35 +118,13 @@ library DataTypes {
         uint256 currVariableBorrowRate;
         uint256 reserveFactor;
         ReserveConfigurationMap reserveConfiguration;
+        ReserveAuctionConfigurationMap reserveAuctionConfiguration;
         address xTokenAddress;
         address stableDebtTokenAddress;
         address variableDebtTokenAddress;
         uint40 reserveLastUpdateTimestamp;
         uint40 stableDebtLastUpdateTimestamp;
     }
-
-    // struct ExecuteLiquidationCallParams {
-    //     uint256 reservesCount;
-    //     uint256 debtToCover;
-    //     address collateralAsset;
-    //     address debtAsset;
-    //     address user;
-    //     bool receivePToken;
-    //     address priceOracle;
-    //     address priceOracleSentinel;
-    // }
-
-    // struct ExecuteERC721LiquidationCallParams {
-    //     uint256 reservesCount;
-    //     uint256 liquidationAmount;
-    //     uint256 collateralTokenId;
-    //     address collateralAsset;
-    //     address liquidationAsset;
-    //     address user;
-    //     bool receiveNToken;
-    //     address priceOracle;
-    //     address priceOracleSentinel;
-    // }
 
     struct ExecuteLiquidationCallParams {
         uint256 reservesCount;
@@ -158,6 +136,14 @@ library DataTypes {
         bool receiveXToken;
         address priceOracle;
         address priceOracleSentinel;
+    }
+
+    struct ExecuteAuctionParams {
+        uint256 reservesCount;
+        uint256 collateralTokenId;
+        address collateralAsset;
+        address user;
+        address priceOracle;
     }
 
     struct ExecuteSupplyParams {
@@ -262,6 +248,13 @@ library DataTypes {
         uint256 collateralDiscountedPrice;
         uint256 liquidationAmount;
         address priceOracleSentinel;
+        address xTokenAddress;
+        AssetType assetType;
+    }
+
+    struct ValidateAuctionParams {
+        uint256 healthFactor;
+        uint256 tokenId;
         address xTokenAddress;
         AssetType assetType;
     }

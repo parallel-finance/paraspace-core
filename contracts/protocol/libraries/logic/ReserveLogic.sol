@@ -345,6 +345,7 @@ library ReserveLogic {
         DataTypes.ReserveCache memory reserveCache;
 
         reserveCache.reserveConfiguration = reserve.configuration;
+        reserveCache.reserveAuctionConfiguration = reserve.auctionConfiguration;
         reserveCache.assetType = reserve.assetType;
         reserveCache.reserveFactor = reserveCache
             .reserveConfiguration

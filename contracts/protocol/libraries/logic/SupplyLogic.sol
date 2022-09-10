@@ -8,6 +8,7 @@ import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC2
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {DataTypes} from "../types/DataTypes.sol";
@@ -15,7 +16,7 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../configuration/AuctionConfiguration.sol";
 
 /**
  * @title SupplyLogic library
@@ -24,6 +25,7 @@ import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
  */
 library SupplyLogic {
     using ReserveLogic for DataTypes.ReserveData;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using GPv2SafeERC20 for IERC20;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using WadRayMath for uint256;
@@ -382,6 +384,13 @@ library SupplyLogic {
             uint256 amount;
 
             if (reserve.assetType == DataTypes.AssetType.ERC721) {
+                require(
+                    !reserve.auctionConfiguration.getAuctionEnabled() ||
+                        !IAuctionableERC721(reserve.xTokenAddress).isAuctioned(
+                            params.value
+                        ),
+                    Errors.TOKEN_ID_IN_AUCTION
+                );
                 usingAsCollateral = params.usedAsCollateral;
                 amount = 1;
             } else {
@@ -448,14 +457,18 @@ library SupplyLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         uint256 userBalance;
+        uint256 auctionedBalance;
 
         if (reserveCache.assetType == DataTypes.AssetType.ERC20) {
             userBalance = IERC20(reserveCache.xTokenAddress).balanceOf(
                 msg.sender
             );
+            auctionedBalance = 0;
         } else {
             userBalance = ICollaterizableERC721(reserveCache.xTokenAddress)
                 .collaterizedBalanceOf(msg.sender);
+            auctionedBalance = IAuctionableERC721(reserveCache.xTokenAddress)
+                .auctionedBalanceOf(msg.sender);
         }
 
         ValidationLogic.validateSetUseReserveAsCollateral(
@@ -470,6 +483,7 @@ library SupplyLogic {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
         } else {
+            require(auctionedBalance == 0, Errors.AUCTIONED_BALANCE_NOT_ZERO);
             userConfig.setUsingAsCollateral(reserve.id, false);
             ValidationLogic.validateHFAndLtv(
                 reservesData,
@@ -533,6 +547,14 @@ library SupplyLogic {
                 }
                 // TODO emit event
             } else {
+                require(
+                    !reserveCache
+                        .reserveAuctionConfiguration
+                        .getAuctionEnabled() ||
+                        !IAuctionableERC721(reserveCache.xTokenAddress)
+                            .isAuctioned(tokenId),
+                    Errors.TOKEN_ID_IN_AUCTION
+                );
                 if (collaterizedBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, false);
                     emit ReserveUsedAsCollateralDisabled(asset, msg.sender);

@@ -15,6 +15,7 @@ import {UserConfiguration} from "../../libraries/configuration/UserConfiguration
 import {ReserveConfiguration} from "../../libraries/configuration/ReserveConfiguration.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 
 import {IStableDebtToken} from "../../../interfaces/IStableDebtToken.sol";
@@ -104,6 +105,100 @@ library LiquidationLogic {
         bool isLiquidationAssetBorrowed;
         DataTypes.ReserveCache debtReserveCache;
         DataTypes.AssetType assetType;
+    }
+
+    struct AuctionLocalVars {
+        uint256 healthFactor;
+        address collateralXToken;
+        DataTypes.AssetType assetType;
+    }
+
+    function executeStartAuction(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
+        DataTypes.ExecuteAuctionParams memory params
+    ) external {
+        AuctionLocalVars memory vars;
+        DataTypes.ReserveData storage collateralReserve = reservesData[
+            params.collateralAsset
+        ];
+        vars.assetType = collateralReserve.assetType;
+        vars.collateralXToken = collateralReserve.xTokenAddress;
+        DataTypes.UserConfigurationMap storage userConfig = usersConfig[
+            params.user
+        ];
+
+        (, , , , , , , , vars.healthFactor, ) = GenericLogic
+            .calculateUserAccountData(
+                reservesData,
+                reservesList,
+                DataTypes.CalculateUserAccountDataParams({
+                    userConfig: userConfig,
+                    reservesCount: params.reservesCount,
+                    user: params.user,
+                    oracle: params.priceOracle
+                })
+            );
+
+        ValidationLogic.validateStartAuction(
+            userConfig,
+            collateralReserve,
+            DataTypes.ValidateAuctionParams({
+                healthFactor: vars.healthFactor,
+                tokenId: params.collateralTokenId,
+                assetType: vars.assetType,
+                xTokenAddress: vars.collateralXToken
+            })
+        );
+
+        IAuctionableERC721(vars.collateralXToken).startAuction(
+            params.collateralTokenId
+        );
+    }
+
+    function executeEndAuction(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
+        DataTypes.ExecuteAuctionParams memory params
+    ) external {
+        AuctionLocalVars memory vars;
+        DataTypes.ReserveData storage collateralReserve = reservesData[
+            params.collateralAsset
+        ];
+        vars.assetType = collateralReserve.assetType;
+        vars.collateralXToken = collateralReserve.xTokenAddress;
+        DataTypes.UserConfigurationMap storage userConfig = usersConfig[
+            params.user
+        ];
+
+        (, , , , , , , , vars.healthFactor, ) = GenericLogic
+            .calculateUserAccountData(
+                reservesData,
+                reservesList,
+                DataTypes.CalculateUserAccountDataParams({
+                    userConfig: userConfig,
+                    reservesCount: params.reservesCount,
+                    user: params.user,
+                    oracle: params.priceOracle
+                })
+            );
+
+        ValidationLogic.validateEndAuction(
+            userConfig,
+            collateralReserve,
+            DataTypes.ValidateAuctionParams({
+                healthFactor: vars.healthFactor,
+                tokenId: params.collateralTokenId,
+                assetType: vars.assetType,
+                xTokenAddress: vars.collateralXToken
+            })
+        );
+
+        IAuctionableERC721(vars.collateralXToken).endAuction(
+            params.collateralTokenId
+        );
     }
 
     /**
