@@ -179,16 +179,4 @@ contract MockReserveConfiguration {
     function getAuctionRecoveryHealthFactor() external view returns (uint256) {
         return auctionConfiguration.getAuctionRecoveryHealthFactor();
     }
-
-    function setAuctionTwapPriceEnabled(
-        bool enabled
-    ) external {
-        DataTypes.ReserveAuctionConfigurationMap memory config = auctionConfiguration;
-        config.setAuctionTwapPriceEnabled(enabled);
-        auctionConfiguration = config;
-    }
-
-    function getAuctionTwapPriceEnabled() external view returns (bool) {
-        return auctionConfiguration.getAuctionTwapPriceEnabled();
-    }
 }

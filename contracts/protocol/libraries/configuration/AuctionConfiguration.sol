@@ -12,12 +12,9 @@ import {DataTypes} from "../types/DataTypes.sol";
 library AuctionConfiguration {
     uint256 internal constant AUCTION_ENABLED_MASK =                    0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE; // prettier-ignore
     uint256 internal constant AUCTION_RECOVERY_HEALTH_FACTOR_MASK =     0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE0001; // prettier-ignore
-    uint256 internal constant AUCTION_TWAP_PRICE_ENABLED_MASK =         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFF; // prettier-ignore
 
     uint256
         internal constant AUCTION_RECOVERY_HEALTH_FACTOR_START_BIT_POSITION = 1;
-    uint256 internal constant AUCTION_TWAP_PRICE_ENABLED_START_BIT_POSITION =
-        17;
 
     uint256 internal constant MAX_VALID_AUCTION_RECOVERY_HEALTH_FACTOR = 65535;
 
@@ -78,31 +75,5 @@ library AuctionConfiguration {
         return
             (self.data & ~AUCTION_RECOVERY_HEALTH_FACTOR_MASK) >>
             AUCTION_RECOVERY_HEALTH_FACTOR_START_BIT_POSITION;
-    }
-
-    /**
-     * @notice Sets the twap price flag of the reserve.
-     * @param self The reserve auction configuration
-     * @param enabled True if the twap price needs to be enabled, false otherwise
-     **/
-    function setAuctionTwapPriceEnabled(
-        DataTypes.ReserveAuctionConfigurationMap memory self,
-        bool enabled
-    ) internal pure {
-        self.data =
-            ((self.data & AUCTION_TWAP_PRICE_ENABLED_MASK) |
-                uint256(enabled ? 1 : 0)) <<
-            AUCTION_TWAP_PRICE_ENABLED_START_BIT_POSITION;
-    }
-
-    /**
-     * @notice Gets the twap price flag of the reserve.
-     * @param self The reserve auction configuration
-     * @return The twap price flag
-     **/
-    function getAuctionTwapPriceEnabled(
-        DataTypes.ReserveAuctionConfigurationMap memory self
-    ) internal pure returns (bool) {
-        return (self.data & ~AUCTION_TWAP_PRICE_ENABLED_MASK) != 0;
     }
 }
