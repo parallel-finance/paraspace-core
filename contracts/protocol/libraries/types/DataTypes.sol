@@ -13,6 +13,8 @@ library DataTypes {
     struct ReserveData {
         //stores the reserve configuration
         ReserveConfigurationMap configuration;
+        // //stores the reserve auction configuration
+        // ReserveAuctionConfigurationMap auctionConfiguration;
         //the liquidity index. Expressed in ray
         uint128 liquidityIndex;
         //the current supply rate. Expressed in ray
@@ -70,6 +72,13 @@ library DataTypes {
          * @dev Bitmap of the users collaterals and borrows. It is divided in pairs of bits, one pair per asset.
          * The first bit indicates if an asset is used as collateral by the user, the second whether an
          * asset is borrowed by the user.
+         */
+        uint256 data;
+    }
+
+    struct ReserveAuctionConfigurationMap {
+        /**
+         * @dev Bitmap of the auction configuration.
          */
         uint256 data;
     }
