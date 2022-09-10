@@ -447,6 +447,7 @@ library LiquidationLogic {
             vars.actualDebtToLiquidate,
             vars.userCollateralBalance,
             vars.liquidationBonus,
+            params.collateralTokenId,
             IPriceOracleGetter(params.priceOracle)
         );
 
@@ -957,6 +958,7 @@ library LiquidationLogic {
         uint256 liquidationAmount,
         uint256 userCollateralBalance,
         uint256 liquidationBonus,
+        uint256 collateralTokenId,
         IPriceOracleGetter oracle
     )
         internal
@@ -971,7 +973,15 @@ library LiquidationLogic {
         AvailableCollateralToLiquidateLocalVars memory vars;
 
         // price of the asset that is used as collateral
-        vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        if (INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()) {
+            vars.collateralPrice = oracle.getTokenPrice(
+                collateralAsset,
+                collateralTokenId
+            );
+        } else {
+            vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        }
+
         // price of the asset the liquidator is liquidating with
         vars.debtAssetPrice = oracle.getAssetPrice(liquidationAsset);
 
