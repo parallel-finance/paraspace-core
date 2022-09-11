@@ -966,32 +966,27 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             reserve.id != 0 || _reservesList[0] == asset,
             Errors.ASSET_NOT_LISTED
         );
-        uint256 startTime = IAuctionableERC721(reserve.xTokenAddress)
-            .getAuctionData(tokenId);
-        auctionData.startTime = startTime;
-        auctionData.currentPriceMultiplier = IReserveAuctionStrategy(
-            reserve.auctionStrategyAddress
-        ).calculateAuctionPriceMultiplier(startTime, block.timestamp);
 
-        // TODO: limit contract call and use reserveCache
-        auctionData.maxPriceMultiplier = IReserveAuctionStrategy(
+        uint256 startTime = IAuctionableERC721(reserve.xTokenAddress)
+            .getAuctionData(tokenId)
+            .startTime;
+        IReserveAuctionStrategy auctionStrategy = IReserveAuctionStrategy(
             reserve.auctionStrategyAddress
-        ).getMaxPriceMultiplier();
-        auctionData.minExpPriceMultiplier = IReserveAuctionStrategy(
-            reserve.auctionStrategyAddress
-        ).getMinExpPriceMultiplier();
-        auctionData.minPriceMultiplier = IReserveAuctionStrategy(
-            reserve.auctionStrategyAddress
-        ).getMinPriceMultiplier();
-        auctionData.stepLinear = IReserveAuctionStrategy(
-            reserve.auctionStrategyAddress
-        ).getStepLinear();
-        auctionData.stepExp = IReserveAuctionStrategy(
-            reserve.auctionStrategyAddress
-        ).getStepExp();
-        auctionData.tickLength = IReserveAuctionStrategy(
-            reserve.auctionStrategyAddress
-        ).getTickLength();
+        );
+
+        auctionData.startTime = startTime;
+        auctionData.currentPriceMultiplier = auctionStrategy
+            .calculateAuctionPriceMultiplier(startTime, block.timestamp);
+
+        auctionData.maxPriceMultiplier = auctionStrategy
+            .getMaxPriceMultiplier();
+        auctionData.minExpPriceMultiplier = auctionStrategy
+            .getMinExpPriceMultiplier();
+        auctionData.minPriceMultiplier = auctionStrategy
+            .getMinPriceMultiplier();
+        auctionData.stepLinear = auctionStrategy.getStepLinear();
+        auctionData.stepExp = auctionStrategy.getStepExp();
+        auctionData.tickLength = auctionStrategy.getTickLength();
     }
 
     /// @inheritdoc IPool

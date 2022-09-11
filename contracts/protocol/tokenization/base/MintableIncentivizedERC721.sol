@@ -718,10 +718,9 @@ abstract contract MintableIncentivizedERC721 is
         external
         view
         override
-        returns (uint256)
+        returns (DataTypes.Auction memory auction)
     {
-        DataTypes.Auction memory auction = _auctions[tokenId];
-        return (auction.startTime);
+        auction = _auctions[tokenId];
     }
 
     // Mapping from owner to list of owned token IDs

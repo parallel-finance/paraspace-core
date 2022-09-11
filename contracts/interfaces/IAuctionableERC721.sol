@@ -18,7 +18,7 @@ interface IAuctionableERC721 {
         returns (uint256);
 
     /**
-     * @dev get the auction configuration of a spefifc token
+     * @dev get the auction configuration of a specific token
      */
     function isAuctioned(uint256 tokenId) external view returns (bool);
 
@@ -42,5 +42,5 @@ interface IAuctionableERC721 {
         external
         view
         virtual
-        returns (uint256);
+        returns (DataTypes.Auction memory);
 }

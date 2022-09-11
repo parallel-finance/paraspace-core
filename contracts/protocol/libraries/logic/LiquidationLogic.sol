@@ -989,22 +989,15 @@ library LiquidationLogic {
                 collateralTokenId
             )
         ) {
-            {
-                vars.startTime = IAuctionableERC721(
-                    collateralReserve.xTokenAddress
-                ).getAuctionData(collateralTokenId);
-                vars.multiplier = IReserveAuctionStrategy(
-                    collateralReserve.auctionStrategyAddress
-                ).calculateAuctionPriceMultiplier(
-                        vars.startTime,
-                        block.timestamp
-                    );
-                {
-                    vars.collateralPrice = oracle
-                        .getAssetPrice(vars.collateralAsset)
-                        .mul(vars.multiplier);
-                }
-            }
+            vars.startTime = IAuctionableERC721(collateralReserve.xTokenAddress)
+                .getAuctionData(collateralTokenId)
+                .startTime;
+            vars.multiplier = IReserveAuctionStrategy(
+                collateralReserve.auctionStrategyAddress
+            ).calculateAuctionPriceMultiplier(vars.startTime, block.timestamp);
+            vars.collateralPrice = oracle
+                .getAssetPrice(vars.collateralAsset)
+                .mul(vars.multiplier);
         } else if (
             INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()
         ) {
