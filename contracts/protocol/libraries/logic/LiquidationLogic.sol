@@ -139,6 +139,8 @@ library LiquidationLogic {
         IAuctionableERC721(vars.collateralXToken).startAuction(
             params.collateralTokenId
         );
+
+        // TODO: emit event
     }
 
     function executeEndAuction(
@@ -183,6 +185,8 @@ library LiquidationLogic {
         IAuctionableERC721(vars.collateralXToken).endAuction(
             params.collateralTokenId
         );
+
+        // TODO: emit event
     }
 
     /**
@@ -451,6 +455,17 @@ library LiquidationLogic {
                 xTokenAddress: vars.collateralXToken
             })
         );
+
+        if (
+            collateralReserve.auctionConfiguration.getAuctionEnabled() &&
+            IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
+                params.collateralTokenId
+            )
+        ) {
+            IAuctionableERC721(collateralReserve.xTokenAddress).endAuction(
+                params.collateralTokenId
+            );
+        }
 
         uint256 debtCanBeCovered = vars.collateralDiscountedPrice -
             vars.liquidationProtocolFeeAmount;

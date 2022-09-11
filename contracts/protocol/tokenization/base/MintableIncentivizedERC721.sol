@@ -347,6 +347,10 @@ abstract contract MintableIncentivizedERC721 is
         return _owners[tokenId] != address(0);
     }
 
+    function _isAuctioned(uint256 tokenId) internal view returns (bool) {
+        return _auctions[tokenId].startTime != 0;
+    }
+
     /**
      * @dev Returns whether `spender` is allowed to manage `tokenId`.
      *
@@ -439,7 +443,7 @@ abstract contract MintableIncentivizedERC721 is
             uint256 tokenId = tokenIds[index];
             address owner = ownerOf(tokenId);
             require(owner == user, "not the owner of Ntoken");
-            require(_auctions[tokenId].startTime == 0, "tokenId in auction");
+            require(!_isAuctioned(tokenId), "token in auction");
 
             _removeTokenFromAllTokensEnumeration(tokenId, length - index);
             _removeTokenFromOwnerEnumeration(user, tokenId, oldBalance - index);
@@ -499,6 +503,7 @@ abstract contract MintableIncentivizedERC721 is
             "ERC721: transfer from incorrect owner"
         );
         require(to != address(0), "ERC721: transfer to the zero address");
+        require(!_isAuctioned(tokenId), "token in auction");
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -513,7 +518,6 @@ abstract contract MintableIncentivizedERC721 is
         _owners[tokenId] = to;
 
         // TODO calculate incentives
-
         IRewardController rewardControllerLocal = _rewardController;
         if (address(rewardControllerLocal) != address(0)) {
             uint256 oldTotalSupply = totalSupply();
@@ -688,15 +692,12 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (bool)
     {
-        return _auctions[tokenId].startTime != 0;
+        return _isAuctioned(tokenId);
     }
 
     /// @inheritdoc IAuctionableERC721
     function startAuction(uint256 tokenId) external virtual override onlyPool {
-        require(
-            _auctions[tokenId].startTime == 0,
-            Errors.AUCTION_ALREADY_STARTED
-        );
+        require(!_isAuctioned(tokenId), Errors.AUCTION_ALREADY_STARTED);
         DataTypes.Auction memory auction = DataTypes.Auction({
             startTime: block.timestamp
         });
@@ -707,7 +708,7 @@ abstract contract MintableIncentivizedERC721 is
 
     /// @inheritdoc IAuctionableERC721
     function endAuction(uint256 tokenId) external virtual override onlyPool {
-        require(_auctions[tokenId].startTime != 0, Errors.AUCTION_NOT_STARTED);
+        require(_isAuctioned(tokenId), Errors.AUCTION_NOT_STARTED);
         require(_exists(tokenId), "ERC721: endAuction for nonexistent token");
         _userState[_owners[tokenId]].auctionedBalance -= 1;
         delete _auctions[tokenId];

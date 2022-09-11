@@ -108,6 +108,6 @@ library Errors {
     string public constant AUCTION_NOT_STARTED = "113"; //auction not started yet.
     string public constant AUCTION_NOT_ENABLED = "114"; //auction not enabled on the reserve.
     string public constant ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD = "115"; //ERC721 Health factor is not above the threshold.
-    string public constant TOKEN_ID_IN_AUCTION = "116"; //tokenId is in auction.
+    string public constant TOKEN_IN_AUCTION = "116"; //tokenId is in auction.
     string public constant AUCTIONED_BALANCE_NOT_ZERO = "117"; //auctioned balance not zero
 }

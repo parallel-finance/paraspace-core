@@ -384,13 +384,6 @@ library SupplyLogic {
             uint256 amount;
 
             if (reserve.assetType == DataTypes.AssetType.ERC721) {
-                require(
-                    !reserve.auctionConfiguration.getAuctionEnabled() ||
-                        !IAuctionableERC721(reserve.xTokenAddress).isAuctioned(
-                            params.value
-                        ),
-                    Errors.TOKEN_ID_IN_AUCTION
-                );
                 usingAsCollateral = params.usedAsCollateral;
                 amount = 1;
             } else {
@@ -553,7 +546,7 @@ library SupplyLogic {
                         .getAuctionEnabled() ||
                         !IAuctionableERC721(reserveCache.xTokenAddress)
                             .isAuctioned(tokenId),
-                    Errors.TOKEN_ID_IN_AUCTION
+                    Errors.TOKEN_IN_AUCTION
                 );
                 if (collaterizedBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, false);
