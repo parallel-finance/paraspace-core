@@ -655,6 +655,10 @@ abstract contract MintableIncentivizedERC721 is
 
         uint64 collaterizedBalance = _userState[owner].collaterizedBalance;
 
+        if (!useAsCollateral) {
+            require(!_isAuctioned(tokenId), "token in auction");
+        }
+
         _isUsedAsCollateral[tokenId] = useAsCollateral;
         collaterizedBalance = useAsCollateral
             ? collaterizedBalance + 1

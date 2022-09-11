@@ -540,14 +540,6 @@ library SupplyLogic {
                 }
                 // TODO emit event
             } else {
-                require(
-                    !reserveCache
-                        .reserveAuctionConfiguration
-                        .getAuctionEnabled() ||
-                        !IAuctionableERC721(reserveCache.xTokenAddress)
-                            .isAuctioned(tokenId),
-                    Errors.TOKEN_IN_AUCTION
-                );
                 if (collaterizedBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, false);
                     emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
