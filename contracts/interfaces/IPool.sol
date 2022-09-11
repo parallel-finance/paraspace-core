@@ -746,7 +746,7 @@ interface IPool {
 
     /**
      * @notice increase user's total atomic tokens counter
-     * @param asset The address of the ntoken underlaying asset
+     * @param asset The address of the ntoken underlying asset
      * @param user The address of the user
      * @param changeBy The amount to increase by
      */
@@ -758,7 +758,7 @@ interface IPool {
 
     /**
      * @notice decrease user's total atomic tokens counter
-     * @param asset The address of the ntoken underlaying asset
+     * @param asset The address of the ntoken underlying asset
      * @param user The address of the user
      * @param changeBy The amount to decrease by
      */
