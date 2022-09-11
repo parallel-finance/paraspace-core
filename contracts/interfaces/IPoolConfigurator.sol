@@ -277,6 +277,12 @@ interface IPoolConfigurator {
     function setReservePause(address asset, bool paused) external;
 
     /**
+     * @notice set the maximum allowed atomic tokens per user
+     * @param value The maximum amount
+     */
+    function setMaxAtomicTokensAllowed(uint24 value) external;
+
+    /**
      * @notice Updates the reserve factor of a reserve.
      * @param asset The address of the underlying asset of the reserve
      * @param newReserveFactor The new reserve factor of the reserve

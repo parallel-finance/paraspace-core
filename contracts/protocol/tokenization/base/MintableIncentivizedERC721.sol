@@ -94,6 +94,9 @@ abstract contract MintableIncentivizedERC721 is
     IRewardController internal _rewardController;
     IPoolAddressesProvider internal immutable _addressesProvider;
     IPool public immutable POOL;
+    bool public immutable ATOMIC_PRICING;
+
+    address internal _underlyingAsset;
 
     mapping(uint256 => bool) _isUsedAsCollateral;
 
@@ -106,12 +109,14 @@ abstract contract MintableIncentivizedERC721 is
     constructor(
         IPool pool,
         string memory name,
-        string memory symbol
+        string memory symbol,
+        bool atomic_pricing
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
         _name = name;
         _symbol = symbol;
         POOL = pool;
+        ATOMIC_PRICING = atomic_pricing;
     }
 
     function name() public view override returns (string memory) {
@@ -406,6 +411,13 @@ abstract contract MintableIncentivizedERC721 is
         _userState[to].collaterizedBalance += collaterizedTokens;
 
         _userState[to].balance = oldBalance + uint64(tokenData.length);
+        if (ATOMIC_PRICING) {
+            POOL.increaseUserTotalAtomicTokens(
+                _underlyingAsset,
+                to,
+                uint24(tokenData.length)
+            );
+        }
 
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
@@ -458,6 +470,13 @@ abstract contract MintableIncentivizedERC721 is
             oldCollaterizedBalance -
             burntCollaterizedTokens;
 
+        if (ATOMIC_PRICING) {
+            POOL.decreaseUserTotalAtomicTokens(
+                _underlyingAsset,
+                user,
+                uint24(tokenIds.length)
+            );
+        }
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
 
@@ -503,6 +522,11 @@ abstract contract MintableIncentivizedERC721 is
         _userState[from].balance = oldSenderBalance - 1;
         uint64 oldRecipientBalance = _userState[to].balance;
         _userState[to].balance = oldRecipientBalance + 1;
+
+        if (ATOMIC_PRICING) {
+            POOL.decreaseUserTotalAtomicTokens(_underlyingAsset, from, 1);
+            POOL.increaseUserTotalAtomicTokens(_underlyingAsset, to, 1);
+        }
 
         _owners[tokenId] = to;
 
