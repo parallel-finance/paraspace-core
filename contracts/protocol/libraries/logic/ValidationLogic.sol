@@ -738,13 +738,6 @@ library ValidationLogic {
         );
 
         require(
-            !collateralReserve.auctionConfiguration.getAuctionEnabled() ||
-                IAuctionableERC721(params.xTokenAddress).isAuctioned(
-                    params.tokenId
-                )
-        );
-
-        require(
             params.priceOracleSentinel == address(0) ||
                 params.healthFactor <
                 MINIMUM_HEALTH_FACTOR_LIQUIDATION_THRESHOLD ||
@@ -753,10 +746,18 @@ library ValidationLogic {
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
 
-        require(
-            params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-        );
+        if (!collateralReserve.auctionConfiguration.getAuctionEnabled()) {
+            require(
+                params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+        } else {
+            require(
+                IAuctionableERC721(params.xTokenAddress).isAuctioned(
+                    params.tokenId
+                )
+            );
+        }
 
         require(
             params.liquidationAmount >= params.collateralDiscountedPrice,
