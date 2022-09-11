@@ -10,6 +10,7 @@ library ConfiguratorInputTypes {
         address variableDebtTokenImpl;
         uint8 underlyingAssetDecimals;
         address interestRateStrategyAddress;
+        address auctionStrategyAddress;
         address underlyingAsset;
         DataTypes.AssetType assetType;
         address treasury;

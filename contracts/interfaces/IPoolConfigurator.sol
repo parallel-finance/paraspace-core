@@ -244,6 +244,11 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     ) external;
 
+    function configureReserveAsAuctionable(
+        address asset,
+        uint256 recoveryHealthFactor
+    ) external;
+
     /**
      * @notice Enable or disable stable rate borrowing on a reserve.
      * @dev Can only be enabled (set to true) if borrowing is enabled

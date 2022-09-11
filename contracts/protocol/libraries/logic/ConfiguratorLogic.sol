@@ -102,7 +102,8 @@ library ConfiguratorLogic {
             xTokenProxyAddress,
             stableDebtTokenProxyAddress,
             variableDebtTokenProxyAddress,
-            input.interestRateStrategyAddress
+            input.interestRateStrategyAddress,
+            input.auctionStrategyAddress
         );
 
         DataTypes.ReserveConfigurationMap memory currentConfig = DataTypes

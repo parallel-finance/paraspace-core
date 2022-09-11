@@ -598,7 +598,8 @@ interface IPool {
         address xTokenAddress,
         address stableDebtAddress,
         address variableDebtAddress,
-        address interestRateStrategyAddress
+        address interestRateStrategyAddress,
+        address auctionStrategyAddress
     ) external;
 
     /**

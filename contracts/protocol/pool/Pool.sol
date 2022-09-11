@@ -858,7 +858,8 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
         address xTokenAddress,
         address stableDebtAddress,
         address variableDebtAddress,
-        address interestRateStrategyAddress
+        address interestRateStrategyAddress,
+        address auctionStrategyAddress
     ) external virtual override onlyPoolConfigurator {
         if (
             PoolLogic.executeInitReserve(
@@ -871,6 +872,7 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                     stableDebtAddress: stableDebtAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
+                    auctionStrategyAddress: auctionStrategyAddress,
                     reservesCount: _reservesCount,
                     maxNumberReserves: MAX_NUMBER_RESERVES()
                 })
