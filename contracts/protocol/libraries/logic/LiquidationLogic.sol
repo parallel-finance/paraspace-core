@@ -260,7 +260,7 @@ library LiquidationLogic {
             vars.actualCollateralToLiquidate,
             vars.actualDebtToLiquidate,
             vars.liquidationProtocolFeeAmount
-        ) = _calculateAvailableCollateralToLiquidate(
+        ) = _calculateERC20LiquidationParameters(
             collateralReserve,
             vars.debtReserveCache,
             vars.collateralPriceSource,
@@ -349,6 +349,7 @@ library LiquidationLogic {
         DataTypes.ExecuteLiquidationCallParams memory params
     ) external {
         LiquidationCallLocalVars memory vars;
+
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
         ];
@@ -836,7 +837,7 @@ library LiquidationLogic {
      * @return The amount to repay with the liquidation
      * @return The fee taken from the liquidation bonus amount to be paid to the protocol
      **/
-    function _calculateAvailableCollateralToLiquidate(
+    function _calculateERC20LiquidationParameters(
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ReserveCache memory debtReserveCache,
         address collateralAsset,

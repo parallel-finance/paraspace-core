@@ -11,12 +11,13 @@ import {DataTypes} from "../types/DataTypes.sol";
  */
 library AuctionConfiguration {
     uint256 internal constant AUCTION_ENABLED_MASK =                    0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE; // prettier-ignore
-    uint256 internal constant AUCTION_RECOVERY_HEALTH_FACTOR_MASK =     0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE0001; // prettier-ignore
+    uint256 internal constant AUCTION_RECOVERY_HEALTH_FACTOR_MASK =     0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE0000000000000001; // prettier-ignore
 
     uint256
         internal constant AUCTION_RECOVERY_HEALTH_FACTOR_START_BIT_POSITION = 1;
 
-    uint256 internal constant MAX_VALID_AUCTION_RECOVERY_HEALTH_FACTOR = 65535;
+    uint256 internal constant MAX_VALID_AUCTION_RECOVERY_HEALTH_FACTOR =
+        18446744073709551615;
 
     /**
      * @notice Sets the auction flag for the reserve.
