@@ -277,15 +277,11 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
         for (uint256 i = 0; i < nTokenAddresses.length; i++) {
             address asset = nTokenAddresses[i];
-            address underlyingAsset = INToken(asset).UNDERLYING_ASSET_ADDRESS();
             uint256 userTotalBalance = INToken(asset).balanceOf(user);
             tokenData[i] = new DataTypes.AuctionData[](userTotalBalance);
 
             for (uint256 j = 0; j < userTotalBalance; j++) {
-                tokenData[i][j] = pool.getAuctionData(
-                    underlyingAsset,
-                    tokenIds[i][j]
-                );
+                tokenData[i][j] = pool.getAuctionData(asset, tokenIds[i][j]);
             }
         }
 

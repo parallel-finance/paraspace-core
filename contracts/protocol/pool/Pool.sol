@@ -14,6 +14,7 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPool} from "../../interfaces/IPool.sol";
+import {INToken} from "../../interfaces/INToken.sol";
 import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {PoolStorage} from "./PoolStorage.sol";
 import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
@@ -956,20 +957,22 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
-    function getAuctionData(address asset, uint256 tokenId)
+    function getAuctionData(address ntokenAsset, uint256 tokenId)
         external
         view
         virtual
         override
         returns (DataTypes.AuctionData memory auctionData)
     {
-        DataTypes.ReserveData storage reserve = _reserves[asset];
+        address underlyingAsset = INToken(ntokenAsset)
+            .UNDERLYING_ASSET_ADDRESS();
+        DataTypes.ReserveData storage reserve = _reserves[underlyingAsset];
         require(
-            reserve.id != 0 || _reservesList[0] == asset,
+            reserve.id != 0 || _reservesList[0] == underlyingAsset,
             Errors.ASSET_NOT_LISTED
         );
 
-        uint256 startTime = IAuctionableERC721(reserve.xTokenAddress)
+        uint256 startTime = IAuctionableERC721(ntokenAsset)
             .getAuctionData(tokenId)
             .startTime;
         IReserveAuctionStrategy auctionStrategy = IReserveAuctionStrategy(
@@ -977,6 +980,8 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
         );
 
         auctionData.startTime = startTime;
+        auctionData.asset = underlyingAsset;
+        auctionData.tokenId = tokenId;
         auctionData.currentPriceMultiplier = auctionStrategy
             .calculateAuctionPriceMultiplier(startTime, block.timestamp);
 

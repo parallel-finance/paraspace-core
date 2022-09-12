@@ -334,6 +334,8 @@ library DataTypes {
     }
 
     struct AuctionData {
+        address asset;
+        uint256 tokenId;
         uint256 startTime;
         uint256 currentPriceMultiplier;
         uint256 maxPriceMultiplier;

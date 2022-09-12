@@ -747,7 +747,7 @@ interface IPool {
      **/
     function getReserveAddressById(uint16 id) external view returns (address);
 
-    function getAuctionData(address asset, uint256 tokenId)
+    function getAuctionData(address ntokenAsset, uint256 tokenId)
         external
         view
         returns (DataTypes.AuctionData memory);
