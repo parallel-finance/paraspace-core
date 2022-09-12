@@ -24,7 +24,8 @@ library ConfiguratorLogic {
         address indexed xToken,
         address stableDebtToken,
         address variableDebtToken,
-        address interestRateStrategyAddress
+        address interestRateStrategyAddress,
+        address auctionStrategyAddress
     );
     event XTokenUpgraded(
         address indexed asset,
@@ -122,7 +123,8 @@ library ConfiguratorLogic {
             xTokenProxyAddress,
             stableDebtTokenProxyAddress,
             variableDebtTokenProxyAddress,
-            input.interestRateStrategyAddress
+            input.interestRateStrategyAddress,
+            input.auctionStrategyAddress
         );
     }
 

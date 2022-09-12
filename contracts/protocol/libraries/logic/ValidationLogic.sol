@@ -906,6 +906,10 @@ library ValidationLogic {
         require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
 
         require(
+            collateralReserve.auctionConfiguration.getAuctionEnabled(),
+            Errors.AUCTION_NOT_ENABLED
+        );
+        require(
             IAuctionableERC721(params.xTokenAddress).isAuctioned(
                 params.tokenId
             ),

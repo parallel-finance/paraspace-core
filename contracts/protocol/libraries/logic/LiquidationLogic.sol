@@ -68,6 +68,16 @@ library LiquidationLogic {
         address liquidator,
         bool receiveNToken
     );
+    event AuctionStarted(
+        address indexed collateralAsset,
+        uint256 indexed collateralTokenId,
+        address user
+    );
+    event AuctionEnded(
+        address indexed collateralAsset,
+        uint256 indexed collateralTokenId,
+        address user
+    );
 
     uint256 private constant BASE_CURRENCY_DECIMALS = 18;
 
@@ -140,7 +150,11 @@ library LiquidationLogic {
             params.collateralTokenId
         );
 
-        // TODO: emit event
+        emit AuctionStarted(
+            params.collateralAsset,
+            params.collateralTokenId,
+            params.user
+        );
     }
 
     function executeEndAuction(
@@ -186,7 +200,11 @@ library LiquidationLogic {
             params.collateralTokenId
         );
 
-        // TODO: emit event
+        emit AuctionEnded(
+            params.collateralAsset,
+            params.collateralTokenId,
+            params.user
+        );
     }
 
     /**
@@ -464,6 +482,11 @@ library LiquidationLogic {
         ) {
             IAuctionableERC721(collateralReserve.xTokenAddress).endAuction(
                 params.collateralTokenId
+            );
+            emit AuctionEnded(
+                params.collateralAsset,
+                params.collateralTokenId,
+                params.user
             );
         }
 
