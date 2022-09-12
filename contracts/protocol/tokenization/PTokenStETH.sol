@@ -27,7 +27,7 @@ contract PTokenStETH is RebasingPToken {
      **/
     function lastRebasingIndex() internal view override returns (uint256) {
         // Returns amount of stETH corresponding to 10**27 stETH shares.
-        // The 10**27 is picked to provide the same precision as the AAVE
+        // The 10**27 is picked to provide the same precision as the ParaSpace
         // liquidity index, which is in RAY (10**27).
         return ILido(_underlyingAsset).getPooledEthByShares(WadRayMath.RAY);
     }
