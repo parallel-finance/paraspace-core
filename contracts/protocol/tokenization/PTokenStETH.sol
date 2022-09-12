@@ -2,15 +2,9 @@
 pragma solidity 0.8.10;
 
 import {IPool} from "../../interfaces/IPool.sol";
+import {ILido} from "../../interfaces/ILido.sol";
 import {RebasingPToken} from "./RebasingPToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
-
-interface ILido {
-    function getPooledEthByShares(uint256 _sharesAmount)
-        external
-        view
-        returns (uint256);
-}
 
 /**
  * @title stETH Rebasing PToken

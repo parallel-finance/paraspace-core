@@ -2,14 +2,7 @@
 pragma solidity 0.8.10;
 
 import {MintableERC20} from "./MintableERC20.sol";
-
-interface ILido {
-    function getPooledEthByShares(uint256 _sharesAmount)
-        external
-        view
-        returns (uint256);
-}
-
+import {ILido} from "../../interfaces/ILido.sol";
 
 contract stETH is MintableERC20, ILido {
 
