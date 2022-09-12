@@ -165,12 +165,11 @@ library SupplyLogic {
             );
         }
 
-        bool isFirstSupply = INToken(reserveCache.xTokenAddress).mint(
+        bool isFirstCollateral = INToken(reserveCache.xTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
-        // TODO consider using (usedAsCollateral > 0) instead here to enable collateralization
-        if (isFirstSupply) {
+        if (isFirstCollateral) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -203,12 +202,11 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
-        bool isFirstSupply = INToken(reserveCache.xTokenAddress).mint(
+        bool isFirstCollateral = INToken(reserveCache.xTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
-        // TODO consider using (usedAsCollateral > 0) instead here to enable collateralization
-        if (isFirstSupply) {
+        if (isFirstCollateral) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,

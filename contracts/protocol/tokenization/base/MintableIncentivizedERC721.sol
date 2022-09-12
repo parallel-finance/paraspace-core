@@ -371,6 +371,7 @@ abstract contract MintableIncentivizedERC721 is
     ) internal virtual returns (bool) {
         require(to != address(0), "ERC721: mint to the zero address");
         uint64 oldBalance = _userState[to].balance;
+        uint64 oldCollaterizedBalance = _userState[to].collaterizedBalance;
         uint256 oldTotalSupply = totalSupply();
         uint64 collaterizedTokens = 0;
 
@@ -403,7 +404,9 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        _userState[to].collaterizedBalance += collaterizedTokens;
+        _userState[to].collaterizedBalance =
+            oldCollaterizedBalance +
+            collaterizedTokens;
 
         _userState[to].balance = oldBalance + uint64(tokenData.length);
 
@@ -413,7 +416,7 @@ abstract contract MintableIncentivizedERC721 is
             rewardControllerLocal.handleAction(to, oldTotalSupply, oldBalance);
         }
 
-        return (oldBalance == 0 && collaterizedTokens != 0);
+        return (oldCollaterizedBalance == 0 && collaterizedTokens != 0);
     }
 
     function _burnMultiple(address user, uint256[] calldata tokenIds)

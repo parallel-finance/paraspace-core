@@ -82,7 +82,7 @@ interface INToken is
      * @notice Mints `amount` nTokens to `user`
      * @param onBehalfOf The address of the user that will receive the minted nTokens
      * @param tokenData The list of the tokens getting minted and their collateral configs
-     * @return `true` if the the previous balance of the user was 0
+     * @return `true` if this is the first time to supply this asset as collateral
      */
     function mint(
         address onBehalfOf,
