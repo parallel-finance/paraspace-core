@@ -25,9 +25,7 @@ contract PTokenAToken is RebasingPToken {
      * @return Current rebasing index of stETH in RAY
      **/
     function lastRebasingIndex() internal view override returns (uint256) {
-        // Returns amount of stETH corresponding to 10**27 stETH shares.
-        // The 10**27 is picked to provide the same precision as the AAVE
-        // liquidity index, which is in RAY (10**27).
+        // Returns Aave aToken liquidity index
         return
             AToken(_underlyingAsset).POOL().getReserveNormalizedIncome(
                 AToken(_underlyingAsset).UNDERLYING_ASSET_ADDRESS()
