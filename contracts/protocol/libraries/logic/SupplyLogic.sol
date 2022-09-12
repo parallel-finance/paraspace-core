@@ -445,16 +445,9 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        uint256 userBalance;
-
-        if (reserveCache.assetType == DataTypes.AssetType.ERC20) {
-            userBalance = IERC20(reserveCache.xTokenAddress).balanceOf(
-                msg.sender
-            );
-        } else {
-            userBalance = ICollaterizableERC721(reserveCache.xTokenAddress)
-                .collaterizedBalanceOf(msg.sender);
-        }
+        uint256 userBalance = IERC20(reserveCache.xTokenAddress).balanceOf(
+            msg.sender
+        );
 
         ValidationLogic.validateSetUseReserveAsCollateral(
             reserveCache,
@@ -502,7 +495,7 @@ library SupplyLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool useAsCollateral,
         uint256 reservesCount,
         address priceOracle
@@ -510,37 +503,46 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        (
-            bool valid,
-            address owner,
-            uint256 collaterizedBalance
-        ) = ICollaterizableERC721(reserveCache.xTokenAddress)
-                .setIsUsedAsCollateral(tokenId, useAsCollateral);
+        bool isAnyValid = false;
+        address sender = msg.sender;
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            bool valid = ICollaterizableERC721(reserveCache.xTokenAddress)
+                .setIsUsedAsCollateral(
+                    tokenIds[index],
+                    useAsCollateral,
+                    sender
+                );
+            if (valid) {
+                isAnyValid = valid;
+            }
+        }
 
-        if (valid) {
-            ValidationLogic.validateSetUseERC721AsCollateral(
-                reserveCache,
-                msg.sender,
-                owner
-            );
+        if (isAnyValid) {
+            ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
 
             if (useAsCollateral) {
-                if (collaterizedBalance == 1) {
+                // here we just need to check flag and don't need to check collateral balance
+                // because collateral balance must > 0.
+                if (!userConfig.isUsingAsCollateral(reserve.id)) {
                     userConfig.setUsingAsCollateral(reserve.id, true);
-                    emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
+                    emit ReserveUsedAsCollateralEnabled(asset, sender);
                 }
-                // TODO emit event
             } else {
-                if (collaterizedBalance == 0) {
+                // here we just need to check collateral balance and don't need to check flag
+                // because isUsingAsCollateral flag must be true
+                uint256 userBalance = ICollaterizableERC721(
+                    reserveCache.xTokenAddress
+                ).collaterizedBalanceOf(sender);
+                if (userBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, false);
-                    emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
+                    emit ReserveUsedAsCollateralDisabled(asset, sender);
                 }
                 ValidationLogic.validateHFAndLtv(
                     reservesData,
                     reservesList,
                     userConfig,
                     asset,
-                    msg.sender,
+                    sender,
                     reservesCount,
                     priceOracle
                 );

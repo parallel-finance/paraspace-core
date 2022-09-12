@@ -631,21 +631,15 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc ICollaterizableERC721
-    function setIsUsedAsCollateral(uint256 tokenId, bool useAsCollateral)
-        external
-        virtual
-        override
-        onlyPool
-        returns (
-            bool,
-            address,
-            uint256
-        )
-    {
-        if (_isUsedAsCollateral[tokenId] == useAsCollateral)
-            return (false, address(0x0), 0);
+    function setIsUsedAsCollateral(
+        uint256 tokenId,
+        bool useAsCollateral,
+        address sender
+    ) external virtual override onlyPool returns (bool) {
+        if (_isUsedAsCollateral[tokenId] == useAsCollateral) return false;
 
         address owner = ownerOf(tokenId);
+        require(owner == sender, "not owner");
 
         uint64 collaterizedBalance = _userState[owner].collaterizedBalance;
 
@@ -655,7 +649,7 @@ abstract contract MintableIncentivizedERC721 is
             : collaterizedBalance - 1;
         _userState[owner].collaterizedBalance = collaterizedBalance;
 
-        return (true, owner, collaterizedBalance);
+        return true;
     }
 
     /// @inheritdoc ICollaterizableERC721
