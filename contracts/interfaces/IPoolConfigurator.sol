@@ -46,6 +46,12 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     );
 
+    event AuctionConfigurationChanged(
+        address indexed asset,
+        bool enabled,
+        uint256 recoveryHealthFactor
+    );
+
     /**
      * @dev Emitted when stable rate borrowing is enabled or disabled on a reserve
      * @param asset The address of the underlying asset of the reserve
@@ -244,8 +250,9 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     ) external;
 
-    function configureReserveAsAuctionable(
+    function configureReserveAsAuctionCollateral(
         address asset,
+        bool auctionEnabled,
         uint256 recoveryHealthFactor
     ) external;
 

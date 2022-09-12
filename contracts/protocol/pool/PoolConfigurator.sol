@@ -189,17 +189,26 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function configureReserveAsAuctionable(
+    function configureReserveAsAuctionCollateral(
         address asset,
-        uint256 recoveryHealthFactor
+        bool auctionEnabled,
+        uint256 auctionRecoveryHealthFactor
     ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveAuctionConfigurationMap memory currentConfig = _pool
             .getAuctionConfiguration(asset);
 
-        currentConfig.setAuctionEnabled(true);
-        currentConfig.setAuctionRecoveryHealthFactor(recoveryHealthFactor);
+        currentConfig.setAuctionEnabled(auctionEnabled);
+        currentConfig.setAuctionRecoveryHealthFactor(
+            auctionRecoveryHealthFactor
+        );
 
         _pool.setAuctionConfiguration(asset, currentConfig);
+
+        emit AuctionConfigurationChanged(
+            asset,
+            auctionEnabled,
+            auctionRecoveryHealthFactor
+        );
     }
 
     /// @inheritdoc IPoolConfigurator

@@ -42,6 +42,11 @@ contract ReservesSetupHelper is Ownable {
                 inputParams[i].liquidationThreshold,
                 inputParams[i].liquidationBonus
             );
+            configurator.configureReserveAsAuctionCollateral(
+                inputParams[i].asset,
+                inputParams[i].auctionEnabled,
+                inputParams[i].auctionRecoveryHealthFactor
+            );
 
             if (inputParams[i].borrowingEnabled) {
                 configurator.setReserveBorrowing(inputParams[i].asset, true);
@@ -53,12 +58,6 @@ contract ReservesSetupHelper is Ownable {
                 configurator.setReserveStableRateBorrowing(
                     inputParams[i].asset,
                     inputParams[i].stableBorrowingEnabled
-                );
-            }
-            if (inputParams[i].auctionEnabled) {
-                configurator.configureReserveAsAuctionable(
-                    inputParams[i].asset,
-                    inputParams[i].auctionRecoveryHealthFactor
                 );
             }
             configurator.setSupplyCap(
