@@ -327,7 +327,7 @@ contract NToken is
                 from,
                 to,
                 isUsedAsCollateral,
-                tokenId,
+                1,
                 fromBalanceBefore,
                 toBalanceBefore
             );
