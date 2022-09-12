@@ -472,7 +472,8 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        return (oldCollaterizedBalance == burntCollaterizedTokens);
+        return (oldCollaterizedBalance != 0 &&
+            oldCollaterizedBalance == burntCollaterizedTokens);
     }
 
     /**
