@@ -548,15 +548,15 @@ interface IPool {
     ) external;
 
     function startAuction(
+        address user,
         address collateralAsset,
-        uint256 collateralTokenId,
-        address user
+        uint256 collateralTokenId
     ) external;
 
     function endAuction(
+        address user,
         address collateralAsset,
-        uint256 collateralTokenId,
-        address user
+        uint256 collateralTokenId
     ) external;
 
     /**

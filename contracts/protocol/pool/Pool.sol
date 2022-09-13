@@ -617,9 +617,9 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
 
     /// @inheritdoc IPool
     function startAuction(
+        address user,
         address collateralAsset,
-        uint256 collateralTokenId,
-        address user
+        uint256 collateralTokenId
     ) external override {
         LiquidationLogic.executeStartAuction(
             _reserves,
@@ -637,9 +637,9 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
 
     /// @inheritdoc IPool
     function endAuction(
+        address user,
         address collateralAsset,
-        uint256 collateralTokenId,
-        address user
+        uint256 collateralTokenId
     ) external override {
         LiquidationLogic.executeEndAuction(
             _reserves,

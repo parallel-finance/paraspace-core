@@ -69,14 +69,14 @@ library LiquidationLogic {
         bool receiveNToken
     );
     event AuctionStarted(
+        address indexed user,
         address indexed collateralAsset,
-        uint256 indexed collateralTokenId,
-        address user
+        uint256 indexed collateralTokenId
     );
     event AuctionEnded(
+        address indexed user,
         address indexed collateralAsset,
-        uint256 indexed collateralTokenId,
-        address user
+        uint256 indexed collateralTokenId
     );
 
     uint256 private constant BASE_CURRENCY_DECIMALS = 18;
@@ -153,9 +153,9 @@ library LiquidationLogic {
         );
 
         emit AuctionStarted(
+            params.user,
             params.collateralAsset,
-            params.collateralTokenId,
-            params.user
+            params.collateralTokenId
         );
     }
 
@@ -205,9 +205,9 @@ library LiquidationLogic {
         );
 
         emit AuctionEnded(
+            params.user,
             params.collateralAsset,
-            params.collateralTokenId,
-            params.user
+            params.collateralTokenId
         );
     }
 
@@ -435,7 +435,10 @@ library LiquidationLogic {
             vars.liquidationBonus
         ) = _getConfigurationData(collateralReserve, params);
 
-        if (!vars.isLiquidationAssetBorrowed) {
+        if (
+            !vars.isLiquidationAssetBorrowed ||
+            collateralReserve.auctionConfiguration.getAuctionEnabled()
+        ) {
             vars.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
         }
 
@@ -478,19 +481,14 @@ library LiquidationLogic {
             })
         );
 
-        if (
-            collateralReserve.auctionConfiguration.getAuctionEnabled() &&
-            IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
-                params.collateralTokenId
-            )
-        ) {
+        if (collateralReserve.auctionConfiguration.getAuctionEnabled()) {
             IAuctionableERC721(collateralReserve.xTokenAddress).endAuction(
                 params.collateralTokenId
             );
             emit AuctionEnded(
+                params.user,
                 params.collateralAsset,
-                params.collateralTokenId,
-                params.user
+                params.collateralTokenId
             );
         }
 
