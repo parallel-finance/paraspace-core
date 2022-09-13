@@ -347,6 +347,7 @@ library LiquidationLogic {
             collateralReserve,
             vars.debtReserveCache,
             vars.collateralPriceSource,
+            params.collateralTokenId,
             vars.debtPriceSource,
             vars.userGlobalTotalDebt,
             vars.actualDebtToLiquidate,
@@ -857,6 +858,7 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ReserveCache memory debtReserveCache,
         address collateralAsset,
+        uint256 collateralTokenId,
         address liquidationAsset,
         uint256 userGlobalTotalDebt,
         uint256 liquidationAmount,
@@ -876,7 +878,17 @@ library LiquidationLogic {
         AvailableCollateralToLiquidateLocalVars memory vars;
 
         // price of the asset that is used as collateral
-        vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        if (
+            collateralReserve.assetType == DataTypes.AssetType.ERC721 &&
+            INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()
+        ) {
+            vars.collateralPrice = oracle.getTokenPrice(
+                collateralAsset,
+                collateralTokenId
+            );
+        } else {
+            vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        }
         // price of the asset the liquidator is liquidating with
         vars.debtAssetPrice = oracle.getAssetPrice(liquidationAsset);
 

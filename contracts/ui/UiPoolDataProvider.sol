@@ -121,9 +121,11 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             //address of the interest rate strategy
             reserveData.interestRateStrategyAddress = baseData
                 .interestRateStrategyAddress;
-            reserveData.priceInMarketReferenceCurrency = oracle.getAssetPrice(
-                reserveData.underlyingAsset
-            );
+            try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
+                uint256 price
+            ) {
+                reserveData.priceInMarketReferenceCurrency = price;
+            } catch {}
             // reserveData.priceOracle = oracle.getSourceOfAsset(
             //     reserveData.underlyingAsset
             // );
