@@ -11,7 +11,6 @@ import {IToken} from "../../interfaces/IToken.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import {PRBMathUD60x18} from "../../dependencies/math/PRBMathUD60x18.sol";
 import {PRBMath} from "../../dependencies/math/PRBMath.sol";
-import "hardhat/console.sol";
 
 /**
  * @title MockReserveAuctionStrategy contract
@@ -104,7 +103,6 @@ contract MockReserveAuctionStrategy is IReserveAuctionStrategy {
         view
         returns (uint256)
     {
-        console.log("ticks:", ticks);
         if (ticks < PRBMath.SCALE) {
             return _maxPriceMultiplier;
         }
