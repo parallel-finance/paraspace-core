@@ -2,22 +2,22 @@
 pragma solidity 0.8.10;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {WadRayMath} from "../libraries/math/WadRayMath.sol";
-import {PercentageMath} from "../libraries/math/PercentageMath.sol";
-import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
+import {PercentageMath} from "../../protocol/libraries/math/PercentageMath.sol";
+import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IToken} from "../../interfaces/IToken.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
+import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import {PRBMathUD60x18} from "../../dependencies/math/PRBMathUD60x18.sol";
 import {PRBMath} from "../../dependencies/math/PRBMath.sol";
 
 /**
- * @title DefaultReserveAuctionStrategy contract
+ * @title MockReserveAuctionStrategy contract
  *
  * @notice Implements the calculation of the current dutch auction price
  **/
-contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
+contract MockReserveAuctionStrategy is IReserveAuctionStrategy {
     using PRBMathUD60x18 for uint256;
 
     /**
@@ -107,26 +107,15 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
             return _maxPriceMultiplier;
         }
 
-        uint256 priceExpMultiplier = PRBMathUD60x18.div(
-            _maxPriceMultiplier,
-            PRBMathUD60x18.exp(_stepExp.mul(ticks))
+        uint256 maxTicks = PRBMathUD60x18.div(
+            (_maxPriceMultiplier - _minPriceMultiplier),
+            _stepLinear
         );
 
-        if (priceExpMultiplier >= _minExpPriceMultiplier) {
-            return priceExpMultiplier;
+        if (ticks > maxTicks) {
+            return _minPriceMultiplier;
         }
 
-        uint256 priceLastExpMultiplier = _calculateAuctionPriceMultiplierByTicks(
-                ticks - PRBMath.SCALE
-            );
-        uint256 priceLinear = priceLastExpMultiplier - _stepLinear;
-        if (
-            priceLinear > _minPriceMultiplier &&
-            priceLinear < _minExpPriceMultiplier
-        ) {
-            return priceLinear;
-        }
-
-        return _minPriceMultiplier;
+        return _maxPriceMultiplier - ticks.mul(_stepLinear);
     }
 }
