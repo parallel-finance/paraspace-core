@@ -254,7 +254,9 @@ library DataTypes {
     }
 
     struct ValidateAuctionParams {
+        address user;
         uint256 healthFactor;
+        address collateralAsset;
         uint256 tokenId;
         address xTokenAddress;
         AssetType assetType;

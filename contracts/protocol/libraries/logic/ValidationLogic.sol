@@ -838,6 +838,11 @@ library ValidationLogic {
             params.assetType == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
         );
+        require(
+            IERC721(params.collateralAsset).ownerOf(params.tokenId) ==
+                params.user,
+            Errors.NOT_THE_OWNER
+        );
 
         ValidateAuctionLocalVars memory vars;
 
@@ -890,6 +895,11 @@ library ValidationLogic {
         require(
             params.assetType == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
+        );
+        require(
+            IERC721(params.collateralAsset).ownerOf(params.tokenId) ==
+                params.user,
+            Errors.NOT_THE_OWNER
         );
 
         ValidateAuctionLocalVars memory vars;

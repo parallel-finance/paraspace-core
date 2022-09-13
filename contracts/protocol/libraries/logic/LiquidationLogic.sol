@@ -139,7 +139,9 @@ library LiquidationLogic {
             userConfig,
             collateralReserve,
             DataTypes.ValidateAuctionParams({
+                user: params.user,
                 healthFactor: vars.healthFactor,
+                collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 assetType: vars.assetType,
                 xTokenAddress: vars.collateralXToken
@@ -189,7 +191,9 @@ library LiquidationLogic {
             userConfig,
             collateralReserve,
             DataTypes.ValidateAuctionParams({
+                user: params.user,
                 healthFactor: vars.healthFactor,
+                collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 assetType: vars.assetType,
                 xTokenAddress: vars.collateralXToken
