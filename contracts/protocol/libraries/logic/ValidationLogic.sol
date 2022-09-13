@@ -839,7 +839,7 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(
-            IERC721(params.collateralAsset).ownerOf(params.tokenId) ==
+            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
                 params.user,
             Errors.NOT_THE_OWNER
         );
@@ -897,7 +897,7 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(
-            IERC721(params.collateralAsset).ownerOf(params.tokenId) ==
+            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
                 params.user,
             Errors.NOT_THE_OWNER
         );
