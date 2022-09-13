@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {MintableERC20} from "./MintableERC20.sol";
 import {ILido} from "../../interfaces/ILido.sol";
+import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 
 contract stETH is MintableERC20, ILido {
 
@@ -28,6 +29,6 @@ contract stETH is MintableERC20, ILido {
         external
         view
         returns (uint256) {
-            return _shares * _sharesAmount;
+            return _shares * _sharesAmount / WadRayMath.RAY;
         }
 }

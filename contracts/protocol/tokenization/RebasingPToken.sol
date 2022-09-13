@@ -101,7 +101,7 @@ contract RebasingPToken is PToken {
         view
         returns (uint256)
     {
-        return (super.scaledBalanceOf(user) * rebasingIndex) / WadRayMath.RAY;
+        return ((super.scaledBalanceOf(user) * rebasingIndex) / WadRayMath.RAY);
     }
 
     function _scaledTotalSupply(uint256 rebasingIndex)
@@ -109,7 +109,7 @@ contract RebasingPToken is PToken {
         view
         returns (uint256)
     {
-        return (super.scaledTotalSupply() * rebasingIndex) / WadRayMath.RAY;
+        return ((super.scaledTotalSupply() * rebasingIndex) / WadRayMath.RAY);
     }
 
     /**
