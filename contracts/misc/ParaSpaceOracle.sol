@@ -116,18 +116,19 @@ contract ParaSpaceOracle is IParaSpaceOracle {
     {
         AggregatorInterface source = AggregatorInterface(assetsSources[asset]);
 
+        uint256 price = 0;
         if (asset == BASE_CURRENCY) {
-            return BASE_CURRENCY_UNIT;
+            price = BASE_CURRENCY_UNIT;
         } else if (address(source) == address(0)) {
-            return _fallbackOracle.getAssetPrice(asset);
+            price = _fallbackOracle.getAssetPrice(asset);
         } else {
-            int256 price = source.latestAnswer();
-            if (price > 0) {
-                return uint256(price);
-            } else {
-                return _fallbackOracle.getAssetPrice(asset);
+            price = uint256(source.latestAnswer());
+            if (price == 0) {
+                price = _fallbackOracle.getAssetPrice(asset);
             }
         }
+        require(price != 0, "no price source found");
+        return price;
     }
 
     function getTokenPrice(address asset, uint256 tokenId)
