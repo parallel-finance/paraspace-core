@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {MintableERC20} from "./MintableERC20.sol";
+import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 
 contract MockAToken is MintableERC20 {
 
@@ -12,7 +13,7 @@ contract MockAToken is MintableERC20 {
         string memory symbol,
         uint8 decimals
     )  MintableERC20(name, symbol, decimals){
-        incomeIndex = 1e18;
+        incomeIndex = WadRayMath.RAY;
     }
 
     function setIncomeIndex(uint256 _incomeIndex) external{
