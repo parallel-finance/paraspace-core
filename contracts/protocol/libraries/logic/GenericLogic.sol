@@ -51,6 +51,7 @@ library GenericLogic {
         bool dynamicConfigs;
         uint256 dynamicLTV;
         uint256 dynamicLiquidationThreshold;
+        address xTokenAddress;
     }
 
     /**
@@ -141,53 +142,22 @@ library GenericLogic {
                 vars.assetUnit = 10**vars.decimals;
             }
 
-            vars.assetPrice = IPriceOracleGetter(params.oracle).getAssetPrice(
-                vars.currentReserveAddress
-            );
+            vars.xTokenAddress = currentReserve.xTokenAddress;
 
-            if (
-                (vars.liquidationThreshold != 0 || vars.dynamicConfigs) &&
-                params.userConfig.isUsingAsCollateral(vars.i)
-            ) {
-                if (vars.assetType == DataTypes.AssetType.ERC721) {
-                    (
-                        vars.userBalanceInBaseCurrency,
-                        vars.dynamicLTV,
-                        vars.dynamicLiquidationThreshold
-                    ) = _getUserBalanceInBaseCurrencyERC721(
+            if (vars.assetType == DataTypes.AssetType.ERC20) {
+                vars.assetPrice = _getAssetPrice(
+                    params.oracle,
+                    vars.currentReserveAddress
+                );
+
+                if (
+                    (vars.liquidationThreshold != 0) &&
+                    params.userConfig.isUsingAsCollateral(vars.i)
+                ) {
+                    vars.userBalanceInBaseCurrency = _getUserBalanceForERC20(
                         params.user,
                         currentReserve,
-                        params.oracle,
-                        vars.currentReserveAddress,
-                        vars.assetUnit,
-                        vars.assetPrice,
-                        vars.dynamicConfigs
-                    );
-
-                    if (vars.dynamicConfigs) {
-                        vars.liquidationThreshold = vars
-                            .dynamicLiquidationThreshold;
-                        vars.avgLtv += vars.dynamicLTV;
-                    } else {
-                        vars.liquidationThreshold =
-                            vars.userBalanceInBaseCurrency *
-                            (vars.liquidationThreshold);
-                        vars.avgLtv +=
-                            vars.userBalanceInBaseCurrency *
-                            vars.ltv;
-                    }
-
-                    vars.avgERC721LiquidationThreshold += vars
-                        .liquidationThreshold;
-                    vars.totalERC721CollateralInBaseCurrency += vars
-                        .userBalanceInBaseCurrency;
-                } else {
-                    (
-                        vars.userBalanceInBaseCurrency
-                    ) = _getUserBalanceInBaseCurrencyERC20(
-                        params.user,
-                        currentReserve,
-                        params.oracle,
+                        vars.xTokenAddress,
                         vars.assetUnit,
                         vars.assetPrice
                     );
@@ -200,25 +170,97 @@ library GenericLogic {
                         vars.userBalanceInBaseCurrency *
                         (vars.liquidationThreshold);
                     vars.avgLtv += vars.userBalanceInBaseCurrency * vars.ltv;
+
+                    vars.totalCollateralInBaseCurrency += vars
+                        .userBalanceInBaseCurrency;
+
+                    if (vars.ltv == 0) {
+                        vars.hasZeroLtvCollateral = true;
+                    }
+
+                    vars.avgLiquidationThreshold += vars.liquidationThreshold;
                 }
 
-                vars.totalCollateralInBaseCurrency += vars
-                    .userBalanceInBaseCurrency;
-
-                if (vars.ltv == 0 && vars.dynamicLTV == 0) {
-                    vars.hasZeroLtvCollateral = true;
+                if (params.userConfig.isBorrowing(vars.i)) {
+                    vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
+                        params.user,
+                        currentReserve,
+                        vars.assetPrice,
+                        vars.assetUnit
+                    );
                 }
+            } else {
+                if (
+                    (vars.liquidationThreshold != 0 || vars.dynamicConfigs) &&
+                    params.userConfig.isUsingAsCollateral(vars.i)
+                ) {
+                    if (INToken(vars.xTokenAddress).getAtomicPricingConfig()) {
+                        if (vars.dynamicConfigs) {
+                            (
+                                vars.userBalanceInBaseCurrency,
+                                vars.dynamicLTV,
+                                vars.dynamicLiquidationThreshold
+                            ) = _getUserBalanceAndDynamicConfigsForAtomicERC721(
+                                params.user,
+                                currentReserve,
+                                params.oracle,
+                                vars.currentReserveAddress,
+                                vars.assetUnit
+                            );
 
-                vars.avgLiquidationThreshold += vars.liquidationThreshold;
-            }
+                            vars.liquidationThreshold = vars
+                                .dynamicLiquidationThreshold;
+                            vars.avgLtv += vars.dynamicLTV;
+                        } else {
+                            vars
+                                .userBalanceInBaseCurrency = _getUserBalanceForAtomicERC721(
+                                params.user,
+                                vars.xTokenAddress,
+                                params.oracle,
+                                vars.currentReserveAddress,
+                                vars.assetUnit
+                            );
+                        }
+                    } else {
+                        vars.assetPrice = _getAssetPrice(
+                            params.oracle,
+                            vars.currentReserveAddress
+                        );
 
-            if (params.userConfig.isBorrowing(vars.i)) {
-                vars.totalDebtInBaseCurrency += _getUserDebtInBaseCurrency(
-                    params.user,
-                    currentReserve,
-                    vars.assetPrice,
-                    vars.assetUnit
-                );
+                        vars
+                            .userBalanceInBaseCurrency = _getUserBalanceForERC721(
+                            params.user,
+                            vars.xTokenAddress,
+                            vars.assetUnit,
+                            vars.assetPrice
+                        );
+                    }
+
+                    if (!vars.dynamicConfigs) {
+                        vars.liquidationThreshold =
+                            vars.userBalanceInBaseCurrency *
+                            (vars.liquidationThreshold);
+                        vars.avgLtv +=
+                            vars.userBalanceInBaseCurrency *
+                            vars.ltv;
+                    }
+
+                    vars.avgERC721LiquidationThreshold += vars
+                        .liquidationThreshold;
+                    vars.totalERC721CollateralInBaseCurrency += vars
+                        .userBalanceInBaseCurrency;
+
+                    vars.totalCollateralInBaseCurrency += vars
+                        .userBalanceInBaseCurrency;
+
+                    if (vars.ltv == 0) {
+                        if (vars.dynamicLTV == 0) {
+                            vars.hasZeroLtvCollateral = true;
+                        }
+                    }
+
+                    vars.avgLiquidationThreshold += vars.liquidationThreshold;
+                }
             }
 
             unchecked {
@@ -354,18 +396,32 @@ library GenericLogic {
      * @dev For gas reasons, the xToken balance is calculated by fetching `scaledBalancesOf` normalized debt, which
      * is cheaper than fetching `balanceOf`
      * @param user The address of the user
-     * @param reserve The data of the reserve for which the total xToken balance of the user is being calculated
      * @param assetUnit The value representing one full unit of the asset (10^decimals)
      * @return The total xToken balance of the user normalized to the base currency of the price oracle
      **/
-    function _getUserBalanceInBaseCurrencyERC721(
+    function _getUserBalanceForERC721(
+        address user,
+        address xTokenAddress,
+        uint256 assetUnit,
+        uint256 assetPrice
+    ) private view returns (uint256) {
+        DynamicParamsTemp memory vars;
+
+        vars.balance =
+            ICollaterizableERC721(xTokenAddress).collaterizedBalanceOf(user) *
+            assetPrice;
+
+        unchecked {
+            return (vars.balance / assetUnit);
+        }
+    }
+
+    function _getUserBalanceAndDynamicConfigsForAtomicERC721(
         address user,
         DataTypes.ReserveData storage reserve,
         address oracle,
         address currentReserveAddress,
-        uint256 assetUnit,
-        uint256 assetPrice,
-        bool dynamicConfigs
+        uint256 assetUnit
     )
         private
         view
@@ -376,64 +432,39 @@ library GenericLogic {
         )
     {
         DynamicParamsTemp memory vars;
+        uint256 assetPrice;
+        // we have to reread the xTokenAddress. otherwise we run into stack too deep issue
         vars.xTokenAddress = reserve.xTokenAddress;
+        uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(user);
+        vars.dynamicConfigsStrategyAddress = reserve
+            .dynamicConfigsStrategyAddress;
+        for (uint256 index = 0; index < totalBalance; index++) {
+            vars.tokenId = IERC721Enumerable(vars.xTokenAddress)
+                .tokenOfOwnerByIndex(user, index);
+            if (
+                ICollaterizableERC721(vars.xTokenAddress).isUsedAsCollateral(
+                    vars.tokenId
+                )
+            ) {
+                // TODO use getTokensPrices instead if it saves gas
+                assetPrice = IPriceOracleGetter(oracle).getTokenPrice(
+                    currentReserveAddress,
+                    vars.tokenId
+                );
+                vars.balance += assetPrice;
 
-        if (INToken(vars.xTokenAddress).getAtomicPricingConfig()) {
-            uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(user);
-            if (dynamicConfigs) {
-                vars.dynamicConfigsStrategyAddress = reserve
-                    .dynamicConfigsStrategyAddress;
-                for (uint256 index = 0; index < totalBalance; index++) {
-                    vars.tokenId = IERC721Enumerable(vars.xTokenAddress)
-                        .tokenOfOwnerByIndex(user, index);
-                    if (
-                        ICollaterizableERC721(vars.xTokenAddress)
-                            .isUsedAsCollateral(vars.tokenId)
-                    ) {
-                        // TODO use getTokensPrices instead if it saves gas
-                        assetPrice = IPriceOracleGetter(oracle).getTokenPrice(
-                            currentReserveAddress,
-                            vars.tokenId
-                        );
-                        vars.balance += assetPrice;
+                (
+                    vars.tmpLTV,
+                    vars.tmpLiquidationThreshold,
 
-                        (
-                            vars.tmpLTV,
-                            vars.tmpLiquidationThreshold,
+                ) = IDynamicConfigsStrategy(vars.dynamicConfigsStrategyAddress)
+                    .getConfigParams(vars.tokenId);
 
-                        ) = IDynamicConfigsStrategy(
-                            vars.dynamicConfigsStrategyAddress
-                        ).getConfigParams(vars.tokenId);
-
-                        vars.ltv += vars.tmpLTV * assetPrice;
-                        vars.liquidationThreshold +=
-                            vars.tmpLiquidationThreshold *
-                            assetPrice;
-                    }
-                }
-            } else {
-                for (uint256 index = 0; index < totalBalance; index++) {
-                    vars.tokenId = IERC721Enumerable(vars.xTokenAddress)
-                        .tokenOfOwnerByIndex(user, index);
-                    if (
-                        ICollaterizableERC721(vars.xTokenAddress)
-                            .isUsedAsCollateral(vars.tokenId)
-                    ) {
-                        // TODO use getTokensPrices instead if it saves gas
-                        assetPrice = IPriceOracleGetter(oracle).getTokenPrice(
-                            currentReserveAddress,
-                            vars.tokenId
-                        );
-                        vars.balance += assetPrice;
-                    }
-                }
+                vars.ltv += vars.tmpLTV * assetPrice;
+                vars.liquidationThreshold +=
+                    vars.tmpLiquidationThreshold *
+                    assetPrice;
             }
-        } else {
-            vars.balance =
-                ICollaterizableERC721(vars.xTokenAddress).collaterizedBalanceOf(
-                    user
-                ) *
-                assetPrice;
         }
 
         unchecked {
@@ -445,24 +476,53 @@ library GenericLogic {
         }
     }
 
+    function _getUserBalanceForAtomicERC721(
+        address user,
+        address xTokenAddress,
+        address oracle,
+        address currentReserveAddress,
+        uint256 assetUnit
+    ) private view returns (uint256) {
+        uint256 assetPrice;
+        uint256 balance;
+        uint256 totalBalance = INToken(xTokenAddress).balanceOf(user);
+
+        for (uint256 index = 0; index < totalBalance; index++) {
+            uint256 tokenId = IERC721Enumerable(xTokenAddress)
+                .tokenOfOwnerByIndex(user, index);
+            if (
+                ICollaterizableERC721(xTokenAddress).isUsedAsCollateral(tokenId)
+            ) {
+                // TODO use getTokensPrices instead if it saves gas
+                assetPrice = IPriceOracleGetter(oracle).getTokenPrice(
+                    currentReserveAddress,
+                    tokenId
+                );
+                balance += assetPrice;
+            }
+        }
+
+        unchecked {
+            return (balance / assetUnit);
+        }
+    }
+
     /**
      * @notice Calculates total xToken balance of the user in the based currency used by the price oracle
      * @dev For gas reasons, the xToken balance is calculated by fetching `scaledBalancesOf` normalized debt, which
      * is cheaper than fetching `balanceOf`
      * @param user The address of the user
-     * @param reserve The data of the reserve for which the total xToken balance of the user is being calculated
      * @param assetUnit The value representing one full unit of the asset (10^decimals)
      * @return The total xToken balance of the user normalized to the base currency of the price oracle
      **/
-    function _getUserBalanceInBaseCurrencyERC20(
+    function _getUserBalanceForERC20(
         address user,
         DataTypes.ReserveData storage reserve,
-        address oracle,
+        address xTokenAddress,
         uint256 assetUnit,
         uint256 assetPrice
     ) private view returns (uint256) {
         uint256 balance;
-        address xTokenAddress = reserve.xTokenAddress;
 
         uint256 normalizedIncome = reserve.getNormalizedIncome();
         balance =
@@ -476,5 +536,13 @@ library GenericLogic {
         unchecked {
             return (balance / assetUnit);
         }
+    }
+
+    function _getAssetPrice(address oracle, address currentReserveAddress)
+        internal
+        view
+        returns (uint256)
+    {
+        return IPriceOracleGetter(oracle).getAssetPrice(currentReserveAddress);
     }
 }
