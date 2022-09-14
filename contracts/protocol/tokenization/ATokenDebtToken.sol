@@ -2,17 +2,17 @@
 pragma solidity 0.8.10;
 
 import {IPool} from "../../interfaces/IPool.sol";
-import {RebasingPToken} from "./RebasingPToken.sol";
+import {RebasingDebtToken} from "./RebasingDebtToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
 
 /**
- * @title aToken Rebasing PToken
+ * @title aToken Rebasing Debt Token
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract PTokenAToken is RebasingPToken {
-    constructor(IPool pool) RebasingPToken(pool) {
+contract ATokenDebtToken is RebasingDebtToken {
+    constructor(IPool pool) RebasingDebtToken(pool) {
         //intentionally empty
     }
 
