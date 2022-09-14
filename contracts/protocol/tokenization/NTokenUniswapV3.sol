@@ -128,12 +128,14 @@ contract NTokenUniswapV3 is NToken {
         receiveEthAsWeth = (receiveEthAsWeth &&
             (token0 == weth || token1 == weth));
 
+        address sender = msg.sender;
+        uint128 MAX_INT_128 = 0xffffffffffffffffffffffffffffffff;
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
-                recipient: receiveEthAsWeth ? address(this) : _msgSender(),
-                amount0Max: 2**128 - 1,
-                amount1Max: 2**128 - 1
+                recipient: receiveEthAsWeth ? address(this) : sender,
+                amount0Max: MAX_INT_128,
+                amount1Max: MAX_INT_128
             });
 
         (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
@@ -146,16 +148,13 @@ contract NTokenUniswapV3 is NToken {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
             if (balanceWeth > 0) {
                 IWETH(weth).withdraw(balanceWeth);
-                (bool success, ) = _msgSender().call{value: balanceWeth}(
-                    new bytes(0)
-                );
-                require(success, "Transfer ETH failed");
+                _safeTransferETH(sender, balanceWeth);
             }
 
             address pairToken = (token0 == weth) ? token1 : token0;
             uint256 balanceToken = IERC20(pairToken).balanceOf(address(this));
             if (balanceToken > 0) {
-                IERC20(pairToken).safeTransfer(_msgSender(), balanceToken);
+                IERC20(pairToken).safeTransfer(sender, balanceToken);
             }
         }
     }
@@ -194,41 +193,18 @@ contract NTokenUniswapV3 is NToken {
         // move underlying into this contract
         address weth = _addressesProvider.getWETH();
         uint256 txValue = msg.value;
+        address sender = msg.sender;
         bool token0IsETH = (token0 == weth && txValue > 0);
         bool token1IsETH = (token1 == weth && txValue > 0);
         if (!token0IsETH) {
-            IERC20(token0).safeTransferFrom(
-                _msgSender(),
-                address(this),
-                amountAdd0
-            );
+            IERC20(token0).safeTransferFrom(sender, address(this), amountAdd0);
         }
         if (!token1IsETH) {
-            IERC20(token1).safeTransferFrom(
-                _msgSender(),
-                address(this),
-                amountAdd1
-            );
+            IERC20(token1).safeTransferFrom(sender, address(this), amountAdd1);
         }
 
-        //avoid stack too deep
-        {
-            uint256 token0Allownance = IERC20(token0).allowance(
-                address(this),
-                _underlyingAsset
-            );
-            if (token0Allownance == 0) {
-                IERC20(token0).safeApprove(_underlyingAsset, 2**256 - 1);
-            }
-
-            uint256 token1Allownance = IERC20(token1).allowance(
-                address(this),
-                _underlyingAsset
-            );
-            if (token1Allownance == 0) {
-                IERC20(token1).safeApprove(_underlyingAsset, 2**256 - 1);
-            }
-        }
+        checkAllownance(token0);
+        checkAllownance(token1);
 
         // move underlying from this contract to Uniswap
         INonfungiblePositionManager.IncreaseLiquidityParams
@@ -250,12 +226,12 @@ contract NTokenUniswapV3 is NToken {
         // refund unused tokens
         if (amount0 < amountAdd0 && !token0IsETH) {
             uint256 refund0 = amountAdd0 - amount0;
-            IERC20(token0).safeTransfer(_msgSender(), refund0);
+            IERC20(token0).safeTransfer(sender, refund0);
         }
 
         if (amount1 < amountAdd1 && !token1IsETH) {
             uint256 refund1 = amountAdd1 - amount1;
-            IERC20(token1).safeTransfer(_msgSender(), refund1);
+            IERC20(token1).safeTransfer(sender, refund1);
         }
 
         //refund eth
@@ -263,10 +239,7 @@ contract NTokenUniswapV3 is NToken {
             INonfungiblePositionManager(_underlyingAsset).refundETH();
             uint256 ethBalance = address(this).balance;
             if (ethBalance > 0) {
-                (bool success, ) = msg.sender.call{value: ethBalance}(
-                    new bytes(0)
-                );
-                require(success, "Refund ETH failed");
+                _safeTransferETH(sender, ethBalance);
             }
         }
     }
@@ -314,7 +287,8 @@ contract NTokenUniswapV3 is NToken {
         bool receiveEthAsWeth
     ) external {
         // only the token owner of the NToken can decrease the underlying
-        require(_msgSender() == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+        address sender = _msgSender();
+        require(sender == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
         // interact with Uniswap V3
         _decreaseLiquidity(
@@ -340,13 +314,29 @@ contract NTokenUniswapV3 is NToken {
             // healthFactor
             uint256 healthFactor, // erc721HealthFactor
 
-        ) = POOL.getUserAccountData(_msgSender());
+        ) = POOL.getUserAccountData(sender);
 
         // revert if decrease would result in a liquidation
         require(
             healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
+    }
+
+    function checkAllownance(address token) internal {
+        uint256 allownance = IERC20(token).allowance(
+            address(this),
+            _underlyingAsset
+        );
+        if (allownance == 0) {
+            uint256 MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+            IERC20(token).safeApprove(_underlyingAsset, MAX_INT);
+        }
+    }
+
+    function _safeTransferETH(address to, uint256 value) internal {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        require(success, "ETH_TRANSFER_FAILED");
     }
 
     receive() external payable {}
