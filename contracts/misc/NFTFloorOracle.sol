@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 
 //maxSubmissions by default we keep 3 submission at most for each feeder
 uint8 constant Default_MaxSubmissions = 3;
-//minCountToAggregate to aggegate with,at least the number of feeders
+//minCountToAggregate to aggregate with,at least the number of feeders
 //assume we deploy 3 oracle clients here
 uint8 constant Default_MinCountToAggregate = 3;
 //expirationPeriod at least the interval of client to feed data(currently 6h=21600s in mainnet)
@@ -84,7 +84,7 @@ contract NFTFloorOracle is
     /// @dev All asset list
     address[] internal nfts;
 
-    /// @dev Original raw value to aggegate with
+    /// @dev Original raw value to aggregate with
     // contract address -> FeederRegistrar
     mapping(address => FeederRegistrar) internal priceFeederMap;
 
@@ -195,8 +195,8 @@ contract NFTFloorOracle is
     }
 
     /// @notice set oracle configs
-    /// @param expirationPeriod only prices not expired will be aggegated with
-    /// @param minCountToAggregate the minum number of valid price to aggegate with
+    /// @param expirationPeriod only prices not expired will be aggregated with
+    /// @param minCountToAggregate the minimum number of valid price to aggregate with
     /// @param maxPriceDeviation use to reject when price increase/decrease more than this value
     function _setConfig(
         uint8 minCountToAggregate,
