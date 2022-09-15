@@ -752,6 +752,13 @@ library ValidationLogic {
             );
         } else {
             require(
+                params.healthFactor <
+                    collateralReserve
+                        .auctionConfiguration
+                        .getAuctionRecoveryHealthFactor(),
+                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+            require(
                 IAuctionableERC721(params.xTokenAddress).isAuctioned(
                     params.tokenId
                 )
