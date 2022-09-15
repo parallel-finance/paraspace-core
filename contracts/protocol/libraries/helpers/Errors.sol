@@ -103,4 +103,5 @@ library Errors {
     string public constant INVALID_CREDIT_SIGNATURE = "108"; //invalid credit signature.
     string public constant INVALID_ORDER_TAKER = "109"; //invalid order taker.
     string public constant MARKETPLACE_PAUSED = "110"; //marketplace paused.
+    string public constant LIQUIDATOR_CAN_NOT_BE_SELF = "111"; //user can not liquidate himself.
 }

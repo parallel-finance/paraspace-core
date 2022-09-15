@@ -701,6 +701,11 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
 
+        require(
+            params.liquidator != params.borrower,
+            Errors.LIQUIDATOR_CAN_NOT_BE_SELF
+        );
+
         ValidateLiquidationCallLocalVars memory vars;
 
         (

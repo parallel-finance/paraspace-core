@@ -360,6 +360,8 @@ library LiquidationLogic {
             collateralReserve,
             DataTypes.ValidateERC721LiquidationCallParams({
                 debtReserveCache: vars.debtReserveCache,
+                liquidator: msg.sender,
+                borrower: params.user,
                 totalDebt: vars.userGlobalTotalDebt,
                 collateralDiscountedPrice: vars.collateralDiscountedPrice,
                 liquidationAmount: params.liquidationAmount,

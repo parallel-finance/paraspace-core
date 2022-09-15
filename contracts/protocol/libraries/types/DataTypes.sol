@@ -240,6 +240,8 @@ library DataTypes {
 
     struct ValidateERC721LiquidationCallParams {
         ReserveCache debtReserveCache;
+        address liquidator;
+        address borrower;
         uint256 totalDebt;
         uint256 healthFactor;
         uint256 tokenId;
