@@ -1002,6 +1002,15 @@ library LiquidationLogic {
         vars.collateralAsset = collateralAsset;
 
         // price of the asset that is used as collateral
+        if (INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()) {
+            vars.collateralPrice = oracle.getTokenPrice(
+                collateralAsset,
+                collateralTokenId
+            );
+        } else {
+            vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        }
+
         if (
             collateralReserve.auctionConfiguration.getAuctionEnabled() &&
             IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
@@ -1014,18 +1023,7 @@ library LiquidationLogic {
             vars.multiplier = IReserveAuctionStrategy(
                 collateralReserve.auctionStrategyAddress
             ).calculateAuctionPriceMultiplier(vars.startTime, block.timestamp);
-            vars.collateralPrice = oracle
-                .getAssetPrice(vars.collateralAsset)
-                .mul(vars.multiplier);
-        } else if (
-            INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()
-        ) {
-            vars.collateralPrice = oracle.getTokenPrice(
-                collateralAsset,
-                collateralTokenId
-            );
-        } else {
-            vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+            vars.collateralPrice = vars.collateralPrice.mul(vars.multiplier);
         }
 
         // price of the asset the liquidator is liquidating with
