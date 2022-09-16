@@ -11,6 +11,7 @@ import {IToken} from "../../interfaces/IToken.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {PRBMathUD60x18} from "../../dependencies/math/PRBMathUD60x18.sol";
 import {PRBMath} from "../../dependencies/math/PRBMath.sol";
+import "hardhat/console.sol";
 
 /**
  * @title DefaultReserveAuctionStrategy contract
@@ -107,24 +108,28 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
             return _maxPriceMultiplier;
         }
 
-        uint256 priceExpMultiplier = PRBMathUD60x18.div(
-            _maxPriceMultiplier,
-            PRBMathUD60x18.exp(_stepExp.mul(ticks))
+        uint256 ticksMinExp = PRBMathUD60x18.div(
+            (PRBMathUD60x18.ln(_maxPriceMultiplier) -
+                PRBMathUD60x18.ln(_minExpPriceMultiplier)),
+            _stepExp
         );
-
-        if (priceExpMultiplier >= _minExpPriceMultiplier) {
-            return priceExpMultiplier;
+        if (ticks <= ticksMinExp) {
+            return
+                PRBMathUD60x18.div(
+                    _maxPriceMultiplier,
+                    PRBMathUD60x18.exp(_stepExp.mul(ticks))
+                );
         }
 
-        uint256 priceLastExpMultiplier = _calculateAuctionPriceMultiplierByTicks(
-                ticks - PRBMath.SCALE
-            );
-        uint256 priceLinear = priceLastExpMultiplier - _stepLinear;
-        if (
-            priceLinear > _minPriceMultiplier &&
-            priceLinear < _minExpPriceMultiplier
-        ) {
-            return priceLinear;
+        uint256 priceMinExpEffective = PRBMathUD60x18.div(
+            _maxPriceMultiplier,
+            PRBMathUD60x18.exp(_stepExp.mul(ticksMinExp))
+        );
+        uint256 ticksMin = ticksMinExp +
+            (priceMinExpEffective - _minPriceMultiplier).div(_stepLinear);
+
+        if (ticks <= ticksMin) {
+            return priceMinExpEffective - _stepLinear.mul(ticks - ticksMinExp);
         }
 
         return _minPriceMultiplier;
