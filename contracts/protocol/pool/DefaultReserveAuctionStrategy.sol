@@ -11,7 +11,6 @@ import {IToken} from "../../interfaces/IToken.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {PRBMathUD60x18} from "../../dependencies/math/PRBMathUD60x18.sol";
 import {PRBMath} from "../../dependencies/math/PRBMath.sol";
-import "hardhat/console.sol";
 
 /**
  * @title DefaultReserveAuctionStrategy contract
