@@ -5,7 +5,7 @@ pragma solidity ^0.8.10;
 * EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
 /******************************************************************************/
 
-import {IParaProxy} from "../interfaces/IParaProxy.sol";
+import {IParaProxy} from "../../../../interfaces/IParaProxy.sol";
 
 library ParaProxyLib {
     bytes32 constant PROXY_STORAGE_POSITION =
