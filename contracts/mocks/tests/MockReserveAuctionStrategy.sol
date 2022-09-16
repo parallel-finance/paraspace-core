@@ -95,7 +95,8 @@ contract MockReserveAuctionStrategy is IReserveAuctionStrategy {
             currentTimestamp - auctionStartTimestamp,
             _tickLength
         );
-        return _calculateAuctionPriceMultiplierByTicks(ticks);
+        uint256 roundedTicks = PRBMathUD60x18.fromUint(PRBMathUD60x18.toUint(ticks));
+        return _calculateAuctionPriceMultiplierByTicks(roundedTicks);
     }
 
     function _calculateAuctionPriceMultiplierByTicks(uint256 ticks)
