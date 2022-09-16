@@ -310,16 +310,9 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
+        ValidationLogic.validateWithdrawERC721(reserveCache);
         reserve.updateState(reserveCache);
         uint256 amountToWithdraw = params.tokenIds.length;
-
-        bool withdrwingAllCollateral = INToken(reserveCache.xTokenAddress).burn(
-            msg.sender,
-            params.to,
-            params.tokenIds
-        );
-
-        ValidationLogic.validateWithdrawERC721(reserveCache);
 
         bool hasAnyCollateralAsset = false;
         for (uint256 index = 0; index < params.tokenIds.length; index++) {
@@ -331,6 +324,12 @@ library SupplyLogic {
                 break;
             }
         }
+
+        bool withdrwingAllCollateral = INToken(reserveCache.xTokenAddress).burn(
+            msg.sender,
+            params.to,
+            params.tokenIds
+        );
 
         if (hasAnyCollateralAsset) {
             if (userConfig.isBorrowingAny()) {
