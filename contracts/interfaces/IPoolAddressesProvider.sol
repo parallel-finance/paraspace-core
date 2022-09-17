@@ -226,7 +226,7 @@ interface IPoolAddressesProvider {
     /**
      * @notice Updates the implementation of the Pool, or creates a proxy
      * setting the new `pool` implementation when the function is called for the first time.
-     * @param _implementationParams Contains the implementation addresses and function selectors
+     * @param implementationParams Contains the implementation addresses and function selectors
      * @param _init The address of the contract or implementation to execute _calldata
      * @param _calldata A function call, including function selector and arguments
      *                  _calldata is executed with delegatecall on _init

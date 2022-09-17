@@ -291,7 +291,7 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
      *   as implementation and calls the calldata on the _init
      * @dev If there is already a proxy registered, it just updates the implementation using the implementationParams
      * @param id The id of the proxy to be updated
-     * @param _implementationParams Contains the implementation addresses and function selectors
+     * @param implementationParams Contains the implementation addresses and function selectors
      * @param _init The address of the contract or implementation to execute _calldata
      * @param _calldata A function call, including function selector and arguments
      *                  _calldata is executed with delegatecall on _init
