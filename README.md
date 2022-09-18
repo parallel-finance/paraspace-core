@@ -3,6 +3,7 @@
 <div align="center">
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/para-space/paraspace-core)](https://github.com/para-space/paraspace-core/commits/main)
+[![Codecov](https://codecov.io/gh/para-space/paraspace-periphery/branch/main/graph/badge.svg)](https://codecov.io/gh/para-space/paraspace-periphery)
 [![CI](https://github.com/para-space/paraspace-core/workflows/CI/badge.svg)](https://github.com/para-space/paraspace-core/actions)
 
 [![Twitter URL](https://img.shields.io/twitter/follow/Para_Space?style=social)](https://twitter.com/Para_Space)
@@ -16,7 +17,8 @@ repository.
 </div>
 
 <div align="center">
-**Instant credit market for NFT and ERC20 assets**
+
+<strong>Instant credit market for NFT and ERC20 assets</strong>
 
 [Website](https://para.space) |
 [White Paper](https://docs.para.space/para-space/para-space/readme) |
@@ -29,7 +31,7 @@ repository.
 
 Click the following guides for more details:
 
-<!-- - [DEVELOPER GUIDE](https://github.com/para-space/paraspace-core/blob/main/docs/DEVELOPER-GUIDE.md) -->
+- [DEVELOPER GUIDE](https://github.com/para-space/paraspace-core/blob/main/docs/DEVELOPER-GUIDE.md)
 
 ## Open Source Credits
 

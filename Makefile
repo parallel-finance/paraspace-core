@@ -1,5 +1,5 @@
 .PHONY: ci
-ci: lint test
+ci: lint size
 
 .PHONY: size
 size:
@@ -8,10 +8,6 @@ size:
 .PHONY: build
 build:
 	yarn build
-
-.PHONY: coverage
-coverage:
-	yarn coverage
 
 .PHONY: format
 format:
