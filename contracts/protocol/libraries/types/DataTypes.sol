@@ -112,29 +112,6 @@ library DataTypes {
         uint40 stableDebtLastUpdateTimestamp;
     }
 
-    // struct ExecuteLiquidationCallParams {
-    //     uint256 reservesCount;
-    //     uint256 debtToCover;
-    //     address collateralAsset;
-    //     address debtAsset;
-    //     address user;
-    //     bool receivePToken;
-    //     address priceOracle;
-    //     address priceOracleSentinel;
-    // }
-
-    // struct ExecuteERC721LiquidationCallParams {
-    //     uint256 reservesCount;
-    //     uint256 liquidationAmount;
-    //     uint256 collateralTokenId;
-    //     address collateralAsset;
-    //     address liquidationAsset;
-    //     address user;
-    //     bool receiveNToken;
-    //     address priceOracle;
-    //     address priceOracleSentinel;
-    // }
-
     struct ExecuteLiquidationCallParams {
         uint256 reservesCount;
         uint256 liquidationAmount;
