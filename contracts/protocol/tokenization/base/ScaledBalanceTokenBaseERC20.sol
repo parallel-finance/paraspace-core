@@ -38,8 +38,9 @@ abstract contract ScaledBalanceTokenBaseERC20 is
 
     /// @inheritdoc IScaledBalanceToken
     function scaledBalanceOf(address user)
-        external
+        public
         view
+        virtual
         override
         returns (uint256)
     {
@@ -50,6 +51,7 @@ abstract contract ScaledBalanceTokenBaseERC20 is
     function getScaledUserBalanceAndSupply(address user)
         external
         view
+        virtual
         override
         returns (uint256, uint256)
     {

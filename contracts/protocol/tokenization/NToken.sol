@@ -35,12 +35,10 @@ contract NToken is
         keccak256(
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
-    bool public immutable ATOMIC_PRICING;
 
     uint256 public constant NTOKEN_REVISION = 0x1;
 
     address internal _treasury;
-    address internal _underlyingAsset;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -52,10 +50,13 @@ contract NToken is
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool, bool atomic_pricing)
-        ScaledBalanceTokenBaseERC721(pool, "NTOKEN_IMPL", "NTOKEN_IMPL")
-    {
-        ATOMIC_PRICING = atomic_pricing;
-    }
+        ScaledBalanceTokenBaseERC721(
+            pool,
+            "NTOKEN_IMPL",
+            "NTOKEN_IMPL",
+            atomic_pricing
+        )
+    {}
 
     function initialize(
         IPool initializingPool,
