@@ -45,6 +45,12 @@
   "author": "ParaSpace-MM Team",
   "contributors": [],
   "license": "AGPLv3",
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged --pattern 'contracts/**/*.sol'",
+      "commit-msg": "commitlint --edit"
+    }
+  },
   "keywords": [
     "paraspace",
     "nft",
