@@ -116,8 +116,6 @@ library ConfiguratorLogic {
 
         pool.setConfiguration(input.underlyingAsset, currentConfig);
 
-        // pool.setReserveDynamicConfigsStrategyAddress(input.underlyingAsset, input.dynamicConfigsStrategyAddress);
-
         emit ReserveInitialized(
             input.underlyingAsset,
             xTokenProxyAddress,
