@@ -900,4 +900,48 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             "Receive not allowed"
         );
     }
+
+    /// @inheritdoc IPool
+    function increaseUserTotalAtomicTokens(
+        address asset,
+        address user,
+        uint24 changeBy
+    ) external virtual override {
+        require(
+            msg.sender == _reserves[asset].xTokenAddress,
+            Errors.CALLER_NOT_XTOKEN
+        );
+        uint24 newUserAtomicTokens = _usersConfig[user].userAtomicTokens +
+            changeBy;
+
+        require(newUserAtomicTokens <= _maxAtomicTokensAllowed);
+
+        _usersConfig[user].userAtomicTokens = newUserAtomicTokens;
+    }
+
+    /// @inheritdoc IPool
+    function decreaseUserTotalAtomicTokens(
+        address asset,
+        address user,
+        uint24 changeBy
+    ) external virtual override {
+        require(
+            msg.sender == _reserves[asset].xTokenAddress,
+            Errors.CALLER_NOT_XTOKEN
+        );
+
+        _usersConfig[user].userAtomicTokens -= changeBy;
+    }
+
+    /// @inheritdoc IPool
+    function setMaxAtomicTokensAllowed(uint24 value)
+        external
+        virtual
+        override
+        onlyPoolConfigurator
+    {
+        require(value != 0, Errors.INVALID_AMOUNT);
+
+        _maxAtomicTokensAllowed = value;
+    }
 }

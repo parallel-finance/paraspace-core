@@ -72,6 +72,9 @@ library DataTypes {
          * asset is borrowed by the user.
          */
         uint256 data;
+        // counter for atomic erc721 tokens.
+        // this is used to limit the total number of atomic erc721 the user can supply
+        uint24 userAtomicTokens;
     }
 
     struct ERC721SupplyParams {

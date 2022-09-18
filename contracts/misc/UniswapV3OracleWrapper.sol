@@ -69,7 +69,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         IUniswapV3PoolState pool = IUniswapV3PoolState(
             UNISWAP_V3_FACTORY.getPool(token0, token1, fee)
         );
-        (, int24 currentTick, , , , , ) = pool.slot0();
+        (uint160 currentPrice, int24 currentTick, , , , , ) = pool.slot0();
 
         return
             UinswapV3PositionData({
@@ -79,6 +79,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
                 tickLower: tickLower,
                 tickUpper: tickUpper,
                 currentTick: currentTick,
+                currentPrice: currentPrice,
                 liquidity: liquidity,
                 feeGrowthInside0LastX128: feeGrowthInside0LastX128,
                 feeGrowthInside1LastX128: feeGrowthInside1LastX128,
@@ -104,7 +105,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         UinswapV3PositionData memory positionData
     ) public view returns (uint256 token0Amount, uint256 token1Amount) {
         (token0Amount, token1Amount) = LiquidityAmounts.getAmountsForLiquidity(
-            TickMath.getSqrtRatioAtTick(positionData.currentTick),
+            positionData.currentPrice,
             TickMath.getSqrtRatioAtTick(positionData.tickLower),
             TickMath.getSqrtRatioAtTick(positionData.tickUpper),
             positionData.liquidity

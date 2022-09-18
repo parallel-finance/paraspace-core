@@ -876,6 +876,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts-upgradeable@npm:^4.2.0":
+  version: 4.7.3
+  resolution: "@openzeppelin/contracts-upgradeable@npm:4.7.3"
+  checksum: c9ffb40cb847a975d440204fc6a811f43af960050242f707332b984d29bd16dc242ffa0935de61867aeb9e0357fadedb16b09b276deda5e9775582face831021
+  languageName: node
+  linkType: hard
+
 "@paraspace/core-v1@workspace:.":
   version: 0.0.0-use.local
   resolution: "@paraspace/core-v1@workspace:."
@@ -883,6 +890,7 @@ __metadata:
     "@commitlint/cli": ^17.0.3
     "@commitlint/config-conventional": ^17.0.3
     "@nomiclabs/hardhat-ethers": ^2.0.0
+    "@openzeppelin/contracts-upgradeable": ^4.2.0
     "@typechain/ethers-v5": ^10.1.0
     "@typechain/hardhat": ^6.1.2
     "@types/node": ^18.0.6
