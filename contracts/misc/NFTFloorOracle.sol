@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
 
+import "../dependencies/openzeppelin/contracts/AccessControl.sol";
+import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "./interfaces/INFTFloorOracle.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 //maxSubmissions by default we keep 3 submission at most for each feeder
 uint8 constant Default_MaxSubmissions = 3;
@@ -55,11 +56,7 @@ struct FeederRegistrar {
 /// @notice Offchain clients can update the prices in this contract. The public can read prices
 /// aggeregate prices which are not expired from different feeders, if number of valid/unexpired prices
 /// not enough, we do not aggeregate and just use previous price
-contract NFTFloorOracle is
-    Initializable,
-    AccessControlUpgradeable,
-    INFTFloorOracle
-{
+contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     event AssetAdded(address indexed asset);
     event AssetRemoved(address indexed asset);
     event SetAssetData(address indexed asset, uint128 price, uint64 timestamp);
@@ -181,8 +178,6 @@ contract NFTFloorOracle is
         address[] memory updaters,
         address[] memory assets
     ) public initializer {
-        ///@dev as there is no constructor, we need to initialise AccessControl
-        __AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
         _setupRole(UPDATER_ROLE, admin);
         _setAssets(assets);
