@@ -909,6 +909,7 @@ __metadata:
     prettier-plugin-solidity: ^1.0.0-alpha.53
     pretty-quick: ^3.1.1
     solhint: ^3.3.6
+    solidity-docgen: ^0.6.0-beta.26
     typechain: ^8.1.0
     typescript: ^4.0.5
   languageName: unknown
@@ -3592,6 +3593,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"handlebars@npm:^4.7.7":
+  version: 4.7.7
+  resolution: "handlebars@npm:4.7.7"
+  dependencies:
+    minimist: ^1.2.5
+    neo-async: ^2.6.0
+    source-map: ^0.6.1
+    uglify-js: ^3.1.4
+    wordwrap: ^1.0.0
+  dependenciesMeta:
+    uglify-js:
+      optional: true
+  bin:
+    handlebars: bin/handlebars
+  checksum: 1e79a43f5e18d15742977cb987923eab3e2a8f44f2d9d340982bcb69e1735ed049226e534d7c1074eaddaf37e4fb4f471a8adb71cddd5bc8cf3f894241df5cee
+  languageName: node
+  linkType: hard
+
 "hard-rejection@npm:^2.1.0":
   version: 2.1.0
   resolution: "hard-rejection@npm:2.1.0"
@@ -4750,7 +4769,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:^1.2.6":
+"minimist@npm:^1.2.5, minimist@npm:^1.2.6":
   version: 1.2.6
   resolution: "minimist@npm:1.2.6"
   checksum: d15428cd1e11eb14e1233bcfb88ae07ed7a147de251441d61158619dfb32c4d7e9061d09cab4825fdee18ecd6fce323228c8c47b5ba7cd20af378ca4048fb3fb
@@ -4950,6 +4969,13 @@ __metadata:
   version: 0.6.3
   resolution: "negotiator@npm:0.6.3"
   checksum: b8ffeb1e262eff7968fc90a2b6767b04cfd9842582a9d0ece0af7049537266e7b2506dfb1d107a32f06dd849ab2aea834d5830f7f4d0e5cb7d36e1ae55d021d9
+  languageName: node
+  linkType: hard
+
+"neo-async@npm:^2.6.0":
+  version: 2.6.2
+  resolution: "neo-async@npm:2.6.2"
+  checksum: deac9f8d00eda7b2e5cd1b2549e26e10a0faa70adaa6fdadca701cc55f49ee9018e427f424bac0c790b7c7e2d3068db97f3093f1093975f2acb8f8818b936ed9
   languageName: node
   linkType: hard
 
@@ -6064,10 +6090,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"solidity-ast@npm:^0.4.31":
+  version: 0.4.35
+  resolution: "solidity-ast@npm:0.4.35"
+  checksum: 6cde9e656dee814fa3d7ce9ef42f1cd0344162515d0d215dbd7d18bf931ed9cd6ce4093aed0a8abbcfb5a4a6faf6638f615aaad479e4657054c6a4ae2cb5092e
+  languageName: node
+  linkType: hard
+
 "solidity-comments-extractor@npm:^0.0.7":
   version: 0.0.7
   resolution: "solidity-comments-extractor@npm:0.0.7"
   checksum: a5cedf2310709969bc1783a6c336171478536f2f0ea96ad88437e0ef1e8844c0b37dd75591b0a824ec9c30640ea7e31b5f03128e871e6235bef3426617ce96c4
+  languageName: node
+  linkType: hard
+
+"solidity-docgen@npm:^0.6.0-beta.26":
+  version: 0.6.0-beta.26
+  resolution: "solidity-docgen@npm:0.6.0-beta.26"
+  dependencies:
+    handlebars: ^4.7.7
+    solidity-ast: ^0.4.31
+  peerDependencies:
+    hardhat: ^2.8.0
+  checksum: 4fbbf52eb304036d05e7c3c1c642a3cb55290b5d79a73e99acc11cd69e8e78e60422c902a3f77a23e18afcd1f8219938ff46e53f6ff1904f3dd899fbb66e2251
   languageName: node
   linkType: hard
 
@@ -6081,7 +6126,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map@npm:^0.6.0":
+"source-map@npm:^0.6.0, source-map@npm:^0.6.1":
   version: 0.6.1
   resolution: "source-map@npm:0.6.1"
   checksum: 59ce8640cf3f3124f64ac289012c2b8bd377c238e316fb323ea22fbfe83da07d81e000071d7242cad7a23cd91c7de98e4df8830ec3f133cb6133a5f6e9f67bc2
@@ -6634,6 +6679,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"uglify-js@npm:^3.1.4":
+  version: 3.17.1
+  resolution: "uglify-js@npm:3.17.1"
+  bin:
+    uglifyjs: bin/uglifyjs
+  checksum: 5e24ad48e096d309e77a462fa0508a9bfe33e2ab00e1bd21dc8bd5d035cf0b58063914bef1c6d6aca78e9e5bbe619714b142ffc646165702e3714f4cfbc7151c
+  languageName: node
+  linkType: hard
+
 "undici@npm:^5.4.0":
   version: 5.8.1
   resolution: "undici@npm:5.8.1"
@@ -6771,6 +6825,13 @@ __metadata:
   version: 1.2.3
   resolution: "word-wrap@npm:1.2.3"
   checksum: 30b48f91fcf12106ed3186ae4fa86a6a1842416df425be7b60485de14bec665a54a68e4b5156647dec3a70f25e84d270ca8bc8cd23182ed095f5c7206a938c1f
+  languageName: node
+  linkType: hard
+
+"wordwrap@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "wordwrap@npm:1.0.0"
+  checksum: 2a44b2788165d0a3de71fd517d4880a8e20ea3a82c080ce46e294f0b68b69a2e49cff5f99c600e275c698a90d12c5ea32aff06c311f0db2eb3f1201f3e7b2a04
   languageName: node
   linkType: hard
 

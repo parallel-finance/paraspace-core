@@ -17,6 +17,10 @@ format:
 lint:
 	yarn lint
 
+.PHONY: doc
+doc:
+	yarn doc
+
 .PHONY: clean
 clean:
 	yarn cache clean --all

@@ -12,6 +12,7 @@
     "compile": "SKIP_LOAD=true hardhat compile",
     "lint": "solhint 'contracts/**/*.sol' && prettier -c 'contracts/**/*.sol' && eslint . --ext .ts",
     "format": "prettier --write 'contracts/**/*.sol'",
+    "doc": "hardhat docgen",
     "clean": "hardhat clean && rm -rf ./artifacts ./cache ./types"
   },
   "dependencies": {
@@ -39,6 +40,7 @@
     "prettier-plugin-solidity": "^1.0.0-alpha.53",
     "pretty-quick": "^3.1.1",
     "solhint": "^3.3.6",
+    "solidity-docgen": "^0.6.0-beta.26",
     "typechain": "^8.1.0",
     "typescript": "^4.0.5"
   },
