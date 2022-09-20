@@ -510,12 +510,12 @@ interface IPool {
     /**
      * @notice Allows suppliers to enable/disable a specific supplied ERC721 asset with a tokenID as collateral
      * @param asset The address of the underlying asset supplied
-     * @param tokenId the id of the supplied ERC721 token
+     * @param tokenIds the ids of the supplied ERC721 token
      * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
      **/
     function setUserUseERC721AsCollateral(
         address asset,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool useAsCollateral
     ) external virtual;
 

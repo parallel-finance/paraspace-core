@@ -149,15 +149,7 @@ library SupplyLogic {
             params.actualSpender = msg.sender;
         }
 
-        // uint256 usedAsCollateral;
-
         for (uint256 index = 0; index < amount; index++) {
-            // if (params.tokenData[index].useAsCollateral) {
-            //     usedAsCollateral++;
-            // }
-            // msg.sender is wPunkGatewayProxy address who is the owner of the token = from
-            // to is reserveCache.xTokenAddress
-            // token id is params.tokenData[index].tokenId
             IERC721(params.asset).safeTransferFrom(
                 params.actualSpender,
                 reserveCache.xTokenAddress,
@@ -165,12 +157,11 @@ library SupplyLogic {
             );
         }
 
-        bool isFirstSupply = INToken(reserveCache.xTokenAddress).mint(
+        bool isFirstCollaterarized = INToken(reserveCache.xTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
-        // TODO consider using (usedAsCollateral > 0) instead here to enable collateralization
-        if (isFirstSupply) {
+        if (isFirstCollaterarized) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -203,12 +194,11 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
-        bool isFirstSupply = INToken(reserveCache.xTokenAddress).mint(
+        bool isFirstCollaterarized = INToken(reserveCache.xTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
-        // TODO consider using (usedAsCollateral > 0) instead here to enable collateralization
-        if (isFirstSupply) {
+        if (isFirstCollaterarized) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -310,28 +300,18 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        ValidationLogic.validateWithdrawERC721(reserveCache);
         reserve.updateState(reserveCache);
-        uint256 amountToWithdraw = params.tokenIds.length;
 
-        bool hasAnyCollateralAsset = false;
-        for (uint256 index = 0; index < params.tokenIds.length; index++) {
-            if (
-                ICollaterizableERC721(reserveCache.xTokenAddress)
-                    .isUsedAsCollateral(params.tokenIds[index])
-            ) {
-                hasAnyCollateralAsset = true;
-                break;
-            }
-        }
+        ValidationLogic.validateWithdrawERC721(reserveCache);
+        uint256 amount = params.tokenIds.length;
 
-        bool withdrwingAllCollateral = INToken(reserveCache.xTokenAddress).burn(
+        bool isLastUncollaterarized = INToken(reserveCache.xTokenAddress).burn(
             msg.sender,
             params.to,
             params.tokenIds
         );
 
-        if (hasAnyCollateralAsset) {
+        if (userConfig.isUsingAsCollateral(reserve.id)) {
             if (userConfig.isBorrowingAny()) {
                 ValidationLogic.validateHFAndLtv(
                     reservesData,
@@ -344,7 +324,7 @@ library SupplyLogic {
                 );
             }
 
-            if (withdrwingAllCollateral) {
+            if (isLastUncollaterarized) {
                 userConfig.setUsingAsCollateral(reserve.id, false);
                 emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
             }
@@ -357,7 +337,7 @@ library SupplyLogic {
             params.tokenIds
         );
 
-        return amountToWithdraw;
+        return amount;
     }
 
     /**
@@ -457,16 +437,9 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        uint256 userBalance;
-
-        if (reserveCache.assetType == DataTypes.AssetType.ERC20) {
-            userBalance = IERC20(reserveCache.xTokenAddress).balanceOf(
-                msg.sender
-            );
-        } else {
-            userBalance = ICollaterizableERC721(reserveCache.xTokenAddress)
-                .collaterizedBalanceOf(msg.sender);
-        }
+        uint256 userBalance = IERC20(reserveCache.xTokenAddress).balanceOf(
+            msg.sender
+        );
 
         ValidationLogic.validateSetUseReserveAsCollateral(
             reserveCache,
@@ -514,7 +487,7 @@ library SupplyLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool useAsCollateral,
         uint256 reservesCount,
         address priceOracle
@@ -522,37 +495,32 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
+        ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
+
+        address sender = msg.sender;
         (
-            bool valid,
-            address owner,
-            uint256 collaterizedBalance
+            uint256 oldCollaterizedBalance,
+            uint256 newCollaterizedBalance
         ) = ICollaterizableERC721(reserveCache.xTokenAddress)
-                .setIsUsedAsCollateral(tokenId, useAsCollateral);
+                .batchSetIsUsedAsCollateral(tokenIds, useAsCollateral, sender);
 
-        if (valid) {
-            ValidationLogic.validateSetUseERC721AsCollateral(
-                reserveCache,
-                msg.sender,
-                owner
-            );
-
+        if (oldCollaterizedBalance != newCollaterizedBalance) {
             if (useAsCollateral) {
-                if (collaterizedBalance == 1) {
+                if (oldCollaterizedBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, true);
-                    emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
+                    emit ReserveUsedAsCollateralEnabled(asset, sender);
                 }
-                // TODO emit event
             } else {
-                if (collaterizedBalance == 0) {
+                if (newCollaterizedBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, false);
-                    emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
+                    emit ReserveUsedAsCollateralDisabled(asset, sender);
                 }
                 ValidationLogic.validateHFAndLtv(
                     reservesData,
                     reservesList,
                     userConfig,
                     asset,
-                    msg.sender,
+                    sender,
                     reservesCount,
                     priceOracle
                 );
