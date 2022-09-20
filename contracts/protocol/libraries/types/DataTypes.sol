@@ -74,6 +74,9 @@ library DataTypes {
          * asset is borrowed by the user.
          */
         uint256 data;
+        // counter for atomic erc721 tokens.
+        // this is used to limit the total number of atomic erc721 the user can supply
+        uint24 userAtomicTokens;
     }
 
     struct ERC721SupplyParams {
@@ -110,29 +113,6 @@ library DataTypes {
         uint40 reserveLastUpdateTimestamp;
         uint40 stableDebtLastUpdateTimestamp;
     }
-
-    // struct ExecuteLiquidationCallParams {
-    //     uint256 reservesCount;
-    //     uint256 debtToCover;
-    //     address collateralAsset;
-    //     address debtAsset;
-    //     address user;
-    //     bool receivePToken;
-    //     address priceOracle;
-    //     address priceOracleSentinel;
-    // }
-
-    // struct ExecuteERC721LiquidationCallParams {
-    //     uint256 reservesCount;
-    //     uint256 liquidationAmount;
-    //     uint256 collateralTokenId;
-    //     address collateralAsset;
-    //     address liquidationAsset;
-    //     address user;
-    //     bool receiveNToken;
-    //     address priceOracle;
-    //     address priceOracleSentinel;
-    // }
 
     struct ExecuteLiquidationCallParams {
         uint256 reservesCount;
@@ -242,6 +222,8 @@ library DataTypes {
 
     struct ValidateERC721LiquidationCallParams {
         ReserveCache debtReserveCache;
+        address liquidator;
+        address borrower;
         uint256 totalDebt;
         uint256 healthFactor;
         uint256 tokenId;

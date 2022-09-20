@@ -63,30 +63,10 @@ library LiquidationLogic {
         bool receiveNToken
     );
 
-    /**
-     * @dev Default percentage of borrower's debt to be repaid in a liquidation.
-     * @dev Percentage applied when the users health factor is above `CLOSE_FACTOR_HF_THRESHOLD`
-     * Expressed in bps, a value of 0.5e4 results in 50.00%
-     */
-    uint256 internal constant DEFAULT_LIQUIDATION_CLOSE_FACTOR = 0.5e4;
-
-    /**
-     * @dev Maximum percentage of borrower's debt to be repaid in a liquidation
-     * @dev Percentage applied when the users health factor is below `CLOSE_FACTOR_HF_THRESHOLD`
-     * Expressed in bps, a value of 1e4 results in 100.00%
-     */
-    uint256 public constant MAX_LIQUIDATION_CLOSE_FACTOR = 1e4;
-
-    /**
-     * @dev This constant represents below which health factor value it is possible to liquidate
-     * an amount of debt corresponding to `MAX_LIQUIDATION_CLOSE_FACTOR`.
-     * A value of 0.95e18 results in 0.95
-     */
-    uint256 public constant CLOSE_FACTOR_HF_THRESHOLD = 0.95e18;
-
     uint256 private constant BASE_CURRENCY_DECIMALS = 18;
 
     struct LiquidationCallLocalVars {
+        address liquidator;
         uint256 userCollateralBalance;
         uint256 userGlobalCollateralBalance;
         uint256 userVariableDebt;
@@ -231,14 +211,15 @@ library LiquidationLogic {
         }
 
         // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
+        vars.liquidator = msg.sender;
         IERC20(params.liquidationAsset).safeTransferFrom(
-            msg.sender,
+            vars.liquidator,
             vars.debtReserveCache.xTokenAddress,
             vars.actualDebtToLiquidate
         );
 
         IPToken(vars.debtReserveCache.xTokenAddress).handleRepayment(
-            msg.sender,
+            vars.liquidator,
             vars.actualDebtToLiquidate
         );
 
@@ -248,7 +229,7 @@ library LiquidationLogic {
             params.user,
             vars.actualDebtToLiquidate,
             vars.actualCollateralToLiquidate,
-            msg.sender,
+            vars.liquidator,
             params.receiveXToken
         );
     }
@@ -347,6 +328,7 @@ library LiquidationLogic {
             collateralReserve,
             vars.debtReserveCache,
             vars.collateralPriceSource,
+            params.collateralTokenId,
             vars.debtPriceSource,
             vars.userGlobalTotalDebt,
             vars.actualDebtToLiquidate,
@@ -355,11 +337,14 @@ library LiquidationLogic {
             IPriceOracleGetter(params.priceOracle)
         );
 
+        vars.liquidator = msg.sender;
         ValidationLogic.validateERC721LiquidationCall(
             userConfig,
             collateralReserve,
             DataTypes.ValidateERC721LiquidationCallParams({
                 debtReserveCache: vars.debtReserveCache,
+                liquidator: vars.liquidator,
+                borrower: params.user,
                 totalDebt: vars.userGlobalTotalDebt,
                 collateralDiscountedPrice: vars.collateralDiscountedPrice,
                 liquidationAmount: params.liquidationAmount,
@@ -410,7 +395,7 @@ library LiquidationLogic {
             } else {
                 // if the actual debt that is getting liquidated > user global debt then pay back excess to user
                 IERC20(params.liquidationAsset).safeTransferFrom(
-                    msg.sender,
+                    vars.liquidator,
                     params.user,
                     debtCanBeCovered - vars.actualDebtToLiquidate
                 );
@@ -431,7 +416,7 @@ library LiquidationLogic {
             );
 
             IERC20(params.liquidationAsset).safeTransferFrom(
-                msg.sender,
+                vars.liquidator,
                 vars.debtReserveCache.xTokenAddress,
                 vars.actualDebtToLiquidate
             );
@@ -450,7 +435,7 @@ library LiquidationLogic {
         // Transfer fee to treasury if it is non-zero
         if (vars.liquidationProtocolFeeAmount != 0) {
             IERC20(params.liquidationAsset).safeTransferFrom(
-                msg.sender,
+                vars.liquidator,
                 IPToken(vars.debtReserveCache.xTokenAddress)
                     .RESERVE_TREASURY_ADDRESS(),
                 vars.liquidationProtocolFeeAmount
@@ -473,7 +458,7 @@ library LiquidationLogic {
             params.user,
             vars.actualDebtToLiquidate,
             params.collateralTokenId,
-            msg.sender,
+            vars.liquidator,
             params.receiveXToken
         );
     }
@@ -541,21 +526,21 @@ library LiquidationLogic {
         LiquidationCallLocalVars memory vars
     ) internal {
         uint256 liquidatorPreviousPTokenBalance = IERC20(vars.collateralXToken)
-            .balanceOf(msg.sender);
+            .balanceOf(vars.liquidator);
         IPToken(vars.collateralXToken).transferOnLiquidation(
             params.user,
-            msg.sender,
+            vars.liquidator,
             vars.actualCollateralToLiquidate
         );
 
         if (liquidatorPreviousPTokenBalance == 0) {
             DataTypes.UserConfigurationMap
-                storage liquidatorConfig = usersConfig[msg.sender];
+                storage liquidatorConfig = usersConfig[vars.liquidator];
 
             liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.collateralAsset,
-                msg.sender
+                vars.liquidator
             );
         }
     }
@@ -577,7 +562,7 @@ library LiquidationLogic {
     ) internal {
         uint256 liquidatorPreviousNTokenBalance = ICollaterizableERC721(
             vars.collateralXToken
-        ).collaterizedBalanceOf(msg.sender);
+        ).collaterizedBalanceOf(vars.liquidator);
 
         bool isTokenUsedAsCollateral = ICollaterizableERC721(
             vars.collateralXToken
@@ -585,18 +570,18 @@ library LiquidationLogic {
 
         INToken(vars.collateralXToken).transferOnLiquidation(
             params.user,
-            msg.sender,
+            vars.liquidator,
             params.collateralTokenId
         );
 
         if (liquidatorPreviousNTokenBalance == 0 && isTokenUsedAsCollateral) {
             DataTypes.UserConfigurationMap
-                storage liquidatorConfig = usersConfig[msg.sender];
+                storage liquidatorConfig = usersConfig[vars.liquidator];
 
             liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.collateralAsset,
-                msg.sender
+                vars.liquidator
             );
         }
     }
@@ -857,6 +842,7 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ReserveCache memory debtReserveCache,
         address collateralAsset,
+        uint256 collateralTokenId,
         address liquidationAsset,
         uint256 userGlobalTotalDebt,
         uint256 liquidationAmount,
@@ -876,7 +862,17 @@ library LiquidationLogic {
         AvailableCollateralToLiquidateLocalVars memory vars;
 
         // price of the asset that is used as collateral
-        vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        if (
+            collateralReserve.assetType == DataTypes.AssetType.ERC721 &&
+            INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()
+        ) {
+            vars.collateralPrice = oracle.getTokenPrice(
+                collateralAsset,
+                collateralTokenId
+            );
+        } else {
+            vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        }
         // price of the asset the liquidator is liquidating with
         vars.debtAssetPrice = oracle.getAssetPrice(liquidationAsset);
 

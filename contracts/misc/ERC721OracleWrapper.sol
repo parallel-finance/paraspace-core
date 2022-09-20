@@ -5,18 +5,10 @@ import {IEACAggregatorProxy} from "../interfaces/IEACAggregatorProxy.sol";
 import {Errors} from "../protocol/libraries/helpers/Errors.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
-
-interface NFTOracle {
-    function getTwap(address token) external view returns (uint128 price);
-
-    function getLastUpdateTime(address token)
-        external
-        view
-        returns (uint128 timestamp);
-}
+import {INFTFloorOracle} from "./interfaces/INFTFloorOracle.sol";
 
 contract ERC721OracleWrapper is IEACAggregatorProxy {
-    NFTOracle private oracleAddress;
+    INFTFloorOracle private oracleAddress;
     address private immutable asset;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
@@ -40,12 +32,12 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
     }
 
     constructor(
-        IPoolAddressesProvider provider,
+        address _provider,
         address _oracleAddress,
         address _asset
     ) {
-        ADDRESSES_PROVIDER = provider;
-        oracleAddress = NFTOracle(_oracleAddress);
+        ADDRESSES_PROVIDER = IPoolAddressesProvider(_provider);
+        oracleAddress = INFTFloorOracle(_oracleAddress);
         asset = _asset;
     }
 
@@ -53,7 +45,7 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
         external
         onlyAssetListingOrPoolAdmins
     {
-        oracleAddress = NFTOracle(_oracleAddress);
+        oracleAddress = INFTFloorOracle(_oracleAddress);
     }
 
     function decimals() external view override returns (uint8) {

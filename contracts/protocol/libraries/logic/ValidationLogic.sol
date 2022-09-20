@@ -583,6 +583,10 @@ library ValidationLogic {
         DataTypes.ReserveCache memory reserveCache,
         uint256 userBalance
     ) internal pure {
+        require(
+            reserveCache.assetType == DataTypes.AssetType.ERC20,
+            Errors.INVALID_ASSET_TYPE
+        );
         require(userBalance != 0, Errors.UNDERLYING_BALANCE_ZERO);
 
         (bool isActive, , , , bool isPaused) = reserveCache
@@ -593,11 +597,12 @@ library ValidationLogic {
     }
 
     function validateSetUseERC721AsCollateral(
-        DataTypes.ReserveCache memory reserveCache,
-        address sender,
-        address owner
+        DataTypes.ReserveCache memory reserveCache
     ) internal pure {
-        require(sender == owner, Errors.NOT_THE_OWNER);
+        require(
+            reserveCache.assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
         (bool isActive, , , , bool isPaused) = reserveCache
             .reserveConfiguration
             .getFlags();
@@ -698,6 +703,11 @@ library ValidationLogic {
         require(
             params.assetType == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
+        );
+
+        require(
+            params.liquidator != params.borrower,
+            Errors.LIQUIDATOR_CAN_NOT_BE_SELF
         );
 
         ValidateLiquidationCallLocalVars memory vars;

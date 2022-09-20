@@ -94,6 +94,9 @@ abstract contract MintableIncentivizedERC721 is
     IRewardController internal _rewardController;
     IPoolAddressesProvider internal immutable _addressesProvider;
     IPool public immutable POOL;
+    bool public immutable ATOMIC_PRICING;
+
+    address internal _underlyingAsset;
 
     mapping(uint256 => bool) _isUsedAsCollateral;
 
@@ -106,12 +109,14 @@ abstract contract MintableIncentivizedERC721 is
     constructor(
         IPool pool,
         string memory name,
-        string memory symbol
+        string memory symbol,
+        bool atomic_pricing
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
         _name = name;
         _symbol = symbol;
         POOL = pool;
+        ATOMIC_PRICING = atomic_pricing;
     }
 
     function name() public view override returns (string memory) {
@@ -371,6 +376,7 @@ abstract contract MintableIncentivizedERC721 is
     ) internal virtual returns (bool) {
         require(to != address(0), "ERC721: mint to the zero address");
         uint64 oldBalance = _userState[to].balance;
+        uint64 oldCollaterizedBalance = _userState[to].collaterizedBalance;
         uint256 oldTotalSupply = totalSupply();
         uint64 collaterizedTokens = 0;
 
@@ -403,9 +409,18 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        _userState[to].collaterizedBalance += collaterizedTokens;
+        _userState[to].collaterizedBalance =
+            oldCollaterizedBalance +
+            collaterizedTokens;
 
         _userState[to].balance = oldBalance + uint64(tokenData.length);
+        if (ATOMIC_PRICING) {
+            POOL.increaseUserTotalAtomicTokens(
+                _underlyingAsset,
+                to,
+                uint24(tokenData.length)
+            );
+        }
 
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
@@ -413,7 +428,7 @@ abstract contract MintableIncentivizedERC721 is
             rewardControllerLocal.handleAction(to, oldTotalSupply, oldBalance);
         }
 
-        return (oldBalance == 0 && collaterizedTokens != 0);
+        return (oldCollaterizedBalance == 0 && collaterizedTokens != 0);
     }
 
     function _burnMultiple(address user, uint256[] calldata tokenIds)
@@ -458,6 +473,13 @@ abstract contract MintableIncentivizedERC721 is
             oldCollaterizedBalance -
             burntCollaterizedTokens;
 
+        if (ATOMIC_PRICING) {
+            POOL.decreaseUserTotalAtomicTokens(
+                _underlyingAsset,
+                user,
+                uint24(tokenIds.length)
+            );
+        }
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
 
@@ -469,7 +491,8 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        return (oldCollaterizedBalance == burntCollaterizedTokens);
+        return (oldCollaterizedBalance != 0 &&
+            oldCollaterizedBalance == burntCollaterizedTokens);
     }
 
     /**
@@ -503,6 +526,11 @@ abstract contract MintableIncentivizedERC721 is
         _userState[from].balance = oldSenderBalance - 1;
         uint64 oldRecipientBalance = _userState[to].balance;
         _userState[to].balance = oldRecipientBalance + 1;
+
+        if (ATOMIC_PRICING) {
+            POOL.decreaseUserTotalAtomicTokens(_underlyingAsset, from, 1);
+            POOL.increaseUserTotalAtomicTokens(_underlyingAsset, to, 1);
+        }
 
         _owners[tokenId] = to;
 
@@ -627,21 +655,15 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc ICollaterizableERC721
-    function setIsUsedAsCollateral(uint256 tokenId, bool useAsCollateral)
-        external
-        virtual
-        override
-        onlyPool
-        returns (
-            bool,
-            address,
-            uint256
-        )
-    {
-        if (_isUsedAsCollateral[tokenId] == useAsCollateral)
-            return (false, address(0x0), 0);
+    function setIsUsedAsCollateral(
+        uint256 tokenId,
+        bool useAsCollateral,
+        address sender
+    ) public virtual override onlyPool returns (bool) {
+        if (_isUsedAsCollateral[tokenId] == useAsCollateral) return false;
 
         address owner = ownerOf(tokenId);
+        require(owner == sender, "not owner");
 
         uint64 collaterizedBalance = _userState[owner].collaterizedBalance;
 
@@ -651,7 +673,28 @@ abstract contract MintableIncentivizedERC721 is
             : collaterizedBalance - 1;
         _userState[owner].collaterizedBalance = collaterizedBalance;
 
-        return (true, owner, collaterizedBalance);
+        return true;
+    }
+
+    /// @inheritdoc ICollaterizableERC721
+    function batchSetIsUsedAsCollateral(
+        uint256[] calldata tokenIds,
+        bool useAsCollateral,
+        address sender
+    )
+        external
+        virtual
+        override
+        onlyPool
+        returns (uint256 oldCollaterizedBalance, uint256 newCollaterizedBalance)
+    {
+        oldCollaterizedBalance = _userState[sender].collaterizedBalance;
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            setIsUsedAsCollateral(tokenIds[index], useAsCollateral, sender);
+        }
+
+        newCollaterizedBalance = _userState[sender].collaterizedBalance;
     }
 
     /// @inheritdoc ICollaterizableERC721

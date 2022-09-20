@@ -13,3 +13,6 @@ artifacts
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+
+docs/*
+!docs/DEVELOPER-GUIDE.md

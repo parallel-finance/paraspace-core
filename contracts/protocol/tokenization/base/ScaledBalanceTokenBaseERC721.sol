@@ -29,8 +29,9 @@ abstract contract ScaledBalanceTokenBaseERC721 is
     constructor(
         IPool pool,
         string memory name,
-        string memory symbol
-    ) MintableIncentivizedERC721(pool, name, symbol) {
+        string memory symbol,
+        bool atomic_pricing
+    ) MintableIncentivizedERC721(pool, name, symbol, atomic_pricing) {
         // Intentionally left blank
     }
 

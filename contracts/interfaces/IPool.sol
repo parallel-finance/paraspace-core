@@ -510,12 +510,12 @@ interface IPool {
     /**
      * @notice Allows suppliers to enable/disable a specific supplied ERC721 asset with a tokenID as collateral
      * @param asset The address of the underlying asset supplied
-     * @param tokenId the id of the supplied ERC721 token
+     * @param tokenIds the ids of the supplied ERC721 token
      * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
      **/
     function setUserUseERC721AsCollateral(
         address asset,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool useAsCollateral
     ) external virtual;
 
@@ -754,4 +754,34 @@ interface IPool {
         address asset,
         address dynamicConfigsStrategyAddress
     ) external;
+
+    /**
+     * @notice increase user's total atomic tokens counter
+     * @param asset The address of the ntoken underlying asset
+     * @param user The address of the user
+     * @param changeBy The amount to increase by
+     */
+    function increaseUserTotalAtomicTokens(
+        address asset,
+        address user,
+        uint24 changeBy
+    ) external virtual;
+
+    /**
+     * @notice decrease user's total atomic tokens counter
+     * @param asset The address of the ntoken underlying asset
+     * @param user The address of the user
+     * @param changeBy The amount to decrease by
+     */
+    function decreaseUserTotalAtomicTokens(
+        address asset,
+        address user,
+        uint24 changeBy
+    ) external virtual;
+
+    /**
+     * @notice set the maximum allowed atomic tokens per user
+     * @param value The maximum amount
+     */
+    function setMaxAtomicTokensAllowed(uint24 value) external virtual;
 }
