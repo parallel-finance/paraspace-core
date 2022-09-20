@@ -300,8 +300,9 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        ValidationLogic.validateWithdrawERC721(reserveCache);
         reserve.updateState(reserveCache);
+
+        ValidationLogic.validateWithdrawERC721(reserveCache);
         uint256 amount = params.tokenIds.length;
 
         bool isLastUncollaterarized = INToken(reserveCache.xTokenAddress).burn(
@@ -310,7 +311,7 @@ library SupplyLogic {
             params.tokenIds
         );
 
-        if (hasAnyCollateralAsset) {
+        if (userConfig.isUsingAsCollateral(reserve.id)) {
             if (userConfig.isBorrowingAny()) {
                 ValidationLogic.validateHFAndLtv(
                     reservesData,
