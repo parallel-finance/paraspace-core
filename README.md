@@ -29,7 +29,7 @@ repository.
 
 [Website](https://para.space) |
 [White Paper](https://docs.para.space/para-space/para-space/readme) |
-[API Docs](https://docs.para.space/para-space/para-space/developer-docs) |
+[API Docs](https://api-docs.para.space) |
 [Chat](https://discord.com/invite/UBnnr7pt5a)
 
 </div>
