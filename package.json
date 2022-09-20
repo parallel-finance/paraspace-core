@@ -15,9 +15,6 @@
     "doc": "hardhat docgen",
     "clean": "hardhat clean && rm -rf ./artifacts ./cache ./types"
   },
-  "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "^4.2.0"
-  },
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
     "@commitlint/config-conventional": "^17.0.3",
