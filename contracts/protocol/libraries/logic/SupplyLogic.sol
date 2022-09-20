@@ -149,15 +149,7 @@ library SupplyLogic {
             params.actualSpender = msg.sender;
         }
 
-        // uint256 usedAsCollateral;
-
         for (uint256 index = 0; index < amount; index++) {
-            // if (params.tokenData[index].useAsCollateral) {
-            //     usedAsCollateral++;
-            // }
-            // msg.sender is wPunkGatewayProxy address who is the owner of the token = from
-            // to is reserveCache.xTokenAddress
-            // token id is params.tokenData[index].tokenId
             IERC721(params.asset).safeTransferFrom(
                 params.actualSpender,
                 reserveCache.xTokenAddress,
@@ -165,11 +157,11 @@ library SupplyLogic {
             );
         }
 
-        bool isFirstCollateral = INToken(reserveCache.xTokenAddress).mint(
+        bool isFirstCollaterarized = INToken(reserveCache.xTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
-        if (isFirstCollateral) {
+        if (isFirstCollaterarized) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -202,11 +194,11 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
-        bool isFirstCollateral = INToken(reserveCache.xTokenAddress).mint(
+        bool isFirstCollaterarized = INToken(reserveCache.xTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
-        if (isFirstCollateral) {
+        if (isFirstCollaterarized) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -309,9 +301,9 @@ library SupplyLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         reserve.updateState(reserveCache);
-        uint256 amountToWithdraw = params.tokenIds.length;
+        uint256 amount = params.tokenIds.length;
 
-        bool withdrwingAllCollateral = INToken(reserveCache.xTokenAddress).burn(
+        bool isLastUncollaterarized = INToken(reserveCache.xTokenAddress).burn(
             msg.sender,
             params.to,
             params.tokenIds
@@ -332,7 +324,7 @@ library SupplyLogic {
                 );
             }
 
-            if (withdrwingAllCollateral) {
+            if (isLastUncollaterarized) {
                 userConfig.setUsingAsCollateral(reserve.id, false);
                 emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
             }
@@ -345,7 +337,7 @@ library SupplyLogic {
             params.tokenIds
         );
 
-        return amountToWithdraw;
+        return amount;
     }
 
     /**
