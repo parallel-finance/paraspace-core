@@ -503,37 +503,23 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        bool isAnyValid = false;
+        ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
+
         address sender = msg.sender;
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            bool valid = ICollaterizableERC721(reserveCache.xTokenAddress)
-                .setIsUsedAsCollateral(
-                    tokenIds[index],
-                    useAsCollateral,
-                    sender
-                );
-            if (valid) {
-                isAnyValid = valid;
-            }
-        }
+        (
+            uint256 oldCollaterizedBalance,
+            uint256 newCollaterizedBalance
+        ) = ICollaterizableERC721(reserveCache.xTokenAddress)
+                .batchSetIsUsedAsCollateral(tokenIds, useAsCollateral, sender);
 
-        if (isAnyValid) {
-            ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
-
+        if (oldCollaterizedBalance != newCollaterizedBalance) {
             if (useAsCollateral) {
-                // here we just need to check flag and don't need to check collateral balance
-                // because collateral balance must > 0.
-                if (!userConfig.isUsingAsCollateral(reserve.id)) {
+                if (oldCollaterizedBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, true);
                     emit ReserveUsedAsCollateralEnabled(asset, sender);
                 }
             } else {
-                // here we just need to check collateral balance and don't need to check flag
-                // because isUsingAsCollateral flag must be true
-                uint256 userBalance = ICollaterizableERC721(
-                    reserveCache.xTokenAddress
-                ).collaterizedBalanceOf(sender);
-                if (userBalance == 0) {
+                if (newCollaterizedBalance == 0) {
                     userConfig.setUsingAsCollateral(reserve.id, false);
                     emit ReserveUsedAsCollateralDisabled(asset, sender);
                 }

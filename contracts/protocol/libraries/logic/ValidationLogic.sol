@@ -599,6 +599,10 @@ library ValidationLogic {
     function validateSetUseERC721AsCollateral(
         DataTypes.ReserveCache memory reserveCache
     ) internal pure {
+        require(
+            reserveCache.assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
         (bool isActive, , , , bool isPaused) = reserveCache
             .reserveConfiguration
             .getFlags();
