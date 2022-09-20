@@ -359,6 +359,15 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
         }
     }
 
+    /// @inheritdoc IPoolConfigurator
+    function setMaxAtomicTokensAllowed(uint24 value)
+        external
+        override
+        onlyRiskOrPoolAdmins
+    {
+        _pool.setMaxAtomicTokensAllowed(value);
+    }
+
     function _checkNoSuppliers(address asset) internal view {
         uint256 totalPTokens = IPoolDataProvider(
             _addressesProvider.getPoolDataProvider()

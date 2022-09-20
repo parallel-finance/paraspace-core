@@ -63,27 +63,6 @@ library LiquidationLogic {
         bool receiveNToken
     );
 
-    /**
-     * @dev Default percentage of borrower's debt to be repaid in a liquidation.
-     * @dev Percentage applied when the users health factor is above `CLOSE_FACTOR_HF_THRESHOLD`
-     * Expressed in bps, a value of 0.5e4 results in 50.00%
-     */
-    uint256 internal constant DEFAULT_LIQUIDATION_CLOSE_FACTOR = 0.5e4;
-
-    /**
-     * @dev Maximum percentage of borrower's debt to be repaid in a liquidation
-     * @dev Percentage applied when the users health factor is below `CLOSE_FACTOR_HF_THRESHOLD`
-     * Expressed in bps, a value of 1e4 results in 100.00%
-     */
-    uint256 public constant MAX_LIQUIDATION_CLOSE_FACTOR = 1e4;
-
-    /**
-     * @dev This constant represents below which health factor value it is possible to liquidate
-     * an amount of debt corresponding to `MAX_LIQUIDATION_CLOSE_FACTOR`.
-     * A value of 0.95e18 results in 0.95
-     */
-    uint256 public constant CLOSE_FACTOR_HF_THRESHOLD = 0.95e18;
-
     uint256 private constant BASE_CURRENCY_DECIMALS = 18;
 
     struct LiquidationCallLocalVars {
@@ -349,6 +328,7 @@ library LiquidationLogic {
             collateralReserve,
             vars.debtReserveCache,
             vars.collateralPriceSource,
+            params.collateralTokenId,
             vars.debtPriceSource,
             vars.userGlobalTotalDebt,
             vars.actualDebtToLiquidate,
@@ -862,6 +842,7 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ReserveCache memory debtReserveCache,
         address collateralAsset,
+        uint256 collateralTokenId,
         address liquidationAsset,
         uint256 userGlobalTotalDebt,
         uint256 liquidationAmount,
@@ -881,7 +862,17 @@ library LiquidationLogic {
         AvailableCollateralToLiquidateLocalVars memory vars;
 
         // price of the asset that is used as collateral
-        vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        if (
+            collateralReserve.assetType == DataTypes.AssetType.ERC721 &&
+            INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()
+        ) {
+            vars.collateralPrice = oracle.getTokenPrice(
+                collateralAsset,
+                collateralTokenId
+            );
+        } else {
+            vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+        }
         // price of the asset the liquidator is liquidating with
         vars.debtAssetPrice = oracle.getAssetPrice(liquidationAsset);
 
