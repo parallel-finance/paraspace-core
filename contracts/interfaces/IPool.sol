@@ -745,6 +745,17 @@ interface IPool {
     ) external;
 
     /**
+     * @notice Updates the address of the dynamic configs strategy contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param dynamicConfigsStrategyAddress The address of the interest rate strategy contract
+     **/
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address dynamicConfigsStrategyAddress
+    ) external;
+
+    /**
      * @notice increase user's total atomic tokens counter
      * @param asset The address of the ntoken underlying asset
      * @param user The address of the user

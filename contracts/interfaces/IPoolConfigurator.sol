@@ -68,6 +68,13 @@ interface IPoolConfigurator {
     event ReserveFrozen(address indexed asset, bool frozen);
 
     /**
+     * @dev Emitted when a reserve has dynamic configs enabled
+     * @param asset The address of the underlying asset of the reserve
+     * @param enabled True if reserve dynamic configs is enabled
+     **/
+    event ReserveDynamicConfigsEnabled(address indexed asset, bool enabled);
+
+    /**
      * @dev Emitted when a reserve is paused or unpaused
      * @param asset The address of the underlying asset of the reserve
      * @param paused True if reserve is paused, false otherwise
@@ -135,6 +142,18 @@ interface IPoolConfigurator {
      * @param newStrategy The address of the new interest strategy contract
      **/
     event ReserveInterestRateStrategyChanged(
+        address indexed asset,
+        address oldStrategy,
+        address newStrategy
+    );
+
+    /**
+     * @dev Emitted when a reserve dynamic configs strategy contract is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param oldStrategy The address of the old interest strategy contract
+     * @param newStrategy The address of the new interest strategy contract
+     **/
+    event ReserveDynamicConfigsStrategyChanged(
         address indexed asset,
         address oldStrategy,
         address newStrategy
@@ -269,6 +288,13 @@ interface IPoolConfigurator {
     function setReserveFreeze(address asset, bool freeze) external;
 
     /**
+     * @notice enable or disable dynamic configs
+     * @param asset The address of the underlying asset of the reserve
+     * @param enabled True if the reserve needs to enable dynamic configs
+     **/
+    function setDynamicConfigsEnabled(address asset, bool enabled) external;
+
+    /**
      * @notice Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
      * swap interest rate, liquidate, xtoken transfers).
      * @param asset The address of the underlying asset of the reserve
@@ -297,6 +323,16 @@ interface IPoolConfigurator {
     function setReserveInterestRateStrategyAddress(
         address asset,
         address newRateStrategyAddress
+    ) external;
+
+    /**
+     * @notice Sets the dynamic configs strategy of a reserve.
+     * @param asset The address of the underlying asset of the reserve
+     * @param newDynamicConfigsStrategyAddress The address of the new interest strategy contract
+     **/
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address newDynamicConfigsStrategyAddress
     ) external;
 
     /**

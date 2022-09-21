@@ -233,6 +233,19 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
+    function setDynamicConfigsEnabled(address asset, bool enabled)
+        external
+        override
+        onlyRiskOrPoolAdmins
+    {
+        DataTypes.ReserveConfigurationMap memory currentConfig = _pool
+            .getConfiguration(asset);
+        currentConfig.setDynamicConfigs(enabled);
+        _pool.setConfiguration(asset, currentConfig);
+        emit ReserveDynamicConfigsEnabled(asset, enabled);
+    }
+
+    /// @inheritdoc IPoolConfigurator
     function setReservePause(address asset, bool paused)
         public
         override
@@ -345,6 +358,25 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
             asset,
             oldRateStrategyAddress,
             newRateStrategyAddress
+        );
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address newDynamicConfigsStrategyAddress
+    ) external override onlyRiskOrPoolAdmins {
+        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+        address oldDynamicConfigsStrategyAddress = reserve
+            .dynamicConfigsStrategyAddress;
+        _pool.setReserveDynamicConfigsStrategyAddress(
+            asset,
+            newDynamicConfigsStrategyAddress
+        );
+        emit ReserveDynamicConfigsStrategyChanged(
+            asset,
+            oldDynamicConfigsStrategyAddress,
+            newDynamicConfigsStrategyAddress
         );
     }
 
