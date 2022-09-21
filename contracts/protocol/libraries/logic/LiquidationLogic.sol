@@ -185,6 +185,7 @@ library LiquidationLogic {
             0
         );
 
+        vars.liquidator = msg.sender;
         if (params.receiveXToken) {
             _liquidatePTokens(usersConfig, collateralReserve, params, vars);
         } else {
@@ -211,7 +212,6 @@ library LiquidationLogic {
         }
 
         // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
-        vars.liquidator = msg.sender;
         IERC20(params.liquidationAsset).safeTransferFrom(
             vars.liquidator,
             vars.debtReserveCache.xTokenAddress,
