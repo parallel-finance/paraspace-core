@@ -6,12 +6,18 @@ dotenv.config();
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer";
+import "solidity-docgen";
 
 const hardhatConfig: HardhatUserConfig = {
   contractSizer: {
     alphaSort: true,
     runOnCompile: false,
     disambiguatePaths: false,
+  },
+  docgen: {
+    outputDir: "docs",
+    pages: "items",
+    exclude: ["dependencies", "deployments", "mocks"],
   },
   solidity: {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html

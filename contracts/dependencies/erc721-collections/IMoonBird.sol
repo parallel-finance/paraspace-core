@@ -5,6 +5,8 @@ pragma solidity 0.8.10;
     @title MoonBirds contract interface
  */
 interface IMoonBirdBase {
+    function nestingOpen() external returns(bool);
+
     function toggleNesting(uint256[] calldata tokenIds) external;
 
     function nestingPeriod(uint256 tokenId)

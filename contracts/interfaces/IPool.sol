@@ -510,12 +510,12 @@ interface IPool {
     /**
      * @notice Allows suppliers to enable/disable a specific supplied ERC721 asset with a tokenID as collateral
      * @param asset The address of the underlying asset supplied
-     * @param tokenId the id of the supplied ERC721 token
+     * @param tokenIds the ids of the supplied ERC721 token
      * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
      **/
     function setUserUseERC721AsCollateral(
         address asset,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool useAsCollateral
     ) external virtual;
 
@@ -793,6 +793,17 @@ interface IPool {
         address token,
         address to,
         uint256 amount
+    ) external;
+
+    /**
+     * @notice Updates the address of the dynamic configs strategy contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param dynamicConfigsStrategyAddress The address of the interest rate strategy contract
+     **/
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address dynamicConfigsStrategyAddress
     ) external;
 
     /**

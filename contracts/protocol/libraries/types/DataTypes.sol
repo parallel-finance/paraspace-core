@@ -43,6 +43,8 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
+        // the address of the dynamic strategy contract
+        address dynamicConfigsStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -246,6 +248,8 @@ library DataTypes {
 
     struct ValidateERC721LiquidationCallParams {
         ReserveCache debtReserveCache;
+        address liquidator;
+        address borrower;
         uint256 totalDebt;
         uint256 healthFactor;
         uint256 tokenId;

@@ -547,7 +547,7 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
 
     function setUserUseERC721AsCollateral(
         address asset,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool useAsCollateral
     ) external virtual override {
         SupplyLogic.executeUseERC721AsCollateral(
@@ -555,7 +555,7 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             _reservesList,
             _usersConfig[msg.sender],
             asset,
-            tokenId,
+            tokenIds,
             useAsCollateral,
             _reservesCount,
             ADDRESSES_PROVIDER.getPriceOracle()
@@ -917,6 +917,20 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             Errors.ASSET_NOT_LISTED
         );
         _reserves[asset].auctionStrategyAddress = auctionStrategyAddress;
+    }
+
+    /// @inheritdoc IPool
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address dynamicConfigsStrategyAddress
+    ) external virtual override onlyPoolConfigurator {
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        _reserves[asset]
+            .dynamicConfigsStrategyAddress = dynamicConfigsStrategyAddress;
     }
 
     /// @inheritdoc IPool
