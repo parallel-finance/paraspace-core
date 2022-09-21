@@ -112,4 +112,12 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
     {
         return IMoonBird(_underlyingAsset).nestingPeriod(tokenId);
     }
+
+    /**
+        @dev an additional function that is custom to MoonBirds reserve.
+        This function check if nesting is open for the underlying tokens
+    */
+    function nestingOpen() external returns (bool) {
+        return IMoonBird(_underlyingAsset).nestingOpen();
+    }
 }
