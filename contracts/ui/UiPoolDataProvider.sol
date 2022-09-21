@@ -10,6 +10,7 @@ import {IPool} from "../interfaces/IPool.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
 import {IStableDebtToken} from "../interfaces/IStableDebtToken.sol";
@@ -262,29 +263,52 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return (reservesData, baseCurrencyInfo);
     }
 
+    function getAuctionData(
+        IPoolAddressesProvider provider,
+        address user,
+        address[] memory nTokenAddresses,
+        uint256[][] memory tokenIds
+    ) external view override returns (DataTypes.AuctionData[][] memory) {
+        DataTypes.AuctionData[][]
+            memory tokenData = new DataTypes.AuctionData[][](
+                nTokenAddresses.length
+            );
+        IPool pool = IPool(provider.getPool());
+
+        for (uint256 i = 0; i < nTokenAddresses.length; i++) {
+            address asset = nTokenAddresses[i];
+            uint256 size = tokenIds[i].length;
+            tokenData[i] = new DataTypes.AuctionData[](size);
+
+            for (uint256 j = 0; j < size; j++) {
+                tokenData[i][j] = pool.getAuctionData(asset, tokenIds[i][j]);
+            }
+        }
+
+        return (tokenData);
+    }
+
     function getNTokenData(
         address user,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
-    ) external view override returns (DataTypes.ERC721SupplyParams[][] memory) {
-        uint256[] memory userBalances = new uint256[](nTokenAddresses.length);
-
-        uint256 tokenDataSize;
-
-        DataTypes.ERC721SupplyParams[][]
-            memory tokenData = new DataTypes.ERC721SupplyParams[][](
+    ) external view override returns (DataTypes.NTokenData[][] memory) {
+        DataTypes.NTokenData[][]
+            memory tokenData = new DataTypes.NTokenData[][](
                 nTokenAddresses.length
             );
 
         for (uint256 i = 0; i < nTokenAddresses.length; i++) {
             address asset = nTokenAddresses[i];
-            uint256 userTotalBalance = INToken(asset).balanceOf(user);
-            tokenData[i] = new DataTypes.ERC721SupplyParams[](userTotalBalance);
+            uint256 size = tokenIds[i].length;
+            tokenData[i] = new DataTypes.NTokenData[](size);
 
-            for (uint256 j = 0; j < userTotalBalance; j++) {
+            for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
                 tokenData[i][j].useAsCollateral = ICollaterizableERC721(asset)
                     .isUsedAsCollateral(tokenIds[i][j]);
+                tokenData[i][j].isAuctioned = IAuctionableERC721(asset)
+                    .isAuctioned(tokenIds[i][j]);
             }
         }
 

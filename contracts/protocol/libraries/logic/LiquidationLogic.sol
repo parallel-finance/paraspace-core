@@ -13,9 +13,14 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {UserConfiguration} from "../../libraries/configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../../libraries/configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../../libraries/configuration/AuctionConfiguration.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
+import {PRBMath} from "../../../dependencies/math/PRBMath.sol";
+import {PRBMathUD60x18} from "../../../dependencies/math/PRBMathUD60x18.sol";
+import {IReserveAuctionStrategy} from "../../../interfaces/IReserveAuctionStrategy.sol";
 
 import {IStableDebtToken} from "../../../interfaces/IStableDebtToken.sol";
 import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
@@ -32,6 +37,8 @@ library LiquidationLogic {
     using ReserveLogic for DataTypes.ReserveData;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
+    using PRBMathUD60x18 for uint256;
     using GPv2SafeERC20 for IERC20;
 
     // See `IPool` for descriptions
@@ -52,7 +59,6 @@ library LiquidationLogic {
         address liquidator,
         bool receivePToken
     );
-
     event ERC721LiquidationCall(
         address indexed collateralAsset,
         address indexed liquidationAsset,
@@ -61,6 +67,16 @@ library LiquidationLogic {
         uint256 liquidatedCollateralTokenId,
         address liquidator,
         bool receiveNToken
+    );
+    event AuctionStarted(
+        address indexed user,
+        address indexed collateralAsset,
+        uint256 indexed collateralTokenId
+    );
+    event AuctionEnded(
+        address indexed user,
+        address indexed collateralAsset,
+        uint256 indexed collateralTokenId
     );
 
     uint256 private constant BASE_CURRENCY_DECIMALS = 18;
@@ -84,6 +100,116 @@ library LiquidationLogic {
         bool isLiquidationAssetBorrowed;
         DataTypes.ReserveCache debtReserveCache;
         DataTypes.AssetType assetType;
+    }
+
+    struct AuctionLocalVars {
+        uint256 healthFactor;
+        address collateralXToken;
+        DataTypes.AssetType assetType;
+    }
+
+    function executeStartAuction(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
+        DataTypes.ExecuteAuctionParams memory params
+    ) external {
+        AuctionLocalVars memory vars;
+        DataTypes.ReserveData storage collateralReserve = reservesData[
+            params.collateralAsset
+        ];
+        vars.assetType = collateralReserve.assetType;
+        vars.collateralXToken = collateralReserve.xTokenAddress;
+        DataTypes.UserConfigurationMap storage userConfig = usersConfig[
+            params.user
+        ];
+
+        (, , , , , , , , vars.healthFactor, ) = GenericLogic
+            .calculateUserAccountData(
+                reservesData,
+                reservesList,
+                DataTypes.CalculateUserAccountDataParams({
+                    userConfig: userConfig,
+                    reservesCount: params.reservesCount,
+                    user: params.user,
+                    oracle: params.priceOracle
+                })
+            );
+
+        ValidationLogic.validateStartAuction(
+            userConfig,
+            collateralReserve,
+            DataTypes.ValidateAuctionParams({
+                user: params.user,
+                healthFactor: vars.healthFactor,
+                collateralAsset: params.collateralAsset,
+                tokenId: params.collateralTokenId,
+                assetType: vars.assetType,
+                xTokenAddress: vars.collateralXToken
+            })
+        );
+
+        IAuctionableERC721(vars.collateralXToken).startAuction(
+            params.collateralTokenId
+        );
+
+        emit AuctionStarted(
+            params.user,
+            params.collateralAsset,
+            params.collateralTokenId
+        );
+    }
+
+    function executeEndAuction(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
+        DataTypes.ExecuteAuctionParams memory params
+    ) external {
+        AuctionLocalVars memory vars;
+        DataTypes.ReserveData storage collateralReserve = reservesData[
+            params.collateralAsset
+        ];
+        vars.assetType = collateralReserve.assetType;
+        vars.collateralXToken = collateralReserve.xTokenAddress;
+        DataTypes.UserConfigurationMap storage userConfig = usersConfig[
+            params.user
+        ];
+
+        (, , , , , , , , vars.healthFactor, ) = GenericLogic
+            .calculateUserAccountData(
+                reservesData,
+                reservesList,
+                DataTypes.CalculateUserAccountDataParams({
+                    userConfig: userConfig,
+                    reservesCount: params.reservesCount,
+                    user: params.user,
+                    oracle: params.priceOracle
+                })
+            );
+
+        ValidationLogic.validateEndAuction(
+            userConfig,
+            collateralReserve,
+            DataTypes.ValidateAuctionParams({
+                user: params.user,
+                healthFactor: vars.healthFactor,
+                collateralAsset: params.collateralAsset,
+                tokenId: params.collateralTokenId,
+                assetType: vars.assetType,
+                xTokenAddress: vars.collateralXToken
+            })
+        );
+
+        IAuctionableERC721(vars.collateralXToken).endAuction(
+            params.collateralTokenId
+        );
+
+        emit AuctionEnded(
+            params.user,
+            params.collateralAsset,
+            params.collateralTokenId
+        );
     }
 
     /**
@@ -161,7 +287,7 @@ library LiquidationLogic {
             vars.actualCollateralToLiquidate,
             vars.actualDebtToLiquidate,
             vars.liquidationProtocolFeeAmount
-        ) = _calculateAvailableCollateralToLiquidate(
+        ) = _calculateERC20LiquidationParameters(
             collateralReserve,
             vars.debtReserveCache,
             vars.collateralPriceSource,
@@ -251,6 +377,7 @@ library LiquidationLogic {
         DataTypes.ExecuteLiquidationCallParams memory params
     ) external {
         LiquidationCallLocalVars memory vars;
+
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
         ];
@@ -310,7 +437,10 @@ library LiquidationLogic {
             vars.liquidationBonus
         ) = _getConfigurationData(collateralReserve, params);
 
-        if (!vars.isLiquidationAssetBorrowed) {
+        if (
+            !vars.isLiquidationAssetBorrowed ||
+            collateralReserve.auctionConfiguration.getAuctionEnabled()
+        ) {
             vars.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
         }
 
@@ -328,12 +458,12 @@ library LiquidationLogic {
             collateralReserve,
             vars.debtReserveCache,
             vars.collateralPriceSource,
-            params.collateralTokenId,
             vars.debtPriceSource,
             vars.userGlobalTotalDebt,
             vars.actualDebtToLiquidate,
             vars.userCollateralBalance,
             vars.liquidationBonus,
+            params.collateralTokenId,
             IPriceOracleGetter(params.priceOracle)
         );
 
@@ -355,6 +485,17 @@ library LiquidationLogic {
                 xTokenAddress: vars.collateralXToken
             })
         );
+
+        if (collateralReserve.auctionConfiguration.getAuctionEnabled()) {
+            IAuctionableERC721(collateralReserve.xTokenAddress).endAuction(
+                params.collateralTokenId
+            );
+            emit AuctionEnded(
+                params.user,
+                params.collateralAsset,
+                params.collateralTokenId
+            );
+        }
 
         uint256 debtCanBeCovered = vars.collateralDiscountedPrice -
             vars.liquidationProtocolFeeAmount;
@@ -720,6 +861,9 @@ library LiquidationLogic {
         uint256 actualLiquidationBonus;
         uint256 liquidationProtocolFeePercentage;
         uint256 liquidationProtocolFee;
+        address collateralAsset;
+        uint256 multiplier;
+        uint256 startTime;
     }
 
     /**
@@ -738,7 +882,7 @@ library LiquidationLogic {
      * @return The amount to repay with the liquidation
      * @return The fee taken from the liquidation bonus amount to be paid to the protocol
      **/
-    function _calculateAvailableCollateralToLiquidate(
+    function _calculateERC20LiquidationParameters(
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ReserveCache memory debtReserveCache,
         address collateralAsset,
@@ -842,12 +986,12 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ReserveCache memory debtReserveCache,
         address collateralAsset,
-        uint256 collateralTokenId,
         address liquidationAsset,
         uint256 userGlobalTotalDebt,
         uint256 liquidationAmount,
         uint256 userCollateralBalance,
         uint256 liquidationBonus,
+        uint256 collateralTokenId,
         IPriceOracleGetter oracle
     )
         internal
@@ -860,12 +1004,10 @@ library LiquidationLogic {
         )
     {
         AvailableCollateralToLiquidateLocalVars memory vars;
+        vars.collateralAsset = collateralAsset;
 
         // price of the asset that is used as collateral
-        if (
-            collateralReserve.assetType == DataTypes.AssetType.ERC721 &&
-            INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()
-        ) {
+        if (INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()) {
             vars.collateralPrice = oracle.getTokenPrice(
                 collateralAsset,
                 collateralTokenId
@@ -873,6 +1015,22 @@ library LiquidationLogic {
         } else {
             vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
         }
+
+        if (
+            collateralReserve.auctionConfiguration.getAuctionEnabled() &&
+            IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
+                collateralTokenId
+            )
+        ) {
+            vars.startTime = IAuctionableERC721(collateralReserve.xTokenAddress)
+                .getAuctionData(collateralTokenId)
+                .startTime;
+            vars.multiplier = IReserveAuctionStrategy(
+                collateralReserve.auctionStrategyAddress
+            ).calculateAuctionPriceMultiplier(vars.startTime, block.timestamp);
+            vars.collateralPrice = vars.collateralPrice.mul(vars.multiplier);
+        }
+
         // price of the asset the liquidator is liquidating with
         vars.debtAssetPrice = oracle.getAssetPrice(liquidationAsset);
 

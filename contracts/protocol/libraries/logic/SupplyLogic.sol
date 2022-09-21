@@ -8,6 +8,7 @@ import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC2
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {DataTypes} from "../types/DataTypes.sol";
@@ -15,7 +16,7 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../configuration/AuctionConfiguration.sol";
 
 /**
  * @title SupplyLogic library
@@ -24,6 +25,7 @@ import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
  */
 library SupplyLogic {
     using ReserveLogic for DataTypes.ReserveData;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using GPv2SafeERC20 for IERC20;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using WadRayMath for uint256;
@@ -504,29 +506,29 @@ library SupplyLogic {
         ) = ICollaterizableERC721(reserveCache.xTokenAddress)
                 .batchSetIsUsedAsCollateral(tokenIds, useAsCollateral, sender);
 
-        if (oldCollaterizedBalance != newCollaterizedBalance) {
-            if (useAsCollateral) {
-                if (oldCollaterizedBalance == 0) {
-                    userConfig.setUsingAsCollateral(reserve.id, true);
-                    emit ReserveUsedAsCollateralEnabled(asset, sender);
-                }
-            } else {
-                if (newCollaterizedBalance == 0) {
-                    userConfig.setUsingAsCollateral(reserve.id, false);
-                    emit ReserveUsedAsCollateralDisabled(asset, sender);
-                }
-                ValidationLogic.validateHFAndLtv(
-                    reservesData,
-                    reservesList,
-                    userConfig,
-                    asset,
-                    sender,
-                    reservesCount,
-                    priceOracle
-                );
+        if (oldCollaterizedBalance == newCollaterizedBalance) {
+            return;
+        }
+
+        if (useAsCollateral) {
+            if (oldCollaterizedBalance == 0) {
+                userConfig.setUsingAsCollateral(reserve.id, true);
+                emit ReserveUsedAsCollateralEnabled(asset, sender);
             }
         } else {
-            return;
+            if (newCollaterizedBalance == 0) {
+                userConfig.setUsingAsCollateral(reserve.id, false);
+                emit ReserveUsedAsCollateralDisabled(asset, sender);
+            }
+            ValidationLogic.validateHFAndLtv(
+                reservesData,
+                reservesList,
+                userConfig,
+                asset,
+                sender,
+                reservesCount,
+                priceOracle
+            );
         }
     }
 }

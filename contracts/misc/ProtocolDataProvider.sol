@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../protocol/libraries/configuration/AuctionConfiguration.sol";
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
@@ -19,6 +20,7 @@ import {IPoolDataProvider} from "../interfaces/IPoolDataProvider.sol";
  */
 contract ProtocolDataProvider is IPoolDataProvider {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using WadRayMath for uint256;
 
@@ -143,6 +145,20 @@ contract ProtocolDataProvider is IPoolDataProvider {
         usageAsCollateralEnabled = liquidationThreshold != 0;
     }
 
+    function getReserveAuctionConfigurationData(address asset)
+        external
+        view
+        returns (bool auctionEnabled, uint256 auctionRecoveryHealthFactor)
+    {
+        DataTypes.ReserveAuctionConfigurationMap memory configuration = IPool(
+            ADDRESSES_PROVIDER.getPool()
+        ).getAuctionConfiguration(asset);
+
+        auctionEnabled = configuration.getAuctionEnabled();
+        auctionRecoveryHealthFactor = configuration
+            .getAuctionRecoveryHealthFactor();
+    }
+
     /**
      * @notice Returns the caps parameters of the reserve
      * @param asset The address of the underlying asset of the reserve
@@ -180,6 +196,24 @@ contract ProtocolDataProvider is IPoolDataProvider {
             IPool(ADDRESSES_PROVIDER.getPool())
                 .getConfiguration(asset)
                 .getSiloedBorrowing();
+    }
+
+    function getAuctionEnabled(address asset) external view returns (bool) {
+        return
+            IPool(ADDRESSES_PROVIDER.getPool())
+                .getAuctionConfiguration(asset)
+                .getAuctionEnabled();
+    }
+
+    function getAuctionRecoveryHealthFactor(address asset)
+        external
+        view
+        returns (uint256)
+    {
+        return
+            IPool(ADDRESSES_PROVIDER.getPool())
+                .getAuctionConfiguration(asset)
+                .getAuctionRecoveryHealthFactor();
     }
 
     /**

@@ -14,6 +14,7 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPool} from "../../interfaces/IPool.sol";
+import {INToken} from "../../interfaces/INToken.sol";
 import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {PoolStorage} from "./PoolStorage.sol";
 import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
@@ -22,6 +23,8 @@ import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
+import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
 /**
  * @title Pool contract
@@ -613,6 +616,46 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
+    function startAuction(
+        address user,
+        address collateralAsset,
+        uint256 collateralTokenId
+    ) external override {
+        LiquidationLogic.executeStartAuction(
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.ExecuteAuctionParams({
+                reservesCount: _reservesCount,
+                collateralAsset: collateralAsset,
+                collateralTokenId: collateralTokenId,
+                user: user,
+                priceOracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
+        );
+    }
+
+    /// @inheritdoc IPool
+    function endAuction(
+        address user,
+        address collateralAsset,
+        uint256 collateralTokenId
+    ) external override {
+        LiquidationLogic.executeEndAuction(
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.ExecuteAuctionParams({
+                reservesCount: _reservesCount,
+                collateralAsset: collateralAsset,
+                collateralTokenId: collateralTokenId,
+                user: user,
+                priceOracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
+        );
+    }
+
+    /// @inheritdoc IPool
     function flashClaim(
         address receiverAddress,
         address nftAsset,
@@ -816,7 +859,8 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
         address xTokenAddress,
         address stableDebtAddress,
         address variableDebtAddress,
-        address interestRateStrategyAddress
+        address interestRateStrategyAddress,
+        address auctionStrategyAddress
     ) external virtual override onlyPoolConfigurator {
         if (
             PoolLogic.executeInitReserve(
@@ -829,6 +873,7 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                     stableDebtAddress: stableDebtAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
+                    auctionStrategyAddress: auctionStrategyAddress,
                     reservesCount: _reservesCount,
                     maxNumberReserves: MAX_NUMBER_RESERVES()
                 })
@@ -862,6 +907,19 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
+    function setReserveAuctionStrategyAddress(
+        address asset,
+        address auctionStrategyAddress
+    ) external virtual override onlyPoolConfigurator {
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        _reserves[asset].auctionStrategyAddress = auctionStrategyAddress;
+    }
+
+    /// @inheritdoc IPool
     function setReserveDynamicConfigsStrategyAddress(
         address asset,
         address dynamicConfigsStrategyAddress
@@ -886,6 +944,70 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
             Errors.ASSET_NOT_LISTED
         );
         _reserves[asset].configuration = configuration;
+    }
+
+    /// @inheritdoc IPool
+    function setAuctionConfiguration(
+        address asset,
+        DataTypes.ReserveAuctionConfigurationMap calldata auctionConfiguration
+    ) external virtual override onlyPoolConfigurator {
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        _reserves[asset].auctionConfiguration = auctionConfiguration;
+    }
+
+    /// @inheritdoc IPool
+    function getAuctionConfiguration(address asset)
+        external
+        view
+        virtual
+        override
+        returns (DataTypes.ReserveAuctionConfigurationMap memory)
+    {
+        return _reserves[asset].auctionConfiguration;
+    }
+
+    /// @inheritdoc IPool
+    function getAuctionData(address ntokenAsset, uint256 tokenId)
+        external
+        view
+        virtual
+        override
+        returns (DataTypes.AuctionData memory auctionData)
+    {
+        address underlyingAsset = INToken(ntokenAsset)
+            .UNDERLYING_ASSET_ADDRESS();
+        DataTypes.ReserveData storage reserve = _reserves[underlyingAsset];
+        require(
+            reserve.id != 0 || _reservesList[0] == underlyingAsset,
+            Errors.ASSET_NOT_LISTED
+        );
+
+        uint256 startTime = IAuctionableERC721(ntokenAsset)
+            .getAuctionData(tokenId)
+            .startTime;
+        IReserveAuctionStrategy auctionStrategy = IReserveAuctionStrategy(
+            reserve.auctionStrategyAddress
+        );
+
+        auctionData.startTime = startTime;
+        auctionData.asset = underlyingAsset;
+        auctionData.tokenId = tokenId;
+        auctionData.currentPriceMultiplier = auctionStrategy
+            .calculateAuctionPriceMultiplier(startTime, block.timestamp);
+
+        auctionData.maxPriceMultiplier = auctionStrategy
+            .getMaxPriceMultiplier();
+        auctionData.minExpPriceMultiplier = auctionStrategy
+            .getMinExpPriceMultiplier();
+        auctionData.minPriceMultiplier = auctionStrategy
+            .getMinPriceMultiplier();
+        auctionData.stepLinear = auctionStrategy.getStepLinear();
+        auctionData.stepExp = auctionStrategy.getStepExp();
+        auctionData.tickLength = auctionStrategy.getTickLength();
     }
 
     /// @inheritdoc IPool

@@ -13,6 +13,8 @@ library DataTypes {
     struct ReserveData {
         //stores the reserve configuration
         ReserveConfigurationMap configuration;
+        // //stores the reserve auction configuration
+        ReserveAuctionConfigurationMap auctionConfiguration;
         //the liquidity index. Expressed in ray
         uint128 liquidityIndex;
         //the current supply rate. Expressed in ray
@@ -37,6 +39,8 @@ library DataTypes {
         address variableDebtTokenAddress;
         //address of the interest rate strategy
         address interestRateStrategyAddress;
+        //address of the auction strategy
+        address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
         // the address of the dynamic strategy contract
@@ -79,9 +83,22 @@ library DataTypes {
         uint24 userAtomicTokens;
     }
 
+    struct ReserveAuctionConfigurationMap {
+        /**
+         * @dev Bitmap of the auction configuration.
+         */
+        uint256 data;
+    }
+
     struct ERC721SupplyParams {
         uint256 tokenId;
         bool useAsCollateral;
+    }
+
+    struct NTokenData {
+        uint256 tokenId;
+        bool useAsCollateral;
+        bool isAuctioned;
     }
 
     enum InterestRateMode {
@@ -107,6 +124,7 @@ library DataTypes {
         uint256 currVariableBorrowRate;
         uint256 reserveFactor;
         ReserveConfigurationMap reserveConfiguration;
+        ReserveAuctionConfigurationMap reserveAuctionConfiguration;
         address xTokenAddress;
         address stableDebtTokenAddress;
         address variableDebtTokenAddress;
@@ -124,6 +142,14 @@ library DataTypes {
         bool receiveXToken;
         address priceOracle;
         address priceOracleSentinel;
+    }
+
+    struct ExecuteAuctionParams {
+        uint256 reservesCount;
+        uint256 collateralTokenId;
+        address collateralAsset;
+        address user;
+        address priceOracle;
     }
 
     struct ExecuteSupplyParams {
@@ -234,6 +260,15 @@ library DataTypes {
         AssetType assetType;
     }
 
+    struct ValidateAuctionParams {
+        address user;
+        uint256 healthFactor;
+        address collateralAsset;
+        uint256 tokenId;
+        address xTokenAddress;
+        AssetType assetType;
+    }
+
     struct CalculateInterestRatesParams {
         uint256 liquidityAdded;
         uint256 liquidityTaken;
@@ -252,6 +287,7 @@ library DataTypes {
         address stableDebtAddress;
         address variableDebtAddress;
         address interestRateStrategyAddress;
+        address auctionStrategyAddress;
         uint16 reservesCount;
         uint16 maxNumberReserves;
     }
@@ -300,5 +336,22 @@ library DataTypes {
         address adapter;
         address operator;
         bool paused;
+    }
+
+    struct Auction {
+        uint256 startTime;
+    }
+
+    struct AuctionData {
+        address asset;
+        uint256 tokenId;
+        uint256 startTime;
+        uint256 currentPriceMultiplier;
+        uint256 maxPriceMultiplier;
+        uint256 minExpPriceMultiplier;
+        uint256 minPriceMultiplier;
+        uint256 stepLinear;
+        uint256 stepExp;
+        uint256 tickLength;
     }
 }
