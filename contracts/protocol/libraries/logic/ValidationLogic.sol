@@ -771,7 +771,8 @@ library ValidationLogic {
             require(
                 IAuctionableERC721(params.xTokenAddress).isAuctioned(
                     params.tokenId
-                )
+                ),
+                Errors.AUCTION_NOT_STARTED
             );
         }
 

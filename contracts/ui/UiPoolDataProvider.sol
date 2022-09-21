@@ -269,10 +269,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view override returns (DataTypes.AuctionData[][] memory) {
-        uint256[] memory userBalances = new uint256[](nTokenAddresses.length);
-
-        uint256 tokenDataSize;
-
         DataTypes.AuctionData[][]
             memory tokenData = new DataTypes.AuctionData[][](
                 nTokenAddresses.length
@@ -281,10 +277,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
         for (uint256 i = 0; i < nTokenAddresses.length; i++) {
             address asset = nTokenAddresses[i];
-            uint256 userTotalBalance = INToken(asset).balanceOf(user);
-            tokenData[i] = new DataTypes.AuctionData[](userTotalBalance);
+            uint256 size = tokenIds[i].length;
+            tokenData[i] = new DataTypes.AuctionData[](size);
 
-            for (uint256 j = 0; j < userTotalBalance; j++) {
+            for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j] = pool.getAuctionData(asset, tokenIds[i][j]);
             }
         }
@@ -297,10 +293,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view override returns (DataTypes.NTokenData[][] memory) {
-        uint256[] memory userBalances = new uint256[](nTokenAddresses.length);
-
-        uint256 tokenDataSize;
-
         DataTypes.NTokenData[][]
             memory tokenData = new DataTypes.NTokenData[][](
                 nTokenAddresses.length
@@ -308,10 +300,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
         for (uint256 i = 0; i < nTokenAddresses.length; i++) {
             address asset = nTokenAddresses[i];
-            uint256 userTotalBalance = INToken(asset).balanceOf(user);
-            tokenData[i] = new DataTypes.NTokenData[](userTotalBalance);
+            uint256 size = tokenIds[i].length;
+            tokenData[i] = new DataTypes.NTokenData[](size);
 
-            for (uint256 j = 0; j < userTotalBalance; j++) {
+            for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
                 tokenData[i][j].useAsCollateral = ICollaterizableERC721(asset)
                     .isUsedAsCollateral(tokenIds[i][j]);
