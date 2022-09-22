@@ -210,24 +210,6 @@ contract PoolParameters is ReentrancyGuard, PoolStorage, IPoolParameters {
         PoolLogic.executeRescueTokens(token, to, amount);
     }
 
-    // This function is necessary when receive erc721 from looksrare
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) external virtual returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
-    receive() external payable {
-        require(
-            msg.sender ==
-                address(IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH()),
-            "Receive not allowed"
-        );
-    }
-
     /// @inheritdoc IPoolParameters
     function increaseUserTotalAtomicTokens(
         address asset,
