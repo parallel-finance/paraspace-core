@@ -135,8 +135,7 @@ library GenericLogic {
                 vars.liquidationThreshold,
                 vars.liquidationBonus,
                 vars.decimals,
-                ,
-                vars.dynamicConfigs
+
             ) = currentReserve.configuration.getParams();
 
             unchecked {
@@ -144,6 +143,10 @@ library GenericLogic {
             }
 
             vars.xTokenAddress = currentReserve.xTokenAddress;
+
+            vars.dynamicConfigs =
+                vars.assetType != DataTypes.AssetType.ERC20 &&
+                currentReserve.dynamicConfigsStrategyAddress != address(0);
 
             if (vars.assetType == DataTypes.AssetType.ERC20) {
                 vars.assetPrice = _getAssetPrice(

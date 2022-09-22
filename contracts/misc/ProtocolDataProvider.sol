@@ -116,8 +116,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             liquidationThreshold,
             liquidationBonus,
             decimals,
-            reserveFactor,
-
+            reserveFactor
         ) = configuration.getParams();
 
         (
