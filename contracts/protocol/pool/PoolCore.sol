@@ -41,9 +41,9 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  *   PoolAddressesProvider
  **/
 contract PoolCore is
+    PoolStorage,
     ReentrancyGuard,
     VersionedInitializable,
-    PoolStorage,
     IPoolCore
 {
     using ReserveLogic for DataTypes.ReserveData;

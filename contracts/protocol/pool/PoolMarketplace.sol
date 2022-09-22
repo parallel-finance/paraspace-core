@@ -40,7 +40,7 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider
  **/
-contract PoolMarketplace is ReentrancyGuard, PoolStorage, IPoolMarketplace {
+contract PoolMarketplace is PoolStorage, ReentrancyGuard, IPoolMarketplace {
     using ReserveLogic for DataTypes.ReserveData;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
