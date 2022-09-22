@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Sources flattened with hardhat v2.9.9 https://hardhat.org
 
 // File contracts/Mimetics/IMimeticMetadata.sol

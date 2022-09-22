@@ -371,13 +371,15 @@ interface IPool {
      * @param onBehalfOf The address of the user who will get his debt reduced/removed. Should be the address of the
      * user calling the function if he wants to reduce/remove his own debt, or the address of any other
      * other borrower whose debt should be removed
+     * @param usePTokens Whethere use ptokens to repay
      * @return The final amount repaid
      **/
     function repay(
         address asset,
         uint256 amount,
         uint256 interestRateMode,
-        address onBehalfOf
+        address onBehalfOf,
+        bool usePTokens
     ) external returns (uint256);
 
     /**
@@ -405,24 +407,6 @@ interface IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    ) external returns (uint256);
-
-    /**
-     * @notice Repays a borrowed `amount` on a specific reserve using the reserve xTokens, burning the
-     * equivalent debt tokens
-     * - E.g. User repays 100 USDC using 100 pUSDC, burning 100 variable/stable debt tokens
-     * @dev  Passing uint256.max as amount will clean up any residual xToken dust balance, if the user xToken
-     * balance is not enough to cover the whole debt
-     * @param asset The address of the borrowed underlying asset previously borrowed
-     * @param amount The amount to repay
-     * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
-     * @param interestRateMode The interest rate mode at of the debt the user wants to repay: 1 for Stable, 2 for Variable
-     * @return The final amount repaid
-     **/
-    function repayWithPTokens(
-        address asset,
-        uint256 amount,
-        uint256 interestRateMode
     ) external returns (uint256);
 
     /**
@@ -510,12 +494,12 @@ interface IPool {
     /**
      * @notice Allows suppliers to enable/disable a specific supplied ERC721 asset with a tokenID as collateral
      * @param asset The address of the underlying asset supplied
-     * @param tokenId the id of the supplied ERC721 token
+     * @param tokenIds the ids of the supplied ERC721 token
      * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
      **/
     function setUserUseERC721AsCollateral(
         address asset,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool useAsCollateral
     ) external virtual;
 
@@ -545,6 +529,18 @@ interface IPool {
         uint256 collateralTokenId,
         uint256 liquidationAmount,
         bool receiveNToken
+    ) external;
+
+    function startAuction(
+        address user,
+        address collateralAsset,
+        uint256 collateralTokenId
+    ) external;
+
+    function endAuction(
+        address user,
+        address collateralAsset,
+        uint256 collateralTokenId
     ) external;
 
     /**
@@ -586,7 +582,8 @@ interface IPool {
         address xTokenAddress,
         address stableDebtAddress,
         address variableDebtAddress,
-        address interestRateStrategyAddress
+        address interestRateStrategyAddress,
+        address auctionStrategyAddress
     ) external;
 
     /**
@@ -608,6 +605,17 @@ interface IPool {
     ) external;
 
     /**
+     * @notice Updates the address of the auction strategy contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param auctionStrategyAddress The address of the auction strategy contract
+     **/
+    function setReserveAuctionStrategyAddress(
+        address asset,
+        address auctionStrategyAddress
+    ) external;
+
+    /**
      * @notice Sets the configuration bitmap of the reserve as a whole
      * @dev Only callable by the PoolConfigurator contract
      * @param asset The address of the underlying asset of the reserve
@@ -619,6 +627,17 @@ interface IPool {
     ) external;
 
     /**
+     * @notice Sets the auction configuration bitmap of the reserve as a whole
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param auctionConfiguration The new auction configuration bitmap
+     **/
+    function setAuctionConfiguration(
+        address asset,
+        DataTypes.ReserveAuctionConfigurationMap calldata auctionConfiguration
+    ) external;
+
+    /**
      * @notice Returns the configuration of the reserve
      * @param asset The address of the underlying asset of the reserve
      * @return The configuration of the reserve
@@ -627,6 +646,16 @@ interface IPool {
         external
         view
         returns (DataTypes.ReserveConfigurationMap memory);
+
+    /**
+     * @notice Returns the auction configuration of the reserve
+     * @param asset The address of the underlying asset of the reserve
+     * @return The auction configuration of the reserve
+     **/
+    function getAuctionConfiguration(address asset)
+        external
+        view
+        returns (DataTypes.ReserveAuctionConfigurationMap memory);
 
     /**
      * @notice Returns the configuration of the user across all the reserves
@@ -702,6 +731,12 @@ interface IPool {
      **/
     function getReserveAddressById(uint16 id) external view returns (address);
 
+    function getAuctionData(address ntokenAsset, uint256 tokenId)
+        external
+        view
+        returns (DataTypes.AuctionData memory);
+
+    // function getAuctionData(address user, address) external view returns (DataTypes.AuctionData memory);
     /**
      * @notice Returns the PoolAddressesProvider connected to this contract
      * @return The address of the PoolAddressesProvider
@@ -743,4 +778,45 @@ interface IPool {
         address to,
         uint256 amount
     ) external;
+
+    /**
+     * @notice Updates the address of the dynamic configs strategy contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param dynamicConfigsStrategyAddress The address of the interest rate strategy contract
+     **/
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address dynamicConfigsStrategyAddress
+    ) external;
+
+    /**
+     * @notice increase user's total atomic tokens counter
+     * @param asset The address of the ntoken underlying asset
+     * @param user The address of the user
+     * @param changeBy The amount to increase by
+     */
+    function increaseUserTotalAtomicTokens(
+        address asset,
+        address user,
+        uint24 changeBy
+    ) external virtual;
+
+    /**
+     * @notice decrease user's total atomic tokens counter
+     * @param asset The address of the ntoken underlying asset
+     * @param user The address of the user
+     * @param changeBy The amount to decrease by
+     */
+    function decreaseUserTotalAtomicTokens(
+        address asset,
+        address user,
+        uint24 changeBy
+    ) external virtual;
+
+    /**
+     * @notice set the maximum allowed atomic tokens per user
+     * @param value The maximum amount
+     */
+    function setMaxAtomicTokensAllowed(uint24 value) external virtual;
 }

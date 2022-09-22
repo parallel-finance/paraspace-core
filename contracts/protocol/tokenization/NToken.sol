@@ -35,12 +35,10 @@ contract NToken is
         keccak256(
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
-    bool public immutable ATOMIC_PRICING;
 
     uint256 public constant NTOKEN_REVISION = 0x1;
 
     address internal _treasury;
-    address internal _underlyingAsset;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -52,10 +50,13 @@ contract NToken is
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool, bool atomic_pricing)
-        ScaledBalanceTokenBaseERC721(pool, "NTOKEN_IMPL", "NTOKEN_IMPL")
-    {
-        ATOMIC_PRICING = atomic_pricing;
-    }
+        ScaledBalanceTokenBaseERC721(
+            pool,
+            "NTOKEN_IMPL",
+            "NTOKEN_IMPL",
+            atomic_pricing
+        )
+    {}
 
     function initialize(
         IPool initializingPool,
@@ -103,7 +104,7 @@ contract NToken is
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
     ) external virtual override onlyPool returns (bool) {
-        bool withdrawingAllTokens = _burnMultiple(from, tokenIds);
+        bool isLastUncollaterarized = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
@@ -115,18 +116,8 @@ contract NToken is
             }
         }
 
-        return withdrawingAllTokens;
+        return isLastUncollaterarized;
     }
-
-    // TODO do we use Treasury?
-    // /// @inheritdoc INToken
-    // function mintToTreasury(uint256 tokenId, uint256 index)
-    //     external
-    //     override
-    //     onlyPool
-    // {
-    //     _mint(_treasury, tokenId);
-    // }
 
     /// @inheritdoc INToken
     function transferOnLiquidation(
@@ -315,8 +306,8 @@ contract NToken is
     ) internal {
         address underlyingAsset = _underlyingAsset;
 
-        uint256 fromBalanceBefore = balanceOf(from);
-        uint256 toBalanceBefore = balanceOf(to);
+        uint256 fromBalanceBefore = collaterizedBalanceOf(from);
+        uint256 toBalanceBefore = collaterizedBalanceOf(to);
 
         bool isUsedAsCollateral = _isUsedAsCollateral[tokenId];
         _transferCollaterizable(from, to, tokenId, isUsedAsCollateral);
@@ -327,7 +318,7 @@ contract NToken is
                 from,
                 to,
                 isUsedAsCollateral,
-                tokenId,
+                1,
                 fromBalanceBefore,
                 toBalanceBefore
             );

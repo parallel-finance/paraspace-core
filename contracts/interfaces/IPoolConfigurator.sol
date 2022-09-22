@@ -46,6 +46,12 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     );
 
+    event AuctionConfigurationChanged(
+        address indexed asset,
+        bool enabled,
+        uint256 recoveryHealthFactor
+    );
+
     /**
      * @dev Emitted when stable rate borrowing is enabled or disabled on a reserve
      * @param asset The address of the underlying asset of the reserve
@@ -135,6 +141,18 @@ interface IPoolConfigurator {
      * @param newStrategy The address of the new interest strategy contract
      **/
     event ReserveInterestRateStrategyChanged(
+        address indexed asset,
+        address oldStrategy,
+        address newStrategy
+    );
+
+    /**
+     * @dev Emitted when a reserve dynamic configs strategy contract is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param oldStrategy The address of the old interest strategy contract
+     * @param newStrategy The address of the new interest strategy contract
+     **/
+    event ReserveDynamicConfigsStrategyChanged(
         address indexed asset,
         address oldStrategy,
         address newStrategy
@@ -244,6 +262,12 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     ) external;
 
+    function configureReserveAsAuctionCollateral(
+        address asset,
+        bool auctionEnabled,
+        uint256 recoveryHealthFactor
+    ) external;
+
     /**
      * @notice Enable or disable stable rate borrowing on a reserve.
      * @dev Can only be enabled (set to true) if borrowing is enabled
@@ -277,6 +301,12 @@ interface IPoolConfigurator {
     function setReservePause(address asset, bool paused) external;
 
     /**
+     * @notice set the maximum allowed atomic tokens per user
+     * @param value The maximum amount
+     */
+    function setMaxAtomicTokensAllowed(uint24 value) external;
+
+    /**
      * @notice Updates the reserve factor of a reserve.
      * @param asset The address of the underlying asset of the reserve
      * @param newReserveFactor The new reserve factor of the reserve
@@ -291,6 +321,16 @@ interface IPoolConfigurator {
     function setReserveInterestRateStrategyAddress(
         address asset,
         address newRateStrategyAddress
+    ) external;
+
+    /**
+     * @notice Sets the dynamic configs strategy of a reserve.
+     * @param asset The address of the underlying asset of the reserve
+     * @param newDynamicConfigsStrategyAddress The address of the new interest strategy contract
+     **/
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address newDynamicConfigsStrategyAddress
     ) external;
 
     /**

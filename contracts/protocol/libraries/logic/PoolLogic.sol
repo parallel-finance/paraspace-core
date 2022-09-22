@@ -45,7 +45,8 @@ library PoolLogic {
             params.assetType,
             params.stableDebtAddress,
             params.variableDebtAddress,
-            params.interestRateStrategyAddress
+            params.interestRateStrategyAddress,
+            params.auctionStrategyAddress
         );
 
         bool reserveAlreadyAdded = reservesData[params.asset].id != 0 ||
@@ -98,7 +99,10 @@ library PoolLogic {
             DataTypes.ReserveData storage reserve = reservesData[assetAddress];
 
             // this cover both inactive reserves and invalid reserves since the flag will be 0 for both
-            if (!reserve.configuration.getActive()) {
+            if (
+                !reserve.configuration.getActive() ||
+                reserve.assetType != DataTypes.AssetType.ERC20
+            ) {
                 continue;
             }
 

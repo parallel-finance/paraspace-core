@@ -12,6 +12,7 @@ import {IERC721Metadata} from "../../../dependencies/openzeppelin/contracts/IERC
 import {IERC721Receiver} from "../../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
@@ -29,6 +30,7 @@ import {DataTypes} from "../../libraries/types/DataTypes.sol";
  **/
 abstract contract MintableIncentivizedERC721 is
     ICollaterizableERC721,
+    IAuctionableERC721,
     Context,
     IERC721Metadata,
     IERC721Enumerable,
@@ -68,6 +70,7 @@ abstract contract MintableIncentivizedERC721 is
         uint64 balance;
         uint64 collaterizedBalance;
         uint128 additionalData;
+        uint64 auctionedBalance;
     }
 
     // Token name
@@ -94,8 +97,13 @@ abstract contract MintableIncentivizedERC721 is
     IRewardController internal _rewardController;
     IPoolAddressesProvider internal immutable _addressesProvider;
     IPool public immutable POOL;
+    bool public immutable ATOMIC_PRICING;
+
+    address internal _underlyingAsset;
 
     mapping(uint256 => bool) _isUsedAsCollateral;
+
+    mapping(uint256 => DataTypes.Auction) _auctions;
 
     /**
      * @dev Constructor.
@@ -106,12 +114,14 @@ abstract contract MintableIncentivizedERC721 is
     constructor(
         IPool pool,
         string memory name,
-        string memory symbol
+        string memory symbol,
+        bool atomic_pricing
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
         _name = name;
         _symbol = symbol;
         POOL = pool;
+        ATOMIC_PRICING = atomic_pricing;
     }
 
     function name() public view override returns (string memory) {
@@ -342,6 +352,10 @@ abstract contract MintableIncentivizedERC721 is
         return _owners[tokenId] != address(0);
     }
 
+    function _isAuctioned(uint256 tokenId) internal view returns (bool) {
+        return _auctions[tokenId].startTime != 0;
+    }
+
     /**
      * @dev Returns whether `spender` is allowed to manage `tokenId`.
      *
@@ -371,6 +385,7 @@ abstract contract MintableIncentivizedERC721 is
     ) internal virtual returns (bool) {
         require(to != address(0), "ERC721: mint to the zero address");
         uint64 oldBalance = _userState[to].balance;
+        uint64 oldCollaterizedBalance = _userState[to].collaterizedBalance;
         uint256 oldTotalSupply = totalSupply();
         uint64 collaterizedTokens = 0;
 
@@ -403,9 +418,18 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        _userState[to].collaterizedBalance += collaterizedTokens;
+        _userState[to].collaterizedBalance =
+            oldCollaterizedBalance +
+            collaterizedTokens;
 
         _userState[to].balance = oldBalance + uint64(tokenData.length);
+        if (ATOMIC_PRICING) {
+            POOL.increaseUserTotalAtomicTokens(
+                _underlyingAsset,
+                to,
+                uint24(tokenData.length)
+            );
+        }
 
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
@@ -413,7 +437,7 @@ abstract contract MintableIncentivizedERC721 is
             rewardControllerLocal.handleAction(to, oldTotalSupply, oldBalance);
         }
 
-        return (oldBalance == 0 && collaterizedTokens != 0);
+        return (oldCollaterizedBalance == 0 && collaterizedTokens != 0);
     }
 
     function _burnMultiple(address user, uint256[] calldata tokenIds)
@@ -434,6 +458,7 @@ abstract contract MintableIncentivizedERC721 is
             uint256 tokenId = tokenIds[index];
             address owner = ownerOf(tokenId);
             require(owner == user, "not the owner of Ntoken");
+            require(!_isAuctioned(tokenId), "token in auction");
 
             _removeTokenFromAllTokensEnumeration(tokenId, length - index);
             _removeTokenFromOwnerEnumeration(user, tokenId, oldBalance - index);
@@ -458,6 +483,13 @@ abstract contract MintableIncentivizedERC721 is
             oldCollaterizedBalance -
             burntCollaterizedTokens;
 
+        if (ATOMIC_PRICING) {
+            POOL.decreaseUserTotalAtomicTokens(
+                _underlyingAsset,
+                user,
+                uint24(tokenIds.length)
+            );
+        }
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
 
@@ -469,7 +501,8 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        return (oldCollaterizedBalance == burntCollaterizedTokens);
+        return (oldCollaterizedBalance != 0 &&
+            oldCollaterizedBalance == burntCollaterizedTokens);
     }
 
     /**
@@ -493,6 +526,7 @@ abstract contract MintableIncentivizedERC721 is
             "ERC721: transfer from incorrect owner"
         );
         require(to != address(0), "ERC721: transfer to the zero address");
+        require(!_isAuctioned(tokenId), "token in auction");
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -504,10 +538,14 @@ abstract contract MintableIncentivizedERC721 is
         uint64 oldRecipientBalance = _userState[to].balance;
         _userState[to].balance = oldRecipientBalance + 1;
 
+        if (ATOMIC_PRICING) {
+            POOL.decreaseUserTotalAtomicTokens(_underlyingAsset, from, 1);
+            POOL.increaseUserTotalAtomicTokens(_underlyingAsset, to, 1);
+        }
+
         _owners[tokenId] = to;
 
         // TODO calculate incentives
-
         IRewardController rewardControllerLocal = _rewardController;
         if (address(rewardControllerLocal) != address(0)) {
             uint256 oldTotalSupply = totalSupply();
@@ -617,7 +655,7 @@ abstract contract MintableIncentivizedERC721 is
 
     /// @inheritdoc ICollaterizableERC721
     function collaterizedBalanceOf(address account)
-        external
+        public
         view
         virtual
         override
@@ -627,23 +665,21 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc ICollaterizableERC721
-    function setIsUsedAsCollateral(uint256 tokenId, bool useAsCollateral)
-        external
-        virtual
-        override
-        onlyPool
-        returns (
-            bool,
-            address,
-            uint256
-        )
-    {
-        if (_isUsedAsCollateral[tokenId] == useAsCollateral)
-            return (false, address(0x0), 0);
+    function setIsUsedAsCollateral(
+        uint256 tokenId,
+        bool useAsCollateral,
+        address sender
+    ) public virtual override onlyPool returns (bool) {
+        if (_isUsedAsCollateral[tokenId] == useAsCollateral) return false;
 
         address owner = ownerOf(tokenId);
+        require(owner == sender, "not owner");
 
         uint64 collaterizedBalance = _userState[owner].collaterizedBalance;
+
+        if (!useAsCollateral) {
+            require(!_isAuctioned(tokenId), "token in auction");
+        }
 
         _isUsedAsCollateral[tokenId] = useAsCollateral;
         collaterizedBalance = useAsCollateral
@@ -651,7 +687,28 @@ abstract contract MintableIncentivizedERC721 is
             : collaterizedBalance - 1;
         _userState[owner].collaterizedBalance = collaterizedBalance;
 
-        return (true, owner, collaterizedBalance);
+        return true;
+    }
+
+    /// @inheritdoc ICollaterizableERC721
+    function batchSetIsUsedAsCollateral(
+        uint256[] calldata tokenIds,
+        bool useAsCollateral,
+        address sender
+    )
+        external
+        virtual
+        override
+        onlyPool
+        returns (uint256 oldCollaterizedBalance, uint256 newCollaterizedBalance)
+    {
+        oldCollaterizedBalance = _userState[sender].collaterizedBalance;
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            setIsUsedAsCollateral(tokenIds[index], useAsCollateral, sender);
+        }
+
+        newCollaterizedBalance = _userState[sender].collaterizedBalance;
     }
 
     /// @inheritdoc ICollaterizableERC721
@@ -662,6 +719,56 @@ abstract contract MintableIncentivizedERC721 is
         returns (bool)
     {
         return _isUsedAsCollateral[tokenId];
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function auctionedBalanceOf(address account)
+        external
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        return _userState[account].auctionedBalance;
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function isAuctioned(uint256 tokenId)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return _isAuctioned(tokenId);
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function startAuction(uint256 tokenId) external virtual override onlyPool {
+        require(!_isAuctioned(tokenId), Errors.AUCTION_ALREADY_STARTED);
+        DataTypes.Auction memory auction = DataTypes.Auction({
+            startTime: block.timestamp
+        });
+        require(_exists(tokenId), "ERC721: startAuction for nonexistent token");
+        _userState[_owners[tokenId]].auctionedBalance += 1;
+        _auctions[tokenId] = auction;
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function endAuction(uint256 tokenId) external virtual override onlyPool {
+        require(_isAuctioned(tokenId), Errors.AUCTION_NOT_STARTED);
+        require(_exists(tokenId), "ERC721: endAuction for nonexistent token");
+        _userState[_owners[tokenId]].auctionedBalance -= 1;
+        delete _auctions[tokenId];
+    }
+
+    /// @inheritdoc IAuctionableERC721
+    function getAuctionData(uint256 tokenId)
+        external
+        view
+        override
+        returns (DataTypes.Auction memory auction)
+    {
+        auction = _auctions[tokenId];
     }
 
     // Mapping from owner to list of owned token IDs

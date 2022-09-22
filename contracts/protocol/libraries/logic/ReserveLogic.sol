@@ -141,7 +141,8 @@ library ReserveLogic {
         DataTypes.AssetType assetType,
         address stableDebtTokenAddress,
         address variableDebtTokenAddress,
-        address interestRateStrategyAddress
+        address interestRateStrategyAddress,
+        address auctionStrategyAddress
     ) internal {
         require(
             reserve.xTokenAddress == address(0),
@@ -155,6 +156,7 @@ library ReserveLogic {
         reserve.stableDebtTokenAddress = stableDebtTokenAddress;
         reserve.variableDebtTokenAddress = variableDebtTokenAddress;
         reserve.interestRateStrategyAddress = interestRateStrategyAddress;
+        reserve.auctionStrategyAddress = auctionStrategyAddress;
     }
 
     struct UpdateInterestRatesLocalVars {
@@ -345,6 +347,7 @@ library ReserveLogic {
         DataTypes.ReserveCache memory reserveCache;
 
         reserveCache.reserveConfiguration = reserve.configuration;
+        reserveCache.reserveAuctionConfiguration = reserve.auctionConfiguration;
         reserveCache.assetType = reserve.assetType;
         reserveCache.reserveFactor = reserveCache
             .reserveConfiguration

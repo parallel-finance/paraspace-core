@@ -70,7 +70,6 @@ contract SeaportAdapter is IMarketplace {
         require(
             // NOT criteria based and must be basic order
             advancedOrders.length == 2 &&
-                resolvers.length == 0 &&
                 isBasicOrder(advancedOrders[0]) &&
                 isBasicOrder(advancedOrders[1]),
             Errors.INVALID_MARKETPLACE_ORDER

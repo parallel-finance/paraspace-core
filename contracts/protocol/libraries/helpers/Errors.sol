@@ -47,7 +47,7 @@ library Errors {
     string public constant UNDERLYING_BALANCE_ZERO = "43"; // 'The underlying balance needs to be greater than 0'
     string public constant INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET = "44"; // 'Interest rate rebalance conditions were not met'
     string public constant HEALTH_FACTOR_NOT_BELOW_THRESHOLD = "45"; // 'Health factor is not below the threshold'
-    string public constant COLLATERAL_CANNOT_BE_LIQUIDATED = "46"; // 'The collateral chosen cannot be liquidated'
+    string public constant COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED = "46"; // 'The collateral chosen cannot be auctioned OR liquidated'
     string public constant SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER = "47"; // 'User did not borrow the specified currency'
     string public constant SAME_BLOCK_BORROW_REPAY = "48"; // 'Borrow and repay in same block is not allowed'
     string public constant BORROW_CAP_EXCEEDED = "50"; // 'Borrow cap is exceeded'
@@ -87,7 +87,7 @@ library Errors {
     string public constant LIQUIDATION_AMOUNT_NOT_ENOUGH = "92";
     string public constant INVALID_ASSET_TYPE = "93"; // invalid asset type for action.
     string public constant INVALID_FLASH_CLAIM_RECEIVER = "94"; // invalid flash claim receiver.
-    string public constant ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD = "95"; // 'ERC721 Health factor is not below the threshold. Can only liquidate ERC20'
+    string public constant ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD = "95"; // ERC721 Health factor is not below the threshold. Can only liquidate ERC20.
     string public constant UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED = "96"; //underlying asset can not be transferred.
     string public constant TOKEN_TRANSFERRED_CAN_NOT_BE_SELF_ADDRESS = "97"; //token transferred can not be self address.
     string public constant INVALID_AIRDROP_CONTRACT_ADDRESS = "98"; //invalid airdrop contract address.
@@ -98,9 +98,16 @@ library Errors {
     string public constant INVALID_MARKETPLACE_ID = "103"; //invalid marketplace id.
     string public constant INVALID_MARKETPLACE_ORDER = "104"; //invalid marketplace id.
     string public constant CREDIT_DOES_NOT_MATCH_ORDER = "105"; //credit doesn't match order.
-    string public constant CREDIT_NOT_USED = "106"; //credit amount cannot be zero.
-    string public constant PAYNOW_NOT_ENOUGH = "107"; //paynow not enough.
-    string public constant INVALID_CREDIT_SIGNATURE = "108"; //invalid credit signature.
-    string public constant INVALID_ORDER_TAKER = "109"; //invalid order taker.
-    string public constant MARKETPLACE_PAUSED = "110"; //marketplace paused.
+    string public constant PAYNOW_NOT_ENOUGH = "106"; //paynow not enough.
+    string public constant INVALID_CREDIT_SIGNATURE = "107"; //invalid credit signature.
+    string public constant INVALID_ORDER_TAKER = "108"; //invalid order taker.
+    string public constant MARKETPLACE_PAUSED = "109"; //marketplace paused.
+    string public constant INVALID_AUCTION_RECOVERY_HEALTH_FACTOR = "110"; //invalid auction recovery health factor.
+    string public constant AUCTION_ALREADY_STARTED = "111"; //auction already started.
+    string public constant AUCTION_NOT_STARTED = "112"; //auction not started yet.
+    string public constant AUCTION_NOT_ENABLED = "113"; //auction not enabled on the reserve.
+    string public constant ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD = "114"; //ERC721 Health factor is not above the threshold.
+    string public constant TOKEN_IN_AUCTION = "115"; //tokenId is in auction.
+    string public constant AUCTIONED_BALANCE_NOT_ZERO = "116"; //auctioned balance not zero
+    string public constant LIQUIDATOR_CAN_NOT_BE_SELF = "117"; //user can not liquidate himself.
 }

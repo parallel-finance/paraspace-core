@@ -114,20 +114,21 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         override
         returns (uint256)
     {
-        AggregatorInterface source = AggregatorInterface(assetsSources[asset]);
-
         if (asset == BASE_CURRENCY) {
             return BASE_CURRENCY_UNIT;
-        } else if (address(source) == address(0)) {
-            return _fallbackOracle.getAssetPrice(asset);
-        } else {
-            int256 price = source.latestAnswer();
-            if (price > 0) {
-                return uint256(price);
-            } else {
-                return _fallbackOracle.getAssetPrice(asset);
-            }
         }
+
+        uint256 price = 0;
+        AggregatorInterface source = AggregatorInterface(assetsSources[asset]);
+        if (address(source) != address(0)) {
+            price = uint256(source.latestAnswer());
+        }
+        if (price == 0) {
+            price = _fallbackOracle.getAssetPrice(asset);
+        }
+
+        require(price != 0, "price not ready");
+        return price;
     }
 
     function getTokenPrice(address asset, uint256 tokenId)
@@ -144,8 +145,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokenPrice(tokenId);
         }
 
-        // should we revert instead?
-        return 0;
+        revert("price not ready");
     }
 
     function getTokensPrices(address asset, uint256[] calldata tokenIds)
@@ -162,9 +162,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokensPrices(tokenIds);
         }
 
-        // should we revert instead?
-        uint256[] memory prices = new uint256[](tokenIds.length);
-        return prices;
+        revert("price not ready");
     }
 
     function getTokensPricesSum(address asset, uint256[] calldata tokenIds)
@@ -181,8 +179,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokensPricesSum(tokenIds);
         }
 
-        // should we revert instead?
-        return 0;
+        revert("price not ready");
     }
 
     /// @inheritdoc IParaSpaceOracle

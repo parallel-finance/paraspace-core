@@ -17,20 +17,27 @@ interface ICollaterizableERC721 {
         returns (uint256);
 
     /**
-     * @dev get the the collateral configuration of a spefifc token
+     * @dev get the the collateral configuration of a specific token
      */
     function isUsedAsCollateral(uint256 tokenId) external view returns (bool);
 
     /**
      * @dev changes the collateral state/config of a token
-     * @return bool (if the state has changed), address (the owner address), uint256 (user's new collaterized balance)
+     * @return if the state has changed
      */
-    function setIsUsedAsCollateral(uint256 tokenId, bool useAsCollateral)
-        external
-        virtual
-        returns (
-            bool,
-            address,
-            uint256
-        );
+    function setIsUsedAsCollateral(
+        uint256 tokenId,
+        bool useAsCollateral,
+        address sender
+    ) external virtual returns (bool);
+
+    /**
+     * @dev the ids of the token want to change the collateral state
+     * @return uint256 (user's old collaterized balance), uint256 (user's new collaterized balance)
+     */
+    function batchSetIsUsedAsCollateral(
+        uint256[] calldata tokenIds,
+        bool useAsCollateral,
+        address sender
+    ) external virtual returns (uint256, uint256);
 }

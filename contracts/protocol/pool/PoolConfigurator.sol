@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
 import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../libraries/configuration/AuctionConfiguration.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
@@ -12,7 +13,7 @@ import {ConfiguratorInputTypes} from "../libraries/types/ConfiguratorInputTypes.
 import {IPoolConfigurator} from "../../interfaces/IPoolConfigurator.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {IACLManager} from "../../interfaces/IACLManager.sol";
-import {IPoolDataProvider} from "../../interfaces/IPoolDataProvider.sol";
+import {IProtocolDataProvider} from "../../interfaces/IProtocolDataProvider.sol";
 
 /**
  * @title PoolConfigurator
@@ -22,6 +23,7 @@ import {IPoolDataProvider} from "../../interfaces/IPoolDataProvider.sol";
 contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     using PercentageMath for uint256;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
 
     IPoolAddressesProvider internal _addressesProvider;
     IPool internal _pool;
@@ -183,6 +185,29 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
             ltv,
             liquidationThreshold,
             liquidationBonus
+        );
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function configureReserveAsAuctionCollateral(
+        address asset,
+        bool auctionEnabled,
+        uint256 auctionRecoveryHealthFactor
+    ) external override onlyRiskOrPoolAdmins {
+        DataTypes.ReserveAuctionConfigurationMap memory currentConfig = _pool
+            .getAuctionConfiguration(asset);
+
+        currentConfig.setAuctionEnabled(auctionEnabled);
+        currentConfig.setAuctionRecoveryHealthFactor(
+            auctionRecoveryHealthFactor
+        );
+
+        _pool.setAuctionConfiguration(asset, currentConfig);
+
+        emit AuctionConfigurationChanged(
+            asset,
+            auctionEnabled,
+            auctionRecoveryHealthFactor
         );
     }
 
@@ -349,6 +374,25 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
+    function setReserveDynamicConfigsStrategyAddress(
+        address asset,
+        address newDynamicConfigsStrategyAddress
+    ) external override onlyRiskOrPoolAdmins {
+        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+        address oldDynamicConfigsStrategyAddress = reserve
+            .dynamicConfigsStrategyAddress;
+        _pool.setReserveDynamicConfigsStrategyAddress(
+            asset,
+            newDynamicConfigsStrategyAddress
+        );
+        emit ReserveDynamicConfigsStrategyChanged(
+            asset,
+            oldDynamicConfigsStrategyAddress,
+            newDynamicConfigsStrategyAddress
+        );
+    }
+
+    /// @inheritdoc IPoolConfigurator
     function setPoolPause(bool paused) external override onlyEmergencyAdmin {
         address[] memory reserves = _pool.getReservesList();
 
@@ -359,15 +403,24 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
         }
     }
 
+    /// @inheritdoc IPoolConfigurator
+    function setMaxAtomicTokensAllowed(uint24 value)
+        external
+        override
+        onlyRiskOrPoolAdmins
+    {
+        _pool.setMaxAtomicTokensAllowed(value);
+    }
+
     function _checkNoSuppliers(address asset) internal view {
-        uint256 totalPTokens = IPoolDataProvider(
+        uint256 totalPTokens = IProtocolDataProvider(
             _addressesProvider.getPoolDataProvider()
         ).getPTokenTotalSupply(asset);
         require(totalPTokens == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
     }
 
     function _checkNoBorrowers(address asset) internal view {
-        uint256 totalDebt = IPoolDataProvider(
+        uint256 totalDebt = IProtocolDataProvider(
             _addressesProvider.getPoolDataProvider()
         ).getTotalDebt(asset);
         require(totalDebt == 0, Errors.RESERVE_DEBT_NOT_ZERO);

@@ -11,10 +11,12 @@ import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {SignatureChecker} from "../../../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 import {IPriceOracleSentinel} from "../../../interfaces/IPriceOracleSentinel.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
+import {AuctionConfiguration} from "../configuration/AuctionConfiguration.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {WadRayMath} from "../math/WadRayMath.sol";
@@ -34,6 +36,7 @@ library ValidationLogic {
     using WadRayMath for uint256;
     using PercentageMath for uint256;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
 
     // Factor to apply to "only-variable-debt" liquidity rate to get threshold for rebalancing, expressed in bps
@@ -56,7 +59,7 @@ library ValidationLogic {
      * @param reserveCache The cached data of the reserve
      * @param amount The amount to be supplied
      */
-    function validateSupplyBase(
+    function validateSupply(
         DataTypes.ReserveCache memory reserveCache,
         uint256 amount,
         DataTypes.AssetType assetType
@@ -95,52 +98,6 @@ library ValidationLogic {
     }
 
     /**
-     * @notice Validates a supply action.
-     * @param reserveCache The cached data of the reserve
-     * @param amount The amount to be supplied
-     */
-    function validateSupplyERC20(
-        DataTypes.ReserveCache memory reserveCache,
-        uint256 amount,
-        DataTypes.AssetType assetType
-    ) internal view {
-        validateSupplyBase(reserveCache, amount, assetType);
-
-        uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
-
-        require(
-            supplyCap == 0 ||
-                (IPToken(reserveCache.xTokenAddress).scaledTotalSupply().rayMul(
-                    reserveCache.nextLiquidityIndex
-                ) + amount) <=
-                supplyCap *
-                    (10**reserveCache.reserveConfiguration.getDecimals()),
-            Errors.SUPPLY_CAP_EXCEEDED
-        );
-    }
-
-    /**
-     * @notice Validates a supply action.
-     * @param reserveCache The cached data of the reserve
-     * @param amount The amount to be supplied
-     */
-    function validateSupplyERC721(
-        DataTypes.ReserveCache memory reserveCache,
-        uint256 amount,
-        DataTypes.AssetType assetType
-    ) internal view {
-        validateSupplyBase(reserveCache, amount, assetType);
-        uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
-
-        require(
-            supplyCap == 0 ||
-                (INToken(reserveCache.xTokenAddress).totalSupply() + amount <=
-                    supplyCap),
-            Errors.SUPPLY_CAP_EXCEEDED
-        );
-    }
-
-    /**
      * @notice Validates a supply action from NToken contract
      * @param reserveCache The cached data of the reserve
      * @param params The params of the supply
@@ -159,7 +116,7 @@ library ValidationLogic {
 
         uint256 amount = params.tokenData.length;
 
-        validateSupplyERC721(reserveCache, amount, assetType);
+        validateSupply(reserveCache, amount, assetType);
 
         for (uint256 index = 0; index < amount; index++) {
             // validate that the owner of the underlying asset is the NToken  contract
@@ -583,6 +540,10 @@ library ValidationLogic {
         DataTypes.ReserveCache memory reserveCache,
         uint256 userBalance
     ) internal pure {
+        require(
+            reserveCache.assetType == DataTypes.AssetType.ERC20,
+            Errors.INVALID_ASSET_TYPE
+        );
         require(userBalance != 0, Errors.UNDERLYING_BALANCE_ZERO);
 
         (bool isActive, , , , bool isPaused) = reserveCache
@@ -593,11 +554,12 @@ library ValidationLogic {
     }
 
     function validateSetUseERC721AsCollateral(
-        DataTypes.ReserveCache memory reserveCache,
-        address sender,
-        address owner
+        DataTypes.ReserveCache memory reserveCache
     ) internal pure {
-        require(sender == owner, Errors.NOT_THE_OWNER);
+        require(
+            reserveCache.assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
         (bool isActive, , , , bool isPaused) = reserveCache
             .reserveConfiguration
             .getFlags();
@@ -610,6 +572,12 @@ library ValidationLogic {
         bool collateralReservePaused;
         bool principalReserveActive;
         bool principalReservePaused;
+        bool isCollateralEnabled;
+    }
+
+    struct ValidateAuctionLocalVars {
+        bool collateralReserveActive;
+        bool collateralReservePaused;
         bool isCollateralEnabled;
     }
 
@@ -676,7 +644,7 @@ library ValidationLogic {
         //if collateral isn't enabled as collateral by user, it cannot be liquidated
         require(
             vars.isCollateralEnabled,
-            Errors.COLLATERAL_CANNOT_BE_LIQUIDATED
+            Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
         );
         require(
             params.totalDebt != 0,
@@ -698,6 +666,11 @@ library ValidationLogic {
         require(
             params.assetType == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
+        );
+
+        require(
+            params.liquidator != params.borrower,
+            Errors.LIQUIDATOR_CAN_NOT_BE_SELF
         );
 
         ValidateLiquidationCallLocalVars memory vars;
@@ -736,10 +709,26 @@ library ValidationLogic {
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
 
-        require(
-            params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-        );
+        if (!collateralReserve.auctionConfiguration.getAuctionEnabled()) {
+            require(
+                params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+        } else {
+            require(
+                params.healthFactor <
+                    collateralReserve
+                        .auctionConfiguration
+                        .getAuctionRecoveryHealthFactor(),
+                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+            require(
+                IAuctionableERC721(params.xTokenAddress).isAuctioned(
+                    params.tokenId
+                ),
+                Errors.AUCTION_NOT_STARTED
+            );
+        }
 
         require(
             params.liquidationAmount >= params.collateralDiscountedPrice,
@@ -756,7 +745,7 @@ library ValidationLogic {
         //if collateral isn't enabled as collateral by user, it cannot be liquidated
         require(
             vars.isCollateralEnabled,
-            Errors.COLLATERAL_CANNOT_BE_LIQUIDATED
+            Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
         );
         require(
             params.totalDebt != 0,
@@ -809,6 +798,114 @@ library ValidationLogic {
         );
 
         return (healthFactor, hasZeroLtvCollateral);
+    }
+
+    function validateStartAuction(
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ReserveData storage collateralReserve,
+        DataTypes.ValidateAuctionParams memory params
+    ) internal view {
+        require(
+            params.assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
+        require(
+            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
+                params.user,
+            Errors.NOT_THE_OWNER
+        );
+
+        ValidateAuctionLocalVars memory vars;
+
+        (
+            vars.collateralReserveActive,
+            ,
+            ,
+            ,
+            vars.collateralReservePaused
+        ) = collateralReserve.configuration.getFlags();
+
+        require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
+        require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
+
+        require(
+            collateralReserve.auctionConfiguration.getAuctionEnabled(),
+            Errors.AUCTION_NOT_ENABLED
+        );
+        require(
+            !IAuctionableERC721(params.xTokenAddress).isAuctioned(
+                params.tokenId
+            ),
+            Errors.AUCTION_ALREADY_STARTED
+        );
+
+        require(
+            params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+        );
+
+        vars.isCollateralEnabled =
+            collateralReserve.configuration.getLiquidationThreshold() != 0 &&
+            userConfig.isUsingAsCollateral(collateralReserve.id) &&
+            ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
+                params.tokenId
+            );
+
+        //if collateral isn't enabled as collateral by user, it cannot be auctioned
+        require(
+            vars.isCollateralEnabled,
+            Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
+        );
+    }
+
+    function validateEndAuction(
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ReserveData storage collateralReserve,
+        DataTypes.ValidateAuctionParams memory params
+    ) internal view {
+        require(
+            params.assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
+        require(
+            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
+                params.user,
+            Errors.NOT_THE_OWNER
+        );
+
+        ValidateAuctionLocalVars memory vars;
+
+        (
+            vars.collateralReserveActive,
+            ,
+            ,
+            ,
+            vars.collateralReservePaused
+        ) = collateralReserve.configuration.getFlags();
+
+        require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
+        require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
+
+        require(
+            collateralReserve.auctionConfiguration.getAuctionEnabled(),
+            Errors.AUCTION_NOT_ENABLED
+        );
+        require(
+            IAuctionableERC721(params.xTokenAddress).isAuctioned(
+                params.tokenId
+            ),
+            Errors.AUCTION_NOT_STARTED
+        );
+
+        uint256 recoveryHealthFactor = collateralReserve
+            .auctionConfiguration
+            .getAuctionRecoveryHealthFactor();
+
+        require(
+            recoveryHealthFactor != 0 &&
+                params.healthFactor >= recoveryHealthFactor,
+            Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
+        );
     }
 
     /**
@@ -933,14 +1030,12 @@ library ValidationLogic {
     function validateBuyWithCredit(
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
-        require(params.credit.amount != 0, Errors.CREDIT_NOT_USED);
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
     }
 
     function validateAcceptBidWithCredit(
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
-        require(params.credit.amount != 0, Errors.CREDIT_NOT_USED);
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
         require(
             keccak256(abi.encodePacked(params.orderInfo.id)) ==
