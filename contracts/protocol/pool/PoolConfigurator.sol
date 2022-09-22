@@ -13,7 +13,7 @@ import {ConfiguratorInputTypes} from "../libraries/types/ConfiguratorInputTypes.
 import {IPoolConfigurator} from "../../interfaces/IPoolConfigurator.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {IACLManager} from "../../interfaces/IACLManager.sol";
-import {IPoolDataProvider} from "../../interfaces/IPoolDataProvider.sol";
+import {IProtocolDataProvider} from "../../interfaces/IProtocolDataProvider.sol";
 
 /**
  * @title PoolConfigurator
@@ -426,14 +426,14 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     function _checkNoSuppliers(address asset) internal view {
-        uint256 totalPTokens = IPoolDataProvider(
+        uint256 totalPTokens = IProtocolDataProvider(
             _addressesProvider.getPoolDataProvider()
         ).getPTokenTotalSupply(asset);
         require(totalPTokens == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
     }
 
     function _checkNoBorrowers(address asset) internal view {
-        uint256 totalDebt = IPoolDataProvider(
+        uint256 totalDebt = IProtocolDataProvider(
             _addressesProvider.getPoolDataProvider()
         ).getTotalDebt(asset);
         require(totalDebt == 0, Errors.RESERVE_DEBT_NOT_ZERO);

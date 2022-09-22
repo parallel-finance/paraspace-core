@@ -86,7 +86,7 @@ library SupplyLogic {
 
         reserve.updateState(reserveCache);
 
-        ValidationLogic.validateSupplyERC20(
+        ValidationLogic.validateSupply(
             reserveCache,
             params.amount,
             DataTypes.AssetType.ERC20
@@ -141,7 +141,7 @@ library SupplyLogic {
 
         uint256 amount = params.tokenData.length;
 
-        ValidationLogic.validateSupplyERC721(
+        ValidationLogic.validateSupply(
             reserveCache,
             amount,
             DataTypes.AssetType.ERC721

@@ -145,8 +145,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokenPrice(tokenId);
         }
 
-        // should we revert instead?
-        return 0;
+        revert("price not ready");
     }
 
     function getTokensPrices(address asset, uint256[] calldata tokenIds)
@@ -163,9 +162,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokensPrices(tokenIds);
         }
 
-        // should we revert instead?
-        uint256[] memory prices = new uint256[](tokenIds.length);
-        return prices;
+        revert("price not ready");
     }
 
     function getTokensPricesSum(address asset, uint256[] calldata tokenIds)
@@ -182,8 +179,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokensPricesSum(tokenIds);
         }
 
-        // should we revert instead?
-        return 0;
+        revert("price not ready");
     }
 
     /// @inheritdoc IParaSpaceOracle

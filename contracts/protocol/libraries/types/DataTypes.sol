@@ -354,4 +354,9 @@ library DataTypes {
         uint256 stepExp;
         uint256 tickLength;
     }
+
+    struct TokenData {
+        string symbol;
+        address tokenAddress;
+    }
 }
