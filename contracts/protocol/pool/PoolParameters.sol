@@ -43,8 +43,7 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
 contract PoolParameters is ReentrancyGuard, PoolStorage, IPoolParameters {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 1;
-    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
 
     /**
      * @dev Only pool configurator can call functions marked by this modifier.

@@ -43,7 +43,7 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
 contract PoolMarketplace is ReentrancyGuard, PoolStorage, IPoolMarketplace {
     using ReserveLogic for DataTypes.ReserveData;
 
-    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
 
     /**
      * @dev Constructor.
