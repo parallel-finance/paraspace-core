@@ -130,8 +130,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
             liquidationThreshold,
             liquidationBonus,
             decimals,
-            reserveFactor,
-
+            reserveFactor
         ) = configuration.getParams();
 
         (
