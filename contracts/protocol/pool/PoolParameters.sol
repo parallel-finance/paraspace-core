@@ -40,12 +40,7 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider
  **/
-contract PoolParameters is
-    ReentrancyGuard,
-    VersionedInitializable,
-    PoolStorage,
-    IPoolParameters
-{
+contract PoolParameters is ReentrancyGuard, PoolStorage, IPoolParameters {
     using ReserveLogic for DataTypes.ReserveData;
 
     uint256 public constant POOL_REVISION = 1;
@@ -83,34 +78,12 @@ contract PoolParameters is
         );
     }
 
-    function getRevision() internal pure virtual override returns (uint256) {
-        return POOL_REVISION;
-    }
-
     /**
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
     constructor(IPoolAddressesProvider provider) {
         ADDRESSES_PROVIDER = provider;
-    }
-
-    /**
-     * @notice Initializes the Pool.
-     * @dev Function is invoked by the proxy contract when the Pool contract is added to the
-     * PoolAddressesProvider of the market.
-     * @dev Caching the address of the PoolAddressesProvider in order to reduce gas consumption on subsequent operations
-     * @param provider The address of the PoolAddressesProvider
-     **/
-    function initialize(IPoolAddressesProvider provider)
-        external
-        virtual
-        initializer
-    {
-        require(
-            provider == ADDRESSES_PROVIDER,
-            Errors.INVALID_ADDRESSES_PROVIDER
-        );
     }
 
     /// @inheritdoc IPoolParameters
