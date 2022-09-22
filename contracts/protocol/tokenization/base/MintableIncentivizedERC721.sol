@@ -655,7 +655,7 @@ abstract contract MintableIncentivizedERC721 is
 
     /// @inheritdoc ICollaterizableERC721
     function collaterizedBalanceOf(address account)
-        external
+        public
         view
         virtual
         override
