@@ -247,10 +247,18 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             .decimals();
 
         try oracle.BASE_CURRENCY_UNIT() returns (uint256 baseCurrencyUnit) {
-            baseCurrencyInfo.marketReferenceCurrencyUnit = baseCurrencyUnit;
-            baseCurrencyInfo.marketReferenceCurrencyPriceInUsd = int256(
-                baseCurrencyUnit
-            );
+            if (ETH_CURRENCY_UNIT == baseCurrencyUnit) {
+                baseCurrencyInfo
+                    .marketReferenceCurrencyUnit = ETH_CURRENCY_UNIT;
+                baseCurrencyInfo
+                    .marketReferenceCurrencyPriceInUsd = marketReferenceCurrencyPriceInUsdProxyAggregator
+                    .latestAnswer();
+            } else {
+                baseCurrencyInfo.marketReferenceCurrencyUnit = baseCurrencyUnit;
+                baseCurrencyInfo.marketReferenceCurrencyPriceInUsd = int256(
+                    baseCurrencyUnit
+                );
+            }
         } catch (
             bytes memory /*lowLevelData*/
         ) {
