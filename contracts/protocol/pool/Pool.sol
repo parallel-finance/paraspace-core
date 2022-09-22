@@ -275,7 +275,8 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
         address asset,
         uint256 amount,
         uint256 interestRateMode,
-        address onBehalfOf
+        address onBehalfOf,
+        bool usePTokens
     ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
@@ -288,7 +289,7 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                         interestRateMode
                     ),
                     onBehalfOf: onBehalfOf,
-                    usePTokens: false
+                    usePTokens: usePTokens
                 })
             );
     }
@@ -333,28 +334,6 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
                     params
                 );
         }
-    }
-
-    /// @inheritdoc IPool
-    function repayWithPTokens(
-        address asset,
-        uint256 amount,
-        uint256 interestRateMode
-    ) external virtual override nonReentrant returns (uint256) {
-        return
-            BorrowLogic.executeRepay(
-                _reserves,
-                _usersConfig[msg.sender],
-                DataTypes.ExecuteRepayParams({
-                    asset: asset,
-                    amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
-                    onBehalfOf: msg.sender,
-                    usePTokens: true
-                })
-            );
     }
 
     /// @inheritdoc IPool

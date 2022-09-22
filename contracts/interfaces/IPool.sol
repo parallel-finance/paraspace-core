@@ -371,13 +371,15 @@ interface IPool {
      * @param onBehalfOf The address of the user who will get his debt reduced/removed. Should be the address of the
      * user calling the function if he wants to reduce/remove his own debt, or the address of any other
      * other borrower whose debt should be removed
+     * @param usePTokens Whethere use ptokens to repay
      * @return The final amount repaid
      **/
     function repay(
         address asset,
         uint256 amount,
         uint256 interestRateMode,
-        address onBehalfOf
+        address onBehalfOf,
+        bool usePTokens
     ) external returns (uint256);
 
     /**
@@ -405,24 +407,6 @@ interface IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    ) external returns (uint256);
-
-    /**
-     * @notice Repays a borrowed `amount` on a specific reserve using the reserve xTokens, burning the
-     * equivalent debt tokens
-     * - E.g. User repays 100 USDC using 100 pUSDC, burning 100 variable/stable debt tokens
-     * @dev  Passing uint256.max as amount will clean up any residual xToken dust balance, if the user xToken
-     * balance is not enough to cover the whole debt
-     * @param asset The address of the borrowed underlying asset previously borrowed
-     * @param amount The amount to repay
-     * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
-     * @param interestRateMode The interest rate mode at of the debt the user wants to repay: 1 for Stable, 2 for Variable
-     * @return The final amount repaid
-     **/
-    function repayWithPTokens(
-        address asset,
-        uint256 amount,
-        uint256 interestRateMode
     ) external returns (uint256);
 
     /**
