@@ -306,8 +306,8 @@ contract NToken is
     ) internal {
         address underlyingAsset = _underlyingAsset;
 
-        uint256 fromBalanceBefore = balanceOf(from);
-        uint256 toBalanceBefore = balanceOf(to);
+        uint256 fromBalanceBefore = collaterizedBalanceOf(from);
+        uint256 toBalanceBefore = collaterizedBalanceOf(to);
 
         bool isUsedAsCollateral = _isUsedAsCollateral[tokenId];
         _transferCollaterizable(from, to, tokenId, isUsedAsCollateral);

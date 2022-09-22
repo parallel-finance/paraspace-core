@@ -200,12 +200,12 @@ library GenericLogic {
                 ) {
                     vars.isAutomicPrice = INToken(vars.xTokenAddress)
                         .getAtomicPricingConfig();
-                    if (vars.isAutomicPrice && vars.dynamicConfigs) {
+                    if (vars.dynamicConfigs) {
                         (
                             vars.userBalanceInBaseCurrency,
                             vars.dynamicLTV,
                             vars.dynamicLiquidationThreshold
-                        ) = _getUserBalanceAndDynamicConfigsForAtomicERC721(
+                        ) = _getUserBalanceForDynamicConfigsAsset(
                             params,
                             vars,
                             currentReserve.dynamicConfigsStrategyAddress
@@ -409,7 +409,7 @@ library GenericLogic {
         return totalValue;
     }
 
-    function _getUserBalanceAndDynamicConfigsForAtomicERC721(
+    function _getUserBalanceForDynamicConfigsAsset(
         DataTypes.CalculateUserAccountDataParams memory params,
         CalculateUserAccountDataVars memory vars,
         address dynamicConfigsStrategyAddress
@@ -428,39 +428,65 @@ library GenericLogic {
         uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(
             params.user
         );
-        for (uint256 index = 0; index < totalBalance; index++) {
-            uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
-                .tokenOfOwnerByIndex(params.user, index);
-            if (
-                ICollaterizableERC721(vars.xTokenAddress).isUsedAsCollateral(
-                    tokenId
-                )
-            ) {
-                // TODO use getTokensPrices instead if it saves gas
-                uint256 assetPrice = IPriceOracleGetter(params.oracle)
-                    .getTokenPrice(vars.currentReserveAddress, tokenId);
-                totalValue += assetPrice;
+        if (vars.isAutomicPrice) {
+            for (uint256 index = 0; index < totalBalance; index++) {
+                uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
+                    .tokenOfOwnerByIndex(params.user, index);
+                if (
+                    ICollaterizableERC721(vars.xTokenAddress)
+                        .isUsedAsCollateral(tokenId)
+                ) {
+                    uint256 assetPrice = IPriceOracleGetter(params.oracle)
+                        .getTokenPrice(vars.currentReserveAddress, tokenId);
+                    totalValue += assetPrice;
 
-                (
-                    uint256 tmpLTV,
-                    uint256 tmpLiquidationThreshold,
+                    (
+                        uint256 tmpLTV,
+                        uint256 tmpLiquidationThreshold,
 
-                ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
-                        .getConfigParams(tokenId);
+                    ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
+                            .getConfigParams(tokenId);
 
-                totalLTV += tmpLTV * assetPrice;
-                totalLiquidationThreshold +=
-                    tmpLiquidationThreshold *
-                    assetPrice;
+                    totalLTV += tmpLTV * assetPrice;
+                    totalLiquidationThreshold +=
+                        tmpLiquidationThreshold *
+                        assetPrice;
+                }
+            }
+        } else {
+            uint256 assetPrice = _getAssetPrice(
+                params.oracle,
+                vars.currentReserveAddress
+            );
+            totalValue =
+                ICollaterizableERC721(vars.xTokenAddress).collaterizedBalanceOf(
+                    params.user
+                ) *
+                assetPrice;
+            for (uint256 index = 0; index < totalBalance; index++) {
+                uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
+                    .tokenOfOwnerByIndex(params.user, index);
+                if (
+                    ICollaterizableERC721(vars.xTokenAddress)
+                        .isUsedAsCollateral(tokenId)
+                ) {
+                    (
+                        uint256 tmpLTV,
+                        uint256 tmpLiquidationThreshold,
+
+                    ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
+                            .getConfigParams(tokenId);
+
+                    totalLTV += tmpLTV * assetPrice;
+                    totalLiquidationThreshold +=
+                        tmpLiquidationThreshold *
+                        assetPrice;
+                }
             }
         }
 
         unchecked {
-            return (
-                totalValue / vars.assetUnit,
-                totalLTV,
-                totalLiquidationThreshold
-            );
+            return (totalValue, totalLTV, totalLiquidationThreshold);
         }
     }
 

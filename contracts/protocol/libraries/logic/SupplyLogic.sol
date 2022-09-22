@@ -393,6 +393,7 @@ library SupplyLogic {
                         params.oracle
                     );
                 }
+
                 if (params.balanceFromBefore == amount) {
                     fromConfig.setUsingAsCollateral(reserveId, false);
                     emit ReserveUsedAsCollateralDisabled(
@@ -400,15 +401,17 @@ library SupplyLogic {
                         params.from
                     );
                 }
-            }
 
-            if (params.balanceToBefore == 0 && params.usedAsCollateral) {
-                DataTypes.UserConfigurationMap storage toConfig = usersConfig[
-                    params.to
-                ];
+                if (params.balanceToBefore == 0) {
+                    DataTypes.UserConfigurationMap
+                        storage toConfig = usersConfig[params.to];
 
-                toConfig.setUsingAsCollateral(reserveId, true);
-                emit ReserveUsedAsCollateralEnabled(params.asset, params.to);
+                    toConfig.setUsingAsCollateral(reserveId, true);
+                    emit ReserveUsedAsCollateralEnabled(
+                        params.asset,
+                        params.to
+                    );
+                }
             }
         }
     }
