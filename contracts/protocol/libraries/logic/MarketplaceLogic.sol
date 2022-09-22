@@ -227,6 +227,10 @@ library MarketplaceLogic {
         DataTypes.ExecuteMarketplaceParams memory params,
         address to
     ) internal {
+        if (params.credit.amount == 0) {
+            return;
+        }
+
         bool isETH = params.credit.token == address(0);
         address underlyingAsset = params.credit.token;
         if (isETH) {
@@ -304,6 +308,10 @@ library MarketplaceLogic {
                     referralCode: params.referralCode
                 })
             );
+        }
+
+        if (params.credit.amount == 0) {
+            return;
         }
 
         BorrowLogic.executeBorrow(
