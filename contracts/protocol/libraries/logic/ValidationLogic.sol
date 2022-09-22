@@ -59,7 +59,7 @@ library ValidationLogic {
      * @param reserveCache The cached data of the reserve
      * @param amount The amount to be supplied
      */
-    function validateSupplyBase(
+    function validateSupply(
         DataTypes.ReserveCache memory reserveCache,
         uint256 amount,
         DataTypes.AssetType assetType
@@ -98,52 +98,6 @@ library ValidationLogic {
     }
 
     /**
-     * @notice Validates a supply action.
-     * @param reserveCache The cached data of the reserve
-     * @param amount The amount to be supplied
-     */
-    function validateSupplyERC20(
-        DataTypes.ReserveCache memory reserveCache,
-        uint256 amount,
-        DataTypes.AssetType assetType
-    ) internal view {
-        validateSupplyBase(reserveCache, amount, assetType);
-
-        uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
-
-        require(
-            supplyCap == 0 ||
-                (IPToken(reserveCache.xTokenAddress).scaledTotalSupply().rayMul(
-                    reserveCache.nextLiquidityIndex
-                ) + amount) <=
-                supplyCap *
-                    (10**reserveCache.reserveConfiguration.getDecimals()),
-            Errors.SUPPLY_CAP_EXCEEDED
-        );
-    }
-
-    /**
-     * @notice Validates a supply action.
-     * @param reserveCache The cached data of the reserve
-     * @param amount The amount to be supplied
-     */
-    function validateSupplyERC721(
-        DataTypes.ReserveCache memory reserveCache,
-        uint256 amount,
-        DataTypes.AssetType assetType
-    ) internal view {
-        validateSupplyBase(reserveCache, amount, assetType);
-        uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
-
-        require(
-            supplyCap == 0 ||
-                (INToken(reserveCache.xTokenAddress).totalSupply() + amount <=
-                    supplyCap),
-            Errors.SUPPLY_CAP_EXCEEDED
-        );
-    }
-
-    /**
      * @notice Validates a supply action from NToken contract
      * @param reserveCache The cached data of the reserve
      * @param params The params of the supply
@@ -162,7 +116,7 @@ library ValidationLogic {
 
         uint256 amount = params.tokenData.length;
 
-        validateSupplyERC721(reserveCache, amount, assetType);
+        validateSupply(reserveCache, amount, assetType);
 
         for (uint256 index = 0; index < amount; index++) {
             // validate that the owner of the underlying asset is the NToken  contract

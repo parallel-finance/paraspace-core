@@ -11,14 +11,14 @@ import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IStableDebtToken} from "../interfaces/IStableDebtToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
 import {IPool} from "../interfaces/IPool.sol";
-import {IPoolDataProvider} from "../interfaces/IPoolDataProvider.sol";
+import {IProtocolDataProvider} from "../interfaces/IProtocolDataProvider.sol";
 
 /**
  * @title ProtocolDataProvider
  *
  * @notice Peripheral contract to collect and pre-process information from the Pool.
  */
-contract ProtocolDataProvider is IPoolDataProvider {
+contract ProtocolDataProvider is IProtocolDataProvider {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
@@ -27,42 +27,39 @@ contract ProtocolDataProvider is IPoolDataProvider {
     address constant MKR = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
     address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    struct TokenData {
-        string symbol;
-        address tokenAddress;
-    }
-
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     constructor(IPoolAddressesProvider addressesProvider) {
         ADDRESSES_PROVIDER = addressesProvider;
     }
 
-    /**
-     * @notice Returns the list of the existing reserves in the pool.
-     * @dev Handling MKR and ETH in a different way since they do not have standard `symbol` functions.
-     * @return The list of reserves, pairs of symbols and addresses
-     */
-    function getAllReservesTokens() external view returns (TokenData[] memory) {
+    /// @inheritdoc IProtocolDataProvider
+    function getAllReservesTokens()
+        external
+        view
+        returns (DataTypes.TokenData[] memory)
+    {
         IPool pool = IPool(ADDRESSES_PROVIDER.getPool());
         address[] memory reserves = pool.getReservesList();
-        TokenData[] memory reservesTokens = new TokenData[](reserves.length);
+        DataTypes.TokenData[] memory reservesTokens = new DataTypes.TokenData[](
+            reserves.length
+        );
         for (uint256 i = 0; i < reserves.length; i++) {
             if (reserves[i] == MKR) {
-                reservesTokens[i] = TokenData({
+                reservesTokens[i] = DataTypes.TokenData({
                     symbol: "MKR",
                     tokenAddress: reserves[i]
                 });
                 continue;
             }
             if (reserves[i] == ETH) {
-                reservesTokens[i] = TokenData({
+                reservesTokens[i] = DataTypes.TokenData({
                     symbol: "ETH",
                     tokenAddress: reserves[i]
                 });
                 continue;
             }
-            reservesTokens[i] = TokenData({
+            reservesTokens[i] = DataTypes.TokenData({
                 symbol: IERC20Detailed(reserves[i]).symbol(),
                 tokenAddress: reserves[i]
             });
@@ -70,19 +67,22 @@ contract ProtocolDataProvider is IPoolDataProvider {
         return reservesTokens;
     }
 
-    /**
-     * @notice Returns the list of the existing PTokens in the pool.
-     * @return The list of PTokens, pairs of symbols and addresses
-     */
-    function getAllPTokens() external view returns (TokenData[] memory) {
+    /// @inheritdoc IProtocolDataProvider
+    function getAllPTokens()
+        external
+        view
+        returns (DataTypes.TokenData[] memory)
+    {
         IPool pool = IPool(ADDRESSES_PROVIDER.getPool());
         address[] memory reserves = pool.getReservesList();
-        TokenData[] memory xTokens = new TokenData[](reserves.length);
+        DataTypes.TokenData[] memory xTokens = new DataTypes.TokenData[](
+            reserves.length
+        );
         for (uint256 i = 0; i < reserves.length; i++) {
             DataTypes.ReserveData memory reserveData = pool.getReserveData(
                 reserves[i]
             );
-            xTokens[i] = TokenData({
+            xTokens[i] = DataTypes.TokenData({
                 symbol: IERC20Detailed(reserveData.xTokenAddress).symbol(),
                 tokenAddress: reserveData.xTokenAddress
             });
@@ -90,21 +90,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
         return xTokens;
     }
 
-    /**
-     * @notice Returns the configuration data of the reserve
-     * @dev Not returning borrow and supply caps for compatibility, nor pause flag
-     * @param asset The address of the underlying asset of the reserve
-     * @return decimals The number of decimals of the reserve
-     * @return ltv The ltv of the reserve
-     * @return liquidationThreshold The liquidationThreshold of the reserve
-     * @return liquidationBonus The liquidationBonus of the reserve
-     * @return reserveFactor The reserveFactor of the reserve
-     * @return usageAsCollateralEnabled True if the usage as collateral is enabled, false otherwise
-     * @return borrowingEnabled True if borrowing is enabled, false otherwise
-     * @return stableBorrowRateEnabled True if stable rate borrowing is enabled, false otherwise
-     * @return isActive True if it is active, false otherwise
-     * @return isFrozen True if it is frozen, false otherwise
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getReserveConfigurationData(address asset)
         external
         view
@@ -159,12 +145,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
             .getAuctionRecoveryHealthFactor();
     }
 
-    /**
-     * @notice Returns the caps parameters of the reserve
-     * @param asset The address of the underlying asset of the reserve
-     * @return borrowCap The borrow cap of the reserve
-     * @return supplyCap The supply cap of the reserve
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getReserveCaps(address asset)
         external
         view
@@ -175,22 +156,14 @@ contract ProtocolDataProvider is IPoolDataProvider {
             .getCaps();
     }
 
-    /**
-     * @notice Returns if the pool is paused
-     * @param asset The address of the underlying asset of the reserve
-     * @return isPaused True if the pool is paused, false otherwise
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getPaused(address asset) external view returns (bool isPaused) {
         (, , , , isPaused) = IPool(ADDRESSES_PROVIDER.getPool())
             .getConfiguration(asset)
             .getFlags();
     }
 
-    /**
-     * @notice Returns the siloed borrowing flag
-     * @param asset The address of the underlying asset of the reserve
-     * @return True if the asset is siloed for borrowing
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getSiloedBorrowing(address asset) external view returns (bool) {
         return
             IPool(ADDRESSES_PROVIDER.getPool())
@@ -216,11 +189,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
                 .getAuctionRecoveryHealthFactor();
     }
 
-    /**
-     * @notice Returns the protocol fee on the liquidation bonus
-     * @param asset The address of the underlying asset of the reserve
-     * @return The protocol fee on liquidation
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getLiquidationProtocolFee(address asset)
         external
         view
@@ -232,21 +201,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
                 .getLiquidationProtocolFee();
     }
 
-    /**
-     * @notice Returns the reserve data
-     * @param asset The address of the underlying asset of the reserve
-     * @return accruedToTreasuryScaled The scaled amount of tokens accrued to treasury that is to be minted
-     * @return totalPToken The total supply of the xToken
-     * @return totalStableDebt The total stable debt of the reserve
-     * @return totalVariableDebt The total variable debt of the reserve
-     * @return liquidityRate The liquidity rate of the reserve
-     * @return variableBorrowRate The variable borrow rate of the reserve
-     * @return stableBorrowRate The stable borrow rate of the reserve
-     * @return averageStableBorrowRate The average stable borrow rate of the reserve
-     * @return liquidityIndex The liquidity index of the reserve
-     * @return variableBorrowIndex The variable borrow index of the reserve
-     * @return lastUpdateTimestamp The timestamp of the last update of the reserve
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getReserveData(address asset)
         external
         view
@@ -285,11 +240,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
         );
     }
 
-    /**
-     * @notice Returns the total supply of xTokens for a given asset
-     * @param asset The address of the underlying asset of the reserve
-     * @return The total supply of the xToken
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getPTokenTotalSupply(address asset)
         external
         view
@@ -302,11 +253,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
         return IERC20Detailed(reserve.xTokenAddress).totalSupply();
     }
 
-    /**
-     * @notice Returns the total debt for a given asset
-     * @param asset The address of the underlying asset of the reserve
-     * @return The total debt for asset
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getTotalDebt(address asset)
         external
         view
@@ -321,21 +268,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
             IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply();
     }
 
-    /**
-     * @notice Returns the user data in a reserve
-     * @param asset The address of the underlying asset of the reserve
-     * @param user The address of the user
-     * @return currentPTokenBalance The current PToken balance of the user
-     * @return currentStableDebt The current stable debt of the user
-     * @return currentVariableDebt The current variable debt of the user
-     * @return principalStableDebt The principal stable debt of the user
-     * @return scaledVariableDebt The scaled variable debt of the user
-     * @return stableBorrowRate The stable borrow rate of the user
-     * @return liquidityRate The liquidity rate of the reserve
-     * @return stableRateLastUpdated The timestamp of the last update of the user stable rate
-     * @return usageAsCollateralEnabled True if the user is using the asset as collateral, false
-     *         otherwise
-     **/
+    /// @inheritdoc IProtocolDataProvider
     function getUserReserveData(address asset, address user)
         external
         view
@@ -379,13 +312,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
         usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
     }
 
-    /**
-     * @notice Returns the token addresses of the reserve
-     * @param asset The address of the underlying asset of the reserve
-     * @return xTokenAddress The PToken address of the reserve
-     * @return stableDebtTokenAddress The StableDebtToken address of the reserve
-     * @return variableDebtTokenAddress The VariableDebtToken address of the reserve
-     */
+    /// @inheritdoc IProtocolDataProvider
     function getReserveTokensAddresses(address asset)
         external
         view
@@ -406,11 +333,7 @@ contract ProtocolDataProvider is IPoolDataProvider {
         );
     }
 
-    /**
-     * @notice Returns the address of the Interest Rate strategy
-     * @param asset The address of the underlying asset of the reserve
-     * @return irStrategyAddress The address of the Interest Rate strategy
-     */
+    /// @inheritdoc IProtocolDataProvider
     function getInterestRateStrategyAddress(address asset)
         external
         view
