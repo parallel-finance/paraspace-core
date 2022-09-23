@@ -160,117 +160,6 @@ contract NTokenUniswapV3 is NToken {
     }
 
     /**
-     * @notice Increases liquidity in the current range
-     * @dev Pool must be initialized already to add liquidity
-     * @param tokenId The id of the erc721 token
-     * @param amountAdd0 The amount to add of token0
-     * @param amountAdd1 The amount to add of token1
-     * @param amount0Min The minimum amount to add of token0
-     * @param amount1Min The minimum amount to add of token1
-     */
-    function _increaseLiquidityCurrentRange(
-        uint256 tokenId,
-        uint256 amountAdd0,
-        uint256 amountAdd1,
-        uint256 amount0Min,
-        uint256 amount1Min
-    ) internal {
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-
-        ) = INonfungiblePositionManager(_underlyingAsset).positions(tokenId);
-
-        // move underlying into this contract
-        address weth = _addressesProvider.getWETH();
-        uint256 txValue = msg.value;
-        address sender = msg.sender;
-        bool token0IsETH = (token0 == weth && txValue > 0);
-        bool token1IsETH = (token1 == weth && txValue > 0);
-        if (!token0IsETH) {
-            IERC20(token0).safeTransferFrom(sender, address(this), amountAdd0);
-        }
-        if (!token1IsETH) {
-            IERC20(token1).safeTransferFrom(sender, address(this), amountAdd1);
-        }
-
-        checkAllownance(token0);
-        checkAllownance(token1);
-
-        // move underlying from this contract to Uniswap
-        INonfungiblePositionManager.IncreaseLiquidityParams
-            memory params = INonfungiblePositionManager
-                .IncreaseLiquidityParams({
-                    tokenId: tokenId,
-                    amount0Desired: amountAdd0,
-                    amount1Desired: amountAdd1,
-                    amount0Min: amount0Min,
-                    amount1Min: amount1Min,
-                    deadline: block.timestamp
-                });
-
-        // return information about amount increased
-        (, uint256 amount0, uint256 amount1) = INonfungiblePositionManager(
-            _underlyingAsset
-        ).increaseLiquidity{value: txValue}(params);
-
-        // refund unused tokens
-        if (amount0 < amountAdd0 && !token0IsETH) {
-            uint256 refund0 = amountAdd0 - amount0;
-            IERC20(token0).safeTransfer(sender, refund0);
-        }
-
-        if (amount1 < amountAdd1 && !token1IsETH) {
-            uint256 refund1 = amountAdd1 - amount1;
-            IERC20(token1).safeTransfer(sender, refund1);
-        }
-
-        //refund eth
-        if (txValue > 0) {
-            INonfungiblePositionManager(_underlyingAsset).refundETH();
-            uint256 ethBalance = address(this).balance;
-            if (ethBalance > 0) {
-                _safeTransferETH(sender, ethBalance);
-            }
-        }
-    }
-
-    /**
-     * @notice Increases liquidity for underlying Uniswap V3 NFT LP
-     * @dev Pool must be initialized already to add liquidity
-     * @param tokenId The id of the erc721 token
-     * @param amountAdd0 The amount to add of token0
-     * @param amountAdd1 The amount to add of token1
-     * @param amount0Min The minimum amount to add of token0
-     * @param amount1Min The minimum amount to add of token1
-     */
-    function increaseUniswapV3Liquidity(
-        uint256 tokenId,
-        uint256 amountAdd0,
-        uint256 amountAdd1,
-        uint256 amount0Min,
-        uint256 amount1Min
-    ) external payable {
-        // interact with Uniswap V3
-        _increaseLiquidityCurrentRange(
-            tokenId,
-            amountAdd0,
-            amountAdd1,
-            amount0Min,
-            amount1Min
-        );
-    }
-
-    /**
      * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
      * that the user respects liquidation checks.
      * @dev Pool must be initialized already to add liquidity
@@ -321,17 +210,6 @@ contract NTokenUniswapV3 is NToken {
             healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
-    }
-
-    function checkAllownance(address token) internal {
-        uint256 allownance = IERC20(token).allowance(
-            address(this),
-            _underlyingAsset
-        );
-        if (allownance == 0) {
-            uint256 MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-            IERC20(token).safeApprove(_underlyingAsset, MAX_INT);
-        }
     }
 
     function _safeTransferETH(address to, uint256 value) internal {
