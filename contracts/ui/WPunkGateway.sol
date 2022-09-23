@@ -199,49 +199,50 @@ contract WPunkGateway is
         );
     }
 
-    // // gives app permission to withdraw n token
-    // // permitV, permitR, permitS. passes signature parameters
-    // /**
-    //  * @dev withdraws the WPUNK _reserves of msg.sender.
-    //  * @param pool address of the targeted underlying pool
-    //  * @param punkIndexes punkIndexes of nWPunks to withdraw and receive native WPunk
-    //  * @param to address of the user who will receive native Punks
-    //  * @param deadline validity deadline of permit and so depositWithPermit signature
-    //  * @param permitV V parameter of ERC712 permit sig
-    //  * @param permitR R parameter of ERC712 permit sig
-    //  * @param permitS S parameter of ERC712 permit sig
-    //  */
-    // function withdrawPunkWithPermit(
-    //     address pool,
-    //     uint256[] calldata punkIndexes,
-    //     address to,
-    //     uint256 deadline,
-    //     uint8 permitV,
-    //     bytes32 permitR,
-    //     bytes32 permitS
-    // ) external override {
-    //     INToken nWPunk = INToken(
-    //         Pool.getReserveData(address(WPunk)).xTokenAddress
-    //     );
+    // gives app permission to withdraw n token
+    // permitV, permitR, permitS. passes signature parameters
+    /**
+     * @dev withdraws the WPUNK _reserves of msg.sender.
+     * @param pool address of the targeted underlying pool
+     * @param punkIndexes punkIndexes of nWPunks to withdraw and receive native WPunk
+     * @param to address of the user who will receive native Punks
+     * @param deadline validity deadline of permit and so depositWithPermit signature
+     * @param permitV V parameter of ERC712 permit sig
+     * @param permitR R parameter of ERC712 permit sig
+     * @param permitS S parameter of ERC712 permit sig
+     */
+    function withdrawPunkWithPermit(
+        address pool,
+        uint256[] calldata punkIndexes,
+        address to,
+        uint256 deadline,
+        uint8 permitV,
+        bytes32 permitR,
+        bytes32 permitS
+    ) external {
+        INToken nWPunk = INToken(
+            Pool.getReserveData(address(WPunk)).xTokenAddress
+        );
 
-    //     for (uint256 i = 0; i < punkIndexes.length; i++) {
-    //         nWPunk.permit(
-    //             msg.sender,
-    //             address(this),
-    //             punkIndexes[i],
-    //             deadline,
-    //             permitV,
-    //             permitR,
-    //             permitS
-    //         );
-    //         nWPunk.safeTransferFrom(msg.sender, address(this), punkIndexes[i]);
-    //     }
-    //     Pool.withdrawERC721(address(WPunk), punkIndexes, address(this));
-    //     for (uint256 i = 0; i < punkIndexes.length; i++) {
-    //         WPunk.burn(punkIndexes[i]);
-    //         Punk.transferPunk(to, punkIndexes[i]);
-    //     }
-    // }
+        nWPunk.permit(
+            msg.sender,
+            address(this),
+            punkIndexes.length,
+            deadline,
+            permitV,
+            permitR,
+            permitS
+        );
+
+        for (uint256 i = 0; i < punkIndexes.length; i++) {
+            nWPunk.safeTransferFrom(msg.sender, address(this), punkIndexes[i]);
+        }
+        Pool.withdrawERC721(address(WPunk), punkIndexes, address(this));
+        for (uint256 i = 0; i < punkIndexes.length; i++) {
+            WPunk.burn(punkIndexes[i]);
+            Punk.transferPunk(to, punkIndexes[i]);
+        }
+    }
 
     /**
      * @dev transfer ERC721 from the utility contract, for ERC721 recovery in case of stuck tokens due
