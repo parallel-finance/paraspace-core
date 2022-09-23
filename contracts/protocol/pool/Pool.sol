@@ -991,12 +991,12 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
 
     /// @inheritdoc IPool
     function rescueTokens(
-        address token,
         DataTypes.AssetType assetType,
+        address token,
         address to,
         uint256 amountOrTokenId
     ) external virtual override onlyPoolAdmin {
-        PoolLogic.executeRescueTokens(token, assetType, to, amountOrTokenId);
+        PoolLogic.executeRescueTokens(assetType, token, to, amountOrTokenId);
     }
 
     // This function is necessary when receive erc721 from looksrare

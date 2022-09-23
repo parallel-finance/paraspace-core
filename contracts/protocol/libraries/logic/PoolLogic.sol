@@ -73,14 +73,14 @@ library PoolLogic {
 
     /**
      * @notice Rescue and transfer tokens locked in this contract
-     * @param token The address of the token
      * @param assetType The asset type of the token
+     * @param token The address of the token
      * @param to The address of the recipient
      * @param amountOrTokenId The amount or id of token to transfer
      */
     function executeRescueTokens(
-        address token,
         DataTypes.AssetType assetType,
+        address token,
         address to,
         uint256 amountOrTokenId
     ) external {
