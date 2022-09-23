@@ -107,14 +107,16 @@ interface IPoolParameters {
 
     /**
      * @notice Rescue and transfer tokens locked in this contract
+     * @param assetType The asset type of the token
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param amount The amount of token to transfer
+     * @param amountOrTokenId The amount or id of token to transfer
      */
     function rescueTokens(
+        DataTypes.AssetType assetType,
         address token,
         address to,
-        uint256 amount
+        uint256 amountOrTokenId
     ) external;
 
     /**
