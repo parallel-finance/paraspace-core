@@ -41,47 +41,15 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  *   PoolAddressesProvider
  **/
 contract PoolCore is
-    PoolStorage,
-    ReentrancyGuard,
     VersionedInitializable,
+    ReentrancyGuard,
+    PoolStorage,
     IPoolCore
 {
     using ReserveLogic for DataTypes.ReserveData;
 
     uint256 public constant POOL_REVISION = 1;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
-
-    /**
-     * @dev Only pool configurator can call functions marked by this modifier.
-     **/
-    modifier onlyPoolConfigurator() {
-        _onlyPoolConfigurator();
-        _;
-    }
-
-    /**
-     * @dev Only pool admin can call functions marked by this modifier.
-     **/
-    modifier onlyPoolAdmin() {
-        _onlyPoolAdmin();
-        _;
-    }
-
-    function _onlyPoolConfigurator() internal view virtual {
-        require(
-            ADDRESSES_PROVIDER.getPoolConfigurator() == msg.sender,
-            Errors.CALLER_NOT_POOL_CONFIGURATOR
-        );
-    }
-
-    function _onlyPoolAdmin() internal view virtual {
-        require(
-            IACLManager(ADDRESSES_PROVIDER.getACLManager()).isPoolAdmin(
-                msg.sender
-            ),
-            Errors.CALLER_NOT_POOL_ADMIN
-        );
-    }
 
     function getRevision() internal pure virtual override returns (uint256) {
         return POOL_REVISION;

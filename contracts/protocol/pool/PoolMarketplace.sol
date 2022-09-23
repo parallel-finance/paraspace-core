@@ -40,10 +40,16 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider
  **/
-contract PoolMarketplace is PoolStorage, ReentrancyGuard, IPoolMarketplace {
+contract PoolMarketplace is
+    VersionedInitializable,
+    ReentrancyGuard,
+    PoolStorage,
+    IPoolMarketplace
+{
     using ReserveLogic for DataTypes.ReserveData;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
+    uint256 internal constant POOL_REVISION = 1;
 
     /**
      * @dev Constructor.
@@ -51,6 +57,10 @@ contract PoolMarketplace is PoolStorage, ReentrancyGuard, IPoolMarketplace {
      */
     constructor(IPoolAddressesProvider provider) {
         ADDRESSES_PROVIDER = provider;
+    }
+
+    function getRevision() internal pure virtual override returns (uint256) {
+        return POOL_REVISION;
     }
 
     /// @inheritdoc IPoolMarketplace
