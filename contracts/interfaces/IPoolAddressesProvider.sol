@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
+import {IParaProxy} from "../interfaces/IParaProxy.sol";
 
 /**
  * @title IPoolAddressesProvider
@@ -18,10 +19,15 @@ interface IPoolAddressesProvider {
 
     /**
      * @dev Emitted when the pool is updated.
-     * @param oldAddress The old address of the Pool
-     * @param newAddress The new address of the Pool
+     * @param implementationParams The old address of the Pool
+     * @param _init The new address to call upon upgrade
+     * @param _calldata The calldata input for the call
      */
-    event PoolUpdated(address indexed oldAddress, address indexed newAddress);
+    event PoolUpdated(
+        IParaProxy.ProxyImplementation[] indexed implementationParams,
+        address _init,
+        bytes _calldata
+    );
 
     /**
      * @dev Emitted when the pool configurator is updated.
@@ -100,6 +106,30 @@ interface IPoolAddressesProvider {
         bytes32 indexed id,
         address indexed proxyAddress,
         address indexed implementationAddress
+    );
+
+    /**
+     * @dev Emitted when a new proxy is created.
+     * @param id The identifier of the proxy
+     * @param proxyAddress The address of the created proxy contract
+     * @param implementationParams The params of the implementation update
+     */
+    event ParaProxyCreated(
+        bytes32 indexed id,
+        address indexed proxyAddress,
+        IParaProxy.ProxyImplementation[] indexed implementationParams
+    );
+
+    /**
+     * @dev Emitted when a new proxy is created.
+     * @param id The identifier of the proxy
+     * @param proxyAddress The address of the created proxy contract
+     * @param implementationParams The params of the implementation update
+     */
+    event ParaProxyUpdated(
+        bytes32 indexed id,
+        address indexed proxyAddress,
+        IParaProxy.ProxyImplementation[] indexed implementationParams
     );
 
     /**
@@ -196,9 +226,16 @@ interface IPoolAddressesProvider {
     /**
      * @notice Updates the implementation of the Pool, or creates a proxy
      * setting the new `pool` implementation when the function is called for the first time.
-     * @param newPoolImpl The new Pool implementation
+     * @param implementationParams Contains the implementation addresses and function selectors
+     * @param _init The address of the contract or implementation to execute _calldata
+     * @param _calldata A function call, including function selector and arguments
+     *                  _calldata is executed with delegatecall on _init
      **/
-    function setPoolImpl(address newPoolImpl) external;
+    function updatePoolImpl(
+        IParaProxy.ProxyImplementation[] calldata implementationParams,
+        address _init,
+        bytes calldata _calldata
+    ) external;
 
     /**
      * @notice Returns the address of the PoolConfigurator proxy.

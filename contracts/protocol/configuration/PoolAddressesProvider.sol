@@ -3,7 +3,9 @@ pragma solidity 0.8.10;
 
 import {Ownable} from "../../dependencies/openzeppelin/contracts/Ownable.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
+import {IParaProxy} from "../../interfaces/IParaProxy.sol";
 import {InitializableImmutableAdminUpgradeabilityProxy} from "../libraries/paraspace-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol";
+import {ParaProxy} from "../libraries/paraspace-upgradeability/ParaProxy.sol";
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
@@ -98,10 +100,14 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setPoolImpl(address newPoolImpl) external override onlyOwner {
-        address oldPoolImpl = _getProxyImplementation(POOL);
-        _updateImpl(POOL, newPoolImpl);
-        emit PoolUpdated(oldPoolImpl, newPoolImpl);
+    function updatePoolImpl(
+        IParaProxy.ProxyImplementation[] calldata implementationParams,
+        address _init,
+        bytes calldata _calldata
+    ) external override onlyOwner {
+        _updateParaProxyImpl(POOL, implementationParams, _init, _calldata);
+
+        emit PoolUpdated(implementationParams, _init, _calldata);
     }
 
     /// @inheritdoc IPoolAddressesProvider
@@ -276,6 +282,41 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
                 payable(proxyAddress)
             );
             proxy.upgradeToAndCall(newAddress, params);
+        }
+    }
+
+    /**
+     * @notice Internal function to update the implementation of a specific proxied component of the protocol that uses ParaProxy.
+     * @dev If there is no proxy registered with the given identifier, it creates the proxy setting `newAddress`
+     *   as implementation and calls the calldata on the _init
+     * @dev If there is already a proxy registered, it just updates the implementation using the implementationParams
+     * @param id The id of the proxy to be updated
+     * @param implementationParams Contains the implementation addresses and function selectors
+     * @param _init The address of the contract or implementation to execute _calldata
+     * @param _calldata A function call, including function selector and arguments
+     *                  _calldata is executed with delegatecall on _init
+     **/
+    function _updateParaProxyImpl(
+        bytes32 id,
+        IParaProxy.ProxyImplementation[] calldata implementationParams,
+        address _init,
+        bytes calldata _calldata
+    ) internal {
+        address proxyAddress = _addresses[id];
+
+        IParaProxy proxy;
+
+        if (proxyAddress == address(0)) {
+            proxy = IParaProxy(address(new ParaProxy(address(this))));
+
+            _addresses[id] = proxyAddress = address(proxy);
+            proxy.updateImplementation(implementationParams, _init, _calldata);
+            emit ParaProxyCreated(id, proxyAddress, implementationParams);
+        } else {
+            proxy = IParaProxy(payable(proxyAddress));
+
+            proxy.updateImplementation(implementationParams, _init, _calldata);
+            emit ParaProxyUpdated(id, proxyAddress, implementationParams);
         }
     }
 
