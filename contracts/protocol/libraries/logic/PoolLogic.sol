@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {Errors} from "../helpers/Errors.sol";
@@ -72,16 +73,22 @@ library PoolLogic {
 
     /**
      * @notice Rescue and transfer tokens locked in this contract
+     * @param assetType The asset type of the token
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param amount The amount of token to transfer
+     * @param amountOrTokenId The amount or id of token to transfer
      */
     function executeRescueTokens(
+        DataTypes.AssetType assetType,
         address token,
         address to,
-        uint256 amount
+        uint256 amountOrTokenId
     ) external {
-        IERC20(token).safeTransfer(to, amount);
+        if (assetType == DataTypes.AssetType.ERC20) {
+            IERC20(token).safeTransfer(to, amountOrTokenId);
+        } else if (assetType == DataTypes.AssetType.ERC721) {
+            IERC721(token).safeTransferFrom(address(this), to, amountOrTokenId);
+        }
     }
 
     /**
