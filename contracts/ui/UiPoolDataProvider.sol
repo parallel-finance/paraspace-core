@@ -350,7 +350,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             if (dynamicConfigsStrategyAddress == address(0)) {
                 return lpTokenInfo;
             }
-            dynamicConfigsStrategy = IDynamicConfigsStrategy(sourceAddress);
+            dynamicConfigsStrategy = IDynamicConfigsStrategy(
+                dynamicConfigsStrategyAddress
+            );
         }
 
         //try to catch invalid tokenId
