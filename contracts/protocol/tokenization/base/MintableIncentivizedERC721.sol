@@ -642,15 +642,16 @@ abstract contract MintableIncentivizedERC721 is
     function _transferCollaterizable(
         address from,
         address to,
-        uint256 tokenId,
-        bool isUsedAsCollateral
-    ) internal virtual {
-        MintableIncentivizedERC721._transfer(from, to, tokenId);
+        uint256 tokenId
+    ) internal virtual returns (bool isUsedAsCollateral) {
+        bool isUsedAsCollateral = _isUsedAsCollateral[tokenId];
 
         if (isUsedAsCollateral) {
             _userState[from].collaterizedBalance -= 1;
-            _userState[to].collaterizedBalance += 1;
+            delete _isUsedAsCollateral[tokenId];
         }
+
+        MintableIncentivizedERC721._transfer(from, to, tokenId);
     }
 
     /// @inheritdoc ICollaterizableERC721

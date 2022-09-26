@@ -606,7 +606,7 @@ contract PoolCore is
             msg.sender == _reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
-        SupplyLogic.executeFinalizeTransfer(
+        SupplyLogic.executeFinalizeTransferERC20(
             _reserves,
             _reservesList,
             _usersConfig,
@@ -616,6 +616,37 @@ contract PoolCore is
                 to: to,
                 usedAsCollateral: usedAsCollateral,
                 value: value,
+                balanceFromBefore: balanceFromBefore,
+                balanceToBefore: balanceToBefore,
+                reservesCount: _reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function finalizeTransferERC721(
+        address asset,
+        address from,
+        address to,
+        bool usedAsCollateral,
+        uint256 balanceFromBefore,
+        uint256 balanceToBefore
+    ) external virtual override {
+        require(
+            msg.sender == _reserves[asset].xTokenAddress,
+            Errors.CALLER_NOT_XTOKEN
+        );
+        SupplyLogic.executeFinalizeTransferERC721(
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.FinalizeTransferParams({
+                asset: asset,
+                from: from,
+                to: to,
+                usedAsCollateral: usedAsCollateral,
+                value: 1,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
                 reservesCount: _reservesCount,
