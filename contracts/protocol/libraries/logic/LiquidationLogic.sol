@@ -670,9 +670,11 @@ library LiquidationLogic {
         DataTypes.ExecuteLiquidationCallParams memory params,
         LiquidationCallLocalVars memory vars
     ) internal {
-        uint256 liquidatorPreviousPTokenBalance = IERC20(vars.collateralXToken)
-            .balanceOf(vars.liquidator);
-        IPToken(vars.collateralXToken).transferOnLiquidation(
+        IPToken pToken = IPToken(vars.collateralXToken);
+        uint256 liquidatorPreviousPTokenBalance = pToken.balanceOf(
+            vars.liquidator
+        );
+        pToken.transferOnLiquidation(
             params.user,
             vars.liquidator,
             vars.actualCollateralToLiquidate
