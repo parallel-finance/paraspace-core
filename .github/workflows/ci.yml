@@ -55,7 +55,7 @@ jobs:
           rm -rf paraspace-core-docs/src/* && mv docs/* paraspace-core-docs/src/
           rm paraspace-core-docs/src/DEVELOPER-GUIDE.md
       - name: Generate Summary
-      - uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
       - uses: actions-rs/cargo@v1
