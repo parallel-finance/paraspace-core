@@ -65,7 +65,7 @@ jobs:
       - name: Build Documentation
         run: |
           mdbook-auto-gen-summary gen paraspace-core-docs/src
-          mdbook build paraspace-core-docs
+          bin/mdbook build paraspace-core-docs
           ls paraspace-core-docs
       
       
