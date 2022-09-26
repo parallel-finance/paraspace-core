@@ -644,7 +644,7 @@ abstract contract MintableIncentivizedERC721 is
         address to,
         uint256 tokenId
     ) internal virtual returns (bool isUsedAsCollateral) {
-        bool isUsedAsCollateral = _isUsedAsCollateral[tokenId];
+        isUsedAsCollateral = _isUsedAsCollateral[tokenId];
 
         if (isUsedAsCollateral) {
             _userState[from].collaterizedBalance -= 1;
