@@ -11,8 +11,6 @@ on:
         type: string
       CLOUDFLARE_PURGE_URLS:
         type: string
-      JS_BUILD_COMMAND:
-        type: string
       AWS_REGION:
         default: 'us-east-2'
         type: string
@@ -62,34 +60,35 @@ jobs:
     needs: deploy-s3-and-cloudfront
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - name: Use node version 16
+        uses: actions/setup-node@v2
         with:
-          version: 7.9.3
+          node-version: 16
+          registry-url: https://registry.npmjs.org
 
-      - uses: actions/setup-node@v3
+      - name: Generate Documentation
+        run: |
+          yarn cache clean --all
+          YARN_CHECKSUM_BEHAVIOR=update yarn
+          yarn
+          make doc
+          mkdir bin
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.21/mdbook-v0.4.21-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+          bin/mdbook init paraspace-core-docs --title "paraspace core" --ignore none
+          rm -rf paraspace-core-docs/src/* && mv docs/* paraspace-core-docs/src/
+          rm paraspace-core-docs/src/DEVELOPER-GUIDE.md
+      - name: Generate Summary
+        uses: actions-rs/toolchain@v1
         with:
-          node-version: '16.17.0'
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'pnpm'
-
-      - name: Cache node modules
-        id: cache-nodemodules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
         with:
-          path: node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: ${{ inputs.JS_BUILD_COMMAND }}
+          command: install
+          args: mdbook-auto-gen-summary
+      - name: Build Documentation
+        run: |
+          mdbook-auto-gen-summary gen paraspace-core-docs/src
+          bin/mdbook build paraspace-core-docs
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -100,8 +99,8 @@ jobs:
 
       - name: Upload to S3
         run: |
-          aws s3 sync ./build s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --delete
-          aws s3 cp ./build/index.html s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --metadata-directive REPLACE --cache-control "no-store"
+          aws s3 sync ./paraspace-core-docs/book s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --delete
+          aws s3 cp ./paraspace-core-docs/book.html s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --metadata-directive REPLACE --cache-control "no-store"
       - name: slack
         uses: 8398a7/action-slack@v3
         env:

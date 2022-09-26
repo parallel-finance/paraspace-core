@@ -5,7 +5,6 @@ on:
     branches:
       - v*
       - main
-      - add-ci/doc
   pull_request: {}
   workflow_dispatch: {}
 
@@ -29,43 +28,4 @@ jobs:
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
           make ci
-  docs:
-    if: github.repository == 'para-space/paraspace-core'
-    name: Docs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Use node version 16
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-          registry-url: https://registry.npmjs.org
-
-      - name: Generate Documentation
-        run: |
-          yarn cache clean --all
-          YARN_CHECKSUM_BEHAVIOR=update yarn
-          yarn
-          make doc
-          mkdir bin
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.21/mdbook-v0.4.21-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
-          bin/mdbook init paraspace-core-docs --title "paraspace core" --ignore none
-          rm -rf paraspace-core-docs/src/* && mv docs/* paraspace-core-docs/src/
-          rm paraspace-core-docs/src/DEVELOPER-GUIDE.md
-      - name: Generate Summary
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: mdbook-auto-gen-summary
-      - name: Build Documentation
-        run: |
-          mdbook-auto-gen-summary gen paraspace-core-docs/src
-          bin/mdbook build paraspace-core-docs
-          ls paraspace-core-docs/book
-      
-      
+  
