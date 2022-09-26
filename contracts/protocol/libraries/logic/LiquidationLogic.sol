@@ -629,7 +629,7 @@ library LiquidationLogic {
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         IPToken(vars.collateralXToken).burn(
             params.user,
-            msg.sender,
+            vars.liquidator,
             vars.actualCollateralToLiquidate,
             collateralReserveCache.nextLiquidityIndex
         );
@@ -648,7 +648,11 @@ library LiquidationLogic {
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = params.collateralTokenId;
-        INToken(vars.collateralXToken).burn(params.user, msg.sender, tokenIds);
+        INToken(vars.collateralXToken).burn(
+            params.user,
+            vars.liquidator,
+            tokenIds
+        );
     }
 
     /**
