@@ -66,6 +66,6 @@ jobs:
         run: |
           mdbook-auto-gen-summary gen paraspace-core-docs/src
           bin/mdbook build paraspace-core-docs
-          ls paraspace-core-docs
+          ls paraspace-core-docs/book
       
       
