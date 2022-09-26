@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {IPool} from "../../../interfaces/IPool.sol";
 import {IInitializablePToken} from "../../../interfaces/IInitializablePToken.sol";
+import {IInitializableNToken} from "../../../interfaces/IInitializableNToken.sol";
 import {IInitializableDebtToken} from "../../../interfaces/IInitializableDebtToken.sol";
 import {IRewardController} from "../../../interfaces/IRewardController.sol";
 import {InitializableImmutableAdminUpgradeabilityProxy} from "../paraspace-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol";
@@ -54,20 +55,37 @@ library ConfiguratorLogic {
         IPool pool,
         ConfiguratorInputTypes.InitReserveInput calldata input
     ) public {
-        address xTokenProxyAddress = _initTokenWithProxy(
-            input.xTokenImpl,
-            abi.encodeWithSelector(
-                IInitializablePToken.initialize.selector,
-                pool,
-                input.treasury,
-                input.underlyingAsset,
-                input.incentivesController,
-                input.underlyingAssetDecimals,
-                input.xTokenName,
-                input.xTokenSymbol,
-                input.params
-            )
-        );
+        address xTokenProxyAddress;
+        if (input.assetType == DataTypes.AssetType.ERC20) {
+            xTokenProxyAddress = _initTokenWithProxy(
+                input.xTokenImpl,
+                abi.encodeWithSelector(
+                    IInitializablePToken.initialize.selector,
+                    pool,
+                    input.treasury,
+                    input.underlyingAsset,
+                    input.incentivesController,
+                    input.underlyingAssetDecimals,
+                    input.xTokenName,
+                    input.xTokenSymbol,
+                    input.params
+                )
+            );
+        } else {
+            xTokenProxyAddress = _initTokenWithProxy(
+                input.xTokenImpl,
+                abi.encodeWithSelector(
+                    IInitializableNToken.initialize.selector,
+                    pool,
+                    input.treasury,
+                    input.underlyingAsset,
+                    input.incentivesController,
+                    input.xTokenName,
+                    input.xTokenSymbol,
+                    input.params
+                )
+            );
+        }
 
         address stableDebtTokenProxyAddress = _initTokenWithProxy(
             input.stableDebtTokenImpl,

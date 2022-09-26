@@ -14,7 +14,7 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
-import {IInitializablePToken} from "../../interfaces/IInitializablePToken.sol";
+import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
 import {ScaledBalanceTokenBaseERC721} from "./base/ScaledBalanceTokenBaseERC721.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {EIP712Base} from "./base/EIP712Base.sol";
@@ -63,7 +63,6 @@ contract NToken is
         address treasury,
         address underlyingAsset,
         IRewardController incentivesController,
-        uint8 nTokenDecimals,
         string calldata nTokenName,
         string calldata nTokenSymbol,
         bytes calldata params

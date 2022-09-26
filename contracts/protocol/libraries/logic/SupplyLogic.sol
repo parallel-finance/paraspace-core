@@ -430,7 +430,7 @@ library SupplyLogic {
      * @param reservesCount The number of initialized reserves
      * @param priceOracle The address of the price oracle
      */
-    function executeUseReserveAsCollateral(
+    function executeUseERC20AsCollateral(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
