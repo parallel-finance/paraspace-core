@@ -346,6 +346,7 @@ contract PoolCore is
         external
         virtual
         override
+        nonReentrant
     {
         SupplyLogic.executeUseERC20AsCollateral(
             _reserves,
@@ -362,7 +363,7 @@ contract PoolCore is
         address asset,
         uint256[] calldata tokenIds,
         bool useAsCollateral
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         SupplyLogic.executeUseERC721AsCollateral(
             _reserves,
             _reservesList,
@@ -382,7 +383,7 @@ contract PoolCore is
         address user,
         uint256 debtToCover,
         bool receivePToken
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         LiquidationLogic.executeLiquidationCall(
             _reserves,
             _reservesList,
@@ -409,7 +410,7 @@ contract PoolCore is
         uint256 collateralTokenId,
         uint256 liquidationAmount,
         bool receiveNToken
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         LiquidationLogic.executeERC721LiquidationCall(
             _reserves,
             _reservesList,
@@ -433,7 +434,7 @@ contract PoolCore is
         address user,
         address collateralAsset,
         uint256 collateralTokenId
-    ) external override {
+    ) external override nonReentrant {
         LiquidationLogic.executeStartAuction(
             _reserves,
             _reservesList,
@@ -453,7 +454,7 @@ contract PoolCore is
         address user,
         address collateralAsset,
         uint256 collateralTokenId
-    ) external override {
+    ) external override nonReentrant {
         LiquidationLogic.executeEndAuction(
             _reserves,
             _reservesList,
@@ -474,7 +475,7 @@ contract PoolCore is
         address nftAsset,
         uint256[] calldata nftTokenIds,
         bytes calldata params
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         FlashClaimLogic.executeFlashClaim(
             _reserves,
             DataTypes.ExecuteFlashClaimParams({
