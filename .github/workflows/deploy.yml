@@ -68,8 +68,6 @@ jobs:
 
       - name: Generate Documentation
         run: |
-          yarn cache clean --all
-          YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
           make doc
           mkdir bin
