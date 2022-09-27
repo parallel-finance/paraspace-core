@@ -112,7 +112,7 @@ interface IPool {
     );
 
     /**
-     * @dev Emitted on setUserUseReserveAsCollateral()
+     * @dev Emitted on setUserUseERC20AsCollateral()
      * @param reserve The address of the underlying asset of the reserve
      * @param user The address of the user enabling the usage as collateral
      **/
@@ -122,7 +122,7 @@ interface IPool {
     );
 
     /**
-     * @dev Emitted on setUserUseReserveAsCollateral()
+     * @dev Emitted on setUserUseERC20AsCollateral()
      * @param reserve The address of the underlying asset of the reserve
      * @param user The address of the user enabling the usage as collateral
      **/
@@ -488,7 +488,7 @@ interface IPool {
      * @param asset The address of the underlying asset supplied
      * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
      **/
-    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
+    function setUserUseERC20AsCollateral(address asset, bool useAsCollateral)
         external;
 
     /**

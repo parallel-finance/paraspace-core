@@ -508,7 +508,7 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
     }
 
     /// @inheritdoc IPool
-    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
+    function setUserUseERC20AsCollateral(address asset, bool useAsCollateral)
         external
         virtual
         override
