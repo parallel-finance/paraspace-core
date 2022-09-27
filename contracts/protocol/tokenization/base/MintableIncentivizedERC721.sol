@@ -675,12 +675,11 @@ abstract contract MintableIncentivizedERC721 is
         address owner = ownerOf(tokenId);
         require(owner == sender, "not owner");
 
-        uint64 collaterizedBalance = _userState[owner].collaterizedBalance;
-
         if (!useAsCollateral) {
             require(!_isAuctioned(tokenId), "token in auction");
         }
 
+        uint64 collaterizedBalance = _userState[owner].collaterizedBalance;
         _isUsedAsCollateral[tokenId] = useAsCollateral;
         collaterizedBalance = useAsCollateral
             ? collaterizedBalance + 1
