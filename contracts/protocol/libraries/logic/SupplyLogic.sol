@@ -335,7 +335,7 @@ library SupplyLogic {
         reserve.updateState(reserveCache);
 
         ValidationLogic.validateWithdrawERC721(reserveCache);
-        uint256 amount = params.tokenIds.length;
+        uint256 amountToWithdraw = params.tokenIds.length;
 
         bool isLastUncollaterarized = INToken(reserveCache.xTokenAddress).burn(
             msg.sender,
@@ -369,7 +369,7 @@ library SupplyLogic {
             params.tokenIds
         );
 
-        return amount;
+        return amountToWithdraw;
     }
 
     /**
