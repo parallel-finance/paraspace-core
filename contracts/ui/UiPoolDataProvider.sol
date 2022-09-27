@@ -123,6 +123,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             //address of the interest rate strategy
             reserveData.interestRateStrategyAddress = baseData
                 .interestRateStrategyAddress;
+            reserveData.dynamicConfigsStrategyAddress = baseData
+                .dynamicConfigsStrategyAddress;
+            reserveData.auctionStrategyAddress = baseData
+                .auctionStrategyAddress;
             try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
                 uint256 price
             ) {
@@ -382,7 +386,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             (
                 lpTokenInfo.baseLTVasCollateral,
                 lpTokenInfo.reserveLiquidationThreshold,
-
+                lpTokenInfo.reserveLiquidationBonus
             ) = dynamicConfigsStrategy.getConfigParams(tokenId);
         } catch {}
 

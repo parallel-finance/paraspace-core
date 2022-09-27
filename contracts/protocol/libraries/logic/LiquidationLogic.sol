@@ -21,6 +21,7 @@ import {INToken} from "../../../interfaces/INToken.sol";
 import {PRBMath} from "../../../dependencies/math/PRBMath.sol";
 import {PRBMathUD60x18} from "../../../dependencies/math/PRBMathUD60x18.sol";
 import {IReserveAuctionStrategy} from "../../../interfaces/IReserveAuctionStrategy.sol";
+import {IDynamicConfigsStrategy} from "../../../interfaces/IDynamicConfigsStrategy.sol";
 
 import {IStableDebtToken} from "../../../interfaces/IStableDebtToken.sol";
 import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
@@ -828,9 +829,16 @@ library LiquidationLogic {
         )
     {
         address collateralXToken = collateralReserve.xTokenAddress;
-        uint256 liquidationBonus = collateralReserve
-            .configuration
-            .getLiquidationBonus();
+        uint256 liquidationBonus;
+        if (collateralReserve.dynamicConfigsStrategyAddress == address(0)) {
+            liquidationBonus = collateralReserve
+                .configuration
+                .getLiquidationBonus();
+        } else {
+            (, , liquidationBonus) = IDynamicConfigsStrategy(
+                collateralReserve.dynamicConfigsStrategyAddress
+            ).getConfigParams(params.collateralTokenId);
+        }
 
         address collateralPriceSource = params.collateralAsset;
         address debtPriceSource = params.liquidationAsset;

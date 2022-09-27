@@ -40,6 +40,8 @@ interface IUiPoolDataProvider {
         address stableDebtTokenAddress;
         address variableDebtTokenAddress;
         address interestRateStrategyAddress;
+        address dynamicConfigsStrategyAddress;
+        address auctionStrategyAddress;
         //
         uint256 availableLiquidity;
         uint256 totalPrincipalStableDebt;
@@ -110,6 +112,7 @@ interface IUiPoolDataProvider {
         uint256 tokenPrice;
         uint256 baseLTVasCollateral;
         uint256 reserveLiquidationThreshold;
+        uint256 reserveLiquidationBonus;
     }
 
     function getReservesList(IPoolAddressesProvider provider)

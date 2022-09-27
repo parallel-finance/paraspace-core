@@ -5,7 +5,7 @@ interface IDynamicConfigsStrategy {
     /**
      * @dev get the dynamic config params
      **/
-    function getConfigParams(uint256 data)
+    function getConfigParams(uint256 tokenId)
         external
         view
         returns (
