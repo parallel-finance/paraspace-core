@@ -28,3 +28,4 @@ jobs:
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
           make ci
+  

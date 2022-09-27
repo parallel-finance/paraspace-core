@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFront distribution with an S3 origin'
+
+Parameters:
+  S3BucketName:
+    Type: String
+  AlternateDomainName:
+    Type: String
+    Description: The custom domain name that you use in URLs for the files served by this CloudFront distribution.
+  CertificateArn:
+    Type: String
+    Description: Give a certificate from AWS Certificate Manager.
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: 'Retain'
+    Properties:
+      AccessControl: 'Private'
+      BucketName: !Ref S3BucketName
+
+  S3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: 'Allow'
+            Principal:
+              CanonicalUser: !GetAtt CfOriginAccessIdentity.S3CanonicalUserId
+            Resource:
+              - !Sub 'arn:aws:s3:::${S3Bucket}/*'
+
+  CfOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'Access S3 bucket content only through CloudFront'
+
+  CfDistribution:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref AlternateDomainName
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - 'HEAD'
+            - 'GET'
+          CachedMethods:
+            - 'HEAD'
+            - 'GET'
+          Compress: true
+          DefaultTTL: 86400
+          MaxTTL: 31536000
+          MinTTL: 0
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
+          TargetOriginId: !Sub 's3-origin-${S3Bucket}'
+          ViewerProtocolPolicy: 'redirect-to-https'
+        DefaultRootObject: 'index.html'
+        Enabled: true
+        HttpVersion: 'http2'
+        IPV6Enabled: true
+        Origins:
+          - DomainName: !GetAtt S3Bucket.DomainName
+            Id: !Sub 's3-origin-${S3Bucket}'
+            OriginPath: ''
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CfOriginAccessIdentity}'
+        PriceClass: 'PriceClass_All'
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: 3600
+            ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+Outputs:
+  S3BucketName:
+    Description: 'The S3 Bucket name'
+    Value: !Ref S3Bucket
+  CfDistributionId:
+    Description: 'Id for our cloudfront distribution'
+    Value: !Ref CfDistribution
+  CfDistributionDomainName:
+    Description: 'Domain name for our cloudfront distribution'
+    Value: !GetAtt CfDistribution.DomainName

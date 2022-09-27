@@ -1,0 +1,31 @@
+name: Docs Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  wait-for-approval:
+    runs-on: ubuntu-latest
+    environment: documentation-deployment
+    steps:
+      - run: echo "start documentation deployment"
+
+  call-deployment-in-local-repo:
+    name: doc
+    needs: wait-for-approval
+    uses: ./.github/workflows/deploy.yml
+    with:
+      AWS_STACK_NAME: paraspace-core-docs
+      S3_BUCKET_NAME: paraspace-core-docs
+      ALTERNATE_DOMAIN_NAME: "api-docs.para.space"
+      CLOUDFLARE_PURGE_URLS: '["https://api-docs.para.space/"]'
+    secrets:
+      CERERTIFICATE_ARN: ${{ secrets.PARA_SPACE_CERERTIFICATE_ARN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEPLOYMENT_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEPLOYMENT_AWS_SECRET_ACCESS_KEY }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
+      CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
