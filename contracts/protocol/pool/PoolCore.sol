@@ -342,7 +342,7 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
+    function setUserUseERC20AsCollateral(address asset, bool useAsCollateral)
         external
         virtual
         override

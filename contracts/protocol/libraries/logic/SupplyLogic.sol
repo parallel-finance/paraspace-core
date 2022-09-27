@@ -58,7 +58,7 @@ library SupplyLogic {
         address indexed onBehalfOf,
         DataTypes.ERC721SupplyParams[] tokenData,
         uint16 indexed referralCode,
-        bool useNToken
+        bool fromNToken
     );
 
     event WithdrawERC721(
@@ -207,7 +207,7 @@ library SupplyLogic {
 
     /**
      * @notice Implements the executeSupplyERC721FromNToken feature.
-     * @dev Emits the `SupplyERC721()` event with useNToken as true.
+     * @dev Emits the `SupplyERC721()` event with fromNToken as true.
      * @dev same as `executeSupplyERC721` whereas no need to transfer the underlying nft
      * @param reservesData The state of all the reserves
      * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
@@ -476,7 +476,7 @@ library SupplyLogic {
             msg.sender
         );
 
-        ValidationLogic.validateSetUseReserveAsCollateral(
+        ValidationLogic.validateSetUseERC20AsCollateral(
             reserveCache,
             userBalance
         );

@@ -536,7 +536,7 @@ library ValidationLogic {
      * @param reserveCache The cached data of the reserve
      * @param userBalance The balance of the user
      */
-    function validateSetUseReserveAsCollateral(
+    function validateSetUseERC20AsCollateral(
         DataTypes.ReserveCache memory reserveCache,
         uint256 userBalance
     ) internal pure {
