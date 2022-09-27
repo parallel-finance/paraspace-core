@@ -1,10 +1,9 @@
-name: docs-deploy
+name: Docs Deployment
 
 on:
   push:
     branches:
       - main
-      - add-ci/doc
   workflow_dispatch:
 
 jobs:
