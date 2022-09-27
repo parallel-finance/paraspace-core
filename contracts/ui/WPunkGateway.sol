@@ -197,7 +197,6 @@ contract WPunkGateway is
     // permitV, permitR, permitS. passes signature parameters
     /**
      * @dev withdraws the WPUNK _reserves of msg.sender.
-     * @param pool address of the targeted underlying pool
      * @param punkIndexes punkIndexes of nWPunks to withdraw and receive native WPunk
      * @param to address of the user who will receive native Punks
      * @param deadline validity deadline of permit and so depositWithPermit signature
@@ -206,7 +205,6 @@ contract WPunkGateway is
      * @param permitS S parameter of ERC712 permit sig
      */
     function withdrawPunkWithPermit(
-        address pool,
         uint256[] calldata punkIndexes,
         address to,
         uint256 deadline,

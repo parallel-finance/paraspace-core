@@ -90,6 +90,7 @@ contract PoolParameters is PoolStorage, ReentrancyGuard, IPoolParameters {
         external
         virtual
         override
+        nonReentrant
     {
         PoolLogic.executeMintToTreasury(_reserves, assets);
     }
