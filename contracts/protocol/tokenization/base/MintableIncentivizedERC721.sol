@@ -745,12 +745,9 @@ abstract contract MintableIncentivizedERC721 is
     /// @inheritdoc IAuctionableERC721
     function startAuction(uint256 tokenId) external virtual override onlyPool {
         require(!_isAuctioned(tokenId), Errors.AUCTION_ALREADY_STARTED);
-        DataTypes.Auction memory auction = DataTypes.Auction({
-            startTime: block.timestamp
-        });
         require(_exists(tokenId), "ERC721: startAuction for nonexistent token");
         _userState[_owners[tokenId]].auctionedBalance += 1;
-        _auctions[tokenId] = auction;
+        _auctions[tokenId] = DataTypes.Auction({startTime: block.timestamp});
     }
 
     /// @inheritdoc IAuctionableERC721
