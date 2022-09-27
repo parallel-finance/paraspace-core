@@ -4,34 +4,25 @@ pragma solidity 0.8.10;
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 interface IWETHGateway {
-    function depositETH(
-        address pool,
-        address onBehalfOf,
-        uint16 referralCode
-    ) external payable;
+    function depositETH(address onBehalfOf, uint16 referralCode)
+        external
+        payable;
 
-    function withdrawETH(
-        address pool,
-        uint256 amount,
-        address onBehalfOf
-    ) external;
+    function withdrawETH(uint256 amount, address onBehalfOf) external;
 
     function repayETH(
-        address pool,
         uint256 amount,
         uint256 rateMode,
         address onBehalfOf
     ) external payable;
 
     function borrowETH(
-        address pool,
         uint256 amount,
         uint256 interesRateMode,
         uint16 referralCode
     ) external;
 
     function withdrawETHWithPermit(
-        address pool,
         uint256 amount,
         address to,
         uint256 deadline,

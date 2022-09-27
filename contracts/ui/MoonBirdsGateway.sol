@@ -34,13 +34,11 @@ contract MoonBirdsGateway is IERC721Receiver, OwnableUpgradeable {
     /**
      * @dev supplies (deposits) WPunk into the reserve, using native Punk. A corresponding amount of the overlying asset (xTokens)
      * is minted.
-     * @param pool address of the targeted underlying pool
      * @param tokenIds tokens to supply to gateway
      * @param onBehalfOf address of the user who will receive the xTokens representing the supply
      * @param referralCode integrators are assigned a referral code and can potentially receive rewards.
      **/
     function supplyMoonBirds(
-        address pool,
         DataTypes.ERC721SupplyParams[] calldata tokenIds,
         address onBehalfOf,
         uint16 referralCode

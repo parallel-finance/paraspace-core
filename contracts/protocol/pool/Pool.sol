@@ -513,7 +513,7 @@ contract Pool is ReentrancyGuard, VersionedInitializable, PoolStorage, IPool {
         virtual
         override
     {
-        SupplyLogic.executeUseReserveAsCollateral(
+        SupplyLogic.executeUseERC20AsCollateral(
             _reserves,
             _reservesList,
             _usersConfig[msg.sender],
