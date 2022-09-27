@@ -11,8 +11,9 @@ import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveC
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {DataTypesHelper} from "./libraries/DataTypesHelper.sol";
+import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 
-contract WETHGateway is IWETHGateway, OwnableUpgradeable {
+contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
 
@@ -86,7 +87,7 @@ contract WETHGateway is IWETHGateway, OwnableUpgradeable {
         uint256 amount,
         uint256 rateMode,
         address onBehalfOf
-    ) external payable override {
+    ) external payable override nonReentrant {
         (uint256 stableDebt, uint256 variableDebt) = DataTypesHelper
             .getUserCurrentDebt(
                 onBehalfOf,
@@ -129,7 +130,7 @@ contract WETHGateway is IWETHGateway, OwnableUpgradeable {
         uint256 amount,
         uint256 interesRateMode,
         uint16 referralCode
-    ) external override {
+    ) external override nonReentrant {
         IPool(pool).borrow(
             address(WETH),
             amount,
@@ -157,7 +158,7 @@ contract WETHGateway is IWETHGateway, OwnableUpgradeable {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    ) external override {
+    ) external override nonReentrant {
         IPToken pWETH = IPToken(
             IPool(pool).getReserveData(address(WETH)).xTokenAddress
         );
@@ -198,7 +199,7 @@ contract WETHGateway is IWETHGateway, OwnableUpgradeable {
         bytes calldata payload,
         DataTypes.Credit calldata credit,
         uint16 referralCode
-    ) external payable override {
+    ) external payable override nonReentrant {
         WETH.deposit{value: msg.value}();
         IPool(pool).buyWithCredit(
             marketplaceId,
@@ -223,7 +224,7 @@ contract WETHGateway is IWETHGateway, OwnableUpgradeable {
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         uint16 referralCode
-    ) external payable override {
+    ) external payable override nonReentrant {
         WETH.deposit{value: msg.value}();
         IPool(pool).batchBuyWithCredit(
             marketplaceIds,
