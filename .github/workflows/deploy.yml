@@ -61,11 +61,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Use node version 16
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org
-
       - name: Generate Documentation
         run: |
           yarn
@@ -87,14 +86,12 @@ jobs:
         run: |
           mdbook-auto-gen-summary gen paraspace-core-docs/src
           bin/mdbook build paraspace-core-docs
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.AWS_REGION }}
-
       - name: Upload to S3
         run: |
           aws s3 sync ./paraspace-core-docs/book s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --delete
@@ -119,7 +116,6 @@ jobs:
           CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
           CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
           PURGE_URLS: ${{ inputs.CLOUDFLARE_PURGE_URLS }}
-
       - name: Purge cloudfront cache
         uses: aws-actions/configure-aws-credentials@v1
         with:
