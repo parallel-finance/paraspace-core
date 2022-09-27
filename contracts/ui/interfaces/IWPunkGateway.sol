@@ -10,10 +10,7 @@ interface IWPunkGateway {
         uint16 referralCode
     ) external;
 
-    function withdrawPunk(
-        uint256[] calldata punkIndexes,
-        address to
-    ) external;
+    function withdrawPunk(uint256[] calldata punkIndexes, address to) external;
 
     function withdrawPunkWithPermit(
         uint256[] calldata punkIndexes,

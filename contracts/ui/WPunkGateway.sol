@@ -100,10 +100,10 @@ contract WPunkGateway is
      * @param punkIndexes indexes of nWPunks to withdraw and receive native WPunk
      * @param to address of the user who will receive native Punks
      */
-    function withdrawPunk(
-        uint256[] calldata punkIndexes,
-        address to
-    ) external nonReentrant {
+    function withdrawPunk(uint256[] calldata punkIndexes, address to)
+        external
+        nonReentrant
+    {
         INToken nWPunk = INToken(
             Pool.getReserveData(address(WPunk)).xTokenAddress
         );
