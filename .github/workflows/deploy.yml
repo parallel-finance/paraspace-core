@@ -104,7 +104,7 @@ jobs:
       - name: Upload to S3
         run: |
           aws s3 sync ./paraspace-core-docs/book s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --delete
-          aws s3 cp ./paraspace-core-docs/book.html s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --metadata-directive REPLACE --cache-control "no-store"
+          aws s3 cp ./paraspace-core-docs/index.html s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --metadata-directive REPLACE --cache-control "no-store"
       - name: slack
         uses: 8398a7/action-slack@v3
         env:
