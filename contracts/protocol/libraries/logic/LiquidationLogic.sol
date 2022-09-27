@@ -189,7 +189,6 @@ library LiquidationLogic {
             );
 
         ValidationLogic.validateEndAuction(
-            userConfig,
             collateralReserve,
             DataTypes.ValidateAuctionParams({
                 user: params.user,
