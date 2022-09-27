@@ -294,6 +294,16 @@ library MarketplaceLogic {
                 continue;
             }
 
+            if (
+                IERC721(token).ownerOf(tokenId) != onBehalfOf &&
+                INToken(reserve.xTokenAddress).ownerOf(tokenId) == onBehalfOf
+            ) {
+                if (!userConfig.isUsingAsCollateral(reserve.id)) {
+                    userConfig.setUsingAsCollateral(reserve.id, true);
+                }
+                continue;
+            }
+
             DataTypes.ERC721SupplyParams[]
                 memory tokenData = new DataTypes.ERC721SupplyParams[](1);
             tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);

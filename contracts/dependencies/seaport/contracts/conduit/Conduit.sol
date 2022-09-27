@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import { ConduitInterface } from "../interfaces/ConduitInterface.sol";
+import {ConduitInterface} from "../interfaces/ConduitInterface.sol";
 
-import { ConduitItemType } from "./lib/ConduitEnums.sol";
+import {OwnableUpgradeable} from "../../../openzeppelin/contracts/proxy/OwnableUpgradeable.sol";
+import {INToken} from "../../../../interfaces/INToken.sol";
+import {IProtocolDataProvider} from "../../../../interfaces/IProtocolDataProvider.sol";
 
-import { TokenTransferrer } from "../lib/TokenTransferrer.sol";
+import {ConduitItemType} from "./lib/ConduitEnums.sol";
 
-import {
-    ConduitTransfer,
-    ConduitBatch1155Transfer
-} from "./lib/ConduitStructs.sol";
+import {TokenTransferrer} from "../lib/TokenTransferrer.sol";
+
+import {ConduitTransfer, ConduitBatch1155Transfer} from "./lib/ConduitStructs.sol";
 
 import "./lib/ConduitConstants.sol";
 
@@ -26,9 +27,10 @@ import "./lib/ConduitConstants.sol";
  *         approved ERC20/721/1155 tokens to be taken immediately — be extremely
  *         cautious with what conduits you give token approvals to!*
  */
-contract Conduit is ConduitInterface, TokenTransferrer {
+contract Conduit is ConduitInterface, OwnableUpgradeable, TokenTransferrer {
     // Set deployer as an immutable controller that can update channel statuses.
     address private immutable _controller;
+    address private _protocolDataProvider;
 
     // Track the status of each channel.
     mapping(address => bool) private _channels;
@@ -73,6 +75,13 @@ contract Conduit is ConduitInterface, TokenTransferrer {
     constructor() {
         // Set the deployer as the controller.
         _controller = msg.sender;
+    }
+
+
+    function initialize(address ProtocolDataProvider) external initializer {
+        __Ownable_init();
+
+        _protocolDataProvider = ProtocolDataProvider;
     }
 
     /**
@@ -224,6 +233,26 @@ contract Conduit is ConduitInterface, TokenTransferrer {
             // Ensure that exactly one 721 item is being transferred.
             if (item.amount != 1) {
                 revert InvalidERC721TransferAmount();
+            }
+
+            if (_protocolDataProvider != address(0)) {
+                (address xTokenAddress, , ) = IProtocolDataProvider(
+                    _protocolDataProvider
+                ).getReserveTokensAddresses(item.token);
+                if (xTokenAddress != address(0)) {
+                    if (
+                        INToken(xTokenAddress).ownerOf(item.identifier) ==
+                        item.from
+                    ) {
+                        _performERC721Transfer(
+                            xTokenAddress,
+                            item.from,
+                            item.to,
+                            item.identifier
+                        );
+                        return;
+                    }
+                }
             }
 
             // Transfer ERC721 token.
