@@ -11,7 +11,7 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
 import {SeaportInterface} from "../../../dependencies/seaport/contracts/interfaces/SeaportInterface.sol";
-import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
+import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {ConsiderationItem, OfferItem} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {ItemType} from "../../../dependencies/seaport/contracts/lib/ConsiderationEnums.sol";
@@ -30,7 +30,7 @@ import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol"
 library MarketplaceLogic {
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-    using GPv2SafeERC20 for IERC20;
+    using SafeERC20 for IERC20;
 
     event BuyWithCredit(
         bytes32 indexed marketplaceId,
@@ -196,9 +196,7 @@ library MarketplaceLogic {
                 address(this),
                 downpayment
             );
-            // reset to be compatible with USDT
-            IERC20(token).approve(params.marketplace.operator, 0);
-            IERC20(token).approve(params.marketplace.operator, price);
+            _checkAllownance(token, params.marketplace.operator);
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -335,5 +333,13 @@ library MarketplaceLogic {
                 priceOracleSentinel: params.priceOracleSentinel
             })
         );
+    }
+
+    function _checkAllownance(address token, address operator) internal {
+        uint256 allownance = IERC20(token).allowance(address(this), operator);
+        if (allownance == 0) {
+            uint256 MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+            IERC20(token).safeApprove(operator, MAX_INT);
+        }
     }
 }
