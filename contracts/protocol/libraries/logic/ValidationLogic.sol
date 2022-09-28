@@ -810,20 +810,22 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(
-            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
+            IERC721(params.xTokenAddress).ownerOf(params.tokenId) ==
                 params.user,
             Errors.NOT_THE_OWNER
         );
 
         ValidateAuctionLocalVars memory vars;
 
+        DataTypes.ReserveConfigurationMap
+            memory collateralConfiguration = collateralReserve.configuration;
         (
             vars.collateralReserveActive,
             ,
             ,
             ,
             vars.collateralReservePaused
-        ) = collateralReserve.configuration.getFlags();
+        ) = collateralConfiguration.getFlags();
 
         require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
         require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
@@ -845,7 +847,7 @@ library ValidationLogic {
         );
 
         vars.isCollateralEnabled =
-            collateralReserve.configuration.getLiquidationThreshold() != 0 &&
+            collateralConfiguration.getLiquidationThreshold() != 0 &&
             userConfig.isUsingAsCollateral(collateralReserve.id) &&
             ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
                 params.tokenId
@@ -859,7 +861,6 @@ library ValidationLogic {
     }
 
     function validateEndAuction(
-        DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ValidateAuctionParams memory params
     ) internal view {
@@ -868,7 +869,7 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(
-            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
+            IERC721(params.xTokenAddress).ownerOf(params.tokenId) ==
                 params.user,
             Errors.NOT_THE_OWNER
         );
@@ -886,8 +887,11 @@ library ValidationLogic {
         require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
         require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
 
+        DataTypes.ReserveAuctionConfigurationMap
+            memory auctionConfiguration = collateralReserve
+                .auctionConfiguration;
         require(
-            collateralReserve.auctionConfiguration.getAuctionEnabled(),
+            auctionConfiguration.getAuctionEnabled(),
             Errors.AUCTION_NOT_ENABLED
         );
         require(
@@ -897,8 +901,7 @@ library ValidationLogic {
             Errors.AUCTION_NOT_STARTED
         );
 
-        uint256 recoveryHealthFactor = collateralReserve
-            .auctionConfiguration
+        uint256 recoveryHealthFactor = auctionConfiguration
             .getAuctionRecoveryHealthFactor();
 
         require(
