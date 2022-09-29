@@ -364,16 +364,25 @@ contract PoolCore is
         uint256[] calldata tokenIds,
         bool useAsCollateral
     ) external virtual override nonReentrant {
-        SupplyLogic.executeUseERC721AsCollateral(
-            _reserves,
-            _reservesList,
-            _usersConfig[msg.sender],
-            asset,
-            tokenIds,
-            useAsCollateral,
-            _reservesCount,
-            ADDRESSES_PROVIDER.getPriceOracle()
-        );
+        if (useAsCollateral) {
+            SupplyLogic.executeCollateralizedERC721(
+                _reserves,
+                _reservesList,
+                _usersConfig[msg.sender],
+                asset,
+                tokenIds
+            );
+        } else {
+            SupplyLogic.executeUncollateralizedERC721(
+                _reserves,
+                _reservesList,
+                _usersConfig[msg.sender],
+                asset,
+                tokenIds,
+                _reservesCount,
+                ADDRESSES_PROVIDER.getPriceOracle()
+            );
+        }
     }
 
     /// @inheritdoc IPoolCore
