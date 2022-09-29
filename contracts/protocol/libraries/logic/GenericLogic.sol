@@ -49,7 +49,7 @@ library GenericLogic {
         address currentReserveAddress;
         bool hasZeroLtvCollateral;
         bool dynamicConfigs;
-        bool isAutomicPrice;
+        bool isAtomicPrice;
         uint256 dynamicLTV;
         uint256 dynamicLiquidationThreshold;
         address xTokenAddress;
@@ -198,7 +198,7 @@ library GenericLogic {
                     (vars.liquidationThreshold != 0 || vars.dynamicConfigs) &&
                     params.userConfig.isUsingAsCollateral(vars.i)
                 ) {
-                    vars.isAutomicPrice = INToken(vars.xTokenAddress)
+                    vars.isAtomicPrice = INToken(vars.xTokenAddress)
                         .getAtomicPricingConfig();
                     if (vars.dynamicConfigs) {
                         (
@@ -375,7 +375,7 @@ library GenericLogic {
         CalculateUserAccountDataVars memory vars
     ) private view returns (uint256) {
         uint256 totalValue;
-        if (vars.isAutomicPrice) {
+        if (vars.isAtomicPrice) {
             uint256 assetPrice;
             uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(
                 params.user
@@ -428,7 +428,7 @@ library GenericLogic {
         uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(
             params.user
         );
-        if (vars.isAutomicPrice) {
+        if (vars.isAtomicPrice) {
             for (uint256 index = 0; index < totalBalance; index++) {
                 uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
                     .tokenOfOwnerByIndex(params.user, index);

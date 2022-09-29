@@ -196,7 +196,7 @@ library MarketplaceLogic {
                 address(this),
                 downpayment
             );
-            _checkAllownance(token, params.marketplace.operator);
+            _checkAllowance(token, params.marketplace.operator);
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -341,9 +341,9 @@ library MarketplaceLogic {
         );
     }
 
-    function _checkAllownance(address token, address operator) internal {
-        uint256 allownance = IERC20(token).allowance(address(this), operator);
-        if (allownance == 0) {
+    function _checkAllowance(address token, address operator) internal {
+        uint256 allowance = IERC20(token).allowance(address(this), operator);
+        if (allowance == 0) {
             uint256 MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
             IERC20(token).safeApprove(operator, MAX_INT);
         }
