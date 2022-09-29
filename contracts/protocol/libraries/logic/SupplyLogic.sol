@@ -511,6 +511,7 @@ library SupplyLogic {
      * @param reservesList The addresses of all the active reserves
      * @param userConfig The users configuration mapping that track the supplied/borrowed assets
      * @param asset The address of the asset being configured as collateral
+     * @param tokenIds the ids of the supplied ERC721 token
      */
     function executeCollateralizedERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
@@ -546,7 +547,7 @@ library SupplyLogic {
      * @param reservesList The addresses of all the active reserves
      * @param userConfig The users configuration mapping that track the supplied/borrowed assets
      * @param asset The address of the asset being configured as collateral
-     * @param useAsCollateral True if the user wants to set the asset as collateral, false otherwise
+     * @param tokenIds the ids of the supplied ERC721 token
      * @param reservesCount The number of initialized reserves
      * @param priceOracle The address of the price oracle
      */
@@ -556,7 +557,6 @@ library SupplyLogic {
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
         uint256[] calldata tokenIds,
-        bool useAsCollateral,
         uint256 reservesCount,
         address priceOracle
     ) external {

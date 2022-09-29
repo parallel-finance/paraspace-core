@@ -379,7 +379,6 @@ contract PoolCore is
                 _usersConfig[msg.sender],
                 asset,
                 tokenIds,
-                useAsCollateral,
                 _reservesCount,
                 ADDRESSES_PROVIDER.getPriceOracle()
             );
