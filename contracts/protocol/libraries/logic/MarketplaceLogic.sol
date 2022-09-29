@@ -11,7 +11,7 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
 import {SeaportInterface} from "../../../dependencies/seaport/contracts/interfaces/SeaportInterface.sol";
-import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
+import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {ConsiderationItem, OfferItem} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {ItemType} from "../../../dependencies/seaport/contracts/lib/ConsiderationEnums.sol";
@@ -30,7 +30,7 @@ import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol"
 library MarketplaceLogic {
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-    using GPv2SafeERC20 for IERC20;
+    using SafeERC20 for IERC20;
 
     event BuyWithCredit(
         bytes32 indexed marketplaceId,
@@ -196,9 +196,7 @@ library MarketplaceLogic {
                 address(this),
                 downpayment
             );
-            // reset to be compatible with USDT
-            IERC20(token).approve(params.marketplace.operator, 0);
-            IERC20(token).approve(params.marketplace.operator, price);
+            _checkAllowance(token, params.marketplace.operator);
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -278,7 +276,7 @@ library MarketplaceLogic {
 
             address token = item.token;
             uint256 tokenId = item.identifierOrCriteria;
-            DataTypes.ReserveData memory reserve = reservesData[token];
+            DataTypes.ReserveData storage reserve = reservesData[token];
 
             if (reserve.xTokenAddress == address(0)) {
                 address underlyingAsset = INToken(token)
@@ -287,9 +285,15 @@ library MarketplaceLogic {
                 bool isNToken = reserve.xTokenAddress == token;
 
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                if (!userConfig.isUsingAsCollateral(reserve.id)) {
-                    userConfig.setUsingAsCollateral(reserve.id, true);
-                }
+                uint256[] memory tokenIds = new uint256[](1);
+                tokenIds[0] = tokenId;
+                SupplyLogic.executeCollateralizedERC721(
+                    reservesData,
+                    reservesList,
+                    userConfig,
+                    underlyingAsset,
+                    tokenIds
+                );
                 // No need to supply anymore because it's already NToken
                 continue;
             }
@@ -335,5 +339,20 @@ library MarketplaceLogic {
                 priceOracleSentinel: params.priceOracleSentinel
             })
         );
+    }
+
+    function _checkAllowance(address token, address operator) internal {
+        uint256 allowance = IERC20(token).allowance(address(this), operator);
+        if (allowance == 0) {
+            uint256 MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+            IERC20(token).safeApprove(operator, MAX_INT);
+        }
+    }
+
+    function refundETH() external {
+        uint256 balance = address(this).balance;
+        if (balance > 0) {
+            Address.sendValue(payable(msg.sender), balance);
+        }
     }
 }

@@ -504,26 +504,59 @@ library SupplyLogic {
     }
 
     /**
-     * @notice Executes the 'set as collateral' feature. A user can choose to activate or deactivate an asset as
-     * collateral at any point in time. Deactivating an asset as collateral is subjected to the usual health factor
-     * checks to ensure collateralization.
+     * @notice Executes the 'set as collateral' feature. A user can choose to activate an asset as
+     * collateral at any point in time.
      * @dev Emits the `ReserveUsedAsCollateralEnabled()` event if the asset can be activated as collateral.
-     * @dev In case the asset is being deactivated as collateral, `ReserveUsedAsCollateralDisabled()` is emitted.
      * @param reservesData The state of all the reserves
      * @param reservesList The addresses of all the active reserves
      * @param userConfig The users configuration mapping that track the supplied/borrowed assets
      * @param asset The address of the asset being configured as collateral
-     * @param useAsCollateral True if the user wants to set the asset as collateral, false otherwise
+     * @param tokenIds the ids of the supplied ERC721 token
+     */
+    function executeCollateralizedERC721(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        DataTypes.UserConfigurationMap storage userConfig,
+        address asset,
+        uint256[] calldata tokenIds
+    ) external {
+        DataTypes.ReserveData storage reserve = reservesData[asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
+
+        address sender = msg.sender;
+        (
+            uint256 oldCollaterizedBalance,
+            uint256 newCollaterizedBalance
+        ) = ICollaterizableERC721(reserveCache.xTokenAddress)
+                .batchSetIsUsedAsCollateral(tokenIds, true, sender);
+
+        if (oldCollaterizedBalance == 0 && newCollaterizedBalance != 0) {
+            userConfig.setUsingAsCollateral(reserve.id, true);
+            emit ReserveUsedAsCollateralEnabled(asset, sender);
+        }
+    }
+
+    /**
+     * @notice Executes the 'set as collateral' feature. A user can choose to deactivate an asset as
+     * collateral at any point in time. Deactivating an asset as collateral is subjected to the usual health factor
+     * checks to ensure collateralization.
+     * @dev Emits the `ReserveUsedAsCollateralDisabled()` event if the asset can be deactivated as collateral.
+     * @param reservesData The state of all the reserves
+     * @param reservesList The addresses of all the active reserves
+     * @param userConfig The users configuration mapping that track the supplied/borrowed assets
+     * @param asset The address of the asset being configured as collateral
+     * @param tokenIds the ids of the supplied ERC721 token
      * @param reservesCount The number of initialized reserves
      * @param priceOracle The address of the price oracle
      */
-    function executeUseERC721AsCollateral(
+    function executeUncollateralizedERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
         uint256[] calldata tokenIds,
-        bool useAsCollateral,
         uint256 reservesCount,
         address priceOracle
     ) external {
@@ -537,31 +570,24 @@ library SupplyLogic {
             uint256 oldCollaterizedBalance,
             uint256 newCollaterizedBalance
         ) = ICollaterizableERC721(reserveCache.xTokenAddress)
-                .batchSetIsUsedAsCollateral(tokenIds, useAsCollateral, sender);
+                .batchSetIsUsedAsCollateral(tokenIds, false, sender);
 
         if (oldCollaterizedBalance == newCollaterizedBalance) {
             return;
         }
 
-        if (useAsCollateral) {
-            if (oldCollaterizedBalance == 0) {
-                userConfig.setUsingAsCollateral(reserve.id, true);
-                emit ReserveUsedAsCollateralEnabled(asset, sender);
-            }
-        } else {
-            if (newCollaterizedBalance == 0) {
-                userConfig.setUsingAsCollateral(reserve.id, false);
-                emit ReserveUsedAsCollateralDisabled(asset, sender);
-            }
-            ValidationLogic.validateHFAndLtv(
-                reservesData,
-                reservesList,
-                userConfig,
-                asset,
-                sender,
-                reservesCount,
-                priceOracle
-            );
+        if (newCollaterizedBalance == 0) {
+            userConfig.setUsingAsCollateral(reserve.id, false);
+            emit ReserveUsedAsCollateralDisabled(asset, sender);
         }
+        ValidationLogic.validateHFAndLtv(
+            reservesData,
+            reservesList,
+            userConfig,
+            asset,
+            sender,
+            reservesCount,
+            priceOracle
+        );
     }
 }

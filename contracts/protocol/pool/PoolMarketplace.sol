@@ -86,6 +86,7 @@ contract PoolMarketplace is PoolStorage, ReentrancyGuard, IPoolMarketplace {
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
         );
+        MarketplaceLogic.refundETH();
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -136,6 +137,7 @@ contract PoolMarketplace is PoolStorage, ReentrancyGuard, IPoolMarketplace {
                 })
             );
         }
+        MarketplaceLogic.refundETH();
     }
 
     /// @inheritdoc IPoolMarketplace
