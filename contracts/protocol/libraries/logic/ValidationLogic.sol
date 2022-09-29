@@ -886,14 +886,6 @@ library ValidationLogic {
 
         require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
         require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
-
-        DataTypes.ReserveAuctionConfigurationMap
-            memory auctionConfiguration = collateralReserve
-                .auctionConfiguration;
-        require(
-            auctionConfiguration.getAuctionEnabled(),
-            Errors.AUCTION_NOT_ENABLED
-        );
         require(
             IAuctionableERC721(params.xTokenAddress).isAuctioned(
                 params.tokenId
@@ -901,7 +893,8 @@ library ValidationLogic {
             Errors.AUCTION_NOT_STARTED
         );
 
-        uint256 recoveryHealthFactor = auctionConfiguration
+        uint256 recoveryHealthFactor = collateralReserve
+            .auctionConfiguration
             .getAuctionRecoveryHealthFactor();
 
         require(
