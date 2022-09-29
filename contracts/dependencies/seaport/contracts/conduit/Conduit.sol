@@ -78,7 +78,7 @@ contract Conduit is ConduitInterface, TokenTransferrer {
 
 
     function initialize(address protocolDataProvider) external {
-        require(_protocolDataProvider != address(0),"Conduit: already initialized");
+        require(_protocolDataProvider == address(0),"Conduit: already initialized");
         _protocolDataProvider = protocolDataProvider;
     }
 
