@@ -125,6 +125,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             isFrozen,
             borrowingEnabled,
             stableBorrowRateEnabled,
+            ,
 
         ) = configuration.getFlags();
 
@@ -158,7 +159,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
 
     /// @inheritdoc IProtocolDataProvider
     function getPaused(address asset) external view returns (bool isPaused) {
-        (, , , , isPaused) = IPool(ADDRESSES_PROVIDER.getPool())
+        (, , , , isPaused, ) = IPool(ADDRESSES_PROVIDER.getPool())
             .getConfiguration(asset)
             .getFlags();
     }

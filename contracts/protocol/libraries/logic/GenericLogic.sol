@@ -30,7 +30,7 @@ library GenericLogic {
     struct CalculateUserAccountDataVars {
         uint256 assetPrice;
         uint256 assetUnit;
-        DataTypes.AssetType assetType;
+        DataTypes.ReserveConfigurationMap reserveConfiguration;
         uint256 userBalanceInBaseCurrency;
         uint256 decimals;
         uint256 ltv;
@@ -128,7 +128,7 @@ library GenericLogic {
                 vars.currentReserveAddress
             ];
 
-            vars.assetType = currentReserve.assetType;
+            vars.reserveConfiguration = currentReserve.configuration;
 
             (
                 vars.ltv,
@@ -145,7 +145,10 @@ library GenericLogic {
 
             vars.xTokenAddress = currentReserve.xTokenAddress;
 
-            if (vars.assetType == DataTypes.AssetType.ERC20) {
+            if (
+                vars.reserveConfiguration.getAssetType() ==
+                DataTypes.AssetType.ERC20
+            ) {
                 vars.assetPrice = _getAssetPrice(
                     params.oracle,
                     vars.currentReserveAddress

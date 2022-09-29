@@ -152,7 +152,7 @@ library ReserveLogic {
         reserve.liquidityIndex = uint128(WadRayMath.RAY);
         reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
         reserve.xTokenAddress = xTokenAddress;
-        reserve.assetType = assetType;
+        reserve.configuration.setAssetType(assetType);
         reserve.stableDebtTokenAddress = stableDebtTokenAddress;
         reserve.variableDebtTokenAddress = variableDebtTokenAddress;
         reserve.interestRateStrategyAddress = interestRateStrategyAddress;
@@ -348,7 +348,6 @@ library ReserveLogic {
 
         reserveCache.reserveConfiguration = reserve.configuration;
         reserveCache.reserveAuctionConfiguration = reserve.auctionConfiguration;
-        reserveCache.assetType = reserve.assetType;
         reserveCache.reserveFactor = reserveCache
             .reserveConfiguration
             .getReserveFactor();

@@ -105,10 +105,13 @@ library PoolLogic {
 
             DataTypes.ReserveData storage reserve = reservesData[assetAddress];
 
+            DataTypes.ReserveConfigurationMap
+                memory reserveConfiguration = reserve.configuration;
+
             // this cover both inactive reserves and invalid reserves since the flag will be 0 for both
             if (
-                !reserve.configuration.getActive() ||
-                reserve.assetType != DataTypes.AssetType.ERC20
+                !reserveConfiguration.getActive() ||
+                reserveConfiguration.getAssetType() != DataTypes.AssetType.ERC20
             ) {
                 continue;
             }

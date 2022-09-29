@@ -118,7 +118,7 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
         ];
-        vars.assetType = collateralReserve.assetType;
+
         vars.collateralXToken = collateralReserve.xTokenAddress;
         DataTypes.UserConfigurationMap storage userConfig = usersConfig[
             params.user
@@ -144,7 +144,6 @@ library LiquidationLogic {
                 healthFactor: vars.healthFactor,
                 collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
-                assetType: vars.assetType,
                 xTokenAddress: vars.collateralXToken
             })
         );
@@ -170,7 +169,6 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
         ];
-        vars.assetType = collateralReserve.assetType;
         vars.collateralXToken = collateralReserve.xTokenAddress;
         DataTypes.UserConfigurationMap storage userConfig = usersConfig[
             params.user
@@ -195,7 +193,6 @@ library LiquidationLogic {
                 healthFactor: vars.healthFactor,
                 collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
-                assetType: vars.assetType,
                 xTokenAddress: vars.collateralXToken
             })
         );
@@ -266,8 +263,7 @@ library LiquidationLogic {
                 debtReserveCache: vars.debtReserveCache,
                 totalDebt: vars.userTotalDebt,
                 healthFactor: vars.healthFactor,
-                priceOracleSentinel: params.priceOracleSentinel,
-                assetType: collateralReserve.assetType
+                priceOracleSentinel: params.priceOracleSentinel
             })
         );
 
@@ -380,7 +376,7 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
         ];
-        vars.assetType = collateralReserve.assetType;
+
         DataTypes.ReserveData storage liquidationAssetReserve = reservesData[
             params.liquidationAsset
         ];
@@ -480,7 +476,6 @@ library LiquidationLogic {
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
                 tokenId: params.collateralTokenId,
-                assetType: vars.assetType,
                 xTokenAddress: vars.collateralXToken
             })
         );
