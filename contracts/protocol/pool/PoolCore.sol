@@ -370,7 +370,8 @@ contract PoolCore is
                 _reservesList,
                 _usersConfig[msg.sender],
                 asset,
-                tokenIds
+                tokenIds,
+                msg.sender
             );
         } else {
             SupplyLogic.executeUncollateralizedERC721(
@@ -379,6 +380,7 @@ contract PoolCore is
                 _usersConfig[msg.sender],
                 asset,
                 tokenIds,
+                msg.sender,
                 _reservesCount,
                 ADDRESSES_PROVIDER.getPriceOracle()
             );

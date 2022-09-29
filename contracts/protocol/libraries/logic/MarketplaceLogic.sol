@@ -276,28 +276,43 @@ library MarketplaceLogic {
 
             address token = item.token;
             uint256 tokenId = item.identifierOrCriteria;
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = tokenId;
             DataTypes.ReserveData storage reserve = reservesData[token];
 
+            // item.token == NToken
             if (reserve.xTokenAddress == address(0)) {
                 address underlyingAsset = INToken(token)
                     .UNDERLYING_ASSET_ADDRESS();
                 reserve = reservesData[underlyingAsset];
                 bool isNToken = reserve.xTokenAddress == token;
-
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                uint256[] memory tokenIds = new uint256[](1);
-                tokenIds[0] = tokenId;
                 SupplyLogic.executeCollateralizedERC721(
                     reservesData,
                     reservesList,
                     userConfig,
                     underlyingAsset,
-                    tokenIds
+                    tokenIds,
+                    onBehalfOf
                 );
                 // No need to supply anymore because it's already NToken
                 continue;
             }
 
+            // item.token == underlyingAsset but supplied after listing/offering
+            if (INToken(reserve.xTokenAddress).ownerOf(tokenId) == onBehalfOf) {
+                SupplyLogic.executeCollateralizedERC721(
+                    reservesData,
+                    reservesList,
+                    userConfig,
+                    token,
+                    tokenIds,
+                    onBehalfOf
+                );
+                continue;
+            }
+
+            // item.token == underlyingAsset
             DataTypes.ERC721SupplyParams[]
                 memory tokenData = new DataTypes.ERC721SupplyParams[](1);
             tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
