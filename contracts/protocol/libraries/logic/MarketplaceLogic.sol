@@ -348,4 +348,11 @@ library MarketplaceLogic {
             IERC20(token).safeApprove(operator, MAX_INT);
         }
     }
+
+    function refundETH() external {
+        uint256 balance = address(this).balance;
+        if (balance > 0) {
+            Address.sendValue(payable(msg.sender), balance);
+        }
+    }
 }
