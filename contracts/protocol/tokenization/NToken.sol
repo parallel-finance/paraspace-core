@@ -118,16 +118,6 @@ contract NToken is
         return isLastUncollaterarized;
     }
 
-    // TODO do we use Treasury?
-    // /// @inheritdoc INToken
-    // function mintToTreasury(uint256 tokenId, uint256 index)
-    //     external
-    //     override
-    //     onlyPool
-    // {
-    //     _mint(_treasury, tokenId);
-    // }
-
     /// @inheritdoc INToken
     function transferOnLiquidation(
         address from,
