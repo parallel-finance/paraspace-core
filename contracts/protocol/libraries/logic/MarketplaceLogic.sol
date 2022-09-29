@@ -276,7 +276,7 @@ library MarketplaceLogic {
 
             address token = item.token;
             uint256 tokenId = item.identifierOrCriteria;
-            DataTypes.ReserveData memory reserve = reservesData[token];
+            DataTypes.ReserveData storage reserve = reservesData[token];
 
             if (reserve.xTokenAddress == address(0)) {
                 address underlyingAsset = INToken(token)
@@ -285,9 +285,15 @@ library MarketplaceLogic {
                 bool isNToken = reserve.xTokenAddress == token;
 
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                if (!userConfig.isUsingAsCollateral(reserve.id)) {
-                    userConfig.setUsingAsCollateral(reserve.id, true);
-                }
+                uint256[] memory tokenIds = new uint256[](1);
+                tokenIds[0] = tokenId;
+                SupplyLogic.executeCollateralizedERC721(
+                    reservesData,
+                    reservesList,
+                    userConfig,
+                    underlyingAsset,
+                    tokenIds
+                );
                 // No need to supply anymore because it's already NToken
                 continue;
             }
