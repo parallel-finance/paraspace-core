@@ -511,21 +511,22 @@ library SupplyLogic {
      * @param reservesList The addresses of all the active reserves
      * @param userConfig The users configuration mapping that track the supplied/borrowed assets
      * @param asset The address of the asset being configured as collateral
-     * @param tokenIds the ids of the supplied ERC721 token
+     * @param tokenIds The ids of the supplied ERC721 token
+     * @param sender The address of NFT owner
      */
     function executeCollateralizedERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
-        uint256[] calldata tokenIds
+        uint256[] calldata tokenIds,
+        address sender
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
 
-        address sender = msg.sender;
         (
             uint256 oldCollaterizedBalance,
             uint256 newCollaterizedBalance
@@ -547,7 +548,8 @@ library SupplyLogic {
      * @param reservesList The addresses of all the active reserves
      * @param userConfig The users configuration mapping that track the supplied/borrowed assets
      * @param asset The address of the asset being configured as collateral
-     * @param tokenIds the ids of the supplied ERC721 token
+     * @param tokenIds The ids of the supplied ERC721 token
+     * @param sender The address of NFT owner
      * @param reservesCount The number of initialized reserves
      * @param priceOracle The address of the price oracle
      */
@@ -557,6 +559,7 @@ library SupplyLogic {
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
         uint256[] calldata tokenIds,
+        address sender,
         uint256 reservesCount,
         address priceOracle
     ) external {
@@ -565,7 +568,6 @@ library SupplyLogic {
 
         ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
 
-        address sender = msg.sender;
         (
             uint256 oldCollaterizedBalance,
             uint256 newCollaterizedBalance

@@ -292,7 +292,8 @@ library MarketplaceLogic {
                     reservesList,
                     userConfig,
                     underlyingAsset,
-                    tokenIds
+                    tokenIds,
+                    onBehalfOf
                 );
                 // No need to supply anymore because it's already NToken
                 continue;
@@ -304,8 +305,9 @@ library MarketplaceLogic {
                     reservesData,
                     reservesList,
                     userConfig,
-                    item.token,
-                    tokenIds
+                    token,
+                    tokenIds,
+                    onBehalfOf
                 );
                 continue;
             }
