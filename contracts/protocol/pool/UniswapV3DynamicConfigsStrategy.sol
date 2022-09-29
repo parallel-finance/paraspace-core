@@ -73,12 +73,14 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
             vars.token0LiquidationThreshold,
             vars.token0LiquidationBonus,
             ,
+            ,
 
         ) = token0Configs.getParams();
         (
             vars.token1Ltv,
             vars.token1LiquidationThreshold,
             vars.token1LiquidationBonus,
+            ,
             ,
 
         ) = token1Configs.getParams();

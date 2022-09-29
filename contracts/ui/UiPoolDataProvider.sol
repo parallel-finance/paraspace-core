@@ -180,7 +180,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.reserveLiquidationThreshold,
                 reserveData.reserveLiquidationBonus,
                 reserveData.decimals,
-                reserveData.reserveFactor
+                reserveData.reserveFactor,
+                // eModeCategoryId
+
             ) = reserveConfigurationMap.getParams();
             reserveData.usageAsCollateralEnabled =
                 reserveData.baseLTVasCollateral != 0;

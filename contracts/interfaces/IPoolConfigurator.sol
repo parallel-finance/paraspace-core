@@ -74,6 +74,13 @@ interface IPoolConfigurator {
     event ReserveFrozen(address indexed asset, bool frozen);
 
     /**
+     * @dev Emitted when a reserve has dynamic configs enabled
+     * @param asset The address of the underlying asset of the reserve
+     * @param enabled True if reserve dynamic configs is enabled
+     **/
+    event ReserveDynamicConfigsEnabled(address indexed asset, bool enabled);
+
+    /**
      * @dev Emitted when a reserve is paused or unpaused
      * @param asset The address of the underlying asset of the reserve
      * @param paused True if reserve is paused, false otherwise
@@ -291,6 +298,13 @@ interface IPoolConfigurator {
      * @param freeze True if the reserve needs to be frozen, false otherwise
      **/
     function setReserveFreeze(address asset, bool freeze) external;
+
+    /**
+     * @notice enable or disable dynamic configs
+     * @param asset The address of the underlying asset of the reserve
+     * @param enabled True if the reserve needs to enable dynamic configs
+     **/
+    function setDynamicConfigsEnabled(address asset, bool enabled) external;
 
     /**
      * @notice Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
