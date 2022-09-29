@@ -45,7 +45,6 @@ interface IInitializableNToken {
         address treasury,
         address underlyingAsset,
         IRewardController incentivesController,
-        uint8 nTokenDecimals,
         string calldata nTokenName,
         string calldata nTokenSymbol,
         bytes calldata params

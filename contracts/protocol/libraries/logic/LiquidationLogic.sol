@@ -189,7 +189,6 @@ library LiquidationLogic {
             );
 
         ValidationLogic.validateEndAuction(
-            userConfig,
             collateralReserve,
             DataTypes.ValidateAuctionParams({
                 user: params.user,
@@ -629,7 +628,7 @@ library LiquidationLogic {
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         IPToken(vars.collateralXToken).burn(
             params.user,
-            msg.sender,
+            vars.liquidator,
             vars.actualCollateralToLiquidate,
             collateralReserveCache.nextLiquidityIndex
         );
@@ -648,7 +647,11 @@ library LiquidationLogic {
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = params.collateralTokenId;
-        INToken(vars.collateralXToken).burn(params.user, msg.sender, tokenIds);
+        INToken(vars.collateralXToken).burn(
+            params.user,
+            vars.liquidator,
+            tokenIds
+        );
     }
 
     /**
@@ -666,9 +669,11 @@ library LiquidationLogic {
         DataTypes.ExecuteLiquidationCallParams memory params,
         LiquidationCallLocalVars memory vars
     ) internal {
-        uint256 liquidatorPreviousPTokenBalance = IERC20(vars.collateralXToken)
-            .balanceOf(vars.liquidator);
-        IPToken(vars.collateralXToken).transferOnLiquidation(
+        IPToken pToken = IPToken(vars.collateralXToken);
+        uint256 liquidatorPreviousPTokenBalance = pToken.balanceOf(
+            vars.liquidator
+        );
+        pToken.transferOnLiquidation(
             params.user,
             vars.liquidator,
             vars.actualCollateralToLiquidate

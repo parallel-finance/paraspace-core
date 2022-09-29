@@ -96,6 +96,7 @@ contract PoolMarketplace is
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
         );
+        MarketplaceLogic.refundETH();
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -146,6 +147,7 @@ contract PoolMarketplace is
                 })
             );
         }
+        MarketplaceLogic.refundETH();
     }
 
     /// @inheritdoc IPoolMarketplace

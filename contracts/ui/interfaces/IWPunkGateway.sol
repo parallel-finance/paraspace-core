@@ -5,16 +5,20 @@ import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 interface IWPunkGateway {
     function supplyPunk(
-        address pool,
         DataTypes.ERC721SupplyParams[] calldata punkIndexes,
         address onBehalfOf,
         uint16 referralCode
     ) external;
 
-    function withdrawPunk(
-        address pool,
+    function withdrawPunk(uint256[] calldata punkIndexes, address to) external;
+
+    function withdrawPunkWithPermit(
         uint256[] calldata punkIndexes,
-        address to
+        address to,
+        uint256 deadline,
+        uint8 permitV,
+        bytes32 permitR,
+        bytes32 permitS
     ) external;
 
     function acceptBidWithCredit(

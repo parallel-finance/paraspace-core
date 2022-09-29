@@ -35,12 +35,10 @@ contract UniswapV3Gateway is IERC721Receiver, OwnableUpgradeable {
     /**
      * @dev supplies (deposits) UniswapV3 into the reserve. A corresponding amount of the overlying asset (xTokens)
      * is minted.
-     * @param pool address of the targeted underlying pool
      * @param tokenIds tokens to supply to gateway
      * @param onBehalfOf address of the user who will receive the xTokens representing the supply
      **/
     function supplyUniswapV3(
-        address pool,
         DataTypes.ERC721SupplyParams[] calldata tokenIds,
         address onBehalfOf
     ) external {

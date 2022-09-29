@@ -248,8 +248,7 @@ contract PoolCore is
         address asset,
         uint256 amount,
         uint256 interestRateMode,
-        address onBehalfOf,
-        bool usePTokens
+        address onBehalfOf
     ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
@@ -262,7 +261,29 @@ contract PoolCore is
                         interestRateMode
                     ),
                     onBehalfOf: onBehalfOf,
-                    usePTokens: usePTokens
+                    usePTokens: false
+                })
+            );
+    }
+
+    /// @inheritdoc IPoolCore
+    function repayWithPTokens(
+        address asset,
+        uint256 amount,
+        uint256 interestRateMode
+    ) external virtual override nonReentrant returns (uint256) {
+        return
+            BorrowLogic.executeRepay(
+                _reserves,
+                _usersConfig[msg.sender],
+                DataTypes.ExecuteRepayParams({
+                    asset: asset,
+                    amount: amount,
+                    interestRateMode: DataTypes.InterestRateMode(
+                        interestRateMode
+                    ),
+                    onBehalfOf: msg.sender,
+                    usePTokens: true
                 })
             );
     }
@@ -310,12 +331,13 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
+    function setUserUseERC20AsCollateral(address asset, bool useAsCollateral)
         external
         virtual
         override
+        nonReentrant
     {
-        SupplyLogic.executeUseReserveAsCollateral(
+        SupplyLogic.executeUseERC20AsCollateral(
             _reserves,
             _reservesList,
             _usersConfig[msg.sender],
@@ -330,17 +352,28 @@ contract PoolCore is
         address asset,
         uint256[] calldata tokenIds,
         bool useAsCollateral
-    ) external virtual override {
-        SupplyLogic.executeUseERC721AsCollateral(
-            _reserves,
-            _reservesList,
-            _usersConfig[msg.sender],
-            asset,
-            tokenIds,
-            useAsCollateral,
-            _reservesCount,
-            ADDRESSES_PROVIDER.getPriceOracle()
-        );
+    ) external virtual override nonReentrant {
+        if (useAsCollateral) {
+            SupplyLogic.executeCollateralizedERC721(
+                _reserves,
+                _reservesList,
+                _usersConfig[msg.sender],
+                asset,
+                tokenIds,
+                msg.sender
+            );
+        } else {
+            SupplyLogic.executeUncollateralizedERC721(
+                _reserves,
+                _reservesList,
+                _usersConfig[msg.sender],
+                asset,
+                tokenIds,
+                msg.sender,
+                _reservesCount,
+                ADDRESSES_PROVIDER.getPriceOracle()
+            );
+        }
     }
 
     /// @inheritdoc IPoolCore
@@ -350,7 +383,7 @@ contract PoolCore is
         address user,
         uint256 debtToCover,
         bool receivePToken
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         LiquidationLogic.executeLiquidationCall(
             _reserves,
             _reservesList,
@@ -377,7 +410,7 @@ contract PoolCore is
         uint256 collateralTokenId,
         uint256 liquidationAmount,
         bool receiveNToken
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         LiquidationLogic.executeERC721LiquidationCall(
             _reserves,
             _reservesList,
@@ -401,7 +434,7 @@ contract PoolCore is
         address user,
         address collateralAsset,
         uint256 collateralTokenId
-    ) external override {
+    ) external override nonReentrant {
         LiquidationLogic.executeStartAuction(
             _reserves,
             _reservesList,
@@ -421,7 +454,7 @@ contract PoolCore is
         address user,
         address collateralAsset,
         uint256 collateralTokenId
-    ) external override {
+    ) external override nonReentrant {
         LiquidationLogic.executeEndAuction(
             _reserves,
             _reservesList,
@@ -442,7 +475,7 @@ contract PoolCore is
         address nftAsset,
         uint256[] calldata nftTokenIds,
         bytes calldata params
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         FlashClaimLogic.executeFlashClaim(
             _reserves,
             DataTypes.ExecuteFlashClaimParams({

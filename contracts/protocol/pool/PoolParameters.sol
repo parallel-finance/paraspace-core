@@ -100,6 +100,7 @@ contract PoolParameters is
         external
         virtual
         override
+        nonReentrant
     {
         PoolLogic.executeMintToTreasury(_reserves, assets);
     }

@@ -536,7 +536,7 @@ library ValidationLogic {
      * @param reserveCache The cached data of the reserve
      * @param userBalance The balance of the user
      */
-    function validateSetUseReserveAsCollateral(
+    function validateSetUseERC20AsCollateral(
         DataTypes.ReserveCache memory reserveCache,
         uint256 userBalance
     ) internal pure {
@@ -810,20 +810,22 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(
-            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
+            IERC721(params.xTokenAddress).ownerOf(params.tokenId) ==
                 params.user,
             Errors.NOT_THE_OWNER
         );
 
         ValidateAuctionLocalVars memory vars;
 
+        DataTypes.ReserveConfigurationMap
+            memory collateralConfiguration = collateralReserve.configuration;
         (
             vars.collateralReserveActive,
             ,
             ,
             ,
             vars.collateralReservePaused
-        ) = collateralReserve.configuration.getFlags();
+        ) = collateralConfiguration.getFlags();
 
         require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
         require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
@@ -845,7 +847,7 @@ library ValidationLogic {
         );
 
         vars.isCollateralEnabled =
-            collateralReserve.configuration.getLiquidationThreshold() != 0 &&
+            collateralConfiguration.getLiquidationThreshold() != 0 &&
             userConfig.isUsingAsCollateral(collateralReserve.id) &&
             ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
                 params.tokenId
@@ -859,7 +861,6 @@ library ValidationLogic {
     }
 
     function validateEndAuction(
-        DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ValidateAuctionParams memory params
     ) internal view {
@@ -868,7 +869,7 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(
-            IERC721(collateralReserve.xTokenAddress).ownerOf(params.tokenId) ==
+            IERC721(params.xTokenAddress).ownerOf(params.tokenId) ==
                 params.user,
             Errors.NOT_THE_OWNER
         );
@@ -885,11 +886,6 @@ library ValidationLogic {
 
         require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
         require(!vars.collateralReservePaused, Errors.RESERVE_PAUSED);
-
-        require(
-            collateralReserve.auctionConfiguration.getAuctionEnabled(),
-            Errors.AUCTION_NOT_ENABLED
-        );
         require(
             IAuctionableERC721(params.xTokenAddress).isAuctioned(
                 params.tokenId

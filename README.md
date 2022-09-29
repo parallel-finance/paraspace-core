@@ -14,8 +14,8 @@
 
 [![Discord chat][discord-badge]][discord-url]
 
-[discord-badge]: https://img.shields.io/discord/991666009637392425.svg?logo=discord&style=flat-square
-[discord-url]: https://discord.com/invite/UBnnr7pt5a
+[discord-badge]: https://img.shields.io/discord/830972820846018600.svg?logo=discord&style=flat-square
+[discord-url]: https://discord.com/invite/buKKx4dySW
 
 This repository contains the core smart contracts for the Para-Space v1 Protocol.  
 For higher level contracts, see the [ paraspace-periphery](https://github.com/para-space/paraspace-periphery)
@@ -30,7 +30,7 @@ repository.
 [Website](https://para.space) |
 [White Paper](https://docs.para.space/para-space/para-space/readme) |
 [API Docs](https://api-docs.para.space) |
-[Chat](https://discord.com/invite/UBnnr7pt5a)
+[Chat](https://discord.com/invite/buKKx4dySW)
 
 </div>
 
@@ -46,4 +46,8 @@ We would like to thank the following projects.
 
 - [Aave](https://github.com/aave/aave-v3-core)
 - [Uniswap](https://github.com/Uniswap/v3-core)
+- [Seaport](https://github.com/ProjectOpenSea/seaport)
+
+## Similar Projects
+
 - [BendDAO](https://github.com/BendDAO/bend-downpayment)
