@@ -30,7 +30,7 @@ repository.
 [Website](https://para.space) |
 [White Paper](https://docs.para.space/para-space/para-space/readme) |
 [API Docs](https://api-docs.para.space) |
-[Chat](https://discord.com/invite/UBnnr7pt5a)
+[Chat](https://discord.com/invite/buKKx4dySW)
 
 </div>
 
@@ -46,5 +46,8 @@ We would like to thank the following projects.
 
 - [Aave](https://github.com/aave/aave-v3-core)
 - [Uniswap](https://github.com/Uniswap/v3-core)
-- [BendDAO](https://github.com/BendDAO/bend-downpayment)
 - [Seaport](https://github.com/ProjectOpenSea/seaport)
+
+## Similar Projects
+
+- [BendDAO](https://github.com/BendDAO/bend-downpayment)
