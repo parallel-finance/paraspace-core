@@ -395,7 +395,7 @@ library SupplyLogic {
 
         uint256 reserveId = reserve.id;
 
-        if (params.from != params.to && params.value != 0) {
+        if (params.from != params.to && params.amount != 0) {
             DataTypes.UserConfigurationMap storage fromConfig = usersConfig[
                 params.from
             ];
@@ -413,7 +413,7 @@ library SupplyLogic {
                     );
                 }
 
-                if (params.balanceFromBefore == params.value) {
+                if (params.balanceFromBefore == params.amount) {
                     fromConfig.setUsingAsCollateral(reserveId, false);
                     emit ReserveUsedAsCollateralDisabled(
                         params.asset,

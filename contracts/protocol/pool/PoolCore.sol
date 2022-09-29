@@ -631,7 +631,7 @@ contract PoolCore is
         address from,
         address to,
         bool usedAsCollateral,
-        uint256 value,
+        uint256 amount,
         uint256 balanceFromBefore,
         uint256 balanceToBefore
     ) external virtual override {
@@ -648,7 +648,7 @@ contract PoolCore is
                 from: from,
                 to: to,
                 usedAsCollateral: usedAsCollateral,
-                value: value,
+                amount: amount,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
                 reservesCount: _reservesCount,
@@ -679,7 +679,7 @@ contract PoolCore is
                 from: from,
                 to: to,
                 usedAsCollateral: usedAsCollateral,
-                value: 1,
+                amount: 1,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
                 reservesCount: _reservesCount,

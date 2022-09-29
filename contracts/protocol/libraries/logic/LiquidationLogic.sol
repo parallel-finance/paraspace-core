@@ -558,7 +558,11 @@ library LiquidationLogic {
         }
 
         if (params.receiveXToken) {
-            _liquidateNTokens(usersConfig, collateralReserve, params, vars);
+            INToken(vars.collateralXToken).transferOnLiquidation(
+                params.user,
+                vars.liquidator,
+                params.collateralTokenId
+            );
         } else {
             _burnCollateralNTokens(params, vars);
         }
@@ -675,47 +679,6 @@ library LiquidationLogic {
         );
 
         if (liquidatorPreviousPTokenBalance == 0) {
-            DataTypes.UserConfigurationMap
-                storage liquidatorConfig = usersConfig[vars.liquidator];
-
-            liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
-            emit ReserveUsedAsCollateralEnabled(
-                params.collateralAsset,
-                vars.liquidator
-            );
-        }
-    }
-
-    /**
-     * @notice Liquidates the user xTokens by transferring them to the liquidator.
-     * @dev   The function also checks the state of the liquidator and activates the xToken as collateral
-     *        as in standard transfers if the isolation mode constraints are respected.
-     * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
-     * @param collateralReserve The data of the collateral reserve
-     * @param params The additional parameters needed to execute the liquidation function
-     * @param vars The executeLiquidationCall() function local vars
-     */
-    function _liquidateNTokens(
-        mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
-        DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ExecuteLiquidationCallParams memory params,
-        LiquidationCallLocalVars memory vars
-    ) internal {
-        uint256 liquidatorPreviousNTokenBalance = ICollaterizableERC721(
-            vars.collateralXToken
-        ).collaterizedBalanceOf(vars.liquidator);
-
-        bool isTokenUsedAsCollateral = ICollaterizableERC721(
-            vars.collateralXToken
-        ).isUsedAsCollateral(params.collateralTokenId);
-
-        INToken(vars.collateralXToken).transferOnLiquidation(
-            params.user,
-            vars.liquidator,
-            params.collateralTokenId
-        );
-
-        if (liquidatorPreviousNTokenBalance == 0 && isTokenUsedAsCollateral) {
             DataTypes.UserConfigurationMap
                 storage liquidatorConfig = usersConfig[vars.liquidator];
 

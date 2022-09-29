@@ -207,7 +207,7 @@ library DataTypes {
         address from;
         address to;
         bool usedAsCollateral;
-        uint256 value;
+        uint256 amount;
         uint256 balanceFromBefore;
         uint256 balanceToBefore;
         uint256 reservesCount;
