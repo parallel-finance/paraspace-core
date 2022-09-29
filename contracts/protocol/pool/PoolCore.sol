@@ -280,8 +280,7 @@ contract PoolCore is
         address asset,
         uint256 amount,
         uint256 interestRateMode,
-        address onBehalfOf,
-        bool usePTokens
+        address onBehalfOf
     ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
@@ -294,7 +293,29 @@ contract PoolCore is
                         interestRateMode
                     ),
                     onBehalfOf: onBehalfOf,
-                    usePTokens: usePTokens
+                    usePTokens: false
+                })
+            );
+    }
+
+    /// @inheritdoc IPoolCore
+    function repayWithPTokens(
+        address asset,
+        uint256 amount,
+        uint256 interestRateMode
+    ) external virtual override nonReentrant returns (uint256) {
+        return
+            BorrowLogic.executeRepay(
+                _reserves,
+                _usersConfig[msg.sender],
+                DataTypes.ExecuteRepayParams({
+                    asset: asset,
+                    amount: amount,
+                    interestRateMode: DataTypes.InterestRateMode(
+                        interestRateMode
+                    ),
+                    onBehalfOf: msg.sender,
+                    usePTokens: true
                 })
             );
     }

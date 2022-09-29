@@ -7,7 +7,7 @@ size:
 
 .PHONY: build
 build:
-	yarn build
+	yarn compile
 
 .PHONY: format
 format:
