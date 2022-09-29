@@ -280,6 +280,7 @@ library MarketplaceLogic {
             uint256 tokenId = item.identifierOrCriteria;
             DataTypes.ReserveData memory reserve = reservesData[token];
 
+            // item.token == NToken
             if (reserve.xTokenAddress == address(0)) {
                 address underlyingAsset = INToken(token)
                     .UNDERLYING_ASSET_ADDRESS();
@@ -294,16 +295,15 @@ library MarketplaceLogic {
                 continue;
             }
 
-            if (
-                IERC721(token).ownerOf(tokenId) != onBehalfOf &&
-                INToken(reserve.xTokenAddress).ownerOf(tokenId) == onBehalfOf
-            ) {
+            // item.token == underlyingAsset but supplied after listing/offering
+            if (INToken(reserve.xTokenAddress).ownerOf(tokenId) == onBehalfOf) {
                 if (!userConfig.isUsingAsCollateral(reserve.id)) {
                     userConfig.setUsingAsCollateral(reserve.id, true);
                 }
                 continue;
             }
 
+            // item.token == underlyingAsset
             DataTypes.ERC721SupplyParams[]
                 memory tokenData = new DataTypes.ERC721SupplyParams[](1);
             tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);

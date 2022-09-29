@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import {ConduitInterface} from "../interfaces/ConduitInterface.sol";
 
-import {OwnableUpgradeable} from "../../../openzeppelin/contracts/proxy/OwnableUpgradeable.sol";
 import {INToken} from "../../../../interfaces/INToken.sol";
 import {IProtocolDataProvider} from "../../../../interfaces/IProtocolDataProvider.sol";
 
@@ -27,7 +26,7 @@ import "./lib/ConduitConstants.sol";
  *         approved ERC20/721/1155 tokens to be taken immediately — be extremely
  *         cautious with what conduits you give token approvals to!*
  */
-contract Conduit is ConduitInterface, OwnableUpgradeable, TokenTransferrer {
+contract Conduit is ConduitInterface, TokenTransferrer {
     // Set deployer as an immutable controller that can update channel statuses.
     address private immutable _controller;
     address private _protocolDataProvider;
@@ -78,10 +77,9 @@ contract Conduit is ConduitInterface, OwnableUpgradeable, TokenTransferrer {
     }
 
 
-    function initialize(address ProtocolDataProvider) external initializer {
-        __Ownable_init();
-
-        _protocolDataProvider = ProtocolDataProvider;
+    function initialize(address protocolDataProvider) external {
+        require(_protocolDataProvider != address(0),"Conduit: already initialized");
+        _protocolDataProvider = protocolDataProvider;
     }
 
     /**
