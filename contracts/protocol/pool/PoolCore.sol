@@ -147,7 +147,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: address(0),
+                actualSpender: msg.sender,
                 referralCode: referralCode
             })
         );

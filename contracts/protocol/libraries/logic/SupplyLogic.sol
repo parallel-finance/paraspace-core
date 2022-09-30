@@ -134,15 +134,11 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyERC721Params memory params
-    ) internal returns (bool) {
+    ) internal {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         reserve.updateState(reserveCache);
-
-        if (params.actualSpender == address(0)) {
-            params.actualSpender = msg.sender;
-        }
 
         bool isFirstCollaterarized = INToken(reserveCache.xTokenAddress).mint(
             params.onBehalfOf,
@@ -150,8 +146,11 @@ library SupplyLogic {
         );
         if (isFirstCollaterarized) {
             userConfig.setUsingAsCollateral(reserve.id, true);
+            emit ReserveUsedAsCollateralEnabled(
+                params.asset,
+                params.onBehalfOf
+            );
         }
-        return isFirstCollaterarized;
     }
 
     /**
@@ -174,12 +173,6 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
-        bool isFirstCollaterarized = executeSupplyERC721Base(
-            reservesData,
-            userConfig,
-            params
-        );
-
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
                 params.actualSpender,
@@ -188,12 +181,7 @@ library SupplyLogic {
             );
         }
 
-        if (isFirstCollaterarized) {
-            emit ReserveUsedAsCollateralEnabled(
-                params.asset,
-                params.onBehalfOf
-            );
-        }
+        executeSupplyERC721Base(reservesData, userConfig, params);
 
         emit SupplyERC721(
             params.asset,
@@ -224,18 +212,7 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
-        bool isFirstCollaterarized = executeSupplyERC721Base(
-            reservesData,
-            userConfig,
-            params
-        );
-
-        if (isFirstCollaterarized) {
-            emit ReserveUsedAsCollateralEnabled(
-                params.asset,
-                params.onBehalfOf
-            );
-        }
+        executeSupplyERC721Base(reservesData, userConfig, params);
 
         emit SupplyERC721(
             params.asset,
