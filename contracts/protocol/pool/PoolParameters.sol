@@ -27,15 +27,13 @@ import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
 /**
- * @title Pool contract
+ * @title Pool Parameters contract
  *
  * @notice Main point of interaction with an ParaSpace protocol's market
  * - Users can:
- *   # Supply
- *   # Withdraw
- *   # Borrow
- *   # Repay
- *   # Liquidate positions
+ *   # mintToTreasury
+ *   # setMaxAtomicTokensAllowed
+ *   # ...
  * @dev To be covered by a proxy contract, owned by the PoolAddressesProvider of the specific market
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider
