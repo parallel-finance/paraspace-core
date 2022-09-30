@@ -405,7 +405,7 @@ interface IPoolCore {
         address asset,
         uint256[] calldata tokenIds,
         bool useAsCollateral
-    ) external virtual;
+    ) external;
 
     /**
      * @notice Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
