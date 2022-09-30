@@ -117,7 +117,6 @@ library ConfiguratorLogic {
 
         pool.initReserve(
             input.underlyingAsset,
-            input.assetType,
             xTokenProxyAddress,
             stableDebtTokenProxyAddress,
             variableDebtTokenProxyAddress,

@@ -275,7 +275,6 @@ library DataTypes {
 
     struct InitReserveParams {
         address asset;
-        AssetType assetType;
         address xTokenAddress;
         address stableDebtAddress;
         address variableDebtAddress;

@@ -108,7 +108,6 @@ contract PoolParameters is
     /// @inheritdoc IPoolParameters
     function initReserve(
         address asset,
-        DataTypes.AssetType assetType,
         address xTokenAddress,
         address stableDebtAddress,
         address variableDebtAddress,
@@ -121,7 +120,6 @@ contract PoolParameters is
                 _reservesList,
                 DataTypes.InitReserveParams({
                     asset: asset,
-                    assetType: assetType,
                     xTokenAddress: xTokenAddress,
                     stableDebtAddress: stableDebtAddress,
                     variableDebtAddress: variableDebtAddress,
