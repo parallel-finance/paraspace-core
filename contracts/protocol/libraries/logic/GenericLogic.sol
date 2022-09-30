@@ -442,8 +442,7 @@ library GenericLogic {
 
                     (
                         uint256 tmpLTV,
-                        uint256 tmpLiquidationThreshold,
-
+                        uint256 tmpLiquidationThreshold
                     ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
                             .getConfigParams(tokenId);
 
@@ -476,8 +475,7 @@ library GenericLogic {
                 ) {
                     (
                         uint256 tmpLTV,
-                        uint256 tmpLiquidationThreshold,
-
+                        uint256 tmpLiquidationThreshold
                     ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
                             .getConfigParams(tokenId);
 

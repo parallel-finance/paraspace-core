@@ -383,8 +383,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             (
                 lpTokenInfo.baseLTVasCollateral,
-                lpTokenInfo.reserveLiquidationThreshold,
-
+                lpTokenInfo.reserveLiquidationThreshold
             ) = dynamicConfigsStrategy.getConfigParams(tokenId);
         } catch {}
 
