@@ -204,7 +204,8 @@ library GenericLogic {
                         (
                             vars.userBalanceInBaseCurrency,
                             vars.dynamicLTV,
-                            vars.dynamicLiquidationThreshold
+                            vars.dynamicLiquidationThreshold,
+                            vars.hasZeroLtvCollateral
                         ) = _getUserBalanceForDynamicConfigsAsset(
                             params,
                             vars,
@@ -227,6 +228,10 @@ library GenericLogic {
                         vars.avgLtv +=
                             vars.userBalanceInBaseCurrency *
                             vars.ltv;
+
+                        if (vars.ltv == 0) {
+                            vars.hasZeroLtvCollateral = true;
+                        }
                     }
 
                     vars.avgERC721LiquidationThreshold += vars
@@ -236,12 +241,6 @@ library GenericLogic {
 
                     vars.totalCollateralInBaseCurrency += vars
                         .userBalanceInBaseCurrency;
-
-                    if (vars.ltv == 0) {
-                        if (vars.dynamicLTV == 0) {
-                            vars.hasZeroLtvCollateral = true;
-                        }
-                    }
 
                     vars.avgLiquidationThreshold += vars.liquidationThreshold;
                 }
@@ -419,7 +418,8 @@ library GenericLogic {
         returns (
             uint256,
             uint256,
-            uint256
+            uint256,
+            bool
         )
     {
         uint256 totalValue;
@@ -446,6 +446,10 @@ library GenericLogic {
 
                     ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
                             .getConfigParams(tokenId);
+
+                    if (tmpLTV == 0) {
+                        vars.hasZeroLtvCollateral = true;
+                    }
 
                     totalLTV += tmpLTV * assetPrice;
                     totalLiquidationThreshold +=
@@ -477,6 +481,10 @@ library GenericLogic {
                     ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
                             .getConfigParams(tokenId);
 
+                    if (tmpLTV == 0) {
+                        vars.hasZeroLtvCollateral = true;
+                    }
+
                     totalLTV += tmpLTV * assetPrice;
                     totalLiquidationThreshold +=
                         tmpLiquidationThreshold *
@@ -486,7 +494,12 @@ library GenericLogic {
         }
 
         unchecked {
-            return (totalValue, totalLTV, totalLiquidationThreshold);
+            return (
+                totalValue,
+                totalLTV,
+                totalLiquidationThreshold,
+                vars.hasZeroLtvCollateral
+            );
         }
     }
 
