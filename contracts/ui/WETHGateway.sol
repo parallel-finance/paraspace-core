@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import {OwnableUpgradeable} from "../dependencies/openzeppelin/contracts/proxy/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IWETH} from "../misc/interfaces/IWETH.sol";
 import {IWETHGateway} from "./interfaces/IWETHGateway.sol";
