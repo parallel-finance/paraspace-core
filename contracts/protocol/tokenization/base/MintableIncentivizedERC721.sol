@@ -646,7 +646,7 @@ abstract contract MintableIncentivizedERC721 is
     ) internal virtual returns (bool isUsedAsCollateral) {
         isUsedAsCollateral = _isUsedAsCollateral[tokenId];
 
-        if (isUsedAsCollateral) {
+        if (from != to && isUsedAsCollateral) {
             _userState[from].collaterizedBalance -= 1;
             delete _isUsedAsCollateral[tokenId];
         }
