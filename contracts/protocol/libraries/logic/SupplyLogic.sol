@@ -524,7 +524,6 @@ library SupplyLogic {
      * collateral at any point in time.
      * @dev Emits the `ReserveUsedAsCollateralEnabled()` event if the asset can be activated as collateral.
      * @param reservesData The state of all the reserves
-     * @param reservesList The addresses of all the active reserves
      * @param userConfig The users configuration mapping that track the supplied/borrowed assets
      * @param asset The address of the asset being configured as collateral
      * @param tokenIds The ids of the supplied ERC721 token
@@ -532,7 +531,6 @@ library SupplyLogic {
      */
     function executeCollateralizedERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
         uint256[] calldata tokenIds,

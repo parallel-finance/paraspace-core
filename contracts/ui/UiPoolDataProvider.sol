@@ -88,9 +88,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     {
         IParaSpaceOracle oracle = IParaSpaceOracle(provider.getPriceOracle());
         IPool pool = IPool(provider.getPool());
-        ProtocolDataProvider poolDataProvider = ProtocolDataProvider(
-            provider.getPoolDataProvider()
-        );
 
         address[] memory reserves = pool.getReservesList();
         AggregatedReserveData[]
@@ -273,7 +270,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
     function getAuctionData(
         IPoolAddressesProvider provider,
-        address user,
+        address,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view override returns (DataTypes.AuctionData[][] memory) {
@@ -297,7 +294,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     }
 
     function getNTokenData(
-        address user,
+        address,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view override returns (DataTypes.NTokenData[][] memory) {

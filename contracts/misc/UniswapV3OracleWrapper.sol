@@ -50,7 +50,6 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         view
         returns (UinswapV3PositionData memory)
     {
-        UinswapV3PositionData memory positionData;
         (
             ,
             ,

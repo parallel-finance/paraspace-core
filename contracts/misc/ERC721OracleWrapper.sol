@@ -64,21 +64,11 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
         return 0;
     }
 
-    function getAnswer(uint256 roundId)
-        external
-        view
-        override
-        returns (int256)
-    {
+    function getAnswer(uint256) external view override returns (int256) {
         return int256(uint256(oracleAddress.getTwap(asset)));
     }
 
-    function getTimestamp(uint256 roundId)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getTimestamp(uint256) external view override returns (uint256) {
         return uint256(oracleAddress.getLastUpdateTime(asset));
     }
 }

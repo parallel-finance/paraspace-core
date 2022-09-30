@@ -198,7 +198,7 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId)
+    function tokenURI(uint256)
         external
         view
         virtual

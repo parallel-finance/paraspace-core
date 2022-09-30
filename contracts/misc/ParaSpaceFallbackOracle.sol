@@ -72,7 +72,7 @@ contract ParaSpaceFallbackOracle {
             ? (left, right)
             : (right, left);
         uint8 ethDecimals = ERC20(WETH).decimals();
-        uint8 usdcDecimals = ERC20(USDC).decimals();
+        //uint8 usdcDecimals = ERC20(USDC).decimals();
         //returns price in 6 decimals
         return
             IUniswapV2Router01(UNISWAP_ROUTER).getAmountOut(

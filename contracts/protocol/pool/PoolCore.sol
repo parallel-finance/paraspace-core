@@ -356,7 +356,6 @@ contract PoolCore is
         if (useAsCollateral) {
             SupplyLogic.executeCollateralizedERC721(
                 _reserves,
-                _reservesList,
                 _usersConfig[msg.sender],
                 asset,
                 tokenIds,

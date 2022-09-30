@@ -456,7 +456,6 @@ library LiquidationLogic {
             vars.debtPriceSource,
             vars.userGlobalTotalDebt,
             vars.actualDebtToLiquidate,
-            vars.userCollateralBalance,
             vars.liquidationBonus,
             params.collateralTokenId,
             IPriceOracleGetter(params.priceOracle)
@@ -737,7 +736,6 @@ library LiquidationLogic {
      * and corresponding close factor. we are always using max closing factor in this version
      * @param debtReserveCache The reserve cache data object of the debt reserve
      * @param params The additional parameters needed to execute the liquidation function
-     * @param healthFactor The health factor of the position
      * @return The variable debt of the user
      * @return The total debt of the user
      * @return The actual debt that is getting liquidated. If liquidation amount passed in by the liquidator is greater then the total user debt, then use the user total debt as the actual debt getting liquidated. If the user total debt is greater than the liquidation amount getting passed in by the liquidator, then use the liquidation amount the user is passing in.
@@ -745,7 +743,7 @@ library LiquidationLogic {
     function _calculateDebt(
         DataTypes.ReserveCache memory debtReserveCache,
         DataTypes.ExecuteLiquidationCallParams memory params,
-        uint256 healthFactor
+        uint256
     )
         internal
         view
@@ -938,7 +936,6 @@ library LiquidationLogic {
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param userGlobalTotalDebt The total debt the user has
      * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
-     * @param userCollateralBalance The collateral balance for the specific `collateralAsset` of the user being liquidated
      * @param liquidationBonus The collateral bonus percentage to receive as result of the liquidation
      * @return The discounted nft price + the liquidationProtocolFee
      * @return The liquidationProtocolFee
@@ -952,7 +949,6 @@ library LiquidationLogic {
         address liquidationAsset,
         uint256 userGlobalTotalDebt,
         uint256 liquidationAmount,
-        uint256 userCollateralBalance,
         uint256 liquidationBonus,
         uint256 collateralTokenId,
         IPriceOracleGetter oracle

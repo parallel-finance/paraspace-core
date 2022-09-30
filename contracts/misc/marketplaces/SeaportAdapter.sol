@@ -22,7 +22,7 @@ import {PoolStorage} from "../../protocol/pool/PoolStorage.sol";
 contract SeaportAdapter is IMarketplace {
     constructor() {}
 
-    function getAskOrderInfo(bytes memory params, address WETH)
+    function getAskOrderInfo(bytes memory params, address)
         external
         view
         override
@@ -58,14 +58,10 @@ contract SeaportAdapter is IMarketplace {
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
-        (
-            AdvancedOrder[] memory advancedOrders,
-            CriteriaResolver[] memory resolvers,
-
-        ) = abi.decode(
-                params,
-                (AdvancedOrder[], CriteriaResolver[], Fulfillment[])
-            );
+        (AdvancedOrder[] memory advancedOrders, , ) = abi.decode(
+            params,
+            (AdvancedOrder[], CriteriaResolver[], Fulfillment[])
+        );
         // support advanced order in the future
         require(
             // NOT criteria based and must be basic order
