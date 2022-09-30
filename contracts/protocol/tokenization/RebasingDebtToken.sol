@@ -121,13 +121,9 @@ contract RebasingDebtToken is VariableDebtToken {
         view
         returns (uint256)
     {
-        uint256 scaledTotalSupply = super.scaledTotalSupply();
+        uint256 scaledTotalSupply_ = super.scaledTotalSupply();
 
-        if (scaledTotalSupply == 0) {
-            return 0;
-        }
-
-        return ((scaledTotalSupply * rebasingIndex) / WadRayMath.RAY);
+        return ((scaledTotalSupply_ * rebasingIndex) / WadRayMath.RAY);
     }
 
     /**
