@@ -1163,9 +1163,9 @@ contract Land is ERC721Enumerable, Ownable {
         string memory symbol,
         ContractAddresses memory addresses,
         LandAmount memory amount,
-        ContributorAmount[] memory _contributors,
-        address _vrfCoordinator,
-        address _linkTokenAddress,
+        ContributorAmount[] memory /*_contributors*/,
+        address /*_vrfCoordinator*/,
+        address /*_linkTokenAddress*/,
         bytes32 _vrfKeyHash,
         uint256 _vrfFee,
         address _operator

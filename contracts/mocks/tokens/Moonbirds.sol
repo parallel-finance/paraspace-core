@@ -3203,7 +3203,7 @@ contract Moonbirds is
         string memory name,
         string memory symbol,
         IERC721 _proof,
-        address payable beneficiary,
+        address payable /*beneficiary*/,
         address payable royaltyReceiver
     ) ERC721ACommon(name, symbol) BaseTokenURI("") {
         proof = _proof;
