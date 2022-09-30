@@ -531,7 +531,7 @@ interface IPoolCore {
         returns (DataTypes.ReserveData memory);
 
     /**
-     * @notice Validates and finalizes an xToken transfer
+     * @notice Validates and finalizes an PToken transfer
      * @dev Only callable by the overlying xToken of the `asset`
      * @param asset The address of the underlying asset of the xToken
      * @param from The user from which the xTokens are transferred
@@ -546,6 +546,24 @@ interface IPoolCore {
         address to,
         bool usedAsCollateral,
         uint256 amount,
+        uint256 balanceFromBefore,
+        uint256 balanceToBefore
+    ) external;
+
+    /**
+     * @notice Validates and finalizes an NToken transfer
+     * @dev Only callable by the overlying xToken of the `asset`
+     * @param asset The address of the underlying asset of the xToken
+     * @param from The user from which the xTokens are transferred
+     * @param to The user receiving the xTokens
+     * @param balanceFromBefore The xToken balance of the `from` user before the transfer
+     * @param balanceToBefore The xToken balance of the `to` user before the transfer
+     */
+    function finalizeTransferERC721(
+        address asset,
+        address from,
+        address to,
+        bool usedAsCollateral,
         uint256 balanceFromBefore,
         uint256 balanceToBefore
     ) external;

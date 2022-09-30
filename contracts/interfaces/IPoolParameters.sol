@@ -40,7 +40,6 @@ interface IPoolParameters {
      **/
     function initReserve(
         address asset,
-        DataTypes.AssetType assetType,
         address xTokenAddress,
         address stableDebtAddress,
         address variableDebtAddress,

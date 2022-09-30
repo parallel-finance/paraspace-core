@@ -142,9 +142,20 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             reserveData.totalScaledVariableDebt = IVariableDebtToken(
                 reserveData.variableDebtTokenAddress
             ).scaledTotalSupply();
-            reserveData.assetType = baseData.assetType;
+            DataTypes.ReserveConfigurationMap
+                memory reserveConfigurationMap = baseData.configuration;
+            bool isPaused;
+            DataTypes.AssetType assetType;
+            (
+                reserveData.isActive,
+                reserveData.isFrozen,
+                reserveData.borrowingEnabled,
+                reserveData.stableBorrowRateEnabled,
+                isPaused,
+                assetType
+            ) = reserveConfigurationMap.getFlags();
 
-            if (baseData.assetType == DataTypes.AssetType.ERC20) {
+            if (assetType == DataTypes.AssetType.ERC20) {
                 // Due we take the symbol from underlying token we need a special case for $MKR as symbol() returns bytes32
                 if (
                     address(reserveData.underlyingAsset) == address(MKR_ADDRESS)
@@ -172,8 +183,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 ).balanceOf(reserveData.xTokenAddress);
             }
 
-            DataTypes.ReserveConfigurationMap
-                memory reserveConfigurationMap = baseData.configuration;
             //uint256 eModeCategoryId;
             (
                 reserveData.baseLTVasCollateral,
@@ -186,15 +195,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             ) = reserveConfigurationMap.getParams();
             reserveData.usageAsCollateralEnabled =
                 reserveData.baseLTVasCollateral != 0;
-
-            bool isPaused;
-            (
-                reserveData.isActive,
-                reserveData.isFrozen,
-                reserveData.borrowingEnabled,
-                reserveData.stableBorrowRateEnabled,
-                isPaused
-            ) = reserveConfigurationMap.getFlags();
 
             InterestRates memory interestRates = getInterestRateStrategySlopes(
                 DefaultReserveInterestRateStrategy(
@@ -383,8 +383,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             (
                 lpTokenInfo.baseLTVasCollateral,
-                lpTokenInfo.reserveLiquidationThreshold,
-
+                lpTokenInfo.reserveLiquidationThreshold
             ) = dynamicConfigsStrategy.getConfigParams(tokenId);
         } catch {}
 
@@ -415,7 +414,11 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             // user reserve data
             userReservesData[i].underlyingAsset = reserves[i];
-            if (baseData.assetType == DataTypes.AssetType.ERC20) {
+
+            if (
+                baseData.configuration.getAssetType() ==
+                DataTypes.AssetType.ERC20
+            ) {
                 userReservesData[i].scaledXTokenBalance = IPToken(
                     baseData.xTokenAddress
                 ).scaledBalanceOf(user);

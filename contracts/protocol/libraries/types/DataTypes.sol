@@ -29,8 +29,6 @@ library DataTypes {
         uint40 lastUpdateTimestamp;
         //the id of the reserve. Represents the position in the list of the active reserves
         uint16 id;
-        // the asset type of the reserve (uint8)
-        AssetType assetType;
         //xToken address
         address xTokenAddress;
         //stableDebtToken address
@@ -108,7 +106,6 @@ library DataTypes {
     }
 
     struct ReserveCache {
-        AssetType assetType;
         uint256 currScaledVariableDebt;
         uint256 nextScaledVariableDebt;
         uint256 currPrincipalStableDebt;
@@ -210,7 +207,7 @@ library DataTypes {
         address from;
         address to;
         bool usedAsCollateral;
-        uint256 value;
+        uint256 amount;
         uint256 balanceFromBefore;
         uint256 balanceToBefore;
         uint256 reservesCount;
@@ -235,7 +232,6 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
-        AssetType assetType;
     }
 
     struct ValidateLiquidationCallParams {
@@ -243,7 +239,6 @@ library DataTypes {
         uint256 totalDebt;
         uint256 healthFactor;
         address priceOracleSentinel;
-        AssetType assetType;
     }
 
     struct ValidateERC721LiquidationCallParams {
@@ -257,7 +252,6 @@ library DataTypes {
         uint256 liquidationAmount;
         address priceOracleSentinel;
         address xTokenAddress;
-        AssetType assetType;
     }
 
     struct ValidateAuctionParams {
@@ -266,7 +260,6 @@ library DataTypes {
         address collateralAsset;
         uint256 tokenId;
         address xTokenAddress;
-        AssetType assetType;
     }
 
     struct CalculateInterestRatesParams {
@@ -282,7 +275,6 @@ library DataTypes {
 
     struct InitReserveParams {
         address asset;
-        AssetType assetType;
         address xTokenAddress;
         address stableDebtAddress;
         address variableDebtAddress;

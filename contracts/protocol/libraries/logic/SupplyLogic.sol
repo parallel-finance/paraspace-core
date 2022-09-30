@@ -373,7 +373,7 @@ library SupplyLogic {
     }
 
     /**
-     * @notice Validates a transfer of xTokens. The sender is subjected to health factor validation to avoid
+     * @notice Validates a transfer of PTokens. The sender is subjected to health factor validation to avoid
      * collateralization constraints violation.
      * @dev Emits the `ReserveUsedAsCollateralEnabled()` event for the `to` account, if the asset is being activated as
      * collateral.
@@ -383,7 +383,7 @@ library SupplyLogic {
      * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
      * @param params The additional parameters needed to execute the finalizeTransfer function
      */
-    function executeFinalizeTransfer(
+    function executeFinalizeTransferERC20(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
@@ -395,23 +395,12 @@ library SupplyLogic {
 
         uint256 reserveId = reserve.id;
 
-        if (params.from != params.to && params.value != 0) {
+        if (params.from != params.to && params.amount != 0) {
             DataTypes.UserConfigurationMap storage fromConfig = usersConfig[
                 params.from
             ];
 
-            bool usingAsCollateral;
-            uint256 amount;
-
-            if (reserve.assetType == DataTypes.AssetType.ERC721) {
-                usingAsCollateral = params.usedAsCollateral;
-                amount = 1;
-            } else {
-                usingAsCollateral = fromConfig.isUsingAsCollateral(reserveId);
-                amount = params.value;
-            }
-
-            if (usingAsCollateral) {
+            if (fromConfig.isUsingAsCollateral(reserveId)) {
                 if (fromConfig.isBorrowingAny()) {
                     ValidationLogic.validateHFAndLtv(
                         reservesData,
@@ -424,7 +413,7 @@ library SupplyLogic {
                     );
                 }
 
-                if (params.balanceFromBefore == amount) {
+                if (params.balanceFromBefore == params.amount) {
                     fromConfig.setUsingAsCollateral(reserveId, false);
                     emit ReserveUsedAsCollateralDisabled(
                         params.asset,
@@ -440,6 +429,56 @@ library SupplyLogic {
                     emit ReserveUsedAsCollateralEnabled(
                         params.asset,
                         params.to
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @notice Validates a transfer of NTokens. The sender is subjected to health factor validation to avoid
+     * collateralization constraints violation.
+     * @dev In case the `from` user transfers everything, `ReserveUsedAsCollateralDisabled()` is emitted for `from`.
+     * @param reservesData The state of all the reserves
+     * @param reservesList The addresses of all the active reserves
+     * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
+     * @param params The additional parameters needed to execute the finalizeTransfer function
+     */
+    function executeFinalizeTransferERC721(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
+        DataTypes.FinalizeTransferParams memory params
+    ) external {
+        DataTypes.ReserveData storage reserve = reservesData[params.asset];
+
+        ValidationLogic.validateTransfer(reserve);
+
+        uint256 reserveId = reserve.id;
+
+        if (params.from != params.to) {
+            DataTypes.UserConfigurationMap storage fromConfig = usersConfig[
+                params.from
+            ];
+
+            if (params.usedAsCollateral) {
+                if (fromConfig.isBorrowingAny()) {
+                    ValidationLogic.validateHFAndLtv(
+                        reservesData,
+                        reservesList,
+                        usersConfig[params.from],
+                        params.asset,
+                        params.from,
+                        params.reservesCount,
+                        params.oracle
+                    );
+                }
+
+                if (params.balanceFromBefore == 1) {
+                    fromConfig.setUsingAsCollateral(reserveId, false);
+                    emit ReserveUsedAsCollateralDisabled(
+                        params.asset,
+                        params.from
                     );
                 }
             }
