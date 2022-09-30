@@ -43,7 +43,6 @@ library PoolLogic {
         require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
         reservesData[params.asset].init(
             params.xTokenAddress,
-            params.assetType,
             params.stableDebtAddress,
             params.variableDebtAddress,
             params.interestRateStrategyAddress,
@@ -105,10 +104,13 @@ library PoolLogic {
 
             DataTypes.ReserveData storage reserve = reservesData[assetAddress];
 
+            DataTypes.ReserveConfigurationMap
+                memory reserveConfiguration = reserve.configuration;
+
             // this cover both inactive reserves and invalid reserves since the flag will be 0 for both
             if (
-                !reserve.configuration.getActive() ||
-                reserve.assetType != DataTypes.AssetType.ERC20
+                !reserveConfiguration.getActive() ||
+                reserveConfiguration.getAssetType() != DataTypes.AssetType.ERC20
             ) {
                 continue;
             }

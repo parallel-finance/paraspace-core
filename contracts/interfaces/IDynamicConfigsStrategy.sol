@@ -8,9 +8,5 @@ interface IDynamicConfigsStrategy {
     function getConfigParams(uint256 data)
         external
         view
-        returns (
-            uint256 ltv,
-            uint256 liquidationThreshold,
-            uint256 liquidationBonus
-        );
+        returns (uint256 ltv, uint256 liquidationThreshold);
 }

@@ -30,7 +30,7 @@ library GenericLogic {
     struct CalculateUserAccountDataVars {
         uint256 assetPrice;
         uint256 assetUnit;
-        DataTypes.AssetType assetType;
+        DataTypes.ReserveConfigurationMap reserveConfiguration;
         uint256 userBalanceInBaseCurrency;
         uint256 decimals;
         uint256 ltv;
@@ -128,7 +128,7 @@ library GenericLogic {
                 vars.currentReserveAddress
             ];
 
-            vars.assetType = currentReserve.assetType;
+            vars.reserveConfiguration = currentReserve.configuration;
 
             (
                 vars.ltv,
@@ -145,7 +145,10 @@ library GenericLogic {
 
             vars.xTokenAddress = currentReserve.xTokenAddress;
 
-            if (vars.assetType == DataTypes.AssetType.ERC20) {
+            if (
+                vars.reserveConfiguration.getAssetType() ==
+                DataTypes.AssetType.ERC20
+            ) {
                 vars.assetPrice = _getAssetPrice(
                     params.oracle,
                     vars.currentReserveAddress
@@ -201,7 +204,8 @@ library GenericLogic {
                         (
                             vars.userBalanceInBaseCurrency,
                             vars.dynamicLTV,
-                            vars.dynamicLiquidationThreshold
+                            vars.dynamicLiquidationThreshold,
+                            vars.hasZeroLtvCollateral
                         ) = _getUserBalanceForDynamicConfigsAsset(
                             params,
                             vars,
@@ -224,6 +228,10 @@ library GenericLogic {
                         vars.avgLtv +=
                             vars.userBalanceInBaseCurrency *
                             vars.ltv;
+
+                        if (vars.ltv == 0) {
+                            vars.hasZeroLtvCollateral = true;
+                        }
                     }
 
                     vars.avgERC721LiquidationThreshold += vars
@@ -233,12 +241,6 @@ library GenericLogic {
 
                     vars.totalCollateralInBaseCurrency += vars
                         .userBalanceInBaseCurrency;
-
-                    if (vars.ltv == 0) {
-                        if (vars.dynamicLTV == 0) {
-                            vars.hasZeroLtvCollateral = true;
-                        }
-                    }
 
                     vars.avgLiquidationThreshold += vars.liquidationThreshold;
                 }
@@ -416,7 +418,8 @@ library GenericLogic {
         returns (
             uint256,
             uint256,
-            uint256
+            uint256,
+            bool
         )
     {
         uint256 totalValue;
@@ -439,10 +442,13 @@ library GenericLogic {
 
                     (
                         uint256 tmpLTV,
-                        uint256 tmpLiquidationThreshold,
-
+                        uint256 tmpLiquidationThreshold
                     ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
                             .getConfigParams(tokenId);
+
+                    if (tmpLTV == 0) {
+                        vars.hasZeroLtvCollateral = true;
+                    }
 
                     totalLTV += tmpLTV * assetPrice;
                     totalLiquidationThreshold +=
@@ -469,10 +475,13 @@ library GenericLogic {
                 ) {
                     (
                         uint256 tmpLTV,
-                        uint256 tmpLiquidationThreshold,
-
+                        uint256 tmpLiquidationThreshold
                     ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
                             .getConfigParams(tokenId);
+
+                    if (tmpLTV == 0) {
+                        vars.hasZeroLtvCollateral = true;
+                    }
 
                     totalLTV += tmpLTV * assetPrice;
                     totalLiquidationThreshold +=
@@ -483,7 +492,12 @@ library GenericLogic {
         }
 
         unchecked {
-            return (totalValue, totalLTV, totalLiquidationThreshold);
+            return (
+                totalValue,
+                totalLTV,
+                totalLiquidationThreshold,
+                vars.hasZeroLtvCollateral
+            );
         }
     }
 

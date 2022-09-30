@@ -85,8 +85,7 @@ library BorrowLogic {
                 maxStableLoanPercent: params.maxStableRateBorrowSizePercent,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
-                priceOracleSentinel: params.priceOracleSentinel,
-                assetType: reserveCache.assetType
+                priceOracleSentinel: params.priceOracleSentinel
             })
         );
 

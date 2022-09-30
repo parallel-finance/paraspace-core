@@ -117,7 +117,6 @@ library ConfiguratorLogic {
 
         pool.initReserve(
             input.underlyingAsset,
-            input.assetType,
             xTokenProxyAddress,
             stableDebtTokenProxyAddress,
             variableDebtTokenProxyAddress,
@@ -129,7 +128,7 @@ library ConfiguratorLogic {
             .ReserveConfigurationMap(0);
 
         currentConfig.setDecimals(input.underlyingAssetDecimals);
-
+        currentConfig.setAssetType(input.assetType);
         currentConfig.setActive(true);
         currentConfig.setPaused(false);
         currentConfig.setFrozen(false);

@@ -52,6 +52,16 @@ contract MockReserveConfiguration {
         return configuration.getDecimals();
     }
 
+    function setAssetType(DataTypes.AssetType assetType) external {
+        DataTypes.ReserveConfigurationMap memory config = configuration;
+        config.setAssetType(assetType);
+        configuration = config;
+    }
+
+    function getAssetType() external view returns (DataTypes.AssetType) {
+        return configuration.getAssetType();
+    }
+
     function setFrozen(bool frozen) external {
         DataTypes.ReserveConfigurationMap memory config = configuration;
         config.setFrozen(frozen);
@@ -132,7 +142,8 @@ contract MockReserveConfiguration {
             bool,
             bool,
             bool,
-            bool
+            bool,
+            DataTypes.AssetType
         )
     {
         return configuration.getFlags();

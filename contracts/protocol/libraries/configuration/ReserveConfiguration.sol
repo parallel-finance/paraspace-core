@@ -25,10 +25,8 @@ library ReserveConfiguration {
     uint256 internal constant BORROW_CAP_MASK =                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000FFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant SUPPLY_CAP_MASK =                0xFFFFFFFFFFFFFFFFFFFFFFFFFF000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant LIQUIDATION_PROTOCOL_FEE_MASK =  0xFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
-    // uint256 internal constant EMODE_CATEGORY_MASK =            0xFFFFFFFFFFFFFFFFFFFF00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
-    uint256 internal constant DYNAMIC_CONFIGS_MASK =               0xFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
-    uint256 internal constant UNBACKED_MINT_CAP_MASK =         0xFFFFFFFFFFF000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
-    uint256 internal constant DEBT_CEILING_MASK =              0xF0000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
+    uint256 internal constant ASSET_TYPE_MASK =                0xFFFFFFFFFFFFFFFFFFFFF0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
+    uint256 internal constant DYNAMIC_CONFIGS_MASK =           0xFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
 
     /// @dev For the LTV, the start bit is 0 (up to 15), hence no bitshifting is needed
     uint256 internal constant LIQUIDATION_THRESHOLD_START_BIT_POSITION = 16;
@@ -47,9 +45,8 @@ library ReserveConfiguration {
     uint256 internal constant BORROW_CAP_START_BIT_POSITION = 80;
     uint256 internal constant SUPPLY_CAP_START_BIT_POSITION = 116;
     uint256 internal constant LIQUIDATION_PROTOCOL_FEE_START_BIT_POSITION = 152;
-    uint256 internal constant IS_DYNAMIC_CONFIGS_START_BIT_POSITION = 168;
-    uint256 internal constant UNBACKED_MINT_CAP_START_BIT_POSITION = 176;
-    uint256 internal constant DEBT_CEILING_START_BIT_POSITION = 212;
+    uint256 internal constant ASSET_TYPE_START_BIT_POSITION = 168;
+    uint256 internal constant IS_DYNAMIC_CONFIGS_START_BIT_POSITION = 172;
 
     uint256 internal constant MAX_VALID_LTV = 65535;
     uint256 internal constant MAX_VALID_LIQUIDATION_THRESHOLD = 65535;
@@ -59,11 +56,8 @@ library ReserveConfiguration {
     uint256 internal constant MAX_VALID_BORROW_CAP = 68719476735;
     uint256 internal constant MAX_VALID_SUPPLY_CAP = 68719476735;
     uint256 internal constant MAX_VALID_LIQUIDATION_PROTOCOL_FEE = 65535;
-    uint256 internal constant MAX_VALID_EMODE_CATEGORY = 255;
-    uint256 internal constant MAX_VALID_UNBACKED_MINT_CAP = 68719476735;
-    uint256 internal constant MAX_VALID_DEBT_CEILING = 1099511627775;
+    uint256 internal constant MAX_ASSET_TYPE = 16;
 
-    uint256 public constant DEBT_CEILING_DECIMALS = 2;
     uint16 public constant MAX_RESERVES_COUNT = 128;
 
     /**
@@ -184,6 +178,41 @@ library ReserveConfiguration {
     {
         return
             (self.data & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION;
+    }
+
+    /**
+     * @notice Sets the asset type of the reserve
+     * @param self The reserve configuration
+     * @param assetType The asset type
+     **/
+    function setAssetType(
+        DataTypes.ReserveConfigurationMap memory self,
+        DataTypes.AssetType assetType
+    ) internal pure {
+        require(
+            uint256(assetType) <= MAX_ASSET_TYPE,
+            Errors.INVALID_ASSET_TYPE
+        );
+
+        self.data =
+            (self.data & ASSET_TYPE_MASK) |
+            (uint256(assetType) << ASSET_TYPE_START_BIT_POSITION);
+    }
+
+    /**
+     * @notice Gets the asset type of the reserve
+     * @param self The reserve configuration
+     * @return The asset type
+     **/
+    function getAssetType(DataTypes.ReserveConfigurationMap memory self)
+        internal
+        pure
+        returns (DataTypes.AssetType)
+    {
+        return
+            DataTypes.AssetType(
+                (self.data & ~ASSET_TYPE_MASK) >> ASSET_TYPE_START_BIT_POSITION
+            );
     }
 
     /**
@@ -482,6 +511,7 @@ library ReserveConfiguration {
      * @return The state flag representing borrowing enabled
      * @return The state flag representing stableRateBorrowing enabled
      * @return The state flag representing paused
+     * @return The asset type
      **/
     function getFlags(DataTypes.ReserveConfigurationMap memory self)
         internal
@@ -491,7 +521,8 @@ library ReserveConfiguration {
             bool,
             bool,
             bool,
-            bool
+            bool,
+            DataTypes.AssetType
         )
     {
         uint256 dataLocal = self.data;
@@ -501,7 +532,10 @@ library ReserveConfiguration {
             (dataLocal & ~FROZEN_MASK) != 0,
             (dataLocal & ~BORROWING_MASK) != 0,
             (dataLocal & ~STABLE_BORROWING_MASK) != 0,
-            (dataLocal & ~PAUSED_MASK) != 0
+            (dataLocal & ~PAUSED_MASK) != 0,
+            DataTypes.AssetType(
+                (dataLocal & ~ASSET_TYPE_MASK) >> ASSET_TYPE_START_BIT_POSITION
+            )
         );
     }
 

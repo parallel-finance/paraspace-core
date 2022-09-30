@@ -27,23 +27,27 @@ import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
 /**
- * @title Pool contract
+ * @title Pool Parameters contract
  *
  * @notice Main point of interaction with an ParaSpace protocol's market
  * - Users can:
- *   # Supply
- *   # Withdraw
- *   # Borrow
- *   # Repay
- *   # Liquidate positions
+ *   # mintToTreasury
+ *   # setMaxAtomicTokensAllowed
+ *   # ...
  * @dev To be covered by a proxy contract, owned by the PoolAddressesProvider of the specific market
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider
  **/
-contract PoolParameters is PoolStorage, ReentrancyGuard, IPoolParameters {
+contract PoolParameters is
+    VersionedInitializable,
+    ReentrancyGuard,
+    PoolStorage,
+    IPoolParameters
+{
     using ReserveLogic for DataTypes.ReserveData;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
+    uint256 internal constant POOL_REVISION = 1;
 
     /**
      * @dev Only pool configurator can call functions marked by this modifier.
@@ -85,6 +89,10 @@ contract PoolParameters is PoolStorage, ReentrancyGuard, IPoolParameters {
         ADDRESSES_PROVIDER = provider;
     }
 
+    function getRevision() internal pure virtual override returns (uint256) {
+        return POOL_REVISION;
+    }
+
     /// @inheritdoc IPoolParameters
     function mintToTreasury(address[] calldata assets)
         external
@@ -98,7 +106,6 @@ contract PoolParameters is PoolStorage, ReentrancyGuard, IPoolParameters {
     /// @inheritdoc IPoolParameters
     function initReserve(
         address asset,
-        DataTypes.AssetType assetType,
         address xTokenAddress,
         address stableDebtAddress,
         address variableDebtAddress,
@@ -111,7 +118,6 @@ contract PoolParameters is PoolStorage, ReentrancyGuard, IPoolParameters {
                 _reservesList,
                 DataTypes.InitReserveParams({
                     asset: asset,
-                    assetType: assetType,
                     xTokenAddress: xTokenAddress,
                     stableDebtAddress: stableDebtAddress,
                     variableDebtAddress: variableDebtAddress,

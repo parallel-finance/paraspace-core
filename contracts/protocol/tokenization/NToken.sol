@@ -307,17 +307,14 @@ contract NToken is
 
         uint256 fromBalanceBefore = collaterizedBalanceOf(from);
         uint256 toBalanceBefore = collaterizedBalanceOf(to);
-
-        bool isUsedAsCollateral = _isUsedAsCollateral[tokenId];
-        _transferCollaterizable(from, to, tokenId, isUsedAsCollateral);
+        bool isUsedAsCollateral = _transferCollaterizable(from, to, tokenId);
 
         if (validate) {
-            POOL.finalizeTransfer(
+            POOL.finalizeTransferERC721(
                 underlyingAsset,
                 from,
                 to,
                 isUsedAsCollateral,
-                1,
                 fromBalanceBefore,
                 toBalanceBefore
             );

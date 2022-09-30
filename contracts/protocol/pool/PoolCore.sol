@@ -41,47 +41,15 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  *   PoolAddressesProvider
  **/
 contract PoolCore is
-    PoolStorage,
-    ReentrancyGuard,
     VersionedInitializable,
+    ReentrancyGuard,
+    PoolStorage,
     IPoolCore
 {
     using ReserveLogic for DataTypes.ReserveData;
 
     uint256 public constant POOL_REVISION = 1;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
-
-    /**
-     * @dev Only pool configurator can call functions marked by this modifier.
-     **/
-    modifier onlyPoolConfigurator() {
-        _onlyPoolConfigurator();
-        _;
-    }
-
-    /**
-     * @dev Only pool admin can call functions marked by this modifier.
-     **/
-    modifier onlyPoolAdmin() {
-        _onlyPoolAdmin();
-        _;
-    }
-
-    function _onlyPoolConfigurator() internal view virtual {
-        require(
-            ADDRESSES_PROVIDER.getPoolConfigurator() == msg.sender,
-            Errors.CALLER_NOT_POOL_CONFIGURATOR
-        );
-    }
-
-    function _onlyPoolAdmin() internal view virtual {
-        require(
-            IACLManager(ADDRESSES_PROVIDER.getACLManager()).isPoolAdmin(
-                msg.sender
-            ),
-            Errors.CALLER_NOT_POOL_ADMIN
-        );
-    }
 
     function getRevision() internal pure virtual override returns (uint256) {
         return POOL_REVISION;
@@ -663,7 +631,7 @@ contract PoolCore is
         address from,
         address to,
         bool usedAsCollateral,
-        uint256 value,
+        uint256 amount,
         uint256 balanceFromBefore,
         uint256 balanceToBefore
     ) external virtual override {
@@ -671,7 +639,7 @@ contract PoolCore is
             msg.sender == _reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
-        SupplyLogic.executeFinalizeTransfer(
+        SupplyLogic.executeFinalizeTransferERC20(
             _reserves,
             _reservesList,
             _usersConfig,
@@ -680,7 +648,38 @@ contract PoolCore is
                 from: from,
                 to: to,
                 usedAsCollateral: usedAsCollateral,
-                value: value,
+                amount: amount,
+                balanceFromBefore: balanceFromBefore,
+                balanceToBefore: balanceToBefore,
+                reservesCount: _reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function finalizeTransferERC721(
+        address asset,
+        address from,
+        address to,
+        bool usedAsCollateral,
+        uint256 balanceFromBefore,
+        uint256 balanceToBefore
+    ) external virtual override {
+        require(
+            msg.sender == _reserves[asset].xTokenAddress,
+            Errors.CALLER_NOT_XTOKEN
+        );
+        SupplyLogic.executeFinalizeTransferERC721(
+            _reserves,
+            _reservesList,
+            _usersConfig,
+            DataTypes.FinalizeTransferParams({
+                asset: asset,
+                from: from,
+                to: to,
+                usedAsCollateral: usedAsCollateral,
+                amount: 1,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
                 reservesCount: _reservesCount,

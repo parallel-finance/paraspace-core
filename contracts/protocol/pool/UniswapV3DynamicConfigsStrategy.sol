@@ -18,13 +18,10 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
         address token1;
         uint256 token0Ltv;
         uint256 token0LiquidationThreshold;
-        uint256 token0LiquidationBonus;
         uint256 token1Ltv;
         uint256 token1LiquidationThreshold;
-        uint256 token1LiquidationBonus;
         uint256 ltv;
         uint256 liquidationThreshold;
-        uint256 liquidationBonus;
     }
 
     IPoolAddressesProvider internal immutable _addressesProvider;
@@ -41,11 +38,7 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
         external
         view
         override
-        returns (
-            uint256 ltv,
-            uint256 liquidationThreshold,
-            uint256 liquidationBonus
-        )
+        returns (uint256 ltv, uint256 liquidationThreshold)
     {
         DynamicConfigsParams memory vars;
         (
@@ -71,7 +64,7 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
         (
             vars.token0Ltv,
             vars.token0LiquidationThreshold,
-            vars.token0LiquidationBonus,
+            ,
             ,
             ,
 
@@ -79,7 +72,7 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
         (
             vars.token1Ltv,
             vars.token1LiquidationThreshold,
-            vars.token1LiquidationBonus,
+            ,
             ,
             ,
 
@@ -92,11 +85,7 @@ contract UniswapV3DynamicConfigsStrategy is IDynamicConfigsStrategy {
             vars.token1LiquidationThreshold
             ? vars.token0LiquidationThreshold
             : vars.token1LiquidationThreshold;
-        vars.liquidationBonus = vars.token0LiquidationBonus <
-            vars.token1LiquidationBonus
-            ? vars.token0LiquidationBonus
-            : vars.token1LiquidationBonus;
 
-        return (vars.ltv, vars.liquidationThreshold, vars.liquidationBonus);
+        return (vars.ltv, vars.liquidationThreshold);
     }
 }
