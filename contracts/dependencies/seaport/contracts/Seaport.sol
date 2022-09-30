@@ -102,7 +102,7 @@ contract Seaport is Consideration {
         // Return the name of the contract.
         assembly {
             mstore(0x20, 0x20)
-            mstore(0x47, 0x07536561706f7274)
+            mstore(0x49, 0x09506172615370616365)
             return(0x20, 0x60)
         }
     }
