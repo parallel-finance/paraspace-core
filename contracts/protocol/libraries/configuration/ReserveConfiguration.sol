@@ -534,7 +534,7 @@ library ReserveConfiguration {
             (dataLocal & ~STABLE_BORROWING_MASK) != 0,
             (dataLocal & ~PAUSED_MASK) != 0,
             DataTypes.AssetType(
-                (self.data & ~ASSET_TYPE_MASK) >> ASSET_TYPE_START_BIT_POSITION
+                (dataLocal & ~ASSET_TYPE_MASK) >> ASSET_TYPE_START_BIT_POSITION
             )
         );
     }
