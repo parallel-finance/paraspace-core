@@ -201,7 +201,8 @@ contract NTokenUniswapV3 is NToken {
             // currentLiquidationThreshold
             // ltv
             // healthFactor
-            uint256 healthFactor, // erc721HealthFactor
+            uint256 healthFactor,
+            // erc721HealthFactor
 
         ) = POOL.getUserAccountData(sender);
 
