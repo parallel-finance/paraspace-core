@@ -189,22 +189,7 @@ contract NTokenUniswapV3 is NToken {
         );
 
         // return data about the users healthFactor after decrease
-        (
-            ,
-            ,
-            ,
-            ,
-            ,
-            // totalCollateralBase
-            // totalDebtBase
-            // availableBorrowsBase
-            // currentLiquidationThreshold
-            // ltv
-            // healthFactor
-            uint256 healthFactor,
-            // erc721HealthFactor
-
-        ) = POOL.getUserAccountData(sender);
+        (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(sender);
 
         // revert if decrease would result in a liquidation
         require(
