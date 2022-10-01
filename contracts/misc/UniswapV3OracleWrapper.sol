@@ -102,7 +102,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
 
     function getLiquidityAmountFromPositionData(
         UinswapV3PositionData memory positionData
-    ) public view returns (uint256 token0Amount, uint256 token1Amount) {
+    ) public pure returns (uint256 token0Amount, uint256 token1Amount) {
         (token0Amount, token1Amount) = LiquidityAmounts.getAmountsForLiquidity(
             positionData.currentPrice,
             TickMath.getSqrtRatioAtTick(positionData.tickLower),
@@ -190,7 +190,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         return sum;
     }
 
-    function latestAnswer() external view returns (int256) {
+    function latestAnswer() external pure returns (int256) {
         revert("unimplemented");
     }
 

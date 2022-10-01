@@ -30,7 +30,7 @@ contract X2Y2Adapter is IMarketplace {
 
     function getAskOrderInfo(bytes memory params, address)
         external
-        view
+        pure
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -78,7 +78,7 @@ contract X2Y2Adapter is IMarketplace {
 
     function getBidOrderInfo(bytes memory)
         external
-        view
+        pure
         override
         returns (DataTypes.OrderInfo memory)
     {
@@ -103,6 +103,7 @@ contract X2Y2Adapter is IMarketplace {
 
     function matchBidWithTakerAsk(address, bytes calldata)
         external
+        pure
         override
         returns (bytes memory)
     {

@@ -24,7 +24,7 @@ contract SeaportAdapter is IMarketplace {
 
     function getAskOrderInfo(bytes memory params, address)
         external
-        view
+        pure
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -54,7 +54,7 @@ contract SeaportAdapter is IMarketplace {
 
     function getBidOrderInfo(bytes memory params)
         external
-        view
+        pure
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -113,7 +113,7 @@ contract SeaportAdapter is IMarketplace {
 
     function isBasicOrder(AdvancedOrder memory advancedOrder)
         private
-        view
+        pure
         returns (bool)
     {
         return

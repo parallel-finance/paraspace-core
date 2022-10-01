@@ -26,7 +26,7 @@ contract ERC721Delegate is IDelegate, AccessControl, IERC721Receiver {
         address,
         uint256,
         bytes calldata
-    ) external override returns (bytes4) {
+    ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 
@@ -34,7 +34,7 @@ contract ERC721Delegate is IDelegate, AccessControl, IERC721Receiver {
         return abi.decode(data, (Pair[]));
     }
 
-    function delegateType() external view returns (uint256) {
+    function delegateType() external pure returns (uint256) {
         // return uint256(Market.DelegationType.ERC721);
         return 1;
     }

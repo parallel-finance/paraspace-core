@@ -24,7 +24,7 @@ contract LooksRareAdapter is IMarketplace {
 
     function getAskOrderInfo(bytes memory params, address WETH)
         external
-        view
+        pure
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -66,7 +66,7 @@ contract LooksRareAdapter is IMarketplace {
 
     function getBidOrderInfo(
         bytes memory /*params*/
-    ) external view override returns (DataTypes.OrderInfo memory) {
+    ) external pure override returns (DataTypes.OrderInfo memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 
@@ -95,6 +95,7 @@ contract LooksRareAdapter is IMarketplace {
 
     function matchBidWithTakerAsk(address, bytes calldata)
         external
+        pure
         override
         returns (bytes memory)
     {
