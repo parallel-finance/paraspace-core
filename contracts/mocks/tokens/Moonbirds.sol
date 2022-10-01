@@ -1,5 +1,5 @@
 // Sources flattened with hardhat v2.9.3 https://hardhat.org
-
+// SPDX-License-Identifier: BUSL-1.1
 // File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.2.0
 
 // MIT
@@ -3203,7 +3203,7 @@ contract Moonbirds is
         string memory name,
         string memory symbol,
         IERC721 _proof,
-        address payable beneficiary,
+        address payable /*beneficiary*/,
         address payable royaltyReceiver
     ) ERC721ACommon(name, symbol) BaseTokenURI("") {
         proof = _proof;

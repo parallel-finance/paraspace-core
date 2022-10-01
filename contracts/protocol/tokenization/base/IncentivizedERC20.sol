@@ -70,20 +70,20 @@ abstract contract IncentivizedERC20 is Context, IERC20Detailed {
     /**
      * @dev Constructor.
      * @param pool The reference to the main Pool contract
-     * @param name The name of the token
-     * @param symbol The symbol of the token
-     * @param decimals The number of decimals of the token
+     * @param name_ The name of the token
+     * @param symbol_ The symbol of the token
+     * @param decimals_ The number of decimals of the token
      */
     constructor(
         IPool pool,
-        string memory name,
-        string memory symbol,
-        uint8 decimals
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
-        _name = name;
-        _symbol = symbol;
-        _decimals = decimals;
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = decimals_;
         POOL = pool;
     }
 

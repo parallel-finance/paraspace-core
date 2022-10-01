@@ -115,7 +115,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: address(0),
+                actualSpender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -356,7 +356,6 @@ contract PoolCore is
         if (useAsCollateral) {
             SupplyLogic.executeCollateralizedERC721(
                 _reserves,
-                _reservesList,
                 _usersConfig[msg.sender],
                 asset,
                 tokenIds,

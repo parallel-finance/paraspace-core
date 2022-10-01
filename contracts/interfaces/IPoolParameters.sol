@@ -139,7 +139,7 @@ interface IPoolParameters {
         address asset,
         address user,
         uint24 changeBy
-    ) external virtual;
+    ) external;
 
     /**
      * @notice decrease user's total atomic tokens counter
@@ -151,11 +151,11 @@ interface IPoolParameters {
         address asset,
         address user,
         uint24 changeBy
-    ) external virtual;
+    ) external;
 
     /**
      * @notice set the maximum allowed atomic tokens per user
      * @param value The maximum amount
      */
-    function setMaxAtomicTokensAllowed(uint24 value) external virtual;
+    function setMaxAtomicTokensAllowed(uint24 value) external;
 }

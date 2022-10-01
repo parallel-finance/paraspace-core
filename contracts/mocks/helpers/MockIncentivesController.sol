@@ -73,9 +73,9 @@ contract MockIncentivesController is IRewardController {
         return 0;
     }
 
-    function getRewardsByAsset(address asset)
+    function getRewardsByAsset(address)
         external
-        view
+        pure
         returns (address[] memory)
     {
         address[] memory rewards;
@@ -83,9 +83,9 @@ contract MockIncentivesController is IRewardController {
         return (rewards);
     }
 
-    function getRewardsData(address asset, address reward)
+    function getRewardsData(address, address)
         public
-        view
+        pure
         returns (
             uint256,
             uint256,
@@ -96,7 +96,7 @@ contract MockIncentivesController is IRewardController {
         return (0, 0, 0, 0);
     }
 
-    function getAssetDecimals(address asset) external view returns (uint8) {
+    function getAssetDecimals(address) external pure returns (uint8) {
         return 8;
     }
 

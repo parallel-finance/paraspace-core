@@ -8,7 +8,7 @@ import {BaseUpgradeabilityProxy} from "../../../dependencies/openzeppelin/upgrad
  * , inspired by the OpenZeppelin upgradeability proxy pattern
  * @notice This contract combines an upgradeability proxy with an authorization
  * mechanism for administrative tasks.
- * @dev The admin role is stored in an immutable, which helps saving transactions costs
+ * @dev The _admin role is stored in an immutable, which helps saving transactions costs
  * All external functions in this contract must be guarded by the
  * `ifAdmin` modifier. See ethereum/solidity#3864 for a Solidity
  * feature proposal that would enable this to be done automatically.
@@ -18,10 +18,10 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy {
 
     /**
      * @dev Constructor.
-     * @param admin The address of the admin
+     * @param admin_ The address of the admin
      */
-    constructor(address admin) {
-        _admin = admin;
+    constructor(address admin_) {
+        _admin = admin_;
     }
 
     modifier ifAdmin() {

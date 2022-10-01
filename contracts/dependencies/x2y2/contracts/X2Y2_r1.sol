@@ -517,7 +517,7 @@ contract X2Y2R1 is
     }
 
     function _takePayment(
-        bytes32 itemHash,
+        bytes32 /*itemHash*/,
         IERC20Upgradeable currency,
         address from,
         uint256 amount

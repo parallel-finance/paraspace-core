@@ -57,7 +57,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         address operator,
         address from,
         uint256 id,
-        bytes memory data
+        bytes memory
     ) external virtual override returns (bytes4) {
         // only accept MoonBird tokens
         require(msg.sender == _underlyingAsset, Errors.OPERATION_NOT_SUPPORTED);

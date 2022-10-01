@@ -28,9 +28,9 @@ contract X2Y2Adapter is IMarketplace {
         uint256 tokenId;
     }
 
-    function getAskOrderInfo(bytes memory params, address WETH)
+    function getAskOrderInfo(bytes memory params, address)
         external
-        view
+        pure
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -76,11 +76,11 @@ contract X2Y2Adapter is IMarketplace {
         orderInfo.consideration = consideration;
     }
 
-    function getBidOrderInfo(bytes memory params)
+    function getBidOrderInfo(bytes memory)
         external
-        view
+        pure
         override
-        returns (DataTypes.OrderInfo memory orderInfo)
+        returns (DataTypes.OrderInfo memory)
     {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
@@ -101,8 +101,9 @@ contract X2Y2Adapter is IMarketplace {
             );
     }
 
-    function matchBidWithTakerAsk(address marketplace, bytes calldata params)
+    function matchBidWithTakerAsk(address, bytes calldata)
         external
+        pure
         override
         returns (bytes memory)
     {

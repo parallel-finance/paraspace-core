@@ -3,7 +3,7 @@
 // File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.2.0
 
 //
-
+// SPDX-License-Identifier: BUSL-1.1
 import "./dependencies/ERC721A.sol";
 
 pragma solidity ^0.8.0;
@@ -900,13 +900,13 @@ library Counters {
     A. Digital Collectible Terms (RTFKT-Owned Content) [Document #2-A, https://rtfkt.com/legal-2A]
     B. Digital Collectible Terms (Third Party Content) [Document #2-B, https://rtfkt.com/legal-2B]
     C. Digital Collectible Limited Commercial Use License Terms (RTFKT-Owned Content) [Document #2-C, https://rtfkt.com/legal-2C]
-    
+
     3. Policies or other documentation
     A. RTFKT Privacy Policy [Document #3-A, https://rtfkt.com/privacy]
     B. NFT Issuance and Marketing Policy [Document #3-B, https://rtfkt.com/legal-3B]
     C. Transfer Fees [Document #3C, https://rtfkt.com/legal-3C]
     C. 1. Commercialization Registration [https://rtfkt.typeform.com/to/u671kiRl]
-    
+
     4. General notices
     A. Murakami Short Verbiage – User Experience Notice [Document #X-1, https://rtfkt.com/legal-X1]
 */

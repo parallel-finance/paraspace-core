@@ -1067,7 +1067,7 @@ library ValidationLogic {
 
     function validateBuyWithCredit(
         DataTypes.ExecuteMarketplaceParams memory params
-    ) internal view {
+    ) internal pure {
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
     }
 

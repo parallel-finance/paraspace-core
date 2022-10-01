@@ -37,9 +37,9 @@ contract NTokenUniswapV3 is NToken {
 
     function onERC721Received(
         address operator,
-        address from,
+        address,
         uint256 id,
-        bytes memory data
+        bytes memory
     ) external virtual override returns (bytes4) {
         // only accept UniswapV3 tokens
         require(msg.sender == _underlyingAsset, Errors.OPERATION_NOT_SUPPORTED);
@@ -189,21 +189,7 @@ contract NTokenUniswapV3 is NToken {
         );
 
         // return data about the users healthFactor after decrease
-        (
-            ,
-            ,
-            ,
-            ,
-            ,
-            // totalCollateralBase
-            // totalDebtBase
-            // availableBorrowsBase
-            // currentLiquidationThreshold
-            // ltv
-            // healthFactor
-            uint256 healthFactor, // erc721HealthFactor
-
-        ) = POOL.getUserAccountData(sender);
+        (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(sender);
 
         // revert if decrease would result in a liquidation
         require(

@@ -61,20 +61,9 @@ library MarketplaceLogic {
     ) external returns (uint256) {
         ValidationLogic.validateBuyWithCredit(params);
 
-        _borrowTo(
-            reservesData,
-            reservesList,
-            userConfig,
-            params,
-            address(this)
-        );
+        _borrowTo(reservesData, params, address(this));
 
-        (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
-            reservesData,
-            reservesList,
-            userConfig,
-            params
-        );
+        (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(params);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -122,13 +111,7 @@ library MarketplaceLogic {
     ) external {
         ValidationLogic.validateAcceptBidWithCredit(params);
 
-        _borrowTo(
-            reservesData,
-            reservesList,
-            userConfig,
-            params,
-            params.orderInfo.maker
-        );
+        _borrowTo(reservesData, params, params.orderInfo.maker);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -159,17 +142,12 @@ library MarketplaceLogic {
      * @notice Transfer payNow portion from taker to this contract. This is only useful
      * in buyWithCredit.
      * @dev
-     * @param reservesData The state of all the reserves
-     * @param reservesList The addresses of all the active reserves
-     * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      */
-    function _delegateToPool(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
-        DataTypes.UserConfigurationMap storage userConfig,
-        DataTypes.ExecuteMarketplaceParams memory params
-    ) internal returns (uint256, uint256) {
+    function _delegateToPool(DataTypes.ExecuteMarketplaceParams memory params)
+        internal
+        returns (uint256, uint256)
+    {
         address token = params.credit.token;
         uint256 price = 0;
         bool isETH = token == address(0);
@@ -213,15 +191,11 @@ library MarketplaceLogic {
      * debt will be minted in the same block to the borrower.
      * @dev
      * @param reservesData The state of all the reserves
-     * @param reservesList The addresses of all the active reserves
-     * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param to The receiver of borrowed tokens
      */
     function _borrowTo(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
-        DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteMarketplaceParams memory params,
         address to
     ) internal {
@@ -289,7 +263,6 @@ library MarketplaceLogic {
                 require(isNToken, Errors.ASSET_NOT_LISTED);
                 SupplyLogic.executeCollateralizedERC721(
                     reservesData,
-                    reservesList,
                     userConfig,
                     underlyingAsset,
                     tokenIds,
@@ -303,7 +276,6 @@ library MarketplaceLogic {
             if (INToken(reserve.xTokenAddress).ownerOf(tokenId) == onBehalfOf) {
                 SupplyLogic.executeCollateralizedERC721(
                     reservesData,
-                    reservesList,
                     userConfig,
                     token,
                     tokenIds,

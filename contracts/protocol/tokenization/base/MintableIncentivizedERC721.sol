@@ -108,18 +108,18 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev Constructor.
      * @param pool The reference to the main Pool contract
-     * @param name The name of the token
-     * @param symbol The symbol of the token
+     * @param name_ The name of the token
+     * @param symbol_ The symbol of the token
      */
     constructor(
         IPool pool,
-        string memory name,
-        string memory symbol,
+        string memory name_,
+        string memory symbol_,
         bool atomic_pricing
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
-        _name = name;
-        _symbol = symbol;
+        _name = name_;
+        _symbol = symbol_;
         POOL = pool;
         ATOMIC_PRICING = atomic_pricing;
     }
@@ -198,7 +198,7 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId)
+    function tokenURI(uint256)
         external
         view
         virtual
@@ -643,10 +643,10 @@ abstract contract MintableIncentivizedERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual returns (bool isUsedAsCollateral) {
-        isUsedAsCollateral = _isUsedAsCollateral[tokenId];
+    ) internal virtual returns (bool isUsedAsCollateral_) {
+        isUsedAsCollateral_ = _isUsedAsCollateral[tokenId];
 
-        if (from != to && isUsedAsCollateral) {
+        if (from != to && isUsedAsCollateral_) {
             _userState[from].collaterizedBalance -= 1;
             delete _isUsedAsCollateral[tokenId];
         }

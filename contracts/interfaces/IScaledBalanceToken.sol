@@ -46,11 +46,7 @@ interface IScaledBalanceToken {
      * @param user The user whose balance is calculated
      * @return The scaled balance of the user
      **/
-    function scaledBalanceOf(address user)
-        external
-        view
-        virtual
-        returns (uint256);
+    function scaledBalanceOf(address user) external view returns (uint256);
 
     /**
      * @notice Returns the scaled balance of the user and the scaled total supply.
@@ -61,14 +57,13 @@ interface IScaledBalanceToken {
     function getScaledUserBalanceAndSupply(address user)
         external
         view
-        virtual
         returns (uint256, uint256);
 
     /**
      * @notice Returns the scaled total supply of the scaled balance token. Represents sum(debt/index)
      * @return The scaled total supply
      **/
-    function scaledTotalSupply() external view virtual returns (uint256);
+    function scaledTotalSupply() external view returns (uint256);
 
     /**
      * @notice Returns last index interest was accrued to the user's balance

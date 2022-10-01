@@ -13,7 +13,6 @@ interface ICollaterizableERC721 {
     function collaterizedBalanceOf(address user)
         external
         view
-        virtual
         returns (uint256);
 
     /**
@@ -29,7 +28,7 @@ interface ICollaterizableERC721 {
         uint256 tokenId,
         bool useAsCollateral,
         address sender
-    ) external virtual returns (bool);
+    ) external returns (bool);
 
     /**
      * @dev the ids of the token want to change the collateral state
@@ -39,5 +38,5 @@ interface ICollaterizableERC721 {
         uint256[] calldata tokenIds,
         bool useAsCollateral,
         address sender
-    ) external virtual returns (uint256, uint256);
+    ) external returns (uint256, uint256);
 }

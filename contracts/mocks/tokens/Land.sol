@@ -3,7 +3,7 @@ import "./dependencies/ERC721A.sol";
 // File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.2.0
 
 //
-
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
 /**
@@ -1163,9 +1163,9 @@ contract Land is ERC721Enumerable, Ownable {
         string memory symbol,
         ContractAddresses memory addresses,
         LandAmount memory amount,
-        ContributorAmount[] memory _contributors,
-        address _vrfCoordinator,
-        address _linkTokenAddress,
+        ContributorAmount[] memory /*_contributors*/,
+        address /*_vrfCoordinator*/,
+        address /*_linkTokenAddress*/,
         bytes32 _vrfKeyHash,
         uint256 _vrfFee,
         address _operator

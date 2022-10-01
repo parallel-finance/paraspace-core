@@ -20,7 +20,7 @@ contract MockAToken is MintableERC20 {
         incomeIndex = _incomeIndex;
     }
 
-    function getReserveNormalizedIncome(address asset)
+    function getReserveNormalizedIncome(address)
     external
     view
     returns (uint256) {

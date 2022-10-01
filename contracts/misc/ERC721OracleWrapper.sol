@@ -48,7 +48,7 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
         oracleAddress = INFTFloorOracle(_oracleAddress);
     }
 
-    function decimals() external view override returns (uint8) {
+    function decimals() external pure override returns (uint8) {
         return 18;
     }
 
@@ -60,25 +60,15 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
         return uint256(oracleAddress.getLastUpdateTime(asset));
     }
 
-    function latestRound() external view override returns (uint256) {
+    function latestRound() external pure override returns (uint256) {
         return 0;
     }
 
-    function getAnswer(uint256 roundId)
-        external
-        view
-        override
-        returns (int256)
-    {
+    function getAnswer(uint256) external view override returns (int256) {
         return int256(uint256(oracleAddress.getTwap(asset)));
     }
 
-    function getTimestamp(uint256 roundId)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getTimestamp(uint256) external view override returns (uint256) {
         return uint256(oracleAddress.getLastUpdateTime(asset));
     }
 }

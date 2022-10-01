@@ -76,7 +76,7 @@ abstract contract ScaledBalanceTokenBaseERC721 is
         return _userState[user].additionalData;
     }
 
-    function decimals() external view returns (uint8) {
+    function decimals() external pure returns (uint8) {
         return 0;
     }
 }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
 import {INFTOracle} from "./interfaces/INFTOracle.sol";
@@ -37,28 +38,26 @@ contract ParaSpaceFallbackOracle {
             if (supported == true) {
                 return INFTOracle(BEND_DAO).getAssetPrice(asset);
             }
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {
-            address pairAddress = IUniswapV2Factory(UNISWAP_FACTORY).getPair(
-                WETH,
-                asset
+        } catch {}
+
+        address pairAddress = IUniswapV2Factory(UNISWAP_FACTORY).getPair(
+            WETH,
+            asset
+        );
+        require(pairAddress != address(0x00), "pair not found");
+        IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
+        (uint256 left, uint256 right, ) = pair.getReserves();
+        (uint256 tokenReserves, uint256 ethReserves) = (asset < WETH)
+            ? (left, right)
+            : (right, left);
+        uint8 decimals = ERC20(asset).decimals();
+        //returns price in 18 decimals
+        return
+            IUniswapV2Router01(UNISWAP_ROUTER).getAmountOut(
+                10**decimals,
+                tokenReserves,
+                ethReserves
             );
-            require(pairAddress != address(0x00), "pair not found");
-            IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
-            (uint256 left, uint256 right, ) = pair.getReserves();
-            (uint256 tokenReserves, uint256 ethReserves) = (asset < WETH)
-                ? (left, right)
-                : (right, left);
-            uint8 decimals = ERC20(asset).decimals();
-            //returns price in 18 decimals
-            return
-                IUniswapV2Router01(UNISWAP_ROUTER).getAmountOut(
-                    10**decimals,
-                    tokenReserves,
-                    ethReserves
-                );
-        }
     }
 
     function getEthUsdPrice() public view returns (uint256) {
@@ -73,7 +72,7 @@ contract ParaSpaceFallbackOracle {
             ? (left, right)
             : (right, left);
         uint8 ethDecimals = ERC20(WETH).decimals();
-        uint8 usdcDecimals = ERC20(USDC).decimals();
+        //uint8 usdcDecimals = ERC20(USDC).decimals();
         //returns price in 6 decimals
         return
             IUniswapV2Router01(UNISWAP_ROUTER).getAmountOut(

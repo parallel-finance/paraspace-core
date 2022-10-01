@@ -3,7 +3,7 @@
 // File @openzeppelin/contracts/utils/Context.sol@v4.2.0
 
 //
-
+// SPDX-License-Identifier: BUSL-1.1
 import "./dependencies/ERC721A.sol";
 
 pragma solidity ^0.8.0;
