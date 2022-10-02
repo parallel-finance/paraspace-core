@@ -36,6 +36,11 @@ clean:
 	YARN_CHECKSUM_BEHAVIOR=update yarn
 	yarn clean
 
+.PHONY: submodules
+submodules:
+	git submodule update --init --recursive
+	git submodule foreach git pull origin main
+
 .PHONY: test
 test:
 	TS_NODE_TRANSPILE_ONLY=1 npx hardhat test ./test-suites/__setup__.ts ./test-suites/${TEST_TARGET}
