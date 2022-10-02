@@ -8,8 +8,12 @@ on:
   pull_request: {}
   workflow_dispatch: {}
 
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
 jobs:
-  run:
+  tests:
     name: Run CI Check
     runs-on: ubuntu-latest
     env:
@@ -17,8 +21,12 @@ jobs:
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
     steps:
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
 
       - name: Use node version 16
         uses: actions/setup-node@v2
