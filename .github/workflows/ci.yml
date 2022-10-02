@@ -21,7 +21,6 @@ jobs:
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
     steps:
-    steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
