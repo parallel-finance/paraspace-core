@@ -1,3 +1,12 @@
+#!make
+include .env
+export $(shell sed 's/=.*//' .env)
+
+NETWORK                  := goerli
+SCRIPT_PATH              := ./tasks/deployments/testnet/full_deployment.ts
+TEST_TARGET              := *.spec.ts
+RUST_TOOLCHAIN           := nightly-2022-07-24
+
 .PHONY: ci
 ci: lint size
 
@@ -26,6 +35,10 @@ clean:
 	yarn cache clean --all
 	YARN_CHECKSUM_BEHAVIOR=update yarn
 	yarn clean
+
+.PHONY: test
+test:
+	TS_NODE_TRANSPILE_ONLY=1 npx hardhat test ./test-suites/__setup__.ts ./test-suites/${TEST_TARGET}
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
