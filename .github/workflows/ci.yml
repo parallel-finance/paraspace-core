@@ -8,13 +8,21 @@ on:
   pull_request: {}
   workflow_dispatch: {}
 
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
 jobs:
-  run:
-    name: Run CI Check
+  lint:
+    name: Lint Check
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
 
       - name: Use node version 16
         uses: actions/setup-node@v2
@@ -22,10 +30,77 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org
 
-      - name: Check CI
+      - name: Run lint
         run: |
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
-          make ci
-  
+          yarn lint
+
+  tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ secrets.RPC_URL }}
+      DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
+      ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
+
+      - name: Use node version 16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org
+
+      - name: Run unit tests
+        run: |
+          yarn cache clean --all
+          YARN_CHECKSUM_BEHAVIOR=update yarn
+          yarn
+          yarn test
+
+  coverage:
+    name: Coverage Check
+    runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ secrets.RPC_URL }}
+      DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
+      ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
+          fetch-depth: 2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: "**/node_modules"
+          key: npm-v2-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: npm-v2-
+      - run: |
+          yarn cache clean --all
+          YARN_CHECKSUM_BEHAVIOR=update yarn
+          yarn
+        if: steps.cache.outputs.cache-hit != 'true'
+      - run: |
+          yarn cache clean --all
+          YARN_CHECKSUM_BEHAVIOR=update yarn
+          yarn build
+          yarn coverage
+        env:
+          NODE_OPTIONS: --max_old_space_size=8192
+      - name: Publish coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info

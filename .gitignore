@@ -1,10 +1,12 @@
 .DS_Store
 **/.DS_Store
+.idea
 node_modules
 cache
 artifacts
 /types
 .env
+deployed-contracts.json
 
 # Setting for non zero-installs (https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored)
 .yarn/*
@@ -16,3 +18,4 @@ artifacts
 
 docs/*
 !docs/DEVELOPER-GUIDE.md
+

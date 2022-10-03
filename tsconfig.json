@@ -8,7 +8,10 @@
     "noImplicitAny": false,
     "resolveJsonModule": true
   },
-  "include": [],
+  "include": ["./scripts", "./test-suites",
+    "./deploy/tasks",
+    "./deploy/helpers"
+  ],
   "files": [
     "./hardhat.config.ts",
     "node_modules/hardhat-typechain/src/type-extensions.ts"
