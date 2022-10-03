@@ -152,7 +152,7 @@ makeSuite("PausableReserve", (testEnv: TestEnv) => {
     await expect(
       pool
         .connect(user.signer)
-        .repay(dai.address, "1", RateMode.Variable, user.address, false)
+        .repay(dai.address, "1", RateMode.Variable, user.address)
     ).to.be.revertedWith(RESERVE_PAUSED);
     // Unpause the pool
     await configurator
@@ -330,7 +330,7 @@ makeSuite("PausableReserve", (testEnv: TestEnv) => {
       .setReservePause(dai.address, false);
   });
 
-  it("setUserUseReserveAsCollateral", async () => {
+  it("setUserUseERC20AsCollateral", async () => {
     const {pool, weth, configurator, emergencyAdmin} = testEnv;
     const user = emergencyAdmin;
     const amountWETHToDeposit = utils.parseEther("1");
@@ -344,9 +344,7 @@ makeSuite("PausableReserve", (testEnv: TestEnv) => {
       .connect(emergencyAdmin.signer)
       .setReservePause(weth.address, true);
     await expect(
-      pool
-        .connect(user.signer)
-        .setUserUseReserveAsCollateral(weth.address, false)
+      pool.connect(user.signer).setUserUseERC20AsCollateral(weth.address, false)
     ).to.be.revertedWith(RESERVE_PAUSED);
     // Unpause pool
     await configurator

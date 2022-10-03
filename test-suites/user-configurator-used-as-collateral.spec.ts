@@ -158,8 +158,8 @@ makeSuite(
       const user2Config = BigNumber.from(
         (await pool.getUserConfiguration(user2.address)).data
       );
-      expect(await nBAYC.collaterizedBalanceOf(user2.address)).to.be.equal(1);
-      expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.true;
+      expect(await nBAYC.collaterizedBalanceOf(user2.address)).to.be.equal(0);
+      expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.false;
     });
 
     it("check setUserUseERC721AsCollateral", async () => {
@@ -357,9 +357,9 @@ makeSuite(
         (await pool.getUserConfiguration(liquidator.address)).data
       );
       expect(await nBAYC.collaterizedBalanceOf(liquidator.address)).to.be.equal(
-        1
+        0
       );
-      expect(isUsingAsCollateral(liquidatorConfig, baycData.id)).to.be.true;
+      expect(isUsingAsCollateral(liquidatorConfig, baycData.id)).to.be.false;
     });
 
     it("special case for supply and transfer", async () => {
@@ -438,8 +438,8 @@ makeSuite(
       user2Config = BigNumber.from(
         (await pool.getUserConfiguration(user2.address)).data
       );
-      expect(await nBAYC.collaterizedBalanceOf(user2.address)).to.be.equal(1);
-      expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.true;
+      expect(await nBAYC.collaterizedBalanceOf(user2.address)).to.be.equal(0);
+      expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.false;
     });
   }
 );

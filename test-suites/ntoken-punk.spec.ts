@@ -1,29 +1,34 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {ethers} from "hardhat";
+import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {
+  buildPermitParams,
+  convertToCurrencyDecimals,
+  getSignatureFromTypedData,
+} from "../deploy/helpers/contracts-helpers";
+import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
 import {waitForTx} from "../deploy/helpers/misc-utils";
-import {RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
+import {WPUNKS} from "../deploy/tasks/deployments/full-deployment/helpers/constants";
 import {makeSuite} from "./helpers/make-suite";
+import {getTestWallets} from "./helpers/utils/wallets";
+
+declare let hre: HardhatRuntimeEnvironment;
 
 makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
+  let testWallets;
   let firstDaiDeposit;
   let secondDaiDeposit;
-  // let thirdDaiDeposit;
   const wPunksFloorPrice = BigNumber.from(
     MOCK_CHAINLINK_AGGREGATORS_PRICES.WPUNKS
   );
+  const EIP712_REVISION = "1";
 
-  // let wPunkGatewayProxy;
-  // let wPunkGatewayProxy;
-  // const EIP712_REVISION = "1";
-
-  before("Initialize Depositors", async () => {
+  before("Initialize WPunk Gateway", async () => {
     const {
       dai,
-      punk,
       wPunk,
       users: [, , user3],
       wPunkGatewayProxy,
@@ -31,30 +36,7 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
 
     firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
     secondDaiDeposit = await convertToCurrencyDecimals(dai.address, "20000");
-    await convertToCurrencyDecimals(dai.address, "50000");
-
-    // withdrawPunk
-    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](0));
-    await punk.connect(user3.signer).balanceOf(user3.address);
-
-    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(0, 0));
-
-    // withdrawPunkWithPermit
-    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](1));
-    await punk.connect(user3.signer).balanceOf(user3.address);
-
-    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(1, 0));
-
-    // wPunkGatewayProxy = await ethers.getContractFactory("wPunkGatewayProxy");
-    // wPunkGatewayProxy = await wPunkGatewayProxy.deploy(
-    //   punk.address,
-    //   wPunk.address,
-    //   user3.address,
-    //   pool.address
-    // );
-
-    const proxy = await wPunkGatewayProxy.proxy();
-    console.log("proxy from wPunkGateway is ", proxy);
+    testWallets = getTestWallets();
 
     await waitForTx(
       await wPunk
@@ -63,14 +45,30 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
     );
   });
 
+  it("User 3 can mint PUNKS and offer them for sale", async () => {
+    const {
+      punk,
+      users: [, , user3],
+    } = testEnv;
+    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](0));
+    expect(await punk.connect(user3.signer).balanceOf(user3.address)).to.equal(
+      1
+    );
+    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(0, 0));
+
+    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](1));
+    expect(await punk.connect(user3.signer).balanceOf(user3.address)).to.equal(
+      2
+    );
+    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(1, 0));
+  });
+
   it("User 3 deposits WPUNK", async () => {
     const {
       wPunk,
       nWPunk,
-      // paraspace,
       users: [, , user3],
       pool,
-      wPunkGateway,
       wPunkGatewayProxy,
     } = testEnv;
 
@@ -81,18 +79,9 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       .totalCollateralBase;
     expect(totalCollateral).to.be.equal(0);
 
-    console.log("Before proxy supplyPunk");
-    console.log("wPunkGateway address is ", wPunkGateway.address);
-    console.log("wPunkGatewayProxy address is ", wPunkGatewayProxy.address);
-    console.log("user3 address is", user3.address);
     await wPunkGatewayProxy
       .connect(user3.signer)
-      .supplyPunk(
-        pool.address,
-        [{tokenId: 0, useAsCollateral: true}],
-        user3.address,
-        "0"
-      );
+      .supplyPunk([{tokenId: 0, useAsCollateral: true}], user3.address, "0");
 
     const nWPunkBalance = await nWPunk.balanceOf(user3.address);
     expect(nWPunkBalance).to.be.equal(1);
@@ -100,14 +89,6 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
     const newTotalCollateral = (await pool.getUserAccountData(user3.address))
       .totalCollateralBase;
     expect(newTotalCollateral).to.be.eq(wPunksFloorPrice);
-
-    // const initialParaSpaceBalance = await paraspace.balanceOf(user3.address);
-    // // advance blocks and assert user is acquiring ParaSpace interest
-    // advanceTimeAndBlock(3600);
-    // const paraspaceBalance = await paraspace.balanceOf(user3.address);
-    // // TODO(ivan.solomonoff): We'd need to merge tokenomics repo in order to perform checks on rewards within this same suite setup
-    // // TODO(ivan.solomonoff): This is currently set at 0% APY, but in documentation we say it should earn interest on a per block basis
-    // // expect(paraspaceBalance).to.be.gt(initialParaSpaceBalance);
 
     // availableToBorrow must've increased in exactly NFT's floor price * 30% (LTV)
     const newAvailableToBorrow = (await pool.getUserAccountData(user3.address))
@@ -179,11 +160,9 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       wPunkGatewayProxy,
     } = testEnv;
 
-    expect(
-      wPunkGatewayProxy
-        .connect(user3.signer)
-        .withdrawPunk(pool.address, [0], user3.address)
-    ).to.be.reverted;
+    await expect(
+      wPunkGatewayProxy.connect(user3.signer).withdrawPunk([0], user3.address)
+    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
   });
 
   it("User 3 tries to withdraw the deposited WPUNK from collateral without paying the accrued interest (should fail)", async () => {
@@ -193,11 +172,13 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       pool,
     } = testEnv;
 
-    expect(
+    await expect(
       pool
         .connect(user3.signer)
         .setUserUseERC721AsCollateral(wPunk.address, [0], false)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("User 3 tries to send the nToken to User 4 (should fail)", async () => {
@@ -207,9 +188,9 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       gatewayAdmin: user4,
     } = testEnv;
 
-    expect(
+    await expect(
       nWPunk.connect(user3.signer).transferFrom(user3.address, user4.address, 1)
-    ).to.be.reverted;
+    ).to.be.revertedWith("ERC721: operator query for nonexistent token");
   });
 
   it("User 3 adds 20K dai as collateral and then removes their WPUNK from collateral without paying the accrued interest", async () => {
@@ -244,7 +225,7 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
     await waitForTx(
       await pool
         .connect(user3.signer)
-        .setUserUseReserveAsCollateral(dai.address, true)
+        .setUserUseERC20AsCollateral(dai.address, true)
     );
 
     const availableToBorrow = (await pool.getUserAccountData(user3.address))
@@ -299,7 +280,7 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
     // withdraw WPUNKS
     const withdrawWPUNKSTx = await wPunkGatewayProxy
       .connect(user3.signer)
-      .withdrawPunk(pool.address, [0], user3.address);
+      .withdrawPunk([0], user3.address);
 
     await withdrawWPUNKSTx.wait();
 
@@ -326,11 +307,11 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       pool,
     } = testEnv;
 
-    expect(
-      pool
-        .connect(user3.signer)
-        .setUserUseReserveAsCollateral(dai.address, false)
-    ).to.be.reverted;
+    await expect(
+      pool.connect(user3.signer).setUserUseERC20AsCollateral(dai.address, false)
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("User 3 tries to withdraw the deposited DAI without paying the accrued interest (should fail)", async () => {
@@ -340,116 +321,65 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       pool,
     } = testEnv;
 
-    expect(pool.connect(user3.signer).withdraw(dai.address, [0], user3.address))
-      .to.be.reverted;
+    await expect(
+      pool.connect(user3.signer).withdraw(dai.address, [0], user3.address)
+    ).to.be.revertedWith(ProtocolErrors.INVALID_AMOUNT);
   });
 
-  it("User 3 pays the accrued interest and withdraw deposited DAI", async () => {
+  it("User 3 deposits WPUNK, signs signature and withdraws with permit", async () => {
     const {
-      dai,
+      punk,
+      wPunk,
+      nWPunk,
       users: [, , user3],
-      pool,
+      wPunkGatewayProxy,
     } = testEnv;
+    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(0, 0));
+
+    // deposits WPUNK
+    await wPunkGatewayProxy
+      .connect(user3.signer)
+      .supplyPunk([{tokenId: 1, useAsCollateral: true}], user3.address, "0");
+
+    const nWPunkBalance = await nWPunk.balanceOf(user3.address);
+    expect(nWPunkBalance).to.be.equal(1);
+
+    // signs signature
+    const chainId = hre.network.config.chainId || HARDHAT_CHAINID;
+    const deadline = MAX_UINT_AMOUNT;
+    const nonce = (await nWPunk.nonces(user3.address)).toNumber();
+    // use nft token length here as amount
+    const permitAmount = "1";
+    const msgParams = buildPermitParams(
+      chainId,
+      nWPunk.address,
+      EIP712_REVISION,
+      await nWPunk.name(),
+      user3.address,
+      wPunkGatewayProxy.address,
+      nonce,
+      deadline,
+      permitAmount
+    );
+
+    const ownerPrivateKey = testWallets[3].secretKey;
+
+    expect((await nWPunk.getApproved(1)).toString()).to.be.equal(
+      "0x0000000000000000000000000000000000000000"
+    );
+
+    const {v, r, s} = getSignatureFromTypedData(ownerPrivateKey, msgParams);
+
+    // withdraws with permit
     await waitForTx(
-      await dai
+      await wPunkGatewayProxy
         .connect(user3.signer)
-        ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "10000"))
+        .withdrawPunkWithPermit([1], user3.address, deadline, v, r, s)
     );
 
-    // approve protocol to access user3 wallet
-    await waitForTx(
-      await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    // repay dai loan
-    const repayTx = await pool
-      .connect(user3.signer)
-      .repay(
-        dai.address,
-        firstDaiDeposit,
-        RateMode.Variable,
-        user3.address,
-        false
-      );
-    await repayTx.wait();
-
-    const daiBalanceBefore = await dai.balanceOf(user3.address);
-    await ethers.utils.formatUnits(daiBalanceBefore, 18);
-
-    // withdraw DAI
-    const withdrawDAITx = await pool
-      .connect(user3.signer)
-      .withdraw(dai.address, secondDaiDeposit, user3.address);
-
-    await withdrawDAITx.wait();
-
-    await dai.balanceOf(user3.address);
+    expect(await wPunk.balanceOf(user3.address)).to.eq(0);
+    expect(await nWPunk.balanceOf(user3.address)).to.eq(0);
   });
-
-  // it("User 3 deposits WPUNK, signs signature and withdraws with permit", async () => {
-  //   const {
-  //     punk,
-  //     wPunk,
-  //     nWPunk,
-  //     users: [,, user3],
-  //     pool,
-  //     helpersContract,
-  //     wPunkGatewayProxy,
-  //   } = testEnv;
-  //   await waitForTx(await punk.connect(user3.signer).offerPunkForSale(0, 0));
-
-  //   console.log("before deposit ------------------- ");
-  //   // deposits WPUNK
-  //   await wPunkGatewayProxy
-  //     .connect(user3.signer)
-  //     .supplyPunk(pool.address, [[1, true]], user3.address, "0");
-
-  //   const nWPunkBalance = await nWPunk.balanceOf(user3.address);
-  //   expect(nWPunkBalance).to.be.equal(1);
-
-  //   console.log("before signature ------------------- ");
-  //   // signs signature
-  //   const chainId = hre.network.config.chainId || HARDHAT_CHAINID;
-  //   const deadline = MAX_UINT_AMOUNT;
-  //   const nonce = (await nWPunk.nonces(user3.address)).toNumber();
-  //   const permitAmount = "1";
-  //   const msgParams = buildPermitParams(
-  //     chainId,
-  //     nWPunk.address,
-  //     EIP712_REVISION,
-  //     await nWPunk.name(),
-  //     user3.address,
-  //     wPunkGatewayProxy.address,
-  //     nonce,
-  //     deadline,
-  //     permitAmount
-  //   );
-
-  //   const ownerPrivateKey = testWallets[0].secretKey;
-
-  //   console.log("before getApproved ------------------- ");
-  //   expect((await nWPunk.getApproved(1)).toString()).to.be.equal(
-  //     "0x0000000000000000000000000000000000000000"
-  //   );
-
-  //   const { v, r, s } = getSignatureFromTypedData(ownerPrivateKey, msgParams);
-
-  //   console.log("before withdraw ------------------- ");
-  //   // withdraws with permit
-  //   await waitForTx(
-  //     await wPunkGatewayProxy
-  //       .connect(user3.signer)
-  //       .withdrawPunkWithPermit(
-  //         pool.address,
-  //         [1],
-  //         user3.address,
-  //         deadline,
-  //         v,
-  //         r,
-  //         s
-  //       )
-  //   );
-  // });
 
   it("getWPunk address returns correct address", async () => {
     const {
@@ -490,6 +420,9 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
           2
         )
     );
+    expect(
+      await wPunk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+    ).to.equal(1);
 
     // PUNK
     await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](3));
@@ -501,6 +434,9 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
         .connect(user3.signer)
         .transferPunk(wPunkGatewayProxy.address, 3)
     );
+    expect(
+      await punk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+    ).to.equal(1);
   });
 
   it("Owner does emergency wpunk transfer of punk 2 to User 3", async () => {
@@ -508,13 +444,25 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       users: [, , user3],
       deployer,
       wPunkGatewayProxy,
+      wPunk,
     } = testEnv;
     const owner = deployer;
+
+    const userBalance = await wPunk
+      .connect(user3.signer)
+      .balanceOf(user3.address);
 
     await waitForTx(
       await wPunkGatewayProxy
         .connect(owner.signer)
         .emergencyTokenTransfer(wPunkGatewayProxy.address, user3.address, 2)
+    );
+    expect(
+      await wPunk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+    ).to.equal(0);
+
+    expect(await wPunk.connect(user3.signer).balanceOf(user3.address)).to.equal(
+      userBalance.add(1)
     );
   });
 
@@ -523,13 +471,25 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
       users: [, , user3],
       deployer,
       wPunkGatewayProxy,
+      punk,
     } = testEnv;
     const owner = deployer;
+
+    const userBalance = await punk
+      .connect(user3.signer)
+      .balanceOf(user3.address);
 
     await waitForTx(
       await wPunkGatewayProxy
         .connect(owner.signer)
         .emergencyPunkTransfer(user3.address, 3)
+    );
+    expect(
+      await punk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+    ).to.equal(0);
+
+    expect(await punk.connect(user3.signer).balanceOf(user3.address)).to.equal(
+      userBalance.add(1)
     );
   });
 });

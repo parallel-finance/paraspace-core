@@ -843,7 +843,7 @@ export const setUseAsCollateral = async (
     const txResult = await waitForTx(
       await pool
         .connect(user.signer)
-        .setUserUseReserveAsCollateral(reserve, useAsCollateralBool)
+        .setUserUseERC20AsCollateral(reserve, useAsCollateralBool)
     );
 
     const {txCost} = await getTxCostAndTimestamp(txResult);
@@ -877,7 +877,7 @@ export const setUseAsCollateral = async (
     await expect(
       pool
         .connect(user.signer)
-        .setUserUseReserveAsCollateral(reserve, useAsCollateralBool),
+        .setUserUseERC20AsCollateral(reserve, useAsCollateralBool),
       revertMessage
     ).to.be.reverted;
   }

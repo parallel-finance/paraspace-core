@@ -6,7 +6,7 @@ import {
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
-import {RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {makeSuite} from "./helpers/make-suite";
 import {ethers, network} from "hardhat";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
@@ -15,6 +15,7 @@ import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {VariableDebtToken__factory} from "../types";
 import {utils} from "ethers";
+import {isAssetInCollateral} from "./helpers/validated-steps";
 
 declare let hre: HardhatRuntimeEnvironment;
 
@@ -38,20 +39,23 @@ makeSuite("WETH GateWay", (testEnv) => {
   it("User 1 deposits 100 ETH", async () => {
     const {
       users: [user1],
-      pool,
+      pWETH,
       wETHGatewayProxy,
     } = testEnv;
 
     // User 1 deposits 1 ETH
+    const ethAmount = ethers.utils.parseEther("100.0");
     const ethValue = {
-      value: ethers.utils.parseEther("100.0"),
+      value: ethAmount,
     };
 
     await waitForTx(
       await wETHGatewayProxy
         .connect(user1.signer)
-        .depositETH(pool.address, user1.address, 0, ethValue)
+        .depositETH(user1.address, 0, ethValue)
     );
+
+    expect(await pWETH.balanceOf(user1.address)).to.eq(ethAmount);
   });
 
   it("User 2 deposits 10k DAI and User 1 borrows 8K DAI", async () => {
@@ -81,8 +85,6 @@ makeSuite("WETH GateWay", (testEnv) => {
         .supply(dai.address, firstDaiDeposit, user2.address, "0")
     );
 
-    // const debtBalanceBefore = await variableDebtDai.balanceOf(user1.address);
-
     // User 1 - Borrow dai
     const borrowAmount = await convertToCurrencyDecimals(dai.address, "8000");
 
@@ -97,10 +99,6 @@ makeSuite("WETH GateWay", (testEnv) => {
           user1.address
         )
     );
-
-    await variableDebtDai.balanceOf(user1.address);
-
-    await helpersContract.getUserReserveData(dai.address, user1.address);
   });
 
   it("User 1 tries to withdraw the deposited WETH without paying the accrued interest (should fail)", async () => {
@@ -115,11 +113,13 @@ makeSuite("WETH GateWay", (testEnv) => {
       "100"
     );
 
-    expect(
+    await expect(
       pool
         .connect(user1.signer)
         .withdraw(weth.address, amountETHtoWithdraw, user1.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("User 1 tries to withdraw the deposited WETH from collateral without paying the accrued interest (should fail)", async () => {
@@ -129,11 +129,13 @@ makeSuite("WETH GateWay", (testEnv) => {
       weth,
     } = testEnv;
 
-    expect(
+    await expect(
       pool
         .connect(user1.signer)
-        .setUserUseReserveAsCollateral(weth.address, false)
-    ).to.be.reverted;
+        .setUserUseERC20AsCollateral(weth.address, false)
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("User 1 adds 20K dai as collateral and then removes their WETH from collateral without paying the accrued interest", async () => {
@@ -146,9 +148,7 @@ makeSuite("WETH GateWay", (testEnv) => {
 
     // User 1 - Mints 20k dai
     await waitForTx(
-      await dai
-        .connect(user1.signer)
-        ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "20000"))
+      await dai.connect(user1.signer)["mint(uint256)"](secondDaiDeposit)
     );
 
     // User 1 - approves dai for pool
@@ -167,15 +167,17 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .setUserUseReserveAsCollateral(dai.address, true)
+        .setUserUseERC20AsCollateral(dai.address, true)
     );
 
     // User 1 - marks weth as not collateral
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .setUserUseReserveAsCollateral(weth.address, false)
+        .setUserUseERC20AsCollateral(weth.address, false)
     );
+
+    expect(await isAssetInCollateral(user1, weth.address)).to.be.false;
   });
 
   it("User 1 tries to remove the deposited dai from collateral without paying the accrued interest (should fail)", async () => {
@@ -185,11 +187,11 @@ makeSuite("WETH GateWay", (testEnv) => {
       pool,
     } = testEnv;
 
-    expect(
-      pool
-        .connect(user1.signer)
-        .setUserUseReserveAsCollateral(dai.address, false)
-    ).to.be.reverted;
+    await expect(
+      pool.connect(user1.signer).setUserUseERC20AsCollateral(dai.address, false)
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("User 1 pays the accrued interest and withdraw the deposited WETH and withdraw deposited DAI", async () => {
@@ -202,9 +204,7 @@ makeSuite("WETH GateWay", (testEnv) => {
       weth,
     } = testEnv;
     await waitForTx(
-      await dai
-        .connect(user1.signer)
-        ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "10000"))
+      await dai.connect(user1.signer)["mint(uint256)"](firstDaiDeposit)
     );
 
     // approve protocol to access user1 wallet
@@ -215,13 +215,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     // repay dai loan
     const repayTx = await pool
       .connect(user1.signer)
-      .repay(
-        dai.address,
-        MAX_UINT_AMOUNT,
-        RateMode.Variable,
-        user1.address,
-        false
-      );
+      .repay(dai.address, MAX_UINT_AMOUNT, RateMode.Variable, user1.address);
     await repayTx.wait();
 
     // withdraw WETH
@@ -231,9 +225,6 @@ makeSuite("WETH GateWay", (testEnv) => {
         .approve(wETHGatewayProxy.address, MAX_UINT_AMOUNT)
     );
 
-    // let punkBalance = await punk.balanceOf(user1.address);
-    // expect(punkBalance).to.be.equal(0);
-
     const amountETHtoWithdraw = await convertToCurrencyDecimals(
       weth.address,
       "100"
@@ -242,11 +233,11 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await wETHGatewayProxy
         .connect(user1.signer)
-        .withdrawETH(pool.address, amountETHtoWithdraw, user1.address)
+        .withdrawETH(amountETHtoWithdraw, user1.address)
     );
 
-    // punkBalance = await punk.balanceOf(user1.address);
-    // expect(punkBalance).to.be.equal(1);
+    expect(await weth.balanceOf(user1.address)).to.eq(0);
+    expect(await pWETH.balanceOf(user1.address)).to.eq(0);
 
     // withdrawing DAI
     await pool
@@ -255,7 +246,13 @@ makeSuite("WETH GateWay", (testEnv) => {
   });
 
   it("User 1 deposits WETH, signs signature and withdraws with permit", async () => {
-    const {pool, wETHGatewayProxy, deployer, pWETH} = testEnv;
+    const {
+      weth,
+      wETHGatewayProxy,
+      deployer,
+      pWETH,
+      users: [user1],
+    } = testEnv;
 
     // User 1 deposits 1 ETH
     const ethValue = {
@@ -265,7 +262,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await wETHGatewayProxy
         .connect(deployer.signer)
-        .depositETH(pool.address, deployer.address, 0, ethValue)
+        .depositETH(deployer.address, 0, ethValue)
     );
 
     // signs signature
@@ -293,16 +290,11 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await wETHGatewayProxy
         .connect(deployer.signer)
-        .withdrawETHWithPermit(
-          pool.address,
-          100,
-          deployer.address,
-          deadline,
-          v,
-          r,
-          s
-        )
+        .withdrawETHWithPermit(100, deployer.address, deadline, v, r, s)
     );
+
+    expect(await weth.balanceOf(user1.address)).to.eq(0);
+    expect(await pWETH.balanceOf(user1.address)).to.eq(0);
   });
 
   it("getWETH address returns correct address", async () => {
@@ -335,7 +327,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await wETHGatewayProxy
         .connect(user1.signer)
-        .depositETH(pool.address, user1.address, 0, ethValue)
+        .depositETH(user1.address, 0, ethValue)
     );
 
     // User 2 - Deposit dai
@@ -360,7 +352,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .setUserUseReserveAsCollateral(dai.address, true)
+        .setUserUseERC20AsCollateral(dai.address, true)
     );
   });
 
@@ -390,10 +382,11 @@ makeSuite("WETH GateWay", (testEnv) => {
     // User 2 - borrows 1 eth
     // https://docs.paraspace.com/developers/periphery-contracts/wethgateway#borroweth
     await waitForTx(
-      await wETHGatewayProxy
-        .connect(user2.signer)
-        .borrowETH(pool.address, amountETH, 2, 0)
+      await wETHGatewayProxy.connect(user2.signer).borrowETH(amountETH, 2, 0)
     );
+
+    expect(await weth.balanceOf(user2.address)).to.eq(0); // receives ETH
+    expect(await variableDebtToken.balanceOf(user2.address)).to.eq(amountETH);
   });
 
   it("User 2 repays 1 ETH", async () => {
@@ -420,8 +413,16 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await wETHGatewayProxy
         .connect(user2.signer)
-        .repayETH(pool.address, amountETHInterest, 2, user2.address, ethValue)
+        .repayETH(amountETHInterest, 2, user2.address, ethValue)
     );
+
+    const wethData = await pool.getReserveData(weth.address);
+    const variableDebtToken = VariableDebtToken__factory.connect(
+      wethData.variableDebtTokenAddress,
+      user2.signer
+    );
+
+    expect(await variableDebtToken.balanceOf(user2.address)).to.eq(0);
   });
 
   it("User 1 deposits 100 ETH", async () => {
@@ -439,7 +440,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await wETHGatewayProxy
         .connect(user1.signer)
-        .depositETH(pool.address, user1.address, 0, ethValue)
+        .depositETH(user1.address, 0, ethValue)
     );
   });
 
@@ -452,17 +453,18 @@ makeSuite("WETH GateWay", (testEnv) => {
     } = testEnv;
     const owner = deployer;
 
+    const userBalanceBefore = await weth.balanceOf(user1.address);
     const amountETHtoWithdraw = await convertToCurrencyDecimals(
       weth.address,
       "50"
     );
 
-    const wethGatewayBalance = await weth.balanceOf(wETHGatewayProxy.address);
     await waitForTx(
       await weth
         .connect(user1.signer)
         ["mint(address,uint256)"](wETHGatewayProxy.address, amountETHtoWithdraw)
     );
+    const gatewayBalanceBefore = await weth.balanceOf(wETHGatewayProxy.address);
 
     await waitForTx(
       await wETHGatewayProxy
@@ -472,6 +474,13 @@ makeSuite("WETH GateWay", (testEnv) => {
           user1.address,
           amountETHtoWithdraw
         )
+    );
+
+    expect(await weth.balanceOf(user1.address)).to.eq(
+      userBalanceBefore.add(amountETHtoWithdraw)
+    ); // receives wETH
+    expect(await weth.balanceOf(wETHGatewayProxy.address)).to.eq(
+      gatewayBalanceBefore.sub(amountETHtoWithdraw)
     );
   });
 
@@ -484,6 +493,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     } = testEnv;
     const owner = deployer;
 
+    const userBalanceBefore = await weth.balanceOf(user1.address);
     const amountETHtoWithdraw = await convertToCurrencyDecimals(
       weth.address,
       "50"
@@ -513,5 +523,7 @@ makeSuite("WETH GateWay", (testEnv) => {
         .connect(owner.signer)
         .emergencyEtherTransfer(user1.address, amountETHtoWithdraw)
     );
+
+    expect(await weth.balanceOf(user1.address)).to.eq(userBalanceBefore); // receives ETH
   });
 });

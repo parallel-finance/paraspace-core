@@ -57,31 +57,6 @@ makeSuite("Flash Claim Test", (testEnv) => {
     );
   });
 
-  it("supply bayc and mint ntoken", async function () {
-    const {
-      bayc,
-      nBAYC,
-      users: [user1],
-      pool,
-    } = testEnv;
-
-    // mint bayc
-    await bayc.connect(user1.signer)["mint(address)"](user1.address);
-    expect(await bayc.ownerOf(tokenId)).to.equal(user1.address);
-
-    // supply bayc and mint ntoken
-    await bayc.connect(user1.signer).setApprovalForAll(pool.address, true);
-    await pool
-      .connect(user1.signer)
-      .supplyERC721(
-        bayc.address,
-        [{tokenId: tokenId, useAsCollateral: true}],
-        user1.address,
-        0
-      );
-    expect(await nBAYC.ownerOf(tokenId)).to.equal(user1.address);
-  });
-
   it("user register receiver", async function () {
     const {
       users: [user1, user2],
@@ -99,6 +74,56 @@ makeSuite("Flash Claim Test", (testEnv) => {
       flashClaimReceiverAddr
     );
     expect(await flashClaimReceiver.owner()).to.be.equal(user1.address);
+  });
+
+  it("User cannot flash claim an airdrop if the asset is not supplied into the pool", async function () {
+    const {
+      users: [user1],
+      bayc,
+      pool,
+    } = testEnv;
+
+    // mint bayc
+    await bayc.connect(user1.signer)["mint(address)"](user1.address);
+    expect(await bayc.ownerOf(tokenId)).to.equal(user1.address);
+
+    const user_registry = await getUserFlashClaimRegistry();
+    await user_registry.connect(user1.signer).createReceiver();
+    const flashClaimReceiverAddr = await user_registry.userReceivers(
+      user1.address
+    );
+
+    expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          bayc.address,
+          [tokenId],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
+
+  it("supply bayc and mint ntoken", async function () {
+    const {
+      bayc,
+      nBAYC,
+      users: [user1],
+      pool,
+    } = testEnv;
+
+    // supply bayc and mint ntoken
+    await bayc.connect(user1.signer).setApprovalForAll(pool.address, true);
+    await pool
+      .connect(user1.signer)
+      .supplyERC721(
+        bayc.address,
+        [{tokenId: tokenId, useAsCollateral: true}],
+        user1.address,
+        0
+      );
+    expect(await nBAYC.ownerOf(tokenId)).to.equal(user1.address);
   });
 
   it("someone else can not flash claim airdrop", async function () {

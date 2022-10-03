@@ -1,7 +1,6 @@
 import {expect} from "chai";
 import {BigNumberish} from "ethers";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {RateMode} from "../deploy/helpers/types";
 import {
   PToken__factory,
   ERC20,
@@ -14,7 +13,7 @@ import {
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {makeSuite} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {setBlocktime, timeLatest, waitForTx} from "../deploy/helpers/misc-utils";
+import {waitForTx} from "../deploy/helpers/misc-utils";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {parseEther} from "ethers/lib/utils";

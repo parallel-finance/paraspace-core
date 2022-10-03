@@ -12,12 +12,20 @@ import {
   fund,
   approveTo,
 } from "../deploy/helpers/uniswapv3-helper";
-import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
+import {encodeSqrtRatioX96, NonfungiblePositionManager} from "@uniswap/v3-sdk";
 import {
   getUniswapV3Gateway,
   getUniswapV3OracleWrapper,
 } from "../deploy/helpers/contracts-getters";
-import {RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {
+  liquidateAndValidate,
+  switchCollateralAndValidate,
+  withdrawAndValidate,
+} from "./helpers/validated-steps";
+import {snapshot} from "./helpers/snapshot-manager";
+import {parseEther} from "ethers/lib/utils";
+import {ethers} from "hardhat";
 
 makeSuite("Uniswap V3", (testEnv) => {
   describe("Uniswap V3 NFT position control", () => {
@@ -28,7 +36,7 @@ makeSuite("Uniswap V3", (testEnv) => {
       await revertHead();
     });
 
-    it("User creates new Uniswap V3 pool and mints NFT [ @skip-on-coverage ]", async () => {
+    it("User creates new Uniswap V3 pool, mints and supplies NFT [ @skip-on-coverage ]", async () => {
       const {
         users: [user1],
         dai,
@@ -90,7 +98,6 @@ makeSuite("Uniswap V3", (testEnv) => {
       await nft.setApprovalForAll(uniswapV3Gateway.address, true);
 
       await uniswapV3Gateway.supplyUniswapV3(
-        ZERO_ADDRESS,
         [{tokenId: 1, useAsCollateral: true}],
         user1.address,
         {
@@ -125,19 +132,27 @@ makeSuite("Uniswap V3", (testEnv) => {
 
       const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
-      await nftPositionManager.connect(user1.signer).increaseLiquidity(
-        {
-          tokenId: 1,
-          amount0Desired: userDaiAmount,
-          amount1Desired: userWethAmount,
-          amount0Min: 0,
-          amount1Min: 0,
-          deadline: 2659537628,
-        },
-        {
-          gasLimit: 12_450_000,
-        }
+      const encodedData0 = nftPositionManager.interface.encodeFunctionData(
+        "increaseLiquidity",
+        [
+          {
+            tokenId: 1,
+            amount0Desired: userDaiAmount,
+            amount1Desired: userWethAmount,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 2659537628,
+          },
+        ]
       );
+
+      const Multicall = await ethers.getContractAt(
+        "IMulticall",
+        nftPositionManager.address
+      );
+      await Multicall.connect(user1.signer).multicall([encodedData0], {
+        gasLimit: 12_450_000,
+      });
 
       const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
@@ -150,7 +165,6 @@ makeSuite("Uniswap V3", (testEnv) => {
         dai,
         weth,
         nftPositionManager,
-        nUniswapV3,
       } = testEnv;
 
       const userDaiAmount = await convertToCurrencyDecimals(
@@ -166,27 +180,39 @@ makeSuite("Uniswap V3", (testEnv) => {
       const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
       const beforeBalance = await user1.signer.getBalance();
 
-      await nftPositionManager.connect(user1.signer).increaseLiquidity(
-        {
-          tokenId: 1,
-          amount0Desired: userDaiAmount,
-          amount1Desired: userWethAmount,
-          amount0Min: 0,
-          amount1Min: 0,
-          deadline: 2659537628,
-        },
+      const encodedData0 = nftPositionManager.interface.encodeFunctionData(
+        "increaseLiquidity",
+        [
+          {
+            tokenId: 1,
+            amount0Desired: userDaiAmount,
+            amount1Desired: userWethAmount,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 2659537628,
+          },
+        ]
+      );
+      const encodedData1 =
+        nftPositionManager.interface.encodeFunctionData("refundETH");
+
+      const Multicall = await ethers.getContractAt(
+        "IMulticall",
+        nftPositionManager.address
+      );
+      await Multicall.connect(user1.signer).multicall(
+        [encodedData0, encodedData1],
         {
           gasLimit: 12_450_000,
           value: userWethAmount,
         }
       );
-      await nftPositionManager.connect(user1.signer).refundETH();
 
       const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
       const afterBalance = await user1.signer.getBalance();
 
       expect(afterLiquidity).to.gt(beforeLiquidity);
-      //got refund
+      // user sent 20, so the remaining 10 are refunded back to the user
       almostEqual(beforeBalance.sub(afterBalance), userWethAmount.div(2));
     });
 
@@ -313,7 +339,7 @@ makeSuite("Uniswap V3", (testEnv) => {
     });
   });
 
-  describe("Uniswap V3 NFT borrow and liquidation logic", () => {
+  describe("Uniswap V3 NFT borrow, collateral and liquidation logic", () => {
     before(async () => {
       await setSnapshot();
     });
@@ -383,7 +409,6 @@ makeSuite("Uniswap V3", (testEnv) => {
       await nft.setApprovalForAll(uniswapV3Gateway.address, true);
 
       await uniswapV3Gateway.supplyUniswapV3(
-        ZERO_ADDRESS,
         [{tokenId: 1, useAsCollateral: true}],
         user1.address,
         {
@@ -449,19 +474,115 @@ makeSuite("Uniswap V3", (testEnv) => {
       );
     });
 
-    it("univ3 nft can be liquidated [ @skip-on-coverage ]", async () => {
+    it("remove some univ3 liquidity from collateral [ @skip-on-coverage ]", async () => {
       const {
-        users: [user1, liquidator],
-        dai,
-        weth,
-        pool,
-        oracle,
-        nftPositionManager,
+        users: [user1],
         nUniswapV3,
       } = testEnv;
 
+      await nUniswapV3
+        .connect(user1.signer)
+        .decreaseUniswapV3Liquidity(1, parseEther("1"), 0, 0, false, {
+          gasLimit: 12_450_000,
+        });
+    });
+
+    it("try to remove univ3 liquidity from collateral beyond LTV (should be reverted) [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        nUniswapV3,
+        nftPositionManager,
+      } = testEnv;
+      // get current liquidity
+      const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+
+      await expect(
+        nUniswapV3
+          .connect(user1.signer)
+          .decreaseUniswapV3Liquidity(
+            1,
+            beforeLiquidity.mul(2).div(3),
+            0,
+            0,
+            false,
+            {
+              gasLimit: 12_450_000,
+            }
+          )
+      ).to.be.revertedWith(
+        ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+      );
+    });
+
+    it("UniswapV3 asset cannot be auctionable [ @skip-on-coverage ]", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        oracle,
+        dai,
+        weth,
+        nftPositionManager,
+        nUniswapV3,
+      } = testEnv;
       await oracle.setAssetPrice(dai.address, "100000000000000"); //weth = 10000 dai
 
+      const ethAmount = await convertToCurrencyDecimals(weth.address, "6");
+      await fund({token: weth, user: liquidator, amount: ethAmount});
+      await approveTo({
+        target: pool.address,
+        token: weth,
+        user: liquidator,
+      });
+
+      const user1Balance = await nUniswapV3.balanceOf(borrower.address);
+      const liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
+      expect(user1Balance).to.eq(1);
+      expect(liquidatorBalance).to.eq(0);
+
+      // try to start auction
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, nftPositionManager.address, 1)
+      ).to.be.revertedWith(ProtocolErrors.AUCTION_NOT_ENABLED);
+    });
+
+    it("univ3 nft can be liquidated - receive UniswapV3 [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1, liquidator],
+        nftPositionManager,
+        weth,
+      } = testEnv;
+      const preLiquidationSnapshot = await snapshot.take();
+
+      await liquidateAndValidate(
+        nftPositionManager,
+        weth,
+        "6",
+        liquidator,
+        user1,
+        false,
+        1
+      );
+
+      const user1Balance = await nftPositionManager.balanceOf(user1.address);
+      const liquidatorBalance = await nftPositionManager.balanceOf(
+        liquidator.address
+      );
+      expect(user1Balance).to.eq(0);
+      expect(liquidatorBalance).to.eq(1);
+
+      await snapshot.revert(preLiquidationSnapshot);
+    });
+
+    it("univ3 nft can be liquidated - receive nToken [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1, liquidator],
+        weth,
+        pool,
+        nftPositionManager,
+        nUniswapV3,
+      } = testEnv;
       const ethAmount = await convertToCurrencyDecimals(weth.address, "6");
       await fund({token: weth, user: liquidator, amount: ethAmount});
       await approveTo({
@@ -492,6 +613,36 @@ makeSuite("Uniswap V3", (testEnv) => {
       liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
       expect(user1Balance).to.eq(0);
       expect(liquidatorBalance).to.eq(1);
+    });
+
+    it("liquidator can remove nUniswapV3 from collateral [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1, liquidator],
+        nftPositionManager,
+      } = testEnv;
+
+      await switchCollateralAndValidate(
+        liquidator,
+        nftPositionManager,
+        false,
+        1
+      );
+    });
+
+    it("liquidator can withdraw the nUniswapV3 [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1, liquidator],
+        nUniswapV3,
+        nftPositionManager,
+      } = testEnv;
+      const liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address); // 1
+
+      await withdrawAndValidate(
+        nftPositionManager,
+        liquidatorBalance.toString(),
+        liquidator,
+        1
+      );
     });
   });
 });

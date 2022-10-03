@@ -37,7 +37,9 @@ makeSuite("ParaSpaceOracle", (testEnv: TestEnv) => {
     expect(await paraspaceOracle.getSourceOfAsset(mockToken.address)).to.be.eq(
       ZERO_ADDRESS
     );
-    expect(paraspaceOracle.getAssetPrice(mockToken.address)).to.be.reverted;
+    await expect(
+      paraspaceOracle.getAssetPrice(mockToken.address)
+    ).to.be.revertedWith("price not ready");
 
     // Add asset source
     expect(
@@ -173,7 +175,9 @@ makeSuite("ParaSpaceOracle", (testEnv: TestEnv) => {
     expect(await paraspaceOracle.getSourceOfAsset(mockToken.address)).to.be.eq(
       zeroPriceMockAgg.address
     );
-    expect(paraspaceOracle.getAssetPrice(mockToken.address)).to.be.reverted;
+    await expect(
+      paraspaceOracle.getAssetPrice(mockToken.address)
+    ).to.be.revertedWith("price not ready");
   });
 
   it("Get price of asset with 0 price but non-zero fallback price", async () => {

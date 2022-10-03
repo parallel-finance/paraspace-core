@@ -1,384 +1,197 @@
 import {expect} from "chai";
+import {getMockAggregator} from "../deploy/helpers/contracts-getters";
+import {makeSuite} from "./helpers/make-suite";
+import {
+  borrowAndValidate,
+  changePriceAndValidate,
+  liquidateAndValidate,
+  liquidateAndValidateReverted,
+  supplyAndValidate,
+  switchCollateralAndValidate,
+  withdrawAndValidate,
+} from "./helpers/validated-steps";
+import {snapshot} from "./helpers/snapshot-manager";
+import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {getMockAggregator} from "../deploy/helpers/contracts-getters";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
-import {RateMode} from "../deploy/helpers/types";
-import {makeSuite} from "./helpers/make-suite";
-import {liquidateAndValidate} from "./helpers/validated-steps";
+import {ProtocolErrors} from "../deploy/helpers/types";
 
-makeSuite("Liquidation", (testEnv) => {
-  let borrowerDaiDeposit;
-  let liquidatorDaiDeposit;
+let snapthotId: string;
 
-  before("Initialize Depositors", async () => {
-    const {dai} = testEnv;
-    borrowerDaiDeposit = await convertToCurrencyDecimals(dai.address, "5000");
-    liquidatorDaiDeposit = await convertToCurrencyDecimals(
-      dai.address,
-      "100000"
-    );
-
-    // assure asset prices for correct health factor calculations
-    const baycAgg = await getMockAggregator(undefined, "BAYC");
-    await baycAgg.updateLatestAnswer("101000000000000000000");
-    const daiAgg = await getMockAggregator(undefined, "DAI");
-    await daiAgg.updateLatestAnswer("908578801039414");
-  });
-
-  it("Borrower deposits 3 BAYC and 5k DAI", async () => {
-    const {
-      bayc,
-      nBAYC,
-      users: [borrower],
-      pool,
-      dai,
-    } = testEnv;
-
-    for (let i = 0; i < 3; i++) {
-      await waitForTx(
-        await bayc.connect(borrower.signer)["mint(address)"](borrower.address)
-      );
-    }
-
-    await waitForTx(
-      await bayc.connect(borrower.signer).setApprovalForAll(pool.address, true)
-    );
-
-    // supplies 2 NFTs, one used as collateral
-    await pool.connect(borrower.signer).supplyERC721(
-      bayc.address,
-      [
-        {tokenId: 0, useAsCollateral: true},
-        {tokenId: 1, useAsCollateral: false},
-        {tokenId: 2, useAsCollateral: false},
-      ],
-      borrower.address,
-      "0"
-    );
-
-    const nBaycBalance = await nBAYC.balanceOf(borrower.address);
-    expect(nBaycBalance).to.be.equal(3);
-
-    await waitForTx(
-      await dai
-        .connect(borrower.signer)
-        ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "40000"))
-    );
-
-    // approve protocol to access depositor wallet
-    await waitForTx(
-      await dai.connect(borrower.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    // User 1 - Deposit dai
-    await waitForTx(
-      await pool
-        .connect(borrower.signer)
-        .supply(dai.address, borrowerDaiDeposit, borrower.address, "0")
-    );
-  });
-
-  it("Liquidator deposits 100k DAI and 10 wETH", async () => {
-    const {
-      weth,
-      users: [, liquidator],
-      pool,
-      dai,
-    } = testEnv;
-
-    await waitForTx(
-      await weth
-        .connect(liquidator.signer)
-        ["mint(uint256)"](await convertToCurrencyDecimals(weth.address, "1000"))
-    );
-
-    await waitForTx(
-      await weth
-        .connect(liquidator.signer)
-        .approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(liquidator.signer)
-        .supply(
-          weth.address,
-          await convertToCurrencyDecimals(weth.address, "10"),
-          liquidator.address,
-          "0"
-        )
-    );
-
-    await waitForTx(
-      await dai
-        .connect(liquidator.signer)
-        ["mint(uint256)"](
-          await convertToCurrencyDecimals(dai.address, "200000")
-        )
-    );
-
-    // approve protocol to access depositor wallet
-    await waitForTx(
-      await dai
-        .connect(liquidator.signer)
-        .approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    // Liquidator - Deposit dai
-    await waitForTx(
-      await pool
-        .connect(liquidator.signer)
-        .supply(dai.address, liquidatorDaiDeposit, liquidator.address, "0")
-    );
-  });
-
-  it("Borrower borrows 15k DAI", async () => {
-    const {
-      users: [borrower],
-      pool,
-      dai,
-    } = testEnv;
-
-    // User 1 - Borrow dai
-    const borrowAmount = await convertToCurrencyDecimals(dai.address, "15000");
-
-    await waitForTx(
-      await pool
-        .connect(borrower.signer)
-        .borrow(
-          dai.address,
-          borrowAmount,
-          RateMode.Variable,
-          "0",
-          borrower.address
-        )
-    );
-  });
-
-  it("Liquidator tries to liquidate a healthy position (should be reverted)", async () => {
+makeSuite("Liquidation Tests", (testEnv) => {
+  before("Setup Borrower and Liquidator positions", async () => {
     const {
       users: [borrower, liquidator],
-      pool,
+      bayc,
       dai,
+      weth,
+    } = testEnv;
+
+    // assure asset prices for correct health factor calculations
+    await changePriceAndValidate(bayc, "101");
+
+    const daiAgg = await getMockAggregator(undefined, "DAI");
+    await daiAgg.updateLatestAnswer("908578801039414");
+
+    // Borrower deposits 3 BAYC and 5k DAI
+    await supplyAndValidate(bayc, "3", borrower, true);
+
+    await supplyAndValidate(dai, "5000", borrower, true);
+    // use only one BAYC as collateral
+    await switchCollateralAndValidate(borrower, bayc, false, 1);
+    await switchCollateralAndValidate(borrower, bayc, false, 2);
+
+    // Liquidator deposits 100k DAI and 10 wETH
+    await supplyAndValidate(weth, "10", liquidator, true, "1000");
+    await supplyAndValidate(dai, "100000", liquidator, true, "200000");
+
+    // Borrower borrows 15k DAI
+    await borrowAndValidate(dai, "15000", borrower);
+  });
+
+  beforeEach("Take Blockchain Snapshot", async () => {
+    snapthotId = await snapshot.take();
+  });
+
+  afterEach("Revert Blockchain to Snapshot", async () => {
+    await snapshot.revert(snapthotId);
+  });
+
+  it("Liquidator tries to liquidate ERC-20 on a healthy position [HF ~ 1.0 - 1.1] (should be reverted)", async () => {
+    const {
+      users: [borrower, liquidator],
+      dai,
+      bayc,
     } = testEnv;
 
     // drop BAYC price to near liquidation limit (HF ~ 1.0 - 1.1)
-    const agg = await getMockAggregator(undefined, "BAYC");
-    await agg.updateLatestAnswer(parseEther("15").toString());
+    await changePriceAndValidate(bayc, "15");
 
-    expect(
-      pool
-        .connect(liquidator.signer)
-        .liquidationCall(
-          dai.address,
-          dai.address,
-          borrower.address,
-          parseEther("1000").toString(),
-          false
-        )
-    ).to.be.reverted;
-  });
-
-  it("BAYC price drops enough so that borrower becomes eligible for liquidation", async () => {
-    const agg = await getMockAggregator(undefined, "BAYC");
-    await agg.updateLatestAnswer(parseEther("12").toString());
+    await liquidateAndValidateReverted(
+      dai,
+      dai,
+      "1000",
+      liquidator,
+      borrower,
+      false,
+      ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+    );
   });
 
   it("Liquidator attempts to liquidate ERC-721 first (should be reverted)", async () => {
     const {
       users: [borrower, liquidator],
-      pool,
       bayc,
       dai,
     } = testEnv;
-    expect(
-      pool
-        .connect(liquidator.signer)
-        .liquidationERC721(
-          bayc.address,
-          dai.address,
-          borrower.address,
-          0,
-          parseEther("12").toString(),
-          false
-        )
-    ).to.be.reverted;
+
+    // BAYC price drops enough so that borrower becomes eligible for liquidation
+    await changePriceAndValidate(bayc, "12");
+
+    await liquidateAndValidateReverted(
+      bayc,
+      dai,
+      "12",
+      liquidator,
+      borrower,
+      false,
+      ProtocolErrors.AUCTION_NOT_STARTED
+    );
   });
 
   it("Liquidator partially liquidates ERC-20 - receives asset", async () => {
     const {
       users: [borrower, liquidator],
-    } = testEnv;
-
-    await liquidateAndValidate(
-      "DAI",
-      "DAI",
-      "1000",
-      liquidator,
-      borrower,
-      false
-    );
-  });
-
-  it("Liquidator insists on liquidating the ERC-721 (should be reverted)", async () => {
-    const {
-      users: [borrower, liquidator],
-      pool,
       bayc,
       dai,
     } = testEnv;
-    expect(
-      pool
-        .connect(liquidator.signer)
-        .liquidationERC721(
-          bayc.address,
-          dai.address,
-          borrower.address,
-          0,
-          parseEther("12").toString(),
-          false
-        )
-    ).to.be.reverted;
+
+    // BAYC price drops enough so that borrower becomes eligible for liquidation
+    await changePriceAndValidate(bayc, "12");
+
+    await liquidateAndValidate(dai, dai, "1000", liquidator, borrower, false);
   });
 
   it("Liquidator fully liquidates ERC-20 - receives pToken", async () => {
     const {
       users: [borrower, liquidator],
+      dai,
+      bayc,
     } = testEnv;
 
-    await liquidateAndValidate(
-      "DAI",
-      "DAI",
-      "40000",
-      liquidator,
-      borrower,
-      true
-    );
+    // BAYC price drops enough so that borrower becomes eligible for liquidation
+    await changePriceAndValidate(bayc, "12");
+
+    await liquidateAndValidate(dai, dai, "40000", liquidator, borrower, true);
   });
 
-  it("Not the best day for BAYC, price drops even more, and borrower's NFT becomes eligible for liquidation", async () => {
-    const agg = await getMockAggregator(undefined, "BAYC");
-    await agg.updateLatestAnswer(parseEther("8").toString());
-  });
-
-  it("Liquidator liquidates the ERC-721 - gets NFT", async () => {
+  it("Liquidator liquidates the ERC-721 with non-borrowed token - gets NFT", async () => {
     const {
       users: [borrower, liquidator],
       pool,
       bayc,
       nBAYC,
+      dai,
+      weth,
     } = testEnv;
 
+    // NFT HF < 1 borrower's NFT becomes eligible for liquidation
+    await changePriceAndValidate(bayc, "8");
+
+    // start auction
     await waitForTx(
       await pool
         .connect(liquidator.signer)
         .startAuction(borrower.address, bayc.address, 0)
     );
-
     const {startTime, tickLength} = await pool.getAuctionData(nBAYC.address, 0);
-    // price drops to 1 * floor price
     await setBlocktime(
       startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
     );
+    expect((await nBAYC.getAuctionData(0)).startTime).to.be.gt(0);
 
-    await liquidateAndValidate(
-      "BAYC",
-      "WETH",
-      "1000",
-      liquidator,
-      borrower,
-      false
-    );
+    await liquidateAndValidate(bayc, weth, "1000", liquidator, borrower, false);
 
     expect(await (await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
-  });
 
-  it("Borrower tries to withdraw the deposited BAYC after liquidation (should fail)", async () => {
-    const {
-      bayc,
-      users: [borrower],
-      pool,
-    } = testEnv;
-
-    expect(
+    // Borrower tries to withdraw the deposited BAYC after liquidation (should fail)
+    await expect(
       pool
         .connect(borrower.signer)
         .withdrawERC721(bayc.address, [0], borrower.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith("not the owner of Ntoken");
+
+    // Liquidator tries to liquidate same NFT again (should fail)
+    await liquidateAndValidateReverted(
+      bayc,
+      dai,
+      "10000",
+      liquidator,
+      borrower,
+      false,
+      ProtocolErrors.AUCTION_NOT_STARTED,
+      1
+    );
   });
 
-  it("Liquidator tries to liquidate same NFT again (should fail)", async () => {
+  it("Liquidator liquidates ERC-721 (pays debt partially) with borrowed token - gets nToken", async () => {
     const {
-      bayc,
       users: [borrower, liquidator],
-      pool,
-      dai,
-    } = testEnv;
-
-    expect(
-      pool
-        .connect(liquidator.signer)
-        .liquidationERC721(
-          bayc.address,
-          dai.address,
-          borrower.address,
-          1,
-          parseEther("10000").toString(),
-          true
-        )
-    ).to.be.reverted;
-  });
-
-  it("Murphys law, after being liquidated BAYC price now recovers", async () => {
-    const agg = await getMockAggregator(undefined, "BAYC");
-    await agg.updateLatestAnswer(parseEther("120").toString());
-  });
-
-  it("Borrower places the 2 NFTs left in collateral and borrows 60k DAI", async () => {
-    const {
-      bayc,
-      users: [borrower],
-      pool,
-      dai,
-    } = testEnv;
-    await waitForTx(
-      await pool
-        .connect(borrower.signer)
-        .setUserUseERC721AsCollateral(bayc.address, [1, 2], true)
-    );
-
-    const borrowAmount = await convertToCurrencyDecimals(dai.address, "60000");
-
-    await waitForTx(
-      await pool
-        .connect(borrower.signer)
-        .borrow(
-          dai.address,
-          borrowAmount,
-          RateMode.Variable,
-          "0",
-          borrower.address
-        )
-    );
-  });
-
-  it("NFT price drops again", async () => {
-    const agg = await getMockAggregator(undefined, "BAYC");
-    await agg.updateLatestAnswer(parseEther("10").toString());
-  });
-
-  it("Liquidator liquidates ERC-721 (pays debt partially) - gets nToken", async () => {
-    const {
-      deployer,
+      nBAYC,
       configurator,
-      // pool,
+      deployer,
       bayc,
-      // nBAYC,
-      users: [borrower, liquidator],
+      dai,
     } = testEnv;
+
+    // borrower places another 2 NFTs in collateral and borrows 60k DAI
+    await switchCollateralAndValidate(borrower, bayc, true, 1);
+    await switchCollateralAndValidate(borrower, bayc, true, 2);
+
+    await borrowAndValidate(dai, "60000", borrower);
+
+    // drop NFT price
+    await changePriceAndValidate(bayc, "10");
 
     await waitForTx(
       await configurator
@@ -386,33 +199,39 @@ makeSuite("Liquidation", (testEnv) => {
         .configureReserveAsAuctionCollateral(
           bayc.address,
           false,
-          "1500000000000000000"
+          parseEther("1.5")
         )
     );
 
+    // verify NFT is available for auction
+    expect(await nBAYC.isAuctioned(1));
+
     await liquidateAndValidate(
-      "BAYC",
-      "DAI",
+      bayc,
+      dai,
       "80000",
       liquidator,
       borrower,
       true,
       1
     );
+
+    // verify NFT is no longer available for auction
+    expect(await nBAYC.isAuctioned(1)).not;
   });
 
-  it("NFT price rises enough to cover full debt", async () => {
-    const agg = await getMockAggregator(undefined, "BAYC");
-    await agg.updateLatestAnswer(parseEther("65").toString());
-  });
-
-  it("Liquidator liquidates the remaining ERC-721 (pays full debt) - gets NFT", async () => {
+  it("Liquidator liquidates ERC-721 (pays full debt) with borrowed token - gets NFT", async () => {
     const {
-      deployer,
-      configurator,
-      bayc,
       users: [borrower, liquidator],
+      nBAYC,
+      bayc,
+      dai,
+      configurator,
+      deployer,
     } = testEnv;
+
+    // drop BAYC price
+    await changePriceAndValidate(bayc, "5");
 
     await waitForTx(
       await configurator
@@ -420,18 +239,154 @@ makeSuite("Liquidation", (testEnv) => {
         .configureReserveAsAuctionCollateral(
           bayc.address,
           false,
-          "1500000000000000000"
+          parseEther("1.5")
         )
     );
 
+    // verify NFT is available for auction
+    expect(await nBAYC.isAuctioned(0));
+
     await liquidateAndValidate(
-      "BAYC",
-      "DAI",
+      bayc,
+      dai,
       "80000",
       liquidator,
       borrower,
       false,
-      2
+      0
     );
+
+    // verify NFT is no longer available for auction
+    expect(await nBAYC.isAuctioned(0)).not;
+  });
+
+  it("Liquidate borrower with 1 NFT and multiple borrow position", async () => {
+    const {
+      users: [borrower, liquidator],
+      bayc,
+      nBAYC,
+      dai,
+      weth,
+      configurator,
+      deployer,
+    } = testEnv;
+
+    // leave only 1 NFT
+    await withdrawAndValidate(bayc, "1", borrower, 1);
+    await withdrawAndValidate(bayc, "1", borrower, 2);
+
+    // borrow more ERC-20
+    await borrowAndValidate(dai, "150", borrower);
+    await borrowAndValidate(weth, "1", borrower);
+
+    // drop BAYC price
+    await changePriceAndValidate(bayc, "5");
+
+    await waitForTx(
+      await configurator
+        .connect(deployer.signer)
+        .configureReserveAsAuctionCollateral(
+          bayc.address,
+          false,
+          parseEther("1.5")
+        )
+    );
+
+    await liquidateAndValidate(
+      bayc,
+      dai,
+      "80000",
+      liquidator,
+      borrower,
+      false,
+      0
+    );
+
+    expect((await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
+  });
+
+  it("Liquidate borrower with multiple NFTs and 1 borrow position", async () => {
+    const {
+      users: [borrower, liquidator],
+      configurator,
+      deployer,
+      dai,
+      bayc,
+      nBAYC,
+    } = testEnv;
+
+    // use all BAYCs as collateral
+    await switchCollateralAndValidate(borrower, bayc, true, 1);
+    await switchCollateralAndValidate(borrower, bayc, true, 2);
+
+    // drop BAYC price
+    await changePriceAndValidate(bayc, "1");
+
+    await waitForTx(
+      await configurator
+        .connect(deployer.signer)
+        .configureReserveAsAuctionCollateral(
+          bayc.address,
+          false,
+          parseEther("1.5")
+        )
+    );
+
+    await liquidateAndValidate(
+      bayc,
+      dai,
+      "80000",
+      liquidator,
+      borrower,
+      false,
+      0
+    );
+
+    expect((await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
+  });
+
+  it("Liquidate borrower with multiple NFTs and multiple borrow positions", async () => {
+    const {
+      users: [borrower, liquidator],
+      configurator,
+      deployer,
+      bayc,
+      nBAYC,
+      dai,
+      weth,
+    } = testEnv;
+
+    // use all BAYCs as collateral
+    await switchCollateralAndValidate(borrower, bayc, true, 1);
+    await switchCollateralAndValidate(borrower, bayc, true, 2);
+
+    // borrow more ERC-20
+    await borrowAndValidate(dai, "150", borrower);
+    await borrowAndValidate(weth, "1", borrower);
+
+    // drop BAYC price
+    await changePriceAndValidate(bayc, "2");
+
+    await waitForTx(
+      await configurator
+        .connect(deployer.signer)
+        .configureReserveAsAuctionCollateral(
+          bayc.address,
+          false,
+          parseEther("1.5")
+        )
+    );
+
+    await liquidateAndValidate(
+      bayc,
+      dai,
+      "80000",
+      liquidator,
+      borrower,
+      false,
+      0
+    );
+
+    expect((await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
   });
 });

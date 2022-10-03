@@ -78,7 +78,7 @@ makeSuite("Pool: Drop Reserve", (testEnv: TestEnv) => {
     expect(
       await pool
         .connect(user1.signer)
-        .repay(dai.address, MAX_UINT_AMOUNT, 2, user1.address, false)
+        .repay(dai.address, MAX_UINT_AMOUNT, 2, user1.address)
     );
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO

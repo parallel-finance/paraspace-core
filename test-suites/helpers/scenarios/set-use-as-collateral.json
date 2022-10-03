@@ -1,6 +1,6 @@
 {
   "title": "Pool: Usage as collateral",
-  "description": "Test cases for the setUserUseReserveAsCollateral() function.",
+  "description": "Test cases for the setUserUseERC20AsCollateral() function.",
   "stories": [
     {
       "description": "User 0 Deposits 1000 DAI, disables DAI as collateral",

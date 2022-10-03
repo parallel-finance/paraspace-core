@@ -6,6 +6,8 @@ import {
 } from "../deploy/helpers/contracts-helpers";
 import {makeSuite} from "./helpers/make-suite";
 import {ethers} from "hardhat";
+import {expect} from "chai";
+import {MockAggregator} from "../types";
 
 makeSuite("Price Oracle update", (testEnv) => {
   let firstDaiDeposit;
@@ -56,8 +58,8 @@ makeSuite("Price Oracle update", (testEnv) => {
     await ethers.provider.listAccounts();
 
     const newMockAggregator = await ethers.getContractFactory("MockAggregator");
-    const newMockAggregatorDeployed =
-      newMockAggregator.deploy(3690684128600000);
+    const newPrice = 3690684128600000;
+    const newMockAggregatorDeployed = newMockAggregator.deploy(newPrice);
     const newMockAggregatorDeployedAddress = (await newMockAggregatorDeployed)
       .address;
 
@@ -66,6 +68,17 @@ makeSuite("Price Oracle update", (testEnv) => {
         .connect(deployer)
         .setAssetSources([dai.address], [newMockAggregatorDeployedAddress])
     );
+
+    // read from aggregator
+    const newDaiPrice = await (
+      (await newMockAggregatorDeployed) as MockAggregator
+    ).latestAnswer();
+    expect(newDaiPrice).to.eq(newPrice);
+    // read new price from oracle
+    const daiPrice = await paraspaceOracle
+      .connect(deployer)
+      .getAssetPrice(dai.address);
+    expect(newDaiPrice).to.eq(daiPrice);
 
     // User 1 - Deposit dai
     await waitForTx(

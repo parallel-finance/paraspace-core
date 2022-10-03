@@ -120,6 +120,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getFrozen()).to.be.false;
     expect(await configMock.setFrozen(true));
@@ -130,6 +131,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getFrozen()).to.be.true;
     expect(await configMock.setFrozen(false));
@@ -139,8 +141,42 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getFrozen()).to.be.false;
+  });
+
+  it("setAssetType and getAssetType", async () => {
+    expect(await configMock.getFlags()).to.be.eql([
+      false,
+      false,
+      false,
+      false,
+      false,
+      0,
+    ]);
+    expect(await configMock.getAssetType()).to.be.eq(0);
+
+    expect(await configMock.setAssetType(1));
+    // frozen is the 2nd flag
+    expect(await configMock.getFlags()).to.be.eql([
+      false,
+      false,
+      false,
+      false,
+      false,
+      1,
+    ]);
+    expect(await configMock.getAssetType()).to.be.eq(1);
+    expect(await configMock.setAssetType(0));
+    expect(await configMock.getFlags()).to.be.eql([
+      false,
+      false,
+      false,
+      false,
+      false,
+      0,
+    ]);
   });
 
   it("getBorrowingEnabled()", async () => {
@@ -150,6 +186,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.false;
     expect(await configMock.setBorrowingEnabled(true));
@@ -160,6 +197,7 @@ describe("ReserveConfiguration", async () => {
       true,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.true;
     expect(await configMock.setBorrowingEnabled(false));
@@ -169,10 +207,10 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.false;
   });
-
   it("getStableRateBorrowingEnabled()", async () => {
     expect(await configMock.getFlags()).to.be.eql([
       false,
@@ -180,6 +218,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getStableRateBorrowingEnabled()).to.be.false;
     expect(await configMock.setStableRateBorrowingEnabled(true));
@@ -190,6 +229,7 @@ describe("ReserveConfiguration", async () => {
       false,
       true,
       false,
+      0,
     ]);
     expect(await configMock.getStableRateBorrowingEnabled()).to.be.true;
     expect(await configMock.setStableRateBorrowingEnabled(false));
@@ -199,6 +239,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      0,
     ]);
     expect(await configMock.getStableRateBorrowingEnabled()).to.be.false;
   });

@@ -1,148 +1,53 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
+import {formatEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
-import {RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {makeSuite} from "./helpers/make-suite";
+import {
+  borrowAndValidate,
+  mintAndValidate,
+  repayAndValidate,
+  supplyAndValidate,
+  switchCollateralAndValidate,
+  withdrawAndValidate,
+} from "./helpers/validated-steps";
 
 makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
   let firstDaiDeposit;
   let secondDaiDeposit;
-  // let thirdDaiDeposit;
+  let accruedInterest = BigNumber.from(0);
   const daiPrice = BigNumber.from(MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI);
 
   before("Initialize Depositors", async () => {
-    const {dai} = testEnv;
-    firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
-    secondDaiDeposit = await convertToCurrencyDecimals(dai.address, "20000");
-    await convertToCurrencyDecimals(dai.address, "50000");
+    firstDaiDeposit = "10000";
+    secondDaiDeposit = "20000";
   });
 
   it("User 2 deposits 10k DAI", async () => {
     const {
       dai,
       users: [, user2],
-      pool,
     } = testEnv;
 
-    await waitForTx(
-      await dai
-        .connect(user2.signer)
-        ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "10000"))
-    );
-
-    // approve protocol to access user2 wallet
-    await waitForTx(
-      await dai.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
     // User 2 - Deposit dai
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .supply(dai.address, firstDaiDeposit, user2.address, "0")
-    );
+    await supplyAndValidate(dai, firstDaiDeposit, user2, true);
   });
 
   it("User 1 deposits 20k DAI and borrows 8K DAI", async () => {
     const {
       dai,
-      pDai,
-      variableDebtDai,
       users: [user1],
-      pool,
     } = testEnv;
 
-    const depositAmount = "20000";
-    await waitForTx(
-      await dai
-        .connect(user1.signer)
-        ["mint(uint256)"](
-          await convertToCurrencyDecimals(dai.address, depositAmount)
-        )
-    );
-
-    // User1 has no balance in collateral
-    const totalCollateral = (await pool.getUserAccountData(user1.address))
-      .totalCollateralBase;
-    expect(totalCollateral).to.be.equal(0);
-
-    // approve protocol to access user1 wallet
-    await waitForTx(
-      await dai.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    // User 1 - available to borrow without suppliying should be 0
-    const availableToBorrow = (await pool.getUserAccountData(user1.address))
-      .availableBorrowsBase;
-    expect(availableToBorrow).to.be.equal(0);
-
     // User 1 - Deposit dai
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .supply(dai.address, secondDaiDeposit, user1.address, "0")
-    );
-
-    // DAI is as collateral
-    const newTotalCollateral = (await pool.getUserAccountData(user1.address))
-      .totalCollateralBase;
-    const depositedUSD = BigNumber.from(depositAmount).mul(daiPrice);
-    expect(newTotalCollateral).to.be.eq(depositedUSD);
-
-    // User 1 - available to borrow should be the supplied amount * dai LTV ratio
-    const availableToBorrowAfterSupply = (
-      await pool.getUserAccountData(user1.address)
-    ).availableBorrowsBase;
-    expect(availableToBorrowAfterSupply).to.be.eq(
-      depositedUSD.mul(BigNumber.from(75)).div(BigNumber.from(100))
-    );
-
-    // check pToken balance is the deposited amount
-    const pDaiBalance = await pDai.balanceOf(user1.address);
-    expect(pDaiBalance).to.be.equal(secondDaiDeposit);
-
-    // check DAI balance is 0 (has been subtracted the deposited amount)
-    const daiBalance = await dai.balanceOf(user1.address);
-    expect(daiBalance).to.be.equal(0);
+    await supplyAndValidate(dai, secondDaiDeposit, user1, true);
 
     // User 1 - Borrow dai
-    const borrowAmount = "8000";
-    const borrowAmountBaseUnits = await convertToCurrencyDecimals(
-      dai.address,
-      "8000"
-    );
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .borrow(
-          dai.address,
-          borrowAmountBaseUnits,
-          RateMode.Variable,
-          "0",
-          user1.address
-        )
-    );
-
-    // User 1 - Available to borrow should have decreased in the borrowed amount
-    const availableToBorrowAfterBorrow = (
-      await pool.getUserAccountData(user1.address)
-    ).availableBorrowsBase;
-    expect(availableToBorrowAfterBorrow).to.be.eq(
-      availableToBorrowAfterSupply.sub(
-        BigNumber.from(borrowAmount).mul(daiPrice)
-      )
-    );
-
-    // User 1 - Debt token balance equals the borrowed amount
-    const debtBalanceAfter = await variableDebtDai.balanceOf(user1.address);
-    expect(debtBalanceAfter).to.equal(borrowAmountBaseUnits);
-
-    // User 1 - DAI balance should have increased in the borrowed amount
-    const daiBalanceAfter = await dai.balanceOf(user1.address);
-    expect(daiBalanceAfter).to.equal(daiBalance.add(borrowAmountBaseUnits));
+    await borrowAndValidate(dai, "8000", user1);
   });
 
   it("User 2 acquires share of borrower interest", async () => {
@@ -150,13 +55,15 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
       pDai,
       users: [, user2],
     } = testEnv;
-    const pDaiBalance = await pDai.balanceOf(user2.address);
+    const pDaiBalanceBefore = await pDai.balanceOf(user2.address);
 
     // Advance time and blocks
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 
     const pDaiBalanceAfter = await pDai.balanceOf(user2.address);
-    expect(pDaiBalanceAfter).to.be.gt(pDaiBalance);
+    expect(pDaiBalanceAfter).to.be.gt(pDaiBalanceBefore);
+
+    accruedInterest = pDaiBalanceAfter.sub(pDaiBalanceBefore);
   });
 
   it("User 1 tries to send the pToken to User 2 (should fail)", async () => {
@@ -165,7 +72,7 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
       users: [user1, user2],
     } = testEnv;
 
-    expect(
+    await expect(
       pDai.connect(user1.signer).transferFrom(user1.address, user2.address, 1)
     ).to.be.reverted;
   });
@@ -177,11 +84,11 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
       pool,
     } = testEnv;
 
-    expect(
-      pool
-        .connect(user1.signer)
-        .setUserUseReserveAsCollateral(dai.address, false)
-    ).to.be.reverted;
+    await expect(
+      pool.connect(user1.signer).setUserUseERC20AsCollateral(dai.address, false)
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("User 1 tries to withdraw from the deposited DAI without paying the accrued interest (should fail)", async () => {
@@ -191,69 +98,30 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
       pool,
     } = testEnv;
 
-    expect(
+    await expect(
       pool
         .connect(user1.signer)
-        .withdraw(dai.address, secondDaiDeposit, user1.address)
-    ).to.be.reverted;
+        .withdraw(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, secondDaiDeposit),
+          user1.address
+        )
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("User 1 partially repays the accrued interest on borrowed DAI", async () => {
     const {
-      dai,
-      variableDebtDai,
       users: [user1],
-      pool,
+      dai,
     } = testEnv;
 
-    await waitForTx(
-      await dai
-        .connect(user1.signer)
-        ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "10000"))
-    );
-
-    // approve protocol to access user1 wallet
-    await waitForTx(
-      await dai.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    const availableToBorrowBeforePartialRepay = (
-      await pool.getUserAccountData(user1.address)
-    ).availableBorrowsBase;
-    const daiBalanceBeforePartialRepay = await dai.balanceOf(user1.address);
-    const debtBalanceBeforePartialRepay = await variableDebtDai.balanceOf(
-      user1.address
-    );
-
-    // partially repay dai loan
-    const repayAmount = await convertToCurrencyDecimals(dai.address, "1000");
-    const repayTx = await pool
-      .connect(user1.signer)
-      .repay(dai.address, repayAmount, RateMode.Variable, user1.address, false);
-    await repayTx.wait();
-
-    // User 1 - Available to borrow should have increased
-    const availableToBorrowAfterPartialRepay = (
-      await pool.getUserAccountData(user1.address)
-    ).availableBorrowsBase;
-    expect(availableToBorrowAfterPartialRepay).to.be.gt(
-      availableToBorrowBeforePartialRepay
-    );
-
-    // User 1 - Debt token balance should have decreased
-    const debtBalanceAfterPartialRepay = await variableDebtDai.balanceOf(
-      user1.address
-    );
-    expect(debtBalanceAfterPartialRepay).to.lt(debtBalanceBeforePartialRepay);
-
-    // User 1 - DAI balance should have increased in the repaid amount
-    const daiBalanceAfterPartialRepay = await dai.balanceOf(user1.address);
-    expect(daiBalanceAfterPartialRepay).to.equal(
-      daiBalanceBeforePartialRepay.sub(repayAmount)
-    );
+    await mintAndValidate(dai, firstDaiDeposit, user1);
+    await repayAndValidate(dai, "1000", user1);
   });
 
-  it("User 2 still acquires share of borrower interest", async () => {
+  it("User 2 still acquires share of borrower interest, but now less", async () => {
     const {
       pDai,
       users: [, user2],
@@ -265,59 +133,30 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
 
     const pDaiBalanceAfter = await pDai.balanceOf(user2.address);
     expect(pDaiBalanceAfter).to.be.gt(pDaiBalance);
+
+    expect(pDaiBalanceAfter.sub(pDaiBalance)).to.be.lt(accruedInterest);
   });
 
   it("User 1 can withdraw the deposited DAI up to debt value", async () => {
     const {
-      dai,
-      pDai,
       variableDebtDai,
+      dai,
       users: [user1],
-      pool,
     } = testEnv;
 
-    const availableToBorrowBeforeWithdraw = (
-      await pool.getUserAccountData(user1.address)
-    ).availableBorrowsBase;
-    const daiBalanceBeforeWithdraw = await dai.balanceOf(user1.address);
     const debtBalanceBeforeWithdraw = await variableDebtDai.balanceOf(
       user1.address
     );
-    const pDaiBalanceBeforeWithdraw = await pDai.balanceOf(user1.address);
 
     // withdraw DAI
-    const withdrawAmount = debtBalanceBeforeWithdraw;
-    const withdrawDAITx = await pool
-      .connect(user1.signer)
-      .withdraw(dai.address, withdrawAmount, user1.address);
-    await withdrawDAITx.wait();
-
-    // User 1 - Available to borrow should have decreased
-    const availableToBorrowAfterWithdraw = (
-      await pool.getUserAccountData(user1.address)
-    ).availableBorrowsBase;
-    expect(availableToBorrowAfterWithdraw).to.be.lt(
-      availableToBorrowBeforeWithdraw
-    );
-
-    // User 1 - Debt token balance should be the same (or actually have earned some lil-extra debt)
-    const debtBalanceAfterWithdraw = await variableDebtDai.balanceOf(
-      user1.address
-    );
-    expect(debtBalanceAfterWithdraw).to.gte(debtBalanceBeforeWithdraw);
-
-    // User 1 - pToken balance should have decreased
-    const pDaiBalanceAfterWithdraw = await pDai.balanceOf(user1.address);
-    expect(pDaiBalanceAfterWithdraw).to.be.lt(pDaiBalanceBeforeWithdraw);
-
-    // User 1 - DAI balance should have increased in withdrawn amount
-    const daiBalanceAfterWithdraw = await dai.balanceOf(user1.address);
-    expect(daiBalanceAfterWithdraw).to.equal(
-      daiBalanceBeforeWithdraw.add(withdrawAmount)
+    await withdrawAndValidate(
+      dai,
+      formatEther(debtBalanceBeforeWithdraw.toString()),
+      user1
     );
   });
 
-  it("User 1 fully repays the accrued interest", async () => {
+  it("User 1 fully repays the loan plus any accrued interest", async () => {
     const {
       dai,
       variableDebtDai,
@@ -336,13 +175,7 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
     // repay dai loan
     const repayTx = await pool
       .connect(user1.signer)
-      .repay(
-        dai.address,
-        MAX_UINT_AMOUNT,
-        RateMode.Variable,
-        user1.address,
-        false
-      );
+      .repay(dai.address, MAX_UINT_AMOUNT, RateMode.Variable, user1.address);
     await repayTx.wait();
 
     // User 1 - Available to borrow should have increased
@@ -380,19 +213,11 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
 
   it("User 1 removes the deposited DAI from collateral", async () => {
     const {
-      dai,
       users: [user1],
-      pool,
+      dai,
     } = testEnv;
 
-    await pool
-      .connect(user1.signer)
-      .setUserUseReserveAsCollateral(dai.address, false);
-
-    // User1 has no balance in collateral
-    const totalCollateral = (await pool.getUserAccountData(user1.address))
-      .totalCollateralBase;
-    expect(totalCollateral).to.be.equal(0);
+    await switchCollateralAndValidate(user1, dai, false);
   });
 
   it("User 1 fully withdraws the deposited DAI", async () => {

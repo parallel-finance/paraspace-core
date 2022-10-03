@@ -82,9 +82,7 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
     const repayAmount = utils.parseEther("25");
 
     await expect(
-      pool
-        .connect(user1.address)
-        .repay(dai.address, repayAmount, 2, user1.address, true)
+      pool.connect(user1.address).repayWithPTokens(dai.address, repayAmount, 2)
     ).to.be.reverted;
   });
 
@@ -115,9 +113,7 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
     });
 
     await expect(
-      pool
-        .connect(user1.signer)
-        .repay(dai.address, repayAmount, 2, user1.address, true)
+      pool.connect(user1.signer).repayWithPTokens(dai.address, repayAmount, 2)
     )
       .to.emit(pool, "Repay")
       .withArgs(dai.address, user1.address, user1.address, repayAmount, true);
@@ -157,7 +153,7 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
     const tx = await waitForTx(
       await pool
         .connect(user1.signer)
-        .repay(dai.address, MAX_UINT_AMOUNT, 2, user1.address, true)
+        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT, 2)
     );
 
     const repayEventSignature = utils.keccak256(
@@ -210,7 +206,7 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
     const tx = await waitForTx(
       await pool
         .connect(user1.signer)
-        .repay(dai.address, MAX_UINT_AMOUNT, 2, user1.address, true)
+        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT, 2)
     );
 
     const repayEventSignature = utils.keccak256(
@@ -268,7 +264,7 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
     const repayAmount = parseUnits("250", 18);
     await pool
       .connect(user.signer)
-      .repay(dai.address, repayAmount, RateMode.Variable, user.address, true);
+      .repayWithPTokens(dai.address, repayAmount, RateMode.Variable);
 
     const reserveData = await pool.getReserveData(dai.address);
     const strategy = DefaultReserveInterestRateStrategy__factory.connect(

@@ -48,12 +48,12 @@ import {tEthereumAddress} from "../../deploy/helpers/types";
 import {
   Conduit,
   ERC721Delegate,
+  IPool,
   NFTFloorOracle,
   NTokenMoonBirds,
   NTokenUniswapV3,
   PausableZone,
   PausableZoneController,
-  Pool,
   UiPoolDataProvider,
   X2Y2R1,
 } from "../../types";
@@ -119,7 +119,7 @@ export interface TestEnv {
   riskAdmin: SignerWithAddress;
   gatewayAdmin: SignerWithAddress;
   users: SignerWithAddress[];
-  pool: Pool;
+  pool: IPool;
   configurator: PoolConfigurator;
   poolDataProvider: UiPoolDataProvider;
   oracle: PriceOracle;

@@ -89,7 +89,7 @@ makeSuite("PToken: Transfer", (testEnv: TestEnv) => {
     expect(
       await pool
         .connect(users[0].signer)
-        .setUserUseReserveAsCollateral(dai.address, false)
+        .setUserUseERC20AsCollateral(dai.address, false)
     );
 
     expect(

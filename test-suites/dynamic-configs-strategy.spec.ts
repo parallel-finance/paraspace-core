@@ -111,7 +111,6 @@ makeSuite("Dynamic Configs Strategy", (testEnv) => {
       await nft.setApprovalForAll(uniswapV3Gateway.address, true);
 
       await uniswapV3Gateway.supplyUniswapV3(
-        ZERO_ADDRESS,
         [{tokenId: 1, useAsCollateral: true}],
         user1.address,
         {
@@ -162,9 +161,9 @@ makeSuite("Dynamic Configs Strategy", (testEnv) => {
       } = testEnv;
 
       const poolConfigurator = await getPoolConfiguratorProxy();
-      await poolConfigurator.setReserveDynamicConfigsStrategyAddress(
+      await poolConfigurator.setDynamicConfigsEnabled(
         nftPositionManager.address,
-        ZERO_ADDRESS
+        false
       );
 
       const userData = await pool.getUserAccountData(user1.address);
@@ -188,13 +187,17 @@ makeSuite("Dynamic Configs Strategy", (testEnv) => {
 
       const poolConfigurator = await getPoolConfiguratorProxy();
       const dynamicStrategy = await getUniswapV3DynamicConfigsStrategy();
+
       await poolConfigurator.setReserveDynamicConfigsStrategyAddress(
         nftPositionManager.address,
         dynamicStrategy.address
       );
+      await poolConfigurator.setDynamicConfigsEnabled(
+        nftPositionManager.address,
+        true
+      );
 
       await uniswapV3Gateway.supplyUniswapV3(
-        ZERO_ADDRESS,
         [{tokenId: 2, useAsCollateral: true}],
         user1.address,
         {

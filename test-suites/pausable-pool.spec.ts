@@ -13,7 +13,6 @@ import {
   evmRevert,
   evmSnapshot,
   getFunctionSignatures,
-  waitForTx,
 } from "../deploy/helpers/misc-utils";
 import {deployMockPool} from "../deploy/helpers/contracts-deployments";
 import {
@@ -176,9 +175,7 @@ makeSuite("PausablePool", (testEnv: TestEnv) => {
 
     // Try to execute liquidation
     await expect(
-      pool
-        .connect(user.signer)
-        .repay(dai.address, "1", "1", user.address, false)
+      pool.connect(user.signer).repay(dai.address, "1", "1", user.address)
     ).to.be.revertedWith(RESERVE_PAUSED);
 
     // Unpause the pool
@@ -374,7 +371,7 @@ makeSuite("PausablePool", (testEnv: TestEnv) => {
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
 
-  it("setUserUseReserveAsCollateral", async () => {
+  it("setUserUseERC20AsCollateral", async () => {
     // eslint-disable-next-line no-unused-vars
     const {pool, weth, configurator, emergencyAdmin} = testEnv;
     const user = emergencyAdmin;
@@ -390,105 +387,102 @@ makeSuite("PausablePool", (testEnv: TestEnv) => {
     await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
 
     await expect(
-      pool
-        .connect(user.signer)
-        .setUserUseReserveAsCollateral(weth.address, false)
+      pool.connect(user.signer).setUserUseERC20AsCollateral(weth.address, false)
     ).to.be.revertedWith(RESERVE_PAUSED);
 
     // Unpause pool
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
 
-  it("Configurator pauses Pool with a ZERO_ADDRESS reserve", async () => {
-    const {poolAdmin, emergencyAdmin, deployer} = testEnv;
-
-    const snapId = await evmSnapshot();
-
-    // Deploy a mock Pool
-    const mockPool = await deployMockPool();
-
-    // Deploy a new PoolConfigurator
-    const configuratorLogic = await (
-      await new ConfiguratorLogic__factory(await getFirstSigner()).deploy()
-    ).deployed();
-    const poolConfigurator = await (
-      await new PoolConfigurator__factory(
-        {
-          ["contracts/protocol/libraries/logic/ConfiguratorLogic.sol:ConfiguratorLogic"]:
-            configuratorLogic.address,
-        },
-        await getFirstSigner()
-      ).deploy()
-    ).deployed();
-
-    // Deploy a new PoolAddressesProvider
-    const MARKET_ID = "1";
-    const poolAddressesProvider = await (
-      await new PoolAddressesProvider__factory(await getFirstSigner()).deploy(
-        MARKET_ID,
-        deployer.address
-      )
-    ).deployed();
-
-    // Set the ACL admin
-    expect(await poolAddressesProvider.setACLAdmin(poolAdmin.address));
-
-    // Update the ACLManager
-    const aclManager = await (
-      await new ACLManager__factory(await getFirstSigner()).deploy(
-        poolAddressesProvider.address
-      )
-    ).deployed();
-    expect(await poolAddressesProvider.setACLManager(aclManager.address))
-      .to.emit(poolAddressesProvider, "ACLManagerUpdated")
-      .withArgs(ZERO_ADDRESS, aclManager.address);
-
-    // Set role of EmergencyAdmin
-    const emergencyAdminRole = await aclManager.EMERGENCY_ADMIN_ROLE();
-    expect(await aclManager.addEmergencyAdmin(emergencyAdmin.address))
-      .to.emit(aclManager, "RoleGranted")
-      .withArgs(emergencyAdminRole, emergencyAdmin.address, poolAdmin.address);
-
-    const poolSelectors = getFunctionSignatures(
-      mockPool.interface.format(FormatTypes.json)
-    );
-    const poolAddress = await poolAddressesProvider.getPool();
-
-    expect(
-      await poolAddressesProvider.updatePoolImpl(
-        [[mockPool.address, 0, poolSelectors]],
-        ZERO_ADDRESS,
-        "0x"
-      )
-    ).to.emit(poolAddressesProvider, "PoolUpdated");
-
-    // Add ZERO_ADDRESS as a reserve
-    const proxiedMockPoolAddress = await poolAddressesProvider.getPool();
-    const proxiedMockPool = await getMockPool(proxiedMockPoolAddress);
-    expect(await proxiedMockPool.addReserveToReservesList(ZERO_ADDRESS));
-
-    // Update the PoolConfigurator impl with the PoolConfigurator
-    expect(
-      await poolAddressesProvider.setPoolConfiguratorImpl(
-        poolConfigurator.address
-      )
-    )
-      .to.emit(poolAddressesProvider, "PoolConfiguratorUpdated")
-      .withArgs(ZERO_ADDRESS, poolConfigurator.address);
-
-    const proxiedPoolConfiguratorAddress =
-      await poolAddressesProvider.getPoolConfigurator();
-    const proxiedPoolConfigurator = await getPoolConfiguratorProxy(
-      proxiedPoolConfiguratorAddress
-    );
-
-    // Pause reserve
-    expect(
-      await proxiedPoolConfigurator
-        .connect(emergencyAdmin.signer)
-        .setPoolPause(true)
-    );
-
-    await evmRevert(snapId);
-  });
+  // it("Configurator pauses Pool with a ZERO_ADDRESS reserve", async () => {
+  //   const {poolAdmin, emergencyAdmin, deployer} = testEnv;
+  //
+  //   const snapId = await evmSnapshot();
+  //
+  //   // Deploy a mock Pool
+  //   const mockPool = await deployMockPool();
+  //
+  //   // Deploy a new PoolConfigurator
+  //   const configuratorLogic = await (
+  //     await new ConfiguratorLogic__factory(await getFirstSigner()).deploy()
+  //   ).deployed();
+  //   const poolConfigurator = await (
+  //     await new PoolConfigurator__factory(
+  //       {
+  //         ["contracts/protocol/libraries/logic/ConfiguratorLogic.sol:ConfiguratorLogic"]:
+  //           configuratorLogic.address,
+  //       },
+  //       await getFirstSigner()
+  //     ).deploy()
+  //   ).deployed();
+  //
+  //   // Deploy a new PoolAddressesProvider
+  //   const MARKET_ID = "1";
+  //   const poolAddressesProvider = await (
+  //     await new PoolAddressesProvider__factory(await getFirstSigner()).deploy(
+  //       MARKET_ID,
+  //       deployer.address
+  //     )
+  //   ).deployed();
+  //
+  //   // Set the ACL admin
+  //   expect(await poolAddressesProvider.setACLAdmin(poolAdmin.address));
+  //
+  //   // Update the ACLManager
+  //   const aclManager = await (
+  //     await new ACLManager__factory(await getFirstSigner()).deploy(
+  //       poolAddressesProvider.address
+  //     )
+  //   ).deployed();
+  //   expect(await poolAddressesProvider.setACLManager(aclManager.address))
+  //     .to.emit(poolAddressesProvider, "ACLManagerUpdated")
+  //     .withArgs(ZERO_ADDRESS, aclManager.address);
+  //
+  //   // Set role of EmergencyAdmin
+  //   const emergencyAdminRole = await aclManager.EMERGENCY_ADMIN_ROLE();
+  //   expect(await aclManager.addEmergencyAdmin(emergencyAdmin.address))
+  //     .to.emit(aclManager, "RoleGranted")
+  //     .withArgs(emergencyAdminRole, emergencyAdmin.address, poolAdmin.address);
+  //
+  //   const poolSelectors = getFunctionSignatures(
+  //     mockPool.interface.format(FormatTypes.json)
+  //   );
+  //
+  //   expect(
+  //     await poolAddressesProvider.updatePoolImpl(
+  //       [[mockPool.address, 0, poolSelectors]],
+  //       ZERO_ADDRESS,
+  //       "0x"
+  //     )
+  //   ).to.emit(poolAddressesProvider, "PoolUpdated");
+  //
+  //   // Add ZERO_ADDRESS as a reserve
+  //   const proxiedMockPoolAddress = await poolAddressesProvider.getPool();
+  //   const proxiedMockPool = await getMockPool(proxiedMockPoolAddress);
+  //   expect(await proxiedMockPool.addReserveToReservesList(ZERO_ADDRESS));
+  //
+  //   // Update the PoolConfigurator impl with the PoolConfigurator
+  //   expect(
+  //     await poolAddressesProvider.setPoolConfiguratorImpl(
+  //       poolConfigurator.address
+  //     )
+  //   )
+  //     .to.emit(poolAddressesProvider, "PoolConfiguratorUpdated")
+  //     .withArgs(ZERO_ADDRESS, poolConfigurator.address);
+  //
+  //   const proxiedPoolConfiguratorAddress =
+  //     await poolAddressesProvider.getPoolConfigurator();
+  //   const proxiedPoolConfigurator = await getPoolConfiguratorProxy(
+  //     proxiedPoolConfiguratorAddress
+  //   );
+  //
+  //   // Pause reserve
+  //   expect(
+  //     await proxiedPoolConfigurator
+  //       .connect(emergencyAdmin.signer)
+  //       .setPoolPause(true)
+  //   );
+  //
+  //   await evmRevert(snapId);
+  // });
 });

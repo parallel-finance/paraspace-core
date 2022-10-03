@@ -550,8 +550,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
           dai.address,
           utils.parseEther("1"),
           RateMode.Variable,
-          user.address,
-          false
+          user.address
         )
     ).to.be.revertedWith(RESERVE_INACTIVE);
   });
@@ -597,8 +596,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
           dai.address,
           utils.parseEther("500"),
           RateMode.Variable,
-          user.address,
-          false
+          user.address
         )
     ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
   });
@@ -683,8 +681,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
           dai.address,
           utils.parseEther("2"),
           RateMode.Variable,
-          user1.address,
-          false
+          user1.address
         )
     ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
   });
@@ -1022,7 +1019,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
     // ).to.be.revertedWith(RESERVE_INACTIVE);
   });
 
-  it("validateSetUseReserveAsCollateral() when reserve is not active (revert expected)", async () => {
+  it("validateSetUseERC20AsCollateral() when reserve is not active (revert expected)", async () => {
     /**
      * Since its not possible to deactivate a reserve with existing suppliers, making the user have
      * xToken balance (pDAI) its not technically possible to end up in this situation.
@@ -1060,28 +1057,24 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
     );
 
     await expect(
-      pool.connect(user.signer).setUserUseReserveAsCollateral(dai.address, true)
+      pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, true)
     ).to.be.revertedWith(RESERVE_INACTIVE);
 
     await expect(
-      pool
-        .connect(user.signer)
-        .setUserUseReserveAsCollateral(dai.address, false)
+      pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, false)
     ).to.be.revertedWith(RESERVE_INACTIVE);
   });
 
-  it("validateSetUseReserveAsCollateral() with userBalance == 0 (revert expected)", async () => {
+  it("validateSetUseERC20AsCollateral() with userBalance == 0 (revert expected)", async () => {
     const {pool, users, dai} = testEnv;
     const user = users[0];
 
     await expect(
-      pool.connect(user.signer).setUserUseReserveAsCollateral(dai.address, true)
+      pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, true)
     ).to.be.revertedWith(UNDERLYING_BALANCE_ZERO);
 
     await expect(
-      pool
-        .connect(user.signer)
-        .setUserUseReserveAsCollateral(dai.address, false)
+      pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, false)
     ).to.be.revertedWith(UNDERLYING_BALANCE_ZERO);
   });
 

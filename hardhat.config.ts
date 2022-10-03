@@ -15,6 +15,7 @@ import {buildForkConfig} from "./deploy/helper-hardhat-config";
 
 dotenv.config();
 
+import "solidity-docgen";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";

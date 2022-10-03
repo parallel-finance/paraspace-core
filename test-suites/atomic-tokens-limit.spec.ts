@@ -92,7 +92,6 @@ makeSuite("Atomic tokens limit", (testEnv) => {
       await waitForTx(await poolConfigurator.setMaxAtomicTokensAllowed(2));
 
       await uniswapV3Gateway.supplyUniswapV3(
-        ZERO_ADDRESS,
         [
           {tokenId: 1, useAsCollateral: true},
           {tokenId: 2, useAsCollateral: true},
@@ -116,7 +115,6 @@ makeSuite("Atomic tokens limit", (testEnv) => {
 
       expect(
         uniswapV3Gateway.supplyUniswapV3(
-          ZERO_ADDRESS,
           [
             {tokenId: 3, useAsCollateral: true},
             {tokenId: 4, useAsCollateral: true},
@@ -176,7 +174,6 @@ makeSuite("Atomic tokens limit", (testEnv) => {
       expect(await nUniswapV3.balanceOf(user2.address)).to.be.eq(2);
 
       await uniswapV3Gateway.supplyUniswapV3(
-        ZERO_ADDRESS,
         [
           {tokenId: 3, useAsCollateral: true},
           {tokenId: 4, useAsCollateral: true},

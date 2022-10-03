@@ -417,13 +417,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
     // repay dai loan
     const repayTx = await pool
       .connect(borrower.signer)
-      .repay(
-        dai.address,
-        MAX_UINT_AMOUNT,
-        RateMode.Variable,
-        borrower.address,
-        false
-      );
+      .repay(dai.address, MAX_UINT_AMOUNT, RateMode.Variable, borrower.address);
     const repayReceipt = await repayTx.wait();
 
     const daiBalanceAfter = await dai.balanceOf(borrower.address);
@@ -578,13 +572,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
     // repay dai loan
     const repayTx = await pool
       .connect(borrower.signer)
-      .repay(
-        dai.address,
-        smallRepay,
-        RateMode.Variable,
-        borrower.address,
-        false
-      );
+      .repay(dai.address, smallRepay, RateMode.Variable, borrower.address);
     const repayReceipt = await repayTx.wait();
 
     const debtBalanceAfter = await variableDebtDai.balanceOf(borrower.address);

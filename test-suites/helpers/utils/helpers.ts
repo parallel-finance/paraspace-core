@@ -1,4 +1,4 @@
-import {Pool} from "../../../types";
+import {IPool} from "../../../types";
 import {ReserveData, UserReserveData} from "./interfaces";
 import {
   getIErc20Detailed,
@@ -104,7 +104,7 @@ export const getReserveData = async (
 };
 
 export const getUserData = async (
-  pool: Pool,
+  pool: IPool,
   helper: ProtocolDataProvider,
   reserve: string,
   user: tEthereumAddress,
