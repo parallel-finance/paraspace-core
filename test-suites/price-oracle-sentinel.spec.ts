@@ -1,6 +1,10 @@
 import {expect} from "chai";
 import {BigNumber, utils} from "ethers";
-import {increaseTime, timeLatest, waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  increaseTime,
+  timeLatest,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {

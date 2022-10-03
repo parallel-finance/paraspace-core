@@ -4,7 +4,11 @@ import {parseEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {getMockAggregator} from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {advanceBlock, setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  advanceBlock,
+  setBlocktime,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {makeSuite} from "./helpers/make-suite";
 import {snapshot} from "./helpers/snapshot-manager";
