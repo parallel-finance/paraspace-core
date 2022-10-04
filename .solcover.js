@@ -1,4 +1,12 @@
 module.exports = {
-  skipFiles: ["dependencies", "mocks", "misc", "deployments"],
+  mocha: {
+    grep: "@skip-on-coverage",
+    invert: true,
+  },
+  skipFiles: [
+    "dependencies",
+    "mocks",
+    "deployments",
+  ],
   configureYulOptimizer: true,
 };
