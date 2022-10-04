@@ -131,21 +131,20 @@ library SupplyLogic {
     }
 
     function executeSupplyERC721Base(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
+        uint16 reserveId,
+        address nTokenAddress,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyERC721Params memory params
     ) internal {
-        DataTypes.ReserveData storage reserve = reservesData[params.asset];
-        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+        //currently don't need to update state for erc721
+        //reserve.updateState(reserveCache);
 
-        reserve.updateState(reserveCache);
-
-        bool isFirstCollaterarized = INToken(reserveCache.xTokenAddress).mint(
+        bool isFirstCollaterarized = INToken(nTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
         if (isFirstCollaterarized) {
-            userConfig.setUsingAsCollateral(reserve.id, true);
+            userConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
                 params.onBehalfOf
@@ -167,8 +166,10 @@ library SupplyLogic {
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyERC721Params memory params
     ) external {
+        DataTypes.ReserveData storage reserve = reservesData[params.asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
         ValidationLogic.validateSupply(
-            reservesData[params.asset].cache(),
+            reserveCache,
             params.tokenData.length,
             DataTypes.AssetType.ERC721
         );
@@ -176,12 +177,17 @@ library SupplyLogic {
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
                 params.actualSpender,
-                reservesData[params.asset].xTokenAddress,
+                reserveCache.xTokenAddress,
                 params.tokenData[index].tokenId
             );
         }
 
-        executeSupplyERC721Base(reservesData, userConfig, params);
+        executeSupplyERC721Base(
+            reserve.id,
+            reserveCache.xTokenAddress,
+            userConfig,
+            params
+        );
 
         emit SupplyERC721(
             params.asset,
@@ -206,13 +212,20 @@ library SupplyLogic {
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyERC721Params memory params
     ) external {
+        DataTypes.ReserveData storage reserve = reservesData[params.asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
         ValidationLogic.validateSupplyFromNToken(
-            reservesData[params.asset].cache(),
+            reserveCache,
             params,
             DataTypes.AssetType.ERC721
         );
 
-        executeSupplyERC721Base(reservesData, userConfig, params);
+        executeSupplyERC721Base(
+            reserve.id,
+            reserveCache.xTokenAddress,
+            userConfig,
+            params
+        );
 
         emit SupplyERC721(
             params.asset,

@@ -346,39 +346,49 @@ library ReserveLogic {
 
         reserveCache.reserveConfiguration = reserve.configuration;
         reserveCache.reserveAuctionConfiguration = reserve.auctionConfiguration;
-        reserveCache.reserveFactor = reserveCache
-            .reserveConfiguration
-            .getReserveFactor();
-        reserveCache.currLiquidityIndex = reserve.liquidityIndex;
-        reserveCache.currVariableBorrowIndex = reserve.variableBorrowIndex;
-        reserveCache.currLiquidityRate = reserve.currentLiquidityRate;
-        reserveCache.currVariableBorrowRate = reserve.currentVariableBorrowRate;
-
         reserveCache.xTokenAddress = reserve.xTokenAddress;
-        reserveCache.stableDebtTokenAddress = reserve.stableDebtTokenAddress;
-        reserveCache.variableDebtTokenAddress = reserve
-            .variableDebtTokenAddress;
 
-        reserveCache.reserveLastUpdateTimestamp = reserve.lastUpdateTimestamp;
+        (, , , , , DataTypes.AssetType reserveAssetType) = reserveCache
+            .reserveConfiguration
+            .getFlags();
 
-        reserveCache.currScaledVariableDebt = reserveCache
-            .nextScaledVariableDebt = IVariableDebtToken(
-            reserveCache.variableDebtTokenAddress
-        ).scaledTotalSupply();
+        if (reserveAssetType == DataTypes.AssetType.ERC20) {
+            reserveCache.reserveFactor = reserveCache
+                .reserveConfiguration
+                .getReserveFactor();
+            reserveCache.currLiquidityIndex = reserve.liquidityIndex;
+            reserveCache.currVariableBorrowIndex = reserve.variableBorrowIndex;
+            reserveCache.currLiquidityRate = reserve.currentLiquidityRate;
+            reserveCache.currVariableBorrowRate = reserve
+                .currentVariableBorrowRate;
 
-        (
-            reserveCache.currPrincipalStableDebt,
-            reserveCache.currTotalStableDebt,
-            reserveCache.currAvgStableBorrowRate,
-            reserveCache.stableDebtLastUpdateTimestamp
-        ) = IStableDebtToken(reserveCache.stableDebtTokenAddress)
-            .getSupplyData();
+            reserveCache.stableDebtTokenAddress = reserve
+                .stableDebtTokenAddress;
+            reserveCache.variableDebtTokenAddress = reserve
+                .variableDebtTokenAddress;
 
-        // by default the actions are considered as not affecting the debt balances.
-        // if the action involves mint/burn of debt, the cache needs to be updated
-        reserveCache.nextTotalStableDebt = reserveCache.currTotalStableDebt;
-        reserveCache.nextAvgStableBorrowRate = reserveCache
-            .currAvgStableBorrowRate;
+            reserveCache.reserveLastUpdateTimestamp = reserve
+                .lastUpdateTimestamp;
+
+            reserveCache.currScaledVariableDebt = reserveCache
+                .nextScaledVariableDebt = IVariableDebtToken(
+                reserveCache.variableDebtTokenAddress
+            ).scaledTotalSupply();
+
+            (
+                reserveCache.currPrincipalStableDebt,
+                reserveCache.currTotalStableDebt,
+                reserveCache.currAvgStableBorrowRate,
+                reserveCache.stableDebtLastUpdateTimestamp
+            ) = IStableDebtToken(reserveCache.stableDebtTokenAddress)
+                .getSupplyData();
+
+            // by default the actions are considered as not affecting the debt balances.
+            // if the action involves mint/burn of debt, the cache needs to be updated
+            reserveCache.nextTotalStableDebt = reserveCache.currTotalStableDebt;
+            reserveCache.nextAvgStableBorrowRate = reserveCache
+                .currAvgStableBorrowRate;
+        }
 
         return reserveCache;
     }
