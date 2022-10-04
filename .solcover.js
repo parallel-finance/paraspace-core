@@ -4,9 +4,9 @@ module.exports = {
     invert: true,
   },
   skipFiles: [
-    "contracts/dependencies",
-    "contracts/mocks",
-    "contracts/deployments",
+    "dependencies",
+    "mocks",
+    "deployments",
   ],
   configureYulOptimizer: true,
 };
