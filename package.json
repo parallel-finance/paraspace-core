@@ -8,6 +8,7 @@
     "types"
   ],
   "scripts": {
+    "prepare": "husky install",
     "size": "hardhat size-contracts",
     "build": "SKIP_LOAD=true hardhat compile",
     "lint": "solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'test-suites/**/*.ts' && eslint . --ext .ts",
@@ -53,7 +54,7 @@
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.0",
     "hardhat-typechain": "^0.3.3",
-    "husky": "^4.2.5",
+    "husky": "^8.0.1",
     "lowdb": "1.0.0",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-alpha.53",
@@ -73,13 +74,7 @@
   },
   "author": "ParaSpace-MM Team",
   "contributors": [],
-  "license": "AGPLv3",
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged --pattern 'contracts/**/*.sol'",
-      "commit-msg": "commitlint --edit"
-    }
-  },
+  "license": "MIT",
   "keywords": [
     "paraspace",
     "nft",

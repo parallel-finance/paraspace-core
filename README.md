@@ -3,7 +3,7 @@
 <div align="center">
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/para-space/paraspace-core)](https://github.com/para-space/paraspace-core/commits/main)
-[![Codecov](https://codecov.io/gh/para-space/paraspace-periphery/branch/main/graph/badge.svg)](https://codecov.io/gh/para-space/paraspace-periphery)
+[![Codecov](https://codecov.io/gh/para-space/paraspace-core/branch/main/graph/badge.svg)](https://codecov.io/gh/para-space/paraspace-core)
 [![CI](https://github.com/para-space/paraspace-core/workflows/CI/badge.svg)](https://github.com/para-space/paraspace-core/actions)
 [![License](https://img.shields.io/github/license/para-space/paraspace-core?color=green)](https://github.com/para-space/paraspace-core/blob/main/LICENSE)
 
