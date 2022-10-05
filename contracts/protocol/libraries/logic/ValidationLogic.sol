@@ -747,7 +747,7 @@ library ValidationLogic {
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
 
-        if (params.auctionEnabled) {
+        if (!params.auctionEnabled) {
             require(
                 params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
                 Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
@@ -931,7 +931,6 @@ library ValidationLogic {
         );
 
         require(
-            params.auctionRecoveryHealthFactor != 0 &&
                 params.healthFactor >= params.auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );

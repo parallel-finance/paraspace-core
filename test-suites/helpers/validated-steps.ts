@@ -3,8 +3,6 @@ import {BigNumber, BigNumberish} from "ethers";
 import {formatEther, parseEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT} from "../../deploy/helpers/constants";
 import {
-  getAllMockedTokens,
-  getFirstSigner,
   getMockAggregator,
   getParaSpaceOracle,
   getPToken,
@@ -68,7 +66,7 @@ export const mintAndValidate = async (
     await waitForTx(
       await token
         .connect(user.signer)
-        ["mint(address,uint256)"](user.address, amountToMint)
+      ["mint(address,uint256)"](user.address, amountToMint)
     );
   }
   // check user balance is the expected
@@ -415,8 +413,8 @@ export const withdrawAndValidate = async (
     (await token.symbol()) == "UNI-V3-POS"
       ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId!)
       : await (await getParaSpaceOracle())
-          .connect((await getDeployer()).signer)
-          .getAssetPrice(token.address);
+        .connect((await getDeployer()).signer)
+        .getAssetPrice(token.address);
   const tokenBalanceBefore = await token.balanceOf(user.address);
   const pTokenBalanceBefore = await pToken.balanceOf(user.address);
   const ltvBefore = (await pool.getUserAccountData(user.address)).ltv;
@@ -478,8 +476,8 @@ export const withdrawAndValidate = async (
   const withdrawnAmountInBaseUnits =
     (await token.symbol()) != "UNI-V3-POS"
       ? BigNumber.from(
-          (+amountInBaseUnits * +formatEther(assetPrice)).toString()
-        )
+        (+amountInBaseUnits * +formatEther(assetPrice)).toString()
+      )
       : parseEther((+amountInBaseUnits * +formatEther(assetPrice)).toString());
   const availableToBorrow = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
@@ -839,8 +837,8 @@ const liquidateAndValidateERC721 = async (
     (await targetToken.symbol()) == "UNI-V3-POS"
       ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId!)
       : await (await getParaSpaceOracle())
-          .connect((await getDeployer()).signer)
-          .getAssetPrice(targetToken.address);
+        .connect((await getDeployer()).signer)
+        .getAssetPrice(targetToken.address);
 
   const assetPrice = originalPrice
     .mul(currentPriceMultiplier)
@@ -851,8 +849,8 @@ const liquidateAndValidateERC721 = async (
     (await liquidationToken.symbol()) == "UNI-V3-POS"
       ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId!)
       : await (await getParaSpaceOracle())
-          .connect((await getDeployer()).signer)
-          .getAssetPrice(liquidationToken.address);
+        .connect((await getDeployer()).signer)
+        .getAssetPrice(liquidationToken.address);
   const availableToBorrowBefore = (
     await pool.getUserAccountData(borrower.address)
   ).availableBorrowsBase;
@@ -910,11 +908,11 @@ const liquidateAndValidateERC721 = async (
   const isAllDebtRepaid =
     isLiquidationAssetBorrowed &&
     +formatEther(borrowerLiquidationDebtTokenBalanceBefore) *
-      +formatEther(liquidationAssetPrice) <=
-      +formatEther(assetPrice.mul(10000).div(liquidationBonus));
+    +formatEther(liquidationAssetPrice) <=
+    +formatEther(assetPrice.mul(10000).div(liquidationBonus));
   const willHaveExcessFunds =
     +formatEther(borrowerLiquidationDebtTokenBalanceBefore) *
-      +formatEther(liquidationAssetPrice) <=
+    +formatEther(liquidationAssetPrice) <=
     +formatEther(assetPrice.mul(10000).div(liquidationBonus));
 
   // target asset must be in collateral
@@ -1190,9 +1188,9 @@ export async function calculateExpectedLTV(user: SignerWithAddress) {
     const valueInCollateral = isNFT
       ? +asset.positionInfo.nftCollaterizedBalance * +formatEther(assetPrice)
       : +(await convertFromCurrencyDecimals(
-          asset.underlyingAsset,
-          pTokenBalance.toString()
-        )) * +formatEther(assetPrice);
+        asset.underlyingAsset,
+        pTokenBalance.toString()
+      )) * +formatEther(assetPrice);
     collateralAccumulator += valueInCollateral;
 
     // 3. fetch LTV of each asset
@@ -1249,9 +1247,9 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
     const valueInCollateral = isNFT
       ? +asset.positionInfo.nftCollaterizedBalance * +formatEther(assetPrice)
       : +(await convertFromCurrencyDecimals(
-          asset.underlyingAsset,
-          pTokenBalance.toString()
-        )) * +formatEther(assetPrice);
+        asset.underlyingAsset,
+        pTokenBalance.toString()
+      )) * +formatEther(assetPrice);
     collateralAccumulator += valueInCollateral;
 
     // 3. fetch LiquidationThreshold of each asset
