@@ -88,17 +88,6 @@ interface IPoolParameters {
     ) external;
 
     /**
-     * @notice Sets the auction configuration bitmap of the reserve as a whole
-     * @dev Only callable by the PoolConfigurator contract
-     * @param asset The address of the underlying asset of the reserve
-     * @param auctionConfiguration The new auction configuration bitmap
-     **/
-    function setAuctionConfiguration(
-        address asset,
-        DataTypes.ReserveAuctionConfigurationMap calldata auctionConfiguration
-    ) external;
-
-    /**
      * @notice Mints the assets accrued through the reserve factor to the treasury in the form of xTokens
      * @param assets The list of reserves for which the minting needs to be executed
      **/
@@ -158,4 +147,17 @@ interface IPoolParameters {
      * @param value The maximum amount
      */
     function setMaxAtomicTokensAllowed(uint24 value) external;
+
+    /**
+     * @notice Set the auction recovery health factor
+     * @param value The new auction health factor
+     */
+    function setAuctionRecoveryHealthFactor(uint256 value) external;
+
+    /**
+     * @notice Set erc721 HF verify time, all auctions triggered before the verify time
+     * will be considered as invalid
+     * @param user The user address
+     */
+    function setERC721HFVerifyTime(address user) external;
 }

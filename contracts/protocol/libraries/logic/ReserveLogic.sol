@@ -345,7 +345,6 @@ library ReserveLogic {
         DataTypes.ReserveCache memory reserveCache;
 
         reserveCache.reserveConfiguration = reserve.configuration;
-        reserveCache.reserveAuctionConfiguration = reserve.auctionConfiguration;
         reserveCache.xTokenAddress = reserve.xTokenAddress;
 
         (, , , , , DataTypes.AssetType reserveAssetType) = reserveCache

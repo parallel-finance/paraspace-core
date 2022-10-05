@@ -390,6 +390,7 @@ contract PoolCore is
             DataTypes.ExecuteLiquidationCallParams({
                 reservesCount: _reservesCount,
                 liquidationAmount: debtToCover,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 liquidationAsset: debtAsset,
                 user: user,
@@ -417,6 +418,7 @@ contract PoolCore is
             DataTypes.ExecuteLiquidationCallParams({
                 reservesCount: _reservesCount,
                 liquidationAmount: liquidationAmount,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 liquidationAsset: liquidationAsset,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
@@ -440,6 +442,7 @@ contract PoolCore is
             _usersConfig,
             DataTypes.ExecuteAuctionParams({
                 reservesCount: _reservesCount,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
@@ -460,6 +463,7 @@ contract PoolCore is
             _usersConfig,
             DataTypes.ExecuteAuctionParams({
                 reservesCount: _reservesCount,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
@@ -688,14 +692,14 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getAuctionConfiguration(address asset)
+    function getERC721HFVerifyTime(address user)
         external
         view
         virtual
         override
-        returns (DataTypes.ReserveAuctionConfigurationMap memory)
+        returns (uint256 verifyTime)
     {
-        return _reserves[asset].auctionConfiguration;
+        verifyTime = _usersConfig[user].erc721HFVerifyTime;
     }
 
     /// @inheritdoc IPoolCore

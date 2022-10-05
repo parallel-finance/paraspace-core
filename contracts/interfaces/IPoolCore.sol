@@ -491,16 +491,6 @@ interface IPoolCore {
         returns (DataTypes.ReserveConfigurationMap memory);
 
     /**
-     * @notice Returns the auction configuration of the reserve
-     * @param asset The address of the underlying asset of the reserve
-     * @return The auction configuration of the reserve
-     **/
-    function getAuctionConfiguration(address asset)
-        external
-        view
-        returns (DataTypes.ReserveAuctionConfigurationMap memory);
-
-    /**
      * @notice Returns the normalized income normalized income of the reserve
      * @param asset The address of the underlying asset of the reserve
      * @return The reserve's normalized income
@@ -582,6 +572,22 @@ interface IPoolCore {
      **/
     function getReserveAddressById(uint16 id) external view returns (address);
 
+    /**
+     * @notice Returns the ERC721 HF verify time
+     * @param user The address of the user
+     * @return The ERC721 HF verify time
+     */
+    function getERC721HFVerifyTime(address user)
+        external
+        view
+        returns (uint256);
+
+    /**
+     * @notice Returns the auction related data of specific asset collection and token id.
+     * @param ntokenAsset The address of ntoken
+     * @param tokenId The token id which is currently auctioned for liquidation
+     * @return The auction related data of the corresponding (ntokenAsset, tokenId)
+     */
     function getAuctionData(address ntokenAsset, uint256 tokenId)
         external
         view

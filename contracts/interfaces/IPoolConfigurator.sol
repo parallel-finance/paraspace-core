@@ -46,12 +46,6 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     );
 
-    event AuctionConfigurationChanged(
-        address indexed asset,
-        bool enabled,
-        uint256 recoveryHealthFactor
-    );
-
     /**
      * @dev Emitted when stable rate borrowing is enabled or disabled on a reserve
      * @param asset The address of the underlying asset of the reserve
@@ -269,12 +263,6 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     ) external;
 
-    function configureReserveAsAuctionCollateral(
-        address asset,
-        bool auctionEnabled,
-        uint256 recoveryHealthFactor
-    ) external;
-
     /**
      * @notice Enable or disable stable rate borrowing on a reserve.
      * @dev Can only be enabled (set to true) if borrowing is enabled
@@ -319,6 +307,12 @@ interface IPoolConfigurator {
      * @param value The maximum amount
      */
     function setMaxAtomicTokensAllowed(uint24 value) external;
+
+    /**
+     * @notice set the auction recovery health factor
+     * @param value The auction recovery health factor
+     */
+    function setAuctionRecoveryHealthFactor(uint256 value) external;
 
     /**
      * @notice Updates the reserve factor of a reserve.

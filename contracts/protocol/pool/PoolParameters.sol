@@ -196,19 +196,6 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function setAuctionConfiguration(
-        address asset,
-        DataTypes.ReserveAuctionConfigurationMap calldata auctionConfiguration
-    ) external virtual override onlyPoolConfigurator {
-        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        require(
-            _reserves[asset].id != 0 || _reservesList[0] == asset,
-            Errors.ASSET_NOT_LISTED
-        );
-        _reserves[asset].auctionConfiguration = auctionConfiguration;
-    }
-
-    /// @inheritdoc IPoolParameters
     function rescueTokens(
         DataTypes.AssetType assetType,
         address token,
@@ -260,5 +247,38 @@ contract PoolParameters is
         require(value != 0, Errors.INVALID_AMOUNT);
 
         _maxAtomicTokensAllowed = value;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAuctionRecoveryHealthFactor(uint256 value)
+        external
+        virtual
+        override
+        onlyPoolConfigurator
+    {
+        require(value != 0, Errors.INVALID_AMOUNT);
+
+        _auctionRecoveryHealthFactor = value;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setERC721HFVerifyTime(address user) external virtual override {
+        DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
+        (, , , , , , uint256 erc721HealthFactor) = PoolLogic
+            .executeGetUserAccountData(
+                _reserves,
+                _reservesList,
+                DataTypes.CalculateUserAccountDataParams({
+                    userConfig: userConfig,
+                    reservesCount: _reservesCount,
+                    user: user,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                })
+            );
+        require(
+            erc721HealthFactor >= _auctionRecoveryHealthFactor,
+            Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
+        );
+        userConfig.erc721HFVerifyTime = block.timestamp;
     }
 }
