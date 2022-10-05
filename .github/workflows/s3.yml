@@ -32,6 +32,8 @@ on:
         required: true
       CLOUDFLARE_TOKEN:
         required: true
+      PAT:
+        required: true
 
 jobs:
   deploy-s3-and-cloudfront:
