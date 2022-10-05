@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
+import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {getMockAggregator} from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
@@ -9,7 +9,7 @@ import {
   setBlocktime,
   waitForTx,
 } from "../deploy/helpers/misc-utils";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {makeSuite} from "./helpers/make-suite";
 import {snapshot} from "./helpers/snapshot-manager";
 import {
@@ -294,12 +294,11 @@ makeSuite("Liquidation Auction", (testEnv) => {
 
     it("Liquidator attempts to liquidate ERC-721 without auction enabled (should be reverted)", async () => {
       const {
-        deployer,
-        configurator,
         users: [borrower, liquidator],
         pool,
         bayc,
         dai,
+        configurator,
       } = testEnv;
 
       // drop BAYC price to liquidation levels
@@ -309,13 +308,10 @@ makeSuite("Liquidation Auction", (testEnv) => {
 
       // disable auction first to test original liquidation
       await waitForTx(
-        await configurator
-          .connect(deployer.signer)
-          .configureReserveAsAuctionCollateral(
-            bayc.address,
-            false,
-            parseEther("1.5")
-          )
+        await configurator.setReserveAuctionStrategyAddress(
+          bayc.address,
+          ZERO_ADDRESS
+        )
       );
 
       // Liquidator
@@ -339,7 +335,10 @@ makeSuite("Liquidation Auction", (testEnv) => {
             borrower.address,
             0,
             parseEther("12").toString(),
-            false
+            false,
+            {
+              gasLimit: 5000000,
+            }
           )
       ).to.be.revertedWith(ProtocolErrors.LIQUIDATION_AMOUNT_NOT_ENOUGH);
     });
@@ -348,8 +347,6 @@ makeSuite("Liquidation Auction", (testEnv) => {
   describe("Do not revert to snapshot on every step", () => {
     it("Liquidator starts auction on BAYC#0", async () => {
       const {
-        deployer,
-        configurator,
         users: [borrower, liquidator],
         pool,
         bayc,
@@ -358,17 +355,6 @@ makeSuite("Liquidation Auction", (testEnv) => {
 
       // drop BAYC price to liquidation levels
       await changePriceAndValidate(bayc, "8");
-
-      // enable auction
-      await waitForTx(
-        await configurator
-          .connect(deployer.signer)
-          .configureReserveAsAuctionCollateral(
-            bayc.address,
-            true,
-            parseEther("1.5")
-          )
-      );
 
       await waitForTx(
         await pool
@@ -398,10 +384,8 @@ makeSuite("Liquidation Auction", (testEnv) => {
       } = testEnv;
 
       const {startTime} = await nBAYC.getAuctionData(0);
-      const auctionedBalance = await nBAYC.auctionedBalanceOf(borrower.address);
       const isAuctioned = await nBAYC.isAuctioned(0);
       expect(startTime).to.be.gt(0);
-      expect(auctionedBalance).to.be.eq(1);
       expect(isAuctioned).to.be.true;
 
       const [[auctionData]] = await poolDataProvider.getNTokenData(
@@ -539,10 +523,8 @@ makeSuite("Liquidation Auction", (testEnv) => {
       } = testEnv;
 
       const {startTime} = await nBAYC.getAuctionData(0);
-      const auctionedBalance = await nBAYC.auctionedBalanceOf(borrower.address);
       const isAuctioned = await nBAYC.isAuctioned(0);
       expect(startTime).to.be.eq(0);
-      expect(auctionedBalance).to.be.eq(0);
       expect(isAuctioned).to.be.false;
 
       const [[auctionData]] = await poolDataProvider.getNTokenData(

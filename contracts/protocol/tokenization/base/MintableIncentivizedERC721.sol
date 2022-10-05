@@ -70,7 +70,6 @@ abstract contract MintableIncentivizedERC721 is
         uint64 balance;
         uint64 collaterizedBalance;
         uint128 additionalData;
-        uint64 auctionedBalance;
     }
 
     // Token name
@@ -353,7 +352,9 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     function _isAuctioned(uint256 tokenId) internal view returns (bool) {
-        return _auctions[tokenId].startTime != 0;
+        return
+            _auctions[tokenId].startTime >
+            POOL.getERC721HFValidityTime(ownerOf(tokenId));
     }
 
     /**
@@ -722,17 +723,6 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc IAuctionableERC721
-    function auctionedBalanceOf(address account)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _userState[account].auctionedBalance;
-    }
-
-    /// @inheritdoc IAuctionableERC721
     function isAuctioned(uint256 tokenId)
         external
         view
@@ -746,7 +736,6 @@ abstract contract MintableIncentivizedERC721 is
     function startAuction(uint256 tokenId) external virtual override onlyPool {
         require(!_isAuctioned(tokenId), Errors.AUCTION_ALREADY_STARTED);
         require(_exists(tokenId), "ERC721: startAuction for nonexistent token");
-        _userState[_owners[tokenId]].auctionedBalance += 1;
         _auctions[tokenId] = DataTypes.Auction({startTime: block.timestamp});
     }
 
@@ -754,7 +743,6 @@ abstract contract MintableIncentivizedERC721 is
     function endAuction(uint256 tokenId) external virtual override onlyPool {
         require(_isAuctioned(tokenId), Errors.AUCTION_NOT_STARTED);
         require(_exists(tokenId), "ERC721: endAuction for nonexistent token");
-        _userState[_owners[tokenId]].auctionedBalance -= 1;
         delete _auctions[tokenId];
     }
 
@@ -765,7 +753,11 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (DataTypes.Auction memory auction)
     {
-        auction = _auctions[tokenId];
+        if (!_isAuctioned(tokenId)) {
+            auction = DataTypes.Auction({startTime: 0});
+        } else {
+            auction = _auctions[tokenId];
+        }
     }
 
     // Mapping from owner to list of owned token IDs

@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {waitForTx} from "../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
+import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {RateMode} from "../deploy/helpers/types";
 import {makeSuite} from "./helpers/make-suite";
@@ -106,11 +106,10 @@ makeSuite("MoonBird gateway and supply while nesting", (testEnv) => {
 
   it("Liquidator liquidates Moonbird while it's nesting - gets nToken", async () => {
     const {
-      deployer,
-      configurator,
       users: [borrower, , liquidator],
       moonbirds,
       nMOONBIRD,
+      configurator,
       dai,
       pool,
     } = testEnv;
@@ -118,13 +117,10 @@ makeSuite("MoonBird gateway and supply while nesting", (testEnv) => {
     const liqSnapshotId = await snapshot.take();
 
     await waitForTx(
-      await configurator
-        .connect(deployer.signer)
-        .configureReserveAsAuctionCollateral(
-          moonbirds.address,
-          false,
-          parseEther("1.5")
-        )
+      await configurator.setReserveAuctionStrategyAddress(
+        moonbirds.address,
+        ZERO_ADDRESS
+      )
     );
 
     const daiAmount = await convertToCurrencyDecimals(dai.address, "1");
@@ -166,21 +162,17 @@ makeSuite("MoonBird gateway and supply while nesting", (testEnv) => {
     const {
       users: [borrower, , liquidator],
       moonbirds,
-      configurator,
-      deployer,
       nMOONBIRD,
       dai,
       pool,
+      configurator,
     } = testEnv;
 
     await waitForTx(
-      await configurator
-        .connect(deployer.signer)
-        .configureReserveAsAuctionCollateral(
-          moonbirds.address,
-          false,
-          parseEther("1.5")
-        )
+      await configurator.setReserveAuctionStrategyAddress(
+        moonbirds.address,
+        ZERO_ADDRESS
+      )
     );
 
     const daiAmount = await convertToCurrencyDecimals(dai.address, "1");

@@ -196,19 +196,6 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function setAuctionConfiguration(
-        address asset,
-        DataTypes.ReserveAuctionConfigurationMap calldata auctionConfiguration
-    ) external virtual override onlyPoolConfigurator {
-        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        require(
-            _reserves[asset].id != 0 || _reservesList[0] == asset,
-            Errors.ASSET_NOT_LISTED
-        );
-        _reserves[asset].auctionConfiguration = auctionConfiguration;
-    }
-
-    /// @inheritdoc IPoolParameters
     function rescueTokens(
         DataTypes.AssetType assetType,
         address token,
@@ -260,5 +247,17 @@ contract PoolParameters is
         require(value != 0, Errors.INVALID_AMOUNT);
 
         _maxAtomicTokensAllowed = value;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAuctionRecoveryHealthFactor(uint64 value)
+        external
+        virtual
+        override
+        onlyPoolConfigurator
+    {
+        require(value != 0, Errors.INVALID_AMOUNT);
+
+        _auctionRecoveryHealthFactor = value;
     }
 }

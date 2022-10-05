@@ -8,11 +8,13 @@
     "types"
   ],
   "scripts": {
+    "prepare": "husky install",
     "size": "hardhat size-contracts",
     "build": "SKIP_LOAD=true hardhat compile",
-    "lint": "solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'test-suites/**/*.ts' && eslint . --ext .ts",
+    "lint": "solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts' && eslint . --ext .ts",
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --testfiles 'test-suites/*.ts'",
-    "format": "prettier --write 'contracts/**/*.sol' 'test-suites/**/*.ts'",
+    "format": "prettier --write 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts'",
+    "doc": "hardhat docgen",
     "test": "TS_NODE_TRANSPILE_ONLY=1 hardhat test ./test-suites/*.ts",
     "clean": "hardhat clean && rm -rf ./artifacts ./cache ./types"
   },
@@ -53,7 +55,7 @@
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.0",
     "hardhat-typechain": "^0.3.3",
-    "husky": "^4.2.5",
+    "husky": "^8.0.1",
     "lowdb": "1.0.0",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-alpha.53",
@@ -64,7 +66,7 @@
     "ts-generator": "^0.1.1",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
-    "typescript": "^4.0.5"
+    "typescript": "4.7.4"
   },
   "dependencies": {
     "async": "^3.2.4",
@@ -73,13 +75,7 @@
   },
   "author": "ParaSpace-MM Team",
   "contributors": [],
-  "license": "AGPLv3",
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged --pattern 'contracts/**/*.sol'",
-      "commit-msg": "commitlint --edit"
-    }
-  },
+  "license": "MIT",
   "keywords": [
     "paraspace",
     "nft",

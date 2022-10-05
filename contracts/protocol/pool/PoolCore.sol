@@ -390,6 +390,7 @@ contract PoolCore is
             DataTypes.ExecuteLiquidationCallParams({
                 reservesCount: _reservesCount,
                 liquidationAmount: debtToCover,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 liquidationAsset: debtAsset,
                 user: user,
@@ -417,6 +418,7 @@ contract PoolCore is
             DataTypes.ExecuteLiquidationCallParams({
                 reservesCount: _reservesCount,
                 liquidationAmount: liquidationAmount,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 liquidationAsset: liquidationAsset,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
@@ -440,6 +442,7 @@ contract PoolCore is
             _usersConfig,
             DataTypes.ExecuteAuctionParams({
                 reservesCount: _reservesCount,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
@@ -460,12 +463,39 @@ contract PoolCore is
             _usersConfig,
             DataTypes.ExecuteAuctionParams({
                 reservesCount: _reservesCount,
+                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle()
             })
         );
+    }
+
+    /// @inheritdoc IPoolCore
+    function updateERC721HFValidityTime(address user)
+        external
+        virtual
+        override
+        nonReentrant
+    {
+        DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
+        (, , , , , , uint256 erc721HealthFactor) = PoolLogic
+            .executeGetUserAccountData(
+                _reserves,
+                _reservesList,
+                DataTypes.CalculateUserAccountDataParams({
+                    userConfig: userConfig,
+                    reservesCount: _reservesCount,
+                    user: user,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                })
+            );
+        require(
+            erc721HealthFactor > _auctionRecoveryHealthFactor,
+            Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
+        );
+        userConfig.erc721HFValidityTime = block.timestamp;
     }
 
     /// @inheritdoc IPoolCore
@@ -688,14 +718,14 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getAuctionConfiguration(address asset)
+    function getERC721HFValidityTime(address user)
         external
         view
         virtual
         override
-        returns (DataTypes.ReserveAuctionConfigurationMap memory)
+        returns (uint256 verifyTime)
     {
-        return _reserves[asset].auctionConfiguration;
+        verifyTime = _usersConfig[user].erc721HFValidityTime;
     }
 
     /// @inheritdoc IPoolCore
@@ -714,28 +744,30 @@ contract PoolCore is
             Errors.ASSET_NOT_LISTED
         );
 
-        uint256 startTime = IAuctionableERC721(ntokenAsset)
-            .getAuctionData(tokenId)
-            .startTime;
-        IReserveAuctionStrategy auctionStrategy = IReserveAuctionStrategy(
-            reserve.auctionStrategyAddress
-        );
+        if (reserve.auctionStrategyAddress != address(0)) {
+            uint256 startTime = IAuctionableERC721(ntokenAsset)
+                .getAuctionData(tokenId)
+                .startTime;
+            IReserveAuctionStrategy auctionStrategy = IReserveAuctionStrategy(
+                reserve.auctionStrategyAddress
+            );
 
-        auctionData.startTime = startTime;
-        auctionData.asset = underlyingAsset;
-        auctionData.tokenId = tokenId;
-        auctionData.currentPriceMultiplier = auctionStrategy
-            .calculateAuctionPriceMultiplier(startTime, block.timestamp);
+            auctionData.startTime = startTime;
+            auctionData.asset = underlyingAsset;
+            auctionData.tokenId = tokenId;
+            auctionData.currentPriceMultiplier = auctionStrategy
+                .calculateAuctionPriceMultiplier(startTime, block.timestamp);
 
-        auctionData.maxPriceMultiplier = auctionStrategy
-            .getMaxPriceMultiplier();
-        auctionData.minExpPriceMultiplier = auctionStrategy
-            .getMinExpPriceMultiplier();
-        auctionData.minPriceMultiplier = auctionStrategy
-            .getMinPriceMultiplier();
-        auctionData.stepLinear = auctionStrategy.getStepLinear();
-        auctionData.stepExp = auctionStrategy.getStepExp();
-        auctionData.tickLength = auctionStrategy.getTickLength();
+            auctionData.maxPriceMultiplier = auctionStrategy
+                .getMaxPriceMultiplier();
+            auctionData.minExpPriceMultiplier = auctionStrategy
+                .getMinExpPriceMultiplier();
+            auctionData.minPriceMultiplier = auctionStrategy
+                .getMinPriceMultiplier();
+            auctionData.stepLinear = auctionStrategy.getStepLinear();
+            auctionData.stepExp = auctionStrategy.getStepExp();
+            auctionData.tickLength = auctionStrategy.getTickLength();
+        }
     }
 
     // This function is necessary when receive erc721 from looksrare

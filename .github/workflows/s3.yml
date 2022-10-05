@@ -1,0 +1,142 @@
+name: Reusable S3 deployment job
+
+on:
+  workflow_call:
+    inputs:
+      AWS_STACK_NAME:
+        type: string
+        required: true
+      S3_BUCKET_NAME:
+        type: string
+        required: true
+      ALTERNATE_DOMAIN_NAME:
+        type: string
+        required: true
+      CLOUDFLARE_PURGE_URLS:
+        type: string
+        required: true
+      AWS_REGION:
+        default: 'us-east-2'
+        type: string
+        required: false
+    secrets:
+      CERERTIFICATE_ARN:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+      CLOUDFLARE_ZONE:
+        required: true
+      CLOUDFLARE_TOKEN:
+        required: true
+      PAT:
+        required: true
+
+jobs:
+  deploy-s3-and-cloudfront:
+    name: Deploy S3 and CloudFront
+    runs-on: ubuntu-latest
+    outputs:
+      CfDistributionId: ${{ steps.cloudformation.outputs.CfDistributionId }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.AWS_REGION }}
+
+      - name: Deploy CloudFormation
+        id: cloudformation
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: ${{ inputs.AWS_STACK_NAME }}
+          template: aws/s3-and-cloudfront-template.yml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: >-
+            S3BucketName=${{ inputs.S3_BUCKET_NAME }},
+            AlternateDomainName=${{ inputs.ALTERNATE_DOMAIN_NAME }},
+            CertificateArn=${{ secrets.CERERTIFICATE_ARN }}
+  deploy-output-to-s3:
+    name: Deploy output files to S3
+    needs: deploy-s3-and-cloudfront
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
+
+      - name: Use node version 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org
+      - name: Generate Documentation
+        run: |
+          yarn
+          touch .env
+          make doc
+          mkdir bin
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.21/mdbook-v0.4.21-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+          bin/mdbook init paraspace-core-docs --title "paraspace core" --ignore none
+          rm -rf paraspace-core-docs/src/* && mv docs/* paraspace-core-docs/src/
+          rm paraspace-core-docs/src/DEVELOPER-GUIDE.md
+      - name: Generate Summary
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: mdbook-auto-gen-summary
+      - name: Build Documentation
+        run: |
+          mdbook-auto-gen-summary gen paraspace-core-docs/src
+          bin/mdbook build paraspace-core-docs
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.AWS_REGION }}
+      - name: Upload to S3
+        run: |
+          aws s3 sync ./paraspace-core-docs/book s3://${{ inputs.S3_BUCKET_NAME }}/ --acl public-read --delete
+      - name: slack
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,eventName,ref,workflow
+        if: always()
+
+  clear-cache:
+    name: Clear-cache
+    needs: [deploy-output-to-s3, deploy-s3-and-cloudfront]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge cloudflare cache
+        uses: jakejarvis/cloudflare-purge-action@master
+        env:
+          CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+          PURGE_URLS: ${{ inputs.CLOUDFLARE_PURGE_URLS }}
+      - name: Purge cloudfront cache
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.AWS_REGION }}
+      - run: aws cloudfront create-invalidation --distribution-id "${{ needs.deploy-s3-and-cloudfront.outputs.CfDistributionId }}" --paths '/*'

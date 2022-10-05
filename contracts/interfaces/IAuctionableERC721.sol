@@ -9,11 +9,6 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
  **/
 interface IAuctionableERC721 {
     /**
-     * @dev get the auctioned balance of a specific user
-     */
-    function auctionedBalanceOf(address user) external view returns (uint256);
-
-    /**
      * @dev get the auction configuration of a specific token
      */
     function isAuctioned(uint256 tokenId) external view returns (bool);

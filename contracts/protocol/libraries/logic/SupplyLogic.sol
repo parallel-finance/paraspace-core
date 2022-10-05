@@ -3,7 +3,6 @@ pragma solidity 0.8.10;
 
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
@@ -16,7 +15,6 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {AuctionConfiguration} from "../configuration/AuctionConfiguration.sol";
 
 /**
  * @title SupplyLogic library
@@ -25,7 +23,6 @@ import {AuctionConfiguration} from "../configuration/AuctionConfiguration.sol";
  */
 library SupplyLogic {
     using ReserveLogic for DataTypes.ReserveData;
-    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using GPv2SafeERC20 for IERC20;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using WadRayMath for uint256;

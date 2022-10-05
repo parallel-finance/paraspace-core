@@ -3,8 +3,6 @@ import {BigNumber, BigNumberish} from "ethers";
 import {formatEther, parseEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT} from "../../deploy/helpers/constants";
 import {
-  getAllMockedTokens,
-  getFirstSigner,
   getMockAggregator,
   getParaSpaceOracle,
   getPToken,
