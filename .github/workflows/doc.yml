@@ -26,3 +26,4 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
       CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+      PAT: ${{ secrets.PAT }}
