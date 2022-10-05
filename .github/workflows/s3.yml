@@ -71,7 +71,12 @@ jobs:
     needs: deploy-s3-and-cloudfront
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
+
       - name: Use node version 16
         uses: actions/setup-node@v3
         with:
