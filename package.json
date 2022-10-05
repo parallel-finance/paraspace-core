@@ -14,6 +14,7 @@
     "lint": "solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'test-suites/**/*.ts' && eslint . --ext .ts",
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --testfiles 'test-suites/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'test-suites/**/*.ts'",
+    "doc": "hardhat docgen",
     "test": "TS_NODE_TRANSPILE_ONLY=1 hardhat test ./test-suites/*.ts",
     "clean": "hardhat clean && rm -rf ./artifacts ./cache ./types"
   },
