@@ -73,10 +73,10 @@
   },
   "author": "ParaSpace-MM Team",
   "contributors": [],
-  "license": "AGPLv3",
+  "license": "MIT",
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged --pattern 'contracts/**/*.sol'",
+      "pre-commit": "typos && pretty-quick --staged --pattern 'test-suites**/*.ts' --pattern 'deploy/**/*.ts'",
       "commit-msg": "commitlint --edit"
     }
   },

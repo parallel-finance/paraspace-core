@@ -37,6 +37,7 @@ const hardhatConfig: HardhatUserConfig = {
     alphaSort: true,
     runOnCompile: false,
     disambiguatePaths: false,
+    except: ["Mock*"],
   },
   paths: {
     sources: "./contracts",
@@ -49,6 +50,17 @@ const hardhatConfig: HardhatUserConfig = {
     pages: "items",
     exclude: ["dependencies", "deployments", "mocks"],
   },
+  namedAccounts: {
+    deployer: {
+      default: 0,
+    },
+    aclAdmin: {
+      default: 1,
+    },
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
+  },
   solidity: {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
     compilers: [
@@ -57,7 +69,7 @@ const hardhatConfig: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 100,
+            runs: 1,
           },
           evmVersion: "london",
         },
@@ -80,6 +92,9 @@ const hardhatConfig: HardhatUserConfig = {
     outDir: "types",
     target: "ethers-v5",
   },
+  mocha: {
+    timeout: 200000,
+  },
   tenderly: {
     project: process.env.TENDERLY_PROJECT || "",
     username: process.env.TENDERLY_USERNAME || "",
@@ -90,7 +105,7 @@ const hardhatConfig: HardhatUserConfig = {
       url: "http://localhost:29933",
       chainId: 1592,
       accounts: evmAccounts.map(
-          ({secretKey}: {secretKey: string; balance: string}) => secretKey
+        ({secretKey}: {secretKey: string; balance: string}) => secretKey
       ),
       gasPrice: 4e9,
       gas: 4e6,
@@ -115,10 +130,10 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts: accounts.map(
-          ({secretKey, balance}: {secretKey: string; balance: string}) => ({
-            privateKey: secretKey,
-            balance,
-          })
+        ({secretKey, balance}: {secretKey: string; balance: string}) => ({
+          privateKey: secretKey,
+          balance,
+        })
       ),
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
@@ -148,8 +163,8 @@ const hardhatConfig: HardhatUserConfig = {
       },
     },
   },
-  mocha: {
-    timeout: 200000
+  etherscan: {
+    apiKey: ETHERSCAN_KEY,
   },
 };
 

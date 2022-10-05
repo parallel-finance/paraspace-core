@@ -13,7 +13,7 @@ jobs:
   call-deployment-in-local-repo:
     name: doc
     needs: wait-for-approval
-    uses: ./.github/workflows/deploy.yml
+    uses: ./.github/workflows/s3.yml
     with:
       AWS_STACK_NAME: paraspace-core-docs
       S3_BUCKET_NAME: paraspace-core-docs
