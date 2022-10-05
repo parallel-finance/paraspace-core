@@ -40,7 +40,11 @@ jobs:
     outputs:
       CfDistributionId: ${{ steps.cloudformation.outputs.CfDistributionId }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: true
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
