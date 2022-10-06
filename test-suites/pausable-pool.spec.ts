@@ -2,27 +2,9 @@ import {expect} from "chai";
 import "./helpers/utils/wadraymath";
 import {utils} from "ethers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {
-  getFirstSigner,
-  getMockPool,
-  getPoolConfiguratorProxy,
-} from "../deploy/helpers/contracts-getters";
-import {
-  evmRevert,
-  evmSnapshot,
-  getFunctionSignatures,
-} from "../deploy/helpers/misc-utils";
-import {deployMockPool} from "../deploy/helpers/contracts-deployments";
-import {
-  ACLManager__factory,
-  ConfiguratorLogic__factory,
-  PoolAddressesProvider__factory,
-  PoolConfigurator__factory,
-} from "../types";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
-import {FormatTypes} from "ethers/lib/utils";
 
 makeSuite("PausablePool", (testEnv: TestEnv) => {
   const {RESERVE_PAUSED} = ProtocolErrors;

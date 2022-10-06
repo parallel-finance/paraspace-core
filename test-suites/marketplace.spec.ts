@@ -1126,8 +1126,6 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
     const {
       doodles,
       dai,
-      looksRareExchange,
-      strategyStandardSaleForFixedPrice,
       transferManagerERC721,
       pool,
       users: [maker, taker],
@@ -1350,10 +1348,8 @@ makeSuite("Leveraged Buy - Negative tests", (testEnv) => {
 
   it("Cannot proceed with purchase using a unsupported currency", async () => {
     const {
-      seaport,
       bayc,
       pDai,
-      pool,
       users: [maker, taker],
     } = testEnv;
 
@@ -1380,7 +1376,7 @@ makeSuite("Leveraged Buy - Negative tests", (testEnv) => {
       paraspaceOracle,
       helpersContract,
     } = testEnv;
-    const [deployer, secondaryWallet] = await getEthersSigners();
+    const [deployer] = await getEthersSigners();
 
     // drop NFT price enough so that the NFT cannot cover a paylater of 200 DAI
     await changePriceAndValidate(bayc, "0.5");
@@ -3249,7 +3245,7 @@ makeSuite("Leveraged Bid - Negative tests", (testEnv) => {
       paraspaceOracle,
       helpersContract,
     } = testEnv;
-    const [deployer, secondaryWallet] = await getEthersSigners();
+    const [deployer] = await getEthersSigners();
 
     // drop NFT price enough so that the NFT cannot cover a paylater of 200 DAI
     await changePriceAndValidate(bayc, "0.5");

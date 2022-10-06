@@ -17,7 +17,7 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
 
     await setSnapshot();
 
-    const [deployer, updater] = await getEthersSigners();
+    const [deployer] = await getEthersSigners();
 
     await nftFloorOracle.connect(deployer).addAssets([bayc.address]);
 
@@ -156,7 +156,7 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Oracle feeders list can be updated", async () => {
     const {
       bayc,
-      users: [user1, user2, user3],
+      users: [, , user3],
     } = testEnv;
     const [deployer, updater] = await getEthersSigners();
 
@@ -180,7 +180,7 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Feeders, updater and admin can feed a price", async () => {
     const {
       bayc,
-      users: [user1, user2, user3],
+      users: [, , user3],
     } = testEnv;
     const [deployer, updater] = await getEthersSigners();
 
@@ -212,7 +212,7 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Only admin can feed price as 0", async () => {
     const {
       bayc,
-      users: [user1, user2, user3],
+      users: [, , user3],
     } = testEnv;
     const [deployer, updater] = await getEthersSigners();
 
@@ -241,7 +241,7 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Administrator role can be granted to another user", async () => {
     const {
       bayc,
-      users: [user1, user2, user3],
+      users: [, , user3],
       aclManager,
     } = testEnv;
     const [deployer, updater] = await getEthersSigners();
@@ -279,10 +279,9 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Feeders with revoked rights cannot feed price", async () => {
     const {
       bayc,
-      users: [user1, user2, user3, user4],
-      aclManager,
+      users: [, , user3],
     } = testEnv;
-    const [deployer, updater] = await getEthersSigners();
+    const [deployer] = await getEthersSigners();
 
     // revoke UPDATER role to user3
     await (await getNFTFloorOracle())
@@ -304,7 +303,7 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Only when minCountToAggregate is reached, median value from the different providers is returned", async () => {
     const {
       bayc,
-      users: [user1, user2, user3, user4],
+      users: [, user2, user3, user4],
     } = testEnv;
     const [deployer, updater] = await getEthersSigners();
     // set initial price to 0.5 ETH
@@ -367,7 +366,7 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Oracle quotes expire based on expirationPeriod", async () => {
     const {
       bayc,
-      users: [user1, user2, user3, user4],
+      users: [, user2, user3, user4],
     } = testEnv;
     const [deployer, updater] = await getEthersSigners();
     // set minCounToAggregate to 2, expiration period to 60 seconds
@@ -414,9 +413,9 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
   it("Price changes away from maxPriceDeviation are not taken into account", async () => {
     const {
       bayc,
-      users: [user1, user2, user3, user4],
+      users: [, user2, user3, user4],
     } = testEnv;
-    const [deployer, updater] = await getEthersSigners();
+    const [deployer] = await getEthersSigners();
 
     // set feeders
     await (await getNFTFloorOracle())

@@ -1,7 +1,6 @@
 import {expect} from "chai";
 import {makeSuite, revertHead, setSnapshot} from "./helpers/make-suite";
 import {waitForTx} from "../deploy/helpers/misc-utils";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
   createNewPool,

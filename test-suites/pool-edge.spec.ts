@@ -13,7 +13,6 @@ import {
 } from "../deploy/helpers/contracts-deployments";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
-  ERC20__factory,
   MockReserveInterestRateStrategy__factory,
   // Pool__factory,
   PToken__factory,
@@ -30,7 +29,6 @@ declare let hre: HardhatRuntimeEnvironment;
 
 makeSuite("Pool: Edge cases", (testEnv: TestEnv) => {
   const {
-    INVALID_ADDRESSES_PROVIDER,
     ASSET_NOT_LISTED,
     ZERO_ADDRESS_NOT_VALID,
     CALLER_NOT_POOL_CONFIGURATOR,

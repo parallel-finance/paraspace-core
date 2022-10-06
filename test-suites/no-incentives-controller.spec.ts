@@ -21,8 +21,6 @@ import {parseEther} from "ethers/lib/utils";
 makeSuite("Reserve Without Incentives Controller", (testEnv) => {
   let mockToken: MintableERC20;
   let oMockToken: ERC20;
-  let mockStableDebt: ERC20;
-  let mockVariableDebt: ERC20;
 
   before(async () => {
     const {pool, poolAdmin, oracle, configurator, dai, helpersContract} =
@@ -172,14 +170,6 @@ makeSuite("Reserve Without Incentives Controller", (testEnv) => {
     const reserveData = await pool.getReserveData(mockToken.address);
     oMockToken = ERC20__factory.connect(
       reserveData.xTokenAddress,
-      await getFirstSigner()
-    );
-    mockStableDebt = ERC20__factory.connect(
-      reserveData.stableDebtTokenAddress,
-      await getFirstSigner()
-    );
-    mockVariableDebt = ERC20__factory.connect(
-      reserveData.variableDebtTokenAddress,
       await getFirstSigner()
     );
   });
