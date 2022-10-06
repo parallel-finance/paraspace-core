@@ -514,7 +514,7 @@ makeSuite("Uniswap V3", (testEnv) => {
       );
     });
 
-    it("UniswapV3 asset cannot be auctionable [ @skip-on-coverage ]", async () => {
+    it("UniswapV3 asset cannot be auctioned [ @skip-on-coverage ]", async () => {
       const {
         users: [borrower, liquidator],
         pool,
