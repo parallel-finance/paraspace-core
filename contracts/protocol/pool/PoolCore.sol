@@ -473,7 +473,7 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function setERC721HFVerifyTime(address user)
+    function updateERC721HFValidityTime(address user)
         external
         virtual
         override
@@ -495,7 +495,7 @@ contract PoolCore is
             erc721HealthFactor > _auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
-        userConfig.erc721HFVerifyTime = block.timestamp;
+        userConfig.erc721HFValidityTime = block.timestamp;
     }
 
     /// @inheritdoc IPoolCore
@@ -718,14 +718,14 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getERC721HFVerifyTime(address user)
+    function getERC721HFValidityTime(address user)
         external
         view
         virtual
         override
         returns (uint256 verifyTime)
     {
-        verifyTime = _usersConfig[user].erc721HFVerifyTime;
+        verifyTime = _usersConfig[user].erc721HFValidityTime;
     }
 
     /// @inheritdoc IPoolCore

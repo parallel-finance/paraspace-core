@@ -15,7 +15,7 @@ contract ParaSpaceFallbackOracle {
     address public immutable WETH;
     address public immutable USDC;
 
-    bytes4 private constant _InterfaceId_ERC721 = 0x80ac58cd;
+    bytes4 private constant INTERFACE_ID_ERC721 = 0x80ac58cd;
 
     constructor(
         address bendDAO,
@@ -32,7 +32,7 @@ contract ParaSpaceFallbackOracle {
     }
 
     function getAssetPrice(address asset) public view returns (uint256) {
-        try IERC165(asset).supportsInterface(_InterfaceId_ERC721) returns (
+        try IERC165(asset).supportsInterface(INTERFACE_ID_ERC721) returns (
             bool supported
         ) {
             if (supported == true) {

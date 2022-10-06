@@ -2,10 +2,7 @@ import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {
-  getMockAggregator,
-  getMockReserveAuctionStrategy,
-} from "../deploy/helpers/contracts-getters";
+import {getMockAggregator} from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
   advanceBlock,
@@ -354,21 +351,10 @@ makeSuite("Liquidation Auction", (testEnv) => {
         pool,
         bayc,
         nBAYC,
-        configurator,
       } = testEnv;
 
       // drop BAYC price to liquidation levels
       await changePriceAndValidate(bayc, "8");
-
-      // enable auction
-      await waitForTx(
-        await configurator.setReserveAuctionStrategyAddress(
-          bayc.address,
-          (
-            await getMockReserveAuctionStrategy()
-          ).address
-        )
-      );
 
       await waitForTx(
         await pool

@@ -464,7 +464,7 @@ interface IPoolCore {
      * will be considered as invalid
      * @param user The user address
      */
-    function setERC721HFVerifyTime(address user) external;
+    function updateERC721HFValidityTime(address user) external;
 
     /**
      * @notice Returns the user account data across all the reserves
@@ -596,7 +596,7 @@ interface IPoolCore {
      * @param user The address of the user
      * @return The ERC721 HF verify time
      */
-    function getERC721HFVerifyTime(address user)
+    function getERC721HFValidityTime(address user)
         external
         view
         returns (uint256);

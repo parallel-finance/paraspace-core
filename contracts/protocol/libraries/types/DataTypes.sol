@@ -78,7 +78,7 @@ library DataTypes {
         // this is used to limit the total number of atomic erc721 the user can supply
         uint24 userAtomicTokens;
         // verify time for closing invalid auctions in one tx.
-        uint256 erc721HFVerifyTime;
+        uint256 erc721HFValidityTime;
     }
 
     struct ERC721SupplyParams {
