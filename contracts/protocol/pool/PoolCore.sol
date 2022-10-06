@@ -473,7 +473,12 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function setERC721HFVerifyTime(address user) external virtual override {
+    function setERC721HFVerifyTime(address user)
+        external
+        virtual
+        override
+        nonReentrant
+    {
         DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
         (, , , , , , uint256 erc721HealthFactor) = PoolLogic
             .executeGetUserAccountData(
