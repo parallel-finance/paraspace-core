@@ -153,7 +153,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
             //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
             //collateral than needed to cover the debt
             require(
-                liquidationBonus > PercentageMath.PERCENTAGE_FACTOR,
+                liquidationBonus >= PercentageMath.PERCENTAGE_FACTOR,
                 Errors.INVALID_RESERVE_PARAMS
             );
 
