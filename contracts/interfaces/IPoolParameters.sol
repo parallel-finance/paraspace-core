@@ -153,11 +153,4 @@ interface IPoolParameters {
      * @param value The new auction health factor
      */
     function setAuctionRecoveryHealthFactor(uint256 value) external;
-
-    /**
-     * @notice Set erc721 HF verify time, all auctions triggered before the verify time
-     * will be considered as invalid
-     * @param user The user address
-     */
-    function setERC721HFVerifyTime(address user) external;
 }

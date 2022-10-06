@@ -435,17 +435,36 @@ interface IPoolCore {
         bool receiveNToken
     ) external;
 
+    /**
+     * @notice Start the auction on user's specific NFT collateral
+     * @param user The address of the user
+     * @param collateralAsset The address of the NFT collateral
+     * @param collateralTokenId The tokenId of the NFT collateral
+     **/
     function startAuction(
         address user,
         address collateralAsset,
         uint256 collateralTokenId
     ) external;
 
+    /**
+     * @notice End specific user's auction
+     * @param user The address of the user
+     * @param collateralAsset The address of the NFT collateral
+     * @param collateralTokenId The tokenId of the NFT collateral
+     **/
     function endAuction(
         address user,
         address collateralAsset,
         uint256 collateralTokenId
     ) external;
+
+    /**
+     * @notice Set erc721 HF verify time, all auctions triggered before the verify time
+     * will be considered as invalid
+     * @param user The user address
+     */
+    function setERC721HFVerifyTime(address user) external;
 
     /**
      * @notice Returns the user account data across all the reserves

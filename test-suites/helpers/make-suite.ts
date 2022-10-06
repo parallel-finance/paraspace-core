@@ -189,7 +189,7 @@ const testEnv: TestEnv = {
   riskAdmin: {} as SignerWithAddress,
   gatewayAdmin: {} as SignerWithAddress,
   users: [] as SignerWithAddress[],
-  pool: {} as Pool,
+  pool: {} as IPool,
   configurator: {} as PoolConfigurator,
   poolDataProvider: {} as UiPoolDataProvider,
   helpersContract: {} as ProtocolDataProvider,

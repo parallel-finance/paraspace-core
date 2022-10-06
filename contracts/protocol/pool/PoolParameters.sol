@@ -260,25 +260,4 @@ contract PoolParameters is
 
         _auctionRecoveryHealthFactor = value;
     }
-
-    /// @inheritdoc IPoolParameters
-    function setERC721HFVerifyTime(address user) external virtual override {
-        DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
-        (, , , , , , uint256 erc721HealthFactor) = PoolLogic
-            .executeGetUserAccountData(
-                _reserves,
-                _reservesList,
-                DataTypes.CalculateUserAccountDataParams({
-                    userConfig: userConfig,
-                    reservesCount: _reservesCount,
-                    user: user,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                })
-            );
-        require(
-            erc721HealthFactor >= _auctionRecoveryHealthFactor,
-            Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
-        );
-        userConfig.erc721HFVerifyTime = block.timestamp;
-    }
 }

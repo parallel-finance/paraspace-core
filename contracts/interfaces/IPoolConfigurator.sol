@@ -160,6 +160,18 @@ interface IPoolConfigurator {
     );
 
     /**
+     * @dev Emitted when a reserve auction strategy contract is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param oldStrategy The address of the old auction strategy contract
+     * @param newStrategy The address of the new auction strategy contract
+     **/
+    event ReserveAuctionStrategyChanged(
+        address indexed asset,
+        address oldStrategy,
+        address newStrategy
+    );
+
+    /**
      * @dev Emitted when an xToken implementation is upgraded.
      * @param asset The address of the underlying asset of the reserve
      * @param proxy The xToken proxy address
@@ -329,6 +341,16 @@ interface IPoolConfigurator {
     function setReserveInterestRateStrategyAddress(
         address asset,
         address newRateStrategyAddress
+    ) external;
+
+    /**
+     * @notice Sets the auction strategy of a reserve
+     * @param asset The address of the underlying asset of the reserve
+     * @param newAuctionStrategyAddress The address of the new auction strategy contract
+     **/
+    function setReserveAuctionStrategyAddress(
+        address asset,
+        address newAuctionStrategyAddress
     ) external;
 
     /**

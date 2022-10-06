@@ -109,6 +109,7 @@ makeSuite("MoonBird gateway and supply while nesting", (testEnv) => {
       users: [borrower, , liquidator],
       moonbirds,
       nMOONBIRD,
+      configurator,
       dai,
       pool,
     } = testEnv;
@@ -116,7 +117,7 @@ makeSuite("MoonBird gateway and supply while nesting", (testEnv) => {
     const liqSnapshotId = await snapshot.take();
 
     await waitForTx(
-      await pool.setReserveAuctionStrategyAddress(
+      await configurator.setReserveAuctionStrategyAddress(
         moonbirds.address,
         ZERO_ADDRESS
       )
@@ -164,10 +165,11 @@ makeSuite("MoonBird gateway and supply while nesting", (testEnv) => {
       nMOONBIRD,
       dai,
       pool,
+      configurator,
     } = testEnv;
 
     await waitForTx(
-      await pool.setReserveAuctionStrategyAddress(
+      await configurator.setReserveAuctionStrategyAddress(
         moonbirds.address,
         ZERO_ADDRESS
       )

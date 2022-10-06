@@ -301,6 +301,7 @@ makeSuite("Liquidation Auction", (testEnv) => {
         pool,
         bayc,
         dai,
+        configurator,
       } = testEnv;
 
       // drop BAYC price to liquidation levels
@@ -310,7 +311,10 @@ makeSuite("Liquidation Auction", (testEnv) => {
 
       // disable auction first to test original liquidation
       await waitForTx(
-        await pool.setReserveAuctionStrategyAddress(bayc.address, ZERO_ADDRESS)
+        await configurator.setReserveAuctionStrategyAddress(
+          bayc.address,
+          ZERO_ADDRESS
+        )
       );
 
       // Liquidator
@@ -334,7 +338,10 @@ makeSuite("Liquidation Auction", (testEnv) => {
             borrower.address,
             0,
             parseEther("12").toString(),
-            false
+            false,
+            {
+              gasLimit: 5000000,
+            }
           )
       ).to.be.revertedWith(ProtocolErrors.LIQUIDATION_AMOUNT_NOT_ENOUGH);
     });
@@ -347,6 +354,7 @@ makeSuite("Liquidation Auction", (testEnv) => {
         pool,
         bayc,
         nBAYC,
+        configurator,
       } = testEnv;
 
       // drop BAYC price to liquidation levels
@@ -354,7 +362,7 @@ makeSuite("Liquidation Auction", (testEnv) => {
 
       // enable auction
       await waitForTx(
-        await pool.setReserveAuctionStrategyAddress(
+        await configurator.setReserveAuctionStrategyAddress(
           bayc.address,
           (
             await getMockReserveAuctionStrategy()

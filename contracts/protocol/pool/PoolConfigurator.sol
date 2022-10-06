@@ -381,6 +381,24 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
+    function setReserveAuctionStrategyAddress(
+        address asset,
+        address newAuctionStrategyAddress
+    ) external override onlyRiskOrPoolAdmins {
+        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+        address oldAuctionStrategyAddress = reserve.auctionStrategyAddress;
+        _pool.setReserveAuctionStrategyAddress(
+            asset,
+            newAuctionStrategyAddress
+        );
+        emit ReserveAuctionStrategyChanged(
+            asset,
+            oldAuctionStrategyAddress,
+            newAuctionStrategyAddress
+        );
+    }
+
+    /// @inheritdoc IPoolConfigurator
     function setPoolPause(bool paused) external override onlyEmergencyAdmin {
         address[] memory reserves = _pool.getReservesList();
 
