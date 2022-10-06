@@ -443,6 +443,14 @@ makeSuite("Liquidation Auction", (testEnv) => {
       await expect(
         pool
           .connect(borrower.signer)
+          .updateERC721HFValidityTime(borrower.address)
+      ).to.be.revertedWith(
+        ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
+      );
+
+      await expect(
+        pool
+          .connect(borrower.signer)
           .endAuction(borrower.address, bayc.address, 0)
       ).to.be.revertedWith(
         ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
@@ -490,9 +498,42 @@ makeSuite("Liquidation Auction", (testEnv) => {
       );
     });
 
+    it("Borrower attempts to end auction using timestamp", async () => {
+      const {
+        users: [borrower],
+        pool,
+        nBAYC,
+      } = testEnv;
+
+      await waitForTx(
+        await pool
+          .connect(borrower.signer)
+          .updateERC721HFValidityTime(borrower.address)
+      );
+
+      expect(await nBAYC.isAuctioned(0)).to.be.false;
+    });
+
     it("BAYC price drops sharply back to 8ETH", async () => {
       const agg = await getMockAggregator(undefined, "BAYC");
       await agg.updateLatestAnswer(parseEther("8").toString());
+    });
+
+    it("Liquidator attempts to start auction again", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+        nBAYC,
+      } = testEnv;
+
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+
+      expect(await nBAYC.isAuctioned(0)).to.be.true;
     });
 
     it("Liquidator liquidates the ERC-721 - gets NFT", async () => {
