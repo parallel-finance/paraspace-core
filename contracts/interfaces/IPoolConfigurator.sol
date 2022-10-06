@@ -324,7 +324,7 @@ interface IPoolConfigurator {
      * @notice set the auction recovery health factor
      * @param value The auction recovery health factor
      */
-    function setAuctionRecoveryHealthFactor(uint256 value) external;
+    function setAuctionRecoveryHealthFactor(uint64 value) external;
 
     /**
      * @notice Updates the reserve factor of a reserve.

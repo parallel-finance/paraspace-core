@@ -250,7 +250,7 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function setAuctionRecoveryHealthFactor(uint256 value)
+    function setAuctionRecoveryHealthFactor(uint64 value)
         external
         virtual
         override

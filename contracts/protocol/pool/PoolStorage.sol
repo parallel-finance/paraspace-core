@@ -33,5 +33,5 @@ contract PoolStorage {
     uint24 internal _maxAtomicTokensAllowed;
 
     // Auction recovery health factor
-    uint256 internal _auctionRecoveryHealthFactor;
+    uint64 internal _auctionRecoveryHealthFactor;
 }

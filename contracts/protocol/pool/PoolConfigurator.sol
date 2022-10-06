@@ -419,7 +419,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setAuctionRecoveryHealthFactor(uint256 value)
+    function setAuctionRecoveryHealthFactor(uint64 value)
         external
         override
         onlyRiskOrPoolAdmins

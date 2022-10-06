@@ -152,5 +152,5 @@ interface IPoolParameters {
      * @notice Set the auction recovery health factor
      * @param value The new auction health factor
      */
-    function setAuctionRecoveryHealthFactor(uint256 value) external;
+    function setAuctionRecoveryHealthFactor(uint64 value) external;
 }
