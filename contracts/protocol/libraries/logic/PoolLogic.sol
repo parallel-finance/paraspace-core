@@ -161,6 +161,7 @@ library PoolLogic {
      * @return currentLiquidationThreshold The liquidation threshold of the user
      * @return ltv The loan to value of The user
      * @return healthFactor The current health factor of the user
+     * @return erc721HealthFactor The current erc721 health factor of the user
      **/
     function executeGetUserAccountData(
         mapping(address => DataTypes.ReserveData) storage reservesData,

@@ -140,6 +140,15 @@ makeSuite("Liquidation Auction", (testEnv) => {
       // rise BAYC price to near liquidation limit (HF ~ 1.0 - 1.1)
       await changePriceAndValidate(bayc, "15");
 
+      // try to batch end auction
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .updateERC721HFValidityTime(borrower.address)
+      ).to.be.revertedWith(
+        ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
+      );
+
       // try to end auction
       await expect(
         pool
@@ -178,12 +187,26 @@ makeSuite("Liquidation Auction", (testEnv) => {
       // rise BAYC price to above recovery limit (HF > 1.5)
       await changePriceAndValidate(bayc, "20");
 
-      // end auction
-      expect(
+      // batch end auction
+      await waitForTx(
         await pool
           .connect(liquidator.signer)
-          .endAuction(borrower.address, bayc.address, 0)
+          .updateERC721HFValidityTime(borrower.address)
       );
+
+      expect(await pool.getERC721HFValidityTime(borrower.address)).to.be.gt(0);
+
+      expect(await nBAYC.isAuctioned(0)).to.be.false;
+
+      const newAuctionData = await pool.getAuctionData(nBAYC.address, 0);
+      expect(newAuctionData.startTime).to.be.eq(0);
+
+      // cannot end auction again
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .endAuction(borrower.address, bayc.address, 0)
+      ).to.be.revertedWith(ProtocolErrors.AUCTION_NOT_STARTED);
     });
 
     it("Cannot execute liquidation if NFT is not in auction", async () => {

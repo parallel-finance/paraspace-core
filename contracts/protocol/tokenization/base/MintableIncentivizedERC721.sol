@@ -4,16 +4,12 @@ pragma solidity 0.8.10;
 import {Context} from "../../../dependencies/openzeppelin/contracts/Context.sol";
 import {Strings} from "../../../dependencies/openzeppelin/contracts/Strings.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
-// TODO does this need to be updated to IERC721?
-import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC165} from "../../../dependencies/openzeppelin/contracts/IERC165.sol";
-
 import {IERC721Metadata} from "../../../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {IERC721Receiver} from "../../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
-
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
