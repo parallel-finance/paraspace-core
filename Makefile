@@ -77,6 +77,10 @@ test-liquidation-auction:
 test-liquidation-edge:
 	make TEST_TARGET=liquidation-edge.spec.ts test
 
+.PHONY: test-configurator-edge
+test-configurator-edge:
+	make TEST_TARGET=configurator-edge.spec.ts test
+
 .PHONY: test-erc20
 test-erc20:
 	make TEST_TARGET=erc20.spec.ts test
