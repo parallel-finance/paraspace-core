@@ -536,13 +536,22 @@ makeSuite("Liquidation Auction", (testEnv) => {
       expect(await nBAYC.isAuctioned(0)).to.be.true;
     });
 
-    it("Liquidator liquidates the ERC-721 - gets NFT", async () => {
+    it("Admin decreased auction recovery health factor to be below the real HF, thus disabled the liquidation", async () => {
+      const {configurator} = testEnv;
+
+      await waitForTx(
+        await configurator.setAuctionRecoveryHealthFactor("500000000000000000")
+      );
+    });
+
+    it("Admin restores the auction recovery health factor, liquidator then liquidates the ERC-721 - gets NFT", async () => {
       const {
         users: [borrower, liquidator],
         pool,
         bayc,
         nBAYC,
         weth,
+        configurator,
       } = testEnv;
 
       // Borrower
@@ -557,6 +566,25 @@ makeSuite("Liquidation Auction", (testEnv) => {
       // ERC721HF = (0.7 * 8) / (9.3021162963559052379) ~= 0.60201354418604660996
 
       // collateralDiscountedPrice: 8 * 1.5 / 1 / 1 = 12 WETH
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .liquidationERC721(
+            bayc.address,
+            weth.address,
+            borrower.address,
+            0,
+            parseEther("12").toString(),
+            false
+          )
+      ).to.be.revertedWith(
+        ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+      );
+
+      await waitForTx(
+        await configurator.setAuctionRecoveryHealthFactor("1500000000000000000")
+      );
+
       const {startTime, tickLength} = await pool.getAuctionData(
         nBAYC.address,
         0
@@ -565,6 +593,7 @@ makeSuite("Liquidation Auction", (testEnv) => {
       await advanceBlock(
         startTime.add(tickLength.mul(BigNumber.from(30))).toNumber()
       );
+
       await waitForTx(
         await pool
           .connect(liquidator.signer)
