@@ -411,12 +411,6 @@ abstract contract MintableIncentivizedERC721 is
             }
 
             emit Transfer(address(0), to, tokenId);
-
-            // TODO check if this is needed
-            require(
-                _checkOnERC721Received(address(0), to, tokenId, ""),
-                "ERC721: transfer to non ERC721Receiver implementer"
-            );
         }
 
         _userState[to].collaterizedBalance =
@@ -565,9 +559,6 @@ abstract contract MintableIncentivizedERC721 is
         }
 
         emit Transfer(from, to, tokenId);
-
-        // _afterTokenTransfer(from, to, tokenId);
-        // TODO do we need _checkOnERC721Received here?
     }
 
     /**

@@ -254,7 +254,7 @@ library LiquidationLogic {
             vars.userVariableDebt,
             vars.userTotalDebt,
             vars.actualDebtToLiquidate
-        ) = _calculateDebt(vars.debtReserveCache, params, vars.healthFactor);
+        ) = _calculateDebt(vars.debtReserveCache, params);
 
         ValidationLogic.validateLiquidationCall(
             userConfig,
@@ -421,11 +421,7 @@ library LiquidationLogic {
                 vars.userVariableDebt,
                 vars.userTotalDebt,
                 vars.actualDebtToLiquidate
-            ) = _calculateDebt(
-                vars.debtReserveCache,
-                params,
-                vars.healthFactor
-            );
+            ) = _calculateDebt(vars.debtReserveCache, params);
         }
 
         (
@@ -745,8 +741,7 @@ library LiquidationLogic {
      */
     function _calculateDebt(
         DataTypes.ReserveCache memory debtReserveCache,
-        DataTypes.ExecuteLiquidationCallParams memory params,
-        uint256
+        DataTypes.ExecuteLiquidationCallParams memory params
     )
         internal
         view
