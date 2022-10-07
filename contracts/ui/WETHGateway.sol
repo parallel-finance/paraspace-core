@@ -50,6 +50,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         external
         payable
         override
+        nonReentrant
     {
         WETH.deposit{value: msg.value}();
         IPool(pool).supply(address(WETH), msg.value, onBehalfOf, referralCode);
@@ -60,7 +61,11 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @param amount amount of pWETH to withdraw and receive native ETH
      * @param to address of the user who will receive native ETH
      */
-    function withdrawETH(uint256 amount, address to) external override {
+    function withdrawETH(uint256 amount, address to)
+        external
+        override
+        nonReentrant
+    {
         IPToken pWETH = IPToken(
             IPool(pool).getReserveData(address(WETH)).xTokenAddress
         );
