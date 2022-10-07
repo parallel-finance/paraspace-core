@@ -5,7 +5,6 @@ import {
   createRandomAddress,
   evmRevert,
   evmSnapshot,
-  waitForTx,
 } from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
@@ -316,7 +315,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Owner registers an existing contract (with proxy) and upgrade it", async () => {
-    const {addressesProvider, users, poolAdmin} = testEnv;
+    const {addressesProvider, users} = testEnv;
     const proxyAdminOwner = users[0];
 
     const currentAddressesProviderOwner = users[1];

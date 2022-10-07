@@ -468,8 +468,7 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       dai,
       weth,
       users: [, , , user],
-      pool,
-      oracle,
+      pool
     } = testEnv;
 
     await weth
@@ -675,8 +674,6 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       weth.address,
       borrower.address
     );
-
-    const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
 
     const daiReserveDataAfter = await getReserveData(
       helpersContract,

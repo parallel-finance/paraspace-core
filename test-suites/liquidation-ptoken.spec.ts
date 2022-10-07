@@ -224,8 +224,6 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
       borrower.address
     );
 
-    const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
-
     const daiReserveDataAfter = await getReserveData(
       helpersContract,
       dai.address

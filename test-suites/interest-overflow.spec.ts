@@ -1,8 +1,7 @@
-import {BigNumber, BigNumberish, utils} from "ethers";
+import {BigNumber, BigNumberish} from "ethers";
 import {
   evmRevert,
   evmSnapshot,
-  impersonateAccountsHardhat,
   increaseTime,
 } from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
@@ -29,7 +28,6 @@ import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {expect} from "chai";
 import {RateMode} from "../deploy/helpers/types";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 
 const SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits";
 
