@@ -468,7 +468,7 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       dai,
       weth,
       users: [, , , user],
-      pool
+      pool,
     } = testEnv;
 
     await weth
