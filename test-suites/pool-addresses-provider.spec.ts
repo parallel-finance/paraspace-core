@@ -153,7 +153,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
         mockConvertibleAddress
       );
 
-    let registeredAddress = await addressesProvider.getAddress(
+    const registeredAddress = await addressesProvider.getAddress(
       convertibleAddressId
     );
     expect(registeredAddress).to.be.eq(mockConvertibleAddress);

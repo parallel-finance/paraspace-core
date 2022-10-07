@@ -27,7 +27,7 @@ import {
   InitializableImmutableAdminUpgradeabilityProxy,
   InitializableImmutableAdminUpgradeabilityProxy__factory,
 } from "../types";
-import { ProtocolErrors } from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 
 makeSuite("Upgradeability", (testEnv: TestEnv) => {
   context("VersionedInitializable", async () => {
@@ -459,13 +459,13 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
   });
 
   context("PoolConfigurator upgrade ability", () => {
-    const { CALLER_NOT_POOL_ADMIN } = ProtocolErrors;
+    const {CALLER_NOT_POOL_ADMIN} = ProtocolErrors;
     let newPTokenAddress: string;
     let newStableTokenAddress: string;
     let newVariableTokenAddress: string;
 
     before("deploying instances", async () => {
-      const { dai, pool } = testEnv;
+      const {dai, pool} = testEnv;
       const xTokenInstance = await deployMockPToken([
         pool.address,
         dai.address,
@@ -500,7 +500,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Tries to update the DAI Ptoken implementation with a different address than the poolManager", async () => {
-      const { dai, configurator, users } = testEnv;
+      const {dai, configurator, users} = testEnv;
 
       const name = await (await getPToken(newPTokenAddress)).name();
       const symbol = await (await getPToken(newPTokenAddress)).symbol();
@@ -530,7 +530,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Upgrades the DAI Ptoken implementation ", async () => {
-      const { dai, configurator, pDai } = testEnv;
+      const {dai, configurator, pDai} = testEnv;
 
       const name = await (await getPToken(newPTokenAddress)).name();
       const symbol = await (await getPToken(newPTokenAddress)).symbol();
@@ -563,7 +563,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Tries to update the DAI Stable debt token implementation with a different address than the poolManager", async () => {
-      const { dai, configurator, users } = testEnv;
+      const {dai, configurator, users} = testEnv;
 
       const name = await (
         await getStableDebtToken(newStableTokenAddress)
@@ -596,7 +596,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Upgrades the DAI stable debt token implementation ", async () => {
-      const { dai, configurator, helpersContract } = testEnv;
+      const {dai, configurator, helpersContract} = testEnv;
 
       const name = await (
         await getStableDebtToken(newStableTokenAddress)
@@ -623,7 +623,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
 
       await configurator.updateStableDebtToken(updateDebtTokenInput);
 
-      const { stableDebtTokenAddress } =
+      const {stableDebtTokenAddress} =
         await helpersContract.getReserveTokensAddresses(dai.address);
 
       const debtToken = await getMockStableDebtToken(stableDebtTokenAddress);
@@ -637,7 +637,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Tries to update the DAI variable debt token implementation with a different address than the poolManager", async () => {
-      const { dai, configurator, users } = testEnv;
+      const {dai, configurator, users} = testEnv;
 
       const name = await (
         await getVariableDebtToken(newVariableTokenAddress)
@@ -670,7 +670,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Upgrades the DAI variable debt token implementation ", async () => {
-      const { dai, configurator, helpersContract } = testEnv;
+      const {dai, configurator, helpersContract} = testEnv;
 
       const name = await (
         await getVariableDebtToken(newVariableTokenAddress)
@@ -697,7 +697,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
 
       expect(await configurator.updateVariableDebtToken(updateDebtTokenInput));
 
-      const { variableDebtTokenAddress } =
+      const {variableDebtTokenAddress} =
         await helpersContract.getReserveTokensAddresses(dai.address);
 
       const debtToken = await getMockVariableDebtToken(
