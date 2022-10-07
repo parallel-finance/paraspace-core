@@ -105,6 +105,10 @@ test-ltv-validation:
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
 
+.PHONY: test-upgradeability
+test-upgradeability:
+	make TEST_TARGET=upgradeability.spec.ts test
+
 .PHONY: test-erc20
 test-erc20:
 	make TEST_TARGET=erc20.spec.ts test
