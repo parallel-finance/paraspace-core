@@ -165,6 +165,7 @@ library SupplyLogic {
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
         ValidationLogic.validateSupply(
             reserveCache,
             params.tokenData.length,
@@ -211,6 +212,7 @@ library SupplyLogic {
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
         ValidationLogic.validateSupplyFromNToken(
             reserveCache,
             params,

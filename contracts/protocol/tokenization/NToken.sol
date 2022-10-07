@@ -93,7 +93,6 @@ contract NToken is
         address onBehalfOf,
         DataTypes.ERC721SupplyParams[] calldata tokenData
     ) external virtual override onlyPool returns (bool) {
-        // TODO think about using safe mint instead
         return _mintMultiple(onBehalfOf, tokenData);
     }
 
