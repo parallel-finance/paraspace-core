@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {ethers} from "hardhat";
-import {makeSuite, setSnapshot} from "./helpers/make-suite";
+import {makeSuite} from "./helpers/make-suite";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
@@ -59,7 +59,7 @@ makeSuite("Flash Claim Test", (testEnv) => {
 
   it("user register receiver", async function () {
     const {
-      users: [user1, user2],
+      users: [user1],
     } = testEnv;
 
     const user_registry = await getUserFlashClaimRegistry();
@@ -129,7 +129,7 @@ makeSuite("Flash Claim Test", (testEnv) => {
   it("someone else can not flash claim airdrop", async function () {
     const {
       bayc,
-      users: [user1, user2],
+      users: [, user2],
       pool,
     } = testEnv;
 

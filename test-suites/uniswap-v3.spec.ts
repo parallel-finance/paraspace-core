@@ -12,7 +12,7 @@ import {
   fund,
   approveTo,
 } from "../deploy/helpers/uniswapv3-helper";
-import {encodeSqrtRatioX96, NonfungiblePositionManager} from "@uniswap/v3-sdk";
+import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {
   getUniswapV3Gateway,
   getUniswapV3OracleWrapper,
@@ -514,7 +514,7 @@ makeSuite("Uniswap V3", (testEnv) => {
       );
     });
 
-    it("UniswapV3 asset cannot be auctionable [ @skip-on-coverage ]", async () => {
+    it("UniswapV3 asset cannot be auctioned [ @skip-on-coverage ]", async () => {
       const {
         users: [borrower, liquidator],
         pool,
@@ -617,7 +617,7 @@ makeSuite("Uniswap V3", (testEnv) => {
 
     it("liquidator can remove nUniswapV3 from collateral [ @skip-on-coverage ]", async () => {
       const {
-        users: [user1, liquidator],
+        users: [, liquidator],
         nftPositionManager,
       } = testEnv;
 
@@ -631,7 +631,7 @@ makeSuite("Uniswap V3", (testEnv) => {
 
     it("liquidator can withdraw the nUniswapV3 [ @skip-on-coverage ]", async () => {
       const {
-        users: [user1, liquidator],
+        users: [, liquidator],
         nUniswapV3,
         nftPositionManager,
       } = testEnv;

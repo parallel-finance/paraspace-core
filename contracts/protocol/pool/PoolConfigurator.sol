@@ -3,7 +3,6 @@ pragma solidity 0.8.10;
 
 import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
 import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
-import {AuctionConfiguration} from "../libraries/configuration/AuctionConfiguration.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
@@ -23,7 +22,6 @@ import {IProtocolDataProvider} from "../../interfaces/IProtocolDataProvider.sol"
 contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     using PercentageMath for uint256;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
 
     IPoolAddressesProvider internal _addressesProvider;
     IPool internal _pool;
@@ -155,7 +153,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
             //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
             //collateral than needed to cover the debt
             require(
-                liquidationBonus > PercentageMath.PERCENTAGE_FACTOR,
+                liquidationBonus >= PercentageMath.PERCENTAGE_FACTOR,
                 Errors.INVALID_RESERVE_PARAMS
             );
 
@@ -185,29 +183,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
             ltv,
             liquidationThreshold,
             liquidationBonus
-        );
-    }
-
-    /// @inheritdoc IPoolConfigurator
-    function configureReserveAsAuctionCollateral(
-        address asset,
-        bool auctionEnabled,
-        uint256 auctionRecoveryHealthFactor
-    ) external override onlyRiskOrPoolAdmins {
-        DataTypes.ReserveAuctionConfigurationMap memory currentConfig = _pool
-            .getAuctionConfiguration(asset);
-
-        currentConfig.setAuctionEnabled(auctionEnabled);
-        currentConfig.setAuctionRecoveryHealthFactor(
-            auctionRecoveryHealthFactor
-        );
-
-        _pool.setAuctionConfiguration(asset, currentConfig);
-
-        emit AuctionConfigurationChanged(
-            asset,
-            auctionEnabled,
-            auctionRecoveryHealthFactor
         );
     }
 
@@ -406,6 +381,24 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
+    function setReserveAuctionStrategyAddress(
+        address asset,
+        address newAuctionStrategyAddress
+    ) external override onlyRiskOrPoolAdmins {
+        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+        address oldAuctionStrategyAddress = reserve.auctionStrategyAddress;
+        _pool.setReserveAuctionStrategyAddress(
+            asset,
+            newAuctionStrategyAddress
+        );
+        emit ReserveAuctionStrategyChanged(
+            asset,
+            oldAuctionStrategyAddress,
+            newAuctionStrategyAddress
+        );
+    }
+
+    /// @inheritdoc IPoolConfigurator
     function setPoolPause(bool paused) external override onlyEmergencyAdmin {
         address[] memory reserves = _pool.getReservesList();
 
@@ -423,6 +416,15 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
         onlyRiskOrPoolAdmins
     {
         _pool.setMaxAtomicTokensAllowed(value);
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function setAuctionRecoveryHealthFactor(uint64 value)
+        external
+        override
+        onlyRiskOrPoolAdmins
+    {
+        _pool.setAuctionRecoveryHealthFactor(value);
     }
 
     function _checkNoSuppliers(address asset) internal view {

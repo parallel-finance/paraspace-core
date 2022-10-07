@@ -3,7 +3,6 @@ pragma solidity 0.8.10;
 
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
-import {AuctionConfiguration} from "../protocol/libraries/configuration/AuctionConfiguration.sol";
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
@@ -20,7 +19,6 @@ import {IProtocolDataProvider} from "../interfaces/IProtocolDataProvider.sol";
  */
 contract ProtocolDataProvider is IProtocolDataProvider {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-    using AuctionConfiguration for DataTypes.ReserveAuctionConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using WadRayMath for uint256;
 
@@ -132,20 +130,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         usageAsCollateralEnabled = liquidationThreshold != 0;
     }
 
-    function getReserveAuctionConfigurationData(address asset)
-        external
-        view
-        returns (bool auctionEnabled, uint256 auctionRecoveryHealthFactor)
-    {
-        DataTypes.ReserveAuctionConfigurationMap memory configuration = IPool(
-            ADDRESSES_PROVIDER.getPool()
-        ).getAuctionConfiguration(asset);
-
-        auctionEnabled = configuration.getAuctionEnabled();
-        auctionRecoveryHealthFactor = configuration
-            .getAuctionRecoveryHealthFactor();
-    }
-
     /// @inheritdoc IProtocolDataProvider
     function getReserveCaps(address asset)
         external
@@ -170,24 +154,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             IPool(ADDRESSES_PROVIDER.getPool())
                 .getConfiguration(asset)
                 .getSiloedBorrowing();
-    }
-
-    function getAuctionEnabled(address asset) external view returns (bool) {
-        return
-            IPool(ADDRESSES_PROVIDER.getPool())
-                .getAuctionConfiguration(asset)
-                .getAuctionEnabled();
-    }
-
-    function getAuctionRecoveryHealthFactor(address asset)
-        external
-        view
-        returns (uint256)
-    {
-        return
-            IPool(ADDRESSES_PROVIDER.getPool())
-                .getAuctionConfiguration(asset)
-                .getAuctionRecoveryHealthFactor();
     }
 
     /// @inheritdoc IProtocolDataProvider

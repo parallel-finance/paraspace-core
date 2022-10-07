@@ -11,7 +11,6 @@ import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
-import {WPUNKS} from "../deploy/tasks/deployments/full-deployment/helpers/constants";
 import {makeSuite} from "./helpers/make-suite";
 import {getTestWallets} from "./helpers/utils/wallets";
 
@@ -156,7 +155,6 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
   it("User 3 tries to withdraw the deposited WPUNK without paying the accrued interest (should fail)", async () => {
     const {
       users: [, , user3],
-      pool,
       wPunkGatewayProxy,
     } = testEnv;
 

@@ -13,8 +13,6 @@ library DataTypes {
     struct ReserveData {
         //stores the reserve configuration
         ReserveConfigurationMap configuration;
-        // //stores the reserve auction configuration
-        ReserveAuctionConfigurationMap auctionConfiguration;
         //the liquidity index. Expressed in ray
         uint128 liquidityIndex;
         //the current supply rate. Expressed in ray
@@ -79,13 +77,8 @@ library DataTypes {
         // counter for atomic erc721 tokens.
         // this is used to limit the total number of atomic erc721 the user can supply
         uint24 userAtomicTokens;
-    }
-
-    struct ReserveAuctionConfigurationMap {
-        /**
-         * @dev Bitmap of the auction configuration.
-         */
-        uint256 data;
+        // verify time for closing invalid auctions in one tx.
+        uint256 erc721HFValidityTime;
     }
 
     struct ERC721SupplyParams {
@@ -121,7 +114,6 @@ library DataTypes {
         uint256 currVariableBorrowRate;
         uint256 reserveFactor;
         ReserveConfigurationMap reserveConfiguration;
-        ReserveAuctionConfigurationMap reserveAuctionConfiguration;
         address xTokenAddress;
         address stableDebtTokenAddress;
         address variableDebtTokenAddress;
@@ -133,6 +125,7 @@ library DataTypes {
         uint256 reservesCount;
         uint256 liquidationAmount;
         uint256 collateralTokenId;
+        uint256 auctionRecoveryHealthFactor;
         address collateralAsset;
         address liquidationAsset;
         address user;
@@ -143,6 +136,7 @@ library DataTypes {
 
     struct ExecuteAuctionParams {
         uint256 reservesCount;
+        uint256 auctionRecoveryHealthFactor;
         uint256 collateralTokenId;
         address collateralAsset;
         address user;
@@ -250,12 +244,15 @@ library DataTypes {
         uint256 tokenId;
         uint256 collateralDiscountedPrice;
         uint256 liquidationAmount;
+        uint256 auctionRecoveryHealthFactor;
         address priceOracleSentinel;
         address xTokenAddress;
+        bool auctionEnabled;
     }
 
     struct ValidateAuctionParams {
         address user;
+        uint256 auctionRecoveryHealthFactor;
         uint256 healthFactor;
         address collateralAsset;
         uint256 tokenId;

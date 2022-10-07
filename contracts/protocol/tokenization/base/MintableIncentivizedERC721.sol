@@ -4,16 +4,12 @@ pragma solidity 0.8.10;
 import {Context} from "../../../dependencies/openzeppelin/contracts/Context.sol";
 import {Strings} from "../../../dependencies/openzeppelin/contracts/Strings.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
-// TODO does this need to be updated to IERC721?
-import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC165} from "../../../dependencies/openzeppelin/contracts/IERC165.sol";
-
 import {IERC721Metadata} from "../../../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {IERC721Receiver} from "../../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
-
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
@@ -70,7 +66,6 @@ abstract contract MintableIncentivizedERC721 is
         uint64 balance;
         uint64 collaterizedBalance;
         uint128 additionalData;
-        uint64 auctionedBalance;
     }
 
     // Token name
@@ -353,7 +348,9 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     function _isAuctioned(uint256 tokenId) internal view returns (bool) {
-        return _auctions[tokenId].startTime != 0;
+        return
+            _auctions[tokenId].startTime >
+            POOL.getERC721HFValidityTime(ownerOf(tokenId));
     }
 
     /**
@@ -410,12 +407,6 @@ abstract contract MintableIncentivizedERC721 is
             }
 
             emit Transfer(address(0), to, tokenId);
-
-            // TODO check if this is needed
-            require(
-                _checkOnERC721Received(address(0), to, tokenId, ""),
-                "ERC721: transfer to non ERC721Receiver implementer"
-            );
         }
 
         _userState[to].collaterizedBalance =
@@ -564,9 +555,6 @@ abstract contract MintableIncentivizedERC721 is
         }
 
         emit Transfer(from, to, tokenId);
-
-        // _afterTokenTransfer(from, to, tokenId);
-        // TODO do we need _checkOnERC721Received here?
     }
 
     /**
@@ -722,17 +710,6 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc IAuctionableERC721
-    function auctionedBalanceOf(address account)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _userState[account].auctionedBalance;
-    }
-
-    /// @inheritdoc IAuctionableERC721
     function isAuctioned(uint256 tokenId)
         external
         view
@@ -746,7 +723,6 @@ abstract contract MintableIncentivizedERC721 is
     function startAuction(uint256 tokenId) external virtual override onlyPool {
         require(!_isAuctioned(tokenId), Errors.AUCTION_ALREADY_STARTED);
         require(_exists(tokenId), "ERC721: startAuction for nonexistent token");
-        _userState[_owners[tokenId]].auctionedBalance += 1;
         _auctions[tokenId] = DataTypes.Auction({startTime: block.timestamp});
     }
 
@@ -754,7 +730,6 @@ abstract contract MintableIncentivizedERC721 is
     function endAuction(uint256 tokenId) external virtual override onlyPool {
         require(_isAuctioned(tokenId), Errors.AUCTION_NOT_STARTED);
         require(_exists(tokenId), "ERC721: endAuction for nonexistent token");
-        _userState[_owners[tokenId]].auctionedBalance -= 1;
         delete _auctions[tokenId];
     }
 
@@ -765,7 +740,11 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (DataTypes.Auction memory auction)
     {
-        auction = _auctions[tokenId];
+        if (!_isAuctioned(tokenId)) {
+            auction = DataTypes.Auction({startTime: 0});
+        } else {
+            auction = _auctions[tokenId];
+        }
     }
 
     // Mapping from owner to list of owned token IDs

@@ -3,9 +3,8 @@ import {BigNumber} from "ethers";
 import {formatEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
+import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {makeSuite} from "./helpers/make-suite";
 import {
   borrowAndValidate,
@@ -20,7 +19,6 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
   let firstDaiDeposit;
   let secondDaiDeposit;
   let accruedInterest = BigNumber.from(0);
-  const daiPrice = BigNumber.from(MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI);
 
   before("Initialize Depositors", async () => {
     firstDaiDeposit = "10000";

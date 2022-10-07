@@ -435,17 +435,36 @@ interface IPoolCore {
         bool receiveNToken
     ) external;
 
+    /**
+     * @notice Start the auction on user's specific NFT collateral
+     * @param user The address of the user
+     * @param collateralAsset The address of the NFT collateral
+     * @param collateralTokenId The tokenId of the NFT collateral
+     **/
     function startAuction(
         address user,
         address collateralAsset,
         uint256 collateralTokenId
     ) external;
 
+    /**
+     * @notice End specific user's auction
+     * @param user The address of the user
+     * @param collateralAsset The address of the NFT collateral
+     * @param collateralTokenId The tokenId of the NFT collateral
+     **/
     function endAuction(
         address user,
         address collateralAsset,
         uint256 collateralTokenId
     ) external;
+
+    /**
+     * @notice Set erc721 HF verify time, all auctions triggered before the verify time
+     * will be considered as invalid
+     * @param user The user address
+     */
+    function updateERC721HFValidityTime(address user) external;
 
     /**
      * @notice Returns the user account data across all the reserves
@@ -489,16 +508,6 @@ interface IPoolCore {
         external
         view
         returns (DataTypes.ReserveConfigurationMap memory);
-
-    /**
-     * @notice Returns the auction configuration of the reserve
-     * @param asset The address of the underlying asset of the reserve
-     * @return The auction configuration of the reserve
-     **/
-    function getAuctionConfiguration(address asset)
-        external
-        view
-        returns (DataTypes.ReserveAuctionConfigurationMap memory);
 
     /**
      * @notice Returns the normalized income normalized income of the reserve
@@ -582,6 +591,22 @@ interface IPoolCore {
      **/
     function getReserveAddressById(uint16 id) external view returns (address);
 
+    /**
+     * @notice Returns the ERC721 HF verify time
+     * @param user The address of the user
+     * @return The ERC721 HF verify time
+     */
+    function getERC721HFValidityTime(address user)
+        external
+        view
+        returns (uint256);
+
+    /**
+     * @notice Returns the auction related data of specific asset collection and token id.
+     * @param ntokenAsset The address of ntoken
+     * @param tokenId The token id which is currently auctioned for liquidation
+     * @return The auction related data of the corresponding (ntokenAsset, tokenId)
+     */
     function getAuctionData(address ntokenAsset, uint256 tokenId)
         external
         view

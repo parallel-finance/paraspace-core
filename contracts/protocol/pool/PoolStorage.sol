@@ -31,4 +31,7 @@ contract PoolStorage {
 
     // Maximum allowed number of atomic tokens per user
     uint24 internal _maxAtomicTokensAllowed;
+
+    // Auction recovery health factor
+    uint64 internal _auctionRecoveryHealthFactor;
 }

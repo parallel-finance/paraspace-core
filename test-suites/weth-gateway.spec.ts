@@ -61,10 +61,8 @@ makeSuite("WETH GateWay", (testEnv) => {
   it("User 2 deposits 10k DAI and User 1 borrows 8K DAI", async () => {
     const {
       dai,
-      variableDebtDai,
       users: [user1, user2],
       pool,
-      helpersContract,
     } = testEnv;
 
     await waitForTx(
@@ -428,7 +426,6 @@ makeSuite("WETH GateWay", (testEnv) => {
   it("User 1 deposits 100 ETH", async () => {
     const {
       users: [user1],
-      pool,
       wETHGatewayProxy,
     } = testEnv;
 

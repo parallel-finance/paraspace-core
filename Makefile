@@ -67,15 +67,19 @@ test-ntoken-punk:
 
 .PHONY: test-liquidation
 test-liquidation:
-	make TEST_TARGET=liquidation.spec.ts test test
+	make TEST_TARGET=liquidation.spec.ts test
 
 .PHONY: test-liquidation-auction
 test-liquidation-auction:
-	make TEST_TARGET=liquidation-auction.spec.ts test test
+	make TEST_TARGET=liquidation-auction.spec.ts test
 
 .PHONY: test-liquidation-edge
 test-liquidation-edge:
-	make TEST_TARGET=liquidation-edge.spec.ts test test
+	make TEST_TARGET=liquidation-edge.spec.ts test
+
+.PHONY: test-configurator-edge
+test-configurator-edge:
+	make TEST_TARGET=configurator-edge.spec.ts test
 
 .PHONY: test-erc20
 test-erc20:
@@ -83,7 +87,7 @@ test-erc20:
 
 .PHONY: test-flash-claim
 test-flash-claim:
-	make TEST_TARGET=flash-claim.spec.ts test test
+	make TEST_TARGET=flash-claim.spec.ts test
 
 .PHONY: test-price-oracle-update
 test-price-oracle-update:

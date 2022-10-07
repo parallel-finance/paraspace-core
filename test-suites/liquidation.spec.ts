@@ -13,8 +13,8 @@ import {
 import {snapshot} from "./helpers/snapshot-manager";
 import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumber} from "ethers";
-import {parseEther} from "ethers/lib/utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 
 let snapthotId: string;
 
@@ -179,7 +179,6 @@ makeSuite("Liquidation Tests", (testEnv) => {
       users: [borrower, liquidator],
       nBAYC,
       configurator,
-      deployer,
       bayc,
       dai,
     } = testEnv;
@@ -194,13 +193,10 @@ makeSuite("Liquidation Tests", (testEnv) => {
     await changePriceAndValidate(bayc, "10");
 
     await waitForTx(
-      await configurator
-        .connect(deployer.signer)
-        .configureReserveAsAuctionCollateral(
-          bayc.address,
-          false,
-          parseEther("1.5")
-        )
+      await configurator.setReserveAuctionStrategyAddress(
+        bayc.address,
+        ZERO_ADDRESS
+      )
     );
 
     // verify NFT is available for auction
@@ -227,20 +223,16 @@ makeSuite("Liquidation Tests", (testEnv) => {
       bayc,
       dai,
       configurator,
-      deployer,
     } = testEnv;
 
     // drop BAYC price
     await changePriceAndValidate(bayc, "5");
 
     await waitForTx(
-      await configurator
-        .connect(deployer.signer)
-        .configureReserveAsAuctionCollateral(
-          bayc.address,
-          false,
-          parseEther("1.5")
-        )
+      await configurator.setReserveAuctionStrategyAddress(
+        bayc.address,
+        ZERO_ADDRESS
+      )
     );
 
     // verify NFT is available for auction
@@ -268,7 +260,6 @@ makeSuite("Liquidation Tests", (testEnv) => {
       dai,
       weth,
       configurator,
-      deployer,
     } = testEnv;
 
     // leave only 1 NFT
@@ -283,13 +274,10 @@ makeSuite("Liquidation Tests", (testEnv) => {
     await changePriceAndValidate(bayc, "5");
 
     await waitForTx(
-      await configurator
-        .connect(deployer.signer)
-        .configureReserveAsAuctionCollateral(
-          bayc.address,
-          false,
-          parseEther("1.5")
-        )
+      await configurator.setReserveAuctionStrategyAddress(
+        bayc.address,
+        ZERO_ADDRESS
+      )
     );
 
     await liquidateAndValidate(
@@ -309,7 +297,6 @@ makeSuite("Liquidation Tests", (testEnv) => {
     const {
       users: [borrower, liquidator],
       configurator,
-      deployer,
       dai,
       bayc,
       nBAYC,
@@ -323,13 +310,10 @@ makeSuite("Liquidation Tests", (testEnv) => {
     await changePriceAndValidate(bayc, "1");
 
     await waitForTx(
-      await configurator
-        .connect(deployer.signer)
-        .configureReserveAsAuctionCollateral(
-          bayc.address,
-          false,
-          parseEther("1.5")
-        )
+      await configurator.setReserveAuctionStrategyAddress(
+        bayc.address,
+        ZERO_ADDRESS
+      )
     );
 
     await liquidateAndValidate(
@@ -349,7 +333,6 @@ makeSuite("Liquidation Tests", (testEnv) => {
     const {
       users: [borrower, liquidator],
       configurator,
-      deployer,
       bayc,
       nBAYC,
       dai,
@@ -368,13 +351,10 @@ makeSuite("Liquidation Tests", (testEnv) => {
     await changePriceAndValidate(bayc, "2");
 
     await waitForTx(
-      await configurator
-        .connect(deployer.signer)
-        .configureReserveAsAuctionCollateral(
-          bayc.address,
-          false,
-          parseEther("1.5")
-        )
+      await configurator.setReserveAuctionStrategyAddress(
+        bayc.address,
+        ZERO_ADDRESS
+      )
     );
 
     await liquidateAndValidate(

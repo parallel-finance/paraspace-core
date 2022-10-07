@@ -1,7 +1,10 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "prettier"],
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -9,7 +12,7 @@
     "prettier"
   ],
   "rules": {
-    "no-unused-vars": "warn",
+    "no-unused-vars": "error",
     "no-process-exit": "off",
     "node/no-missing-import": "off",
     "no-unpublished-import": "off",

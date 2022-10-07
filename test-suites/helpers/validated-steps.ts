@@ -3,8 +3,6 @@ import {BigNumber, BigNumberish} from "ethers";
 import {formatEther, parseEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT} from "../../deploy/helpers/constants";
 import {
-  getAllMockedTokens,
-  getFirstSigner,
   getMockAggregator,
   getParaSpaceOracle,
   getPToken,
@@ -596,9 +594,6 @@ const liquidateAndValidateERC20 = async (
   ).totalCollateralBase;
   const healthFactorBefore = (await pool.getUserAccountData(borrower.address))
     .healthFactor;
-  const erc721HealthFactorBefore = (
-    await pool.getUserAccountData(borrower.address)
-  ).erc721HealthFactor;
   const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
     targetToken.address
   );
@@ -1112,7 +1107,7 @@ const liquidateAndValidateERC721 = async (
 };
 
 async function getDeployer(): Promise<SignerWithAddress> {
-  const [_deployer, ...restSigners] = await getEthersSigners();
+  const [_deployer] = await getEthersSigners();
   const deployer: SignerWithAddress = {
     address: await _deployer.getAddress(),
     signer: _deployer,
@@ -1295,8 +1290,7 @@ export async function assertHealthFactorCalculation(user: SignerWithAddress) {
 function assertAlmostEqual(
   actual: any,
   expected: any,
-  delta?: any,
-  message?: string
+  delta?: any
 ): Chai.Assertion {
   actual = BigNumber.from(actual);
   expected = BigNumber.from(expected);
@@ -1314,7 +1308,7 @@ export const changePriceAndValidate = async (
   token: SupportedAsset,
   newPrice: string
 ) => {
-  const [deployer, updater] = await getEthersSigners();
+  const [deployer] = await getEthersSigners();
   const agg = await getMockAggregator(undefined, await token.symbol());
   await agg.updateLatestAnswer(parseEther(newPrice));
 

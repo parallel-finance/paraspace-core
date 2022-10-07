@@ -83,7 +83,7 @@ makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
           dai.address,
           config.ltv,
           config.liquidationThreshold,
-          10000
+          9999
         )
     ).to.be.revertedWith(INVALID_RESERVE_PARAMS);
   });

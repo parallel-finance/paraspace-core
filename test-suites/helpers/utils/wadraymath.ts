@@ -19,11 +19,17 @@ declare module "@ethersproject/bignumber" {
     halfWad: () => BigNumber;
     halfPercentage: () => BigNumber;
     percentageFactor: () => BigNumber;
+    // eslint-disable-next-line no-unused-vars
     wadMul: (a: BigNumber) => BigNumber;
+    // eslint-disable-next-line no-unused-vars
     wadDiv: (a: BigNumber) => BigNumber;
+    // eslint-disable-next-line no-unused-vars
     rayMul: (a: BigNumber) => BigNumber;
+    // eslint-disable-next-line no-unused-vars
     rayDiv: (a: BigNumber) => BigNumber;
+    // eslint-disable-next-line no-unused-vars
     percentMul: (a: BigNumberish) => BigNumber;
+    // eslint-disable-next-line no-unused-vars
     percentDiv: (a: BigNumberish) => BigNumber;
     rayToWad: () => BigNumber;
     wadToRay: () => BigNumber;
