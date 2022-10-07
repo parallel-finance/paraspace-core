@@ -10,10 +10,17 @@ import {
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import { getProxyImplementation } from "../deploy/helpers/contracts-helpers";
-import { deployPoolComponents } from "../deploy/helpers/contracts-deployments";
-import { InitializableAdminUpgradeabilityProxy__factory, MockPeripheryContractV1__factory, MockPeripheryContractV2__factory } from "../types";
-import { getFirstSigner, getProxyAdmin } from "../deploy/helpers/contracts-getters";
+import {getProxyImplementation} from "../deploy/helpers/contracts-helpers";
+import {deployPoolComponents} from "../deploy/helpers/contracts-deployments";
+import {
+  InitializableAdminUpgradeabilityProxy__factory,
+  MockPeripheryContractV1__factory,
+  MockPeripheryContractV2__factory,
+} from "../types";
+import {
+  getFirstSigner,
+  getProxyAdmin,
+} from "../deploy/helpers/contracts-getters";
 
 makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
@@ -63,7 +70,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Owner adds a new address as proxy", async () => {
-    const { addressesProvider, users } = testEnv;
+    const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
 
@@ -87,7 +94,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Owner adds a new address with no proxy", async () => {
-    const { addressesProvider, users } = testEnv;
+    const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
     const mockNonProxiedAddress = createRandomAddress();
@@ -116,7 +123,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Owner adds a new address with no proxy and turns it into a proxy", async () => {
-    const { addressesProvider, users } = testEnv;
+    const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
     const {poolCore} = await deployPoolComponents(addressesProvider.address);
@@ -183,7 +190,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Unregister a proxy address", async () => {
-    const { addressesProvider, users } = testEnv;
+    const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
 
@@ -215,7 +222,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Owner adds a new address with proxy and turns it into a no proxy", async () => {
-    const { addressesProvider, users } = testEnv;
+    const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
     const {poolCore} = await deployPoolComponents(addressesProvider.address);
@@ -275,7 +282,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Unregister a no proxy address", async () => {
-    const { addressesProvider, users } = testEnv;
+    const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
 
@@ -309,7 +316,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   });
 
   it("Owner registers an existing contract (with proxy) and upgrade it", async () => {
-    const { addressesProvider, users, poolAdmin } = testEnv;
+    const {addressesProvider, users, poolAdmin} = testEnv;
     const proxyAdminOwner = users[0];
 
     const currentAddressesProviderOwner = users[1];
@@ -329,7 +336,9 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
 
     // Implementation
     const impleV1 = await (
-      await new MockPeripheryContractV1__factory(await getFirstSigner()).deploy()
+      await new MockPeripheryContractV1__factory(
+        await getFirstSigner()
+      ).deploy()
     ).deployed();
     await impleV1.initialize(initialManager.address, 123);
 
@@ -380,7 +389,9 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
 
     // New implementation
     const impleV2 = await (
-      await new MockPeripheryContractV2__factory(await getFirstSigner()).deploy()
+      await new MockPeripheryContractV2__factory(
+        await getFirstSigner()
+      ).deploy()
     ).deployed();
     await impleV2.initialize(addressesProvider.address);
 
@@ -405,10 +416,12 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   it("Owner updates the implementation of a proxy which is already initialized", async () => {
     const snapId = await evmSnapshot();
 
-    const { addressesProvider, users } = testEnv;
+    const {addressesProvider, users} = testEnv;
     const currentAddressesProviderOwner = users[1];
 
-    const {poolCore, poolCoreSelectors} = await deployPoolComponents(addressesProvider.address);
+    const {poolCore, poolCoreSelectors} = await deployPoolComponents(
+      addressesProvider.address
+    );
 
     // Pool has already a proxy
     const poolAddress = await addressesProvider.getPool();
@@ -419,11 +432,21 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
 
     // Update the Pool proxy
     await expect(
-      addressesProvider.connect(currentAddressesProviderOwner.signer).updatePoolImpl([{
-        implAddress: poolCore.address,
-        action: 0,
-        functionSelectors: poolCoreSelectors
-      }], proxyAddress, poolCore.interface.encodeFunctionData("initialize", [addressesProvider.address]))
+      addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .updatePoolImpl(
+          [
+            {
+              implAddress: poolCore.address,
+              action: 0,
+              functionSelectors: poolCoreSelectors,
+            },
+          ],
+          proxyAddress,
+          poolCore.interface.encodeFunctionData("initialize", [
+            addressesProvider.address,
+          ])
+        )
     ).to.be.revertedWith("ParaProxy: Can't add function that already exists");
 
     // Pool address should not change

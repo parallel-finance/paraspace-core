@@ -7,8 +7,10 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
 
 makeSuite("PausablePool", (testEnv: TestEnv) => {
-  const INVALID_TO_BALANCE_AFTER_TRANSFER = "Invalid 'TO' balance after transfer!";
-  const INVALID_FROM_BALANCE_AFTER_TRANSFER = "Invalid 'FROMO' balance after transfer!";
+  const INVALID_TO_BALANCE_AFTER_TRANSFER =
+    "Invalid 'TO' balance after transfer!";
+  const INVALID_FROM_BALANCE_AFTER_TRANSFER =
+    "Invalid 'FROMO' balance after transfer!";
   const {RESERVE_PAUSED} = ProtocolErrors;
 
   before(async () => {
@@ -16,7 +18,7 @@ makeSuite("PausablePool", (testEnv: TestEnv) => {
   });
 
   it("User 0 supplys 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
-    const { users, pool, dai, pDai, configurator, emergencyAdmin } = testEnv;
+    const {users, pool, dai, pDai, configurator, emergencyAdmin} = testEnv;
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,

@@ -5,9 +5,9 @@ import {MAX_UINT_AMOUNT, oneEther} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {makeSuite} from "./helpers/make-suite";
-import { getReserveData, getUserData } from "./helpers/utils/helpers";
-import { BigNumber } from "ethers";
-import { calcExpectedVariableDebtTokenBalance } from "./helpers/utils/calculations";
+import {getReserveData, getUserData} from "./helpers/utils/helpers";
+import {BigNumber} from "ethers";
+import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
 
 makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
   const {

@@ -64,7 +64,7 @@ makeSuite("DebtToken: Permit Delegation", (testEnv: TestEnv) => {
   });
 
   it("Checks the domain separator", async () => {
-    const { variableDebtDai, stableDebtDai } = testEnv;
+    const {variableDebtDai, stableDebtDai} = testEnv;
     const variableSeparator = await variableDebtDai.DOMAIN_SEPARATOR();
     const stableSeparator = await stableDebtDai.DOMAIN_SEPARATOR();
 

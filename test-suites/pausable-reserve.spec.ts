@@ -11,15 +11,17 @@ import "./helpers/utils/wadraymath";
 makeSuite("PausableReserve", (testEnv: TestEnv) => {
   // const _mockFlashLoanReceiver = {} as MockFlashLoanReceiver;
   const {RESERVE_PAUSED} = ProtocolErrors;
-  const INVALID_TO_BALANCE_AFTER_TRANSFER = "Invalid 'TO' balance after transfer!";
-  const INVALID_FROM_BALANCE_AFTER_TRANSFER = "Invalid 'FROMO' balance after transfer!";
+  const INVALID_TO_BALANCE_AFTER_TRANSFER =
+    "Invalid 'TO' balance after transfer!";
+  const INVALID_FROM_BALANCE_AFTER_TRANSFER =
+    "Invalid 'FROMO' balance after transfer!";
 
   before(async () => {
     // _mockFlashLoanReceiver = await getMockFlashLoanReceiver();
   });
 
   it("User 0 supplies 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
-    const { users, pool, dai, pDai, configurator, emergencyAdmin } = testEnv;
+    const {users, pool, dai, pDai, configurator, emergencyAdmin} = testEnv;
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
       "1000"
@@ -57,9 +59,11 @@ makeSuite("PausableReserve", (testEnv: TestEnv) => {
       .connect(emergencyAdmin.signer)
       .setReservePause(dai.address, false);
     // User 0 succeeds transfer to User 1
-    expect(await pDai
-      .connect(users[0].signer)
-      .transfer(users[1].address, amountDAItoDeposit));
+    expect(
+      await pDai
+        .connect(users[0].signer)
+        .transfer(users[1].address, amountDAItoDeposit)
+    );
     const fromBalance = await pDai.balanceOf(users[0].address);
     const toBalance = await pDai.balanceOf(users[1].address);
     expect(fromBalance.toString()).to.be.equal(

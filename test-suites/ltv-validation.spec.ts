@@ -81,7 +81,13 @@ makeSuite("LTV validation", (testEnv: TestEnv) => {
     expect(
       await pool
         .connect(user1.signer)
-        .borrow(weth.address, borrowedAmount, RateMode.Variable, 0, user1.address)
+        .borrow(
+          weth.address,
+          borrowedAmount,
+          RateMode.Variable,
+          0,
+          user1.address
+        )
     );
   });
 

@@ -1,5 +1,10 @@
 import {BigNumber, BigNumberish, utils} from "ethers";
-import {evmRevert, evmSnapshot, impersonateAccountsHardhat, increaseTime} from "../deploy/helpers/misc-utils";
+import {
+  evmRevert,
+  evmSnapshot,
+  impersonateAccountsHardhat,
+  increaseTime,
+} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   PToken__factory,
@@ -12,15 +17,19 @@ import {
   VariableDebtToken__factory,
   DefaultReserveAuctionStrategy,
 } from "../types";
-import {getFirstSigner, getMockAggregator, getParaSpaceOracle} from "../deploy/helpers/contracts-getters";
+import {
+  getFirstSigner,
+  getMockAggregator,
+  getParaSpaceOracle,
+} from "../deploy/helpers/contracts-getters";
 import {makeSuite} from "./helpers/make-suite";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
-import { convertToCurrencyDecimals } from "../deploy/helpers/contracts-helpers";
-import { expect } from "chai";
-import { RateMode } from "../deploy/helpers/types";
-import { topUpNonPayableWithEther } from "./helpers/utils/funds";
+import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {expect} from "chai";
+import {RateMode} from "../deploy/helpers/types";
+import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 
 const SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits";
 
@@ -151,7 +160,12 @@ makeSuite("Interest Rate and Index Overflow", (testEnv) => {
       await getFirstSigner()
     );
 
-    await (await getParaSpaceOracle()).setAssetSources([mockToken.address], [(await getMockAggregator(undefined, "DAI")).address])
+    await (
+      await getParaSpaceOracle()
+    ).setAssetSources(
+      [mockToken.address],
+      [(await getMockAggregator(undefined, "DAI")).address]
+    );
   });
 
   beforeEach(async () => {
