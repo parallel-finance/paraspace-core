@@ -47,8 +47,10 @@ jobs:
 
       - name: Verification
         run: |
-          make ETHERSCAN_VERIFICATION=true verify
-          make ETHERSCAN_VERIFICATION_CONTRACT=PoolCore,PoolMarketplace,PoolParameters,Seaport,PoolAddressesProvider,ACLManager,ParaSpaceOracle verify
+          make \
+            ETHERSCAN_VERIFICATION=true \
+            ETHERSCAN_VERIFICATION_CONTRACT=PoolCore,PoolMarketplace,PoolParameters,Seaport,PoolAddressesProvider,ACLManager,ParaSpaceOracle \
+            verify
 
       - name: Upload Artifacts
         if: always()
