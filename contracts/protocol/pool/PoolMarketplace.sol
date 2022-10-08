@@ -83,7 +83,7 @@ contract PoolMarketplace is
         uint256 ethLeft = msg.value;
 
         if (
-            msg.value > 0 &&
+            ethLeft > 0 &&
             orderInfo.consideration[0].itemType != ItemType.NATIVE
         ) {
             IWETH(WETH).deposit{value: ethLeft}();
