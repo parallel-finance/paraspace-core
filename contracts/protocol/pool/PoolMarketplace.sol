@@ -12,6 +12,10 @@ import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
+import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {IWETH} from "../../misc/interfaces/IWETH.sol";
+import {ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationEnums.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPoolMarketplace} from "../../interfaces/IPoolMarketplace.sol";
 import {INToken} from "../../interfaces/INToken.sol";
@@ -46,6 +50,7 @@ contract PoolMarketplace is
     IPoolMarketplace
 {
     using ReserveLogic for DataTypes.ReserveData;
+    using SafeERC20 for IERC20;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 1;
@@ -67,7 +72,6 @@ contract PoolMarketplace is
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
         address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
@@ -75,16 +79,31 @@ contract PoolMarketplace is
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
             .getAskOrderInfo(payload, WETH);
-        orderInfo.taker = onBehalfOf;
+        orderInfo.taker = msg.sender;
+        uint256 ethLeft = msg.value;
+
+        if (
+            msg.value > 0 &&
+            orderInfo.consideration[0].itemType != ItemType.NATIVE
+        ) {
+            IWETH(WETH).deposit{value: ethLeft}();
+            IERC20(WETH).safeTransferFrom(
+                address(this),
+                orderInfo.taker,
+                ethLeft
+            );
+            ethLeft = 0;
+        }
+
         MarketplaceLogic.executeBuyWithCredit(
             _reserves,
             _reservesList,
-            _usersConfig[onBehalfOf],
+            _usersConfig[orderInfo.taker],
             DataTypes.ExecuteMarketplaceParams({
                 marketplaceId: marketplaceId,
                 payload: payload,
                 credit: credit,
-                ethLeft: msg.value,
+                ethLeft: ethLeft,
                 marketplace: marketplace,
                 orderInfo: orderInfo,
                 WETH: WETH,
@@ -103,7 +122,6 @@ contract PoolMarketplace is
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
         address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
@@ -123,12 +141,25 @@ contract PoolMarketplace is
             DataTypes.OrderInfo memory orderInfo = IMarketplace(
                 marketplace.adapter
             ).getAskOrderInfo(payload, WETH);
-            orderInfo.taker = onBehalfOf;
+            orderInfo.taker = msg.sender;
+
+            if (
+                ethLeft > 0 &&
+                orderInfo.consideration[0].itemType != ItemType.NATIVE
+            ) {
+                IWETH(WETH).deposit{value: ethLeft}();
+                IERC20(WETH).transferFrom(
+                    address(this),
+                    orderInfo.taker,
+                    ethLeft
+                );
+                ethLeft = 0;
+            }
 
             ethLeft -= MarketplaceLogic.executeBuyWithCredit(
                 _reserves,
                 _reservesList,
-                _usersConfig[onBehalfOf],
+                _usersConfig[msg.sender],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
                     payload: payload,

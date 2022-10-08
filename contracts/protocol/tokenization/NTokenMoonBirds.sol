@@ -38,7 +38,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
     ) external virtual override onlyPool returns (bool) {
-        bool isLastUncollaterarized = _burnMultiple(from, tokenIds);
+        bool isLastUncollateralized = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
@@ -50,7 +50,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
             }
         }
 
-        return isLastUncollaterarized;
+        return isLastUncollateralized;
     }
 
     function onERC721Received(

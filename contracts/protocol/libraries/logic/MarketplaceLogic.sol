@@ -261,7 +261,7 @@ library MarketplaceLogic {
                 reserve = reservesData[underlyingAsset];
                 bool isNToken = reserve.xTokenAddress == token;
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                SupplyLogic.executeCollateralizedERC721(
+                SupplyLogic.executeCollateralizeERC721(
                     reservesData,
                     userConfig,
                     underlyingAsset,
@@ -274,7 +274,7 @@ library MarketplaceLogic {
 
             // item.token == underlyingAsset but supplied after listing/offering
             if (INToken(reserve.xTokenAddress).ownerOf(tokenId) == onBehalfOf) {
-                SupplyLogic.executeCollateralizedERC721(
+                SupplyLogic.executeCollateralizeERC721(
                     reservesData,
                     userConfig,
                     token,
@@ -331,8 +331,7 @@ library MarketplaceLogic {
     function _checkAllowance(address token, address operator) internal {
         uint256 allowance = IERC20(token).allowance(address(this), operator);
         if (allowance == 0) {
-            uint256 MAX_INT = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-            IERC20(token).safeApprove(operator, MAX_INT);
+            IERC20(token).approve(operator, type(uint256).max);
         }
     }
 

@@ -354,7 +354,7 @@ contract PoolCore is
         bool useAsCollateral
     ) external virtual override nonReentrant {
         if (useAsCollateral) {
-            SupplyLogic.executeCollateralizedERC721(
+            SupplyLogic.executeCollateralizeERC721(
                 _reserves,
                 _usersConfig[msg.sender],
                 asset,
@@ -362,7 +362,7 @@ contract PoolCore is
                 msg.sender
             );
         } else {
-            SupplyLogic.executeUncollateralizedERC721(
+            SupplyLogic.executeUncollateralizeERC721(
                 _reserves,
                 _reservesList,
                 _usersConfig[msg.sender],
