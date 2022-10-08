@@ -8,7 +8,6 @@ import {
   getOfferOrConsiderationItem,
   toBN,
   toFulfillment,
-  toKey,
 } from "../../deploy/helpers/seaport-helpers/encoding";
 import {createOrder, createRunput} from "../../deploy/helpers/x2y2-helpers";
 import {ethers} from "hardhat";
@@ -254,7 +253,12 @@ export async function executeSeaportBuyWithCredit(
 
   const encodedData = seaport.interface.encodeFunctionData(
     "fulfillAdvancedOrder",
-    [await getSellOrder(), [], toKey(0), (isNToken ? taker : pool).address]
+    [
+      await getSellOrder(),
+      [],
+      await getConduitKey(),
+      (isNToken ? taker : pool).address,
+    ]
   );
 
   const tx = (await getPool()).connect(taker.signer).buyWithCredit(

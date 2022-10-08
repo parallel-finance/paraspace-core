@@ -18,7 +18,6 @@ import {
   getOfferOrConsiderationItem,
   toBN,
   toFulfillment,
-  toKey,
 } from "../deploy/helpers/seaport-helpers/encoding";
 import {createOrder, createRunput} from "../deploy/helpers/x2y2-helpers";
 import {ethers} from "hardhat";
@@ -256,7 +255,7 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], toKey(0), pool.address]
+      [await getSellOrder(), [], conduitKey, pool.address]
     );
 
     const tx = pool.connect(taker.signer).buyWithCredit(
@@ -679,7 +678,7 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], toKey(0), pool.address]
+      [await getSellOrder(), [], conduitKey, pool.address]
     );
 
     const offerBeforeBalance = await taker.signer.getBalance();
@@ -819,6 +818,8 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
       pausableZone,
       seaport,
       pool,
+      conduit,
+      conduitKey,
       users: [offer, offerer, middleman],
     } = testEnv;
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
@@ -882,7 +883,7 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
     expect(await nBAYC.collaterizedBalanceOf(offer.address)).to.be.equal(0);
 
     await waitForTx(
-      await nBAYC.connect(offer.signer).approve(seaport.address, nftId)
+      await nBAYC.connect(offer.signer).approve(conduit.address, nftId)
     );
 
     await waitForTx(
@@ -911,13 +912,14 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
         offers,
         considerations,
         2,
-        pausableZone.address
+        pausableZone.address,
+        conduitKey
       );
     };
 
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], toKey(0), offerer.address]
+      [await getSellOrder(), [], conduitKey, offerer.address]
     );
 
     const tx = pool.connect(offerer.signer).buyWithCredit(
@@ -2943,7 +2945,7 @@ makeSuite("Leveraged Bid - Positive tests", (testEnv) => {
     };
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], toKey(0), offerer.address]
+      [await getSellOrder(), [], conduitKey, offerer.address]
     );
     const tx = pool.connect(offerer.signer).buyWithCredit(
       PARASPACE_SEAPORT_ID,
