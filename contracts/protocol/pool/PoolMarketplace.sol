@@ -143,6 +143,15 @@ contract PoolMarketplace is
             ).getAskOrderInfo(payload, WETH);
             orderInfo.taker = msg.sender;
 
+            // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
+            // this also means that the order is important
+            //
+            // the following example image that the `taker` owns only ETH and wants to
+            // batch buy bunch of NFTs
+            //
+            // batchBuyWithCredit([ETH, WETH, ETH]) => not ok
+            // batchBuyWithCredit([ETH, ETH, ETH]) => ok
+            // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             if (
                 ethLeft > 0 &&
                 orderInfo.consideration[0].itemType != ItemType.NATIVE
