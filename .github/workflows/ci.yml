@@ -71,6 +71,7 @@ jobs:
       RPC_URL: ${{ secrets.RPC_URL }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+      REPORT_GAS: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
