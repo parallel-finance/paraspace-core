@@ -67,39 +67,45 @@ makeSuite("LTV validation", (testEnv: TestEnv) => {
     expect(ltv).to.be.equal(0);
   });
 
-  // it("Borrows 0.000414 WETH", async () => {
-  //   const {
-  //     pool,
-  //     weth,
-  //     users: [user1],
-  //   } = testEnv;
-  //   const borrowedAmount = await convertToCurrencyDecimals(
-  //     weth.address,
-  //     "0.000414"
-  //   );
+  it("Borrows 0.000414 WETH", async () => {
+    const {
+      pool,
+      weth,
+      users: [user1],
+    } = testEnv;
+    const borrowedAmount = await convertToCurrencyDecimals(
+      weth.address,
+      "0.000414"
+    );
 
-  //   expect(
-  //     await pool
-  //       .connect(user1.signer)
-  //       .borrow(weth.address, borrowedAmount, 1, 0, user1.address)
-  //   );
-  // });
+    expect(
+      await pool
+        .connect(user1.signer)
+        .borrow(
+          weth.address,
+          borrowedAmount,
+          RateMode.Variable,
+          0,
+          user1.address
+        )
+    );
+  });
 
-  // it("Tries to withdraw USDC (revert expected)", async () => {
-  //   const {
-  //     pool,
-  //     usdc,
-  //     users: [user1],
-  //   } = testEnv;
+  it("Tries to withdraw USDC (revert expected)", async () => {
+    const {
+      pool,
+      usdc,
+      users: [user1],
+    } = testEnv;
 
-  //   const withdrawnAmount = await convertToCurrencyDecimals(usdc.address, "1");
+    const withdrawnAmount = await convertToCurrencyDecimals(usdc.address, "1");
 
-  //   await expect(
-  //     pool
-  //       .connect(user1.signer)
-  //       .withdraw(usdc.address, withdrawnAmount, user1.address)
-  //   ).to.be.revertedWith(LTV_VALIDATION_FAILED);
-  // });
+    await expect(
+      pool
+        .connect(user1.signer)
+        .withdraw(usdc.address, withdrawnAmount, user1.address)
+    ).to.be.revertedWith(LTV_VALIDATION_FAILED);
+  });
 
   it("Withdraws DAI", async () => {
     const {

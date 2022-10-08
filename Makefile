@@ -77,9 +77,37 @@ test-liquidation-auction:
 test-liquidation-edge:
 	make TEST_TARGET=liquidation-edge.spec.ts test
 
+.PHONY: test-liquidation-ptoken
+test-liquidation-ptoken:
+	make TEST_TARGET=liquidation-ptoken.spec.ts test	
+
 .PHONY: test-configurator-edge
 test-configurator-edge:
 	make TEST_TARGET=configurator-edge.spec.ts test
+
+.PHONY: test-debt-token-delegation-permit
+test-debt-token-delegation-permit:
+	make TEST_TARGET=debt-token-delegation-permit.spec.ts test
+
+.PHONY: test-ptoken-permit
+test-ptoken-permit:
+	make TEST_TARGET=ptoken-permit.spec.ts test
+
+.PHONY: test-interest-overflow
+test-interest-overflow:
+	make TEST_TARGET=interest-overflow.spec.ts test
+
+.PHONY: test-ltv-validation
+test-ltv-validation:
+	make TEST_TARGET=ltv-validation.spec.ts test
+
+.PHONY: test-pausable-reserve
+test-pausable-reserve:
+	make TEST_TARGET=pausable-reserve.spec.ts test
+
+.PHONY: test-upgradeability
+test-upgradeability:
+	make TEST_TARGET=upgradeability.spec.ts test
 
 .PHONY: test-erc20
 test-erc20:
@@ -137,6 +165,10 @@ test-ptoken-transfer:
 test-ptoken-repay:
 	make TEST_TARGET=ptoken-repay.spec.ts test
 
+.PHONY: test-variable-debt-token
+test-variable-debt-token:
+	make TEST_TARGET=variable-debt-token.spec.ts test
+
 .PHONY: test-paraspace-oracle
 test-paraspace-oracle:
 	make TEST_TARGET=paraspace-oracle.spec.ts test
@@ -153,13 +185,29 @@ test-atomic-tokens-limit:
 test-rebasing-tokens:
 	make TEST_TARGET=rebasing.spec.ts test
 
+.PHONY: test-pool-addresses-provider
+test-pool-addresses-provider:
+	make TEST_TARGET=pool-addresses-provider.spec.ts test
+
+.PHONY: test-pausable-pool
+test-pausable-pool:
+	make TEST_TARGET=pausable-pool.spec.ts test	
+
 .PHONY: test-pool-drop-reserve
 test-pool-drop-reserve:
 	make TEST_TARGET=pool-drop-reserve.spec.ts test
 
+.PHONY: test-price-oracle-sentinel
+test-price-oracle-sentinel:
+	make TEST_TARGET=price-oracle-sentinel.spec.ts test
+
 .PHONY: test-user-configurator-used-as-collateral
 test-user-configurator-used-as-collateral:
 	make TEST_TARGET=user-configurator-used-as-collateral.spec.ts test
+
+.PHONY: test-rate-strategy
+test-rate-strategy:
+	make TEST_TARGET=rate-strategy.spec.ts test
 
 .PHONY: test-dynamic-configs-strategy
 test-dynamic-configs-strategy:

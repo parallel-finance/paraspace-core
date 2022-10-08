@@ -7,73 +7,77 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
 
 makeSuite("PausablePool", (testEnv: TestEnv) => {
+  const INVALID_TO_BALANCE_AFTER_TRANSFER =
+    "Invalid 'TO' balance after transfer!";
+  const INVALID_FROM_BALANCE_AFTER_TRANSFER =
+    "Invalid 'FROMO' balance after transfer!";
   const {RESERVE_PAUSED} = ProtocolErrors;
 
   before(async () => {
     // _mockFlashLoanReceiver = await getMockFlashLoanReceiver();
   });
 
-  // it("User 0 supplys 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
-  //   const { users, pool, dai, pDai, configurator, emergencyAdmin } = testEnv;
+  it("User 0 supplys 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
+    const {users, pool, dai, pDai, configurator, emergencyAdmin} = testEnv;
 
-  //   const amountDAItoDeposit = await convertToCurrencyDecimals(
-  //     dai.address,
-  //     "1000"
-  //   );
+    const amountDAItoDeposit = await convertToCurrencyDecimals(
+      dai.address,
+      "1000"
+    );
 
-  //   await dai.connect(users[0].signer)["mint(uint256)"](amountDAItoDeposit);
+    await dai.connect(users[0].signer)["mint(uint256)"](amountDAItoDeposit);
 
-  //   // user 0 supplys 1000 DAI
-  //   await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT);
-  //   await pool
-  //     .connect(users[0].signer)
-  //     .supply(dai.address, amountDAItoDeposit, users[0].address, "0");
+    // user 0 supplys 1000 DAI
+    await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(users[0].signer)
+      .supply(dai.address, amountDAItoDeposit, users[0].address, "0");
 
-  //   const user0Balance = await pDai.balanceOf(users[0].address);
-  //   const user1Balance = await pDai.balanceOf(emergencyAdmin.address);
+    const user0Balance = await pDai.balanceOf(users[0].address);
+    const user1Balance = await pDai.balanceOf(users[1].address);
 
-  //   // Configurator pauses the pool
-  //   await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    // Configurator pauses the pool
+    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
 
-  //   // User 0 tries the transfer to User 1
-  //   await expect(
-  //     pDai
-  //       .connect(users[0].signer)
-  //       .transfer(emergencyAdmin.address, amountDAItoDeposit)
-  //   ).to.revertedWith(RESERVE_PAUSED);
+    // User 0 tries the transfer to User 1
+    await expect(
+      pDai
+        .connect(users[0].signer)
+        .transfer(users[1].address, amountDAItoDeposit)
+    ).to.revertedWith(RESERVE_PAUSED);
 
-  //   const pausedFromBalance = await pDai.balanceOf(users[0].address);
-  //   const pausedToBalance = await pDai.balanceOf(emergencyAdmin.address);
+    const pausedFromBalance = await pDai.balanceOf(users[0].address);
+    const pausedToBalance = await pDai.balanceOf(users[1].address);
 
-  //   expect(pausedFromBalance).to.be.equal(
-  //     user0Balance.toString(),
-  //     INVALID_TO_BALANCE_AFTER_TRANSFER
-  //   );
-  //   expect(pausedToBalance.toString()).to.be.equal(
-  //     user1Balance.toString(),
-  //     INVALID_FROM_BALANCE_AFTER_TRANSFER
-  //   );
+    expect(pausedFromBalance).to.be.equal(
+      user0Balance.toString(),
+      INVALID_TO_BALANCE_AFTER_TRANSFER
+    );
+    expect(pausedToBalance.toString()).to.be.equal(
+      user1Balance.toString(),
+      INVALID_FROM_BALANCE_AFTER_TRANSFER
+    );
 
-  //   // Configurator unpauses the pool
-  //   await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    // Configurator unpauses the pool
+    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
 
-  //   // User 0 succeeds transfer to User 1
-  //   await pDai
-  //     .connect(users[0].signer)
-  //     .transfer(emergencyAdmin.address, amountDAItoDeposit);
+    // User 0 succeeds transfer to User 1
+    await pDai
+      .connect(users[0].signer)
+      .transfer(users[1].address, amountDAItoDeposit);
 
-  //   const fromBalance = await pDai.balanceOf(users[0].address);
-  //   const toBalance = await pDai.balanceOf(emergencyAdmin.address);
+    const fromBalance = await pDai.balanceOf(users[0].address);
+    const toBalance = await pDai.balanceOf(users[1].address);
 
-  //   expect(fromBalance.toString()).to.be.equal(
-  //     user0Balance.sub(amountDAItoDeposit),
-  //     INVALID_FROM_BALANCE_AFTER_TRANSFER
-  //   );
-  //   expect(toBalance.toString()).to.be.equal(
-  //     user1Balance.add(amountDAItoDeposit),
-  //     INVALID_TO_BALANCE_AFTER_TRANSFER
-  //   );
-  // });
+    expect(fromBalance.toString()).to.be.equal(
+      user0Balance.sub(amountDAItoDeposit),
+      INVALID_FROM_BALANCE_AFTER_TRANSFER
+    );
+    expect(toBalance.toString()).to.be.equal(
+      user1Balance.add(amountDAItoDeposit),
+      INVALID_TO_BALANCE_AFTER_TRANSFER
+    );
+  });
 
   it("Deposit", async () => {
     const {users, pool, dai, configurator, emergencyAdmin} = testEnv;

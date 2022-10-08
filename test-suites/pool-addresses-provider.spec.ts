@@ -9,6 +9,17 @@ import {
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {getProxyImplementation} from "../deploy/helpers/contracts-helpers";
+import {deployPoolComponents} from "../deploy/helpers/contracts-deployments";
+import {
+  InitializableAdminUpgradeabilityProxy__factory,
+  MockPeripheryContractV1__factory,
+  MockPeripheryContractV2__factory,
+} from "../types";
+import {
+  getFirstSigner,
+  getProxyAdmin,
+} from "../deploy/helpers/contracts-getters";
 
 makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
@@ -57,377 +68,391 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
     ).to.be.revertedWith(OWNABLE_ONLY_OWNER);
   });
 
-  // it("Owner adds a new address as proxy", async () => {
-  //   const { addressesProvider, users } = testEnv;
+  it("Owner adds a new address as proxy", async () => {
+    const {addressesProvider, users} = testEnv;
 
-  //   const currentAddressesProviderOwner = users[1];
+    const currentAddressesProviderOwner = users[1];
 
-  //   const mockPool = await deployPool(addressesProvider.address);
-  //   const proxiedAddressId = utils.formatBytes32String("RANDOM_PROXIED");
+    const {poolCore} = await deployPoolComponents(addressesProvider.address);
+    const proxiedAddressId = utils.formatBytes32String("RANDOM_PROXIED");
 
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddressAsProxy(proxiedAddressId, mockPool.address)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSetAsProxy")
-  //     .to.emit(addressesProvider, "ProxyCreated");
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddressAsProxy(proxiedAddressId, poolCore.address)
+    )
+      .to.emit(addressesProvider, "AddressSetAsProxy")
+      .to.emit(addressesProvider, "ProxyCreated");
 
-  //   const proxyAddress = await addressesProvider.getAddress(proxiedAddressId);
-  //   const implAddress = await getProxyImplementation(
-  //     addressesProvider.address,
-  //     proxyAddress
-  //   );
-  //   expect(implAddress).to.be.eq(mockPool.address);
-  // });
+    const proxyAddress = await addressesProvider.getAddress(proxiedAddressId);
+    const implAddress = await getProxyImplementation(
+      addressesProvider.address,
+      proxyAddress
+    );
+    expect(implAddress).to.be.eq(poolCore.address);
+  });
 
-  // it("Owner adds a new address with no proxy", async () => {
-  //   const { addressesProvider, users } = testEnv;
+  it("Owner adds a new address with no proxy", async () => {
+    const {addressesProvider, users} = testEnv;
 
-  //   const currentAddressesProviderOwner = users[1];
-  //   const mockNonProxiedAddress = createRandomAddress();
-  //   const nonProxiedAddressId = utils.formatBytes32String("RANDOM_NON_PROXIED");
+    const currentAddressesProviderOwner = users[1];
+    const mockNonProxiedAddress = createRandomAddress();
+    const nonProxiedAddressId = utils.formatBytes32String("RANDOM_NON_PROXIED");
 
-  //   const oldAddress = await addressesProvider.getAddress(nonProxiedAddressId);
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(nonProxiedAddressId, mockNonProxiedAddress)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSet")
-  //     .withArgs(nonProxiedAddressId, oldAddress, mockNonProxiedAddress);
+    const oldAddress = await addressesProvider.getAddress(nonProxiedAddressId);
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(nonProxiedAddressId, mockNonProxiedAddress)
+    )
+      .to.emit(addressesProvider, "AddressSet")
+      .withArgs(nonProxiedAddressId, oldAddress, mockNonProxiedAddress);
 
-  //   expect(
-  //     (await addressesProvider.getAddress(nonProxiedAddressId)).toLowerCase()
-  //   ).to.be.eq(mockNonProxiedAddress.toLowerCase());
+    expect(
+      (await addressesProvider.getAddress(nonProxiedAddressId)).toLowerCase()
+    ).to.be.eq(mockNonProxiedAddress.toLowerCase());
 
-  //   const proxyAddress = await addressesProvider.getAddress(
-  //     nonProxiedAddressId
-  //   );
-  //   await expect(
-  //     getProxyImplementation(addressesProvider.address, proxyAddress)
-  //   ).to.be.reverted;
-  // });
+    // fails with hardhat exception
+    // const proxyAddress = await addressesProvider.getAddress(
+    //   nonProxiedAddressId
+    // );
+    // await expect(
+    //   getProxyImplementation(addressesProvider.address, proxyAddress)
+    // ).to.be.reverted;
+  });
 
-  // it("Owner adds a new address with no proxy and turns it into a proxy", async () => {
-  //   const { addressesProvider, users } = testEnv;
+  it("Owner adds a new address with no proxy and turns it into a proxy", async () => {
+    const {addressesProvider, users} = testEnv;
 
-  //   const currentAddressesProviderOwner = users[1];
-  //   const mockPool = await deployPool(addressesProvider.address);
-  //   const mockConvertibleAddress = mockPool.address;
-  //   const convertibleAddressId = utils.formatBytes32String(
-  //     "CONVERTIBLE_ADDRESS"
-  //   );
+    const currentAddressesProviderOwner = users[1];
+    const {poolCore} = await deployPoolComponents(addressesProvider.address);
+    const mockConvertibleAddress = poolCore.address;
+    const convertibleAddressId = utils.formatBytes32String(
+      "CONVERTIBLE_ADDRESS"
+    );
 
-  //   expect(await addressesProvider.getAddress(convertibleAddressId)).to.be.eq(
-  //     ZERO_ADDRESS
-  //   );
+    expect(await addressesProvider.getAddress(convertibleAddressId)).to.be.eq(
+      ZERO_ADDRESS
+    );
 
-  //   const oldNonProxiedAddress = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
+    const oldNonProxiedAddress = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
 
-  //   // Add address as non proxy
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(convertibleAddressId, mockConvertibleAddress)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSet")
-  //     .withArgs(
-  //       convertibleAddressId,
-  //       oldNonProxiedAddress,
-  //       mockConvertibleAddress
-  //     );
+    // Add address as non proxy
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(convertibleAddressId, mockConvertibleAddress)
+    )
+      .to.emit(addressesProvider, "AddressSet")
+      .withArgs(
+        convertibleAddressId,
+        oldNonProxiedAddress,
+        mockConvertibleAddress
+      );
 
-  //   let registeredAddress = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
-  //   expect(registeredAddress).to.be.eq(mockConvertibleAddress);
-  //   await expect(
-  //     getProxyImplementation(addressesProvider.address, registeredAddress)
-  //   ).to.be.reverted;
+    const registeredAddress = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
+    expect(registeredAddress).to.be.eq(mockConvertibleAddress);
+    await expect(
+      getProxyImplementation(addressesProvider.address, registeredAddress)
+    ).to.be.reverted;
 
-  //   // Unregister address as non proxy
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(convertibleAddressId, ZERO_ADDRESS)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSet")
-  //     .withArgs(convertibleAddressId, mockConvertibleAddress, ZERO_ADDRESS);
+    // Unregister address as non proxy
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(convertibleAddressId, ZERO_ADDRESS)
+    )
+      .to.emit(addressesProvider, "AddressSet")
+      .withArgs(convertibleAddressId, mockConvertibleAddress, ZERO_ADDRESS);
 
-  //   // Add address as proxy
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddressAsProxy(convertibleAddressId, mockConvertibleAddress)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSetAsProxy")
-  //     .to.emit(addressesProvider, "ProxyCreated");
+    // Add address as proxy
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddressAsProxy(convertibleAddressId, mockConvertibleAddress)
+    )
+      .to.emit(addressesProvider, "AddressSetAsProxy")
+      .to.emit(addressesProvider, "ProxyCreated");
 
-  //   const proxyAddress = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
-  //   const implAddress = await getProxyImplementation(
-  //     addressesProvider.address,
-  //     proxyAddress
-  //   );
-  //   expect(implAddress).to.be.eq(mockConvertibleAddress);
-  // });
+    const proxyAddress = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
+    const implAddress = await getProxyImplementation(
+      addressesProvider.address,
+      proxyAddress
+    );
+    expect(implAddress).to.be.eq(mockConvertibleAddress);
+  });
 
-  // it("Unregister a proxy address", async () => {
-  //   const { addressesProvider, users } = testEnv;
+  it("Unregister a proxy address", async () => {
+    const {addressesProvider, users} = testEnv;
 
-  //   const currentAddressesProviderOwner = users[1];
+    const currentAddressesProviderOwner = users[1];
 
-  //   const convertibleAddressId = utils.formatBytes32String(
-  //     "CONVERTIBLE_ADDRESS"
-  //   );
+    const convertibleAddressId = utils.formatBytes32String(
+      "CONVERTIBLE_ADDRESS"
+    );
 
-  //   const proxyAddress = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
+    const proxyAddress = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
 
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(convertibleAddressId, ZERO_ADDRESS)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSet")
-  //     .withArgs(convertibleAddressId, proxyAddress, ZERO_ADDRESS);
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(convertibleAddressId, ZERO_ADDRESS)
+    )
+      .to.emit(addressesProvider, "AddressSet")
+      .withArgs(convertibleAddressId, proxyAddress, ZERO_ADDRESS);
 
-  //   const proxyAddressAfter = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
-  //   expect(proxyAddressAfter).to.be.eq(ZERO_ADDRESS);
-  //   expect(proxyAddressAfter).to.be.not.eq(proxyAddress);
-  //   await expect(
-  //     getProxyImplementation(addressesProvider.address, proxyAddressAfter)
-  //   ).to.be.reverted;
-  // });
+    const proxyAddressAfter = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
+    expect(proxyAddressAfter).to.be.eq(ZERO_ADDRESS);
+    expect(proxyAddressAfter).to.be.not.eq(proxyAddress);
+    // fails with hardhat exception
+    // await expect(
+    //   getProxyImplementation(addressesProvider.address, proxyAddressAfter)
+    // ).to.be.reverted;
+  });
 
-  // it("Owner adds a new address with proxy and turns it into a no proxy", async () => {
-  //   const { addressesProvider, users } = testEnv;
+  it("Owner adds a new address with proxy and turns it into a no proxy", async () => {
+    const {addressesProvider, users} = testEnv;
 
-  //   const currentAddressesProviderOwner = users[1];
-  //   const mockPool = await deployPool(addressesProvider.address);
-  //   const mockConvertibleAddress = mockPool.address;
-  //   const convertibleAddressId = utils.formatBytes32String(
-  //     "CONVERTIBLE_ADDRESS2"
-  //   );
+    const currentAddressesProviderOwner = users[1];
+    const {poolCore} = await deployPoolComponents(addressesProvider.address);
+    const mockConvertibleAddress = poolCore.address;
+    const convertibleAddressId = utils.formatBytes32String(
+      "CONVERTIBLE_ADDRESS2"
+    );
 
-  //   expect(await addressesProvider.getAddress(convertibleAddressId)).to.be.eq(
-  //     ZERO_ADDRESS
-  //   );
+    expect(await addressesProvider.getAddress(convertibleAddressId)).to.be.eq(
+      ZERO_ADDRESS
+    );
 
-  //   // Add address as proxy
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddressAsProxy(convertibleAddressId, mockConvertibleAddress)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSetAsProxy")
-  //     .to.emit(addressesProvider, "ProxyCreated");
+    // Add address as proxy
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddressAsProxy(convertibleAddressId, mockConvertibleAddress)
+    )
+      .to.emit(addressesProvider, "AddressSetAsProxy")
+      .to.emit(addressesProvider, "ProxyCreated");
 
-  //   const proxyAddress = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
-  //   const implAddress = await getProxyImplementation(
-  //     addressesProvider.address,
-  //     proxyAddress
-  //   );
-  //   expect(implAddress).to.be.eq(mockConvertibleAddress);
+    const proxyAddress = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
+    const implAddress = await getProxyImplementation(
+      addressesProvider.address,
+      proxyAddress
+    );
+    expect(implAddress).to.be.eq(mockConvertibleAddress);
 
-  //   // Unregister address as proxy
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(convertibleAddressId, ZERO_ADDRESS)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSet")
-  //     .withArgs(convertibleAddressId, proxyAddress, ZERO_ADDRESS);
+    // Unregister address as proxy
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(convertibleAddressId, ZERO_ADDRESS)
+    )
+      .to.emit(addressesProvider, "AddressSet")
+      .withArgs(convertibleAddressId, proxyAddress, ZERO_ADDRESS);
 
-  //   // Add address as non proxy
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(convertibleAddressId, mockConvertibleAddress)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSet")
-  //     .withArgs(convertibleAddressId, ZERO_ADDRESS, mockConvertibleAddress);
+    // Add address as non proxy
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(convertibleAddressId, mockConvertibleAddress)
+    )
+      .to.emit(addressesProvider, "AddressSet")
+      .withArgs(convertibleAddressId, ZERO_ADDRESS, mockConvertibleAddress);
 
-  //   const registeredAddressAfter = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
-  //   expect(registeredAddressAfter).to.be.not.eq(proxyAddress);
-  //   expect(registeredAddressAfter).to.be.eq(mockConvertibleAddress);
-  //   await expect(
-  //     getProxyImplementation(addressesProvider.address, registeredAddressAfter)
-  //   ).to.be.reverted;
-  // });
+    const registeredAddressAfter = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
+    expect(registeredAddressAfter).to.be.not.eq(proxyAddress);
+    expect(registeredAddressAfter).to.be.eq(mockConvertibleAddress);
+    await expect(
+      getProxyImplementation(addressesProvider.address, registeredAddressAfter)
+    ).to.be.reverted;
+  });
 
-  // it("Unregister a no proxy address", async () => {
-  //   const { addressesProvider, users } = testEnv;
+  it("Unregister a no proxy address", async () => {
+    const {addressesProvider, users} = testEnv;
 
-  //   const currentAddressesProviderOwner = users[1];
+    const currentAddressesProviderOwner = users[1];
 
-  //   const convertibleAddressId = utils.formatBytes32String(
-  //     "CONVERTIBLE_ADDRESS2"
-  //   );
+    const convertibleAddressId = utils.formatBytes32String(
+      "CONVERTIBLE_ADDRESS2"
+    );
 
-  //   const registeredAddress = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
-  //   await expect(
-  //     getProxyImplementation(addressesProvider.address, registeredAddress)
-  //   ).to.be.reverted;
+    const registeredAddress = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
+    await expect(
+      getProxyImplementation(addressesProvider.address, registeredAddress)
+    ).to.be.reverted;
 
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(convertibleAddressId, ZERO_ADDRESS)
-  //   )
-  //     .to.emit(addressesProvider, "AddressSet")
-  //     .withArgs(convertibleAddressId, registeredAddress, ZERO_ADDRESS);
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(convertibleAddressId, ZERO_ADDRESS)
+    )
+      .to.emit(addressesProvider, "AddressSet")
+      .withArgs(convertibleAddressId, registeredAddress, ZERO_ADDRESS);
 
-  //   const registeredAddressAfter = await addressesProvider.getAddress(
-  //     convertibleAddressId
-  //   );
-  //   expect(registeredAddressAfter).to.be.eq(ZERO_ADDRESS);
-  //   expect(registeredAddressAfter).to.be.not.eq(registeredAddress);
-  //   await expect(
-  //     getProxyImplementation(addressesProvider.address, registeredAddress)
-  //   ).to.be.reverted;
-  // });
+    const registeredAddressAfter = await addressesProvider.getAddress(
+      convertibleAddressId
+    );
+    expect(registeredAddressAfter).to.be.eq(ZERO_ADDRESS);
+    expect(registeredAddressAfter).to.be.not.eq(registeredAddress);
+    await expect(
+      getProxyImplementation(addressesProvider.address, registeredAddress)
+    ).to.be.reverted;
+  });
 
-  // it("Owner registers an existing contract (with proxy) and upgrade it", async () => {
-  //   const { addressesProvider, users, poolAdmin } = testEnv;
-  //   const proxyAdminOwner = users[0];
+  it("Owner registers an existing contract (with proxy) and upgrade it", async () => {
+    const {addressesProvider, users} = testEnv;
+    const proxyAdminOwner = users[0];
 
-  //   const currentAddressesProviderOwner = users[1];
-  //   const initialManager = users[1];
-  //   const initialProxyAdmin = users[2];
+    const currentAddressesProviderOwner = users[1];
+    const initialManager = users[1];
+    const initialProxyAdmin = users[2];
 
-  //   const newRegisteredContractId = hre.ethers.utils.keccak256(
-  //     hre.ethers.utils.toUtf8Bytes("NEW_REGISTERED_CONTRACT")
-  //   );
+    const newRegisteredContractId = hre.ethers.utils.keccak256(
+      hre.ethers.utils.toUtf8Bytes("NEW_REGISTERED_CONTRACT")
+    );
 
-  //   // Deploy the periphery contract that will be registered in the PoolAddressesProvider
-  //   const proxy = await (
-  //     await new InitializableAdminUpgradeabilityProxy__factory(
-  //       await getFirstSigner()
-  //     ).deploy()
-  //   ).deployed();
+    // Deploy the periphery contract that will be registered in the PoolAddressesProvider
+    const proxy = await (
+      await new InitializableAdminUpgradeabilityProxy__factory(
+        await getFirstSigner()
+      ).deploy()
+    ).deployed();
 
-  //   // Implementation
-  //   const impleV1 = await (
-  //     await new MockPeripheryContractV1__factory(await getFirstSigner()).deploy()
-  //   ).deployed();
-  //   await impleV1.initialize(initialManager.address, 123);
+    // Implementation
+    const impleV1 = await (
+      await new MockPeripheryContractV1__factory(
+        await getFirstSigner()
+      ).deploy()
+    ).deployed();
+    await impleV1.initialize(initialManager.address, 123);
 
-  //   // Initialize proxy
-  //   const incentivesInit = impleV1.interface.encodeFunctionData("initialize", [
-  //     initialManager.address,
-  //     123,
-  //   ]);
-  //   await (
-  //     await proxy["initialize(address,address,bytes)"](
-  //       impleV1.address, // logic
-  //       initialProxyAdmin.address, // admin
-  //       incentivesInit // data
-  //     )
-  //   ).wait();
-  //   expect(await getProxyAdmin(proxy.address)).to.be.eq(
-  //     initialProxyAdmin.address
-  //   );
+    // Initialize proxy
+    const incentivesInit = impleV1.interface.encodeFunctionData("initialize", [
+      initialManager.address,
+      123,
+    ]);
+    await (
+      await proxy["initialize(address,address,bytes)"](
+        impleV1.address, // logic
+        initialProxyAdmin.address, // admin
+        incentivesInit // data
+      )
+    ).wait();
+    expect(await getProxyAdmin(proxy.address)).to.be.eq(
+      initialProxyAdmin.address
+    );
 
-  //   const contractToRegister = MockPeripheryContractV1__factory.connect(
-  //     proxy.address,
-  //     proxyAdminOwner.signer
-  //   );
-  //   expect(await contractToRegister.getManager()).to.be.eq(
-  //     initialManager.address
-  //   );
+    const contractToRegister = MockPeripheryContractV1__factory.connect(
+      proxy.address,
+      proxyAdminOwner.signer
+    );
+    expect(await contractToRegister.getManager()).to.be.eq(
+      initialManager.address
+    );
 
-  //   // Register the periphery contract into the PoolAddressesProvider
-  //   expect(
-  //     await proxy
-  //       .connect(initialProxyAdmin.signer)
-  //       .changeAdmin(addressesProvider.address)
-  //   );
-  //   expect(await getProxyAdmin(proxy.address)).to.be.eq(
-  //     addressesProvider.address
-  //   );
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddress(newRegisteredContractId, proxy.address)
-  //   );
-  //   expect(
-  //     await addressesProvider.getAddress(newRegisteredContractId)
-  //   ).to.be.eq(proxy.address);
+    // Register the periphery contract into the PoolAddressesProvider
+    expect(
+      await proxy
+        .connect(initialProxyAdmin.signer)
+        .changeAdmin(addressesProvider.address)
+    );
+    expect(await getProxyAdmin(proxy.address)).to.be.eq(
+      addressesProvider.address
+    );
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(newRegisteredContractId, proxy.address)
+    );
+    expect(
+      await addressesProvider.getAddress(newRegisteredContractId)
+    ).to.be.eq(proxy.address);
 
-  //   // Upgrade periphery contract to V2 from PoolAddressesProvider
-  //   // Note the new implementation contract should has a proper `initialize` function signature
+    // Upgrade periphery contract to V2 from PoolAddressesProvider
+    // Note the new implementation contract should has a proper `initialize` function signature
 
-  //   // New implementation
-  //   const impleV2 = await (
-  //     await new MockPeripheryContractV2__factory(await getFirstSigner()).deploy()
-  //   ).deployed();
-  //   await impleV2.initialize(addressesProvider.address);
+    // New implementation
+    const impleV2 = await (
+      await new MockPeripheryContractV2__factory(
+        await getFirstSigner()
+      ).deploy()
+    ).deployed();
+    await impleV2.initialize(addressesProvider.address);
 
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setAddressAsProxy(newRegisteredContractId, impleV2.address)
-  //   );
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddressAsProxy(newRegisteredContractId, impleV2.address)
+    );
 
-  //   const upgradedContract = MockPeripheryContractV2__factory.connect(
-  //     proxy.address,
-  //     proxyAdminOwner.signer
-  //   );
-  //   expect(await upgradedContract.getManager()).to.be.eq(
-  //     initialManager.address
-  //   );
-  //   expect(await upgradedContract.getAddressesProvider()).to.be.eq(
-  //     addressesProvider.address
-  //   );
-  // });
+    const upgradedContract = MockPeripheryContractV2__factory.connect(
+      proxy.address,
+      proxyAdminOwner.signer
+    );
+    expect(await upgradedContract.getManager()).to.be.eq(
+      initialManager.address
+    );
+    expect(await upgradedContract.getAddressesProvider()).to.be.eq(
+      addressesProvider.address
+    );
+  });
 
-  // it("Owner updates the implementation of a proxy which is already initialized", async () => {
-  //   const snapId = await evmSnapshot();
+  it("Owner updates the implementation of a proxy which is already initialized", async () => {
+    const snapId = await evmSnapshot();
 
-  //   const { addressesProvider, users } = testEnv;
-  //   const currentAddressesProviderOwner = users[1];
+    const {addressesProvider, users} = testEnv;
+    const currentAddressesProviderOwner = users[1];
 
-  //   const mockPool = await deployMockPool();
+    const {poolCore, poolCoreSelectors} = await deployPoolComponents(
+      addressesProvider.address
+    );
 
-  //   // Pool has already a proxy
-  //   const poolAddress = await addressesProvider.getPool();
-  //   expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
+    // Pool has already a proxy
+    const poolAddress = await addressesProvider.getPool();
+    expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
 
-  //   const poolAddressId = utils.formatBytes32String("POOL");
-  //   const proxyAddress = await addressesProvider.getAddress(poolAddressId);
-  //   const implementationAddress = await getProxyImplementation(
-  //     addressesProvider.address,
-  //     proxyAddress
-  //   );
+    const poolAddressId = utils.formatBytes32String("POOL");
+    const proxyAddress = await addressesProvider.getAddress(poolAddressId);
 
-  //   // Update the Pool proxy
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setPoolImpl(mockPool.address)
-  //   )
-  //     .to.emit(addressesProvider, "PoolUpdated")
-  //     .withArgs(implementationAddress, mockPool.address);
+    // Update the Pool proxy
+    await expect(
+      addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .updatePoolImpl(
+          [
+            {
+              implAddress: poolCore.address,
+              action: 0,
+              functionSelectors: poolCoreSelectors,
+            },
+          ],
+          proxyAddress,
+          poolCore.interface.encodeFunctionData("initialize", [
+            addressesProvider.address,
+          ])
+        )
+    ).to.be.revertedWith("ParaProxy: Can't add function that already exists");
 
-  //   // Pool address should not change
-  //   expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
+    // Pool address should not change
+    expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
 
-  //   await evmRevert(snapId);
-  // });
+    await evmRevert(snapId);
+  });
 
   it("Owner updates the MarketId", async () => {
     const snapId = await evmSnapshot();

@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {BigNumber} from "ethers";
+import {BigNumber, utils} from "ethers";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
 import {
@@ -63,37 +63,37 @@ makeSuite("DebtToken: Permit Delegation", (testEnv: TestEnv) => {
     );
   });
 
-  // it("Checks the domain separator", async () => {
-  //   const { variableDebtDai, stableDebtDai } = testEnv;
-  //   const variableSeparator = await variableDebtDai.DOMAIN_SEPARATOR();
-  //   const stableSeparator = await stableDebtDai.DOMAIN_SEPARATOR();
+  it("Checks the domain separator", async () => {
+    const {variableDebtDai, stableDebtDai} = testEnv;
+    const variableSeparator = await variableDebtDai.DOMAIN_SEPARATOR();
+    const stableSeparator = await stableDebtDai.DOMAIN_SEPARATOR();
 
-  //   const variableDomain = {
-  //     name: await variableDebtDai.name(),
-  //     version: EIP712_REVISION,
-  //     chainId: hre.network.config.chainId,
-  //     verifyingContract: variableDebtDai.address,
-  //   };
-  //   const stableDomain = {
-  //     name: await stableDebtDai.name(),
-  //     version: EIP712_REVISION,
-  //     chainId: hre.network.config.chainId,
-  //     verifyingContract: stableDebtDai.address,
-  //   };
-  //   const variableDomainSeparator =
-  //     utils._TypedDataEncoder.hashDomain(variableDomain);
-  //   const stableDomainSeparator =
-  //     utils._TypedDataEncoder.hashDomain(stableDomain);
+    const variableDomain = {
+      name: await variableDebtDai.name(),
+      version: EIP712_REVISION,
+      chainId: hre.network.config.chainId,
+      verifyingContract: variableDebtDai.address,
+    };
+    const stableDomain = {
+      name: await stableDebtDai.name(),
+      version: EIP712_REVISION,
+      chainId: hre.network.config.chainId,
+      verifyingContract: stableDebtDai.address,
+    };
+    const variableDomainSeparator =
+      utils._TypedDataEncoder.hashDomain(variableDomain);
+    const stableDomainSeparator =
+      utils._TypedDataEncoder.hashDomain(stableDomain);
 
-  //   expect(variableSeparator).to.be.equal(
-  //     variableDomainSeparator,
-  //     "Invalid variable domain separator"
-  //   );
-  //   expect(stableSeparator).to.be.equal(
-  //     stableDomainSeparator,
-  //     "Invalid stable domain separator"
-  //   );
-  // });
+    expect(variableSeparator).to.be.equal(
+      variableDomainSeparator,
+      "Invalid variable domain separator"
+    );
+    expect(stableSeparator).to.be.equal(
+      stableDomainSeparator,
+      "Invalid stable domain separator"
+    );
+  });
 
   it("User 3 borrows variable interest dai on behalf of user 2 via permit", async () => {
     const {

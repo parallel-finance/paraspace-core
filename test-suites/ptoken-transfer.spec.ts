@@ -2,7 +2,7 @@ import {expect} from "chai";
 import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
 
 makeSuite("PToken: Transfer", (testEnv: TestEnv) => {
@@ -246,85 +246,87 @@ makeSuite("PToken: Transfer", (testEnv: TestEnv) => {
     );
   });
 
-  // it("User 0 deposits 1 WETH and user 1 tries to borrow the WETH with the received DAI as collateral", async () => {
-  //   const { users, pool, weth, helpersContract } = testEnv;
-  //   const userAddress = await pool.signer.getAddress();
+  it("User 0 deposits 1 WETH and user 1 tries to borrow the WETH with the received DAI as collateral", async () => {
+    const {users, pool, weth, helpersContract} = testEnv;
+    const userAddress = await pool.signer.getAddress();
 
-  //   const amountWETHtoDeposit = await convertToCurrencyDecimals(
-  //     weth.address,
-  //     "1"
-  //   );
-  //   const amountWETHtoBorrow = await convertToCurrencyDecimals(
-  //     weth.address,
-  //     "0.1"
-  //   );
+    const amountWETHtoDeposit = await convertToCurrencyDecimals(
+      weth.address,
+      "1"
+    );
+    const amountWETHtoBorrow = await convertToCurrencyDecimals(
+      weth.address,
+      "0.1"
+    );
 
-  //   expect(
-  //     await weth.connect(users[0].signer)["mint(uint256)"](amountWETHtoDeposit)
-  //   );
+    expect(
+      await weth.connect(users[0].signer)["mint(uint256)"](amountWETHtoDeposit)
+    );
 
-  //   expect(
-  //     await weth.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT)
-  //   );
+    expect(
+      await weth.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
 
-  //   expect(
-  //     await pool
-  //       .connect(users[0].signer)
-  //       .supply(weth.address, amountWETHtoDeposit, userAddress, "0")
-  //   );
-  //   expect(
-  //     await pool
-  //       .connect(users[1].signer)
-  //       .borrow(
-  //         weth.address,
-  //         amountWETHtoBorrow,
-  //         RateMode.Stable,
-  //         "0",
-  //         users[1].address
-  //       )
-  //   );
+    expect(
+      await pool
+        .connect(users[0].signer)
+        .supply(weth.address, amountWETHtoDeposit, userAddress, "0")
+    );
+    expect(
+      await pool
+        .connect(users[1].signer)
+        .borrow(
+          weth.address,
+          amountWETHtoBorrow,
+          RateMode.Variable,
+          "0",
+          users[1].address
+        )
+    );
 
-  //   const userReserveData = await helpersContract.getUserReserveData(
-  //     weth.address,
-  //     users[1].address
-  //   );
+    const userReserveData = await helpersContract.getUserReserveData(
+      weth.address,
+      users[1].address
+    );
 
-  //   expect(userReserveData.currentStableDebt.toString()).to.be.eq(
-  //     amountWETHtoBorrow
-  //   );
-  // });
+    expect(userReserveData.currentVariableDebt.toString()).to.be.eq(
+      amountWETHtoBorrow
+    );
+  });
 
-  // it("User 1 tries to transfer all the DAI used as collateral back to user 0 (revert expected)", async () => {
-  //   const { users, pDai, dai } = testEnv;
+  it("User 1 tries to transfer all the DAI used as collateral back to user 0 (revert expected)", async () => {
+    const {users, pDai, dai} = testEnv;
 
-  //   const amountDAItoTransfer = await convertToCurrencyDecimals(
-  //     dai.address,
-  //     DAI_AMOUNT_TO_DEPOSIT
-  //   );
+    const amountDAItoTransfer = await convertToCurrencyDecimals(
+      dai.address,
+      DAI_AMOUNT_TO_DEPOSIT
+    );
 
-  //   await expect(
-  //     pDai
-  //       .connect(users[1].signer)
-  //       .transfer(users[0].address, amountDAItoTransfer),
-  //     HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-  //   ).to.be.revertedWith(HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
-  // });
+    await expect(
+      pDai
+        .connect(users[1].signer)
+        .transfer(users[0].address, amountDAItoTransfer),
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
+  });
 
-  // it("User 1 transfers a small amount of DAI used as collateral back to user 0", async () => {
-  //   const { users, pDai, dai } = testEnv;
+  it("User 1 transfers a small amount of DAI used as collateral back to user 0", async () => {
+    const {users, pDai, dai} = testEnv;
 
-  //   const pDAItoTransfer = await convertToCurrencyDecimals(dai.address, "100");
+    const pDAItoTransfer = await convertToCurrencyDecimals(dai.address, "100");
 
-  //   expect(
-  //     await pDai
-  //       .connect(users[1].signer)
-  //       .transfer(users[0].address, pDAItoTransfer)
-  //   )
-  //     .to.emit(pDai, "Transfer")
-  //     .withArgs(users[1].address, users[0].address, pDAItoTransfer);
+    expect(
+      await pDai
+        .connect(users[1].signer)
+        .transfer(users[0].address, pDAItoTransfer)
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(users[1].address, users[0].address, pDAItoTransfer);
 
-  //   const user0Balance = await pDai.balanceOf(users[0].address);
+    const user0Balance = await pDai.balanceOf(users[0].address);
 
-  //   expect(user0Balance.toString()).to.be.eq(pDAItoTransfer.toString());
-  // });
+    expect(user0Balance.toString()).to.be.eq(pDAItoTransfer.toString());
+  });
 });

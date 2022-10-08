@@ -1,6 +1,10 @@
-import {BigNumberish} from "ethers";
-import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {BigNumber, BigNumberish} from "ethers";
+import {
+  evmRevert,
+  evmSnapshot,
+  increaseTime,
+} from "../deploy/helpers/misc-utils";
+import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   PToken__factory,
   MintableERC20,
@@ -12,11 +16,20 @@ import {
   VariableDebtToken__factory,
   DefaultReserveAuctionStrategy,
 } from "../types";
-import {getFirstSigner} from "../deploy/helpers/contracts-getters";
+import {
+  getFirstSigner,
+  getMockAggregator,
+  getParaSpaceOracle,
+} from "../deploy/helpers/contracts-getters";
 import {makeSuite} from "./helpers/make-suite";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
+import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {expect} from "chai";
+import {RateMode} from "../deploy/helpers/types";
+
+const SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits";
 
 makeSuite("Interest Rate and Index Overflow", (testEnv) => {
   let mockToken: MintableERC20;
@@ -144,6 +157,13 @@ makeSuite("Interest Rate and Index Overflow", (testEnv) => {
       reserveData.stableDebtTokenAddress,
       await getFirstSigner()
     );
+
+    await (
+      await getParaSpaceOracle()
+    ).setAssetSources(
+      [mockToken.address],
+      [(await getMockAggregator(undefined, "DAI")).address]
+    );
   });
 
   beforeEach(async () => {
@@ -154,223 +174,223 @@ makeSuite("Interest Rate and Index Overflow", (testEnv) => {
     await evmRevert(snap);
   });
 
-  // it("ReserveLogic `updateInterestRates` with nextLiquidityRate > type(uint128).max (revert expected)", async () => {
-  //   const {
-  //     pool,
-  //     users: [user],
-  //   } = testEnv;
+  it("ReserveLogic `updateInterestRates` with nextLiquidityRate > type(uint128).max (revert expected)", async () => {
+    const {
+      pool,
+      users: [user],
+    } = testEnv;
 
-  //   await mockToken
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](
-  //       await convertToCurrencyDecimals(mockToken.address, "10000")
-  //     );
-  //   await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await mockToken
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "10000")
+      );
+    await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   await mockRateStrategy.setLiquidityRate(MAX_UINT_AMOUNT);
+    await mockRateStrategy.setLiquidityRate(MAX_UINT_AMOUNT);
 
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .deposit(
-  //         mockToken.address,
-  //         await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //         user.address,
-  //         0
-  //       )
-  //   ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
-  // });
+    await expect(
+      pool
+        .connect(user.signer)
+        .supply(
+          mockToken.address,
+          await convertToCurrencyDecimals(mockToken.address, "1000"),
+          user.address,
+          0
+        )
+    ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
+  });
 
-  // it("ReserveLogic `updateInterestRates` with nextStableRate > type(uint128).max (revert expected)", async () => {
-  //   const {
-  //     pool,
-  //     users: [user],
-  //   } = testEnv;
+  it("ReserveLogic `updateInterestRates` with nextStableRate > type(uint128).max (revert expected)", async () => {
+    const {
+      pool,
+      users: [user],
+    } = testEnv;
 
-  //   await mockToken
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](
-  //       await convertToCurrencyDecimals(mockToken.address, "10000")
-  //     );
-  //   await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await mockToken
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "10000")
+      );
+    await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   await mockRateStrategy.setStableBorrowRate(MAX_UINT_AMOUNT);
+    await mockRateStrategy.setStableBorrowRate(MAX_UINT_AMOUNT);
 
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .deposit(
-  //         mockToken.address,
-  //         await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //         user.address,
-  //         0
-  //       )
-  //   ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
-  // });
+    await expect(
+      pool
+        .connect(user.signer)
+        .supply(
+          mockToken.address,
+          await convertToCurrencyDecimals(mockToken.address, "1000"),
+          user.address,
+          0
+        )
+    ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
+  });
 
-  // it("ReserveLogic `updateInterestRates` with nextVariableRate > type(uint128).max (revert expected)", async () => {
-  //   const {
-  //     pool,
-  //     users: [user],
-  //   } = testEnv;
+  it("ReserveLogic `updateInterestRates` with nextVariableRate > type(uint128).max (revert expected)", async () => {
+    const {
+      pool,
+      users: [user],
+    } = testEnv;
 
-  //   await mockToken
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](
-  //       await convertToCurrencyDecimals(mockToken.address, "10000")
-  //     );
-  //   await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await mockToken
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "10000")
+      );
+    await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   await mockRateStrategy.setVariableBorrowRate(MAX_UINT_AMOUNT);
+    await mockRateStrategy.setVariableBorrowRate(MAX_UINT_AMOUNT);
 
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .deposit(
-  //         mockToken.address,
-  //         await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //         user.address,
-  //         0
-  //       )
-  //   ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
-  // });
+    await expect(
+      pool
+        .connect(user.signer)
+        .supply(
+          mockToken.address,
+          await convertToCurrencyDecimals(mockToken.address, "1000"),
+          user.address,
+          0
+        )
+    ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
+  });
 
-  // it("ReserveLogic `_updateIndexes` with nextLiquidityIndex > type(uint128).max (revert expected)", async () => {
-  //   const {
-  //     pool,
-  //     users: [user],
-  //     dai,
-  //   } = testEnv;
+  it("ReserveLogic `_updateIndexes` with nextLiquidityIndex > type(uint128).max (revert expected)", async () => {
+    const {
+      pool,
+      users: [user],
+      dai,
+    } = testEnv;
 
-  //   await dai
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](
-  //       await convertToCurrencyDecimals(mockToken.address, "10000")
-  //     );
-  //   await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-  //   await pool
-  //     .connect(user.signer)
-  //     .deposit(
-  //       dai.address,
-  //       await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //       user.address,
-  //       0
-  //     );
+    await dai
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "10000")
+      );
+    await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(user.signer)
+      .supply(
+        dai.address,
+        await convertToCurrencyDecimals(mockToken.address, "1000"),
+        user.address,
+        0
+      );
 
-  //   await mockToken
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](
-  //       await convertToCurrencyDecimals(mockToken.address, "1000")
-  //     );
-  //   await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await mockToken
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "1000")
+      );
+    await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   await pool
-  //     .connect(user.signer)
-  //     .deposit(
-  //       mockToken.address,
-  //       await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //       user.address,
-  //       0
-  //     );
+    await pool
+      .connect(user.signer)
+      .supply(
+        mockToken.address,
+        await convertToCurrencyDecimals(mockToken.address, "1000"),
+        user.address,
+        0
+      );
+    // Set liquidity rate to max
+    await mockRateStrategy.setLiquidityRate(BigNumber.from(2).pow(128).sub(1));
 
-  //   // Set liquidity rate to max
-  //   await mockRateStrategy.setLiquidityRate(BigNumber.from(2).pow(128).sub(1));
-  //   // Borrow funds
-  //   await pool
-  //     .connect(user.signer)
-  //     .borrow(
-  //       mockToken.address,
-  //       await convertToCurrencyDecimals(mockToken.address, "100"),
-  //       RateMode.Variable,
-  //       0,
-  //       user.address
-  //     );
+    // Borrow funds
+    await pool
+      .connect(user.signer)
+      .borrow(
+        mockToken.address,
+        await convertToCurrencyDecimals(mockToken.address, "100"),
+        RateMode.Variable,
+        0,
+        user.address
+      );
 
-  //   // set borrow rate to max
-  //   await mockRateStrategy.setVariableBorrowRate(
-  //     BigNumber.from(2).pow(128).sub(1)
-  //   );
+    // set borrow rate to max
+    await mockRateStrategy.setVariableBorrowRate(
+      BigNumber.from(2).pow(128).sub(1)
+    );
 
-  //   // Increase time such that the next liquidity index overflow because of interest
-  //   await increaseTime(60 * 60 * 24 * 500);
+    // Increase time such that the next liquidity index overflow because of interest
+    await increaseTime(60 * 60 * 24 * 500);
 
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .deposit(
-  //         mockToken.address,
-  //         await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //         user.address,
-  //         0
-  //       )
-  //   ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
-  // });
+    await expect(
+      pool
+        .connect(user.signer)
+        .supply(
+          mockToken.address,
+          await convertToCurrencyDecimals(mockToken.address, "1000"),
+          user.address,
+          0
+        )
+    ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
+  });
 
-  // it("ReserveLogic `_updateIndexes` with nextVariableBorrowIndex > type(uint128).max (revert expected)", async () => {
-  //   const {
-  //     pool,
-  //     users: [user],
-  //     dai,
-  //   } = testEnv;
+  it("ReserveLogic `_updateIndexes` with nextVariableBorrowIndex > type(uint128).max (revert expected)", async () => {
+    const {
+      pool,
+      users: [user],
+      dai,
+    } = testEnv;
 
-  //   await dai
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](
-  //       await convertToCurrencyDecimals(mockToken.address, "10000")
-  //     );
-  //   await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-  //   await pool
-  //     .connect(user.signer)
-  //     .deposit(
-  //       dai.address,
-  //       await convertToCurrencyDecimals(mockToken.address, "10000"),
-  //       user.address,
-  //       0
-  //     );
+    await dai
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "10000")
+      );
+    await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(user.signer)
+      .supply(
+        dai.address,
+        await convertToCurrencyDecimals(mockToken.address, "10000"),
+        user.address,
+        0
+      );
 
-  //   await mockToken
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](
-  //       await convertToCurrencyDecimals(mockToken.address, "10000")
-  //     );
-  //   await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await mockToken
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "10000")
+      );
+    await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   await pool
-  //     .connect(user.signer)
-  //     .deposit(
-  //       mockToken.address,
-  //       await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //       user.address,
-  //       0
-  //     );
+    await pool
+      .connect(user.signer)
+      .supply(
+        mockToken.address,
+        await convertToCurrencyDecimals(mockToken.address, "1000"),
+        user.address,
+        0
+      );
 
-  //   await mockRateStrategy.setLiquidityRate(BigNumber.from(10).pow(27));
-  //   await mockRateStrategy.setVariableBorrowRate(
-  //     BigNumber.from(2).pow(110).sub(1)
-  //   );
-  //   await pool
-  //     .connect(user.signer)
-  //     .borrow(
-  //       mockToken.address,
-  //       await convertToCurrencyDecimals(mockToken.address, "100"),
-  //       RateMode.Variable,
-  //       0,
-  //       user.address
-  //     );
+    await mockRateStrategy.setLiquidityRate(BigNumber.from(10).pow(27));
+    await mockRateStrategy.setVariableBorrowRate(
+      BigNumber.from(2).pow(110).sub(1)
+    );
+    await pool
+      .connect(user.signer)
+      .borrow(
+        mockToken.address,
+        await convertToCurrencyDecimals(mockToken.address, "100"),
+        RateMode.Variable,
+        0,
+        user.address
+      );
 
-  //   await increaseTime(60 * 60 * 24 * 365);
+    await increaseTime(60 * 60 * 24 * 365);
 
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .deposit(
-  //         mockToken.address,
-  //         await convertToCurrencyDecimals(mockToken.address, "1000"),
-  //         user.address,
-  //         0
-  //       )
-  //   ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
-  // });
+    await expect(
+      pool
+        .connect(user.signer)
+        .supply(
+          mockToken.address,
+          await convertToCurrencyDecimals(mockToken.address, "1000"),
+          user.address,
+          0
+        )
+    ).to.be.revertedWith(SAFECAST_UINT128_OVERFLOW);
+  });
 
   // it("ReserveLogic `cumulateToLiquidityIndex` with liquidityIndex > type(uint128).max (revert expected)", async () => {
   //   const {
@@ -386,7 +406,7 @@ makeSuite("Interest Rate and Index Overflow", (testEnv) => {
   //   await dai.connect(user.signer)["mint(uint256)"](toBorrow.add(1));
   //   await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   await pool.connect(user.signer).deposit(dai.address, 1, user.address, 0);
+  //   await pool.connect(user.signer).supply(dai.address, 1, user.address, 0);
   //   await dai.connect(user.signer).transfer(pDai.address, toBorrow);
 
   //   const mockFlashLoan = await new MockFlashLoanReceiver__factory(

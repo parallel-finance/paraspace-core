@@ -38,20 +38,20 @@ makeSuite("PToken: Permit", (testEnv: TestEnv) => {
     );
   });
 
-  // it("Checks the domain separator", async () => {
-  //   const { pDai } = testEnv;
-  //   const separator = await pDai.DOMAIN_SEPARATOR();
+  it("Checks the domain separator", async () => {
+    const {pDai} = testEnv;
+    const separator = await pDai.DOMAIN_SEPARATOR();
 
-  //   const domain = {
-  //     name: await pDai.name(),
-  //     version: EIP712_REVISION,
-  //     chainId: hre.network.config.chainId,
-  //     verifyingContract: pDai.address,
-  //   };
-  //   const domainSeparator = utils._TypedDataEncoder.hashDomain(domain);
+    const domain = {
+      name: await pDai.name(),
+      version: EIP712_REVISION,
+      chainId: hre.network.config.chainId,
+      verifyingContract: pDai.address,
+    };
+    const domainSeparator = utils._TypedDataEncoder.hashDomain(domain);
 
-  //   expect(separator).to.be.equal(domainSeparator, "Invalid domain separator");
-  // });
+    expect(separator).to.be.equal(domainSeparator, "Invalid domain separator");
+  });
 
   it("Tries to submit a permit with 0 expiration (revert expected)", async () => {
     const {pDai, deployer, users} = testEnv;
