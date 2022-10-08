@@ -45,7 +45,15 @@ jobs:
           echo ETHERSCAN_VERIFICATION=${{ env.ETHERSCAN_VERIFICATION }} >> .env
           make deploy
 
+      - name: Verification
+        run: |
+          make \
+            ETHERSCAN_VERIFICATION=true \
+            ETHERSCAN_VERIFICATION_CONTRACT=PoolCore,PoolMarketplace,PoolParameters,Seaport,PoolAddressesProvider,ACLManager,ParaSpaceOracle \
+            verify
+
       - name: Upload Artifacts
+        if: always()
         uses: actions/upload-artifact@master
         with:
           name: ${{ github.event.inputs.network }}-deployed-contracts-${{ github.sha }}

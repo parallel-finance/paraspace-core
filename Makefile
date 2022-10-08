@@ -9,8 +9,7 @@ RUST_TOOLCHAIN           := nightly-2022-07-24
 
 .PHONY: init
 init: submodules
-	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-		| sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
+	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
 
