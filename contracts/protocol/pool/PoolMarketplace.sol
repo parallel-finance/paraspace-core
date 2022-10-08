@@ -148,7 +148,7 @@ contract PoolMarketplace is
                 orderInfo.consideration[0].itemType != ItemType.NATIVE
             ) {
                 IWETH(WETH).deposit{value: ethLeft}();
-                IERC20(WETH).transferFrom(
+                IERC20(WETH).safeTransferFrom(
                     address(this),
                     orderInfo.taker,
                     ethLeft
