@@ -18,6 +18,7 @@ import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider
 import {IPool} from "../../../interfaces/IPool.sol";
 import {IACLManager} from "../../../interfaces/IACLManager.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
+import {ReentrancyGuard} from "../../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 
 /**
  * @title MintableIncentivizedERC721
@@ -25,6 +26,7 @@ import {DataTypes} from "../../libraries/types/DataTypes.sol";
  * @notice Basic ERC721 implementation
  **/
 abstract contract MintableIncentivizedERC721 is
+    ReentrancyGuard,
     ICollaterizableERC721,
     IAuctionableERC721,
     Context,
@@ -267,7 +269,7 @@ abstract contract MintableIncentivizedERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         //solhint-disable-next-line max-line-length
         require(
             _isApprovedOrOwner(_msgSender(), tokenId),
@@ -284,8 +286,8 @@ abstract contract MintableIncentivizedERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) external virtual override {
-        safeTransferFrom(from, to, tokenId, "");
+    ) external virtual override nonReentrant {
+        _safeTransferFrom(from, to, tokenId, "");
     }
 
     /**
@@ -296,7 +298,16 @@ abstract contract MintableIncentivizedERC721 is
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) public virtual override {
+    ) external virtual override nonReentrant {
+        _safeTransferFrom(from, to, tokenId, _data);
+    }
+
+    function _safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    ) internal {
         require(
             _isApprovedOrOwner(_msgSender(), tokenId),
             "ERC721: transfer caller is not owner nor approved"
@@ -658,7 +669,37 @@ abstract contract MintableIncentivizedERC721 is
         uint256 tokenId,
         bool useAsCollateral,
         address sender
-    ) public virtual override onlyPool returns (bool) {
+    ) external virtual override onlyPool nonReentrant returns (bool) {
+        return _setIsUsedAsCollateral(tokenId, useAsCollateral, sender);
+    }
+
+    /// @inheritdoc ICollaterizableERC721
+    function batchSetIsUsedAsCollateral(
+        uint256[] calldata tokenIds,
+        bool useAsCollateral,
+        address sender
+    )
+        external
+        virtual
+        override
+        onlyPool
+        nonReentrant
+        returns (uint256 oldCollaterizedBalance, uint256 newCollaterizedBalance)
+    {
+        oldCollaterizedBalance = _userState[sender].collaterizedBalance;
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            _setIsUsedAsCollateral(tokenIds[index], useAsCollateral, sender);
+        }
+
+        newCollaterizedBalance = _userState[sender].collaterizedBalance;
+    }
+
+    function _setIsUsedAsCollateral(
+        uint256 tokenId,
+        bool useAsCollateral,
+        address sender
+    ) internal returns (bool) {
         if (_isUsedAsCollateral[tokenId] == useAsCollateral) return false;
 
         address owner = ownerOf(tokenId);
@@ -676,27 +717,6 @@ abstract contract MintableIncentivizedERC721 is
         _userState[owner].collaterizedBalance = collaterizedBalance;
 
         return true;
-    }
-
-    /// @inheritdoc ICollaterizableERC721
-    function batchSetIsUsedAsCollateral(
-        uint256[] calldata tokenIds,
-        bool useAsCollateral,
-        address sender
-    )
-        external
-        virtual
-        override
-        onlyPool
-        returns (uint256 oldCollaterizedBalance, uint256 newCollaterizedBalance)
-    {
-        oldCollaterizedBalance = _userState[sender].collaterizedBalance;
-
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            setIsUsedAsCollateral(tokenIds[index], useAsCollateral, sender);
-        }
-
-        newCollaterizedBalance = _userState[sender].collaterizedBalance;
     }
 
     /// @inheritdoc ICollaterizableERC721
@@ -720,14 +740,26 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc IAuctionableERC721
-    function startAuction(uint256 tokenId) external virtual override onlyPool {
+    function startAuction(uint256 tokenId)
+        external
+        virtual
+        override
+        onlyPool
+        nonReentrant
+    {
         require(!_isAuctioned(tokenId), Errors.AUCTION_ALREADY_STARTED);
         require(_exists(tokenId), "ERC721: startAuction for nonexistent token");
         _auctions[tokenId] = DataTypes.Auction({startTime: block.timestamp});
     }
 
     /// @inheritdoc IAuctionableERC721
-    function endAuction(uint256 tokenId) external virtual override onlyPool {
+    function endAuction(uint256 tokenId)
+        external
+        virtual
+        override
+        onlyPool
+        nonReentrant
+    {
         require(_isAuctioned(tokenId), Errors.AUCTION_NOT_STARTED);
         require(_exists(tokenId), "ERC721: endAuction for nonexistent token");
         delete _auctions[tokenId];
