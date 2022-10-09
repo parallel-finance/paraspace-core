@@ -82,10 +82,7 @@ contract PoolMarketplace is
         orderInfo.taker = msg.sender;
         uint256 ethLeft = msg.value;
 
-        if (
-            ethLeft > 0 &&
-            orderInfo.consideration[0].itemType != ItemType.NATIVE
-        ) {
+        if (ethLeft > 0 && orderInfo.consideration[0].token == WETH) {
             IWETH(WETH).deposit{value: ethLeft}();
             IERC20(WETH).safeTransferFrom(
                 address(this),
@@ -152,10 +149,7 @@ contract PoolMarketplace is
             // batchBuyWithCredit([ETH, WETH, ETH]) => not ok
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
-            if (
-                ethLeft > 0 &&
-                orderInfo.consideration[0].itemType != ItemType.NATIVE
-            ) {
+            if (ethLeft > 0 && orderInfo.consideration[0].token == WETH) {
                 IWETH(WETH).deposit{value: ethLeft}();
                 IERC20(WETH).safeTransferFrom(
                     address(this),
@@ -168,7 +162,7 @@ contract PoolMarketplace is
             ethLeft -= MarketplaceLogic.executeBuyWithCredit(
                 _reserves,
                 _reservesList,
-                _usersConfig[msg.sender],
+                _usersConfig[orderInfo.taker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
                     payload: payload,
