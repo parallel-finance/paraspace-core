@@ -117,17 +117,24 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 .stableDebtTokenAddress;
             reserveData.variableDebtTokenAddress = baseData
                 .variableDebtTokenAddress;
-            //address of the interest rate strategy
+
             reserveData.interestRateStrategyAddress = baseData
                 .interestRateStrategyAddress;
+            reserveData.auctionStrategyAddress = baseData
+                .auctionStrategyAddress;
+            reserveData.auctionEnabled =
+                reserveData.auctionStrategyAddress != address(0);
+            reserveData.dynamicConfigsStrategyAddress = baseData
+                .dynamicConfigsStrategyAddress;
+
             try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
                 uint256 price
             ) {
                 reserveData.priceInMarketReferenceCurrency = price;
             } catch {}
-            // reserveData.priceOracle = oracle.getSourceOfAsset(
-            //     reserveData.underlyingAsset
-            // );
+            reserveData.priceOracle = oracle.getSourceOfAsset(
+                reserveData.underlyingAsset
+            );
 
             (
                 reserveData.totalPrincipalStableDebt,
@@ -180,15 +187,13 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 ).balanceOf(reserveData.xTokenAddress);
             }
 
-            //uint256 eModeCategoryId;
             (
                 reserveData.baseLTVasCollateral,
                 reserveData.reserveLiquidationThreshold,
                 reserveData.reserveLiquidationBonus,
                 reserveData.decimals,
                 reserveData.reserveFactor,
-                // eModeCategoryId
-
+                reserveData.dynamicConfigsEnabled
             ) = reserveConfigurationMap.getParams();
             reserveData.usageAsCollateralEnabled =
                 reserveData.baseLTVasCollateral != 0;
@@ -375,14 +380,12 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         external
         view
         override
-        returns (UserReserveData[] memory, uint8)
+        returns (UserReserveData[] memory)
     {
         IPool pool = IPool(provider.getPool());
         address[] memory reserves = pool.getReservesList();
         DataTypes.UserConfigurationMap memory userConfig = pool
             .getUserConfiguration(user);
-
-        uint8 userEmodeCategoryId = 0;
 
         UserReserveData[] memory userReservesData = new UserReserveData[](
             user != address(0) ? reserves.length : 0
@@ -434,7 +437,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             }
         }
 
-        return (userReservesData, userEmodeCategoryId);
+        return userReservesData;
     }
 
     function bytes32ToString(bytes32 _bytes32)

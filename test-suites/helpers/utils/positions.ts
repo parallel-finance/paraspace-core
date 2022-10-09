@@ -28,7 +28,7 @@ export const getUserPositions = async (user: SignerWithAddress) => {
     user.address
   );
 
-  return raw[0].map(
+  return raw.map(
     (each) =>
       ({
         underlyingAsset: each.underlyingAsset,

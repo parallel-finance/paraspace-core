@@ -655,6 +655,28 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
+    function MAX_ATOMIC_TOKENS_ALLOWED()
+        external
+        view
+        virtual
+        override
+        returns (uint24)
+    {
+        return _maxAtomicTokensAllowed;
+    }
+
+    /// @inheritdoc IPoolCore
+    function AUCTION_RECOVERY_HEALTH_FACTOR()
+        external
+        view
+        virtual
+        override
+        returns (uint64)
+    {
+        return _auctionRecoveryHealthFactor;
+    }
+
+    /// @inheritdoc IPoolCore
     function finalizeTransfer(
         address asset,
         address from,
@@ -715,17 +737,6 @@ contract PoolCore is
                 oracle: ADDRESSES_PROVIDER.getPriceOracle()
             })
         );
-    }
-
-    /// @inheritdoc IPoolCore
-    function getERC721HFValidityTime(address user)
-        external
-        view
-        virtual
-        override
-        returns (uint256 verifyTime)
-    {
-        verifyTime = _usersConfig[user].erc721HFValidityTime;
     }
 
     /// @inheritdoc IPoolCore

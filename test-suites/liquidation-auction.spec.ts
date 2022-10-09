@@ -194,7 +194,9 @@ makeSuite("Liquidation Auction", (testEnv) => {
           .updateERC721HFValidityTime(borrower.address)
       );
 
-      expect(await pool.getERC721HFValidityTime(borrower.address)).to.be.gt(0);
+      expect(
+        (await pool.getUserConfiguration(borrower.address)).erc721HFValidityTime
+      ).to.be.gt(0);
 
       expect(await nBAYC.isAuctioned(0)).to.be.false;
 
