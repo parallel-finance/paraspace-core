@@ -181,7 +181,7 @@ library MarketplaceLogic {
         } else {
             require(params.ethLeft >= downpayment, Errors.PAYNOW_NOT_ENOUGH);
             // prepare for _repay in WETH
-            params.credit.token = params.WETH;
+            params.credit.token = params.weth;
         }
 
         return (price, downpayment);
@@ -207,7 +207,7 @@ library MarketplaceLogic {
         bool isETH = params.credit.token == address(0);
         address underlyingAsset = params.credit.token;
         if (isETH) {
-            underlyingAsset = params.WETH;
+            underlyingAsset = params.weth;
         }
 
         DataTypes.ReserveData storage reserve = reservesData[underlyingAsset];
@@ -221,7 +221,7 @@ library MarketplaceLogic {
 
         if (isETH) {
             // No re-entrancy because it sent to our contract address
-            IWETH(params.WETH).withdraw(params.credit.amount);
+            IWETH(params.weth).withdraw(params.credit.amount);
         }
     }
 
@@ -341,5 +341,14 @@ library MarketplaceLogic {
         if (balance > 0) {
             Address.sendValue(payable(msg.sender), balance);
         }
+    }
+
+    function depositETH(
+        address weth,
+        address taker,
+        uint256 ethLeft
+    ) external {
+        IWETH(weth).deposit{value: ethLeft}();
+        IERC20(weth).safeTransferFrom(address(this), taker, ethLeft);
     }
 }

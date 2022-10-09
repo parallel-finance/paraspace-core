@@ -74,21 +74,16 @@ contract PoolMarketplace is
         DataTypes.Credit calldata credit,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(payload, WETH);
+            .getAskOrderInfo(payload, weth);
         orderInfo.taker = msg.sender;
         uint256 ethLeft = msg.value;
 
-        if (ethLeft > 0 && orderInfo.consideration[0].token == WETH) {
-            IWETH(WETH).deposit{value: ethLeft}();
-            IERC20(WETH).safeTransferFrom(
-                address(this),
-                orderInfo.taker,
-                ethLeft
-            );
+        if (ethLeft > 0 && orderInfo.consideration[0].token == weth) {
+            MarketplaceLogic.depositETH(weth, orderInfo.taker, ethLeft);
             ethLeft = 0;
         }
 
@@ -103,7 +98,7 @@ contract PoolMarketplace is
                 ethLeft: ethLeft,
                 marketplace: marketplace,
                 orderInfo: orderInfo,
-                WETH: WETH,
+                weth: weth,
                 referralCode: referralCode,
                 maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                 reservesCount: _reservesCount,
@@ -121,7 +116,7 @@ contract PoolMarketplace is
         DataTypes.Credit[] calldata credits,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
@@ -137,7 +132,7 @@ contract PoolMarketplace is
                 .getMarketplace(marketplaceId);
             DataTypes.OrderInfo memory orderInfo = IMarketplace(
                 marketplace.adapter
-            ).getAskOrderInfo(payload, WETH);
+            ).getAskOrderInfo(payload, weth);
             orderInfo.taker = msg.sender;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
@@ -154,13 +149,8 @@ contract PoolMarketplace is
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
-            if (ethLeft > 0 && orderInfo.consideration[0].token == WETH) {
-                IWETH(WETH).deposit{value: ethLeft}();
-                IERC20(WETH).safeTransferFrom(
-                    address(this),
-                    orderInfo.taker,
-                    ethLeft
-                );
+            if (ethLeft > 0 && orderInfo.consideration[0].token == weth) {
+                MarketplaceLogic.depositETH(weth, orderInfo.taker, ethLeft);
                 ethLeft = 0;
             }
 
@@ -175,7 +165,7 @@ contract PoolMarketplace is
                     ethLeft: ethLeft,
                     marketplace: marketplace,
                     orderInfo: orderInfo,
-                    WETH: WETH,
+                    weth: weth,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
@@ -196,7 +186,7 @@ contract PoolMarketplace is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
@@ -214,7 +204,7 @@ contract PoolMarketplace is
                     ethLeft: 0,
                     marketplace: marketplace,
                     orderInfo: orderInfo,
-                    WETH: WETH,
+                    weth: weth,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
@@ -233,7 +223,7 @@ contract PoolMarketplace is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
@@ -262,7 +252,7 @@ contract PoolMarketplace is
                     ethLeft: 0,
                     marketplace: marketplace,
                     orderInfo: orderInfo,
-                    WETH: WETH,
+                    weth: weth,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,

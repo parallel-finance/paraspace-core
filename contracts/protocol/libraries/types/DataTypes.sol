@@ -304,7 +304,7 @@ library DataTypes {
         uint256 ethLeft;
         DataTypes.Marketplace marketplace;
         OrderInfo orderInfo;
-        address WETH;
+        address weth;
         uint16 referralCode;
         uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;
