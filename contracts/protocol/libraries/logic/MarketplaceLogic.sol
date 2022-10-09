@@ -180,6 +180,7 @@ library MarketplaceLogic {
             downpayment = 0;
         } else {
             require(params.ethLeft >= downpayment, Errors.PAYNOW_NOT_ENOUGH);
+            // prepare for _repay in WETH
             params.credit.token = params.WETH;
         }
 

@@ -141,14 +141,19 @@ contract PoolMarketplace is
             orderInfo.taker = msg.sender;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
-            // this also means that the order is important
+            // this also means that the parameters order is very important
             //
-            // the following example image that the `taker` owns only ETH and wants to
-            // batch buy bunch of NFTs
+            // frontend/sdk needs to guarantee that WETH orders will always be put after ALL
+            // ETH orders, all ETH orders after WETH orders will fail
             //
-            // batchBuyWithCredit([ETH, WETH, ETH]) => not ok
+            // eg. The following example image that the `taker` owns only ETH and wants to
+            // batch buy bunch of NFTs which are listed using WETH and ETH
+            //
+            // batchBuyWithCredit([ETH, WETH, ETH]) => ko
+            //                            | -> convert all ethLeft to WETH, 3rd purchase will fail
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
+            //
             if (ethLeft > 0 && orderInfo.consideration[0].token == WETH) {
                 IWETH(WETH).deposit{value: ethLeft}();
                 IERC20(WETH).safeTransferFrom(
