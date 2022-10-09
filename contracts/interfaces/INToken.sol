@@ -21,18 +21,6 @@ interface INToken is
     IERC1155Receiver
 {
     /**
-     * @dev Emitted during the transfer action
-     * @param from The user whose tokens are being transferred
-     * @param to The recipient
-     * @param tokenId The id of the token being transferred
-     **/
-    event BalanceTransfer(
-        address indexed from,
-        address indexed to,
-        uint256 tokenId
-    );
-
-    /**
      * @dev Emitted during rescueERC20()
      * @param token The address of the token
      * @param to The address of the recipient

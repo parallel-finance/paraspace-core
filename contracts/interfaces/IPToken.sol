@@ -12,20 +12,6 @@ import {IInitializablePToken} from "./IInitializablePToken.sol";
  **/
 interface IPToken is IERC20, IScaledBalanceToken, IInitializablePToken {
     /**
-     * @dev Emitted during the transfer action
-     * @param from The user whose tokens are being transferred
-     * @param to The recipient
-     * @param value The amount being transferred
-     * @param index The next liquidity index of the reserve
-     **/
-    event BalanceTransfer(
-        address indexed from,
-        address indexed to,
-        uint256 value,
-        uint256 index
-    );
-
-    /**
      * @notice Mints `amount` xTokens to `user`
      * @param caller The address performing the mint
      * @param onBehalfOf The address of the user that will receive the minted xTokens

@@ -114,8 +114,6 @@ contract NToken is
         address to,
         uint256 value
     ) external override onlyPool {
-        // Being a normal transfer, the Transfer() and BalanceTransfer() are emitted
-        // so no need to emit a specific event here
         _transfer(from, to, value, false);
     }
 
@@ -252,8 +250,6 @@ contract NToken is
                 toBalanceBefore
             );
         }
-
-        // emit BalanceTransfer(from, to, tokenId, index); TODO emit a transfer event
     }
 
     /**
