@@ -82,7 +82,10 @@ contract PoolMarketplace is
         orderInfo.taker = msg.sender;
         uint256 ethLeft = msg.value;
 
-        if (ethLeft > 0 && orderInfo.consideration[0].token == weth) {
+        if (
+            ethLeft > 0 &&
+            orderInfo.consideration[0].itemType != ItemType.NATIVE
+        ) {
             MarketplaceLogic.depositETH(weth, orderInfo.taker, ethLeft);
             ethLeft = 0;
         }
@@ -149,7 +152,10 @@ contract PoolMarketplace is
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
-            if (ethLeft > 0 && orderInfo.consideration[0].token == weth) {
+            if (
+                ethLeft > 0 &&
+                orderInfo.consideration[0].itemType != ItemType.NATIVE
+            ) {
                 MarketplaceLogic.depositETH(weth, orderInfo.taker, ethLeft);
                 ethLeft = 0;
             }
