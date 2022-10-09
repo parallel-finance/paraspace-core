@@ -86,11 +86,11 @@ contract PoolMarketplace is
             ethLeft > 0 &&
             orderInfo.consideration[0].itemType != ItemType.NATIVE
         ) {
-            MarketplaceLogic.depositETH(weth, orderInfo.taker, ethLeft);
+            MarketplaceLogic.depositETH(weth, ethLeft);
             ethLeft = 0;
         }
 
-        MarketplaceLogic.executeBuyWithCredit(
+        ethLeft -= MarketplaceLogic.executeBuyWithCredit(
             _reserves,
             _reservesList,
             _usersConfig[orderInfo.taker],
@@ -109,7 +109,7 @@ contract PoolMarketplace is
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
         );
-        MarketplaceLogic.refundETH();
+        MarketplaceLogic.refundETH(ethLeft);
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -156,7 +156,7 @@ contract PoolMarketplace is
                 ethLeft > 0 &&
                 orderInfo.consideration[0].itemType != ItemType.NATIVE
             ) {
-                MarketplaceLogic.depositETH(weth, orderInfo.taker, ethLeft);
+                MarketplaceLogic.depositETH(weth, ethLeft);
                 ethLeft = 0;
             }
 
@@ -181,7 +181,7 @@ contract PoolMarketplace is
                 })
             );
         }
-        MarketplaceLogic.refundETH();
+        MarketplaceLogic.refundETH(ethLeft);
     }
 
     /// @inheritdoc IPoolMarketplace
