@@ -64,10 +64,10 @@ interface IProtocolDataProvider {
         returns (DataTypes.TokenData[] memory);
 
     /**
-     * @notice Returns the list of the existing PTokens in the pool.
-     * @return The list of PTokens, pairs of symbols and addresses
+     * @notice Returns the list of the existing XTokens(PToken+NToken) in the pool.
+     * @return The list of XTokens, pairs of symbols and addresses
      */
-    function getAllPTokens()
+    function getAllXTokens()
         external
         view
         returns (DataTypes.TokenData[] memory);

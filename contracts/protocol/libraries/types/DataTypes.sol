@@ -242,7 +242,7 @@ library DataTypes {
         uint256 totalDebt;
         uint256 healthFactor;
         uint256 tokenId;
-        uint256 collateralDiscountedPrice;
+        uint256 actualLiquidationAmount;
         uint256 liquidationAmount;
         uint256 auctionRecoveryHealthFactor;
         address priceOracleSentinel;

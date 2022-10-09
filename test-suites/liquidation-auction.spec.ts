@@ -327,7 +327,7 @@ makeSuite("Liquidation Auction", (testEnv) => {
       // drop BAYC price to liquidation levels
       await changePriceAndValidate(bayc, "8");
 
-      // collateralDiscountedPrice: 12 / 0.000908578801039414 / 1.05 = 12578.514285714287769 DAI
+      // actualLiquidationAmount: 12 / 0.000908578801039414 / 1.05 = 12578.514285714287769 DAI
 
       // disable auction first to test original liquidation
       await waitForTx(
@@ -348,7 +348,7 @@ makeSuite("Liquidation Auction", (testEnv) => {
       // WETH#990
       //
       // liquidationAmount: 12000000000000000000
-      // collateralDiscountedPrice: 12578514285714287768609
+      // actualLiquidationAmount: 12578514285714287768609
       await expect(
         pool
           .connect(liquidator.signer)
@@ -565,7 +565,7 @@ makeSuite("Liquidation Auction", (testEnv) => {
       // HF = (0.7 * 8) / (9.3021162963559052379) ~= 0.60201354418604660996
       // ERC721HF = (0.7 * 8) / (9.3021162963559052379) ~= 0.60201354418604660996
 
-      // collateralDiscountedPrice: 8 * 1.5 / 1 / 1 = 12 WETH
+      // actualLiquidationAmount: 8 * 1.5 / 1 / 1 = 12 WETH
       await expect(
         pool
           .connect(liquidator.signer)

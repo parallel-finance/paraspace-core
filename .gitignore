@@ -18,4 +18,5 @@ deployed-contracts.json
 
 docs/*
 !docs/DEVELOPER-GUIDE.md
+.vscode
 

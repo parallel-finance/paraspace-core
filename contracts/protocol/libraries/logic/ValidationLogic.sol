@@ -766,7 +766,7 @@ library ValidationLogic {
         }
 
         require(
-            params.liquidationAmount >= params.collateralDiscountedPrice,
+            params.liquidationAmount >= params.actualLiquidationAmount,
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
