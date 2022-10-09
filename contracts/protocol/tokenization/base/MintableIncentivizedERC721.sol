@@ -350,7 +350,7 @@ abstract contract MintableIncentivizedERC721 is
     function _isAuctioned(uint256 tokenId) internal view returns (bool) {
         return
             _auctions[tokenId].startTime >
-            POOL.getUserConfiguration(ownerOf(tokenId)).erc721HFValidityTime;
+            POOL.getUserConfiguration(ownerOf(tokenId)).auctionValidityTime;
     }
 
     /**

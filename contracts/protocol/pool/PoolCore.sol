@@ -473,12 +473,13 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function updateERC721HFValidityTime(address user)
+    function setAuctionValidityTime(address user)
         external
         virtual
         override
         nonReentrant
     {
+        require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
         (, , , , , , uint256 erc721HealthFactor) = PoolLogic
             .executeGetUserAccountData(
@@ -495,7 +496,7 @@ contract PoolCore is
             erc721HealthFactor > _auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
-        userConfig.erc721HFValidityTime = block.timestamp;
+        userConfig.auctionValidityTime = block.timestamp;
     }
 
     /// @inheritdoc IPoolCore

@@ -460,11 +460,10 @@ interface IPoolCore {
     ) external;
 
     /**
-     * @notice Set erc721 HF verify time, all auctions triggered before the verify time
-     * will be considered as invalid
+     * @notice Set auction validity time, all auctions triggered before the validity time will be considered as invalid
      * @param user The user address
      */
-    function updateERC721HFValidityTime(address user) external;
+    function setAuctionValidityTime(address user) external;
 
     /**
      * @notice Returns the user account data across all the reserves
