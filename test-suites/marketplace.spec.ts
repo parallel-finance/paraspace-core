@@ -723,6 +723,160 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
     );
   });
 
+  it("ERC721 <=> ETH batch buy via paraspace [ @skip-on-coverage ]", async () => {
+    const {
+      mayc,
+      nMAYC,
+      conduit,
+      conduitKey,
+      pausableZone,
+      seaport,
+      pool,
+      wETHGatewayProxy,
+      weth,
+      users: [maker, taker, middleman],
+    } = testEnv;
+    const masGasFeeLeft = parseEther("4");
+
+    const totalPayNowAmount = (await taker.signer.getBalance()).sub(
+      masGasFeeLeft
+    );
+    const totalCreditAmount = parseEther("3");
+    const creditAmount = totalCreditAmount.div(3);
+    const payNowAmount = totalPayNowAmount.div(3);
+    const startAmount = payNowAmount.add(creditAmount);
+    const nftIds = ["0", "1", "2"];
+
+    // middleman supplies ETH to pool to be borrowed by offerer later
+    await waitForTx(
+      await wETHGatewayProxy
+        .connect(middleman.signer)
+        .depositETH(middleman.address, 0, {
+          value: totalCreditAmount,
+        })
+    );
+
+    // verify pool holds liquidity
+    expect(
+      await weth.balanceOf(
+        (
+          await pool.getReserveData(weth.address)
+        ).xTokenAddress
+      )
+    ).to.be.equal(totalCreditAmount);
+
+    // mint MAYC to maker
+    const mintableMayc = await getMintableERC721(mayc.address);
+    for (const nftId of nftIds) {
+      await waitForTx(
+        await mintableMayc.connect(maker.signer)["mint(address)"](maker.address)
+      );
+      expect(await mayc.ownerOf(nftId)).to.be.equal(maker.address);
+    }
+
+    const getSellOrder = async (
+      token: string,
+      nftId: BigNumberish,
+      listPrice: BigNumberish
+    ): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(2, token, nftId, toBN(1), toBN(1)),
+      ];
+
+      const considerations = [getItemETH(listPrice, listPrice, maker.address)];
+
+      return createSeaportOrder(
+        seaport,
+        maker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const getEncodedData = (order: AdvancedOrderStruct): string =>
+      `0x${seaport.interface
+        .encodeFunctionData("fulfillAdvancedOrder", [
+          order,
+          [],
+          conduitKey,
+          pool.address,
+        ])
+        .slice(10)}`;
+
+    const orderETH0 = await getSellOrder(mayc.address, nftIds[0], startAmount);
+    const orderETH1 = await getSellOrder(mayc.address, nftIds[1], startAmount);
+    const orderETH2 = await getSellOrder(mayc.address, nftIds[2], startAmount);
+
+    const emptySig = {
+      orderId: constants.HashZero,
+      v: 0,
+      r: constants.HashZero,
+      s: constants.HashZero,
+    };
+
+    const creditETH0 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+    const creditETH1 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+    const creditETH2 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+
+    // approve
+    await waitForTx(
+      await mayc.connect(maker.signer).setApprovalForAll(conduit.address, true)
+    );
+
+    const makerETHBeforeBalance = await maker.signer.getBalance();
+    const takerETHBeforeBalance = await taker.signer.getBalance();
+
+    const tx = pool
+      .connect(taker.signer)
+      .batchBuyWithCredit(
+        [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
+        [
+          getEncodedData(orderETH0),
+          getEncodedData(orderETH1),
+          getEncodedData(orderETH2),
+        ],
+        [creditETH0, creditETH1, creditETH2],
+        0,
+        {
+          gasLimit: 5000000,
+          value: totalPayNowAmount,
+        }
+      );
+
+    const txReceipt = await (await tx).wait();
+    const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+
+    expect(await mayc.balanceOf(maker.address)).to.be.equal(0);
+    expect(await nMAYC.balanceOf(taker.address)).to.be.equal(3);
+    for (const nftId of nftIds) {
+      expect(await mayc.ownerOf(nftId)).to.be.equal(
+        (await pool.getReserveData(mayc.address)).xTokenAddress
+      );
+    }
+    expect(await pool.provider.getBalance(maker.address)).to.be.equal(
+      startAmount.mul(3).add(makerETHBeforeBalance)
+    );
+    expect(await pool.provider.getBalance(taker.address)).to.be.equal(
+      takerETHBeforeBalance.sub(totalPayNowAmount).sub(gasUsed)
+    );
+    expect(await pool.provider.getBalance(pool.address)).to.be.equal(0);
+  });
+
   it("ERC721 <=> WETH/ETH batch buy via paraspace [ @skip-on-coverage ]", async () => {
     const {
       mayc,
