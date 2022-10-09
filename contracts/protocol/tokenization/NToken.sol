@@ -38,8 +38,6 @@ contract NToken is
 
     uint256 public constant NTOKEN_REVISION = 0x1;
 
-    address internal _treasury;
-
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
         return NTOKEN_REVISION;
@@ -60,7 +58,6 @@ contract NToken is
 
     function initialize(
         IPool initializingPool,
-        address treasury,
         address underlyingAsset,
         IRewardController incentivesController,
         string calldata nTokenName,
@@ -71,7 +68,6 @@ contract NToken is
         _setName(nTokenName);
         _setSymbol(nTokenSymbol);
 
-        _treasury = treasury;
         _underlyingAsset = underlyingAsset;
         _rewardController = incentivesController;
 
@@ -80,7 +76,6 @@ contract NToken is
         emit Initialized(
             underlyingAsset,
             address(POOL),
-            treasury,
             address(incentivesController),
             nTokenName,
             nTokenSymbol,
@@ -207,16 +202,6 @@ contract NToken is
         );
 
         emit ExecuteAirdrop(airdropContract);
-    }
-
-    /// @inheritdoc INToken
-    function RESERVE_TREASURY_ADDRESS()
-        external
-        view
-        override
-        returns (address)
-    {
-        return _treasury;
     }
 
     /// @inheritdoc INToken

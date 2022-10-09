@@ -14,7 +14,6 @@ interface IInitializableNToken {
      * @dev Emitted when an nToken is initialized
      * @param underlyingAsset The address of the underlying asset
      * @param pool The address of the associated pool
-     * @param treasury The address of the treasury
      * @param incentivesController The address of the incentives controller for this nToken
      * @param nTokenName The name of the nToken
      * @param nTokenSymbol The symbol of the nToken
@@ -23,7 +22,6 @@ interface IInitializableNToken {
     event Initialized(
         address indexed underlyingAsset,
         address indexed pool,
-        address treasury,
         address incentivesController,
         string nTokenName,
         string nTokenSymbol,
@@ -33,7 +31,6 @@ interface IInitializableNToken {
     /**
      * @notice Initializes the nToken
      * @param pool The pool contract that is initializing this contract
-     * @param treasury The address of the ParaSpace treasury, receiving the fees on this nToken
      * @param underlyingAsset The address of the underlying asset of this nToken (E.g. WETH for pWETH)
      * @param incentivesController The smart contract managing potential incentives distribution
      * @param nTokenName The name of the nToken
@@ -42,7 +39,6 @@ interface IInitializableNToken {
      */
     function initialize(
         IPool pool,
-        address treasury,
         address underlyingAsset,
         IRewardController incentivesController,
         string calldata nTokenName,

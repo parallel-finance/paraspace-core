@@ -170,12 +170,6 @@ interface INToken is
     function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 
     /**
-     * @notice Returns the address of the ParaSpace treasury, receiving the fees on this nToken.
-     * @return Address of the ParaSpace treasury
-     **/
-    function RESERVE_TREASURY_ADDRESS() external view returns (address);
-
-    /**
      * @notice Get the domain separator for the token
      * @dev Return cached value if chainId matches cache, otherwise recomputes separator
      * @return The domain separator of the token at current chain
