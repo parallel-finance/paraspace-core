@@ -17,7 +17,6 @@ import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
 import {ScaledBalanceTokenBaseERC721} from "./base/ScaledBalanceTokenBaseERC721.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
-import {EIP712Base} from "./base/EIP712Base.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
@@ -28,7 +27,6 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 contract NToken is
     VersionedInitializable,
     ScaledBalanceTokenBaseERC721,
-    EIP712Base,
     INToken
 {
     bytes32 public constant PERMIT_TYPEHASH =
@@ -70,8 +68,6 @@ contract NToken is
 
         _underlyingAsset = underlyingAsset;
         _rewardController = incentivesController;
-
-        _domainSeparator = _calculateDomainSeparator();
 
         emit Initialized(
             underlyingAsset,
@@ -226,41 +222,6 @@ contract NToken is
         // Intentionally left blank
     }
 
-    /// @inheritdoc INToken
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external override {
-        require(owner != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        //solium-disable-next-line
-        require(block.timestamp <= deadline, Errors.INVALID_EXPIRATION);
-        uint256 currentValidNonce = _nonces[owner];
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR(),
-                keccak256(
-                    abi.encode(
-                        PERMIT_TYPEHASH,
-                        owner,
-                        spender,
-                        value,
-                        currentValidNonce,
-                        deadline
-                    )
-                )
-            )
-        );
-        require(owner == ecrecover(digest, v, r, s), Errors.INVALID_SIGNATURE);
-        _nonces[owner] = currentValidNonce + 1;
-        _approve(spender, value);
-    }
-
     /**
      * @notice Transfers the nTokens between two users. Validates the transfer
      * (ie checks for valid HF after the transfer) if required
@@ -307,37 +268,6 @@ contract NToken is
         uint256 tokenId
     ) internal override {
         _transfer(from, to, tokenId, true);
-    }
-
-    /**
-     * @dev Overrides the base function to fully implement INToken
-     * @dev see `IncentivizedERC20.DOMAIN_SEPARATOR()` for more detailed documentation
-     */
-    function DOMAIN_SEPARATOR()
-        public
-        view
-        override(INToken, EIP712Base)
-        returns (bytes32)
-    {
-        return super.DOMAIN_SEPARATOR();
-    }
-
-    /**
-     * @dev Overrides the base function to fully implement INToken
-     * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
-     */
-    function nonces(address owner)
-        public
-        view
-        override(INToken, EIP712Base)
-        returns (uint256)
-    {
-        return super.nonces(owner);
-    }
-
-    /// @inheritdoc EIP712Base
-    function _EIP712BaseId() internal view override returns (string memory) {
-        return name();
     }
 
     function onERC721Received(

@@ -142,46 +142,10 @@ interface INToken is
     function handleRepayment(address user, uint256 tokenId) external;
 
     /**
-     * @notice Allow passing a signed message to approve spending
-     * @dev implements the permit function as for
-     * https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-     * @param owner The owner of the funds
-     * @param spender The spender
-     * @param value The tokenId
-     * @param deadline The deadline timestamp, type(uint256).max for max deadline
-     * @param v Signature param
-     * @param s Signature param
-     * @param r Signature param
-     */
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
-
-    /**
      * @notice Returns the address of the underlying asset of this nToken (E.g. WETH for pWETH)
      * @return The address of the underlying asset
      **/
     function UNDERLYING_ASSET_ADDRESS() external view returns (address);
-
-    /**
-     * @notice Get the domain separator for the token
-     * @dev Return cached value if chainId matches cache, otherwise recomputes separator
-     * @return The domain separator of the token at current chain
-     */
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-
-    /**
-     * @notice Returns the nonce for owner.
-     * @param owner The address of the owner
-     * @return The nonce of the owner
-     **/
-    function nonces(address owner) external view returns (uint256);
 
     /**
      * @notice Rescue ERC20 Token.
