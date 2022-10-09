@@ -33,38 +33,38 @@ interface INToken is
     );
 
     /**
-     * @dev Emitted during claimERC20Airdrop()
+     * @dev Emitted during rescueERC20()
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param amount The amount being claimed from the airdrop
+     * @param amount The amount being rescued
      **/
-    event ClaimERC20Airdrop(
+    event RescueERC20(
         address indexed token,
         address indexed to,
         uint256 amount
     );
 
     /**
-     * @dev Emitted during claimERC721Airdrop()
+     * @dev Emitted during rescueERC721()
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
+     * @param ids The ids of the tokens being rescued
      **/
-    event ClaimERC721Airdrop(
+    event RescueERC721(
         address indexed token,
         address indexed to,
         uint256[] ids
     );
 
     /**
-     * @dev Emitted during claimERC1155Airdrop()
+     * @dev Emitted during RescueERC1155()
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
-     * @param amounts The amount of NFTs being claimed from the airdrop for a specific id.
-     * @param data The data of the tokens that is being claimed from the airdrop. Usually this is 0.
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
      **/
-    event ClaimERC1155Airdrop(
+    event RescueERC1155(
         address indexed token,
         address indexed to,
         uint256[] ids,
@@ -184,50 +184,38 @@ interface INToken is
     function nonces(address owner) external view returns (uint256);
 
     /**
-     * @notice Rescue and transfer tokens locked in this contract
+     * @notice Rescue ERC20 Token.
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param value The tokenId or amount to transfer
-     */
-    function rescueTokens(
-        address token,
-        address to,
-        uint256 value
-    ) external;
-
-    /**
-     * @notice Claims ERC20 Airdrops.
-     * @param token The address of the token
-     * @param to The address of the recipient
-     * @param amount The amount being claimed from the airdrop
+     * @param amount The amount being rescued
      **/
-    function claimERC20Airdrop(
+    function rescueERC20(
         address token,
         address to,
         uint256 amount
     ) external;
 
     /**
-     * @notice Claims ERC721 Airdrops.
+     * @notice Rescue ERC721 Token.
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
+     * @param ids The ids of the tokens being rescued
      **/
-    function claimERC721Airdrop(
+    function rescueERC721(
         address token,
         address to,
         uint256[] calldata ids
     ) external;
 
     /**
-     * @notice Claims ERC1155 Airdrops.
+     * @notice Rescue ERC1155 Token.
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
-     * @param amounts The amount of NFTs being claimed from the airdrop for a specific id.
-     * @param data The data of the tokens that is being claimed from the airdrop. Usually this is 0.
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
      **/
-    function claimERC1155Airdrop(
+    function rescueERC1155(
         address token,
         address to,
         uint256[] calldata ids,

@@ -123,7 +123,7 @@ contract NToken is
         _transfer(from, to, value, false);
     }
 
-    function claimERC20Airdrop(
+    function rescueERC20(
         address token,
         address to,
         uint256 amount
@@ -132,15 +132,11 @@ contract NToken is
             token != _underlyingAsset,
             Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
         );
-        require(
-            token != address(this),
-            Errors.TOKEN_TRANSFERRED_CAN_NOT_BE_SELF_ADDRESS
-        );
         IERC20(token).transfer(to, amount);
-        emit ClaimERC20Airdrop(token, to, amount);
+        emit RescueERC20(token, to, amount);
     }
 
-    function claimERC721Airdrop(
+    function rescueERC721(
         address token,
         address to,
         uint256[] calldata ids
@@ -149,17 +145,13 @@ contract NToken is
             token != _underlyingAsset,
             Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
         );
-        require(
-            token != address(this),
-            Errors.TOKEN_TRANSFERRED_CAN_NOT_BE_SELF_ADDRESS
-        );
         for (uint256 i = 0; i < ids.length; i++) {
             IERC721(token).safeTransferFrom(address(this), to, ids[i]);
         }
-        emit ClaimERC721Airdrop(token, to, ids);
+        emit RescueERC721(token, to, ids);
     }
 
-    function claimERC1155Airdrop(
+    function rescueERC1155(
         address token,
         address to,
         uint256[] calldata ids,
@@ -170,10 +162,6 @@ contract NToken is
             token != _underlyingAsset,
             Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
         );
-        require(
-            token != address(this),
-            Errors.TOKEN_TRANSFERRED_CAN_NOT_BE_SELF_ADDRESS
-        );
         IERC1155(token).safeBatchTransferFrom(
             address(this),
             to,
@@ -181,7 +169,7 @@ contract NToken is
             amounts,
             data
         );
-        emit ClaimERC1155Airdrop(token, to, ids, amounts, data);
+        emit RescueERC1155(token, to, ids, amounts, data);
     }
 
     function executeAirdrop(
@@ -350,17 +338,6 @@ contract NToken is
     /// @inheritdoc EIP712Base
     function _EIP712BaseId() internal view override returns (string memory) {
         return name();
-    }
-
-    /// @inheritdoc INToken
-    function rescueTokens(
-        address token,
-        address to,
-        uint256 tokenId
-    ) external override onlyPoolAdmin {
-        require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
-
-        IERC721(token).safeTransferFrom(address(this), to, tokenId);
     }
 
     function onERC721Received(
