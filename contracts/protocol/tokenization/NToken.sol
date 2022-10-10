@@ -18,6 +18,7 @@ import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
 import {ScaledBalanceTokenBaseERC721} from "./base/ScaledBalanceTokenBaseERC721.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -29,6 +30,8 @@ contract NToken is
     ScaledBalanceTokenBaseERC721,
     INToken
 {
+    using SafeERC20 for IERC20;
+
     bytes32 public constant PERMIT_TYPEHASH =
         keccak256(
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
@@ -126,7 +129,7 @@ contract NToken is
             token != _underlyingAsset,
             Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
         );
-        IERC20(token).transfer(to, amount);
+        IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
     }
 
