@@ -15,21 +15,17 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
-import {ScaledBalanceTokenBaseERC721} from "./base/ScaledBalanceTokenBaseERC721.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract NToken is
-    VersionedInitializable,
-    ScaledBalanceTokenBaseERC721,
-    INToken
-{
+contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
     bytes32 public constant PERMIT_TYPEHASH =
@@ -49,7 +45,7 @@ contract NToken is
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool, bool atomic_pricing)
-        ScaledBalanceTokenBaseERC721(
+        MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
             "NTOKEN_IMPL",
