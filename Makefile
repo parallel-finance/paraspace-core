@@ -78,7 +78,7 @@ test-liquidation-edge:
 
 .PHONY: test-liquidation-ptoken
 test-liquidation-ptoken:
-	make TEST_TARGET=liquidation-ptoken.spec.ts test	
+	make TEST_TARGET=liquidation-ptoken.spec.ts test
 
 .PHONY: test-configurator-edge
 test-configurator-edge:
@@ -190,7 +190,7 @@ test-pool-addresses-provider:
 
 .PHONY: test-pausable-pool
 test-pausable-pool:
-	make TEST_TARGET=pausable-pool.spec.ts test	
+	make TEST_TARGET=pausable-pool.spec.ts test
 
 .PHONY: test-pool-drop-reserve
 test-pool-drop-reserve:

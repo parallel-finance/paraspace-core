@@ -460,11 +460,10 @@ interface IPoolCore {
     ) external;
 
     /**
-     * @notice Set erc721 HF verify time, all auctions triggered before the verify time
-     * will be considered as invalid
+     * @notice Set auction validity time, all auctions triggered before the validity time will be considered as invalid
      * @param user The user address
      */
-    function updateERC721HFValidityTime(address user) external;
+    function setAuctionValidityTime(address user) external;
 
     /**
      * @notice Returns the user account data across all the reserves
@@ -592,16 +591,6 @@ interface IPoolCore {
     function getReserveAddressById(uint16 id) external view returns (address);
 
     /**
-     * @notice Returns the ERC721 HF verify time
-     * @param user The address of the user
-     * @return The ERC721 HF verify time
-     */
-    function getERC721HFValidityTime(address user)
-        external
-        view
-        returns (uint256);
-
-    /**
      * @notice Returns the auction related data of specific asset collection and token id.
      * @param ntokenAsset The address of ntoken
      * @param tokenId The token id which is currently auctioned for liquidation
@@ -636,4 +625,16 @@ interface IPoolCore {
      * @return The maximum number of reserves supported
      */
     function MAX_NUMBER_RESERVES() external view returns (uint16);
+
+    /**
+     * @notice Returns the maximum allowed number of atomic tokens per user
+     * @return The maximum allowed number of atomic tokens per user
+     */
+    function MAX_ATOMIC_TOKENS_ALLOWED() external view returns (uint24);
+
+    /**
+     * @notice Returns the auction recovery health factor
+     * @return The auction recovery health factor
+     */
+    function AUCTION_RECOVERY_HEALTH_FACTOR() external view returns (uint64);
 }

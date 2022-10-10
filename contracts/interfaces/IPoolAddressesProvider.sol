@@ -166,7 +166,7 @@ interface IPoolAddressesProvider {
      * @param operator The address of the marketplace transfer helper
      * @param paused Is the marketplace adapter paused
      */
-    event MarketplaceSet(
+    event MarketplaceUpdated(
         bytes32 indexed id,
         address indexed marketplace,
         address indexed adapter,
