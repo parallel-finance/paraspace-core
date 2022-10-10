@@ -325,7 +325,7 @@ abstract contract MintableIncentivizedERC721 is
         address from,
         address to,
         uint256 tokenId,
-        bytes memory _data
+        bytes memory
     ) internal virtual {
         _transfer(from, to, tokenId);
     }
