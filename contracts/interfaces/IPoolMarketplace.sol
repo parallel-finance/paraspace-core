@@ -29,14 +29,12 @@ interface IPoolMarketplace {
      * @param marketplaceId The marketplace identifier
      * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credit The credit that user would like to use for this purchase
-     * @param onBehalfOf Address of the user who will buy the NFT and do the downpayment
      * @param referralCode The referral code used
      */
     function buyWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
         uint16 referralCode
     ) external payable;
 
@@ -47,14 +45,12 @@ interface IPoolMarketplace {
      * @param marketplaceIds The marketplace identifiers
      * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credits The credits that user would like to use for this purchase
-     * @param onBehalfOf Address of the user who will buy the NFTs and do the downpayment
      * @param referralCode The referral code used
      */
     function batchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
         uint16 referralCode
     ) external payable;
 

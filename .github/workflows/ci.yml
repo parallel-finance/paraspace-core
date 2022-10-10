@@ -103,5 +103,6 @@ jobs:
       - name: Publish coverage
         uses: codecov/codecov-action@v3
         with:
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info

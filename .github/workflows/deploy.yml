@@ -47,10 +47,13 @@ jobs:
 
       - name: Verification
         run: |
-          make \
-            ETHERSCAN_VERIFICATION=true \
-            ETHERSCAN_VERIFICATION_CONTRACT=PoolCore,PoolMarketplace,PoolParameters,Seaport,PoolAddressesProvider,ACLManager,ParaSpaceOracle \
-            verify
+          echo ETHERSCAN_VERIFICATION=true >> .env
+          make ETHERSCAN_VERIFICATION_CONTRACT=PoolConfigurator,PoolAddressesProvider,ACLManager verify
+          make ETHERSCAN_VERIFICATION_CONTRACT=PoolCore,PoolMarketplace,PoolParameters verify
+          make ETHERSCAN_VERIFICATION_CONTRACT=ProtocolDataProvider,UiPoolDataProvider,WalletBalanceProvider verify
+          make ETHERSCAN_VERIFICATION_CONTRACT=WETHGatewayProxy,WPunkGatewayProxy,UniswapV3GatewayProxy verify
+          make ETHERSCAN_VERIFICATION_CONTRACT=ParaSpaceOracle verify
+          make ETHERSCAN_VERIFICATION_CONTRACT=Seaport,SeaportAdapter,Conduit verify
 
       - name: Upload Artifacts
         if: always()

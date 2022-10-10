@@ -354,7 +354,7 @@ contract PoolCore is
         bool useAsCollateral
     ) external virtual override nonReentrant {
         if (useAsCollateral) {
-            SupplyLogic.executeCollateralizedERC721(
+            SupplyLogic.executeCollateralizeERC721(
                 _reserves,
                 _usersConfig[msg.sender],
                 asset,
@@ -362,7 +362,7 @@ contract PoolCore is
                 msg.sender
             );
         } else {
-            SupplyLogic.executeUncollateralizedERC721(
+            SupplyLogic.executeUncollateralizeERC721(
                 _reserves,
                 _reservesList,
                 _usersConfig[msg.sender],
@@ -473,12 +473,13 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function updateERC721HFValidityTime(address user)
+    function setAuctionValidityTime(address user)
         external
         virtual
         override
         nonReentrant
     {
+        require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
         (, , , , , , uint256 erc721HealthFactor) = PoolLogic
             .executeGetUserAccountData(
@@ -495,7 +496,7 @@ contract PoolCore is
             erc721HealthFactor > _auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
-        userConfig.erc721HFValidityTime = block.timestamp;
+        userConfig.auctionValidityTime = block.timestamp;
     }
 
     /// @inheritdoc IPoolCore
@@ -655,6 +656,28 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
+    function MAX_ATOMIC_TOKENS_ALLOWED()
+        external
+        view
+        virtual
+        override
+        returns (uint24)
+    {
+        return _maxAtomicTokensAllowed;
+    }
+
+    /// @inheritdoc IPoolCore
+    function AUCTION_RECOVERY_HEALTH_FACTOR()
+        external
+        view
+        virtual
+        override
+        returns (uint64)
+    {
+        return _auctionRecoveryHealthFactor;
+    }
+
+    /// @inheritdoc IPoolCore
     function finalizeTransfer(
         address asset,
         address from,
@@ -715,17 +738,6 @@ contract PoolCore is
                 oracle: ADDRESSES_PROVIDER.getPriceOracle()
             })
         );
-    }
-
-    /// @inheritdoc IPoolCore
-    function getERC721HFValidityTime(address user)
-        external
-        view
-        virtual
-        override
-        returns (uint256 verifyTime)
-    {
-        verifyTime = _usersConfig[user].erc721HFValidityTime;
     }
 
     /// @inheritdoc IPoolCore

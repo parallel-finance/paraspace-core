@@ -101,7 +101,7 @@ library LiquidationLogic {
     }
 
     struct AuctionLocalVars {
-        uint256 healthFactor;
+        uint256 erc721HealthFactor;
         address collateralXToken;
         DataTypes.AssetType assetType;
     }
@@ -122,7 +122,7 @@ library LiquidationLogic {
             params.user
         ];
 
-        (, , , , , , , , vars.healthFactor, ) = GenericLogic
+        (, , , , , , , , vars.erc721HealthFactor, ) = GenericLogic
             .calculateUserAccountData(
                 reservesData,
                 reservesList,
@@ -140,7 +140,7 @@ library LiquidationLogic {
             DataTypes.ValidateAuctionParams({
                 user: params.user,
                 auctionRecoveryHealthFactor: params.auctionRecoveryHealthFactor,
-                healthFactor: vars.healthFactor,
+                erc721HealthFactor: vars.erc721HealthFactor,
                 collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 xTokenAddress: vars.collateralXToken
@@ -173,7 +173,7 @@ library LiquidationLogic {
             params.user
         ];
 
-        (, , , , , , , , vars.healthFactor, ) = GenericLogic
+        (, , , , , , , , vars.erc721HealthFactor, ) = GenericLogic
             .calculateUserAccountData(
                 reservesData,
                 reservesList,
@@ -190,7 +190,7 @@ library LiquidationLogic {
             DataTypes.ValidateAuctionParams({
                 user: params.user,
                 auctionRecoveryHealthFactor: params.auctionRecoveryHealthFactor,
-                healthFactor: vars.healthFactor,
+                erc721HealthFactor: vars.erc721HealthFactor,
                 collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 xTokenAddress: vars.collateralXToken

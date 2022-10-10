@@ -77,8 +77,8 @@ library DataTypes {
         // counter for atomic erc721 tokens.
         // this is used to limit the total number of atomic erc721 the user can supply
         uint24 userAtomicTokens;
-        // verify time for closing invalid auctions in one tx.
-        uint256 erc721HFValidityTime;
+        // auction validity time for closing invalid auctions in one tx.
+        uint256 auctionValidityTime;
     }
 
     struct ERC721SupplyParams {
@@ -253,7 +253,7 @@ library DataTypes {
     struct ValidateAuctionParams {
         address user;
         uint256 auctionRecoveryHealthFactor;
-        uint256 healthFactor;
+        uint256 erc721HealthFactor;
         address collateralAsset;
         uint256 tokenId;
         address xTokenAddress;
@@ -304,7 +304,7 @@ library DataTypes {
         uint256 ethLeft;
         DataTypes.Marketplace marketplace;
         OrderInfo orderInfo;
-        address WETH;
+        address weth;
         uint16 referralCode;
         uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;
