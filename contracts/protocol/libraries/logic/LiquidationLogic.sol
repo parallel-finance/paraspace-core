@@ -297,8 +297,6 @@ library LiquidationLogic {
             userConfig.setBorrowing(debtReserve.id, false);
         }
 
-        _burnDebtTokens(params, vars);
-
         debtReserve.updateInterestRates(
             vars.debtReserveCache,
             params.liquidationAsset,
@@ -338,6 +336,8 @@ library LiquidationLogic {
             vars.liquidator,
             vars.actualDebtToLiquidate
         );
+
+        _burnDebtTokens(params, vars);
 
         if (params.receiveXToken) {
             _liquidatePTokens(usersConfig, collateralReserve, params, vars);
@@ -544,22 +544,6 @@ library LiquidationLogic {
             vars.actualDebtToLiquidate = debtCanBeCovered;
         }
 
-        if (vars.actualDebtToLiquidate != 0) {
-            _burnDebtTokens(params, vars);
-            liquidationAssetReserve.updateInterestRates(
-                vars.debtReserveCache,
-                params.liquidationAsset,
-                vars.actualDebtToLiquidate,
-                0
-            );
-
-            IERC20(params.liquidationAsset).safeTransferFrom(
-                vars.liquidator,
-                vars.debtReserveCache.xTokenAddress,
-                vars.actualDebtToLiquidate
-            );
-        }
-
         if (vars.userTotalDebt == vars.actualDebtToLiquidate) {
             userConfig.setBorrowing(liquidationAssetReserve.id, false);
         }
@@ -582,6 +566,21 @@ library LiquidationLogic {
                 params.collateralAsset,
                 params.user
             );
+        }
+
+        if (vars.actualDebtToLiquidate != 0) {
+            liquidationAssetReserve.updateInterestRates(
+                vars.debtReserveCache,
+                params.liquidationAsset,
+                vars.actualDebtToLiquidate,
+                0
+            );
+            IERC20(params.liquidationAsset).safeTransferFrom(
+                vars.liquidator,
+                vars.debtReserveCache.xTokenAddress,
+                vars.actualDebtToLiquidate
+            );
+            _burnDebtTokens(params, vars);
         }
 
         if (params.receiveXToken) {
