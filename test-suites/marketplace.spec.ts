@@ -18,7 +18,6 @@ import {
   getOfferOrConsiderationItem,
   toBN,
   toFulfillment,
-  toKey,
 } from "../deploy/helpers/seaport-helpers/encoding";
 import {createOrder, createRunput} from "../deploy/helpers/x2y2-helpers";
 import {ethers} from "hardhat";
@@ -35,7 +34,7 @@ import {
   X2Y2_ID,
 } from "../deploy/helpers/constants";
 import {formatEther, parseEther} from "ethers/lib/utils";
-import {BigNumber, constants} from "ethers";
+import {BigNumber, BigNumberish, constants} from "ethers";
 import {
   borrowAndValidate,
   changePriceAndValidate,
@@ -58,6 +57,7 @@ import {
   executeSeaportBuyWithCredit,
   executeX2Y2BuyWithCredit,
 } from "./helpers/marketplace-helper";
+import {AdvancedOrderStruct} from "../types/dependencies/seaport/contracts/Seaport";
 
 makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
   let snapShot: string;
@@ -256,7 +256,7 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], toKey(0), pool.address]
+      [await getSellOrder(), [], conduitKey, pool.address]
     );
 
     const tx = pool.connect(taker.signer).buyWithCredit(
@@ -270,7 +270,6 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
-      taker.address,
       0,
       {
         gasLimit: 5000000,
@@ -563,7 +562,6 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
-      taker.address,
       0,
       {
         gasLimit: 5000000,
@@ -589,6 +587,502 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
     expect(await taker.signer.getBalance()).to.be.equal(
       offerBeforeBalance.sub(payNowAmount).sub(gasUsed)
     );
+  });
+
+  it("ERC721 <=> WETH via paraspace (1% platform fee) - partial borrow [ @skip-on-coverage ]", async () => {
+    const {
+      mayc,
+      conduit,
+      conduitKey,
+      pausableZone,
+      seaport,
+      pool,
+      wETHGatewayProxy,
+      weth,
+      users: [maker, taker, middleman, platform],
+    } = testEnv;
+    const masGasFeeLeft = parseEther("5");
+    const payNowAmount = (await taker.signer.getBalance()).sub(masGasFeeLeft);
+    const creditAmount = parseEther("2");
+    const startAmount = payNowAmount.add(creditAmount);
+    const nftId = "0";
+
+    // middleman supplies ETH to pool to be borrowed by offerer later
+    await waitForTx(
+      await wETHGatewayProxy
+        .connect(middleman.signer)
+        .depositETH(middleman.address, 0, {
+          value: creditAmount,
+        })
+    );
+
+    // verify pool holds liquidity
+    expect(
+      await weth.balanceOf(
+        (
+          await pool.getReserveData(weth.address)
+        ).xTokenAddress
+      )
+    ).to.be.equal(creditAmount);
+
+    // mint MAYC to maker
+    const mintableMayc = await getMintableERC721(mayc.address);
+    await waitForTx(
+      await mintableMayc.connect(maker.signer)["mint(address)"](maker.address)
+    );
+    expect(await mayc.ownerOf(nftId)).to.be.equal(maker.address);
+
+    // approve
+    await waitForTx(
+      await mayc.connect(maker.signer).approve(conduit.address, nftId)
+    );
+    await waitForTx(
+      await weth.connect(taker.signer).approve(pool.address, payNowAmount)
+    );
+    const oldOfferBalance = await weth.balanceOf(maker.address);
+    const oldPlatformBalance = await weth.balanceOf(platform.address);
+
+    const getSellOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(2, mayc.address, nftId, toBN(1), toBN(1)),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          1,
+          weth.address,
+          toBN(0),
+          startAmount.sub(startAmount.div(100)),
+          startAmount.sub(startAmount.div(100)),
+          maker.address
+        ),
+        getOfferOrConsiderationItem(
+          1,
+          weth.address,
+          toBN(0),
+          startAmount.div(100),
+          startAmount.div(100),
+          platform.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        maker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const encodedData = seaport.interface.encodeFunctionData(
+      "fulfillAdvancedOrder",
+      [await getSellOrder(), [], conduitKey, pool.address]
+    );
+
+    const offerBeforeBalance = await taker.signer.getBalance();
+    const tx = pool.connect(taker.signer).buyWithCredit(
+      PARASPACE_SEAPORT_ID,
+      `0x${encodedData.slice(10)}`,
+      {
+        token: weth.address,
+        amount: creditAmount,
+        orderId: constants.HashZero,
+        v: 0,
+        r: constants.HashZero,
+        s: constants.HashZero,
+      },
+      0,
+      {
+        gasLimit: 5000000,
+        value: payNowAmount,
+      }
+    );
+
+    const txReceipt = await (await tx).wait();
+    const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+
+    expect(await mayc.balanceOf(taker.address)).to.be.equal(0);
+    expect(await mayc.ownerOf(nftId)).to.be.equal(
+      (await pool.getReserveData(mayc.address)).xTokenAddress
+    );
+    expect(await weth.balanceOf(maker.address)).to.be.equal(
+      startAmount.sub(startAmount.div(100)).add(oldOfferBalance)
+    );
+    expect(await weth.balanceOf(platform.address)).to.be.equal(
+      startAmount.div(100).add(oldPlatformBalance)
+    );
+    expect(await pool.provider.getBalance(pool.address)).to.be.equal(0);
+    expect(await weth.balanceOf(pool.address)).to.be.equal(0);
+
+    //check offerer got refund
+    expect(await taker.signer.getBalance()).to.be.equal(
+      offerBeforeBalance.sub(payNowAmount).sub(gasUsed)
+    );
+  });
+
+  it("ERC721 <=> ETH batch buy via paraspace [ @skip-on-coverage ]", async () => {
+    const {
+      mayc,
+      nMAYC,
+      conduit,
+      conduitKey,
+      pausableZone,
+      seaport,
+      pool,
+      wETHGatewayProxy,
+      weth,
+      users: [maker, taker, middleman],
+    } = testEnv;
+    const masGasFeeLeft = parseEther("4");
+
+    const totalPayNowAmount = (await taker.signer.getBalance()).sub(
+      masGasFeeLeft
+    );
+    const totalCreditAmount = parseEther("3");
+    const creditAmount = totalCreditAmount.div(3);
+    const payNowAmount = totalPayNowAmount.div(3);
+    const startAmount = payNowAmount.add(creditAmount);
+    const nftIds = ["0", "1", "2"];
+
+    // middleman supplies ETH to pool to be borrowed by offerer later
+    await waitForTx(
+      await wETHGatewayProxy
+        .connect(middleman.signer)
+        .depositETH(middleman.address, 0, {
+          value: totalCreditAmount,
+        })
+    );
+
+    // verify pool holds liquidity
+    expect(
+      await weth.balanceOf(
+        (
+          await pool.getReserveData(weth.address)
+        ).xTokenAddress
+      )
+    ).to.be.equal(totalCreditAmount);
+
+    // mint MAYC to maker
+    const mintableMayc = await getMintableERC721(mayc.address);
+    for (const nftId of nftIds) {
+      await waitForTx(
+        await mintableMayc.connect(maker.signer)["mint(address)"](maker.address)
+      );
+      expect(await mayc.ownerOf(nftId)).to.be.equal(maker.address);
+    }
+
+    const getSellOrder = async (
+      token: string,
+      nftId: BigNumberish,
+      listPrice: BigNumberish
+    ): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(2, token, nftId, toBN(1), toBN(1)),
+      ];
+
+      const considerations = [getItemETH(listPrice, listPrice, maker.address)];
+
+      return createSeaportOrder(
+        seaport,
+        maker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const getEncodedData = (order: AdvancedOrderStruct): string =>
+      `0x${seaport.interface
+        .encodeFunctionData("fulfillAdvancedOrder", [
+          order,
+          [],
+          conduitKey,
+          pool.address,
+        ])
+        .slice(10)}`;
+
+    const orderETH0 = await getSellOrder(mayc.address, nftIds[0], startAmount);
+    const orderETH1 = await getSellOrder(mayc.address, nftIds[1], startAmount);
+    const orderETH2 = await getSellOrder(mayc.address, nftIds[2], startAmount);
+
+    const emptySig = {
+      orderId: constants.HashZero,
+      v: 0,
+      r: constants.HashZero,
+      s: constants.HashZero,
+    };
+
+    const creditETH0 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+    const creditETH1 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+    const creditETH2 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+
+    // approve
+    await waitForTx(
+      await mayc.connect(maker.signer).setApprovalForAll(conduit.address, true)
+    );
+
+    const makerETHBeforeBalance = await maker.signer.getBalance();
+    const takerETHBeforeBalance = await taker.signer.getBalance();
+
+    const tx = pool
+      .connect(taker.signer)
+      .batchBuyWithCredit(
+        [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
+        [
+          getEncodedData(orderETH0),
+          getEncodedData(orderETH1),
+          getEncodedData(orderETH2),
+        ],
+        [creditETH0, creditETH1, creditETH2],
+        0,
+        {
+          gasLimit: 5000000,
+          value: totalPayNowAmount,
+        }
+      );
+
+    const txReceipt = await (await tx).wait();
+    const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+
+    expect(await mayc.balanceOf(maker.address)).to.be.equal(0);
+    expect(await nMAYC.balanceOf(taker.address)).to.be.equal(3);
+    for (const nftId of nftIds) {
+      expect(await mayc.ownerOf(nftId)).to.be.equal(
+        (await pool.getReserveData(mayc.address)).xTokenAddress
+      );
+    }
+    expect(await pool.provider.getBalance(maker.address)).to.be.equal(
+      startAmount.mul(3).add(makerETHBeforeBalance)
+    );
+    expect(await pool.provider.getBalance(taker.address)).to.be.equal(
+      takerETHBeforeBalance.sub(totalPayNowAmount).sub(gasUsed)
+    );
+    expect(await pool.provider.getBalance(pool.address)).to.be.equal(0);
+  });
+
+  it("ERC721 <=> WETH/ETH batch buy via paraspace [ @skip-on-coverage ]", async () => {
+    const {
+      mayc,
+      nMAYC,
+      conduit,
+      conduitKey,
+      pausableZone,
+      seaport,
+      pool,
+      wETHGatewayProxy,
+      weth,
+      users: [maker, taker, middleman],
+    } = testEnv;
+    const masGasFeeLeft = parseEther("4");
+
+    const totalPayNowAmount = (await taker.signer.getBalance()).sub(
+      masGasFeeLeft
+    );
+    const totalPayNowAmountInETH = totalPayNowAmount.div(3).mul(2);
+    const totalPayNowAmountInWETH = totalPayNowAmount.sub(
+      totalPayNowAmountInETH
+    );
+    const totalCreditAmount = parseEther("3");
+    const creditAmount = totalCreditAmount.div(3);
+    const payNowAmount = totalPayNowAmount.div(3);
+    const startAmount = payNowAmount.add(creditAmount);
+    const nftIds = ["0", "1", "2"];
+
+    // middleman supplies ETH to pool to be borrowed by offerer later
+    await waitForTx(
+      await wETHGatewayProxy
+        .connect(middleman.signer)
+        .depositETH(middleman.address, 0, {
+          value: totalCreditAmount,
+        })
+    );
+
+    // verify pool holds liquidity
+    expect(
+      await weth.balanceOf(
+        (
+          await pool.getReserveData(weth.address)
+        ).xTokenAddress
+      )
+    ).to.be.equal(totalCreditAmount);
+
+    // mint MAYC to maker
+    const mintableMayc = await getMintableERC721(mayc.address);
+    for (const nftId of nftIds) {
+      await waitForTx(
+        await mintableMayc.connect(maker.signer)["mint(address)"](maker.address)
+      );
+      expect(await mayc.ownerOf(nftId)).to.be.equal(maker.address);
+    }
+
+    const getSellOrder = async (
+      token: string,
+      nftId: BigNumberish,
+      listPrice: BigNumberish,
+      listInETH = true
+    ): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(2, token, nftId, toBN(1), toBN(1)),
+      ];
+
+      const considerations = [
+        listInETH
+          ? getItemETH(listPrice, listPrice, maker.address)
+          : getOfferOrConsiderationItem(
+              1,
+              weth.address,
+              toBN(0),
+              listPrice,
+              listPrice,
+              maker.address
+            ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        maker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const getEncodedData = (order: AdvancedOrderStruct): string =>
+      `0x${seaport.interface
+        .encodeFunctionData("fulfillAdvancedOrder", [
+          order,
+          [],
+          conduitKey,
+          pool.address,
+        ])
+        .slice(10)}`;
+
+    const orderETH0 = await getSellOrder(mayc.address, nftIds[0], startAmount);
+    const orderETH1 = await getSellOrder(mayc.address, nftIds[1], startAmount);
+    const orderWETH2 = await getSellOrder(
+      mayc.address,
+      nftIds[2],
+      startAmount,
+      false
+    );
+
+    const emptySig = {
+      orderId: constants.HashZero,
+      v: 0,
+      r: constants.HashZero,
+      s: constants.HashZero,
+    };
+
+    const creditETH0 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+    const creditETH1 = {
+      token: ethers.constants.AddressZero,
+      amount: creditAmount,
+      ...emptySig,
+    };
+    const creditWETH2 = {
+      token: weth.address,
+      amount: creditAmount,
+      ...emptySig,
+    };
+
+    // approve
+    await waitForTx(
+      await mayc.connect(maker.signer).setApprovalForAll(conduit.address, true)
+    );
+    await waitForTx(
+      await weth
+        .connect(taker.signer)
+        .approve(pool.address, totalPayNowAmountInWETH)
+    );
+
+    // batchBuyWithCredit([ETH, WETH, ETH]) will fail
+    await expect(
+      pool
+        .connect(taker.signer)
+        .batchBuyWithCredit(
+          [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
+          [
+            getEncodedData(orderETH0),
+            getEncodedData(orderWETH2),
+            getEncodedData(orderETH1),
+          ],
+          [creditETH0, creditWETH2, creditETH1],
+          0,
+          {
+            gasLimit: 5000000,
+            value: totalPayNowAmount,
+          }
+        )
+    ).to.revertedWith(ProtocolErrors.PAYNOW_NOT_ENOUGH);
+
+    const makerETHBeforeBalance = await maker.signer.getBalance();
+    const takerETHBeforeBalance = await taker.signer.getBalance();
+
+    const makerWETHBeforeBalance = await weth.balanceOf(maker.address);
+
+    const tx = pool
+      .connect(taker.signer)
+      .batchBuyWithCredit(
+        [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
+        [
+          getEncodedData(orderETH0),
+          getEncodedData(orderETH1),
+          getEncodedData(orderWETH2),
+        ],
+        [creditETH0, creditETH1, creditWETH2],
+        0,
+        {
+          gasLimit: 5000000,
+          value: totalPayNowAmount,
+        }
+      );
+
+    const txReceipt = await (await tx).wait();
+    const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+
+    expect(await mayc.balanceOf(maker.address)).to.be.equal(0);
+    expect(await nMAYC.balanceOf(taker.address)).to.be.equal(3);
+    for (const nftId of nftIds) {
+      expect(await mayc.ownerOf(nftId)).to.be.equal(
+        (await pool.getReserveData(mayc.address)).xTokenAddress
+      );
+    }
+    expect(await weth.balanceOf(maker.address)).to.be.equal(
+      startAmount.add(makerWETHBeforeBalance)
+    );
+    expect(await pool.provider.getBalance(maker.address)).to.be.equal(
+      startAmount.mul(2).add(makerETHBeforeBalance)
+    );
+    expect(await pool.provider.getBalance(taker.address)).to.be.equal(
+      takerETHBeforeBalance.sub(totalPayNowAmount).sub(gasUsed)
+    );
+    expect(await weth.balanceOf(taker.address)).to.be.equal(0);
+    expect(await pool.provider.getBalance(pool.address)).to.be.equal(0);
+    expect(await weth.balanceOf(pool.address)).to.be.equal(0);
+    expect(await weth.allowance(taker.address, pool.address)).to.be.equal(0);
   });
 
   it("NToken(collateralized) <=> ERC20 via paraspace - partial borrow", async () => {
@@ -687,6 +1181,8 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
       pausableZone,
       seaport,
       pool,
+      conduit,
+      conduitKey,
       users: [offer, offerer, middleman],
     } = testEnv;
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
@@ -750,7 +1246,7 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
     expect(await nBAYC.collaterizedBalanceOf(offer.address)).to.be.equal(0);
 
     await waitForTx(
-      await nBAYC.connect(offer.signer).approve(seaport.address, nftId)
+      await nBAYC.connect(offer.signer).approve(conduit.address, nftId)
     );
 
     await waitForTx(
@@ -779,13 +1275,14 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
         offers,
         considerations,
         2,
-        pausableZone.address
+        pausableZone.address,
+        conduitKey
       );
     };
 
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], toKey(0), offerer.address]
+      [await getSellOrder(), [], conduitKey, offerer.address]
     );
 
     const tx = pool.connect(offerer.signer).buyWithCredit(
@@ -799,7 +1296,6 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
-      offerer.address,
       0,
       {
         gasLimit: 5000000,
@@ -983,7 +1479,6 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
           s: constants.HashZero,
         },
       ],
-      taker.address,
       0,
       {
         gasLimit: 5000000,
@@ -2813,7 +3308,7 @@ makeSuite("Leveraged Bid - Positive tests", (testEnv) => {
     };
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], toKey(0), offerer.address]
+      [await getSellOrder(), [], conduitKey, offerer.address]
     );
     const tx = pool.connect(offerer.signer).buyWithCredit(
       PARASPACE_SEAPORT_ID,
@@ -2826,7 +3321,6 @@ makeSuite("Leveraged Bid - Positive tests", (testEnv) => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
-      offerer.address,
       0,
       {
         gasLimit: 5000000,

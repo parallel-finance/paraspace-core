@@ -22,7 +22,7 @@ import {PoolStorage} from "../../protocol/pool/PoolStorage.sol";
 contract LooksRareAdapter is IMarketplace {
     constructor() {}
 
-    function getAskOrderInfo(bytes memory params, address WETH)
+    function getAskOrderInfo(bytes memory params, address weth)
         external
         pure
         override
@@ -48,7 +48,7 @@ contract LooksRareAdapter is IMarketplace {
 
         ItemType itemType = ItemType.ERC20;
         address token = makerAsk.currency;
-        if (token == WETH) {
+        if (token == weth) {
             itemType = ItemType.NATIVE;
             token = address(0);
         }

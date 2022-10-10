@@ -184,56 +184,6 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         _safeTransferETH(to, amountToWithdraw);
     }
 
-    /*
-     * @notice Implements the buyWithCredit feature. BuyWithCredit allows users to buy NFT from various NFT marketplaces
-     * including OpenSea, LooksRare, X2Y2 etc. Users can use NFT's credit and will need to pay at most (1 - LTV) * $NFT
-     * @dev
-     * @param marketplaceId The marketplace identifier
-     * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
-     * @param credit The credit that user would like to use for this purchase
-     * @param referralCode The referral code used
-     */
-    function buyWithCredit(
-        bytes32 marketplaceId,
-        bytes calldata payload,
-        DataTypes.Credit calldata credit,
-        uint16 referralCode
-    ) external payable override nonReentrant {
-        WETH.deposit{value: msg.value}();
-        IPool(pool).buyWithCredit(
-            marketplaceId,
-            payload,
-            credit,
-            msg.sender,
-            referralCode
-        );
-    }
-
-    /**
-     * @notice Implements the batchBuyWithCredit feature. BuyWithCredit allows users to buy NFT from various NFT marketplaces
-     * including OpenSea, LooksRare, X2Y2 etc. Users can use NFT's credit and will need to pay at most (1 - LTV) * $NFT
-     * @dev marketplaceIds[i] should match payload[i] and credits[i]
-     * @param marketplaceIds The marketplace identifiers
-     * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
-     * @param credits The credits that user would like to use for this purchase
-     * @param referralCode The referral code used
-     */
-    function batchBuyWithCredit(
-        bytes32[] calldata marketplaceIds,
-        bytes[] calldata payloads,
-        DataTypes.Credit[] calldata credits,
-        uint16 referralCode
-    ) external payable override nonReentrant {
-        WETH.deposit{value: msg.value}();
-        IPool(pool).batchBuyWithCredit(
-            marketplaceIds,
-            payloads,
-            credits,
-            msg.sender,
-            referralCode
-        );
-    }
-
     /**
      * @dev transfer ETH to an address, revert if it fails.
      * @param to recipient of the transfer

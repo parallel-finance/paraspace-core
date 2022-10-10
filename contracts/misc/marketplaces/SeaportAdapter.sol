@@ -46,10 +46,15 @@ contract SeaportAdapter is IMarketplace {
         // the person who listed NFT to sell
         orderInfo.maker = advancedOrder.parameters.offerer;
         orderInfo.id = advancedOrder.signature;
-        // NFT, will be checked inside MarketplaceLogic
+        // NFT, items will be checked inside MarketplaceLogic
         orderInfo.offer = advancedOrder.parameters.offer;
-        // ERC20, will be checked inside MarketplaceLogic
+        require(orderInfo.offer.length > 0, Errors.INVALID_MARKETPLACE_ORDER);
+        // ERC20, items will be checked inside MarketplaceLogic
         orderInfo.consideration = advancedOrder.parameters.consideration;
+        require(
+            orderInfo.consideration.length > 0,
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
     }
 
     function getBidOrderInfo(bytes memory params)
@@ -70,14 +75,19 @@ contract SeaportAdapter is IMarketplace {
                 isBasicOrder(advancedOrders[1]),
             Errors.INVALID_MARKETPLACE_ORDER
         );
-        // the person who sends BID to buy NFT
+        // the person who sends bid to buy NFT
         orderInfo.maker = advancedOrders[0].parameters.offerer;
         orderInfo.taker = advancedOrders[1].parameters.offerer;
         orderInfo.id = advancedOrders[0].signature;
-        // NFT, will be checked inside MarketplaceLogic
+        // NFT, items will be checked inside MarketplaceLogic
         orderInfo.offer = advancedOrders[1].parameters.offer;
-        // ERC20, will be checked inside MarketplaceLogic
+        require(orderInfo.offer.length > 0, Errors.INVALID_MARKETPLACE_ORDER);
+        // ERC20, items will be checked inside MarketplaceLogic
         orderInfo.consideration = advancedOrders[1].parameters.consideration;
+        require(
+            orderInfo.consideration.length > 0,
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
     }
 
     function matchAskWithTakerBid(
