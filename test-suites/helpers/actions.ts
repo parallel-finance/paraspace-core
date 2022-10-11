@@ -2,15 +2,11 @@ import {
   calcExpectedReserveDataAfterBorrow,
   calcExpectedReserveDataAfterDeposit,
   calcExpectedReserveDataAfterRepay,
-  calcExpectedReserveDataAfterStableRateRebalance,
-  calcExpectedReserveDataAfterSwapRateMode,
   calcExpectedReserveDataAfterWithdraw,
   calcExpectedUserDataAfterBorrow,
   calcExpectedUserDataAfterDeposit,
   calcExpectedUserDataAfterRepay,
   calcExpectedUserDataAfterSetUseAsCollateral,
-  calcExpectedUserDataAfterStableRateRebalance,
-  calcExpectedUserDataAfterSwapRateMode,
   calcExpectedUserDataAfterWithdraw,
 } from "./utils/calculations";
 import {

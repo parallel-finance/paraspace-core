@@ -12,6 +12,7 @@ const selectedScenarios: string[] = []; //"borrow-repay-stable-edge.json", "borr
 fs.readdirSync(scenarioFolder).forEach((file) => {
   if (selectedScenarios.length > 0 && !selectedScenarios.includes(file)) return;
 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const scenario = require(`./helpers/scenarios/${file}`);
 
   makeSuite(scenario.title, async (testEnv) => {
