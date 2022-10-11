@@ -28,11 +28,6 @@ import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol"
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    bytes32 public constant PERMIT_TYPEHASH =
-        keccak256(
-            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
-        );
-
     uint256 public constant NTOKEN_REVISION = 0x1;
 
     /// @inheritdoc VersionedInitializable
@@ -121,10 +116,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address to,
         uint256 amount
     ) external override onlyPoolAdmin {
-        require(
-            token != _underlyingAsset,
-            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
-        );
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
     }
@@ -151,10 +142,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         uint256[] calldata amounts,
         bytes calldata data
     ) external override onlyPoolAdmin {
-        require(
-            token != _underlyingAsset,
-            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
-        );
         IERC1155(token).safeBatchTransferFrom(
             address(this),
             to,
