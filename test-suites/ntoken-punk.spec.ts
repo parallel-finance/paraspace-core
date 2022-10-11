@@ -1,29 +1,18 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {
-  buildPermitParams,
-  convertToCurrencyDecimals,
-  getSignatureFromTypedData,
-} from "../deploy/helpers/contracts-helpers";
-import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
+import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {makeSuite} from "./helpers/make-suite";
-import {getTestWallets} from "./helpers/utils/wallets";
-
-declare let hre: HardhatRuntimeEnvironment;
 
 makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
-  let testWallets;
   let firstDaiDeposit;
   let secondDaiDeposit;
   const wPunksFloorPrice = BigNumber.from(
     MOCK_CHAINLINK_AGGREGATORS_PRICES.WPUNKS
   );
-  const EIP712_REVISION = "1";
 
   before("Initialize WPunk Gateway", async () => {
     const {
@@ -35,7 +24,6 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
 
     firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
     secondDaiDeposit = await convertToCurrencyDecimals(dai.address, "20000");
-    testWallets = getTestWallets();
 
     await waitForTx(
       await wPunk
