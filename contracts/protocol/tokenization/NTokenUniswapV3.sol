@@ -79,8 +79,10 @@ contract NTokenUniswapV3 is NToken {
     /**
      * @notice A function that decreases the current liquidity.
      * @param tokenId The id of the erc721 token
+     * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
+     * @param receiveEthAsWeth If convert weth to ETH
      * @return amount0 The amount received back in token0
      * @return amount1 The amount returned back in token1
      */
@@ -167,6 +169,7 @@ contract NTokenUniswapV3 is NToken {
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
+     * @param receiveEthAsWeth If convert weth to ETH
      */
     function decreaseUniswapV3Liquidity(
         uint256 tokenId,

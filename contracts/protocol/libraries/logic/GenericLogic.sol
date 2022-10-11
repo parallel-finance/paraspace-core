@@ -68,6 +68,7 @@ library GenericLogic {
      * @return The average ltv of the user
      * @return The average liquidation threshold of the user
      * @return The health factor of the user
+     * @return The ERC721 health factor of the user
      * @return True if the ltv is zero, false otherwise
      **/
     function calculateUserAccountData(
