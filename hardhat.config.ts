@@ -24,7 +24,6 @@ import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
-import "hardhat-deploy";
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
@@ -49,14 +48,6 @@ const hardhatConfig: HardhatUserConfig = {
     outputDir: "docs",
     pages: "items",
     exclude: ["dependencies", "deployments", "mocks"],
-  },
-  namedAccounts: {
-    deployer: {
-      default: 0,
-    },
-    aclAdmin: {
-      default: 1,
-    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS == "true" ? true : false,

@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-typos && npx pretty-quick --staged --pattern 'test-suites**/*.ts' --pattern 'deploy/**/*.ts'
+typos \
+  && tsc --noEmit -skipLibCheck \
+  && npx pretty-quick --staged --pattern 'test-suites**/*.ts' --pattern 'deploy/**/*.ts'
