@@ -3,8 +3,13 @@ ignore:
   - "contracts/dependencies"
   - "contracts/deployments"
 coverage:
+  range: 100..100
+  round: down
+  precision: 2
   status:
     project:
       default:
         target: auto
-        threshold: 1%
+        threshold: 0%
+        base: auto
+        if_ci_failed: error
