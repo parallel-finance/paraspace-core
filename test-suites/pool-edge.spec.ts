@@ -24,10 +24,13 @@ import {makeSuite, TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("Pool: Edge cases", (testEnv: TestEnv) => {
+makeSuite("Pool: Edge cases", () => {
+  let testEnv: TestEnv;
   const {
     ASSET_NOT_LISTED,
     ZERO_ADDRESS_NOT_VALID,
@@ -41,14 +44,8 @@ makeSuite("Pool: Edge cases", (testEnv: TestEnv) => {
   const MAX_STABLE_RATE_BORROW_SIZE_PERCENT = 2500;
   const MAX_NUMBER_RESERVES = 128;
 
-  let snap: string;
-
   beforeEach(async () => {
-    snap = await evmSnapshot();
-  });
-
-  afterEach(async () => {
-    await evmRevert(snap);
+    testEnv = await loadFixture(testEnvFixture);
   });
 
   // it("Drop asset while user uses it as collateral, ensure that borrowing power is lowered", async () => {

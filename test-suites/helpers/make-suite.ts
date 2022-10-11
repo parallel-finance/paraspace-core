@@ -448,9 +448,6 @@ export function makeSuite(
   tests: (fixture: typeof testEnvFixture) => void
 ) {
   describe(name, () => {
-    before(async () => {
-      await loadFixture(testEnvFixture);
-    });
     tests(testEnvFixture);
   });
 }

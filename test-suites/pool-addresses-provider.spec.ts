@@ -20,9 +20,16 @@ import {
   getFirstSigner,
   getProxyAdmin,
 } from "../deploy/helpers/contracts-getters";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
+makeSuite("PoolAddressesProvider", () => {
+  let testEnv: TestEnv;
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
 
   it("Test the onlyOwner accessibility of the PoolAddressesProvider", async () => {
     const {addressesProvider, users} = testEnv;

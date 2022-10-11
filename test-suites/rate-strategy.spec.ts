@@ -13,6 +13,8 @@ import {TestEnv, makeSuite} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
 import {formatUnits} from "@ethersproject/units";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 const DEBUG = false;
 
@@ -28,7 +30,8 @@ type CalculateInterestRatesParams = {
   xToken: string;
 };
 
-makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
+makeSuite("InterestRateStrategy", () => {
+  let testEnv: TestEnv;
   let strategyInstance: DefaultReserveInterestRateStrategy;
   let dai: MintableERC20;
   let pDai: PToken;
@@ -42,10 +45,10 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
   } = ProtocolErrors;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+    const {addressesProvider} = testEnv;
     dai = testEnv.dai;
     pDai = testEnv.pDai;
-
-    const {addressesProvider} = testEnv;
 
     strategyInstance = await deployDefaultReserveInterestRateStrategy([
       addressesProvider.address,

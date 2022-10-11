@@ -14,10 +14,17 @@ import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {VariableDebtToken__factory} from "../types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
+makeSuite("VariableDebtToken", () => {
+  let testEnv: TestEnv;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   const {
     CALLER_MUST_BE_POOL,
     INVALID_MINT_AMOUNT,

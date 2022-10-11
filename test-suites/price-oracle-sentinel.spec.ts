@@ -20,8 +20,11 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import "./helpers/utils/wadraymath";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
+makeSuite("PriceOracleSentinel", () => {
+  let testEnv: TestEnv;
   const {
     PRICE_ORACLE_SENTINEL_CHECK_FAILED,
     INVALID_HF,
@@ -34,6 +37,7 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
   const GRACE_PERIOD = BigNumber.from(60 * 60);
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {addressesProvider, deployer, oracle} = testEnv;
 
     // Deploy SequencerOracle
@@ -52,13 +56,6 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
     ).deployed();
 
     await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
-  });
-
-  after(async () => {
-    const {paraspaceOracle, addressesProvider} = testEnv;
-    await waitForTx(
-      await addressesProvider.setPriceOracle(paraspaceOracle.address)
-    );
   });
 
   it("Admin sets a PriceOracleSentinel and activate it for DAI and WETH", async () => {

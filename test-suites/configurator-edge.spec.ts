@@ -13,8 +13,14 @@ import {
 } from "../deploy/helpers/contracts-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {parseUnits} from "ethers/lib/utils";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
+makeSuite("PoolConfigurator: Edge cases", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   const {
     INVALID_RESERVE_FACTOR,
     INVALID_RESERVE_PARAMS,

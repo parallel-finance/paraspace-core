@@ -5,18 +5,16 @@ import {makeSuite, TestEnv} from "./helpers/make-suite";
 import {ethers} from "hardhat";
 import {toBN} from "../deploy/helpers/seaport-helpers/encoding";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool: rescue tokens", (testEnv: TestEnv) => {
-  let snap: string;
+makeSuite("Pool: rescue tokens", () => {
+  let testEnv: TestEnv;
 
   const {CALLER_NOT_POOL_ADMIN} = ProtocolErrors;
 
   beforeEach(async () => {
-    snap = await evmSnapshot();
-  });
-
-  afterEach(async () => {
-    await evmRevert(snap);
+    testEnv = await loadFixture(testEnvFixture);
   });
 
   it("PoolAdmin can rescue ERC20 tokens locked in pool contract", async () => {

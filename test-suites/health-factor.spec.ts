@@ -1,7 +1,9 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ONE_YEAR} from "../deploy/helpers/constants";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
-import {makeSuite} from "./helpers/make-suite";
+import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 import {snapshot} from "./helpers/snapshot-manager";
 import {
   assertHealthFactorCalculation,
@@ -9,16 +11,12 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 
-makeSuite("Health Factor tests", (testEnv) => {
+makeSuite("Health Factor tests", () => {
   const firstDaiDeposit = "10000";
-  let snapthotId: string;
+  let testEnv: TestEnv;
 
   beforeEach("Take Blockchain Snapshot", async () => {
-    snapthotId = await snapshot.take();
-  });
-
-  afterEach("Revert Blockchain to Snapshot", async () => {
-    await snapshot.revert(snapthotId);
+    testEnv = await loadFixture(testEnvFixture);
   });
 
   it("User 1 adds liquidity into the pool - 100 years later, health factor is the same.", async () => {

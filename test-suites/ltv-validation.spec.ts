@@ -3,14 +3,15 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {TestEnv, makeSuite} from "./helpers/make-suite";
-import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("LTV validation", (testEnv: TestEnv) => {
+makeSuite("LTV validation", () => {
+  let testEnv: TestEnv;
   const {LTV_VALIDATION_FAILED} = ProtocolErrors;
 
-  let snap: string;
   before(async () => {
-    snap = await evmSnapshot();
+    testEnv = await loadFixture(testEnvFixture);
   });
 
   it("User 1 deposits 10 Dai, 10 USDC, user 2 deposits 0.071 WETH", async () => {
@@ -131,7 +132,7 @@ makeSuite("LTV validation", (testEnv: TestEnv) => {
   });
 
   it("User 1 deposit dai, DAI ltv drops to 0, then tries borrow", async () => {
-    await evmRevert(snap);
+    testEnv = await loadFixture(testEnvFixture);
     const {
       pool,
       dai,

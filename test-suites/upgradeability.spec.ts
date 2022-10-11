@@ -28,8 +28,15 @@ import {
   InitializableImmutableAdminUpgradeabilityProxy__factory,
 } from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Upgradeability", (testEnv: TestEnv) => {
+makeSuite("Upgradeability", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
+
   context("VersionedInitializable", async () => {
     it("Call initialize from the constructor function", async () => {
       const initValue = "1";

@@ -8,10 +8,17 @@ import {
 import {DelegationAwarePToken} from "../types";
 import {MintableDelegationERC20} from "../types";
 import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken: DelegationAwarePToken", (testEnv: TestEnv) => {
+makeSuite("PToken: DelegationAwarePToken", () => {
+  let testEnv: TestEnv;
   let delegationPToken = <DelegationAwarePToken>{};
   let delegationERC20 = <MintableDelegationERC20>{};
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
 
   it("Deploys a new MintableDelegationERC20 and a DelegationAwarePToken", async () => {
     const {pool} = testEnv;

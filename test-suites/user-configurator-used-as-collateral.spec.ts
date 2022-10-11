@@ -10,6 +10,8 @@ import {
 import {parseEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 const isUsingAsCollateral = (conf, id) =>
   conf
@@ -19,13 +21,10 @@ const isUsingAsCollateral = (conf, id) =>
 
 makeSuite(
   "UserConfigurator for ERC721: check user usedAsCollateral and collaterizedBalance status",
-  (testEnv: TestEnv) => {
-    let snap: string;
+  () => {
+    let testEnv: TestEnv;
     beforeEach(async () => {
-      snap = await evmSnapshot();
-    });
-    afterEach(async () => {
-      await evmRevert(snap);
+      testEnv = await loadFixture(testEnvFixture);
     });
 
     it("check by supply and withdraw", async () => {

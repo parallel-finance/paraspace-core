@@ -1,3 +1,4 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {utils} from "ethers";
 import {parseUnits} from "ethers/lib/utils";
@@ -16,13 +17,16 @@ import {
   VariableDebtToken__factory,
 } from "../types";
 import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken: Repay", (testEnv: TestEnv) => {
+makeSuite("PToken: Repay", () => {
+  let testEnv: TestEnv;
   let snapShot: string;
 
   before(
     "User 0 deposits 100 DAI, user 1 deposits 1 WETH, borrows 50 DAI",
     async () => {
+      testEnv = await loadFixture(testEnvFixture);
       const {
         weth,
         pool,

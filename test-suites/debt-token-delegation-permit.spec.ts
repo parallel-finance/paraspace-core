@@ -12,11 +12,14 @@ import {makeSuite, TestEnv} from "./helpers/make-suite";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("DebtToken: Permit Delegation", (testEnv: TestEnv) => {
+makeSuite("DebtToken: Permit Delegation", () => {
   let snapId;
+  let testEnv: TestEnv;
 
   beforeEach(async () => {
     snapId = await evmSnapshot();
@@ -33,6 +36,7 @@ makeSuite("DebtToken: Permit Delegation", (testEnv: TestEnv) => {
   const EIP712_REVISION = "1";
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       pool,
       weth,
