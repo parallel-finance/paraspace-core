@@ -80,16 +80,23 @@ library LiquidationLogic {
 
     struct LiquidationCallLocalVars {
         address liquidator;
+        //userCollateralBalance from collateralReserve
         uint256 userCollateralBalance;
+        //userGlobalCollateralBalance from all reserves
         uint256 userGlobalCollateralBalance;
+        //userVariableDebt from liquadationReserve
         uint256 userVariableDebt;
-        //(UserVariableDebt+UserStableDebt) from single reserve
+        //(userVariableDebt+userStableDebt) from liquadationReserve
         uint256 userTotalDebt;
-        //UserDebt from all reserves
+        //userGlobalDebt from all reserves
         uint256 userGlobalDebt;
+        //actualDebt allowed to liquidate
         uint256 actualDebtToLiquidate;
+        //actualLiquidationAmount to repay based on collateral
         uint256 actualLiquidationAmount;
+        //actualCollateral allowed to liquidate
         uint256 actualCollateralToLiquidate;
+        //liquidationBonusRate from reserve config
         uint256 liquidationBonus;
         uint256 healthFactor;
         uint256 liquidationProtocolFeeAmount;
@@ -440,7 +447,7 @@ library LiquidationLogic {
             vars.collateralXToken
         ).collaterizedBalanceOf(params.user);
 
-        // vars.userGlobalDebt is set twice to get updated in base currency if it is not already
+        // vars.userGlobalDebt is set twice to get amount here
         (
             vars.actualLiquidationAmount,
             vars.liquidationProtocolFeeAmount,
@@ -815,8 +822,6 @@ library LiquidationLogic {
         uint256 collateralPrice;
         uint256 liquidationAssetPrice;
         uint256 debtToCoverInBaseCurrency;
-        uint256 maxCollateralToLiquidate;
-        uint256 bonusCollateral;
         uint256 liquidationAssetDecimals;
         uint256 collateralDecimals;
         uint256 collateralAssetUnit;
@@ -884,32 +889,28 @@ library LiquidationLogic {
             .configuration
             .getLiquidationProtocolFee();
 
-        vars.maxCollateralToLiquidate = ((
-            (vars.liquidationAssetPrice *
-                liquidationAmount *
-                vars.collateralAssetUnit)
-        ) / (vars.collateralPrice * vars.liquidationAssetUnit)).percentMul(
+        uint256 maxCollateralToLiquidate = ((((vars.liquidationAssetPrice *
+            liquidationAmount) / vars.collateralPrice) *
+            vars.collateralAssetUnit) / vars.liquidationAssetUnit).percentMul(
                 liquidationBonus
             );
 
-        if (vars.maxCollateralToLiquidate > userCollateralBalance) {
+        if (maxCollateralToLiquidate > userCollateralBalance) {
             vars.actualCollateralToLiquidate = userCollateralBalance;
-            vars.actualLiquidationAmount = ((vars.collateralPrice *
-                vars.actualCollateralToLiquidate *
-                vars.liquidationAssetUnit) /
-                (vars.liquidationAssetPrice * vars.collateralAssetUnit))
-                .percentDiv(liquidationBonus);
+            vars.actualLiquidationAmount = ((((vars.collateralPrice *
+                vars.actualCollateralToLiquidate) /
+                vars.liquidationAssetPrice) * vars.liquidationAssetUnit) /
+                vars.collateralAssetUnit).percentDiv(liquidationBonus);
         } else {
-            vars.actualCollateralToLiquidate = vars.maxCollateralToLiquidate;
+            vars.actualCollateralToLiquidate = maxCollateralToLiquidate;
             vars.actualLiquidationAmount = liquidationAmount;
         }
 
         if (vars.liquidationProtocolFeePercentage != 0) {
-            vars.bonusCollateral =
-                vars.actualCollateralToLiquidate -
+            uint256 bonusCollateral = vars.actualCollateralToLiquidate -
                 vars.actualCollateralToLiquidate.percentDiv(liquidationBonus);
 
-            vars.liquidationProtocolFee = vars.bonusCollateral.percentMul(
+            vars.liquidationProtocolFee = bonusCollateral.percentMul(
                 vars.liquidationProtocolFeePercentage
             );
 
@@ -1029,11 +1030,10 @@ library LiquidationLogic {
         );
 
         if (vars.liquidationProtocolFeePercentage != 0) {
-            vars.bonusCollateral =
-                collateralToLiquate -
+            uint256 bonusCollateral = collateralToLiquate -
                 vars.actualLiquidationAmount;
 
-            vars.liquidationProtocolFee = vars.bonusCollateral.percentMul(
+            vars.liquidationProtocolFee = bonusCollateral.percentMul(
                 vars.liquidationProtocolFeePercentage
             );
 
