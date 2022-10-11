@@ -146,9 +146,7 @@ makeSuite("Liquidation Auction", () => {
 
       // try to batch end auction
       await expect(
-        pool
-          .connect(liquidator.signer)
-          .updateERC721HFValidityTime(borrower.address)
+        pool.connect(liquidator.signer).setAuctionValidityTime(borrower.address)
       ).to.be.revertedWith(
         ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
       );
@@ -195,10 +193,12 @@ makeSuite("Liquidation Auction", () => {
       await waitForTx(
         await pool
           .connect(liquidator.signer)
-          .updateERC721HFValidityTime(borrower.address)
+          .setAuctionValidityTime(borrower.address)
       );
 
-      expect(await pool.getERC721HFValidityTime(borrower.address)).to.be.gt(0);
+      expect(
+        (await pool.getUserConfiguration(borrower.address)).auctionValidityTime
+      ).to.be.gt(0);
 
       expect(await nBAYC.isAuctioned(0)).to.be.false;
 
@@ -445,9 +445,7 @@ makeSuite("Liquidation Auction", () => {
       } = testEnv;
 
       await expect(
-        pool
-          .connect(borrower.signer)
-          .updateERC721HFValidityTime(borrower.address)
+        pool.connect(borrower.signer).setAuctionValidityTime(borrower.address)
       ).to.be.revertedWith(
         ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
       );
@@ -512,7 +510,7 @@ makeSuite("Liquidation Auction", () => {
       await waitForTx(
         await pool
           .connect(borrower.signer)
-          .updateERC721HFValidityTime(borrower.address)
+          .setAuctionValidityTime(borrower.address)
       );
 
       expect(await nBAYC.isAuctioned(0)).to.be.false;

@@ -27,8 +27,11 @@ interface IUiPoolDataProvider {
         bool usageAsCollateralEnabled;
         bool borrowingEnabled;
         bool stableBorrowRateEnabled;
+        bool auctionEnabled;
+        bool dynamicConfigsEnabled;
         bool isActive;
         bool isFrozen;
+        bool isPaused;
         // base data
         uint128 liquidityIndex;
         uint128 variableBorrowIndex;
@@ -40,7 +43,8 @@ interface IUiPoolDataProvider {
         address stableDebtTokenAddress;
         address variableDebtTokenAddress;
         address interestRateStrategyAddress;
-        //
+        address auctionStrategyAddress;
+        address dynamicConfigsStrategyAddress;
         uint256 availableLiquidity;
         uint256 totalPrincipalStableDebt;
         uint256 averageStableRate;
@@ -55,24 +59,9 @@ interface IUiPoolDataProvider {
         uint256 baseStableBorrowRate;
         uint256 baseVariableBorrowRate;
         uint256 optimalUsageRatio;
-        // v3 only
-        bool isPaused;
         uint128 accruedToTreasury;
-        uint128 unbacked;
-        uint128 isolationModeTotalDebt;
-        //
-        uint256 debtCeiling;
-        uint256 debtCeilingDecimals;
-        uint8 eModeCategoryId;
         uint256 borrowCap;
         uint256 supplyCap;
-        // eMode
-        uint16 eModeLtv;
-        uint16 eModeLiquidationThreshold;
-        uint16 eModeLiquidationBonus;
-        address eModePriceSource;
-        string eModeLabel;
-        bool borrowableInIsolation;
         //AssetType
         DataTypes.AssetType assetType;
     }
@@ -125,7 +114,7 @@ interface IUiPoolDataProvider {
     function getUserReservesData(IPoolAddressesProvider provider, address user)
         external
         view
-        returns (UserReserveData[] memory, uint8);
+        returns (UserReserveData[] memory);
 
     function getNTokenData(
         address user,

@@ -31,9 +31,9 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  *
  * @notice Main point of interaction with an ParaSpace protocol's market
  * - Users can:
- *   # mintToTreasury
- *   # setMaxAtomicTokensAllowed
- *   # ...
+ *   - mintToTreasury
+ *   - setMaxAtomicTokensAllowed
+ *   - ...
  * @dev To be covered by a proxy contract, owned by the PoolAddressesProvider of the specific market
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
  *   PoolAddressesProvider

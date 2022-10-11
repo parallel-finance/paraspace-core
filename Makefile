@@ -9,8 +9,7 @@ RUST_TOOLCHAIN           := nightly-2022-07-24
 
 .PHONY: init
 init: submodules
-	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-		| sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
+	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
 
@@ -79,7 +78,7 @@ test-liquidation-edge:
 
 .PHONY: test-liquidation-ptoken
 test-liquidation-ptoken:
-	make TEST_TARGET=liquidation-ptoken.spec.ts test	
+	make TEST_TARGET=liquidation-ptoken.spec.ts test
 
 .PHONY: test-configurator-edge
 test-configurator-edge:
@@ -191,7 +190,7 @@ test-pool-addresses-provider:
 
 .PHONY: test-pausable-pool
 test-pausable-pool:
-	make TEST_TARGET=pausable-pool.spec.ts test	
+	make TEST_TARGET=pausable-pool.spec.ts test
 
 .PHONY: test-pool-drop-reserve
 test-pool-drop-reserve:

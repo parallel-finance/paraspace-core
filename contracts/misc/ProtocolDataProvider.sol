@@ -301,15 +301,23 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getInterestRateStrategyAddress(address asset)
+    function getStrategyAddresses(address asset)
         external
         view
-        returns (address irStrategyAddress)
+        returns (
+            address interestRateStrategyAddress,
+            address dynamicConfigsStrategyAddress,
+            address auctionStrategyAddress
+        )
     {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
 
-        return (reserve.interestRateStrategyAddress);
+        return (
+            reserve.interestRateStrategyAddress,
+            reserve.dynamicConfigsStrategyAddress,
+            reserve.auctionStrategyAddress
+        );
     }
 }

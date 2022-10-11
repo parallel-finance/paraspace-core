@@ -136,11 +136,11 @@ library SupplyLogic {
         //currently don't need to update state for erc721
         //reserve.updateState(reserveCache);
 
-        bool isFirstCollaterarized = INToken(nTokenAddress).mint(
+        bool isFirstCollateralized = INToken(nTokenAddress).mint(
             params.onBehalfOf,
             params.tokenData
         );
-        if (isFirstCollaterarized) {
+        if (isFirstCollateralized) {
             userConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -326,7 +326,7 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(reserveCache);
         uint256 amountToWithdraw = params.tokenIds.length;
 
-        bool isLastUncollaterarized = INToken(reserveCache.xTokenAddress).burn(
+        bool isLastUncollateralized = INToken(reserveCache.xTokenAddress).burn(
             msg.sender,
             params.to,
             params.tokenIds
@@ -345,7 +345,7 @@ library SupplyLogic {
                 );
             }
 
-            if (isLastUncollaterarized) {
+            if (isLastUncollateralized) {
                 userConfig.setUsingAsCollateral(reserve.id, false);
                 emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
             }
@@ -541,7 +541,7 @@ library SupplyLogic {
      * @param tokenIds The ids of the supplied ERC721 token
      * @param sender The address of NFT owner
      */
-    function executeCollateralizedERC721(
+    function executeCollateralizeERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
@@ -579,7 +579,7 @@ library SupplyLogic {
      * @param reservesCount The number of initialized reserves
      * @param priceOracle The address of the price oracle
      */
-    function executeUncollateralizedERC721(
+    function executeUncollateralizeERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,

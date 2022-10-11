@@ -27,7 +27,9 @@ export const getReserveData = async (
   ] = await Promise.all([
     helper.getReserveData(reserve),
     helper.getReserveTokensAddresses(reserve),
-    helper.getInterestRateStrategyAddress(reserve),
+    helper
+      .getStrategyAddresses(reserve)
+      .then(({interestRateStrategyAddress}) => interestRateStrategyAddress),
     helper.getReserveConfigurationData(reserve),
     getIErc20Detailed(reserve),
   ]);
