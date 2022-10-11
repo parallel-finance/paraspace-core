@@ -133,12 +133,12 @@
       ]
     },
     {
-      "description": "User 1 Deposits 10 ParaSpace, disables WETH as collateral. Should revert as 10 ParaSpace are not enough to cover the debt (revert expected)",
+      "description": "User 1 Deposits 10 APE, disables WETH as collateral. Should revert as 10 APE are not enough to cover the debt (revert expected)",
       "actions": [
         {
           "name": "mint",
           "args": {
-            "reserve": "ParaSpace",
+            "reserve": "APE",
             "amount": "10",
             "user": "1"
           },
@@ -147,7 +147,7 @@
         {
           "name": "approve",
           "args": {
-            "reserve": "ParaSpace",
+            "reserve": "APE",
             "user": "1"
           },
           "expected": "success"
@@ -155,7 +155,7 @@
         {
           "name": "deposit",
           "args": {
-            "reserve": "ParaSpace",
+            "reserve": "APE",
             "amount": "10",
             "user": "1"
           },
@@ -173,12 +173,12 @@
       ]
     },
     {
-      "description": "User 1 Deposits 640 more ParaSpace (enough to cover the DAI debt), disables WETH as collateral",
+      "description": "User 1 Deposits 640 more APE (enough to cover the DAI debt), disables WETH as collateral",
       "actions": [
         {
           "name": "mint",
           "args": {
-            "reserve": "ParaSpace",
+            "reserve": "APE",
             "amount": "640",
             "user": "1"
           },
@@ -187,7 +187,7 @@
         {
           "name": "deposit",
           "args": {
-            "reserve": "ParaSpace",
+            "reserve": "APE",
             "amount": "640",
             "user": "1"
           },
@@ -205,12 +205,12 @@
       ]
     },
     {
-      "description": "User 1 disables ParaSpace as collateral (revert expected)",
+      "description": "User 1 disables APE as collateral (revert expected)",
       "actions": [
         {
           "name": "setUseAsCollateral",
           "args": {
-            "reserve": "ParaSpace",
+            "reserve": "APE",
             "user": "1",
             "useAsCollateral": "false"
           },
