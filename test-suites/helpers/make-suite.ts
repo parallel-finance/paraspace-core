@@ -70,7 +70,7 @@ import {PoolAddressesProvider} from "../../types";
 import {PoolAddressesProviderRegistry} from "../../types";
 import {getEthersSigners} from "../../deploy/helpers/contracts-helpers";
 import {WETH9Mocked} from "../../types";
-import {solidity} from "ethereum-waffle";
+import {loadFixture, solidity} from "ethereum-waffle";
 import {
   ParaSpaceOracle,
   ACLManager,
@@ -103,6 +103,7 @@ import {MintableERC721} from "../../types";
 import {DRE, evmRevert, evmSnapshot} from "../../deploy/helpers/misc-utils";
 import {Signer} from "ethers";
 import ParaSpaceConfig from "../../deploy/market-config";
+import {testEnvFixture} from "./setup-env";
 
 chai.use(bignumberChai());
 chai.use(solidity);
@@ -181,67 +182,66 @@ const setHardhatSnapshotId = (id: string) => {
   HardhatSnapshotId = id;
 };
 
-const testEnv: TestEnv = {
-  deployer: {} as SignerWithAddress,
-  poolAdmin: {} as SignerWithAddress,
-  assetListingAdmin: {} as SignerWithAddress,
-  emergencyAdmin: {} as SignerWithAddress,
-  riskAdmin: {} as SignerWithAddress,
-  gatewayAdmin: {} as SignerWithAddress,
-  users: [] as SignerWithAddress[],
-  pool: {} as IPool,
-  configurator: {} as PoolConfigurator,
-  poolDataProvider: {} as UiPoolDataProvider,
-  helpersContract: {} as ProtocolDataProvider,
-  oracle: {} as PriceOracle,
-  paraspaceOracle: {} as ParaSpaceOracle,
-  weth: {} as WETH9Mocked,
-  pWETH: {} as PToken,
-  aWETH: {} as MockAToken,
-  paWETH: {} as PTokenAToken,
-  dai: {} as MintableERC20,
-  pDai: {} as PToken,
-  variableDebtDai: {} as VariableDebtToken,
-  stableDebtDai: {} as StableDebtToken,
-  pUsdc: {} as PToken,
-  usdc: {} as MintableERC20,
-  usdt: {} as MintableERC20,
-  nBAYC: {} as NToken,
-  nMOONBIRD: {} as NTokenMoonBirds,
-  bayc: {} as MintableERC721,
-  addressesProvider: {} as PoolAddressesProvider,
-  registry: {} as PoolAddressesProviderRegistry,
-  aclManager: {} as ACLManager,
-  punk: {} as CryptoPunksMarket,
-  wPunk: {} as WPunk,
-  nWPunk: {} as NToken,
-  wPunkGateway: {} as WPunkGateway,
-  wETHGateway: {} as WETHGateway,
-  wBTC: {} as MintableERC20,
-  stETH: {} as StETH,
-  pstETH: {} as PTokenStETH,
-  ape: {} as MintableERC20,
-  mayc: {} as MintableERC721,
-  doodles: {} as MintableERC721,
-  mockTokenFaucet: {} as MockTokenFaucet,
-  wPunkGatewayProxy: {} as WPunkGateway,
-  wETHGatewayProxy: {} as WETHGateway,
-  conduitController: {} as ConduitController,
-  pausableZoneController: {} as PausableZoneController,
-  conduitKey: {} as string,
-  conduit: {} as Conduit,
-  pausableZone: {} as PausableZone,
-  seaport: {} as Seaport,
-  looksRareExchange: {} as LooksRareExchange,
-  strategyStandardSaleForFixedPrice: {} as StrategyStandardSaleForFixedPrice,
-  transferManagerERC721: {} as TransferManagerERC721,
-  x2y2r1: {} as X2Y2R1,
-  erc721Delegate: {} as ERC721Delegate,
-  moonbirds: {} as Moonbirds,
-  nftFloorOracle: {} as NFTFloorOracle,
-} as TestEnv;
-
 export async function initializeMakeSuite() {
+  const testEnv: TestEnv = {
+    deployer: {} as SignerWithAddress,
+    poolAdmin: {} as SignerWithAddress,
+    assetListingAdmin: {} as SignerWithAddress,
+    emergencyAdmin: {} as SignerWithAddress,
+    riskAdmin: {} as SignerWithAddress,
+    gatewayAdmin: {} as SignerWithAddress,
+    users: [] as SignerWithAddress[],
+    pool: {} as IPool,
+    configurator: {} as PoolConfigurator,
+    poolDataProvider: {} as UiPoolDataProvider,
+    helpersContract: {} as ProtocolDataProvider,
+    oracle: {} as PriceOracle,
+    paraspaceOracle: {} as ParaSpaceOracle,
+    weth: {} as WETH9Mocked,
+    pWETH: {} as PToken,
+    aWETH: {} as MockAToken,
+    paWETH: {} as PTokenAToken,
+    dai: {} as MintableERC20,
+    pDai: {} as PToken,
+    variableDebtDai: {} as VariableDebtToken,
+    stableDebtDai: {} as StableDebtToken,
+    pUsdc: {} as PToken,
+    usdc: {} as MintableERC20,
+    usdt: {} as MintableERC20,
+    nBAYC: {} as NToken,
+    nMOONBIRD: {} as NTokenMoonBirds,
+    bayc: {} as MintableERC721,
+    addressesProvider: {} as PoolAddressesProvider,
+    registry: {} as PoolAddressesProviderRegistry,
+    aclManager: {} as ACLManager,
+    punk: {} as CryptoPunksMarket,
+    wPunk: {} as WPunk,
+    nWPunk: {} as NToken,
+    wPunkGateway: {} as WPunkGateway,
+    wETHGateway: {} as WETHGateway,
+    wBTC: {} as MintableERC20,
+    stETH: {} as StETH,
+    pstETH: {} as PTokenStETH,
+    ape: {} as MintableERC20,
+    mayc: {} as MintableERC721,
+    doodles: {} as MintableERC721,
+    mockTokenFaucet: {} as MockTokenFaucet,
+    wPunkGatewayProxy: {} as WPunkGateway,
+    wETHGatewayProxy: {} as WETHGateway,
+    conduitController: {} as ConduitController,
+    pausableZoneController: {} as PausableZoneController,
+    conduitKey: {} as string,
+    conduit: {} as Conduit,
+    pausableZone: {} as PausableZone,
+    seaport: {} as Seaport,
+    looksRareExchange: {} as LooksRareExchange,
+    strategyStandardSaleForFixedPrice: {} as StrategyStandardSaleForFixedPrice,
+    transferManagerERC721: {} as TransferManagerERC721,
+    x2y2r1: {} as X2Y2R1,
+    erc721Delegate: {} as ERC721Delegate,
+    moonbirds: {} as Moonbirds,
+    nftFloorOracle: {} as NFTFloorOracle,
+  } as TestEnv;
   const [_deployer, ...restSigners] = await getEthersSigners();
   const deployer: SignerWithAddress = {
     address: await _deployer.getAddress(),
@@ -439,35 +439,18 @@ export async function initializeMakeSuite() {
   testEnv.nftPositionManager = await getNonfungiblePositionManager();
   testEnv.nUniswapV3 = await getNTokenUniswapV3(nUniwapV3Address);
   testEnv.nftFloorOracle = await getNFTFloorOracle();
+  return testEnv;
 }
 
-export const setSnapshot = async () => {
-  const hre = DRE as HardhatRuntimeEnvironment;
-  if (usingTenderly()) {
-    setHardhatSnapshotId((await hre.tenderlyNetwork.getHead()) || "0x1");
-    return;
-  }
-  setHardhatSnapshotId(await evmSnapshot());
-};
-
-export const revertHead = async () => {
-  const hre = DRE as HardhatRuntimeEnvironment;
-  if (usingTenderly()) {
-    await hre.tenderlyNetwork.setHead(HardhatSnapshotId);
-    return;
-  }
-  await evmRevert(HardhatSnapshotId);
-};
-
 // eslint-disable-next-line no-unused-vars
-export function makeSuite(name: string, tests: (testEnv: TestEnv) => void) {
+export function makeSuite(
+  name: string,
+  tests: (fixture: typeof testEnvFixture) => void
+) {
   describe(name, () => {
     before(async () => {
-      await setSnapshot();
+      await loadFixture(testEnvFixture);
     });
-    tests(testEnv);
-    after(async () => {
-      await revertHead();
-    });
+    tests(testEnvFixture);
   });
 }
