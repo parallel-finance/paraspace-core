@@ -8,7 +8,6 @@ import {
   getOfferOrConsiderationItem,
   toBN,
   toFulfillment,
-  toKey,
 } from "../../deploy/helpers/seaport-helpers/encoding";
 import {createOrder, createRunput} from "../../deploy/helpers/x2y2-helpers";
 import {ethers} from "hardhat";
@@ -125,7 +124,6 @@ export async function executeLooksrareBuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    taker.address,
     0,
     {
       gasLimit: 5000000,
@@ -190,7 +188,6 @@ export async function executeX2Y2BuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    taker.address,
     0,
     {
       gasLimit: 5000000,
@@ -256,7 +253,12 @@ export async function executeSeaportBuyWithCredit(
 
   const encodedData = seaport.interface.encodeFunctionData(
     "fulfillAdvancedOrder",
-    [await getSellOrder(), [], toKey(0), (isNToken ? taker : pool).address]
+    [
+      await getSellOrder(),
+      [],
+      await getConduitKey(),
+      (isNToken ? taker : pool).address,
+    ]
   );
 
   const tx = (await getPool()).connect(taker.signer).buyWithCredit(
@@ -270,7 +272,6 @@ export async function executeSeaportBuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    taker.address,
     0,
     {
       gasLimit: 5000000,

@@ -252,7 +252,7 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
             operator,
             paused
         );
-        emit MarketplaceSet(id, marketplace, adapter, operator, paused);
+        emit MarketplaceUpdated(id, marketplace, adapter, operator, paused);
     }
 
     /**

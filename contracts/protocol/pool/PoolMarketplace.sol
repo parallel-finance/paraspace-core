@@ -12,6 +12,10 @@ import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
+import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {IWETH} from "../../misc/interfaces/IWETH.sol";
+import {ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationEnums.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPoolMarketplace} from "../../interfaces/IPoolMarketplace.sol";
 import {INToken} from "../../interfaces/INToken.sol";
@@ -46,6 +50,7 @@ contract PoolMarketplace is
     IPoolMarketplace
 {
     using ReserveLogic for DataTypes.ReserveData;
+    using SafeERC20 for IERC20;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 1;
@@ -67,27 +72,36 @@ contract PoolMarketplace is
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(payload, WETH);
-        orderInfo.taker = onBehalfOf;
-        MarketplaceLogic.executeBuyWithCredit(
+            .getAskOrderInfo(payload, weth);
+        orderInfo.taker = msg.sender;
+        uint256 ethLeft = msg.value;
+
+        if (
+            ethLeft > 0 &&
+            orderInfo.consideration[0].itemType != ItemType.NATIVE
+        ) {
+            MarketplaceLogic.depositETH(weth, ethLeft);
+            ethLeft = 0;
+        }
+
+        ethLeft -= MarketplaceLogic.executeBuyWithCredit(
             _reserves,
             _reservesList,
-            _usersConfig[onBehalfOf],
+            _usersConfig[orderInfo.taker],
             DataTypes.ExecuteMarketplaceParams({
                 marketplaceId: marketplaceId,
                 payload: payload,
                 credit: credit,
-                ethLeft: msg.value,
+                ethLeft: ethLeft,
                 marketplace: marketplace,
                 orderInfo: orderInfo,
-                WETH: WETH,
+                weth: weth,
                 referralCode: referralCode,
                 maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                 reservesCount: _reservesCount,
@@ -95,7 +109,7 @@ contract PoolMarketplace is
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
         );
-        MarketplaceLogic.refundETH();
+        MarketplaceLogic.refundETH(ethLeft);
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -103,10 +117,9 @@ contract PoolMarketplace is
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
@@ -122,13 +135,35 @@ contract PoolMarketplace is
                 .getMarketplace(marketplaceId);
             DataTypes.OrderInfo memory orderInfo = IMarketplace(
                 marketplace.adapter
-            ).getAskOrderInfo(payload, WETH);
-            orderInfo.taker = onBehalfOf;
+            ).getAskOrderInfo(payload, weth);
+            orderInfo.taker = msg.sender;
+
+            // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
+            // this also means that the parameters order is very important
+            //
+            // frontend/sdk needs to guarantee that WETH orders will always be put after ALL
+            // ETH orders, all ETH orders after WETH orders will fail
+            //
+            // eg. The following example image that the `taker` owns only ETH and wants to
+            // batch buy bunch of NFTs which are listed using WETH and ETH
+            //
+            // batchBuyWithCredit([ETH, WETH, ETH]) => ko
+            //                            | -> convert all ethLeft to WETH, 3rd purchase will fail
+            // batchBuyWithCredit([ETH, ETH, ETH]) => ok
+            // batchBuyWithCredit([ETH, ETH, WETH]) => ok
+            //
+            if (
+                ethLeft > 0 &&
+                orderInfo.consideration[0].itemType != ItemType.NATIVE
+            ) {
+                MarketplaceLogic.depositETH(weth, ethLeft);
+                ethLeft = 0;
+            }
 
             ethLeft -= MarketplaceLogic.executeBuyWithCredit(
                 _reserves,
                 _reservesList,
-                _usersConfig[onBehalfOf],
+                _usersConfig[orderInfo.taker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
                     payload: payload,
@@ -136,7 +171,7 @@ contract PoolMarketplace is
                     ethLeft: ethLeft,
                     marketplace: marketplace,
                     orderInfo: orderInfo,
-                    WETH: WETH,
+                    weth: weth,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
@@ -146,7 +181,7 @@ contract PoolMarketplace is
                 })
             );
         }
-        MarketplaceLogic.refundETH();
+        MarketplaceLogic.refundETH(ethLeft);
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -157,7 +192,7 @@ contract PoolMarketplace is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
@@ -175,7 +210,7 @@ contract PoolMarketplace is
                     ethLeft: 0,
                     marketplace: marketplace,
                     orderInfo: orderInfo,
-                    WETH: WETH,
+                    weth: weth,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
@@ -194,7 +229,7 @@ contract PoolMarketplace is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
-        address WETH = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
+        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
@@ -223,7 +258,7 @@ contract PoolMarketplace is
                     ethLeft: 0,
                     marketplace: marketplace,
                     orderInfo: orderInfo,
-                    WETH: WETH,
+                    weth: weth,
                     referralCode: referralCode,
                     maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
