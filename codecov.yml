@@ -1,0 +1,10 @@
+ignore:
+  - "contracts/mock"
+  - "contracts/dependencies"
+  - "contracts/deployments"
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%

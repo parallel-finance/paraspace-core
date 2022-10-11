@@ -209,6 +209,60 @@ makeSuite("Liquidation Auction", (testEnv) => {
       ).to.be.revertedWith(ProtocolErrors.AUCTION_NOT_STARTED);
     });
 
+    it("Auction can be manually ended if HF > RECOVERY_HF", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+        nBAYC,
+        dai,
+      } = testEnv;
+
+      // drop BAYC price to liquidation levels
+      await changePriceAndValidate(bayc, "8");
+
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+      expect(await nBAYC.isAuctioned(0)).to.be.true;
+
+      const {startTime, tickLength} = await pool.getAuctionData(
+        nBAYC.address,
+        0
+      );
+      await setBlocktime(
+        startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
+      );
+
+      // as borrower repay 5k DAI (HF = 1.176)
+      await repayAndValidate(dai, "5000", borrower);
+
+      // and then rise BAYC price to above recovery limit (HF > 1.5)
+      await changePriceAndValidate(bayc, "20");
+
+      // manually end auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .endAuction(borrower.address, bayc.address, 0)
+      );
+
+      expect(await nBAYC.isAuctioned(0)).to.be.false;
+
+      const newAuctionData = await pool.getAuctionData(nBAYC.address, 0);
+      expect(newAuctionData.startTime).to.be.eq(0);
+
+      // cannot end auction again
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .endAuction(borrower.address, bayc.address, 0)
+      ).to.be.revertedWith(ProtocolErrors.AUCTION_NOT_STARTED);
+    });
+
     it("Cannot execute liquidation if NFT is not in auction", async () => {
       const {
         users: [borrower, liquidator],
@@ -453,6 +507,8 @@ makeSuite("Liquidation Auction", (testEnv) => {
       ).to.be.revertedWith(
         ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
       );
+
+
     });
 
     it("Before liquidation BAYC price increased sharply", async () => {
