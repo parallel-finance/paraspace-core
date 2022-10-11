@@ -507,8 +507,6 @@ makeSuite("Liquidation Auction", (testEnv) => {
       ).to.be.revertedWith(
         ProtocolErrors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
       );
-
-
     });
 
     it("Before liquidation BAYC price increased sharply", async () => {
