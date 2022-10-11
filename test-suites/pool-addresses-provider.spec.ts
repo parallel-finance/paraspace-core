@@ -46,11 +46,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
     }
 
     await expect(
-      addressesProvider.updatePoolImpl(
-        [[mockAddress, 0, []]],
-        ZERO_ADDRESS,
-        "0x"
-      )
+      addressesProvider.updatePoolImpl([], ZERO_ADDRESS, "0x")
     ).to.be.revertedWith(OWNABLE_ONLY_OWNER);
 
     await expect(
@@ -588,13 +584,12 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   it("Owner updates the ACLAdmin", async () => {
     const snapId = await evmSnapshot();
 
-    const {addressesProvider, users} = testEnv;
-    const {aclAdmin: aclAdminAddress} = await hre.getNamedAccounts();
+    const {addressesProvider, users, deployer} = testEnv;
     const currentAddressesProviderOwner = users[1];
 
     const newACLAdminAddress = createRandomAddress();
 
-    expect(await addressesProvider.getACLAdmin(), aclAdminAddress);
+    expect(await addressesProvider.getACLAdmin(), deployer.address);
 
     const aclAdminAddressId = utils.formatBytes32String("ACL_ADMIN");
     const registeredAddress = await addressesProvider.getAddress(
@@ -608,7 +603,9 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
       .to.emit(addressesProvider, "ACLAdminUpdated")
       .withArgs(registeredAddress, newACLAdminAddress);
 
-    expect(await addressesProvider.getACLAdmin()).to.be.not.eq(aclAdminAddress);
+    expect(await addressesProvider.getACLAdmin()).to.be.not.eq(
+      deployer.address
+    );
     expect(await addressesProvider.getACLAdmin()).to.be.eq(newACLAdminAddress);
 
     await evmRevert(snapId);
