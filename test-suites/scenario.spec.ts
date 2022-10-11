@@ -5,7 +5,7 @@ import {configuration as calculationsConfiguration} from "./helpers/utils/calcul
 import {makeSuite} from "./helpers/make-suite";
 import {executeStory} from "./helpers/scenario-engine";
 
-const scenarioFolder = './test-suites/helpers/scenarios/';
+const scenarioFolder = "./test-suites/helpers/scenarios/";
 
 const selectedScenarios: string[] = []; //"borrow-repay-stable-edge.json", "borrow-repay-stable.json"];
 
@@ -15,7 +15,7 @@ fs.readdirSync(scenarioFolder).forEach((file) => {
   const scenario = require(`./helpers/scenarios/${file}`);
 
   makeSuite(scenario.title, async (testEnv) => {
-    before('Initializing configuration', async () => {
+    before("Initializing configuration", async () => {
       actionsConfiguration.skipIntegrityCheck = false; //set this to true to execute solidity-coverage
 
       calculationsConfiguration.reservesParams = ParaSpaceConfig.ReservesConfig;

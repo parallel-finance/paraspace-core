@@ -477,7 +477,7 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
       2,
       "Invalid principal available liquidity"
     );
-    
+
     //the liquidity index of the principal reserve needs to be bigger than the index before
     expect(usdcReserveDataAfter.liquidityIndex).to.be.gte(
       usdcReserveDataBefore.liquidityIndex,

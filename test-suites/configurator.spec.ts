@@ -710,7 +710,7 @@ makeSuite("PoolConfigurator", (testEnv: TestEnv) => {
     });
     await evmRevert(snapId);
   });
-  
+
   it("Updates the borrowCap of WETH via pool admin", async () => {
     const {configurator, helpersContract, weth} = testEnv;
 

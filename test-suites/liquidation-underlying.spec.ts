@@ -608,7 +608,7 @@ makeSuite(
     //       2,
     //       "Invalid user borrow balance after liquidation"
     //     );
-    
+
     //     expect(usdcReserveDataAfter.availableLiquidity).to.be.closeTo(
     //       usdcReserveDataBefore.availableLiquidity.add(expectedPrincipal),
     //       2,
