@@ -19,4 +19,5 @@ dist
 
 docs/*
 !docs/DEVELOPER-GUIDE.md
-
+coverage/
+coverage.json

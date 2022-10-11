@@ -1,10 +1,5 @@
 import {expect} from "chai";
-import {
-  makeSuite,
-  revertHead,
-  setSnapshot,
-  TestEnv,
-} from "./helpers/make-suite";
+import {makeSuite, TestEnv} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
   createNewPool,
