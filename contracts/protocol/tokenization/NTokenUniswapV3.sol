@@ -131,13 +131,12 @@ contract NTokenUniswapV3 is NToken {
             (token0 == weth || token1 == weth));
 
         address sender = msg.sender;
-        uint128 MAX_INT_128 = 0xffffffffffffffffffffffffffffffff;
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
                 recipient: receiveEthAsWeth ? address(this) : sender,
-                amount0Max: MAX_INT_128,
-                amount1Max: MAX_INT_128
+                amount0Max: type(uint128).max,
+                amount1Max: type(uint128).max
             });
 
         (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
