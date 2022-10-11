@@ -49,14 +49,6 @@ const hardhatConfig: HardhatUserConfig = {
     pages: "items",
     exclude: ["dependencies", "deployments", "mocks"],
   },
-  namedAccounts: {
-    deployer: {
-      default: 0,
-    },
-    aclAdmin: {
-      default: 1,
-    },
-  },
   gasReporter: {
     enabled: process.env.REPORT_GAS == "true" ? true : false,
   },

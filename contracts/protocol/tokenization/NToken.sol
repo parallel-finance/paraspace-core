@@ -92,7 +92,7 @@ contract NToken is
     function mint(
         address onBehalfOf,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    ) external virtual override onlyPool returns (bool) {
+    ) external virtual override onlyPool nonReentrant returns (bool) {
         return _mintMultiple(onBehalfOf, tokenData);
     }
 
@@ -101,7 +101,7 @@ contract NToken is
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) external virtual override onlyPool returns (bool) {
+    ) external virtual override onlyPool nonReentrant returns (bool) {
         bool isLastUncollateralized = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
@@ -122,7 +122,7 @@ contract NToken is
         address from,
         address to,
         uint256 value
-    ) external override onlyPool {
+    ) external override onlyPool nonReentrant {
         // Being a normal transfer, the Transfer() and BalanceTransfer() are emitted
         // so no need to emit a specific event here
         _transfer(from, to, value, false);
@@ -235,6 +235,7 @@ contract NToken is
         virtual
         override
         onlyPool
+        nonReentrant
     {
         IERC721(_underlyingAsset).safeTransferFrom(
             address(this),
@@ -249,6 +250,7 @@ contract NToken is
         virtual
         override
         onlyPool
+        nonReentrant
     {
         // Intentionally left blank
     }
