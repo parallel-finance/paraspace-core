@@ -214,10 +214,6 @@ export const deposit = async (
 
     const {txCost, txTimestamp} = await getTxCostAndTimestamp(txResult);
 
-    console.log("amountToDeposit.toString() " + amountToDeposit.toString())
-    console.log("reserveDataBefore " + reserveDataBefore)
-    console.log("txTimestamp " + txTimestamp)
-
     const expectedReserveData = calcExpectedReserveDataAfterDeposit(
       amountToDeposit.toString(),
       reserveDataBefore,
