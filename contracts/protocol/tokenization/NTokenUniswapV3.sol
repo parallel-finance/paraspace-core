@@ -24,14 +24,13 @@ import {IWETH} from "../../misc/interfaces/IWETH.sol";
 contract NTokenUniswapV3 is NToken {
     using SafeERC20 for IERC20;
 
-    bool internal constant ATOMIC_PRICING_VALUE = true;
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool) NToken(pool, ATOMIC_PRICING_VALUE) {
+    constructor(IPool pool) NToken(pool, true) {
         // Intentionally left blank
     }
 
