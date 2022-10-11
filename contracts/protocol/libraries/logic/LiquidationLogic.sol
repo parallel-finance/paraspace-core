@@ -889,18 +889,21 @@ library LiquidationLogic {
             .configuration
             .getLiquidationProtocolFee();
 
-        uint256 maxCollateralToLiquidate = ((((vars.liquidationAssetPrice *
-            liquidationAmount) / vars.collateralPrice) *
-            vars.collateralAssetUnit) / vars.liquidationAssetUnit).percentMul(
+        uint256 maxCollateralToLiquidate = ((vars.liquidationAssetPrice *
+            liquidationAmount *
+            vars.collateralAssetUnit) /
+            (vars.collateralPrice * vars.liquidationAssetUnit)).percentMul(
                 liquidationBonus
             );
 
         if (maxCollateralToLiquidate > userCollateralBalance) {
             vars.actualCollateralToLiquidate = userCollateralBalance;
-            vars.actualLiquidationAmount = ((((vars.collateralPrice *
-                vars.actualCollateralToLiquidate) /
-                vars.liquidationAssetPrice) * vars.liquidationAssetUnit) /
-                vars.collateralAssetUnit).percentDiv(liquidationBonus);
+            vars.actualLiquidationAmount = (
+                ((vars.collateralPrice *
+                    vars.actualCollateralToLiquidate *
+                    vars.liquidationAssetUnit) /
+                    (vars.liquidationAssetPrice * vars.collateralAssetUnit))
+            ).percentDiv(liquidationBonus);
         } else {
             vars.actualCollateralToLiquidate = maxCollateralToLiquidate;
             vars.actualLiquidationAmount = liquidationAmount;
