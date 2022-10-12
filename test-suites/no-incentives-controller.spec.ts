@@ -27,7 +27,7 @@ describe("Reserve Without Incentives Controller", () => {
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {pool, poolAdmin, oracle, configurator, dai, helpersContract} =
+    const {pool, poolAdmin, oracle, configurator, dai, protocolDataProvider} =
       testEnv;
 
     mockToken = await new MintableERC20__factory(await getFirstSigner()).deploy(
@@ -116,7 +116,7 @@ describe("Reserve Without Incentives Controller", () => {
 
     // Configuration
     const daiReserveConfigurationData =
-      await helpersContract.getReserveConfigurationData(dai.address);
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
 
     const inputParams: {
       asset: string;

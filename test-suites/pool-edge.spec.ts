@@ -146,9 +146,11 @@ describe("Pool: Edge cases", () => {
   });
 
   it("Tries to initialize a reserve as non PoolConfigurator (revert expected)", async () => {
-    const {pool, users, dai, helpersContract} = testEnv;
+    const {pool, users, dai, protocolDataProvider} = testEnv;
 
-    const config = await helpersContract.getReserveTokensAddresses(dai.address);
+    const config = await protocolDataProvider.getReserveTokensAddresses(
+      dai.address
+    );
 
     await expect(
       pool
@@ -167,7 +169,7 @@ describe("Pool: Edge cases", () => {
   it("Call `setUserUseERC20AsCollateral()` to use an asset as collateral when the asset is already set as collateral", async () => {
     const {
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai,
       users: [user0],
     } = testEnv;
@@ -182,7 +184,7 @@ describe("Pool: Edge cases", () => {
         .supply(dai.address, amount, user0.address, 0)
     );
 
-    const userReserveDataBefore = await helpersContract.getUserReserveData(
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
       dai.address,
       user0.address
     );
@@ -194,7 +196,7 @@ describe("Pool: Edge cases", () => {
         .setUserUseERC20AsCollateral(dai.address, true)
     ).to.not.emit(pool, "ReserveUsedAsCollateralEnabled");
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
       dai.address,
       user0.address
     );
@@ -204,7 +206,7 @@ describe("Pool: Edge cases", () => {
   it("Call `setUserUseERC20AsCollateral()` to disable an asset as collateral when the asset is already disabled as collateral", async () => {
     const {
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai,
       users: [user0],
     } = testEnv;
@@ -228,7 +230,7 @@ describe("Pool: Edge cases", () => {
       .to.emit(pool, "ReserveUsedAsCollateralDisabled")
       .withArgs(dai.address, user0.address);
 
-    const userReserveDataBefore = await helpersContract.getUserReserveData(
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
       dai.address,
       user0.address
     );
@@ -240,7 +242,7 @@ describe("Pool: Edge cases", () => {
         .setUserUseERC20AsCollateral(dai.address, false)
     ).to.not.emit(pool, "ReserveUsedAsCollateralDisabled");
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
       dai.address,
       user0.address
     );
@@ -762,7 +764,7 @@ describe("Pool: Edge cases", () => {
   //   const {
   //     configurator,
   //     pool,
-  //     helpersContract,
+  //     protocolDataProvider,
   //     dai,
   //     poolAdmin,
   //     deployer,
@@ -771,13 +773,13 @@ describe("Pool: Edge cases", () => {
 
   //   const debtCeiling = utils.parseUnits("10", 2);
 
-  //   expect(await helpersContract.getDebtCeiling(dai.address)).to.be.eq(0);
+  //   expect(await protocolDataProvider.getDebtCeiling(dai.address)).to.be.eq(0);
 
   //   await configurator
   //     .connect(poolAdmin.signer)
   //     .setDebtCeiling(dai.address, debtCeiling);
 
-  //   expect(await helpersContract.getDebtCeiling(dai.address)).to.be.eq(
+  //   expect(await protocolDataProvider.getDebtCeiling(dai.address)).to.be.eq(
   //     debtCeiling
   //   );
 

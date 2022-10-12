@@ -14,7 +14,7 @@ describe("Mint To Treasury", () => {
     testEnv = await loadFixture(testEnvFixture);
   });
   it("User 0 deposits 1000 DAI. Borrower borrows 100 DAI. Clock moved forward one year. Calculates and verifies the amount accrued to the treasury", async () => {
-    const {users, pool, dai, helpersContract} = testEnv;
+    const {users, pool, dai, protocolDataProvider} = testEnv;
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
@@ -51,9 +51,8 @@ describe("Mint To Treasury", () => {
         )
     );
 
-    const {reserveFactor} = await helpersContract.getReserveConfigurationData(
-      dai.address
-    );
+    const {reserveFactor} =
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
 
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 

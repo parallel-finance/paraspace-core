@@ -473,33 +473,6 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function setAuctionValidityTime(address user)
-        external
-        virtual
-        override
-        nonReentrant
-    {
-        require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
-        (, , , , , , uint256 erc721HealthFactor) = PoolLogic
-            .executeGetUserAccountData(
-                _reserves,
-                _reservesList,
-                DataTypes.CalculateUserAccountDataParams({
-                    userConfig: userConfig,
-                    reservesCount: _reservesCount,
-                    user: user,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                })
-            );
-        require(
-            erc721HealthFactor > _auctionRecoveryHealthFactor,
-            Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
-        );
-        userConfig.auctionValidityTime = block.timestamp;
-    }
-
-    /// @inheritdoc IPoolCore
     function flashClaim(
         address receiverAddress,
         address nftAsset,
@@ -526,35 +499,6 @@ contract PoolCore is
         returns (DataTypes.ReserveData memory)
     {
         return _reserves[asset];
-    }
-
-    /// @inheritdoc IPoolCore
-    function getUserAccountData(address user)
-        external
-        view
-        virtual
-        override
-        returns (
-            uint256 totalCollateralBase,
-            uint256 totalDebtBase,
-            uint256 availableBorrowsBase,
-            uint256 currentLiquidationThreshold,
-            uint256 ltv,
-            uint256 healthFactor,
-            uint256 erc721HealthFactor
-        )
-    {
-        return
-            PoolLogic.executeGetUserAccountData(
-                _reserves,
-                _reservesList,
-                DataTypes.CalculateUserAccountDataParams({
-                    userConfig: _usersConfig[user],
-                    reservesCount: _reservesCount,
-                    user: user,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                })
-            );
     }
 
     /// @inheritdoc IPoolCore

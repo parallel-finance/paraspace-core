@@ -48,7 +48,7 @@ describe("Interest Rate and Index Overflow", () => {
       poolAdmin,
       configurator,
       dai,
-      helpersContract,
+      protocolDataProvider,
       addressesProvider,
     } = testEnv;
 
@@ -109,7 +109,7 @@ describe("Interest Rate and Index Overflow", () => {
 
     // Configuration
     const daiReserveConfigurationData =
-      await helpersContract.getReserveConfigurationData(dai.address);
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
 
     const maxCap = 68719476735;
     const inputParams: {

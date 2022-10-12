@@ -35,7 +35,7 @@ describe("Dynamic Configs Strategy", () => {
         dai,
         weth,
         nftPositionManager,
-        helpersContract,
+        protocolDataProvider,
         wBTC,
       } = testEnv;
 
@@ -120,7 +120,7 @@ describe("Dynamic Configs Strategy", () => {
         }
       );
 
-      daiConfigs = await helpersContract.getReserveConfigurationData(
+      daiConfigs = await protocolDataProvider.getReserveConfigurationData(
         dai.address
       );
 
@@ -156,7 +156,7 @@ describe("Dynamic Configs Strategy", () => {
         users: [user1],
         pool,
         nftPositionManager,
-        helpersContract,
+        protocolDataProvider,
       } = testEnv;
 
       const poolConfigurator = await getPoolConfiguratorProxy();
@@ -167,9 +167,10 @@ describe("Dynamic Configs Strategy", () => {
 
       const userData = await pool.getUserAccountData(user1.address);
 
-      const uniswapConfigs = await helpersContract.getReserveConfigurationData(
-        nftPositionManager.address
-      );
+      const uniswapConfigs =
+        await protocolDataProvider.getReserveConfigurationData(
+          nftPositionManager.address
+        );
 
       expect(userData.ltv).to.be.equal(uniswapConfigs.ltv);
       expect(userData.currentLiquidationThreshold).to.be.equal(

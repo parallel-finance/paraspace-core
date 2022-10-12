@@ -241,7 +241,7 @@ describe("PToken: Repay", () => {
       dai,
       pDai,
       pool,
-      helpersContract,
+      protocolDataProvider,
       users: [user],
     } = testEnv;
 
@@ -299,7 +299,7 @@ describe("PToken: Repay", () => {
       xToken: pDai.address,
       reserve: dai.address,
       reserveFactor: (
-        await helpersContract.getReserveConfigurationData(dai.address)
+        await protocolDataProvider.getReserveConfigurationData(dai.address)
       ).reserveFactor,
       averageStableBorrowRate: stableDebtData[2],
     });

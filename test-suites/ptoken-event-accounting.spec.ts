@@ -57,7 +57,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     // mints DAI to depositor
@@ -72,7 +72,9 @@ describe("PToken Mint and Burn Event Accounting", () => {
       await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
 
     const expectedBalanceIncrease = 0;
 
@@ -100,7 +102,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       pDai,
       users: [depositor, receiver],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     // mints DAI to depositor
@@ -115,7 +117,9 @@ describe("PToken Mint and Burn Event Accounting", () => {
       await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
 
     const expectedBalanceIncrease = 0;
 
@@ -143,7 +147,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       weth,
       users: [, borrower],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     //user 2 deposits 100 ETH
@@ -187,11 +191,11 @@ describe("PToken Mint and Burn Event Accounting", () => {
         )
     );
 
-    const borrowerWethData = await helpersContract.getUserReserveData(
+    const borrowerWethData = await protocolDataProvider.getUserReserveData(
       weth.address,
       borrower.address
     );
-    const borrowerDaiData = await helpersContract.getUserReserveData(
+    const borrowerDaiData = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
@@ -207,7 +211,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       variableDebtDai,
       users: [, borrower],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
     await increaseTime(86400);
 
@@ -224,7 +228,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       );
     const borrowReceipt = await borrowTx.wait();
 
-    const borrowerDaiData = await helpersContract.getUserReserveData(
+    const borrowerDaiData = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
@@ -333,7 +337,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     await increaseTime(86400);
@@ -357,7 +361,9 @@ describe("PToken Mint and Burn Event Accounting", () => {
       .sub(secondDaiDeposit)
       .sub(thirdDaiDeposit)
       .sub(accruedInterest1);
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
     const totalMinted = thirdDaiDeposit.add(accruedInterest2);
 
     // get transfer event
@@ -399,7 +405,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       variableDebtDai,
       users: [, borrower],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     await increaseTime(86400);
@@ -431,7 +437,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       .sub(accruedDebt1)
       .sub(secondDaiBorrow)
       .sub(accruedDebt2);
-    const borrowerDaiData = await helpersContract.getUserReserveData(
+    const borrowerDaiData = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
@@ -476,7 +482,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
     const daiBalanceBefore = await dai.balanceOf(depositor.address);
 
@@ -497,7 +503,9 @@ describe("PToken Mint and Burn Event Accounting", () => {
       .sub(accruedInterest2)
       .sub(thirdDaiDeposit);
     const totalBurned = daiWithdrawn.sub(accruedInterest3);
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
 
     // get transfer event
     const rawTransferEvents = withdrawReceipt.logs.filter(
@@ -624,7 +632,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     // repay a very small amount - less than accrued debt
@@ -636,7 +644,9 @@ describe("PToken Mint and Burn Event Accounting", () => {
     const withdrawReceipt = await withdrawTx.wait();
 
     const xTokenSupplyAfter = await pDai.balanceOf(depositor.address);
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
     const totalMinted = xTokenSupplyAfter.sub(firstDaiDeposit);
 
     // get transfer event

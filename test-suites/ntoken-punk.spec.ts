@@ -26,7 +26,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       dai,
       wPunk,
       users: [, , user3],
-      wPunkGatewayProxy,
+      wPunkGateway,
     } = testEnv;
 
     firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
@@ -35,7 +35,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await wPunk
         .connect(user3.signer)
-        .setApprovalForAll(wPunkGatewayProxy.address, true)
+        .setApprovalForAll(wPunkGateway.address, true)
     );
   });
 
@@ -63,7 +63,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       nWPunk,
       users: [, , user3],
       pool,
-      wPunkGatewayProxy,
+      wPunkGateway,
     } = testEnv;
 
     const availableToBorrow = (await pool.getUserAccountData(user3.address))
@@ -73,7 +73,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       .totalCollateralBase;
     expect(totalCollateral).to.be.equal(0);
 
-    await wPunkGatewayProxy
+    await wPunkGateway
       .connect(user3.signer)
       .supplyPunk([{tokenId: 0, useAsCollateral: true}], user3.address, "0");
 
@@ -104,7 +104,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       users: [, , user3],
       gatewayAdmin: user4,
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     await waitForTx(
@@ -144,17 +144,17 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
 
     await variableDebtDai.balanceOf(user3.address);
 
-    await helpersContract.getUserReserveData(dai.address, user3.address);
+    await protocolDataProvider.getUserReserveData(dai.address, user3.address);
   });
 
   it("User 3 tries to withdraw the deposited WPUNK without paying the accrued interest (should fail)", async () => {
     const {
       users: [, , user3],
-      wPunkGatewayProxy,
+      wPunkGateway,
     } = testEnv;
 
     await expect(
-      wPunkGatewayProxy.connect(user3.signer).withdrawPunk([0], user3.address)
+      wPunkGateway.connect(user3.signer).withdrawPunk([0], user3.address)
     ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
   });
 
@@ -254,7 +254,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       nWPunk,
       users: [, , user3],
       pool,
-      wPunkGatewayProxy,
+      wPunkGateway,
       punk,
     } = testEnv;
     const availableToBorrow = (await pool.getUserAccountData(user3.address))
@@ -265,13 +265,13 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await nWPunk
         .connect(user3.signer)
-        .setApprovalForAll(wPunkGatewayProxy.address, true)
+        .setApprovalForAll(wPunkGateway.address, true)
     );
 
-    await nWPunk.isApprovedForAll(user3.address, wPunkGatewayProxy.address);
+    await nWPunk.isApprovedForAll(user3.address, wPunkGateway.address);
 
     // withdraw WPUNKS
-    const withdrawWPUNKSTx = await wPunkGatewayProxy
+    const withdrawWPUNKSTx = await wPunkGateway
       .connect(user3.signer)
       .withdrawPunk([0], user3.address);
 
@@ -323,22 +323,22 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     const {
       wPunk,
       users: [, , user3],
-      wPunkGatewayProxy,
+      wPunkGateway,
     } = testEnv;
 
-    const wPunkAddress = await wPunkGatewayProxy
+    const wPunkAddress = await wPunkGateway
       .connect(user3.signer)
       .getWPunkAddress();
 
     expect(wPunkAddress).to.be.equal(wPunk.address);
   });
 
-  it("wPunkGatewayProxy receives 1 WPUNK and 1 PUNK", async () => {
+  it("wPunkGateway receives 1 WPUNK and 1 PUNK", async () => {
     const {
       users: [, , user3],
       punk,
       wPunk,
-      wPunkGatewayProxy,
+      wPunkGateway,
     } = testEnv;
     // WPUNK
     await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](2));
@@ -354,12 +354,12 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
         .connect(user3.signer)
         ["safeTransferFrom(address,address,uint256)"](
           user3.address,
-          wPunkGatewayProxy.address,
+          wPunkGateway.address,
           2
         )
     );
     expect(
-      await wPunk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+      await wPunk.connect(user3.signer).balanceOf(wPunkGateway.address)
     ).to.equal(1);
 
     // PUNK
@@ -368,12 +368,10 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
 
     await waitForTx(await punk.connect(user3.signer).offerPunkForSale(3, 0));
     await waitForTx(
-      await punk
-        .connect(user3.signer)
-        .transferPunk(wPunkGatewayProxy.address, 3)
+      await punk.connect(user3.signer).transferPunk(wPunkGateway.address, 3)
     );
     expect(
-      await punk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+      await punk.connect(user3.signer).balanceOf(wPunkGateway.address)
     ).to.equal(1);
   });
 
@@ -381,7 +379,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     const {
       users: [, , user3],
       deployer,
-      wPunkGatewayProxy,
+      wPunkGateway,
       wPunk,
     } = testEnv;
     const owner = deployer;
@@ -391,12 +389,12 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       .balanceOf(user3.address);
 
     await waitForTx(
-      await wPunkGatewayProxy
+      await wPunkGateway
         .connect(owner.signer)
-        .emergencyTokenTransfer(wPunkGatewayProxy.address, user3.address, 2)
+        .emergencyTokenTransfer(wPunkGateway.address, user3.address, 2)
     );
     expect(
-      await wPunk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+      await wPunk.connect(user3.signer).balanceOf(wPunkGateway.address)
     ).to.equal(0);
 
     expect(await wPunk.connect(user3.signer).balanceOf(user3.address)).to.equal(
@@ -408,7 +406,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     const {
       users: [, , user3],
       deployer,
-      wPunkGatewayProxy,
+      wPunkGateway,
       punk,
     } = testEnv;
     const owner = deployer;
@@ -418,12 +416,12 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       .balanceOf(user3.address);
 
     await waitForTx(
-      await wPunkGatewayProxy
+      await wPunkGateway
         .connect(owner.signer)
         .emergencyPunkTransfer(user3.address, 3)
     );
     expect(
-      await punk.connect(user3.signer).balanceOf(wPunkGatewayProxy.address)
+      await punk.connect(user3.signer).balanceOf(wPunkGateway.address)
     ).to.equal(0);
 
     expect(await punk.connect(user3.signer).balanceOf(user3.address)).to.equal(

@@ -1,5 +1,5 @@
 import {
-  getPool,
+  getPoolProxy,
   getPoolAddressesProvider,
   getProtocolDataProvider,
   getPToken,
@@ -16,11 +16,7 @@ import {
   getMintableERC721,
   getWPunk,
   getPunk,
-  getWPunkGateway,
-  getWETHGateway,
   getMockTokenFaucet,
-  getWPunkGatewayProxy,
-  getWETHGatewayProxy,
   getConduitController,
   getPausableZoneController,
   getPausableZone,
@@ -43,6 +39,8 @@ import {
   getMockAToken,
   getPTokenAToken,
   getPTokenStETH,
+  getWPunkGatewayProxy,
+  getWETHGatewayProxy,
 } from "../../deploy/helpers/contracts-getters";
 import {tEthereumAddress} from "../../deploy/helpers/types";
 import {
@@ -97,7 +95,10 @@ import {
   PTokenAToken,
   PTokenStETH,
 } from "../../types";
+import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {usingTenderly} from "../../deploy/helpers/tenderly-utils";
 import {MintableERC721} from "../../types";
+import {DRE, evmRevert, evmSnapshot} from "../../deploy/helpers/misc-utils";
 import {Signer} from "ethers";
 import ParaSpaceConfig from "../../deploy/market-config";
 
@@ -121,7 +122,7 @@ export interface TestEnv {
   poolDataProvider: UiPoolDataProvider;
   oracle: PriceOracle;
   paraspaceOracle: ParaSpaceOracle;
-  helpersContract: ProtocolDataProvider;
+  protocolDataProvider: ProtocolDataProvider;
   weth: WETH9Mocked;
   pWETH: PToken;
   aWETH: MockAToken;
@@ -141,8 +142,6 @@ export interface TestEnv {
   punk: CryptoPunksMarket;
   wPunk: WPunk;
   nWPunk: NToken;
-  wPunkGateway: WPunkGateway;
-  wETHGateway: WETHGateway;
   wBTC: MintableERC20;
   stETH: StETH;
   pstETH: PTokenStETH;
@@ -152,8 +151,8 @@ export interface TestEnv {
   nDOODLES: NToken;
   doodles: MintableERC721;
   mockTokenFaucet: MockTokenFaucet;
-  wPunkGatewayProxy: WPunkGateway;
-  wETHGatewayProxy: WETHGateway;
+  wPunkGateway: WPunkGateway;
+  wETHGateway: WETHGateway;
   conduitController: ConduitController;
   pausableZoneController: PausableZoneController;
   conduitKey: string;
@@ -185,7 +184,7 @@ export async function initializeMakeSuite() {
     pool: {} as IPool,
     configurator: {} as PoolConfigurator,
     poolDataProvider: {} as UiPoolDataProvider,
-    helpersContract: {} as ProtocolDataProvider,
+    protocolDataProvider: {} as ProtocolDataProvider,
     oracle: {} as PriceOracle,
     paraspaceOracle: {} as ParaSpaceOracle,
     weth: {} as WETH9Mocked,
@@ -208,8 +207,6 @@ export async function initializeMakeSuite() {
     punk: {} as CryptoPunksMarket,
     wPunk: {} as WPunk,
     nWPunk: {} as NToken,
-    wPunkGateway: {} as WPunkGateway,
-    wETHGateway: {} as WETHGateway,
     wBTC: {} as MintableERC20,
     stETH: {} as StETH,
     pstETH: {} as PTokenStETH,
@@ -217,8 +214,8 @@ export async function initializeMakeSuite() {
     mayc: {} as MintableERC721,
     doodles: {} as MintableERC721,
     mockTokenFaucet: {} as MockTokenFaucet,
-    wPunkGatewayProxy: {} as WPunkGateway,
-    wETHGatewayProxy: {} as WETHGateway,
+    wPunkGateway: {} as WPunkGateway,
+    wETHGateway: {} as WETHGateway,
     conduitController: {} as ConduitController,
     pausableZoneController: {} as PausableZoneController,
     conduitKey: {} as string,
@@ -253,7 +250,7 @@ export async function initializeMakeSuite() {
   testEnv.riskAdmin = testEnv.users[ParaSpaceConfig.RiskAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
   testEnv.gatewayAdmin = testEnv.users[ParaSpaceConfig.GatewayAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
 
-  testEnv.pool = await getPool();
+  testEnv.pool = await getPoolProxy();
   testEnv.configurator = await getPoolConfiguratorProxy();
   testEnv.poolDataProvider = await getUiPoolDataProvider();
 
@@ -265,7 +262,7 @@ export async function initializeMakeSuite() {
   testEnv.oracle = await getPriceOracle();
   testEnv.paraspaceOracle = await getParaSpaceOracle();
 
-  testEnv.helpersContract = await getProtocolDataProvider();
+  testEnv.protocolDataProvider = await getProtocolDataProvider();
 
   testEnv.mockTokenFaucet = await getMockTokenFaucet();
 
@@ -284,7 +281,7 @@ export async function initializeMakeSuite() {
   testEnv.x2y2r1 = await getX2Y2R1();
   testEnv.erc721Delegate = await getERC721Delegate();
 
-  const allTokens = await testEnv.helpersContract.getAllXTokens();
+  const allTokens = await testEnv.protocolDataProvider.getAllXTokens();
 
   const pDaiAddress = allTokens.find(
     (xToken) => xToken.symbol === "pDAI"
@@ -329,7 +326,8 @@ export async function initializeMakeSuite() {
     (xToken) => xToken.symbol === "nUniswapV3"
   )?.tokenAddress;
 
-  const reservesTokens = await testEnv.helpersContract.getAllReservesTokens();
+  const reservesTokens =
+    await testEnv.protocolDataProvider.getAllReservesTokens();
 
   const daiAddress = reservesTokens.find(
     (token) => token.symbol === "DAI"
@@ -338,7 +336,9 @@ export async function initializeMakeSuite() {
   const {
     variableDebtTokenAddress: variableDebtDaiAddress,
     stableDebtTokenAddress: stableDebtDaiAddress,
-  } = await testEnv.helpersContract.getReserveTokensAddresses(daiAddress || "");
+  } = await testEnv.protocolDataProvider.getReserveTokensAddresses(
+    daiAddress || ""
+  );
 
   const usdcAddress = reservesTokens.find(
     (token) => token.symbol === "USDC"
@@ -414,10 +414,8 @@ export async function initializeMakeSuite() {
   testEnv.nWPunk = await getNToken(nWPunkAddress);
   testEnv.punk = await getPunk(punkAddress);
   testEnv.wPunk = await getWPunk(wpunkAddress);
-  testEnv.wPunkGateway = await getWPunkGateway();
-  testEnv.wPunkGatewayProxy = await getWPunkGatewayProxy();
-  testEnv.wETHGateway = await getWETHGateway();
-  testEnv.wETHGatewayProxy = await getWETHGatewayProxy();
+  testEnv.wPunkGateway = await getWPunkGatewayProxy();
+  testEnv.wETHGateway = await getWETHGatewayProxy();
 
   testEnv.wBTC = await getMintableERC20(wBTCAddress);
   testEnv.stETH = await getStETH(stETHAddress);

@@ -49,7 +49,7 @@ describe("LTV validation", () => {
   });
 
   it("Sets the LTV of DAI to 0", async () => {
-    const {configurator, dai, helpersContract} = testEnv;
+    const {configurator, dai, protocolDataProvider} = testEnv;
 
     expect(
       await configurator.configureReserveAsCollateral(
@@ -62,8 +62,9 @@ describe("LTV validation", () => {
       .to.emit(configurator, "CollateralConfigurationChanged")
       .withArgs(dai.address, 0, 8000, 10500);
 
-    const ltv = (await helpersContract.getReserveConfigurationData(dai.address))
-      .ltv;
+    const ltv = (
+      await protocolDataProvider.getReserveConfigurationData(dai.address)
+    ).ltv;
 
     expect(ltv).to.be.equal(0);
   });
@@ -139,7 +140,7 @@ describe("LTV validation", () => {
       weth,
       users: [user1, user2],
       configurator,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     const daiAmount = await convertToCurrencyDecimals(dai.address, "10");
@@ -170,8 +171,9 @@ describe("LTV validation", () => {
     )
       .to.emit(configurator, "CollateralConfigurationChanged")
       .withArgs(dai.address, 0, 8000, 10500);
-    const ltv = (await helpersContract.getReserveConfigurationData(dai.address))
-      .ltv;
+    const ltv = (
+      await protocolDataProvider.getReserveConfigurationData(dai.address)
+    ).ltv;
     expect(ltv).to.be.equal(0);
 
     // Borrow all the weth because of issue in collateral needed.

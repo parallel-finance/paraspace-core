@@ -150,10 +150,10 @@ export const getTokenAddressFromSymbol = async (symbol: string) => {
 const getPTokenUserData = async (
   reserve: string,
   user: string,
-  helpersContract: ProtocolDataProvider
+  protocolDataProvider: ProtocolDataProvider
 ) => {
   const xTokenAddress: string = (
-    await helpersContract.getReserveTokensAddresses(reserve)
+    await protocolDataProvider.getReserveTokensAddresses(reserve)
   ).xTokenAddress;
 
   const xToken = await getPToken(xTokenAddress);

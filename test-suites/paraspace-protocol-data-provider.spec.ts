@@ -8,7 +8,7 @@
 //   const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
 // it("getAllReservesTokens() with MKR and ETH as symbols", async () => {
-//   const { addressesProvider, poolAdmin, helpersContract } = testEnv;
+//   const { addressesProvider, poolAdmin, protocolDataProvider } = testEnv;
 
 //   // Deploy a mock Pool
 //   const mockPool = await deployMockPool();
@@ -34,7 +34,7 @@
 //   expect(await proxiedMockPool.addReserveToReservesList(MKR_ADDRESS));
 //   expect(await proxiedMockPool.addReserveToReservesList(ETH_ADDRESS));
 
-//   expect(await helpersContract.getAllReservesTokens()).to.be.eql([
+//   expect(await protocolDataProvider.getAllReservesTokens()).to.be.eql([
 //     ["MKR", MKR_ADDRESS],
 //     ["ETH", ETH_ADDRESS],
 //   ]);

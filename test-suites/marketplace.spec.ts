@@ -479,7 +479,7 @@ describe("Leveraged Buy - Positive tests", () => {
       pausableZone,
       seaport,
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
       users: [maker, taker, middleman, platform],
     } = testEnv;
@@ -492,7 +492,7 @@ describe("Leveraged Buy - Positive tests", () => {
 
     // middleman supplies ETH to pool to be borrowed by offerer later
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(middleman.signer)
         .depositETH(middleman.address, 0, {
           value: creditAmount,
@@ -603,7 +603,7 @@ describe("Leveraged Buy - Positive tests", () => {
       pausableZone,
       seaport,
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
       users: [maker, taker, middleman, platform],
     } = testEnv;
@@ -615,7 +615,7 @@ describe("Leveraged Buy - Positive tests", () => {
 
     // middleman supplies ETH to pool to be borrowed by offerer later
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(middleman.signer)
         .depositETH(middleman.address, 0, {
           value: creditAmount,
@@ -738,7 +738,7 @@ describe("Leveraged Buy - Positive tests", () => {
       pausableZone,
       seaport,
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
       users: [maker, taker, middleman],
     } = testEnv;
@@ -755,7 +755,7 @@ describe("Leveraged Buy - Positive tests", () => {
 
     // middleman supplies ETH to pool to be borrowed by offerer later
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(middleman.signer)
         .depositETH(middleman.address, 0, {
           value: totalCreditAmount,
@@ -892,7 +892,7 @@ describe("Leveraged Buy - Positive tests", () => {
       pausableZone,
       seaport,
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
       users: [maker, taker, middleman],
     } = testEnv;
@@ -913,7 +913,7 @@ describe("Leveraged Buy - Positive tests", () => {
 
     // middleman supplies ETH to pool to be borrowed by offerer later
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(middleman.signer)
         .depositETH(middleman.address, 0, {
           value: totalCreditAmount,
@@ -1319,7 +1319,7 @@ describe("Leveraged Buy - Positive tests", () => {
     const {
       doodles,
       weth,
-      wETHGatewayProxy,
+      wETHGateway,
       looksRareExchange,
       strategyStandardSaleForFixedPrice,
       transferManagerERC721,
@@ -1339,7 +1339,7 @@ describe("Leveraged Buy - Positive tests", () => {
 
     // middleman provides ETH liquidity to the pool
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(middleman.signer)
         .depositETH(middleman.address, 0, {
           value: payLaterAmount,
@@ -1877,7 +1877,7 @@ describe("Leveraged Buy - Negative tests", () => {
       dai,
       users: [maker, taker],
       paraspaceOracle,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
     const [deployer] = await getEthersSigners();
 
@@ -1888,7 +1888,7 @@ describe("Leveraged Buy - Negative tests", () => {
       .connect(deployer)
       .getAssetPrice(bayc.address);
     const ltvRatio = (
-      await helpersContract.getReserveConfigurationData(bayc.address)
+      await protocolDataProvider.getReserveConfigurationData(bayc.address)
     ).ltv;
     const availableToBorrowInBaseUnits = nftPrice.mul(ltvRatio).div(10000);
     const daiPrice = await paraspaceOracle
@@ -2217,7 +2217,7 @@ describe("Leveraged Bid - Positive tests", () => {
       seaport,
       pool,
       users: [offer, offerer, middleman],
-      wPunkGatewayProxy,
+      wPunkGateway,
     } = testEnv;
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
     const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
@@ -2370,7 +2370,7 @@ describe("Leveraged Bid - Positive tests", () => {
       convertSignatureToEIP2098(signature)
     );
 
-    const tx = wPunkGatewayProxy.connect(offerer.signer).acceptBidWithCredit(
+    const tx = wPunkGateway.connect(offerer.signer).acceptBidWithCredit(
       PARASPACE_SEAPORT_ID,
       `0x${encodedData.slice(10)}`,
       {
@@ -3744,7 +3744,7 @@ describe("Leveraged Bid - Negative tests", () => {
       dai,
       users: [maker, taker],
       paraspaceOracle,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
     const [deployer] = await getEthersSigners();
 
@@ -3755,7 +3755,7 @@ describe("Leveraged Bid - Negative tests", () => {
       .connect(deployer)
       .getAssetPrice(bayc.address);
     const ltvRatio = (
-      await helpersContract.getReserveConfigurationData(bayc.address)
+      await protocolDataProvider.getReserveConfigurationData(bayc.address)
     ).ltv;
     const availableToBorrowInBaseUnits = nftPrice.mul(ltvRatio).div(10000);
     const daiPrice = await paraspaceOracle

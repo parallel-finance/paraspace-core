@@ -171,7 +171,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
       weth,
       users: [, borrower],
       oracle,
-      helpersContract,
+      protocolDataProvider,
       deployer,
     } = testEnv;
 
@@ -185,24 +185,24 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     await dai.approve(pool.address, MAX_UINT_AMOUNT);
 
     const daiReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
     const userReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai.address,
       borrower.address
     );
 
     const userWethReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       weth.address,
       borrower.address
     );
@@ -218,22 +218,23 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
       true
     );
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
 
-    const userWethReserveDataAfter = await helpersContract.getUserReserveData(
-      weth.address,
-      borrower.address
-    );
+    const userWethReserveDataAfter =
+      await protocolDataProvider.getUserReserveData(
+        weth.address,
+        borrower.address
+      );
 
     const daiReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
@@ -241,10 +242,10 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     const principalPrice = await oracle.getAssetPrice(dai.address);
 
     const collateralDecimals = (
-      await helpersContract.getReserveConfigurationData(weth.address)
+      await protocolDataProvider.getReserveConfigurationData(weth.address)
     ).decimals;
     const principalDecimals = (
-      await helpersContract.getReserveConfigurationData(dai.address)
+      await protocolDataProvider.getReserveConfigurationData(dai.address)
     ).decimals;
 
     const expectedCollateralLiquidated = principalPrice
@@ -307,8 +308,12 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     );
 
     expect(
-      (await helpersContract.getUserReserveData(weth.address, deployer.address))
-        .usageAsCollateralEnabled
+      (
+        await protocolDataProvider.getUserReserveData(
+          weth.address,
+          deployer.address
+        )
+      ).usageAsCollateralEnabled
     ).to.be.true;
   });
 
@@ -319,7 +324,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
       usdc,
       oracle,
       weth,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     //mints USDC to depositor
@@ -391,22 +396,22 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     //approve protocol to access depositor wallet
     await usdc.approve(pool.address, MAX_UINT_AMOUNT);
 
-    const userReserveDataBefore = await helpersContract.getUserReserveData(
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
       usdc.address,
       borrower.address
     );
 
     const usdcReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       usdc.address
     );
     const ethReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
     const userWethReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       weth.address,
       borrower.address
     );
@@ -421,24 +426,25 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
       true
     );
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
       usdc.address,
       borrower.address
     );
 
-    const userWethReserveDataAfter = await helpersContract.getUserReserveData(
-      weth.address,
-      borrower.address
-    );
+    const userWethReserveDataAfter =
+      await protocolDataProvider.getUserReserveData(
+        weth.address,
+        borrower.address
+      );
 
     const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
 
     const usdcReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       usdc.address
     );
     const ethReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
@@ -446,10 +452,10 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     const principalPrice = await oracle.getAssetPrice(usdc.address);
 
     const collateralDecimals = (
-      await helpersContract.getReserveConfigurationData(weth.address)
+      await protocolDataProvider.getReserveConfigurationData(weth.address)
     ).decimals;
     const principalDecimals = (
-      await helpersContract.getReserveConfigurationData(usdc.address)
+      await protocolDataProvider.getReserveConfigurationData(usdc.address)
     ).decimals;
 
     const expectedCollateralLiquidated = principalPrice

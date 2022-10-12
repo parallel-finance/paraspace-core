@@ -48,12 +48,11 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Reserves should initially have borrow cap disabled (borrowCap = 0)", async () => {
-    const {dai, usdc, helpersContract} = testEnv;
+    const {dai, usdc, protocolDataProvider} = testEnv;
 
-    const {borrowCap: usdcBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiBorrowCap} = await helpersContract.getReserveCaps(
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -129,14 +128,12 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Sets the borrow cap for DAI and USDC to 10 Units", async () => {
-    const {configurator, dai, usdc, helpersContract} = testEnv;
+    const {configurator, dai, usdc, protocolDataProvider} = testEnv;
 
-    const {borrowCap: usdcOldBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiOldBorrowCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = 10;
     expect(await configurator.setBorrowCap(usdc.address, newCap))
@@ -146,10 +143,9 @@ describe("PoolConfigurator: Borrow Cap", () => {
       .to.emit(configurator, "BorrowCapChanged")
       .withArgs(dai.address, usdcOldBorrowCap, newCap);
 
-    const {borrowCap: usdcBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiBorrowCap} = await helpersContract.getReserveCaps(
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -195,15 +191,13 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Sets the borrow cap for DAI and USDC to 120 Units", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
     const newCap = "120";
 
-    const {borrowCap: usdcOldBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiOldBorrowCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     expect(await configurator.setBorrowCap(usdc.address, newCap))
       .to.emit(configurator, "BorrowCapChanged")
@@ -212,10 +206,9 @@ describe("PoolConfigurator: Borrow Cap", () => {
       .to.emit(configurator, "BorrowCapChanged")
       .withArgs(dai.address, daiOldBorrowCap, newCap);
 
-    const {borrowCap: usdcBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiBorrowCap} = await helpersContract.getReserveCaps(
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -249,19 +242,19 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Sets the borrow cap for WETH to 2 Units", async () => {
-    const {configurator, weth, helpersContract} = testEnv;
+    const {configurator, weth, protocolDataProvider} = testEnv;
 
-    const {borrowCap: wethOldBorrowCap} = await helpersContract.getReserveCaps(
-      weth.address
-    );
+    const {borrowCap: wethOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(weth.address);
 
     const newCap = 2;
     expect(await configurator.setBorrowCap(weth.address, newCap))
       .to.emit(configurator, "BorrowCapChanged")
       .withArgs(weth.address, wethOldBorrowCap, newCap);
 
-    const wethBorrowCap = (await helpersContract.getReserveCaps(weth.address))
-      .borrowCap;
+    const wethBorrowCap = (
+      await protocolDataProvider.getReserveCaps(weth.address)
+    ).borrowCap;
 
     expect(wethBorrowCap).to.be.equal(newCap);
   });
@@ -281,14 +274,14 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Time flies and ETH debt amount goes above the limit due to accrued interests", async () => {
-    const {weth, helpersContract} = testEnv;
+    const {weth, protocolDataProvider} = testEnv;
 
     // Advance blocks
     await advanceTimeAndBlock(3600);
 
-    const wethData = await helpersContract.getReserveData(weth.address);
+    const wethData = await protocolDataProvider.getReserveData(weth.address);
     const totalDebt = wethData.totalVariableDebt.add(wethData.totalStableDebt);
-    const wethCaps = await helpersContract.getReserveCaps(weth.address);
+    const wethCaps = await protocolDataProvider.getReserveCaps(weth.address);
 
     expect(totalDebt).gt(wethCaps.borrowCap);
   });
@@ -334,14 +327,12 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Raises the borrow cap for USDC and DAI to 1000 Units", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
-    const {borrowCap: usdcOldBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiOldBorrowCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = "1000";
     expect(await configurator.setBorrowCap(usdc.address, newCap))
@@ -351,10 +342,9 @@ describe("PoolConfigurator: Borrow Cap", () => {
       .to.emit(configurator, "BorrowCapChanged")
       .withArgs(dai.address, daiOldBorrowCap, newCap);
 
-    const {borrowCap: usdcBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiBorrowCap} = await helpersContract.getReserveCaps(
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -388,14 +378,12 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Lowers the borrow cap for USDC and DAI to 200 Units", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
-    const {borrowCap: usdcOldBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiOldBorrowCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = "200";
     expect(await configurator.setBorrowCap(usdc.address, newCap))
@@ -405,10 +393,9 @@ describe("PoolConfigurator: Borrow Cap", () => {
       .to.emit(configurator, "BorrowCapChanged")
       .withArgs(dai.address, daiOldBorrowCap, newCap);
 
-    const {borrowCap: usdcBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiBorrowCap} = await helpersContract.getReserveCaps(
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -442,14 +429,12 @@ describe("PoolConfigurator: Borrow Cap", () => {
   });
 
   it("Raises the borrow cap for USDC and DAI to MAX_BORROW_CAP", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
-    const {borrowCap: usdcOldBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiOldBorrowCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = MAX_BORROW_CAP;
     expect(await configurator.setBorrowCap(usdc.address, newCap))
@@ -459,10 +444,9 @@ describe("PoolConfigurator: Borrow Cap", () => {
       .to.emit(configurator, "BorrowCapChanged")
       .withArgs(dai.address, daiOldBorrowCap, newCap);
 
-    const {borrowCap: usdcBorrowCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {borrowCap: daiBorrowCap} = await helpersContract.getReserveCaps(
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 

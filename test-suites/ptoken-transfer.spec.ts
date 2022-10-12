@@ -254,7 +254,7 @@ describe("PToken: Transfer", () => {
   });
 
   it("User 0 deposits 1 WETH and user 1 tries to borrow the WETH with the received DAI as collateral", async () => {
-    const {users, pool, weth, helpersContract} = testEnv;
+    const {users, pool, weth, protocolDataProvider} = testEnv;
     const userAddress = await pool.signer.getAddress();
 
     const amountWETHtoDeposit = await convertToCurrencyDecimals(
@@ -291,7 +291,7 @@ describe("PToken: Transfer", () => {
         )
     );
 
-    const userReserveData = await helpersContract.getUserReserveData(
+    const userReserveData = await protocolDataProvider.getUserReserveData(
       weth.address,
       users[1].address
     );
