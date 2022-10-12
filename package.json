@@ -70,8 +70,7 @@
   },
   "dependencies": {
     "async": "^3.2.4",
-    "hardhat-deploy": "^0.11.4",
-    "tmp-promise": "^3.0.2"
+    "hardhat-deploy": "^0.11.4"
   },
   "author": "ParaSpace-MM Team",
   "contributors": [],
