@@ -173,11 +173,6 @@ export interface TestEnv {
   nftFloorOracle: NFTFloorOracle;
 }
 
-let HardhatSnapshotId = "0x1";
-const setHardhatSnapshotId = (id: string) => {
-  HardhatSnapshotId = id;
-};
-
 export async function initializeMakeSuite() {
   const testEnv: TestEnv = {
     deployer: {} as SignerWithAddress,
