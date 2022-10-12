@@ -15,7 +15,7 @@ init: submodules
 
 .PHONY: test
 test:
-	TS_NODE_TRANSPILE_ONLY=1 npx hardhat test ./test-suites/__setup__.ts ./test-suites/${TEST_TARGET}
+	TS_NODE_TRANSPILE_ONLY=1 npx hardhat test ./test-suites/${TEST_TARGET}
 
 .PHONY: size
 size:
