@@ -277,8 +277,6 @@ contract PToken is
                 toBalanceBefore
             );
         }
-
-        emit BalanceTransfer(from, to, amount, index);
     }
 
     /**

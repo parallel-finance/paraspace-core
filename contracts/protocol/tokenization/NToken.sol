@@ -15,30 +15,20 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
-import {ScaledBalanceTokenBaseERC721} from "./base/ScaledBalanceTokenBaseERC721.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
-import {EIP712Base} from "./base/EIP712Base.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract NToken is
-    VersionedInitializable,
-    ScaledBalanceTokenBaseERC721,
-    EIP712Base,
-    INToken
-{
-    bytes32 public constant PERMIT_TYPEHASH =
-        keccak256(
-            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
-        );
+contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
+    using SafeERC20 for IERC20;
 
     uint256 public constant NTOKEN_REVISION = 0x1;
-
-    address internal _treasury;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -50,7 +40,7 @@ contract NToken is
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool, bool atomic_pricing)
-        ScaledBalanceTokenBaseERC721(
+        MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
             "NTOKEN_IMPL",
@@ -60,7 +50,6 @@ contract NToken is
 
     function initialize(
         IPool initializingPool,
-        address treasury,
         address underlyingAsset,
         IRewardController incentivesController,
         string calldata nTokenName,
@@ -71,16 +60,12 @@ contract NToken is
         _setName(nTokenName);
         _setSymbol(nTokenSymbol);
 
-        _treasury = treasury;
         _underlyingAsset = underlyingAsset;
         _rewardController = incentivesController;
-
-        _domainSeparator = _calculateDomainSeparator();
 
         emit Initialized(
             underlyingAsset,
             address(POOL),
-            treasury,
             address(incentivesController),
             nTokenName,
             nTokenSymbol,
@@ -123,29 +108,19 @@ contract NToken is
         address to,
         uint256 value
     ) external override onlyPool nonReentrant {
-        // Being a normal transfer, the Transfer() and BalanceTransfer() are emitted
-        // so no need to emit a specific event here
         _transfer(from, to, value, false);
     }
 
-    function claimERC20Airdrop(
+    function rescueERC20(
         address token,
         address to,
         uint256 amount
     ) external override onlyPoolAdmin {
-        require(
-            token != _underlyingAsset,
-            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
-        );
-        require(
-            token != address(this),
-            Errors.TOKEN_TRANSFERRED_CAN_NOT_BE_SELF_ADDRESS
-        );
-        IERC20(token).transfer(to, amount);
-        emit ClaimERC20Airdrop(token, to, amount);
+        IERC20(token).safeTransfer(to, amount);
+        emit RescueERC20(token, to, amount);
     }
 
-    function claimERC721Airdrop(
+    function rescueERC721(
         address token,
         address to,
         uint256[] calldata ids
@@ -154,31 +129,19 @@ contract NToken is
             token != _underlyingAsset,
             Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
         );
-        require(
-            token != address(this),
-            Errors.TOKEN_TRANSFERRED_CAN_NOT_BE_SELF_ADDRESS
-        );
         for (uint256 i = 0; i < ids.length; i++) {
             IERC721(token).safeTransferFrom(address(this), to, ids[i]);
         }
-        emit ClaimERC721Airdrop(token, to, ids);
+        emit RescueERC721(token, to, ids);
     }
 
-    function claimERC1155Airdrop(
+    function rescueERC1155(
         address token,
         address to,
         uint256[] calldata ids,
         uint256[] calldata amounts,
         bytes calldata data
     ) external override onlyPoolAdmin {
-        require(
-            token != _underlyingAsset,
-            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
-        );
-        require(
-            token != address(this),
-            Errors.TOKEN_TRANSFERRED_CAN_NOT_BE_SELF_ADDRESS
-        );
         IERC1155(token).safeBatchTransferFrom(
             address(this),
             to,
@@ -186,7 +149,7 @@ contract NToken is
             amounts,
             data
         );
-        emit ClaimERC1155Airdrop(token, to, ids, amounts, data);
+        emit RescueERC1155(token, to, ids, amounts, data);
     }
 
     function executeAirdrop(
@@ -207,16 +170,6 @@ contract NToken is
         );
 
         emit ExecuteAirdrop(airdropContract);
-    }
-
-    /// @inheritdoc INToken
-    function RESERVE_TREASURY_ADDRESS()
-        external
-        view
-        override
-        returns (address)
-    {
-        return _treasury;
     }
 
     /// @inheritdoc INToken
@@ -255,41 +208,6 @@ contract NToken is
         // Intentionally left blank
     }
 
-    /// @inheritdoc INToken
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external override {
-        require(owner != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        //solium-disable-next-line
-        require(block.timestamp <= deadline, Errors.INVALID_EXPIRATION);
-        uint256 currentValidNonce = _nonces[owner];
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR(),
-                keccak256(
-                    abi.encode(
-                        PERMIT_TYPEHASH,
-                        owner,
-                        spender,
-                        value,
-                        currentValidNonce,
-                        deadline
-                    )
-                )
-            )
-        );
-        require(owner == ecrecover(digest, v, r, s), Errors.INVALID_SIGNATURE);
-        _nonces[owner] = currentValidNonce + 1;
-        _approve(spender, value);
-    }
-
     /**
      * @notice Transfers the nTokens between two users. Validates the transfer
      * (ie checks for valid HF after the transfer) if required
@@ -320,8 +238,6 @@ contract NToken is
                 toBalanceBefore
             );
         }
-
-        // emit BalanceTransfer(from, to, tokenId, index); TODO emit a transfer event
     }
 
     /**
@@ -336,48 +252,6 @@ contract NToken is
         uint256 tokenId
     ) internal override {
         _transfer(from, to, tokenId, true);
-    }
-
-    /**
-     * @dev Overrides the base function to fully implement INToken
-     * @dev see `IncentivizedERC20.DOMAIN_SEPARATOR()` for more detailed documentation
-     */
-    function DOMAIN_SEPARATOR()
-        public
-        view
-        override(INToken, EIP712Base)
-        returns (bytes32)
-    {
-        return super.DOMAIN_SEPARATOR();
-    }
-
-    /**
-     * @dev Overrides the base function to fully implement INToken
-     * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
-     */
-    function nonces(address owner)
-        public
-        view
-        override(INToken, EIP712Base)
-        returns (uint256)
-    {
-        return super.nonces(owner);
-    }
-
-    /// @inheritdoc EIP712Base
-    function _EIP712BaseId() internal view override returns (string memory) {
-        return name();
-    }
-
-    /// @inheritdoc INToken
-    function rescueTokens(
-        address token,
-        address to,
-        uint256 tokenId
-    ) external override onlyPoolAdmin {
-        require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
-
-        IERC721(token).safeTransferFrom(address(this), to, tokenId);
     }
 
     function onERC721Received(

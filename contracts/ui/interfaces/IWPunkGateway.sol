@@ -12,15 +12,6 @@ interface IWPunkGateway {
 
     function withdrawPunk(uint256[] calldata punkIndexes, address to) external;
 
-    function withdrawPunkWithPermit(
-        uint256[] calldata punkIndexes,
-        address to,
-        uint256 deadline,
-        uint8 permitV,
-        bytes32 permitR,
-        bytes32 permitS
-    ) external;
-
     function acceptBidWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,

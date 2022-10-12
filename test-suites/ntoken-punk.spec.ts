@@ -1,29 +1,18 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {
-  buildPermitParams,
-  convertToCurrencyDecimals,
-  getSignatureFromTypedData,
-} from "../deploy/helpers/contracts-helpers";
-import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
+import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {makeSuite} from "./helpers/make-suite";
-import {getTestWallets} from "./helpers/utils/wallets";
-
-declare let hre: HardhatRuntimeEnvironment;
 
 makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
-  let testWallets;
   let firstDaiDeposit;
   let secondDaiDeposit;
   const wPunksFloorPrice = BigNumber.from(
     MOCK_CHAINLINK_AGGREGATORS_PRICES.WPUNKS
   );
-  const EIP712_REVISION = "1";
 
   before("Initialize WPunk Gateway", async () => {
     const {
@@ -35,7 +24,6 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
 
     firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
     secondDaiDeposit = await convertToCurrencyDecimals(dai.address, "20000");
-    testWallets = getTestWallets();
 
     await waitForTx(
       await wPunk
@@ -322,61 +310,6 @@ makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
     await expect(
       pool.connect(user3.signer).withdraw(dai.address, [0], user3.address)
     ).to.be.revertedWith(ProtocolErrors.INVALID_AMOUNT);
-  });
-
-  it("User 3 deposits WPUNK, signs signature and withdraws with permit", async () => {
-    const {
-      punk,
-      wPunk,
-      nWPunk,
-      users: [, , user3],
-      wPunkGatewayProxy,
-    } = testEnv;
-    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(0, 0));
-
-    // deposits WPUNK
-    await wPunkGatewayProxy
-      .connect(user3.signer)
-      .supplyPunk([{tokenId: 1, useAsCollateral: true}], user3.address, "0");
-
-    const nWPunkBalance = await nWPunk.balanceOf(user3.address);
-    expect(nWPunkBalance).to.be.equal(1);
-
-    // signs signature
-    const chainId = hre.network.config.chainId || HARDHAT_CHAINID;
-    const deadline = MAX_UINT_AMOUNT;
-    const nonce = (await nWPunk.nonces(user3.address)).toNumber();
-    // use nft token length here as amount
-    const permitAmount = "1";
-    const msgParams = buildPermitParams(
-      chainId,
-      nWPunk.address,
-      EIP712_REVISION,
-      await nWPunk.name(),
-      user3.address,
-      wPunkGatewayProxy.address,
-      nonce,
-      deadline,
-      permitAmount
-    );
-
-    const ownerPrivateKey = testWallets[3].secretKey;
-
-    expect((await nWPunk.getApproved(1)).toString()).to.be.equal(
-      "0x0000000000000000000000000000000000000000"
-    );
-
-    const {v, r, s} = getSignatureFromTypedData(ownerPrivateKey, msgParams);
-
-    // withdraws with permit
-    await waitForTx(
-      await wPunkGatewayProxy
-        .connect(user3.signer)
-        .withdrawPunkWithPermit([1], user3.address, deadline, v, r, s)
-    );
-
-    expect(await wPunk.balanceOf(user3.address)).to.eq(0);
-    expect(await nWPunk.balanceOf(user3.address)).to.eq(0);
   });
 
   it("getWPunk address returns correct address", async () => {
