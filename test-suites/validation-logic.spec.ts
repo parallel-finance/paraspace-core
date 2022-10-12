@@ -54,11 +54,11 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("validateDeposit() when reserve is not active (revert expected)", async () => {
-    const {pool, poolAdmin, configurator, helpersContract, users, dai} =
+    const {pool, poolAdmin, configurator, protocolDataProvider, users, dai} =
       testEnv;
     const user = users[0];
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -68,7 +68,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveActive(dai.address, false);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(false);
@@ -84,11 +84,11 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("validateDeposit() when reserve is frozen (revert expected)", async () => {
-    const {pool, poolAdmin, configurator, helpersContract, users, dai} =
+    const {pool, poolAdmin, configurator, protocolDataProvider, users, dai} =
       testEnv;
     const user = users[0];
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -98,7 +98,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveFreeze(dai.address, true);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(true);
@@ -124,7 +124,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       pool,
       poolAdmin,
       configurator,
-      helpersContract,
+      protocolDataProvider,
       users,
       dai,
       pDai,
@@ -140,7 +140,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(user.signer)
       .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -150,7 +150,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveActive(dai.address, false);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(false);
@@ -176,8 +176,15 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("validateBorrow() when reserve is frozen (revert expected)", async () => {
-    const {pool, poolAdmin, configurator, helpersContract, users, dai, usdc} =
-      testEnv;
+    const {
+      pool,
+      poolAdmin,
+      configurator,
+      protocolDataProvider,
+      users,
+      dai,
+      usdc,
+    } = testEnv;
     const user = users[0];
 
     await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("1000"));
@@ -196,7 +203,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(user.signer)
       .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -206,7 +213,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveFreeze(dai.address, true);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(true);
@@ -237,8 +244,15 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("validateBorrow() when borrowing is not enabled (revert expected)", async () => {
-    const {pool, poolAdmin, configurator, helpersContract, users, dai, usdc} =
-      testEnv;
+    const {
+      pool,
+      poolAdmin,
+      configurator,
+      protocolDataProvider,
+      users,
+      dai,
+      usdc,
+    } = testEnv;
     const user = users[0];
 
     await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("1000"));
@@ -257,7 +271,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(user.signer)
       .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.borrowingEnabled).to.be.eq(true);
@@ -270,7 +284,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveBorrowing(dai.address, false);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.borrowingEnabled).to.be.eq(false);
@@ -293,7 +307,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   //     pool,
   //     poolAdmin,
   //     configurator,
-  //     helpersContract,
+  //     protocolDataProvider,
   //     users,
   //     dai,
   //     pDai,
@@ -309,7 +323,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   //     .connect(user.signer)
   //     .supply(dai.address, utils.parseEther("1000"), user.address, 0);
 
-  //   const configBefore = await helpersContract.getReserveConfigurationData(
+  //   const configBefore = await protocolDataProvider.getReserveConfigurationData(
   //     dai.address
   //   );
   //   expect(configBefore.stableBorrowRateEnabled).to.be.eq(true);
@@ -319,7 +333,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   //     .connect(poolAdmin.signer)
   //     .setReserveStableRateBorrowing(dai.address, false);
 
-  //   const configAfter = await helpersContract.getReserveConfigurationData(
+  //   const configAfter = await protocolDataProvider.getReserveConfigurationData(
   //     dai.address
   //   );
   //   expect(configAfter.stableBorrowRateEnabled).to.be.eq(false);
@@ -523,11 +537,11 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
 
   it("validateRepay() when reserve is not active (revert expected)", async () => {
     // Unsure how we can end in this scenario. Would require that it could be deactivated after someone have borrowed
-    const {pool, users, dai, helpersContract, configurator, poolAdmin} =
+    const {pool, users, dai, protocolDataProvider, configurator, poolAdmin} =
       testEnv;
     const user = users[0];
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -537,7 +551,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveActive(dai.address, false);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(false);
@@ -810,9 +824,9 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
 
   it("validateSwapRateMode() when reserve is not active", async () => {
     // Not clear when this would be useful in practice, as you should not be able to have debt if it is deactivated
-    const {poolAdmin, configurator, helpersContract, dai} = testEnv;
+    const {poolAdmin, configurator, protocolDataProvider, dai} = testEnv;
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -822,7 +836,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveActive(dai.address, false);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(false);
@@ -843,9 +857,9 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
 
   it("validateSwapRateMode() when reserve is frozen", async () => {
     // Not clear when this would be useful in practice, as you should not be able to have debt if it is deactivated
-    const {poolAdmin, configurator, helpersContract, dai} = testEnv;
+    const {poolAdmin, configurator, protocolDataProvider, dai} = testEnv;
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -855,7 +869,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveFreeze(dai.address, true);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(true);
@@ -875,9 +889,9 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("validateSwapRateMode() with currentRateMode not equal to stable or variable, (revert expected)", async () => {
-    const {helpersContract, dai} = testEnv;
+    const {protocolDataProvider, dai} = testEnv;
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -889,7 +903,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   });
 
   // it("validateSwapRateMode() from variable to stable with stableBorrowing disabled (revert expected)", async () => {
-  //   const { pool, poolAdmin, configurator, helpersContract, users, dai } =
+  //   const { pool, poolAdmin, configurator, protocolDataProvider, users, dai } =
   //     testEnv;
   //   const user = users[0];
 
@@ -901,7 +915,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   //     .connect(user.signer)
   //     .supply(dai.address, utils.parseEther("1000"), user.address, 0);
 
-  //   const configBefore = await helpersContract.getReserveConfigurationData(
+  //   const configBefore = await protocolDataProvider.getReserveConfigurationData(
   //     dai.address
   //   );
   //   expect(configBefore.stableBorrowRateEnabled).to.be.eq(true);
@@ -911,7 +925,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   //     .connect(poolAdmin.signer)
   //     .setReserveStableRateBorrowing(dai.address, false);
 
-  //   const configAfter = await helpersContract.getReserveConfigurationData(
+  //   const configAfter = await protocolDataProvider.getReserveConfigurationData(
   //     dai.address
   //   );
   //   expect(configAfter.stableBorrowRateEnabled).to.be.eq(false);
@@ -994,9 +1008,9 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   // });
 
   it("validateRebalanceStableBorrowRate() when reserve is not active (revert expected)", async () => {
-    const {configurator, helpersContract, poolAdmin, dai} = testEnv;
+    const {configurator, protocolDataProvider, poolAdmin, dai} = testEnv;
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -1006,7 +1020,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveActive(dai.address, false);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(false);
@@ -1025,11 +1039,18 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
      * xToken balance (pDAI) its not technically possible to end up in this situation.
      * However, we impersonate the Pool to get some pDAI and make the test possible
      */
-    const {pool, configurator, helpersContract, poolAdmin, users, dai, pDai} =
-      testEnv;
+    const {
+      pool,
+      configurator,
+      protocolDataProvider,
+      poolAdmin,
+      users,
+      dai,
+      pDai,
+    } = testEnv;
     const user = users[0];
 
-    const configBefore = await helpersContract.getReserveConfigurationData(
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configBefore.isActive).to.be.eq(true);
@@ -1039,7 +1060,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       .connect(poolAdmin.signer)
       .setReserveActive(dai.address, false);
 
-    const configAfter = await helpersContract.getReserveConfigurationData(
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(configAfter.isActive).to.be.eq(false);
@@ -1336,7 +1357,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       pool,
       poolAdmin,
       configurator,
-      helpersContract,
+      protocolDataProvider,
       users: [user, usdcProvider],
     } = testEnv;
 
@@ -1370,7 +1391,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
       );
 
     // Drop LTV
-    const daiData = await helpersContract.getReserveConfigurationData(
+    const daiData = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
 

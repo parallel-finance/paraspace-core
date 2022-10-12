@@ -8,7 +8,7 @@ import "./helpers/utils/wadraymath";
 
 makeSuite("Mint To Treasury", (testEnv: TestEnv) => {
   it("User 0 deposits 1000 DAI. Borrower borrows 100 DAI. Clock moved forward one year. Calculates and verifies the amount accrued to the treasury", async () => {
-    const {users, pool, dai, helpersContract} = testEnv;
+    const {users, pool, dai, protocolDataProvider} = testEnv;
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
@@ -45,9 +45,8 @@ makeSuite("Mint To Treasury", (testEnv: TestEnv) => {
         )
     );
 
-    const {reserveFactor} = await helpersContract.getReserveConfigurationData(
-      dai.address
-    );
+    const {reserveFactor} =
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
 
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 

@@ -26,9 +26,9 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   } = ProtocolErrors;
 
   it("Check initialization", async () => {
-    const {pool, weth, dai, helpersContract, users} = testEnv;
+    const {pool, weth, dai, protocolDataProvider, users} = testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
 
     const variableDebtContract = await VariableDebtToken__factory.connect(
@@ -101,10 +101,10 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to mint not being the Pool (revert expected)", async () => {
-    const {deployer, dai, helpersContract} = testEnv;
+    const {deployer, dai, protocolDataProvider} = testEnv;
 
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
 
     const variableDebtContract = VariableDebtToken__factory.connect(
@@ -118,10 +118,10 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to burn not being the Pool (revert expected)", async () => {
-    const {deployer, dai, helpersContract} = testEnv;
+    const {deployer, dai, protocolDataProvider} = testEnv;
 
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
 
     const variableDebtContract = VariableDebtToken__factory.connect(
@@ -135,7 +135,7 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to mint with amountScaled == 0 (revert expected)", async () => {
-    const {deployer, pool, dai, helpersContract, users} = testEnv;
+    const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
 
     // Impersonate the Pool
     await topUpNonPayableWithEther(
@@ -147,7 +147,7 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
     const poolSigner = await hre.ethers.getSigner(pool.address);
 
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
 
     const variableDebtContract = VariableDebtToken__factory.connect(
@@ -163,7 +163,7 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to burn with amountScaled == 0 (revert expected)", async () => {
-    const {deployer, pool, dai, helpersContract, users} = testEnv;
+    const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
 
     // Impersonate the Pool
     await topUpNonPayableWithEther(
@@ -175,7 +175,7 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
     const poolSigner = await hre.ethers.getSigner(pool.address);
 
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
 
     const variableDebtContract = VariableDebtToken__factory.connect(
@@ -191,9 +191,9 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to transfer debt tokens (revert expected)", async () => {
-    const {users, dai, helpersContract} = testEnv;
+    const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
     const variableDebtContract = VariableDebtToken__factory.connect(
       daiVariableDebtTokenAddress,
@@ -208,9 +208,9 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to approve debt tokens (revert expected)", async () => {
-    const {users, dai, helpersContract} = testEnv;
+    const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
     const variableDebtContract = VariableDebtToken__factory.connect(
       daiVariableDebtTokenAddress,
@@ -228,9 +228,9 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to increaseAllowance (revert expected)", async () => {
-    const {users, dai, helpersContract} = testEnv;
+    const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
     const variableDebtContract = VariableDebtToken__factory.connect(
       daiVariableDebtTokenAddress,
@@ -245,9 +245,9 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to decreaseAllowance (revert expected)", async () => {
-    const {users, dai, helpersContract} = testEnv;
+    const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
     const variableDebtContract = VariableDebtToken__factory.connect(
       daiVariableDebtTokenAddress,
@@ -262,9 +262,9 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   });
 
   it("Tries to transferFrom debt tokens (revert expected)", async () => {
-    const {users, dai, helpersContract} = testEnv;
+    const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
     const variableDebtContract = VariableDebtToken__factory.connect(
       daiVariableDebtTokenAddress,
@@ -280,9 +280,10 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
 
   it("setIncentivesController() ", async () => {
     const snapshot = await evmSnapshot();
-    const {dai, helpersContract, poolAdmin, aclManager, deployer} = testEnv;
+    const {dai, protocolDataProvider, poolAdmin, aclManager, deployer} =
+      testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
     const variableDebtContract = VariableDebtToken__factory.connect(
       daiVariableDebtTokenAddress,
@@ -311,11 +312,11 @@ makeSuite("VariableDebtToken", (testEnv: TestEnv) => {
   it("setIncentivesController() from not pool admin (revert expected)", async () => {
     const {
       dai,
-      helpersContract,
+      protocolDataProvider,
       users: [user],
     } = testEnv;
     const daiVariableDebtTokenAddress = (
-      await helpersContract.getReserveTokensAddresses(dai.address)
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
     ).variableDebtTokenAddress;
     const variableDebtContract = VariableDebtToken__factory.connect(
       daiVariableDebtTokenAddress,

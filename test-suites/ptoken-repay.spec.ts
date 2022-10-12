@@ -237,7 +237,7 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
       dai,
       pDai,
       pool,
-      helpersContract,
+      protocolDataProvider,
       users: [user],
     } = testEnv;
 
@@ -295,7 +295,7 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
       xToken: pDai.address,
       reserve: dai.address,
       reserveFactor: (
-        await helpersContract.getReserveConfigurationData(dai.address)
+        await protocolDataProvider.getReserveConfigurationData(dai.address)
       ).reserveFactor,
       averageStableBorrowRate: stableDebtData[2],
     });

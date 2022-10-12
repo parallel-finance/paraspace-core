@@ -23,7 +23,7 @@ makeSuite("Reserve Without Incentives Controller", (testEnv) => {
   let oMockToken: ERC20;
 
   before(async () => {
-    const {pool, poolAdmin, oracle, configurator, dai, helpersContract} =
+    const {pool, poolAdmin, oracle, configurator, dai, protocolDataProvider} =
       testEnv;
 
     mockToken = await new MintableERC20__factory(await getFirstSigner()).deploy(
@@ -112,7 +112,7 @@ makeSuite("Reserve Without Incentives Controller", (testEnv) => {
 
     // Configuration
     const daiReserveConfigurationData =
-      await helpersContract.getReserveConfigurationData(dai.address);
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
 
     const inputParams: {
       asset: string;

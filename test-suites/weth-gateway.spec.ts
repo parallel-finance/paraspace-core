@@ -40,7 +40,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     const {
       users: [user1],
       pWETH,
-      wETHGatewayProxy,
+      wETHGateway,
     } = testEnv;
 
     // User 1 deposits 1 ETH
@@ -50,7 +50,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     };
 
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(user1.signer)
         .depositETH(user1.address, 0, ethValue)
     );
@@ -197,7 +197,7 @@ makeSuite("WETH GateWay", (testEnv) => {
       dai,
       users: [user1],
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
       pWETH,
       weth,
     } = testEnv;
@@ -220,7 +220,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await pWETH
         .connect(user1.signer)
-        .approve(wETHGatewayProxy.address, MAX_UINT_AMOUNT)
+        .approve(wETHGateway.address, MAX_UINT_AMOUNT)
     );
 
     const amountETHtoWithdraw = await convertToCurrencyDecimals(
@@ -229,7 +229,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     );
 
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(user1.signer)
         .withdrawETH(amountETHtoWithdraw, user1.address)
     );
@@ -246,7 +246,7 @@ makeSuite("WETH GateWay", (testEnv) => {
   it("User 1 deposits WETH, signs signature and withdraws with permit", async () => {
     const {
       weth,
-      wETHGatewayProxy,
+      wETHGateway,
       deployer,
       pWETH,
       users: [user1],
@@ -258,7 +258,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     };
 
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(deployer.signer)
         .depositETH(deployer.address, 0, ethValue)
     );
@@ -274,7 +274,7 @@ makeSuite("WETH GateWay", (testEnv) => {
       EIP712_REVISION,
       await pWETH.name(),
       deployer.address,
-      wETHGatewayProxy.address,
+      wETHGateway.address,
       nonce,
       deadline,
       permitAmount
@@ -286,7 +286,7 @@ makeSuite("WETH GateWay", (testEnv) => {
 
     // withdraws with permit
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(deployer.signer)
         .withdrawETHWithPermit(100, deployer.address, deadline, v, r, s)
     );
@@ -299,10 +299,10 @@ makeSuite("WETH GateWay", (testEnv) => {
     const {
       users: [user1],
       weth,
-      wETHGatewayProxy,
+      wETHGateway,
     } = testEnv;
 
-    const wETHAddress = await wETHGatewayProxy
+    const wETHAddress = await wETHGateway
       .connect(user1.signer)
       .getWETHAddress();
 
@@ -314,7 +314,7 @@ makeSuite("WETH GateWay", (testEnv) => {
       dai,
       users: [user1, user2],
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
     } = testEnv;
 
     // User 1 deposits 100 ETH
@@ -323,7 +323,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     };
 
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(user1.signer)
         .depositETH(user1.address, 0, ethValue)
     );
@@ -358,7 +358,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     const {
       users: [, user2],
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
     } = testEnv;
 
@@ -374,13 +374,13 @@ makeSuite("WETH GateWay", (testEnv) => {
     expect(
       await variableDebtToken
         .connect(user2.signer)
-        .approveDelegation(wETHGatewayProxy.address, utils.parseUnits("1", 18))
+        .approveDelegation(wETHGateway.address, utils.parseUnits("1", 18))
     );
 
     // User 2 - borrows 1 eth
     // https://docs.paraspace.com/developers/periphery-contracts/wethgateway#borroweth
     await waitForTx(
-      await wETHGatewayProxy.connect(user2.signer).borrowETH(amountETH, 2, 0)
+      await wETHGateway.connect(user2.signer).borrowETH(amountETH, 2, 0)
     );
 
     expect(await weth.balanceOf(user2.address)).to.eq(0); // receives ETH
@@ -391,7 +391,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     const {
       users: [, user2],
       pool,
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
     } = testEnv;
 
@@ -409,7 +409,7 @@ makeSuite("WETH GateWay", (testEnv) => {
 
     // User 2 - repays 1 eth
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(user2.signer)
         .repayETH(amountETHInterest, 2, user2.address, ethValue)
     );
@@ -426,7 +426,7 @@ makeSuite("WETH GateWay", (testEnv) => {
   it("User 1 deposits 100 ETH", async () => {
     const {
       users: [user1],
-      wETHGatewayProxy,
+      wETHGateway,
     } = testEnv;
 
     // User 1 deposits 1 ETH
@@ -435,7 +435,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     };
 
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(user1.signer)
         .depositETH(user1.address, 0, ethValue)
     );
@@ -444,7 +444,7 @@ makeSuite("WETH GateWay", (testEnv) => {
   it("Owner does emergency token transfer 50 WETH to User 1", async () => {
     const {
       users: [user1],
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
       deployer,
     } = testEnv;
@@ -459,12 +459,12 @@ makeSuite("WETH GateWay", (testEnv) => {
     await waitForTx(
       await weth
         .connect(user1.signer)
-        ["mint(address,uint256)"](wETHGatewayProxy.address, amountETHtoWithdraw)
+        ["mint(address,uint256)"](wETHGateway.address, amountETHtoWithdraw)
     );
-    const gatewayBalanceBefore = await weth.balanceOf(wETHGatewayProxy.address);
+    const gatewayBalanceBefore = await weth.balanceOf(wETHGateway.address);
 
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(owner.signer)
         .emergencyTokenTransfer(
           weth.address,
@@ -476,7 +476,7 @@ makeSuite("WETH GateWay", (testEnv) => {
     expect(await weth.balanceOf(user1.address)).to.eq(
       userBalanceBefore.add(amountETHtoWithdraw)
     ); // receives wETH
-    expect(await weth.balanceOf(wETHGatewayProxy.address)).to.eq(
+    expect(await weth.balanceOf(wETHGateway.address)).to.eq(
       gatewayBalanceBefore.sub(amountETHtoWithdraw)
     );
   });
@@ -484,7 +484,7 @@ makeSuite("WETH GateWay", (testEnv) => {
   it("Owner does emergency ether transfer 50 ETH to User 1", async () => {
     const {
       users: [user1],
-      wETHGatewayProxy,
+      wETHGateway,
       weth,
       deployer,
     } = testEnv;
@@ -511,12 +511,12 @@ makeSuite("WETH GateWay", (testEnv) => {
 
     // weth contract send ether to gateway
     await wethSigner.sendTransaction({
-      to: wETHGatewayProxy.address,
+      to: wETHGateway.address,
       value: ethers.utils.parseEther("50.0"), // Sends exactly 50.0 ether
     });
 
     await waitForTx(
-      await wETHGatewayProxy
+      await wETHGateway
         .connect(owner.signer)
         .emergencyEtherTransfer(user1.address, amountETHtoWithdraw)
     );

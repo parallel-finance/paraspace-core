@@ -202,7 +202,7 @@ makeSuite("PausableReserve", (testEnv: TestEnv) => {
       oracle,
       weth,
       configurator,
-      helpersContract,
+      protocolDataProvider,
       emergencyAdmin,
     } = testEnv;
     const supplyor = users[3];
@@ -259,7 +259,7 @@ makeSuite("PausableReserve", (testEnv: TestEnv) => {
       await convertToCurrencyDecimals(usdc.address, "1000")
     );
     await usdc.approve(pool.address, MAX_UINT_AMOUNT);
-    const userReserveDataBefore = await helpersContract.getUserReserveData(
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
       usdc.address,
       borrower.address
     );

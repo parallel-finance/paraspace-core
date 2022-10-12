@@ -153,4 +153,33 @@ interface IPoolParameters {
      * @param value The new auction health factor
      */
     function setAuctionRecoveryHealthFactor(uint64 value) external;
+
+    /**
+     * @notice Set auction validity time, all auctions triggered before the validity time will be considered as invalid
+     * @param user The user address
+     */
+    function setAuctionValidityTime(address user) external;
+
+    /**
+     * @notice Returns the user account data across all the reserves
+     * @param user The address of the user
+     * @return totalCollateralBase The total collateral of the user in the base currency used by the price feed
+     * @return totalDebtBase The total debt of the user in the base currency used by the price feed
+     * @return availableBorrowsBase The borrowing power left of the user in the base currency used by the price feed
+     * @return currentLiquidationThreshold The liquidation threshold of the user
+     * @return ltv The loan to value of The user
+     * @return healthFactor The current health factor of the user
+     **/
+    function getUserAccountData(address user)
+        external
+        view
+        returns (
+            uint256 totalCollateralBase,
+            uint256 totalDebtBase,
+            uint256 availableBorrowsBase,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor,
+            uint256 erc721HealthFactor
+        );
 }

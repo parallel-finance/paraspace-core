@@ -5,7 +5,7 @@ export $(shell sed 's/=.*//' .env)
 NETWORK                  := goerli
 SCRIPT_PATH              := ./deploy/tasks/deployments/testnet/full_deployment.ts
 TEST_TARGET              := *.spec.ts
-RUST_TOOLCHAIN           := nightly-2022-07-24
+RUST_TOOLCHAIN           := nightly-2022-09-19
 
 .PHONY: init
 init: submodules

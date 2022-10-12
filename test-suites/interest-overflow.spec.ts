@@ -44,7 +44,7 @@ makeSuite("Interest Rate and Index Overflow", (testEnv) => {
       poolAdmin,
       configurator,
       dai,
-      helpersContract,
+      protocolDataProvider,
       addressesProvider,
     } = testEnv;
 
@@ -105,7 +105,7 @@ makeSuite("Interest Rate and Index Overflow", (testEnv) => {
 
     // Configuration
     const daiReserveConfigurationData =
-      await helpersContract.getReserveConfigurationData(dai.address);
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
 
     const maxCap = 68719476735;
     const inputParams: {

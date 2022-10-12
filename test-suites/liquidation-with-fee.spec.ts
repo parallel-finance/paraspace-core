@@ -28,12 +28,12 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   });
 
   it("Sets the WETH protocol liquidation fee to 1000 (10.00%)", async () => {
-    const {configurator, weth, dai, helpersContract} = testEnv;
+    const {configurator, weth, dai, protocolDataProvider} = testEnv;
 
     const oldWethLiquidationProtocolFee =
-      await helpersContract.getLiquidationProtocolFee(weth.address);
+      await protocolDataProvider.getLiquidationProtocolFee(weth.address);
     const oldDAILiquidationProtocolFee =
-      await helpersContract.getLiquidationProtocolFee(dai.address);
+      await protocolDataProvider.getLiquidationProtocolFee(dai.address);
 
     const wethLiquidationProtocolFeeInput = 1000;
     const daiLiquidationProtocolFeeInput = 500;
@@ -64,9 +64,9 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
       );
 
     const wethLiquidationProtocolFee =
-      await helpersContract.getLiquidationProtocolFee(weth.address);
+      await protocolDataProvider.getLiquidationProtocolFee(weth.address);
     const daiLiquidationProtocolFee =
-      await helpersContract.getLiquidationProtocolFee(dai.address);
+      await protocolDataProvider.getLiquidationProtocolFee(dai.address);
 
     expect(wethLiquidationProtocolFee).to.be.equal(
       wethLiquidationProtocolFeeInput
@@ -176,7 +176,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
       users: [, borrower, , liquidator],
       pool,
       oracle,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     //mints dai to the liquidator
@@ -188,18 +188,18 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
     await dai.connect(liquidator.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
     const daiReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
     const liquidatorBalanceBefore = await weth.balanceOf(liquidator.address);
 
     const treasuryAddress = await pWETH.RESERVE_TREASURY_ADDRESS();
-    const treasuryDataBefore = await helpersContract.getUserReserveData(
+    const treasuryDataBefore = await protocolDataProvider.getUserReserveData(
       weth.address,
       treasuryAddress
     );
@@ -207,7 +207,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
 
     const userReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai.address,
       borrower.address
     );
@@ -215,7 +215,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
 
     const wethLiquidationProtocolFee =
-      await helpersContract.getLiquidationProtocolFee(weth.address);
+      await protocolDataProvider.getLiquidationProtocolFee(weth.address);
 
     await increaseTime(100);
 
@@ -231,23 +231,23 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
 
     const userReserveDataAfter = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai.address,
       borrower.address
     );
 
     const daiReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
     const liquidatorBalanceAfter = await weth.balanceOf(liquidator.address);
 
-    const treasuryDataAfter = await helpersContract.getUserReserveData(
+    const treasuryDataAfter = await protocolDataProvider.getUserReserveData(
       weth.address,
       treasuryAddress
     );
@@ -257,10 +257,10 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
     const principalPrice = await oracle.getAssetPrice(dai.address);
 
     const collateralDecimals = (
-      await helpersContract.getReserveConfigurationData(weth.address)
+      await protocolDataProvider.getReserveConfigurationData(weth.address)
     ).decimals;
     const principalDecimals = (
-      await helpersContract.getReserveConfigurationData(dai.address)
+      await protocolDataProvider.getReserveConfigurationData(dai.address)
     ).decimals;
 
     const baseCollateral = principalPrice
@@ -344,7 +344,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
       oracle,
       weth,
       pWETH,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     //mints USDC to depositor
@@ -419,24 +419,24 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
       .connect(liquidator.signer)
       .approve(pool.address, MAX_UINT_AMOUNT);
 
-    const userReserveDataBefore = await helpersContract.getUserReserveData(
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
       usdc.address,
       borrower.address
     );
 
     const usdcReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       usdc.address
     );
     const ethReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
     const liquidatorBalanceBefore = await weth.balanceOf(liquidator.address);
 
     const treasuryAddress = await pWETH.RESERVE_TREASURY_ADDRESS();
-    const treasuryDataBefore = await helpersContract.getUserReserveData(
+    const treasuryDataBefore = await protocolDataProvider.getUserReserveData(
       weth.address,
       treasuryAddress
     );
@@ -445,7 +445,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
 
     const wethLiquidationProtocolFee =
-      await helpersContract.getLiquidationProtocolFee(weth.address);
+      await protocolDataProvider.getLiquidationProtocolFee(weth.address);
 
     await pool
       .connect(liquidator.signer)
@@ -457,7 +457,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
         false
       );
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
       usdc.address,
       borrower.address
     );
@@ -465,16 +465,16 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
     const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
 
     const usdcReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       usdc.address
     );
     const ethReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
     const liquidatorBalanceAfter = await weth.balanceOf(liquidator.address);
-    const treasuryDataAfter = await helpersContract.getUserReserveData(
+    const treasuryDataAfter = await protocolDataProvider.getUserReserveData(
       weth.address,
       treasuryAddress
     );
@@ -484,10 +484,10 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
     const principalPrice = await oracle.getAssetPrice(usdc.address);
 
     const collateralDecimals = (
-      await helpersContract.getReserveConfigurationData(weth.address)
+      await protocolDataProvider.getReserveConfigurationData(weth.address)
     ).decimals;
     const principalDecimals = (
-      await helpersContract.getReserveConfigurationData(usdc.address)
+      await protocolDataProvider.getReserveConfigurationData(usdc.address)
     ).decimals;
 
     const baseCollateral = principalPrice
@@ -562,7 +562,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     users: [, , , , borrower, liquidator],
   //     pool,
   //     oracle,
-  //     helpersContract,
+  //     protocolDataProvider,
   //   } = testEnv;
 
   //   //mints DAI to borrower
@@ -597,17 +597,17 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     .connect(liquidator.signer)
   //     .approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   const userReserveDataBefore = await helpersContract.getUserReserveData(
+  //   const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
   //     usdc.address,
   //     borrower.address
   //   );
 
   //   const usdcReserveDataBefore = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     usdc.address
   //   );
   //   const daiReserveDataBefore = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     dai.address
   //   );
 
@@ -616,7 +616,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //   const collateralPrice = await oracle.getAssetPrice(dai.address);
   //   const principalPrice = await oracle.getAssetPrice(usdc.address);
 
-  //   const daiTokenAddresses = await helpersContract.getReserveTokensAddresses(
+  //   const daiTokenAddresses = await protocolDataProvider.getReserveTokensAddresses(
   //     dai.address
   //   );
   //   const pDAITokenAddress = await daiTokenAddresses.xTokenAddress;
@@ -632,7 +632,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //   );
 
   //   const treasuryAddress = await pDAITokenContract.RESERVE_TREASURY_ADDRESS();
-  //   const treasuryDataBefore = await helpersContract.getUserReserveData(
+  //   const treasuryDataBefore = await protocolDataProvider.getUserReserveData(
   //     dai.address,
   //     treasuryAddress
   //   );
@@ -648,7 +648,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //       true
   //     );
 
-  //   const userReserveDataAfter = await helpersContract.getUserReserveData(
+  //   const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
   //     usdc.address,
   //     borrower.address
   //   );
@@ -656,28 +656,28 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //   const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
 
   //   const usdcReserveDataAfter = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     usdc.address
   //   );
   //   const daiReserveDataAfter = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     dai.address
   //   );
 
-  //   const daiConfiguration = await helpersContract.getReserveConfigurationData(
+  //   const daiConfiguration = await protocolDataProvider.getReserveConfigurationData(
   //     dai.address
   //   );
   //   const collateralDecimals = daiConfiguration.decimals;
   //   const liquidationBonus = daiConfiguration.liquidationBonus;
 
   //   const principalDecimals = (
-  //     await helpersContract.getReserveConfigurationData(usdc.address)
+  //     await protocolDataProvider.getReserveConfigurationData(usdc.address)
   //   ).decimals;
 
   //   const expectedCollateralLiquidated = oneEther.mul(30).div(1000);
 
   //   const daiLiquidationProtocolFee =
-  //     await helpersContract.getLiquidationProtocolFee(dai.address);
+  //     await protocolDataProvider.getLiquidationProtocolFee(dai.address);
 
   //   const expectedPrincipal = collateralPrice
   //     .mul(expectedCollateralLiquidated)
@@ -699,7 +699,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     liquidator.address
   //   );
 
-  //   const treasuryDataAfter = await helpersContract.getUserReserveData(
+  //   const treasuryDataAfter = await protocolDataProvider.getUserReserveData(
   //     dai.address,
   //     treasuryAddress
   //   );
@@ -748,12 +748,12 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     users: [, , , , borrower, liquidator],
   //     pool,
   //     oracle,
-  //     helpersContract,
+  //     protocolDataProvider,
   //     configurator,
   //   } = testEnv;
 
   //   const oldDAILiquidationProtocolFee =
-  //     await helpersContract.getLiquidationProtocolFee(dai.address);
+  //     await protocolDataProvider.getLiquidationProtocolFee(dai.address);
 
   //   expect(await configurator.setLiquidationProtocolFee(dai.address, 0))
   //     .to.emit(configurator, "LiquidationProtocolFeeChanged")
@@ -791,17 +791,17 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     .connect(liquidator.signer)
   //     .approve(pool.address, MAX_UINT_AMOUNT);
 
-  //   const userReserveDataBefore = await helpersContract.getUserReserveData(
+  //   const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
   //     usdc.address,
   //     borrower.address
   //   );
 
   //   const usdcReserveDataBefore = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     usdc.address
   //   );
   //   const daiReserveDataBefore = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     dai.address
   //   );
 
@@ -810,7 +810,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //   const collateralPrice = await oracle.getAssetPrice(dai.address);
   //   const principalPrice = await oracle.getAssetPrice(usdc.address);
 
-  //   const daiTokenAddresses = await helpersContract.getReserveTokensAddresses(
+  //   const daiTokenAddresses = await protocolDataProvider.getReserveTokensAddresses(
   //     dai.address
   //   );
   //   const pDAITokenAddress = await daiTokenAddresses.xTokenAddress;
@@ -826,7 +826,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //   );
 
   //   const treasuryAddress = await pDAITokenContract.RESERVE_TREASURY_ADDRESS();
-  //   const treasuryDataBefore = await helpersContract.getUserReserveData(
+  //   const treasuryDataBefore = await protocolDataProvider.getUserReserveData(
   //     dai.address,
   //     treasuryAddress
   //   );
@@ -842,7 +842,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //       true
   //     );
 
-  //   const userReserveDataAfter = await helpersContract.getUserReserveData(
+  //   const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
   //     usdc.address,
   //     borrower.address
   //   );
@@ -850,28 +850,28 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //   const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
 
   //   const usdcReserveDataAfter = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     usdc.address
   //   );
   //   const daiReserveDataAfter = await getReserveData(
-  //     helpersContract,
+  //     protocolDataProvider,
   //     dai.address
   //   );
 
-  //   const daiConfiguration = await helpersContract.getReserveConfigurationData(
+  //   const daiConfiguration = await protocolDataProvider.getReserveConfigurationData(
   //     dai.address
   //   );
   //   const collateralDecimals = daiConfiguration.decimals;
   //   const liquidationBonus = daiConfiguration.liquidationBonus;
 
   //   const principalDecimals = (
-  //     await helpersContract.getReserveConfigurationData(usdc.address)
+  //     await protocolDataProvider.getReserveConfigurationData(usdc.address)
   //   ).decimals;
 
   //   const expectedCollateralLiquidated = oneEther.mul(30).div(1000);
 
   //   const daiLiquidationProtocolFee =
-  //     await helpersContract.getLiquidationProtocolFee(dai.address);
+  //     await protocolDataProvider.getLiquidationProtocolFee(dai.address);
 
   //   const expectedPrincipal = collateralPrice
   //     .mul(expectedCollateralLiquidated)
@@ -893,7 +893,7 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     liquidator.address
   //   );
 
-  //   const treasuryDataAfter = await helpersContract.getUserReserveData(
+  //   const treasuryDataAfter = await protocolDataProvider.getUserReserveData(
   //     dai.address,
   //     treasuryAddress
   //   );

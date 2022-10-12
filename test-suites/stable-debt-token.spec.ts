@@ -25,9 +25,9 @@
 //   snap = await evmSnapshot();
 // });
 // it("Check initialization", async () => {
-//   const { pool, weth, dai, helpersContract, users } = testEnv;
+//   const { pool, weth, dai, protocolDataProvider, users } = testEnv;
 //   const daiStableDebtTokenAddress = (
-//     await helpersContract.getReserveTokensAddresses(dai.address)
+//     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 //   ).stableDebtTokenAddress;
 //   const stableDebtContract = StableDebtToken__factory.connect(
 //     daiStableDebtTokenAddress,
@@ -79,9 +79,9 @@
 //   expect(totSupplyAndRateAfter[1]).to.be.gt(0);
 // });
 // it("Tries to mint not being the Pool (revert expected)", async () => {
-//   const { deployer, dai, helpersContract } = testEnv;
+//   const { deployer, dai, protocolDataProvider } = testEnv;
 //   const daiStableDebtTokenAddress = (
-//     await helpersContract.getReserveTokensAddresses(dai.address)
+//     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 //   ).stableDebtTokenAddress;
 //   const stableDebtContract = StableDebtToken__factory.connect(
 //     daiStableDebtTokenAddress,
@@ -92,9 +92,9 @@
 //   ).to.be.revertedWith(CALLER_MUST_BE_POOL);
 // });
 // it("Tries to burn not being the Pool (revert expected)", async () => {
-//   const { deployer, dai, helpersContract } = testEnv;
+//   const { deployer, dai, protocolDataProvider } = testEnv;
 //   const daiStableDebtTokenAddress = (
-//     await helpersContract.getReserveTokensAddresses(dai.address)
+//     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 //   ).stableDebtTokenAddress;
 //   const stableDebtContract = StableDebtToken__factory.connect(
 //     daiStableDebtTokenAddress,
@@ -107,9 +107,9 @@
 //   ).to.be.revertedWith(CALLER_MUST_BE_POOL);
 // });
 // it("Tries to transfer debt tokens (revert expected)", async () => {
-//   const { users, dai, helpersContract } = testEnv;
+//   const { users, dai, protocolDataProvider } = testEnv;
 //   const daiStableDebtTokenAddress = (
-//     await helpersContract.getReserveTokensAddresses(dai.address)
+//     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 //   ).stableDebtTokenAddress;
 //   const stableDebtContract = StableDebtToken__factory.connect(
 //     daiStableDebtTokenAddress,
@@ -222,9 +222,9 @@
 //   await evmRevert(snapId);
 // });
 // // it("Tries to approve debt tokens (revert expected)", async () => {
-// //   const { users, dai, helpersContract } = testEnv;
+// //   const { users, dai, protocolDataProvider } = testEnv;
 // //   const daiStableDebtTokenAddress = (
-// //     await helpersContract.getReserveTokensAddresses(dai.address)
+// //     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 // //   ).stableDebtTokenAddress;
 // //   const stableDebtContract = StableDebtToken__factory.connect(
 // //     daiStableDebtTokenAddress,
@@ -238,9 +238,9 @@
 // //   ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
 // // });
 // it("Tries to increase allowance of debt tokens (revert expected)", async () => {
-//   const { users, dai, helpersContract } = testEnv;
+//   const { users, dai, protocolDataProvider } = testEnv;
 //   const daiStableDebtTokenAddress = (
-//     await helpersContract.getReserveTokensAddresses(dai.address)
+//     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 //   ).stableDebtTokenAddress;
 //   const stableDebtContract = StableDebtToken__factory.connect(
 //     daiStableDebtTokenAddress,
@@ -253,9 +253,9 @@
 //   ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
 // });
 // it("Tries to decrease allowance of debt tokens (revert expected)", async () => {
-//   const { users, dai, helpersContract } = testEnv;
+//   const { users, dai, protocolDataProvider } = testEnv;
 //   const daiStableDebtTokenAddress = (
-//     await helpersContract.getReserveTokensAddresses(dai.address)
+//     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 //   ).stableDebtTokenAddress;
 //   const stableDebtContract = StableDebtToken__factory.connect(
 //     daiStableDebtTokenAddress,
@@ -268,9 +268,9 @@
 //   ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
 // });
 // it("Tries to transferFrom (revert expected)", async () => {
-//   const { users, dai, helpersContract } = testEnv;
+//   const { users, dai, protocolDataProvider } = testEnv;
 //   const daiStableDebtTokenAddress = (
-//     await helpersContract.getReserveTokensAddresses(dai.address)
+//     await protocolDataProvider.getReserveTokensAddresses(dai.address)
 //   ).stableDebtTokenAddress;
 //   const stableDebtContract = StableDebtToken__factory.connect(
 //     daiStableDebtTokenAddress,
@@ -296,7 +296,7 @@
 //   const rateGuess2 = BigNumber.from(10).pow(30);
 //   const amount1 = BigNumber.from(2);
 //   const amount2 = BigNumber.from(1);
-//   const { deployer, pool, dai, helpersContract, users } = testEnv;
+//   const { deployer, pool, dai, protocolDataProvider, users } = testEnv;
 //   // Impersonate the Pool
 //   await topUpNonPayableWithEther(
 //     deployer.signer,
@@ -305,7 +305,7 @@
 //   );
 //   await impersonateAccountsHardhat([pool.address]);
 //   const poolSigner = await hre.ethers.getSigner(pool.address);
-//   const config = await helpersContract.getReserveTokensAddresses(dai.address);
+//   const config = await protocolDataProvider.getReserveTokensAddresses(dai.address);
 //   const stableDebt = StableDebtToken__factory.connect(
 //     config.stableDebtTokenAddress,
 //     deployer.signer
@@ -327,8 +327,8 @@
 // });
 // it("setIncentivesController() ", async () => {
 //   const snapshot = await evmSnapshot();
-//   const { dai, helpersContract, poolAdmin, aclManager, deployer } = testEnv;
-//   const config = await helpersContract.getReserveTokensAddresses(dai.address);
+//   const { dai, protocolDataProvider, poolAdmin, aclManager, deployer } = testEnv;
+//   const config = await protocolDataProvider.getReserveTokensAddresses(dai.address);
 //   const stableDebt = StableDebtToken__factory.connect(
 //     config.stableDebtTokenAddress,
 //     deployer.signer
@@ -350,10 +350,10 @@
 // it("setIncentivesController() from not pool admin (revert expected)", async () => {
 //   const {
 //     dai,
-//     helpersContract,
+//     protocolDataProvider,
 //     users: [user],
 //   } = testEnv;
-//   const config = await helpersContract.getReserveTokensAddresses(dai.address);
+//   const config = await protocolDataProvider.getReserveTokensAddresses(dai.address);
 //   const stableDebt = StableDebtToken__factory.connect(
 //     config.stableDebtTokenAddress,
 //     user.signer

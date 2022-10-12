@@ -171,7 +171,7 @@ makeSuite(
         users: [, borrower, , liquidator],
         pool,
         oracle,
-        helpersContract,
+        protocolDataProvider,
       } = testEnv;
 
       //mints dai to the liquidator
@@ -185,17 +185,17 @@ makeSuite(
         .approve(pool.address, MAX_UINT_AMOUNT);
 
       const daiReserveDataBefore = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         dai.address
       );
       const ethReserveDataBefore = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         weth.address
       );
 
       const userReserveDataBefore = await getUserData(
         pool,
-        helpersContract,
+        protocolDataProvider,
         dai.address,
         borrower.address
       );
@@ -217,17 +217,17 @@ makeSuite(
 
       const userReserveDataAfter = await getUserData(
         pool,
-        helpersContract,
+        protocolDataProvider,
         dai.address,
         borrower.address
       );
 
       const daiReserveDataAfter = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         dai.address
       );
       const ethReserveDataAfter = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         weth.address
       );
 
@@ -235,10 +235,10 @@ makeSuite(
       const principalPrice = await oracle.getAssetPrice(dai.address);
 
       const collateralDecimals = (
-        await helpersContract.getReserveConfigurationData(weth.address)
+        await protocolDataProvider.getReserveConfigurationData(weth.address)
       ).decimals;
       const principalDecimals = (
-        await helpersContract.getReserveConfigurationData(dai.address)
+        await protocolDataProvider.getReserveConfigurationData(dai.address)
       ).decimals;
 
       const expectedCollateralLiquidated = principalPrice
@@ -301,7 +301,7 @@ makeSuite(
         pool,
         oracle,
         weth,
-        helpersContract,
+        protocolDataProvider,
       } = testEnv;
 
       //mints USDC to depositor
@@ -387,17 +387,18 @@ makeSuite(
         .connect(liquidator.signer)
         .approve(pool.address, MAX_UINT_AMOUNT);
 
-      const userReserveDataBefore = await helpersContract.getUserReserveData(
-        usdc.address,
-        borrower.address
-      );
+      const userReserveDataBefore =
+        await protocolDataProvider.getUserReserveData(
+          usdc.address,
+          borrower.address
+        );
 
       const usdcReserveDataBefore = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         usdc.address
       );
       const ethReserveDataBefore = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         weth.address
       );
 
@@ -414,21 +415,22 @@ makeSuite(
           false
         );
 
-      const userReserveDataAfter = await helpersContract.getUserReserveData(
-        usdc.address,
-        borrower.address
-      );
+      const userReserveDataAfter =
+        await protocolDataProvider.getUserReserveData(
+          usdc.address,
+          borrower.address
+        );
 
       const userGlobalDataAfter = await pool.getUserAccountData(
         borrower.address
       );
 
       const usdcReserveDataAfter = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         usdc.address
       );
       const ethReserveDataAfter = await getReserveData(
-        helpersContract,
+        protocolDataProvider,
         weth.address
       );
 
@@ -436,10 +438,10 @@ makeSuite(
       const principalPrice = await oracle.getAssetPrice(usdc.address);
 
       const collateralDecimals = (
-        await helpersContract.getReserveConfigurationData(weth.address)
+        await protocolDataProvider.getReserveConfigurationData(weth.address)
       ).decimals;
       const principalDecimals = (
-        await helpersContract.getReserveConfigurationData(usdc.address)
+        await protocolDataProvider.getReserveConfigurationData(usdc.address)
       ).decimals;
 
       const expectedCollateralLiquidated = principalPrice
@@ -493,7 +495,7 @@ makeSuite(
     //       users: [, , , , borrower, liquidator],
     //       pool,
     //       oracle,
-    //       helpersContract,
+    //       protocolDataProvider,
     //     } = testEnv;
 
     //     //mints ParaSpace to borrower
@@ -534,17 +536,17 @@ makeSuite(
     //       .connect(liquidator.signer)
     //       .approve(pool.address, MAX_UINT_AMOUNT);
 
-    //     const userReserveDataBefore = await helpersContract.getUserReserveData(
+    //     const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
     //       usdc.address,
     //       borrower.address
     //     );
 
     //     const usdcReserveDataBefore = await getReserveData(
-    //       helpersContract,
+    //       protocolDataProvider,
     //       usdc.address
     //     );
     //     const paraspaceReserveDataBefore = await getReserveData(
-    //       helpersContract,
+    //       protocolDataProvider,
     //       paraspace.address
     //     );
 
@@ -563,7 +565,7 @@ makeSuite(
     //         false
     //       );
 
-    //     const userReserveDataAfter = await helpersContract.getUserReserveData(
+    //     const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
     //       usdc.address,
     //       borrower.address
     //     );
@@ -573,21 +575,21 @@ makeSuite(
     //     );
 
     //     const usdcReserveDataAfter = await getReserveData(
-    //       helpersContract,
+    //       protocolDataProvider,
     //       usdc.address
     //     );
     //     const paraspaceReserveDataAfter = await getReserveData(
-    //       helpersContract,
+    //       protocolDataProvider,
     //       paraspace.address
     //     );
 
     //     const paraspaceConfiguration =
-    //       await helpersContract.getReserveConfigurationData(paraspace.address);
+    //       await protocolDataProvider.getReserveConfigurationData(paraspace.address);
     //     const collateralDecimals = paraspaceConfiguration.decimals;
     //     const liquidationBonus = paraspaceConfiguration.liquidationBonus;
 
     //     const principalDecimals = (
-    //       await helpersContract.getReserveConfigurationData(usdc.address)
+    //       await protocolDataProvider.getReserveConfigurationData(usdc.address)
     //     ).decimals;
 
     //     const expectedCollateralLiquidated = oneEther.mul("33").div("1000");
