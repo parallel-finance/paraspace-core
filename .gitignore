@@ -19,4 +19,7 @@ dist
 
 docs/*
 !docs/DEVELOPER-GUIDE.md
-
+.vscode
+coverage
+*sol.html
+coverage.json

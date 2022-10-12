@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
+import {IERC721Metadata} from "../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
@@ -66,7 +67,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getAllPTokens()
+    function getAllXTokens()
         external
         view
         returns (DataTypes.TokenData[] memory)
@@ -80,10 +81,20 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             DataTypes.ReserveData memory reserveData = pool.getReserveData(
                 reserves[i]
             );
-            xTokens[i] = DataTypes.TokenData({
-                symbol: IERC20Detailed(reserveData.xTokenAddress).symbol(),
-                tokenAddress: reserveData.xTokenAddress
-            });
+            if (
+                reserveData.configuration.getAssetType() ==
+                DataTypes.AssetType.ERC20
+            ) {
+                xTokens[i] = DataTypes.TokenData({
+                    symbol: IERC20Detailed(reserveData.xTokenAddress).symbol(),
+                    tokenAddress: reserveData.xTokenAddress
+                });
+            } else {
+                xTokens[i] = DataTypes.TokenData({
+                    symbol: IERC721Metadata(reserveData.xTokenAddress).symbol(),
+                    tokenAddress: reserveData.xTokenAddress
+                });
+            }
         }
         return xTokens;
     }

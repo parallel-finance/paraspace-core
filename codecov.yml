@@ -1,3 +1,7 @@
+ignore:
+  - "contracts/mock"
+  - "contracts/dependencies"
+  - "contracts/deployments"
 coverage:
   range: 100..100
   round: down
