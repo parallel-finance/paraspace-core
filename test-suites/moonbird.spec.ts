@@ -3,7 +3,7 @@ import {waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {RateMode} from "../deploy/helpers/types";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {snapshot} from "./helpers/snapshot-manager";
 import {
   getMockAggregator,
@@ -11,10 +11,14 @@ import {
   getMoonBirdsGatewayProxy,
 } from "../deploy/helpers/contracts-getters";
 import {parseEther} from "ethers/lib/utils";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("MoonBird gateway and supply while nesting", (testEnv) => {
+describe("MoonBird gateway and supply while nesting", () => {
   let snapshotId: string;
+  let testEnv: TestEnv;
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     snapshotId = await snapshot.take();
   });
 

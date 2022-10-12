@@ -4,10 +4,13 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 // import {MockFlashLoanReceiver} from "../types";
 // import {getMockFlashLoanReceiver} from "../helpers/contracts-getters";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool: Drop Reserve", (testEnv: TestEnv) => {
+describe("Pool: Drop Reserve", () => {
   // const _mockFlashLoanReceiver = {} as MockFlashLoanReceiver;
+  let testEnv: TestEnv;
 
   const {
     XTOKEN_SUPPLY_NOT_ZERO,
@@ -16,9 +19,9 @@ makeSuite("Pool: Drop Reserve", (testEnv: TestEnv) => {
     ZERO_ADDRESS_NOT_VALID,
   } = ProtocolErrors;
 
-  // before(async () => {
-  //   _mockFlashLoanReceiver = await getMockFlashLoanReceiver();
-  // });
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
 
   it("User 1 deposits DAI, User 2 borrow DAI variable, should fail to drop DAI reserve", async () => {
     const {

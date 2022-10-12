@@ -1,3 +1,4 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber, BigNumberish} from "ethers";
 import {parseEther} from "ethers/lib/utils";
@@ -22,7 +23,8 @@ import {
   VariableDebtToken__factory,
 } from "../types";
 // import {strategyWETH} from "../market-config/reservesConfigs";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
 type ReserveConfigurationValues = {
   reserveDecimals: string;
@@ -122,10 +124,12 @@ const getReserveData = async (
   ]);
 };
 
-makeSuite("PoolConfigurator", (testEnv: TestEnv) => {
+describe("PoolConfigurator", () => {
+  let testEnv: TestEnv;
   let baseConfigValues: ReserveConfigurationValues;
 
-  before(() => {
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       reserveDecimals,
       baseLTVAsCollateral,

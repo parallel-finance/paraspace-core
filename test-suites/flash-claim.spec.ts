@@ -1,14 +1,17 @@
 import {expect} from "chai";
 import {ethers} from "hardhat";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
 } from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Flash Claim Test", (testEnv) => {
+describe("Flash Claim Test", () => {
   const tokenId = 0;
+  let testEnv: TestEnv;
   let receiverEncodedData;
   let mockAirdropERC20Token;
   let mockAirdropERC721Token;
@@ -16,6 +19,7 @@ makeSuite("Flash Claim Test", (testEnv) => {
   let erc1155Id;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     //create all factory
     const MintableERC20 = await ethers.getContractFactory("MintableERC20");
     const MintableERC721 = await ethers.getContractFactory("MintableERC721");

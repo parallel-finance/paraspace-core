@@ -5,7 +5,7 @@ import {
   createSeaportOrder,
   getEthersSigners,
 } from "../deploy/helpers/contracts-helpers";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import creditType from "../deploy/helpers/eip-712-types/credit";
 import {
   AdvancedOrder,
@@ -48,7 +48,6 @@ import {
   getMintableERC721,
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
-import {snapshot} from "./helpers/snapshot-manager";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {merkleTree} from "../deploy/helpers/seaport-helpers/criteria";
 import {
@@ -57,10 +56,17 @@ import {
   executeSeaportBuyWithCredit,
   executeX2Y2BuyWithCredit,
 } from "./helpers/marketplace-helper";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 import {AdvancedOrderStruct} from "../types/dependencies/seaport/contracts/Seaport";
 
-makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
+describe("Leveraged Buy - Positive tests", () => {
   let snapShot: string;
+  let testEnv: TestEnv;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   beforeEach(async () => {
     snapShot = await evmSnapshot();
   });
@@ -1664,13 +1670,15 @@ makeSuite("Leveraged Buy - Positive tests", (testEnv) => {
   });
 });
 
-makeSuite("Leveraged Buy - Negative tests", (testEnv) => {
+describe("Leveraged Buy - Negative tests", () => {
   const nftId = 0;
   let startAmount: BigNumber;
   let endAmount: BigNumber;
   let payLaterAmount: BigNumber;
   const {COLLATERAL_CANNOT_COVER_NEW_BORROW} = ProtocolErrors;
+  let testEnv: TestEnv;
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       bayc,
       dai,
@@ -1930,14 +1938,10 @@ makeSuite("Leveraged Buy - Negative tests", (testEnv) => {
   });
 });
 
-makeSuite("Leveraged Bid - Positive tests", (testEnv) => {
-  let snapthotId: string;
+describe("Leveraged Bid - Positive tests", () => {
+  let testEnv: TestEnv;
   beforeEach("Take Blockchain Snapshot", async () => {
-    snapthotId = await snapshot.take();
-  });
-
-  afterEach("Revert Blockchain to Snapshot", async () => {
-    await snapshot.revert(snapthotId);
+    testEnv = await loadFixture(testEnvFixture);
   });
 
   it("ERC20 <=> ERC721 via paraspace - no loan", async () => {
@@ -3534,13 +3538,16 @@ makeSuite("Leveraged Bid - Positive tests", (testEnv) => {
   });
 });
 
-makeSuite("Leveraged Bid - Negative tests", (testEnv) => {
+describe("Leveraged Bid - Negative tests", () => {
   const nftId = 0;
   let startAmount: BigNumber;
   let endAmount: BigNumber;
   let payLaterAmount: BigNumber;
+  let testEnv: TestEnv;
   const {COLLATERAL_CANNOT_COVER_NEW_BORROW} = ProtocolErrors;
+
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       bayc,
       dai,

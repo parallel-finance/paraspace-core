@@ -1,3 +1,4 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
@@ -5,16 +6,18 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
-import {makeSuite} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Punk nToken Mint and Burn Event Accounting", (testEnv) => {
+describe("Punk nToken Mint and Burn Event Accounting", () => {
   let firstDaiDeposit;
   let secondDaiDeposit;
+  let testEnv;
   const wPunksFloorPrice = BigNumber.from(
     MOCK_CHAINLINK_AGGREGATORS_PRICES.WPUNKS
   );
 
   before("Initialize WPunk Gateway", async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       dai,
       wPunk,

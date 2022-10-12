@@ -9,19 +9,26 @@ import {
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("PToken: Edge cases", (testEnv: TestEnv) => {
+describe("PToken: Edge cases", () => {
+  let testEnv: TestEnv;
   const {
     INVALID_MINT_AMOUNT,
     INVALID_BURN_AMOUNT,
     SAFECAST_UINT128_OVERFLOW,
     CALLER_NOT_POOL_ADMIN,
   } = ProtocolErrors;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
 
   it("Check getters", async () => {
     const {pool, users, dai, pDai} = testEnv;

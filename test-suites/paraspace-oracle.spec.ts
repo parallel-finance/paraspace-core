@@ -7,11 +7,14 @@ import {
 } from "../deploy/helpers/contracts-deployments";
 import {MintableERC20, MockAggregator} from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("ParaSpaceOracle", (testEnv: TestEnv) => {
+describe("ParaSpaceOracle", () => {
   let snap: string;
+  let testEnv: TestEnv;
 
   beforeEach(async () => {
     snap = await evmSnapshot();
@@ -25,6 +28,7 @@ makeSuite("ParaSpaceOracle", (testEnv: TestEnv) => {
   let assetPrice: string;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     mockToken = await deployMintableERC20(["MOCK", "MOCK", "18"]);
     assetPrice = MOCK_CHAINLINK_AGGREGATORS_PRICES.WETH;
     mockAggregator = await deployMockAggregator("MOCK", assetPrice);

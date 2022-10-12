@@ -1,3 +1,4 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {formatEther} from "ethers/lib/utils";
@@ -5,7 +6,8 @@ import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 import {
   borrowAndValidate,
   mintAndValidate,
@@ -15,12 +17,14 @@ import {
   withdrawAndValidate,
 } from "./helpers/validated-steps";
 
-makeSuite("pToken/debtToken Mint and Burn Event Accounting", (testEnv) => {
+describe("pToken/debtToken Mint and Burn Event Accounting", () => {
   let firstDaiDeposit;
   let secondDaiDeposit;
   let accruedInterest = BigNumber.from(0);
+  let testEnv: TestEnv;
 
   before("Initialize Depositors", async () => {
+    testEnv = await loadFixture(testEnvFixture);
     firstDaiDeposit = "10000";
     secondDaiDeposit = "20000";
   });

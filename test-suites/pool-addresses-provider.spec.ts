@@ -7,7 +7,7 @@ import {
   evmSnapshot,
 } from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {getProxyImplementation} from "../deploy/helpers/contracts-helpers";
 import {deployPoolComponents} from "../deploy/helpers/contracts-deployments";
@@ -20,9 +20,16 @@ import {
   getFirstSigner,
   getProxyAdmin,
 } from "../deploy/helpers/contracts-getters";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
+describe("PoolAddressesProvider", () => {
+  let testEnv: TestEnv;
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
 
   it("Test the onlyOwner accessibility of the PoolAddressesProvider", async () => {
     const {addressesProvider, users} = testEnv;

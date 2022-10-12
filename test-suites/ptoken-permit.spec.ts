@@ -7,19 +7,23 @@ import {
   buildPermitParams,
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("PToken: Permit", (testEnv: TestEnv) => {
+describe("PToken: Permit", () => {
+  let testEnv: TestEnv;
   let testWallets;
 
   const EIP712_REVISION = "1";
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {dai, pool, deployer} = testEnv;
 
     testWallets = getTestWallets();

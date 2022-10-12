@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite, revertHead, setSnapshot} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
@@ -13,14 +13,14 @@ import {
   getPoolConfiguratorProxy,
   getUniswapV3Gateway,
 } from "../deploy/helpers/contracts-getters";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Atomic tokens limit", (testEnv) => {
+describe("Atomic tokens limit", () => {
   describe("token limit behaviour", () => {
+    let testEnv: TestEnv;
     before(async () => {
-      await setSnapshot();
-    });
-    after(async () => {
-      await revertHead();
+      testEnv = await loadFixture(testEnvFixture);
     });
 
     it("Should allow supplying atomic tokens within limit [ @skip-on-coverage ]", async () => {

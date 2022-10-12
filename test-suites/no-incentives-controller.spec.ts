@@ -11,18 +11,22 @@ import {
   VariableDebtToken__factory,
 } from "../types";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {parseEther} from "ethers/lib/utils";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Reserve Without Incentives Controller", (testEnv) => {
+describe("Reserve Without Incentives Controller", () => {
   let mockToken: MintableERC20;
   let oMockToken: ERC20;
+  let testEnv: TestEnv;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {pool, poolAdmin, oracle, configurator, dai, protocolDataProvider} =
       testEnv;
 

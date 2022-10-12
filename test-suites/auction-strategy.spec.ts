@@ -11,11 +11,10 @@ import {
   auctionStrategyExp,
   auctionStrategyLinear,
 } from "../deploy/market-config/auctionStrategies";
-import {makeSuite} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
 import {utils} from "ethers";
 
-makeSuite("AuctionStrategy", () => {
+describe("AuctionStrategy", () => {
   let strategyInstanceExp: DefaultReserveAuctionStrategy;
   let strategyInstanceLinear: MockReserveAuctionStrategy;
 

@@ -1,3 +1,4 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
@@ -10,7 +11,8 @@ import {
   waitForTx,
 } from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 import {snapshot} from "./helpers/snapshot-manager";
 import {
   borrowAndValidate,
@@ -21,10 +23,12 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 
-makeSuite("Liquidation Auction", (testEnv) => {
+describe("Liquidation Auction", () => {
   let snapthotId: string;
+  let testEnv: TestEnv;
 
   before("Setup Borrower and Liquidator positions", async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       users: [borrower, liquidator],
       bayc,

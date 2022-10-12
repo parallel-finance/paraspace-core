@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite, revertHead, setSnapshot} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
@@ -26,14 +26,15 @@ import {
 import {snapshot} from "./helpers/snapshot-manager";
 import {parseEther} from "ethers/lib/utils";
 import {ethers} from "hardhat";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Uniswap V3", (testEnv) => {
+describe("Uniswap V3", () => {
   describe("Uniswap V3 NFT position control", () => {
+    let testEnv: TestEnv;
+
     before(async () => {
-      await setSnapshot();
-    });
-    after(async () => {
-      await revertHead();
+      testEnv = await loadFixture(testEnvFixture);
     });
 
     it("User creates new Uniswap V3 pool, mints and supplies NFT [ @skip-on-coverage ]", async () => {
@@ -340,13 +341,10 @@ makeSuite("Uniswap V3", (testEnv) => {
   });
 
   describe("Uniswap V3 NFT borrow, collateral and liquidation logic", () => {
+    let testEnv: TestEnv;
     before(async () => {
-      await setSnapshot();
+      testEnv = await loadFixture(testEnvFixture);
     });
-    after(async () => {
-      await revertHead();
-    });
-
     it("User creates new Uniswap V3 pool and mints NFT [ @skip-on-coverage ]", async () => {
       const {
         users: [user1],

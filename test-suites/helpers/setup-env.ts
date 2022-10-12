@@ -1,27 +1,27 @@
 import rawBRE from "hardhat";
-import {printContracts} from "../deploy/helpers/misc-utils";
-import {initializeMakeSuite} from "./helpers/make-suite";
-import {step_00} from "../deploy/tasks/deployments/testnet/steps/00_deleteDb";
-import {step_0A} from "../deploy/tasks/deployments/testnet/steps/0A_mockERC20Tokens";
-import {step_0B} from "../deploy/tasks/deployments/testnet/steps/0B_mockERC721Tokens";
-import {step_01} from "../deploy/tasks/deployments/testnet/steps/01_faucet";
-import {step_02} from "../deploy/tasks/deployments/testnet/steps/02_addressProvider";
-import {step_03} from "../deploy/tasks/deployments/testnet/steps/03_aclManager";
-import {step_04} from "../deploy/tasks/deployments/testnet/steps/04_poolAddressesProviderRegistry";
-import {step_05} from "../deploy/tasks/deployments/testnet/steps/05_pool";
-import {step_06} from "../deploy/tasks/deployments/testnet/steps/06_poolConfigurator";
-import {step_07} from "../deploy/tasks/deployments/testnet/steps/07_reservesSetupHelper";
-import {step_08} from "../deploy/tasks/deployments/testnet/steps/08_priceOracle";
-import {step_09} from "../deploy/tasks/deployments/testnet/steps/09_allMockAggregators";
-import {step_10} from "../deploy/tasks/deployments/testnet/steps/10_uiIncentiveDataProvider";
-import {step_11} from "../deploy/tasks/deployments/testnet/steps/11_wethGateway";
-import {step_12} from "../deploy/tasks/deployments/testnet/steps/12_punkGateway";
-import {step_13} from "../deploy/tasks/deployments/testnet/steps/13_moonbirdsGateway";
-import {step_14} from "../deploy/tasks/deployments/testnet/steps/14_uniswapV3Gateway";
-import {step_15} from "../deploy/tasks/deployments/testnet/steps/15_seaport";
-import {step_16} from "../deploy/tasks/deployments/testnet/steps/16_looksrare";
-import {step_17} from "../deploy/tasks/deployments/testnet/steps/17_x2y2";
-import {step_18} from "../deploy/tasks/deployments/testnet/steps/18_flashClaimRegistry";
+import {printContracts} from "../../deploy/helpers/misc-utils";
+import {initializeMakeSuite} from "./make-suite";
+import {step_00} from "../../deploy/tasks/deployments/testnet/steps/00_deleteDb";
+import {step_0A} from "../../deploy/tasks/deployments/testnet/steps/0A_mockERC20Tokens";
+import {step_0B} from "../../deploy/tasks/deployments/testnet/steps/0B_mockERC721Tokens";
+import {step_01} from "../../deploy/tasks/deployments/testnet/steps/01_faucet";
+import {step_02} from "../../deploy/tasks/deployments/testnet/steps/02_addressProvider";
+import {step_03} from "../../deploy/tasks/deployments/testnet/steps/03_aclManager";
+import {step_04} from "../../deploy/tasks/deployments/testnet/steps/04_poolAddressesProviderRegistry";
+import {step_05} from "../../deploy/tasks/deployments/testnet/steps/05_pool";
+import {step_06} from "../../deploy/tasks/deployments/testnet/steps/06_poolConfigurator";
+import {step_07} from "../../deploy/tasks/deployments/testnet/steps/07_reservesSetupHelper";
+import {step_08} from "../../deploy/tasks/deployments/testnet/steps/08_priceOracle";
+import {step_09} from "../../deploy/tasks/deployments/testnet/steps/09_allMockAggregators";
+import {step_10} from "../../deploy/tasks/deployments/testnet/steps/10_uiIncentiveDataProvider";
+import {step_11} from "../../deploy/tasks/deployments/testnet/steps/11_wethGateway";
+import {step_12} from "../../deploy/tasks/deployments/testnet/steps/12_punkGateway";
+import {step_13} from "../../deploy/tasks/deployments/testnet/steps/13_moonbirdsGateway";
+import {step_14} from "../../deploy/tasks/deployments/testnet/steps/14_uniswapV3Gateway";
+import {step_15} from "../../deploy/tasks/deployments/testnet/steps/15_seaport";
+import {step_16} from "../../deploy/tasks/deployments/testnet/steps/16_looksrare";
+import {step_17} from "../../deploy/tasks/deployments/testnet/steps/17_x2y2";
+import {step_18} from "../../deploy/tasks/deployments/testnet/steps/18_flashClaimRegistry";
 
 const buildTestEnv = async () => {
   console.time("setup");
@@ -112,7 +112,7 @@ const buildTestEnv = async () => {
   console.timeEnd("setup");
 };
 
-before(async () => {
+export async function testEnvFixture() {
   await rawBRE.run("set-DRE");
   const FORK = process.env.FORK;
 
@@ -124,9 +124,5 @@ before(async () => {
     printContracts();
   }
 
-  console.log("initialize make suite");
-  await initializeMakeSuite();
-  console.log("\n***************");
-  console.log("Setup and snapshot finished");
-  console.log("***************\n");
-});
+  return await initializeMakeSuite();
+}

@@ -1,9 +1,15 @@
 import {expect} from "chai";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {ONE_ADDRESS} from "../deploy/helpers/constants";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("AddressesProviderRegistry", (testEnv: TestEnv) => {
+describe("AddressesProviderRegistry", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   const NEW_ADDRESSES_PROVIDER_ID_2 = 2;
   const NEW_ADDRESSES_PROVIDER_ID_3 = 3;
   const NEW_ADDRESSES_PROVIDER_ADDRESS = ONE_ADDRESS;

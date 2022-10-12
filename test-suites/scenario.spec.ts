@@ -2,8 +2,10 @@ import fs from "fs";
 import ParaSpaceConfig from "../deploy/market-config";
 import {configuration as actionsConfiguration} from "./helpers/actions";
 import {configuration as calculationsConfiguration} from "./helpers/utils/calculations";
-import {makeSuite} from "./helpers/make-suite";
 import {executeStory} from "./helpers/scenario-engine";
+import {TestEnv} from "./helpers/make-suite";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 const scenarioFolder = "./test-suites/helpers/scenarios/";
 
@@ -15,8 +17,10 @@ fs.readdirSync(scenarioFolder).forEach((file) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const scenario = require(`./helpers/scenarios/${file}`);
 
-  makeSuite(scenario.title, async (testEnv) => {
+  describe(scenario.title, async () => {
+    let testEnv: TestEnv;
     before("Initializing configuration", async () => {
+      testEnv = await loadFixture(testEnvFixture);
       actionsConfiguration.skipIntegrityCheck = false; //set this to true to execute solidity-coverage
 
       calculationsConfiguration.reservesParams = ParaSpaceConfig.ReservesConfig;

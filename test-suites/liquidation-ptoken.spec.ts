@@ -4,12 +4,15 @@ import {waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, oneEther} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
 import {BigNumber} from "ethers";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
+describe("Pool Liquidation: Liquidator receiving xToken", () => {
+  let testEnv: TestEnv;
   const {
     HEALTH_FACTOR_NOT_BELOW_THRESHOLD,
     INVALID_HF,
@@ -18,6 +21,7 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
   } = ProtocolErrors;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {paraspaceOracle, addressesProvider, oracle} = testEnv;
 
     (await (await paraspaceOracle.BASE_CURRENCY_UNIT()).toString().length) - 1;
@@ -25,12 +29,12 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
     await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
   });
 
-  after(async () => {
-    const {paraspaceOracle, addressesProvider} = testEnv;
-    await waitForTx(
-      await addressesProvider.setPriceOracle(paraspaceOracle.address)
-    );
-  });
+  // after(async () => {
+  //   const {paraspaceOracle, addressesProvider} = testEnv;
+  //   await waitForTx(
+  //     await addressesProvider.setPriceOracle(paraspaceOracle.address)
+  //   );
+  // });
 
   it("Deposits WETH, borrows DAI/Check liquidation fails because health factor is above 1", async () => {
     const {

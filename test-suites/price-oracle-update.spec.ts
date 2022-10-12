@@ -4,15 +4,19 @@ import {
   convertToCurrencyDecimals,
   getEthersSigners,
 } from "../deploy/helpers/contracts-helpers";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ethers} from "hardhat";
 import {expect} from "chai";
 import {MockAggregator} from "../types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Price Oracle update", (testEnv) => {
+describe("Price Oracle update", () => {
+  let testEnv: TestEnv;
   let firstDaiDeposit;
 
   before("Initialize Depositors", async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {dai} = testEnv;
     firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
     await convertToCurrencyDecimals(dai.address, "20000");

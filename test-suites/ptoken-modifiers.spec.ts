@@ -1,8 +1,14 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken: Modifiers", (testEnv: TestEnv) => {
+describe("PToken: Modifiers", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   const {CALLER_MUST_BE_POOL} = ProtocolErrors;
 
   it("Tries to invoke mint not being the Pool (revert expected)", async () => {

@@ -1,21 +1,23 @@
 import {expect} from "chai";
 import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {getEthersSigners} from "../deploy/helpers/contracts-helpers";
-import {makeSuite, revertHead, setSnapshot} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
 import {utils} from "ethers";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {getNFTFloorOracle} from "../deploy/helpers/contracts-getters";
 import {deployERC721OracleWrapper} from "../deploy/helpers/contracts-deployments";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("NFT Oracle Tests", (testEnv) => {
+describe("NFT Oracle Tests", () => {
   let snapthotId: string;
+  let testEnv: TestEnv;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {bayc, addressesProvider, paraspaceOracle, nftFloorOracle} = testEnv;
-
-    await setSnapshot();
 
     const [deployer] = await getEthersSigners();
 
@@ -36,10 +38,6 @@ makeSuite("NFT Oracle Tests", (testEnv) => {
         [baycOracleWrapper.address]
       )
     );
-  });
-
-  after(async () => {
-    await revertHead();
   });
 
   beforeEach("Take Blockchain Snapshot", async () => {

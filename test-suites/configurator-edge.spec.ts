@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
   MAX_BORROW_CAP,
@@ -13,8 +13,14 @@ import {
 } from "../deploy/helpers/contracts-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {parseUnits} from "ethers/lib/utils";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
+describe("PoolConfigurator: Edge cases", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   const {
     INVALID_RESERVE_FACTOR,
     INVALID_RESERVE_PARAMS,

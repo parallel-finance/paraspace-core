@@ -1,10 +1,16 @@
 import {expect} from "chai";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {MOCK_TOKEN_MINT_VALUE} from "../deploy/market-config";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Mock Token Faucet", (testEnv) => {
+describe("Mock Token Faucet", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   it("User mint all mock Tokens", async () => {
     const {
       mockTokenFaucet,

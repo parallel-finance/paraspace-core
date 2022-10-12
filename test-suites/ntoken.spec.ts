@@ -1,3 +1,4 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
@@ -5,7 +6,8 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 import {
   borrowAndValidate,
   supplyAndValidate,
@@ -13,9 +15,14 @@ import {
   withdrawAndValidate,
 } from "./helpers/validated-steps";
 
-makeSuite("nToken Mint and Burn Event Accounting", (testEnv) => {
+describe("nToken Mint and Burn Event Accounting", () => {
   const firstDaiDeposit = "10000";
   const secondDaiDeposit = "20000";
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
+
   BigNumber.from(MOCK_CHAINLINK_AGGREGATORS_PRICES.BAYC);
 
   it("User 1 deposits BAYC", async () => {

@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite, revertHead, setSnapshot} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
   createNewPool,
@@ -15,8 +15,10 @@ import {
   getUniswapV3DynamicConfigsStrategy,
   getUniswapV3Gateway,
 } from "../deploy/helpers/contracts-getters";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Dynamic Configs Strategy", (testEnv) => {
+describe("Dynamic Configs Strategy", () => {
   let daiConfigs;
   let dynamicConfigsStrategy;
   let userDaiAmount;
@@ -25,8 +27,9 @@ makeSuite("Dynamic Configs Strategy", (testEnv) => {
   let uniswapV3Gateway;
 
   describe("Prepare Uniswap V3 NFT position [  @skip-on-coverage ]", () => {
+    let testEnv: TestEnv;
     before(async () => {
-      await setSnapshot();
+      testEnv = await loadFixture(testEnvFixture);
       const {
         users: [user1],
         dai,
@@ -122,9 +125,6 @@ makeSuite("Dynamic Configs Strategy", (testEnv) => {
       );
 
       dynamicConfigsStrategy = await getUniswapDynamicConfigStrategy();
-    });
-    after(async () => {
-      await revertHead();
     });
 
     it("Dynamic config strategy should calculate the correct LTV and LT", async () => {

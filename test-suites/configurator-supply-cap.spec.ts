@@ -4,12 +4,16 @@ import {MAX_UINT_AMOUNT, MAX_SUPPLY_CAP} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 
-makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
+describe("PoolConfigurator: Supply Cap", () => {
+  let testEnv: TestEnv;
   const {SUPPLY_CAP_EXCEEDED, INVALID_SUPPLY_CAP} = ProtocolErrors;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {weth, pool, dai, usdc} = testEnv;
 
     const mintedAmount = utils.parseEther("1000000000");

@@ -3,15 +3,22 @@ import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken: Transfer", (testEnv: TestEnv) => {
+describe("PToken: Transfer", () => {
+  let testEnv: TestEnv;
   const {
     INVALID_FROM_BALANCE_AFTER_TRANSFER,
     INVALID_TO_BALANCE_AFTER_TRANSFER,
   } = ProtocolErrors;
 
   const DAI_AMOUNT_TO_DEPOSIT = "1000";
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
 
   it("User 0 deposits 1000 DAI, transfers 1000 to user 0", async () => {
     const {users, pool, dai, pDai} = testEnv;

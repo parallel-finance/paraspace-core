@@ -10,16 +10,19 @@ import {
   setAutomineEvm,
   waitForTx,
 } from "../deploy/helpers/misc-utils";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {parseUnits} from "@ethersproject/units";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {getVariableDebtToken} from "../deploy/helpers/contracts-getters";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
+describe("ValidationLogic: Edge cases", () => {
+  let testEnv: TestEnv;
   const {
     RESERVE_INACTIVE,
     RESERVE_FROZEN,
@@ -34,6 +37,7 @@ makeSuite("ValidationLogic: Edge cases", (testEnv: TestEnv) => {
   let snap: string;
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {addressesProvider, oracle} = testEnv;
 
     await waitForTx(await addressesProvider.setPriceOracle(oracle.address));

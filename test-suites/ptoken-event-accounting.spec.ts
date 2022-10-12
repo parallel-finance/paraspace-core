@@ -4,9 +4,12 @@ import {increaseTime, waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {RateMode} from "../deploy/helpers/types";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
+describe("PToken Mint and Burn Event Accounting", () => {
+  let testEnv: TestEnv;
   let firstDaiDeposit;
   let secondDaiDeposit;
   let thirdDaiDeposit;
@@ -40,6 +43,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
   before(
     "User 0 deposits 100 DAI, user 1 deposits 1 WETH, borrows 50 DAI",
     async () => {
+      testEnv = await loadFixture(testEnvFixture);
       const {dai} = testEnv;
       firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
       secondDaiDeposit = await convertToCurrencyDecimals(dai.address, "20000");

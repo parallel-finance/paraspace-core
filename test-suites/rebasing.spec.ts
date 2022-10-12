@@ -1,3 +1,4 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
@@ -5,10 +6,16 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Rebasing tokens", (testEnv) => {
+describe("Rebasing tokens", () => {
   BigNumber.from(MOCK_CHAINLINK_AGGREGATORS_PRICES.BAYC);
+  let testEnv: TestEnv;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
 
   it("should be able to supply stETH and mint rebasing PToken", async () => {
     const {

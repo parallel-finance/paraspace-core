@@ -95,10 +95,7 @@ import {
   PTokenAToken,
   PTokenStETH,
 } from "../../types";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
-import {usingTenderly} from "../../deploy/helpers/tenderly-utils";
 import {MintableERC721} from "../../types";
-import {DRE, evmRevert, evmSnapshot} from "../../deploy/helpers/misc-utils";
 import {Signer} from "ethers";
 import ParaSpaceConfig from "../../deploy/market-config";
 
@@ -172,70 +169,64 @@ export interface TestEnv {
   nftFloorOracle: NFTFloorOracle;
 }
 
-let HardhatSnapshotId = "0x1";
-const setHardhatSnapshotId = (id: string) => {
-  HardhatSnapshotId = id;
-};
-
-const testEnv: TestEnv = {
-  deployer: {} as SignerWithAddress,
-  poolAdmin: {} as SignerWithAddress,
-  assetListingAdmin: {} as SignerWithAddress,
-  emergencyAdmin: {} as SignerWithAddress,
-  riskAdmin: {} as SignerWithAddress,
-  gatewayAdmin: {} as SignerWithAddress,
-  users: [] as SignerWithAddress[],
-  pool: {} as IPool,
-  configurator: {} as PoolConfigurator,
-  poolDataProvider: {} as UiPoolDataProvider,
-  protocolDataProvider: {} as ProtocolDataProvider,
-  oracle: {} as PriceOracle,
-  paraspaceOracle: {} as ParaSpaceOracle,
-  weth: {} as WETH9Mocked,
-  pWETH: {} as PToken,
-  aWETH: {} as MockAToken,
-  paWETH: {} as PTokenAToken,
-  dai: {} as MintableERC20,
-  pDai: {} as PToken,
-  variableDebtDai: {} as VariableDebtToken,
-  stableDebtDai: {} as StableDebtToken,
-  pUsdc: {} as PToken,
-  usdc: {} as MintableERC20,
-  usdt: {} as MintableERC20,
-  nBAYC: {} as NToken,
-  nMOONBIRD: {} as NTokenMoonBirds,
-  bayc: {} as MintableERC721,
-  addressesProvider: {} as PoolAddressesProvider,
-  registry: {} as PoolAddressesProviderRegistry,
-  aclManager: {} as ACLManager,
-  punk: {} as CryptoPunksMarket,
-  wPunk: {} as WPunk,
-  nWPunk: {} as NToken,
-  wBTC: {} as MintableERC20,
-  stETH: {} as StETH,
-  pstETH: {} as PTokenStETH,
-  ape: {} as MintableERC20,
-  mayc: {} as MintableERC721,
-  doodles: {} as MintableERC721,
-  mockTokenFaucet: {} as MockTokenFaucet,
-  wPunkGateway: {} as WPunkGateway,
-  wETHGateway: {} as WETHGateway,
-  conduitController: {} as ConduitController,
-  pausableZoneController: {} as PausableZoneController,
-  conduitKey: {} as string,
-  conduit: {} as Conduit,
-  pausableZone: {} as PausableZone,
-  seaport: {} as Seaport,
-  looksRareExchange: {} as LooksRareExchange,
-  strategyStandardSaleForFixedPrice: {} as StrategyStandardSaleForFixedPrice,
-  transferManagerERC721: {} as TransferManagerERC721,
-  x2y2r1: {} as X2Y2R1,
-  erc721Delegate: {} as ERC721Delegate,
-  moonbirds: {} as Moonbirds,
-  nftFloorOracle: {} as NFTFloorOracle,
-} as TestEnv;
-
 export async function initializeMakeSuite() {
+  const testEnv: TestEnv = {
+    deployer: {} as SignerWithAddress,
+    poolAdmin: {} as SignerWithAddress,
+    assetListingAdmin: {} as SignerWithAddress,
+    emergencyAdmin: {} as SignerWithAddress,
+    riskAdmin: {} as SignerWithAddress,
+    gatewayAdmin: {} as SignerWithAddress,
+    users: [] as SignerWithAddress[],
+    pool: {} as IPool,
+    configurator: {} as PoolConfigurator,
+    poolDataProvider: {} as UiPoolDataProvider,
+    protocolDataProvider: {} as ProtocolDataProvider,
+    oracle: {} as PriceOracle,
+    paraspaceOracle: {} as ParaSpaceOracle,
+    weth: {} as WETH9Mocked,
+    pWETH: {} as PToken,
+    aWETH: {} as MockAToken,
+    paWETH: {} as PTokenAToken,
+    dai: {} as MintableERC20,
+    pDai: {} as PToken,
+    variableDebtDai: {} as VariableDebtToken,
+    stableDebtDai: {} as StableDebtToken,
+    pUsdc: {} as PToken,
+    usdc: {} as MintableERC20,
+    usdt: {} as MintableERC20,
+    nBAYC: {} as NToken,
+    nMOONBIRD: {} as NTokenMoonBirds,
+    bayc: {} as MintableERC721,
+    addressesProvider: {} as PoolAddressesProvider,
+    registry: {} as PoolAddressesProviderRegistry,
+    aclManager: {} as ACLManager,
+    punk: {} as CryptoPunksMarket,
+    wPunk: {} as WPunk,
+    nWPunk: {} as NToken,
+    wBTC: {} as MintableERC20,
+    stETH: {} as StETH,
+    pstETH: {} as PTokenStETH,
+    ape: {} as MintableERC20,
+    mayc: {} as MintableERC721,
+    doodles: {} as MintableERC721,
+    mockTokenFaucet: {} as MockTokenFaucet,
+    wPunkGateway: {} as WPunkGateway,
+    wETHGateway: {} as WETHGateway,
+    conduitController: {} as ConduitController,
+    pausableZoneController: {} as PausableZoneController,
+    conduitKey: {} as string,
+    conduit: {} as Conduit,
+    pausableZone: {} as PausableZone,
+    seaport: {} as Seaport,
+    looksRareExchange: {} as LooksRareExchange,
+    strategyStandardSaleForFixedPrice: {} as StrategyStandardSaleForFixedPrice,
+    transferManagerERC721: {} as TransferManagerERC721,
+    x2y2r1: {} as X2Y2R1,
+    erc721Delegate: {} as ERC721Delegate,
+    moonbirds: {} as Moonbirds,
+    nftFloorOracle: {} as NFTFloorOracle,
+  } as TestEnv;
   const [_deployer, ...restSigners] = await getEthersSigners();
   const deployer: SignerWithAddress = {
     address: await _deployer.getAddress(),
@@ -434,35 +425,5 @@ export async function initializeMakeSuite() {
   testEnv.nftPositionManager = await getNonfungiblePositionManager();
   testEnv.nUniswapV3 = await getNTokenUniswapV3(nUniwapV3Address);
   testEnv.nftFloorOracle = await getNFTFloorOracle();
-}
-
-export const setSnapshot = async () => {
-  const hre = DRE as HardhatRuntimeEnvironment;
-  if (usingTenderly()) {
-    setHardhatSnapshotId((await hre.tenderlyNetwork.getHead()) || "0x1");
-    return;
-  }
-  setHardhatSnapshotId(await evmSnapshot());
-};
-
-export const revertHead = async () => {
-  const hre = DRE as HardhatRuntimeEnvironment;
-  if (usingTenderly()) {
-    await hre.tenderlyNetwork.setHead(HardhatSnapshotId);
-    return;
-  }
-  await evmRevert(HardhatSnapshotId);
-};
-
-// eslint-disable-next-line no-unused-vars
-export function makeSuite(name: string, tests: (testEnv: TestEnv) => void) {
-  describe(name, () => {
-    before(async () => {
-      await setSnapshot();
-    });
-    tests(testEnv);
-    after(async () => {
-      await revertHead();
-    });
-  });
+  return testEnv;
 }

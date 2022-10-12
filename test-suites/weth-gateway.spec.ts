@@ -7,7 +7,7 @@ import {
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ethers, network} from "hardhat";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
@@ -16,18 +16,22 @@ import {getTestWallets} from "./helpers/utils/wallets";
 import {VariableDebtToken__factory} from "../types";
 import {utils} from "ethers";
 import {isAssetInCollateral} from "./helpers/validated-steps";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("WETH GateWay", (testEnv) => {
+describe("WETH GateWay", () => {
   let testWallets;
   let firstDaiDeposit;
   let secondDaiDeposit;
   let thirdDaiDeposit;
+  let testEnv: TestEnv;
 
   const EIP712_REVISION = "1";
 
   before("Initialize Depositors", async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {dai} = testEnv;
     firstDaiDeposit = await convertToCurrencyDecimals(dai.address, "10000");
     secondDaiDeposit = await convertToCurrencyDecimals(dai.address, "20000");

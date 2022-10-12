@@ -9,10 +9,9 @@ import {
 } from "../deploy/helpers/constants";
 import {WadRayMathWrapper, WadRayMathWrapper__factory} from "../types";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
-import {makeSuite} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
 
-makeSuite("WadRayMath", () => {
+describe("WadRayMath", () => {
   let wrapper: WadRayMathWrapper;
 
   before("setup", async () => {

@@ -1,10 +1,6 @@
 import {expect} from "chai";
 import {BigNumberish, utils} from "ethers";
-import {
-  evmRevert,
-  evmSnapshot,
-  impersonateAccountsHardhat,
-} from "../deploy/helpers/misc-utils";
+import {impersonateAccountsHardhat} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   deployDefaultReserveAuctionStrategy,
@@ -20,14 +16,17 @@ import {
   VariableDebtToken__factory,
 } from "../types";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("Pool: Edge cases", (testEnv: TestEnv) => {
+describe("Pool: Edge cases", () => {
+  let testEnv: TestEnv;
   const {
     ASSET_NOT_LISTED,
     ZERO_ADDRESS_NOT_VALID,
@@ -41,14 +40,8 @@ makeSuite("Pool: Edge cases", (testEnv: TestEnv) => {
   const MAX_STABLE_RATE_BORROW_SIZE_PERCENT = 2500;
   const MAX_NUMBER_RESERVES = 128;
 
-  let snap: string;
-
   beforeEach(async () => {
-    snap = await evmSnapshot();
-  });
-
-  afterEach(async () => {
-    await evmRevert(snap);
+    testEnv = await loadFixture(testEnvFixture);
   });
 
   // it("Drop asset while user uses it as collateral, ensure that borrowing power is lowered", async () => {

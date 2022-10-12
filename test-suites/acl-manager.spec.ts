@@ -1,18 +1,22 @@
 import {expect} from "chai";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {constants, utils} from "ethers";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {ACLManager, ACLManager__factory} from "../types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Access Control List Manager", (testEnv: TestEnv) => {
+describe("Access Control List Manager", () => {
   let aclManager: ACLManager;
+  let testEnv: TestEnv;
 
   const FLASH_BORROW_ADMIN_ROLE = utils.keccak256(
     utils.formatBytes32String("FLASH_BORROWER_ADMIN")
   );
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {deployer, addressesProvider} = testEnv;
     aclManager = await new ACLManager__factory(deployer.signer).deploy(
       addressesProvider.address

@@ -1,6 +1,5 @@
 // import {configuration as actionsConfiguration} from "./helpers/actions";
 // import {configuration as calculationsConfiguration} from "./helpers/utils/calculations";
-// import {makeSuite} from "./helpers/make-suite";
 // import {executeStory} from "./helpers/scenario-engine";
 // import ParaSpaceConfig from "../market-config";
 //

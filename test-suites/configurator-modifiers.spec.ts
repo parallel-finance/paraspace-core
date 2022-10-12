@@ -1,9 +1,15 @@
 import {expect} from "chai";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {ONE_ADDRESS} from "../deploy/helpers/constants";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolConfigurator: Modifiers", (testEnv: TestEnv) => {
+describe("PoolConfigurator: Modifiers", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
   const {
     CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN,
     CALLER_NOT_EMERGENCY_ADMIN,

@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {getMockAggregator} from "../deploy/helpers/contracts-getters";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {
   borrowAndValidate,
   changePriceAndValidate,
@@ -15,11 +15,15 @@ import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumber} from "ethers";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 let snapthotId: string;
 
-makeSuite("Liquidation Tests", (testEnv) => {
+describe("Liquidation Tests", () => {
+  let testEnv: TestEnv;
   before("Setup Borrower and Liquidator positions", async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       users: [borrower, liquidator],
       bayc,

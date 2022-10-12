@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {waitForTx, evmSnapshot, evmRevert} from "../deploy/helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
@@ -16,9 +16,13 @@ import {
   getV3Pool,
 } from "../deploy/helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Uniswap V3 Oracle", (testEnv) => {
+describe("Uniswap V3 Oracle", () => {
   let snap: string;
+  let testEnv: TestEnv;
+
   beforeEach(async () => {
     snap = await evmSnapshot();
   });
@@ -27,6 +31,7 @@ makeSuite("Uniswap V3 Oracle", (testEnv) => {
   });
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {addressesProvider, oracle} = testEnv;
     await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
   });

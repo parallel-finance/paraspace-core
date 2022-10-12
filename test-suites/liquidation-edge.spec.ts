@@ -6,11 +6,14 @@ import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {evmRevert, evmSnapshot, waitForTx} from "../deploy/helpers/misc-utils";
 import {RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {VariableDebtToken__factory} from "../types";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool Liquidation: Edge cases", (testEnv: TestEnv) => {
+describe("Pool Liquidation: Edge cases", () => {
   let snap: string;
+  let testEnv: TestEnv;
 
   beforeEach(async () => {
     snap = await evmSnapshot();
@@ -20,17 +23,18 @@ makeSuite("Pool Liquidation: Edge cases", (testEnv: TestEnv) => {
   });
 
   before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {addressesProvider, oracle} = testEnv;
 
     await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
   });
 
-  after(async () => {
-    const {paraspaceOracle, addressesProvider} = testEnv;
-    await waitForTx(
-      await addressesProvider.setPriceOracle(paraspaceOracle.address)
-    );
-  });
+  // after(async () => {
+  //   const {paraspaceOracle, addressesProvider} = testEnv;
+  //   await waitForTx(
+  //     await addressesProvider.setPriceOracle(paraspaceOracle.address)
+  //   );
+  // });
 
   // it("ValidationLogic `executeLiquidationCall` where user has variable debt and stable debt, but variable debt is insufficient to cover the full liquidation amount", async () => {
   //   const { pool, users, dai, weth, oracle } = testEnv;
