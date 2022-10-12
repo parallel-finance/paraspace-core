@@ -120,7 +120,6 @@ const getReserveData = async (
     helpersContract.getReserveCaps(asset),
     helpersContract.getPaused(asset),
     helpersContract.getLiquidationProtocolFee(asset),
-    // helpersContract.getUnbackedMintCap(asset),
   ]);
 };
 
@@ -715,44 +714,6 @@ describe("PoolConfigurator", () => {
     });
     await evmRevert(snapId);
   });
-
-  // it("Updates the unbackedMintCap of WETH via pool admin", async () => {
-  //   const { configurator, helpersContract, weth } = testEnv;
-
-  //   const oldWethUnbackedMintCap = await helpersContract.getUnbackedMintCap(
-  //     weth.address
-  //   );
-
-  //   const newUnbackedMintCap = "10000";
-  //   expect(
-  //     await configurator.setUnbackedMintCap(weth.address, newUnbackedMintCap)
-  //   )
-  //     .to.emit(configurator, "UnbackedMintCapChanged")
-  //     .withArgs(weth.address, oldWethUnbackedMintCap, newUnbackedMintCap);
-
-  //   expect(await helpersContract.getUnbackedMintCap(weth.address)).to.be.eq(
-  //     newUnbackedMintCap
-  //   );
-  // });
-
-  // it("Updates the unbackedMintCap of WETH via risk admin", async () => {
-  //   const { configurator, helpersContract, weth } = testEnv;
-
-  //   const oldWethUnbackedMintCap = await helpersContract.getUnbackedMintCap(
-  //     weth.address
-  //   );
-
-  //   const newUnbackedMintCap = "20000";
-  //   expect(
-  //     await configurator.setUnbackedMintCap(weth.address, newUnbackedMintCap)
-  //   )
-  //     .to.emit(configurator, "UnbackedMintCapChanged")
-  //     .withArgs(weth.address, oldWethUnbackedMintCap, newUnbackedMintCap);
-
-  //   expect(await helpersContract.getUnbackedMintCap(weth.address)).to.be.eq(
-  //     newUnbackedMintCap
-  //   );
-  // });
 
   it("Updates the borrowCap of WETH via pool admin", async () => {
     const {configurator, helpersContract, weth} = testEnv;

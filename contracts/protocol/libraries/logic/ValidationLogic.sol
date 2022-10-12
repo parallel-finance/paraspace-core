@@ -648,7 +648,7 @@ library ValidationLogic {
             ,
             vars.principalReservePaused,
 
-        ) = params.debtReserveCache.reserveConfiguration.getFlags();
+        ) = params.liquidationAssetReserveCache.reserveConfiguration.getFlags();
 
         require(
             vars.collateralReserveActive && vars.principalReserveActive,
@@ -727,7 +727,7 @@ library ValidationLogic {
             ,
             vars.principalReservePaused,
 
-        ) = params.debtReserveCache.reserveConfiguration.getFlags();
+        ) = params.liquidationAssetReserveCache.reserveConfiguration.getFlags();
 
         require(
             vars.collateralReserveActive && vars.principalReserveActive,
@@ -766,7 +766,7 @@ library ValidationLogic {
         }
 
         require(
-            params.liquidationAmount >= params.collateralDiscountedPrice,
+            params.liquidationAmount >= params.actualLiquidationAmount,
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
@@ -783,7 +783,7 @@ library ValidationLogic {
             Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
         );
         require(
-            params.totalDebt != 0,
+            params.globalDebt != 0,
             Errors.SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER
         );
     }

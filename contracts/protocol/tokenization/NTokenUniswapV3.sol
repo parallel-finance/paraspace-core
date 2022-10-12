@@ -24,14 +24,13 @@ import {IWETH} from "../../misc/interfaces/IWETH.sol";
 contract NTokenUniswapV3 is NToken {
     using SafeERC20 for IERC20;
 
-    bool internal constant ATOMIC_PRICING_VALUE = true;
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool) NToken(pool, ATOMIC_PRICING_VALUE) {
+    constructor(IPool pool) NToken(pool, true) {
         // Intentionally left blank
     }
 
@@ -79,8 +78,10 @@ contract NTokenUniswapV3 is NToken {
     /**
      * @notice A function that decreases the current liquidity.
      * @param tokenId The id of the erc721 token
+     * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
+     * @param receiveEthAsWeth If convert weth to ETH
      * @return amount0 The amount received back in token0
      * @return amount1 The amount returned back in token1
      */
@@ -129,13 +130,12 @@ contract NTokenUniswapV3 is NToken {
             (token0 == weth || token1 == weth));
 
         address sender = msg.sender;
-        uint128 MAX_INT_128 = 0xffffffffffffffffffffffffffffffff;
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
                 recipient: receiveEthAsWeth ? address(this) : sender,
-                amount0Max: MAX_INT_128,
-                amount1Max: MAX_INT_128
+                amount0Max: type(uint128).max,
+                amount1Max: type(uint128).max
             });
 
         (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
@@ -167,6 +167,7 @@ contract NTokenUniswapV3 is NToken {
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
+     * @param receiveEthAsWeth If convert weth to ETH
      */
     function decreaseUniswapV3Liquidity(
         uint256 tokenId,

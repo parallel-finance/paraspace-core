@@ -229,13 +229,13 @@
       ]
     },
     {
-      "description": "User 1 deposits 100 DAI on behalf of user 2, user 2 tries to borrow 0.1 WETH",
+      "description": "User 1 deposits 500 DAI on behalf of user 2, user 2 tries to borrow 0.1 WETH",
       "actions": [
         {
           "name": "mint",
           "args": {
             "reserve": "DAI",
-            "amount": "100",
+            "amount": "500",
             "user": "1"
           },
           "expected": "success"
@@ -244,7 +244,7 @@
           "name": "deposit",
           "args": {
             "reserve": "DAI",
-            "amount": "100",
+            "amount": "500",
             "user": "1",
             "onBehalfOf": "2"
           },

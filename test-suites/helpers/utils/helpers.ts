@@ -82,7 +82,6 @@ export const getReserveData = async (
     reserveFactor,
     accruedToTreasuryScaled,
     availableLiquidity,
-    totalLiquidity: availableLiquidity,
     borrowUtilizationRate,
     supplyUtilizationRate,
     totalStableDebt: reserveData.totalStableDebt,

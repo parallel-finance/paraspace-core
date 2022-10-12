@@ -292,7 +292,6 @@ describe("PToken: Repay", () => {
     );
 
     const expectedRates = await strategy.calculateInterestRates({
-      // unbacked: 0,
       liquidityAdded: 0,
       liquidityTaken: 0,
       totalStableDebt: stableDebtData[1],

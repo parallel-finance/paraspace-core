@@ -134,72 +134,112 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
         borrower.address
       );
 
-    const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
+      const daiReserveDataAfter = await getReserveData(
+        helpersContract,
+        dai.address
+      );
+      const ethReserveDataAfter = await getReserveData(
+        helpersContract,
+        weth.address
+      );
 
-    expect(userGlobalDataAfter.currentLiquidationThreshold).to.be.equal(
-      8500,
-      INVALID_HF
-    );
-  });
+      const collateralPrice = await oracle.getAssetPrice(weth.address);
+      const principalPrice = await oracle.getAssetPrice(dai.address);
 
-  it("Drop the health factor below 1", async () => {
-    const {
-      dai,
-      users: [, borrower],
-      pool,
-      oracle,
-    } = testEnv;
+      const collateralDecimals = (
+        await helpersContract.getReserveConfigurationData(weth.address)
+      ).decimals;
+      const principalDecimals = (
+        await helpersContract.getReserveConfigurationData(dai.address)
+      ).decimals;
 
-    const daiPrice = await oracle.getAssetPrice(dai.address);
+      const expectedCollateralLiquidated = principalPrice
+        .mul(amountToLiquidate)
+        .percentMul(10500)
+        .mul(BigNumber.from(10).pow(collateralDecimals))
+        .div(collateralPrice.mul(BigNumber.from(10).pow(principalDecimals)));
 
-    await oracle.setAssetPrice(dai.address, daiPrice.percentMul(11800));
+      if (!tx.blockNumber) {
+        expect(false, "Invalid block number");
+        return;
+      }
+      const txTimestamp = BigNumber.from(
+        (await hre.ethers.provider.getBlock(tx.blockNumber)).timestamp
+      );
 
-    const userGlobalData = await pool.getUserAccountData(borrower.address);
+      const variableDebtBeforeTx = calcExpectedVariableDebtTokenBalance(
+        daiReserveDataBefore,
+        userReserveDataBefore,
+        txTimestamp
+      );
 
-    expect(userGlobalData.healthFactor).to.be.lt(oneEther, INVALID_HF);
-  });
+      expect(userReserveDataAfter.currentVariableDebt).to.be.closeTo(
+        variableDebtBeforeTx.sub(amountToLiquidate),
+        2,
+        "Invalid user debt after liquidation"
+      );
 
-  it("Liquidates the borrow", async () => {
-    const {
-      dai,
-      weth,
-      users: [, borrower, , liquidator],
-      pool,
-      oracle,
-      helpersContract,
-    } = testEnv;
+      //the liquidity index of the principal reserve needs to be bigger than the index before
+      expect(daiReserveDataAfter.liquidityIndex).to.be.gte(
+        daiReserveDataBefore.liquidityIndex,
+        "Invalid liquidity index"
+      );
 
-    //mints dai to the liquidator
-    await dai
-      .connect(liquidator.signer)
-      ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "1000"));
+      //the principal APY after a liquidation needs to be lower than the APY before
+      expect(daiReserveDataAfter.liquidityRate).to.be.lt(
+        daiReserveDataBefore.liquidityRate,
+        "Invalid liquidity APY"
+      );
 
-    //approve protocol to access the liquidator wallet
-    await dai.connect(liquidator.signer).approve(pool.address, MAX_UINT_AMOUNT);
+      expect(daiReserveDataAfter.availableLiquidity).to.be.closeTo(
+        daiReserveDataBefore.availableLiquidity.add(amountToLiquidate),
+        2,
+        "Invalid principal available liquidity"
+      );
 
-    const daiReserveDataBefore = await getReserveData(
-      helpersContract,
-      dai.address
-    );
-    const ethReserveDataBefore = await getReserveData(
-      helpersContract,
-      weth.address
-    );
+      expect(ethReserveDataAfter.availableLiquidity).to.be.closeTo(
+        ethReserveDataBefore.availableLiquidity.sub(
+          expectedCollateralLiquidated
+        ),
+        2,
+        "Invalid collateral available liquidity"
+      );
+    });
 
-    const userReserveDataBefore = await getUserData(
-      pool,
-      helpersContract,
-      dai.address,
-      borrower.address
-    );
+    it("User 3 deposits 1000 USDC, user 4 0.06775 WETH, user 4 borrows - drops HF, liquidates the borrow", async () => {
+      const {
+        usdc,
+        users: [, , , depositor, borrower, liquidator],
+        pool,
+        oracle,
+        weth,
+        helpersContract,
+      } = testEnv;
 
-    const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
+      //mints USDC to depositor
+      await usdc
+        .connect(depositor.signer)
+        ["mint(uint256)"](
+          await convertToCurrencyDecimals(usdc.address, "1000")
+        );
 
-    await increaseTime(100);
+      //approve protocol to access depositor wallet
+      await usdc
+        .connect(depositor.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
 
-    const tx = await pool
-      .connect(liquidator.signer)
-      .liquidationCall(
+      //depositor deposits 1000 USDC
+      const amountUSDCtoDeposit = await convertToCurrencyDecimals(
+        usdc.address,
+        "1000"
+      );
+
+      await pool
+        .connect(depositor.signer)
+        .supply(usdc.address, amountUSDCtoDeposit, depositor.address, "0");
+
+      //borrower deposits ETH
+      const amountETHtoDeposit = await convertToCurrencyDecimals(
         weth.address,
         dai.address,
         borrower.address,
@@ -379,259 +419,157 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
       .connect(liquidator.signer)
       .approve(pool.address, MAX_UINT_AMOUNT);
 
-    const userReserveDataBefore = await helpersContract.getUserReserveData(
-      usdc.address,
-      borrower.address
-    );
-
-    const usdcReserveDataBefore = await getReserveData(
-      helpersContract,
-      usdc.address
-    );
-    const ethReserveDataBefore = await getReserveData(
-      helpersContract,
-      weth.address
-    );
-
-    const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
-
-    await pool
-      .connect(liquidator.signer)
-      .liquidationCall(
-        weth.address,
-        usdc.address,
-        borrower.address,
-        amountToLiquidate,
-        false
+      expect(usdcReserveDataAfter.availableLiquidity).to.be.closeTo(
+        usdcReserveDataBefore.availableLiquidity.add(amountToLiquidate),
+        2,
+        "Invalid principal available liquidity"
       );
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
-      usdc.address,
-      borrower.address
-    );
+      expect(ethReserveDataAfter.availableLiquidity).to.be.closeTo(
+        ethReserveDataBefore.availableLiquidity.sub(
+          expectedCollateralLiquidated
+        ),
+        2,
+        "Invalid collateral available liquidity"
+      );
+    });
 
-    const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
+    //   it("User 4 deposits 0.033 ParaSpace - drops HF, liquidates the ParaSpace, which results on a lower amount being liquidated", async () => {
+    //     const {
+    //       paraspace,
+    //       usdc,
+    //       users: [, , , , borrower, liquidator],
+    //       pool,
+    //       oracle,
+    //       helpersContract,
+    //     } = testEnv;
 
-    const usdcReserveDataAfter = await getReserveData(
-      helpersContract,
-      usdc.address
-    );
-    const ethReserveDataAfter = await getReserveData(
-      helpersContract,
-      weth.address
-    );
+    //     //mints ParaSpace to borrower
+    //     await paraspace
+    //       .connect(borrower.signer)
+    //       ["mint(uint256)"](
+    //         await convertToCurrencyDecimals(paraspace.address, "0.033")
+    //       );
 
-    const collateralPrice = await oracle.getAssetPrice(weth.address);
-    const principalPrice = await oracle.getAssetPrice(usdc.address);
+    //     //approve protocol to access the borrower wallet
+    //     await paraspace
+    //       .connect(borrower.signer)
+    //       .approve(pool.address, MAX_UINT_AMOUNT);
 
-    const collateralDecimals = (
-      await helpersContract.getReserveConfigurationData(weth.address)
-    ).decimals;
-    const principalDecimals = (
-      await helpersContract.getReserveConfigurationData(usdc.address)
-    ).decimals;
+    //     //borrower deposits 1 ParaSpace
+    //     const amountToDeposit = await convertToCurrencyDecimals(
+    //       paraspace.address,
+    //       "0.033"
+    //     );
 
-    const expectedCollateralLiquidated = principalPrice
-      .mul(BigNumber.from(amountToLiquidate))
-      .percentMul(10500)
-      .mul(BigNumber.from(10).pow(collateralDecimals))
-      .div(collateralPrice.mul(BigNumber.from(10).pow(principalDecimals)));
+    //     await pool
+    //       .connect(borrower.signer)
+    //       .supply(paraspace.address, amountToDeposit, borrower.address, "0");
+    //     const usdcPrice = await oracle.getAssetPrice(usdc.address);
 
-    expect(userGlobalDataAfter.healthFactor).to.be.gt(
-      oneEther,
-      "Invalid health factor"
-    );
+    //     //drops HF below 1
+    //     await oracle.setAssetPrice(usdc.address, usdcPrice.percentMul(11400));
 
-    expect(userReserveDataAfter.currentVariableDebt).to.be.closeTo(
-      userReserveDataBefore.currentVariableDebt.sub(amountToLiquidate),
-      2,
-      "Invalid user borrow balance after liquidation"
-    );
+    //     //mints usdc to the liquidator
+    //     await usdc
+    //       .connect(liquidator.signer)
+    //       ["mint(uint256)"](
+    //         await convertToCurrencyDecimals(usdc.address, "1000")
+    //       );
 
-    //the liquidity index of the principal reserve needs to be bigger than the index before
-    expect(usdcReserveDataAfter.liquidityIndex).to.be.gte(
-      usdcReserveDataBefore.liquidityIndex,
-      "Invalid liquidity index"
-    );
+    //     //approve protocol to access liquidator wallet
+    //     await usdc
+    //       .connect(liquidator.signer)
+    //       .approve(pool.address, MAX_UINT_AMOUNT);
 
-    //the principal APY after a liquidation needs to be lower than the APY before
-    expect(usdcReserveDataAfter.liquidityRate).to.be.lt(
-      usdcReserveDataBefore.liquidityRate,
-      "Invalid liquidity APY"
-    );
+    //     const userReserveDataBefore = await helpersContract.getUserReserveData(
+    //       usdc.address,
+    //       borrower.address
+    //     );
 
-    expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-      usdcReserveDataBefore.totalLiquidity.add(amountToLiquidate),
-      2,
-      "Invalid principal total liquidity"
-    );
+    //     const usdcReserveDataBefore = await getReserveData(
+    //       helpersContract,
+    //       usdc.address
+    //     );
+    //     const paraspaceReserveDataBefore = await getReserveData(
+    //       helpersContract,
+    //       paraspace.address
+    //     );
 
-    expect(ethReserveDataAfter.totalLiquidity).to.be.closeTo(
-      ethReserveDataBefore.totalLiquidity.sub(expectedCollateralLiquidated),
-      2,
-      "Invalid collateral total liquidity"
-    );
+    //     const amountToLiquidate = userReserveDataBefore.currentStableDebt.div(2);
 
-    expect(usdcReserveDataAfter.availableLiquidity).to.be.closeTo(
-      usdcReserveDataBefore.availableLiquidity.add(amountToLiquidate),
-      2,
-      "Invalid principal available liquidity"
-    );
+    //     const collateralPrice = await oracle.getAssetPrice(paraspace.address);
+    //     const principalPrice = await oracle.getAssetPrice(usdc.address);
 
-    expect(ethReserveDataAfter.availableLiquidity).to.be.closeTo(
-      ethReserveDataBefore.availableLiquidity.sub(expectedCollateralLiquidated),
-      2,
-      "Invalid collateral available liquidity"
-    );
-  });
+    //     await pool
+    //       .connect(liquidator.signer)
+    //       .liquidationCall(
+    //         paraspace.address,
+    //         usdc.address,
+    //         borrower.address,
+    //         amountToLiquidate,
+    //         false
+    //       );
 
-  //   it("User 4 deposits 0.033 ParaSpace - drops HF, liquidates the ParaSpace, which results on a lower amount being liquidated", async () => {
-  //     const {
-  //       paraspace,
-  //       usdc,
-  //       users: [, , , , borrower, liquidator],
-  //       pool,
-  //       oracle,
-  //       helpersContract,
-  //     } = testEnv;
+    //     const userReserveDataAfter = await helpersContract.getUserReserveData(
+    //       usdc.address,
+    //       borrower.address
+    //     );
 
-  //     //mints ParaSpace to borrower
-  //     await paraspace
-  //       .connect(borrower.signer)
-  //       ["mint(uint256)"](
-  //         await convertToCurrencyDecimals(paraspace.address, "0.033")
-  //       );
+    //     const userGlobalDataAfter = await pool.getUserAccountData(
+    //       borrower.address
+    //     );
 
-  //     //approve protocol to access the borrower wallet
-  //     await paraspace
-  //       .connect(borrower.signer)
-  //       .approve(pool.address, MAX_UINT_AMOUNT);
+    //     const usdcReserveDataAfter = await getReserveData(
+    //       helpersContract,
+    //       usdc.address
+    //     );
+    //     const paraspaceReserveDataAfter = await getReserveData(
+    //       helpersContract,
+    //       paraspace.address
+    //     );
 
-  //     //borrower deposits 1 ParaSpace
-  //     const amountToDeposit = await convertToCurrencyDecimals(
-  //       paraspace.address,
-  //       "0.033"
-  //     );
+    //     const paraspaceConfiguration =
+    //       await helpersContract.getReserveConfigurationData(paraspace.address);
+    //     const collateralDecimals = paraspaceConfiguration.decimals;
+    //     const liquidationBonus = paraspaceConfiguration.liquidationBonus;
 
-  //     await pool
-  //       .connect(borrower.signer)
-  //       .supply(paraspace.address, amountToDeposit, borrower.address, "0");
-  //     const usdcPrice = await oracle.getAssetPrice(usdc.address);
+    //     const principalDecimals = (
+    //       await helpersContract.getReserveConfigurationData(usdc.address)
+    //     ).decimals;
 
-  //     //drops HF below 1
-  //     await oracle.setAssetPrice(usdc.address, usdcPrice.percentMul(11400));
+    //     const expectedCollateralLiquidated = oneEther.mul("33").div("1000");
 
-  //     //mints usdc to the liquidator
-  //     await usdc
-  //       .connect(liquidator.signer)
-  //       ["mint(uint256)"](
-  //         await convertToCurrencyDecimals(usdc.address, "1000")
-  //       );
+    //     const expectedPrincipal = collateralPrice
+    //       .mul(expectedCollateralLiquidated)
+    //       .mul(BigNumber.from(10).pow(principalDecimals))
+    //       .div(principalPrice.mul(BigNumber.from(10).pow(collateralDecimals)))
+    //       .percentDiv(liquidationBonus);
 
-  //     //approve protocol to access liquidator wallet
-  //     await usdc
-  //       .connect(liquidator.signer)
-  //       .approve(pool.address, MAX_UINT_AMOUNT);
+    //     expect(userGlobalDataAfter.healthFactor).to.be.gt(
+    //       oneEther,
+    //       "Invalid health factor"
+    //     );
 
-  //     const userReserveDataBefore = await helpersContract.getUserReserveData(
-  //       usdc.address,
-  //       borrower.address
-  //     );
+    //     expect(userReserveDataAfter.currentStableDebt).to.be.closeTo(
+    //       userReserveDataBefore.currentStableDebt.sub(expectedPrincipal),
+    //       2,
+    //       "Invalid user borrow balance after liquidation"
+    //     );
 
-  //     const usdcReserveDataBefore = await getReserveData(
-  //       helpersContract,
-  //       usdc.address
-  //     );
-  //     const paraspaceReserveDataBefore = await getReserveData(
-  //       helpersContract,
-  //       paraspace.address
-  //     );
+    //     expect(usdcReserveDataAfter.availableLiquidity).to.be.closeTo(
+    //       usdcReserveDataBefore.availableLiquidity.add(expectedPrincipal),
+    //       2,
+    //       "Invalid principal available liquidity"
+    //     );
 
-  //     const amountToLiquidate = userReserveDataBefore.currentStableDebt.div(2);
-
-  //     const collateralPrice = await oracle.getAssetPrice(paraspace.address);
-  //     const principalPrice = await oracle.getAssetPrice(usdc.address);
-
-  //     await pool
-  //       .connect(liquidator.signer)
-  //       .liquidationCall(
-  //         paraspace.address,
-  //         usdc.address,
-  //         borrower.address,
-  //         amountToLiquidate,
-  //         false
-  //       );
-
-  //     const userReserveDataAfter = await helpersContract.getUserReserveData(
-  //       usdc.address,
-  //       borrower.address
-  //     );
-
-  //     const userGlobalDataAfter = await pool.getUserAccountData(
-  //       borrower.address
-  //     );
-
-  //     const usdcReserveDataAfter = await getReserveData(
-  //       helpersContract,
-  //       usdc.address
-  //     );
-  //     const paraspaceReserveDataAfter = await getReserveData(
-  //       helpersContract,
-  //       paraspace.address
-  //     );
-
-  //     const paraspaceConfiguration =
-  //       await helpersContract.getReserveConfigurationData(paraspace.address);
-  //     const collateralDecimals = paraspaceConfiguration.decimals;
-  //     const liquidationBonus = paraspaceConfiguration.liquidationBonus;
-
-  //     const principalDecimals = (
-  //       await helpersContract.getReserveConfigurationData(usdc.address)
-  //     ).decimals;
-
-  //     const expectedCollateralLiquidated = oneEther.mul("33").div("1000");
-
-  //     const expectedPrincipal = collateralPrice
-  //       .mul(expectedCollateralLiquidated)
-  //       .mul(BigNumber.from(10).pow(principalDecimals))
-  //       .div(principalPrice.mul(BigNumber.from(10).pow(collateralDecimals)))
-  //       .percentDiv(liquidationBonus);
-
-  //     expect(userGlobalDataAfter.healthFactor).to.be.gt(
-  //       oneEther,
-  //       "Invalid health factor"
-  //     );
-
-  //     expect(userReserveDataAfter.currentStableDebt).to.be.closeTo(
-  //       userReserveDataBefore.currentStableDebt.sub(expectedPrincipal),
-  //       2,
-  //       "Invalid user borrow balance after liquidation"
-  //     );
-
-  //     expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-  //       usdcReserveDataBefore.totalLiquidity.add(expectedPrincipal),
-  //       2,
-  //       "Invalid principal total liquidity"
-  //     );
-
-  //     expect(paraspaceReserveDataAfter.totalLiquidity).to.be.closeTo(
-  //       paraspaceReserveDataBefore.totalLiquidity.sub(expectedCollateralLiquidated),
-  //       2,
-  //       "Invalid collateral total liquidity"
-  //     );
-
-  //     expect(usdcReserveDataAfter.availableLiquidity).to.be.closeTo(
-  //       usdcReserveDataBefore.availableLiquidity.add(expectedPrincipal),
-  //       2,
-  //       "Invalid principal available liquidity"
-  //     );
-
-  //     expect(paraspaceReserveDataAfter.availableLiquidity).to.be.closeTo(
-  //       paraspaceReserveDataBefore.availableLiquidity.sub(
-  //         expectedCollateralLiquidated
-  //       ),
-  //       2,
-  //       "Invalid collateral available liquidity"
-  //     );
-  //   });
-});
+    //     expect(paraspaceReserveDataAfter.availableLiquidity).to.be.closeTo(
+    //       paraspaceReserveDataBefore.availableLiquidity.sub(
+    //         expectedCollateralLiquidated
+    //       ),
+    //       2,
+    //       "Invalid collateral available liquidity"
+    //     );
+    //   });
+  }
+);

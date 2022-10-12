@@ -212,6 +212,10 @@ test-rate-strategy:
 test-dynamic-configs-strategy:
 	make TEST_TARGET=dynamic-configs-strategy.spec.ts test
 
+.PHONY: test-scenario
+test-scenario:
+	make TEST_TARGET=scenario.spec.ts test
+
 .PHONY: run
 run:
 	TS_NODE_TRANSPILE_ONLY=1 npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
