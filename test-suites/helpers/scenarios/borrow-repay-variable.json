@@ -244,7 +244,7 @@
       ]
     },
     {
-      "description": "User 0 deposits 1 WETH, user 1 deposits 100 LINK as collateral and borrows 0.5 WETH at variable rate",
+      "description": "User 0 deposits 1 WETH, user 1 deposits 1000 USDT as collateral and borrows 0.5 WETH at variable rate",
       "actions": [
         {
           "name": "mint",
@@ -275,8 +275,8 @@
         {
           "name": "mint",
           "args": {
-            "reserve": "LINK",
-            "amount": "100",
+            "reserve": "USDT",
+            "amount": "1000",
             "user": "1"
           },
           "expected": "success"
@@ -284,7 +284,7 @@
         {
           "name": "approve",
           "args": {
-            "reserve": "LINK",
+            "reserve": "USDT",
             "user": "1"
           },
           "expected": "success"
@@ -293,8 +293,8 @@
         {
           "name": "deposit",
           "args": {
-            "reserve": "LINK",
-            "amount": "100",
+            "reserve": "USDT",
+            "amount": "1000",
             "user": "1"
           },
           "expected": "success"
@@ -432,7 +432,7 @@
         {
           "name": "withdraw",
           "args": {
-            "reserve": "LINK",
+            "reserve": "USDT",
             "amount": "-1",
             "user": "1"
           },
@@ -815,7 +815,7 @@
       ]
     },
     {
-      "description": "User 0 deposits 1000 DAI, user 6 deposits 2 WETH and borrow 100 DAI at variable rate first, then 100 DAI at stable rate, repays everything. User 0 withdraws",
+      "description": "User 0 deposits 1000 DAI, user 6 deposits 2 WETH and borrow 100 DAI first, then another 100 DAI, repays everything. User 0 withdraws",
       "actions": [
         {
           "name": "mint",
@@ -885,7 +885,7 @@
           "args": {
             "reserve": "DAI",
             "amount": "100",
-            "borrowRateMode": "stable",
+            "borrowRateMode": "variable",
             "user": "6",
             "timeTravel": "365"
           },
@@ -906,17 +906,6 @@
           "args": {
             "reserve": "DAI",
             "user": "6"
-          },
-          "expected": "success"
-        },
-        {
-          "name": "repay",
-          "args": {
-            "reserve": "DAI",
-            "amount": "-1",
-            "user": "6",
-            "onBehalfOf": "6",
-            "borrowRateMode": "stable"
           },
           "expected": "success"
         },

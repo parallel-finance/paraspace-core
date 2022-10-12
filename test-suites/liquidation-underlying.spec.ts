@@ -279,18 +279,6 @@ makeSuite(
         "Invalid liquidity APY"
       );
 
-      expect(daiReserveDataAfter.totalLiquidity).to.be.closeTo(
-        daiReserveDataBefore.totalLiquidity.add(amountToLiquidate),
-        2,
-        "Invalid principal total liquidity"
-      );
-
-      expect(ethReserveDataAfter.totalLiquidity).to.be.closeTo(
-        ethReserveDataBefore.totalLiquidity.sub(expectedCollateralLiquidated),
-        2,
-        "Invalid collateral total liquidity"
-      );
-
       expect(daiReserveDataAfter.availableLiquidity).to.be.closeTo(
         daiReserveDataBefore.availableLiquidity.add(amountToLiquidate),
         2,
@@ -483,18 +471,6 @@ makeSuite(
         "Invalid liquidity APY"
       );
 
-      expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-        usdcReserveDataBefore.totalLiquidity.add(amountToLiquidate),
-        2,
-        "Invalid principal total liquidity"
-      );
-
-      expect(ethReserveDataAfter.totalLiquidity).to.be.closeTo(
-        ethReserveDataBefore.totalLiquidity.sub(expectedCollateralLiquidated),
-        2,
-        "Invalid collateral total liquidity"
-      );
-
       expect(usdcReserveDataAfter.availableLiquidity).to.be.closeTo(
         usdcReserveDataBefore.availableLiquidity.add(amountToLiquidate),
         2,
@@ -631,18 +607,6 @@ makeSuite(
     //       userReserveDataBefore.currentStableDebt.sub(expectedPrincipal),
     //       2,
     //       "Invalid user borrow balance after liquidation"
-    //     );
-
-    //     expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-    //       usdcReserveDataBefore.totalLiquidity.add(expectedPrincipal),
-    //       2,
-    //       "Invalid principal total liquidity"
-    //     );
-
-    //     expect(paraspaceReserveDataAfter.totalLiquidity).to.be.closeTo(
-    //       paraspaceReserveDataBefore.totalLiquidity.sub(expectedCollateralLiquidated),
-    //       2,
-    //       "Invalid collateral total liquidity"
     //     );
 
     //     expect(usdcReserveDataAfter.availableLiquidity).to.be.closeTo(

@@ -334,20 +334,6 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
       2,
       "Invalid liquidator balance"
     );
-
-    expect(daiReserveDataAfter.totalLiquidity).to.be.closeTo(
-      daiReserveDataBefore.totalLiquidity.add(amountToLiquidate),
-      2,
-      "Invalid principal total liquidity"
-    );
-
-    expect(ethReserveDataAfter.totalLiquidity).to.be.closeTo(
-      ethReserveDataBefore.totalLiquidity.sub(
-        totalCollateralLiquidated.sub(liquidationProtocolFees)
-      ),
-      2,
-      "Invalid collateral total liquidity"
-    );
   });
 
   it("User 3 deposits 1000 USDC, user 4 0.06775 WETH, user 4 borrows - drops HF, liquidates the borrow", async () => {
@@ -566,20 +552,6 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
       2,
       "Invalid liquidator balance"
     );
-
-    expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-      usdcReserveDataBefore.totalLiquidity.add(amountToLiquidate),
-      2,
-      "Invalid principal total liquidity"
-    );
-
-    expect(ethReserveDataAfter.totalLiquidity).to.be.closeTo(
-      ethReserveDataBefore.totalLiquidity.sub(
-        totalCollateralLiquidated.sub(liquidationProtocolFees)
-      ),
-      2,
-      "Invalid collateral total liquidity"
-    );
   });
 
   // it("User 4 deposits 0.03 DAI - drops HF, liquidates the DAI, which results on a lower amount being liquidated", async () => {
@@ -754,18 +726,6 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     daiReserveDataBefore.availableLiquidity,
   //     2,
   //     "Invalid collateral available liquidity"
-  //   );
-
-  //   expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-  //     usdcReserveDataBefore.totalLiquidity.add(expectedPrincipal),
-  //     2,
-  //     "Invalid principal total liquidity"
-  //   );
-
-  //   expect(daiReserveDataAfter.totalLiquidity).to.be.closeTo(
-  //     daiReserveDataBefore.totalLiquidity,
-  //     2,
-  //     "Invalid collateral total liquidity"
   //   );
 
   //   expect(pDAITokenBalanceBefore).to.be.equal(
@@ -960,18 +920,6 @@ makeSuite("Pool Liquidation: Add fee to liquidations", (testEnv) => {
   //     daiReserveDataBefore.availableLiquidity,
   //     2,
   //     "Invalid collateral available liquidity"
-  //   );
-
-  //   expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-  //     usdcReserveDataBefore.totalLiquidity.add(expectedPrincipal),
-  //     2,
-  //     "Invalid principal total liquidity"
-  //   );
-
-  //   expect(daiReserveDataAfter.totalLiquidity).to.be.closeTo(
-  //     daiReserveDataBefore.totalLiquidity,
-  //     2,
-  //     "Invalid collateral total liquidity"
   //   );
 
   //   expect(pDAITokenBalanceBefore).to.be.equal(

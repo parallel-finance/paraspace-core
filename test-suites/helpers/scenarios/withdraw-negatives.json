@@ -94,7 +94,7 @@
             "reserve": "DAI",
             "amount": "100",
             "user": "1",
-            "borrowRateMode": "stable"
+            "borrowRateMode": "variable"
           },
           "expected": "success"
         },

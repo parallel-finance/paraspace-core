@@ -290,12 +290,6 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
       "Invalid collateral available liquidity"
     );
 
-    expect(daiReserveDataAfter.totalLiquidity).to.be.closeTo(
-      daiReserveDataBefore.totalLiquidity.add(amountToLiquidate),
-      2,
-      "Invalid principal total liquidity"
-    );
-
     //the liquidity index of the principal reserve needs to be bigger than the index before
     expect(daiReserveDataAfter.liquidityIndex).to.be.gte(
       daiReserveDataBefore.liquidityIndex,
@@ -306,13 +300,6 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
     expect(daiReserveDataAfter.liquidityRate).to.be.lt(
       daiReserveDataBefore.liquidityRate,
       "Invalid liquidity APY"
-    );
-
-    // We need the scaled balances here
-    expect(ethReserveDataAfter.totalLiquidity).to.be.closeTo(
-      ethReserveDataBefore.totalLiquidity,
-      2,
-      "Invalid collateral total liquidity"
     );
 
     expect(
@@ -491,12 +478,6 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
       "Invalid principal available liquidity"
     );
 
-    expect(usdcReserveDataAfter.totalLiquidity).to.be.closeTo(
-      usdcReserveDataBefore.totalLiquidity.add(amountToLiquidate),
-      2,
-      "Invalid principal total liquidity"
-    );
-
     //the liquidity index of the principal reserve needs to be bigger than the index before
     expect(usdcReserveDataAfter.liquidityIndex).to.be.gte(
       usdcReserveDataBefore.liquidityIndex,
@@ -513,12 +494,6 @@ makeSuite("Pool Liquidation: Liquidator receiving xToken", (testEnv) => {
       ethReserveDataBefore.availableLiquidity,
       2,
       "Invalid collateral available liquidity"
-    );
-
-    expect(ethReserveDataAfter.totalLiquidity).to.be.closeTo(
-      ethReserveDataBefore.totalLiquidity,
-      2,
-      "Invalid collateral total liquidity"
     );
   });
 });

@@ -288,7 +288,6 @@ makeSuite("PToken: Repay", (testEnv: TestEnv) => {
     );
 
     const expectedRates = await strategy.calculateInterestRates({
-      // unbacked: 0,
       liquidityAdded: 0,
       liquidityTaken: 0,
       totalStableDebt: stableDebtData[1],
