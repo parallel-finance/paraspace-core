@@ -19,7 +19,6 @@ import "solidity-docgen";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
-import "@openzeppelin/hardhat-upgrades";
 import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
