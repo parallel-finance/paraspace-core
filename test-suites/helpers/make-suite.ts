@@ -16,11 +16,7 @@ import {
   getMintableERC721,
   getWPunk,
   getPunk,
-  getWPunkGateway,
-  getWETHGateway,
   getMockTokenFaucet,
-  getWPunkGatewayProxy,
-  getWETHGatewayProxy,
   getConduitController,
   getPausableZoneController,
   getPausableZone,
@@ -43,6 +39,8 @@ import {
   getMockAToken,
   getPTokenAToken,
   getPTokenStETH,
+  getWPunkGatewayProxy,
+  getWETHGatewayProxy,
 } from "../../deploy/helpers/contracts-getters";
 import {tEthereumAddress} from "../../deploy/helpers/types";
 import {
@@ -144,8 +142,6 @@ export interface TestEnv {
   punk: CryptoPunksMarket;
   wPunk: WPunk;
   nWPunk: NToken;
-  wPunkGateway: WPunkGateway;
-  wETHGateway: WETHGateway;
   wBTC: MintableERC20;
   stETH: StETH;
   pstETH: PTokenStETH;
@@ -215,8 +211,6 @@ const testEnv: TestEnv = {
   punk: {} as CryptoPunksMarket,
   wPunk: {} as WPunk,
   nWPunk: {} as NToken,
-  wPunkGateway: {} as WPunkGateway,
-  wETHGateway: {} as WETHGateway,
   wBTC: {} as MintableERC20,
   stETH: {} as StETH,
   pstETH: {} as PTokenStETH,
@@ -423,9 +417,7 @@ export async function initializeMakeSuite() {
   testEnv.nWPunk = await getNToken(nWPunkAddress);
   testEnv.punk = await getPunk(punkAddress);
   testEnv.wPunk = await getWPunk(wpunkAddress);
-  testEnv.wPunkGateway = await getWPunkGateway();
   testEnv.wPunkGatewayProxy = await getWPunkGatewayProxy();
-  testEnv.wETHGateway = await getWETHGateway();
   testEnv.wETHGatewayProxy = await getWETHGatewayProxy();
 
   testEnv.wBTC = await getMintableERC20(wBTCAddress);
