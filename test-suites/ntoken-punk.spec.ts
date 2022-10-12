@@ -7,12 +7,8 @@ import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {testEnvFixture} from "./helpers/setup-env";
-import {getTestWallets} from "./helpers/utils/wallets";
-
-declare let hre: HardhatRuntimeEnvironment;
 
 describe("Punk nToken Mint and Burn Event Accounting", () => {
-  let testWallets;
   let firstDaiDeposit;
   let secondDaiDeposit;
   let testEnv;
