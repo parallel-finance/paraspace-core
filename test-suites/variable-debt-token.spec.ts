@@ -9,7 +9,7 @@ import {
 } from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
@@ -19,7 +19,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("VariableDebtToken", () => {
+describe("VariableDebtToken", () => {
   let testEnv: TestEnv;
 
   before(async () => {

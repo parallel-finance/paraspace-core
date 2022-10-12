@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
   MAX_BORROW_CAP,
@@ -16,7 +16,7 @@ import {parseUnits} from "ethers/lib/utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolConfigurator: Edge cases", () => {
+describe("PoolConfigurator: Edge cases", () => {
   let testEnv: TestEnv;
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);

@@ -6,10 +6,10 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Rebasing tokens", () => {
+describe("Rebasing tokens", () => {
   BigNumber.from(MOCK_CHAINLINK_AGGREGATORS_PRICES.BAYC);
   let testEnv: TestEnv;
 

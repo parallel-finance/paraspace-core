@@ -5,10 +5,10 @@ import {MAX_UINT_AMOUNT, MAX_BORROW_CAP} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolConfigurator: Borrow Cap", () => {
+describe("PoolConfigurator: Borrow Cap", () => {
   let testEnv: TestEnv;
   const {INVALID_BORROW_CAP, BORROW_CAP_EXCEEDED} = ProtocolErrors;
 

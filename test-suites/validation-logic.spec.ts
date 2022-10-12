@@ -10,7 +10,7 @@ import {
   setAutomineEvm,
   waitForTx,
 } from "../deploy/helpers/misc-utils";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {parseUnits} from "@ethersproject/units";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
@@ -21,7 +21,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("ValidationLogic: Edge cases", () => {
+describe("ValidationLogic: Edge cases", () => {
   let testEnv: TestEnv;
   const {
     RESERVE_INACTIVE,

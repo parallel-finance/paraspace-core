@@ -5,13 +5,13 @@ import {MAX_UINT_AMOUNT, oneEther} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {increaseTime, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool Liquidation: Liquidator receiving the underlying asset", () => {
+describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
   let testEnv: TestEnv;
   const {INVALID_HF} = ProtocolErrors;
 

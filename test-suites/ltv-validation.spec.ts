@@ -2,11 +2,11 @@ import {expect} from "chai";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("LTV validation", () => {
+describe("LTV validation", () => {
   let testEnv: TestEnv;
   const {LTV_VALIDATION_FAILED} = ProtocolErrors;
 

@@ -4,11 +4,11 @@ import {utils} from "ethers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 
-makeSuite("PausablePool", () => {
+describe("PausablePool", () => {
   let testEnv: TestEnv;
   const INVALID_TO_BALANCE_AFTER_TRANSFER =
     "Invalid 'TO' balance after transfer!";

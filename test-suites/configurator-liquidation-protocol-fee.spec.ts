@@ -3,10 +3,10 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {utils} from "ethers";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolConfigurator: Liquidation Protocol Fee", () => {
+describe("PoolConfigurator: Liquidation Protocol Fee", () => {
   let testEnv: TestEnv;
   const {INVALID_LIQUIDATION_PROTOCOL_FEE} = ProtocolErrors;
 

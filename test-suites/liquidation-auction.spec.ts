@@ -11,7 +11,7 @@ import {
   waitForTx,
 } from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {snapshot} from "./helpers/snapshot-manager";
 import {
@@ -23,7 +23,7 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 
-makeSuite("Liquidation Auction", () => {
+describe("Liquidation Auction", () => {
   let snapthotId: string;
   let testEnv: TestEnv;
 

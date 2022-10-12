@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
@@ -16,7 +16,7 @@ import {
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Atomic tokens limit", () => {
+describe("Atomic tokens limit", () => {
   describe("token limit behaviour", () => {
     let testEnv: TestEnv;
     before(async () => {

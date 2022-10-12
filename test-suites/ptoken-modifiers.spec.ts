@@ -1,10 +1,10 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken: Modifiers", () => {
+describe("PToken: Modifiers", () => {
   let testEnv: TestEnv;
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);

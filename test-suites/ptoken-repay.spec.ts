@@ -16,10 +16,10 @@ import {
   StableDebtToken__factory,
   VariableDebtToken__factory,
 } from "../types";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken: Repay", () => {
+describe("PToken: Repay", () => {
   let testEnv: TestEnv;
   let snapShot: string;
 

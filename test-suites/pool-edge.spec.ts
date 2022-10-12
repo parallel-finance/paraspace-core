@@ -1,10 +1,6 @@
 import {expect} from "chai";
 import {BigNumberish, utils} from "ethers";
-import {
-  evmRevert,
-  evmSnapshot,
-  impersonateAccountsHardhat,
-} from "../deploy/helpers/misc-utils";
+import {impersonateAccountsHardhat} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   deployDefaultReserveAuctionStrategy,
@@ -20,7 +16,7 @@ import {
   VariableDebtToken__factory,
 } from "../types";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
@@ -29,7 +25,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("Pool: Edge cases", () => {
+describe("Pool: Edge cases", () => {
   let testEnv: TestEnv;
   const {
     ASSET_NOT_LISTED,

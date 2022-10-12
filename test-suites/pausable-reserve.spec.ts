@@ -5,12 +5,12 @@ import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 // import {MockFlashLoanReceiver} from "../types";
 // import {getMockFlashLoanReceiver} from "../helpers/contracts-getters";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PausableReserve", () => {
+describe("PausableReserve", () => {
   let testEnv: TestEnv;
   const {RESERVE_PAUSED} = ProtocolErrors;
   const INVALID_TO_BALANCE_AFTER_TRANSFER =

@@ -1,12 +1,7 @@
 import {expect} from "chai";
 import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {getEthersSigners} from "../deploy/helpers/contracts-helpers";
-import {
-  makeSuite,
-  revertHead,
-  setSnapshot,
-  TestEnv,
-} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
 import {utils} from "ethers";
@@ -16,7 +11,7 @@ import {deployERC721OracleWrapper} from "../deploy/helpers/contracts-deployments
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("NFT Oracle Tests", () => {
+describe("NFT Oracle Tests", () => {
   let snapthotId: string;
   let testEnv: TestEnv;
 

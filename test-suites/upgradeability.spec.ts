@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ONE_ADDRESS, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   getFirstSigner,
@@ -31,7 +31,7 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Upgradeability", () => {
+describe("Upgradeability", () => {
   let testEnv: TestEnv;
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);

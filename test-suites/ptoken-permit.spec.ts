@@ -7,7 +7,7 @@ import {
   buildPermitParams,
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ProtocolErrors} from "../deploy/helpers/types";
@@ -16,7 +16,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("PToken: Permit", () => {
+describe("PToken: Permit", () => {
   let testEnv: TestEnv;
   let testWallets;
 

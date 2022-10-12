@@ -8,7 +8,7 @@ import {
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
 import {evmRevert, evmSnapshot, timeLatest} from "../deploy/helpers/misc-utils";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ProtocolErrors} from "../deploy/helpers/types";
@@ -17,7 +17,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("DebtToken: Permit Delegation", () => {
+describe("DebtToken: Permit Delegation", () => {
   let snapId;
   let testEnv: TestEnv;
 

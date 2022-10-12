@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {ethers} from "hardhat";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
@@ -9,7 +9,7 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Flash Claim Test", () => {
+describe("Flash Claim Test", () => {
   const tokenId = 0;
   let testEnv: TestEnv;
   let receiverEncodedData;

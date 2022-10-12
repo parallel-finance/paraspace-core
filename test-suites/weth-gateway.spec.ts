@@ -7,7 +7,7 @@ import {
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ethers, network} from "hardhat";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
@@ -21,7 +21,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("WETH GateWay", () => {
+describe("WETH GateWay", () => {
   let testWallets;
   let firstDaiDeposit;
   let secondDaiDeposit;

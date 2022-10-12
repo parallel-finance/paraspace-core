@@ -4,11 +4,11 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 // import {MockFlashLoanReceiver} from "../types";
 // import {getMockFlashLoanReceiver} from "../helpers/contracts-getters";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool: Drop Reserve", () => {
+describe("Pool: Drop Reserve", () => {
   // const _mockFlashLoanReceiver = {} as MockFlashLoanReceiver;
   let testEnv: TestEnv;
 

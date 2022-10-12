@@ -21,7 +21,7 @@ import {
   getMockAggregator,
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
@@ -33,7 +33,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 const SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits";
 
-makeSuite("Interest Rate and Index Overflow", () => {
+describe("Interest Rate and Index Overflow", () => {
   let mockToken: MintableERC20;
   let mockRateStrategy: MockReserveInterestRateStrategy;
   let mockAuctionStrategy: DefaultReserveAuctionStrategy;

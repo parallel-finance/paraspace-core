@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {waitForTx, evmSnapshot, evmRevert} from "../deploy/helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
@@ -19,7 +19,7 @@ import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Uniswap V3 Oracle", () => {
+describe("Uniswap V3 Oracle", () => {
   let snap: string;
   let testEnv: TestEnv;
 

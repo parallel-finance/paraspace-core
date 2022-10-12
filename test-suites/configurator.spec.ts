@@ -23,7 +23,7 @@ import {
   VariableDebtToken__factory,
 } from "../types";
 // import {strategyWETH} from "../market-config/reservesConfigs";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
 type ReserveConfigurationValues = {
@@ -124,7 +124,7 @@ const getReserveData = async (
   ]);
 };
 
-makeSuite("PoolConfigurator", () => {
+describe("PoolConfigurator", () => {
   let testEnv: TestEnv;
   let baseConfigValues: ReserveConfigurationValues;
 

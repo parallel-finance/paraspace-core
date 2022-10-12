@@ -4,7 +4,7 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
@@ -13,7 +13,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 declare let hre: HardhatRuntimeEnvironment;
 
-makeSuite("Pool Liquidation: Add fee to liquidations", () => {
+describe("Pool Liquidation: Add fee to liquidations", () => {
   let testEnv: TestEnv;
   const {INVALID_HF} = ProtocolErrors;
 

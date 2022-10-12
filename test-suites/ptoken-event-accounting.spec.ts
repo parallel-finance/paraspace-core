@@ -4,11 +4,11 @@ import {increaseTime, waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken Mint and Burn Event Accounting", () => {
+describe("PToken Mint and Burn Event Accounting", () => {
   let testEnv: TestEnv;
   let firstDaiDeposit;
   let secondDaiDeposit;

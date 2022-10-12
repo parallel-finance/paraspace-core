@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
@@ -29,7 +29,7 @@ import {ethers} from "hardhat";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Uniswap V3", () => {
+describe("Uniswap V3", () => {
   describe("Uniswap V3 NFT position control", () => {
     let testEnv: TestEnv;
 

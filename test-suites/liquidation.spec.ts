@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {getMockAggregator} from "../deploy/helpers/contracts-getters";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {
   borrowAndValidate,
   changePriceAndValidate,
@@ -20,7 +20,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 let snapthotId: string;
 
-makeSuite("Liquidation Tests", () => {
+describe("Liquidation Tests", () => {
   let testEnv: TestEnv;
   before("Setup Borrower and Liquidator positions", async () => {
     testEnv = await loadFixture(testEnvFixture);

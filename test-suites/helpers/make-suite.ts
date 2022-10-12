@@ -70,7 +70,7 @@ import {PoolAddressesProvider} from "../../types";
 import {PoolAddressesProviderRegistry} from "../../types";
 import {getEthersSigners} from "../../deploy/helpers/contracts-helpers";
 import {WETH9Mocked} from "../../types";
-import {loadFixture, solidity} from "ethereum-waffle";
+import {solidity} from "ethereum-waffle";
 import {
   ParaSpaceOracle,
   ACLManager,
@@ -97,13 +97,9 @@ import {
   PTokenAToken,
   PTokenStETH,
 } from "../../types";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
-import {usingTenderly} from "../../deploy/helpers/tenderly-utils";
 import {MintableERC721} from "../../types";
-import {DRE, evmRevert, evmSnapshot} from "../../deploy/helpers/misc-utils";
 import {Signer} from "ethers";
 import ParaSpaceConfig from "../../deploy/market-config";
-import {testEnvFixture} from "./setup-env";
 
 chai.use(bignumberChai());
 chai.use(solidity);
@@ -440,14 +436,4 @@ export async function initializeMakeSuite() {
   testEnv.nUniswapV3 = await getNTokenUniswapV3(nUniwapV3Address);
   testEnv.nftFloorOracle = await getNFTFloorOracle();
   return testEnv;
-}
-
-// eslint-disable-next-line no-unused-vars
-export function makeSuite(
-  name: string,
-  tests: (fixture: typeof testEnvFixture) => void
-) {
-  describe(name, () => {
-    tests(testEnvFixture);
-  });
 }

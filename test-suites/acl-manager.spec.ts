@@ -4,10 +4,10 @@ import {constants, utils} from "ethers";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {ACLManager, ACLManager__factory} from "../types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Access Control List Manager", () => {
+describe("Access Control List Manager", () => {
   let aclManager: ACLManager;
   let testEnv: TestEnv;
 

@@ -6,12 +6,12 @@ import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {evmRevert, evmSnapshot, waitForTx} from "../deploy/helpers/misc-utils";
 import {RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {VariableDebtToken__factory} from "../types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool Liquidation: Edge cases", () => {
+describe("Pool Liquidation: Edge cases", () => {
   let snap: string;
   let testEnv: TestEnv;
 

@@ -15,7 +15,7 @@ import {
   SequencerOracle__factory,
 } from "../types";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import "./helpers/utils/wadraymath";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
@@ -23,7 +23,7 @@ import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PriceOracleSentinel", () => {
+describe("PriceOracleSentinel", () => {
   let testEnv: TestEnv;
   const {
     PRICE_ORACLE_SENTINEL_CHECK_FAILED,

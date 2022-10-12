@@ -9,7 +9,7 @@ import {
 } from "../types";
 import {strategyDAI} from "../deploy/market-config/reservesConfigs";
 import {rateStrategyStableTwo} from "../deploy/market-config/rateStrategies";
-import {TestEnv, makeSuite} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
 import {formatUnits} from "@ethersproject/units";
 import {ProtocolErrors} from "../deploy/helpers/types";
@@ -30,7 +30,7 @@ type CalculateInterestRatesParams = {
   xToken: string;
 };
 
-makeSuite("InterestRateStrategy", () => {
+describe("InterestRateStrategy", () => {
   let testEnv: TestEnv;
   let strategyInstance: DefaultReserveInterestRateStrategy;
   let dai: MintableERC20;

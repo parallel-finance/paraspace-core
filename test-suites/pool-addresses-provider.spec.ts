@@ -7,7 +7,7 @@ import {
   evmSnapshot,
 } from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {getProxyImplementation} from "../deploy/helpers/contracts-helpers";
 import {deployPoolComponents} from "../deploy/helpers/contracts-deployments";
@@ -23,7 +23,7 @@ import {
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PoolAddressesProvider", () => {
+describe("PoolAddressesProvider", () => {
   let testEnv: TestEnv;
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
 

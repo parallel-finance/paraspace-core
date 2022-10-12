@@ -7,12 +7,12 @@ import {
 } from "../deploy/helpers/contracts-deployments";
 import {MintableERC20, MockAggregator} from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("ParaSpaceOracle", () => {
+describe("ParaSpaceOracle", () => {
   let snap: string;
   let testEnv: TestEnv;
 

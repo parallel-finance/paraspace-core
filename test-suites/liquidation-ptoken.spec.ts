@@ -4,14 +4,14 @@ import {waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, oneEther} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
 import {BigNumber} from "ethers";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("Pool Liquidation: Liquidator receiving xToken", () => {
+describe("Pool Liquidation: Liquidator receiving xToken", () => {
   let testEnv: TestEnv;
   const {
     HEALTH_FACTOR_NOT_BELOW_THRESHOLD,

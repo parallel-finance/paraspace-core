@@ -3,11 +3,11 @@ import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
-import {makeSuite, TestEnv} from "./helpers/make-suite";
+import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-makeSuite("PToken: Transfer", () => {
+describe("PToken: Transfer", () => {
   let testEnv: TestEnv;
   const {
     INVALID_FROM_BALANCE_AFTER_TRANSFER,
