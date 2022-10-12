@@ -274,7 +274,7 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       dai,
       weth,
       users: [, borrower],
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     await dai["mint(uint256)"](
@@ -284,7 +284,7 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
 
     const userReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai.address,
       borrower.address
     );
@@ -326,7 +326,7 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       weth,
       users: [, borrower],
       oracle,
-      helpersContract,
+      protocolDataProvider,
       deployer,
     } = testEnv;
 
@@ -336,24 +336,24 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
     await dai.approve(pool.address, MAX_UINT_AMOUNT);
 
     const daiReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
     const userReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai.address,
       borrower.address
     );
 
     const userWethReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       weth.address,
       borrower.address
     );
@@ -368,22 +368,23 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       true
     );
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
 
-    const userWethReserveDataAfter = await helpersContract.getUserReserveData(
-      weth.address,
-      borrower.address
-    );
+    const userWethReserveDataAfter =
+      await protocolDataProvider.getUserReserveData(
+        weth.address,
+        borrower.address
+      );
 
     const daiReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
@@ -391,10 +392,10 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
     const principalPrice = await oracle.getAssetPrice(dai.address);
 
     const collateralDecimals = (
-      await helpersContract.getReserveConfigurationData(weth.address)
+      await protocolDataProvider.getReserveConfigurationData(weth.address)
     ).decimals;
     const principalDecimals = (
-      await helpersContract.getReserveConfigurationData(dai.address)
+      await protocolDataProvider.getReserveConfigurationData(dai.address)
     ).decimals;
 
     const expectedCollateralLiquidated = principalPrice
@@ -457,8 +458,12 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
     );
 
     expect(
-      (await helpersContract.getUserReserveData(weth.address, deployer.address))
-        .usageAsCollateralEnabled
+      (
+        await protocolDataProvider.getUserReserveData(
+          weth.address,
+          deployer.address
+        )
+      ).usageAsCollateralEnabled
     ).to.be.true;
   });
 
@@ -622,7 +627,7 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       weth,
       users: [, , borrower],
       oracle,
-      helpersContract,
+      protocolDataProvider,
       deployer,
     } = testEnv;
 
@@ -632,24 +637,24 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
     await dai.approve(pool.address, MAX_UINT_AMOUNT);
 
     const daiReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataBefore = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
     const userReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       dai.address,
       borrower.address
     );
 
     const userWethReserveDataBefore = await getUserData(
       pool,
-      helpersContract,
+      protocolDataProvider,
       weth.address,
       borrower.address
     );
@@ -665,22 +670,23 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
       true
     );
 
-    const userReserveDataAfter = await helpersContract.getUserReserveData(
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
 
-    const userWethReserveDataAfter = await helpersContract.getUserReserveData(
-      weth.address,
-      borrower.address
-    );
+    const userWethReserveDataAfter =
+      await protocolDataProvider.getUserReserveData(
+        weth.address,
+        borrower.address
+      );
 
     const daiReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       dai.address
     );
     const ethReserveDataAfter = await getReserveData(
-      helpersContract,
+      protocolDataProvider,
       weth.address
     );
 
@@ -688,10 +694,10 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
     const principalPrice = await oracle.getAssetPrice(dai.address);
 
     const collateralDecimals = (
-      await helpersContract.getReserveConfigurationData(weth.address)
+      await protocolDataProvider.getReserveConfigurationData(weth.address)
     ).decimals;
     const principalDecimals = (
-      await helpersContract.getReserveConfigurationData(dai.address)
+      await protocolDataProvider.getReserveConfigurationData(dai.address)
     ).decimals;
 
     const expectedCollateralLiquidated = principalPrice
@@ -754,8 +760,12 @@ makeSuite("PriceOracleSentinel", (testEnv: TestEnv) => {
     );
 
     expect(
-      (await helpersContract.getUserReserveData(weth.address, deployer.address))
-        .usageAsCollateralEnabled
+      (
+        await protocolDataProvider.getUserReserveData(
+          weth.address,
+          deployer.address
+        )
+      ).usageAsCollateralEnabled
     ).to.be.true;
   });
 });

@@ -646,12 +646,12 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
   it("Owner updates the DataProvider", async () => {
     const snapId = await evmSnapshot();
 
-    const {addressesProvider, helpersContract, users} = testEnv;
+    const {addressesProvider, protocolDataProvider, users} = testEnv;
     const currentAddressesProviderOwner = users[1];
 
     expect(
       await addressesProvider.getPoolDataProvider(),
-      helpersContract.address
+      protocolDataProvider.address
     );
 
     const newDataProviderAddress = createRandomAddress();
@@ -669,7 +669,7 @@ makeSuite("PoolAddressesProvider", (testEnv: TestEnv) => {
       .withArgs(registeredAddress, newDataProviderAddress);
 
     expect(await addressesProvider.getPoolDataProvider()).to.be.not.eq(
-      helpersContract.address
+      protocolDataProvider.address
     );
     expect(await addressesProvider.getPoolDataProvider()).to.be.eq(
       newDataProviderAddress

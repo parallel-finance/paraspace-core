@@ -596,7 +596,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Upgrades the DAI stable debt token implementation ", async () => {
-      const {dai, configurator, helpersContract} = testEnv;
+      const {dai, configurator, protocolDataProvider} = testEnv;
 
       const name = await (
         await getStableDebtToken(newStableTokenAddress)
@@ -624,7 +624,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
       await configurator.updateStableDebtToken(updateDebtTokenInput);
 
       const {stableDebtTokenAddress} =
-        await helpersContract.getReserveTokensAddresses(dai.address);
+        await protocolDataProvider.getReserveTokensAddresses(dai.address);
 
       const debtToken = await getMockStableDebtToken(stableDebtTokenAddress);
 
@@ -670,7 +670,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
     });
 
     it("Upgrades the DAI variable debt token implementation ", async () => {
-      const {dai, configurator, helpersContract} = testEnv;
+      const {dai, configurator, protocolDataProvider} = testEnv;
 
       const name = await (
         await getVariableDebtToken(newVariableTokenAddress)
@@ -698,7 +698,7 @@ makeSuite("Upgradeability", (testEnv: TestEnv) => {
       expect(await configurator.updateVariableDebtToken(updateDebtTokenInput));
 
       const {variableDebtTokenAddress} =
-        await helpersContract.getReserveTokensAddresses(dai.address);
+        await protocolDataProvider.getReserveTokensAddresses(dai.address);
 
       const debtToken = await getMockVariableDebtToken(
         variableDebtTokenAddress

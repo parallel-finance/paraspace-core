@@ -86,14 +86,14 @@ makeSuite("Pool: Drop Reserve", (testEnv: TestEnv) => {
   });
 
   it("User 1 withdraw DAI, drop DAI reserve should succeed", async () => {
-    const {deployer, pool, dai, configurator, helpersContract} = testEnv;
+    const {deployer, pool, dai, configurator, protocolDataProvider} = testEnv;
     await pool.withdraw(dai.address, MAX_UINT_AMOUNT, deployer.address);
     const reserveCount = (await pool.getReservesList()).length;
     expect(await configurator.dropReserve(dai.address));
     const tokens = await pool.getReservesList();
     expect(tokens.length).to.be.eq(reserveCount - 1);
     expect(tokens.includes(dai.address)).to.be.false;
-    const {isActive} = await helpersContract.getReserveConfigurationData(
+    const {isActive} = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
     expect(isActive).to.be.false;

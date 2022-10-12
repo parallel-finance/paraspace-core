@@ -1249,7 +1249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/hardhat-upgrades@npm:^1.20.0":
+"@openzeppelin/hardhat-upgrades@npm:^1.21.0":
   version: 1.21.0
   resolution: "@openzeppelin/hardhat-upgrades@npm:1.21.0"
   dependencies:
@@ -1298,7 +1298,7 @@ __metadata:
     "@nomiclabs/hardhat-waffle": 2.0.3
     "@openzeppelin/contracts": 4.2.0
     "@openzeppelin/contracts-upgradeable": 4.2.0
-    "@openzeppelin/hardhat-upgrades": ^1.20.0
+    "@openzeppelin/hardhat-upgrades": ^1.21.0
     "@tenderly/hardhat-tenderly": 1.1.0-beta.5
     "@typechain/ethers-v5": ^10.1.0
     "@typechain/hardhat": ^6.1.2

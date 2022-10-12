@@ -51,9 +51,9 @@ makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("PoolConfigurator configureReserveAsCollateral() ltv > liquidationThreshold", async () => {
-    const {poolAdmin, dai, configurator, helpersContract} = testEnv;
+    const {poolAdmin, dai, configurator, protocolDataProvider} = testEnv;
 
-    const config = await helpersContract.getReserveConfigurationData(
+    const config = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
 
@@ -70,9 +70,9 @@ makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("PoolConfigurator configureReserveAsCollateral() liquidationBonus < 10000", async () => {
-    const {poolAdmin, dai, configurator, helpersContract} = testEnv;
+    const {poolAdmin, dai, configurator, protocolDataProvider} = testEnv;
 
-    const config = await helpersContract.getReserveConfigurationData(
+    const config = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
 
@@ -268,10 +268,10 @@ makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
   // });
 
   // it("Tries to set DAI eMode category to category with too low LT (revert expected)", async () => {
-  //   const { configurator, helpersContract, poolAdmin, dai } = testEnv;
+  //   const { configurator, protocolDataProvider, poolAdmin, dai } = testEnv;
 
   //   const { liquidationThreshold, ltv } =
-  //     await helpersContract.getReserveConfigurationData(dai.address);
+  //     await protocolDataProvider.getReserveConfigurationData(dai.address);
 
   //   expect(
   //     await configurator
@@ -319,7 +319,7 @@ makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
   });
 
   it("Tries to withdraw from an inactive reserve (revert expected)", async () => {
-    const {dai, pool, configurator, helpersContract} = testEnv;
+    const {dai, pool, configurator, protocolDataProvider} = testEnv;
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
       "1000"
@@ -361,7 +361,7 @@ makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
     );
 
     const updatedConfiguration =
-      await helpersContract.getReserveConfigurationData(dai.address);
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
     expect(updatedConfiguration.isActive).to.false;
 
     await expect(

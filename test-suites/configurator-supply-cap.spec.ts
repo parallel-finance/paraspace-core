@@ -23,12 +23,14 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
   });
 
   it("Reserves should initially have supply cap disabled (supplyCap = 0)", async () => {
-    const {dai, usdc, helpersContract} = testEnv;
+    const {dai, usdc, protocolDataProvider} = testEnv;
 
-    const usdcSupplyCap = (await helpersContract.getReserveCaps(usdc.address))
-      .supplyCap;
-    const daiSupplyCap = (await helpersContract.getReserveCaps(dai.address))
-      .supplyCap;
+    const usdcSupplyCap = (
+      await protocolDataProvider.getReserveCaps(usdc.address)
+    ).supplyCap;
+    const daiSupplyCap = (
+      await protocolDataProvider.getReserveCaps(dai.address)
+    ).supplyCap;
 
     expect(usdcSupplyCap).to.be.equal("0");
     expect(daiSupplyCap).to.be.equal("0");
@@ -61,14 +63,12 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
   });
 
   it("Sets the supply cap for DAI and USDC to 1000 Unit, leaving 0 Units to reach the limit", async () => {
-    const {configurator, dai, usdc, helpersContract} = testEnv;
+    const {configurator, dai, usdc, protocolDataProvider} = testEnv;
 
-    const {supplyCap: oldUsdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: oldDaiSupplyCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {supplyCap: oldUsdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: oldDaiSupplyCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = "1000";
 
@@ -79,10 +79,9 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
       .to.emit(configurator, "SupplyCapChanged")
       .withArgs(dai.address, oldDaiSupplyCap, newCap);
 
-    const {supplyCap: usdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: daiSupplyCap} = await helpersContract.getReserveCaps(
+    const {supplyCap: usdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: daiSupplyCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -121,14 +120,12 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
   });
 
   it("Sets the supply cap for usdc and DAI to 1110 Units, leaving 110 Units to reach the limit", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
-    const {supplyCap: oldUsdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: oldDaiSupplyCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {supplyCap: oldUsdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: oldDaiSupplyCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = "1110";
     expect(await configurator.setSupplyCap(usdc.address, newCap))
@@ -138,10 +135,9 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
       .to.emit(configurator, "SupplyCapChanged")
       .withArgs(dai.address, oldDaiSupplyCap, newCap);
 
-    const {supplyCap: usdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: daiSupplyCap} = await helpersContract.getReserveCaps(
+    const {supplyCap: usdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: daiSupplyCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -231,29 +227,27 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
   });
 
   it("Time flies and DAI and USDC supply amount goes above the limit due to accrued interests", async () => {
-    const {usdc, dai, helpersContract} = testEnv;
+    const {usdc, dai, protocolDataProvider} = testEnv;
 
     // Advance blocks
     await advanceTimeAndBlock(3600);
 
-    const daiData = await helpersContract.getReserveData(dai.address);
-    const daiCaps = await helpersContract.getReserveCaps(dai.address);
-    const usdcData = await helpersContract.getReserveData(usdc.address);
-    const usdcCaps = await helpersContract.getReserveCaps(usdc.address);
+    const daiData = await protocolDataProvider.getReserveData(dai.address);
+    const daiCaps = await protocolDataProvider.getReserveCaps(dai.address);
+    const usdcData = await protocolDataProvider.getReserveData(usdc.address);
+    const usdcCaps = await protocolDataProvider.getReserveCaps(usdc.address);
 
     expect(daiData.totalPToken).gt(daiCaps.supplyCap);
     expect(usdcData.totalPToken).gt(usdcCaps.supplyCap);
   });
 
   it("Raises the supply cap for USDC and DAI to 2000 Units, leaving 800 Units to reach the limit", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
-    const {supplyCap: oldUsdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: oldDaiSupplyCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {supplyCap: oldUsdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: oldDaiSupplyCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = "2000";
     expect(await configurator.setSupplyCap(usdc.address, newCap))
@@ -263,10 +257,9 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
       .to.emit(configurator, "SupplyCapChanged")
       .withArgs(dai.address, oldDaiSupplyCap, newCap);
 
-    const {supplyCap: usdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: daiSupplyCap} = await helpersContract.getReserveCaps(
+    const {supplyCap: usdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: daiSupplyCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -294,14 +287,12 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
   });
 
   it("Lowers the supply cap for USDC and DAI to 1200 Units (suppliedAmount > supplyCap)", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
-    const {supplyCap: oldUsdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: oldDaiSupplyCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {supplyCap: oldUsdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: oldDaiSupplyCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = "1200";
     expect(await configurator.setSupplyCap(usdc.address, newCap))
@@ -311,10 +302,9 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
       .to.emit(configurator, "SupplyCapChanged")
       .withArgs(dai.address, oldDaiSupplyCap, newCap);
 
-    const {supplyCap: usdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: daiSupplyCap} = await helpersContract.getReserveCaps(
+    const {supplyCap: usdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: daiSupplyCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 
@@ -347,14 +337,12 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
   });
 
   it("Raises the supply cap for USDC and DAI to MAX_SUPPLY_CAP", async () => {
-    const {configurator, usdc, dai, helpersContract} = testEnv;
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
-    const {supplyCap: oldUsdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: oldDaiSupplyCap} = await helpersContract.getReserveCaps(
-      dai.address
-    );
+    const {supplyCap: oldUsdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: oldDaiSupplyCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
 
     const newCap = MAX_SUPPLY_CAP;
     expect(await configurator.setSupplyCap(usdc.address, newCap))
@@ -364,10 +352,9 @@ makeSuite("PoolConfigurator: Supply Cap", (testEnv: TestEnv) => {
       .to.emit(configurator, "SupplyCapChanged")
       .withArgs(dai.address, oldDaiSupplyCap, newCap);
 
-    const {supplyCap: usdcSupplyCap} = await helpersContract.getReserveCaps(
-      usdc.address
-    );
-    const {supplyCap: daiSupplyCap} = await helpersContract.getReserveCaps(
+    const {supplyCap: usdcSupplyCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {supplyCap: daiSupplyCap} = await protocolDataProvider.getReserveCaps(
       dai.address
     );
 

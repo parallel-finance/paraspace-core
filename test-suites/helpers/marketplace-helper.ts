@@ -31,7 +31,7 @@ import {
   getERC721Delegate,
   getLooksRareExchange,
   getPausableZone,
-  getPool,
+  getPoolProxy,
   getSeaport,
   getStrategyStandardSaleForFixedPrice,
   getTransferManagerERC721,
@@ -98,7 +98,7 @@ export async function executeLooksrareBuyWithCredit(
     ...makerOrderWithSignature,
     ...vrs,
   };
-  const pool = await getPool();
+  const pool = await getPoolProxy();
   const takerOrder: TakerOrder = {
     isOrderAsk: false,
     taker: pool.address,
@@ -156,7 +156,7 @@ export async function executeX2Y2BuyWithCredit(
     await x2y2r1.connect(deployer.signer).updateSigners([middleman.address], [])
   );
   const now = Math.floor(Date.now() / 1000);
-  const pool = await getPool();
+  const pool = await getPoolProxy();
 
   const order = await createOrder({
     chainId: (await ethers.provider.getNetwork()).chainId,
@@ -248,7 +248,7 @@ export async function executeSeaportBuyWithCredit(
     );
   };
 
-  const pool = await getPool();
+  const pool = await getPoolProxy();
   const isNToken = !(await pool.getReservesList()).includes(tokenToBuy.address);
 
   const encodedData = seaport.interface.encodeFunctionData(
@@ -261,7 +261,7 @@ export async function executeSeaportBuyWithCredit(
     ]
   );
 
-  const tx = (await getPool()).connect(taker.signer).buyWithCredit(
+  const tx = (await getPoolProxy()).connect(taker.signer).buyWithCredit(
     PARASPACE_SEAPORT_ID,
     `0x${encodedData.slice(10)}`,
     {
@@ -292,7 +292,7 @@ export async function executeAcceptBidWithCredit(
   taker: SignerWithAddress,
   _isNtoken = false
 ) {
-  const pool = await getPool();
+  const pool = await getPoolProxy();
   const seaport = await getSeaport();
   const pausableZone = await getPausableZone();
   const conduit = await getConduit();

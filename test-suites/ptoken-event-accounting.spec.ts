@@ -53,7 +53,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     // mints DAI to depositor
@@ -68,7 +68,9 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
 
     const expectedBalanceIncrease = 0;
 
@@ -96,7 +98,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       pDai,
       users: [depositor, receiver],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     // mints DAI to depositor
@@ -111,7 +113,9 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
 
     const expectedBalanceIncrease = 0;
 
@@ -139,7 +143,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       weth,
       users: [, borrower],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     //user 2 deposits 100 ETH
@@ -183,11 +187,11 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
         )
     );
 
-    const borrowerWethData = await helpersContract.getUserReserveData(
+    const borrowerWethData = await protocolDataProvider.getUserReserveData(
       weth.address,
       borrower.address
     );
-    const borrowerDaiData = await helpersContract.getUserReserveData(
+    const borrowerDaiData = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
@@ -203,7 +207,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       variableDebtDai,
       users: [, borrower],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
     await increaseTime(86400);
 
@@ -220,7 +224,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       );
     const borrowReceipt = await borrowTx.wait();
 
-    const borrowerDaiData = await helpersContract.getUserReserveData(
+    const borrowerDaiData = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
@@ -329,7 +333,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     await increaseTime(86400);
@@ -353,7 +357,9 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       .sub(secondDaiDeposit)
       .sub(thirdDaiDeposit)
       .sub(accruedInterest1);
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
     const totalMinted = thirdDaiDeposit.add(accruedInterest2);
 
     // get transfer event
@@ -395,7 +401,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       variableDebtDai,
       users: [, borrower],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     await increaseTime(86400);
@@ -427,7 +433,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       .sub(accruedDebt1)
       .sub(secondDaiBorrow)
       .sub(accruedDebt2);
-    const borrowerDaiData = await helpersContract.getUserReserveData(
+    const borrowerDaiData = await protocolDataProvider.getUserReserveData(
       dai.address,
       borrower.address
     );
@@ -472,7 +478,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
     const daiBalanceBefore = await dai.balanceOf(depositor.address);
 
@@ -493,7 +499,9 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       .sub(accruedInterest2)
       .sub(thirdDaiDeposit);
     const totalBurned = daiWithdrawn.sub(accruedInterest3);
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
 
     // get transfer event
     const rawTransferEvents = withdrawReceipt.logs.filter(
@@ -620,7 +628,7 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
       pDai,
       users: [depositor],
       pool,
-      helpersContract,
+      protocolDataProvider,
     } = testEnv;
 
     // repay a very small amount - less than accrued debt
@@ -632,7 +640,9 @@ makeSuite("PToken Mint and Burn Event Accounting", (testEnv) => {
     const withdrawReceipt = await withdrawTx.wait();
 
     const xTokenSupplyAfter = await pDai.balanceOf(depositor.address);
-    const daiReserveData = await helpersContract.getReserveData(dai.address);
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
     const totalMinted = xTokenSupplyAfter.sub(firstDaiDeposit);
 
     // get transfer event

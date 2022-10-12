@@ -6,7 +6,7 @@ import {
   getMockAggregator,
   getParaSpaceOracle,
   getPToken,
-  getPool,
+  getPoolProxy,
   getPoolAddressesProvider,
   getProtocolDataProvider,
   getUiPoolDataProvider,
@@ -85,7 +85,7 @@ export const supplyAndValidate = async (
   const amountInBaseUnits = isNFT
     ? BigNumber.from(amount)
     : await convertToCurrencyDecimals(token.address, amount);
-  const pool = await getPool();
+  const pool = await getPoolProxy();
   const nftIdsToUse = isNFT ? [...Array(+amount).keys()] : null;
 
   if (mintTokens) {
@@ -108,7 +108,7 @@ export const supplyAndValidate = async (
   const tokenBalanceBefore = await token.balanceOf(user.address);
   const pTokenBalanceBefore = await pToken.balanceOf(user.address);
   const totalCollateralBefore = (
-    await (await getPool()).getUserAccountData(user.address)
+    await (await getPoolProxy()).getUserAccountData(user.address)
   ).totalCollateralBase;
   const availableToBorrowBefore = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
@@ -206,7 +206,7 @@ export const borrowAndValidate = async (
     token.address,
     amount
   );
-  const pool = await getPool();
+  const pool = await getPoolProxy();
 
   // approve protocol to access user wallet
   await approveTnx(token, false, pool, user);
@@ -222,8 +222,9 @@ export const borrowAndValidate = async (
     .getAssetPrice(token.address);
   const tokenBalanceBefore = await token.balanceOf(user.address);
   const debtTokenBalanceBefore = await debtToken.balanceOf(user.address);
-  const ltvBefore = (await (await getPool()).getUserAccountData(user.address))
-    .ltv;
+  const ltvBefore = (
+    await (await getPoolProxy()).getUserAccountData(user.address)
+  ).ltv;
   const availableToBorrowBefore = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
   const healthFactorBefore = (await pool.getUserAccountData(user.address))
@@ -304,7 +305,7 @@ export const repayAndValidate = async (
     token.address,
     amount
   );
-  const pool = await getPool();
+  const pool = await getPoolProxy();
 
   // approve protocol to access user wallet
   await approveTnx(token, false, pool, user);
@@ -373,7 +374,8 @@ export const repayAndValidate = async (
   assertAlmostEqual(tvl, tvlBefore);
 
   // LTV is based on my collateral, should stay the same
-  const ltv = (await (await getPool()).getUserAccountData(user.address)).ltv;
+  const ltv = (await (await getPoolProxy()).getUserAccountData(user.address))
+    .ltv;
   expect(ltv).to.equal(ltvBefore);
 
   // total debt decreased in the repaid amount
@@ -402,7 +404,7 @@ export const withdrawAndValidate = async (
     : await convertToCurrencyDecimals(token.address, amount);
   const amountInBaseUnits = isNFT ? BigNumber.from(amount) : parseEther(amount);
 
-  const pool = await getPool();
+  const pool = await getPoolProxy();
 
   const protocolDataProvider = await getProtocolDataProvider();
   const pTokenAddress = (
@@ -421,7 +423,7 @@ export const withdrawAndValidate = async (
   const availableToBorrowBefore = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
   const totalCollateralBefore = (
-    await (await getPool()).getUserAccountData(user.address)
+    await (await getPoolProxy()).getUserAccountData(user.address)
   ).totalCollateralBase;
   const healthFactorBefore = (await pool.getUserAccountData(user.address))
     .healthFactor;
@@ -500,7 +502,8 @@ export const withdrawAndValidate = async (
   assertAlmostEqual(totalDebt, totalDebtBefore);
 
   // LTV decreased, but only if asset was collateral
-  const ltv = (await (await getPool()).getUserAccountData(user.address)).ltv;
+  const ltv = (await (await getPoolProxy()).getUserAccountData(user.address))
+    .ltv;
   if (wasCollateral) {
     expect(ltv).to.be.equal(await calculateExpectedLTV(user));
   } else {
@@ -509,7 +512,7 @@ export const withdrawAndValidate = async (
 
   // if asset was used as collateral, total collateral decreases in withdrawn amount
   const totalCollateral = (
-    await (await getPool()).getUserAccountData(user.address)
+    await (await getPoolProxy()).getUserAccountData(user.address)
   ).totalCollateralBase;
   if (wasCollateral) {
     assertAlmostEqual(
@@ -576,7 +579,7 @@ const liquidateAndValidateERC20 = async (
   borrower: SignerWithAddress,
   receivePToken: boolean
 ) => {
-  const pool = await getPool();
+  const pool = await getPoolProxy();
   const protocolDataProvider = await getProtocolDataProvider();
   const targetPTokenAddress = (
     await protocolDataProvider.getReserveTokensAddresses(targetToken.address)
@@ -590,7 +593,7 @@ const liquidateAndValidateERC20 = async (
     await pool.getUserAccountData(borrower.address)
   ).availableBorrowsBase;
   const totalCollateralBefore = (
-    await (await getPool()).getUserAccountData(borrower.address)
+    await (await getPoolProxy()).getUserAccountData(borrower.address)
   ).totalCollateralBase;
   const healthFactorBefore = (await pool.getUserAccountData(borrower.address))
     .healthFactor;
@@ -806,7 +809,7 @@ const liquidateAndValidateERC721 = async (
   receiveNToken: boolean,
   nftId?: number
 ) => {
-  const pool = await getPool();
+  const pool = await getPoolProxy();
   const protocolDataProvider = await getProtocolDataProvider();
   const targetNTokenAddress = (
     await protocolDataProvider.getReserveTokensAddresses(targetToken.address)
@@ -852,7 +855,7 @@ const liquidateAndValidateERC721 = async (
     await pool.getUserAccountData(borrower.address)
   ).availableBorrowsBase;
   const totalCollateralBefore = (
-    await (await getPool()).getUserAccountData(borrower.address)
+    await (await getPoolProxy()).getUserAccountData(borrower.address)
   ).totalCollateralBase;
   const erc721HealthFactorBefore = (
     await pool.getUserAccountData(borrower.address)
@@ -1225,7 +1228,7 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
     if (
       asset.underlyingAsset == (await getNonfungiblePositionManager()).address
     ) {
-      return (await (await getPool()).getUserAccountData(user.address))
+      return (await (await getPoolProxy()).getUserAccountData(user.address))
         .healthFactor;
     } else {
       assetPrice = await (await getParaSpaceOracle())
@@ -1265,8 +1268,9 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
       : 0;
 
   // 4. get total debt
-  const totalDebt = (await (await getPool()).getUserAccountData(user.address))
-    .totalDebtBase;
+  const totalDebt = (
+    await (await getPoolProxy()).getUserAccountData(user.address)
+  ).totalDebtBase;
 
   // 5. do HF formula
   const result =
@@ -1280,8 +1284,9 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
 }
 
 export async function assertHealthFactorCalculation(user: SignerWithAddress) {
-  const contractHF = (await (await getPool()).getUserAccountData(user.address))
-    .healthFactor;
+  const contractHF = (
+    await (await getPoolProxy()).getUserAccountData(user.address)
+  ).healthFactor;
   const calculatedHF = await calculateHealthFactor(user);
 
   assertAlmostEqual(contractHF, calculatedHF);
@@ -1329,7 +1334,7 @@ export const switchCollateralAndValidate = async (
 
   if (isNFT) {
     await waitForTx(
-      await (await getPool())
+      await (await getPoolProxy())
         .connect(user.signer)
         .setUserUseERC721AsCollateral(
           token.address,
@@ -1339,7 +1344,7 @@ export const switchCollateralAndValidate = async (
     );
   } else {
     await waitForTx(
-      await (await getPool())
+      await (await getPoolProxy())
         .connect(user.signer)
         .setUserUseERC20AsCollateral(token.address, useAsCollateral)
     );
@@ -1360,7 +1365,7 @@ export const liquidateAndValidateReverted = async (
   message: string,
   nftId?: number
 ) => {
-  const pool = await getPool();
+  const pool = await getPoolProxy();
   const isNFT = !isERC20(targetToken);
 
   if (isNFT) {
