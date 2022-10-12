@@ -154,16 +154,6 @@ makeSuite("PoolConfigurator: Edge cases", (testEnv: TestEnv) => {
     ).to.be.revertedWith(INVALID_SUPPLY_CAP);
   });
 
-  // it("Tries to update unbackedMintCap > MAX_UNBACKED_MINT_CAP (revert expected)", async () => {
-  //   const { configurator, weth } = testEnv;
-  //   await expect(
-  //     configurator.setUnbackedMintCap(
-  //       weth.address,
-  //       BigNumber.from(MAX_UNBACKED_MINT_CAP).add(1)
-  //     )
-  //   ).to.be.revertedWith(INVALID_UNBACKED_MINT_CAP);
-  // });
-
   it("Tries to set borrowCap of MAX_BORROW_CAP an unlisted asset", async () => {
     const {configurator, users} = testEnv;
     const newCap = 10;

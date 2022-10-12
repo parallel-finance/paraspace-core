@@ -378,7 +378,7 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function liquidationCall(
         address collateralAsset,
-        address debtAsset,
+        address liquidationAsset,
         address user,
         uint256 debtToCover,
         bool receivePToken
@@ -392,7 +392,7 @@ contract PoolCore is
                 liquidationAmount: debtToCover,
                 auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
-                liquidationAsset: debtAsset,
+                liquidationAsset: liquidationAsset,
                 user: user,
                 receiveXToken: receivePToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),

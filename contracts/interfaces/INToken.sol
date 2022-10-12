@@ -21,50 +21,38 @@ interface INToken is
     IERC1155Receiver
 {
     /**
-     * @dev Emitted during the transfer action
-     * @param from The user whose tokens are being transferred
-     * @param to The recipient
-     * @param tokenId The id of the token being transferred
-     **/
-    event BalanceTransfer(
-        address indexed from,
-        address indexed to,
-        uint256 tokenId
-    );
-
-    /**
-     * @dev Emitted during claimERC20Airdrop()
+     * @dev Emitted during rescueERC20()
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param amount The amount being claimed from the airdrop
+     * @param amount The amount being rescued
      **/
-    event ClaimERC20Airdrop(
+    event RescueERC20(
         address indexed token,
         address indexed to,
         uint256 amount
     );
 
     /**
-     * @dev Emitted during claimERC721Airdrop()
+     * @dev Emitted during rescueERC721()
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
+     * @param ids The ids of the tokens being rescued
      **/
-    event ClaimERC721Airdrop(
+    event RescueERC721(
         address indexed token,
         address indexed to,
         uint256[] ids
     );
 
     /**
-     * @dev Emitted during claimERC1155Airdrop()
+     * @dev Emitted during RescueERC1155()
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
-     * @param amounts The amount of NFTs being claimed from the airdrop for a specific id.
-     * @param data The data of the tokens that is being claimed from the airdrop. Usually this is 0.
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
      **/
-    event ClaimERC1155Airdrop(
+    event RescueERC1155(
         address indexed token,
         address indexed to,
         uint256[] ids,
@@ -142,98 +130,44 @@ interface INToken is
     function handleRepayment(address user, uint256 tokenId) external;
 
     /**
-     * @notice Allow passing a signed message to approve spending
-     * @dev implements the permit function as for
-     * https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-     * @param owner The owner of the funds
-     * @param spender The spender
-     * @param value The tokenId
-     * @param deadline The deadline timestamp, type(uint256).max for max deadline
-     * @param v Signature param
-     * @param s Signature param
-     * @param r Signature param
-     */
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
-
-    /**
      * @notice Returns the address of the underlying asset of this nToken (E.g. WETH for pWETH)
      * @return The address of the underlying asset
      **/
     function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 
     /**
-     * @notice Returns the address of the ParaSpace treasury, receiving the fees on this nToken.
-     * @return Address of the ParaSpace treasury
-     **/
-    function RESERVE_TREASURY_ADDRESS() external view returns (address);
-
-    /**
-     * @notice Get the domain separator for the token
-     * @dev Return cached value if chainId matches cache, otherwise recomputes separator
-     * @return The domain separator of the token at current chain
-     */
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-
-    /**
-     * @notice Returns the nonce for owner.
-     * @param owner The address of the owner
-     * @return The nonce of the owner
-     **/
-    function nonces(address owner) external view returns (uint256);
-
-    /**
-     * @notice Rescue and transfer tokens locked in this contract
+     * @notice Rescue ERC20 Token.
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param value The tokenId or amount to transfer
-     */
-    function rescueTokens(
-        address token,
-        address to,
-        uint256 value
-    ) external;
-
-    /**
-     * @notice Claims ERC20 Airdrops.
-     * @param token The address of the token
-     * @param to The address of the recipient
-     * @param amount The amount being claimed from the airdrop
+     * @param amount The amount being rescued
      **/
-    function claimERC20Airdrop(
+    function rescueERC20(
         address token,
         address to,
         uint256 amount
     ) external;
 
     /**
-     * @notice Claims ERC721 Airdrops.
+     * @notice Rescue ERC721 Token.
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
+     * @param ids The ids of the tokens being rescued
      **/
-    function claimERC721Airdrop(
+    function rescueERC721(
         address token,
         address to,
         uint256[] calldata ids
     ) external;
 
     /**
-     * @notice Claims ERC1155 Airdrops.
+     * @notice Rescue ERC1155 Token.
      * @param token The address of the token
      * @param to The address of the recipient
-     * @param ids The ids of the tokens being claimed from the airdrop
-     * @param amounts The amount of NFTs being claimed from the airdrop for a specific id.
-     * @param data The data of the tokens that is being claimed from the airdrop. Usually this is 0.
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
      **/
-    function claimERC1155Airdrop(
+    function rescueERC1155(
         address token,
         address to,
         uint256[] calldata ids,

@@ -276,8 +276,8 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
             proxy = new InitializableImmutableAdminUpgradeabilityProxy(
                 address(this)
             );
-            _addresses[id] = proxyAddress = address(proxy);
             proxy.initialize(newAddress, params);
+            _addresses[id] = proxyAddress = address(proxy);
             emit ProxyCreated(id, proxyAddress, newAddress);
         } else {
             proxy = InitializableImmutableAdminUpgradeabilityProxy(
@@ -310,9 +310,8 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
 
         if (proxyAddress == address(0)) {
             proxy = IParaProxy(address(new ParaProxy(address(this))));
-
-            _addresses[id] = proxyAddress = address(proxy);
             proxy.updateImplementation(implementationParams, _init, _calldata);
+            _addresses[id] = proxyAddress = address(proxy);
             emit ParaProxyCreated(id, proxyAddress, implementationParams);
         } else {
             proxy = IParaProxy(payable(proxyAddress));

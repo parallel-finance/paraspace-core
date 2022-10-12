@@ -121,7 +121,7 @@ interface IPoolCore {
     /**
      * @dev Emitted when a borrower is liquidated.
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-     * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
+     * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
      * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
      * @param liquidatedCollateralAmount The amount of collateral received by the liquidator
@@ -131,7 +131,7 @@ interface IPoolCore {
      **/
     event LiquidationCall(
         address indexed collateralAsset,
-        address indexed debtAsset,
+        address indexed liquidationAsset,
         address indexed user,
         uint256 debtToCover,
         uint256 liquidatedCollateralAmount,
@@ -412,7 +412,7 @@ interface IPoolCore {
      * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
      *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-     * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
+     * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
      * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
@@ -420,7 +420,7 @@ interface IPoolCore {
      **/
     function liquidationCall(
         address collateralAsset,
-        address debtAsset,
+        address liquidationAsset,
         address user,
         uint256 debtToCover,
         bool receivePToken

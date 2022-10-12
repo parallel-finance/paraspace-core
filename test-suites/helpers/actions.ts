@@ -2,15 +2,11 @@ import {
   calcExpectedReserveDataAfterBorrow,
   calcExpectedReserveDataAfterDeposit,
   calcExpectedReserveDataAfterRepay,
-  calcExpectedReserveDataAfterStableRateRebalance,
-  calcExpectedReserveDataAfterSwapRateMode,
   calcExpectedReserveDataAfterWithdraw,
   calcExpectedUserDataAfterBorrow,
   calcExpectedUserDataAfterDeposit,
   calcExpectedUserDataAfterRepay,
   calcExpectedUserDataAfterSetUseAsCollateral,
-  calcExpectedUserDataAfterStableRateRebalance,
-  calcExpectedUserDataAfterSwapRateMode,
   calcExpectedUserDataAfterWithdraw,
 } from "./utils/calculations";
 import {
@@ -878,129 +874,6 @@ export const setUseAsCollateral = async (
       pool
         .connect(user.signer)
         .setUserUseERC20AsCollateral(reserve, useAsCollateralBool),
-      revertMessage
-    ).to.be.reverted;
-  }
-};
-
-export const swapBorrowRateMode = async (
-  reserveSymbol: string,
-  user: SignerWithAddress,
-  rateMode: string,
-  expectedResult: string,
-  testEnv: TestEnv,
-  revertMessage?: string
-) => {
-  const {pool} = testEnv;
-
-  const reserve = await getTokenAddressFromSymbol(reserveSymbol);
-
-  const {reserveData: reserveDataBefore, userData: userDataBefore} =
-    await getContractsData(reserve, user.address, testEnv);
-
-  if (expectedResult === "success") {
-    const txResult = await waitForTx(
-      await pool.connect(user.signer).swapBorrowRateMode(reserve, rateMode)
-    );
-
-    const {txCost, txTimestamp} = await getTxCostAndTimestamp(txResult);
-
-    const {reserveData: reserveDataAfter, userData: userDataAfter} =
-      await getContractsData(reserve, user.address, testEnv);
-
-    const expectedReserveData = calcExpectedReserveDataAfterSwapRateMode(
-      reserveDataBefore,
-      userDataBefore,
-      rateMode,
-      txTimestamp
-    );
-
-    const expectedUserData = calcExpectedUserDataAfterSwapRateMode(
-      reserveDataBefore,
-      expectedReserveData,
-      userDataBefore,
-      rateMode,
-      txCost,
-      txTimestamp
-    );
-
-    expectEqual(reserveDataAfter, expectedReserveData);
-    expectEqual(userDataAfter, expectedUserData);
-
-    // truffleAssert.eventEmitted(txResult, "Swap", (ev: any) => {
-    //   const {_user, _reserve, _newRateMode, _newRate} = ev;
-    //   return (
-    //     _user === user &&
-    //     _reserve == reserve &&
-    //     new BigNumber(_newRateMode).eq(expectedUserData.borrowRateMode) &&
-    //     new BigNumber(_newRate).eq(expectedUserData.borrowRate)
-    //   );
-    // });
-  } else if (expectedResult === "revert") {
-    await expect(
-      pool.connect(user.signer).swapBorrowRateMode(reserve, rateMode),
-      revertMessage
-    ).to.be.reverted;
-  }
-};
-
-export const rebalanceStableBorrowRate = async (
-  reserveSymbol: string,
-  user: SignerWithAddress,
-  target: SignerWithAddress,
-  expectedResult: string,
-  testEnv: TestEnv,
-  revertMessage?: string
-) => {
-  const {pool} = testEnv;
-
-  const reserve = await getTokenAddressFromSymbol(reserveSymbol);
-
-  const {reserveData: reserveDataBefore, userData: userDataBefore} =
-    await getContractsData(reserve, target.address, testEnv);
-
-  if (expectedResult === "success") {
-    const txResult = await waitForTx(
-      await pool
-        .connect(user.signer)
-        .rebalanceStableBorrowRate(reserve, target.address)
-    );
-
-    const {txCost, txTimestamp} = await getTxCostAndTimestamp(txResult);
-
-    const {reserveData: reserveDataAfter, userData: userDataAfter} =
-      await getContractsData(reserve, target.address, testEnv);
-
-    const expectedReserveData = calcExpectedReserveDataAfterStableRateRebalance(
-      reserveDataBefore,
-      userDataBefore,
-      txTimestamp
-    );
-
-    const expectedUserData = calcExpectedUserDataAfterStableRateRebalance(
-      reserveDataBefore,
-      expectedReserveData,
-      userDataBefore,
-      txCost,
-      txTimestamp
-    );
-
-    expectEqual(reserveDataAfter, expectedReserveData);
-    expectEqual(userDataAfter, expectedUserData);
-
-    // truffleAssert.eventEmitted(txResult, 'RebalanceStableBorrowRate', (ev: any) => {
-    //   const {_user, _reserve, _newStableRate} = ev;
-    //   return (
-    //     _user.toLowerCase() === target.toLowerCase() &&
-    //     _reserve.toLowerCase() === reserve.toLowerCase() &&
-    //     new BigNumber(_newStableRate).eq(expectedUserData.borrowRate)
-    //   );
-    // });
-  } else if (expectedResult === "revert") {
-    await expect(
-      pool
-        .connect(user.signer)
-        .rebalanceStableBorrowRate(reserve, target.address),
       revertMessage
     ).to.be.reverted;
   }

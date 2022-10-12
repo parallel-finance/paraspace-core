@@ -17,7 +17,6 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 const DEBUG = false;
 
 type CalculateInterestRatesParams = {
-  unbacked: BigNumberish;
   liquidityAdded: BigNumberish;
   liquidityTaken: BigNumberish;
   totalStableDebt: BigNumberish;
@@ -63,7 +62,6 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
 
   it("Checks rates at 0% usage ratio, empty reserve", async () => {
     const params: CalculateInterestRatesParams = {
-      unbacked: 0,
       liquidityAdded: 0,
       liquidityTaken: 0,
       totalStableDebt: 0,
@@ -93,7 +91,6 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
 
   it("Checks rates at 80% usage ratio", async () => {
     const params: CalculateInterestRatesParams = {
-      unbacked: 0,
       liquidityAdded: "200000000000000000",
       liquidityTaken: 0,
       totalStableDebt: 0,
@@ -148,7 +145,6 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
 
   it("Checks rates at 100% usage ratio", async () => {
     const params: CalculateInterestRatesParams = {
-      unbacked: 0,
       liquidityAdded: "0",
       liquidityTaken: 0,
       totalStableDebt: 0,
@@ -205,7 +201,6 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
 
   it("Checks rates at 100% usage ratio, 50% stable debt and 50% variable debt, with a 10% avg stable rate", async () => {
     const params: CalculateInterestRatesParams = {
-      unbacked: 0,
       liquidityAdded: "0",
       liquidityTaken: 0,
       totalStableDebt: "400000000000000000",
@@ -258,7 +253,6 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
 
   // it("Checks rates at 80% borrow usage ratio and 50% supply usage due to minted tokens", async () => {
   //   let params: CalculateInterestRatesParams = {
-  //     unbacked: "600000000000000000",
   //     liquidityAdded: "200000000000000000",
   //     liquidityTaken: 0,
   //     totalStableDebt: "0",
@@ -304,7 +298,6 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
   //   const totalVariableDebt = BigNumber.from("800000000000000000");
 
   //   let params: CalculateInterestRatesParams = {
-  //     unbacked: totalVariableDebt.mul("124").sub(availableLiquidity),
   //     liquidityAdded: availableLiquidity,
   //     liquidityTaken: 0,
   //     totalStableDebt: "0",
@@ -358,7 +351,6 @@ makeSuite("InterestRateStrategy", (testEnv: TestEnv) => {
 
   it("Checks rates at 0.8% usage", async () => {
     const params: CalculateInterestRatesParams = {
-      unbacked: 0,
       liquidityAdded: "9920000000000000000000",
       liquidityTaken: 0,
       totalStableDebt: "0",

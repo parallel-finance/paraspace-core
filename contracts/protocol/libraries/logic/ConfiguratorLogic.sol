@@ -77,7 +77,6 @@ library ConfiguratorLogic {
                 abi.encodeWithSelector(
                     IInitializableNToken.initialize.selector,
                     pool,
-                    input.treasury,
                     input.underlyingAsset,
                     input.incentivesController,
                     input.xTokenName,

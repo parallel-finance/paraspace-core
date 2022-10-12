@@ -287,7 +287,7 @@ export async function initializeMakeSuite() {
   testEnv.x2y2r1 = await getX2Y2R1();
   testEnv.erc721Delegate = await getERC721Delegate();
 
-  const allTokens = await testEnv.protocolDataProvider.getAllPTokens();
+  const allTokens = await testEnv.protocolDataProvider.getAllXTokens();
 
   const pDaiAddress = allTokens.find(
     (xToken) => xToken.symbol === "pDAI"

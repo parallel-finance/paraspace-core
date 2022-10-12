@@ -229,20 +229,20 @@ library DataTypes {
     }
 
     struct ValidateLiquidationCallParams {
-        ReserveCache debtReserveCache;
+        ReserveCache liquidationAssetReserveCache;
         uint256 totalDebt;
         uint256 healthFactor;
         address priceOracleSentinel;
     }
 
     struct ValidateERC721LiquidationCallParams {
-        ReserveCache debtReserveCache;
+        ReserveCache liquidationAssetReserveCache;
         address liquidator;
         address borrower;
-        uint256 totalDebt;
+        uint256 globalDebt;
         uint256 healthFactor;
         uint256 tokenId;
-        uint256 collateralDiscountedPrice;
+        uint256 actualLiquidationAmount;
         uint256 liquidationAmount;
         uint256 auctionRecoveryHealthFactor;
         address priceOracleSentinel;

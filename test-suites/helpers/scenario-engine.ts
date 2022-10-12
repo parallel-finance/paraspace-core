@@ -7,8 +7,6 @@ import {
   withdraw,
   repay,
   setUseAsCollateral,
-  swapBorrowRateMode,
-  rebalanceStableBorrowRate,
   delegateBorrowAllowance,
   repayWithPermit,
   supplyWithPermit,
@@ -289,37 +287,6 @@ const executeAction = async (
           reserve,
           user,
           useAsCollateral,
-          expected,
-          testEnv,
-          revertMessage
-        );
-      }
-      break;
-
-    case "swapBorrowRateMode":
-      await swapBorrowRateMode(
-        reserve,
-        user,
-        rateMode,
-        expected,
-        testEnv,
-        revertMessage
-      );
-      break;
-
-    case "rebalanceStableBorrowRate":
-      {
-        const {target: targetIndex} = action.args;
-
-        if (!targetIndex || targetIndex === "") {
-          throw `A target must be selected when trying to rebalance a stable rate`;
-        }
-        const target = users[parseInt(targetIndex)];
-
-        await rebalanceStableBorrowRate(
-          reserve,
-          user,
-          target,
           expected,
           testEnv,
           revertMessage
