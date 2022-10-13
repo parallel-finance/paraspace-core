@@ -284,16 +284,91 @@ makeSuite("pToken/debtToken Mint and Burn Event Accounting", () => {
         await mintAndValidate(dai, firstDaiDeposit, user3);
         const balance = await dai.balanceOf(user3.address)
 
-        const supplyTx = await pool.connect(user3.signer).supply(dai.address, firstDaiDeposit, user3.address, '0')
-        expect(await  supplyTx).to.thrown('supply failed');
+        await expect(
+            pool.connect(user3.signer).supply(dai.address, firstDaiDeposit, user3.address, '0')
+        ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
 
         // User 3 - DAI balance should remain unchanged
         const balanceAfter = await dai.balanceOf(user3.address)
         expect(balanceAfter).to.equal(balance)
 
+        // User 3 - pDAI balance should not be increased
+        const pDaiBalanceAfter = await pDai.balanceOf(user3.address);
+        expect(pDaiBalanceAfter).to.equal(pDaiBalance)
+    });
+
+    it('user3 supply 10k greater than approve 5k (should fail)', async () => {
+        const {
+            dai,
+            pDai,
+            pool,
+            users: [, , user3],
+        } = testEnv;
+        const pDaiBalance = await pDai.balanceOf(user3.address);
+        const balance = await dai.balanceOf(user3.address)
+        const amount = await convertToCurrencyDecimals(dai.address, firstDaiDeposit)
+        await dai.connect(user3.signer).approve(pool.address, '5000000000000000000000')
+        await expect(
+            pool.connect(user3.signer).supply(dai.address, amount, user3.address, '0')
+        ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
+
+        // User 3 - DAI balance should remain unchanged
+        const balanceAfter = await dai.balanceOf(user3.address)
+        expect(balanceAfter).to.equal(balance)
 
         // User 3 - pDAI balance should not be increased
         const pDaiBalanceAfter = await pDai.balanceOf(user3.address);
         expect(pDaiBalanceAfter).to.equal(pDaiBalance)
     });
+    it('user3 supply 20K greater than user balance  10K  (should fail) ', async () => {
+        const {
+            dai,
+            pDai,
+            pool,
+            users: [, , user3],
+        } = testEnv;
+        const pDaiBalance = await pDai.balanceOf(user3.address);
+        const balance = await dai.balanceOf(user3.address)
+        const amount = await convertToCurrencyDecimals(dai.address, '200000')
+        await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT)
+        await expect(
+            pool.connect(user3.signer).supply(dai.address, amount, user3.address, '0')
+        ).to.be.revertedWith('ERC20: transfer amount exceeds balance');
+
+        // User 3 - DAI balance should remain unchanged
+        const balanceAfter = await dai.balanceOf(user3.address)
+        expect(balanceAfter).to.equal(balance)
+
+        // User 3 - pDAI balance should not be increased
+        const pDaiBalanceAfter = await pDai.balanceOf(user3.address);
+        expect(pDaiBalanceAfter).to.equal(pDaiBalance)
+    });
+
+    it('user3 Users do not supply loans to borrow ', async () => {
+        const {
+            dai,
+            pool,
+            users: [, , user3],
+            variableDebtDai,
+        } = testEnv;
+        const debtBalanceBeforeWithdraw = await variableDebtDai.balanceOf(user3.address);
+
+        const balance = await dai.balanceOf(user3.address)
+        await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT)
+        const amount = await convertToCurrencyDecimals(dai.address, firstDaiDeposit)
+        await expect(
+            pool.connect(user3.signer).borrow(dai.address, amount, RateMode.Variable, "0",
+                user3.address, {
+                    gasLimit: 5000000,
+                })
+        ).to.be.revertedWith(ProtocolErrors.COLLATERAL_BALANCE_IS_ZERO);
+
+        // User 3 - DAI balance should remain unchanged
+        const balanceAfter = await dai.balanceOf(user3.address)
+        expect(balanceAfter).to.equal(balance)
+        const debtBalanceAfterWithdraw = await variableDebtDai.balanceOf(user3.address);
+
+        // User 3 - debtBalance should not change
+        expect(debtBalanceBeforeWithdraw).to.equal(debtBalanceAfterWithdraw)
+    })
 });
