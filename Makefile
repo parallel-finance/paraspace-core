@@ -222,12 +222,12 @@ run:
 
 .PHONY: print
 print:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/run_printContracts.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run_printContracts.ts run
 
 .PHONY: verify
 verify:
 	yarn clean
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/run_verifyContracts.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run_verifyContracts.ts run
 
 .PHONY: deploy
 deploy: run
@@ -238,79 +238,83 @@ dev-deploy:
 
 .PHONY: deploy-mockERC20Tokens
 deploy-mockERC20Tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/0A_mockERC20Tokens.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/0A_mockERC20Tokens.ts run
 
 .PHONY: deploy-mockERC721Tokens
 deploy-mockERC721Tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/0B_mockERC721Tokens.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/0B_mockERC721Tokens.ts run
 
 .PHONY: deploy-faucet
 deploy-faucet:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/01_faucet.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/01_faucet.ts run
 
 .PHONY: deploy-addressProvider
 deploy-addressProvider:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/02_addressProvider.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/02_addressProvider.ts run
 
 .PHONY: deploy-aclManager
 deploy-aclManager:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/03_aclManager.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/03_aclManager.ts run
 
 .PHONY: deploy-poolAddressesProviderRegistry
 deploy-poolAddressesProviderRegistry:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/04_poolAddressesProviderRegistry.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/04_poolAddressesProviderRegistry.ts run
 
 .PHONY: deploy-pool
 deploy-pool:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/05_pool.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/05_pool.ts run
 
 .PHONY: deploy-poolConfigurator
 deploy-poolConfigurator:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/06_poolConfigurator.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/06_poolConfigurator.ts run
 
 .PHONY: deploy-reservesSetupHelper
 deploy-reservesSetupHelper:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/07_reservesSetupHelper.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/07_reservesSetupHelper.ts run
 
 .PHONY: deploy-priceOracle
 deploy-priceOracle:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/08_priceOracle.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/08_priceOracle.ts run
 
 .PHONY: deploy-allMockAggregators
 deploy-allMockAggregators:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/09_allMockAggregators.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/09_allMockAggregators.ts run
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/10_uiIncentiveDataProvider.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/10_uiIncentiveDataProvider.ts run
 
 .PHONY: deploy-wethGateway
 deploy-wethGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/11_wethGateway.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/11_wethGateway.ts run
 
 .PHONY: deploy-punkGateway
 deploy-punkGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/12_punkGateway.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/12_punkGateway.ts run
 
 .PHONY: deploy-moonbirdsGateway
 deploy-moonbirdsGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/13_moonbirdsGateway.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/13_moonbirdsGateway.ts run
 
 .PHONY: deploy-uniswapV3Gateway
 deploy-uniswapV3Gateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/14_uniswapV3Gateway.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/14_uniswapV3Gateway.ts run
 
 .PHONY: deploy-seaport
 deploy-seaport:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/15_seaport.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/15_seaport.ts run
 
 .PHONY: deploy-looksrare
 deploy-looksrare:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/16_looksrare.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/16_looksrare.ts run
 
 .PHONY: deploy-x2y2
 deploy-x2y2:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/17_x2y2.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/17_x2y2.ts run
+
+.PHONY: deploy-flashClaimRegistry
+deploy-flashClaimRegistry:
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/18_flashClaimRegistry.ts run
 
 .PHONY: ad-hoc
 ad-hoc:
