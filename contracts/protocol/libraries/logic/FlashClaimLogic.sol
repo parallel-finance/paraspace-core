@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {IFlashClaimReceiver} from "../../../interfaces/IFlashClaimReceiver.sol";
+import {IFlashClaimReceiver} from "../../../misc/interfaces/IFlashClaimReceiver.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {Errors} from "../helpers/Errors.sol";
