@@ -216,6 +216,10 @@ test-dynamic-configs-strategy:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
+.PHONY: test-wallet-balance-provider
+test-wallet-balance-provider:
+	make TEST_TARGET=wallet-balance-provider.spec.ts test	
+
 .PHONY: run
 run:
 	TS_NODE_TRANSPILE_ONLY=1 npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
