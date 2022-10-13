@@ -41,6 +41,7 @@
     "@uniswap/v3-periphery": "1.4.1",
     "@uniswap/v3-sdk": "^3.9.0",
     "@x2y2-io/sdk": "^0.1.4",
+    "async": "^3.2.4",
     "chai": "4.2.0",
     "chai-bignumber": "3.0.0",
     "defender-relay-client": "^1.7.0",
@@ -54,11 +55,13 @@
     "ethers": "^5.0.19",
     "hardhat": "^2.6.4",
     "hardhat-contract-sizer": "^2.0.3",
+    "hardhat-deploy": "^0.11.4",
     "hardhat-gas-reporter": "^1.0.0",
     "hardhat-typechain": "^0.3.3",
     "husky": "^8.0.1",
     "lodash": "^4.17.21",
     "lowdb": "1.0.0",
+    "minimatch": "^5.1.0",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-alpha.53",
     "pretty-quick": "^3.1.1",
@@ -69,10 +72,6 @@
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "4.7.4"
-  },
-  "dependencies": {
-    "async": "^3.2.4",
-    "hardhat-deploy": "^0.11.4"
   },
   "author": "ParaSpace-MM Team",
   "contributors": [],
