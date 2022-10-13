@@ -23,18 +23,11 @@ library ConfiguratorLogic {
     event ReserveInitialized(
         address indexed asset,
         address indexed xToken,
-        address stableDebtToken,
         address variableDebtToken,
         address interestRateStrategyAddress,
         address auctionStrategyAddress
     );
     event XTokenUpgraded(
-        address indexed asset,
-        address indexed proxy,
-        address indexed implementation
-    );
-    // TODO can we get rid of StableDebtToken?
-    event StableDebtTokenUpgraded(
         address indexed asset,
         address indexed proxy,
         address indexed implementation
@@ -86,20 +79,6 @@ library ConfiguratorLogic {
             );
         }
 
-        address stableDebtTokenProxyAddress = _initTokenWithProxy(
-            input.stableDebtTokenImpl,
-            abi.encodeWithSelector(
-                IInitializableDebtToken.initialize.selector,
-                pool,
-                input.underlyingAsset,
-                input.incentivesController,
-                input.underlyingAssetDecimals,
-                input.stableDebtTokenName,
-                input.stableDebtTokenSymbol,
-                input.params
-            )
-        );
-
         address variableDebtTokenProxyAddress = _initTokenWithProxy(
             input.variableDebtTokenImpl,
             abi.encodeWithSelector(
@@ -117,7 +96,6 @@ library ConfiguratorLogic {
         pool.initReserve(
             input.underlyingAsset,
             xTokenProxyAddress,
-            stableDebtTokenProxyAddress,
             variableDebtTokenProxyAddress,
             input.interestRateStrategyAddress,
             input.auctionStrategyAddress
@@ -137,7 +115,6 @@ library ConfiguratorLogic {
         emit ReserveInitialized(
             input.underlyingAsset,
             xTokenProxyAddress,
-            stableDebtTokenProxyAddress,
             variableDebtTokenProxyAddress,
             input.interestRateStrategyAddress,
             input.auctionStrategyAddress
@@ -183,49 +160,6 @@ library ConfiguratorLogic {
         emit XTokenUpgraded(
             input.asset,
             reserveData.xTokenAddress,
-            input.implementation
-        );
-    }
-
-    // TODO can we get rid of StableDebtToken?
-    /**
-     * @notice Updates the stable debt token implementation and initializes it
-     * @dev Emits the `StableDebtTokenUpgraded` event
-     * @param cachedPool The Pool containing the reserve with the stable debt token
-     * @param input The parameters needed for the initialize call
-     */
-    function executeUpdateStableDebtToken(
-        IPool cachedPool,
-        ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
-    ) public {
-        DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(
-            input.asset
-        );
-
-        (, , , uint256 decimals, , ) = cachedPool
-            .getConfiguration(input.asset)
-            .getParams();
-
-        bytes memory encodedCall = abi.encodeWithSelector(
-            IInitializableDebtToken.initialize.selector,
-            cachedPool,
-            input.asset,
-            input.incentivesController,
-            decimals,
-            input.name,
-            input.symbol,
-            input.params
-        );
-
-        _upgradeTokenImplementation(
-            reserveData.stableDebtTokenAddress,
-            input.implementation,
-            encodedCall
-        );
-
-        emit StableDebtTokenUpgraded(
-            input.asset,
-            reserveData.stableDebtTokenAddress,
             input.implementation
         );
     }

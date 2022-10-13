@@ -4,9 +4,15 @@ import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {deployMockReserveConfiguration} from "../deploy/helpers/contracts-deployments";
 import {MockReserveConfiguration} from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {testEnvFixture} from "./helpers/setup-env";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 
 describe("ReserveConfiguration", async () => {
   let snap: string;
+
+  before(async () => {
+    await loadFixture(testEnvFixture);
+  });
 
   beforeEach(async () => {
     snap = await evmSnapshot();
@@ -118,7 +124,6 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
-      false,
       0,
     ]);
     expect(await configMock.getFrozen()).to.be.false;
@@ -129,13 +134,11 @@ describe("ReserveConfiguration", async () => {
       true,
       false,
       false,
-      false,
       0,
     ]);
     expect(await configMock.getFrozen()).to.be.true;
     expect(await configMock.setFrozen(false));
     expect(await configMock.getFlags()).to.be.eql([
-      false,
       false,
       false,
       false,
@@ -151,7 +154,6 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
-      false,
       0,
     ]);
     expect(await configMock.getAssetType()).to.be.eq(0);
@@ -163,13 +165,11 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
-      false,
       1,
     ]);
     expect(await configMock.getAssetType()).to.be.eq(1);
     expect(await configMock.setAssetType(0));
     expect(await configMock.getFlags()).to.be.eql([
-      false,
       false,
       false,
       false,
@@ -184,7 +184,6 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
-      false,
       0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.false;
@@ -195,7 +194,6 @@ describe("ReserveConfiguration", async () => {
       false,
       true,
       false,
-      false,
       0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.true;
@@ -205,42 +203,9 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
-      false,
       0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.false;
-  });
-  it("getStableRateBorrowingEnabled()", async () => {
-    expect(await configMock.getFlags()).to.be.eql([
-      false,
-      false,
-      false,
-      false,
-      false,
-      0,
-    ]);
-    expect(await configMock.getStableRateBorrowingEnabled()).to.be.false;
-    expect(await configMock.setStableRateBorrowingEnabled(true));
-    // stable borrowing is the 4th flag
-    expect(await configMock.getFlags()).to.be.eql([
-      false,
-      false,
-      false,
-      true,
-      false,
-      0,
-    ]);
-    expect(await configMock.getStableRateBorrowingEnabled()).to.be.true;
-    expect(await configMock.setStableRateBorrowingEnabled(false));
-    expect(await configMock.getFlags()).to.be.eql([
-      false,
-      false,
-      false,
-      false,
-      false,
-      0,
-    ]);
-    expect(await configMock.getStableRateBorrowingEnabled()).to.be.false;
   });
 
   // it("getReserveFactor()", async () => {

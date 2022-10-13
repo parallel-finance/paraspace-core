@@ -23,7 +23,6 @@ import {convertToCurrencyDecimals} from "../../deploy/helpers/contracts-helpers"
 import {
   getPToken,
   getMintableERC20,
-  getStableDebtToken,
   getVariableDebtToken,
   getChainId,
 } from "../../deploy/helpers/contracts-getters";
@@ -56,11 +55,9 @@ const almostEqualOrEqual = function (
   keys.forEach((key) => {
     if (
       key === "lastUpdateTimestamp" ||
-      key === "marketStableRate" ||
       key === "symbol" ||
       key === "xTokenAddress" ||
-      key === "decimals" ||
-      key === "totalStableDebtLastUpdated"
+      key === "decimals"
     ) {
       // skipping consistency check on accessory data
       return;
@@ -346,10 +343,9 @@ export const delegateBorrowAllowance = async (
 
   const reserveData = await pool.getReserveData(reserveAddress);
 
-  const debtToken =
-    interestRateMode === "1"
-      ? await getStableDebtToken(reserveData.stableDebtTokenAddress)
-      : await getVariableDebtToken(reserveData.variableDebtTokenAddress);
+  const debtToken = await getVariableDebtToken(
+    reserveData.variableDebtTokenAddress
+  );
 
   const delegateAllowancePromise = debtToken
     .connect(user.signer)

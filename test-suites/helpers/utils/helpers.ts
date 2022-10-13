@@ -2,11 +2,10 @@ import {IPool} from "../../../types";
 import {ReserveData, UserReserveData} from "./interfaces";
 import {
   getIErc20Detailed,
+  getIRStrategy,
   getMintableERC20,
   getPToken,
-  getStableDebtToken,
   getVariableDebtToken,
-  getIRStrategy,
 } from "../../../deploy/helpers/contracts-getters";
 import {tEthereumAddress} from "../../../deploy/helpers/types";
 import {getDb, DRE} from "../../../deploy/helpers/misc-utils";
@@ -34,19 +33,11 @@ export const getReserveData = async (
     getIErc20Detailed(reserve),
   ]);
 
-  const stableDebtToken = await getStableDebtToken(
-    tokenAddresses.stableDebtTokenAddress
-  );
   const variableDebtToken = await getVariableDebtToken(
     tokenAddresses.variableDebtTokenAddress
   );
-  const irStrategy = await getIRStrategy(irStrategyAddress);
 
-  const baseStableRate = await irStrategy.getBaseStableBorrowRate();
-
-  const {0: principalStableDebt} = await stableDebtToken.getSupplyData();
-  const totalStableDebtLastUpdated =
-    await stableDebtToken.getTotalSupplyLastUpdated();
+  await getIRStrategy(irStrategyAddress);
 
   const scaledVariableDebt = await variableDebtToken.scaledTotalSupply();
 
@@ -61,9 +52,7 @@ export const getReserveData = async (
 
   const availableLiquidity = await token.balanceOf(xToken.address);
 
-  const totalDebt = reserveData.totalStableDebt.add(
-    reserveData.totalVariableDebt
-  );
+  const totalDebt = reserveData.totalVariableDebt;
 
   const borrowUtilizationRate = totalDebt.eq(0)
     ? BigNumber.from(0)
@@ -84,23 +73,17 @@ export const getReserveData = async (
     availableLiquidity,
     borrowUtilizationRate,
     supplyUtilizationRate,
-    totalStableDebt: reserveData.totalStableDebt,
     totalVariableDebt: reserveData.totalVariableDebt,
     liquidityRate: reserveData.liquidityRate,
     variableBorrowRate: reserveData.variableBorrowRate,
-    stableBorrowRate: reserveData.stableBorrowRate,
-    averageStableBorrowRate: reserveData.averageStableBorrowRate,
     liquidityIndex: reserveData.liquidityIndex,
     variableBorrowIndex: reserveData.variableBorrowIndex,
     lastUpdateTimestamp: BigNumber.from(reserveData.lastUpdateTimestamp),
-    totalStableDebtLastUpdated: BigNumber.from(totalStableDebtLastUpdated),
-    principalStableDebt: principalStableDebt,
     scaledVariableDebt: scaledVariableDebt,
     address: reserve,
     xTokenAddress: tokenAddresses.xTokenAddress,
     symbol,
     decimals,
-    marketStableRate: BigNumber.from(baseStableRate),
   };
 };
 
@@ -122,14 +105,10 @@ export const getUserData = async (
   return {
     scaledPTokenBalance: BigNumber.from(scaledPTokenBalance),
     currentPTokenBalance: userData.currentPTokenBalance,
-    currentStableDebt: userData.currentStableDebt,
     currentVariableDebt: userData.currentVariableDebt,
-    principalStableDebt: userData.principalStableDebt,
     scaledVariableDebt: userData.scaledVariableDebt,
-    stableBorrowRate: userData.stableBorrowRate,
     liquidityRate: userData.liquidityRate,
     usageAsCollateralEnabled: userData.usageAsCollateralEnabled,
-    stableRateLastUpdated: BigNumber.from(userData.stableRateLastUpdated),
     walletBalance,
   };
 };

@@ -6,7 +6,6 @@ import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol"
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IReserveInterestRateStrategy} from "../../../interfaces/IReserveInterestRateStrategy.sol";
-import {IStableDebtToken} from "../../../interfaces/IStableDebtToken.sol";
 import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
@@ -67,7 +66,6 @@ library ValidationLogic {
         (
             bool isActive,
             bool isFrozen,
-            ,
             ,
             bool isPaused,
             DataTypes.AssetType reserveAssetType
@@ -162,7 +160,6 @@ library ValidationLogic {
             bool isActive,
             ,
             ,
-            ,
             bool isPaused,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
@@ -181,7 +178,6 @@ library ValidationLogic {
     {
         (
             bool isActive,
-            ,
             ,
             ,
             bool isPaused,
@@ -214,7 +210,6 @@ library ValidationLogic {
         bool isFrozen;
         bool isPaused;
         bool borrowingEnabled;
-        bool stableRateBorrowingEnabled;
         bool siloedBorrowingEnabled;
         DataTypes.AssetType assetType;
     }
@@ -237,7 +232,6 @@ library ValidationLogic {
             vars.isActive,
             vars.isFrozen,
             vars.borrowingEnabled,
-            vars.stableRateBorrowingEnabled,
             vars.isPaused,
             vars.assetType
         ) = params.reserveCache.reserveConfiguration.getFlags();
@@ -260,8 +254,7 @@ library ValidationLogic {
 
         //validate interest rate mode
         require(
-            params.interestRateMode == DataTypes.InterestRateMode.VARIABLE ||
-                params.interestRateMode == DataTypes.InterestRateMode.STABLE,
+            params.interestRateMode == DataTypes.InterestRateMode.VARIABLE,
             Errors.INVALID_INTEREST_RATE_MODE_SELECTED
         );
 
@@ -283,10 +276,7 @@ library ValidationLogic {
                 .currScaledVariableDebt
                 .rayMul(params.reserveCache.nextVariableBorrowIndex);
 
-            vars.totalDebt =
-                params.reserveCache.currTotalStableDebt +
-                vars.totalSupplyVariableDebt +
-                params.amount;
+            vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
 
             unchecked {
                 require(
@@ -345,50 +335,6 @@ library ValidationLogic {
                 vars.userCollateralInBaseCurrency,
             Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW
         );
-
-        /**
-         * Following conditions need to be met if the user is borrowing at a stable rate:
-         * 1. Reserve must be enabled for stable rate borrowing
-         * 2. Users cannot borrow from the reserve if their collateral is (mostly) the same currency
-         *    they are borrowing, to prevent abuses.
-         * 3. Users will be able to borrow only a portion of the total available liquidity
-         **/
-
-        if (params.interestRateMode == DataTypes.InterestRateMode.STABLE) {
-            //check if the borrow mode is stable and if stable rate borrowing is enabled on this reserve
-
-            require(
-                vars.stableRateBorrowingEnabled,
-                Errors.STABLE_BORROWING_NOT_ENABLED
-            );
-
-            require(
-                !params.userConfig.isUsingAsCollateral(
-                    reservesData[params.asset].id
-                ) ||
-                    params.reserveCache.reserveConfiguration.getLtv() == 0 ||
-                    params.amount >
-                    IToken(params.reserveCache.xTokenAddress).balanceOf(
-                        params.userAddress
-                    ),
-                Errors.COLLATERAL_SAME_AS_BORROWING_CURRENCY
-            );
-
-            vars.availableLiquidity = IToken(params.asset).balanceOf(
-                params.reserveCache.xTokenAddress
-            );
-
-            //calculate the max available loan size in stable rate mode as a percentage of the
-            //available liquidity
-            uint256 maxLoanSizeStable = vars.availableLiquidity.percentMul(
-                params.maxStableLoanPercent
-            );
-
-            require(
-                params.amount <= maxLoanSizeStable,
-                Errors.AMOUNT_BIGGER_THAN_MAX_LOAN_SIZE_STABLE
-            );
-        }
     }
 
     /**
@@ -397,7 +343,6 @@ library ValidationLogic {
      * @param amountSent The amount sent for the repayment. Can be an actual value or uint(-1)
      * @param interestRateMode The interest rate mode of the debt being repaid
      * @param onBehalfOf The address of the user msg.sender is repaying for
-     * @param stableDebt The borrow balance of the user
      * @param variableDebt The borrow balance of the user
      */
     function validateRepay(
@@ -405,7 +350,6 @@ library ValidationLogic {
         uint256 amountSent,
         DataTypes.InterestRateMode interestRateMode,
         address onBehalfOf,
-        uint256 stableDebt,
         uint256 variableDebt
     ) internal view {
         require(amountSent != 0, Errors.INVALID_AMOUNT);
@@ -414,7 +358,7 @@ library ValidationLogic {
             Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
         );
 
-        (bool isActive, , , , bool isPaused, ) = reserveCache
+        (bool isActive, , , bool isPaused, ) = reserveCache
             .reserveConfiguration
             .getFlags();
         require(isActive, Errors.RESERVE_INACTIVE);
@@ -424,129 +368,16 @@ library ValidationLogic {
             reserveCache.variableDebtTokenAddress
         ).getPreviousIndex(onBehalfOf);
 
-        uint40 stableRatePreviousTimestamp = IStableDebtToken(
-            reserveCache.stableDebtTokenAddress
-        ).getUserLastUpdated(onBehalfOf);
-
         require(
-            (stableRatePreviousTimestamp < uint40(block.timestamp) &&
-                interestRateMode == DataTypes.InterestRateMode.STABLE) ||
-                (variableDebtPreviousIndex <
-                    reserveCache.nextVariableBorrowIndex &&
-                    interestRateMode == DataTypes.InterestRateMode.VARIABLE),
+            (variableDebtPreviousIndex < reserveCache.nextVariableBorrowIndex &&
+                interestRateMode == DataTypes.InterestRateMode.VARIABLE),
             Errors.SAME_BLOCK_BORROW_REPAY
         );
 
         require(
-            (stableDebt != 0 &&
-                interestRateMode == DataTypes.InterestRateMode.STABLE) ||
-                (variableDebt != 0 &&
-                    interestRateMode == DataTypes.InterestRateMode.VARIABLE),
+            (variableDebt != 0 &&
+                interestRateMode == DataTypes.InterestRateMode.VARIABLE),
             Errors.NO_DEBT_OF_SELECTED_TYPE
-        );
-    }
-
-    /**
-     * @notice Validates a swap of borrow rate mode.
-     * @param reserve The reserve state on which the user is swapping the rate
-     * @param reserveCache The cached data of the reserve
-     * @param userConfig The user reserves configuration
-     * @param stableDebt The stable debt of the user
-     * @param variableDebt The variable debt of the user
-     * @param currentRateMode The rate mode of the debt being swapped
-     */
-    function validateSwapRateMode(
-        DataTypes.ReserveData storage reserve,
-        DataTypes.ReserveCache memory reserveCache,
-        DataTypes.UserConfigurationMap storage userConfig,
-        uint256 stableDebt,
-        uint256 variableDebt,
-        DataTypes.InterestRateMode currentRateMode
-    ) internal view {
-        (
-            bool isActive,
-            bool isFrozen,
-            ,
-            bool stableRateEnabled,
-            bool isPaused,
-
-        ) = reserveCache.reserveConfiguration.getFlags();
-        require(isActive, Errors.RESERVE_INACTIVE);
-        require(!isPaused, Errors.RESERVE_PAUSED);
-        require(!isFrozen, Errors.RESERVE_FROZEN);
-
-        if (currentRateMode == DataTypes.InterestRateMode.STABLE) {
-            require(stableDebt != 0, Errors.NO_OUTSTANDING_STABLE_DEBT);
-        } else if (currentRateMode == DataTypes.InterestRateMode.VARIABLE) {
-            require(variableDebt != 0, Errors.NO_OUTSTANDING_VARIABLE_DEBT);
-            /**
-             * user wants to swap to stable, before swapping we need to ensure that
-             * 1. stable borrow rate is enabled on the reserve
-             * 2. user is not trying to abuse the reserve by supplying
-             * more collateral than he is borrowing, artificially lowering
-             * the interest rate, borrowing at variable, and switching to stable
-             **/
-            require(stableRateEnabled, Errors.STABLE_BORROWING_NOT_ENABLED);
-
-            require(
-                !userConfig.isUsingAsCollateral(reserve.id) ||
-                    reserveCache.reserveConfiguration.getLtv() == 0 ||
-                    stableDebt + variableDebt >
-                    IToken(reserveCache.xTokenAddress).balanceOf(msg.sender),
-                Errors.COLLATERAL_SAME_AS_BORROWING_CURRENCY
-            );
-        } else {
-            revert(Errors.INVALID_INTEREST_RATE_MODE_SELECTED);
-        }
-    }
-
-    /**
-     * @notice Validates a stable borrow rate rebalance action.
-     * @dev Rebalancing is accepted when depositors are earning <= 90% of their earnings in pure supply/demand market (variable rate only)
-     * For this to be the case, there has to be quite large stable debt with an interest rate below the current variable rate.
-     * @param reserve The reserve state on which the user is getting rebalanced
-     * @param reserveCache The cached state of the reserve
-     * @param reserveAddress The address of the reserve
-     */
-    function validateRebalanceStableBorrowRate(
-        DataTypes.ReserveData storage reserve,
-        DataTypes.ReserveCache memory reserveCache,
-        address reserveAddress
-    ) internal view {
-        (bool isActive, , , , bool isPaused, ) = reserveCache
-            .reserveConfiguration
-            .getFlags();
-        require(isActive, Errors.RESERVE_INACTIVE);
-        require(!isPaused, Errors.RESERVE_PAUSED);
-
-        uint256 totalDebt = IToken(reserveCache.stableDebtTokenAddress)
-            .totalSupply() +
-            IToken(reserveCache.variableDebtTokenAddress).totalSupply();
-
-        (
-            uint256 liquidityRateVariableDebtOnly,
-            ,
-
-        ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress)
-                .calculateInterestRates(
-                    DataTypes.CalculateInterestRatesParams({
-                        liquidityAdded: 0,
-                        liquidityTaken: 0,
-                        totalStableDebt: 0,
-                        totalVariableDebt: totalDebt,
-                        averageStableBorrowRate: 0,
-                        reserveFactor: reserveCache.reserveFactor,
-                        reserve: reserveAddress,
-                        xToken: reserveCache.xTokenAddress
-                    })
-                );
-
-        require(
-            reserveCache.currLiquidityRate <=
-                liquidityRateVariableDebtOnly.percentMul(
-                    REBALANCE_UP_LIQUIDITY_RATE_THRESHOLD
-                ),
-            Errors.INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET
         );
     }
 
@@ -563,7 +394,6 @@ library ValidationLogic {
 
         (
             bool isActive,
-            ,
             ,
             ,
             bool isPaused,
@@ -583,7 +413,6 @@ library ValidationLogic {
     ) internal pure {
         (
             bool isActive,
-            ,
             ,
             ,
             bool isPaused,
@@ -631,7 +460,6 @@ library ValidationLogic {
             vars.collateralReserveActive,
             ,
             ,
-            ,
             vars.collateralReservePaused,
             vars.collateralReserveAssetType
         ) = collateralReserve.configuration.getFlags();
@@ -643,7 +471,6 @@ library ValidationLogic {
 
         (
             vars.principalReserveActive,
-            ,
             ,
             ,
             vars.principalReservePaused,
@@ -710,7 +537,6 @@ library ValidationLogic {
             vars.collateralReserveActive,
             ,
             ,
-            ,
             vars.collateralReservePaused,
             vars.collateralReserveAssetType
         ) = collateralReserve.configuration.getFlags();
@@ -722,7 +548,6 @@ library ValidationLogic {
 
         (
             vars.principalReserveActive,
-            ,
             ,
             ,
             vars.principalReservePaused,
@@ -848,7 +673,6 @@ library ValidationLogic {
             vars.collateralReserveActive,
             ,
             ,
-            ,
             vars.collateralReservePaused,
             vars.collateralReserveAssetType
         ) = collateralConfiguration.getFlags();
@@ -905,7 +729,6 @@ library ValidationLogic {
 
         (
             vars.collateralReserveActive,
-            ,
             ,
             ,
             vars.collateralReservePaused,
@@ -998,10 +821,6 @@ library ValidationLogic {
         require(
             reserve.id != 0 || reservesList[0] == asset,
             Errors.ASSET_NOT_LISTED
-        );
-        require(
-            IToken(reserve.stableDebtTokenAddress).totalSupply() == 0,
-            Errors.STABLE_DEBT_NOT_ZERO
         );
         require(
             IToken(reserve.variableDebtTokenAddress).totalSupply() == 0,

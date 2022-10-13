@@ -93,16 +93,12 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         uint256 rateMode,
         address onBehalfOf
     ) external payable override nonReentrant {
-        (uint256 stableDebt, uint256 variableDebt) = DataTypesHelper
-            .getUserCurrentDebt(
-                onBehalfOf,
-                IPool(pool).getReserveData(address(WETH))
-            );
+        uint256 variableDebt = DataTypesHelper.getUserCurrentDebt(
+            onBehalfOf,
+            IPool(pool).getReserveData(address(WETH))
+        );
 
-        uint256 paybackAmount = DataTypes.InterestRateMode(rateMode) ==
-            DataTypes.InterestRateMode.STABLE
-            ? stableDebt
-            : variableDebt;
+        uint256 paybackAmount = variableDebt;
 
         if (amount < paybackAmount) {
             paybackAmount = amount;

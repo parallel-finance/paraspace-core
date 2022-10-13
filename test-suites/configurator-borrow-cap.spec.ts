@@ -280,7 +280,7 @@ describe("PoolConfigurator: Borrow Cap", () => {
     await advanceTimeAndBlock(3600);
 
     const wethData = await protocolDataProvider.getReserveData(weth.address);
-    const totalDebt = wethData.totalVariableDebt.add(wethData.totalStableDebt);
+    const totalDebt = wethData.totalVariableDebt;
     const wethCaps = await protocolDataProvider.getReserveCaps(weth.address);
 
     expect(totalDebt).gt(wethCaps.borrowCap);

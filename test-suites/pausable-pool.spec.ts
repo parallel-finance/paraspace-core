@@ -287,7 +287,7 @@ describe("PausablePool", () => {
       borrower.address
     );
 
-    const amountToLiquidate = userReserveDataBefore.currentStableDebt
+    const amountToLiquidate = userReserveDataBefore.currentVariableDebt
       .div(2)
       .toString();
 
@@ -304,58 +304,6 @@ describe("PausablePool", () => {
         true
       )
     ).to.be.revertedWith(RESERVE_PAUSED);
-
-    // Unpause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
-  });
-
-  it("SwapBorrowRateMode", async () => {
-    const {pool, weth, dai, usdc, configurator, emergencyAdmin} = testEnv;
-    const user = emergencyAdmin;
-    const amountWETHToDeposit = utils.parseEther("10");
-    const amountDAIToDeposit = utils.parseEther("120");
-    const amountToBorrow = utils.parseUnits("65", 6);
-
-    await weth.connect(user.signer)["mint(uint256)"](amountWETHToDeposit);
-    await weth.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-    await pool
-      .connect(user.signer)
-      .supply(weth.address, amountWETHToDeposit, user.address, "0");
-
-    await dai.connect(user.signer)["mint(uint256)"](amountDAIToDeposit);
-    await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-    await pool
-      .connect(user.signer)
-      .supply(dai.address, amountDAIToDeposit, user.address, "0");
-
-    await pool
-      .connect(user.signer)
-      .borrow(usdc.address, amountToBorrow, RateMode.Variable, 0, user.address);
-
-    // Pause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
-
-    // await expect(
-    //   pool
-    //     .connect(user.signer)
-    //     .swapBorrowRateMode(usdc.address, RateMode.Stable)
-    // ).to.be.revertedWith(RESERVE_PAUSED);
-
-    // Unpause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
-  });
-
-  it("RebalanceStableBorrowRate", async () => {
-    const {configurator, emergencyAdmin} = testEnv;
-    // const user = emergencyAdmin;
-    // Pause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
-
-    // await expect(
-    //   pool
-    //     .connect(user.signer)
-    //     .rebalanceStableBorrowRate(dai.address, user.address)
-    // ).to.be.revertedWith(RESERVE_PAUSED);
 
     // Unpause pool
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);

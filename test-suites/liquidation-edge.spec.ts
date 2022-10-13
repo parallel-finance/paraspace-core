@@ -193,13 +193,8 @@ describe("Pool Liquidation: Edge cases", () => {
       daiData.variableDebtTokenAddress,
       depositor.signer
     );
-    // const stableDebtToken = StableDebtToken__factory.connect(
-    //   daiData.stableDebtTokenAddress,
-    //   depositor.signer
-    // );
 
     expect(await variableDebtToken.balanceOf(borrower.address)).to.be.gt(0);
-    // expect(await stableDebtToken.balanceOf(borrower.address)).to.be.gt(0);
 
     const userConfigBefore = BigNumber.from(
       (await pool.getUserConfiguration(borrower.address)).data
@@ -228,7 +223,6 @@ describe("Pool Liquidation: Edge cases", () => {
         .gt(0);
 
     expect(await variableDebtToken.balanceOf(borrower.address)).to.be.eq(0);
-    // expect(await stableDebtToken.balanceOf(borrower.address)).to.be.eq(0);
 
     expect(isBorrowing(userConfigBefore, daiData.id)).to.be.true;
     expect(isBorrowing(userConfigAfter, daiData.id)).to.be.false;

@@ -265,7 +265,7 @@ describe("PausableReserve", () => {
       usdc.address,
       borrower.address
     );
-    const amountToLiquidate = userReserveDataBefore.currentStableDebt.div(2);
+    const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
     // Pause pool
     await configurator
       .connect(emergencyAdmin.signer)
@@ -284,58 +284,6 @@ describe("PausableReserve", () => {
     await configurator
       .connect(emergencyAdmin.signer)
       .setReservePause(usdc.address, false);
-  });
-
-  it("SwapBorrowRateMode", async () => {
-    const {pool, weth, dai, usdc, configurator, emergencyAdmin} = testEnv;
-    const user = emergencyAdmin;
-    const amountWETHToDeposit = utils.parseEther("10");
-    const amountDAIToDeposit = utils.parseEther("120");
-    const amountToBorrow = await convertToCurrencyDecimals(usdc.address, "65");
-    await weth.connect(user.signer)["mint(uint256)"](amountWETHToDeposit);
-    await weth.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-    await pool
-      .connect(user.signer)
-      .supply(weth.address, amountWETHToDeposit, user.address, "0");
-    await dai.connect(user.signer)["mint(uint256)"](amountDAIToDeposit);
-    await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-    await pool
-      .connect(user.signer)
-      .supply(dai.address, amountDAIToDeposit, user.address, "0");
-    await pool
-      .connect(user.signer)
-      .borrow(usdc.address, amountToBorrow, RateMode.Variable, 0, user.address);
-    // Pause pool
-    await configurator
-      .connect(emergencyAdmin.signer)
-      .setReservePause(usdc.address, true);
-    // await expect(
-    //   pool
-    //     .connect(user.signer)
-    //     .swapBorrowRateMode(usdc.address, RateMode.Stable)
-    // ).to.be.revertedWith(RESERVE_PAUSED);
-    // Unpause pool
-    await configurator
-      .connect(emergencyAdmin.signer)
-      .setReservePause(usdc.address, false);
-  });
-
-  it("RebalanceStableBorrowRate", async () => {
-    const {dai, configurator, emergencyAdmin} = testEnv;
-    // const user = emergencyAdmin;
-    // Pause pool
-    await configurator
-      .connect(emergencyAdmin.signer)
-      .setReservePause(dai.address, true);
-    // await expect(
-    //   pool
-    //     .connect(user.signer)
-    //     .rebalanceStableBorrowRate(dai.address, user.address)
-    // ).to.be.revertedWith(RESERVE_PAUSED);
-    // Unpause pool
-    await configurator
-      .connect(emergencyAdmin.signer)
-      .setReservePause(dai.address, false);
   });
 
   it("setUserUseERC20AsCollateral", async () => {

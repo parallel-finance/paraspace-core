@@ -79,7 +79,6 @@ contract PoolCore is
             provider == ADDRESSES_PROVIDER,
             Errors.INVALID_ADDRESSES_PROVIDER
         );
-        _maxStableRateBorrowSizePercent = 0.25e4;
     }
 
     /// @inheritdoc IPoolCore
@@ -232,10 +231,9 @@ contract PoolCore is
                 user: msg.sender,
                 onBehalfOf: onBehalfOf,
                 amount: amount,
-                interestRateMode: DataTypes.InterestRateMode(interestRateMode),
+                interestRateMode: DataTypes.InterestRateMode.VARIABLE,
                 referralCode: referralCode,
                 releaseUnderlying: true,
-                maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                 reservesCount: _reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
@@ -257,9 +255,7 @@ contract PoolCore is
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
+                    interestRateMode: DataTypes.InterestRateMode.VARIABLE,
                     onBehalfOf: onBehalfOf,
                     usePTokens: false
                 })
@@ -575,17 +571,6 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function getReserveAddressById(uint16 id) external view returns (address) {
         return _reservesList[id];
-    }
-
-    /// @inheritdoc IPoolCore
-    function MAX_STABLE_RATE_BORROW_SIZE_PERCENT()
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _maxStableRateBorrowSizePercent;
     }
 
     /// @inheritdoc IPoolCore
