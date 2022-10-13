@@ -292,25 +292,21 @@ deploy-wethGateway:
 deploy-punkGateway:
 	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/12_punkGateway.ts run
 
-.PHONY: deploy-moonbirdsGateway
-deploy-moonbirdsGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/13_moonbirdsGateway.ts run
-
 .PHONY: deploy-uniswapV3Gateway
 deploy-uniswapV3Gateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/14_uniswapV3Gateway.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/13_uniswapV3Gateway.ts run
 
 .PHONY: deploy-seaport
 deploy-seaport:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/15_seaport.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/14_seaport.ts run
 
 .PHONY: deploy-looksrare
 deploy-looksrare:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/16_looksrare.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/15_looksrare.ts run
 
 .PHONY: deploy-x2y2
 deploy-x2y2:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/17_x2y2.ts run
+	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/16_x2y2.ts run
 
 .PHONY: ad-hoc
 ad-hoc:
