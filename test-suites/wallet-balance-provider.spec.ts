@@ -149,9 +149,7 @@ describe("Wallet Balance Provider", () => {
   });
 
   it("Test contract cannot receive ETH", async () => {
-    const {
-      deployer,
-    } = testEnv;
+    const {deployer} = testEnv;
 
     await expect(
       deployer.signer.sendTransaction({

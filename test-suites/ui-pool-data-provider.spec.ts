@@ -26,12 +26,7 @@ describe("UI Pool Data Provider", () => {
   });
 
   it("Test can get list of reserves", async () => {
-    const {
-      addressesProvider,
-      poolDataProvider,
-      pool,
-      configurator,
-    } = testEnv;
+    const {addressesProvider, poolDataProvider, pool, configurator} = testEnv;
     const expectedReservesList = await pool
       .connect(configurator.signer)
       .getReservesList();
