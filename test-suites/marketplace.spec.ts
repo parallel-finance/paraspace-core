@@ -1,5 +1,10 @@
 import {expect} from "chai";
-import {evmRevert, evmSnapshot, waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  DRE,
+  evmRevert,
+  evmSnapshot,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {
   convertToCurrencyDecimals,
   createSeaportOrder,
@@ -20,7 +25,6 @@ import {
   toFulfillment,
 } from "../deploy/helpers/seaport-helpers/encoding";
 import {createOrder, createRunput} from "../deploy/helpers/x2y2-helpers";
-import {ethers} from "hardhat";
 import {
   generateMakerOrderTypedData,
   MakerOrder,
@@ -33,7 +37,12 @@ import {
   PARASPACE_SEAPORT_ID,
   X2Y2_ID,
 } from "../deploy/helpers/constants";
-import {formatEther, parseEther} from "ethers/lib/utils";
+import {
+  formatEther,
+  parseEther,
+  arrayify,
+  splitSignature,
+} from "ethers/lib/utils";
 import {BigNumber, BigNumberish, constants} from "ethers";
 import {
   borrowAndValidate,
@@ -824,17 +833,17 @@ describe("Leveraged Buy - Positive tests", () => {
     };
 
     const creditETH0 = {
-      token: ethers.constants.AddressZero,
+      token: constants.AddressZero,
       amount: creditAmount,
       ...emptySig,
     };
     const creditETH1 = {
-      token: ethers.constants.AddressZero,
+      token: constants.AddressZero,
       amount: creditAmount,
       ...emptySig,
     };
     const creditETH2 = {
-      token: ethers.constants.AddressZero,
+      token: constants.AddressZero,
       amount: creditAmount,
       ...emptySig,
     };
@@ -999,12 +1008,12 @@ describe("Leveraged Buy - Positive tests", () => {
     };
 
     const creditETH0 = {
-      token: ethers.constants.AddressZero,
+      token: constants.AddressZero,
       amount: creditAmount,
       ...emptySig,
     };
     const creditETH1 = {
-      token: ethers.constants.AddressZero,
+      token: constants.AddressZero,
       amount: creditAmount,
       ...emptySig,
     };
@@ -1381,7 +1390,7 @@ describe("Leveraged Buy - Positive tests", () => {
     const now = Math.floor(Date.now() / 1000);
 
     const order = await createOrder({
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       signer: maker.signer,
       tokenAddress: doodles.address,
       tokenId: nftIdX2Y2,
@@ -1408,7 +1417,7 @@ describe("Leveraged Buy - Positive tests", () => {
         .approve(transferManagerERC721.address, nftId)
     );
     const oldMakerBalance = await maker.signer.getBalance();
-    const signer = ethers.provider.getSigner(maker.address);
+    const signer = DRE.ethers.provider.getSigner(maker.address);
     const chainId = await maker.signer.getChainId();
     const nonce = await maker.signer.getTransactionCount();
 
@@ -1443,7 +1452,7 @@ describe("Leveraged Buy - Positive tests", () => {
       signature: signatureHash,
     };
 
-    const vrs = ethers.utils.splitSignature(makerOrderWithSignature.signature);
+    const vrs = splitSignature(makerOrderWithSignature.signature);
 
     const makerOrderWithVRS: MakerOrderWithVRS = {
       ...makerOrderWithSignature,
@@ -2352,23 +2361,21 @@ describe("Leveraged Bid - Positive tests", () => {
     const domainData = {
       name: "ParaSpace",
       version: "1.1",
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       verifyingContract: pool.address,
     };
 
     const credit = {
       token: usdc.address,
       amount: creditAmount,
-      orderId: ethers.utils.arrayify(sellOrder.signature),
+      orderId: arrayify(sellOrder.signature),
     };
 
-    const signature = await ethers.provider
+    const signature = await DRE.ethers.provider
       .getSigner(offer.address)
       ._signTypedData(domainData, creditType, credit);
 
-    const vrs = ethers.utils.splitSignature(
-      convertSignatureToEIP2098(signature)
-    );
+    const vrs = splitSignature(convertSignatureToEIP2098(signature));
 
     const tx = wPunkGateway.connect(offerer.signer).acceptBidWithCredit(
       PARASPACE_SEAPORT_ID,
@@ -2596,34 +2603,30 @@ describe("Leveraged Bid - Positive tests", () => {
     const domainData = {
       name: "ParaSpace",
       version: "1.1",
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       verifyingContract: pool.address,
     };
 
     const payLater = {
       token: usdc.address,
       amount: payLaterAmount,
-      orderId: ethers.utils.arrayify(sellOrder.signature),
+      orderId: arrayify(sellOrder.signature),
     };
     const payLater2 = {
       token: usdc.address,
       amount: payLaterAmount2,
-      orderId: ethers.utils.arrayify(sellOrder2.signature),
+      orderId: arrayify(sellOrder2.signature),
     };
 
-    const signature = await ethers.provider
+    const signature = await DRE.ethers.provider
       .getSigner(maker.address)
       ._signTypedData(domainData, creditType, payLater);
-    const signature2 = await ethers.provider
+    const signature2 = await DRE.ethers.provider
       .getSigner(maker.address)
       ._signTypedData(domainData, creditType, payLater2);
 
-    const vrs = ethers.utils.splitSignature(
-      convertSignatureToEIP2098(signature)
-    );
-    const vrs2 = ethers.utils.splitSignature(
-      convertSignatureToEIP2098(signature2)
-    );
+    const vrs = splitSignature(convertSignatureToEIP2098(signature));
+    const vrs2 = splitSignature(convertSignatureToEIP2098(signature2));
 
     const tx = pool.connect(taker.signer).batchAcceptBidWithCredit(
       [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
@@ -2795,23 +2798,21 @@ describe("Leveraged Bid - Positive tests", () => {
     const domainData = {
       name: "ParaSpace",
       version: "1.1",
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       verifyingContract: pool.address,
     };
 
     const credit = {
       token: usdc.address,
       amount: creditAmount,
-      orderId: ethers.utils.arrayify(buyOrder.signature),
+      orderId: arrayify(buyOrder.signature),
     };
 
-    const signature = await ethers.provider
+    const signature = await DRE.ethers.provider
       .getSigner(buyer.address)
       ._signTypedData(domainData, creditType, credit);
 
-    const vrs = ethers.utils.splitSignature(
-      convertSignatureToEIP2098(signature)
-    );
+    const vrs = splitSignature(convertSignatureToEIP2098(signature));
 
     const tx = pool.connect(seller.signer).acceptBidWithCredit(
       PARASPACE_SEAPORT_ID,
@@ -2975,23 +2976,21 @@ describe("Leveraged Bid - Positive tests", () => {
     const domainData = {
       name: "ParaSpace",
       version: "1.1",
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       verifyingContract: pool.address,
     };
 
     const credit = {
       token: usdc.address,
       amount: creditAmount,
-      orderId: ethers.utils.arrayify(buyOrder.signature),
+      orderId: arrayify(buyOrder.signature),
     };
 
-    const signature = await ethers.provider
+    const signature = await DRE.ethers.provider
       .getSigner(buyer.address)
       ._signTypedData(domainData, creditType, credit);
 
-    const vrs = ethers.utils.splitSignature(
-      convertSignatureToEIP2098(signature)
-    );
+    const vrs = splitSignature(convertSignatureToEIP2098(signature));
 
     const tx = pool.connect(seller.signer).acceptBidWithCredit(
       PARASPACE_SEAPORT_ID,
@@ -3171,23 +3170,21 @@ describe("Leveraged Bid - Positive tests", () => {
     const domainData = {
       name: "ParaSpace",
       version: "1.1",
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       verifyingContract: pool.address,
     };
 
     const credit = {
       token: usdc.address,
       amount: creditAmount,
-      orderId: ethers.utils.arrayify(buyOrder.signature),
+      orderId: arrayify(buyOrder.signature),
     };
 
-    const signature = await ethers.provider
+    const signature = await DRE.ethers.provider
       .getSigner(buyer.address)
       ._signTypedData(domainData, creditType, credit);
 
-    const vrs = ethers.utils.splitSignature(
-      convertSignatureToEIP2098(signature)
-    );
+    const vrs = splitSignature(convertSignatureToEIP2098(signature));
 
     const tx = pool.connect(seller.signer).acceptBidWithCredit(
       PARASPACE_SEAPORT_ID,
@@ -3498,23 +3495,21 @@ describe("Leveraged Bid - Positive tests", () => {
     const domainData = {
       name: "ParaSpace",
       version: "1.1",
-      chainId: (await ethers.provider.getNetwork()).chainId,
+      chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       verifyingContract: pool.address,
     };
 
     const credit = {
       token: usdc.address,
       amount: creditAmount,
-      orderId: ethers.utils.arrayify(sellOrder.signature),
+      orderId: arrayify(sellOrder.signature),
     };
 
-    const signature = await ethers.provider
+    const signature = await DRE.ethers.provider
       .getSigner(offer.address)
       ._signTypedData(domainData, creditType, credit);
 
-    const vrs = ethers.utils.splitSignature(
-      convertSignatureToEIP2098(signature)
-    );
+    const vrs = splitSignature(convertSignatureToEIP2098(signature));
 
     const tx = pool.connect(offerer.signer).acceptBidWithCredit(
       PARASPACE_SEAPORT_ID,

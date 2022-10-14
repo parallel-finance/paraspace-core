@@ -1,6 +1,6 @@
 import {expect} from "chai";
-import {ethers} from "hardhat";
 import {TestEnv} from "./helpers/make-suite";
+import {DRE} from "../deploy/helpers/misc-utils";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
@@ -21,10 +21,14 @@ describe("Flash Claim Test", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     //create all factory
-    const MintableERC20 = await ethers.getContractFactory("MintableERC20");
-    const MintableERC721 = await ethers.getContractFactory("MintableERC721");
-    const MintableERC1155 = await ethers.getContractFactory("MintableERC1155");
-    const MockAirdropProject = await ethers.getContractFactory(
+    const MintableERC20 = await DRE.ethers.getContractFactory("MintableERC20");
+    const MintableERC721 = await DRE.ethers.getContractFactory(
+      "MintableERC721"
+    );
+    const MintableERC1155 = await DRE.ethers.getContractFactory(
+      "MintableERC1155"
+    );
+    const MockAirdropProject = await DRE.ethers.getContractFactory(
       "MockAirdropProject"
     );
 
@@ -45,7 +49,7 @@ describe("Flash Claim Test", () => {
       MockAirdropProject.interface.encodeFunctionData("claimAirdrop", [
         tokenId,
       ]);
-    receiverEncodedData = ethers.utils.defaultAbiCoder.encode(
+    receiverEncodedData = DRE.ethers.utils.defaultAbiCoder.encode(
       ["uint256[]", "address[]", "uint256[]", "address", "bytes"],
       [
         [1, 2, 3],
@@ -71,7 +75,7 @@ describe("Flash Claim Test", () => {
     const flashClaimReceiverAddr = await user_registry.userReceivers(
       user1.address
     );
-    const AirdropFlashClaimReceiver = await ethers.getContractFactory(
+    const AirdropFlashClaimReceiver = await DRE.ethers.getContractFactory(
       "AirdropFlashClaimReceiver"
     );
     const flashClaimReceiver = AirdropFlashClaimReceiver.attach(

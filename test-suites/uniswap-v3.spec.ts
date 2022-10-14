@@ -18,6 +18,7 @@ import {
   getUniswapV3OracleWrapper,
 } from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {DRE} from "../deploy/helpers/misc-utils";
 import {
   liquidateAndValidate,
   switchCollateralAndValidate,
@@ -25,7 +26,6 @@ import {
 } from "./helpers/validated-steps";
 import {snapshot} from "./helpers/snapshot-manager";
 import {parseEther} from "ethers/lib/utils";
-import {ethers} from "hardhat";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -147,7 +147,7 @@ describe("Uniswap V3", () => {
         ]
       );
 
-      const Multicall = await ethers.getContractAt(
+      const Multicall = await DRE.ethers.getContractAt(
         "IMulticall",
         nftPositionManager.address
       );
@@ -197,7 +197,7 @@ describe("Uniswap V3", () => {
       const encodedData1 =
         nftPositionManager.interface.encodeFunctionData("refundETH");
 
-      const Multicall = await ethers.getContractAt(
+      const Multicall = await DRE.ethers.getContractAt(
         "IMulticall",
         nftPositionManager.address
       );

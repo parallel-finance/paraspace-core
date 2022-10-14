@@ -1,4 +1,4 @@
-import {network} from "hardhat";
+import {DRE} from "../../deploy/helpers/misc-utils";
 
 class SnapshotManager {
   snapshots: {[id: string]: string} = {};
@@ -15,14 +15,14 @@ class SnapshotManager {
   }
 
   private async takeSnapshot(): Promise<string> {
-    return (await network.provider.request({
+    return (await DRE.network.provider.request({
       method: "evm_snapshot",
       params: [],
     })) as string;
   }
 
   private async revertSnapshot(id: string) {
-    await network.provider.request({
+    await DRE.network.provider.request({
       method: "evm_revert",
       params: [id],
     });
