@@ -44,6 +44,7 @@ describe("Uniswap V3", () => {
         weth,
         nftPositionManager,
         nUniswapV3,
+        deployer,
       } = testEnv;
 
       const userDaiAmount = await convertToCurrencyDecimals(
@@ -97,6 +98,34 @@ describe("Uniswap V3", () => {
         user1.signer
       );
       await nft.setApprovalForAll(uniswapV3Gateway.address, true);
+
+      // uniswap gateway receives 1 uniswap
+      await waitForTx(
+        await nftPositionManager
+          .connect(user1.signer)
+          ["safeTransferFrom(address,address,uint256)"](
+            user1.address,
+            uniswapV3Gateway.address,
+            1
+          )
+      );
+      expect(
+        await nftPositionManager
+          .connect(user1.signer)
+          .balanceOf(uniswapV3Gateway.address)
+      ).to.equal(1);
+
+      // gateway emergency transfers stuck NFT back to user1
+      await waitForTx(
+        await uniswapV3Gateway
+          .connect(deployer.signer)
+          .emergencyTokenTransfer(uniswapV3Gateway.address, user1.address, 1)
+      );
+      expect(
+        await nftPositionManager
+          .connect(user1.signer)
+          .balanceOf(uniswapV3Gateway.address)
+      ).to.equal(0);
 
       await uniswapV3Gateway.supplyUniswapV3(
         [{tokenId: 1, useAsCollateral: true}],
