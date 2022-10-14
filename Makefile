@@ -208,6 +208,11 @@ test-user-configurator-used-as-collateral:
 test-rate-strategy:
 	make TEST_TARGET=rate-strategy.spec.ts test
 
+.PHONY: test-ui-pool-data-provider
+test-ui-pool-data-provider:
+	make TEST_TARGET=ui-pool-data-provider.spec.ts test
+
+
 .PHONY: test-dynamic-configs-strategy
 test-dynamic-configs-strategy:
 	make TEST_TARGET=dynamic-configs-strategy.spec.ts test
