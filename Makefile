@@ -13,6 +13,7 @@ init: submodules
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
 	yarn prepare
+	yarn build
 
 .PHONY: test
 test:
