@@ -12,6 +12,7 @@ init: submodules
 	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
+	yarn prepare
 
 .PHONY: test
 test:
@@ -222,15 +223,16 @@ run:
 
 .PHONY: print
 print:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/run_printContracts.ts run
+	npx hardhat print-contracts
 
 .PHONY: verify
 verify:
 	yarn clean
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/run_verifyContracts.ts run
+	npx hardhat verify-contracts
 
 .PHONY: deploy
-deploy: run
+deploy:
+	npx hardhat deploy:all
 
 .PHONY: dev-deploy
 dev-deploy:
@@ -238,79 +240,83 @@ dev-deploy:
 
 .PHONY: deploy-mockERC20Tokens
 deploy-mockERC20Tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/0A_mockERC20Tokens.ts run
+	npx hardhat deploy:mock-erc20-tokens
 
 .PHONY: deploy-mockERC721Tokens
 deploy-mockERC721Tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/0B_mockERC721Tokens.ts run
+	npx hardhat deploy:mock-erc721-tokens
 
 .PHONY: deploy-faucet
 deploy-faucet:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/01_faucet.ts run
+	npx hardhat deploy:faucet
 
 .PHONY: deploy-addressProvider
 deploy-addressProvider:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/02_addressProvider.ts run
+	npx hardhat deploy:address-provider
 
 .PHONY: deploy-aclManager
 deploy-aclManager:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/03_aclManager.ts run
+	npx hardhat deploy:acl-manager
 
 .PHONY: deploy-poolAddressesProviderRegistry
 deploy-poolAddressesProviderRegistry:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/04_poolAddressesProviderRegistry.ts run
+	npx hardhat deploy:pool-addresses-provider-registry
 
 .PHONY: deploy-pool
 deploy-pool:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/05_pool.ts run
+	npx hardhat deploy:pool
 
 .PHONY: deploy-poolConfigurator
 deploy-poolConfigurator:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/06_poolConfigurator.ts run
+	npx hardhat deploy:pool-configurator
 
 .PHONY: deploy-reservesSetupHelper
 deploy-reservesSetupHelper:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/07_reservesSetupHelper.ts run
+	npx hardhat deploy:reserves-setup-helper
 
 .PHONY: deploy-priceOracle
 deploy-priceOracle:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/08_priceOracle.ts run
+	npx hardhat deploy:price-oracle
 
 .PHONY: deploy-allMockAggregators
 deploy-allMockAggregators:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/09_allMockAggregators.ts run
+	npx hardhat deploy:all-mock-aggregators
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/10_uiIncentiveDataProvider.ts run
+	npx hardhat deploy:ui-incentive-data-provider
 
 .PHONY: deploy-wethGateway
 deploy-wethGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/11_wethGateway.ts run
+	npx hardhat deploy:weth-gateway
 
 .PHONY: deploy-punkGateway
 deploy-punkGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/12_punkGateway.ts run
+	npx hardhat deploy:punk-gateway
 
 .PHONY: deploy-moonbirdsGateway
 deploy-moonbirdsGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/13_moonbirdsGateway.ts run
+	npx hardhat deploy:moonbirds-gateway
 
 .PHONY: deploy-uniswapV3Gateway
 deploy-uniswapV3Gateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/14_uniswapV3Gateway.ts run
+	npx hardhat deploy:uniswap-v3-gateway
 
 .PHONY: deploy-seaport
 deploy-seaport:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/15_seaport.ts run
+	npx hardhat deploy:seaport
 
 .PHONY: deploy-looksrare
 deploy-looksrare:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/16_looksrare.ts run
+	npx hardhat deploy:looksrare
 
 .PHONY: deploy-x2y2
 deploy-x2y2:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/17_x2y2.ts run
+	npx hardhat deploy:x2y2
+
+.PHONY: deploy-flashClaimRegistry
+deploy-flashClaimRegistry:
+	npx hardhat deploy:flash-claim-registry
 
 .PHONY: ad-hoc
 ad-hoc:

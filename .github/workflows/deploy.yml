@@ -13,7 +13,7 @@ on:
         required: true
       verifyContract:
         description: Contracts to be verified on etherscan (separated by comma).
-        default: Pool*,*Oracle,*Gateway*,*DataProvider,Seaport
+        default: *Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport
         required: true
 
 jobs:

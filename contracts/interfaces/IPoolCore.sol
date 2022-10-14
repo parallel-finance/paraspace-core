@@ -31,7 +31,8 @@ interface IPoolCore {
         address user,
         address indexed onBehalfOf,
         DataTypes.ERC721SupplyParams[] tokenData,
-        uint16 indexed referralCode
+        uint16 indexed referralCode,
+        bool fromNToken
     );
 
     /**

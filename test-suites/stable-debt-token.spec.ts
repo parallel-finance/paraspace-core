@@ -16,7 +16,6 @@
 // import {makeSuite, TestEnv} from "./helpers/make-suite";
 // import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 // import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
-// import hre from "hardhat";
 //
 // makeSuite("StableDebtToken", (testEnv: TestEnv) => {
 // const { CALLER_MUST_BE_POOL, CALLER_NOT_POOL_ADMIN } = ProtocolErrors;

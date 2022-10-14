@@ -1,4 +1,4 @@
-import {waitForTx} from "../../deploy/helpers/misc-utils";
+import {DRE, waitForTx} from "../../deploy/helpers/misc-utils";
 import {createSeaportOrder} from "../../deploy/helpers/contracts-helpers";
 import {SignerWithAddress} from "./../helpers/make-suite";
 import creditType from "../../deploy/helpers/eip-712-types/credit";
@@ -10,7 +10,6 @@ import {
   toFulfillment,
 } from "../../deploy/helpers/seaport-helpers/encoding";
 import {createOrder, createRunput} from "../../deploy/helpers/x2y2-helpers";
-import {ethers} from "hardhat";
 import {
   generateMakerOrderTypedData,
   MakerOrder,
@@ -47,7 +46,7 @@ export async function executeLooksrareBuyWithCredit(
   maker: SignerWithAddress,
   taker: SignerWithAddress
 ) {
-  const signer = ethers.provider.getSigner(maker.address);
+  const signer = DRE.ethers.provider.getSigner(maker.address);
   const chainId = await maker.signer.getChainId();
   const nonce = await maker.signer.getTransactionCount();
 
@@ -92,7 +91,9 @@ export async function executeLooksrareBuyWithCredit(
     signature: signatureHash,
   };
 
-  const vrs = ethers.utils.splitSignature(makerOrderWithSignature.signature);
+  const vrs = DRE.ethers.utils.splitSignature(
+    makerOrderWithSignature.signature
+  );
 
   const makerOrderWithVRS: MakerOrderWithVRS = {
     ...makerOrderWithSignature,
@@ -159,7 +160,7 @@ export async function executeX2Y2BuyWithCredit(
   const pool = await getPoolProxy();
 
   const order = await createOrder({
-    chainId: (await ethers.provider.getNetwork()).chainId,
+    chainId: (await DRE.ethers.provider.getNetwork()).chainId,
     signer: maker.signer,
     tokenAddress: tokenToBuy.address,
     tokenId: nftId,
@@ -392,21 +393,23 @@ export async function executeAcceptBidWithCredit(
   const domainData = {
     name: "ParaSpace",
     version: "1.1",
-    chainId: (await ethers.provider.getNetwork()).chainId,
+    chainId: (await DRE.ethers.provider.getNetwork()).chainId,
     verifyingContract: pool.address,
   };
 
   const payLater = {
     token: tokenToPayWith.address,
     amount: payLaterAmount,
-    orderId: ethers.utils.arrayify(sellOrder.signature),
+    orderId: DRE.ethers.utils.arrayify(sellOrder.signature),
   };
 
-  const signature = await ethers.provider
+  const signature = await DRE.ethers.provider
     .getSigner(maker.address)
     ._signTypedData(domainData, creditType, payLater);
 
-  const vrs = ethers.utils.splitSignature(convertSignatureToEIP2098(signature));
+  const vrs = DRE.ethers.utils.splitSignature(
+    convertSignatureToEIP2098(signature)
+  );
 
   const tx = pool.connect(taker.signer).acceptBidWithCredit(
     PARASPACE_SEAPORT_ID,
