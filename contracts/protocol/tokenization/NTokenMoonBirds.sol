@@ -17,7 +17,6 @@ import {NToken} from "./NToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
-import {MoonBirdHelper} from "../../misc/MoonBirdHelper.sol";
 
 /**
  * @title MoonBird NToken
