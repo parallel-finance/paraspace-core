@@ -150,9 +150,6 @@ describe("Wallet Balance Provider", () => {
 
   it("Test contract cannot receive ETH", async () => {
     const {
-      users: [user1, user2],
-      dai,
-      weth,
       deployer,
     } = testEnv;
 

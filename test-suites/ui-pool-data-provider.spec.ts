@@ -28,8 +28,6 @@ describe("UI Pool Data Provider", () => {
   it("Test can get list of reserves", async () => {
     const {
       addressesProvider,
-      users: [user1],
-      dai,
       poolDataProvider,
       pool,
       configurator,
