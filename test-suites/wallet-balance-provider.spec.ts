@@ -11,6 +11,7 @@ import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
+import {ethers} from "ethers";
 
 const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -58,6 +59,29 @@ describe("Wallet Balance Provider", () => {
     );
   });
 
+  it("Test balance for inactive reserve is 0", async () => {
+    const {
+      addressesProvider,
+      users: [user1],
+      dai,
+      configurator,
+    } = testEnv;
+    const amount = "1000";
+    // mint token
+    await mintAndValidate(dai, amount, user1);
+
+    // deactivate DAI reserve
+    await configurator.setReserveActive(dai.address, false);
+
+    const [tokens, balances] =
+      await walletBalanceProvider.getUserWalletBalances(
+        addressesProvider.address,
+        user1.address
+      );
+
+    expect(balances[tokens.indexOf(dai.address)]).to.eq(0);
+  });
+
   it("Test can get user balance for a token", async () => {
     const {
       users: [user1],
@@ -99,7 +123,6 @@ describe("Wallet Balance Provider", () => {
 
   it("Test can get user balances in batch", async () => {
     const {
-      addressesProvider,
       users: [user1, user2],
       dai,
       usdc,
@@ -113,7 +136,7 @@ describe("Wallet Balance Provider", () => {
       [user1.address, user2.address],
       [dai.address, usdc.address]
     );
-    console.log("balances: " + balances);
+
     // response should be in the form of [ user1.dai, user1.usdc, user2.dai, user2.usdc]
     expect(balances[0]).to.eq(
       await convertToCurrencyDecimals(dai.address, amount1)
@@ -123,5 +146,21 @@ describe("Wallet Balance Provider", () => {
     expect(balances[3]).to.eq(
       await convertToCurrencyDecimals(usdc.address, amount2)
     );
+  });
+
+  it("Test contract cannot receive ETH", async () => {
+    const {
+      users: [user1, user2],
+      dai,
+      weth,
+      deployer,
+    } = testEnv;
+
+    await expect(
+      deployer.signer.sendTransaction({
+        to: walletBalanceProvider.address,
+        value: ethers.utils.parseEther("1.0"),
+      })
+    ).to.be.revertedWith("22");
   });
 });
