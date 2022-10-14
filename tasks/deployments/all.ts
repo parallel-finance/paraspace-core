@@ -107,5 +107,7 @@ task("deploy:all", "Deploy all contracts")
     await step_19(verify);
     console.log("------------ step 19 done ------------ ");
 
+    await printContracts()
+
     console.timeEnd("setup");
   })
