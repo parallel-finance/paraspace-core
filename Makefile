@@ -13,6 +13,7 @@ init: submodules
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
 	yarn prepare
+	yarn build
 
 .PHONY: test
 test:
@@ -50,7 +51,7 @@ clean:
 	yarn clean
 
 .PHONY: ci
-ci: lint test
+ci: clean build lint doc test
 
 .PHONY: submodules
 submodules:
@@ -226,12 +227,11 @@ print:
 	npx hardhat print-contracts
 
 .PHONY: verify
-verify:
-	yarn clean
+verify: clean build
 	npx hardhat verify-contracts
 
 .PHONY: deploy
-deploy:
+deploy: clean build
 	npx hardhat deploy:all
 
 .PHONY: dev-deploy

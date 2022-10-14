@@ -67,6 +67,7 @@ library GenericLogic {
      * @return The total debt of the user in the base currency used by the price feed
      * @return The average ltv of the user
      * @return The average liquidation threshold of the user
+     * @return The payable debt by ERC20 assets
      * @return The health factor of the user
      * @return The ERC721 health factor of the user
      * @return True if the ltv is zero, false otherwise

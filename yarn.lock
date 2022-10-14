@@ -1347,7 +1347,7 @@ __metadata:
     prettier-plugin-solidity: ^1.0.0-alpha.53
     pretty-quick: ^3.1.1
     solhint: ^3.3.6
-    solidity-coverage: ^0.8.0-rc.test.0
+    solidity-coverage: ^0.8.2
     solidity-docgen: ^0.6.0-beta.26
     ts-generator: ^0.1.1
     ts-node: ^10.9.1
@@ -13157,7 +13157,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"solidity-coverage@npm:^0.8.0-rc.test.0":
+"solidity-coverage@npm:^0.8.2":
   version: 0.8.2
   resolution: "solidity-coverage@npm:0.8.2"
   dependencies:
