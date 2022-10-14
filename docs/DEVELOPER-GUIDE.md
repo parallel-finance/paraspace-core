@@ -4,10 +4,24 @@
 
 Follow these steps to get started with the ParaSpace development :hammer_and_wrench:
 
+
+### Initialize and install deps
+
+```
+yarn
+make init
+```
+
 ### Build
 
 ```
-yarn build
+make build
+```
+
+### Test
+
+```
+make test
 ```
 
 ### Available commands
