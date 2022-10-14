@@ -146,7 +146,6 @@ library BorrowLogic {
         ValidationLogic.validateRepay(
             reserveCache,
             params.amount,
-            params.interestRateMode,
             params.onBehalfOf,
             variableDebt
         );

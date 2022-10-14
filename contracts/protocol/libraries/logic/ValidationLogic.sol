@@ -252,12 +252,6 @@ library ValidationLogic {
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
 
-        //validate interest rate mode
-        require(
-            params.interestRateMode == DataTypes.InterestRateMode.VARIABLE,
-            Errors.INVALID_INTEREST_RATE_MODE_SELECTED
-        );
-
         vars.reserveDecimals = params
             .reserveCache
             .reserveConfiguration
@@ -341,14 +335,12 @@ library ValidationLogic {
      * @notice Validates a repay action.
      * @param reserveCache The cached data of the reserve
      * @param amountSent The amount sent for the repayment. Can be an actual value or uint(-1)
-     * @param interestRateMode The interest rate mode of the debt being repaid
      * @param onBehalfOf The address of the user msg.sender is repaying for
      * @param variableDebt The borrow balance of the user
      */
     function validateRepay(
         DataTypes.ReserveCache memory reserveCache,
         uint256 amountSent,
-        DataTypes.InterestRateMode interestRateMode,
         address onBehalfOf,
         uint256 variableDebt
     ) internal view {
@@ -369,16 +361,11 @@ library ValidationLogic {
         ).getPreviousIndex(onBehalfOf);
 
         require(
-            (variableDebtPreviousIndex < reserveCache.nextVariableBorrowIndex &&
-                interestRateMode == DataTypes.InterestRateMode.VARIABLE),
+            (variableDebtPreviousIndex < reserveCache.nextVariableBorrowIndex),
             Errors.SAME_BLOCK_BORROW_REPAY
         );
 
-        require(
-            (variableDebt != 0 &&
-                interestRateMode == DataTypes.InterestRateMode.VARIABLE),
-            Errors.NO_DEBT_OF_SELECTED_TYPE
-        );
+        require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
     }
 
     /**

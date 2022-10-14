@@ -83,9 +83,7 @@ library LiquidationLogic {
         uint256 userCollateralBalance;
         //userGlobalCollateralBalance from all reserves
         uint256 userGlobalCollateralBalance;
-        //userVariableDebt from liquadationReserve
-        uint256 userVariableDebt;
-        //(userVariableDebt+userStableDebt) from liquadationReserve
+        //userTotalDebt from liquadationReserve
         uint256 userTotalDebt;
         //userGlobalDebt from all reserves
         uint256 userGlobalDebt;
@@ -258,11 +256,10 @@ library LiquidationLogic {
                 })
             );
 
-        (
-            vars.userVariableDebt,
-            vars.userTotalDebt,
-            vars.actualDebtToLiquidate
-        ) = _calculateDebt(vars.liquidationAssetReserveCache, params);
+        (vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
+            vars.liquidationAssetReserveCache,
+            params
+        );
 
         ValidationLogic.validateLiquidationCall(
             userConfig,
@@ -424,11 +421,10 @@ library LiquidationLogic {
         );
 
         if (vars.isLiquidationAssetBorrowed) {
-            (
-                vars.userVariableDebt,
-                vars.userTotalDebt,
-                vars.actualDebtToLiquidate
-            ) = _calculateDebt(vars.liquidationAssetReserveCache, params);
+            (vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
+                vars.liquidationAssetReserveCache,
+                params
+            );
         }
 
         (
@@ -708,7 +704,7 @@ library LiquidationLogic {
         DataTypes.ExecuteLiquidationCallParams memory params,
         LiquidationCallLocalVars memory vars
     ) internal {
-        if (vars.userVariableDebt >= vars.actualDebtToLiquidate) {
+        if (vars.userTotalDebt >= vars.actualDebtToLiquidate) {
             vars
                 .liquidationAssetReserveCache
                 .nextScaledVariableDebt = IVariableDebtToken(
@@ -720,14 +716,14 @@ library LiquidationLogic {
                 );
         } else {
             // If the user doesn't have variable debt, no need to try to burn variable debt tokens
-            if (vars.userVariableDebt != 0) {
+            if (vars.userTotalDebt != 0) {
                 vars
                     .liquidationAssetReserveCache
                     .nextScaledVariableDebt = IVariableDebtToken(
                     vars.liquidationAssetReserveCache.variableDebtTokenAddress
                 ).burn(
                         params.user,
-                        vars.userVariableDebt,
+                        vars.userTotalDebt,
                         vars
                             .liquidationAssetReserveCache
                             .nextVariableBorrowIndex
@@ -741,35 +737,24 @@ library LiquidationLogic {
      * and corresponding close factor. we are always using max closing factor in this version
      * @param liquidationAssetReserveCache The reserve cache data object of the debt reserve
      * @param params The additional parameters needed to execute the liquidation function
-     * @return The variable debt of the user
      * @return The total debt of the user
      * @return The actual debt that is getting liquidated. If liquidation amount passed in by the liquidator is greater then the total user debt, then use the user total debt as the actual debt getting liquidated. If the user total debt is greater than the liquidation amount getting passed in by the liquidator, then use the liquidation amount the user is passing in.
      */
     function _calculateDebt(
         DataTypes.ReserveCache memory liquidationAssetReserveCache,
         DataTypes.ExecuteLiquidationCallParams memory params
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        uint256 userVariableDebt = Helpers.getUserCurrentDebt(
+    ) internal view returns (uint256, uint256) {
+        // userTotalDebt = debt of the borrowed position needed for liquidation
+        uint256 userTotalDebt = Helpers.getUserCurrentDebt(
             params.user,
             liquidationAssetReserveCache
         );
-
-        // userTotalDebt = debt of the borrowed position needed for liquidation
-        uint256 userTotalDebt = userVariableDebt;
 
         uint256 actualDebtToLiquidate = params.liquidationAmount > userTotalDebt
             ? userTotalDebt
             : params.liquidationAmount;
 
-        return (userVariableDebt, userTotalDebt, actualDebtToLiquidate);
+        return (userTotalDebt, actualDebtToLiquidate);
     }
 
     /**
