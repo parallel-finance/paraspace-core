@@ -36,7 +36,7 @@ jobs:
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
           yarn build
-          yarn doc
+          # yarn doc
           yarn lint
 
   tests:
