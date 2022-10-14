@@ -9,11 +9,11 @@ on:
         required: true
       verification:
         description: Whether to verify contracts or not.
-        default: false
+        default: "false"
         required: true
       verifyContract:
         description: Contracts to be verified on etherscan (separated by comma).
-        default: *Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport
+        default: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport"
         required: true
 
 jobs:
