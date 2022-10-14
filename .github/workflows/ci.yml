@@ -63,6 +63,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
           yarn test
 
   coverage:
@@ -83,17 +84,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      # - uses: actions/cache@v3
-      #   id: cache
-      #   with:
-      #     path: "**/node_modules"
-      #     key: npm-v2-${{ hashFiles('**/yarn.lock') }}
-      #     restore-keys: npm-v2-
-      # - run: |
-      #     yarn cache clean --all
-      #     YARN_CHECKSUM_BEHAVIOR=update yarn
-      #     yarn
-      #   if: steps.cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: "**/node_modules"
+          key: npm-v2-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: npm-v2-
+      - run: |
+          yarn cache clean --all
+          YARN_CHECKSUM_BEHAVIOR=update yarn
+          yarn
+        if: steps.cache.outputs.cache-hit != 'true'
       - run: |
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn

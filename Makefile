@@ -50,7 +50,7 @@ clean:
 	yarn clean
 
 .PHONY: ci
-ci: lint test
+ci: clean build lint test
 
 .PHONY: submodules
 submodules:
@@ -226,12 +226,11 @@ print:
 	npx hardhat print-contracts
 
 .PHONY: verify
-verify:
-	yarn clean
+verify: clean build
 	npx hardhat verify-contracts
 
 .PHONY: deploy
-deploy:
+deploy: clean build
 	npx hardhat deploy:all
 
 .PHONY: dev-deploy
