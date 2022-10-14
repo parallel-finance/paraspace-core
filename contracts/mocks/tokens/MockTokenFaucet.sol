@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 import "../../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import "../../dependencies/openzeppelin/contracts/Ownable.sol";
