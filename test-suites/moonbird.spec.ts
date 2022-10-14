@@ -14,11 +14,9 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
 describe("MoonBirds nToken and supply while nesting", () => {
-  let snapshotId: string;
   let testEnv: TestEnv;
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    snapshotId = await snapshot.take();
   });
 
   it("Borrower deposits a nesting moonbird through transfer and toggles nesting from nToken", async () => {
