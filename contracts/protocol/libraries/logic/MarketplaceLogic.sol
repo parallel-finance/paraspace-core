@@ -159,6 +159,7 @@ library MarketplaceLogic {
      * in buyWithCredit.
      * @dev
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
+     * @param vars The marketplace local vars for caching storage values for future reads
      */
     function _delegateToPool(
         DataTypes.ExecuteMarketplaceParams memory params,
@@ -208,6 +209,7 @@ library MarketplaceLogic {
      * @dev
      * @param reservesData The state of all the reserves
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
+     * @param vars The marketplace local vars for caching storage values for future reads
      * @param to The receiver of borrowed tokens
      */
     function _borrowTo(
@@ -241,6 +243,7 @@ library MarketplaceLogic {
      * @param reservesList The addresses of all the active reserves
      * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
+     * @param vars The marketplace local vars for caching storage values for future reads
      * @param onBehalfOf The receiver of minted debt and NToken
      */
     function _repay(

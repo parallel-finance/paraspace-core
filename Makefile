@@ -51,7 +51,7 @@ clean:
 	yarn clean
 
 .PHONY: ci
-ci: clean build lint test
+ci: clean build lint doc test
 
 .PHONY: submodules
 submodules:
