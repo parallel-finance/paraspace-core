@@ -3,7 +3,7 @@ include .env
 export $(shell sed 's/=.*//' .env)
 
 NETWORK                  := goerli
-SCRIPT_PATH              := ./deploy/tasks/deployments/testnet/full_deployment.ts
+SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TEST_TARGET              := *.spec.ts
 RUST_TOOLCHAIN           := nightly-2022-09-19
 
@@ -293,10 +293,6 @@ deploy-wethGateway:
 .PHONY: deploy-punkGateway
 deploy-punkGateway:
 	npx hardhat deploy:punk-gateway
-
-.PHONY: deploy-moonbirdsGateway
-deploy-moonbirdsGateway:
-	npx hardhat deploy:moonbirds-gateway
 
 .PHONY: deploy-uniswapV3Gateway
 deploy-uniswapV3Gateway:

@@ -8,18 +8,15 @@ import {snapshot} from "./helpers/snapshot-manager";
 import {
   getMockAggregator,
   getMoonBirds,
-  getMoonBirdsGatewayProxy,
 } from "../deploy/helpers/contracts-getters";
 import {parseEther} from "ethers/lib/utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-describe("MoonBird gateway and supply while nesting", () => {
-  let snapshotId: string;
+describe("MoonBirds nToken and supply while nesting", () => {
   let testEnv: TestEnv;
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    snapshotId = await snapshot.take();
   });
 
   it("Borrower deposits a nesting moonbird through transfer and toggles nesting from nToken", async () => {
@@ -257,71 +254,6 @@ describe("MoonBird gateway and supply while nesting", () => {
     expect(nesting.nesting).equal(true);
   });
 
-  it("User 2 deposits a nesting moonbird through gateway and toggles nesting from nToken", async () => {
-    const {
-      users: [user1, user2],
-      pool,
-      moonbirds,
-      nMOONBIRD,
-    } = testEnv;
-
-    await waitForTx(
-      await moonbirds.connect(user2.signer)["mint(address)"](user2.address)
-    );
-
-    await waitForTx(
-      await moonbirds
-        .connect(user2.signer)
-        .setApprovalForAll(pool.address, true)
-    );
-
-    const moonbirdsGateway = await getMoonBirdsGatewayProxy();
-
-    await moonbirds.setNestingOpen(true);
-
-    await waitForTx(await moonbirds.connect(user2.signer).toggleNesting(["2"]));
-    expect((await moonbirds.nestingPeriod("2")).nesting).equal(true);
-
-    await waitForTx(
-      await moonbirds
-        .connect(user2.signer)
-        .setApprovalForAll(moonbirdsGateway.address, true)
-    );
-
-    await moonbirdsGateway
-      .connect(user2.signer)
-      .supplyMoonBirds(
-        [{tokenId: 2, useAsCollateral: true}],
-        user2.address,
-        "0"
-      );
-
-    const balance = await nMOONBIRD.balanceOf(user2.address);
-    expect(balance.toNumber()).equal(1);
-
-    const nesting = await moonbirds.nestingPeriod("2");
-    expect(nesting.nesting).equal(false); // supplying through gateway looses nesting
-
-    const nMoonBird = await getMoonBirds(nMOONBIRD.address);
-    await nMoonBird.connect(user2.signer).toggleNesting(["2"]);
-
-    const newNesting = await moonbirds.nestingPeriod("2");
-    expect(newNesting.nesting).equal(true);
-
-    await nMoonBird.connect(user2.signer).toggleNesting(["2"]);
-
-    // another user cannot toggle nesting
-    await expect(
-      nMoonBird.connect(user1.signer).toggleNesting(["2"])
-    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
-
-    await pool
-      .connect(user2.signer)
-      .withdrawERC721(moonbirds.address, ["2"], user2.address);
-
-    expect((await moonbirds.nestingPeriod("2")).nesting).equal(false);
-  });
-
   it("User attempts to transfer BAYC to a Moonbird nToken - should be reverted", async () => {
     const {
       users: [, user2],
@@ -348,58 +280,5 @@ describe("MoonBird gateway and supply while nesting", () => {
           "3"
         )
     ).to.be.reverted;
-  });
-
-  it("If user supplies a mix of nesting and non-nesting moonbirds through gateway, they all become unnested", async () => {
-    const {
-      users: [, , user3],
-      pool,
-      moonbirds,
-    } = testEnv;
-
-    await snapshot.revert(snapshotId);
-
-    for (let i = 0; i < 3; i++) {
-      await waitForTx(
-        await moonbirds.connect(user3.signer)["mint(address)"](user3.address)
-      );
-    }
-
-    await waitForTx(
-      await moonbirds
-        .connect(user3.signer)
-        .setApprovalForAll(pool.address, true)
-    );
-
-    const moonbirdsGateway = await getMoonBirdsGatewayProxy();
-
-    await moonbirds.setNestingOpen(true);
-
-    // toggle nesting for 2 of the 3
-    for (let i = 0; i < 2; i++) {
-      await waitForTx(await moonbirds.connect(user3.signer).toggleNesting([i]));
-    }
-
-    await waitForTx(
-      await moonbirds
-        .connect(user3.signer)
-        .setApprovalForAll(moonbirdsGateway.address, true)
-    );
-
-    await moonbirdsGateway.connect(user3.signer).supplyMoonBirds(
-      [
-        {tokenId: 0, useAsCollateral: true},
-        {tokenId: 1, useAsCollateral: true},
-        {tokenId: 2, useAsCollateral: true},
-      ],
-      user3.address,
-      "0"
-    );
-
-    // they should all be unnested now
-    for (let i = 0; i < 3; i++) {
-      const newNesting = await moonbirds.nestingPeriod(i);
-      expect(newNesting.nesting).equal(false);
-    }
   });
 });

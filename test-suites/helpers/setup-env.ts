@@ -16,12 +16,11 @@ import {step_11} from "../../deploy/tasks/deployments/testnet/steps/11_allMockAg
 import {step_12} from "../../deploy/tasks/deployments/testnet/steps/12_uiIncentiveDataProvider";
 import {step_13} from "../../deploy/tasks/deployments/testnet/steps/13_wethGateway";
 import {step_14} from "../../deploy/tasks/deployments/testnet/steps/14_punkGateway";
-import {step_15} from "../../deploy/tasks/deployments/testnet/steps/15_moonbirdsGateway";
-import {step_16} from "../../deploy/tasks/deployments/testnet/steps/16_uniswapV3Gateway";
-import {step_17} from "../../deploy/tasks/deployments/testnet/steps/17_seaport";
-import {step_18} from "../../deploy/tasks/deployments/testnet/steps/18_looksrare";
-import {step_19} from "../../deploy/tasks/deployments/testnet/steps/19_x2y2";
-import {step_20} from "../../deploy/tasks/deployments/testnet/steps/20_flashClaimRegistry";
+import {step_15} from "../../deploy/tasks/deployments/testnet/steps/15_uniswapV3Gateway";
+import {step_16} from "../../deploy/tasks/deployments/testnet/steps/16_seaport";
+import {step_17} from "../../deploy/tasks/deployments/testnet/steps/17_looksrare";
+import {step_18} from "../../deploy/tasks/deployments/testnet/steps/18_x2y2";
+import {step_19} from "../../deploy/tasks/deployments/testnet/steps/19_flashClaimRegistry";
 
 const buildTestEnv = async () => {
   console.time("setup");
@@ -85,29 +84,25 @@ const buildTestEnv = async () => {
   await step_14();
   console.log("------------ step 14 done ------------ ");
 
-  // deploy moonbirdsGateway
+  // deploy uniswapV3Gateway
   await step_15();
   console.log("------------ step 15 done ------------ ");
 
-  // deploy uniswapV3Gateway
+  // deploy seaport
   await step_16();
   console.log("------------ step 16 done ------------ ");
 
-  // deploy seaport
+  // deploy looksrare
   await step_17();
   console.log("------------ step 17 done ------------ ");
 
-  // deploy looksrare
+  // deploy x2y2
   await step_18();
   console.log("------------ step 18 done ------------ ");
 
-  // deploy x2y2
+  // deploy flash claim registry
   await step_19();
   console.log("------------ step 19 done ------------ ");
-
-  // deploy flash claim registry
-  await step_20();
-  console.log("------------ step 20 done ------------ ");
 
   console.timeEnd("setup");
 };
