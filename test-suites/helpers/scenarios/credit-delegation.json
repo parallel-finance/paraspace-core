@@ -63,7 +63,6 @@
             "reserve": "WETH",
             "amount": "2",
             "user": "0",
-            "borrowRateMode": "variable",
             "toUser": "4"
           },
           "expected": "success"
@@ -74,8 +73,7 @@
             "reserve": "WETH",
             "amount": "1",
             "user": "4",
-            "onBehalfOf": "0",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "0"
           },
           "expected": "success"
         }
@@ -90,7 +88,6 @@
             "reserve": "WETH",
             "amount": "1",
             "user": "0",
-            "borrowRateMode": "variable",
             "toUser": "4"
           },
           "expected": "success"
@@ -101,8 +98,7 @@
             "reserve": "WETH",
             "amount": "3",
             "user": "4",
-            "onBehalfOf": "0",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "0"
           },
           "expected": "revert",
           "revertMessage": "59"

@@ -330,6 +330,16 @@ library LiquidationLogic {
             );
         }
 
+        // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
+        IERC20(params.liquidationAsset).safeTransferFrom(
+            vars.liquidator,
+            vars.liquidationAssetReserveCache.xTokenAddress,
+            vars.actualDebtToLiquidate
+        );
+
+        IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
+            .handleRepayment(vars.liquidator, vars.actualDebtToLiquidate);
+
         _burnDebtTokens(params, vars);
 
         if (params.receiveXToken) {
@@ -509,6 +519,19 @@ library LiquidationLogic {
                         referralCode: 0
                     })
                 );
+
+                if (
+                    !userConfig.isUsingAsCollateral(liquidationAssetReserveId)
+                ) {
+                    userConfig.setUsingAsCollateral(
+                        liquidationAssetReserveId,
+                        true
+                    );
+                    emit ReserveUsedAsCollateralEnabled(
+                        params.liquidationAsset,
+                        params.user
+                    );
+                }
             } else {
                 // if the actual debt that is getting liquidated > user global debt then pay back excess to user
                 IERC20(params.liquidationAsset).safeTransferFrom(
@@ -553,6 +576,11 @@ library LiquidationLogic {
                 params.liquidationAsset,
                 vars.actualDebtToLiquidate,
                 0
+            );
+            IERC20(params.liquidationAsset).safeTransferFrom(
+                vars.liquidator,
+                vars.liquidationAssetReserveCache.xTokenAddress,
+                vars.actualDebtToLiquidate
             );
             _burnDebtTokens(params, vars);
         }
@@ -676,25 +704,32 @@ library LiquidationLogic {
         DataTypes.ExecuteLiquidationCallParams memory params,
         LiquidationCallLocalVars memory vars
     ) internal {
-        // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
-        IERC20(params.liquidationAsset).safeTransferFrom(
-            vars.liquidator,
-            vars.liquidationAssetReserveCache.xTokenAddress,
-            vars.actualDebtToLiquidate
-        );
-        // Handle payment
-        IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
-            .handleRepayment(vars.liquidator, vars.actualDebtToLiquidate);
-        // Burn borrower's debt token
-        vars
-            .liquidationAssetReserveCache
-            .nextScaledVariableDebt = IVariableDebtToken(
-            vars.liquidationAssetReserveCache.variableDebtTokenAddress
-        ).burn(
-                params.user,
-                vars.actualDebtToLiquidate,
-                vars.liquidationAssetReserveCache.nextVariableBorrowIndex
-            );
+        if (vars.userTotalDebt >= vars.actualDebtToLiquidate) {
+            vars
+                .liquidationAssetReserveCache
+                .nextScaledVariableDebt = IVariableDebtToken(
+                vars.liquidationAssetReserveCache.variableDebtTokenAddress
+            ).burn(
+                    params.user,
+                    vars.actualDebtToLiquidate,
+                    vars.liquidationAssetReserveCache.nextVariableBorrowIndex
+                );
+        } else {
+            // If the user doesn't have variable debt, no need to try to burn variable debt tokens
+            if (vars.userTotalDebt != 0) {
+                vars
+                    .liquidationAssetReserveCache
+                    .nextScaledVariableDebt = IVariableDebtToken(
+                    vars.liquidationAssetReserveCache.variableDebtTokenAddress
+                ).burn(
+                        params.user,
+                        vars.userTotalDebt,
+                        vars
+                            .liquidationAssetReserveCache
+                            .nextVariableBorrowIndex
+                    );
+            }
+        }
     }
 
     /**

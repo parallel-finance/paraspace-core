@@ -51,7 +51,7 @@ describe("Pool: Drop Reserve", () => {
       .supply(weth.address, depositedAmount, user1.address, 0);
     await pool
       .connect(user1.signer)
-      .borrow(dai.address, borrowedAmount, 2, 0, user1.address);
+      .borrow(dai.address, borrowedAmount, 0, user1.address);
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       VARIABLE_DEBT_SUPPLY_NOT_ZERO
     );
@@ -81,7 +81,7 @@ describe("Pool: Drop Reserve", () => {
     expect(
       await pool
         .connect(user1.signer)
-        .repay(dai.address, MAX_UINT_AMOUNT, 2, user1.address)
+        .repay(dai.address, MAX_UINT_AMOUNT, user1.address)
     );
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO

@@ -69,7 +69,6 @@ interface IPoolCore {
      * initiator of the transaction on flashLoan()
      * @param onBehalfOf The address that will be getting the debt
      * @param amount The amount borrowed out
-     * @param interestRateMode The rate mode
      * @param borrowRate The numeric rate at which the user has borrowed, expressed in ray
      * @param referralCode The referral code used
      **/
@@ -78,7 +77,6 @@ interface IPoolCore {
         address user,
         address indexed onBehalfOf,
         uint256 amount,
-        DataTypes.InterestRateMode interestRateMode,
         uint256 borrowRate,
         uint16 indexed referralCode
     );
@@ -305,10 +303,9 @@ interface IPoolCore {
      * already supplied enough collateral, or he was given enough allowance by a credit delegator on the
      * corresponding debt token (VariableDebtToken)
      * - E.g. User borrows 100 USDC passing as `onBehalfOf` his own address, receiving the 100 USDC in his wallet
-     *   and 100 stable/variable debt tokens, depending on the `interestRateMode`
+     *   and 100 stable/variable debt tokens
      * @param asset The address of the underlying asset to borrow
      * @param amount The amount to be borrowed
-     * @param interestRateMode The interest rate mode at which the user wants to borrow
      * @param referralCode The code used to register the integrator originating the operation, for potential rewards.
      *   0 if the action is executed directly by the user, without any middle-man
      * @param onBehalfOf The address of the user who will receive the debt. Should be the address of the borrower itself
@@ -318,7 +315,6 @@ interface IPoolCore {
     function borrow(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         uint16 referralCode,
         address onBehalfOf
     ) external;
@@ -329,7 +325,6 @@ interface IPoolCore {
      * @param asset The address of the borrowed underlying asset previously borrowed
      * @param amount The amount to repay
      * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
-     * @param interestRateMode The interest rate mode at of the debt the user wants to repay
      * @param onBehalfOf The address of the user who will get his debt reduced/removed. Should be the address of the
      * user calling the function if he wants to reduce/remove his own debt, or the address of any other
      * other borrower whose debt should be removed
@@ -338,7 +333,6 @@ interface IPoolCore {
     function repay(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf
     ) external returns (uint256);
 
@@ -351,14 +345,11 @@ interface IPoolCore {
      * @param asset The address of the borrowed underlying asset previously borrowed
      * @param amount The amount to repay
      * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
-     * @param interestRateMode The interest rate mode at of the debt the user wants to repay
      * @return The final amount repaid
      **/
-    function repayWithPTokens(
-        address asset,
-        uint256 amount,
-        uint256 interestRateMode
-    ) external returns (uint256);
+    function repayWithPTokens(address asset, uint256 amount)
+        external
+        returns (uint256);
 
     /**
      * @notice Repay with transfer approval of asset to be repaid done via permit function
@@ -366,7 +357,6 @@ interface IPoolCore {
      * @param asset The address of the borrowed underlying asset previously borrowed
      * @param amount The amount to repay
      * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
-     * @param interestRateMode The interest rate mode at of the debt the user wants to repay
      * @param onBehalfOf Address of the user who will get his debt reduced/removed. Should be the address of the
      * user calling the function if he wants to reduce/remove his own debt, or the address of any other
      * other borrower whose debt should be removed
@@ -379,7 +369,6 @@ interface IPoolCore {
     function repayWithPermit(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf,
         uint256 deadline,
         uint8 permitV,

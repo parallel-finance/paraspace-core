@@ -26,7 +26,6 @@ import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-d
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {expect} from "chai";
-import {RateMode} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -263,7 +262,6 @@ describe("Interest Rate and Index Overflow", () => {
       .borrow(
         mockToken.address,
         await convertToCurrencyDecimals(mockToken.address, "100"),
-        RateMode.Variable,
         0,
         user.address
       );
@@ -335,7 +333,6 @@ describe("Interest Rate and Index Overflow", () => {
       .borrow(
         mockToken.address,
         await convertToCurrencyDecimals(mockToken.address, "100"),
-        RateMode.Variable,
         0,
         user.address
       );

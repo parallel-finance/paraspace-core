@@ -141,7 +141,7 @@ describe("DebtToken: Permit Delegation", () => {
 
     await pool
       .connect(user3.signer)
-      .borrow(dai.address, permitAmount, 2, 0, user2.address);
+      .borrow(dai.address, permitAmount, 0, user2.address);
     expect(
       (
         await variableDebtDai.borrowAllowance(user2.address, user3.address)

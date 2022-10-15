@@ -324,9 +324,6 @@ library MarketplaceLogic {
                 user: onBehalfOf,
                 onBehalfOf: onBehalfOf,
                 amount: vars.creditAmount,
-                interestRateMode: DataTypes.InterestRateMode(
-                    DataTypes.InterestRateMode.VARIABLE
-                ),
                 referralCode: params.referralCode,
                 releaseUnderlying: false,
                 reservesCount: params.reservesCount,

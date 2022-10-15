@@ -29,7 +29,6 @@ library BorrowLogic {
         address user,
         address indexed onBehalfOf,
         uint256 amount,
-        DataTypes.InterestRateMode interestRateMode,
         uint256 borrowRate,
         uint16 indexed referralCode
     );
@@ -71,7 +70,6 @@ library BorrowLogic {
                 asset: params.asset,
                 userAddress: params.onBehalfOf,
                 amount: params.amount,
-                interestRateMode: params.interestRateMode,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
                 priceOracleSentinel: params.priceOracleSentinel
@@ -113,7 +111,6 @@ library BorrowLogic {
             params.user,
             params.onBehalfOf,
             params.amount,
-            params.interestRateMode,
             reserve.currentVariableBorrowRate,
             params.referralCode
         );

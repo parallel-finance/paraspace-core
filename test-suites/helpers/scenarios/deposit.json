@@ -255,7 +255,6 @@
           "args": {
             "reserve": "WETH",
             "amount": "0.1",
-            "borrowRateMode": "variable",
             "user": "2"
           },
           "expected": "success"

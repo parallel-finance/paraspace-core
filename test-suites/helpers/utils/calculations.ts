@@ -4,11 +4,7 @@ import {
   MAX_UINT_AMOUNT,
   PERCENTAGE_FACTOR,
 } from "../../../deploy/helpers/constants";
-import {
-  IReserveParams,
-  iMultiPoolsAssets,
-  RateMode,
-} from "../../../deploy/helpers/types";
+import {IReserveParams, iMultiPoolsAssets} from "../../../deploy/helpers/types";
 import "./wadraymath";
 import {ReserveData, UserReserveData} from "./interfaces";
 import {BigNumber} from "ethers";
@@ -209,7 +205,6 @@ export const calcExpectedReserveDataAfterWithdraw = (
 
 export const calcExpectedReserveDataAfterBorrow = (
   amountBorrowed: string,
-  borrowRateMode: string,
   reserveDataBeforeAction: ReserveData,
   userDataBeforeAction: UserReserveData,
   txTimestamp: BigNumber,
@@ -284,7 +279,6 @@ export const calcExpectedReserveDataAfterBorrow = (
 
 export const calcExpectedReserveDataAfterRepay = (
   amountRepaid: string,
-  borrowRateMode: RateMode,
   reserveDataBeforeAction: ReserveData,
   userDataBeforeAction: UserReserveData,
   txTimestamp: BigNumber,
@@ -357,7 +351,6 @@ export const calcExpectedReserveDataAfterRepay = (
 
 export const calcExpectedUserDataAfterBorrow = (
   amountBorrowed: string,
-  interestRateMode: string,
   reserveDataBeforeAction: ReserveData,
   expectedDataAfterAction: ReserveData,
   userDataBeforeAction: UserReserveData,
@@ -403,7 +396,6 @@ export const calcExpectedUserDataAfterBorrow = (
 
 export const calcExpectedUserDataAfterRepay = (
   totalRepaid: string,
-  rateMode: RateMode,
   reserveDataBeforeAction: ReserveData,
   expectedDataAfterAction: ReserveData,
   userDataBeforeAction: UserReserveData,
@@ -611,11 +603,7 @@ export const calcExpectedInterestRates = (
     );
   }
 
-  const expectedOverallRate = calcExpectedOverallBorrowRate(
-    totalVariableDebt,
-    variableBorrowRate
-  );
-  const liquidityRate = expectedOverallRate
+  const liquidityRate = variableBorrowRate
     .rayMul(supplyUtilizationRate)
     .percentMul(
       BigNumber.from(PERCENTAGE_FACTOR).sub(reserveConfiguration.reserveFactor)

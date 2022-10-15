@@ -1014,7 +1014,7 @@ describe("PoolConfigurator", () => {
 
     await pool
       .connect(user2.signer)
-      .borrow(weth.address, "100", 2, "0", user2.address);
+      .borrow(weth.address, "100", "0", user2.address);
 
     await expect(
       configurator.setSiloedBorrowing(weth.address, true)

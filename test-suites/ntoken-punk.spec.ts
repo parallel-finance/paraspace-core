@@ -4,7 +4,7 @@ import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -129,13 +129,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await pool
         .connect(user3.signer)
-        .borrow(
-          dai.address,
-          borrowAmount,
-          RateMode.Variable,
-          "0",
-          user3.address
-        )
+        .borrow(dai.address, borrowAmount, "0", user3.address)
     );
 
     await variableDebtDai.balanceOf(user3.address);

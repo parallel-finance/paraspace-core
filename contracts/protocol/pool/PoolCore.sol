@@ -218,7 +218,6 @@ contract PoolCore is
     function borrow(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         uint16 referralCode,
         address onBehalfOf
     ) external virtual override nonReentrant {
@@ -231,7 +230,6 @@ contract PoolCore is
                 user: msg.sender,
                 onBehalfOf: onBehalfOf,
                 amount: amount,
-                interestRateMode: DataTypes.InterestRateMode.VARIABLE,
                 referralCode: referralCode,
                 releaseUnderlying: true,
                 reservesCount: _reservesCount,
@@ -245,7 +243,6 @@ contract PoolCore is
     function repay(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf
     ) external virtual override nonReentrant returns (uint256) {
         return
@@ -255,7 +252,6 @@ contract PoolCore is
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode.VARIABLE,
                     onBehalfOf: onBehalfOf,
                     usePTokens: false
                 })
@@ -263,11 +259,13 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function repayWithPTokens(
-        address asset,
-        uint256 amount,
-        uint256 interestRateMode
-    ) external virtual override nonReentrant returns (uint256) {
+    function repayWithPTokens(address asset, uint256 amount)
+        external
+        virtual
+        override
+        nonReentrant
+        returns (uint256)
+    {
         return
             BorrowLogic.executeRepay(
                 _reserves,
@@ -275,9 +273,6 @@ contract PoolCore is
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: msg.sender,
                     usePTokens: true
                 })
@@ -288,7 +283,6 @@ contract PoolCore is
     function repayWithPermit(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf,
         uint256 deadline,
         uint8 permitV,
@@ -311,9 +305,6 @@ contract PoolCore is
                 .ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: onBehalfOf,
                     usePTokens: false
                 });

@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {utils} from "ethers";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 // import {MockFlashLoanReceiver} from "../types";
@@ -139,9 +139,7 @@ describe("PausableReserve", () => {
       .setReservePause(dai.address, true);
     // Try to execute liquidation
     await expect(
-      pool
-        .connect(user.signer)
-        .borrow(dai.address, "1", RateMode.Variable, "0", user.address)
+      pool.connect(user.signer).borrow(dai.address, "1", "0", user.address)
     ).to.be.revertedWith(RESERVE_PAUSED);
     // Unpause the pool
     await configurator
@@ -158,9 +156,7 @@ describe("PausableReserve", () => {
       .setReservePause(dai.address, true);
     // Try to execute liquidation
     await expect(
-      pool
-        .connect(user.signer)
-        .repay(dai.address, "1", RateMode.Variable, user.address)
+      pool.connect(user.signer).repay(dai.address, "1", user.address)
     ).to.be.revertedWith(RESERVE_PAUSED);
     // Unpause the pool
     await configurator
@@ -247,13 +243,7 @@ describe("PausableReserve", () => {
     );
     await pool
       .connect(borrower.signer)
-      .borrow(
-        usdc.address,
-        amountUSDCToBorrow,
-        RateMode.Variable,
-        "0",
-        borrower.address
-      );
+      .borrow(usdc.address, amountUSDCToBorrow, "0", borrower.address);
     // Drops HF below 1
     await oracle.setAssetPrice(usdc.address, usdcPrice.percentMul(12000));
     //mints dai to the liquidator
