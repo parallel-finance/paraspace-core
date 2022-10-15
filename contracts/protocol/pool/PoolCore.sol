@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
+import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
 import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
@@ -22,7 +22,7 @@ import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
-import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import {ParaReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
@@ -80,6 +80,9 @@ contract PoolCore is
             Errors.INVALID_ADDRESSES_PROVIDER
         );
         _maxStableRateBorrowSizePercent = 0.25e4;
+        RGStorage storage rgs = rgStorage();
+
+        rgs._status = _NOT_ENTERED;
     }
 
     /// @inheritdoc IPoolCore
