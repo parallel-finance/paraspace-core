@@ -36,6 +36,7 @@ jobs:
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
           yarn build
+          # yarn doc
           yarn lint
 
   tests:
@@ -63,6 +64,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
           yarn test
 
   coverage:

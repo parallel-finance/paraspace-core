@@ -9,6 +9,7 @@ Follow these steps to get started with the ParaSpace development :hammer_and_wre
 
 ```
 yarn
+touch .env
 make init
 ```
 

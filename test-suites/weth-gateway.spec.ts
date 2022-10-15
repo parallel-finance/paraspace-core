@@ -8,10 +8,9 @@ import {
 } from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
-import {ethers, network} from "hardhat";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
-// import { constants, utils } from "ethers";
+import {DRE} from "../deploy/helpers/misc-utils";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {VariableDebtToken__factory} from "../types";
 import {utils} from "ethers";
@@ -48,7 +47,7 @@ describe("WETH GateWay", () => {
     } = testEnv;
 
     // User 1 deposits 1 ETH
-    const ethAmount = ethers.utils.parseEther("100.0");
+    const ethAmount = DRE.ethers.utils.parseEther("100.0");
     const ethValue = {
       value: ethAmount,
     };
@@ -252,7 +251,7 @@ describe("WETH GateWay", () => {
 
     // User 1 deposits 1 ETH
     const ethValue = {
-      value: ethers.utils.parseEther("100.0"),
+      value: DRE.ethers.utils.parseEther("100.0"),
     };
 
     await waitForTx(
@@ -317,7 +316,7 @@ describe("WETH GateWay", () => {
 
     // User 1 deposits 100 ETH
     const ethValue = {
-      value: ethers.utils.parseEther("100.0"),
+      value: DRE.ethers.utils.parseEther("100.0"),
     };
 
     await waitForTx(
@@ -397,7 +396,7 @@ describe("WETH GateWay", () => {
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 
     const ethValue = {
-      value: ethers.utils.parseEther("1.2"),
+      value: DRE.ethers.utils.parseEther("1.2"),
     };
 
     const amountETHInterest = await convertToCurrencyDecimals(
@@ -429,7 +428,7 @@ describe("WETH GateWay", () => {
 
     // User 1 deposits 1 ETH
     const ethValue = {
-      value: ethers.utils.parseEther("100.0"),
+      value: DRE.ethers.utils.parseEther("100.0"),
     };
 
     await waitForTx(
@@ -494,23 +493,23 @@ describe("WETH GateWay", () => {
       "50"
     );
 
-    await network.provider.request({
+    await DRE.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [weth.address],
     });
-    const wethSigner = await ethers.provider.getSigner(weth.address);
+    const wethSigner = await DRE.ethers.provider.getSigner(weth.address);
 
     // user3 send eth to weth contract
-    const [, , user3] = await ethers.getSigners();
+    const [, , user3] = await DRE.ethers.getSigners();
     await user3.sendTransaction({
       to: weth.address,
-      value: ethers.utils.parseEther("50.0"), // Sends exactly 50.0 ether
+      value: DRE.ethers.utils.parseEther("50.0"), // Sends exactly 50.0 ether
     });
 
     // weth contract send ether to gateway
     await wethSigner.sendTransaction({
       to: wETHGateway.address,
-      value: ethers.utils.parseEther("50.0"), // Sends exactly 50.0 ether
+      value: DRE.ethers.utils.parseEther("50.0"), // Sends exactly 50.0 ether
     });
 
     await waitForTx(
