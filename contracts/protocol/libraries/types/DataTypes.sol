@@ -349,7 +349,6 @@ library DataTypes {
         address tokenAddress;
     }
 
-
     struct PoolStorage {
         // Map of reserves and their data (underlyingAssetOfReserve => reserveData)
         mapping(address => ReserveData)  _reserves;

@@ -41,8 +41,8 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  *   PoolAddressesProvider
  **/
 contract PoolCore is
-    VersionedInitializable,
-    ReentrancyGuard,
+    ParaVersionedInitializable,
+    ParaReentrancyGuard,
     PoolStorage,
     IPoolCore
 {
@@ -92,9 +92,11 @@ contract PoolCore is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
+        DataTypes.PoolStorage ps = getPoolStorage();
+
         SupplyLogic.executeSupply(
-            _reserves,
-            _usersConfig[onBehalfOf],
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
             DataTypes.ExecuteSupplyParams({
                 asset: asset,
                 amount: amount,
