@@ -6,7 +6,7 @@ import {
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
@@ -92,13 +92,7 @@ describe("WETH GateWay", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .borrow(
-          dai.address,
-          borrowAmount,
-          RateMode.Variable,
-          "0",
-          user1.address
-        )
+        .borrow(dai.address, borrowAmount, "0", user1.address)
     );
   });
 
@@ -216,7 +210,7 @@ describe("WETH GateWay", () => {
     // repay dai loan
     const repayTx = await pool
       .connect(user1.signer)
-      .repay(dai.address, MAX_UINT_AMOUNT, RateMode.Variable, user1.address);
+      .repay(dai.address, MAX_UINT_AMOUNT, user1.address);
     await repayTx.wait();
 
     // withdraw WETH
@@ -383,7 +377,7 @@ describe("WETH GateWay", () => {
     // User 2 - borrows 1 eth
     // https://docs.paraspace.com/developers/periphery-contracts/wethgateway#borroweth
     await waitForTx(
-      await wETHGateway.connect(user2.signer).borrowETH(amountETH, 2, 0)
+      await wETHGateway.connect(user2.signer).borrowETH(amountETH, 0)
     );
 
     expect(await weth.balanceOf(user2.address)).to.eq(0); // receives ETH
@@ -414,7 +408,7 @@ describe("WETH GateWay", () => {
     await waitForTx(
       await wETHGateway
         .connect(user2.signer)
-        .repayETH(amountETHInterest, 2, user2.address, ethValue)
+        .repayETH(amountETHInterest, user2.address, ethValue)
     );
 
     const wethData = await pool.getReserveData(weth.address);

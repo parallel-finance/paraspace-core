@@ -4,7 +4,7 @@ import {BigNumber, utils} from "ethers";
 import {MAX_UINT_AMOUNT, oneEther} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {increaseTime, waitForTx} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
@@ -125,13 +125,7 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
 
     await pool
       .connect(borrower.signer)
-      .borrow(
-        dai.address,
-        amountDAIToBorrow,
-        RateMode.Variable,
-        "0",
-        borrower.address
-      );
+      .borrow(dai.address, amountDAIToBorrow, "0", borrower.address);
 
     const userGlobalDataAfter = await pool.getUserAccountData(borrower.address);
 
@@ -344,13 +338,7 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
 
     await pool
       .connect(borrower.signer)
-      .borrow(
-        usdc.address,
-        amountUSDCToBorrow,
-        RateMode.Variable,
-        "0",
-        borrower.address
-      );
+      .borrow(usdc.address, amountUSDCToBorrow, "0", borrower.address);
 
     //drops HF below 1
     await oracle.setAssetPrice(usdc.address, usdcPrice.percentMul(11200));

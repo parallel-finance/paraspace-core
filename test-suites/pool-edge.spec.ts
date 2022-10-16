@@ -12,7 +12,6 @@ import {
   MockReserveInterestRateStrategy__factory,
   // Pool__factory,
   PToken__factory,
-  StableDebtToken__factory,
   VariableDebtToken__factory,
 } from "../types";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
@@ -37,7 +36,6 @@ describe("Pool: Edge cases", () => {
     RESERVE_ALREADY_ADDED,
   } = ProtocolErrors;
 
-  const MAX_STABLE_RATE_BORROW_SIZE_PERCENT = 2500;
   const MAX_NUMBER_RESERVES = 128;
 
   beforeEach(async () => {
@@ -139,9 +137,6 @@ describe("Pool: Edge cases", () => {
   it("Check initialization", async () => {
     const {pool} = testEnv;
 
-    expect(await pool.MAX_STABLE_RATE_BORROW_SIZE_PERCENT()).to.be.eq(
-      MAX_STABLE_RATE_BORROW_SIZE_PERCENT
-    );
     expect(await pool.MAX_NUMBER_RESERVES()).to.be.eq(MAX_NUMBER_RESERVES);
   });
 
@@ -158,7 +153,6 @@ describe("Pool: Edge cases", () => {
         .initReserve(
           dai.address,
           config.xTokenAddress,
-          config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
           ZERO_ADDRESS
@@ -301,7 +295,6 @@ describe("Pool: Edge cases", () => {
           ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,
-          ZERO_ADDRESS,
           ZERO_ADDRESS
         )
     ).to.be.revertedWith(NOT_CONTRACT);
@@ -392,7 +385,6 @@ describe("Pool: Edge cases", () => {
       pool.connect(configSigner).initReserve(
         dai.address,
         config.xTokenAddress, // just need a non-used reserve token
-        config.stableDebtTokenAddress,
         config.variableDebtTokenAddress,
         ZERO_ADDRESS,
         ZERO_ADDRESS
@@ -427,7 +419,6 @@ describe("Pool: Edge cases", () => {
         .initReserve(
           config.xTokenAddress,
           ZERO_ADDRESS,
-          config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
           ZERO_ADDRESS
@@ -443,7 +434,6 @@ describe("Pool: Edge cases", () => {
         .initReserve(
           config.xTokenAddress,
           ZERO_ADDRESS,
-          config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
           ZERO_ADDRESS
@@ -540,7 +530,6 @@ describe("Pool: Edge cases", () => {
 
       if (
         assetData.currentLiquidityRate.eq(0) &&
-        assetData.currentStableBorrowRate.eq(0) &&
         assetData.currentVariableBorrowRate.eq(0)
       ) {
         await configurator.connect(poolAdmin.signer).dropReserve(reserveAsset);
@@ -557,9 +546,6 @@ describe("Pool: Edge cases", () => {
 
     // Deploy new token and implementations
     const mockToken = await deployMintableERC20(["MOCK", "MOCK", "18"]);
-    const stableDebtTokenImplementation = await new StableDebtToken__factory(
-      await getFirstSigner()
-    ).deploy(pool.address);
     const variableDebtTokenImplementation =
       await new VariableDebtToken__factory(await getFirstSigner()).deploy(
         pool.address
@@ -569,7 +555,7 @@ describe("Pool: Edge cases", () => {
     ).deploy(pool.address);
     const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
       await getFirstSigner()
-    ).deploy(addressesProvider.address, 0, 0, 0, 0, 0, 0);
+    ).deploy(addressesProvider.address, 0, 0, 0, 0);
     const mockAuctionStrategy = await await deployDefaultReserveAuctionStrategy(
       [
         auctionStrategyExp.maxPriceMultiplier,
@@ -584,7 +570,6 @@ describe("Pool: Edge cases", () => {
     // Init the reserve
     const initInputParams: {
       xTokenImpl: string;
-      stableDebtTokenImpl: string;
       variableDebtTokenImpl: string;
       underlyingAssetDecimals: BigNumberish;
       interestRateStrategyAddress: string;
@@ -597,13 +582,10 @@ describe("Pool: Edge cases", () => {
       xTokenSymbol: string;
       variableDebtTokenName: string;
       variableDebtTokenSymbol: string;
-      stableDebtTokenName: string;
-      stableDebtTokenSymbol: string;
       params: string;
     }[] = [
       {
         xTokenImpl: xTokenImplementation.address,
-        stableDebtTokenImpl: stableDebtTokenImplementation.address,
         variableDebtTokenImpl: variableDebtTokenImplementation.address,
         underlyingAssetDecimals: 18,
         interestRateStrategyAddress: mockRateStrategy.address,
@@ -616,8 +598,6 @@ describe("Pool: Edge cases", () => {
         xTokenSymbol: "PMOCK",
         variableDebtTokenName: "VMOCK",
         variableDebtTokenSymbol: "VMOCK",
-        stableDebtTokenName: "SMOCK",
-        stableDebtTokenSymbol: "SMOCK",
         params: "0x10",
       },
     ];

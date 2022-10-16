@@ -234,7 +234,7 @@ contract Conduit is ConduitInterface, TokenTransferrer {
             }
 
             if (_protocolDataProvider != address(0)) {
-                (address xTokenAddress, , ) = IProtocolDataProvider(
+                (address xTokenAddress, ) = IProtocolDataProvider(
                     _protocolDataProvider
                 ).getReserveTokensAddresses(item.token);
                 if (xTokenAddress != address(0)) {

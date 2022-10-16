@@ -93,7 +93,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "100",
-            "borrowRateMode": "variable",
             "user": "1",
             "timeTravel": "365"
           },
@@ -109,7 +108,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "900",
-            "borrowRateMode": "variable",
             "user": "1"
           },
           "expected": "revert",
@@ -150,8 +148,7 @@
             "reserve": "DAI",
             "amount": "1.25",
             "user": "1",
-            "onBehalfOf": "1",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "1"
           },
           "expected": "success"
         }
@@ -177,7 +174,6 @@
             "amount": "-1",
             "user": "1",
             "onBehalfOf": "1",
-            "borrowRateMode": "variable",
             "timeTravel": "365"
           },
           "expected": "success"
@@ -304,7 +300,6 @@
           "args": {
             "reserve": "WETH",
             "amount": "0.5",
-            "borrowRateMode": "variable",
             "user": "1",
             "timeTravel": "365"
           },
@@ -321,8 +316,7 @@
             "reserve": "WETH",
             "amount": "0",
             "user": "1",
-            "onBehalfOf": "1",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "1"
           },
           "expected": "revert",
           "revertMessage": "Amount must be greater than 0"
@@ -338,7 +332,6 @@
             "reserve": "WETH",
             "amount": "-1",
             "user": "2",
-            "borrowRateMode": "variable",
             "onBehalfOf": "1"
           },
           "expected": "revert",
@@ -372,7 +365,6 @@
             "reserve": "WETH",
             "amount": "0.2",
             "user": "3",
-            "borrowRateMode": "variable",
             "onBehalfOf": "1"
           },
           "expected": "success"
@@ -404,7 +396,6 @@
           "args": {
             "reserve": "WETH",
             "amount": "-1",
-            "borrowRateMode": "variable",
             "user": "1",
             "onBehalfOf": "1"
           },
@@ -532,7 +523,6 @@
           "args": {
             "reserve": "USDC",
             "amount": "100",
-            "borrowRateMode": "variable",
             "user": "1",
             "timeTravel": "365"
           },
@@ -548,7 +538,6 @@
           "args": {
             "reserve": "USDC",
             "amount": "900",
-            "borrowRateMode": "variable",
             "user": "1"
           },
           "expected": "revert",
@@ -583,8 +572,7 @@
             "reserve": "USDC",
             "amount": "-1",
             "user": "1",
-            "onBehalfOf": "1",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "1"
           },
           "expected": "success"
         }
@@ -652,7 +640,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "1000",
-            "borrowRateMode": "variable",
             "user": "3"
           },
           "expected": "revert",
@@ -694,7 +681,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "100",
-            "borrowRateMode": "variable",
             "user": "3"
           },
           "expected": "revert",
@@ -750,7 +736,6 @@
           "args": {
             "reserve": "USDC",
             "amount": "1000",
-            "borrowRateMode": "variable",
             "user": "3"
           },
           "expected": "revert",
@@ -792,7 +777,6 @@
           "args": {
             "reserve": "USDC",
             "amount": "100",
-            "borrowRateMode": "variable",
             "user": "3"
           },
           "expected": "revert",
@@ -874,7 +858,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "100",
-            "borrowRateMode": "variable",
             "user": "6",
             "timeTravel": "365"
           },
@@ -885,7 +868,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "100",
-            "borrowRateMode": "variable",
             "user": "6",
             "timeTravel": "365"
           },
@@ -915,8 +897,7 @@
             "reserve": "DAI",
             "amount": "-1",
             "user": "6",
-            "onBehalfOf": "6",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "6"
           },
           "expected": "success"
         },
