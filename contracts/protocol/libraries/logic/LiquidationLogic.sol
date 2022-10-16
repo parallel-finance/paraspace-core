@@ -75,8 +75,6 @@ library LiquidationLogic {
         uint256 indexed collateralTokenId
     );
 
-    uint256 private constant BASE_CURRENCY_DECIMALS = 18;
-
     struct LiquidationCallLocalVars {
         address liquidator;
         //userCollateralBalance from collateralReserve

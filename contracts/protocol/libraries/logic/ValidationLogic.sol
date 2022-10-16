@@ -110,12 +110,6 @@ library ValidationLogic {
         DataTypes.ExecuteSupplyERC721Params memory params,
         DataTypes.AssetType assetType
     ) internal view {
-        // TODO check if this is needed
-        // require(
-        //     msg.sender == reserveCache.xTokenAddress,
-        //     Errors.SUPPLIER_NOT_NTOKEN
-        // );
-
         uint256 amount = params.tokenData.length;
 
         validateSupply(reserveCache, amount, assetType);
