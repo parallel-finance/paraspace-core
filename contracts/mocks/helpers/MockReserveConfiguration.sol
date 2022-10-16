@@ -79,16 +79,6 @@ contract MockReserveConfiguration {
         return configuration.getBorrowingEnabled();
     }
 
-    function setStableRateBorrowingEnabled(bool enabled) external {
-        DataTypes.ReserveConfigurationMap memory config = configuration;
-        config.setStableRateBorrowingEnabled(enabled);
-        configuration = config;
-    }
-
-    function getStableRateBorrowingEnabled() external view returns (bool) {
-        return configuration.getStableRateBorrowingEnabled();
-    }
-
     function setReserveFactor(uint256 reserveFactor) external {
         DataTypes.ReserveConfigurationMap memory config = configuration;
         config.setReserveFactor(reserveFactor);
@@ -135,7 +125,6 @@ contract MockReserveConfiguration {
         external
         view
         returns (
-            bool,
             bool,
             bool,
             bool,

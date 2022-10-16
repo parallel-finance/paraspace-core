@@ -2,7 +2,6 @@ import {expect} from "chai";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {RateMode} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {snapshot} from "./helpers/snapshot-manager";
 import {
@@ -90,13 +89,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .borrow(
-          dai.address,
-          borrowAmount,
-          RateMode.Variable,
-          "0",
-          user1.address
-        )
+        .borrow(dai.address, borrowAmount, "0", user1.address)
     );
   });
 

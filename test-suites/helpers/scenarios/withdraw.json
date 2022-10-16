@@ -355,8 +355,7 @@
           "args": {
             "reserve": "DAI",
             "amount": "100",
-            "user": "1",
-            "borrowRateMode": "variable"
+            "user": "1"
           },
           "expected": "success"
         },

@@ -12,11 +12,8 @@ contract MockReserveInterestRateStrategy is IReserveInterestRateStrategy {
     uint256 internal immutable _baseVariableBorrowRate;
     uint256 internal immutable _variableRateSlope1;
     uint256 internal immutable _variableRateSlope2;
-    uint256 internal immutable _stableRateSlope1;
-    uint256 internal immutable _stableRateSlope2;
 
     uint256 internal _liquidityRate;
-    uint256 internal _stableBorrowRate;
     uint256 internal _variableBorrowRate;
 
     constructor(
@@ -24,25 +21,17 @@ contract MockReserveInterestRateStrategy is IReserveInterestRateStrategy {
         uint256 optimalUsageRatio,
         uint256 baseVariableBorrowRate,
         uint256 variableRateSlope1,
-        uint256 variableRateSlope2,
-        uint256 stableRateSlope1,
-        uint256 stableRateSlope2
+        uint256 variableRateSlope2
     ) {
         OPTIMAL_USAGE_RATIO = optimalUsageRatio;
         ADDRESSES_PROVIDER = provider;
         _baseVariableBorrowRate = baseVariableBorrowRate;
         _variableRateSlope1 = variableRateSlope1;
         _variableRateSlope2 = variableRateSlope2;
-        _stableRateSlope1 = stableRateSlope1;
-        _stableRateSlope2 = stableRateSlope2;
     }
 
     function setLiquidityRate(uint256 liquidityRate) public {
         _liquidityRate = liquidityRate;
-    }
-
-    function setStableBorrowRate(uint256 stableBorrowRate) public {
-        _stableBorrowRate = stableBorrowRate;
     }
 
     function setVariableBorrowRate(uint256 variableBorrowRate) public {
@@ -57,11 +46,10 @@ contract MockReserveInterestRateStrategy is IReserveInterestRateStrategy {
         override
         returns (
             uint256 liquidityRate,
-            uint256 stableBorrowRate,
             uint256 variableBorrowRate
         )
     {
-        return (_liquidityRate, _stableBorrowRate, _variableBorrowRate);
+        return (_liquidityRate, _variableBorrowRate);
     }
 
     function getVariableRateSlope1() external view returns (uint256) {
@@ -70,14 +58,6 @@ contract MockReserveInterestRateStrategy is IReserveInterestRateStrategy {
 
     function getVariableRateSlope2() external view returns (uint256) {
         return _variableRateSlope2;
-    }
-
-    function getStableRateSlope1() external view returns (uint256) {
-        return _stableRateSlope1;
-    }
-
-    function getStableRateSlope2() external view returns (uint256) {
-        return _stableRateSlope2;
     }
 
     function getBaseVariableBorrowRate()

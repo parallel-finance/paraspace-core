@@ -102,13 +102,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function updateStableDebtToken(
-        ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
-    ) external override onlyPoolAdmin {
-        ConfiguratorLogic.executeUpdateStableDebtToken(_pool, input);
-    }
-
-    /// @inheritdoc IPoolConfigurator
     function updateVariableDebtToken(
         ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
     ) external override onlyPoolAdmin {
@@ -123,12 +116,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
-        if (!enabled) {
-            require(
-                !currentConfig.getStableRateBorrowingEnabled(),
-                Errors.STABLE_BORROWING_ENABLED
-            );
-        }
         currentConfig.setBorrowingEnabled(enabled);
         _pool.setConfiguration(asset, currentConfig);
         emit ReserveBorrowing(asset, enabled);
@@ -184,25 +171,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
             liquidationThreshold,
             liquidationBonus
         );
-    }
-
-    /// @inheritdoc IPoolConfigurator
-    function setReserveStableRateBorrowing(address asset, bool enabled)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
-        DataTypes.ReserveConfigurationMap memory currentConfig = _pool
-            .getConfiguration(asset);
-        if (enabled) {
-            require(
-                currentConfig.getBorrowingEnabled(),
-                Errors.BORROWING_NOT_ENABLED
-            );
-        }
-        currentConfig.setStableRateBorrowingEnabled(enabled);
-        _pool.setConfiguration(asset, currentConfig);
-        emit ReserveStableRateBorrowing(asset, enabled);
     }
 
     /// @inheritdoc IPoolConfigurator

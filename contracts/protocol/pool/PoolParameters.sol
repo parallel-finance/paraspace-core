@@ -107,7 +107,6 @@ contract PoolParameters is
     function initReserve(
         address asset,
         address xTokenAddress,
-        address stableDebtAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress,
         address auctionStrategyAddress
@@ -119,7 +118,6 @@ contract PoolParameters is
                 DataTypes.InitReserveParams({
                     asset: asset,
                     xTokenAddress: xTokenAddress,
-                    stableDebtAddress: stableDebtAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
                     auctionStrategyAddress: auctionStrategyAddress,

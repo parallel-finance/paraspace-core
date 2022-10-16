@@ -5,7 +5,7 @@ import {formatEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
@@ -177,7 +177,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
     // repay dai loan
     const repayTx = await pool
       .connect(user1.signer)
-      .repay(dai.address, MAX_UINT_AMOUNT, RateMode.Variable, user1.address);
+      .repay(dai.address, MAX_UINT_AMOUNT, user1.address);
     await repayTx.wait();
 
     // User 1 - Available to borrow should have increased

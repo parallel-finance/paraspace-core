@@ -103,7 +103,6 @@ contract PoolMarketplace is
                 orderInfo: orderInfo,
                 weth: weth,
                 referralCode: referralCode,
-                maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                 reservesCount: _reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
@@ -173,7 +172,6 @@ contract PoolMarketplace is
                     orderInfo: orderInfo,
                     weth: weth,
                     referralCode: referralCode,
-                    maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
@@ -212,7 +210,6 @@ contract PoolMarketplace is
                     orderInfo: orderInfo,
                     weth: weth,
                     referralCode: referralCode,
-                    maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
@@ -260,7 +257,6 @@ contract PoolMarketplace is
                     orderInfo: orderInfo,
                     weth: weth,
                     referralCode: referralCode,
-                    maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                     reservesCount: _reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER

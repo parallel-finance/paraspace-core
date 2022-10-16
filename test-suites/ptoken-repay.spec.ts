@@ -10,14 +10,13 @@ import {
   timeLatest,
   waitForTx,
 } from "../deploy/helpers/misc-utils";
-import {RateMode} from "../deploy/helpers/types";
 import {
   DefaultReserveInterestRateStrategy__factory,
-  StableDebtToken__factory,
   VariableDebtToken__factory,
 } from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
+import "./helpers/utils/wadraymath";
 
 describe("PToken: Repay", () => {
   let testEnv: TestEnv;
@@ -64,7 +63,7 @@ describe("PToken: Repay", () => {
       expect(
         await pool
           .connect(user1.signer)
-          .borrow(dai.address, daiAmount.div(2), 2, 0, user1.address)
+          .borrow(dai.address, daiAmount.div(2), 0, user1.address)
       );
     }
   );
@@ -86,7 +85,7 @@ describe("PToken: Repay", () => {
     const repayAmount = utils.parseEther("25");
 
     await expect(
-      pool.connect(user1.address).repayWithPTokens(dai.address, repayAmount, 2)
+      pool.connect(user1.address).repayWithPTokens(dai.address, repayAmount)
     ).to.be.reverted;
   });
 
@@ -117,7 +116,7 @@ describe("PToken: Repay", () => {
     });
 
     await expect(
-      pool.connect(user1.signer).repayWithPTokens(dai.address, repayAmount, 2)
+      pool.connect(user1.signer).repayWithPTokens(dai.address, repayAmount)
     )
       .to.emit(pool, "Repay")
       .withArgs(dai.address, user1.address, user1.address, repayAmount, true);
@@ -157,7 +156,7 @@ describe("PToken: Repay", () => {
     const tx = await waitForTx(
       await pool
         .connect(user1.signer)
-        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT, 2)
+        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT)
     );
 
     const repayEventSignature = utils.keccak256(
@@ -210,7 +209,7 @@ describe("PToken: Repay", () => {
     const tx = await waitForTx(
       await pool
         .connect(user1.signer)
-        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT, 2)
+        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT)
     );
 
     const repayEventSignature = utils.keccak256(
@@ -262,25 +261,17 @@ describe("PToken: Repay", () => {
     const borrowAmount = parseUnits("500", 18);
     await pool
       .connect(user.signer)
-      .borrow(dai.address, borrowAmount, RateMode.Variable, 0, user.address);
+      .borrow(dai.address, borrowAmount, 0, user.address);
 
     // Now we repay 250 with xTokens
     const repayAmount = parseUnits("250", 18);
-    await pool
-      .connect(user.signer)
-      .repayWithPTokens(dai.address, repayAmount, RateMode.Variable);
+    await pool.connect(user.signer).repayWithPTokens(dai.address, repayAmount);
 
     const reserveData = await pool.getReserveData(dai.address);
     const strategy = DefaultReserveInterestRateStrategy__factory.connect(
       reserveData.interestRateStrategyAddress,
       user.signer
     );
-
-    const stableDebtToken = StableDebtToken__factory.connect(
-      reserveData.stableDebtTokenAddress,
-      user.signer
-    );
-    const stableDebtData = await stableDebtToken.getSupplyData();
 
     const variableDebtToken = VariableDebtToken__factory.connect(
       reserveData.variableDebtTokenAddress,
@@ -294,18 +285,15 @@ describe("PToken: Repay", () => {
     const expectedRates = await strategy.calculateInterestRates({
       liquidityAdded: 0,
       liquidityTaken: 0,
-      totalStableDebt: stableDebtData[1],
       totalVariableDebt: variableDebt,
       xToken: pDai.address,
       reserve: dai.address,
       reserveFactor: (
         await protocolDataProvider.getReserveConfigurationData(dai.address)
       ).reserveFactor,
-      averageStableBorrowRate: stableDebtData[2],
     });
 
     expect(reserveData.currentLiquidityRate).to.be.eq(expectedRates[0]);
-    expect(reserveData.currentStableBorrowRate).to.be.eq(expectedRates[1]);
-    expect(reserveData.currentVariableBorrowRate).to.be.eq(expectedRates[2]);
+    expect(reserveData.currentVariableBorrowRate).to.be.eq(expectedRates[1]);
   });
 });
