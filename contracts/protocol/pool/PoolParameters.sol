@@ -301,14 +301,9 @@ contract PoolParameters is
 
         return
             PoolLogic.executeGetUserAccountData(
-                ps._reserves,
-                ps._reservesList,
-                DataTypes.CalculateUserAccountDataParams({
-                    userConfig: ps._usersConfig[user],
-                    reservesCount: ps._reservesCount,
-                    user: user,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                })
+                user,
+                ps,
+                ADDRESSES_PROVIDER.getPriceOracle()
             );
     }
 
@@ -323,16 +318,10 @@ contract PoolParameters is
         
         require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[user];
-        (, , , , , , uint256 erc721HealthFactor) = PoolLogic
-            .executeGetUserAccountData(
-                ps._reserves,
-                ps._reservesList,
-                DataTypes.CalculateUserAccountDataParams({
-                    userConfig: userConfig,
-                    reservesCount: ps._reservesCount,
-                    user: user,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                })
+        (, , , , , , uint256 erc721HealthFactor) = PoolLogic.executeGetUserAccountData(
+                user,
+                ps,
+                ADDRESSES_PROVIDER.getPriceOracle()
             );
         require(
             erc721HealthFactor > ps._auctionRecoveryHealthFactor,

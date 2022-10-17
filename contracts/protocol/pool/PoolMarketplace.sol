@@ -76,41 +76,13 @@ contract PoolMarketplace is
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
-        DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
-            .getMarketplace(marketplaceId);
-        DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(payload, weth);
-        orderInfo.taker = msg.sender;
-        uint256 ethLeft = msg.value;
-
-        if (
-            ethLeft > 0 &&
-            orderInfo.consideration[0].itemType != ItemType.NATIVE
-        ) {
-            MarketplaceLogic.depositETH(weth, ethLeft);
-            ethLeft = 0;
-        }
-
-        ethLeft -= MarketplaceLogic.executeBuyWithCredit(
-            ps._reserves,
-            ps._reservesList,
-            ps._usersConfig[orderInfo.taker],
-            DataTypes.ExecuteMarketplaceParams({
-                marketplaceId: marketplaceId,
-                payload: payload,
-                credit: credit,
-                ethLeft: ethLeft,
-                marketplace: marketplace,
-                orderInfo: orderInfo,
-                weth: weth,
-                referralCode: referralCode,
-                reservesCount: ps._reservesCount,
-                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
-            })
+        MarketplaceLogic.executeBuyWithCredit(
+            marketplaceId,
+            payload,
+            credit,
+            ps,
+            ADDRESSES_PROVIDER
         );
-        MarketplaceLogic.refundETH(ethLeft);
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -122,68 +94,13 @@ contract PoolMarketplace is
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
-        require(
-            marketplaceIds.length == payloads.length &&
-                payloads.length == credits.length,
-            Errors.INCONSISTENT_PARAMS_LENGTH
+        MarketplaceLogic.executeBatchBuyWithCredit(
+            marketplaceIds,
+            payloads,
+            credits,
+            ps,
+            ADDRESSES_PROVIDER
         );
-        uint256 ethLeft = msg.value;
-        for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            bytes32 marketplaceId = marketplaceIds[i];
-            bytes memory payload = payloads[i];
-            DataTypes.Credit memory credit = credits[i];
-
-            DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
-                .getMarketplace(marketplaceId);
-            DataTypes.OrderInfo memory orderInfo = IMarketplace(
-                marketplace.adapter
-            ).getAskOrderInfo(payload, weth);
-            orderInfo.taker = msg.sender;
-
-            // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
-            // this also means that the parameters order is very important
-            //
-            // frontend/sdk needs to guarantee that WETH orders will always be put after ALL
-            // ETH orders, all ETH orders after WETH orders will fail
-            //
-            // eg. The following example image that the `taker` owns only ETH and wants to
-            // batch buy bunch of NFTs which are listed using WETH and ETH
-            //
-            // batchBuyWithCredit([ETH, WETH, ETH]) => ko
-            //                            | -> convert all ethLeft to WETH, 3rd purchase will fail
-            // batchBuyWithCredit([ETH, ETH, ETH]) => ok
-            // batchBuyWithCredit([ETH, ETH, WETH]) => ok
-            //
-            if (
-                ethLeft > 0 &&
-                orderInfo.consideration[0].itemType != ItemType.NATIVE
-            ) {
-                MarketplaceLogic.depositETH(weth, ethLeft);
-                ethLeft = 0;
-            }
-
-            ethLeft -= MarketplaceLogic.executeBuyWithCredit(
-                ps._reserves,
-                ps._reservesList,
-                ps._usersConfig[orderInfo.taker],
-                DataTypes.ExecuteMarketplaceParams({
-                    marketplaceId: marketplaceId,
-                    payload: payload,
-                    credit: credit,
-                    ethLeft: ethLeft,
-                    marketplace: marketplace,
-                    orderInfo: orderInfo,
-                    weth: weth,
-                    referralCode: referralCode,
-                    reservesCount: ps._reservesCount,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                    priceOracleSentinel: ADDRESSES_PROVIDER
-                        .getPriceOracleSentinel()
-                })
-            );
-        }
-        MarketplaceLogic.refundETH(ethLeft);
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -196,32 +113,17 @@ contract PoolMarketplace is
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
-        DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
-            .getMarketplace(marketplaceId);
-        DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getBidOrderInfo(payload);
-        require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
-        return
-            MarketplaceLogic.executeAcceptBidWithCredit(
-                ps._reserves,
-                ps._reservesList,
-                ps._usersConfig[orderInfo.maker],
-                DataTypes.ExecuteMarketplaceParams({
-                    marketplaceId: marketplaceId,
-                    payload: payload,
-                    credit: credit,
-                    ethLeft: 0,
-                    marketplace: marketplace,
-                    orderInfo: orderInfo,
-                    weth: weth,
-                    referralCode: referralCode,
-                    reservesCount: ps._reservesCount,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                    priceOracleSentinel: ADDRESSES_PROVIDER
-                        .getPriceOracleSentinel()
-                })
-            );
+
+        MarketplaceLogic.executeAcceptBidWithCredit(
+            marketplaceId,
+            payload,
+            credit,
+            onBehalfOf,
+            ps,
+            ADDRESSES_PROVIDER
+        );
+
+
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -234,43 +136,13 @@ contract PoolMarketplace is
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
-        require(
-            marketplaceIds.length == payloads.length &&
-                payloads.length == credits.length,
-            Errors.INCONSISTENT_PARAMS_LENGTH
+        MarketplaceLogic.executeBatchAcceptBidWithCredit(
+            marketplaceIds,
+            payloads,
+            credits,
+            onBehalfOf,
+            ps,
+            ADDRESSES_PROVIDER
         );
-        for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            bytes32 marketplaceId = marketplaceIds[i];
-            bytes memory payload = payloads[i];
-            DataTypes.Credit memory credit = credits[i];
-
-            DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
-                .getMarketplace(marketplaceId);
-            DataTypes.OrderInfo memory orderInfo = IMarketplace(
-                marketplace.adapter
-            ).getBidOrderInfo(payload);
-            require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
-
-            MarketplaceLogic.executeAcceptBidWithCredit(
-                ps._reserves,
-                ps._reservesList,
-                ps._usersConfig[orderInfo.maker],
-                DataTypes.ExecuteMarketplaceParams({
-                    marketplaceId: marketplaceId,
-                    payload: payload,
-                    credit: credit,
-                    ethLeft: 0,
-                    marketplace: marketplace,
-                    orderInfo: orderInfo,
-                    weth: weth,
-                    referralCode: referralCode,
-                    reservesCount: ps._reservesCount,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                    priceOracleSentinel: ADDRESSES_PROVIDER
-                        .getPriceOracleSentinel()
-                })
-            );
-        }
     }
 }
