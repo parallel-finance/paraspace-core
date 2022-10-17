@@ -12,7 +12,7 @@ import {
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {buildForkConfig} from "./deploy/helper-hardhat-config";
-import fs from 'fs'
+import fs from "fs";
 
 dotenv.config();
 
@@ -97,6 +97,8 @@ const hardhatConfig: HardhatUserConfig = {
     target: "ethers-v5",
   },
   mocha: {
+    parallel: true,
+    jobs: 4,
     timeout: 200000,
   },
   tenderly: {

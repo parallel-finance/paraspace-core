@@ -13,12 +13,15 @@ import {
 } from "../deploy/market-config/auctionStrategies";
 import "./helpers/utils/wadraymath";
 import {utils} from "ethers";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {testEnvFixture} from "./helpers/setup-env";
 
 describe("AuctionStrategy", () => {
   let strategyInstanceExp: DefaultReserveAuctionStrategy;
   let strategyInstanceLinear: MockReserveAuctionStrategy;
 
   before(async () => {
+    await loadFixture(testEnvFixture);
     strategyInstanceExp = await deployDefaultReserveAuctionStrategy([
       auctionStrategyExp.maxPriceMultiplier,
       auctionStrategyExp.minExpPriceMultiplier,
