@@ -2,7 +2,11 @@ name: Docs Deployment
 
 on:
   push:
-    branches: main
+    branches:
+      - v*
+      - main
+  pull_request: {}
+  workflow_dispatch: {}
 
 jobs:
   wait-for-approval:

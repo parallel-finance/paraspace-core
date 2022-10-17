@@ -16,7 +16,7 @@ import fs from 'fs'
 
 dotenv.config();
 
-import "solidity-docgen";
+import "solidity-docgen-forked";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
