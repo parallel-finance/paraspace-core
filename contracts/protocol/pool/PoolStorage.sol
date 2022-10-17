@@ -23,9 +23,6 @@ contract PoolStorage {
     // It is structured as a mapping for gas savings reasons, using the reserve id as index
     mapping(uint256 => address) internal _reservesList;
 
-    // Available liquidity that can be borrowed at once at stable rate, expressed in bps
-    uint64 internal _maxStableRateBorrowSizePercent;
-
     // Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
     uint16 internal _reservesCount;
 

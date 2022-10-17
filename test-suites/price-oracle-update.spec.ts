@@ -4,8 +4,8 @@ import {
   convertToCurrencyDecimals,
   getEthersSigners,
 } from "../deploy/helpers/contracts-helpers";
+import {DRE} from "../deploy/helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
-import {ethers} from "hardhat";
 import {expect} from "chai";
 import {MockAggregator} from "../types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -59,9 +59,11 @@ describe("Price Oracle update", () => {
     const [deployer] = await getEthersSigners();
     await deployer.getAddress();
 
-    await ethers.provider.listAccounts();
+    await DRE.ethers.provider.listAccounts();
 
-    const newMockAggregator = await ethers.getContractFactory("MockAggregator");
+    const newMockAggregator = await DRE.ethers.getContractFactory(
+      "MockAggregator"
+    );
     const newPrice = 3690684128600000;
     const newMockAggregatorDeployed = newMockAggregator.deploy(newPrice);
     const newMockAggregatorDeployedAddress = (await newMockAggregatorDeployed)

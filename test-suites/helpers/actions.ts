@@ -23,7 +23,6 @@ import {convertToCurrencyDecimals} from "../../deploy/helpers/contracts-helpers"
 import {
   getPToken,
   getMintableERC20,
-  getStableDebtToken,
   getVariableDebtToken,
   getChainId,
 } from "../../deploy/helpers/contracts-getters";
@@ -40,7 +39,7 @@ import chai from "chai";
 import {ReserveData, UserReserveData} from "./utils/interfaces";
 import {BigNumber, ContractReceipt} from "ethers";
 import {PToken} from "../../types";
-import {RateMode, tEthereumAddress} from "../../deploy/helpers/types";
+import {tEthereumAddress} from "../../deploy/helpers/types";
 import {MintableERC20__factory} from "../../types";
 
 const {expect} = chai;
@@ -56,11 +55,9 @@ const almostEqualOrEqual = function (
   keys.forEach((key) => {
     if (
       key === "lastUpdateTimestamp" ||
-      key === "marketStableRate" ||
       key === "symbol" ||
       key === "xTokenAddress" ||
-      key === "decimals" ||
-      key === "totalStableDebtLastUpdated"
+      key === "decimals"
     ) {
       // skipping consistency check on accessory data
       return;
@@ -327,7 +324,6 @@ export const withdraw = async (
 export const delegateBorrowAllowance = async (
   reserve: string,
   amount: string,
-  interestRateMode: string,
   user: SignerWithAddress,
   receiver: tEthereumAddress,
   expectedResult: string,
@@ -346,10 +342,9 @@ export const delegateBorrowAllowance = async (
 
   const reserveData = await pool.getReserveData(reserveAddress);
 
-  const debtToken =
-    interestRateMode === "1"
-      ? await getStableDebtToken(reserveData.stableDebtTokenAddress)
-      : await getVariableDebtToken(reserveData.variableDebtTokenAddress);
+  const debtToken = await getVariableDebtToken(
+    reserveData.variableDebtTokenAddress
+  );
 
   const delegateAllowancePromise = debtToken
     .connect(user.signer)
@@ -373,7 +368,6 @@ export const delegateBorrowAllowance = async (
 export const borrow = async (
   reserveSymbol: string,
   amount: string,
-  interestRateMode: string,
   user: SignerWithAddress,
   onBehalfOf: tEthereumAddress,
   timeTravel: string,
@@ -394,7 +388,7 @@ export const borrow = async (
     const txResult = await waitForTx(
       await pool
         .connect(user.signer)
-        .borrow(reserve, amountToBorrow, interestRateMode, "0", onBehalfOf)
+        .borrow(reserve, amountToBorrow, "0", onBehalfOf)
     );
 
     const {txTimestamp} = await getTxCostAndTimestamp(txResult);
@@ -416,7 +410,6 @@ export const borrow = async (
 
     const expectedReserveData = calcExpectedReserveDataAfterBorrow(
       amountToBorrow.toString(),
-      interestRateMode,
       reserveDataBefore,
       userDataBefore,
       txTimestamp,
@@ -425,7 +418,6 @@ export const borrow = async (
 
     const expectedUserData = calcExpectedUserDataAfterBorrow(
       amountToBorrow.toString(),
-      interestRateMode,
       reserveDataBefore,
       expectedReserveData,
       userDataBefore,
@@ -460,7 +452,7 @@ export const borrow = async (
     await expect(
       pool
         .connect(user.signer)
-        .borrow(reserve, amountToBorrow, interestRateMode, "0", onBehalfOf),
+        .borrow(reserve, amountToBorrow, "0", onBehalfOf),
       revertMessage
     ).to.be.reverted;
   }
@@ -469,7 +461,6 @@ export const borrow = async (
 export const repay = async (
   reserveSymbol: string,
   amount: string,
-  rateMode: string,
   user: SignerWithAddress,
   onBehalfOf: SignerWithAddress,
   sendValue: string,
@@ -515,7 +506,7 @@ export const repay = async (
     const txResult = await waitForTx(
       await pool
         .connect(user.signer)
-        .repay(reserve, amountToRepay, rateMode, onBehalfOf.address, txOptions)
+        .repay(reserve, amountToRepay, onBehalfOf.address, txOptions)
     );
 
     const {txTimestamp} = await getTxCostAndTimestamp(txResult);
@@ -528,7 +519,6 @@ export const repay = async (
 
     const expectedReserveData = calcExpectedReserveDataAfterRepay(
       amountToRepay,
-      <RateMode>rateMode,
       reserveDataBefore,
       userDataBefore,
       txTimestamp,
@@ -537,7 +527,6 @@ export const repay = async (
 
     const expectedUserData = calcExpectedUserDataAfterRepay(
       amountToRepay,
-      <RateMode>rateMode,
       reserveDataBefore,
       expectedReserveData,
       userDataBefore,
@@ -563,7 +552,7 @@ export const repay = async (
     await expect(
       pool
         .connect(user.signer)
-        .repay(reserve, amountToRepay, rateMode, onBehalfOf.address, txOptions),
+        .repay(reserve, amountToRepay, onBehalfOf.address, txOptions),
       revertMessage
     ).to.be.reverted;
   }
@@ -689,7 +678,6 @@ export const supplyWithPermit = async (
 export const repayWithPermit = async (
   reserveSymbol: string,
   amount: string,
-  rateMode: string,
   user: SignerWithAddress,
   userPk: string,
   onBehalfOf: SignerWithAddress,
@@ -747,7 +735,6 @@ export const repayWithPermit = async (
         .repayWithPermit(
           reserve,
           amountToRepay,
-          rateMode,
           onBehalfOf.address,
           highDeadline,
           v,
@@ -767,7 +754,6 @@ export const repayWithPermit = async (
 
     const expectedReserveData = calcExpectedReserveDataAfterRepay(
       amountToRepay,
-      <RateMode>rateMode,
       reserveDataBefore,
       userDataBefore,
       txTimestamp,
@@ -776,7 +762,6 @@ export const repayWithPermit = async (
 
     const expectedUserData = calcExpectedUserDataAfterRepay(
       amountToRepay,
-      <RateMode>rateMode,
       reserveDataBefore,
       expectedReserveData,
       userDataBefore,
@@ -805,7 +790,6 @@ export const repayWithPermit = async (
         .repayWithPermit(
           reserve,
           amountToRepay,
-          rateMode,
           onBehalfOf.address,
           highDeadline,
           v,

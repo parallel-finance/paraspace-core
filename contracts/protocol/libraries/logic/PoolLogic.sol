@@ -43,7 +43,6 @@ library PoolLogic {
         require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
         reservesData[params.asset].init(
             params.xTokenAddress,
-            params.stableDebtAddress,
             params.variableDebtAddress,
             params.interestRateStrategyAddress,
             params.auctionStrategyAddress

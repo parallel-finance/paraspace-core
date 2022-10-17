@@ -3,7 +3,7 @@ import "./dependencies/ERC721A.sol";
 // File @openzeppelin/contracts/token/ERC721/ERC721.sol@v4.2.0
 
 //
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 /**

@@ -79,7 +79,6 @@ contract PoolCore is
             provider == ADDRESSES_PROVIDER,
             Errors.INVALID_ADDRESSES_PROVIDER
         );
-        _maxStableRateBorrowSizePercent = 0.25e4;
     }
 
     /// @inheritdoc IPoolCore
@@ -219,7 +218,6 @@ contract PoolCore is
     function borrow(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         uint16 referralCode,
         address onBehalfOf
     ) external virtual override nonReentrant {
@@ -232,10 +230,8 @@ contract PoolCore is
                 user: msg.sender,
                 onBehalfOf: onBehalfOf,
                 amount: amount,
-                interestRateMode: DataTypes.InterestRateMode(interestRateMode),
                 referralCode: referralCode,
                 releaseUnderlying: true,
-                maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
                 reservesCount: _reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
@@ -247,7 +243,6 @@ contract PoolCore is
     function repay(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf
     ) external virtual override nonReentrant returns (uint256) {
         return
@@ -257,9 +252,6 @@ contract PoolCore is
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: onBehalfOf,
                     usePTokens: false
                 })
@@ -267,11 +259,13 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function repayWithPTokens(
-        address asset,
-        uint256 amount,
-        uint256 interestRateMode
-    ) external virtual override nonReentrant returns (uint256) {
+    function repayWithPTokens(address asset, uint256 amount)
+        external
+        virtual
+        override
+        nonReentrant
+        returns (uint256)
+    {
         return
             BorrowLogic.executeRepay(
                 _reserves,
@@ -279,9 +273,6 @@ contract PoolCore is
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: msg.sender,
                     usePTokens: true
                 })
@@ -292,7 +283,6 @@ contract PoolCore is
     function repayWithPermit(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf,
         uint256 deadline,
         uint8 permitV,
@@ -315,9 +305,6 @@ contract PoolCore is
                 .ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: onBehalfOf,
                     usePTokens: false
                 });
@@ -575,17 +562,6 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function getReserveAddressById(uint16 id) external view returns (address) {
         return _reservesList[id];
-    }
-
-    /// @inheritdoc IPoolCore
-    function MAX_STABLE_RATE_BORROW_SIZE_PERCENT()
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _maxStableRateBorrowSizePercent;
     }
 
     /// @inheritdoc IPoolCore
