@@ -15,7 +15,7 @@ init: submodules
 
 .PHONY: test
 test:
-	TS_NODE_TRANSPILE_ONLY=1 npx hardhat test ./test-suites/${TEST_TARGET}
+	npx hardhat test ./test-suites/${TEST_TARGET}
 
 .PHONY: size
 size:
@@ -44,8 +44,8 @@ format:
 
 .PHONY: clean
 clean:
-	yarn cache clean --all
-	YARN_CHECKSUM_BEHAVIOR=update yarn
+	# yarn cache clean --all
+	# YARN_CHECKSUM_BEHAVIOR=update yarn
 	yarn clean
 
 .PHONY: ci
@@ -222,19 +222,19 @@ test-scenario:
 
 .PHONY: run
 run:
-	TS_NODE_TRANSPILE_ONLY=1 npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
+	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
 
 .PHONY: print
 print:
 	npx hardhat print-contracts
 
 .PHONY: verify
-verify: clean build
+verify: clean
 	npx hardhat verify-contracts
 
 .PHONY: deploy
-deploy: clean build
-	npx hardhat deploy:all
+deploy: clean
+	SKIP_LOAD=false npx hardhat deploy:all
 
 .PHONY: dev-deploy
 dev-deploy:

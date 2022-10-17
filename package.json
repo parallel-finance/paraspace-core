@@ -12,13 +12,13 @@
     "prepack": "pinst --disable",
     "postpack": "pinst --enable",
     "size": "hardhat size-contracts",
-    "build": "SKIP_LOAD=true hardhat compile",
+    "build": "hardhat compile",
     "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts' && eslint . --ext .ts",
-    "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --testfiles 'test-suites/*.ts'",
+    "coverage": "hardhat coverage --testfiles 'test-suites/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts'",
     "doc": "hardhat docgen",
-    "test": "TS_NODE_TRANSPILE_ONLY=1 hardhat test ./test-suites/*.ts",
-    "clean": "SKIP_LOAD=true hardhat clean && rm -rf ./artifacts ./cache ./types"
+    "test": "hardhat test ./test-suites/*.ts",
+    "clean": "hardhat clean"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",

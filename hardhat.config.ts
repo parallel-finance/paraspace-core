@@ -25,7 +25,7 @@ import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
 
-const SKIP_LOAD = process.env.SKIP_LOAD === "true";
+const SKIP_LOAD = process.env.SKIP_LOAD !== "false";
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
@@ -60,7 +60,7 @@ const hardhatConfig: HardhatUserConfig = {
   docgen: {
     outputDir: "docs",
     pages: "items",
-    exclude: ["dependencies", "deployments", "mocks", "protocol"],
+    exclude: ["dependencies", "deployments", "mocks"],
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS == "true" ? true : false,
