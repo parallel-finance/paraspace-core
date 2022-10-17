@@ -125,14 +125,12 @@ contract WPunkGateway is
      * @param marketplaceId The marketplace identifier
      * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credit The credit that user would like to use for this purchase
-     * @param referralCode The referral code used
      */
     function acceptBidWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        uint256[] calldata punkIndexes,
-        uint16 referralCode
+        uint256[] calldata punkIndexes
     ) external nonReentrant {
         for (uint256 i = 0; i < punkIndexes.length; i++) {
             Punk.buyPunk(punkIndexes[i]);
@@ -150,8 +148,7 @@ contract WPunkGateway is
             marketplaceId,
             payload,
             credit,
-            msg.sender,
-            referralCode
+            msg.sender
         );
     }
 
@@ -163,14 +160,12 @@ contract WPunkGateway is
      * @param marketplaceIds The marketplace identifiers
      * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credits The credits that the makers have approved to use for this purchase
-     * @param referralCode The referral code used
      */
     function batchAcceptBidWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        uint256[] calldata punkIndexes,
-        uint16 referralCode
+        uint256[] calldata punkIndexes
     ) external nonReentrant {
         for (uint256 i = 0; i < punkIndexes.length; i++) {
             Punk.buyPunk(punkIndexes[i]);
@@ -188,8 +183,7 @@ contract WPunkGateway is
             marketplaceIds,
             payloads,
             credits,
-            msg.sender,
-            referralCode
+            msg.sender
         );
     }
 

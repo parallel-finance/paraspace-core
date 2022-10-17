@@ -16,15 +16,13 @@ interface IWPunkGateway {
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        uint256[] calldata punkIndexes,
-        uint16 referralCode
+        uint256[] calldata punkIndexes
     ) external;
 
     function batchAcceptBidWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        uint256[] calldata punkIndexes,
-        uint16 referralCode
+        uint256[] calldata punkIndexes
     ) external;
 }

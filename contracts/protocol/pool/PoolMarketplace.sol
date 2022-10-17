@@ -71,8 +71,7 @@ contract PoolMarketplace is
     function buyWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
-        DataTypes.Credit calldata credit,
-        uint16 referralCode
+        DataTypes.Credit calldata credit
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -89,8 +88,7 @@ contract PoolMarketplace is
     function batchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
-        DataTypes.Credit[] calldata credits,
-        uint16 referralCode
+        DataTypes.Credit[] calldata credits
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -108,8 +106,7 @@ contract PoolMarketplace is
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -131,8 +128,7 @@ contract PoolMarketplace is
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
