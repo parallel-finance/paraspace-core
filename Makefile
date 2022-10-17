@@ -226,7 +226,7 @@ run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
 
 .PHONY: run-task
-run-task:
+run-task: clean build
 	SKIP_LOAD=false npx hardhat $(TASK_NAME) --network $(NETWORK)
 
 .PHONY: print
@@ -234,11 +234,11 @@ print:
 	make TASK_NAME=print-contracts run-task
 
 .PHONY: verify
-verify: clean build
+verify:
 	make TASK_NAME=verify-contracts run-task
 
 .PHONY: deploy
-deploy: clean build
+deploy:
 	make TASK_NAME=deploy:all run-task
 
 .PHONY: deploy-mockERC20Tokens
