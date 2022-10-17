@@ -14,10 +14,10 @@
     "size": "hardhat size-contracts",
     "build": "hardhat compile",
     "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts' && eslint . --ext .ts",
-    "coverage": "hardhat coverage --testfiles 'test-suites/*.ts'",
+    "coverage": "DB_PATH=':memory:' hardhat coverage --testfiles 'test-suites/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts'",
     "doc": "hardhat docgen",
-    "test": "hardhat test ./test-suites/*.ts",
+    "test": "DB_PATH=':memory:' hardhat test ./test-suites/*.ts",
     "clean": "hardhat clean"
   },
   "devDependencies": {
