@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import {utils} from "ethers";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {RateMode, ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {
   evmRevert,
   evmSnapshot,
@@ -169,13 +169,7 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool
         .connect(user.signer)
-        .borrow(
-          dai.address,
-          utils.parseEther("1000"),
-          RateMode.Variable,
-          0,
-          user.address
-        )
+        .borrow(dai.address, utils.parseEther("1000"), 0, user.address)
     ).to.be.revertedWith(RESERVE_INACTIVE);
   });
 
@@ -226,13 +220,7 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool
         .connect(user.signer)
-        .borrow(
-          dai.address,
-          utils.parseEther("1000"),
-          RateMode.Variable,
-          0,
-          user.address
-        )
+        .borrow(dai.address, utils.parseEther("1000"), 0, user.address)
     ).to.be.revertedWith(RESERVE_FROZEN);
   });
 
@@ -241,9 +229,7 @@ describe("ValidationLogic: Edge cases", () => {
     const user = users[0];
 
     await expect(
-      pool
-        .connect(user.signer)
-        .borrow(dai.address, 0, RateMode.Variable, 0, user.address)
+      pool.connect(user.signer).borrow(dai.address, 0, 0, user.address)
     ).to.be.revertedWith(INVALID_AMOUNT);
   });
 
@@ -280,10 +266,6 @@ describe("ValidationLogic: Edge cases", () => {
     );
     expect(configBefore.borrowingEnabled).to.be.eq(true);
 
-    // Disable borrowing
-    await configurator
-      .connect(poolAdmin.signer)
-      .setReserveStableRateBorrowing(dai.address, false);
     await configurator
       .connect(poolAdmin.signer)
       .setReserveBorrowing(dai.address, false);
@@ -296,64 +278,9 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool
         .connect(user.signer)
-        .borrow(
-          dai.address,
-          utils.parseEther("1000"),
-          RateMode.Variable,
-          0,
-          user.address
-        )
+        .borrow(dai.address, utils.parseEther("1000"), 0, user.address)
     ).to.be.revertedWith(BORROWING_NOT_ENABLED);
   });
-
-  // it("validateBorrow() when stableRateBorrowing is not enabled", async () => {
-  //   const {
-  //     pool,
-  //     poolAdmin,
-  //     configurator,
-  //     protocolDataProvider,
-  //     users,
-  //     dai,
-  //     pDai,
-  //     usdc,
-  //   } = testEnv;
-  //   const user = users[0];
-
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("1000"));
-  //   await dai
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("1000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(dai.address, utils.parseEther("1000"), user.address, 0);
-
-  //   const configBefore = await protocolDataProvider.getReserveConfigurationData(
-  //     dai.address
-  //   );
-  //   expect(configBefore.stableBorrowRateEnabled).to.be.eq(true);
-
-  //   // Disable stable rate borrowing
-  //   await configurator
-  //     .connect(poolAdmin.signer)
-  //     .setReserveStableRateBorrowing(dai.address, false);
-
-  //   const configAfter = await protocolDataProvider.getReserveConfigurationData(
-  //     dai.address
-  //   );
-  //   expect(configAfter.stableBorrowRateEnabled).to.be.eq(false);
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .borrow(
-  //         dai.address,
-  //         utils.parseEther("500"),
-  //         RateMode.Stable,
-  //         0,
-  //         user.address
-  //       )
-  //   ).to.be.revertedWith(STABLE_BORROWING_NOT_ENABLED);
-  // });
 
   it("validateBorrow() borrowing when user has already a HF < threshold", async () => {
     const {pool, users, dai, usdc, oracle} = testEnv;
@@ -391,7 +318,6 @@ describe("ValidationLogic: Edge cases", () => {
       .borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, "1000"),
-        RateMode.Variable,
         0,
         user.address
       );
@@ -406,89 +332,11 @@ describe("ValidationLogic: Edge cases", () => {
         .borrow(
           dai.address,
           await convertToCurrencyDecimals(dai.address, "200"),
-          RateMode.Variable,
           0,
           user.address
         )
     ).to.be.revertedWith(HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
   });
-
-  // it("validateBorrow() stable borrowing where collateral is mostly the same currency is borrowing (revert expected)", async () => {
-  //   // Stable borrowing
-  //   // isUsingAsCollateral == true
-  //   // ltv != 0
-  //   // amount < xToken Balance
-
-  //   const { pool, users, dai, pDai, usdc } = testEnv;
-  //   const user = users[0];
-
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await dai
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("1000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(dai.address, utils.parseEther("1000"), user.address, 0);
-  //   await dai
-  //     .connect(user.signer)
-  //     .transfer(pDai.address, utils.parseEther("1000"));
-
-  //   await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("10000"));
-  //   await usdc
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("10000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .borrow(
-  //         dai.address,
-  //         utils.parseEther("500"),
-  //         RateMode.Stable,
-  //         0,
-  //         user.address
-  //       )
-  //   ).to.be.revertedWith(COLLATERAL_SAME_AS_BORROWING_CURRENCY);
-  // });
-
-  // it("validateBorrow() stable borrowing when amount > maxLoanSizeStable (revert expected)", async () => {
-  //   const { pool, users, dai, pDai, usdc } = testEnv;
-  //   const user = users[0];
-
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await dai
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("1000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(dai.address, utils.parseEther("1000"), user.address, 0);
-  //   await dai
-  //     .connect(user.signer)
-  //     .transfer(pDai.address, utils.parseEther("1000"));
-
-  //   await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("10000"));
-  //   await usdc
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("10000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .borrow(
-  //         dai.address,
-  //         utils.parseEther("1500"),
-  //         RateMode.Stable,
-  //         0,
-  //         user.address
-  //       )
-  //   ).to.be.revertedWith(AMOUNT_BIGGER_THAN_MAX_LOAN_SIZE_STABLE);
-  // });
 
   it("validateLiquidationCall() when healthFactor > threshold (revert expected)", async () => {
     // Liquidation something that is not liquidatable
@@ -526,7 +374,6 @@ describe("ValidationLogic: Edge cases", () => {
       .borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, "250"),
-        RateMode.Variable,
         0,
         borrower.address
       );
@@ -564,12 +411,7 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool
         .connect(user.signer)
-        .repay(
-          dai.address,
-          utils.parseEther("1"),
-          RateMode.Variable,
-          user.address
-        )
+        .repay(dai.address, utils.parseEther("1"), user.address)
     ).to.be.revertedWith(RESERVE_INACTIVE);
   });
 
@@ -596,13 +438,7 @@ describe("ValidationLogic: Edge cases", () => {
     // Borrow 500 dai
     await pool
       .connect(user.signer)
-      .borrow(
-        dai.address,
-        utils.parseEther("500"),
-        RateMode.Variable,
-        0,
-        user.address
-      );
+      .borrow(dai.address, utils.parseEther("500"), 0, user.address);
 
     // Turn on automining, but not mine a new block until next tx
     await setAutomineEvm(true);
@@ -610,12 +446,7 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool
         .connect(user.signer)
-        .repay(
-          dai.address,
-          utils.parseEther("500"),
-          RateMode.Variable,
-          user.address
-        )
+        .repay(dai.address, utils.parseEther("500"), user.address)
     ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
   });
 
@@ -666,13 +497,7 @@ describe("ValidationLogic: Edge cases", () => {
     expect(
       await pool
         .connect(user2.signer)
-        .borrow(
-          dai.address,
-          borrowOnBehalfAmount,
-          RateMode.Variable,
-          0,
-          user1.address
-        )
+        .borrow(dai.address, borrowOnBehalfAmount, 0, user1.address)
     );
 
     // Turn off automining to simulate actions in same block
@@ -681,13 +506,7 @@ describe("ValidationLogic: Edge cases", () => {
     // User2 borrows 2 DAI on behalf of User1
     await pool
       .connect(user2.signer)
-      .borrow(
-        dai.address,
-        utils.parseEther("2"),
-        RateMode.Variable,
-        0,
-        user1.address
-      );
+      .borrow(dai.address, utils.parseEther("2"), 0, user1.address);
 
     // Turn on automining, but not mine a new block until next tx
     await setAutomineEvm(true);
@@ -695,346 +514,8 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool
         .connect(user1.signer)
-        .repay(
-          dai.address,
-          utils.parseEther("2"),
-          RateMode.Variable,
-          user1.address
-        )
+        .repay(dai.address, utils.parseEther("2"), user1.address)
     ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
-  });
-
-  // it("validateRepay() when stable borrowing and repaying in same block (revert expected)", async () => {
-  //   // Same block repay
-
-  //   const { pool, users, dai, pDai, usdc } = testEnv;
-  //   const user = users[0];
-
-  //   // We need some debt.
-  //   await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await usdc.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(usdc.address, utils.parseEther("2000"), user.address, 0);
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await dai
-  //     .connect(user.signer)
-  //     .transfer(pDai.address, utils.parseEther("2000"));
-
-  //   // Turn off automining - pretty sure that coverage is getting messed up here.
-  //   await setAutomine(false);
-
-  //   // Borrow 500 dai
-  //   await pool
-  //     .connect(user.signer)
-  //     .borrow(
-  //       dai.address,
-  //       utils.parseEther("500"),
-  //       RateMode.Stable,
-  //       0,
-  //       user.address
-  //     );
-
-  //   // Turn on automining, but not mine a new block until next tx
-  //   await setAutomineEvm(true);
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .repay(
-  //         dai.address,
-  //         utils.parseEther("500"),
-  //         RateMode.Stable,
-  //         user.address
-  //       )
-  //   ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
-  // });
-
-  // it("validateRepay() the variable debt when is 0 (stableDebt > 0) (revert expected)", async () => {
-  //   // (stableDebt > 0 && DataTypes.InterestRateMode(rateMode) == DataTypes.InterestRateMode.STABLE) ||
-  //   // (variableDebt > 0 &&	DataTypes.InterestRateMode(rateMode) == DataTypes.InterestRateMode.VARIABLE),
-
-  //   const { pool, users, dai, pDai, usdc } = testEnv;
-  //   const user = users[0];
-
-  //   // We need some debt
-  //   await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await usdc.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(usdc.address, utils.parseEther("2000"), user.address, 0);
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await dai
-  //     .connect(user.signer)
-  //     .transfer(pDai.address, utils.parseEther("2000"));
-
-  //   await pool
-  //     .connect(user.signer)
-  //     .borrow(
-  //       dai.address,
-  //       utils.parseEther("250"),
-  //       RateMode.Stable,
-  //       0,
-  //       user.address
-  //     );
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .repay(
-  //         dai.address,
-  //         utils.parseEther("250"),
-  //         RateMode.Variable,
-  //         user.address
-  //       )
-  //   ).to.be.revertedWith(NO_DEBT_OF_SELECTED_TYPE);
-  // });
-
-  // it("validateRepay() the stable debt when is 0 (variableDebt > 0) (revert expected)", async () => {
-  //   // (stableDebt > 0 && DataTypes.InterestRateMode(rateMode) == DataTypes.InterestRateMode.STABLE) ||
-  //   // (variableDebt > 0 &&	DataTypes.InterestRateMode(rateMode) == DataTypes.InterestRateMode.VARIABLE),
-
-  //   const { pool, users, dai } = testEnv;
-  //   const user = users[0];
-
-  //   // We need some debt
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(dai.address, utils.parseEther("2000"), user.address, 0);
-
-  //   await pool
-  //     .connect(user.signer)
-  //     .borrow(
-  //       dai.address,
-  //       utils.parseEther("250"),
-  //       RateMode.Variable,
-  //       0,
-  //       user.address
-  //     );
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .repay(
-  //         dai.address,
-  //         utils.parseEther("250"),
-  //         RateMode.Stable,
-  //         user.address
-  //       )
-  //   ).to.be.revertedWith(NO_DEBT_OF_SELECTED_TYPE);
-  // });
-
-  it("validateSwapRateMode() when reserve is not active", async () => {
-    // Not clear when this would be useful in practice, as you should not be able to have debt if it is deactivated
-    const {poolAdmin, configurator, protocolDataProvider, dai} = testEnv;
-
-    const configBefore = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configBefore.isActive).to.be.eq(true);
-    expect(configBefore.isFrozen).to.be.eq(false);
-
-    await configurator
-      .connect(poolAdmin.signer)
-      .setReserveActive(dai.address, false);
-
-    const configAfter = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configAfter.isActive).to.be.eq(false);
-    expect(configAfter.isFrozen).to.be.eq(false);
-
-    // await expect(
-    //   pool.connect(user.signer).swapBorrowRateMode(dai.address, RateMode.Stable)
-    // ).to.be.revertedWith(RESERVE_INACTIVE);
-    // await expect(
-    //   pool
-    //     .connect(user.signer)
-    //     .swapBorrowRateMode(dai.address, RateMode.Variable)
-    // ).to.be.revertedWith(RESERVE_INACTIVE);
-    // await expect(
-    //   pool.connect(user.signer).swapBorrowRateMode(dai.address, RateMode.None)
-    // ).to.be.revertedWith(RESERVE_INACTIVE);
-  });
-
-  it("validateSwapRateMode() when reserve is frozen", async () => {
-    // Not clear when this would be useful in practice, as you should not be able to have debt if it is deactivated
-    const {poolAdmin, configurator, protocolDataProvider, dai} = testEnv;
-
-    const configBefore = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configBefore.isActive).to.be.eq(true);
-    expect(configBefore.isFrozen).to.be.eq(false);
-
-    await configurator
-      .connect(poolAdmin.signer)
-      .setReserveFreeze(dai.address, true);
-
-    const configAfter = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configAfter.isActive).to.be.eq(true);
-    expect(configAfter.isFrozen).to.be.eq(true);
-
-    // await expect(
-    //   pool.connect(user.signer).swapBorrowRateMode(dai.address, RateMode.Stable)
-    // ).to.be.revertedWith(RESERVE_FROZEN);
-    // await expect(
-    //   pool
-    //     .connect(user.signer)
-    //     .swapBorrowRateMode(dai.address, RateMode.Variable)
-    // ).to.be.revertedWith(RESERVE_FROZEN);
-    // await expect(
-    //   pool.connect(user.signer).swapBorrowRateMode(dai.address, RateMode.None)
-    // ).to.be.revertedWith(RESERVE_FROZEN);
-  });
-
-  it("validateSwapRateMode() with currentRateMode not equal to stable or variable, (revert expected)", async () => {
-    const {protocolDataProvider, dai} = testEnv;
-
-    const configBefore = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configBefore.isActive).to.be.eq(true);
-    expect(configBefore.isFrozen).to.be.eq(false);
-
-    // await expect(
-    //   pool.connect(user.signer).swapBorrowRateMode(dai.address, RateMode.None)
-    // ).to.be.revertedWith(INVALID_INTEREST_RATE_MODE_SELECTED);
-  });
-
-  // it("validateSwapRateMode() from variable to stable with stableBorrowing disabled (revert expected)", async () => {
-  //   const { pool, poolAdmin, configurator, protocolDataProvider, users, dai } =
-  //     testEnv;
-  //   const user = users[0];
-
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("1000"));
-  //   await dai
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("1000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(dai.address, utils.parseEther("1000"), user.address, 0);
-
-  //   const configBefore = await protocolDataProvider.getReserveConfigurationData(
-  //     dai.address
-  //   );
-  //   expect(configBefore.stableBorrowRateEnabled).to.be.eq(true);
-
-  //   // Disable stable rate borrowing
-  //   await configurator
-  //     .connect(poolAdmin.signer)
-  //     .setReserveStableRateBorrowing(dai.address, false);
-
-  //   const configAfter = await protocolDataProvider.getReserveConfigurationData(
-  //     dai.address
-  //   );
-  //   expect(configAfter.stableBorrowRateEnabled).to.be.eq(false);
-
-  //   // We need some variable debt, and then flip it
-
-  //   await dai
-  //     .connect(user.signer)
-  //     ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "5000"));
-  //   await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(
-  //       dai.address,
-  //       await convertToCurrencyDecimals(dai.address, "5000"),
-  //       user.address,
-  //       0
-  //     );
-
-  //   await pool
-  //     .connect(user.signer)
-  //     .borrow(
-  //       dai.address,
-  //       await convertToCurrencyDecimals(dai.address, "500"),
-  //       RateMode.Variable,
-  //       0,
-  //       user.address
-  //     );
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .swapBorrowRateMode(dai.address, RateMode.Variable)
-  //   ).to.be.revertedWith(STABLE_BORROWING_NOT_ENABLED);
-  // });
-
-  // it("validateSwapRateMode() where collateral is mostly the same currency is borrowing (revert expected)", async () => {
-  //   // SwapRate from variable to stable
-  //   // isUsingAsCollateral == true
-  //   // ltv != 0
-  //   // stableDebt + variableDebt < xToken
-
-  //   const { pool, users, dai, pDai, usdc } = testEnv;
-  //   const user = users[0];
-
-  //   await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
-  //   await dai
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("1000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(dai.address, utils.parseEther("1000"), user.address, 0);
-  //   await dai
-  //     .connect(user.signer)
-  //     .transfer(pDai.address, utils.parseEther("1000"));
-
-  //   await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("10000"));
-  //   await usdc
-  //     .connect(user.signer)
-  //     .approve(pool.address, utils.parseEther("10000"));
-  //   await pool
-  //     .connect(user.signer)
-  //     .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
-
-  //   await pool
-  //     .connect(user.signer)
-  //     .borrow(
-  //       dai.address,
-  //       utils.parseEther("500"),
-  //       RateMode.Variable,
-  //       0,
-  //       user.address
-  //     );
-
-  //   await expect(
-  //     pool
-  //       .connect(user.signer)
-  //       .swapBorrowRateMode(dai.address, RateMode.Variable)
-  //   ).to.be.revertedWith(COLLATERAL_SAME_AS_BORROWING_CURRENCY);
-  // });
-
-  it("validateRebalanceStableBorrowRate() when reserve is not active (revert expected)", async () => {
-    const {configurator, protocolDataProvider, poolAdmin, dai} = testEnv;
-
-    const configBefore = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configBefore.isActive).to.be.eq(true);
-    expect(configBefore.isFrozen).to.be.eq(false);
-
-    await configurator
-      .connect(poolAdmin.signer)
-      .setReserveActive(dai.address, false);
-
-    const configAfter = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configAfter.isActive).to.be.eq(false);
-    expect(configAfter.isFrozen).to.be.eq(false);
-
-    // await expect(
-    //   pool
-    //     .connect(user.signer)
-    //     .rebalanceStableBorrowRate(dai.address, user.address)
-    // ).to.be.revertedWith(RESERVE_INACTIVE);
   });
 
   it("validateSetUseERC20AsCollateral() when reserve is not active (revert expected)", async () => {
@@ -1339,13 +820,7 @@ describe("ValidationLogic: Edge cases", () => {
 
     await pool
       .connect(user.signer)
-      .borrow(
-        usdc.address,
-        amountUSDCToBorrow,
-        RateMode.Variable,
-        0,
-        user.address
-      );
+      .borrow(usdc.address, amountUSDCToBorrow, 0, user.address);
 
     await expect(
       pool
@@ -1386,13 +861,7 @@ describe("ValidationLogic: Edge cases", () => {
     // Borrow usdc
     await pool
       .connect(user.signer)
-      .borrow(
-        usdc.address,
-        parseUnits("500", 6),
-        RateMode.Variable,
-        0,
-        user.address
-      );
+      .borrow(usdc.address, parseUnits("500", 6), 0, user.address);
 
     // Drop LTV
     const daiData = await protocolDataProvider.getReserveConfigurationData(

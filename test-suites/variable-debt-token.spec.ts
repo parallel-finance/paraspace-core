@@ -8,7 +8,7 @@ import {
   waitForTx,
 } from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
@@ -83,7 +83,6 @@ describe("VariableDebtToken", () => {
       .borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, "200"),
-        RateMode.Variable,
         0,
         users[1].address
       );
@@ -379,7 +378,7 @@ describe("VariableDebtToken", () => {
     expect(
       await pool
         .connect(user1.signer)
-        .borrow(dai.address, borrowAmount, RateMode.Variable, 0, user1.address)
+        .borrow(dai.address, borrowAmount, 0, user1.address)
     );
 
     // User1 approves user2 to borrow 1000 DAI
@@ -404,13 +403,7 @@ describe("VariableDebtToken", () => {
     const tx = await waitForTx(
       await pool
         .connect(user2.signer)
-        .borrow(
-          dai.address,
-          borrowOnBehalfAmount,
-          RateMode.Variable,
-          0,
-          user1.address
-        )
+        .borrow(dai.address, borrowOnBehalfAmount, 0, user1.address)
     );
 
     const previousIndexUser1After = await variableDebtToken.getPreviousIndex(

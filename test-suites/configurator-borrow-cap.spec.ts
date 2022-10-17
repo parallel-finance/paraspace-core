@@ -4,7 +4,7 @@ import {utils} from "ethers";
 import {MAX_UINT_AMOUNT, MAX_BORROW_CAP} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -110,7 +110,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         usdc.address,
         await convertToCurrencyDecimals(usdc.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -120,7 +119,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -161,7 +159,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       pool.borrow(
         usdc.address,
         await convertToCurrencyDecimals(usdc.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -171,7 +168,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       pool.borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -224,7 +220,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         usdc.address,
         await convertToCurrencyDecimals(usdc.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -234,7 +229,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -267,7 +261,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
     await pool.borrow(
       weth.address,
       await convertToCurrencyDecimals(weth.address, borrowedAmount),
-      RateMode.Variable,
       0,
       deployer.address
     );
@@ -280,7 +273,7 @@ describe("PoolConfigurator: Borrow Cap", () => {
     await advanceTimeAndBlock(3600);
 
     const wethData = await protocolDataProvider.getReserveData(weth.address);
-    const totalDebt = wethData.totalVariableDebt.add(wethData.totalStableDebt);
+    const totalDebt = wethData.totalVariableDebt;
     const wethCaps = await protocolDataProvider.getReserveCaps(weth.address);
 
     expect(totalDebt).gt(wethCaps.borrowCap);
@@ -294,7 +287,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       pool.borrow(
         weth.address,
         await convertToCurrencyDecimals(weth.address, borrowedAmount),
-        RateMode.Variable,
         0,
         deployer.address
       )
@@ -309,7 +301,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         usdc.address,
         await convertToCurrencyDecimals(usdc.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -319,7 +310,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -360,7 +350,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         usdc.address,
         await convertToCurrencyDecimals(usdc.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -370,7 +359,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -411,7 +399,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       pool.borrow(
         usdc.address,
         await convertToCurrencyDecimals(usdc.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -421,7 +408,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       pool.borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -462,7 +448,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         usdc.address,
         await convertToCurrencyDecimals(usdc.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )
@@ -471,7 +456,6 @@ describe("PoolConfigurator: Borrow Cap", () => {
       await pool.borrow(
         dai.address,
         await convertToCurrencyDecimals(dai.address, borrowedAmount),
-        2,
         0,
         deployer.address
       )

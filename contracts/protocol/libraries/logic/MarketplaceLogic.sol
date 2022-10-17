@@ -274,6 +274,10 @@ library MarketplaceLogic {
                 bool isNToken = reservesData[underlyingAsset].xTokenAddress ==
                     token;
                 require(isNToken, Errors.ASSET_NOT_LISTED);
+                require(
+                    INToken(vars.xTokenAddress).ownerOf(tokenId) == onBehalfOf,
+                    Errors.INVALID_RECIPIENT
+                );
                 SupplyLogic.executeCollateralizeERC721(
                     reservesData,
                     userConfig,
@@ -286,6 +290,7 @@ library MarketplaceLogic {
             }
 
             // item.token == underlyingAsset but supplied after listing/offering
+            // so NToken is transferred instead
             if (INToken(vars.xTokenAddress).ownerOf(tokenId) == onBehalfOf) {
                 SupplyLogic.executeCollateralizeERC721(
                     reservesData,
@@ -327,13 +332,8 @@ library MarketplaceLogic {
                 user: onBehalfOf,
                 onBehalfOf: onBehalfOf,
                 amount: vars.creditAmount,
-                interestRateMode: DataTypes.InterestRateMode(
-                    DataTypes.InterestRateMode.VARIABLE
-                ),
                 referralCode: params.referralCode,
                 releaseUnderlying: false,
-                maxStableRateBorrowSizePercent: params
-                    .maxStableRateBorrowSizePercent,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
                 priceOracleSentinel: params.priceOracleSentinel

@@ -3,7 +3,6 @@ import {BigNumber, utils} from "ethers";
 import {increaseTime, waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {RateMode} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -182,13 +181,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await pool
         .connect(borrower.signer)
-        .borrow(
-          dai.address,
-          firstDaiBorrow,
-          RateMode.Variable,
-          "0",
-          borrower.address
-        )
+        .borrow(dai.address, firstDaiBorrow, "0", borrower.address)
     );
 
     const borrowerWethData = await protocolDataProvider.getUserReserveData(
@@ -219,13 +212,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
     secondDaiBorrow = await convertToCurrencyDecimals(dai.address, "2000");
     const borrowTx = await pool
       .connect(borrower.signer)
-      .borrow(
-        dai.address,
-        secondDaiBorrow,
-        RateMode.Variable,
-        "0",
-        borrower.address
-      );
+      .borrow(dai.address, secondDaiBorrow, "0", borrower.address);
     const borrowReceipt = await borrowTx.wait();
 
     const borrowerDaiData = await protocolDataProvider.getUserReserveData(
@@ -427,7 +414,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
     // repay dai loan
     const repayTx = await pool
       .connect(borrower.signer)
-      .repay(dai.address, MAX_UINT_AMOUNT, RateMode.Variable, borrower.address);
+      .repay(dai.address, MAX_UINT_AMOUNT, borrower.address);
     const repayReceipt = await repayTx.wait();
 
     const daiBalanceAfter = await dai.balanceOf(borrower.address);
@@ -560,13 +547,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await pool
         .connect(borrower.signer)
-        .borrow(
-          dai.address,
-          borrowAmount,
-          RateMode.Variable,
-          "0",
-          borrower.address
-        )
+        .borrow(dai.address, borrowAmount, "0", borrower.address)
     );
 
     const debtBalanceBefore = await variableDebtDai.balanceOf(borrower.address);
@@ -584,7 +565,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
     // repay dai loan
     const repayTx = await pool
       .connect(borrower.signer)
-      .repay(dai.address, smallRepay, RateMode.Variable, borrower.address);
+      .repay(dai.address, smallRepay, borrower.address);
     const repayReceipt = await repayTx.wait();
 
     const debtBalanceAfter = await variableDebtDai.balanceOf(borrower.address);

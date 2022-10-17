@@ -10,7 +10,6 @@ import {
   getPoolAddressesProviderRegistry,
   getWETHMocked,
   getVariableDebtToken,
-  getStableDebtToken,
   getParaSpaceOracle,
   getACLManager,
   getMintableERC721,
@@ -72,7 +71,6 @@ import {solidity} from "ethereum-waffle";
 import {
   ParaSpaceOracle,
   ACLManager,
-  StableDebtToken,
   VariableDebtToken,
   WPunk,
   CryptoPunksMarket,
@@ -127,7 +125,6 @@ export interface TestEnv {
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
-  stableDebtDai: StableDebtToken;
   pUsdc: PToken;
   usdc: MintableERC20;
   usdt: MintableERC20;
@@ -191,7 +188,6 @@ export async function initializeMakeSuite() {
     dai: {} as MintableERC20,
     pDai: {} as PToken,
     variableDebtDai: {} as VariableDebtToken,
-    stableDebtDai: {} as StableDebtToken,
     pUsdc: {} as PToken,
     usdc: {} as MintableERC20,
     usdt: {} as MintableERC20,
@@ -330,12 +326,10 @@ export async function initializeMakeSuite() {
     (token) => token.symbol === "DAI"
   )?.tokenAddress;
 
-  const {
-    variableDebtTokenAddress: variableDebtDaiAddress,
-    stableDebtTokenAddress: stableDebtDaiAddress,
-  } = await testEnv.protocolDataProvider.getReserveTokensAddresses(
-    daiAddress || ""
-  );
+  const {variableDebtTokenAddress: variableDebtDaiAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      daiAddress || ""
+    );
 
   const usdcAddress = reservesTokens.find(
     (token) => token.symbol === "USDC"
@@ -388,7 +382,6 @@ export async function initializeMakeSuite() {
 
   testEnv.pDai = await getPToken(pDaiAddress);
   testEnv.variableDebtDai = await getVariableDebtToken(variableDebtDaiAddress);
-  testEnv.stableDebtDai = await getStableDebtToken(stableDebtDaiAddress);
   testEnv.pUsdc = await getPToken(pUsdcAddress);
   testEnv.pWETH = await getPToken(pWEthAddress);
   testEnv.paWETH = await getPTokenAToken(paWEthAddress);

@@ -13,7 +13,6 @@ import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
-import {IStableDebtToken} from "../interfaces/IStableDebtToken.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
@@ -56,12 +55,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             .getVariableRateSlope1();
         interestRates.variableRateSlope2 = interestRateStrategy
             .getVariableRateSlope2();
-        interestRates.stableRateSlope1 = interestRateStrategy
-            .getStableRateSlope1();
-        interestRates.stableRateSlope2 = interestRateStrategy
-            .getStableRateSlope2();
-        interestRates.baseStableBorrowRate = interestRateStrategy
-            .getBaseStableBorrowRate();
         interestRates.baseVariableBorrowRate = interestRateStrategy
             .getBaseVariableBorrowRate();
         interestRates.optimalUsageRatio = interestRateStrategy
@@ -109,12 +102,8 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             reserveData.liquidityRate = baseData.currentLiquidityRate;
             //the current variable borrow rate. Expressed in ray
             reserveData.variableBorrowRate = baseData.currentVariableBorrowRate;
-            //the current stable borrow rate. Expressed in ray
-            reserveData.stableBorrowRate = baseData.currentStableBorrowRate;
             reserveData.lastUpdateTimestamp = baseData.lastUpdateTimestamp;
             reserveData.xTokenAddress = baseData.xTokenAddress;
-            reserveData.stableDebtTokenAddress = baseData
-                .stableDebtTokenAddress;
             reserveData.variableDebtTokenAddress = baseData
                 .variableDebtTokenAddress;
 
@@ -136,13 +125,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.underlyingAsset
             );
 
-            (
-                reserveData.totalPrincipalStableDebt,
-                ,
-                reserveData.averageStableRate,
-                reserveData.stableDebtLastUpdateTimestamp
-            ) = IStableDebtToken(reserveData.stableDebtTokenAddress)
-                .getSupplyData();
             reserveData.totalScaledVariableDebt = IVariableDebtToken(
                 reserveData.variableDebtTokenAddress
             ).scaledTotalSupply();
@@ -154,7 +136,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.isActive,
                 reserveData.isFrozen,
                 reserveData.borrowingEnabled,
-                reserveData.stableBorrowRateEnabled,
                 isPaused,
                 assetType
             ) = reserveConfigurationMap.getFlags();
@@ -206,10 +187,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             reserveData.variableRateSlope1 = interestRates.variableRateSlope1;
             reserveData.variableRateSlope2 = interestRates.variableRateSlope2;
-            reserveData.stableRateSlope1 = interestRates.stableRateSlope1;
-            reserveData.stableRateSlope2 = interestRates.stableRateSlope2;
-            reserveData.baseStableBorrowRate = interestRates
-                .baseStableBorrowRate;
             reserveData.baseVariableBorrowRate = interestRates
                 .baseVariableBorrowRate;
             reserveData.optimalUsageRatio = interestRates.optimalUsageRatio;
@@ -422,18 +399,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 userReservesData[i].scaledVariableDebt = IVariableDebtToken(
                     baseData.variableDebtTokenAddress
                 ).scaledBalanceOf(user);
-                userReservesData[i].principalStableDebt = IStableDebtToken(
-                    baseData.stableDebtTokenAddress
-                ).principalBalanceOf(user);
-                if (userReservesData[i].principalStableDebt != 0) {
-                    userReservesData[i].stableBorrowRate = IStableDebtToken(
-                        baseData.stableDebtTokenAddress
-                    ).getUserStableRate(user);
-                    userReservesData[i]
-                        .stableBorrowLastUpdateTimestamp = IStableDebtToken(
-                        baseData.stableDebtTokenAddress
-                    ).getUserLastUpdated(user);
-                }
             }
         }
 

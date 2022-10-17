@@ -85,7 +85,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "400",
-            "borrowRateMode": "variable",
             "user": "1"
           },
           "expected": "revert",
@@ -110,7 +109,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "400",
-            "borrowRateMode": "variable",
             "user": "1"
           },
           "expected": "success"

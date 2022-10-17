@@ -79,7 +79,7 @@ contract PoolCore is
             provider == ADDRESSES_PROVIDER,
             Errors.INVALID_ADDRESSES_PROVIDER
         );
-        _maxStableRateBorrowSizePercent = 0.25e4;
+
         RGStorage storage rgs = rgStorage();
 
         rgs._status = _NOT_ENTERED;
@@ -114,8 +114,8 @@ contract PoolCore is
         uint16 referralCode
     ) external virtual override nonReentrant {
         SupplyLogic.executeSupplyERC721(
-            _reserves,
-            _usersConfig[onBehalfOf],
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
             DataTypes.ExecuteSupplyERC721Params({
                 asset: asset,
                 tokenData: tokenData,
@@ -133,8 +133,8 @@ contract PoolCore is
         address onBehalfOf
     ) external virtual override nonReentrant {
         SupplyLogic.executeSupplyERC721FromNToken(
-            _reserves,
-            _usersConfig[onBehalfOf],
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
             DataTypes.ExecuteSupplyERC721Params({
                 asset: asset,
                 tokenData: tokenData,
@@ -167,8 +167,8 @@ contract PoolCore is
             permitS
         );
         SupplyLogic.executeSupply(
-            _reserves,
-            _usersConfig[onBehalfOf],
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
             DataTypes.ExecuteSupplyParams({
                 asset: asset,
                 amount: amount,
@@ -186,14 +186,14 @@ contract PoolCore is
     ) external virtual override nonReentrant returns (uint256) {
         return
             SupplyLogic.executeWithdraw(
-                _reserves,
-                _reservesList,
-                _usersConfig[msg.sender],
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
                 DataTypes.ExecuteWithdrawParams({
                     asset: asset,
                     amount: amount,
                     to: to,
-                    reservesCount: _reservesCount,
+                    reservesCount: ps._reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle()
                 })
             );
@@ -207,14 +207,14 @@ contract PoolCore is
     ) external virtual override nonReentrant returns (uint256) {
         return
             SupplyLogic.executeWithdrawERC721(
-                _reserves,
-                _reservesList,
-                _usersConfig[msg.sender],
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
                 DataTypes.ExecuteWithdrawERC721Params({
                     asset: asset,
                     tokenIds: tokenIds,
                     to: to,
-                    reservesCount: _reservesCount,
+                    reservesCount: ps._reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle()
                 })
             );
@@ -224,24 +224,21 @@ contract PoolCore is
     function borrow(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         uint16 referralCode,
         address onBehalfOf
     ) external virtual override nonReentrant {
         BorrowLogic.executeBorrow(
-            _reserves,
-            _reservesList,
-            _usersConfig[onBehalfOf],
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[onBehalfOf],
             DataTypes.ExecuteBorrowParams({
                 asset: asset,
                 user: msg.sender,
                 onBehalfOf: onBehalfOf,
                 amount: amount,
-                interestRateMode: DataTypes.InterestRateMode(interestRateMode),
                 referralCode: referralCode,
                 releaseUnderlying: true,
-                maxStableRateBorrowSizePercent: _maxStableRateBorrowSizePercent,
-                reservesCount: _reservesCount,
+                reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
@@ -252,19 +249,15 @@ contract PoolCore is
     function repay(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf
     ) external virtual override nonReentrant returns (uint256) {
         return
             BorrowLogic.executeRepay(
-                _reserves,
-                _usersConfig[onBehalfOf],
+                ps._reserves,
+                ps._usersConfig[onBehalfOf],
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: onBehalfOf,
                     usePTokens: false
                 })
@@ -272,21 +265,20 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function repayWithPTokens(
-        address asset,
-        uint256 amount,
-        uint256 interestRateMode
-    ) external virtual override nonReentrant returns (uint256) {
+    function repayWithPTokens(address asset, uint256 amount)
+        external
+        virtual
+        override
+        nonReentrant
+        returns (uint256)
+    {
         return
             BorrowLogic.executeRepay(
-                _reserves,
-                _usersConfig[msg.sender],
+                ps._reserves,
+                ps._usersConfig[msg.sender],
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: msg.sender,
                     usePTokens: true
                 })
@@ -297,7 +289,6 @@ contract PoolCore is
     function repayWithPermit(
         address asset,
         uint256 amount,
-        uint256 interestRateMode,
         address onBehalfOf,
         uint256 deadline,
         uint8 permitV,
@@ -320,16 +311,13 @@ contract PoolCore is
                 .ExecuteRepayParams({
                     asset: asset,
                     amount: amount,
-                    interestRateMode: DataTypes.InterestRateMode(
-                        interestRateMode
-                    ),
                     onBehalfOf: onBehalfOf,
                     usePTokens: false
                 });
             return
                 BorrowLogic.executeRepay(
-                    _reserves,
-                    _usersConfig[onBehalfOf],
+                    ps._reserves,
+                    ps._usersConfig[onBehalfOf],
                     params
                 );
         }
@@ -343,12 +331,12 @@ contract PoolCore is
         nonReentrant
     {
         SupplyLogic.executeUseERC20AsCollateral(
-            _reserves,
-            _reservesList,
-            _usersConfig[msg.sender],
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[msg.sender],
             asset,
             useAsCollateral,
-            _reservesCount,
+            ps._reservesCount,
             ADDRESSES_PROVIDER.getPriceOracle()
         );
     }
@@ -360,21 +348,21 @@ contract PoolCore is
     ) external virtual override nonReentrant {
         if (useAsCollateral) {
             SupplyLogic.executeCollateralizeERC721(
-                _reserves,
-                _usersConfig[msg.sender],
+                ps._reserves,
+                ps._usersConfig[msg.sender],
                 asset,
                 tokenIds,
                 msg.sender
             );
         } else {
             SupplyLogic.executeUncollateralizeERC721(
-                _reserves,
-                _reservesList,
-                _usersConfig[msg.sender],
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
                 asset,
                 tokenIds,
                 msg.sender,
-                _reservesCount,
+                ps._reservesCount,
                 ADDRESSES_PROVIDER.getPriceOracle()
             );
         }
@@ -389,13 +377,13 @@ contract PoolCore is
         bool receivePToken
     ) external virtual override nonReentrant {
         LiquidationLogic.executeLiquidationCall(
-            _reserves,
-            _reservesList,
-            _usersConfig,
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig,
             DataTypes.ExecuteLiquidationCallParams({
-                reservesCount: _reservesCount,
+                reservesCount: ps._reservesCount,
                 liquidationAmount: debtToCover,
-                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
+                auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 liquidationAsset: liquidationAsset,
                 user: user,
@@ -417,13 +405,13 @@ contract PoolCore is
         bool receiveNToken
     ) external virtual override nonReentrant {
         LiquidationLogic.executeERC721LiquidationCall(
-            _reserves,
-            _reservesList,
-            _usersConfig,
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig,
             DataTypes.ExecuteLiquidationCallParams({
-                reservesCount: _reservesCount,
+                reservesCount: ps._reservesCount,
                 liquidationAmount: liquidationAmount,
-                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
+                auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 liquidationAsset: liquidationAsset,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
@@ -442,12 +430,12 @@ contract PoolCore is
         uint256 collateralTokenId
     ) external override nonReentrant {
         LiquidationLogic.executeStartAuction(
-            _reserves,
-            _reservesList,
-            _usersConfig,
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig,
             DataTypes.ExecuteAuctionParams({
-                reservesCount: _reservesCount,
-                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
+                reservesCount: ps._reservesCount,
+                auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
@@ -463,12 +451,12 @@ contract PoolCore is
         uint256 collateralTokenId
     ) external override nonReentrant {
         LiquidationLogic.executeEndAuction(
-            _reserves,
-            _reservesList,
-            _usersConfig,
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig,
             DataTypes.ExecuteAuctionParams({
-                reservesCount: _reservesCount,
-                auctionRecoveryHealthFactor: _auctionRecoveryHealthFactor,
+                reservesCount: ps._reservesCount,
+                auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
@@ -485,7 +473,7 @@ contract PoolCore is
         bytes calldata params
     ) external virtual override nonReentrant {
         FlashClaimLogic.executeFlashClaim(
-            _reserves,
+            ps._reserves,
             DataTypes.ExecuteFlashClaimParams({
                 receiverAddress: receiverAddress,
                 nftAsset: nftAsset,
@@ -503,7 +491,7 @@ contract PoolCore is
         override
         returns (DataTypes.ReserveData memory)
     {
-        return _reserves[asset];
+        return ps._reserves[asset];
     }
 
     /// @inheritdoc IPoolCore
@@ -514,7 +502,7 @@ contract PoolCore is
         override
         returns (DataTypes.ReserveConfigurationMap memory)
     {
-        return _reserves[asset].configuration;
+        return ps._reserves[asset].configuration;
     }
 
     /// @inheritdoc IPoolCore
@@ -525,7 +513,7 @@ contract PoolCore is
         override
         returns (DataTypes.UserConfigurationMap memory)
     {
-        return _usersConfig[user];
+        return ps._usersConfig[user];
     }
 
     /// @inheritdoc IPoolCore
@@ -536,7 +524,7 @@ contract PoolCore is
         override
         returns (uint256)
     {
-        return _reserves[asset].getNormalizedIncome();
+        return ps._reserves[asset].getNormalizedIncome();
     }
 
     /// @inheritdoc IPoolCore
@@ -547,7 +535,7 @@ contract PoolCore is
         override
         returns (uint256)
     {
-        return _reserves[asset].getNormalizedDebt();
+        return ps._reserves[asset].getNormalizedDebt();
     }
 
     /// @inheritdoc IPoolCore
@@ -558,13 +546,13 @@ contract PoolCore is
         override
         returns (address[] memory)
     {
-        uint256 reservesListCount = _reservesCount;
+        uint256 reservesListCount = ps._reservesCount;
         uint256 droppedReservesCount = 0;
         address[] memory reservesList = new address[](reservesListCount);
 
         for (uint256 i = 0; i < reservesListCount; i++) {
-            if (_reservesList[i] != address(0)) {
-                reservesList[i - droppedReservesCount] = _reservesList[i];
+            if (ps._reservesList[i] != address(0)) {
+                reservesList[i - droppedReservesCount] = ps._reservesList[i];
             } else {
                 droppedReservesCount++;
             }
@@ -579,29 +567,18 @@ contract PoolCore is
 
     /// @inheritdoc IPoolCore
     function getReserveAddressById(uint16 id) external view returns (address) {
-        return _reservesList[id];
+        return ps._reservesList[id];
     }
 
     /// @inheritdoc IPoolCore
-    function MAX_STABLE_RATE_BORROW_SIZE_PERCENT()
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _maxStableRateBorrowSizePercent;
-    }
-
-    /// @inheritdoc IPoolCore
-    function MAX_NUMBER_RESERVES()
+    function MAX_NUMBERps._reserves()
         external
         view
         virtual
         override
         returns (uint16)
     {
-        return ReserveConfiguration.MAX_RESERVES_COUNT;
+        return ReserveConfiguration.MAXps._reserves_COUNT;
     }
 
     /// @inheritdoc IPoolCore
@@ -612,7 +589,7 @@ contract PoolCore is
         override
         returns (uint24)
     {
-        return _maxAtomicTokensAllowed;
+        return ps._maxAtomicTokensAllowed;
     }
 
     /// @inheritdoc IPoolCore
@@ -623,7 +600,7 @@ contract PoolCore is
         override
         returns (uint64)
     {
-        return _auctionRecoveryHealthFactor;
+        return ps._auctionRecoveryHealthFactor;
     }
 
     /// @inheritdoc IPoolCore
@@ -637,13 +614,13 @@ contract PoolCore is
         uint256 balanceToBefore
     ) external virtual override {
         require(
-            msg.sender == _reserves[asset].xTokenAddress,
+            msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
         SupplyLogic.executeFinalizeTransferERC20(
-            _reserves,
-            _reservesList,
-            _usersConfig,
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig,
             DataTypes.FinalizeTransferParams({
                 asset: asset,
                 from: from,
@@ -652,7 +629,7 @@ contract PoolCore is
                 amount: amount,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
-                reservesCount: _reservesCount,
+                reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle()
             })
         );
@@ -668,13 +645,13 @@ contract PoolCore is
         uint256 balanceToBefore
     ) external virtual override {
         require(
-            msg.sender == _reserves[asset].xTokenAddress,
+            msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
         SupplyLogic.executeFinalizeTransferERC721(
-            _reserves,
-            _reservesList,
-            _usersConfig,
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig,
             DataTypes.FinalizeTransferParams({
                 asset: asset,
                 from: from,
@@ -683,7 +660,7 @@ contract PoolCore is
                 amount: 1,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
-                reservesCount: _reservesCount,
+                reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle()
             })
         );
@@ -699,9 +676,9 @@ contract PoolCore is
     {
         address underlyingAsset = INToken(ntokenAsset)
             .UNDERLYING_ASSET_ADDRESS();
-        DataTypes.ReserveData storage reserve = _reserves[underlyingAsset];
+        DataTypes.ReserveData storage reserve = ps._reserves[underlyingAsset];
         require(
-            reserve.id != 0 || _reservesList[0] == underlyingAsset,
+            reserve.id != 0 || ps._reservesList[0] == underlyingAsset,
             Errors.ASSET_NOT_LISTED
         );
 

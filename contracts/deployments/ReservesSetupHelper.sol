@@ -19,7 +19,6 @@ contract ReservesSetupHelper is Ownable {
         uint256 reserveFactor;
         uint256 borrowCap;
         uint256 supplyCap;
-        bool stableBorrowingEnabled;
         bool borrowingEnabled;
     }
 
@@ -46,10 +45,6 @@ contract ReservesSetupHelper is Ownable {
                 configurator.setBorrowCap(
                     inputParams[i].asset,
                     inputParams[i].borrowCap
-                );
-                configurator.setReserveStableRateBorrowing(
-                    inputParams[i].asset,
-                    inputParams[i].stableBorrowingEnabled
                 );
             }
             configurator.setSupplyCap(

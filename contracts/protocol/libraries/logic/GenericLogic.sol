@@ -353,10 +353,6 @@ library GenericLogic {
             userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
         }
 
-        userTotalDebt =
-            userTotalDebt +
-            IERC20(reserve.stableDebtTokenAddress).balanceOf(user);
-
         userTotalDebt = assetPrice * userTotalDebt;
 
         unchecked {

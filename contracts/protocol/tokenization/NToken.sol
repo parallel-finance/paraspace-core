@@ -21,9 +21,9 @@ import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 
 /**
- * @title ParaSpace ERC20 PToken
+ * @title ParaSpace ERC721 NToken
  *
- * @notice Implementation of the interest bearing token for the ParaSpace protocol
+ * @notice Implementation of the NFT derivative token for the ParaSpace protocol
  */
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;

@@ -17,7 +17,7 @@ import {
   getUniswapV3Gateway,
   getUniswapV3OracleWrapper,
 } from "../deploy/helpers/contracts-getters";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {DRE} from "../deploy/helpers/misc-utils";
 import {
   liquidateAndValidate,
@@ -465,7 +465,6 @@ describe("Uniswap V3", () => {
           .borrow(
             weth.address,
             userAccountData.availableBorrowsBase.sub(1),
-            RateMode.Variable,
             "0",
             user1.address
           )
