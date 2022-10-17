@@ -8,15 +8,17 @@
     "types"
   ],
   "scripts": {
-    "prepare": "husky install",
+    "postinstall": "husky install && yarn build",
+    "prepack": "pinst --disable",
+    "postpack": "pinst --enable",
     "size": "hardhat size-contracts",
-    "build": "SKIP_LOAD=true hardhat compile",
+    "build": "hardhat compile",
     "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts' && eslint . --ext .ts",
-    "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --testfiles 'test-suites/*.ts'",
+    "coverage": "hardhat coverage --testfiles 'test-suites/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts'",
     "doc": "hardhat docgen",
-    "test": "TS_NODE_TRANSPILE_ONLY=1 hardhat test ./test-suites/*.ts",
-    "clean": "hardhat clean && rm -rf ./artifacts ./cache ./types"
+    "test": "hardhat test ./test-suites/*.ts",
+    "clean": "hardhat clean"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
@@ -52,7 +54,7 @@
     "eth-sig-util": "2.5.3",
     "ethereum-waffle": "3.2.0",
     "ethereumjs-util": "7.0.2",
-    "hardhat": "^2.6.4",
+    "hardhat": "^2.12.0",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-deploy": "^0.11.4",
     "hardhat-gas-reporter": "^1.0.0",
@@ -61,6 +63,7 @@
     "lodash": "^4.17.21",
     "lowdb": "1.0.0",
     "minimatch": "^5.1.0",
+    "pinst": "^3.0.0",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-alpha.53",
     "pretty-quick": "^3.1.1",

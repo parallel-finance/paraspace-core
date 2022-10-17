@@ -4,6 +4,7 @@ export $(shell sed 's/=.*//' .env)
 
 NETWORK                  := goerli
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
+TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
 RUST_TOOLCHAIN           := nightly-2022-09-19
 
@@ -12,12 +13,10 @@ init: submodules
 	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
-	yarn prepare
-	yarn build
 
 .PHONY: test
 test:
-	TS_NODE_TRANSPILE_ONLY=1 npx hardhat test ./test-suites/${TEST_TARGET}
+	npx hardhat test ./test-suites/${TEST_TARGET}
 
 .PHONY: size
 size:
@@ -46,8 +45,8 @@ format:
 
 .PHONY: clean
 clean:
-	yarn cache clean --all
-	YARN_CHECKSUM_BEHAVIOR=update yarn
+	# yarn cache clean --all
+	# YARN_CHECKSUM_BEHAVIOR=update yarn
 	yarn clean
 
 .PHONY: ci
@@ -224,99 +223,99 @@ test-scenario:
 
 .PHONY: run
 run:
-	TS_NODE_TRANSPILE_ONLY=1 npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
+	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
+
+.PHONY: run-task
+run-task: clean build
+	SKIP_LOAD=false npx hardhat $(TASK_NAME) --network $(NETWORK)
 
 .PHONY: print
 print:
-	npx hardhat print-contracts
+	make TASK_NAME=print-contracts run-task
 
 .PHONY: verify
-verify: clean build
-	npx hardhat verify-contracts
+verify:
+	make TASK_NAME=verify-contracts run-task
 
 .PHONY: deploy
-deploy: clean build
-	npx hardhat deploy:all
-
-.PHONY: dev-deploy
-dev-deploy:
-	make NETWORK=hardhat run
+deploy:
+	make TASK_NAME=deploy:all run-task
 
 .PHONY: deploy-mockERC20Tokens
 deploy-mockERC20Tokens:
-	npx hardhat deploy:mock-erc20-tokens
+	make TASK_NAME=deploy:mock-erc20-tokens run-task
 
 .PHONY: deploy-mockERC721Tokens
 deploy-mockERC721Tokens:
-	npx hardhat deploy:mock-erc721-tokens
+	make TASK_NAME=deploy:mock-erc721-tokens run-task
 
 .PHONY: deploy-faucet
 deploy-faucet:
-	npx hardhat deploy:faucet
+	make TASK_NAME=deploy:faucet run-task
 
 .PHONY: deploy-addressProvider
 deploy-addressProvider:
-	npx hardhat deploy:address-provider
+	make TASK_NAME=deploy:address-provider run-task
 
 .PHONY: deploy-aclManager
 deploy-aclManager:
-	npx hardhat deploy:acl-manager
+	make TASK_NAME=deploy:acl-manager run-task
 
 .PHONY: deploy-poolAddressesProviderRegistry
 deploy-poolAddressesProviderRegistry:
-	npx hardhat deploy:pool-addresses-provider-registry
+	make TASK_NAME=deploy:pool-addresses-provider-registry run-task
 
 .PHONY: deploy-pool
 deploy-pool:
-	npx hardhat deploy:pool
+	make TASK_NAME=deploy:pool run-task
 
 .PHONY: deploy-poolConfigurator
 deploy-poolConfigurator:
-	npx hardhat deploy:pool-configurator
+	make TASK_NAME=deploy:pool-configurator run-task
 
 .PHONY: deploy-reservesSetupHelper
 deploy-reservesSetupHelper:
-	npx hardhat deploy:reserves-setup-helper
+	make TASK_NAME=deploy:reserves-setup-helper run-task
 
 .PHONY: deploy-priceOracle
 deploy-priceOracle:
-	npx hardhat deploy:price-oracle
+	make TASK_NAME=deploy:price-oracle run-task
 
 .PHONY: deploy-allMockAggregators
 deploy-allMockAggregators:
-	npx hardhat deploy:all-mock-aggregators
+	make TASK_NAME=deploy:all-mock-aggregators run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
-	npx hardhat deploy:ui-incentive-data-provider
+	make TASK_NAME=deploy:ui-incentive-data-provider run-task
 
 .PHONY: deploy-wethGateway
 deploy-wethGateway:
-	npx hardhat deploy:weth-gateway
+	make TASK_NAME=deploy:weth-gateway run-task
 
 .PHONY: deploy-punkGateway
 deploy-punkGateway:
-	npx hardhat deploy:punk-gateway
+	make TASK_NAME=deploy:punk-gateway run-task
 
 .PHONY: deploy-uniswapV3Gateway
 deploy-uniswapV3Gateway:
-	npx hardhat deploy:uniswap-v3-gateway
+	make TASK_NAME=deploy:uniswap-v3-gateway run-task
 
 .PHONY: deploy-seaport
 deploy-seaport:
-	npx hardhat deploy:seaport
+	make TASK_NAME=deploy:seaport run-task
 
 .PHONY: deploy-looksrare
 deploy-looksrare:
-	npx hardhat deploy:looksrare
+	make TASK_NAME=deploy:looksrare run-task
 
 .PHONY: deploy-x2y2
 deploy-x2y2:
-	npx hardhat deploy:x2y2
+	make TASK_NAME=deploy:x2y2 run-task
 
 .PHONY: deploy-flashClaimRegistry
 deploy-flashClaimRegistry:
-	npx hardhat deploy:flash-claim-registry
+	make TASK_NAME=deploy:flash-claim-registry run-task
 
 .PHONY: ad-hoc
 ad-hoc:

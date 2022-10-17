@@ -25,7 +25,7 @@ import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
 
-const SKIP_LOAD = process.env.SKIP_LOAD === "true";
+const SKIP_LOAD = process.env.SKIP_LOAD !== "false";
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";

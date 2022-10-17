@@ -10,6 +10,5 @@ const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
 task("deploy:mock-erc20-tokens", "Deploy mocked ERC20 tokens")
   .setAction(async (_, DRE) => {
     await DRE.run("set-DRE")
-    console.log(verify)
     await step_01(verify)
   })
