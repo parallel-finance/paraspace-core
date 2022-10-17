@@ -21,6 +21,7 @@ dist
 
 docs/*
 !docs/DEVELOPER-GUIDE.md
+docs.restore
 
 .vscode
 coverage
