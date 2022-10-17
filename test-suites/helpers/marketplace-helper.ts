@@ -125,7 +125,6 @@ export async function executeLooksrareBuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    0,
     {
       gasLimit: 5000000,
     }
@@ -189,7 +188,6 @@ export async function executeX2Y2BuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    0,
     {
       gasLimit: 5000000,
     }
@@ -273,7 +271,6 @@ export async function executeSeaportBuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    0,
     {
       gasLimit: 5000000,
     }
@@ -419,7 +416,6 @@ export async function executeAcceptBidWithCredit(
       ...vrs,
     },
     taker.address,
-    0,
     {
       gasLimit: 5000000,
     }

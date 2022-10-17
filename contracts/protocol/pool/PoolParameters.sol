@@ -188,7 +188,8 @@ contract PoolParameters is
             ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
             Errors.ASSET_NOT_LISTED
         );
-        ps._reserves[asset]
+        ps
+            ._reserves[asset]
             .dynamicConfigsStrategyAddress = dynamicConfigsStrategyAddress;
     }
 
@@ -315,10 +316,13 @@ contract PoolParameters is
         nonReentrant
     {
         DataTypes.PoolStorage storage ps = poolStorage();
-        
+
         require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[user];
-        (, , , , , , uint256 erc721HealthFactor) = PoolLogic.executeGetUserAccountData(
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            user
+        ];
+        (, , , , , , uint256 erc721HealthFactor) = PoolLogic
+            .executeGetUserAccountData(
                 user,
                 ps,
                 ADDRESSES_PROVIDER.getPriceOracle()

@@ -13,11 +13,14 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  * @dev It defines the storage layout of the Pool contract.
  */
 contract PoolStorage {
-
     bytes32 constant POOL_STORAGE_POSITION =
-    keccak256("paraspace.proxy.pool.storage");
+        keccak256("paraspace.proxy.pool.storage");
 
-    function poolStorage() internal pure returns (DataTypes.PoolStorage storage rgs) {
+    function poolStorage()
+        internal
+        pure
+        returns (DataTypes.PoolStorage storage rgs)
+    {
         bytes32 position = POOL_STORAGE_POSITION;
         assembly {
             rgs.slot := position

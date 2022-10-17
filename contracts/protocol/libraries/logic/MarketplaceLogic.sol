@@ -60,7 +60,6 @@ library MarketplaceLogic {
         DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-
         address weth = poolAddressProvider.getWETH();
         DataTypes.Marketplace memory marketplace = poolAddressProvider
             .getMarketplace(marketplaceId);
@@ -154,7 +153,6 @@ library MarketplaceLogic {
         return downpaymentEth;
     }
 
-
     function executeBatchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
@@ -223,11 +221,10 @@ library MarketplaceLogic {
                 })
             );
         }
-        MarketplaceLogic.refundETH(ethLeft);     
+        MarketplaceLogic.refundETH(ethLeft);
     }
 
-
-    function executeAcceptBidWithCredit(        
+    function executeAcceptBidWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
@@ -241,7 +238,7 @@ library MarketplaceLogic {
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
             .getBidOrderInfo(payload);
         require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
-        
+
         _acceptBidWithCredit(
             ps._reserves,
             ps._reservesList,
@@ -257,12 +254,10 @@ library MarketplaceLogic {
                 referralCode: 0,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider
-                    .getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
             })
-        );      
+        );
     }
-
 
     function executeBatchAcceptBidWithCredit(
         bytes32[] calldata marketplaceIds,
@@ -272,7 +267,6 @@ library MarketplaceLogic {
         DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-        
         address weth = poolAddressProvider.getWETH();
         require(
             marketplaceIds.length == payloads.length &&
@@ -312,7 +306,6 @@ library MarketplaceLogic {
             );
         }
     }
-
 
     /**
      * @notice Implements the acceptBidWithCredit feature. AcceptBidWithCredit allows users to

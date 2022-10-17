@@ -110,7 +110,6 @@ contract PoolMarketplace is
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-
         MarketplaceLogic.executeAcceptBidWithCredit(
             marketplaceId,
             payload,
@@ -119,8 +118,6 @@ contract PoolMarketplace is
             ps,
             ADDRESSES_PROVIDER
         );
-
-
     }
 
     /// @inheritdoc IPoolMarketplace

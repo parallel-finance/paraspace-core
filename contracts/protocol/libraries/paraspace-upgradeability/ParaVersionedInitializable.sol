@@ -14,29 +14,30 @@ pragma solidity 0.8.10;
  * because this is not dealt with automatically as with constructors.
  */
 abstract contract ParaVersionedInitializable {
-
     bytes32 constant VERSION_STORAGE_POSITION =
         keccak256("paraspace.proxy.version.storage");
 
     struct VersionStorage {
         /**
-        * @dev Indicates that the contract has been initialized.
-        */
+         * @dev Indicates that the contract has been initialized.
+         */
         uint256 lastInitializedRevision;
-
         /**
-        * @dev Indicates that the contract is in the process of being initialized.
-        */
+         * @dev Indicates that the contract is in the process of being initialized.
+         */
         bool initializing;
     }
 
-    function versionStorage() internal pure returns (VersionStorage storage vs) {
+    function versionStorage()
+        internal
+        pure
+        returns (VersionStorage storage vs)
+    {
         bytes32 position = VERSION_STORAGE_POSITION;
         assembly {
             vs.slot := position
         }
     }
-
 
     /**
      * @dev Modifier to use in the initializer function of a contract.

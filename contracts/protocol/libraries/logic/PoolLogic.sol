@@ -175,14 +175,15 @@ library PoolLogic {
             uint256 healthFactor,
             uint256 erc721HealthFactor
         )
-    {   
-        DataTypes.CalculateUserAccountDataParams memory params = DataTypes.CalculateUserAccountDataParams({
-            userConfig: ps._usersConfig[user],
-            reservesCount: ps._reservesCount,
-            user: user,
-            oracle: oracle
-        });
-        
+    {
+        DataTypes.CalculateUserAccountDataParams memory params = DataTypes
+            .CalculateUserAccountDataParams({
+                userConfig: ps._usersConfig[user],
+                reservesCount: ps._reservesCount,
+                user: user,
+                oracle: oracle
+            });
+
         (
             totalCollateralBase,
             ,

@@ -144,12 +144,7 @@ contract WPunkGateway is
                 punkIndexes[i]
             );
         }
-        Pool.acceptBidWithCredit(
-            marketplaceId,
-            payload,
-            credit,
-            msg.sender
-        );
+        Pool.acceptBidWithCredit(marketplaceId, payload, credit, msg.sender);
     }
 
     /**

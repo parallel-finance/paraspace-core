@@ -576,7 +576,7 @@ contract PoolCore is
         returns (uint256)
     {
         DataTypes.PoolStorage storage ps = poolStorage();
-        
+
         return ps._reserves[asset].getNormalizedDebt();
     }
 
@@ -729,7 +729,7 @@ contract PoolCore is
         returns (DataTypes.AuctionData memory auctionData)
     {
         DataTypes.PoolStorage storage ps = poolStorage();
-        
+
         address underlyingAsset = INToken(ntokenAsset)
             .UNDERLYING_ASSET_ADDRESS();
         DataTypes.ReserveData storage reserve = ps._reserves[underlyingAsset];
