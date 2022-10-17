@@ -521,7 +521,10 @@ library LiquidationLogic {
             vars.actualDebtToLiquidate = debtCanBeCovered;
         }
 
-        if (vars.userTotalDebt == vars.actualDebtToLiquidate) {
+        if (
+            vars.isLiquidationAssetBorrowed &&
+            vars.userTotalDebt == vars.actualDebtToLiquidate
+        ) {
             userConfig.setBorrowing(liquidationAssetReserve.id, false);
         }
 
