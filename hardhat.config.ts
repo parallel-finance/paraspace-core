@@ -25,22 +25,18 @@ import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
 
-const SKIP_LOAD = process.env.SKIP_LOAD !== "false";
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
 
-// Prevent to load scripts before compilation and typechain
-if (!SKIP_LOAD) {
-  ["deployments"].forEach((folder) => {
-    const tasksPath = path.join(__dirname, "tasks", folder);
-    fs.readdirSync(tasksPath)
-      .filter((pth) => pth.includes(".ts"))
-      .forEach((task) => {
-        require(`${tasksPath}/${task}`);
-      });
-  });
-}
+["deployments"].forEach((folder) => {
+  const tasksPath = path.join(__dirname, "tasks", folder);
+  fs.readdirSync(tasksPath)
+    .filter((pth) => pth.includes(".ts"))
+    .forEach((task) => {
+      require(`${tasksPath}/${task}`);
+    });
+});
 
 require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
