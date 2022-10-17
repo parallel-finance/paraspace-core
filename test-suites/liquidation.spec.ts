@@ -11,8 +11,7 @@ import {
   withdrawAndValidate,
 } from "./helpers/validated-steps";
 import {snapshot} from "./helpers/snapshot-manager";
-import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
-import {BigNumber} from "ethers";
+import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -127,55 +126,6 @@ describe("Liquidation Tests", () => {
     await changePriceAndValidate(bayc, "12");
 
     await liquidateAndValidate(dai, dai, "40000", liquidator, borrower, true);
-  });
-
-  it("Liquidator liquidates the ERC-721 with non-borrowed token - gets NFT", async () => {
-    const {
-      users: [borrower, liquidator],
-      pool,
-      bayc,
-      nBAYC,
-      dai,
-      weth,
-    } = testEnv;
-
-    // NFT HF < 1 borrower's NFT becomes eligible for liquidation
-    await changePriceAndValidate(bayc, "8");
-
-    // start auction
-    await waitForTx(
-      await pool
-        .connect(liquidator.signer)
-        .startAuction(borrower.address, bayc.address, 0)
-    );
-    const {startTime, tickLength} = await pool.getAuctionData(nBAYC.address, 0);
-    await setBlocktime(
-      startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
-    );
-    expect((await nBAYC.getAuctionData(0)).startTime).to.be.gt(0);
-
-    await liquidateAndValidate(bayc, weth, "1000", liquidator, borrower, false);
-
-    expect(await (await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
-
-    // Borrower tries to withdraw the deposited BAYC after liquidation (should fail)
-    await expect(
-      pool
-        .connect(borrower.signer)
-        .withdrawERC721(bayc.address, [0], borrower.address)
-    ).to.be.revertedWith("not the owner of Ntoken");
-
-    // Liquidator tries to liquidate same NFT again (should fail)
-    await liquidateAndValidateReverted(
-      bayc,
-      dai,
-      "10000",
-      liquidator,
-      borrower,
-      false,
-      ProtocolErrors.AUCTION_NOT_STARTED,
-      1
-    );
   });
 
   it("Liquidator liquidates ERC-721 (pays debt partially) with borrowed token - gets nToken", async () => {
