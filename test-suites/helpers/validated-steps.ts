@@ -955,6 +955,22 @@ export const liquidateAndValidateERC721 = async (
     liquidator.address
   );
 
+  const liquidationAssetData = await pool.getReserveData(
+    liquidationToken.address
+  );
+  const borrowerConfigBefore = BigNumber.from(
+    (await pool.getUserConfiguration(borrower.address)).data
+  );
+
+  const isBorrowingBefore = isBorrowing(
+    borrowerConfigBefore,
+    liquidationAssetData.id
+  );
+  const isUsingAsCollateralBefore = isUsingAsCollateral(
+    borrowerConfigBefore,
+    liquidationAssetData.id
+  );
+
   const before = {
     isLiquidationAssetBorrowed: isLiquidationAssetBorrowed,
     targetTokenBalance: borrowerTokenBalanceBefore,
@@ -972,6 +988,8 @@ export const liquidateAndValidateERC721 = async (
     liquidatorLiquidationPTokenBalance:
       liquidatorLiquidationAssetPTokenBalanceBefore,
     liquidatorTargetTokenBalance: liquidatorTargetTokenBalanceBefore,
+    isBorrowing: isBorrowingBefore,
+    isUsingAsCollateral: isUsingAsCollateralBefore,
   };
 
   // liquidate asset
@@ -1170,6 +1188,19 @@ export const liquidateAndValidateERC721 = async (
     liquidator.address
   );
 
+  const borrowerConfigAfter = BigNumber.from(
+    (await pool.getUserConfiguration(borrower.address)).data
+  );
+
+  const isBorrowingAfter = isBorrowing(
+    borrowerConfigAfter,
+    liquidationAssetData.id
+  );
+  const isUsingAsCollateralAfter = isUsingAsCollateral(
+    borrowerConfigAfter,
+    liquidationAssetData.id
+  );
+
   const after = {
     isLiquidationAssetBorrowed: isLiquidationAssetBorrowedAfter,
     targetTokenBalance: borrowerTokenBalance,
@@ -1186,6 +1217,8 @@ export const liquidateAndValidateERC721 = async (
     liquidatorLiquidationAssetBalance: liquidatorLiquidationAssetBalance,
     liquidatorLiquidationPTokenBalance: liquidatorLiquidationAssetPTokenBalance,
     liquidatorTargetTokenBalance: liquidatorTargetTokenBalance,
+    isBorrowing: isBorrowingAfter,
+    isUsingAsCollateral: isUsingAsCollateralAfter,
   };
 
   return {before, after};
@@ -1477,3 +1510,15 @@ export const liquidateAndValidateReverted = async (
     ).to.be.revertedWith(message);
   }
 };
+
+const isBorrowing = (conf, id) =>
+  conf
+    .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2)))
+    .and(1)
+    .gt(0);
+
+const isUsingAsCollateral = (conf, id) =>
+  conf
+    .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2).add(1)))
+    .and(1)
+    .gt(0);

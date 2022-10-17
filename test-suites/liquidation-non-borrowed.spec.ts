@@ -4,13 +4,11 @@ import {
   borrowAndValidate,
   changePriceAndValidate,
   liquidateAndValidateERC721,
-  liquidateAndValidateReverted,
   supplyAndValidate,
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumber} from "ethers";
-import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {assert} from "console";
@@ -53,7 +51,6 @@ describe("Liquidation Tests", () => {
       pool,
       bayc,
       nBAYC,
-      dai,
       weth,
     } = await loadFixture(fixture);
 
@@ -95,26 +92,11 @@ describe("Liquidation Tests", () => {
     assert(
       after.liquidatorTargetTokenBalance > before.liquidatorTargetTokenBalance
     );
-
-    expect(await (await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
-
-    // Borrower tries to withdraw the deposited BAYC after liquidation (should fail)
-    await expect(
-      pool
-        .connect(borrower.signer)
-        .withdrawERC721(bayc.address, [0], borrower.address)
-    ).to.be.revertedWith("not the owner of Ntoken");
-
-    // Liquidator tries to liquidate same NFT again (should fail)
-    await liquidateAndValidateReverted(
-      bayc,
-      dai,
-      "10000",
-      liquidator,
-      borrower,
-      false,
-      ProtocolErrors.AUCTION_NOT_STARTED,
-      1
-    );
+    //assert borrowing status correct
+    expect(before.isBorrowing).to.be.false;
+    expect(after.isBorrowing).to.be.false;
+    //assert isUsingAsCollateral status correct
+    expect(before.isUsingAsCollateral).to.be.false;
+    expect(after.isUsingAsCollateral).to.be.true;
   });
 });
