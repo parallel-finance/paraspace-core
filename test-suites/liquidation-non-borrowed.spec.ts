@@ -17,49 +17,38 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {assert} from "console";
 
-let snapthotId: string;
+const fixture = async () => {
+  const testEnv = await loadFixture(testEnvFixture);
+  const {
+    users: [borrower, liquidator],
+    bayc,
+    dai,
+    weth,
+  } = testEnv;
+  // assure asset prices for correct health factor calculations
+  await changePriceAndValidate(bayc, "101");
+
+  const daiAgg = await getMockAggregator(undefined, "DAI");
+  await daiAgg.updateLatestAnswer("908578801039414");
+
+  // Borrower deposits 3 BAYC and 5k DAI
+  await supplyAndValidate(bayc, "3", borrower, true);
+
+  await supplyAndValidate(dai, "5000", borrower, true);
+  // use only one BAYC as collateral
+  await switchCollateralAndValidate(borrower, bayc, false, 1);
+  await switchCollateralAndValidate(borrower, bayc, false, 2);
+
+  // Liquidator deposits 100k DAI and 10 wETH
+  await supplyAndValidate(weth, "10", liquidator, true, "1000");
+  await supplyAndValidate(dai, "100000", liquidator, true, "200000");
+
+  // Borrower borrows 15k DAI
+  await borrowAndValidate(dai, "15000", borrower);
+  return testEnv;
+};
 
 describe("Liquidation Tests", () => {
-  let testEnv: TestEnv;
-  before("Setup Borrower and Liquidator positions", async () => {
-    testEnv = await loadFixture(testEnvFixture);
-    const {
-      users: [borrower, liquidator],
-      bayc,
-      dai,
-      weth,
-    } = testEnv;
-
-    // assure asset prices for correct health factor calculations
-    await changePriceAndValidate(bayc, "101");
-
-    const daiAgg = await getMockAggregator(undefined, "DAI");
-    await daiAgg.updateLatestAnswer("908578801039414");
-
-    // Borrower deposits 3 BAYC and 5k DAI
-    await supplyAndValidate(bayc, "3", borrower, true);
-
-    await supplyAndValidate(dai, "5000", borrower, true);
-    // use only one BAYC as collateral
-    await switchCollateralAndValidate(borrower, bayc, false, 1);
-    await switchCollateralAndValidate(borrower, bayc, false, 2);
-
-    // Liquidator deposits 100k DAI and 10 wETH
-    await supplyAndValidate(weth, "10", liquidator, true, "1000");
-    await supplyAndValidate(dai, "100000", liquidator, true, "200000");
-
-    // Borrower borrows 15k DAI
-    await borrowAndValidate(dai, "15000", borrower);
-  });
-
-  beforeEach("Take Blockchain Snapshot", async () => {
-    snapthotId = await snapshot.take();
-  });
-
-  afterEach("Revert Blockchain to Snapshot", async () => {
-    await snapshot.revert(snapthotId);
-  });
-
   it("Liquidator liquidates the ERC-721 with non-borrowed token - gets NFT", async () => {
     const {
       users: [borrower, liquidator],
@@ -68,7 +57,7 @@ describe("Liquidation Tests", () => {
       nBAYC,
       dai,
       weth,
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     // NFT HF < 1 borrower's NFT becomes eligible for liquidation
     await changePriceAndValidate(bayc, "8");
