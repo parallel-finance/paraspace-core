@@ -1348,7 +1348,7 @@ __metadata:
     pretty-quick: ^3.1.1
     solhint: ^3.3.6
     solidity-coverage: ^0.8.2
-    solidity-docgen: ^0.6.0-beta.26
+    solidity-docgen-forked: ^0.6.0-beta.29
     ts-generator: ^0.1.1
     ts-node: ^10.9.1
     typechain: ^8.1.0
@@ -13189,15 +13189,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"solidity-docgen@npm:^0.6.0-beta.26":
+"solidity-docgen-forked@npm:^0.6.0-beta.29":
   version: 0.6.0-beta.29
-  resolution: "solidity-docgen@npm:0.6.0-beta.29"
+  resolution: "solidity-docgen-forked@npm:0.6.0-beta.29"
   dependencies:
     handlebars: ^4.7.7
     solidity-ast: ^0.4.31
   peerDependencies:
     hardhat: ^2.8.0
-  checksum: d472e9d8dd03179413be1ef6eb0f34fcfad2b46f6c1b9c708a5fe6f6ab2890c9ee1deb072709ea27a198481ceca881b4f09c953e481a94f0090896183eb547ba
+  checksum: 809f18952718aa68d76f6420b3ea13e896c542eaabeabdc10211b3aa91cff068ca35a0fcb02d9a63c02212d2ae1884940adb943c9c546258319a44a4abfb9ebc
   languageName: node
   linkType: hard
 
