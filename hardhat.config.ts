@@ -60,7 +60,7 @@ const hardhatConfig: HardhatUserConfig = {
   docgen: {
     outputDir: "docs",
     pages: "items",
-    exclude: ["dependencies", "deployments", "mocks"],
+    exclude: ["dependencies", "deployments", "mocks", "protocol"],
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS == "true" ? true : false,

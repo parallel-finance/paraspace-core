@@ -275,7 +275,7 @@ library MarketplaceLogic {
                     token;
                 require(isNToken, Errors.ASSET_NOT_LISTED);
                 require(
-                    INToken(vars.xTokenAddress).ownerOf(tokenId) == onBehalfOf,
+                    INToken(token).ownerOf(tokenId) == onBehalfOf,
                     Errors.INVALID_RECIPIENT
                 );
                 SupplyLogic.executeCollateralizeERC721(
