@@ -94,7 +94,7 @@ const hardhatConfig: HardhatUserConfig = {
   },
   mocha: {
     parallel: true,
-    jobs: 4,
+    jobs: parseInt(process.env.MOCHA_JOBS ?? "4"),
     timeout: 200000,
   },
   tenderly: {
