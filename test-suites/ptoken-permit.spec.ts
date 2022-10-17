@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {ethers, utils} from "ethers";
+import {utils} from "ethers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
@@ -172,10 +172,7 @@ describe("PToken: Permit", () => {
 
     expect(
       (await pDai.allowance(owner.address, spender.address)).toString()
-    ).to.be.equal(
-      ethers.utils.parseEther("2"),
-      "INVALID_ALLOWANCE_BEFORE_PERMIT"
-    );
+    ).to.be.equal(utils.parseEther("2"), "INVALID_ALLOWANCE_BEFORE_PERMIT");
 
     expect(
       await pDai

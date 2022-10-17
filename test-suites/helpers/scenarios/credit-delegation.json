@@ -63,7 +63,6 @@
             "reserve": "WETH",
             "amount": "2",
             "user": "0",
-            "borrowRateMode": "variable",
             "toUser": "4"
           },
           "expected": "success"
@@ -74,27 +73,9 @@
             "reserve": "WETH",
             "amount": "1",
             "user": "4",
-            "onBehalfOf": "0",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "0"
           },
           "expected": "success"
-        }
-      ]
-    },
-    {
-      "description": "User 4 trying to borrow 1 WETH stable on behalf of user 0, revert expected",
-      "actions": [
-        {
-          "name": "borrow",
-          "args": {
-            "reserve": "WETH",
-            "amount": "1",
-            "user": "4",
-            "onBehalfOf": "0",
-            "borrowRateMode": "stable"
-          },
-          "expected": "revert",
-          "revertMessage": "59"
         }
       ]
     },
@@ -107,7 +88,6 @@
             "reserve": "WETH",
             "amount": "1",
             "user": "0",
-            "borrowRateMode": "variable",
             "toUser": "4"
           },
           "expected": "success"
@@ -118,8 +98,7 @@
             "reserve": "WETH",
             "amount": "3",
             "user": "4",
-            "onBehalfOf": "0",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "0"
           },
           "expected": "revert",
           "revertMessage": "59"

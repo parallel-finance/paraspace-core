@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -83,13 +83,7 @@ describe("LTV validation", () => {
     expect(
       await pool
         .connect(user1.signer)
-        .borrow(
-          weth.address,
-          borrowedAmount,
-          RateMode.Variable,
-          0,
-          user1.address
-        )
+        .borrow(weth.address, borrowedAmount, 0, user1.address)
     );
   });
 
@@ -180,13 +174,7 @@ describe("LTV validation", () => {
     await expect(
       pool
         .connect(user1.signer)
-        .borrow(
-          weth.address,
-          borrowWethAmount,
-          RateMode.Variable,
-          0,
-          user1.address
-        )
+        .borrow(weth.address, borrowWethAmount, 0, user1.address)
     ).to.be.revertedWith(LTV_VALIDATION_FAILED);
 
     const userData = await pool.getUserAccountData(user1.address);

@@ -3,7 +3,8 @@ include .env
 export $(shell sed 's/=.*//' .env)
 
 NETWORK                  := goerli
-SCRIPT_PATH              := ./deploy/tasks/deployments/testnet/full_deployment.ts
+SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
+TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
 RUST_TOOLCHAIN           := nightly-2022-09-19
 
@@ -15,7 +16,7 @@ init: submodules
 
 .PHONY: test
 test:
-	TS_NODE_TRANSPILE_ONLY=1 npx hardhat test ./test-suites/${TEST_TARGET}
+	npx hardhat test ./test-suites/${TEST_TARGET}
 
 .PHONY: size
 size:
@@ -44,12 +45,12 @@ format:
 
 .PHONY: clean
 clean:
-	yarn cache clean --all
-	YARN_CHECKSUM_BEHAVIOR=update yarn
+	# yarn cache clean --all
+	# YARN_CHECKSUM_BEHAVIOR=update yarn
 	yarn clean
 
 .PHONY: ci
-ci: lint test
+ci: clean build lint doc test
 
 .PHONY: submodules
 submodules:
@@ -212,6 +213,9 @@ test-rate-strategy:
 test-ui-pool-data-provider:
 	make TEST_TARGET=ui-pool-data-provider.spec.ts test
 
+.PHONY: test-reserve-configuration
+test-reserve-configuration:
+	make TEST_TARGET=reserve-configuration.spec.ts test
 
 .PHONY: test-dynamic-configs-strategy
 test-dynamic-configs-strategy:
@@ -227,99 +231,99 @@ test-wallet-balance-provider:
 
 .PHONY: run
 run:
-	TS_NODE_TRANSPILE_ONLY=1 npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
+	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
+
+.PHONY: run-task
+run-task: clean build
+	SKIP_LOAD=false npx hardhat $(TASK_NAME) --network $(NETWORK)
 
 .PHONY: print
 print:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/run_printContracts.ts run
+	make TASK_NAME=print-contracts run-task
 
 .PHONY: verify
 verify:
-	yarn clean
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/run_verifyContracts.ts run
+	make TASK_NAME=verify-contracts run-task
 
 .PHONY: deploy
-deploy: run
-
-.PHONY: dev-deploy
-dev-deploy:
-	make NETWORK=hardhat run
+deploy:
+	make TASK_NAME=deploy:all run-task
 
 .PHONY: deploy-mockERC20Tokens
 deploy-mockERC20Tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/0A_mockERC20Tokens.ts run
+	make TASK_NAME=deploy:mock-erc20-tokens run-task
 
 .PHONY: deploy-mockERC721Tokens
 deploy-mockERC721Tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/0B_mockERC721Tokens.ts run
+	make TASK_NAME=deploy:mock-erc721-tokens run-task
 
 .PHONY: deploy-faucet
 deploy-faucet:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/01_faucet.ts run
+	make TASK_NAME=deploy:faucet run-task
 
 .PHONY: deploy-addressProvider
 deploy-addressProvider:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/02_addressProvider.ts run
+	make TASK_NAME=deploy:address-provider run-task
 
 .PHONY: deploy-aclManager
 deploy-aclManager:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/03_aclManager.ts run
+	make TASK_NAME=deploy:acl-manager run-task
 
 .PHONY: deploy-poolAddressesProviderRegistry
 deploy-poolAddressesProviderRegistry:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/04_poolAddressesProviderRegistry.ts run
+	make TASK_NAME=deploy:pool-addresses-provider-registry run-task
 
 .PHONY: deploy-pool
 deploy-pool:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/05_pool.ts run
+	make TASK_NAME=deploy:pool run-task
 
 .PHONY: deploy-poolConfigurator
 deploy-poolConfigurator:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/06_poolConfigurator.ts run
+	make TASK_NAME=deploy:pool-configurator run-task
 
 .PHONY: deploy-reservesSetupHelper
 deploy-reservesSetupHelper:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/07_reservesSetupHelper.ts run
+	make TASK_NAME=deploy:reserves-setup-helper run-task
 
 .PHONY: deploy-priceOracle
 deploy-priceOracle:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/08_priceOracle.ts run
+	make TASK_NAME=deploy:price-oracle run-task
 
 .PHONY: deploy-allMockAggregators
 deploy-allMockAggregators:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/09_allMockAggregators.ts run
+	make TASK_NAME=deploy:all-mock-aggregators run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/10_uiIncentiveDataProvider.ts run
+	make TASK_NAME=deploy:ui-incentive-data-provider run-task
 
 .PHONY: deploy-wethGateway
 deploy-wethGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/11_wethGateway.ts run
+	make TASK_NAME=deploy:weth-gateway run-task
 
 .PHONY: deploy-punkGateway
 deploy-punkGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/12_punkGateway.ts run
-
-.PHONY: deploy-moonbirdsGateway
-deploy-moonbirdsGateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/13_moonbirdsGateway.ts run
+	make TASK_NAME=deploy:punk-gateway run-task
 
 .PHONY: deploy-uniswapV3Gateway
 deploy-uniswapV3Gateway:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/14_uniswapV3Gateway.ts run
+	make TASK_NAME=deploy:uniswap-v3-gateway run-task
 
 .PHONY: deploy-seaport
 deploy-seaport:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/15_seaport.ts run
+	make TASK_NAME=deploy:seaport run-task
 
 .PHONY: deploy-looksrare
 deploy-looksrare:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/16_looksrare.ts run
+	make TASK_NAME=deploy:looksrare run-task
 
 .PHONY: deploy-x2y2
 deploy-x2y2:
-	make SCRIPT_PATH=./deploy/tasks/deployments/testnet/steps/run-steps/17_x2y2.ts run
+	make TASK_NAME=deploy:x2y2 run-task
+
+.PHONY: deploy-flashClaimRegistry
+deploy-flashClaimRegistry:
+	make TASK_NAME=deploy:flash-claim-registry run-task
 
 .PHONY: ad-hoc
 ad-hoc:

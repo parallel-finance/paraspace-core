@@ -1,7 +1,6 @@
 import {expect} from "chai";
-
 import {TestEnv} from "./helpers/make-suite";
-import {ethers} from "hardhat";
+import {DRE} from "../deploy/helpers/misc-utils";
 import {toBN} from "../deploy/helpers/seaport-helpers/encoding";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -23,7 +22,7 @@ describe("Pool: rescue tokens", () => {
       pool,
       users: [user1],
     } = testEnv;
-    const amount = ethers.utils.parseEther("100");
+    const amount = DRE.ethers.utils.parseEther("100");
     await dai
       .connect(user1.signer)
       ["mint(address,uint256)"](pool.address, amount);
@@ -67,7 +66,7 @@ describe("Pool: rescue tokens", () => {
       users: [user1],
     } = testEnv;
 
-    const amount = ethers.utils.parseEther("100");
+    const amount = DRE.ethers.utils.parseEther("100");
     await dai
       .connect(user1.signer)
       ["mint(address,uint256)"](pool.address, amount);

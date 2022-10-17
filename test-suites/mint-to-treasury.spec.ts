@@ -1,5 +1,4 @@
 import {expect} from "chai";
-import {RateMode} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
@@ -42,13 +41,7 @@ describe("Mint To Treasury", () => {
     await expect(
       await pool
         .connect(users[0].signer)
-        .borrow(
-          dai.address,
-          amountDAItoBorrow,
-          RateMode.Variable,
-          "0",
-          users[0].address
-        )
+        .borrow(dai.address, amountDAItoBorrow, "0", users[0].address)
     );
 
     const {reserveFactor} =

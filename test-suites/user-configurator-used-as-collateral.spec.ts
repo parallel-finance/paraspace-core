@@ -4,7 +4,7 @@ import {TestEnv} from "./helpers/make-suite";
 import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {parseEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -272,13 +272,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .borrow(
-          weth.address,
-          parseEther("10"),
-          RateMode.Variable,
-          0,
-          user1.address
-        )
+        .borrow(weth.address, parseEther("10"), 0, user1.address)
     );
 
     //3 bayc price drop

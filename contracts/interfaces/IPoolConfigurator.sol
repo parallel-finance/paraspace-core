@@ -13,14 +13,12 @@ interface IPoolConfigurator {
      * @dev Emitted when a reserve is initialized.
      * @param asset The address of the underlying asset of the reserve
      * @param xToken The address of the associated xToken contract
-     * @param stableDebtToken The address of the associated stable rate debt token
      * @param variableDebtToken The address of the associated variable rate debt token
      * @param interestRateStrategyAddress The address of the interest rate strategy for the reserve
      **/
     event ReserveInitialized(
         address indexed asset,
         address indexed xToken,
-        address stableDebtToken,
         address variableDebtToken,
         address interestRateStrategyAddress
     );
@@ -45,13 +43,6 @@ interface IPoolConfigurator {
         uint256 liquidationThreshold,
         uint256 liquidationBonus
     );
-
-    /**
-     * @dev Emitted when stable rate borrowing is enabled or disabled on a reserve
-     * @param asset The address of the underlying asset of the reserve
-     * @param enabled True if stable rate borrowing is enabled, false otherwise
-     **/
-    event ReserveStableRateBorrowing(address indexed asset, bool enabled);
 
     /**
      * @dev Emitted when a reserve is activated or deactivated
@@ -184,18 +175,6 @@ interface IPoolConfigurator {
     );
 
     /**
-     * @dev Emitted when the implementation of a stable debt token is upgraded.
-     * @param asset The address of the underlying asset of the reserve
-     * @param proxy The stable debt token proxy address
-     * @param implementation The new xToken implementation
-     **/
-    event StableDebtTokenUpgraded(
-        address indexed asset,
-        address indexed proxy,
-        address indexed implementation
-    );
-
-    /**
      * @dev Emitted when the implementation of a variable debt token is upgraded.
      * @param asset The address of the underlying asset of the reserve
      * @param proxy The variable debt token proxy address
@@ -236,14 +215,6 @@ interface IPoolConfigurator {
     ) external;
 
     /**
-     * @notice Updates the stable debt token implementation for the reserve.
-     * @param input The stableDebtToken update parameters
-     **/
-    function updateStableDebtToken(
-        ConfiguratorInputTypes.UpdateDebtTokenInput calldata input
-    ) external;
-
-    /**
      * @notice Updates the variable debt token implementation for the asset.
      * @param input The variableDebtToken update parameters
      **/
@@ -274,15 +245,6 @@ interface IPoolConfigurator {
         uint256 liquidationThreshold,
         uint256 liquidationBonus
     ) external;
-
-    /**
-     * @notice Enable or disable stable rate borrowing on a reserve.
-     * @dev Can only be enabled (set to true) if borrowing is enabled
-     * @param asset The address of the underlying asset of the reserve
-     * @param enabled True if stable rate borrowing needs to be enabled, false otherwise
-     **/
-    function setReserveStableRateBorrowing(address asset, bool enabled)
-        external;
 
     /**
      * @notice Activate or deactivate a reserve

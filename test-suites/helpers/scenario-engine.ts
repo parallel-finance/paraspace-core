@@ -11,7 +11,6 @@ import {
   repayWithPermit,
   supplyWithPermit,
 } from "./actions";
-import {RateMode} from "../../deploy/helpers/types";
 import {getTestWallets} from "./utils/wallets";
 
 export interface Action {
@@ -45,7 +44,7 @@ const executeAction = async (
   users: SignerWithAddress[],
   testEnv: TestEnv
 ) => {
-  const {reserve, user: userIndex, borrowRateMode} = action.args;
+  const {reserve, user: userIndex} = action.args;
   const {name, expected, revertMessage} = action;
 
   if (!name || name === "") {
@@ -60,21 +59,6 @@ const executeAction = async (
 
   if (!expected || expected === "") {
     throw `An expected result for action ${name} is required`;
-  }
-
-  let rateMode: string = RateMode.None;
-
-  if (borrowRateMode) {
-    if (borrowRateMode === "none") {
-      rateMode = RateMode.None;
-    } else if (borrowRateMode === "stable") {
-      rateMode = RateMode.Stable;
-    } else if (borrowRateMode === "variable") {
-      rateMode = RateMode.Variable;
-    } else {
-      //random value, to test improper selection of the parameter
-      rateMode = "4";
-    }
   }
 
   const user = users[parseInt(userIndex)];
@@ -161,7 +145,6 @@ const executeAction = async (
         await delegateBorrowAllowance(
           reserve,
           amount,
-          rateMode,
           user,
           toUser,
           expected,
@@ -197,7 +180,6 @@ const executeAction = async (
         await borrow(
           reserve,
           amount,
-          rateMode,
           user,
           onBehalfOf,
           timeTravel,
@@ -230,7 +212,6 @@ const executeAction = async (
         await repay(
           reserve,
           amount,
-          rateMode,
           user,
           userToRepayOnBehalf,
           sendValue,
@@ -264,7 +245,6 @@ const executeAction = async (
         await repayWithPermit(
           reserve,
           amount,
-          rateMode,
           user,
           userPrivateKey,
           userToRepayOnBehalf,

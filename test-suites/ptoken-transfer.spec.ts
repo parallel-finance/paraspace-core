@@ -2,7 +2,7 @@ import {expect} from "chai";
 import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -282,13 +282,7 @@ describe("PToken: Transfer", () => {
     expect(
       await pool
         .connect(users[1].signer)
-        .borrow(
-          weth.address,
-          amountWETHtoBorrow,
-          RateMode.Variable,
-          "0",
-          users[1].address
-        )
+        .borrow(weth.address, amountWETHtoBorrow, "0", users[1].address)
     );
 
     const userReserveData = await protocolDataProvider.getUserReserveData(

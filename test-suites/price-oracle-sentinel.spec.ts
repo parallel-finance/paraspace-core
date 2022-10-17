@@ -7,7 +7,7 @@ import {
   waitForTx,
 } from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {ProtocolErrors, RateMode} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 import {
   PriceOracleSentinel,
   PriceOracleSentinel__factory,
@@ -234,13 +234,7 @@ describe("PriceOracleSentinel", () => {
 
       await pool
         .connect(currBorrower.signer)
-        .borrow(
-          dai.address,
-          amountDAIToBorrow,
-          RateMode.Variable,
-          "0",
-          currBorrower.address
-        );
+        .borrow(dai.address, amountDAIToBorrow, "0", currBorrower.address);
     }
   });
 
@@ -484,13 +478,7 @@ describe("PriceOracleSentinel", () => {
     await expect(
       pool
         .connect(user.signer)
-        .borrow(
-          dai.address,
-          utils.parseUnits("100", 18),
-          RateMode.Variable,
-          0,
-          user.address
-        )
+        .borrow(dai.address, utils.parseUnits("100", 18), 0, user.address)
     ).to.be.revertedWith(PRICE_ORACLE_SENTINEL_CHECK_FAILED);
   });
 
@@ -517,13 +505,7 @@ describe("PriceOracleSentinel", () => {
     await expect(
       pool
         .connect(user.signer)
-        .borrow(
-          dai.address,
-          utils.parseUnits("100", 18),
-          RateMode.Variable,
-          0,
-          user.address
-        )
+        .borrow(dai.address, utils.parseUnits("100", 18), 0, user.address)
     ).to.be.revertedWith(PRICE_ORACLE_SENTINEL_CHECK_FAILED);
   });
 
@@ -552,13 +534,7 @@ describe("PriceOracleSentinel", () => {
     await expect(
       pool
         .connect(user.signer)
-        .borrow(
-          dai.address,
-          utils.parseUnits("100", 18),
-          RateMode.Variable,
-          0,
-          user.address
-        )
+        .borrow(dai.address, utils.parseUnits("100", 18), 0, user.address)
     ).to.be.revertedWith(PRICE_ORACLE_SENTINEL_CHECK_FAILED);
   });
 
@@ -586,13 +562,7 @@ describe("PriceOracleSentinel", () => {
     await waitForTx(
       await pool
         .connect(user.signer)
-        .borrow(
-          dai.address,
-          utils.parseUnits("100", 18),
-          RateMode.Variable,
-          0,
-          user.address
-        )
+        .borrow(dai.address, utils.parseUnits("100", 18), 0, user.address)
     );
   });
 

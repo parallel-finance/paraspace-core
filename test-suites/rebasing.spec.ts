@@ -4,7 +4,6 @@ import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
-import {RateMode} from "../deploy/helpers/types";
 import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -108,16 +107,9 @@ describe("Rebasing tokens", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .borrow(
-          stETH.address,
-          borrowAmountBaseUnits,
-          RateMode.Variable,
-          "0",
-          user2.address,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+        .borrow(stETH.address, borrowAmountBaseUnits, "0", user2.address, {
+          gasLimit: 12_450_000,
+        })
     );
 
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
@@ -170,65 +162,4 @@ describe("Rebasing tokens", () => {
       );
     });
   });
-
-  // it("expect the balance of supplier to accrue both aWETH and paWETH interest", async () => {
-  //   const {
-  //     users: [user1, user2],
-  //     pool,
-  //     aWETH,
-  //     paWETH,
-  //     weth,
-  //   } = testEnv;
-  //
-  //   const supplyAmountBaseUnits = await convertToCurrencyDecimals(
-  //     weth.address,
-  //     "80000"
-  //   );
-  //   const userAETHAmount = await convertToCurrencyDecimals(
-  //     aWETH.address,
-  //     "10000"
-  //   );
-  //   const borrowAmountBaseUnits = await convertToCurrencyDecimals(
-  //     aWETH.address,
-  //     "10"
-  //   );
-  //
-  //   await waitForTx(
-  //     await weth.connect(user2.signer)["mint(uint256)"](supplyAmountBaseUnits)
-  //   );
-  //
-  //   await waitForTx(
-  //     await weth.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
-  //   );
-  //
-  //   await waitForTx(
-  //     await pool
-  //       .connect(user2.signer)
-  //       .supply(weth.address, supplyAmountBaseUnits, user2.address, "0", {
-  //         gasLimit: 12_450_000,
-  //       })
-  //   );
-  //
-  //   await waitForTx(
-  //     await pool
-  //       .connect(user2.signer)
-  //       .borrow(
-  //         aWETH.address,
-  //         borrowAmountBaseUnits,
-  //         RateMode.Variable,
-  //         "0",
-  //         user2.address,
-  //         {
-  //           gasLimit: 12_450_000,
-  //         }
-  //       )
-  //   );
-  //
-  //   await advanceTimeAndBlock(parseInt(ONE_YEAR));
-  //   expect(await paWETH.balanceOf(user1.address)).to.be.gt(
-  //     BigNumber.from("1080000000000000000000000000")
-  //       .mul(userAETHAmount)
-  //       .div("1000000000000000000000000000")
-  //   );
-  // });
 });

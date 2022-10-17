@@ -1,5 +1,5 @@
 // Sources flattened with hardhat v2.9.3 https://hardhat.org
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 // File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.2.0
 
 // MIT

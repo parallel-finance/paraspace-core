@@ -79,7 +79,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "100",
-            "borrowRateMode": "variable",
             "user": "1",
             "timeTravel": "365"
           },
@@ -95,7 +94,6 @@
           "args": {
             "reserve": "DAI",
             "amount": "900",
-            "borrowRateMode": "variable",
             "user": "1"
           },
           "expected": "revert",
@@ -128,8 +126,7 @@
             "reserve": "DAI",
             "amount": "1.25",
             "user": "1",
-            "onBehalfOf": "1",
-            "borrowRateMode": "variable"
+            "onBehalfOf": "1"
           },
           "expected": "success"
         }
@@ -155,7 +152,6 @@
             "amount": "-1",
             "user": "1",
             "onBehalfOf": "1",
-            "borrowRateMode": "variable",
             "timeTravel" : "365"
           },
           "expected": "success"
