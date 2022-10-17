@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
+import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
 import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
@@ -26,7 +26,7 @@ import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
-import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
@@ -44,8 +44,8 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  *   PoolAddressesProvider
  **/
 contract PoolMarketplace is
-    VersionedInitializable,
-    ReentrancyGuard,
+    ParaVersionedInitializable,
+    ParaReentrancyGuard,
     PoolStorage,
     IPoolMarketplace
 {
@@ -74,6 +74,8 @@ contract PoolMarketplace is
         DataTypes.Credit calldata credit,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
@@ -91,9 +93,9 @@ contract PoolMarketplace is
         }
 
         ethLeft -= MarketplaceLogic.executeBuyWithCredit(
-            _reserves,
-            _reservesList,
-            _usersConfig[orderInfo.taker],
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[orderInfo.taker],
             DataTypes.ExecuteMarketplaceParams({
                 marketplaceId: marketplaceId,
                 payload: payload,
@@ -103,7 +105,7 @@ contract PoolMarketplace is
                 orderInfo: orderInfo,
                 weth: weth,
                 referralCode: referralCode,
-                reservesCount: _reservesCount,
+                reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
@@ -118,6 +120,8 @@ contract PoolMarketplace is
         DataTypes.Credit[] calldata credits,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         require(
             marketplaceIds.length == payloads.length &&
@@ -160,9 +164,9 @@ contract PoolMarketplace is
             }
 
             ethLeft -= MarketplaceLogic.executeBuyWithCredit(
-                _reserves,
-                _reservesList,
-                _usersConfig[orderInfo.taker],
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[orderInfo.taker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
                     payload: payload,
@@ -172,7 +176,7 @@ contract PoolMarketplace is
                     orderInfo: orderInfo,
                     weth: weth,
                     referralCode: referralCode,
-                    reservesCount: _reservesCount,
+                    reservesCount: ps._reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
                         .getPriceOracleSentinel()
@@ -190,6 +194,8 @@ contract PoolMarketplace is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         DataTypes.Marketplace memory marketplace = ADDRESSES_PROVIDER
             .getMarketplace(marketplaceId);
@@ -198,9 +204,9 @@ contract PoolMarketplace is
         require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
         return
             MarketplaceLogic.executeAcceptBidWithCredit(
-                _reserves,
-                _reservesList,
-                _usersConfig[orderInfo.maker],
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[orderInfo.maker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
                     payload: payload,
@@ -210,7 +216,7 @@ contract PoolMarketplace is
                     orderInfo: orderInfo,
                     weth: weth,
                     referralCode: referralCode,
-                    reservesCount: _reservesCount,
+                    reservesCount: ps._reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
                         .getPriceOracleSentinel()
@@ -226,6 +232,8 @@ contract PoolMarketplace is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address weth = IPoolAddressesProvider(ADDRESSES_PROVIDER).getWETH();
         require(
             marketplaceIds.length == payloads.length &&
@@ -245,9 +253,9 @@ contract PoolMarketplace is
             require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
 
             MarketplaceLogic.executeAcceptBidWithCredit(
-                _reserves,
-                _reservesList,
-                _usersConfig[orderInfo.maker],
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[orderInfo.maker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: marketplaceId,
                     payload: payload,
@@ -257,7 +265,7 @@ contract PoolMarketplace is
                     orderInfo: orderInfo,
                     weth: weth,
                     referralCode: referralCode,
-                    reservesCount: _reservesCount,
+                    reservesCount: ps._reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
                         .getPriceOracleSentinel()

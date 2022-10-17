@@ -13,55 +13,39 @@ pragma solidity 0.8.10;
  * a parent initializer twice, or ensure that all initializers are idempotent,
  * because this is not dealt with automatically as with constructors.
  */
-abstract contract ParaVersionedInitializable {
+abstract contract VersionedInitializable {
+    /**
+     * @dev Indicates that the contract has been initialized.
+     */
+    uint256 private lastInitializedRevision = 0;
 
-    bytes32 constant VERSION_STORAGE_POSITION =
-        keccak256("paraspace.proxy.version.storage");
-
-    struct VersionStorage {
-        /**
-        * @dev Indicates that the contract has been initialized.
-        */
-        uint256 lastInitializedRevision;
-
-        /**
-        * @dev Indicates that the contract is in the process of being initialized.
-        */
-        bool initializing;
-    }
-
-    function versionStorage() internal pure returns (VersionStorage storage vs) {
-        bytes32 position = VERSION_STORAGE_POSITION;
-        assembly {
-            vs.slot := position
-        }
-    }
-
+    /**
+     * @dev Indicates that the contract is in the process of being initialized.
+     */
+    bool private initializing;
 
     /**
      * @dev Modifier to use in the initializer function of a contract.
      */
     modifier initializer() {
-        VersionStorage storage vs = versionStorage();
-
         uint256 revision = getRevision();
         require(
-            vs.initializing ||
+            initializing ||
                 isConstructor() ||
-                revision > vs.lastInitializedRevision,
+                revision > lastInitializedRevision,
             "Contract instance has already been initialized"
         );
 
-        bool isTopLevelCall = !vs.initializing;
+        bool isTopLevelCall = !initializing;
         if (isTopLevelCall) {
-            vs.initializing = true;
-            vs.lastInitializedRevision = revision;
+            initializing = true;
+            lastInitializedRevision = revision;
         }
 
         _;
 
         if (isTopLevelCall) {
-            vs.initializing = false;
+            initializing = false;
         }
     }
 
@@ -91,5 +75,5 @@ abstract contract ParaVersionedInitializable {
     }
 
     // Reserved storage space to allow for layout changes in the future.
-    // uint256[50] private ______gap;
+    uint256[50] private ______gap;
 }
