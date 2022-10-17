@@ -212,6 +212,9 @@ test-rate-strategy:
 test-ui-pool-data-provider:
 	make TEST_TARGET=ui-pool-data-provider.spec.ts test
 
+.PHONY: test-ui-incentive-data-provider
+test-ui-incentive-data-provider:
+	make TEST_TARGET=ui-incentive-data-provider.spec.ts test
 
 .PHONY: test-dynamic-configs-strategy
 test-dynamic-configs-strategy:
