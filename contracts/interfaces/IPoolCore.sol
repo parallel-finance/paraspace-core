@@ -239,6 +239,9 @@ interface IPoolCore {
         address onBehalfOf
     ) external;
 
+    /**
+     * @notice Same as `supplyERC721` but this can only be used by supplying UniswapV3 NFT.
+     **/
     function supplyUniswapV3(
         address asset,
         DataTypes.ERC721SupplyParams[] calldata tokenData,
