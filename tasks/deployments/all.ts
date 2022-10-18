@@ -50,19 +50,16 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
     "../../deploy/tasks/deployments/testnet/steps/14_punkGateway"
   );
   const {step_15} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/15_uniswapV3Gateway"
+    "../../deploy/tasks/deployments/testnet/steps/15_seaport"
   );
   const {step_16} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/16_seaport"
+    "../../deploy/tasks/deployments/testnet/steps/16_looksrare"
   );
   const {step_17} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/17_looksrare"
+    "../../deploy/tasks/deployments/testnet/steps/17_x2y2"
   );
   const {step_18} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/18_x2y2"
-  );
-  const {step_19} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/19_flashClaimRegistry"
+    "../../deploy/tasks/deployments/testnet/steps/18_flashClaimRegistry"
   );
 
   await DRE.run("set-DRE");
@@ -127,25 +124,21 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   await step_14(verify);
   console.log("------------ step 14 done ------------ ");
 
-  // deploy uniswapV3Gateway
+  // deploy seaport
   await step_15(verify);
   console.log("------------ step 15 done ------------ ");
 
-  // deploy seaport
+  // deploy looksrare
   await step_16(verify);
   console.log("------------ step 16 done ------------ ");
 
-  // deploy looksrare
+  // deploy x2y2
   await step_17(verify);
   console.log("------------ step 17 done ------------ ");
 
-  // deploy x2y2
+  // deploy flash claim registry
   await step_18(verify);
   console.log("------------ step 18 done ------------ ");
-
-  // deploy flash claim registry
-  await step_19(verify);
-  console.log("------------ step 19 done ------------ ");
 
   await printContracts();
 

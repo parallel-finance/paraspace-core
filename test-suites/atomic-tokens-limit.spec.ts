@@ -9,10 +9,7 @@ import {
   approveTo,
 } from "../deploy/helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {
-  getPoolConfiguratorProxy,
-  getUniswapV3Gateway,
-} from "../deploy/helpers/contracts-getters";
+import {getPoolConfiguratorProxy} from "../deploy/helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -30,6 +27,7 @@ describe("Atomic tokens limit", () => {
         weth,
         nftPositionManager,
         nUniswapV3,
+        pool,
       } = testEnv;
 
       const userDaiAmount = await convertToCurrencyDecimals(
@@ -80,22 +78,20 @@ describe("Atomic tokens limit", () => {
         });
       }
 
-      const uniswapV3Gateway = (await getUniswapV3Gateway()).connect(
-        user1.signer
-      );
-
-      await nft.setApprovalForAll(uniswapV3Gateway.address, true);
+      await nft.setApprovalForAll(pool.address, true);
 
       const poolConfigurator = await getPoolConfiguratorProxy();
 
       await waitForTx(await poolConfigurator.setMaxAtomicTokensAllowed(2));
 
-      await uniswapV3Gateway.supplyUniswapV3(
+      await pool.connect(user1.signer).supplyUniswapV3(
+        nftPositionManager.address,
         [
           {tokenId: 1, useAsCollateral: true},
           {tokenId: 2, useAsCollateral: true},
         ],
         user1.address,
+        0,
         {
           gasLimit: 12_450_000,
         }
@@ -106,19 +102,20 @@ describe("Atomic tokens limit", () => {
 
     it("Should not allow supplying atomic tokens outside of limit [ @skip-on-coverage ]", async () => {
       const {
+        nftPositionManager,
         users: [user1],
+        pool,
       } = testEnv;
-      const uniswapV3Gateway = (await getUniswapV3Gateway()).connect(
-        user1.signer
-      );
 
       expect(
-        uniswapV3Gateway.supplyUniswapV3(
+        pool.connect(user1.signer).supplyUniswapV3(
+          nftPositionManager.address,
           [
             {tokenId: 3, useAsCollateral: true},
             {tokenId: 4, useAsCollateral: true},
           ],
           user1.address,
+          0,
           {
             gasLimit: 12_450_000,
           }
@@ -126,12 +123,11 @@ describe("Atomic tokens limit", () => {
       ).to.be.reverted;
     });
 
-    it("Should allow trasnfering atomic tokens within of limit [ @skip-on-coverage ]", async () => {
+    it("Should allow transferring atomic tokens within of limit [ @skip-on-coverage ]", async () => {
       const {
         users: [user1, user2],
         nUniswapV3,
       } = testEnv;
-      (await getUniswapV3Gateway()).connect(user1.signer);
 
       await waitForTx(
         await nUniswapV3
@@ -148,14 +144,13 @@ describe("Atomic tokens limit", () => {
       expect(await nUniswapV3.balanceOf(user2.address)).to.be.eq(1);
     });
 
-    it("Should not allow trasnfering atomic tokens outside of limit [ @skip-on-coverage ]", async () => {
+    it("Should not allow transferring atomic tokens outside of limit [ @skip-on-coverage ]", async () => {
       const {
         users: [user1, user2],
         nUniswapV3,
+        pool,
+        nftPositionManager,
       } = testEnv;
-      const uniswapV3Gateway = (await getUniswapV3Gateway()).connect(
-        user1.signer
-      );
 
       await waitForTx(
         await nUniswapV3
@@ -172,12 +167,14 @@ describe("Atomic tokens limit", () => {
 
       expect(await nUniswapV3.balanceOf(user2.address)).to.be.eq(2);
 
-      await uniswapV3Gateway.supplyUniswapV3(
+      await pool.connect(user1.signer).supplyUniswapV3(
+        nftPositionManager.address,
         [
           {tokenId: 3, useAsCollateral: true},
           {tokenId: 4, useAsCollateral: true},
         ],
         user1.address,
+        0,
         {
           gasLimit: 12_450_000,
         }
@@ -204,7 +201,6 @@ describe("Atomic tokens limit", () => {
         nUniswapV3,
         pool,
       } = testEnv;
-      (await getUniswapV3Gateway()).connect(user1.signer);
 
       await waitForTx(
         await pool

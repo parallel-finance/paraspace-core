@@ -34,47 +34,6 @@ contract NTokenUniswapV3 is NToken {
         // Intentionally left blank
     }
 
-    function onERC721Received(
-        address operator,
-        address,
-        uint256 id,
-        bytes memory
-    ) external virtual override returns (bytes4) {
-        // only accept UniswapV3 tokens
-        require(msg.sender == _underlyingAsset, Errors.OPERATION_NOT_SUPPORTED);
-
-        // if the operator is the pool, this means that the pool is transferring the token to this contract
-        // which can happen during a normal supplyERC721 pool tx
-        if (operator == address(POOL)) {
-            revert(Errors.OPERATION_NOT_SUPPORTED);
-        }
-
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-
-        ) = INonfungiblePositionManager(_underlyingAsset).positions(id);
-
-        //TODO should we check for 0 balance tokens?
-
-        require(
-            POOL.getReserveData(token0).xTokenAddress != address(0) &&
-                POOL.getReserveData(token1).xTokenAddress != address(0),
-            Errors.ASSET_NOT_LISTED
-        );
-
-        return this.onERC721Received.selector;
-    }
-
     /**
      * @notice A function that decreases the current liquidity.
      * @param tokenId The id of the erc721 token

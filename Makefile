@@ -297,10 +297,6 @@ deploy-wethGateway:
 deploy-punkGateway:
 	make TASK_NAME=deploy:punk-gateway run-task
 
-.PHONY: deploy-uniswapV3Gateway
-deploy-uniswapV3Gateway:
-	make TASK_NAME=deploy:uniswap-v3-gateway run-task
-
 .PHONY: deploy-seaport
 deploy-seaport:
 	make TASK_NAME=deploy:seaport run-task

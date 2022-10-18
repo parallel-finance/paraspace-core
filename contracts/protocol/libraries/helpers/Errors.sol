@@ -17,7 +17,7 @@ library Errors {
     string public constant INVALID_ADDRESSES_PROVIDER_ID = "8"; // 'Invalid id for the pool addresses provider'
     string public constant NOT_CONTRACT = "9"; // 'Address is not a contract'
     string public constant CALLER_NOT_POOL_CONFIGURATOR = "10"; // 'The caller of the function is not the pool configurator'
-    string public constant CALLER_NOT_XTOKEN = "11"; // 'The caller of the function is not an PToken'
+    string public constant CALLER_NOT_XTOKEN = "11"; // 'The caller of the function is not an PToken or NToken'
     string public constant INVALID_ADDRESSES_PROVIDER = "12"; // 'The address of the pool addresses provider is invalid'
     string public constant RESERVE_ALREADY_ADDED = "14"; // 'Reserve has already been added to reserve list'
     string public constant NO_MORE_RESERVES_ALLOWED = "15"; // 'Maximum amount of reserves in the pool reached'
