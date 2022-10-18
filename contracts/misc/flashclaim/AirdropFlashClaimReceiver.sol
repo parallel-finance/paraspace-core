@@ -11,6 +11,7 @@ import "../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
 import "../../dependencies/openzeppelin/contracts/ERC721Holder.sol";
 import "../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import "../../dependencies/openzeppelin/contracts/ERC1155Holder.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 
 contract AirdropFlashClaimReceiver is
     IFlashClaimReceiver,
@@ -19,6 +20,8 @@ contract AirdropFlashClaimReceiver is
     ERC721Holder,
     ERC1155Holder
 {
+    using SafeERC20 for IERC20;
+
     address public immutable pool;
     mapping(bytes32 => bool) public airdropClaimRecords;
 
@@ -124,7 +127,7 @@ contract AirdropFlashClaimReceiver is
                     vars.airdropTokenAddresses[typeIndex]
                 ).balanceOf(address(this));
                 if (vars.airdropBalance > 0) {
-                    IERC20(vars.airdropTokenAddresses[typeIndex]).transfer(
+                    IERC20(vars.airdropTokenAddresses[typeIndex]).safeTransfer(
                         initiator,
                         vars.airdropBalance
                     );
@@ -177,7 +180,7 @@ contract AirdropFlashClaimReceiver is
         address to,
         uint256 amount
     ) external nonReentrant onlyOwner {
-        IERC20(token).transfer(to, amount);
+        IERC20(token).safeTransfer(to, amount);
     }
 
     function transferERC721(
