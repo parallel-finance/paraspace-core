@@ -239,7 +239,7 @@ run:
 
 .PHONY: run-task
 run-task: clean build
-	SKIP_LOAD=false npx hardhat $(TASK_NAME) --network $(NETWORK)
+	npx hardhat $(TASK_NAME) --network $(NETWORK)
 
 .PHONY: print
 print:
@@ -308,10 +308,6 @@ deploy-wethGateway:
 .PHONY: deploy-punkGateway
 deploy-punkGateway:
 	make TASK_NAME=deploy:punk-gateway run-task
-
-.PHONY: deploy-uniswapV3Gateway
-deploy-uniswapV3Gateway:
-	make TASK_NAME=deploy:uniswap-v3-gateway run-task
 
 .PHONY: deploy-seaport
 deploy-seaport:

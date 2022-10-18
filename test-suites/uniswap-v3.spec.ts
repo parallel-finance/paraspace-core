@@ -13,10 +13,7 @@ import {
   approveTo,
 } from "../deploy/helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {
-  getUniswapV3Gateway,
-  getUniswapV3OracleWrapper,
-} from "../deploy/helpers/contracts-getters";
+import {getUniswapV3OracleWrapper} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {DRE} from "../deploy/helpers/misc-utils";
 import {
@@ -45,6 +42,7 @@ describe("Uniswap V3", () => {
         nftPositionManager,
         nUniswapV3,
         deployer,
+        pool,
       } = testEnv;
 
       const userDaiAmount = await convertToCurrencyDecimals(
@@ -94,10 +92,7 @@ describe("Uniswap V3", () => {
       });
       expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
 
-      const uniswapV3Gateway = (await getUniswapV3Gateway()).connect(
-        user1.signer
-      );
-      await nft.setApprovalForAll(uniswapV3Gateway.address, true);
+      await nft.setApprovalForAll(pool.address, true);
 
       // uniswap gateway receives 1 uniswap
       await waitForTx(
@@ -127,13 +122,17 @@ describe("Uniswap V3", () => {
           .balanceOf(uniswapV3Gateway.address)
       ).to.equal(0);
 
-      await uniswapV3Gateway.supplyUniswapV3(
-        [{tokenId: 1, useAsCollateral: true}],
-        user1.address,
-        {
-          gasLimit: 12_450_000,
-        }
-      );
+      await pool
+        .connect(user1.signer)
+        .supplyUniswapV3(
+          nftPositionManager.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user1.address,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        );
 
       expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
     });
@@ -381,6 +380,7 @@ describe("Uniswap V3", () => {
         weth,
         nftPositionManager,
         nUniswapV3,
+        pool,
       } = testEnv;
 
       const userDaiAmount = await convertToCurrencyDecimals(
@@ -430,18 +430,19 @@ describe("Uniswap V3", () => {
       });
       expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
 
-      const uniswapV3Gateway = (await getUniswapV3Gateway()).connect(
-        user1.signer
-      );
-      await nft.setApprovalForAll(uniswapV3Gateway.address, true);
+      await nft.setApprovalForAll(pool.address, true);
 
-      await uniswapV3Gateway.supplyUniswapV3(
-        [{tokenId: 1, useAsCollateral: true}],
-        user1.address,
-        {
-          gasLimit: 12_450_000,
-        }
-      );
+      await pool
+        .connect(user1.signer)
+        .supplyUniswapV3(
+          nftPositionManager.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user1.address,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        );
 
       expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
     });
