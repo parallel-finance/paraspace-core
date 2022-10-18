@@ -12,7 +12,7 @@ import {
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {buildForkConfig} from "./deploy/helper-hardhat-config";
-import fs from 'fs'
+import fs from "fs";
 
 dotenv.config();
 
@@ -25,22 +25,18 @@ import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
 
-const SKIP_LOAD = process.env.SKIP_LOAD !== "false";
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
 
-// Prevent to load scripts before compilation and typechain
-if (!SKIP_LOAD) {
-  ["deployments"].forEach((folder) => {
-    const tasksPath = path.join(__dirname, "tasks", folder);
-    fs.readdirSync(tasksPath)
-      .filter((pth) => pth.includes(".ts"))
-      .forEach((task) => {
-        require(`${tasksPath}/${task}`);
-      });
-  });
-}
+["deployments"].forEach((folder) => {
+  const tasksPath = path.join(__dirname, "tasks", folder);
+  fs.readdirSync(tasksPath)
+    .filter((pth) => pth.includes(".ts"))
+    .forEach((task) => {
+      require(`${tasksPath}/${task}`);
+    });
+});
 
 require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
@@ -97,6 +93,8 @@ const hardhatConfig: HardhatUserConfig = {
     target: "ethers-v5",
   },
   mocha: {
+    parallel: true,
+    jobs: parseInt(process.env.MOCHA_JOBS ?? "4"),
     timeout: 200000,
   },
   tenderly: {

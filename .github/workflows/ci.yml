@@ -45,6 +45,7 @@ jobs:
       RPC_URL: ${{ secrets.RPC_URL }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+      MOCHA_JOBS: 0
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -73,6 +74,7 @@ jobs:
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
       REPORT_GAS: true
+      MOCHA_JOBS: 0
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3

@@ -231,7 +231,7 @@ run:
 
 .PHONY: run-task
 run-task: clean build
-	SKIP_LOAD=false npx hardhat $(TASK_NAME) --network $(NETWORK)
+	npx hardhat $(TASK_NAME) --network $(NETWORK)
 
 .PHONY: print
 print:
