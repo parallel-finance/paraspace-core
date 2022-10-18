@@ -240,6 +240,16 @@ interface IPoolCore {
     ) external;
 
     /**
+     * @notice Same as `supplyERC721` but this can only be used by supplying UniswapV3 NFT.
+     **/
+    function supplyUniswapV3(
+        address asset,
+        DataTypes.ERC721SupplyParams[] calldata tokenData,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external;
+
+    /**
      * @notice Supply with transfer approval of asset to be supplied done via permit function
      * see: https://eips.ethereum.org/EIPS/eip-2612 and https://eips.ethereum.org/EIPS/eip-713
      * @param asset The address of the underlying asset to supply

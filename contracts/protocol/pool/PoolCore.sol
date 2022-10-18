@@ -140,6 +140,26 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
+    function supplyUniswapV3(
+        address asset,
+        DataTypes.ERC721SupplyParams[] calldata tokenData,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external virtual override nonReentrant {
+        SupplyLogic.executeSupplyUniswapV3(
+            _reserves,
+            _usersConfig[onBehalfOf],
+            DataTypes.ExecuteSupplyERC721Params({
+                asset: asset,
+                tokenData: tokenData,
+                onBehalfOf: onBehalfOf,
+                actualSpender: msg.sender,
+                referralCode: referralCode
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
     function supplyWithPermit(
         address asset,
         uint256 amount,
