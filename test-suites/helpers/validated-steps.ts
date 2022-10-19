@@ -553,33 +553,36 @@ export interface LiquidationValidationData {
   isUsingAsCollateral?: boolean;
 }
 
-const checkBeforeLiquidation = async (before) => {
-  expect(before.isCollateral).to.be.true;
+const checkBeforeLiquidation = async (before: LiquidationValidationData) => {
   // upon liquidation, user should not be available to borrow more
   expect(before.availableToBorrow).to.equal(0);
-  // upon liquidation, health factor should be below 1
-  expect(before.healthFactorBefore).to.be.lt(parseEther("1"));
   if (before.isNFT) {
     // upon NFT liquidation, NFT health factor should be below 1.5 (RECOVERY_HF)
     expect(before.erc721HealthFactor).to.be.lt(parseEther("1.5"));
   } else {
+    // upon liquidation, health factor should be below 1
+    expect(before.healthFactor).to.be.lt(parseEther("1"));
     // for ERC20 asset used for liquidation must be borrowed
     expect(before.isLiquidationAssetBorrowed).to.be.true;
   }
 };
 
 // refactor: move check logics here before and after liquidation
-// eslint-disable-next-line no-unused-vars
+/* eslint-disable  no-unused-vars */
 const checkAfterLiquidationERC20 = async (
   before: LiquidationValidationData,
   after: LiquidationValidationData
-) => {};
+) => {
+  return true;
+};
 
-// eslint-disable-next-line no-unused-vars
 const checkAfterLiquidationERC721 = async (
   before: LiquidationValidationData,
   after: LiquidationValidationData
-) => {};
+) => {
+  return true;
+};
+/* eslint-enable no-unused-vars */
 
 export const liquidateAndValidate = async (
   targetToken: SupportedAsset,
@@ -692,13 +695,7 @@ export const liquidateAndValidateERC20 = async (
   const borrowerLiquidationDebtTokenBalanceBefore =
     await liquidationDebtToken.balanceOf(borrower.address);
 
-  // target asset must be in collateral
-  const wasCollateral = await isAssetInCollateral(
-    borrower,
-    targetToken.address
-  );
   const before = {
-    isCollateral: wasCollateral,
     isLiquidationAssetBorrowed: isLiquidationAssetBorrowed,
     targetTokenBalance: borrowerTokenBalanceBefore,
     targetXTokenBalance: borrowerPTokenBalanceBefore,
@@ -991,12 +988,6 @@ export const liquidateAndValidateERC721 = async (
     +formatEther(borrowerLiquidationDebtTokenBalanceBefore) *
       +formatEther(liquidationAssetPrice) <=
     +formatEther(assetPrice.mul(10000).div(liquidationBonus));
-
-  // target asset must be in collateral
-  const wasCollateral = await isAssetInCollateral(
-    borrower,
-    targetToken.address
-  );
 
   const liquidatorLiquidationAssetBalanceBefore =
     await liquidationToken.balanceOf(liquidator.address);
