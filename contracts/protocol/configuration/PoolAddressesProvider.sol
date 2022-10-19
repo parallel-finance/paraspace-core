@@ -221,14 +221,14 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setPoolDataProvider(address newDataProvider)
+    function setProtocolDataProvider(address newDataProvider)
         external
         override
         onlyOwner
     {
         address oldDataProvider = _addresses[DATA_PROVIDER];
         _addresses[DATA_PROVIDER] = newDataProvider;
-        emit PoolDataProviderUpdated(oldDataProvider, newDataProvider);
+        emit ProtocolDataProviderUpdated(oldDataProvider, newDataProvider);
     }
 
     /// @inheritdoc IPoolAddressesProvider

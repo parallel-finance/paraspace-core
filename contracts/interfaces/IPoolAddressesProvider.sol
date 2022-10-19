@@ -91,7 +91,7 @@ interface IPoolAddressesProvider {
      * @param oldAddress The old address of the PoolDataProvider
      * @param newAddress The new address of the PoolDataProvider
      */
-    event PoolDataProviderUpdated(
+    event ProtocolDataProviderUpdated(
         address indexed oldAddress,
         address indexed newAddress
     );
@@ -323,7 +323,7 @@ interface IPoolAddressesProvider {
      * @notice Updates the address of the data provider.
      * @param newDataProvider The address of the new DataProvider
      **/
-    function setPoolDataProvider(address newDataProvider) external;
+    function setProtocolDataProvider(address newDataProvider) external;
 
     /**
      * @notice Updates the address of the WETH.

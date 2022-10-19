@@ -23,7 +23,7 @@ size:
 	yarn size
 
 .PHONY: build
-build:
+build: clean
 	yarn build
 
 .PHONY: doc
