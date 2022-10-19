@@ -157,9 +157,11 @@ contract PoolCore is
         address onBehalfOf,
         uint16 referralCode
     ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        
         SupplyLogic.executeSupplyUniswapV3(
-            _reserves,
-            _usersConfig[onBehalfOf],
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
             DataTypes.ExecuteSupplyERC721Params({
                 asset: asset,
                 tokenData: tokenData,

@@ -58,7 +58,8 @@ library MarketplaceLogic {
         bytes calldata payload,
         DataTypes.Credit calldata credit,
         DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider
+        IPoolAddressesProvider poolAddressProvider,
+        uint16 referralCode
     ) external {
         address weth = poolAddressProvider.getWETH();
         DataTypes.Marketplace memory marketplace = poolAddressProvider
@@ -88,7 +89,7 @@ library MarketplaceLogic {
                 marketplace: marketplace,
                 orderInfo: orderInfo,
                 weth: weth,
-                referralCode: 0,
+                referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
                 priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
@@ -158,7 +159,8 @@ library MarketplaceLogic {
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider
+        IPoolAddressesProvider poolAddressProvider,
+        uint16 referralCode
     ) external {
         address weth = poolAddressProvider.getWETH();
         require(
@@ -213,7 +215,7 @@ library MarketplaceLogic {
                     marketplace: marketplace,
                     orderInfo: orderInfo,
                     weth: weth,
-                    referralCode: 0,
+                    referralCode: referralCode,
                     reservesCount: ps._reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
                     priceOracleSentinel: poolAddressProvider
@@ -230,7 +232,8 @@ library MarketplaceLogic {
         DataTypes.Credit calldata credit,
         address onBehalfOf,
         DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider
+        IPoolAddressesProvider poolAddressProvider,
+        uint16 referralCode
     ) external {
         address weth = poolAddressProvider.getWETH();
         DataTypes.Marketplace memory marketplace = poolAddressProvider
@@ -251,7 +254,7 @@ library MarketplaceLogic {
                 marketplace: marketplace,
                 orderInfo: orderInfo,
                 weth: weth,
-                referralCode: 0,
+                referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
                 priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
@@ -265,7 +268,8 @@ library MarketplaceLogic {
         DataTypes.Credit[] calldata credits,
         address onBehalfOf,
         DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider
+        IPoolAddressesProvider poolAddressProvider,
+        uint16 referralCode
     ) external {
         address weth = poolAddressProvider.getWETH();
         require(
@@ -297,7 +301,7 @@ library MarketplaceLogic {
                     marketplace: marketplace,
                     orderInfo: orderInfo,
                     weth: weth,
-                    referralCode: 0,
+                    referralCode: referralCode,
                     reservesCount: ps._reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
                     priceOracleSentinel: poolAddressProvider
