@@ -12,7 +12,7 @@ import {
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {buildForkConfig} from "./deploy/helper-hardhat-config";
-import fs from 'fs'
+import fs from "fs";
 
 dotenv.config();
 
@@ -25,24 +25,21 @@ import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
 
-const SKIP_LOAD = process.env.SKIP_LOAD !== "false";
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
-
-// Prevent to load scripts before compilation and typechain
-if (!SKIP_LOAD) {
-  ["deployments"].forEach((folder) => {
-    const tasksPath = path.join(__dirname, "tasks", folder);
-    fs.readdirSync(tasksPath)
-      .filter((pth) => pth.includes(".ts"))
-      .forEach((task) => {
-        require(`${tasksPath}/${task}`);
-      });
-  });
-}
+const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4")
 
 require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
+
+["deployments"].forEach((folder) => {
+  const tasksPath = path.join(__dirname, "tasks", folder);
+  fs.readdirSync(tasksPath)
+    .filter((pth) => pth.includes(".ts"))
+    .forEach((task) => {
+      require(`${tasksPath}/${task}`);
+    });
+});
 
 const hardhatConfig: HardhatUserConfig = {
   contractSizer: {
@@ -73,7 +70,7 @@ const hardhatConfig: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 10000,
           },
           evmVersion: "london",
         },
@@ -97,6 +94,8 @@ const hardhatConfig: HardhatUserConfig = {
     target: "ethers-v5",
   },
   mocha: {
+    parallel: !isNaN(MOCHA_JOBS) && MOCHA_JOBS > 1,
+    jobs: MOCHA_JOBS,
     timeout: 200000,
   },
   tenderly: {
@@ -143,7 +142,7 @@ const hardhatConfig: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
     },
     ganache: {
-      url: "http://127.0.0.1:8545",
+      url: "http://localhost:8545",
       chainId: FORK_MAINNET_CHAINID,
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",

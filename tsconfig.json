@@ -12,10 +12,6 @@
     "./test-suites",
     "./deploy/tasks"
   ],
-  "exclude": [
-    "./deploy/helpers/seaport-helpers",
-    "./test-suites/helpers"
-  ],
   "files": [
     "./hardhat.config.ts"
   ]

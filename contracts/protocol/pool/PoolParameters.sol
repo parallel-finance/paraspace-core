@@ -48,6 +48,8 @@ contract PoolParameters is
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 1;
+    uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 2e18;
+    uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
 
     /**
      * @dev Only pool configurator can call functions marked by this modifier.
@@ -278,6 +280,12 @@ contract PoolParameters is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         require(value != 0, Errors.INVALID_AMOUNT);
+
+        require(
+            value > MIN_AUCTION_HEALTH_FACTOR &&
+                value <= MAX_AUCTION_HEALTH_FACTOR,
+            Errors.INVALID_AMOUNT
+        );
 
         ps._auctionRecoveryHealthFactor = value;
     }

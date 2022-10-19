@@ -10,6 +10,7 @@ import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
+import {AuctionLogic} from "../libraries/logic/AuctionLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
@@ -145,6 +146,26 @@ contract PoolCore is
                 onBehalfOf: onBehalfOf,
                 actualSpender: address(0),
                 referralCode: 0
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function supplyUniswapV3(
+        address asset,
+        DataTypes.ERC721SupplyParams[] calldata tokenData,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external virtual override nonReentrant {
+        SupplyLogic.executeSupplyUniswapV3(
+            _reserves,
+            _usersConfig[onBehalfOf],
+            DataTypes.ExecuteSupplyERC721Params({
+                asset: asset,
+                tokenData: tokenData,
+                onBehalfOf: onBehalfOf,
+                actualSpender: msg.sender,
+                referralCode: referralCode
             })
         );
     }
@@ -457,7 +478,7 @@ contract PoolCore is
     ) external override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        LiquidationLogic.executeStartAuction(
+        AuctionLogic.executeStartAuction(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
@@ -480,7 +501,7 @@ contract PoolCore is
     ) external override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        LiquidationLogic.executeEndAuction(
+        AuctionLogic.executeEndAuction(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
