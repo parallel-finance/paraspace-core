@@ -72,6 +72,7 @@ contract PToken is
         _setSymbol(pTokenSymbol);
         _setDecimals(pTokenDecimals);
 
+        require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         _treasury = treasury;
         _underlyingAsset = underlyingAsset;
         _rewardController = incentivesController;
