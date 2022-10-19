@@ -62,7 +62,6 @@ contract VariableDebtToken is
         _setSymbol(debtTokenSymbol);
         _setDecimals(debtTokenDecimals);
 
-        require(_underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         _underlyingAsset = underlyingAsset;
         _rewardController = incentivesController;
 
