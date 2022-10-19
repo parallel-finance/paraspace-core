@@ -265,6 +265,7 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
      * @param newAddress The address of the new implementation
      **/
     function _updateImpl(bytes32 id, address newAddress) internal {
+        require(newAddress != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         address proxyAddress = _addresses[id];
         InitializableImmutableAdminUpgradeabilityProxy proxy;
         bytes memory params = abi.encodeWithSignature(
