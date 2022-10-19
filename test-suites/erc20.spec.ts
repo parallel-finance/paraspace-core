@@ -297,9 +297,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
       dai.address,
       firstDaiDeposit
     );
-    await dai
-      .connect(user3.signer)
-      .approve(pool.address, parseEther("5000"));
+    await dai.connect(user3.signer).approve(pool.address, parseEther("5000"));
     await expect(
       pool.connect(user3.signer).supply(dai.address, amount, user3.address, "0")
     ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
@@ -523,7 +521,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
         await convertToCurrencyDecimals(usdc.address, "8000"),
         user3.address
       );
-    
+
     // user3 - healthFactor value is between 1.1 - 1.0
     const healthFactor = (await pool.getUserAccountData(user3.address))
       .healthFactor;
