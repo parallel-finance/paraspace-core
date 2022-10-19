@@ -23,7 +23,7 @@ size:
 	yarn size
 
 .PHONY: build
-build:
+build: clean
 	yarn build
 
 .PHONY: doc
@@ -238,8 +238,8 @@ run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
 
 .PHONY: run-task
-run-task: clean build
-	npx hardhat $(TASK_NAME) --network $(NETWORK)
+run-task:
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) --network $(NETWORK)
 
 .PHONY: print
 print:

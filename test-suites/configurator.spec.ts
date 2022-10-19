@@ -8,10 +8,10 @@ import {
   RAY,
   ZERO_ADDRESS,
 } from "../deploy/helpers/constants";
-import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
+import {deployReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {strategyWETH} from "../deploy/market-config/reservesConfigs";
 import {
@@ -183,7 +183,8 @@ describe("PoolConfigurator", () => {
     const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
       await getFirstSigner()
     ).deploy(addressesProvider.address, 0, 0, 0, 0);
-    const mockAuctionStrategy = await await deployDefaultReserveAuctionStrategy(
+    const mockAuctionStrategy = await deployReserveAuctionStrategy(
+      eContractid.DefaultReserveAuctionStrategy,
       [
         auctionStrategyExp.maxPriceMultiplier,
         auctionStrategyExp.minExpPriceMultiplier,

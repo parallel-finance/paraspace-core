@@ -28,6 +28,9 @@ import "hardhat-contract-sizer";
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
+const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4")
+
+require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
 ["deployments"].forEach((folder) => {
   const tasksPath = path.join(__dirname, "tasks", folder);
@@ -37,8 +40,6 @@ const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
       require(`${tasksPath}/${task}`);
     });
 });
-
-require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
 const hardhatConfig: HardhatUserConfig = {
   contractSizer: {
@@ -69,7 +70,7 @@ const hardhatConfig: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 10000,
           },
           evmVersion: "london",
         },
@@ -93,8 +94,8 @@ const hardhatConfig: HardhatUserConfig = {
     target: "ethers-v5",
   },
   mocha: {
-    parallel: true,
-    jobs: parseInt(process.env.MOCHA_JOBS ?? "4"),
+    parallel: !isNaN(MOCHA_JOBS) && MOCHA_JOBS > 1,
+    jobs: MOCHA_JOBS,
     timeout: 200000,
   },
   tenderly: {
@@ -141,7 +142,7 @@ const hardhatConfig: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
     },
     ganache: {
-      url: "http://127.0.0.1:8545",
+      url: "http://localhost:8545",
       chainId: FORK_MAINNET_CHAINID,
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",

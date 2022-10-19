@@ -1,4 +1,5 @@
 import {expect} from "chai";
+
 import {BigNumberish} from "ethers";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
@@ -13,11 +14,12 @@ import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {TestEnv} from "./helpers/make-suite";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
-import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
-import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
+import {deployReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {parseEther} from "ethers/lib/utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {eContractid} from "../deploy/helpers/types";
+import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 
 describe("Reserve Without Incentives Controller", () => {
   let mockToken: MintableERC20;
@@ -54,8 +56,9 @@ describe("Reserve Without Incentives Controller", () => {
     );
 
     const interestRateStrategyAddress = daiData.interestRateStrategyAddress;
-
-    const mockAuctionStrategy = await await deployDefaultReserveAuctionStrategy(
+    deployReserveAuctionStrategy;
+    const mockAuctionStrategy = await await deployReserveAuctionStrategy(
+      eContractid.DefaultReserveAuctionStrategy,
       [
         auctionStrategyExp.maxPriceMultiplier,
         auctionStrategyExp.minExpPriceMultiplier,
