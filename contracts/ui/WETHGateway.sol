@@ -12,10 +12,12 @@ import {UserConfiguration} from "../protocol/libraries/configuration/UserConfigu
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {DataTypesHelper} from "./libraries/DataTypesHelper.sol";
 import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 
 contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
+    using SafeERC20 for IERC20;
 
     IWETH internal immutable WETH;
 
@@ -195,7 +197,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         address to,
         uint256 amount
     ) external onlyOwner {
-        IERC20(token).transfer(to, amount);
+        IERC20(token).safeTransfer(to, amount);
     }
 
     /**

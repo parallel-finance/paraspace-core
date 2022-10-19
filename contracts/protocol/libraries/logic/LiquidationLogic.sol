@@ -187,13 +187,6 @@ library LiquidationLogic {
             userConfig.setBorrowing(liquidationAssetReserve.id, false);
         }
 
-        liquidationAssetReserve.updateInterestRates(
-            vars.liquidationAssetReserveCache,
-            params.liquidationAsset,
-            vars.actualDebtToLiquidate,
-            0
-        );
-
         vars.liquidator = msg.sender;
 
         // Transfer fee to treasury if it is non-zero
@@ -216,6 +209,13 @@ library LiquidationLogic {
         }
 
         _burnDebtTokens(params, vars);
+
+        liquidationAssetReserve.updateInterestRates(
+            vars.liquidationAssetReserveCache,
+            params.liquidationAsset,
+            vars.actualDebtToLiquidate,
+            0
+        );
 
         if (params.receiveXToken) {
             _liquidatePTokens(usersConfig, collateralReserve, params, vars);
@@ -433,13 +433,13 @@ library LiquidationLogic {
         }
 
         if (vars.actualDebtToLiquidate != 0) {
+            _burnDebtTokens(params, vars);
             liquidationAssetReserve.updateInterestRates(
                 vars.liquidationAssetReserveCache,
                 params.liquidationAsset,
                 vars.actualDebtToLiquidate,
                 0
             );
-            _burnDebtTokens(params, vars);
         }
 
         if (params.receiveXToken) {
