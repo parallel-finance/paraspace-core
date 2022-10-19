@@ -530,6 +530,57 @@ export const withdrawAndValidate = async (
   await assertHealthFactorCalculation(user);
 };
 
+export interface LiquidationValidationData {
+  isNFT?: boolean;
+  isLiquidationAssetBorrowed?: boolean;
+  targetTokenBalance?: BigNumber;
+  targetXTokenBalance?: BigNumber;
+  liquidationTokenBalance?: BigNumber;
+  liquidationPTokenBalance?: BigNumber;
+  liquidationDebtTokenBalance?: BigNumber;
+  amountToLiquidate?: BigNumber;
+  liquidationBonus?: BigNumber;
+  availableToBorrow?: BigNumber;
+  totalCollateral?: BigNumber;
+  totalDebt?: BigNumber;
+  liquidationThreshold?: BigNumber;
+  healthFactor?: BigNumber;
+  erc721HealthFactor?: BigNumber;
+  liquidatorLiquidationAssetBalance?: BigNumber;
+  liquidatorLiquidationPTokenBalance?: BigNumber;
+  liquidatorTargetTokenBalance?: BigNumber;
+  isBorrowing?: boolean;
+  isUsingAsCollateral?: boolean;
+}
+
+const checkBeforeLiquidation = async (before) => {
+  expect(before.isCollateral).to.be.true;
+  // upon liquidation, user should not be available to borrow more
+  expect(before.availableToBorrow).to.equal(0);
+  // upon liquidation, health factor should be below 1
+  expect(before.healthFactorBefore).to.be.lt(parseEther("1"));
+  if (before.isNFT) {
+    // upon NFT liquidation, NFT health factor should be below 1.5 (RECOVERY_HF)
+    expect(before.erc721HealthFactor).to.be.lt(parseEther("1.5"));
+  } else {
+    // for ERC20 asset used for liquidation must be borrowed
+    expect(before.isLiquidationAssetBorrowed).to.be.true;
+  }
+};
+
+// refactor: move check logics here before and after liquidation
+// eslint-disable-next-line no-unused-vars
+const checkAfterLiquidationERC20 = async (
+  before: LiquidationValidationData,
+  after: LiquidationValidationData
+) => {};
+
+// eslint-disable-next-line no-unused-vars
+const checkAfterLiquidationERC721 = async (
+  before: LiquidationValidationData,
+  after: LiquidationValidationData
+) => {};
+
 export const liquidateAndValidate = async (
   targetToken: SupportedAsset,
   liquidationToken: SupportedAsset,
@@ -538,11 +589,14 @@ export const liquidateAndValidate = async (
   borrower: SignerWithAddress,
   receiveXToken: boolean,
   nftId?: number
-) => {
+): Promise<{
+  before: LiquidationValidationData;
+  after: LiquidationValidationData;
+}> => {
   const isNFT = !isERC20(targetToken);
 
   if (isNFT) {
-    await liquidateAndValidateERC721(
+    return await liquidateAndValidateERC721(
       targetToken,
       liquidationToken,
       amount,
@@ -552,7 +606,7 @@ export const liquidateAndValidate = async (
       nftId
     );
   } else {
-    await liquidateAndValidateERC20(
+    return await liquidateAndValidateERC20(
       targetToken,
       liquidationToken,
       amount,
@@ -570,7 +624,10 @@ export const liquidateAndValidateERC20 = async (
   liquidator: SignerWithAddress,
   borrower: SignerWithAddress,
   receivePToken: boolean
-) => {
+): Promise<{
+  before: LiquidationValidationData;
+  after: LiquidationValidationData;
+}> => {
   const pool = await getPoolProxy();
   const protocolDataProvider = await getProtocolDataProvider();
   const targetPTokenAddress = (
@@ -640,16 +697,8 @@ export const liquidateAndValidateERC20 = async (
     borrower,
     targetToken.address
   );
-  expect(wasCollateral).to.be.true;
-
-  // asset used for liquidation must be borrowed
-  expect(isLiquidationAssetBorrowed).to.be.true;
-  // upon liquidation, user should not be available to borrow more
-  expect(availableToBorrowBefore).to.equal(0);
-  // upon liquidation, health factor should be below 1
-  expect(healthFactorBefore).to.be.lt(parseEther("1"));
-
   const before = {
+    isCollateral: wasCollateral,
     isLiquidationAssetBorrowed: isLiquidationAssetBorrowed,
     targetTokenBalance: borrowerTokenBalanceBefore,
     targetXTokenBalance: borrowerPTokenBalanceBefore,
@@ -659,6 +708,8 @@ export const liquidateAndValidateERC20 = async (
     totalDebt: totalDebtBefore,
     healthFactor: healthFactorBefore,
   };
+
+  await checkBeforeLiquidation(before);
 
   // liquidate asset
   await waitForTx(
@@ -687,10 +738,14 @@ export const liquidateAndValidateERC20 = async (
     liquidator.address
   );
 
+  // todo: better to move all common checks before and after liquidation to another validation function
+  // and make sure every check make sense
+  // we wrap {before,after} as result and let each testcase verify as required
+
   // borrower's Token balance is the same
   expect(borrowerTokenBalance).equal(borrowerTokenBalanceBefore);
 
-  // borrower's pToken balance is subtracted amountToLiquidate+bonus
+  // borrower's pToken balance is subtracted amountToLiquidate+bonus?(seems not make sense)
   assertAlmostEqual(
     borrowerPTokenBalance,
     borrowerPTokenBalanceBefore.sub(
@@ -823,7 +878,10 @@ export const liquidateAndValidateERC721 = async (
   borrower: SignerWithAddress,
   receiveNToken: boolean,
   nftId?: number
-) => {
+): Promise<{
+  before: LiquidationValidationData;
+  after: LiquidationValidationData;
+}> => {
   const pool = await getPoolProxy();
   const protocolDataProvider = await getProtocolDataProvider();
   const targetNTokenAddress = (
@@ -939,13 +997,6 @@ export const liquidateAndValidateERC721 = async (
     borrower,
     targetToken.address
   );
-  expect(wasCollateral).to.be.true;
-
-  // upon NFT liquidation, NFT health factor should be below 1.5 (RECOVERY_HF)
-  expect(erc721HealthFactorBefore).to.be.lt(parseEther("1.5"));
-
-  // upon liquidation, user should not be available to borrow more
-  expect(availableToBorrowBefore).to.equal(0);
 
   const liquidatorLiquidationAssetBalanceBefore =
     await liquidationToken.balanceOf(liquidator.address);
@@ -972,6 +1023,7 @@ export const liquidateAndValidateERC721 = async (
   );
 
   const before = {
+    isNFT: true,
     isLiquidationAssetBorrowed: isLiquidationAssetBorrowed,
     targetTokenBalance: borrowerTokenBalanceBefore,
     targetXTokenBalance: borrowerPTokenBalanceBefore,
@@ -991,6 +1043,8 @@ export const liquidateAndValidateERC721 = async (
     isBorrowing: isBorrowingBefore,
     isUsingAsCollateral: isUsingAsCollateralBefore,
   };
+
+  await checkBeforeLiquidation(before);
 
   // liquidate asset
   await waitForTx(
