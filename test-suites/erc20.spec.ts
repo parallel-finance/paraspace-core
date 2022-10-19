@@ -258,4 +258,310 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
       daiBalanceBeforeWithdraw.add(withdrawAmount)
     );
   });
+  it("user 3 not Obtain approve to Operate supplying  10K (should fail)", async () => {
+    const {
+      dai,
+      pDai,
+      pool,
+      users: [, , user3],
+    } = testEnv;
+    const pDaiBalance = await pDai.balanceOf(user3.address);
+    await mintAndValidate(dai, firstDaiDeposit, user3);
+    const balance = await dai.balanceOf(user3.address);
+
+    await expect(
+      pool
+        .connect(user3.signer)
+        .supply(dai.address, firstDaiDeposit, user3.address, "0")
+    ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+
+    // User 3 - DAI balance should remain unchanged
+    const balanceAfter = await dai.balanceOf(user3.address);
+    expect(balanceAfter).to.equal(balance);
+
+    // User 3 - pDAI balance should not be increased
+    const pDaiBalanceAfter = await pDai.balanceOf(user3.address);
+    expect(pDaiBalanceAfter).to.equal(pDaiBalance);
+  });
+
+  it("user 3 supply 10k greater than approve 5k (should fail)", async () => {
+    const {
+      dai,
+      pDai,
+      pool,
+      users: [, , user3],
+    } = testEnv;
+    const pDaiBalance = await pDai.balanceOf(user3.address);
+    const balance = await dai.balanceOf(user3.address);
+    const amount = await convertToCurrencyDecimals(
+      dai.address,
+      firstDaiDeposit
+    );
+    await dai
+      .connect(user3.signer)
+      .approve(pool.address, "5000000000000000000000");
+    await expect(
+      pool.connect(user3.signer).supply(dai.address, amount, user3.address, "0")
+    ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+
+    // User 3 - DAI balance should remain unchanged
+    const balanceAfter = await dai.balanceOf(user3.address);
+    expect(balanceAfter).to.equal(balance);
+
+    // User 3 - pDAI balance should not be increased
+    const pDaiBalanceAfter = await pDai.balanceOf(user3.address);
+    expect(pDaiBalanceAfter).to.equal(pDaiBalance);
+  });
+
+  it("user 3 supply 20K greater than user balance  10K  (should fail) ", async () => {
+    const {
+      dai,
+      pDai,
+      pool,
+      users: [, , user3],
+    } = testEnv;
+    const pDaiBalance = await pDai.balanceOf(user3.address);
+    const balance = await dai.balanceOf(user3.address);
+    const amount = await convertToCurrencyDecimals(dai.address, "200000");
+    await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await expect(
+      pool.connect(user3.signer).supply(dai.address, amount, user3.address, "0")
+    ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+
+    // User 3 - DAI balance should remain unchanged
+    const balanceAfter = await dai.balanceOf(user3.address);
+    expect(balanceAfter).to.equal(balance);
+
+    // User 3 - pDAI balance should not be increased
+    const pDaiBalanceAfter = await pDai.balanceOf(user3.address);
+    expect(pDaiBalanceAfter).to.equal(pDaiBalance);
+  });
+
+  it("user 3 Users do not supply loans to borrow (should fail) ", async () => {
+    const {
+      dai,
+      pool,
+      users: [, , user3],
+      variableDebtDai,
+    } = testEnv;
+    const debtBalanceBeforeWithdraw = await variableDebtDai.balanceOf(
+      user3.address
+    );
+
+    const balance = await dai.balanceOf(user3.address);
+    await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    const amount = await convertToCurrencyDecimals(
+      dai.address,
+      firstDaiDeposit
+    );
+    await expect(
+      pool
+        .connect(user3.signer)
+        .borrow(dai.address, amount, "0", user3.address, {
+          gasLimit: 5000000,
+        })
+    ).to.be.revertedWith(ProtocolErrors.COLLATERAL_BALANCE_IS_ZERO);
+
+    // User 3 - DAI balance should remain unchanged
+    const balanceAfter = await dai.balanceOf(user3.address);
+    expect(balanceAfter).to.equal(balance);
+
+    // User 3 - debtBalance should not change
+    const debtBalanceAfterWithdraw = await variableDebtDai.balanceOf(
+      user3.address
+    );
+    expect(debtBalanceBeforeWithdraw).to.equal(debtBalanceAfterWithdraw);
+  });
+
+  it("user 3 Redeem 20k exceeds the amount of its own supply 10k (no borrow) (should fail)", async () => {
+    const {
+      dai,
+      pool,
+      users: [, , user3],
+    } = testEnv;
+    const daiBalance = await dai.balanceOf(user3.address);
+    await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
+
+    await supplyAndValidate(dai, firstDaiDeposit, user3, true);
+
+    await expect(
+      pool
+        .connect(user3.signer)
+        .withdraw(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, secondDaiDeposit),
+          user3.address
+        )
+    ).to.be.revertedWith(ProtocolErrors.NOT_ENOUGH_AVAILABLE_USER_BALANCE);
+
+    // User 3 - dAI balance should not be change
+    const daiBalanceAfter = await dai.balanceOf(user3.address);
+    expect(daiBalanceAfter).to.equal(daiBalance);
+  });
+
+  it("user 3 Borrow is greater than collateral borrow limit (should fail)", async () => {
+    const {
+      dai,
+      pool,
+      users: [, , user3],
+    } = testEnv;
+    const daiBalance = await dai.balanceOf(user3.address);
+    const amount = await convertToCurrencyDecimals(
+      dai.address,
+      firstDaiDeposit
+    );
+    await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
+
+    await expect(
+      pool
+        .connect(user3.signer)
+        .borrow(dai.address, amount, "0", user3.address, {
+          gasLimit: 5000000,
+        })
+    ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
+
+    // User 3 - dAI balance should not be change
+    const daiBalanceAfter = await dai.balanceOf(user3.address);
+    expect(daiBalanceAfter).to.equal(daiBalance);
+  });
+
+  it("user 3 Repay 7k exceeds borrowed 5K", async () => {
+    const {
+      dai,
+      pool,
+      variableDebtDai,
+      users: [, , user3],
+    } = testEnv;
+    const daiBalanceBeforeRepay = await dai.balanceOf(user3.address);
+    const debtBalanceBeforeRepay = await variableDebtDai.balanceOf(
+      user3.address
+    );
+
+    // borrow dai
+    await borrowAndValidate(dai, "5000", user3);
+    const amount = convertToCurrencyDecimals(dai.address, "7000");
+
+    const availableToBorrowBeforeRepay = (
+      await pool.getUserAccountData(user3.address)
+    ).availableBorrowsBase;
+
+    // repay dai loan
+    const repayTx = await pool
+      .connect(user3.signer)
+      .repay(dai.address, amount, user3.address);
+    await repayTx.wait();
+
+    // User 3 - Available to borrow should have increased
+    const availableToBorrowAfterRepay = (
+      await pool.getUserAccountData(user3.address)
+    ).availableBorrowsBase;
+    expect(availableToBorrowAfterRepay).to.be.gt(availableToBorrowBeforeRepay);
+
+    // User 3 - Debt token balance should be 0
+    const debtBalanceAfterRepay = await variableDebtDai.balanceOf(
+      user3.address
+    );
+    expect(debtBalanceAfterRepay).to.be.equal(0);
+
+    // User 3 - DAI balance should have decreased at least in the debtBalanceBeforeRepay amount
+    const daiBalanceAfterRepay = await dai.balanceOf(user3.address);
+    expect(daiBalanceAfterRepay).to.be.lte(
+      daiBalanceBeforeRepay.sub(debtBalanceBeforeRepay)
+    );
+  });
+
+  it("user 3 Borrow 21K is greater than the max liquidity 20K amount  (should fail)", async () => {
+    const {
+      dai,
+      usdc,
+      pDai,
+      pool,
+      variableDebtDai,
+      users: [, , user3],
+    } = testEnv;
+    const pDaiBalance = await pDai.balanceOf(user3.address);
+    const daiBalance = await dai.balanceOf(user3.address);
+    const debtBalance = await variableDebtDai.balanceOf(user3.address);
+
+    await supplyAndValidate(usdc, "30000", user3, true);
+
+    const amount = await convertToCurrencyDecimals(dai.address, "21000");
+    await expect(
+      pool
+        .connect(user3.signer)
+        .borrow(dai.address, amount, "0", user3.address, {
+          gasLimit: 5000000,
+        })
+    ).to.be.reverted;
+
+    // // User 3 - dAI balance should not be increased
+    const daiBalanceAfter = await dai.balanceOf(user3.address);
+    expect(daiBalanceAfter).to.equal(daiBalance);
+
+    // User 3 - pDAI balance should not be increased
+    const pDaiBalanceAfter = await pDai.balanceOf(user3.address);
+    expect(pDaiBalanceAfter).to.equal(pDaiBalance);
+
+    // User 3 -  debt balance should not be increased
+    const debtBalanceAfter = await variableDebtDai.balanceOf(user3.address);
+    expect(debtBalanceAfter).to.be.equal(debtBalance);
+  });
+
+  it("user 3 withdraw reaches Health Factor 1~1.1", async () => {
+    const {
+      dai,
+      usdc,
+      pool,
+      users: [, , user3],
+    } = testEnv;
+    await borrowAndValidate(dai, "10000", user3);
+    await borrowAndValidate(usdc, "15000", user3);
+    await pool
+      .connect(user3.signer)
+      .withdraw(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, "8000"),
+        user3.address
+      );
+
+    // user3 - healthFactor value is between 1.1 - 1.0
+    const healthFactor = (await pool.getUserAccountData(user3.address))
+      .healthFactor;
+    expect(healthFactor)
+      .to.be.most("1100000000000000000")
+      .to.be.least("1000000000000000000");
+  });
+
+  it("user 3 Reaching the liquidation threshold, repay to make it recover health", async () => {
+    const {
+      usdc,
+      pool,
+      users: [, , user3],
+    } = testEnv;
+
+    const healthFactor = (await pool.getUserAccountData(user3.address))
+      .healthFactor;
+    await repayAndValidate(usdc, "10000", user3);
+
+    //user3 -  health factor should have improved
+    const healthFactorAfter = (await pool.getUserAccountData(user3.address))
+      .healthFactor;
+    expect(healthFactorAfter).to.be.least(healthFactor);
+  });
+  it("user 3 If the debt is not exceeded, Ptoken can transfer", async () => {
+    const {
+      dai,
+      pDai,
+      users: [, , user3, user4],
+    } = testEnv;
+    const amount = await convertToCurrencyDecimals(dai.address, "1000");
+
+    const pDaiBalance = await pDai.balanceOf(user4.address);
+    await pDai.connect(user3.signer).transfer(user4.address, amount);
+
+    const pDaiBalanceAfter = await pDai.balanceOf(user4.address);
+
+    //  User 4 - pDAI balance should be increased
+    expect(pDaiBalanceAfter).to.be.equal(pDaiBalance.add(amount));
+  });
 });
