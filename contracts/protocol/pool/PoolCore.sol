@@ -10,6 +10,7 @@ import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
+import {AuctionLogic} from "../libraries/logic/AuctionLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
@@ -443,7 +444,7 @@ contract PoolCore is
         address collateralAsset,
         uint256 collateralTokenId
     ) external override nonReentrant {
-        LiquidationLogic.executeStartAuction(
+        AuctionLogic.executeStartAuction(
             _reserves,
             _reservesList,
             _usersConfig,
@@ -464,7 +465,7 @@ contract PoolCore is
         address collateralAsset,
         uint256 collateralTokenId
     ) external override nonReentrant {
-        LiquidationLogic.executeEndAuction(
+        AuctionLogic.executeEndAuction(
             _reserves,
             _reservesList,
             _usersConfig,
