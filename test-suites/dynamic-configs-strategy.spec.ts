@@ -13,7 +13,6 @@ import {
   getPoolConfiguratorProxy,
   getUniswapDynamicConfigStrategy,
   getUniswapV3DynamicConfigsStrategy,
-  getUniswapV3Gateway,
 } from "../deploy/helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -24,7 +23,6 @@ describe("Dynamic Configs Strategy", () => {
   let userDaiAmount;
   let userWethAmount;
   let userWBTCAmount;
-  let uniswapV3Gateway;
 
   describe("Prepare Uniswap V3 NFT position [  @skip-on-coverage ]", () => {
     let testEnv: TestEnv;
@@ -37,6 +35,7 @@ describe("Dynamic Configs Strategy", () => {
         nftPositionManager,
         protocolDataProvider,
         wBTC,
+        pool,
       } = testEnv;
 
       userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
@@ -109,16 +108,19 @@ describe("Dynamic Configs Strategy", () => {
         token1Amount: userWBTCAmount,
       });
 
-      uniswapV3Gateway = (await getUniswapV3Gateway()).connect(user1.signer);
-      await nft.setApprovalForAll(uniswapV3Gateway.address, true);
+      await nft.setApprovalForAll(pool.address, true);
 
-      await uniswapV3Gateway.supplyUniswapV3(
-        [{tokenId: 1, useAsCollateral: true}],
-        user1.address,
-        {
-          gasLimit: 12_450_000,
-        }
-      );
+      await pool
+        .connect(user1.signer)
+        .supplyUniswapV3(
+          nftPositionManager.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user1.address,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        );
 
       daiConfigs = await protocolDataProvider.getReserveConfigurationData(
         dai.address
@@ -197,13 +199,17 @@ describe("Dynamic Configs Strategy", () => {
         true
       );
 
-      await uniswapV3Gateway.supplyUniswapV3(
-        [{tokenId: 2, useAsCollateral: true}],
-        user1.address,
-        {
-          gasLimit: 12_450_000,
-        }
-      );
+      await pool
+        .connect(user1.signer)
+        .supplyUniswapV3(
+          nftPositionManager.address,
+          [{tokenId: 2, useAsCollateral: true}],
+          user1.address,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        );
 
       const userData = await pool.getUserAccountData(user1.address);
 
