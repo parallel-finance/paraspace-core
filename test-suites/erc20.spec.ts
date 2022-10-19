@@ -1,7 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {formatEther} from "ethers/lib/utils";
+import {parseEther, formatEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
@@ -299,7 +299,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
     );
     await dai
       .connect(user3.signer)
-      .approve(pool.address, "5000000000000000000000");
+      .approve(pool.address, parseEther("5000"));
     await expect(
       pool.connect(user3.signer).supply(dai.address, amount, user3.address, "0")
     ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
@@ -523,13 +523,13 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
         await convertToCurrencyDecimals(usdc.address, "8000"),
         user3.address
       );
-
+    
     // user3 - healthFactor value is between 1.1 - 1.0
     const healthFactor = (await pool.getUserAccountData(user3.address))
       .healthFactor;
     expect(healthFactor)
-      .to.be.most("1100000000000000000")
-      .to.be.least("1000000000000000000");
+      .to.be.most(parseEther("1.1"))
+      .to.be.least(parseEther("1.0"));
   });
 
   it("user 3 Reaching the liquidation threshold, repay to make it recover health", async () => {
