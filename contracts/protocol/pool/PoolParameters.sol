@@ -257,8 +257,8 @@ contract PoolParameters is
         onlyPoolConfigurator
     {
         require(
-            value > MIN_AUCTION_HEALTH_FACTOR &&
-                value < MAX_AUCTION_HEALTH_FACTOR,
+            value >= MIN_AUCTION_HEALTH_FACTOR &&
+                value <= MAX_AUCTION_HEALTH_FACTOR,
             Errors.INVALID_AMOUNT
         );
 
