@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {
-  deployDefaultReserveAuctionStrategy,
+  deployReserveAuctionStrategy,
   deployMockReserveAuctionStrategy,
 } from "../deploy/helpers/contracts-deployments";
 import {
@@ -15,6 +15,7 @@ import "./helpers/utils/wadraymath";
 import {utils} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {eContractid} from "../deploy/helpers/types";
 
 describe("AuctionStrategy", () => {
   let strategyInstanceExp: DefaultReserveAuctionStrategy;
@@ -22,14 +23,17 @@ describe("AuctionStrategy", () => {
 
   before(async () => {
     await loadFixture(testEnvFixture);
-    strategyInstanceExp = await deployDefaultReserveAuctionStrategy([
-      auctionStrategyExp.maxPriceMultiplier,
-      auctionStrategyExp.minExpPriceMultiplier,
-      auctionStrategyExp.minPriceMultiplier,
-      auctionStrategyExp.stepLinear,
-      auctionStrategyExp.stepExp,
-      auctionStrategyExp.tickLength,
-    ]);
+    strategyInstanceExp = await deployReserveAuctionStrategy(
+      eContractid.DefaultReserveAuctionStrategy,
+      [
+        auctionStrategyExp.maxPriceMultiplier,
+        auctionStrategyExp.minExpPriceMultiplier,
+        auctionStrategyExp.minPriceMultiplier,
+        auctionStrategyExp.stepLinear,
+        auctionStrategyExp.stepExp,
+        auctionStrategyExp.tickLength,
+      ]
+    );
 
     strategyInstanceLinear = await deployMockReserveAuctionStrategy([
       auctionStrategyLinear.maxPriceMultiplier,
