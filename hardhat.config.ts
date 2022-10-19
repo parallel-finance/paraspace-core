@@ -142,7 +142,7 @@ const hardhatConfig: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
     },
     ganache: {
-      url: "http://127.0.0.1:8545",
+      url: "http://localhost:8545",
       chainId: FORK_MAINNET_CHAINID,
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",
