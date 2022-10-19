@@ -251,10 +251,10 @@ library MarketplaceLogic {
         buyWithCreditTempParams memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
-        vars.marketplace = poolAddressProvider
-            .getMarketplace(marketplaceId);
-        vars.orderInfo = IMarketplace(vars.marketplace.adapter)
-            .getBidOrderInfo(payload);
+        vars.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
+        vars.orderInfo = IMarketplace(vars.marketplace.adapter).getBidOrderInfo(
+            payload
+        );
         require(vars.orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
 
         _acceptBidWithCredit(
@@ -299,12 +299,15 @@ library MarketplaceLogic {
             vars.payload = payloads[i];
             DataTypes.Credit memory credit = credits[i];
 
-            vars.marketplace = poolAddressProvider
-                .getMarketplace(vars.marketplaceId);
-            vars.orderInfo = IMarketplace(
-                vars.marketplace.adapter
-            ).getBidOrderInfo(vars.payload);
-            require(vars.orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
+            vars.marketplace = poolAddressProvider.getMarketplace(
+                vars.marketplaceId
+            );
+            vars.orderInfo = IMarketplace(vars.marketplace.adapter)
+                .getBidOrderInfo(vars.payload);
+            require(
+                vars.orderInfo.taker == onBehalfOf,
+                Errors.INVALID_ORDER_TAKER
+            );
 
             _acceptBidWithCredit(
                 ps._reserves,

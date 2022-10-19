@@ -34,7 +34,7 @@ abstract contract ParaReentrancyGuard {
     uint256 constant _ENTERED = 2;
 
     bytes32 constant RG_STORAGE_POSITION =
-        keccak256("paraspace.proxy.rg.storage");
+        bytes32(uint256(keccak256("paraspace.proxy.rg.storage")) - 1);
 
     struct RGStorage {
         uint256 _status;

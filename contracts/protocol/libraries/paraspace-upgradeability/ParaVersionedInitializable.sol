@@ -15,7 +15,7 @@ pragma solidity 0.8.10;
  */
 abstract contract ParaVersionedInitializable {
     bytes32 constant VERSION_STORAGE_POSITION =
-        keccak256("paraspace.proxy.version.storage");
+        bytes32(uint256(keccak256("paraspace.proxy.version.storage")) - 1);
 
     struct VersionStorage {
         /**

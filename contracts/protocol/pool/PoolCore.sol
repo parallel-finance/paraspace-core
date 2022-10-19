@@ -158,7 +158,7 @@ contract PoolCore is
         uint16 referralCode
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        
+
         SupplyLogic.executeSupplyUniswapV3(
             ps._reserves,
             ps._usersConfig[onBehalfOf],
