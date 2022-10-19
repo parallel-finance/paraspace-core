@@ -33,10 +33,7 @@ make help
 ### Tests Instructure
 
 ## Structure
-
-Option 1. Use flatten layout
-
-Option 2. Use structured layout
+Use flatten layout
 
 ## Coding
 
