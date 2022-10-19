@@ -61,23 +61,25 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        address weth = poolAddressProvider.getWETH();
+        buyWithCreditTempParams memory vars;
+
+        vars.weth = poolAddressProvider.getWETH();
         DataTypes.Marketplace memory marketplace = poolAddressProvider
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(payload, weth);
+            .getAskOrderInfo(payload, vars.weth);
         orderInfo.taker = msg.sender;
-        uint256 ethLeft = msg.value;
+        vars.ethLeft = msg.value;
 
         if (
-            ethLeft > 0 &&
+            vars.ethLeft > 0 &&
             orderInfo.consideration[0].itemType != ItemType.NATIVE
         ) {
-            depositETH(weth, ethLeft);
-            ethLeft = 0;
+            depositETH(vars.weth, vars.ethLeft);
+            vars.ethLeft = 0;
         }
 
-        ethLeft -= _buyWithCredit(
+        vars.ethLeft -= _buyWithCredit(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig[orderInfo.taker],
@@ -85,10 +87,10 @@ library MarketplaceLogic {
                 marketplaceId: marketplaceId,
                 payload: payload,
                 credit: credit,
-                ethLeft: ethLeft,
+                ethLeft: vars.ethLeft,
                 marketplace: marketplace,
                 orderInfo: orderInfo,
-                weth: weth,
+                weth: vars.weth,
                 referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
@@ -96,7 +98,7 @@ library MarketplaceLogic {
             })
         );
 
-        refundETH(ethLeft);
+        refundETH(vars.ethLeft);
     }
 
     /**
@@ -154,6 +156,15 @@ library MarketplaceLogic {
         return downpaymentEth;
     }
 
+    struct buyWithCreditTempParams {
+        address weth;
+        uint256 ethLeft;
+        bytes32 marketplaceId;
+        bytes payload;
+        DataTypes.Marketplace marketplace;
+        DataTypes.OrderInfo orderInfo;
+    }
+
     function executeBatchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
@@ -162,23 +173,25 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        address weth = poolAddressProvider.getWETH();
+        buyWithCreditTempParams memory vars;
+
+        vars.weth = poolAddressProvider.getWETH();
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
-        uint256 ethLeft = msg.value;
+        vars.ethLeft = msg.value;
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            bytes32 marketplaceId = marketplaceIds[i];
-            bytes memory payload = payloads[i];
+            vars.marketplaceId = marketplaceIds[i];
+            vars.payload = payloads[i];
             DataTypes.Credit memory credit = credits[i];
 
             DataTypes.Marketplace memory marketplace = poolAddressProvider
-                .getMarketplace(marketplaceId);
+                .getMarketplace(vars.marketplaceId);
             DataTypes.OrderInfo memory orderInfo = IMarketplace(
                 marketplace.adapter
-            ).getAskOrderInfo(payload, weth);
+            ).getAskOrderInfo(vars.payload, vars.weth);
             orderInfo.taker = msg.sender;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
@@ -196,25 +209,25 @@ library MarketplaceLogic {
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
             if (
-                ethLeft > 0 &&
+                vars.ethLeft > 0 &&
                 orderInfo.consideration[0].itemType != ItemType.NATIVE
             ) {
-                MarketplaceLogic.depositETH(weth, ethLeft);
-                ethLeft = 0;
+                MarketplaceLogic.depositETH(vars.weth, vars.ethLeft);
+                vars.ethLeft = 0;
             }
 
-            ethLeft -= _buyWithCredit(
+            vars.ethLeft -= _buyWithCredit(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[orderInfo.taker],
                 DataTypes.ExecuteMarketplaceParams({
-                    marketplaceId: marketplaceId,
-                    payload: payload,
+                    marketplaceId: vars.marketplaceId,
+                    payload: vars.payload,
                     credit: credit,
-                    ethLeft: ethLeft,
+                    ethLeft: vars.ethLeft,
                     marketplace: marketplace,
                     orderInfo: orderInfo,
-                    weth: weth,
+                    weth: vars.weth,
                     referralCode: referralCode,
                     reservesCount: ps._reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
@@ -223,7 +236,7 @@ library MarketplaceLogic {
                 })
             );
         }
-        MarketplaceLogic.refundETH(ethLeft);
+        MarketplaceLogic.refundETH(vars.ethLeft);
     }
 
     function executeAcceptBidWithCredit(
@@ -235,25 +248,27 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        address weth = poolAddressProvider.getWETH();
-        DataTypes.Marketplace memory marketplace = poolAddressProvider
+        buyWithCreditTempParams memory vars;
+
+        vars.weth = poolAddressProvider.getWETH();
+        vars.marketplace = poolAddressProvider
             .getMarketplace(marketplaceId);
-        DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
+        vars.orderInfo = IMarketplace(vars.marketplace.adapter)
             .getBidOrderInfo(payload);
-        require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
+        require(vars.orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
 
         _acceptBidWithCredit(
             ps._reserves,
             ps._reservesList,
-            ps._usersConfig[orderInfo.maker],
+            ps._usersConfig[vars.orderInfo.maker],
             DataTypes.ExecuteMarketplaceParams({
                 marketplaceId: marketplaceId,
                 payload: payload,
                 credit: credit,
                 ethLeft: 0,
-                marketplace: marketplace,
-                orderInfo: orderInfo,
-                weth: weth,
+                marketplace: vars.marketplace,
+                orderInfo: vars.orderInfo,
+                weth: vars.weth,
                 referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
@@ -271,36 +286,38 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        address weth = poolAddressProvider.getWETH();
+        buyWithCreditTempParams memory vars;
+
+        vars.weth = poolAddressProvider.getWETH();
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            bytes32 marketplaceId = marketplaceIds[i];
-            bytes memory payload = payloads[i];
+            vars.marketplaceId = marketplaceIds[i];
+            vars.payload = payloads[i];
             DataTypes.Credit memory credit = credits[i];
 
-            DataTypes.Marketplace memory marketplace = poolAddressProvider
-                .getMarketplace(marketplaceId);
-            DataTypes.OrderInfo memory orderInfo = IMarketplace(
-                marketplace.adapter
-            ).getBidOrderInfo(payload);
-            require(orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
+            vars.marketplace = poolAddressProvider
+                .getMarketplace(vars.marketplaceId);
+            vars.orderInfo = IMarketplace(
+                vars.marketplace.adapter
+            ).getBidOrderInfo(vars.payload);
+            require(vars.orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
 
             _acceptBidWithCredit(
                 ps._reserves,
                 ps._reservesList,
-                ps._usersConfig[orderInfo.maker],
+                ps._usersConfig[vars.orderInfo.maker],
                 DataTypes.ExecuteMarketplaceParams({
-                    marketplaceId: marketplaceId,
-                    payload: payload,
+                    marketplaceId: vars.marketplaceId,
+                    payload: vars.payload,
                     credit: credit,
                     ethLeft: 0,
-                    marketplace: marketplace,
-                    orderInfo: orderInfo,
-                    weth: weth,
+                    marketplace: vars.marketplace,
+                    orderInfo: vars.orderInfo,
+                    weth: vars.weth,
                     referralCode: referralCode,
                     reservesCount: ps._reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
