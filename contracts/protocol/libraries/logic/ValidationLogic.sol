@@ -24,6 +24,7 @@ import {ReserveLogic} from "./ReserveLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IToken} from "../../../interfaces/IToken.sol";
+import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 
 /**
@@ -838,10 +839,7 @@ library ValidationLogic {
 
         INToken nToken = INToken(reserve.xTokenAddress);
         require(
-            Helpers.compareStrings(
-                nToken.getNTokenIdentifier(),
-                "NTokenUniswapV3"
-            ),
+            nToken.getXTokenType() == XTokenType.NTokenUniswapV3Type,
             Errors.UNIV3_NOT_ALLOWED
         );
 

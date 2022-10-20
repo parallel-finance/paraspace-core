@@ -15,6 +15,7 @@ import {NToken} from "./NToken.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title UniswapV3 NToken
@@ -34,13 +35,8 @@ contract NTokenUniswapV3 is NToken {
         // Intentionally left blank
     }
 
-    function getNTokenIdentifier()
-        external
-        pure
-        override
-        returns (string memory)
-    {
-        return "NTokenUniswapV3";
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.NTokenUniswapV3Type;
     }
 
     /**

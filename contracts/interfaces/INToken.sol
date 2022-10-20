@@ -7,7 +7,7 @@ import {IERC721Enumerable} from "../dependencies/openzeppelin/contracts/IERC721E
 import {IERC1155Receiver} from "../dependencies/openzeppelin/contracts/IERC1155Receiver.sol";
 
 import {IInitializableNToken} from "./IInitializableNToken.sol";
-import {INTokenIdentifier} from "./INTokenIdentifier.sol";
+import {IXTokenType} from "./IXTokenType.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
@@ -20,7 +20,7 @@ interface INToken is
     IInitializableNToken,
     IERC721Receiver,
     IERC1155Receiver,
-    INTokenIdentifier
+    IXTokenType
 {
     /**
      * @dev Emitted during rescueERC20()

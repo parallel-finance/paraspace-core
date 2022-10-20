@@ -17,6 +17,7 @@ import {NToken} from "./NToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title MoonBird NToken
@@ -32,13 +33,8 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         // Intentionally left blank
     }
 
-    function getNTokenIdentifier()
-        external
-        pure
-        override
-        returns (string memory)
-    {
-        return "NTokenMoonBirds";
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.NTokenMoonBirdsType;
     }
 
     function burn(
