@@ -546,6 +546,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
       .healthFactor;
     expect(healthFactorAfter).to.be.least(healthFactor);
   });
+
   it("user 3 If the debt is not exceeded, Ptoken can transfer", async () => {
     const {
       dai,
@@ -561,5 +562,27 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
 
     //  User 4 - pDAI balance should be increased
     expect(pDaiBalanceAfter).to.be.equal(pDaiBalance.add(amount));
+  });
+
+  it("demo QA case", async () => {
+    const {
+      dai,
+      pool,
+      users: [user1],
+    } = testEnv;
+    const amount = await convertToCurrencyDecimals(dai.address, "10000");
+
+    // mint token
+    const initialBalance = await dai.balanceOf(user1.address);
+    await dai.connect(user1.signer)["mint(uint256)"](amount);
+    const balance = await dai.balanceOf(user1.address);
+    expect(balance).to.be.equal(initialBalance.add(amount));
+    // supply token
+    await dai.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(user1.signer)
+      .supply(dai.address, amount, user1.address, "0");
+    const tokenBalance = await dai.balanceOf(user1.address);
+    expect(tokenBalance).to.be.equal(balance.sub(amount));
   });
 });
