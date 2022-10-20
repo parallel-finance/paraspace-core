@@ -24,6 +24,7 @@ import {ReserveLogic} from "./ReserveLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IToken} from "../../../interfaces/IToken.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title ReserveLogic library
@@ -835,11 +836,19 @@ library ValidationLogic {
             Errors.ZERO_ADDRESS_NOT_VALID
         );
 
+        INToken nToken = INToken(reserve.xTokenAddress);
+        require(
+            Helpers.compareStrings(
+                nToken.getNTokenIdentifier(),
+                "NTokenUniswapV3"
+            ),
+            Errors.UNIV3_NOT_ALLOWED
+        );
+
         // only token owner can do flash claim
         for (uint256 i = 0; i < params.nftTokenIds.length; i++) {
             require(
-                INToken(reserve.xTokenAddress).ownerOf(params.nftTokenIds[i]) ==
-                    msg.sender,
+                nToken.ownerOf(params.nftTokenIds[i]) == msg.sender,
                 Errors.NOT_THE_OWNER
             );
         }
