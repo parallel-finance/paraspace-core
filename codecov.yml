@@ -13,3 +13,7 @@ coverage:
         threshold: 1%
         base: auto
         if_ci_failed: error
+        informational: true
+    patch:
+      default:
+        informational: true

@@ -60,6 +60,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         _setName(nTokenName);
         _setSymbol(nTokenSymbol);
 
+        require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         _underlyingAsset = underlyingAsset;
         _rewardController = incentivesController;
 
