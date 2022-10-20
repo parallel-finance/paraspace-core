@@ -32,6 +32,15 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         // Intentionally left blank
     }
 
+    function getNTokenIdentifier()
+        external
+        pure
+        override
+        returns (string memory)
+    {
+        return "NTokenMoonBirds";
+    }
+
     function burn(
         address from,
         address receiverOfUnderlying,

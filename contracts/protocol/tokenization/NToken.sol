@@ -310,4 +310,14 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     function getAtomicPricingConfig() external view returns (bool) {
         return ATOMIC_PRICING;
     }
+
+    function getNTokenIdentifier()
+        external
+        pure
+        virtual
+        override
+        returns (string memory)
+    {
+        return "NToken";
+    }
 }

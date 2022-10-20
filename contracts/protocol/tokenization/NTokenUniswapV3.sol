@@ -34,6 +34,15 @@ contract NTokenUniswapV3 is NToken {
         // Intentionally left blank
     }
 
+    function getNTokenIdentifier()
+        external
+        pure
+        override
+        returns (string memory)
+    {
+        return "NTokenUniswapV3";
+    }
+
     /**
      * @notice A function that decreases the current liquidity.
      * @param tokenId The id of the erc721 token
