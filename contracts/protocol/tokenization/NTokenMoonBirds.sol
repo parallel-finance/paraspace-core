@@ -45,7 +45,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) external virtual override onlyPool returns (bool) {
+    ) external virtual override onlyPool nonReentrant returns (bool) {
         bool isLastUncollateralized = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {

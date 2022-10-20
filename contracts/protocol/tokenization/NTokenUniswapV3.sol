@@ -140,7 +140,7 @@ contract NTokenUniswapV3 is NToken {
         uint256 amount0Min,
         uint256 amount1Min,
         bool receiveEthAsWeth
-    ) external {
+    ) external nonReentrant {
         // only the token owner of the NToken can decrease the underlying
         address sender = _msgSender();
         require(sender == ownerOf(tokenId), Errors.NOT_THE_OWNER);
