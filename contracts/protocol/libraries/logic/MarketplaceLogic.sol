@@ -61,7 +61,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        buyWithCreditTempParams memory vars;
+        BuyWithCreditTempParams memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         DataTypes.Marketplace memory marketplace = poolAddressProvider
@@ -156,7 +156,7 @@ library MarketplaceLogic {
         return downpaymentEth;
     }
 
-    struct buyWithCreditTempParams {
+    struct BuyWithCreditTempParams {
         address weth;
         uint256 ethLeft;
         bytes32 marketplaceId;
@@ -173,7 +173,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        buyWithCreditTempParams memory vars;
+        BuyWithCreditTempParams memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         require(
@@ -248,7 +248,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        buyWithCreditTempParams memory vars;
+        BuyWithCreditTempParams memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         vars.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
@@ -286,7 +286,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        buyWithCreditTempParams memory vars;
+        BuyWithCreditTempParams memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         require(
