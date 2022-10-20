@@ -285,6 +285,7 @@ describe("Leveraged Buy - Positive tests", () => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
+      0,
       {
         gasLimit: 5000000,
       }
@@ -576,6 +577,7 @@ describe("Leveraged Buy - Positive tests", () => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
+      0,
       {
         gasLimit: 5000000,
         value: payNowAmount.add(refundAmount),
@@ -707,6 +709,7 @@ describe("Leveraged Buy - Positive tests", () => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
+      0,
       {
         gasLimit: 5000000,
         value: payNowAmount,
@@ -863,6 +866,7 @@ describe("Leveraged Buy - Positive tests", () => {
           getEncodedData(orderETH2),
         ],
         [creditETH0, creditETH1, creditETH2],
+        0,
         {
           gasLimit: 5000000,
           value: totalPayNowAmount,
@@ -1041,6 +1045,7 @@ describe("Leveraged Buy - Positive tests", () => {
             getEncodedData(orderETH1),
           ],
           [creditETH0, creditWETH2, creditETH1],
+          0,
           {
             gasLimit: 5000000,
             value: totalPayNowAmount,
@@ -1063,6 +1068,7 @@ describe("Leveraged Buy - Positive tests", () => {
           getEncodedData(orderWETH2),
         ],
         [creditETH0, creditETH1, creditWETH2],
+        0,
         {
           gasLimit: 5000000,
           value: totalPayNowAmount,
@@ -1305,6 +1311,7 @@ describe("Leveraged Buy - Positive tests", () => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
+      0,
       {
         gasLimit: 5000000,
       }
@@ -1487,6 +1494,7 @@ describe("Leveraged Buy - Positive tests", () => {
           s: constants.HashZero,
         },
       ],
+      0,
       {
         gasLimit: 5000000,
         value: payNowAmount,
@@ -2377,6 +2385,7 @@ describe("Leveraged Bid - Positive tests", () => {
         ...vrs,
       },
       [nftId],
+      0,
       {
         gasLimit: 5000000,
       }
@@ -2633,6 +2642,7 @@ describe("Leveraged Bid - Positive tests", () => {
         },
       ],
       taker.address,
+      0,
       {
         gasLimit: 5000000,
       }
@@ -2812,6 +2822,7 @@ describe("Leveraged Bid - Positive tests", () => {
         ...vrs,
       },
       seller.address,
+      0,
       {
         gasLimit: 5000000,
       }
@@ -2989,6 +3000,7 @@ describe("Leveraged Bid - Positive tests", () => {
         ...vrs,
       },
       seller.address,
+      0,
       {
         gasLimit: 5000000,
       }
@@ -3182,6 +3194,7 @@ describe("Leveraged Bid - Positive tests", () => {
         ...vrs,
       },
       seller.address,
+      0,
       {
         gasLimit: 5000000,
       }
@@ -3309,6 +3322,7 @@ describe("Leveraged Bid - Positive tests", () => {
         r: constants.HashZero,
         s: constants.HashZero,
       },
+      0,
       {
         gasLimit: 5000000,
       }
@@ -3505,6 +3519,7 @@ describe("Leveraged Bid - Positive tests", () => {
         ...vrs,
       },
       offerer.address,
+      0,
       {
         gasLimit: 5000000,
       }
