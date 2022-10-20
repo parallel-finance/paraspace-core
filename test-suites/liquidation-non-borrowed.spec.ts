@@ -100,7 +100,7 @@ describe("Liquidation Tests", () => {
         .liquidatorLiquidationAssetBalance!.sub(
           after.liquidatorLiquidationAssetBalance!
         )
-        .eq(after.borrowerLiquidationXTokenBalance!)
+        .eq(after.borrowerLiquidationPTokenBalance!)
     );
     //assert liquidator actually get the nft
     assert(

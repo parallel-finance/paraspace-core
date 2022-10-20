@@ -548,7 +548,7 @@ export interface BeforeLiquidationValidationData {
   borrowerTargetXTokenBalance: BigNumber;
   borrowerLiquidationTokenBalance: BigNumber;
   borrowerLiquidationDebtTokenBalance: BigNumber;
-  borrowerLiquidationXTokenBalance: BigNumber;
+  borrowerLiquidationPTokenBalance: BigNumber;
   liquidationThreshold: BigNumber;
   isBorrowing: boolean;
   isUsingAsCollateral: boolean;
@@ -565,7 +565,7 @@ export interface AfterLiquidationValidationData {
   borrowerTargetXTokenBalance: BigNumber;
   borrowerLiquidationDebtTokenBalance: BigNumber;
   borrowerLiquidationTokenBalance: BigNumber;
-  borrowerLiquidationXTokenBalance: BigNumber;
+  borrowerLiquidationPTokenBalance: BigNumber;
   availableToBorrow?: BigNumber;
   totalCollateral: BigNumber;
   totalDebt: BigNumber;
@@ -719,8 +719,8 @@ const checkAfterLiquidationERC721 = async (
   if (isAllDebtRepaid || !willHaveExcessFunds) {
     // if all debt is repaid borrower's liquidation pToken balance should be the same (plus accrued interest)
     assertAlmostEqual(
-      after.borrowerLiquidationXTokenBalance,
-      before.borrowerLiquidationXTokenBalance
+      after.borrowerLiquidationPTokenBalance,
+      before.borrowerLiquidationPTokenBalance
     );
     if (willHaveExcessFunds) {
       const excessToSupplyInCoinUnits = parseEther(
@@ -746,8 +746,8 @@ const checkAfterLiquidationERC721 = async (
     if (before.isLiquidationAssetBorrowed) {
       // supplied amount should be (NFT price - DEBT in base units)
       assertAlmostEqual(
-        after.borrowerLiquidationXTokenBalance,
-        before.borrowerLiquidationXTokenBalance.add(excessToSupplyInCoinUnits)
+        after.borrowerLiquidationPTokenBalance,
+        before.borrowerLiquidationPTokenBalance.add(excessToSupplyInCoinUnits)
       );
     }
     expect(await isAssetInCollateral(borrower, liquidationToken.address)).to.be
@@ -1018,7 +1018,7 @@ export const liquidateAndValidateERC20 = async (
     debtToRepayInBaseUnits: debtToRepayInBaseUnits,
     borrowerTargetXTokenBalance: borrowerPTokenBalanceBefore,
     borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalanceBefore,
-    borrowerLiquidationXTokenBalance: borrowerLiquidationPTokenBalanceBefore,
+    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalanceBefore,
     borrowerTargetTokenBalance: borrowerTargetTokenBalanceBefore,
     borrowerLiquidationDebtTokenBalance:
       borrowerLiquidationDebtTokenBalanceBefore,
@@ -1050,6 +1050,9 @@ export const liquidateAndValidateERC20 = async (
   const borrowerLiquidationDebtTokenBalance =
     await liquidationDebtToken.balanceOf(borrower.address);
   const borrowerLiquidationTokenBalance = await liquidationToken.balanceOf(
+    borrower.address
+  );
+  const borrowerLiquidationPTokenBalance = await liquidationPToken.balanceOf(
     borrower.address
   );
   const liquidatorTargetTokenBalance = await targetToken.balanceOf(
@@ -1093,6 +1096,7 @@ export const liquidateAndValidateERC20 = async (
     borrowerTargetXTokenBalance: borrowerPTokenBalance,
     borrowerTargetTokenBalance: borrowerTokenBalance,
     borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalance,
+    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalance,
     borrowerLiquidationDebtTokenBalance: borrowerLiquidationDebtTokenBalance,
     liquidatorTargetTokenBalance: liquidatorTargetTokenBalance,
     liquidatorTargetXTokenBalance: liquidatorTargetPTokenBalance,
@@ -1273,7 +1277,7 @@ export const liquidateAndValidateERC721 = async (
     borrowerTargetTokenBalance: borrowerTargetTokenBalanceBefore,
     borrowerTargetXTokenBalance: borrowerTargetNTokenBalanceBefore,
     borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalanceBefore,
-    borrowerLiquidationXTokenBalance: borrowerLiquidationPTokenBalanceBefore,
+    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalanceBefore,
     borrowerLiquidationDebtTokenBalance:
       borrowerLiquidationDebtTokenBalanceBefore,
     availableToBorrow: availableToBorrowBefore,
@@ -1393,7 +1397,7 @@ export const liquidateAndValidateERC721 = async (
     borrowerTargetTokenBalance: borrowerTokenBalance,
     borrowerTargetXTokenBalance: borrowerPTokenBalance,
     borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalance,
-    borrowerLiquidationXTokenBalance: borrowerLiquidationPTokenBalance,
+    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalance,
     borrowerLiquidationDebtTokenBalance: borrowerLiquidationDebtTokenBalance,
     liquidatorLiquidationAssetBalance: liquidatorLiquidationAssetBalance,
     liquidatorLiquidationPTokenBalance: liquidatorLiquidationAssetPTokenBalance,
