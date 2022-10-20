@@ -13,6 +13,7 @@
     "postpack": "pinst --enable",
     "size": "hardhat size-contracts",
     "build": "hardhat compile",
+    "lint:sol": "solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol'",
     "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts' && eslint . --ext .ts",
     "coverage": "hardhat coverage --testfiles 'test-suites/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts'",

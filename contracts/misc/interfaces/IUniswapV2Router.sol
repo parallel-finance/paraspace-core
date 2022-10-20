@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-interface IUniswapV2Router01 {
+interface IUniswapV2Router {
     function getAmountOut(
         uint256 amountIn,
         uint256 reserveIn,

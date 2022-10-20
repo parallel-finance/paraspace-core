@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import {INFTOracle} from "./interfaces/INFTOracle.sol";
 import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
-import {IUniswapV2Router01} from "./interfaces/IUniswapV2Router01.sol";
+import {IUniswapV2Router} from "./interfaces/IUniswapV2Router.sol";
 import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
 import {IERC165} from "../dependencies/openzeppelin/contracts/IERC165.sol";
 import {ERC20} from "../dependencies/openzeppelin/contracts/ERC20.sol";
@@ -12,6 +12,8 @@ contract ParaSpaceFallbackOracle {
     address public immutable BEND_DAO;
     address public immutable UNISWAP_FACTORY;
     address public immutable UNISWAP_ROUTER;
+    address public immutable SUSHISWAP_FACTORY;
+    address public immutable SUSHISWAP_ROUTER;
     address public immutable WETH;
     address public immutable USDC;
 
@@ -22,11 +24,15 @@ contract ParaSpaceFallbackOracle {
         address uniswapFactory,
         address uniswapRouter,
         address weth,
-        address usdc
+        address usdc,
+        address sushiswapFactory,
+        address sushiswapRouter
     ) {
         BEND_DAO = bendDAO;
         UNISWAP_FACTORY = uniswapFactory;
         UNISWAP_ROUTER = uniswapRouter;
+        SUSHISWAP_FACTORY = sushiswapFactory;
+        SUSHISWAP_ROUTER = sushiswapRouter;
         WETH = weth;
         USDC = usdc;
     }
@@ -40,24 +46,36 @@ contract ParaSpaceFallbackOracle {
             }
         } catch {}
 
+        bool fetchFromSushiSwap = false;
         address pairAddress = IUniswapV2Factory(UNISWAP_FACTORY).getPair(
             WETH,
             asset
         );
+        if (pairAddress == address(0x00)) {
+            pairAddress = IUniswapV2Factory(SUSHISWAP_FACTORY).getPair(
+                WETH,
+                asset
+            );
+            if (pairAddress != address(0x00)) {
+                fetchFromSushiSwap = true;
+            }
+        }
         require(pairAddress != address(0x00), "pair not found");
         IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
         (uint256 left, uint256 right, ) = pair.getReserves();
         (uint256 tokenReserves, uint256 ethReserves) = (asset < WETH)
             ? (left, right)
             : (right, left);
-        uint8 decimals = ERC20(asset).decimals();
         //returns price in 18 decimals
-        return
-            IUniswapV2Router01(UNISWAP_ROUTER).getAmountOut(
-                10**decimals,
-                tokenReserves,
-                ethReserves
-            );
+        uint8 decimals = ERC20(asset).decimals();
+        IUniswapV2Router router;
+        if (fetchFromSushiSwap) {
+            router = IUniswapV2Router(SUSHISWAP_ROUTER);
+        } else {
+            router = IUniswapV2Router(UNISWAP_ROUTER);
+        }
+
+        return router.getAmountOut(10**decimals, tokenReserves, ethReserves);
     }
 
     function getEthUsdPrice() public view returns (uint256) {
@@ -75,7 +93,7 @@ contract ParaSpaceFallbackOracle {
         //uint8 usdcDecimals = ERC20(USDC).decimals();
         //returns price in 6 decimals
         return
-            IUniswapV2Router01(UNISWAP_ROUTER).getAmountOut(
+            IUniswapV2Router(UNISWAP_ROUTER).getAmountOut(
                 10**ethDecimals,
                 ethReserves,
                 usdcReserves
