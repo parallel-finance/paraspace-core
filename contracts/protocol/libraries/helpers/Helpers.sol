@@ -24,7 +24,7 @@ library Helpers {
     }
 
     function compareStrings(string memory a, string memory b)
-        public
+        internal
         pure
         returns (bool)
     {
