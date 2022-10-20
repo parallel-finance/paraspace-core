@@ -13,22 +13,17 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  * @dev It defines the storage layout of the Pool contract.
  */
 contract PoolStorage {
-    // Map of reserves and their data (underlyingAssetOfReserve => reserveData)
-    mapping(address => DataTypes.ReserveData) internal _reserves;
+    bytes32 constant POOL_STORAGE_POSITION =
+        keccak256("paraspace.proxy.pool.storage");
 
-    // Map of users address and their configuration data (userAddress => userConfiguration)
-    mapping(address => DataTypes.UserConfigurationMap) internal _usersConfig;
-
-    // List of reserves as a map (reserveId => reserve).
-    // It is structured as a mapping for gas savings reasons, using the reserve id as index
-    mapping(uint256 => address) internal _reservesList;
-
-    // Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
-    uint16 internal _reservesCount;
-
-    // Maximum allowed number of atomic tokens per user
-    uint24 internal _maxAtomicTokensAllowed;
-
-    // Auction recovery health factor
-    uint64 internal _auctionRecoveryHealthFactor;
+    function poolStorage()
+        internal
+        pure
+        returns (DataTypes.PoolStorage storage rgs)
+    {
+        bytes32 position = POOL_STORAGE_POSITION;
+        assembly {
+            rgs.slot := position
+        }
+    }
 }

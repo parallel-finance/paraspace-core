@@ -221,14 +221,14 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setPoolDataProvider(address newDataProvider)
+    function setProtocolDataProvider(address newDataProvider)
         external
         override
         onlyOwner
     {
         address oldDataProvider = _addresses[DATA_PROVIDER];
         _addresses[DATA_PROVIDER] = newDataProvider;
-        emit PoolDataProviderUpdated(oldDataProvider, newDataProvider);
+        emit ProtocolDataProviderUpdated(oldDataProvider, newDataProvider);
     }
 
     /// @inheritdoc IPoolAddressesProvider
@@ -265,6 +265,7 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
      * @param newAddress The address of the new implementation
      **/
     function _updateImpl(bytes32 id, address newAddress) internal {
+        require(newAddress != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         address proxyAddress = _addresses[id];
         InitializableImmutableAdminUpgradeabilityProxy proxy;
         bytes memory params = abi.encodeWithSignature(

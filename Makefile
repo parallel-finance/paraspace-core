@@ -23,7 +23,7 @@ size:
 	yarn size
 
 .PHONY: build
-build:
+build: clean
 	yarn build
 
 .PHONY: doc
@@ -209,6 +209,14 @@ test-user-configurator-used-as-collateral:
 test-rate-strategy:
 	make TEST_TARGET=rate-strategy.spec.ts test
 
+.PHONY: test-ui-pool-data-provider
+test-ui-pool-data-provider:
+	make TEST_TARGET=ui-pool-data-provider.spec.ts test
+
+.PHONY: test-ui-incentive-data-provider
+test-ui-incentive-data-provider:
+	make TEST_TARGET=ui-incentive-data-provider.spec.ts test
+
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
 	make TEST_TARGET=reserve-configuration.spec.ts test
@@ -221,13 +229,17 @@ test-dynamic-configs-strategy:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
+.PHONY: test-wallet-balance-provider
+test-wallet-balance-provider:
+	make TEST_TARGET=wallet-balance-provider.spec.ts test	
+
 .PHONY: run
 run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
 
 .PHONY: run-task
-run-task: clean build
-	npx hardhat $(TASK_NAME) --network $(NETWORK)
+run-task:
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) --network $(NETWORK)
 
 .PHONY: print
 print:

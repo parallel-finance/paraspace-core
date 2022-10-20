@@ -151,9 +151,6 @@ library PoolLogic {
 
     /**
      * @notice Returns the user account data across all the reserves
-     * @param reservesData The state of all the reserves
-     * @param reservesList The addresses of all the active reserves
-     * @param params Additional params needed for the calculation
      * @return totalCollateralBase The total collateral of the user in the base currency used by the price feed
      * @return totalDebtBase The total debt of the user in the base currency used by the price feed
      * @return availableBorrowsBase The borrowing power left of the user in the base currency used by the price feed
@@ -163,9 +160,9 @@ library PoolLogic {
      * @return erc721HealthFactor The current erc721 health factor of the user
      **/
     function executeGetUserAccountData(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
-        DataTypes.CalculateUserAccountDataParams memory params
+        address user,
+        DataTypes.PoolStorage storage ps,
+        address oracle
     )
         external
         view
@@ -179,6 +176,14 @@ library PoolLogic {
             uint256 erc721HealthFactor
         )
     {
+        DataTypes.CalculateUserAccountDataParams memory params = DataTypes
+            .CalculateUserAccountDataParams({
+                userConfig: ps._usersConfig[user],
+                reservesCount: ps._reservesCount,
+                user: user,
+                oracle: oracle
+            });
+
         (
             totalCollateralBase,
             ,
@@ -191,8 +196,8 @@ library PoolLogic {
             erc721HealthFactor,
 
         ) = GenericLogic.calculateUserAccountData(
-            reservesData,
-            reservesList,
+            ps._reserves,
+            ps._reservesList,
             params
         );
 

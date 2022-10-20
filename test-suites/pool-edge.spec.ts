@@ -3,11 +3,11 @@ import {BigNumberish, utils} from "ethers";
 import {impersonateAccountsHardhat} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
-  deployDefaultReserveAuctionStrategy,
+  deployReserveAuctionStrategy,
   deployMintableERC20,
   // deployPool,
 } from "../deploy/helpers/contracts-deployments";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {
   MockReserveInterestRateStrategy__factory,
   // Pool__factory,
@@ -556,7 +556,8 @@ describe("Pool: Edge cases", () => {
     const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
       await getFirstSigner()
     ).deploy(addressesProvider.address, 0, 0, 0, 0);
-    const mockAuctionStrategy = await await deployDefaultReserveAuctionStrategy(
+    const mockAuctionStrategy = await await deployReserveAuctionStrategy(
+      eContractid.DefaultReserveAuctionStrategy,
       [
         auctionStrategyExp.maxPriceMultiplier,
         auctionStrategyExp.minExpPriceMultiplier,
@@ -812,7 +813,7 @@ describe("Pool: Edge cases", () => {
   //   const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
   //     await getFirstSigner()
   //   ).deploy(addressesProvider.address, 0, 0, 0, 0, 0, 0);
-  //   const mockAuctionStrategy = await await deployDefaultReserveAuctionStrategy(
+  //   const mockAuctionStrategy = await await deployReserveAuctionStrategy(
   //     [
   //       auctionStrategyExp.maxPriceMultiplier,
   //       auctionStrategyExp.minExpPriceMultiplier,

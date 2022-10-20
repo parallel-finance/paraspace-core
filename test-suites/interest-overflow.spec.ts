@@ -22,12 +22,13 @@ import {
 } from "../deploy/helpers/contracts-getters";
 import {TestEnv} from "./helpers/make-suite";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
-import {deployDefaultReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
+import {deployReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {expect} from "chai";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {eContractid} from "../deploy/helpers/types";
 
 const SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits";
 
@@ -68,14 +69,17 @@ describe("Interest Rate and Index Overflow", () => {
       await getFirstSigner()
     ).deploy(addressesProvider.address, 0, 0, 0, 0);
 
-    mockAuctionStrategy = await await deployDefaultReserveAuctionStrategy([
-      auctionStrategyExp.maxPriceMultiplier,
-      auctionStrategyExp.minExpPriceMultiplier,
-      auctionStrategyExp.minPriceMultiplier,
-      auctionStrategyExp.stepLinear,
-      auctionStrategyExp.stepExp,
-      auctionStrategyExp.tickLength,
-    ]);
+    mockAuctionStrategy = await await deployReserveAuctionStrategy(
+      eContractid.DefaultReserveAuctionStrategy,
+      [
+        auctionStrategyExp.maxPriceMultiplier,
+        auctionStrategyExp.minExpPriceMultiplier,
+        auctionStrategyExp.minPriceMultiplier,
+        auctionStrategyExp.stepLinear,
+        auctionStrategyExp.stepExp,
+        auctionStrategyExp.tickLength,
+      ]
+    );
 
     // Init the reserve
     const initInputParams: ConfiguratorInputTypes.InitReserveInputStruct[] = [
