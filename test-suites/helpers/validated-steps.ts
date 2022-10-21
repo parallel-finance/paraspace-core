@@ -989,7 +989,7 @@ const fetchLiquidationData = async (
     }
   }
   const assetPrice =
-    (nftId != undefined && (await targetToken.symbol())) == "UNI-V3-POS"
+    nftId != undefined && (await targetToken.symbol()) == "UNI-V3-POS"
       ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId as number)
       : await (await getParaSpaceOracle())
           .connect((await getDeployer()).signer)
@@ -1155,7 +1155,8 @@ const liquidateAndValidateERC721 = async (
     liquidationToken,
     amount,
     liquidator,
-    borrower
+    borrower,
+    nftId
   );
 
   await checkBeforeLiquidation(before);
@@ -1179,7 +1180,8 @@ const liquidateAndValidateERC721 = async (
     liquidationToken,
     amount,
     liquidator,
-    borrower
+    borrower,
+    nftId
   );
 
   await checkAfterLiquidationERC721(
