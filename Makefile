@@ -97,6 +97,10 @@ test-debt-token-delegation-permit:
 test-ptoken-permit:
 	make TEST_TARGET=ptoken-permit.spec.ts test
 
+.PHONY: test-ptoken-delegation-aware
+test-ptoken-delegation-aware:
+	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
+
 .PHONY: test-interest-overflow
 test-interest-overflow:
 	make TEST_TARGET=interest-overflow.spec.ts test
@@ -235,7 +239,7 @@ test-scenario:
 
 .PHONY: test-wallet-balance-provider
 test-wallet-balance-provider:
-	make TEST_TARGET=wallet-balance-provider.spec.ts test	
+	make TEST_TARGET=wallet-balance-provider.spec.ts test
 
 .PHONY: run
 run:

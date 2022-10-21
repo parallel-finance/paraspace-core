@@ -45,7 +45,7 @@ describe("PoolAddressesProvider", () => {
       addressesProvider.setPriceOracle,
       addressesProvider.setACLAdmin,
       addressesProvider.setPriceOracleSentinel,
-      addressesProvider.setPoolDataProvider,
+      addressesProvider.setProtocolDataProvider,
     ]) {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(
         OWNABLE_ONLY_OWNER
@@ -670,9 +670,9 @@ describe("PoolAddressesProvider", () => {
     expect(
       await addressesProvider
         .connect(currentAddressesProviderOwner.signer)
-        .setPoolDataProvider(newDataProviderAddress)
+        .setProtocolDataProvider(newDataProviderAddress)
     )
-      .to.emit(addressesProvider, "PoolDataProviderUpdated")
+      .to.emit(addressesProvider, "ProtocolDataProviderUpdated")
       .withArgs(registeredAddress, newDataProviderAddress);
 
     expect(await addressesProvider.getPoolDataProvider()).to.be.not.eq(

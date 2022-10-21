@@ -1,9 +1,5 @@
 import {task} from "hardhat/config";
 
-import dotenv from "dotenv";
-
-dotenv.config();
-
 const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
 
 task("deploy:mock-erc20-tokens", "Deploy mocked ERC20 tokens").setAction(
