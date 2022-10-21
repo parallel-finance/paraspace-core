@@ -497,7 +497,11 @@ library MarketplaceLogic {
                 bool isNToken = reservesData[underlyingAsset].xTokenAddress ==
                     token;
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                IERC721(token).transferFrom(address(this), onBehalfOf, tokenId);
+                IERC721(token).safeTransferFrom(
+                    address(this),
+                    onBehalfOf,
+                    tokenId
+                );
                 SupplyLogic.executeCollateralizeERC721(
                     reservesData,
                     userConfig,
@@ -512,7 +516,7 @@ library MarketplaceLogic {
             // item.token == underlyingAsset but supplied after listing/offering
             // so NToken is transferred instead
             if (INToken(vars.xTokenAddress).ownerOf(tokenId) == address(this)) {
-                IERC721(vars.xTokenAddress).transferFrom(
+                IERC721(vars.xTokenAddress).safeTransferFrom(
                     address(this),
                     onBehalfOf,
                     tokenId
