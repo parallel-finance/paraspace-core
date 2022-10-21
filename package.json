@@ -95,6 +95,5 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/para-space/paraspace-core"
-  },
-  "packageManager": "yarn@4.0.0-rc.26"
+  }
 }
