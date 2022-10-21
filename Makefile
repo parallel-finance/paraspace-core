@@ -69,6 +69,10 @@ test-ntoken-punk:
 test-liquidation:
 	make TEST_TARGET=liquidation.spec.ts test
 
+.PHONY: test-liquidation-non-borrowed
+test-liquidation-non-borrowed:
+	make TEST_TARGET=liquidation-non-borrowed.spec.ts test
+
 .PHONY: test-liquidation-auction
 test-liquidation-auction:
 	make TEST_TARGET=liquidation-auction.spec.ts test
