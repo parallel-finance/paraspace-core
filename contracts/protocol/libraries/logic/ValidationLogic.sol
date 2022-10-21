@@ -839,7 +839,7 @@ library ValidationLogic {
 
         INToken nToken = INToken(reserve.xTokenAddress);
         require(
-            nToken.getXTokenType() == XTokenType.NTokenUniswapV3Type,
+            nToken.getXTokenType() != XTokenType.NTokenUniswapV3Type,
             Errors.UNIV3_NOT_ALLOWED
         );
 
