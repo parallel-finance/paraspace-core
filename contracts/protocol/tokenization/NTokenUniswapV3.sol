@@ -36,7 +36,7 @@ contract NTokenUniswapV3 is NToken {
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
-        return XTokenType.NTokenUniswapV3Type;
+        return XTokenType.NTokenUniswapV3;
     }
 
     /**

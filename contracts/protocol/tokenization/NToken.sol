@@ -319,6 +319,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         override
         returns (XTokenType)
     {
-        return XTokenType.NTokenType;
+        return XTokenType.NToken;
     }
 }

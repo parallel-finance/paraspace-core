@@ -343,6 +343,6 @@ contract PToken is
         override
         returns (XTokenType)
     {
-        return XTokenType.PTokenType;
+        return XTokenType.PToken;
     }
 }

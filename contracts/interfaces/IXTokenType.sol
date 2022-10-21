@@ -8,14 +8,14 @@ pragma solidity 0.8.10;
  **/
 enum XTokenType {
     NoneType, // unused
-    NTokenType,
-    NTokenMoonBirdsType,
-    NTokenUniswapV3Type,
-    PTokenType,
-    DelegationAwarePTokenType,
-    RebasingPTokenType,
-    PTokenATokenType,
-    PTokenStETHType
+    NToken,
+    NTokenMoonBirds,
+    NTokenUniswapV3,
+    PToken,
+    DelegationAwarePToken,
+    RebasingPToken,
+    PTokenAToken,
+    PTokenStETH
 }
 
 interface IXTokenType {

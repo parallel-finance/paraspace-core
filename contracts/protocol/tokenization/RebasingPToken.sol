@@ -128,6 +128,6 @@ contract RebasingPToken is PToken {
         override
         returns (XTokenType)
     {
-        return XTokenType.RebasingPTokenType;
+        return XTokenType.RebasingPToken;
     }
 }

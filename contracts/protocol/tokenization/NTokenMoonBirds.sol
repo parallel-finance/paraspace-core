@@ -34,7 +34,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
-        return XTokenType.NTokenMoonBirdsType;
+        return XTokenType.NTokenMoonBirds;
     }
 
     function burn(

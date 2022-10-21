@@ -28,6 +28,6 @@ contract PTokenStETH is RebasingPToken {
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
-        return XTokenType.PTokenStETHType;
+        return XTokenType.PTokenStETH;
     }
 }

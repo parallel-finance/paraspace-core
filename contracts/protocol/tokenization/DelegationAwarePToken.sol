@@ -37,6 +37,6 @@ contract DelegationAwarePToken is PToken {
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
-        return XTokenType.DelegationAwarePTokenType;
+        return XTokenType.DelegationAwarePToken;
     }
 }
