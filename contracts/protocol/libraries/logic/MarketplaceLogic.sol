@@ -15,6 +15,7 @@ import {BorrowLogic} from "./BorrowLogic.sol";
 import {SeaportInterface} from "../../../dependencies/seaport/contracts/interfaces/SeaportInterface.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {ConsiderationItem, OfferItem} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {ItemType} from "../../../dependencies/seaport/contracts/lib/ConsiderationEnums.sol";
 import {AdvancedOrder, CriteriaResolver, Fulfillment} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
@@ -51,6 +52,12 @@ library MarketplaceLogic {
         address xTokenAddress;
         address creditToken;
         uint256 creditAmount;
+        address weth;
+        uint256 ethLeft;
+        bytes32 marketplaceId;
+        bytes payload;
+        DataTypes.Marketplace marketplace;
+        DataTypes.OrderInfo orderInfo;
     }
 
     function executeBuyWithCredit(
@@ -61,7 +68,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        BuyWithCreditTempParams memory vars;
+        MarketplaceLocalVars memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         DataTypes.Marketplace memory marketplace = poolAddressProvider
@@ -75,7 +82,7 @@ library MarketplaceLogic {
             vars.ethLeft > 0 &&
             orderInfo.consideration[0].itemType != ItemType.NATIVE
         ) {
-            depositETH(vars.weth, vars.ethLeft);
+            _depositETH(vars.weth, vars.ethLeft);
             vars.ethLeft = 0;
         }
 
@@ -98,7 +105,7 @@ library MarketplaceLogic {
             })
         );
 
-        refundETH(vars.ethLeft);
+        _refundETH(vars.ethLeft);
     }
 
     /**
@@ -156,15 +163,6 @@ library MarketplaceLogic {
         return downpaymentEth;
     }
 
-    struct BuyWithCreditTempParams {
-        address weth;
-        uint256 ethLeft;
-        bytes32 marketplaceId;
-        bytes payload;
-        DataTypes.Marketplace marketplace;
-        DataTypes.OrderInfo orderInfo;
-    }
-
     function executeBatchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
@@ -173,7 +171,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        BuyWithCreditTempParams memory vars;
+        MarketplaceLocalVars memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         require(
@@ -212,7 +210,7 @@ library MarketplaceLogic {
                 vars.ethLeft > 0 &&
                 orderInfo.consideration[0].itemType != ItemType.NATIVE
             ) {
-                MarketplaceLogic.depositETH(vars.weth, vars.ethLeft);
+                _depositETH(vars.weth, vars.ethLeft);
                 vars.ethLeft = 0;
             }
 
@@ -236,7 +234,7 @@ library MarketplaceLogic {
                 })
             );
         }
-        MarketplaceLogic.refundETH(vars.ethLeft);
+        _refundETH(vars.ethLeft);
     }
 
     function executeAcceptBidWithCredit(
@@ -248,7 +246,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        BuyWithCreditTempParams memory vars;
+        MarketplaceLocalVars memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         vars.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
@@ -286,7 +284,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
-        BuyWithCreditTempParams memory vars;
+        MarketplaceLocalVars memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
         require(
@@ -499,9 +497,10 @@ library MarketplaceLogic {
                 bool isNToken = reservesData[underlyingAsset].xTokenAddress ==
                     token;
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                require(
-                    INToken(token).ownerOf(tokenId) == onBehalfOf,
-                    Errors.INVALID_RECIPIENT
+                IERC721(token).safeTransferFrom(
+                    address(this),
+                    onBehalfOf,
+                    tokenId
                 );
                 SupplyLogic.executeCollateralizeERC721(
                     reservesData,
@@ -516,7 +515,12 @@ library MarketplaceLogic {
 
             // item.token == underlyingAsset but supplied after listing/offering
             // so NToken is transferred instead
-            if (INToken(vars.xTokenAddress).ownerOf(tokenId) == onBehalfOf) {
+            if (INToken(vars.xTokenAddress).ownerOf(tokenId) == address(this)) {
+                IERC721(vars.xTokenAddress).safeTransferFrom(
+                    address(this),
+                    onBehalfOf,
+                    tokenId
+                );
                 SupplyLogic.executeCollateralizeERC721(
                     reservesData,
                     userConfig,
@@ -583,13 +587,13 @@ library MarketplaceLogic {
         vars.creditAmount = params.credit.amount;
     }
 
-    function refundETH(uint256 ethLeft) internal {
+    function _refundETH(uint256 ethLeft) internal {
         if (ethLeft > 0) {
             Address.sendValue(payable(msg.sender), ethLeft);
         }
     }
 
-    function depositETH(address weth, uint256 ethLeft) internal {
+    function _depositETH(address weth, uint256 ethLeft) internal {
         IWETH(weth).deposit{value: ethLeft}();
         IERC20(weth).safeTransferFrom(address(this), msg.sender, ethLeft);
     }

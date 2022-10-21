@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {BigNumber, BigNumberish, utils} from "ethers";
-import {deployDefaultReserveInterestRateStrategy} from "../deploy/helpers/contracts-deployments";
+import {deployReserveInterestRateStrategy} from "../deploy/helpers/contracts-deployments";
 import {PERCENTAGE_FACTOR} from "../deploy/helpers/constants";
 import {
   PToken,
@@ -12,7 +12,7 @@ import {rateStrategyStableTwo} from "../deploy/market-config/rateStrategies";
 import {TestEnv} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
 import {formatUnits} from "@ethersproject/units";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -41,13 +41,16 @@ describe("InterestRateStrategy", () => {
     dai = testEnv.dai;
     pDai = testEnv.pDai;
 
-    strategyInstance = await deployDefaultReserveInterestRateStrategy([
-      addressesProvider.address,
-      rateStrategyStableTwo.optimalUsageRatio,
-      rateStrategyStableTwo.baseVariableBorrowRate,
-      rateStrategyStableTwo.variableRateSlope1,
-      rateStrategyStableTwo.variableRateSlope2,
-    ]);
+    strategyInstance = await deployReserveInterestRateStrategy(
+      eContractid.DefaultReserveInterestRateStrategy,
+      [
+        addressesProvider.address,
+        rateStrategyStableTwo.optimalUsageRatio,
+        rateStrategyStableTwo.baseVariableBorrowRate,
+        rateStrategyStableTwo.variableRateSlope1,
+        rateStrategyStableTwo.variableRateSlope2,
+      ]
+    );
   });
 
   it("Checks rates at 0% usage ratio, empty reserve", async () => {
@@ -229,13 +232,16 @@ describe("InterestRateStrategy", () => {
     const {addressesProvider} = testEnv;
 
     await expect(
-      deployDefaultReserveInterestRateStrategy([
-        addressesProvider.address,
-        utils.parseUnits("1.0", 28).toString(),
-        rateStrategyStableTwo.baseVariableBorrowRate,
-        rateStrategyStableTwo.variableRateSlope1,
-        rateStrategyStableTwo.variableRateSlope2,
-      ])
+      deployReserveInterestRateStrategy(
+        eContractid.DefaultReserveInterestRateStrategy,
+        [
+          addressesProvider.address,
+          utils.parseUnits("1.0", 28).toString(),
+          rateStrategyStableTwo.baseVariableBorrowRate,
+          rateStrategyStableTwo.variableRateSlope1,
+          rateStrategyStableTwo.variableRateSlope2,
+        ]
+      )
     ).to.be.revertedWith(INVALID_OPTIMAL_USAGE_RATIO);
   });
 });

@@ -250,16 +250,10 @@ export async function executeSeaportBuyWithCredit(
   };
 
   const pool = await getPoolProxy();
-  const isNToken = !(await pool.getReservesList()).includes(tokenToBuy.address);
 
   const encodedData = seaport.interface.encodeFunctionData(
     "fulfillAdvancedOrder",
-    [
-      await getSellOrder(),
-      [],
-      await getConduitKey(),
-      (isNToken ? taker : pool).address,
-    ]
+    [await getSellOrder(), [], await getConduitKey(), pool.address]
   );
 
   const tx = (await getPoolProxy()).connect(taker.signer).buyWithCredit(
@@ -290,8 +284,7 @@ export async function executeAcceptBidWithCredit(
   payLaterAmount: BigNumberish,
   nftId: number,
   maker: SignerWithAddress,
-  taker: SignerWithAddress,
-  _isNtoken = false
+  taker: SignerWithAddress
 ) {
   const pool = await getPoolProxy();
   const seaport = await getSeaport();
@@ -327,7 +320,7 @@ export async function executeAcceptBidWithCredit(
         nftId,
         toBN(1),
         toBN(1),
-        _isNtoken ? maker.address : pool.address
+        pool.address
       ),
     ];
 

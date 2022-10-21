@@ -16,7 +16,11 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET}
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET}
+
+.PHONY: fast-test
+fast-test:
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET}
 
 .PHONY: size
 size:
@@ -96,6 +100,10 @@ test-debt-token-delegation-permit:
 .PHONY: test-ptoken-permit
 test-ptoken-permit:
 	make TEST_TARGET=ptoken-permit.spec.ts test
+
+.PHONY: test-ptoken-delegation-aware
+test-ptoken-delegation-aware:
+	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
 
 .PHONY: test-interest-overflow
 test-interest-overflow:
@@ -235,7 +243,7 @@ test-scenario:
 
 .PHONY: test-wallet-balance-provider
 test-wallet-balance-provider:
-	make TEST_TARGET=wallet-balance-provider.spec.ts test	
+	make TEST_TARGET=wallet-balance-provider.spec.ts test
 
 .PHONY: run
 run:

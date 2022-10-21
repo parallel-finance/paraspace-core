@@ -201,7 +201,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
       weth.address,
       treasuryAddress
     );
-    const treasuryBalanceBefore = treasuryDataBefore.currentPTokenBalance;
+    const treasuryBalanceBefore = treasuryDataBefore.currentXTokenBalance;
 
     const userReserveDataBefore = await getUserData(
       pool,
@@ -249,7 +249,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
       weth.address,
       treasuryAddress
     );
-    const treasuryBalanceAfter = treasuryDataAfter.currentPTokenBalance;
+    const treasuryBalanceAfter = treasuryDataAfter.currentXTokenBalance;
 
     const collateralPrice = await oracle.getAssetPrice(weth.address);
     const principalPrice = await oracle.getAssetPrice(dai.address);
@@ -432,7 +432,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
       weth.address,
       treasuryAddress
     );
-    const treasuryBalanceBefore = treasuryDataBefore.currentPTokenBalance;
+    const treasuryBalanceBefore = treasuryDataBefore.currentXTokenBalance;
 
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
 
@@ -470,7 +470,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
       weth.address,
       treasuryAddress
     );
-    const treasuryBalanceAfter = treasuryDataAfter.currentPTokenBalance;
+    const treasuryBalanceAfter = treasuryDataAfter.currentXTokenBalance;
 
     const collateralPrice = await oracle.getAssetPrice(weth.address);
     const principalPrice = await oracle.getAssetPrice(usdc.address);

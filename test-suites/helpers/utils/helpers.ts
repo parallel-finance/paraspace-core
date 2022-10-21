@@ -104,7 +104,7 @@ export const getUserData = async (
 
   return {
     scaledPTokenBalance: BigNumber.from(scaledPTokenBalance),
-    currentPTokenBalance: userData.currentPTokenBalance,
+    currentPTokenBalance: userData.currentXTokenBalance,
     currentVariableDebt: userData.currentVariableDebt,
     scaledVariableDebt: userData.scaledVariableDebt,
     liquidityRate: userData.liquidityRate,
