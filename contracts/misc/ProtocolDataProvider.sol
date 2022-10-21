@@ -9,6 +9,10 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
+import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {IScaledBalanceToken} from "../interfaces/IScaledBalanceToken.sol";
+import {INToken} from "../interfaces/INToken.sol";
+import {IPToken} from "../interfaces/IPToken.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IProtocolDataProvider} from "../interfaces/IProtocolDataProvider.sol";
 
@@ -203,7 +207,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getPTokenTotalSupply(address asset)
+    function getXTokenTotalSupply(address asset)
         external
         view
         override
@@ -212,7 +216,11 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
-        return IERC20Detailed(reserve.xTokenAddress).totalSupply();
+        if (reserve.configuration.getAssetType() == DataTypes.AssetType.ERC20) {
+            return IPToken(reserve.xTokenAddress).totalSupply();
+        } else {
+            return INToken(reserve.xTokenAddress).totalSupply();
+        }
     }
 
     /// @inheritdoc IProtocolDataProvider
@@ -233,7 +241,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         external
         view
         returns (
-            uint256 currentPTokenBalance,
+            uint256 currentXTokenBalance,
+            uint256 scaledXTokenBalance,
+            uint256 collaterizedBalance,
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,
@@ -248,16 +258,31 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             ADDRESSES_PROVIDER.getPool()
         ).getUserConfiguration(user);
 
-        currentPTokenBalance = IERC20Detailed(reserve.xTokenAddress).balanceOf(
-            user
-        );
+        liquidityRate = reserve.currentLiquidityRate;
+        usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
+
+        if (reserve.configuration.getAssetType() == DataTypes.AssetType.ERC20) {
+            currentXTokenBalance = IPToken(reserve.xTokenAddress).balanceOf(
+                user
+            );
+            scaledXTokenBalance = IPToken(reserve.xTokenAddress)
+                .scaledBalanceOf(user);
+        } else {
+            currentXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
+                user
+            );
+            scaledXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
+                user
+            );
+            collaterizedBalance = ICollaterizableERC721(reserve.xTokenAddress)
+                .collaterizedBalanceOf(user);
+        }
+
         currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress)
             .balanceOf(user);
         scaledVariableDebt = IVariableDebtToken(
             reserve.variableDebtTokenAddress
         ).scaledBalanceOf(user);
-        liquidityRate = reserve.currentLiquidityRate;
-        usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
     }
 
     /// @inheritdoc IProtocolDataProvider

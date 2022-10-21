@@ -115,7 +115,7 @@ export const supplyAndValidate = async (
     .healthFactor;
   const erc721HealthFactorBefore = (await pool.getUserAccountData(user.address))
     .erc721HealthFactor;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
+  const tvlBefore = await protocolDataProvider.getXTokenTotalSupply(
     token.address
   );
 
@@ -172,7 +172,7 @@ export const supplyAndValidate = async (
   );
 
   // TVL must increase in supplied amount
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(token.address);
+  const tvl = await protocolDataProvider.getXTokenTotalSupply(token.address);
   assertAlmostEqual(tvl, tvlBefore.add(amountInBaseUnits));
 
   // health factor should improve - but only if user had some borrow position
@@ -230,7 +230,7 @@ export const borrowAndValidate = async (
     .healthFactor;
   const erc721HealthFactorBefore = (await pool.getUserAccountData(user.address))
     .erc721HealthFactor;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
+  const tvlBefore = await protocolDataProvider.getXTokenTotalSupply(
     token.address
   );
   const totalDebtBefore = (await pool.getUserAccountData(user.address))
@@ -270,7 +270,7 @@ export const borrowAndValidate = async (
   );
 
   // TVL should stay the same
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(token.address);
+  const tvl = await protocolDataProvider.getXTokenTotalSupply(token.address);
   assertAlmostEqual(tvl, tvlBefore);
 
   // total debt increased in the borrowed amount
@@ -325,7 +325,7 @@ export const repayAndValidate = async (
     .healthFactor;
   const erc721HealthFactorBefore = (await pool.getUserAccountData(user.address))
     .erc721HealthFactor;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
+  const tvlBefore = await protocolDataProvider.getXTokenTotalSupply(
     token.address
   );
   const totalDebtBefore = (await pool.getUserAccountData(user.address))
@@ -362,7 +362,7 @@ export const repayAndValidate = async (
   );
 
   // TVL should stay the same
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(token.address);
+  const tvl = await protocolDataProvider.getXTokenTotalSupply(token.address);
   assertAlmostEqual(tvl, tvlBefore);
 
   // LTV is based on my collateral, should stay the same
@@ -421,7 +421,7 @@ export const withdrawAndValidate = async (
     .healthFactor;
   const erc721HealthFactorBefore = (await pool.getUserAccountData(user.address))
     .erc721HealthFactor;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
+  const tvlBefore = await protocolDataProvider.getXTokenTotalSupply(
     token.address
   );
   const totalDebtBefore = (await pool.getUserAccountData(user.address))
@@ -463,7 +463,7 @@ export const withdrawAndValidate = async (
   );
 
   // TVL decreased in the withdrawn amount
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(token.address);
+  const tvl = await protocolDataProvider.getXTokenTotalSupply(token.address);
   assertAlmostEqual(tvl, tvlBefore.sub(amountInBaseUnits));
 
   // available to borrow decreased in [withdrawn amount * token's LTV ratio], but only if was collateral
@@ -649,7 +649,7 @@ export const liquidateAndValidateERC20 = async (
   ).totalCollateralBase;
   const healthFactorBefore = (await pool.getUserAccountData(borrower.address))
     .healthFactor;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
+  const tvlBefore = await protocolDataProvider.getXTokenTotalSupply(
     targetToken.address
   );
   const totalDebtBefore = (await pool.getUserAccountData(borrower.address))
@@ -755,7 +755,7 @@ export const liquidateAndValidateERC20 = async (
     borrowerLiquidationDebtTokenBalance,
     borrowerLiquidationDebtTokenBalanceBefore.sub(amountToLiquidate)
   );
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(
+  const tvl = await protocolDataProvider.getXTokenTotalSupply(
     targetToken.address
   );
 
@@ -934,7 +934,7 @@ export const liquidateAndValidateERC721 = async (
   const currentLiquidationThresholdBefore = (
     await pool.getUserAccountData(borrower.address)
   ).currentLiquidationThreshold;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
+  const tvlBefore = await protocolDataProvider.getXTokenTotalSupply(
     targetToken.address
   );
   const totalDebtBefore = (await pool.getUserAccountData(borrower.address))
@@ -1147,7 +1147,7 @@ export const liquidateAndValidateERC721 = async (
     );
   }
 
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(
+  const tvl = await protocolDataProvider.getXTokenTotalSupply(
     targetToken.address
   );
   if (receiveNToken) {
@@ -1312,9 +1312,9 @@ export async function isAssetInCollateral(
       ).getReserveTokensAddresses(assetAddress)
     ).xTokenAddress;
     const arr = new Array(100).fill(nftId); // workaround to avoid getNTokenData to fail due to missing elements
-    return (
-      await uiDataProvider.getNTokenData(user.address, [nTokenAddress], [arr])
-    )[0][0]["useAsCollateral"];
+    return (await uiDataProvider.getNTokenData([nTokenAddress], [arr]))[0][0][
+      "useAsCollateral"
+    ];
   } else {
     return (await getUserPositions(user)).filter(
       (it) => it.underlyingAsset == assetAddress
