@@ -396,10 +396,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     function _checkNoSuppliers(address asset) internal view {
-        uint256 totalPTokens = IProtocolDataProvider(
+        uint256 totalXTokens = IProtocolDataProvider(
             _addressesProvider.getPoolDataProvider()
-        ).getPTokenTotalSupply(asset);
-        require(totalPTokens == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
+        ).getXTokenTotalSupply(asset);
+        require(totalXTokens == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
     }
 
     function _checkNoBorrowers(address asset) internal view {

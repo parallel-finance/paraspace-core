@@ -6,8 +6,7 @@ import {OfferItem, ConsiderationItem} from "../../../dependencies/seaport/contra
 library DataTypes {
     enum AssetType {
         ERC20,
-        ERC721,
-        ERC1155
+        ERC721
     }
 
     struct ReserveData {
