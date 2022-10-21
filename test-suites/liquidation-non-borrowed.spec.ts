@@ -6,7 +6,7 @@ import {
 import {
   borrowAndValidate,
   changePriceAndValidate,
-  liquidateAndValidateERC721,
+  liquidateAndValidate,
   supplyAndValidate,
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
@@ -81,7 +81,7 @@ describe("Liquidation Tests", () => {
     );
     expect((await nBAYC.getAuctionData(0)).startTime).to.be.gt(0);
 
-    const result = await liquidateAndValidateERC721(
+    const result = await liquidateAndValidate(
       bayc,
       weth,
       "1000",
@@ -90,8 +90,6 @@ describe("Liquidation Tests", () => {
       false,
       0
     );
-    console.log("\n****liquidation params in test*****");
-    console.log(result);
 
     const {before, after} = result;
     //liquidator supply liquadation asset on behalf of borrower to get his nft token
@@ -107,8 +105,8 @@ describe("Liquidation Tests", () => {
       after.liquidatorTargetTokenBalance! > before.liquidatorTargetTokenBalance!
     );
     //assert borrowing status correct
-    expect(before.isBorrowing).to.be.false;
-    expect(after.isBorrowing).to.be.false;
+    expect(before.isLiquidationAssetBorrowed).to.be.false;
+    expect(after.isLiquidationAssetBorrowed).to.be.false;
     //assert isUsingAsCollateral status correct
     expect(before.isUsingAsCollateral).to.be.false;
     expect(after.isUsingAsCollateral).to.be.true;
@@ -192,10 +190,6 @@ describe("Liquidation Tests", () => {
 
     const userGlobalDataAfterPriceChange = await pool.getUserAccountData(
       borrower.address
-    );
-
-    console.log(
-      "userGlobalDataAfterPriceChange: " + userGlobalDataAfterPriceChange
     );
 
     expect(userGlobalDataAfterPriceChange.healthFactor).to.be.lt(

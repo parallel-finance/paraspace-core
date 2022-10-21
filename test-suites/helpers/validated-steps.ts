@@ -25,11 +25,13 @@ import {
   IPool,
   MintableERC20,
   MintableERC721,
+  NToken,
   WETH9Mocked,
 } from "../../types";
 import {SignerWithAddress} from "./make-suite";
 import {getUserPositions} from "./utils/positions";
 import {convertFromCurrencyDecimals} from "./utils/helpers";
+import "../helpers/utils/wadraymath";
 
 const {expect} = chai;
 type SupportedAsset =
@@ -530,7 +532,7 @@ export const withdrawAndValidate = async (
   await assertHealthFactorCalculation(user);
 };
 
-export interface BeforeLiquidationValidationData {
+export interface LiquidationValidationData {
   debtToRepayInBaseUnits: BigNumber;
   totalDebt: BigNumber;
   isNFT: boolean;
@@ -550,38 +552,20 @@ export interface BeforeLiquidationValidationData {
   borrowerLiquidationDebtTokenBalance: BigNumber;
   borrowerLiquidationPTokenBalance: BigNumber;
   liquidationThreshold: BigNumber;
-  isBorrowing: boolean;
   isUsingAsCollateral: boolean;
   liquidationBonus: BigNumber;
-}
-export interface AfterLiquidationValidationData {
   hasMoreCollateral: boolean;
-  collateralLiquidatedInBaseUnits: BigNumber;
+  collateralToBeLiquidatedInBaseUnits: BigNumber;
   ltv: BigNumber;
-  tvl: BigNumber;
-  liquidatorTargetXTokenBalance: BigNumber;
-  isLiquidationAssetBorrowed?: boolean;
-  borrowerTargetTokenBalance: BigNumber;
-  borrowerTargetXTokenBalance: BigNumber;
-  borrowerLiquidationDebtTokenBalance: BigNumber;
-  borrowerLiquidationTokenBalance: BigNumber;
-  borrowerLiquidationPTokenBalance: BigNumber;
-  availableToBorrow?: BigNumber;
-  totalCollateral: BigNumber;
-  totalDebt: BigNumber;
-  liquidationThreshold?: BigNumber;
-  healthFactor: BigNumber;
-  erc721HealthFactor?: BigNumber;
-  liquidatorLiquidationAssetBalance?: BigNumber;
-  liquidatorLiquidationPTokenBalance?: BigNumber;
-  liquidatorTargetTokenBalance: BigNumber;
-  isBorrowing?: boolean;
-  isUsingAsCollateral?: boolean;
+  amountToLiquidate: BigNumber;
+  liquidationAssetPrice: BigNumber;
+  targetAssetPrice: BigNumber;
+  willRepayAllDebt: boolean;
+  willHaveExcessFunds: boolean;
+  borrowerLiquidationTokenDebtInBaseUnits: BigNumber;
 }
 
-const checkBeforeLiquidation = async (
-  before: BeforeLiquidationValidationData
-) => {
+const checkBeforeLiquidation = async (before: LiquidationValidationData) => {
   // upon liquidation, user should not be available to borrow more
   expect(before.availableToBorrow).to.equal(0);
   if (before.isNFT) {
@@ -599,10 +583,9 @@ const checkAfterLiquidationERC20 = async (
   borrower: SignerWithAddress,
   targetToken: SupportedAsset,
   liquidationToken: SupportedAsset,
-  amountToLiquidate: BigNumber,
   receivePToken: boolean,
-  before: BeforeLiquidationValidationData,
-  after: AfterLiquidationValidationData
+  before: LiquidationValidationData,
+  after: LiquidationValidationData
 ) => {
   // borrower's Token balance is the same
   expect(after.borrowerTargetTokenBalance).equal(
@@ -613,27 +596,27 @@ const checkAfterLiquidationERC20 = async (
   assertAlmostEqual(
     after.borrowerTargetXTokenBalance,
     before.borrowerTargetXTokenBalance.sub(
-      amountToLiquidate.mul(before.liquidationBonus).div(10000)
+      before.amountToLiquidate.mul(before.liquidationBonus).div(10000)
     )
   );
 
   // borrower debtToken balance is subtracted amountToLiquidate (plus accrued interest)
   assertAlmostEqual(
     after.borrowerLiquidationDebtTokenBalance,
-    before.borrowerLiquidationDebtTokenBalance.sub(amountToLiquidate)
+    before.borrowerLiquidationDebtTokenBalance.sub(before.amountToLiquidate)
   );
 
   if (receivePToken) {
     // liquidator's Token balance is subtracted the liquidated amount
     assertAlmostEqual(
       after.liquidatorTargetTokenBalance,
-      before.liquidatorTargetTokenBalance.sub(amountToLiquidate)
+      before.liquidatorTargetTokenBalance.sub(before.amountToLiquidate)
     );
     // liquidator's pToken balance is incremented in liquidatedAmount+bonus (plus accrued interest)
     assertAlmostEqual(
       after.liquidatorTargetXTokenBalance,
       before.liquidatorTargetXTokenBalance.add(
-        amountToLiquidate.mul(before.liquidationBonus).div(10000)
+        before.amountToLiquidate.mul(before.liquidationBonus).div(10000)
       )
     );
     // TVL stays the same
@@ -641,7 +624,7 @@ const checkAfterLiquidationERC20 = async (
   } else {
     // liquidator's Token balance is incremented in amountToLiquidate+bonus
     // unless it's the same asset (then only bonus)
-    const bonus = amountToLiquidate
+    const bonus = before.amountToLiquidate
       .mul(before.liquidationBonus.sub(10000))
       .div(10000);
     if ((await liquidationToken.symbol()) == (await targetToken.symbol())) {
@@ -650,7 +633,9 @@ const checkAfterLiquidationERC20 = async (
       );
     } else {
       expect(after.liquidatorTargetTokenBalance).to.eq(
-        before.liquidatorTargetTokenBalance.add(amountToLiquidate.add(bonus))
+        before.liquidatorTargetTokenBalance.add(
+          before.amountToLiquidate.add(bonus)
+        )
       );
     }
     // liquidator's pToken balance stays the same
@@ -662,7 +647,9 @@ const checkAfterLiquidationERC20 = async (
     // TVL decreased in the liquidated+bonus amount
     assertAlmostEqual(
       after.tvl,
-      before.tvl.sub(amountToLiquidate.mul(before.liquidationBonus).div(10000))
+      before.tvl.sub(
+        before.amountToLiquidate.mul(before.liquidationBonus).div(10000)
+      )
     );
   }
 
@@ -671,7 +658,7 @@ const checkAfterLiquidationERC20 = async (
   // total collateral is decremented in liquidated amount
   assertAlmostEqual(
     after.totalCollateral,
-    before.totalCollateral.sub(after.collateralLiquidatedInBaseUnits)
+    before.totalCollateral.sub(before.collateralToBeLiquidatedInBaseUnits)
   );
 
   // if there's no more collateral, then health factor should be 0
@@ -699,15 +686,13 @@ const checkAfterLiquidationERC721 = async (
   borrower: SignerWithAddress,
   liquidationToken: SupportedAsset,
   receiveNToken: boolean,
-  isAllDebtRepaid: boolean,
-  willHaveExcessFunds: boolean,
-  discountedNFTPrice: BigNumber,
-  tokenDebtInBaseUnits: BigNumber,
-  liquidationAssetPrice: BigNumber,
-  assetPrice: BigNumber,
-  before: BeforeLiquidationValidationData,
-  after: AfterLiquidationValidationData
+  before: LiquidationValidationData,
+  after: LiquidationValidationData
 ) => {
+  const discountedNFTPrice = before.targetAssetPrice
+    .mul(10000)
+    .div(before.liquidationBonus);
+
   // borrower's Token balance is the same
   expect(after.borrowerTargetTokenBalance).equal(
     before.borrowerTargetTokenBalance
@@ -716,17 +701,17 @@ const checkAfterLiquidationERC721 = async (
   expect(after.borrowerTargetXTokenBalance).to.eq(
     before.borrowerTargetXTokenBalance.sub(1)
   );
-  if (isAllDebtRepaid || !willHaveExcessFunds) {
+  if (before.willRepayAllDebt || !before.willHaveExcessFunds) {
     // if all debt is repaid borrower's liquidation pToken balance should be the same (plus accrued interest)
     assertAlmostEqual(
       after.borrowerLiquidationPTokenBalance,
       before.borrowerLiquidationPTokenBalance
     );
-    if (willHaveExcessFunds) {
+    if (before.willHaveExcessFunds) {
       const excessToSupplyInCoinUnits = parseEther(
         discountedNFTPrice
-          .sub(tokenDebtInBaseUnits)
-          .div(liquidationAssetPrice)
+          .sub(before.borrowerLiquidationTokenDebtInBaseUnits)
+          .div(after.liquidationAssetPrice)
           .toString()
       );
       // Supplied amount should be (NFT discounted price - DEBT in base units), excess funds are returned to liquidator
@@ -738,9 +723,12 @@ const checkAfterLiquidationERC721 = async (
   } else {
     // if the asset is not borrowed there's no discounted price for the NFT
     const excessToSupplyInCoinUnits = parseEther(
-      (after.isLiquidationAssetBorrowed ? discountedNFTPrice : assetPrice)
-        .sub(tokenDebtInBaseUnits)
-        .div(liquidationAssetPrice)
+      (after.isLiquidationAssetBorrowed
+        ? discountedNFTPrice
+        : before.targetAssetPrice
+      )
+        .sub(before.borrowerLiquidationTokenDebtInBaseUnits)
+        .div(after.liquidationAssetPrice)
         .toString()
     );
     if (before.isLiquidationAssetBorrowed) {
@@ -759,7 +747,7 @@ const checkAfterLiquidationERC721 = async (
     expect(after.borrowerLiquidationDebtTokenBalance).to.be.eq(
       before.borrowerLiquidationDebtTokenBalance
     );
-  } else if (isAllDebtRepaid) {
+  } else if (before.willRepayAllDebt) {
     // if all debt is repaid, then borrower's liquidation debt token balance is 0
     expect(after.borrowerLiquidationDebtTokenBalance).to.equal(0);
   } else {
@@ -767,8 +755,8 @@ const checkAfterLiquidationERC721 = async (
     // is the resulting in subtracting the discounted NFT price
     const discountedNFTPriceInDebtUnits =
       (await liquidationToken.symbol()) != "WETH"
-        ? parseEther(discountedNFTPrice.div(liquidationAssetPrice).toString())
-        : discountedNFTPrice.div(+formatEther(liquidationAssetPrice));
+        ? discountedNFTPrice.wadDiv(before.liquidationAssetPrice)
+        : discountedNFTPrice;
 
     assertAlmostEqual(
       after.borrowerLiquidationDebtTokenBalance,
@@ -814,7 +802,7 @@ const checkAfterLiquidationERC721 = async (
     // total collateral is subtracted the asset floor price
     assertAlmostEqual(
       after.totalCollateral,
-      before.totalCollateral.sub(assetPrice)
+      before.totalCollateral.sub(before.targetAssetPrice)
     );
   }
 
@@ -832,18 +820,20 @@ const checkAfterLiquidationERC721 = async (
     expect(after.availableToBorrow).to.be.gt(before.availableToBorrow);
   }
 
-  if (isAllDebtRepaid) {
+  if (before.willRepayAllDebt) {
     // if repays all token debt, the total debt should be subtracted the full liq token debt
     assertAlmostEqual(
       after.totalDebt,
-      before.totalDebt.sub(tokenDebtInBaseUnits)
+      before.totalDebt.sub(before.borrowerLiquidationTokenDebtInBaseUnits)
     );
   } else if (!before.isLiquidationAssetBorrowed) {
     // total debt should stay the same
     assertAlmostEqual(after.totalDebt, before.totalDebt);
   } else {
     // if liquidation asset is borrowed but not all debt is repaid, total debt should result in subtracting the amount repaid
-    const debtToRepay = assetPrice.mul(10000).div(before.liquidationBonus);
+    const debtToRepay = before.targetAssetPrice
+      .mul(10000)
+      .div(before.liquidationBonus);
     assertAlmostEqual(after.totalDebt, before.totalDebt.sub(debtToRepay));
   }
 };
@@ -857,8 +847,8 @@ export const liquidateAndValidate = async (
   receiveXToken: boolean,
   nftId?: number
 ): Promise<{
-  before: BeforeLiquidationValidationData;
-  after: AfterLiquidationValidationData;
+  before: LiquidationValidationData;
+  after: LiquidationValidationData;
 }> => {
   const isNFT = !isERC20(targetToken);
 
@@ -884,83 +874,29 @@ export const liquidateAndValidate = async (
   }
 };
 
-export const liquidateAndValidateERC20 = async (
+const fetchLiquidationData = async (
   targetToken: SupportedAsset,
   liquidationToken: SupportedAsset,
   amount: string,
   liquidator: SignerWithAddress,
   borrower: SignerWithAddress,
-  receivePToken: boolean
-): Promise<{
-  before: BeforeLiquidationValidationData;
-  after: AfterLiquidationValidationData;
-}> => {
+  nftId?: number
+): Promise<LiquidationValidationData> => {
+  const isNFT = !isERC20(targetToken);
   const pool = await getPoolProxy();
   const protocolDataProvider = await getProtocolDataProvider();
-  const targetPTokenAddress = (
+  const targetXTokenAddress = (
     await protocolDataProvider.getReserveTokensAddresses(targetToken.address)
   ).xTokenAddress;
-  const targetPToken = await getPToken(targetPTokenAddress);
+  const targetXToken = isNFT
+    ? await getNToken(targetXTokenAddress)
+    : await getPToken(targetXTokenAddress);
   const liquidationPTokenAddress = (
     await protocolDataProvider.getReserveTokensAddresses(
       liquidationToken.address
     )
   ).xTokenAddress;
   const liquidationPToken = await getPToken(liquidationPTokenAddress);
-
-  const liquidationAssetPrice = await (await getParaSpaceOracle())
-    .connect((await getDeployer()).signer)
-    .getAssetPrice(liquidationToken.address);
-  const availableToBorrowBefore = (
-    await pool.getUserAccountData(borrower.address)
-  ).availableBorrowsBase;
-  const totalCollateralBefore = (
-    await (await getPoolProxy()).getUserAccountData(borrower.address)
-  ).totalCollateralBase;
-  const healthFactorBefore = (await pool.getUserAccountData(borrower.address))
-    .healthFactor;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
-    targetToken.address
-  );
-  const totalDebtBefore = (await pool.getUserAccountData(borrower.address))
-    .totalDebtBase;
-
-  const borrowerTargetTokenBalanceBefore = await targetToken.balanceOf(
-    borrower.address
-  );
-  const borrowerPTokenBalanceBefore = await targetPToken.balanceOf(
-    borrower.address
-  );
-  const borrowerLiquidationPTokenBalanceBefore =
-    await liquidationPToken.balanceOf(borrower.address);
-
-  const liquidatorTargetTokenBalanceBefore = await targetToken.balanceOf(
-    liquidator.address
-  );
-  const liquidatorPTokenBalanceBefore = await targetPToken.balanceOf(
-    liquidator.address
-  );
-  const liquidatorLiquidationAssetBalanceBefore =
-    await liquidationToken.balanceOf(liquidator.address);
-  const liquidatorLiquidationAssetPTokenBalanceBefore =
-    await liquidationPToken.balanceOf(liquidator.address);
-
-  const amountInBaseUnits = await convertToCurrencyDecimals(
-    liquidationToken.address,
-    amount
-  );
-  const isPartialLiquidation =
-    borrowerPTokenBalanceBefore.gt(amountInBaseUnits);
-  const liquidationBonus = (
-    await protocolDataProvider.getReserveConfigurationData(targetToken.address)
-  ).liquidationBonus;
-  const amountToLiquidate = isPartialLiquidation
-    ? amountInBaseUnits
-    : borrowerPTokenBalanceBefore.mul(10000).div(liquidationBonus);
-  const isLiquidationAssetBorrowed = (await getUserPositions(borrower))
-    .filter((it) => it.underlyingAsset == liquidationToken.address)[0]
-    .positionInfo.erc20XTokenDebt.gt(0);
-
   const liquidationDebtTokenAddress = (
     await protocolDataProvider.getReserveTokensAddresses(
       liquidationToken.address
@@ -969,69 +905,195 @@ export const liquidateAndValidateERC20 = async (
   const liquidationDebtToken = await getVariableDebtToken(
     liquidationDebtTokenAddress
   );
-  const borrowerLiquidationDebtTokenBalanceBefore =
+
+  // borrower user account stats
+  const availableToBorrow = (await pool.getUserAccountData(borrower.address))
+    .availableBorrowsBase;
+  const totalCollateral = (
+    await (await getPoolProxy()).getUserAccountData(borrower.address)
+  ).totalCollateralBase;
+  const healthFactor = (await pool.getUserAccountData(borrower.address))
+    .healthFactor;
+  const tvl = await protocolDataProvider.getPTokenTotalSupply(
+    targetToken.address
+  );
+  const totalDebt = (await pool.getUserAccountData(borrower.address))
+    .totalDebtBase;
+  const liquidationThreshold = (await pool.getUserAccountData(borrower.address))
+    .currentLiquidationThreshold;
+  const ltv = (await pool.getUserAccountData(borrower.address)).ltv;
+  const hasMoreCollateral =
+    (await getUserPositions(borrower)).filter((it) =>
+      it.positionInfo.xTokenBalance.gt(0)
+    ).length > 0;
+
+  // borrower balances
+  const borrowerTargetTokenBalance = await targetToken.balanceOf(
+    borrower.address
+  );
+  const borrowerPTokenBalance = await targetXToken.balanceOf(borrower.address);
+  const borrowerLiquidationTokenBalance = await liquidationToken.balanceOf(
+    borrower.address
+  );
+  const borrowerLiquidationPTokenBalance = await liquidationPToken.balanceOf(
+    borrower.address
+  );
+  const borrowerLiquidationDebtTokenBalance =
     await liquidationDebtToken.balanceOf(borrower.address);
-  const borrowerLiquidationTokenBalanceBefore =
-    await liquidationToken.balanceOf(borrower.address);
+
+  // liquidator balances
+  const liquidatorTargetTokenBalance = await targetToken.balanceOf(
+    liquidator.address
+  );
+  const liquidatorTargetXTokenBalance = await targetXToken.balanceOf(
+    liquidator.address
+  );
+  const liquidatorLiquidationAssetBalance = await liquidationToken.balanceOf(
+    liquidator.address
+  );
+  const liquidatorLiquidationAssetPTokenBalance =
+    await liquidationPToken.balanceOf(liquidator.address);
+
+  // liquidation situation specifics
+  const amountInBaseUnits = await convertToCurrencyDecimals(
+    liquidationToken.address,
+    amount
+  );
+  const isPartialLiquidation = borrowerPTokenBalance.gt(amountInBaseUnits);
+  const liquidationBonus = (
+    await protocolDataProvider.getReserveConfigurationData(targetToken.address)
+  ).liquidationBonus;
+  const amountToLiquidate = isPartialLiquidation
+    ? amountInBaseUnits
+    : borrowerPTokenBalance.mul(10000).div(liquidationBonus);
+  const isLiquidationAssetBorrowed = (await getUserPositions(borrower))
+    .filter((it) => it.underlyingAsset == liquidationToken.address)[0]
+    .positionInfo.erc20XTokenDebt.gt(0);
+
+  const liquidationAssetPrice = await (await getParaSpaceOracle())
+    .connect((await getDeployer()).signer)
+    .getAssetPrice(liquidationToken.address);
+
+  let currentPriceMultiplier = BigNumber.from("1000000000000000000");
+  let isAuctioned = false;
+  if (nftId != undefined) {
+    const auctionData = await pool.getAuctionData(targetXTokenAddress, nftId);
+    isAuctioned = await (targetXToken as NToken).isAuctioned(nftId);
+    if (isAuctioned && auctionData.startTime.gt(0)) {
+      currentPriceMultiplier = auctionData.currentPriceMultiplier;
+    }
+  }
+  const assetPrice =
+    (nftId != undefined && (await targetToken.symbol())) == "UNI-V3-POS"
+      ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId as number)
+      : await (await getParaSpaceOracle())
+          .connect((await getDeployer()).signer)
+          .getAssetPrice(targetToken.address);
+  const targetAssetPrice = assetPrice
+    .mul(currentPriceMultiplier)
+    .div("1000000000000000000");
 
   const debtToRepay = isPartialLiquidation
     ? amountInBaseUnits
-    : borrowerPTokenBalanceBefore.mul(10000).div(liquidationBonus);
-  const debtToRepayInBaseUnits = parseEther(
-    (+formatEther(debtToRepay) * +formatEther(liquidationAssetPrice)).toString()
-  );
-  const liquidationThresholdBefore = (
-    await pool.getUserAccountData(borrower.address)
-  ).currentLiquidationThreshold;
+    : borrowerPTokenBalance.mul(10000).div(liquidationBonus);
+
+  const debtToRepayInBaseUnits = debtToRepay.wadMul(liquidationAssetPrice);
+
+  const borrowerLiquidationTokenDebtInBaseUnits =
+    borrowerLiquidationDebtTokenBalance.wadMul(liquidationAssetPrice);
 
   const liquidationAssetData = await pool.getReserveData(
     liquidationToken.address
   );
-  const borrowerConfigBefore = BigNumber.from(
+  const borrowerConfig = BigNumber.from(
     (await pool.getUserConfiguration(borrower.address)).data
   );
 
-  const isBorrowingBefore = isBorrowing(
-    borrowerConfigBefore,
-    liquidationAssetData.id
-  );
-  const isUsingAsCollateralBefore = isUsingAsCollateral(
-    borrowerConfigBefore,
+  const isLiquidationAssetInCollateral = isUsingAsCollateral(
+    borrowerConfig,
     liquidationAssetData.id
   );
 
-  const before: BeforeLiquidationValidationData = {
-    isNFT: false,
+  const collateralToBeLiquidated = isPartialLiquidation
+    ? amountInBaseUnits.mul(liquidationBonus).div(10000)
+    : borrowerPTokenBalance;
+
+  const collateralToBeLiquidatedInBaseUnits = collateralToBeLiquidated.wadMul(
+    liquidationAssetPrice
+  );
+
+  const willRepayAllDebt =
+    isLiquidationAssetBorrowed &&
+    +formatEther(borrowerLiquidationDebtTokenBalance) *
+      +formatEther(liquidationAssetPrice) <=
+      +formatEther(assetPrice.mul(10000).div(liquidationBonus));
+
+  const willHaveExcessFunds =
+    +formatEther(borrowerLiquidationDebtTokenBalance) *
+      +formatEther(liquidationAssetPrice) <=
+    +formatEther(assetPrice.mul(10000).div(liquidationBonus));
+
+  const data: LiquidationValidationData = {
+    isNFT: isNFT,
     isLiquidationAssetBorrowed: isLiquidationAssetBorrowed,
-    availableToBorrow: availableToBorrowBefore,
-    healthFactor: healthFactorBefore,
-    erc721HealthFactor: healthFactorBefore,
-    totalCollateral: totalCollateralBefore,
-    liquidationThreshold: liquidationThresholdBefore,
-    tvl: tvlBefore,
-    liquidatorTargetTokenBalance: liquidatorTargetTokenBalanceBefore,
-    liquidatorTargetXTokenBalance: liquidatorPTokenBalanceBefore,
-    liquidatorLiquidationAssetBalance: liquidatorLiquidationAssetBalanceBefore,
+    availableToBorrow: availableToBorrow,
+    healthFactor: healthFactor,
+    erc721HealthFactor: healthFactor,
+    totalCollateral: totalCollateral,
+    liquidationThreshold: liquidationThreshold,
+    tvl: tvl,
+    liquidatorTargetTokenBalance: liquidatorTargetTokenBalance,
+    liquidatorTargetXTokenBalance: liquidatorTargetXTokenBalance,
+    liquidatorLiquidationAssetBalance: liquidatorLiquidationAssetBalance,
     liquidatorLiquidationAssetPTokenBalance:
-      liquidatorLiquidationAssetPTokenBalanceBefore,
-    totalDebt: totalDebtBefore,
+      liquidatorLiquidationAssetPTokenBalance,
+    totalDebt: totalDebt,
     debtToRepayInBaseUnits: debtToRepayInBaseUnits,
-    borrowerTargetXTokenBalance: borrowerPTokenBalanceBefore,
-    borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalanceBefore,
-    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalanceBefore,
-    borrowerTargetTokenBalance: borrowerTargetTokenBalanceBefore,
-    borrowerLiquidationDebtTokenBalance:
-      borrowerLiquidationDebtTokenBalanceBefore,
-    isBorrowing: isBorrowingBefore,
-    isUsingAsCollateral: isUsingAsCollateralBefore,
+    borrowerTargetXTokenBalance: borrowerPTokenBalance,
+    borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalance,
+    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalance,
+    borrowerLiquidationDebtTokenBalance: borrowerLiquidationDebtTokenBalance,
+    borrowerLiquidationTokenDebtInBaseUnits:
+      borrowerLiquidationTokenDebtInBaseUnits,
+    borrowerTargetTokenBalance: borrowerTargetTokenBalance,
+    isUsingAsCollateral: isLiquidationAssetInCollateral,
     liquidationBonus: liquidationBonus,
+    hasMoreCollateral: hasMoreCollateral,
+    collateralToBeLiquidatedInBaseUnits: collateralToBeLiquidatedInBaseUnits,
+    ltv: ltv,
+    amountToLiquidate: amountToLiquidate,
+    liquidationAssetPrice: liquidationAssetPrice,
+    targetAssetPrice: targetAssetPrice,
+    willRepayAllDebt: willRepayAllDebt,
+    willHaveExcessFunds: willHaveExcessFunds,
   };
+  return data;
+};
+
+const liquidateAndValidateERC20 = async (
+  targetToken: SupportedAsset,
+  liquidationToken: SupportedAsset,
+  amount: string,
+  liquidator: SignerWithAddress,
+  borrower: SignerWithAddress,
+  receivePToken: boolean
+): Promise<{
+  before: LiquidationValidationData;
+  after: LiquidationValidationData;
+}> => {
+  const before = await fetchLiquidationData(
+    targetToken,
+    liquidationToken,
+    amount,
+    liquidator,
+    borrower
+  );
 
   await checkBeforeLiquidation(before);
 
   // liquidate asset
   await waitForTx(
-    await pool
+    await (await getPoolProxy())
       .connect(liquidator.signer)
       .liquidationCall(
         targetToken.address,
@@ -1045,77 +1107,18 @@ export const liquidateAndValidateERC20 = async (
       )
   );
 
-  const borrowerTokenBalance = await targetToken.balanceOf(borrower.address);
-  const borrowerPTokenBalance = await targetPToken.balanceOf(borrower.address);
-  const borrowerLiquidationDebtTokenBalance =
-    await liquidationDebtToken.balanceOf(borrower.address);
-  const borrowerLiquidationTokenBalance = await liquidationToken.balanceOf(
-    borrower.address
+  const after = await fetchLiquidationData(
+    targetToken,
+    liquidationToken,
+    amount,
+    liquidator,
+    borrower
   );
-  const borrowerLiquidationPTokenBalance = await liquidationPToken.balanceOf(
-    borrower.address
-  );
-  const liquidatorTargetTokenBalance = await targetToken.balanceOf(
-    liquidator.address
-  );
-  const liquidatorTargetPTokenBalance = await targetPToken.balanceOf(
-    liquidator.address
-  );
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(
-    targetToken.address
-  );
-  const ltv = (await pool.getUserAccountData(borrower.address)).ltv;
-
-  const totalCollateral = (await pool.getUserAccountData(borrower.address))
-    .totalCollateralBase;
-  const collateralLiquidated = isPartialLiquidation
-    ? amountInBaseUnits.mul(liquidationBonus).div(10000)
-    : borrowerPTokenBalanceBefore;
-  const collateralLiquidatedInBaseUnits = parseEther(
-    (
-      +formatEther(collateralLiquidated) * +formatEther(liquidationAssetPrice)
-    ).toString()
-  );
-  const healthFactor = (await pool.getUserAccountData(borrower.address))
-    .healthFactor;
-  const erc721HealthFactor = (await pool.getUserAccountData(borrower.address))
-    .erc721HealthFactor;
-  const hasMoreCollateral =
-    (await getUserPositions(borrower)).filter((it) =>
-      it.positionInfo.xTokenBalance.gt(0)
-    ).length > 0;
-
-  const availableToBorrow = (await pool.getUserAccountData(borrower.address))
-    .availableBorrowsBase;
-
-  const totalDebt = (await pool.getUserAccountData(borrower.address))
-    .totalDebtBase;
-  // total debt decreased in the liquidated amount (in base units)
-
-  const after: AfterLiquidationValidationData = {
-    borrowerTargetXTokenBalance: borrowerPTokenBalance,
-    borrowerTargetTokenBalance: borrowerTokenBalance,
-    borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalance,
-    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalance,
-    borrowerLiquidationDebtTokenBalance: borrowerLiquidationDebtTokenBalance,
-    liquidatorTargetTokenBalance: liquidatorTargetTokenBalance,
-    liquidatorTargetXTokenBalance: liquidatorTargetPTokenBalance,
-    availableToBorrow: availableToBorrow,
-    totalCollateral: totalCollateral,
-    collateralLiquidatedInBaseUnits: collateralLiquidatedInBaseUnits,
-    hasMoreCollateral: hasMoreCollateral,
-    totalDebt: totalDebt,
-    healthFactor: healthFactor,
-    erc721HealthFactor: erc721HealthFactor,
-    tvl: tvl,
-    ltv: ltv,
-  };
 
   await checkAfterLiquidationERC20(
     borrower,
     targetToken,
     liquidationToken,
-    amountToLiquidate,
     receivePToken,
     before,
     after
@@ -1125,7 +1128,7 @@ export const liquidateAndValidateERC20 = async (
   return {before, after};
 };
 
-export const liquidateAndValidateERC721 = async (
+const liquidateAndValidateERC721 = async (
   targetToken: SupportedAsset,
   liquidationToken: SupportedAsset,
   amount: string,
@@ -1134,175 +1137,22 @@ export const liquidateAndValidateERC721 = async (
   receiveNToken: boolean,
   nftId?: number
 ): Promise<{
-  before: BeforeLiquidationValidationData;
-  after: AfterLiquidationValidationData;
+  before: LiquidationValidationData;
+  after: LiquidationValidationData;
 }> => {
-  const pool = await getPoolProxy();
-  const protocolDataProvider = await getProtocolDataProvider();
-  const targetNTokenAddress = (
-    await protocolDataProvider.getReserveTokensAddresses(targetToken.address)
-  ).xTokenAddress;
-  const targetNToken = await getNToken(targetNTokenAddress);
-
-  let currentPriceMultiplier = BigNumber.from("1000000000000000000");
-  let isAuctioned = false;
-  if (nftId != undefined) {
-    const auctionData = await pool.getAuctionData(targetNTokenAddress, nftId);
-    isAuctioned = await targetNToken.isAuctioned(nftId);
-    if (isAuctioned && auctionData.startTime.gt(0)) {
-      currentPriceMultiplier = auctionData.currentPriceMultiplier;
-    }
-  }
-
-  const liquidationPTokenAddress = (
-    await protocolDataProvider.getReserveTokensAddresses(
-      liquidationToken.address
-    )
-  ).xTokenAddress;
-  const liquidationPToken = await getPToken(liquidationPTokenAddress);
-
-  const originalPrice =
-    (await targetToken.symbol()) == "UNI-V3-POS"
-      ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId!)
-      : await (await getParaSpaceOracle())
-          .connect((await getDeployer()).signer)
-          .getAssetPrice(targetToken.address);
-
-  const assetPrice = originalPrice
-    .mul(currentPriceMultiplier)
-    .div("1000000000000000000");
-
-  const liquidationAssetPrice =
-    (await liquidationToken.symbol()) == "UNI-V3-POS"
-      ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId!)
-      : await (await getParaSpaceOracle())
-          .connect((await getDeployer()).signer)
-          .getAssetPrice(liquidationToken.address);
-  const availableToBorrowBefore = (
-    await pool.getUserAccountData(borrower.address)
-  ).availableBorrowsBase;
-  const totalCollateralBefore = (
-    await (await getPoolProxy()).getUserAccountData(borrower.address)
-  ).totalCollateralBase;
-  const healthFactorBefore = (await pool.getUserAccountData(borrower.address))
-    .healthFactor;
-  const erc721HealthFactorBefore = (
-    await pool.getUserAccountData(borrower.address)
-  ).erc721HealthFactor;
-  const currentLiquidationThresholdBefore = (
-    await pool.getUserAccountData(borrower.address)
-  ).currentLiquidationThreshold;
-  const tvlBefore = await protocolDataProvider.getPTokenTotalSupply(
-    targetToken.address
+  const before = await fetchLiquidationData(
+    targetToken,
+    liquidationToken,
+    amount,
+    liquidator,
+    borrower
   );
-  const totalDebtBefore = (await pool.getUserAccountData(borrower.address))
-    .totalDebtBase;
-
-  const borrowerTargetTokenBalanceBefore = await targetToken.balanceOf(
-    borrower.address
-  );
-  const borrowerTargetNTokenBalanceBefore = await targetNToken.balanceOf(
-    borrower.address
-  );
-  const borrowerLiquidationTokenBalanceBefore =
-    await liquidationToken.balanceOf(borrower.address);
-  const borrowerLiquidationPTokenBalanceBefore =
-    await liquidationPToken.balanceOf(borrower.address);
-  const liquidatorTokenBalanceBefore = await targetToken.balanceOf(
-    liquidator.address
-  );
-  const liquidatorNTokenBalanceBefore = await targetNToken.balanceOf(
-    liquidator.address
-  );
-
-  const originalLiquidationBonus = (
-    await protocolDataProvider.getReserveConfigurationData(targetToken.address)
-  ).liquidationBonus;
-  const isLiquidationAssetBorrowed = (await getUserPositions(borrower))
-    .filter((it) => it.underlyingAsset == liquidationToken.address)[0]
-    .positionInfo.erc20XTokenDebt.gt(0);
-  const liquidationBonus =
-    !isLiquidationAssetBorrowed || isAuctioned
-      ? BigNumber.from(10000)
-      : originalLiquidationBonus;
-
-  const debtLiquidationTokenAddress = (
-    await protocolDataProvider.getReserveTokensAddresses(
-      liquidationToken.address
-    )
-  ).variableDebtTokenAddress;
-  const liquidationDebtToken = await getVariableDebtToken(
-    debtLiquidationTokenAddress
-  );
-  const borrowerLiquidationDebtTokenBalanceBefore =
-    await liquidationDebtToken.balanceOf(borrower.address);
-
-  const isAllDebtRepaid =
-    isLiquidationAssetBorrowed &&
-    +formatEther(borrowerLiquidationDebtTokenBalanceBefore) *
-      +formatEther(liquidationAssetPrice) <=
-      +formatEther(assetPrice.mul(10000).div(liquidationBonus));
-  const willHaveExcessFunds =
-    +formatEther(borrowerLiquidationDebtTokenBalanceBefore) *
-      +formatEther(liquidationAssetPrice) <=
-    +formatEther(assetPrice.mul(10000).div(liquidationBonus));
-
-  const liquidatorLiquidationAssetBalanceBefore =
-    await liquidationToken.balanceOf(liquidator.address);
-  const liquidatorLiquidationAssetPTokenBalanceBefore =
-    await liquidationPToken.balanceOf(liquidator.address);
-  const liquidatorTargetTokenBalanceBefore = await targetToken.balanceOf(
-    liquidator.address
-  );
-
-  const liquidationAssetData = await pool.getReserveData(
-    liquidationToken.address
-  );
-  const borrowerConfigBefore = BigNumber.from(
-    (await pool.getUserConfiguration(borrower.address)).data
-  );
-
-  const isBorrowingBefore = isBorrowing(
-    borrowerConfigBefore,
-    liquidationAssetData.id
-  );
-  const isUsingAsCollateralBefore = isUsingAsCollateral(
-    borrowerConfigBefore,
-    liquidationAssetData.id
-  );
-
-  const before: BeforeLiquidationValidationData = {
-    isNFT: true,
-    isLiquidationAssetBorrowed: isLiquidationAssetBorrowed,
-    borrowerTargetTokenBalance: borrowerTargetTokenBalanceBefore,
-    borrowerTargetXTokenBalance: borrowerTargetNTokenBalanceBefore,
-    borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalanceBefore,
-    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalanceBefore,
-    borrowerLiquidationDebtTokenBalance:
-      borrowerLiquidationDebtTokenBalanceBefore,
-    availableToBorrow: availableToBorrowBefore,
-    totalCollateral: totalCollateralBefore,
-    totalDebt: totalDebtBefore,
-    liquidationThreshold: currentLiquidationThresholdBefore,
-    healthFactor: healthFactorBefore,
-    erc721HealthFactor: erc721HealthFactorBefore,
-    liquidatorLiquidationAssetBalance: liquidatorLiquidationAssetBalanceBefore,
-    liquidatorLiquidationAssetPTokenBalance:
-      liquidatorLiquidationAssetPTokenBalanceBefore,
-    liquidatorTargetTokenBalance: liquidatorTargetTokenBalanceBefore,
-    liquidatorTargetXTokenBalance: liquidatorNTokenBalanceBefore,
-    isBorrowing: isBorrowingBefore,
-    isUsingAsCollateral: isUsingAsCollateralBefore,
-    tvl: tvlBefore,
-    debtToRepayInBaseUnits: liquidationAssetPrice,
-    liquidationBonus: liquidationBonus,
-  };
 
   await checkBeforeLiquidation(before);
 
   // liquidate asset
   await waitForTx(
-    await pool
+    await (await getPoolProxy())
       .connect(liquidator.signer)
       .liquidationERC721(
         targetToken.address,
@@ -1314,119 +1164,18 @@ export const liquidateAndValidateERC721 = async (
       )
   );
 
-  const borrowerTokenBalance = await targetToken.balanceOf(borrower.address);
-  const borrowerLiquidationTokenBalance = await liquidationToken.balanceOf(
-    borrower.address
+  const after = await fetchLiquidationData(
+    targetToken,
+    liquidationToken,
+    amount,
+    liquidator,
+    borrower
   );
-  const borrowerLiquidationPTokenBalance = await liquidationPToken.balanceOf(
-    borrower.address
-  );
-  const borrowerPTokenBalance = await targetNToken.balanceOf(borrower.address);
-  const borrowerLiquidationDebtTokenBalance =
-    await liquidationDebtToken.balanceOf(borrower.address);
-  const liquidatorTokenBalance = await targetToken.balanceOf(
-    liquidator.address
-  );
-  const liquidatorTargetXTokenBalance = await targetNToken.balanceOf(
-    liquidator.address
-  );
-  const liquidatorLiquidationAssetBalance = await liquidationToken.balanceOf(
-    liquidator.address
-  );
-  const liquidatorLiquidationAssetPTokenBalance =
-    await liquidationPToken.balanceOf(liquidator.address);
-
-  const tokenDebtInBaseUnits = parseEther(
-    (
-      +formatEther(borrowerLiquidationDebtTokenBalanceBefore) *
-      +formatEther(liquidationAssetPrice)
-    ).toString()
-  );
-  const discountedNFTPrice = assetPrice.mul(10000).div(liquidationBonus);
-
-  const tvl = await protocolDataProvider.getPTokenTotalSupply(
-    targetToken.address
-  );
-  const ltv = (await pool.getUserAccountData(borrower.address)).ltv;
-
-  const isLiquidationAssetBorrowedAfter = (await getUserPositions(borrower))
-    .filter((it) => it.underlyingAsset == liquidationToken.address)[0]
-    .positionInfo.erc20XTokenDebt.gt(0);
-
-  const currentLiquidationThreshold = (
-    await pool.getUserAccountData(borrower.address)
-  ).currentLiquidationThreshold;
-
-  const liquidatorTargetTokenBalance = await targetToken.balanceOf(
-    liquidator.address
-  );
-
-  const borrowerConfigAfter = BigNumber.from(
-    (await pool.getUserConfiguration(borrower.address)).data
-  );
-
-  const isBorrowingAfter = isBorrowing(
-    borrowerConfigAfter,
-    liquidationAssetData.id
-  );
-  const isUsingAsCollateralAfter = isUsingAsCollateral(
-    borrowerConfigAfter,
-    liquidationAssetData.id
-  );
-
-  const totalCollateral = (await pool.getUserAccountData(borrower.address))
-    .totalCollateralBase;
-  const hasMoreCollateral =
-    (await getUserPositions(borrower)).filter((it) =>
-      it.positionInfo.xTokenBalance.gt(0)
-    ).length > 0;
-
-  const healthFactor = (await pool.getUserAccountData(borrower.address))
-    .healthFactor;
-  const erc721HealthFactor = (await pool.getUserAccountData(borrower.address))
-    .erc721HealthFactor;
-
-  const totalDebt = (await pool.getUserAccountData(borrower.address))
-    .totalDebtBase;
-
-  const availableToBorrow = (await pool.getUserAccountData(borrower.address))
-    .availableBorrowsBase;
-
-  const after: AfterLiquidationValidationData = {
-    isLiquidationAssetBorrowed: isLiquidationAssetBorrowedAfter,
-    borrowerTargetTokenBalance: borrowerTokenBalance,
-    borrowerTargetXTokenBalance: borrowerPTokenBalance,
-    borrowerLiquidationTokenBalance: borrowerLiquidationTokenBalance,
-    borrowerLiquidationPTokenBalance: borrowerLiquidationPTokenBalance,
-    borrowerLiquidationDebtTokenBalance: borrowerLiquidationDebtTokenBalance,
-    liquidatorLiquidationAssetBalance: liquidatorLiquidationAssetBalance,
-    liquidatorLiquidationPTokenBalance: liquidatorLiquidationAssetPTokenBalance,
-    liquidatorTargetTokenBalance: liquidatorTargetTokenBalance,
-    liquidatorTargetXTokenBalance: liquidatorTargetXTokenBalance,
-    availableToBorrow: availableToBorrow,
-    totalCollateral: totalCollateral,
-    totalDebt: totalDebt,
-    liquidationThreshold: currentLiquidationThreshold,
-    healthFactor: healthFactor,
-    erc721HealthFactor: erc721HealthFactor,
-    isBorrowing: isBorrowingAfter,
-    isUsingAsCollateral: isUsingAsCollateralAfter,
-    hasMoreCollateral: hasMoreCollateral,
-    collateralLiquidatedInBaseUnits: BigNumber.from(1),
-    ltv: ltv,
-    tvl: tvl,
-  };
 
   await checkAfterLiquidationERC721(
     borrower,
     liquidationToken,
     receiveNToken,
-    isAllDebtRepaid,
-    willHaveExcessFunds,
-    discountedNFTPrice,
-    tokenDebtInBaseUnits,
-    liquidationAssetPrice,
-    assetPrice,
     before,
     after
   );
