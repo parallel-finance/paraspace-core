@@ -406,8 +406,8 @@ export const withdrawAndValidate = async (
   ).xTokenAddress;
   const pToken = await getPToken(pTokenAddress);
   const assetPrice =
-    (await token.symbol()) == "UNI-V3-POS"
-      ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId!)
+    nftId != undefined && (await token.symbol()) == "UNI-V3-POS"
+      ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId)
       : await (await getParaSpaceOracle())
           .connect((await getDeployer()).signer)
           .getAssetPrice(token.address);
@@ -539,6 +539,7 @@ export interface LiquidationValidationData {
   availableToBorrow: BigNumber;
   erc721HealthFactor: BigNumber;
   isLiquidationAssetBorrowed: boolean;
+  isBorrowingInConfig: boolean;
   healthFactor: BigNumber;
   totalCollateral: BigNumber;
   tvl: BigNumber;
@@ -576,6 +577,7 @@ const checkBeforeLiquidation = async (before: LiquidationValidationData) => {
     expect(before.healthFactor).to.be.lt(parseEther("1"));
     // for ERC20 asset used for liquidation must be borrowed
     expect(before.isLiquidationAssetBorrowed).to.be.true;
+    expect(before.isBorrowingInConfig).to.be.true;
   }
 };
 
@@ -969,6 +971,9 @@ const fetchLiquidationData = async (
   const isLiquidationAssetBorrowed = (await getUserPositions(borrower))
     .filter((it) => it.underlyingAsset == liquidationToken.address)[0]
     .positionInfo.erc20XTokenDebt.gt(0);
+  const borrowerConfigBefore = BigNumber.from(
+    (await pool.getUserConfiguration(borrower.address)).data
+  );
 
   const liquidationAssetPrice = await (await getParaSpaceOracle())
     .connect((await getDeployer()).signer)
@@ -1013,6 +1018,10 @@ const fetchLiquidationData = async (
     borrowerConfig,
     liquidationAssetData.id
   );
+  const isBorrowingInConfig = isBorrowing(
+    borrowerConfigBefore,
+    liquidationAssetData.id
+  );
 
   const collateralToBeLiquidated = isPartialLiquidation
     ? amountInBaseUnits.mul(liquidationBonus).div(10000)
@@ -1036,6 +1045,7 @@ const fetchLiquidationData = async (
   const data: LiquidationValidationData = {
     isNFT: isNFT,
     isLiquidationAssetBorrowed: isLiquidationAssetBorrowed,
+    isBorrowingInConfig: isBorrowingInConfig,
     availableToBorrow: availableToBorrow,
     healthFactor: healthFactor,
     erc721HealthFactor: healthFactor,
@@ -1193,7 +1203,7 @@ async function getDeployer(): Promise<SignerWithAddress> {
 }
 
 async function approveTnx(
-  token: any,
+  token: SupportedAsset,
   isNFT: boolean,
   pool: IPool,
   user: SignerWithAddress
@@ -1367,20 +1377,21 @@ export async function assertHealthFactorCalculation(user: SignerWithAddress) {
 }
 
 function assertAlmostEqual(
-  actual: any,
-  expected: any,
-  delta?: any
+  actual: BigNumberish,
+  expected: BigNumberish,
+  delta?: BigNumberish
 ): Chai.Assertion {
-  actual = BigNumber.from(actual);
-  expected = BigNumber.from(expected);
   if (delta == null) {
     if (actual == 0 || expected == 0) {
       delta = 1; // use the unit as minimum delta
     } else {
-      delta = expected.div(10000).mul(2); // using 0.002% as an acceptable error
+      delta = BigNumber.from(expected).div(10000).mul(2); // using 0.002% as an acceptable error
     }
   }
-  return expect(actual).to.be.closeTo(expected, BigNumber.from(delta));
+  return expect(BigNumber.from(actual)).to.be.closeTo(
+    BigNumber.from(expected),
+    BigNumber.from(delta)
+  );
 }
 
 export const changePriceAndValidate = async (
@@ -1412,7 +1423,7 @@ export const switchCollateralAndValidate = async (
         .connect(user.signer)
         .setUserUseERC721AsCollateral(
           token.address,
-          [tokenId!],
+          [tokenId as number],
           useAsCollateral
         )
     );

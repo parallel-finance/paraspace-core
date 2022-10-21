@@ -94,19 +94,17 @@ describe("Liquidation Tests", () => {
     const {before, after} = result;
     //liquidator supply liquadation asset on behalf of borrower to get his nft token
     assert(
-      before
-        .liquidatorLiquidationAssetBalance!.sub(
-          after.liquidatorLiquidationAssetBalance!
-        )
-        .eq(after.borrowerLiquidationPTokenBalance!)
+      before.liquidatorLiquidationAssetBalance
+        .sub(after.liquidatorLiquidationAssetBalance)
+        .eq(after.borrowerLiquidationPTokenBalance)
     );
     //assert liquidator actually get the nft
     assert(
-      after.liquidatorTargetTokenBalance! > before.liquidatorTargetTokenBalance!
+      after.liquidatorTargetTokenBalance > before.liquidatorTargetTokenBalance
     );
     //assert borrowing status correct
-    expect(before.isLiquidationAssetBorrowed).to.be.false;
-    expect(after.isLiquidationAssetBorrowed).to.be.false;
+    expect(before.isBorrowingInConfig).to.be.false;
+    expect(after.isBorrowingInConfig).to.be.false;
     //assert isUsingAsCollateral status correct
     expect(before.isUsingAsCollateral).to.be.false;
     expect(after.isUsingAsCollateral).to.be.true;
