@@ -267,15 +267,13 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             );
             scaledXTokenBalance = IPToken(reserve.xTokenAddress)
                 .scaledBalanceOf(user);
-            if (usageAsCollateralEnabled) {
-                collaterizedBalance = currentXTokenBalance;
-            }
         } else {
             currentXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
                 user
             );
-            scaledXTokenBalance = IScaledBalanceToken(reserve.xTokenAddress)
-                .scaledBalanceOf(user);
+            scaledXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
+                user
+            );
             collaterizedBalance = ICollaterizableERC721(reserve.xTokenAddress)
                 .collaterizedBalanceOf(user);
         }

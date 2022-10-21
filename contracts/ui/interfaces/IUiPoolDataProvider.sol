@@ -56,6 +56,7 @@ interface IUiPoolDataProvider {
 
     struct UserReserveData {
         address underlyingAsset;
+        uint256 currentXTokenBalance;
         uint256 scaledXTokenBalance;
         uint256 collaterizedBalance;
         bool usageAsCollateralEnabledOnUser;

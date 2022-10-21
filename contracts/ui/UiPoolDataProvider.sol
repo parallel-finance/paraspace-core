@@ -373,15 +373,23 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             // user reserve data
             userReservesData[i].underlyingAsset = reserves[i];
+            userReservesData[i].usageAsCollateralEnabledOnUser = userConfig
+                .isUsingAsCollateral(i);
 
             if (
                 baseData.configuration.getAssetType() ==
                 DataTypes.AssetType.ERC20
             ) {
+                userReservesData[i].currentXTokenBalance = IPToken(
+                    baseData.xTokenAddress
+                ).balanceOf(user);
                 userReservesData[i].scaledXTokenBalance = IPToken(
                     baseData.xTokenAddress
                 ).scaledBalanceOf(user);
             } else {
+                userReservesData[i].currentXTokenBalance = INToken(
+                    baseData.xTokenAddress
+                ).balanceOf(user);
                 userReservesData[i].scaledXTokenBalance = INToken(
                     baseData.xTokenAddress
                 ).balanceOf(user);
@@ -389,9 +397,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     baseData.xTokenAddress
                 ).collaterizedBalanceOf(user);
             }
-
-            userReservesData[i].usageAsCollateralEnabledOnUser = userConfig
-                .isUsingAsCollateral(i);
 
             if (userConfig.isBorrowing(i)) {
                 userReservesData[i].scaledVariableDebt = IVariableDebtToken(
