@@ -94,7 +94,7 @@ describe("Liquidation Tests", () => {
     console.log(result);
 
     const {before, after} = result;
-    //liquidator supply liquidation asset on behalf of borrower to get his nft token
+    //liquidator supply liquadation asset on behalf of borrower to get his nft token
     assert(
       before
         .liquidatorLiquidationAssetBalance!.sub(
