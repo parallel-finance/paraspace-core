@@ -102,14 +102,12 @@ interface IUiPoolDataProvider {
         returns (UserReserveData[] memory);
 
     function getNTokenData(
-        address user,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view returns (DataTypes.NTokenData[][] memory);
 
     function getAuctionData(
         IPoolAddressesProvider provider,
-        address user,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view returns (DataTypes.AuctionData[][] memory);

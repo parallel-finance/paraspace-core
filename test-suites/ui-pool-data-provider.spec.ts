@@ -65,7 +65,6 @@ describe("UI Pool Data Provider", () => {
 
     const [[auctionData]] = await poolDataProvider.getAuctionData(
       addressesProvider.address,
-      user3.address,
       [nBAYC.address],
       [["0"]]
     );

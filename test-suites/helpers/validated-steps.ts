@@ -1312,9 +1312,9 @@ export async function isAssetInCollateral(
       ).getReserveTokensAddresses(assetAddress)
     ).xTokenAddress;
     const arr = new Array(100).fill(nftId); // workaround to avoid getNTokenData to fail due to missing elements
-    return (
-      await uiDataProvider.getNTokenData(user.address, [nTokenAddress], [arr])
-    )[0][0]["useAsCollateral"];
+    return (await uiDataProvider.getNTokenData([nTokenAddress], [arr]))[0][0][
+      "useAsCollateral"
+    ];
   } else {
     return (await getUserPositions(user)).filter(
       (it) => it.underlyingAsset == assetAddress

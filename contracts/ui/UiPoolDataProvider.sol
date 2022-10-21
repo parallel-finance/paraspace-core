@@ -236,7 +236,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
     function getAuctionData(
         IPoolAddressesProvider provider,
-        address,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view override returns (DataTypes.AuctionData[][] memory) {
@@ -260,7 +259,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     }
 
     function getNTokenData(
-        address,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view override returns (DataTypes.NTokenData[][] memory) {
