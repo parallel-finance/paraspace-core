@@ -69,6 +69,10 @@ test-ntoken-punk:
 test-liquidation:
 	make TEST_TARGET=liquidation.spec.ts test
 
+.PHONY: test-liquidation-non-borrowed
+test-liquidation-non-borrowed:
+	make TEST_TARGET=liquidation-non-borrowed.spec.ts test
+
 .PHONY: test-liquidation-auction
 test-liquidation-auction:
 	make TEST_TARGET=liquidation-auction.spec.ts test
@@ -92,6 +96,10 @@ test-debt-token-delegation-permit:
 .PHONY: test-ptoken-permit
 test-ptoken-permit:
 	make TEST_TARGET=ptoken-permit.spec.ts test
+
+.PHONY: test-ptoken-delegation-aware
+test-ptoken-delegation-aware:
+	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
 
 .PHONY: test-interest-overflow
 test-interest-overflow:
@@ -231,7 +239,7 @@ test-scenario:
 
 .PHONY: test-wallet-balance-provider
 test-wallet-balance-provider:
-	make TEST_TARGET=wallet-balance-provider.spec.ts test	
+	make TEST_TARGET=wallet-balance-provider.spec.ts test
 
 .PHONY: run
 run:

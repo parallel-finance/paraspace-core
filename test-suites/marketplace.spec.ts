@@ -1297,7 +1297,7 @@ describe("Leveraged Buy - Positive tests", () => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, offerer.address]
+      [await getSellOrder(), [], conduitKey, pool.address]
     );
 
     const tx = pool.connect(offerer.signer).buyWithCredit(
@@ -2195,8 +2195,7 @@ describe("Leveraged Bid - Positive tests", () => {
       creditAmount,
       nftId,
       maker,
-      taker,
-      true
+      taker
     );
 
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
@@ -2472,7 +2471,7 @@ describe("Leveraged Bid - Positive tests", () => {
           nftId,
           toBN(1),
           toBN(1),
-          maker.address
+          pool.address
         ),
       ];
 
@@ -3309,7 +3308,7 @@ describe("Leveraged Bid - Positive tests", () => {
     };
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, offerer.address]
+      [await getSellOrder(), [], conduitKey, pool.address]
     );
     const tx = pool.connect(offerer.signer).buyWithCredit(
       PARASPACE_SEAPORT_ID,
@@ -3408,7 +3407,7 @@ describe("Leveraged Bid - Positive tests", () => {
           nftId,
           toBN(1),
           toBN(1),
-          offer.address
+          pool.address
         ),
       ];
 

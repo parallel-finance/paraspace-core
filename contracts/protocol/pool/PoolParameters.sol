@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
+import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
 import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
@@ -22,7 +22,7 @@ import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
-import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
@@ -39,8 +39,8 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  *   PoolAddressesProvider
  **/
 contract PoolParameters is
-    VersionedInitializable,
-    ReentrancyGuard,
+    ParaVersionedInitializable,
+    ParaReentrancyGuard,
     PoolStorage,
     IPoolParameters
 {
@@ -102,7 +102,9 @@ contract PoolParameters is
         override
         nonReentrant
     {
-        PoolLogic.executeMintToTreasury(_reserves, assets);
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        PoolLogic.executeMintToTreasury(ps._reserves, assets);
     }
 
     /// @inheritdoc IPoolParameters
@@ -113,22 +115,24 @@ contract PoolParameters is
         address interestRateStrategyAddress,
         address auctionStrategyAddress
     ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         if (
             PoolLogic.executeInitReserve(
-                _reserves,
-                _reservesList,
+                ps._reserves,
+                ps._reservesList,
                 DataTypes.InitReserveParams({
                     asset: asset,
                     xTokenAddress: xTokenAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
                     auctionStrategyAddress: auctionStrategyAddress,
-                    reservesCount: _reservesCount,
+                    reservesCount: ps._reservesCount,
                     maxNumberReserves: ReserveConfiguration.MAX_RESERVES_COUNT
                 })
             )
         ) {
-            _reservesCount++;
+            ps._reservesCount++;
         }
     }
 
@@ -139,7 +143,9 @@ contract PoolParameters is
         override
         onlyPoolConfigurator
     {
-        PoolLogic.executeDropReserve(_reserves, _reservesList, asset);
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        PoolLogic.executeDropReserve(ps._reserves, ps._reservesList, asset);
     }
 
     /// @inheritdoc IPoolParameters
@@ -147,12 +153,14 @@ contract PoolParameters is
         address asset,
         address rateStrategyAddress
     ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         require(
-            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
             Errors.ASSET_NOT_LISTED
         );
-        _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
+        ps._reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
     }
 
     /// @inheritdoc IPoolParameters
@@ -160,12 +168,14 @@ contract PoolParameters is
         address asset,
         address auctionStrategyAddress
     ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         require(
-            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
             Errors.ASSET_NOT_LISTED
         );
-        _reserves[asset].auctionStrategyAddress = auctionStrategyAddress;
+        ps._reserves[asset].auctionStrategyAddress = auctionStrategyAddress;
     }
 
     /// @inheritdoc IPoolParameters
@@ -173,12 +183,15 @@ contract PoolParameters is
         address asset,
         address dynamicConfigsStrategyAddress
     ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         require(
-            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
             Errors.ASSET_NOT_LISTED
         );
-        _reserves[asset]
+        ps
+            ._reserves[asset]
             .dynamicConfigsStrategyAddress = dynamicConfigsStrategyAddress;
     }
 
@@ -187,12 +200,14 @@ contract PoolParameters is
         address asset,
         DataTypes.ReserveConfigurationMap calldata configuration
     ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         require(
-            _reserves[asset].id != 0 || _reservesList[0] == asset,
+            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
             Errors.ASSET_NOT_LISTED
         );
-        _reserves[asset].configuration = configuration;
+        ps._reserves[asset].configuration = configuration;
     }
 
     /// @inheritdoc IPoolParameters
@@ -211,16 +226,18 @@ contract PoolParameters is
         address user,
         uint24 changeBy
     ) external virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(
-            msg.sender == _reserves[asset].xTokenAddress,
+            msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
-        uint24 newUserAtomicTokens = _usersConfig[user].userAtomicTokens +
+        uint24 newUserAtomicTokens = ps._usersConfig[user].userAtomicTokens +
             changeBy;
 
-        require(newUserAtomicTokens <= _maxAtomicTokensAllowed);
+        require(newUserAtomicTokens <= ps._maxAtomicTokensAllowed);
 
-        _usersConfig[user].userAtomicTokens = newUserAtomicTokens;
+        ps._usersConfig[user].userAtomicTokens = newUserAtomicTokens;
     }
 
     /// @inheritdoc IPoolParameters
@@ -229,12 +246,14 @@ contract PoolParameters is
         address user,
         uint24 changeBy
     ) external virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(
-            msg.sender == _reserves[asset].xTokenAddress,
+            msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
 
-        _usersConfig[user].userAtomicTokens -= changeBy;
+        ps._usersConfig[user].userAtomicTokens -= changeBy;
     }
 
     /// @inheritdoc IPoolParameters
@@ -244,9 +263,11 @@ contract PoolParameters is
         override
         onlyPoolConfigurator
     {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(value != 0, Errors.INVALID_AMOUNT);
 
-        _maxAtomicTokensAllowed = value;
+        ps._maxAtomicTokensAllowed = value;
     }
 
     /// @inheritdoc IPoolParameters
@@ -256,13 +277,17 @@ contract PoolParameters is
         override
         onlyPoolConfigurator
     {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        require(value != 0, Errors.INVALID_AMOUNT);
+
         require(
             value > MIN_AUCTION_HEALTH_FACTOR &&
                 value <= MAX_AUCTION_HEALTH_FACTOR,
             Errors.INVALID_AMOUNT
         );
 
-        _auctionRecoveryHealthFactor = value;
+        ps._auctionRecoveryHealthFactor = value;
     }
 
     /// @inheritdoc IPoolParameters
@@ -281,16 +306,13 @@ contract PoolParameters is
             uint256 erc721HealthFactor
         )
     {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         return
             PoolLogic.executeGetUserAccountData(
-                _reserves,
-                _reservesList,
-                DataTypes.CalculateUserAccountDataParams({
-                    userConfig: _usersConfig[user],
-                    reservesCount: _reservesCount,
-                    user: user,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                })
+                user,
+                ps,
+                ADDRESSES_PROVIDER.getPriceOracle()
             );
     }
 
@@ -301,21 +323,20 @@ contract PoolParameters is
         override
         nonReentrant
     {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            user
+        ];
         (, , , , , , uint256 erc721HealthFactor) = PoolLogic
             .executeGetUserAccountData(
-                _reserves,
-                _reservesList,
-                DataTypes.CalculateUserAccountDataParams({
-                    userConfig: userConfig,
-                    reservesCount: _reservesCount,
-                    user: user,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                })
+                user,
+                ps,
+                ADDRESSES_PROVIDER.getPriceOracle()
             );
         require(
-            erc721HealthFactor > _auctionRecoveryHealthFactor,
+            erc721HealthFactor > ps._auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
         userConfig.auctionValidityTime = block.timestamp;
