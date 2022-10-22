@@ -16,7 +16,7 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET}
+	npx hardhat test ./test-suites/${TEST_TARGET} --no-compile --verbose --show-stack-traces
 
 .PHONY: size
 size:
@@ -56,6 +56,10 @@ ci: clean build lint doc test
 submodules:
 	git submodule update --init --recursive
 	git submodule foreach git pull origin main
+
+.PHONY: test-pool-upgrade
+test-pool-upgrade:
+	make TEST_TARGET=pool-upgrade.spec.ts test
 
 .PHONY: test-ntoken
 test-ntoken:
@@ -343,6 +347,14 @@ fork:
 	-d \
 	--chain.chainId 522 \
 	--fork ${RPC_URL}
+
+.PHONY: upgrade
+upgrade:
+	make TASK_NAME=upgrade:all run-task
+
+.PHONY: upgrade-pool
+upgrade-pool:
+	make TASK_NAME=upgrade:pool run-task
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
