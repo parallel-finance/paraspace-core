@@ -192,7 +192,7 @@ describe("PToken Mint and Burn Event Accounting", () => {
       dai.address,
       borrower.address
     );
-    expect(borrowerWethData.currentPTokenBalance).to.be.equal(
+    expect(borrowerWethData.currentXTokenBalance).to.be.equal(
       amountETHtoDeposit
     );
     expect(borrowerDaiData.currentVariableDebt).to.be.equal(firstDaiBorrow);

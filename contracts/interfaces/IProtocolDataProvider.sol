@@ -35,7 +35,7 @@ interface IProtocolDataProvider {
      * @param asset The address of the underlying asset of the reserve
      * @return The total supply of the xToken
      **/
-    function getPTokenTotalSupply(address asset)
+    function getXTokenTotalSupply(address asset)
         external
         view
         returns (uint256);
@@ -134,7 +134,9 @@ interface IProtocolDataProvider {
      * @notice Returns the user data in a reserve
      * @param asset The address of the underlying asset of the reserve
      * @param user The address of the user
-     * @return currentPTokenBalance The current PToken balance of the user
+     * @return currentXTokenBalance The current XToken balance of the user
+     * @return scaledXTokenBalance The scaled XToken balance of the user
+     * @return collaterizedBalance The collaterized balance of the user
      * @return currentVariableDebt The current variable debt of the user
      * @return scaledVariableDebt The scaled variable debt of the user
      * @return liquidityRate The liquidity rate of the reserve
@@ -145,7 +147,9 @@ interface IProtocolDataProvider {
         external
         view
         returns (
-            uint256 currentPTokenBalance,
+            uint256 currentXTokenBalance,
+            uint256 scaledXTokenBalance,
+            uint256 collaterizedBalance,
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,
