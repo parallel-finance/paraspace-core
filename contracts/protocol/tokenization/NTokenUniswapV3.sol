@@ -100,9 +100,6 @@ contract NTokenUniswapV3 is NToken {
         (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
             .collect(collectParams);
 
-        require(amount0 >= amount0Min, "Insufficient amount0");
-        require(amount1 >= amount1Min, "Insufficient amount1");
-
         if (receiveEthAsWeth) {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
             if (balanceWeth > 0) {
