@@ -135,7 +135,7 @@ library BorrowLogic {
 
         uint256 variableDebt = Helpers.getUserCurrentDebt(
             params.onBehalfOf,
-            reserveCache.xTokenAddress
+            reserveCache.variableDebtTokenAddress
         );
 
         ValidationLogic.validateRepay(

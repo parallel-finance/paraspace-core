@@ -97,7 +97,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
     {
         uint256 variableDebt = Helpers.getUserCurrentDebt(
             onBehalfOf,
-            IPool(pool).getReserveData(address(WETH)).xTokenAddress
+            IPool(pool).getReserveData(address(WETH)).variableDebtTokenAddress
         );
 
         uint256 paybackAmount = variableDebt;
