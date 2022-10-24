@@ -720,86 +720,101 @@ const checkAfterLiquidationERC721 = async (
   before: LiquidationValidationData,
   after: LiquidationValidationData
 ) => {
-  /*
-  const discountedNFTPrice = before.collateralAssetPrice
-    .mul(10000)
-    .div(before.liquidationBonus);
+  // if the asset is not borrowed there's no discounted price for the NFT
+  const discountedNFTPrice = before.isLiquidationAssetBorrowed
+    ? before.collateralAssetPrice.mul(10000).div(before.liquidationBonus)
+    : before.collateralAssetPrice;
 
-  // borrower's Token balance is the same
+  const liquidationAmountToBeUsed = discountedNFTPrice.wadDiv(
+    before.liquidationAssetPrice
+  );
+
+  const willHaveExcessFunds = discountedNFTPrice.gt(before.totalDebt);
+
+  // borrower's collateral token balance in wallet is the same
   expect(after.borrowerCollateralTokenBalance).equal(
     before.borrowerCollateralTokenBalance
   );
-  // borrower's looses the NFT in collateral
+
+  // borrower looses the NFT in collateral
   expect(after.borrowerCollateralXTokenBalance).to.eq(
     before.borrowerCollateralXTokenBalance.sub(1)
   );
-  if (before.willRepayAllDebt || !before.willHaveExcessFunds) {
-    // if all debt is repaid borrower's liquidation pToken balance should be the same (plus accrued interest)
-    assertAlmostEqual(
-      after.borrowerLiquidationPTokenBalance,
-      before.borrowerLiquidationPTokenBalance
-    );
-    if (before.willHaveExcessFunds) {
-      const excessToSupplyInCoinUnits = parseEther(
-        discountedNFTPrice
-          .sub(before.borrowerLiquidationTokenDebtInBaseUnits)
-          .div(after.liquidationAssetPrice)
-          .toString()
-      );
-      // Supplied amount should be (NFT discounted price - DEBT in base units), excess funds are returned to liquidator
-      assertAlmostEqual(
-        after.borrowerLiquidationTokenBalance,
-        before.borrowerLiquidationTokenBalance.add(excessToSupplyInCoinUnits)
-      );
-    }
-  } else {
-    // if the asset is not borrowed there's no discounted price for the NFT
-    const excessToSupplyInCoinUnits = parseEther(
-      (after.isLiquidationAssetBorrowed
-        ? discountedNFTPrice
-        : before.collateralAssetPrice
-      )
-        .sub(before.borrowerLiquidationTokenDebtInBaseUnits)
-        .div(after.liquidationAssetPrice)
-        .toString()
-    );
-    if (before.isLiquidationAssetBorrowed) {
-      // supplied amount should be (NFT price - DEBT in base units)
-      assertAlmostEqual(
-        after.borrowerLiquidationPTokenBalance,
-        before.borrowerLiquidationPTokenBalance.add(excessToSupplyInCoinUnits)
-      );
-    }
-    expect(await isAssetInCollateral(borrower, liquidationToken.address)).to.be
-      .true;
-  }
 
-  if (!before.isLiquidationAssetBorrowed) {
-    // if liquidation asset is not borrowed, then borrower's liquidation debt token balance stays the same
-    expect(after.borrowerLiquidationDebtTokenBalance).to.be.eq(
+  const excessFundsInLiquidationAssetUnits = discountedNFTPrice
+    .sub(before.totalDebt)
+    .wadDiv(before.liquidationAssetPrice);
+
+  if (before.isLiquidationAssetBorrowed) {
+    // some or all borrower's debt is repaid
+    const isAllTokenDebtRepaid = discountedNFTPrice.gt(
       before.borrowerLiquidationDebtTokenBalance
     );
-  } else if (before.willRepayAllDebt) {
-    // if all debt is repaid, then borrower's liquidation debt token balance is 0
-    expect(after.borrowerLiquidationDebtTokenBalance).to.equal(0);
-  } else {
-    // if liquidation asset is borrowed but does not repay all debt, then borrower's debt token balance
-    // is the resulting in subtracting the discounted NFT price
-    const discountedNFTPriceInDebtUnits =
-      (await liquidationToken.symbol()) != "WETH"
-        ? discountedNFTPrice.wadDiv(before.liquidationAssetPrice)
-        : discountedNFTPrice;
+    if (isAllTokenDebtRepaid) {
+      // all debt repaid
+      expect(after.borrowerLiquidationDebtTokenBalance).to.equal(0);
+      // excess funds are transferred to the borrower
+      assertAlmostEqual(
+        after.borrowerLiquidationTokenBalance,
+        before.borrowerLiquidationTokenBalance.add(
+          excessFundsInLiquidationAssetUnits
+        )
+      );
+      // borrower has no more debt
+      expect(
+        await isAssetInCollateral(
+          after.borrower,
+          after.liquidationToken.address
+        )
+      ).to.be.false;
+    } else {
+      // borrower liquidation token balance is the same
+      assertAlmostEqual(
+        after.borrowerLiquidationTokenBalance,
+        before.borrowerLiquidationTokenBalance
+      );
+      // borrower liquidation debt token balance is decreased in repaid amount
+      assertAlmostEqual(
+        after.borrowerLiquidationDebtTokenBalance,
+        before.borrowerLiquidationDebtTokenBalance.sub(
+          liquidationAmountToBeUsed
+        )
+      );
 
+      expect(
+        await isAssetInCollateral(
+          after.borrower,
+          after.liquidationToken.address
+        )
+      ).to.be.true;
+    }
+
+    if (willHaveExcessFunds) {
+      // supply excess to the protocol on behalf of the borrower
+      // borrower liquidation pToken balance is incremented with the excess
+      assertAlmostEqual(
+        after.borrowerLiquidationPTokenBalance,
+        before.borrowerLiquidationPTokenBalance.add(
+          excessFundsInLiquidationAssetUnits
+        )
+      );
+    }
+  } else {
+    // no debt repaid, of course will have excess funds -> supplied to the protocol on behalf of the borrower.
+    // borrower liquidation pToken balance is incremented with the excess
     assertAlmostEqual(
-      after.borrowerLiquidationDebtTokenBalance,
-      before.borrowerLiquidationDebtTokenBalance.sub(
-        discountedNFTPriceInDebtUnits
+      after.borrowerLiquidationPTokenBalance,
+      before.borrowerLiquidationPTokenBalance.add(
+        excessFundsInLiquidationAssetUnits
       )
     );
+    expect(
+      await isAssetInCollateral(after.borrower, after.liquidationToken.address)
+    ).to.be.true;
   }
 
-  if (receiveNToken) {
-    // liquidator's Token balance stays the same
+  if (before.receiveXToken) {
+    // liquidator's collateral token balance stays the same
     expect(after.liquidatorCollateralTokenBalance).to.eq(
       before.liquidatorCollateralTokenBalance
     );
@@ -807,43 +822,30 @@ const checkAfterLiquidationERC721 = async (
     expect(after.liquidatorCollateralXTokenBalance).to.eq(
       before.liquidatorCollateralXTokenBalance.add(1)
     );
-    // TVL stays the same
-    assertAlmostEqual(after.tvl, before.tvl);
+    // Collateral token TVL stays the same
+    assertAlmostEqual(after.collateralTokenTVL, before.collateralTokenTVL);
   } else {
-    // liquidator's Token balance is incremented in 1 (gets the NFT)
+    // liquidator's collateral token balance is incremented in 1 (gets the NFT)
     expect(after.liquidatorCollateralTokenBalance).to.eq(
       before.liquidatorCollateralTokenBalance.add(1)
     );
-    // liquidator's pToken balance stays the same
+    // liquidator's collateral pToken balance stays the same
     assertAlmostEqual(
       after.liquidatorCollateralXTokenBalance,
       before.liquidatorCollateralXTokenBalance
     );
-    // TVL is subtracted the liquidated NFT
-    expect(after.tvl).to.equal(before.tvl.sub(1));
+    // Collateral token TVL is subtracted the liquidated NFT
+    expect(after.collateralTokenTVL).to.equal(before.collateralTokenTVL.sub(1));
   }
 
-  expect(after.ltv).to.be.equal(await calculateExpectedLTV(borrower));
-
-  // if isNFT and liquidationAsset is not being borrowed by the user,
-  // then there's no bonus and liquidated amount supplied on behalf of the borrower,
-  // so total collateral should remain the same)
-  // todo: seems none-borrow liquidation check will fail
-  // so temporarily disable it and need further check
-  if (before.isLiquidationAssetBorrowed) {
-    // total collateral is subtracted the asset floor price
-    assertAlmostEqual(
-      after.totalCollateral,
-      before.totalCollateral.sub(before.collateralAssetPrice)
-    );
-  }
+  expect(after.ltv).to.be.equal(await calculateExpectedLTV(after.borrower));
 
   // if there's no more collateral, then health factor should be 0
   if (!after.hasMoreCollateral) {
     expect(after.erc721HealthFactor).to.equal(0);
     expect(after.healthFactor).to.equal(0);
   }
-  await assertHealthFactorCalculation(borrower);
+  await assertHealthFactorCalculation(after.borrower);
 
   // After being liquidated, borrower's available to borrow should now increase, unless health factor is still below 1
   if (after.healthFactor.lt(parseEther("1"))) {
@@ -852,22 +854,34 @@ const checkAfterLiquidationERC721 = async (
     expect(after.availableToBorrow).to.be.gt(before.availableToBorrow);
   }
 
-  if (before.willRepayAllDebt) {
-    // if repays all token debt, the total debt should be subtracted the full liq token debt
-    assertAlmostEqual(
-      after.totalDebt,
-      before.totalDebt.sub(before.borrowerLiquidationTokenDebtInBaseUnits)
-    );
-  } else if (!before.isLiquidationAssetBorrowed) {
+  const isAllTokenDebtRepaid = discountedNFTPrice.gt(
+    before.borrowerLiquidationDebtTokenBalance
+  );
+
+  // borrower's new total collateral should be the resulting on removing the value of the NFT
+  assertAlmostEqual(
+    after.totalCollateral,
+    before.totalCollateral.sub(before.collateralAssetPrice)
+  );
+
+  if (!before.isLiquidationAssetBorrowed) {
     // total debt should stay the same
     assertAlmostEqual(after.totalDebt, before.totalDebt);
   } else {
-    // if liquidation asset is borrowed but not all debt is repaid, total debt should result in subtracting the amount repaid
-    const debtToRepay = before.collateralAssetPrice
-      .mul(10000)
-      .div(before.liquidationBonus);
-    assertAlmostEqual(after.totalDebt, before.totalDebt.sub(debtToRepay));
-  }*/
+    if (!isAllTokenDebtRepaid) {
+      // if liquidation asset is borrowed but not all debt is repaid, total debt should result in subtracting the amount repaid
+      assertAlmostEqual(
+        after.totalDebt,
+        before.totalDebt.sub(discountedNFTPrice)
+      );
+    } else {
+      // all debt is repaid, final debt will be the resulting on subtracting the initial debt balance
+      assertAlmostEqual(
+        after.totalDebt,
+        before.totalDebt.sub(before.borrowerLiquidationDebtTokenBalance)
+      );
+    }
+  }
 };
 
 export const liquidateAndValidate = async (

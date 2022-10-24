@@ -100,7 +100,8 @@ describe("Liquidation Tests", () => {
     );
     //assert liquidator actually get the nft
     assert(
-      after.liquidatorTargetTokenBalance > before.liquidatorTargetTokenBalance
+      after.liquidatorCollateralTokenBalance >
+        before.liquidatorCollateralTokenBalance
     );
     //assert borrowing status correct
     expect(before.isLiquidationAssetBorrowedPerConfig).to.be.false;
