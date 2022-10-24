@@ -1,8 +1,10 @@
 import {task} from "hardhat/config";
+
 const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
 
-//FIXME(alan): Use subtask
 task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
+  await DRE.run("set-DRE");
+
   const {printContracts} = await import("../../deploy/helpers/misc-utils");
   const {step_00} = await import(
     "../../deploy/tasks/deployments/testnet/steps/00_deleteDb"
@@ -21,9 +23,6 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   );
   const {step_05} = await import(
     "../../deploy/tasks/deployments/testnet/steps/05_aclManager"
-  );
-  const {step_06} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/06_poolAddressesProviderRegistry"
   );
   const {step_07} = await import(
     "../../deploy/tasks/deployments/testnet/steps/07_pool"
@@ -62,7 +61,6 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
     "../../deploy/tasks/deployments/testnet/steps/18_flashClaimRegistry"
   );
 
-  await DRE.run("set-DRE");
   console.time("setup");
   // delete json file
   step_00();
@@ -87,10 +85,6 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   // deploy ACLManager and setup ACLManager
   await step_05(verify);
   console.log("------------ step 05 done ------------ ");
-
-  // deploy PoolAddressesProviderRegistry
-  await step_06(verify);
-  console.log("------------ step 06 done ------------ ");
 
   // deploy Pool
   await step_07(verify);

@@ -285,10 +285,6 @@ deploy-addressProvider:
 deploy-aclManager:
 	make TASK_NAME=deploy:acl-manager run-task
 
-.PHONY: deploy-poolAddressesProviderRegistry
-deploy-poolAddressesProviderRegistry:
-	make TASK_NAME=deploy:pool-addresses-provider-registry run-task
-
 .PHONY: deploy-pool
 deploy-pool:
 	make TASK_NAME=deploy:pool run-task
