@@ -265,13 +265,13 @@ verify:
 deploy:
 	make TASK_NAME=deploy:all run-task
 
-.PHONY: deploy-mockERC20Tokens
-deploy-mockERC20Tokens:
-	make TASK_NAME=deploy:mock-erc20-tokens run-task
+.PHONY: deploy-ERC20Tokens
+deploy-ERC20Tokens:
+	make TASK_NAME=deploy:erc20-tokens run-task
 
-.PHONY: deploy-mockERC721Tokens
-deploy-mockERC721Tokens:
-	make TASK_NAME=deploy:mock-erc721-tokens run-task
+.PHONY: deploy-ERC721Tokens
+deploy-ERC721Tokens:
+	make TASK_NAME=deploy:erc721-tokens run-task
 
 .PHONY: deploy-faucet
 deploy-faucet:

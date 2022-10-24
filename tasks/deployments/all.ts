@@ -10,10 +10,10 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
     "../../deploy/tasks/deployments/testnet/steps/00_deleteDb"
   );
   const {step_01} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/01_mockERC20Tokens"
+    "../../deploy/tasks/deployments/testnet/steps/01_ERC20Tokens"
   );
   const {step_02} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/02_mockERC721Tokens"
+    "../../deploy/tasks/deployments/testnet/steps/02_ERC721Tokens"
   );
   const {step_03} = await import(
     "../../deploy/tasks/deployments/testnet/steps/03_faucet"
