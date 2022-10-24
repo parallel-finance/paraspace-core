@@ -132,7 +132,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
     // user 1 ptoken  should  be reduced
     expect(user1BalanceAfter).to.be.equal(user1balance.sub(amount));
 
-    // user 2 ptoken  should  be reduced
+    // user 2 ptoken  should increase
     expect(user2BalanceAfter).to.be.equal(user2balance.add(amount));
   });
 });

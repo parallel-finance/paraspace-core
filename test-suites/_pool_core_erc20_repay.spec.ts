@@ -100,7 +100,6 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
 
     const pDaiBalanceAfter = await pDai.balanceOf(user1.address);
     expect(pDaiBalanceAfter).to.be.gt(pDaiBalance);
-
     expect(pDaiBalanceAfter.sub(pDaiBalance)).to.be.lt(accruedInterest);
   });
 
@@ -128,7 +127,6 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
     const availableToBorrowAfterRepay = (
       await pool.getUserAccountData(user2.address)
     ).availableBorrowsBase;
-
     expect(availableToBorrowAfterRepay).to.be.gt(availableToBorrowBeforeRepay);
   });
 
@@ -138,10 +136,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
       variableDebtDai,
       users: [user1],
       pool,
-      pDai,
     } = testEnv;
-    const pDaiBalance = await pDai.balanceOf(user1.address);
-    console.log("pDaiBalance", pDaiBalance.toString());
     const availableToBorrowBeforeRepay = (
       await pool.getUserAccountData(user1.address)
     ).availableBorrowsBase;
@@ -173,8 +168,6 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
     expect(daiBalanceAfterRepay).to.be.lte(
       daiBalanceBeforeRepay.sub(debtBalanceBeforeRepay)
     );
-    const pDaiBalanceAfter = await pDai.balanceOf(user1.address);
-    console.log("pDaiBalanceAfter", pDaiBalanceAfter.toString());
   });
 
   it("TC-erc20-repay-08 User 1 no longer acquires share of borrower interest", async () => {
@@ -227,7 +220,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
     await supplyAndValidate(dai, firstDaiDeposit, user3, true);
   });
 
-  it("TC-erc20-repay-12 User 3 Borrow and repay in same block (should fail)", async () => {
+  it("TC-erc20-repay-12 User 3 Borrow and repay in same block", async () => {
     const {
       users: [, , user3],
       pool,
@@ -236,7 +229,7 @@ describe("pToken/debtToken Mint and Burn Event Accounting", () => {
 
     const daiBalance = await dai.balanceOf(user3.address);
     const amount = await convertToCurrencyDecimals(dai.address, "100");
-    // await supplyAndValidate(dai, "1000", user3, true);
+
     await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
     await pool
       .connect(user3.signer)
