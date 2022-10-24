@@ -103,8 +103,8 @@ describe("Liquidation Tests", () => {
       after.liquidatorTargetTokenBalance > before.liquidatorTargetTokenBalance
     );
     //assert borrowing status correct
-    expect(before.isBorrowingInConfig).to.be.false;
-    expect(after.isBorrowingInConfig).to.be.false;
+    expect(before.isLiquidationAssetBorrowedPerConfig).to.be.false;
+    expect(after.isLiquidationAssetBorrowedPerConfig).to.be.false;
     //assert isUsingAsCollateral status correct
     expect(before.isUsingAsCollateral).to.be.false;
     expect(after.isUsingAsCollateral).to.be.true;
