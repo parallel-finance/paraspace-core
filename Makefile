@@ -341,8 +341,7 @@ ad-hoc:
 fork:
 	npx ganache \
 	-d \
-	--chain.chainId 522 \
-	--fork ${RPC_URL}
+	--chain.chainId 522
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
