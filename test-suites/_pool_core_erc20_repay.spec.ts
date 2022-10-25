@@ -17,18 +17,16 @@ import {
 } from "./helpers/validated-steps";
 
 describe("pToken/debtToken Mint and Burn Event Accounting", () => {
-  let firstDaiDeposit;
-  let secondDaiDeposit;
+  const firstDaiDeposit = "10000";
+  const secondDaiDeposit = "20000";
   let accruedInterest = BigNumber.from(0);
   let testEnv: TestEnv;
 
   before("Initialize Depositors", async () => {
     testEnv = await loadFixture(testEnvFixture);
-    firstDaiDeposit = "10000";
-    secondDaiDeposit = "20000";
   });
 
-  it("TC-erc20-repay-01 User 1 deposits 20k DAI and borrows 8K DAI", async () => {
+  it("TC-erc20-repay-01 User 1 deposits 10K DAI and borrows 5K DAI", async () => {
     const {
       dai,
       users: [user1],

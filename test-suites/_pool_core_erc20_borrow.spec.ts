@@ -14,15 +14,13 @@ import {
 } from "./helpers/validated-steps";
 
 describe("pToken/debtToken Borrow Event Accounting", () => {
-  let firstDaiDeposit;
-  let secondDaiDeposit;
+  const firstDaiDeposit = "10000";
+  const secondDaiDeposit = "20000";
   let accruedInterest = BigNumber.from(0);
   let testEnv: TestEnv;
 
   before("Initialize Depositors", async () => {
     testEnv = await loadFixture(testEnvFixture);
-    firstDaiDeposit = "10000";
-    secondDaiDeposit = "20000";
   });
 
   it("TC-erc20-borrow-01 User 1 deposits 20k DAI and borrows 8K DAI", async () => {
@@ -51,7 +49,6 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
     // User 1 - pDAI balance should have increased
     const pDaiBalanceAfter = await pDai.balanceOf(user1.address);
     expect(pDaiBalanceAfter).to.be.gt(pDaiBalanceBefore);
-
     accruedInterest = pDaiBalanceAfter.sub(pDaiBalanceBefore);
   });
 

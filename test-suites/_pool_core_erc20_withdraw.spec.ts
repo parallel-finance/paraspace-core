@@ -14,14 +14,12 @@ import {
   withdrawAndValidate,
 } from "./helpers/validated-steps";
 describe("pToken/debtToken Mint and Burn Event Accounting", () => {
-  let firstDaiDeposit;
-  let secondDaiDeposit;
+  const firstDaiDeposit = "10000";
+  const secondDaiDeposit = "20000";
   let testEnv: TestEnv;
 
   before("Initialize Depositors", async () => {
     testEnv = await loadFixture(testEnvFixture);
-    firstDaiDeposit = "10000";
-    secondDaiDeposit = "20000";
   });
 
   it("TC-erc20- withdraw-01 User 2 deposits 10k DAI", async () => {
