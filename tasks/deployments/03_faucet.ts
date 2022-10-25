@@ -1,4 +1,5 @@
 import {task} from "hardhat/config";
+import {isLocalTestnet, isPublicTestnet} from "../../deploy/helpers/contracts-helpers";
 
 const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
 
@@ -7,8 +8,10 @@ task(
   "Deploy faucet for mocked ERC20 & ERC721 tokens"
 ).setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
-  const {step_03} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/03_faucet"
-  );
-  await step_03(verify);
+  if (isLocalTestnet(DRE) || isPublicTestnet(DRE)) {
+    const {step_03} = await import(
+      "../../deploy/tasks/deployments/testnet/steps/03_faucet"
+    );
+    await step_03(verify);
+  }
 });
