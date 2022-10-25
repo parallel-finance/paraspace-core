@@ -34,7 +34,7 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
     "../../deploy/tasks/deployments/full-deployment/steps/08_reservesSetupHelper"
   );
   const {step_09} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/09_priceOracle"
+    "../../deploy/tasks/deployments/full-deployment/steps/09_fallbackOracle"
   );
   const {step_10} = await import(
     "../../deploy/tasks/deployments/full-deployment/steps/10_allAggregators"

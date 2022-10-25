@@ -297,9 +297,9 @@ deploy-poolConfigurator:
 deploy-reservesSetupHelper:
 	make TASK_NAME=deploy:reserves-setup-helper run-task
 
-.PHONY: deploy-priceOracle
-deploy-priceOracle:
-	make TASK_NAME=deploy:price-oracle run-task
+.PHONY: deploy-fallbackOracle
+deploy-fallbackOracle:
+	make TASK_NAME=deploy:fallback-oracle run-task
 
 .PHONY: deploy-allAggregators
 deploy-allAggregators:
