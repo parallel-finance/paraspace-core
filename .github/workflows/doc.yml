@@ -84,7 +84,7 @@ jobs:
       - name: Purge cloudfront cache
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.DEPLOYMENT_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEPLOYMENT_AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - run: aws cloudfront create-invalidation --distribution-id "${{ env.AWS_CLOUDFRONT_DISTRIBUTION_ID }}" --paths '/*'
