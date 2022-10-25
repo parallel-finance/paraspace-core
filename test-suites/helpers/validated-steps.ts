@@ -534,6 +534,7 @@ export const withdrawAndValidate = async (
 
 export interface LiquidationValidationData {
   borrower: SignerWithAddress;
+  isAuctionStarted: boolean;
   collateralToken: SupportedAsset;
   liquidationToken: SupportedAsset;
   receiveXToken: boolean;
@@ -720,6 +721,9 @@ const checkAfterLiquidationERC721 = async (
   before: LiquidationValidationData,
   after: LiquidationValidationData
 ) => {
+  // auction should've ended
+  expect(after.isAuctionStarted).to.be.false;
+
   // if the asset is not borrowed there's no discounted price for the NFT
   const discountedNFTPrice = before.isLiquidationAssetBorrowed
     ? before.collateralAssetPrice.mul(10000).div(before.liquidationBonus)
@@ -802,11 +806,16 @@ const checkAfterLiquidationERC721 = async (
 
     assertAlmostEqual(
       after.borrowerLiquidationPTokenBalance,
-      // it is dificult to predict the price in auction case, so use the liquidator subtracted amount instead
-      before.liquidatorLiquidationAssetBalance.sub(
-        after.liquidatorLiquidationAssetBalance
-      )
+      before.isAuctionStarted
+        ? // it is dificult to predict the price in auction case, so use the liquidator subtracted amount instead
+          before.liquidatorLiquidationAssetBalance.sub(
+            after.liquidatorLiquidationAssetBalance
+          )
+        : before.borrowerLiquidationPTokenBalance.add(
+            before.liquidationAssetPrice
+          )
     );
+
     expect(
       await isAssetInCollateral(after.borrower, after.liquidationToken.address)
     ).to.be.true;
@@ -862,9 +871,11 @@ const checkAfterLiquidationERC721 = async (
     after.totalCollateral,
     before.totalCollateral.sub(
       // it is dificult to predict the price in auction case, so use the liquidator subtracted amount instead
-      before.liquidatorLiquidationAssetBalance.sub(
-        after.liquidatorLiquidationAssetBalance
-      )
+      before.isAuctionStarted
+        ? before.liquidatorLiquidationAssetBalance.sub(
+            after.liquidatorLiquidationAssetBalance
+          )
+        : before.collateralAssetPrice
     )
   );
 
@@ -1033,14 +1044,15 @@ const fetchLiquidationData = async (
   );
 
   let currentPriceMultiplier = BigNumber.from("1000000000000000000");
-  let isAuctioned = false;
+  let isAuctionStarted = false;
   if (nftId != undefined) {
     const auctionData = await pool.getAuctionData(
       collateralXTokenAddress,
       nftId
     );
-    isAuctioned = await (collateralXToken as NToken).isAuctioned(nftId);
-    if (isAuctioned && auctionData.startTime.gt(0)) {
+    const isAuctioned = await (collateralXToken as NToken).isAuctioned(nftId);
+    isAuctionStarted = isAuctioned && auctionData.startTime.gt(0);
+    if (isAuctionStarted) {
       currentPriceMultiplier = auctionData.currentPriceMultiplier;
     }
   }
@@ -1073,6 +1085,7 @@ const fetchLiquidationData = async (
 
   const data: LiquidationValidationData = {
     isNFT: isNFT,
+    isAuctionStarted: isAuctionStarted,
     borrower: borrower,
     collateralToken: collateralToken,
     liquidationToken: liquidationToken,
