@@ -21,9 +21,18 @@ library ConfiguratorInputTypes {
         bytes params;
     }
 
-    struct UpdateXTokenInput {
+    struct UpdatePTokenInput {
         address asset;
         address treasury;
+        address incentivesController;
+        string name;
+        string symbol;
+        address implementation;
+        bytes params;
+    }
+
+    struct UpdateNTokenInput {
+        address asset;
         address incentivesController;
         string name;
         string symbol;

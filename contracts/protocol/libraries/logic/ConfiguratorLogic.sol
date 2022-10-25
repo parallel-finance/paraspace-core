@@ -27,7 +27,12 @@ library ConfiguratorLogic {
         address interestRateStrategyAddress,
         address auctionStrategyAddress
     );
-    event XTokenUpgraded(
+    event PTokenUpgraded(
+        address indexed asset,
+        address indexed proxy,
+        address indexed implementation
+    );
+    event NTokenUpgraded(
         address indexed asset,
         address indexed proxy,
         address indexed implementation
@@ -127,9 +132,9 @@ library ConfiguratorLogic {
      * @param cachedPool The Pool containing the reserve with the xToken
      * @param input The parameters needed for the initialize call
      */
-    function executeUpdateXToken(
+    function executeUpdatePToken(
         IPool cachedPool,
-        ConfiguratorInputTypes.UpdateXTokenInput calldata input
+        ConfiguratorInputTypes.UpdatePTokenInput calldata input
     ) public {
         DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(
             input.asset
@@ -157,7 +162,44 @@ library ConfiguratorLogic {
             encodedCall
         );
 
-        emit XTokenUpgraded(
+        emit PTokenUpgraded(
+            input.asset,
+            reserveData.xTokenAddress,
+            input.implementation
+        );
+    }
+
+    /**
+     * @notice Updates the xToken implementation and initializes it
+     * @dev Emits the `XTokenUpgraded` event
+     * @param cachedPool The Pool containing the reserve with the xToken
+     * @param input The parameters needed for the initialize call
+     */
+    function executeUpdateNToken(
+        IPool cachedPool,
+        ConfiguratorInputTypes.UpdateNTokenInput calldata input
+    ) public {
+        DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(
+            input.asset
+        );
+
+        bytes memory encodedCall = abi.encodeWithSelector(
+            IInitializableNToken.initialize.selector,
+            cachedPool,
+            input.asset,
+            input.incentivesController,
+            input.name,
+            input.symbol,
+            input.params
+        );
+
+        _upgradeTokenImplementation(
+            reserveData.xTokenAddress,
+            input.implementation,
+            encodedCall
+        );
+
+        emit NTokenUpgraded(
             input.asset,
             reserveData.xTokenAddress,
             input.implementation
