@@ -7,8 +7,8 @@ task(
   "Deploy all aggregators and reserves"
 ).setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
-  const {step_11} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/11_allAggregators"
+  const {step_10} = await import(
+    "../../deploy/tasks/deployments/full-deployment/steps/10_allAggregators"
   );
-  await step_11(verify);
+  await step_10(verify);
 });

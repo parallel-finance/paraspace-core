@@ -24,20 +24,20 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   const {step_05} = await import(
     "../../deploy/tasks/deployments/full-deployment/steps/05_aclManager"
   );
+  const {step_06} = await import(
+    "../../deploy/tasks/deployments/full-deployment/steps/06_pool"
+  );
   const {step_07} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/07_pool"
+    "../../deploy/tasks/deployments/full-deployment/steps/07_poolConfigurator"
   );
   const {step_08} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/08_poolConfigurator"
+    "../../deploy/tasks/deployments/full-deployment/steps/08_reservesSetupHelper"
   );
   const {step_09} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/09_reservesSetupHelper"
+    "../../deploy/tasks/deployments/full-deployment/steps/09_priceOracle"
   );
   const {step_10} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/10_priceOracle"
-  );
-  const {step_11} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/11_allAggregators"
+    "../../deploy/tasks/deployments/full-deployment/steps/10_allAggregators"
   );
   const {step_12} = await import(
     "../../deploy/tasks/deployments/full-deployment/steps/12_uiIncentiveDataProvider"
@@ -87,24 +87,24 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   console.log("------------ step 05 done ------------ ");
 
   // deploy Pool
+  await step_06(verify);
+  console.log("------------ step 06 done ------------ ");
+
+  // deploy PoolConfigurator
   await step_07(verify);
   console.log("------------ step 07 done ------------ ");
 
-  // deploy PoolConfigurator
+  // deploy ReservesSetupHelper
   await step_08(verify);
   console.log("------------ step 08 done ------------ ");
 
-  // deploy ReservesSetupHelper
+  // deploy PriceOracle and set initial prices
   await step_09(verify);
   console.log("------------ step 09 done ------------ ");
 
-  // deploy PriceOracle and set initial prices
+  // deploy mock aggregators, ParaSpaceOracle, ProtocolDataProvider, MockIncentivesController and UiPoolDataProvider
   await step_10(verify);
   console.log("------------ step 10 done ------------ ");
-
-  // deploy mock aggregators, ParaSpaceOracle, ProtocolDataProvider, MockIncentivesController and UiPoolDataProvider
-  await step_11(verify);
-  console.log("------------ step 11 done ------------ ");
 
   // deploy UiIncentiveDataProviderV3
   await step_12(verify);
