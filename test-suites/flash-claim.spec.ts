@@ -199,7 +199,7 @@ describe("Flash Claim Test", () => {
     ).to.be.equal(await airdrop_project.erc1155Bonus());
   });
 
-  it("user can not flash claim with uniswapV3", async function () {
+  it("user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {
     const {
       users: [user1],
       pool,
