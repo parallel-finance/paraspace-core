@@ -22,7 +22,7 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import "./helpers/utils/wadraymath";
 import {parseUnits} from "ethers/lib/utils";
 
-describe("Liquidation Tests", () => {
+describe("ERC721 Liquidation - non-borrowed token", () => {
   let testEnv: TestEnv;
 
   const {
@@ -81,6 +81,12 @@ describe("Liquidation Tests", () => {
     );
     expect((await nBAYC.getAuctionData(0)).startTime).to.be.gt(0);
 
+    const expectedAuctionData = await pool
+      .connect(liquidator.signer)
+      .getAuctionData(nBAYC.address, 0);
+
+    console.log(expectedAuctionData);
+
     const result = await liquidateAndValidate(
       bayc,
       weth,
@@ -92,12 +98,13 @@ describe("Liquidation Tests", () => {
     );
 
     const {before, after} = result;
-    //liquidator supply liquadation asset on behalf of borrower to get his nft token
+    //liquidator supply liquidation asset on behalf of borrower to get his nft token
     assert(
       before.liquidatorLiquidationAssetBalance
         .sub(after.liquidatorLiquidationAssetBalance)
         .eq(after.borrowerLiquidationPTokenBalance)
     );
+
     //assert liquidator actually get the nft
     assert(
       after.liquidatorCollateralTokenBalance >

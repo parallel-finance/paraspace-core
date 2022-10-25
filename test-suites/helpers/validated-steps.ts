@@ -741,16 +741,13 @@ const checkAfterLiquidationERC721 = async (
     before.borrowerCollateralXTokenBalance.sub(1)
   );
 
-  const excessFundsInLiquidationAssetUnits = discountedNFTPrice
-    .sub(before.totalDebt)
-    .wadDiv(before.liquidationAssetPrice);
-
   if (before.isLiquidationAssetBorrowed) {
     // some or all borrower's debt is repaid
-    const isAllTokenDebtRepaid = discountedNFTPrice.gt(
-      before.borrowerLiquidationDebtTokenBalance
-    );
-    if (isAllTokenDebtRepaid) {
+    const isAllUserDebtRepaid = discountedNFTPrice.gt(before.totalDebt);
+    const excessFundsInLiquidationAssetUnits = discountedNFTPrice
+      .sub(before.totalDebt)
+      .wadDiv(before.liquidationAssetPrice);
+    if (isAllUserDebtRepaid) {
       // all debt repaid
       expect(after.borrowerLiquidationDebtTokenBalance).to.equal(0);
       // excess funds are transferred to the borrower
@@ -780,13 +777,6 @@ const checkAfterLiquidationERC721 = async (
           liquidationAmountToBeUsed
         )
       );
-
-      expect(
-        await isAssetInCollateral(
-          after.borrower,
-          after.liquidationToken.address
-        )
-      ).to.be.true;
     }
 
     if (willHaveExcessFunds) {
@@ -798,14 +788,23 @@ const checkAfterLiquidationERC721 = async (
           excessFundsInLiquidationAssetUnits
         )
       );
+
+      expect(
+        await isAssetInCollateral(
+          after.borrower,
+          after.liquidationToken.address
+        )
+      ).to.be.true;
     }
   } else {
-    // no debt repaid, of course will have excess funds -> supplied to the protocol on behalf of the borrower.
-    // borrower liquidation pToken balance is incremented with the excess
+    // no debt repaid, of course there will be excess funds -> supplied to the protocol on behalf of the borrower
+    // borrower liquidation pToken balance is incremented with liquidationAssetPrice
+
     assertAlmostEqual(
       after.borrowerLiquidationPTokenBalance,
-      before.borrowerLiquidationPTokenBalance.add(
-        excessFundsInLiquidationAssetUnits
+      // it is dificult to predict the price in auction case, so use the liquidator subtracted amount instead
+      before.liquidatorLiquidationAssetBalance.sub(
+        after.liquidatorLiquidationAssetBalance
       )
     );
     expect(
@@ -861,7 +860,12 @@ const checkAfterLiquidationERC721 = async (
   // borrower's new total collateral should be the resulting on removing the value of the NFT
   assertAlmostEqual(
     after.totalCollateral,
-    before.totalCollateral.sub(before.collateralAssetPrice)
+    before.totalCollateral.sub(
+      // it is dificult to predict the price in auction case, so use the liquidator subtracted amount instead
+      before.liquidatorLiquidationAssetBalance.sub(
+        after.liquidatorLiquidationAssetBalance
+      )
+    )
   );
 
   if (!before.isLiquidationAssetBorrowed) {
@@ -1046,6 +1050,7 @@ const fetchLiquidationData = async (
       : await (await getParaSpaceOracle())
           .connect((await getDeployer()).signer)
           .getAssetPrice(collateralToken.address);
+
   const collateralAssetPrice = assetPrice
     .mul(currentPriceMultiplier)
     .div("1000000000000000000");
