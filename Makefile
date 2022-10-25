@@ -61,6 +61,10 @@ submodules:
 	git submodule update --init --recursive
 	git submodule foreach git pull origin main
 
+.PHONY: test-pool-upgrade
+test-pool-upgrade:
+	make TEST_TARGET=pool-upgrade.spec.ts test
+
 .PHONY: test-ntoken
 test-ntoken:
 	make TEST_TARGET=ntoken.spec.ts test
@@ -347,6 +351,14 @@ fork:
 	-d \
 	--chain.chainId 522 \
 	--fork ${RPC_URL}
+
+.PHONY: upgrade
+upgrade:
+	make TASK_NAME=upgrade:all run-task
+
+.PHONY: upgrade-pool
+upgrade-pool:
+	make TASK_NAME=upgrade:pool run-task
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
