@@ -7,58 +7,58 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
 
   const {printContracts} = await import("../../deploy/helpers/misc-utils");
   const {step_00} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/00_deleteDb"
+    "../../deploy/tasks/deployments/full-deployment/steps/00_deleteDb"
   );
   const {step_01} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/01_ERC20Tokens"
+    "../../deploy/tasks/deployments/full-deployment/steps/01_ERC20Tokens"
   );
   const {step_02} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/02_ERC721Tokens"
+    "../../deploy/tasks/deployments/full-deployment/steps/02_ERC721Tokens"
   );
   const {step_03} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/03_faucet"
+    "../../deploy/tasks/deployments/full-deployment/steps/03_faucet"
   );
   const {step_04} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/04_addressProvider"
+    "../../deploy/tasks/deployments/full-deployment/steps/04_addressProvider"
   );
   const {step_05} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/05_aclManager"
+    "../../deploy/tasks/deployments/full-deployment/steps/05_aclManager"
   );
   const {step_07} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/07_pool"
+    "../../deploy/tasks/deployments/full-deployment/steps/07_pool"
   );
   const {step_08} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/08_poolConfigurator"
+    "../../deploy/tasks/deployments/full-deployment/steps/08_poolConfigurator"
   );
   const {step_09} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/09_reservesSetupHelper"
+    "../../deploy/tasks/deployments/full-deployment/steps/09_reservesSetupHelper"
   );
   const {step_10} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/10_priceOracle"
+    "../../deploy/tasks/deployments/full-deployment/steps/10_priceOracle"
   );
   const {step_11} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/11_allMockAggregators"
+    "../../deploy/tasks/deployments/full-deployment/steps/11_allAggregators"
   );
   const {step_12} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/12_uiIncentiveDataProvider"
+    "../../deploy/tasks/deployments/full-deployment/steps/12_uiIncentiveDataProvider"
   );
   const {step_13} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/13_wethGateway"
+    "../../deploy/tasks/deployments/full-deployment/steps/13_wethGateway"
   );
   const {step_14} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/14_punkGateway"
+    "../../deploy/tasks/deployments/full-deployment/steps/14_punkGateway"
   );
   const {step_15} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/15_seaport"
+    "../../deploy/tasks/deployments/full-deployment/steps/15_seaport"
   );
   const {step_16} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/16_looksrare"
+    "../../deploy/tasks/deployments/full-deployment/steps/16_looksrare"
   );
   const {step_17} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/17_x2y2"
+    "../../deploy/tasks/deployments/full-deployment/steps/17_x2y2"
   );
   const {step_18} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/18_flashClaimRegistry"
+    "../../deploy/tasks/deployments/full-deployment/steps/18_flashClaimRegistry"
   );
 
   console.time("setup");

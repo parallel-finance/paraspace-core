@@ -6,7 +6,7 @@ task("deploy:reserves-setup-helper", "Deploy reserves setup helper").setAction(
   async (_, DRE) => {
     await DRE.run("set-DRE");
     const {step_09} = await import(
-      "../../deploy/tasks/deployments/testnet/steps/09_reservesSetupHelper"
+      "../../deploy/tasks/deployments/full-deployment/steps/09_reservesSetupHelper"
     );
     await step_09(verify);
   }

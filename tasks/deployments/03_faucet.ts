@@ -10,7 +10,7 @@ task(
   await DRE.run("set-DRE");
   if (isLocalTestnet(DRE) || isPublicTestnet(DRE)) {
     const {step_03} = await import(
-      "../../deploy/tasks/deployments/testnet/steps/03_faucet"
+      "../../deploy/tasks/deployments/full-deployment/steps/03_faucet"
     );
     await step_03(verify);
   }

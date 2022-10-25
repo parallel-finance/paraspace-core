@@ -301,8 +301,8 @@ deploy-reservesSetupHelper:
 deploy-priceOracle:
 	make TASK_NAME=deploy:price-oracle run-task
 
-.PHONY: deploy-allMockAggregators
-deploy-allMockAggregators:
+.PHONY: deploy-allAggregators
+deploy-allAggregators:
 	make TASK_NAME=deploy:all-mock-aggregators run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
