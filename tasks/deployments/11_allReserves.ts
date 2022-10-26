@@ -3,12 +3,12 @@ import {task} from "hardhat/config";
 const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
 
 task(
-  "deploy:all-aggregators",
-  "Deploy all aggregators"
+  "deploy:all-reserves",
+  "Deploy all reserves"
 ).setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
-  const {step_10} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps/10_allAggregators"
+  const {step_11} = await import(
+    "../../deploy/tasks/deployments/full-deployment/steps/11_allReserves"
   );
-  await step_10(verify);
+  await step_11(verify);
 });
