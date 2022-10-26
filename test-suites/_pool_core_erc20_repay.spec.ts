@@ -16,7 +16,7 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 
-describe("pToken/debtToken Mint and Burn Event Accounting", () => {
+describe("pToken repay Event Accounting", () => {
   const firstDaiDeposit = "10000";
   const secondDaiDeposit = "20000";
   let accruedInterest = BigNumber.from(0);

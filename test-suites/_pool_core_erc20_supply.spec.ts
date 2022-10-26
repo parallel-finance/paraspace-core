@@ -11,7 +11,7 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 
-describe("pToken/debtToken Mint and Burn Event Accounting", () => {
+describe("pToken supply Event Accounting", () => {
   const firstDaiDeposit = "10000";
   const secondDaiDeposit = "20000";
   let testEnv: TestEnv;
