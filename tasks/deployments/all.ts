@@ -1,68 +1,66 @@
 import {task} from "hardhat/config";
+
 const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
 
-//FIXME(alan): Use subtask
 task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
+  await DRE.run("set-DRE");
+
   const {printContracts} = await import("../../deploy/helpers/misc-utils");
   const {step_00} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/00_deleteDb"
+    "../../deploy/tasks/deployments/full-deployment/steps/00_deleteDb"
   );
   const {step_01} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/01_mockERC20Tokens"
+    "../../deploy/tasks/deployments/full-deployment/steps/01_ERC20Tokens"
   );
   const {step_02} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/02_mockERC721Tokens"
+    "../../deploy/tasks/deployments/full-deployment/steps/02_ERC721Tokens"
   );
   const {step_03} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/03_faucet"
+    "../../deploy/tasks/deployments/full-deployment/steps/03_faucet"
   );
   const {step_04} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/04_addressProvider"
+    "../../deploy/tasks/deployments/full-deployment/steps/04_addressProvider"
   );
   const {step_05} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/05_aclManager"
+    "../../deploy/tasks/deployments/full-deployment/steps/05_aclManager"
   );
   const {step_06} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/06_poolAddressesProviderRegistry"
+    "../../deploy/tasks/deployments/full-deployment/steps/06_pool"
   );
   const {step_07} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/07_pool"
+    "../../deploy/tasks/deployments/full-deployment/steps/07_poolConfigurator"
   );
   const {step_08} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/08_poolConfigurator"
+    "../../deploy/tasks/deployments/full-deployment/steps/08_reservesSetupHelper"
   );
   const {step_09} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/09_reservesSetupHelper"
+    "../../deploy/tasks/deployments/full-deployment/steps/09_fallbackOracle"
   );
   const {step_10} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/10_priceOracle"
-  );
-  const {step_11} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/11_allMockAggregators"
+    "../../deploy/tasks/deployments/full-deployment/steps/10_allAggregators"
   );
   const {step_12} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/12_uiIncentiveDataProvider"
+    "../../deploy/tasks/deployments/full-deployment/steps/12_uiIncentiveDataProvider"
   );
   const {step_13} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/13_wethGateway"
+    "../../deploy/tasks/deployments/full-deployment/steps/13_wethGateway"
   );
   const {step_14} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/14_punkGateway"
+    "../../deploy/tasks/deployments/full-deployment/steps/14_punkGateway"
   );
   const {step_15} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/15_seaport"
+    "../../deploy/tasks/deployments/full-deployment/steps/15_seaport"
   );
   const {step_16} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/16_looksrare"
+    "../../deploy/tasks/deployments/full-deployment/steps/16_looksrare"
   );
   const {step_17} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/17_x2y2"
+    "../../deploy/tasks/deployments/full-deployment/steps/17_x2y2"
   );
   const {step_18} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/18_flashClaimRegistry"
+    "../../deploy/tasks/deployments/full-deployment/steps/18_flashClaimRegistry"
   );
 
-  await DRE.run("set-DRE");
   console.time("setup");
   // delete json file
   step_00();
@@ -88,29 +86,25 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   await step_05(verify);
   console.log("------------ step 05 done ------------ ");
 
-  // deploy PoolAddressesProviderRegistry
+  // deploy Pool
   await step_06(verify);
   console.log("------------ step 06 done ------------ ");
 
-  // deploy Pool
+  // deploy PoolConfigurator
   await step_07(verify);
   console.log("------------ step 07 done ------------ ");
 
-  // deploy PoolConfigurator
+  // deploy ReservesSetupHelper
   await step_08(verify);
   console.log("------------ step 08 done ------------ ");
 
-  // deploy ReservesSetupHelper
+  // deploy PriceOracle and set initial prices
   await step_09(verify);
   console.log("------------ step 09 done ------------ ");
 
-  // deploy PriceOracle and set initial prices
+  // deploy mock aggregators, ParaSpaceOracle, ProtocolDataProvider, MockIncentivesController and UiPoolDataProvider
   await step_10(verify);
   console.log("------------ step 10 done ------------ ");
-
-  // deploy mock aggregators, ParaSpaceOracle, ProtocolDataProvider, MockIncentivesController and UiPoolDataProvider
-  await step_11(verify);
-  console.log("------------ step 11 done ------------ ");
 
   // deploy UiIncentiveDataProviderV3
   await step_12(verify);

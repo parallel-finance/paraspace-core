@@ -20,7 +20,7 @@ describe("Mock Token Faucet", () => {
       ape,
       wBTC,
       stETH,
-      punk,
+      cryptoPunksMarket: punk,
       bayc,
       mayc,
       doodles,
@@ -175,7 +175,7 @@ describe("Mock Token Faucet", () => {
   it("update PUNK config and mint", async () => {
     const {
       mockTokenFaucet,
-      punk,
+      cryptoPunksMarket: punk,
       deployer,
       users: [user1],
     } = testEnv;

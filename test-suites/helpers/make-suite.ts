@@ -14,7 +14,7 @@ import {
   getACLManager,
   getMintableERC721,
   getWPunk,
-  getPunk,
+  getCryptoPunksMarket,
   getMockTokenFaucet,
   getConduitController,
   getPausableZoneController,
@@ -41,7 +41,14 @@ import {
   getWPunkGatewayProxy,
   getWETHGatewayProxy,
 } from "../../deploy/helpers/contracts-getters";
-import {tEthereumAddress} from "../../deploy/helpers/types";
+import {
+  eContractid,
+  ERC20TokenContractId,
+  ERC721TokenContractId,
+  NTokenContractId,
+  PTokenContractId,
+  tEthereumAddress,
+} from "../../deploy/helpers/types";
 import {
   Conduit,
   ERC721Delegate,
@@ -133,7 +140,7 @@ export interface TestEnv {
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
   aclManager: ACLManager;
-  punk: CryptoPunksMarket;
+  cryptoPunksMarket: CryptoPunksMarket;
   wPunk: WPunk;
   nWPunk: NToken;
   wBTC: MintableERC20;
@@ -197,7 +204,7 @@ export async function initializeMakeSuite() {
     addressesProvider: {} as PoolAddressesProvider,
     registry: {} as PoolAddressesProviderRegistry,
     aclManager: {} as ACLManager,
-    punk: {} as CryptoPunksMarket,
+    cryptoPunksMarket: {} as CryptoPunksMarket,
     wPunk: {} as WPunk,
     nWPunk: {} as NToken,
     wBTC: {} as MintableERC20,
@@ -277,53 +284,53 @@ export async function initializeMakeSuite() {
   const allTokens = await testEnv.protocolDataProvider.getAllXTokens();
 
   const pDaiAddress = allTokens.find(
-    (xToken) => xToken.symbol === "pDAI"
+    (xToken) => xToken.symbol === PTokenContractId.pDAI
   )?.tokenAddress;
   const pUsdcAddress = allTokens.find(
-    (xToken) => xToken.symbol === "pUSDC"
+    (xToken) => xToken.symbol === PTokenContractId.pUSDC
   )?.tokenAddress;
 
   const pWEthAddress = allTokens.find(
-    (xToken) => xToken.symbol === "pWETH"
+    (xToken) => xToken.symbol === PTokenContractId.pWETH
   )?.tokenAddress;
 
   const paWEthAddress = allTokens.find(
-    (xToken) => xToken.symbol === "paWETH"
+    (xToken) => xToken.symbol === PTokenContractId.paWETH
   )?.tokenAddress;
 
   const pstEthAddress = allTokens.find(
-    (xToken) => xToken.symbol === "pstETH"
+    (xToken) => xToken.symbol === PTokenContractId.pstETH
   )?.tokenAddress;
 
   const nBAYCAddress = allTokens.find(
-    (xToken) => xToken.symbol === "nBAYC"
+    (xToken) => xToken.symbol === NTokenContractId.nBAYC
   )?.tokenAddress;
 
   const nMAYCAddress = allTokens.find(
-    (xToken) => xToken.symbol === "nMAYC"
+    (xToken) => xToken.symbol === NTokenContractId.nMAYC
   )?.tokenAddress;
 
   const nDOODLESAddress = allTokens.find(
-    (xToken) => xToken.symbol === "nDOODLES"
+    (xToken) => xToken.symbol === NTokenContractId.nDOODLES
   )?.tokenAddress;
 
   const nWPunkAddress = allTokens.find(
-    (xToken) => xToken.symbol === "nWPUNKS"
+    (xToken) => xToken.symbol === NTokenContractId.nWPUNKS
   )?.tokenAddress;
 
   const nMOONBIRDAddress = allTokens.find(
-    (xToken) => xToken.symbol === "nMOONBIRD"
+    (xToken) => xToken.symbol === NTokenContractId.nMOONBIRD
   )?.tokenAddress;
 
   const nUniwapV3Address = allTokens.find(
-    (xToken) => xToken.symbol === "nUniswapV3"
+    (xToken) => xToken.symbol === NTokenContractId.nUniswapV3
   )?.tokenAddress;
 
   const reservesTokens =
     await testEnv.protocolDataProvider.getAllReservesTokens();
 
   const daiAddress = reservesTokens.find(
-    (token) => token.symbol === "DAI"
+    (token) => token.symbol === ERC20TokenContractId.DAI
   )?.tokenAddress;
 
   const {variableDebtTokenAddress: variableDebtDaiAddress} =
@@ -332,45 +339,45 @@ export async function initializeMakeSuite() {
     );
 
   const usdcAddress = reservesTokens.find(
-    (token) => token.symbol === "USDC"
+    (token) => token.symbol === ERC20TokenContractId.USDC
   )?.tokenAddress;
   const usdtAddress = reservesTokens.find(
-    (token) => token.symbol === "USDT"
+    (token) => token.symbol === ERC20TokenContractId.USDT
   )?.tokenAddress;
   const wethAddress = reservesTokens.find(
-    (token) => token.symbol === "WETH"
+    (token) => token.symbol === ERC20TokenContractId.WETH
   )?.tokenAddress;
 
   const aWETHAddress = reservesTokens.find(
-    (token) => token.symbol === "aWETH"
+    (token) => token.symbol === ERC20TokenContractId.aWETH
   )?.tokenAddress;
   const baycAddress = reservesTokens.find(
-    (token) => token.symbol === "BAYC"
+    (token) => token.symbol === ERC721TokenContractId.BAYC
   )?.tokenAddress;
   const punkAddress = reservesTokens.find(
-    (token) => token.symbol === "PUNKS"
+    (token) => token.symbol === eContractid.CryptoPunksMarket
   )?.tokenAddress;
 
   const wpunkAddress = reservesTokens.find(
-    (token) => token.symbol === "WPUNKS"
+    (token) => token.symbol === ERC721TokenContractId.WPUNKS
   )?.tokenAddress;
   const wBTCAddress = reservesTokens.find(
-    (token) => token.symbol === "WBTC"
+    (token) => token.symbol === ERC20TokenContractId.WBTC
   )?.tokenAddress;
   const stETHAddress = reservesTokens.find(
-    (token) => token.symbol === "stETH"
+    (token) => token.symbol === ERC20TokenContractId.stETH
   )?.tokenAddress;
   const apeAddress = reservesTokens.find(
-    (token) => token.symbol === "APE"
+    (token) => token.symbol === ERC20TokenContractId.APE
   )?.tokenAddress;
   const maycAddress = reservesTokens.find(
-    (token) => token.symbol === "MAYC"
+    (token) => token.symbol === ERC721TokenContractId.MAYC
   )?.tokenAddress;
   const doodlesAddress = reservesTokens.find(
-    (token) => token.symbol === "DOODLE"
+    (token) => token.symbol === ERC721TokenContractId.DOODLE
   )?.tokenAddress;
   const moonbirdsAddress = reservesTokens.find(
-    (token) => token.symbol === "MOONBIRD"
+    (token) => token.symbol === ERC721TokenContractId.MOONBIRD
   )?.tokenAddress;
 
   if (!pDaiAddress || !pWEthAddress || !nBAYCAddress) {
@@ -402,7 +409,7 @@ export async function initializeMakeSuite() {
   testEnv.bayc = await getMintableERC721(baycAddress);
 
   testEnv.nWPunk = await getNToken(nWPunkAddress);
-  testEnv.punk = await getPunk(punkAddress);
+  testEnv.cryptoPunksMarket = await getCryptoPunksMarket(punkAddress);
   testEnv.wPunk = await getWPunk(wpunkAddress);
   testEnv.wPunkGateway = await getWPunkGatewayProxy();
   testEnv.wETHGateway = await getWETHGatewayProxy();
