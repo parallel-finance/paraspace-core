@@ -39,6 +39,9 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   const {step_10} = await import(
     "../../deploy/tasks/deployments/full-deployment/steps/10_allAggregators"
   );
+  const {step_11} = await import(
+    "../../deploy/tasks/deployments/full-deployment/steps/11_allReserves"
+  );
   const {step_12} = await import(
     "../../deploy/tasks/deployments/full-deployment/steps/12_uiIncentiveDataProvider"
   );
@@ -102,9 +105,13 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   await step_09(verify);
   console.log("------------ step 09 done ------------ ");
 
-  // deploy mock aggregators, ParaSpaceOracle, ProtocolDataProvider, MockIncentivesController and UiPoolDataProvider
+  // deploy mock aggregators, ParaSpaceOracle, ProtocolDataProvider and UiPoolDataProvider
   await step_10(verify);
   console.log("------------ step 10 done ------------ ");
+
+  // deploy MockIncentivesController, mockReserveAuctionStrategy and reserves
+  await step_11(verify);
+  console.log("------------ step 11 done ------------ ");
 
   // deploy UiIncentiveDataProviderV3
   await step_12(verify);
