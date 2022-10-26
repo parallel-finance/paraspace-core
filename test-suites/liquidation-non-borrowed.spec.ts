@@ -4,6 +4,7 @@ import {
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
 import {
+  assertAlmostEqual,
   borrowAndValidate,
   changePriceAndValidate,
   liquidateAndValidate,
@@ -116,6 +117,19 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
     //assert isUsingAsCollateral status correct
     expect(before.isUsingAsCollateral).to.be.false;
     expect(after.isUsingAsCollateral).to.be.true;
+    //assert ptoken balance of liquidation asset
+    assertAlmostEqual(
+      after.borrowerLiquidationPTokenBalance,
+      before.isAuctionStarted
+        ? // since it is dificult to predict the price in auction case
+          // we remove it from common validation logic to here
+          before.liquidatorLiquidationAssetBalance.sub(
+            after.liquidatorLiquidationAssetBalance
+          )
+        : before.borrowerLiquidationPTokenBalance.add(
+            before.liquidationAssetPrice
+          )
+    );
   });
 
   it("liquidates ERC-20 with non-borrowed token is not allowed", async () => {

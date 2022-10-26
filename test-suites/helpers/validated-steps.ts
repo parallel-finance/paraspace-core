@@ -733,7 +733,7 @@ const checkAfterLiquidationERC721 = async (
     before.liquidationAssetPrice
   );
 
-  const willHaveExcessFunds = discountedNFTPrice.gt(before.totalDebt);
+  const isAllUserDebtRepaid = discountedNFTPrice.gt(before.totalDebt);
 
   // borrower's collateral token balance in wallet is the same
   expect(after.borrowerCollateralTokenBalance).equal(
@@ -747,7 +747,6 @@ const checkAfterLiquidationERC721 = async (
 
   if (before.isLiquidationAssetBorrowed) {
     // some or all borrower's debt is repaid
-    const isAllUserDebtRepaid = discountedNFTPrice.gt(before.totalDebt);
     const excessFundsInLiquidationAssetUnits = discountedNFTPrice
       .sub(before.totalDebt)
       .wadDiv(before.liquidationAssetPrice);
@@ -783,7 +782,7 @@ const checkAfterLiquidationERC721 = async (
       );
     }
 
-    if (willHaveExcessFunds) {
+    if (isAllUserDebtRepaid) {
       // supply excess to the protocol on behalf of the borrower
       // borrower liquidation pToken balance is incremented with the excess
       assertAlmostEqual(
@@ -800,25 +799,6 @@ const checkAfterLiquidationERC721 = async (
         )
       ).to.be.true;
     }
-  } else {
-    // no debt repaid, of course there will be excess funds -> supplied to the protocol on behalf of the borrower
-    // borrower liquidation pToken balance is incremented with liquidationAssetPrice
-
-    assertAlmostEqual(
-      after.borrowerLiquidationPTokenBalance,
-      before.isAuctionStarted
-        ? // it is dificult to predict the price in auction case, so use the liquidator subtracted amount instead
-          before.liquidatorLiquidationAssetBalance.sub(
-            after.liquidatorLiquidationAssetBalance
-          )
-        : before.borrowerLiquidationPTokenBalance.add(
-            before.liquidationAssetPrice
-          )
-    );
-
-    expect(
-      await isAssetInCollateral(after.borrower, after.liquidationToken.address)
-    ).to.be.true;
   }
 
   if (before.receiveXToken) {
@@ -1409,7 +1389,7 @@ export async function assertHealthFactorCalculation(user: SignerWithAddress) {
   assertAlmostEqual(contractHF, calculatedHF);
 }
 
-function assertAlmostEqual(
+export function assertAlmostEqual(
   actual: BigNumberish,
   expected: BigNumberish,
   delta?: BigNumberish
