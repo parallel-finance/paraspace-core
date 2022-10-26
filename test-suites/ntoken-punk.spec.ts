@@ -37,20 +37,28 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
 
   it("User 3 can mint PUNKS and offer them for sale", async () => {
     const {
-      punk,
+      cryptoPunksMarket,
       users: [, , user3],
     } = testEnv;
-    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](0));
-    expect(await punk.connect(user3.signer).balanceOf(user3.address)).to.equal(
-      1
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer)["getPunk(uint256)"](0)
     );
-    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(0, 0));
+    expect(
+      await cryptoPunksMarket.connect(user3.signer).balanceOf(user3.address)
+    ).to.equal(1);
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer).offerPunkForSale(0, 0)
+    );
 
-    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](1));
-    expect(await punk.connect(user3.signer).balanceOf(user3.address)).to.equal(
-      2
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer)["getPunk(uint256)"](1)
     );
-    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(1, 0));
+    expect(
+      await cryptoPunksMarket.connect(user3.signer).balanceOf(user3.address)
+    ).to.equal(2);
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer).offerPunkForSale(1, 0)
+    );
   });
 
   it("User 3 deposits WPUNK", async () => {
@@ -245,7 +253,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       users: [, , user3],
       pool,
       wPunkGateway,
-      punk,
+      cryptoPunksMarket,
     } = testEnv;
     const availableToBorrow = (await pool.getUserAccountData(user3.address))
       .availableBorrowsBase;
@@ -274,7 +282,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(wPunkBalance).to.be.equal(0);
 
     // minted both id of 0 and 1 at the beginning so Punk balance should be back at 2
-    const punkBalance = await punk.balanceOf(user3.address);
+    const punkBalance = await cryptoPunksMarket.balanceOf(user3.address);
     expect(punkBalance).to.be.equal(2);
 
     // availableToBorrow must've decreased
@@ -326,18 +334,24 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   it("wPunkGateway receives 1 WPUNK and 1 PUNK", async () => {
     const {
       users: [, , user3],
-      punk,
+      cryptoPunksMarket,
       wPunk,
       wPunkGateway,
     } = testEnv;
     // WPUNK
-    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](2));
-    await punk.connect(user3.signer).balanceOf(user3.address);
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer)["getPunk(uint256)"](2)
+    );
+    await cryptoPunksMarket.connect(user3.signer).balanceOf(user3.address);
 
-    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(2, 0));
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer).offerPunkForSale(2, 0)
+    );
     await waitForTx(await wPunk.connect(user3.signer).registerProxy());
     const proxy = await wPunk.proxyInfo(user3.address);
-    await waitForTx(await punk.connect(user3.signer).transferPunk(proxy, 2));
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer).transferPunk(proxy, 2)
+    );
     await waitForTx(await wPunk.connect(user3.signer).mint(2));
     await waitForTx(
       await wPunk
@@ -353,15 +367,23 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     ).to.equal(1);
 
     // PUNK
-    await waitForTx(await punk.connect(user3.signer)["getPunk(uint256)"](3));
-    await punk.connect(user3.signer).balanceOf(user3.address);
-
-    await waitForTx(await punk.connect(user3.signer).offerPunkForSale(3, 0));
     await waitForTx(
-      await punk.connect(user3.signer).transferPunk(wPunkGateway.address, 3)
+      await cryptoPunksMarket.connect(user3.signer)["getPunk(uint256)"](3)
+    );
+    await cryptoPunksMarket.connect(user3.signer).balanceOf(user3.address);
+
+    await waitForTx(
+      await cryptoPunksMarket.connect(user3.signer).offerPunkForSale(3, 0)
+    );
+    await waitForTx(
+      await cryptoPunksMarket
+        .connect(user3.signer)
+        .transferPunk(wPunkGateway.address, 3)
     );
     expect(
-      await punk.connect(user3.signer).balanceOf(wPunkGateway.address)
+      await cryptoPunksMarket
+        .connect(user3.signer)
+        .balanceOf(wPunkGateway.address)
     ).to.equal(1);
   });
 
@@ -397,11 +419,11 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       users: [, , user3],
       deployer,
       wPunkGateway,
-      punk,
+      cryptoPunksMarket,
     } = testEnv;
     const owner = deployer;
 
-    const userBalance = await punk
+    const userBalance = await cryptoPunksMarket
       .connect(user3.signer)
       .balanceOf(user3.address);
 
@@ -411,11 +433,13 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
         .emergencyPunkTransfer(user3.address, 3)
     );
     expect(
-      await punk.connect(user3.signer).balanceOf(wPunkGateway.address)
+      await cryptoPunksMarket
+        .connect(user3.signer)
+        .balanceOf(wPunkGateway.address)
     ).to.equal(0);
 
-    expect(await punk.connect(user3.signer).balanceOf(user3.address)).to.equal(
-      userBalance.add(1)
-    );
+    expect(
+      await cryptoPunksMarket.connect(user3.signer).balanceOf(user3.address)
+    ).to.equal(userBalance.add(1));
   });
 });

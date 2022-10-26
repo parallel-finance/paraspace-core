@@ -5,13 +5,12 @@ import {
   HARDHAT_CHAINID,
   COVERAGE_CHAINID,
   FORK_MAINNET_CHAINID,
-  RINKEBY_CHAINID,
   MAINNET_CHAINID,
   GOERLI_CHAINID,
 } from "./deploy/helpers/hardhat-constants";
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
-import {buildForkConfig} from "./deploy/helper-hardhat-config";
+import {buildForkConfig, NETWORKS_RPC_URL} from "./deploy/helper-hardhat-config";
 import fs from "fs";
 
 dotenv.config();
@@ -24,6 +23,7 @@ import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
+import {eEthereumNetwork} from "./deploy/helpers/types";
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
@@ -104,8 +104,8 @@ const hardhatConfig: HardhatUserConfig = {
     forkNetwork: `${MAINNET_CHAINID}`, //Network id of the network we want to fork
   },
   networks: {
-    evm: {
-      url: "http://localhost:29933",
+    parallel: {
+      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
       chainId: 1592,
       accounts: evmAccounts.map(
         ({secretKey}: {secretKey: string; balance: string}) => secretKey
@@ -115,11 +115,11 @@ const hardhatConfig: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
     },
     localhost: {
-      url: "http://localhost:8545",
+      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
       chainId: HARDHAT_CHAINID,
     },
     coverage: {
-      url: "http://localhost:8555",
+      url: NETWORKS_RPC_URL[eEthereumNetwork.coverage],
       chainId: COVERAGE_CHAINID,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
@@ -142,7 +142,7 @@ const hardhatConfig: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
     },
     ganache: {
-      url: "http://localhost:8545",
+      url: NETWORKS_RPC_URL[eEthereumNetwork.ganache],
       chainId: FORK_MAINNET_CHAINID,
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",
@@ -151,16 +151,9 @@ const hardhatConfig: HardhatUserConfig = {
         count: 20,
       },
     },
-    rinkeby: {
-      chainId: RINKEBY_CHAINID,
-      url: process.env.RPC_URL || "",
-      accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
-      },
-    },
     goerli: {
       chainId: GOERLI_CHAINID,
-      url: process.env.RPC_URL || "",
+      url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",
       },

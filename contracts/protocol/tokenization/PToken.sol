@@ -14,6 +14,7 @@ import {IInitializablePToken} from "../../interfaces/IInitializablePToken.sol";
 import {ScaledBalanceTokenBaseERC20} from "./base/ScaledBalanceTokenBaseERC20.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {EIP712Base} from "./base/EIP712Base.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -333,5 +334,15 @@ contract PToken is
     ) external override onlyPoolAdmin {
         require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
         IERC20(token).safeTransfer(to, amount);
+    }
+
+    function getXTokenType()
+        external
+        pure
+        virtual
+        override
+        returns (XTokenType)
+    {
+        return XTokenType.PToken;
     }
 }

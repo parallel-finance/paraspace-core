@@ -14,7 +14,7 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  */
 contract PoolStorage {
     bytes32 constant POOL_STORAGE_POSITION =
-        keccak256("paraspace.proxy.pool.storage");
+        bytes32(uint256(keccak256("paraspace.proxy.pool.storage")) - 1);
 
     function poolStorage()
         internal

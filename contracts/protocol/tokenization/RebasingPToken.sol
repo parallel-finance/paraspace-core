@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title Rebasing PToken
@@ -118,5 +119,15 @@ contract RebasingPToken is PToken {
     function lastRebasingIndex() internal view virtual returns (uint256) {
         // returns 1 RAY by default which makes it identical to PToken in behaviour
         return WadRayMath.RAY;
+    }
+
+    function getXTokenType()
+        external
+        pure
+        virtual
+        override
+        returns (XTokenType)
+    {
+        return XTokenType.RebasingPToken;
     }
 }
