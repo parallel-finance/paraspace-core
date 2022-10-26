@@ -600,7 +600,7 @@ library LiquidationLogic {
         // userTotalDebt = debt of the borrowed position needed for liquidation
         uint256 userTotalDebt = Helpers.getUserCurrentDebt(
             params.user,
-            liquidationAssetReserveCache
+            liquidationAssetReserveCache.variableDebtTokenAddress
         );
 
         uint256 actualDebtToLiquidate = params.liquidationAmount > userTotalDebt

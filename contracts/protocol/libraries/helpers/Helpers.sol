@@ -12,13 +12,14 @@ library Helpers {
     /**
      * @notice Fetches the user current stable and variable debt balances
      * @param user The user address
-     * @param reserveCache The reserve cache data object
+     * @param debtTokenAddress The debt token address
      * @return The variable debt balance
      **/
-    function getUserCurrentDebt(
-        address user,
-        DataTypes.ReserveCache memory reserveCache
-    ) internal view returns (uint256) {
-        return (IERC20(reserveCache.variableDebtTokenAddress).balanceOf(user));
+    function getUserCurrentDebt(address user, address debtTokenAddress)
+        internal
+        view
+        returns (uint256)
+    {
+        return (IERC20(debtTokenAddress).balanceOf(user));
     }
 }

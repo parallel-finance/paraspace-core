@@ -4,13 +4,19 @@ pragma solidity 0.8.10;
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "./IScaledBalanceToken.sol";
 import {IInitializablePToken} from "./IInitializablePToken.sol";
+import {IXTokenType} from "./IXTokenType.sol";
 
 /**
  * @title IPToken
  *
  * @notice Defines the basic interface for an PToken.
  **/
-interface IPToken is IERC20, IScaledBalanceToken, IInitializablePToken {
+interface IPToken is
+    IERC20,
+    IScaledBalanceToken,
+    IInitializablePToken,
+    IXTokenType
+{
     /**
      * @notice Mints `amount` xTokens to `user`
      * @param caller The address performing the mint

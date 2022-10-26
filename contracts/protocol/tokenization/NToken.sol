@@ -19,6 +19,7 @@ import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
@@ -309,5 +310,15 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
 
     function getAtomicPricingConfig() external view returns (bool) {
         return ATOMIC_PRICING;
+    }
+
+    function getXTokenType()
+        external
+        pure
+        virtual
+        override
+        returns (XTokenType)
+    {
+        return XTokenType.NToken;
     }
 }
