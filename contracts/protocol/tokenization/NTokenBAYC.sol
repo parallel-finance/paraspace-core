@@ -73,7 +73,7 @@ contract NTokenBAYC is NToken {
     }
 
     /**
-     * @notice Overrides the transferOnLiquidation from NToken to withdraw all staked and pending rewards before trasnfer the asset on liquidation
+     * @notice Overrides the transferOnLiquidation from NToken to withdraw all staked and pending rewards before transfer the asset on liquidation
      */
     function transferOnLiquidation(address from, address to, uint256 tokenId)
         public
@@ -103,12 +103,15 @@ contract NTokenBAYC is NToken {
 
     function _withdrawBAYC(uint256[] memory tokenIds, address _recipient)
         internal
-    {
-        ApeCoinStaking.SingleNft[] memory nfts = new ApeCoinStaking.SingleNft[](
-            tokenIds.length
-        );
+    {   
+        uint256 tokenIdLength = tokenIds.length;
 
-        for (uint256 index = 0; index < tokenIds.length; index++) {
+        ApeCoinStaking.SingleNft[] memory nfts = new ApeCoinStaking.SingleNft[](
+            tokenIdLength
+        );
+        uint256 counter = 0;
+
+        for (uint256 index = 0; index < tokenIdLength; index++) {
             (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
                 BAYC_POOL_ID,
                 tokenIds[index]
@@ -121,12 +124,20 @@ contract NTokenBAYC is NToken {
                     tokenIds[index]
                 );
 
-            nfts[index] = ApeCoinStaking.SingleNft({
-                tokenId: tokenIds[index],
-                amount: totalAmount
-            });
+            if (totalAmount > 0) {
+                nfts[counter] = ApeCoinStaking.SingleNft({
+                    tokenId: tokenIds[index],
+                    amount: totalAmount
+                });
+                counter++;
+            }
         }
 
-        _apeCoinStaking.withdrawBAYC(nfts, _recipient);
+        assembly { mstore(nfts, sub(mload(nfts), sub(tokenIdLength, counter))) }
+
+        if (nfts.length > 0) {
+            _apeCoinStaking.withdrawMAYC(nfts, _recipient);
+        }
+        
     }
 }
