@@ -163,7 +163,7 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
       expect(pDaiBalanceAfter).to.be.equal(pDaiBalance.add(amount));
     });
 
-    it("TC-erc20-borrow-08 User 2 borrow has reached the clearing threshold", async () => {
+    it("TC-erc20-borrow-08 User 2 borrow has reached the liquidation threshold", async () => {
       const {
         usdc,
         pool,
