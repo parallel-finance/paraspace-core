@@ -21,6 +21,7 @@ contract NTokenBAYC is NToken {
      */
     constructor(IPool pool, address apeCoinStaking) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
+        _apeCoinStaking.apeCoin().approve(address(_apeCoinStaking), type(uint256).max);
     }
 
     /**
