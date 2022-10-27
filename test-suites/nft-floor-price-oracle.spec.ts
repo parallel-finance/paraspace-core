@@ -5,11 +5,11 @@ import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
 import {utils} from "ethers";
-import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {getNFTFloorOracle} from "../deploy/helpers/contracts-getters";
 import {deployERC721OracleWrapper} from "../deploy/helpers/contracts-deployments";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import ParaSpaceConfig from "../deploy/market-config";
 
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
@@ -66,7 +66,9 @@ describe("NFT Oracle Tests", () => {
       .connect(deployer)
       .getAssetPrice(bayc.address);
 
-    expect(fallbackPrice).to.equal(MOCK_CHAINLINK_AGGREGATORS_PRICES.BAYC);
+    expect(fallbackPrice).to.equal(
+      ParaSpaceConfig.Mocks.AllAssetsInitialPrices.BAYC
+    );
   });
 
   it("If NFT Oracle is paused, feeding new prices is not possible", async () => {

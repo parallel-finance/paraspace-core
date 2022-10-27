@@ -5,7 +5,7 @@ import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
+import ParaSpaceConfig from "../deploy/market-config";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
@@ -23,7 +23,7 @@ describe("nToken Mint and Burn Event Accounting", () => {
     testEnv = await loadFixture(testEnvFixture);
   });
 
-  BigNumber.from(MOCK_CHAINLINK_AGGREGATORS_PRICES.BAYC);
+  BigNumber.from(ParaSpaceConfig.Mocks.AllAssetsInitialPrices.BAYC);
 
   it("User 1 deposits BAYC", async () => {
     const {

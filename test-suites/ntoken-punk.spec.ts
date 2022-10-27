@@ -5,7 +5,7 @@ import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
+import ParaSpaceConfig from "../deploy/market-config";
 import {testEnvFixture} from "./helpers/setup-env";
 
 describe("Punk nToken Mint and Burn Event Accounting", () => {
@@ -13,7 +13,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   let secondDaiDeposit;
   let testEnv;
   const wPunksFloorPrice = BigNumber.from(
-    MOCK_CHAINLINK_AGGREGATORS_PRICES.WPUNKS
+    ParaSpaceConfig.Mocks.AllAssetsInitialPrices.WPUNKS
   );
 
   before("Initialize WPunk Gateway", async () => {
