@@ -713,6 +713,7 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function finalizeTransferERC721(
         address asset,
+        uint256 tokenId,
         address from,
         address to,
         bool usedAsCollateral,
@@ -729,12 +730,12 @@ contract PoolCore is
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
-            DataTypes.FinalizeTransferParams({
+            DataTypes.FinalizeTransferERC721Params({
                 asset: asset,
                 from: from,
                 to: to,
                 usedAsCollateral: usedAsCollateral,
-                amount: 1,
+                tokenId: tokenId,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
                 reservesCount: ps._reservesCount,

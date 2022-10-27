@@ -449,7 +449,7 @@ describe("Uniswap V3", () => {
       const nftValue = await convertToCurrencyDecimals(weth.address, "20");
       const borrowableValue = await convertToCurrencyDecimals(
         weth.address,
-        "15"
+        "6"
       );
 
       const uniV3Oracle = await getUniswapV3OracleWrapper();
@@ -457,7 +457,7 @@ describe("Uniswap V3", () => {
       almostEqual(tokenPrice, nftValue);
 
       const userAccountData = await pool.getUserAccountData(user1.address);
-      expect(userAccountData.ltv).to.eq(7500);
+      expect(userAccountData.ltv).to.eq(3000);
       almostEqual(userAccountData.availableBorrowsBase, borrowableValue);
 
       await waitForTx(
@@ -476,11 +476,14 @@ describe("Uniswap V3", () => {
       const {
         users: [user1],
         nUniswapV3,
+        nftPositionManager,
       } = testEnv;
+
+      const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
       await nUniswapV3
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(1, parseEther("1"), 0, 0, false, {
+        .decreaseUniswapV3Liquidity(1, beforeLiquidity.div(2), 0, 0, false, {
           gasLimit: 12_450_000,
         });
     });
@@ -499,7 +502,7 @@ describe("Uniswap V3", () => {
           .connect(user1.signer)
           .decreaseUniswapV3Liquidity(
             1,
-            beforeLiquidity.mul(2).div(3),
+            beforeLiquidity.mul(1).div(2),
             0,
             0,
             false,

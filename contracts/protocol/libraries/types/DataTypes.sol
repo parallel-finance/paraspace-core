@@ -34,8 +34,6 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
-        // the address of the dynamic strategy contract
-        address dynamicConfigsStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -181,6 +179,18 @@ library DataTypes {
         address to;
         bool usedAsCollateral;
         uint256 amount;
+        uint256 balanceFromBefore;
+        uint256 balanceToBefore;
+        uint256 reservesCount;
+        address oracle;
+    }
+
+    struct FinalizeTransferERC721Params {
+        address asset;
+        address from;
+        address to;
+        bool usedAsCollateral;
+        uint256 tokenId;
         uint256 balanceFromBefore;
         uint256 balanceToBefore;
         uint256 reservesCount;

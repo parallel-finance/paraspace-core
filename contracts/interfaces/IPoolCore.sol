@@ -533,6 +533,7 @@ interface IPoolCore {
      * @notice Validates and finalizes an NToken transfer
      * @dev Only callable by the overlying xToken of the `asset`
      * @param asset The address of the underlying asset of the xToken
+     * @param tokenId The tokenId of the ERC721 asset
      * @param from The user from which the xTokens are transferred
      * @param to The user receiving the xTokens
      * @param balanceFromBefore The xToken balance of the `from` user before the transfer
@@ -540,6 +541,7 @@ interface IPoolCore {
      */
     function finalizeTransferERC721(
         address asset,
+        uint256 tokenId,
         address from,
         address to,
         bool usedAsCollateral,

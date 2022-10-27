@@ -179,23 +179,6 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function setReserveDynamicConfigsStrategyAddress(
-        address asset,
-        address dynamicConfigsStrategyAddress
-    ) external virtual override onlyPoolConfigurator {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        require(
-            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
-            Errors.ASSET_NOT_LISTED
-        );
-        ps
-            ._reserves[asset]
-            .dynamicConfigsStrategyAddress = dynamicConfigsStrategyAddress;
-    }
-
-    /// @inheritdoc IPoolParameters
     function setConfiguration(
         address asset,
         DataTypes.ReserveConfigurationMap calldata configuration
@@ -314,6 +297,17 @@ contract PoolParameters is
                 ps,
                 ADDRESSES_PROVIDER.getPriceOracle()
             );
+    }
+
+    function getAssetLtvAndLT(address asset, uint256 tokenId)
+        external
+        view
+        virtual
+        override
+        returns (uint256 ltv, uint256 lt)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return PoolLogic.executeGetAssetLtvAndLT(ps, asset, tokenId);
     }
 
     /// @inheritdoc IPoolParameters

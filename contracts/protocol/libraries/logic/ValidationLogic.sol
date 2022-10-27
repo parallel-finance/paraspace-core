@@ -756,7 +756,7 @@ library ValidationLogic {
      * @param reservesCount The number of available reserves
      * @param oracle The price oracle
      */
-    function validateHFAndLtv(
+    function validateHFAndLtvERC20(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap memory userConfig,
@@ -765,7 +765,7 @@ library ValidationLogic {
         uint256 reservesCount,
         address oracle
     ) internal view {
-        DataTypes.ReserveData memory reserve = reservesData[asset];
+        DataTypes.ReserveData storage reserve = reservesData[asset];
 
         (, bool hasZeroLtvCollateral) = validateHealthFactor(
             reservesData,
@@ -780,6 +780,61 @@ library ValidationLogic {
             !hasZeroLtvCollateral || reserve.configuration.getLtv() == 0,
             Errors.LTV_VALIDATION_FAILED
         );
+    }
+
+    /**
+     * @notice Validates the health factor of a user and the ltv of the erc721 asset being withdrawn.
+     * @param reservesData The state of all the reserves
+     * @param reservesList The addresses of all the active reserves
+     * @param userConfig The state of the user for the specific reserve
+     * @param asset The asset for which the ltv will be validated
+     * @param tokenIds The asset tokenIds for which the ltv will be validated
+     * @param from The user from which the xTokens are being transferred
+     * @param reservesCount The number of available reserves
+     * @param oracle The price oracle
+     */
+    function validateHFAndLtvERC721(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        DataTypes.UserConfigurationMap memory userConfig,
+        address asset,
+        uint256[] memory tokenIds,
+        address from,
+        uint256 reservesCount,
+        address oracle
+    ) internal view {
+        DataTypes.ReserveData storage reserve = reservesData[asset];
+
+        (, bool hasZeroLtvCollateral) = validateHealthFactor(
+            reservesData,
+            reservesList,
+            userConfig,
+            from,
+            reservesCount,
+            oracle
+        );
+
+        if (hasZeroLtvCollateral) {
+            INToken nToken = INToken(reserve.xTokenAddress);
+            if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+                for (uint256 index = 0; index < tokenIds.length; index++) {
+                    (uint256 assetLTV, ) = GenericLogic.getLtvAndLTForUniswapV3(
+                        reservesData,
+                        asset,
+                        tokenIds[index],
+                        reserve.configuration.getLtv(),
+                        0
+                    );
+                    require(assetLTV == 0, Errors.LTV_VALIDATION_FAILED);
+                }
+            } else {
+                require(
+                    !hasZeroLtvCollateral ||
+                        reserve.configuration.getLtv() == 0,
+                    Errors.LTV_VALIDATION_FAILED
+                );
+            }
+        }
     }
 
     /**
