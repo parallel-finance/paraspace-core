@@ -75,7 +75,7 @@ describe("erc721 as pool_core withdraw unit case", () => {
     ).to.be.revertedWith(ProtocolErrors.INVALID_ASSET_TYPE);
   });
 
-  it("TC-erc721-withdraw-06:User1 withdraw ERC-721 in pledge state will reverted", async () => {
+  it("TC-erc721-withdraw-06:User1 withdraw Collateral opened ERC-721 without debt will success", async () => {
     const {
       users: [user1],
       bayc,
@@ -85,11 +85,16 @@ describe("erc721 as pool_core withdraw unit case", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, [0], true)
+    );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
         .withdrawERC721(bayc.address, [0], user1.address)
     );
   });
 
-  it("TC-erc721-withdraw-07:UUser1 withdraw the deposited ERC-721 will success", async () => {
+  it("TC-erc721-withdraw-07:User1 withdraw the deposited ERC-721 will success", async () => {
     const {
       users: [user1],
       bayc,
