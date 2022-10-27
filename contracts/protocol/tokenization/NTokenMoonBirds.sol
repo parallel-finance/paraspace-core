@@ -36,7 +36,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) external virtual override onlyPool returns (bool) {
+    ) public virtual override onlyPool returns (bool) {
         bool isLastUncollateralized = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
@@ -103,11 +103,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
     function nestingPeriod(uint256 tokenId)
         external
         view
-        returns (
-            bool nesting,
-            uint256 current,
-            uint256 total
-        )
+        returns (bool nesting, uint256 current, uint256 total)
     {
         return IMoonBird(_underlyingAsset).nestingPeriod(tokenId);
     }
