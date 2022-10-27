@@ -8,9 +8,9 @@ import {
 import {MintableERC20, MockAggregator} from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
-import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import ParaSpaceConfig from "../deploy/market-config";
 
 describe("ParaSpaceOracle", () => {
   let snap: string;
@@ -30,7 +30,7 @@ describe("ParaSpaceOracle", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     mockToken = await deployMintableERC20(["MOCK", "MOCK", "18"]);
-    assetPrice = MOCK_CHAINLINK_AGGREGATORS_PRICES.WETH;
+    assetPrice = ParaSpaceConfig.Mocks.AllAssetsInitialPrices.WETH;
     mockAggregator = await deployMockAggregator("MOCK", assetPrice);
   });
 
@@ -136,7 +136,7 @@ describe("ParaSpaceOracle", () => {
 
     // Check returns the fixed price BASE_CURRENCY_UNIT
     expect(await paraspaceOracle.getAssetPrice(weth.address)).to.be.eq(
-      MOCK_CHAINLINK_AGGREGATORS_PRICES.WETH
+      ParaSpaceConfig.Mocks.AllAssetsInitialPrices.WETH
     );
   });
 

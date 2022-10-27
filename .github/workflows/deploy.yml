@@ -21,7 +21,7 @@ jobs:
     name: Deployment
     runs-on: ubuntu-latest
     env:
-      RPC_URL: ${{ secrets.RPC_URL }}
+      INFURA_KEY: ${{ secrets.INFURA_KEY }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
       NETWORK: ${{ github.event.inputs.network }}
@@ -50,7 +50,7 @@ jobs:
       - name: Deploy
         run: |
           echo NETWORK=${{ env.NETWORK }} >> .env
-          echo RPC_URL=${{ env.RPC_URL }} >> .env
+          echo INFURA_KEY=${{ env.INFURA_KEY }} >> .env
           echo DEPLOYER_MNEMONIC=${{ env.DEPLOYER_MNEMONIC }} >> .env
           echo ETHERSCAN_KEY=${{ env.ETHERSCAN_KEY }} >> .env
           echo ETHERSCAN_VERIFICATION=${{ env.ETHERSCAN_VERIFICATION }} >> .env

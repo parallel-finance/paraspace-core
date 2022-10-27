@@ -5,6 +5,7 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {RebasingPToken} from "./RebasingPToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title aToken Rebasing PToken
@@ -25,5 +26,9 @@ contract PTokenAToken is RebasingPToken {
             IAToken(_underlyingAsset).POOL().getReserveNormalizedIncome(
                 IAToken(_underlyingAsset).UNDERLYING_ASSET_ADDRESS()
             );
+    }
+
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.PTokenAToken;
     }
 }

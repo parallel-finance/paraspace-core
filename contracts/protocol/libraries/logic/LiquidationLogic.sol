@@ -394,6 +394,18 @@ library LiquidationLogic {
                         referralCode: 0
                     })
                 );
+                if (
+                    !userConfig.isUsingAsCollateral(liquidationAssetReserveId)
+                ) {
+                    userConfig.setUsingAsCollateral(
+                        liquidationAssetReserveId,
+                        true
+                    );
+                    emit ReserveUsedAsCollateralEnabled(
+                        params.liquidationAsset,
+                        params.user
+                    );
+                }
             } else {
                 // if the actual debt that is getting liquidated > user global debt then pay back excess to user
                 IERC20(params.liquidationAsset).safeTransferFrom(
@@ -600,7 +612,7 @@ library LiquidationLogic {
         // userTotalDebt = debt of the borrowed position needed for liquidation
         uint256 userTotalDebt = Helpers.getUserCurrentDebt(
             params.user,
-            liquidationAssetReserveCache
+            liquidationAssetReserveCache.variableDebtTokenAddress
         );
 
         uint256 actualDebtToLiquidate = params.liquidationAmount > userTotalDebt

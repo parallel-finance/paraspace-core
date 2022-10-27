@@ -8,7 +8,7 @@ task(
 ).setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   const {step_12} = await import(
-    "../../deploy/tasks/deployments/testnet/steps/12_uiIncentiveDataProvider"
+    "../../deploy/tasks/deployments/full-deployment/steps/12_uiIncentiveDataProvider"
   );
   await step_12(verify);
 });
