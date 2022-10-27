@@ -307,7 +307,11 @@ deploy-fallbackOracle:
 
 .PHONY: deploy-allAggregators
 deploy-allAggregators:
-	make TASK_NAME=deploy:all-mock-aggregators run-task
+	make TASK_NAME=deploy:all-aggregators run-task
+
+.PHONY: deploy-allReserves
+deploy-allReserves:
+	make TASK_NAME=deploy:all-allReserves run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
