@@ -32,6 +32,7 @@ describe("ValidationLogic: Edge cases", () => {
     HEALTH_FACTOR_NOT_BELOW_THRESHOLD,
     UNDERLYING_BALANCE_ZERO,
     HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD,
+    NOT_ENOUGH_LIQUIDITY_IN_RESERVE,
   } = ProtocolErrors;
 
   let snap: string;
@@ -231,6 +232,17 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool.connect(user.signer).borrow(dai.address, 0, 0, user.address)
     ).to.be.revertedWith(INVALID_AMOUNT);
+  });
+
+  it("validateBorrow() when reserve has no liquidity (revert expected)", async () => {
+    const {pool, users, dai} = testEnv;
+    const user = users[0];
+
+    await expect(
+      pool
+        .connect(user.signer)
+        .borrow(dai.address, utils.parseEther("300"), 0, user.address)
+    ).to.be.revertedWith(NOT_ENOUGH_LIQUIDITY_IN_RESERVE);
   });
 
   it("validateBorrow() when borrowing is not enabled (revert expected)", async () => {

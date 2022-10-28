@@ -200,6 +200,7 @@ library DataTypes {
         address asset;
         address userAddress;
         uint256 amount;
+        bool releaseUnderlying;
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;

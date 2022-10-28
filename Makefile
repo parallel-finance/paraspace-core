@@ -117,6 +117,10 @@ test-interest-overflow:
 test-ltv-validation:
 	make TEST_TARGET=ltv-validation.spec.ts test
 
+.PHONY: test-validation-logic
+test-validation-logic:
+	make TEST_TARGET=validation-logic.spec.ts test	
+
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test

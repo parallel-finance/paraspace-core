@@ -252,6 +252,17 @@ library ValidationLogic {
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
 
+        if (params.releaseUnderlying) {
+            vars.availableLiquidity = IERC20(params.asset).balanceOf(
+                params.reserveCache.xTokenAddress
+            );
+
+            require(
+                vars.availableLiquidity >= params.amount,
+                Errors.NOT_ENOUGH_LIQUIDITY_IN_RESERVE
+            );
+        }
+
         vars.reserveDecimals = params
             .reserveCache
             .reserveConfiguration

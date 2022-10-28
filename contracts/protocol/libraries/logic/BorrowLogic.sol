@@ -69,6 +69,7 @@ library BorrowLogic {
                 asset: params.asset,
                 userAddress: params.onBehalfOf,
                 amount: params.amount,
+                releaseUnderlying: params.releaseUnderlying,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
                 priceOracleSentinel: params.priceOracleSentinel
