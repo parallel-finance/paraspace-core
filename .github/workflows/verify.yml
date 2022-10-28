@@ -43,10 +43,10 @@ jobs:
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
       CONFIGS_BASE_URL: ${{ secrets.CONFIGS_BASE_URL }}
-      NETWORK: "goerli"
-      ETHERSCAN_VERIFICATION: "true"
-      ETHERSCAN_VERIFICATION_CONTRACTS: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport"
-      REF: "72303f98aaf92db2957588245343f0e4a0f1dfda"
+      NETWORK: goerli
+      ETHERSCAN_VERIFICATION: true
+      ETHERSCAN_VERIFICATION_CONTRACTS: *Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport
+      REF: 72303f98aaf92db2957588245343f0e4a0f1dfda
       ETHERSCAN_VERIFICATION_JOBS: 4
 
     steps:
@@ -70,14 +70,14 @@ jobs:
           yarn
 
       - name: Get deployment date
-        id: deploymentId
-        run: echo ::set-output name=value::$(git show -s --format=%cd --date=format:%m%d ${{ env.REF }})
+        id: deploymentInfo
+        run: echo ::set-output name=date::$(git show -s --format=%cd --date=format:%m%d ${{ env.REF }})
 
       - name: Download deployed-contracts.json
         run: |
           curl -H 'Authorization: token ${{ secrets.PAT }}' \
             -H 'Accept: application/vnd.github.v3.raw' \
-            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.1023.json
+            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.${{  steps.deploymentInfo.outputs.date }}.json
 
       - name: Verification
         run: |
