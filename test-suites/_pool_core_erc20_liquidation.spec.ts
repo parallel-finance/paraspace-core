@@ -286,7 +286,7 @@ describe("ERC-20 Liquidation Tests", () => {
     );
   });
 
-  it("TC-erc20-liquidation-11 Liquidate user with one ERC-20 and multipe ERC-20 borrowed positions", async () => {
+  it("TC-erc20-liquidation-11 Liquidate user with one ERC-20 and multiple ERC-20 borrowed positions", async () => {
     const {
       weth,
       users: [borrower, liquidator],
