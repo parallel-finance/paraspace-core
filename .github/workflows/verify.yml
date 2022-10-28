@@ -43,10 +43,10 @@ jobs:
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
       CONFIGS_BASE_URL: ${{ secrets.CONFIGS_BASE_URL }}
-      NETWORK: goerli
-      ETHERSCAN_VERIFICATION: true
-      ETHERSCAN_VERIFICATION_CONTRACTS: *Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport
-      REF: 72303f98aaf92db2957588245343f0e4a0f1dfda
+      NETWORK: "goerli"
+      ETHERSCAN_VERIFICATION: "true"
+      ETHERSCAN_VERIFICATION_CONTRACTS: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport"
+      REF: "72303f98aaf92db2957588245343f0e4a0f1dfda"
       ETHERSCAN_VERIFICATION_JOBS: 4
 
     steps:
