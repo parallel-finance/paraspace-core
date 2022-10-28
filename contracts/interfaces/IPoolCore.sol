@@ -591,12 +591,6 @@ interface IPoolCore {
     function MAX_NUMBER_RESERVES() external view returns (uint16);
 
     /**
-     * @notice Returns the maximum allowed number of atomic tokens per user
-     * @return The maximum allowed number of atomic tokens per user
-     */
-    function MAX_ATOMIC_TOKENS_ALLOWED() external view returns (uint24);
-
-    /**
      * @notice Returns the auction recovery health factor
      * @return The auction recovery health factor
      */

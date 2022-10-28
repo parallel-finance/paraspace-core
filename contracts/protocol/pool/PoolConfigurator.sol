@@ -346,15 +346,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setMaxAtomicTokensAllowed(uint24 value)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
-        _pool.setMaxAtomicTokensAllowed(value);
-    }
-
-    /// @inheritdoc IPoolConfigurator
     function setAuctionRecoveryHealthFactor(uint64 value)
         external
         override

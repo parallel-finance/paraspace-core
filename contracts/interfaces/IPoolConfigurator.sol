@@ -251,12 +251,6 @@ interface IPoolConfigurator {
     function setReservePause(address asset, bool paused) external;
 
     /**
-     * @notice set the maximum allowed atomic tokens per user
-     * @param value The maximum amount
-     */
-    function setMaxAtomicTokensAllowed(uint24 value) external;
-
-    /**
      * @notice set the auction recovery health factor
      * @param value The auction recovery health factor
      */

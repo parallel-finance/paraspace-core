@@ -651,19 +651,6 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function MAX_ATOMIC_TOKENS_ALLOWED()
-        external
-        view
-        virtual
-        override
-        returns (uint24)
-    {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        return ps._maxAtomicTokensAllowed;
-    }
-
-    /// @inheritdoc IPoolCore
     function AUCTION_RECOVERY_HEALTH_FACTOR()
         external
         view

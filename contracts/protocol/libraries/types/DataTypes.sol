@@ -67,9 +67,6 @@ library DataTypes {
          * asset is borrowed by the user.
          */
         uint256 data;
-        // counter for atomic erc721 tokens.
-        // this is used to limit the total number of atomic erc721 the user can supply
-        uint24 userAtomicTokens;
         // auction validity time for closing invalid auctions in one tx.
         uint256 auctionValidityTime;
     }
@@ -342,8 +339,6 @@ library DataTypes {
         mapping(uint256 => address) _reservesList;
         // Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
         uint16 _reservesCount;
-        // Maximum allowed number of atomic tokens per user
-        uint24 _maxAtomicTokensAllowed;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
     }

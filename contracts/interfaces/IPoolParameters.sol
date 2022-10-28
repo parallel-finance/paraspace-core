@@ -104,36 +104,6 @@ interface IPoolParameters {
     ) external;
 
     /**
-     * @notice increase user's total atomic tokens counter
-     * @param asset The address of the ntoken underlying asset
-     * @param user The address of the user
-     * @param changeBy The amount to increase by
-     */
-    function increaseUserTotalAtomicTokens(
-        address asset,
-        address user,
-        uint24 changeBy
-    ) external;
-
-    /**
-     * @notice decrease user's total atomic tokens counter
-     * @param asset The address of the ntoken underlying asset
-     * @param user The address of the user
-     * @param changeBy The amount to decrease by
-     */
-    function decreaseUserTotalAtomicTokens(
-        address asset,
-        address user,
-        uint24 changeBy
-    ) external;
-
-    /**
-     * @notice set the maximum allowed atomic tokens per user
-     * @param value The maximum amount
-     */
-    function setMaxAtomicTokensAllowed(uint24 value) external;
-
-    /**
      * @notice Set the auction recovery health factor
      * @param value The new auction health factor
      */
