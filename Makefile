@@ -73,6 +73,10 @@ test-ntoken:
 test-ntoken-punk:
 	make TEST_TARGET=ntoken-punk.spec.ts test
 
+.PHONY: test-erc20-liquidation
+test-erc20-liquidation:
+	make TEST_TARGET=_pool_core_erc20_liquidation.spec.ts test
+
 .PHONY: test-liquidation
 test-liquidation:
 	make TEST_TARGET=liquidation.spec.ts test

@@ -189,7 +189,7 @@ export const supplyAndValidate = async (
       expect(healthFactor).to.equal(healthFactorBefore);
     } else {
       expect(healthFactor).to.be.gt(healthFactorBefore);
-      expect(erc721HealthFactor).to.be.gt(erc721HealthFactorBefore);
+      expect(erc721HealthFactor).to.be.gte(erc721HealthFactorBefore);
     }
   } else {
     expect(healthFactor).to.equal(healthFactorBefore);
@@ -623,27 +623,42 @@ const checkAfterLiquidationERC20 = async (
     after.borrowerCollateralXTokenBalance,
     before.borrowerCollateralXTokenBalance.sub(
       collateralAmountToLiquidateWithBonus
-    )
+    ),
+    BigNumber.from(liquidationAmountToBeUsed).div(10000).mul(2) // allow 0.002% interest error
   );
 
   // borrower debtToken balance is subtracted liquidationAmountToBeUsed
   assertAlmostEqual(
     after.borrowerLiquidationDebtTokenBalance,
-    before.borrowerLiquidationDebtTokenBalance.sub(liquidationAmountToBeUsed)
+    before.borrowerLiquidationDebtTokenBalance.sub(liquidationAmountToBeUsed),
+    BigNumber.from(liquidationAmountToBeUsed).div(10000).mul(2) // allow 0.002% interest error
   );
+
+  const liqFeePercent = await (
+    await getProtocolDataProvider()
+  ).getLiquidationProtocolFee(before.collateralToken.address);
+  // protocol fee % is taken from the bonus
+  const bonus = collateralAmountToLiquidateWithBonus.sub(
+    collateralAmountToLiquidateWithBonus.mul(10000).div(before.liquidationBonus)
+  );
+  const liqFeeAmount = liqFeePercent.gt(0)
+    ? bonus.percentMul(liqFeePercent)
+    : BigNumber.from(0);
 
   if (before.receiveXToken) {
     // liquidator's liquidation token balance is subtracted the amount used
     assertAlmostEqual(
       after.liquidatorLiquidationAssetBalance,
-      before.liquidatorLiquidationAssetBalance.sub(liquidationAmountToBeUsed)
+      before.liquidatorLiquidationAssetBalance.sub(liquidationAmountToBeUsed),
+      BigNumber.from(liquidationAmountToBeUsed).div(10000).mul(2) // allow 0.002% interest error
     );
     // liquidator's collateral pToken balance is incremented in collateralAmountToLiquidateWithBonus
     assertAlmostEqual(
       after.liquidatorCollateralXTokenBalance,
       before.liquidatorCollateralXTokenBalance.add(
-        collateralAmountToLiquidateWithBonus
-      )
+        collateralAmountToLiquidateWithBonus.sub(liqFeeAmount)
+      ),
+      BigNumber.from(collateralAmountToLiquidateWithBonus).div(10000).mul(2) // allow 0.002% interest error
     );
     // Collateral token TVL stays the same
     assertAlmostEqual(after.collateralTokenTVL, before.collateralTokenTVL);
@@ -655,19 +670,15 @@ const checkAfterLiquidationERC20 = async (
       (await before.liquidationToken.symbol()) ==
       (await before.collateralToken.symbol())
     ) {
-      expect(after.liquidatorCollateralTokenBalance).to.eq(
-        before.liquidatorCollateralTokenBalance.add(
-          collateralAmountToLiquidateWithBonus.sub(
-            collateralAmountToLiquidateWithBonus
-              .mul(10000)
-              .div(before.liquidationBonus)
-          )
-        )
+      assertAlmostEqual(
+        after.liquidatorCollateralTokenBalance,
+        before.liquidatorCollateralTokenBalance.add(bonus.sub(liqFeeAmount))
       );
     } else {
-      expect(after.liquidatorCollateralTokenBalance).to.eq(
+      assertAlmostEqual(
+        after.liquidatorCollateralTokenBalance,
         before.liquidatorCollateralTokenBalance.add(
-          collateralAmountToLiquidateWithBonus
+          collateralAmountToLiquidateWithBonus.sub(liqFeeAmount)
         )
       );
     }

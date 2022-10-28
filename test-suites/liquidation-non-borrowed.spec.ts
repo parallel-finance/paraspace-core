@@ -1,8 +1,5 @@
 import {expect} from "chai";
-import {
-  getMockAggregator,
-  getParaSpaceOracle,
-} from "../deploy/helpers/contracts-getters";
+import {getMockAggregator} from "../deploy/helpers/contracts-getters";
 import {
   assertAlmostEqual,
   borrowAndValidate,
@@ -17,20 +14,10 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {assert} from "console";
 import {TestEnv} from "./helpers/make-suite";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {MAX_UINT_AMOUNT, oneEther} from "../deploy/helpers/constants";
-import {ProtocolErrors} from "../deploy/helpers/types";
 import "./helpers/utils/wadraymath";
-import {parseUnits} from "ethers/lib/utils";
 
 describe("ERC721 Liquidation - non-borrowed token", () => {
   let testEnv: TestEnv;
-
-  const {
-    INVALID_HF,
-    SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER,
-    HEALTH_FACTOR_NOT_BELOW_THRESHOLD,
-  } = ProtocolErrors;
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -130,104 +117,5 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
             before.liquidationAssetPrice
           )
     );
-  });
-
-  it("liquidates ERC-20 with non-borrowed token is not allowed", async () => {
-    const {
-      dai,
-      usdc,
-      weth,
-      users: [depositor, borrower, liquidator],
-      pool,
-    } = testEnv;
-
-    //mints DAI to depositor
-    await dai
-      .connect(depositor.signer)
-      ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "1000"));
-
-    //approve protocol to access depositor wallet
-    await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
-
-    //user 1 deposits DAI
-    const amountDAItoDeposit = await convertToCurrencyDecimals(
-      dai.address,
-      "1000"
-    );
-    await pool
-      .connect(depositor.signer)
-      .supply(dai.address, amountDAItoDeposit, depositor.address, "0");
-
-    const amountETHtoDeposit = await convertToCurrencyDecimals(
-      weth.address,
-      "0.3"
-    );
-
-    //mints WETH to borrower
-    await weth.connect(borrower.signer)["mint(uint256)"](amountETHtoDeposit);
-
-    //approve protocol to access borrower wallet
-    await weth.connect(borrower.signer).approve(pool.address, MAX_UINT_AMOUNT);
-
-    //user 2 deposits WETH
-    await pool
-      .connect(borrower.signer)
-      .supply(weth.address, amountETHtoDeposit, borrower.address, "0");
-
-    //user 2 borrows
-    const userGlobalData = await pool.getUserAccountData(borrower.address);
-
-    const daiPrice = await (await getParaSpaceOracle())
-      .connect(borrower.address)
-      .getAssetPrice(dai.address);
-
-    const amountDAIToBorrow = await convertToCurrencyDecimals(
-      dai.address,
-      userGlobalData.availableBorrowsBase
-        .div(daiPrice.toString())
-        .percentMul(9500)
-        .toString()
-    );
-    await pool
-      .connect(borrower.signer)
-      .borrow(dai.address, amountDAIToBorrow, "0", borrower.address);
-
-    const userGlobalDataAfterBorrow = await pool.getUserAccountData(
-      borrower.address
-    );
-
-    expect(userGlobalDataAfterBorrow.currentLiquidationThreshold).to.be.equal(
-      8050,
-      "Invalid liquidation threshold"
-    );
-
-    //someone tries to liquidate user 2
-    await expect(
-      pool.liquidationCall(weth.address, dai.address, borrower.address, 1, true)
-    ).to.be.revertedWith(HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
-
-    await changePriceAndValidate(dai, daiPrice.percentMul(12000).toString());
-
-    const userGlobalDataAfterPriceChange = await pool.getUserAccountData(
-      borrower.address
-    );
-
-    expect(userGlobalDataAfterPriceChange.healthFactor).to.be.lt(
-      oneEther,
-      INVALID_HF
-    );
-
-    //user 2 tries to borrow
-    await expect(
-      pool
-        .connect(liquidator.signer)
-        .liquidationCall(
-          weth.address,
-          usdc.address,
-          borrower.address,
-          parseUnits("20000", 18),
-          false
-        )
-    ).to.be.revertedWith(SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER);
   });
 });

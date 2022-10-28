@@ -32,8 +32,6 @@ const fixture = async () => {
 
   // Borrower deposits 3 BAYC and 5k DAI
   await supplyAndValidate(bayc, "3", borrower, true);
-
-  await supplyAndValidate(dai, "5000", borrower, true);
   // use only one BAYC as collateral
   await switchCollateralAndValidate(borrower, bayc, false, 1);
   await switchCollateralAndValidate(borrower, bayc, false, 2);
@@ -48,27 +46,6 @@ const fixture = async () => {
 };
 
 describe("Liquidation Tests", () => {
-  it("Liquidator tries to liquidate ERC-20 on a healthy position [HF ~ 1.0 - 1.1] (should be reverted)", async () => {
-    const {
-      users: [borrower, liquidator],
-      dai,
-      bayc,
-    } = await loadFixture(fixture);
-
-    // drop BAYC price to near liquidation limit (HF ~ 1.0 - 1.1)
-    await changePriceAndValidate(bayc, "15");
-
-    await liquidateAndValidateReverted(
-      dai,
-      dai,
-      "1000",
-      liquidator,
-      borrower,
-      false,
-      ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-    );
-  });
-
   it("Liquidator attempts to liquidate ERC-721 first (should be reverted)", async () => {
     const {
       users: [borrower, liquidator],
@@ -88,32 +65,6 @@ describe("Liquidation Tests", () => {
       false,
       ProtocolErrors.AUCTION_NOT_STARTED
     );
-  });
-
-  it("Liquidator partially liquidates ERC-20 - receives asset", async () => {
-    const {
-      users: [borrower, liquidator],
-      bayc,
-      dai,
-    } = await loadFixture(fixture);
-
-    // BAYC price drops enough so that borrower becomes eligible for liquidation
-    await changePriceAndValidate(bayc, "12");
-
-    await liquidateAndValidate(dai, dai, "1000", liquidator, borrower, false);
-  });
-
-  it("Liquidator fully liquidates ERC-20 - receives pToken", async () => {
-    const {
-      users: [borrower, liquidator],
-      dai,
-      bayc,
-    } = await loadFixture(fixture);
-
-    // BAYC price drops enough so that borrower becomes eligible for liquidation
-    await changePriceAndValidate(bayc, "12");
-
-    await liquidateAndValidate(dai, dai, "40000", liquidator, borrower, true);
   });
 
   it("Liquidator liquidates ERC-721 (pays debt partially) with borrowed token - gets nToken", async () => {
