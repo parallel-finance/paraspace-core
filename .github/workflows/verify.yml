@@ -78,7 +78,7 @@ jobs:
         run: |
           curl -H 'Authorization: token ${{ secrets.PAT }}' \
             -H 'Accept: application/vnd.github.v3.raw' \
-            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.1023.json
+            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.${{ steps.deploymentInfo.outputs.date }}.json
 
       - name: Verification
         run: |
