@@ -472,13 +472,14 @@ contract PoolCore is
         );
     }
 
+    /// @inheritdoc IPoolCore
     function liquidationERC721WithEther(
         address collateralAsset,
         address user,
         uint256 collateralTokenId,
         uint256 liquidationAmount,
         bool receiveNToken
-    ) external virtual nonReentrant {
+    ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         LiquidationLogic.executeERC721LiquidationWithEther(
