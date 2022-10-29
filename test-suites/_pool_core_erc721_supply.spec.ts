@@ -12,44 +12,8 @@ import {
 } from "./helpers/validated-steps";
 import {MintableERC721} from "../types";
 
-//FIXME(alan): "Functionality tests of ERC721 supply in PoolCore contract"
-describe("erc721 as pool_core supply unit case", () => {
-  //FIXME(alan): "User shouldn't supply ERC721 token when he doesn't have it"
-  //HINT(alan): The case is overlapped with Supply-02, 03
-  it("TC-erc721-supply-01:User1 supply ERC-721 Not mint nor approve will reverted", async () => {
-    const {
-      users: [user3],
-      bayc,
-      pool,
-    } = await loadFixture(testEnvFixture);
-
-    await expect(
-      pool
-        .connect(user3.signer)
-        .supplyERC721(
-          bayc.address,
-          [{tokenId: 0, useAsCollateral: false}],
-          user3.address,
-          "0"
-        )
-    ).to.be.revertedWith("ERC721: operator query for nonexistent token");
-  });
-
-  //FIXME(alan): "User shouldn't supply ERC721 token when he doesn't approve"
-  it("TC-erc721-supply-02:User1 supply Not approved before ERC-721 will reverted", async () => {
-    const {
-      users: [user1],
-      bayc,
-    } = await loadFixture(testEnvFixture);
-
-    //FATAL(alan): It will automatically approve!
-    await expect(supplyAndValidate(bayc, "1", user1, false)).to.be.revertedWith(
-      "ERC721: operator query for nonexistent token"
-    );
-  });
-
-  //FIXME(alan): "User shouldn't supply ERC721 token when he didn't own it"
-  it("TC-erc721-supply-03:User1 supply ERC-721 Not mint will reverted", async () => {
+describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
+  it("TC-erc721-supply-01:User shouldn't supply ERC721 token when he didn't own it", async () => {
     const {
       users: [user1],
       bayc,
@@ -73,52 +37,63 @@ describe("erc721 as pool_core supply unit case", () => {
     ).to.be.revertedWith("ERC721: operator query for nonexistent token");
   });
 
-  //FATAL(alan): Invalid case
-  it("TC-erc721-supply-04:User1 supply no existing tokenId will reverted", async () => {
-    const tokenId = 78997;
+  it("TC-erc721-supply-02:User shouldn't supply ERC721 token when he doesn't approve", async () => {
     const {
       users: [user1],
       bayc,
       pool,
     } = await loadFixture(testEnvFixture);
 
+    await mintAndValidate(bayc, "1", user1);
     await expect(
       pool
         .connect(user1.signer)
         .supplyERC721(
           bayc.address,
-          [{tokenId: tokenId, useAsCollateral: false}],
+          [{tokenId: 0, useAsCollateral: false}],
           user1.address,
           "0"
         )
-    ).to.be.revertedWith("ERC721: operator query for nonexistent token");
+    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
   });
 
-  //FIXME(alan): "User should supply ERC721 tokens when part of tokens are not owned by him"
-  it("TC-erc721-supply-05::User1 supply multiple ERC-721s, some owned, some non-existent will reverted", async () => {
+  it("TC-erc721-supply-03:User shouldn't supply ERC721 tokens when part of tokens are not owned by him", async () => {
     const {
-      users: [user1],
+      users: [user1, user2],
       bayc,
       pool,
     } = await loadFixture(testEnvFixture);
 
-    await mintAndValidate(bayc, "2", user1);
+    await waitForTx(
+      await bayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await bayc.connect(user2.signer)["mint(address)"](user2.address)
+    );
+    await waitForTx(
+      await (bayc as MintableERC721)
+        .connect(user1.signer)
+        .setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await (bayc as MintableERC721)
+        .connect(user2.signer)
+        .setApprovalForAll(pool.address, true)
+    );
     await expect(
       pool.connect(user1.signer).supplyERC721(
         bayc.address,
         [
           {tokenId: 0, useAsCollateral: false},
           {tokenId: 1, useAsCollateral: false},
-          {tokenId: 2, useAsCollateral: false},
         ],
         user1.address,
         "0"
       )
-    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
+    ).to.be.revertedWith("ERC721: transfer from incorrect owner");
   });
 
-  //FIXME(alan): "User should supply an owned ERC721 token"
-  it("TC-erc721-supply-06:User1 supplies an owned ERC-721 will succeed", async () => {
+  it("TC-erc721-supply-04:User should supply an owned ERC721 token", async () => {
     const {
       users: [user1],
       bayc,
@@ -139,8 +114,7 @@ describe("erc721 as pool_core supply unit case", () => {
       await supplyAndValidate(bayc, "1", user1, true);
     });
 
-    //FIXME(alan): "User shouldn't transfer nToken"
-    it("TC-erc721-supply-07:User1 transfers the supplied nToken will reverted", async () => {
+    it("TC-erc721-supply-05:User shouldn't transfer nToken", async () => {
       const {
         nBAYC,
         users: [user1, user2],
@@ -153,7 +127,7 @@ describe("erc721 as pool_core supply unit case", () => {
       ).to.be.revertedWith("ERC721: operator query for nonexistent token");
     });
 
-    it("TC-erc721-supply-08:User1 supplies same NFT again will reverted", async () => {
+    it("TC-erc721-supply-06:User supplies same NFT again will reverted", async () => {
       const {
         users: [user1],
         bayc,
@@ -172,8 +146,7 @@ describe("erc721 as pool_core supply unit case", () => {
       ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
     });
 
-    //FIXME(alan): "User shouldn't borrow assets when he doesn't collateralize supplied ERC721"
-    it("TC-erc721-supply-09:User1 who supplied non-collateralized NFT borrows failed", async () => {
+    it("TC-erc721-supply-07:User shouldn't borrow assets when he doesn't collateralize supplied ERC721", async () => {
       const {
         users: [user1],
         bayc,
@@ -186,7 +159,6 @@ describe("erc721 as pool_core supply unit case", () => {
           .connect(user1.signer)
           .setUserUseERC721AsCollateral(bayc.address, [0], false)
       );
-
       await expect(
         pool
           .connect(user1.signer)
@@ -219,8 +191,7 @@ describe("erc721 as pool_core supply unit case", () => {
       await supplyAndValidate(dai, poolLiquidity, user2, true);
     });
 
-    //FIXME(alan): "User should borrow ERC20 token"
-    it("TC-erc721-supply-10:User1 borrow 1K Dai (User2 deposits 10k add liquidity) will success", async () => {
+    it("TC-erc721-supply-08:User should borrow ERC20 token when he has enough borrow capacity", async () => {
       const {
         users: [user1],
         bayc,
@@ -229,7 +200,6 @@ describe("erc721 as pool_core supply unit case", () => {
       } = testEnv;
 
       const borrowDaiFirst = "1000";
-
       await waitForTx(
         await pool
           .connect(user1.signer)
@@ -238,8 +208,7 @@ describe("erc721 as pool_core supply unit case", () => {
       await borrowAndValidate(dai, borrowDaiFirst, user1);
     });
 
-    //FIXME(alan): "User should borrow more ERC20 tokens when he has enough borrow capacity"
-    it("TC-erc721-supply-11:User1 has debt in case the Borrow again is less than the borrow limit of ERC-20 will success", async () => {
+    it("TC-erc721-supply-09:User should borrow more ERC20 tokens when he has enough borrow capacity", async () => {
       const {
         users: [user1],
         dai,
@@ -249,8 +218,7 @@ describe("erc721 as pool_core supply unit case", () => {
       await borrowAndValidate(dai, againBorrowAmount, user1);
     });
 
-    //FIXME(alan): "User shouldn't borrow ERC20 tokens if his debt would be over borrow limit but his hf is over liquidation threshold"
-    it("TC-erc721-supply-12:User1 borrow amount is greater than its borrow limit and does not reach the clearing line will reverted", async () => {
+    it("TC-erc721-supply-10:User shouldn't borrow ERC20 tokens if his debt would be over borrow limit but his hf is over liquidation threshold", async () => {
       const {
         users: [user1],
         dai,
@@ -264,7 +232,7 @@ describe("erc721 as pool_core supply unit case", () => {
         dai.address,
         userGlobalData.availableBorrowsBase
           .div(daiPrice.toString())
-          .add(await convertToCurrencyDecimals(dai.address, "10"))
+          .add(10)
           // .percentMul(9500)
           .toString()
       );
@@ -277,8 +245,7 @@ describe("erc721 as pool_core supply unit case", () => {
       ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
     });
 
-    //FIXME(alan): "User shouldn't borrow ERC20 tokens if his debt is over borrow limit and his hf is under liquidation threshold"
-    it("TC-erc721-supply-13:User1 borrow amount is greater than its borrow limit and reaches the clearing line will reverted", async () => {
+    it("TC-erc721-supply-11:User shouldn't borrow ERC20 tokens if his debt is over borrow limit and his hf is under liquidation threshold", async () => {
       const {
         users: [user1],
         dai,
@@ -290,16 +257,19 @@ describe("erc721 as pool_core supply unit case", () => {
       const daiPrice = await oracle.getAssetPrice(dai.address);
       const currentLiquidationThreshold =
         userGlobalData.currentLiquidationThreshold;
+      const availableBorrowsBase = userGlobalData.availableBorrowsBase;
       const totalCollateralBase = userGlobalData.totalCollateralBase;
       const amountDAIToBorrow = await convertToCurrencyDecimals(
         dai.address,
-        currentLiquidationThreshold
-          .mul(totalCollateralBase)
+        totalCollateralBase
+          .mul(currentLiquidationThreshold)
+          .div(10000)
           .div(daiPrice.toString())
-          .add(await convertToCurrencyDecimals(dai.address, "10"))
+          .add(10)
           // .percentMul(9500)
           .toString()
       );
+      await expect(amountDAIToBorrow).to.be.gt(availableBorrowsBase);
       await expect(
         pool
           .connect(user1.signer)
@@ -310,8 +280,7 @@ describe("erc721 as pool_core supply unit case", () => {
     });
   });
 
-  //FIXME(alan): "User should supply multiple ERC721 tokens"
-  it("TC-erc721-supply-15:User3 supply multiple types of ERC-721 will success", async () => {
+  it("TC-erc721-supply-12:User should supply multiple ERC721 tokens", async () => {
     const {
       users: [user1],
       doodles,
@@ -322,24 +291,12 @@ describe("erc721 as pool_core supply unit case", () => {
     await supplyAndValidate(mayc, "1", user1, true);
   });
 
-  //FIXME(alan): "User should supply many ERC721 tokens"
-  it("TC-erc721-supply-16:User3 supply any ERC-721s and will success", async () => {
+  it("TC-erc721-supply-13:User should supply many ERC721 tokens", async () => {
     const {
-      users: [, , user3],
+      users: [user1],
       mayc,
     } = await loadFixture(testEnvFixture);
 
-    await supplyAndValidate(mayc, "3", user3, true);
-  });
-
-  //FIXME(alan): "User should supply bulks of ERC721 tokens"
-  // 100 is too small for an edge case.
-  it("TC-erc721-supply-17:User3 supply more than multiple ERC-721s at one time will success", async () => {
-    const {
-      users: [, , user3],
-      mayc,
-    } = await loadFixture(testEnvFixture);
-
-    await supplyAndValidate(mayc, "100", user3, true);
+    await supplyAndValidate(mayc, "3", user1, true);
   });
 });
