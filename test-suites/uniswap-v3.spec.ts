@@ -723,7 +723,7 @@ describe("Uniswap V3", () => {
         );
     });
 
-    it("check ltv strategy", async () => {
+    it("check ltv strategy [ @skip-on-coverage ]", async () => {
       const {
         dai,
         weth,
@@ -778,7 +778,7 @@ describe("Uniswap V3", () => {
       expect(uniTokenConfig.ltv).to.be.equal(0);
     });
 
-    it("user supply weth and borrow dai", async () => {
+    it("user supply weth and borrow dai [ @skip-on-coverage ]", async () => {
       const {
         users: [user1, user2],
         dai,
@@ -820,7 +820,7 @@ describe("Uniswap V3", () => {
         .borrow(dai.address, daiBorrowAmount, 0, user1.address);
     });
 
-    it("user can only withdraw uniswapv3", async () => {
+    it("user can only withdraw uniswapv3 [ @skip-on-coverage ]", async () => {
       const {
         users: [user1],
         weth,
