@@ -22,7 +22,6 @@ import {
   withdrawAndValidate,
 } from "./helpers/validated-steps";
 import {snapshot} from "./helpers/snapshot-manager";
-import {parseEther} from "ethers/lib/utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -659,7 +658,6 @@ describe("Uniswap V3", () => {
         dai,
         weth,
         nftPositionManager,
-        nUniswapV3,
         pool,
       } = testEnv;
 
