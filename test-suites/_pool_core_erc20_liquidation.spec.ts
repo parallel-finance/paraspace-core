@@ -11,6 +11,9 @@ import {
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
+import {waitForTx} from "../deploy/helpers/misc-utils";
+import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -268,25 +271,7 @@ describe("ERC-20 Liquidation Tests", () => {
     expect(await variableDebtWeth.balanceOf(borrower.address)).to.be.gt(0);
   });
 
-  it("TC-erc20-liquidation-10 Liquidator liquidates by using an amount larger than total debt", async () => {
-    const {
-      weth,
-      users: [borrower, liquidator],
-      dai,
-    } = await loadFixture(fixture);
-    await changePriceAndValidate(dai, "0.80");
-
-    await liquidateAndValidate(
-      dai,
-      weth,
-      "100", // larger than total debt of 65 wETH
-      liquidator,
-      borrower,
-      false
-    );
-  });
-
-  it("TC-erc20-liquidation-11 Liquidate user with one ERC-20 and multiple ERC-20 borrowed positions", async () => {
+  it("TC-erc20-liquidation-10 Liquidate user with one ERC-20 and multiple ERC-20 borrowed positions", async () => {
     const {
       weth,
       users: [borrower, liquidator],
@@ -302,7 +287,7 @@ describe("ERC-20 Liquidation Tests", () => {
     await liquidateAndValidate(dai, weth, "65", liquidator, borrower, false);
   });
 
-  it("TC-erc20-liquidation-12 Liquidate user with multiple ERC-20 and one ERC-20 borrowed position", async () => {
+  it("TC-erc20-liquidation-11 Liquidate user with multiple ERC-20 and one ERC-20 borrowed position", async () => {
     const {
       weth,
       users: [borrower, liquidator],
@@ -318,7 +303,7 @@ describe("ERC-20 Liquidation Tests", () => {
     await liquidateAndValidate(dai, weth, "65", liquidator, borrower, false);
   });
 
-  it("TC-erc20-liquidation-13 Liquidate user with multiple ERC-20 and multiple ERC-20 borrowed positions", async () => {
+  it("TC-erc20-liquidation-12 Liquidate user with multiple ERC-20 and multiple ERC-20 borrowed positions", async () => {
     const {
       weth,
       users: [borrower, liquidator],
@@ -337,7 +322,7 @@ describe("ERC-20 Liquidation Tests", () => {
     await liquidateAndValidate(dai, weth, "65", liquidator, borrower, true);
   });
 
-  it("TC-erc20-liquidation-14 Liquidator liquidates full ERC-20 debt - with a protocol fee of 10%", async () => {
+  it("TC-erc20-liquidation-13 Liquidator liquidates full ERC-20 debt - with a protocol fee of 10%", async () => {
     const {
       configurator,
       protocolDataProvider,
@@ -375,7 +360,7 @@ describe("ERC-20 Liquidation Tests", () => {
     await liquidateAndValidate(dai, weth, "75", liquidator, borrower, true);
   });
 
-  it("TC-erc20-liquidation-15 Liquidator liquidates partial ERC-20 debt - with a protocol fee of 10%", async () => {
+  it("TC-erc20-liquidation-14 Liquidator liquidates partial ERC-20 debt - with a protocol fee of 10%", async () => {
     const {
       configurator,
       weth,
@@ -399,8 +384,6 @@ describe("ERC-20 Liquidation Tests", () => {
       treasuryAddress
     );
     const treasuryBalanceBefore = treasuryDataBefore.currentXTokenBalance;
-    console.log("treasuryBalanceBefore: " + treasuryBalanceBefore);
-    console.log("straight: " + (await pDai.balanceOf(treasuryAddress)));
 
     await liquidateAndValidate(
       dai,
@@ -416,33 +399,56 @@ describe("ERC-20 Liquidation Tests", () => {
       treasuryAddress
     );
     const treasuryBalanceAfter = treasuryDataAfter.currentXTokenBalance;
-    console.log("treasuryBalanceAfter: " + treasuryBalanceAfter);
-    console.log("after: " + (await pDai.balanceOf(treasuryAddress)));
+
+    const liquidationAmount = await convertToCurrencyDecimals(
+      dai.address,
+      "45"
+    );
+    const liquidationBonus = (
+      await protocolDataProvider.getReserveConfigurationData(dai.address)
+    ).liquidationBonus;
+
+    const bonusAmount = liquidationAmount.sub(
+      liquidationAmount.mul(10000).div(liquidationBonus)
+    );
+
+    const feeAmount = bonusAmount.percentMul(daiLiquidationProtocolFeeInput);
+
+    // 10% went to treasury
+    expect(treasuryBalanceAfter).to.be.closeTo(
+      treasuryBalanceBefore.add(feeAmount),
+      feeAmount
+    );
   });
 
-  // TODO(ivan.solomonoff): This functionality is currently unavailable and needs to be reviewed.
-  // it("TC-erc20-liquidation-16 Liquidator liquidates max possible amount by passing '-1' amount", async () => {
-  //   const {
-  //     weth,
-  //     users: [borrower, liquidator],
-  //     dai,
-  //   } = await loadFixture(fixture);
-  //   await changePriceAndValidate(dai, "0.80");
+  it("TC-erc20-liquidation-15 Liquidator liquidates max possible amount by passing 'MAX_INT' amount", async () => {
+    const {
+      weth,
+      users: [borrower, liquidator],
+      dai,
+      pool,
+    } = await loadFixture(fixture);
+    await changePriceAndValidate(dai, "0.80");
 
-  //   // liquidate asset
-  //   await waitForTx(
-  //     await (await getPoolProxy())
-  //       .connect(liquidator.signer)
-  //       .liquidationCall(
-  //         dai.address,
-  //         weth.address,
-  //         borrower.address,
-  //         -1,
-  //         false,
-  //         {
-  //           gasLimit: 5000000,
-  //         }
-  //       )
-  //   );
-  // });
+    // liquidate asset
+    await waitForTx(
+      await pool
+        .connect(liquidator.signer)
+        .liquidationCall(
+          dai.address,
+          weth.address,
+          borrower.address,
+          MAX_UINT_AMOUNT,
+          false,
+          {
+            gasLimit: 5000000,
+          }
+        )
+    );
+
+    // should've liquidated all debt (max)
+    expect(
+      (await pool.getUserAccountData(borrower.address)).totalDebtBase
+    ).to.eq(0);
+  });
 });
