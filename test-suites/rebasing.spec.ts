@@ -4,12 +4,12 @@ import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
-import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
+import ParaSpaceConfig from "../deploy/market-config";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
 describe("Rebasing tokens", () => {
-  BigNumber.from(MOCK_CHAINLINK_AGGREGATORS_PRICES.BAYC);
+  BigNumber.from(ParaSpaceConfig.Mocks.AllAssetsInitialPrices.BAYC);
   let testEnv: TestEnv;
 
   before(async () => {

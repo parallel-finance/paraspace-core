@@ -16,11 +16,11 @@ init: submodules
 
 .PHONY: test
 test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET}
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET}
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} # --verbose
 
 .PHONY: size
 size:
@@ -307,7 +307,11 @@ deploy-fallbackOracle:
 
 .PHONY: deploy-allAggregators
 deploy-allAggregators:
-	make TASK_NAME=deploy:all-mock-aggregators run-task
+	make TASK_NAME=deploy:all-aggregators run-task
+
+.PHONY: deploy-allReserves
+deploy-allReserves:
+	make TASK_NAME=deploy:all-allReserves run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:

@@ -1,13 +1,6 @@
-import {
-  evmRevert,
-  evmSnapshot,
-  getFunctionSignatureObjs,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
-
+import {evmRevert, evmSnapshot, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {liquidateAndValidateReverted} from "./helpers/validated-steps";
@@ -15,9 +8,7 @@ import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {deployPoolCoreLibraries} from "../deploy/helpers/contracts-deployments";
 import {PoolCore__factory, PoolCoreV2__factory} from "../types";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-
-// eslint-disable-next-line no-unused-vars
-declare let hre: HardhatRuntimeEnvironment;
+import {getFunctionSignatures} from "../deploy/helpers/contracts-helpers";
 
 describe("Pool: Upgrade", () => {
   let testEnv: TestEnv;
@@ -53,7 +44,7 @@ describe("Pool: Upgrade", () => {
       ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
     );
 
-    const liquidationCallSignature = getFunctionSignatureObjs(
+    const liquidationCallSignature = getFunctionSignatures(
       PoolCore__factory.abi
     ).filter((s) => s.name.includes("liquidationCall"))[0].signature;
 
@@ -101,7 +92,7 @@ describe("Pool: Upgrade", () => {
       ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
     );
 
-    const poolCoreV2Selectors = getFunctionSignatureObjs(
+    const poolCoreV2Selectors = getFunctionSignatures(
       PoolCoreV2__factory.abi
     ).map((s) => s.signature);
 

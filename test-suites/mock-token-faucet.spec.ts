@@ -2,7 +2,7 @@ import {expect} from "chai";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
-import {MOCK_TOKEN_MINT_VALUE} from "../deploy/market-config";
+import ParaSpaceConfig from "../deploy/market-config";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -36,7 +36,7 @@ describe("Mock Token Faucet", () => {
     expect(daiBalance).to.be.equal(
       await convertToCurrencyDecimals(
         dai.address,
-        MOCK_TOKEN_MINT_VALUE.DAI.toString()
+        ParaSpaceConfig.Mocks.TokenFaucetMintValue.DAI.toString()
       )
     );
 
@@ -44,7 +44,7 @@ describe("Mock Token Faucet", () => {
     expect(usdcBalance).to.be.equal(
       await convertToCurrencyDecimals(
         usdc.address,
-        MOCK_TOKEN_MINT_VALUE.USDC.toString()
+        ParaSpaceConfig.Mocks.TokenFaucetMintValue.USDC.toString()
       )
     );
 
@@ -52,7 +52,7 @@ describe("Mock Token Faucet", () => {
     expect(usdtBalance).to.be.equal(
       await convertToCurrencyDecimals(
         usdt.address,
-        MOCK_TOKEN_MINT_VALUE.USDT.toString()
+        ParaSpaceConfig.Mocks.TokenFaucetMintValue.USDT.toString()
       )
     );
 
@@ -60,7 +60,7 @@ describe("Mock Token Faucet", () => {
     expect(apeBalance).to.be.equal(
       await convertToCurrencyDecimals(
         ape.address,
-        MOCK_TOKEN_MINT_VALUE.APE.toString()
+        ParaSpaceConfig.Mocks.TokenFaucetMintValue.APE.toString()
       )
     );
 
@@ -68,7 +68,7 @@ describe("Mock Token Faucet", () => {
     expect(wBTCBalance).to.be.equal(
       await convertToCurrencyDecimals(
         wBTC.address,
-        MOCK_TOKEN_MINT_VALUE.WBTC.toString()
+        ParaSpaceConfig.Mocks.TokenFaucetMintValue.WBTC.toString()
       )
     );
 
@@ -76,35 +76,35 @@ describe("Mock Token Faucet", () => {
     expect(stETHBalance).to.be.equal(
       await convertToCurrencyDecimals(
         stETH.address,
-        MOCK_TOKEN_MINT_VALUE.stETH.toString()
+        ParaSpaceConfig.Mocks.TokenFaucetMintValue.stETH.toString()
       )
     );
     const aWETHBalance = await aWETH.balanceOf(user1.address);
     expect(aWETHBalance).to.be.equal(
       await convertToCurrencyDecimals(
         aWETH.address,
-        MOCK_TOKEN_MINT_VALUE.stETH.toString()
+        ParaSpaceConfig.Mocks.TokenFaucetMintValue.stETH.toString()
       )
     );
 
     const baycBalance = await bayc.balanceOf(user1.address);
     expect(baycBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.BAYC.toString()
+      ParaSpaceConfig.Mocks.TokenFaucetMintValue.BAYC.toString()
     );
 
     const maycBalance = await mayc.balanceOf(user1.address);
     expect(maycBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.MAYC.toString()
+      ParaSpaceConfig.Mocks.TokenFaucetMintValue.MAYC.toString()
     );
 
     const doodleBalance = await doodles.balanceOf(user1.address);
     expect(doodleBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.DOODLE.toString()
+      ParaSpaceConfig.Mocks.TokenFaucetMintValue.DOODLE.toString()
     );
 
     const punkBalance = await punk.balanceOf(user1.address);
     expect(punkBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.CRYPTO_PUNK.toString()
+      ParaSpaceConfig.Mocks.TokenFaucetMintValue.CRYPTO_PUNK.toString()
     );
   });
 
