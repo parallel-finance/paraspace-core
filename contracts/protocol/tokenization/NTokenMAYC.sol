@@ -5,6 +5,7 @@ import {NToken} from "./NToken.sol";
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IRewardController} from "../../interfaces/IRewardController.sol";
 
 /**
  * @title BAYC NToken
@@ -21,7 +22,19 @@ contract NTokenMAYC is NToken {
      */
     constructor(IPool pool, address apeCoinStaking) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
+    }
+
+    function initialize(
+        IPool initializingPool,
+        address underlyingAsset,
+        IRewardController incentivesController,
+        string calldata nTokenName,
+        string calldata nTokenSymbol,
+        bytes calldata params
+    ) public virtual override initializer {
         _apeCoinStaking.apeCoin().approve(address(_apeCoinStaking), type(uint256).max);
+        
+        super.initialize(initializingPool, underlyingAsset, incentivesController, nTokenName, nTokenSymbol, params);
     }
 
     /**
@@ -80,7 +93,6 @@ contract NTokenMAYC is NToken {
         public
         override
         onlyPool
-        nonReentrant
     {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -92,12 +104,11 @@ contract NTokenMAYC is NToken {
     /**
      * @notice Overrides the burn from NToken to withdraw all staked and pending rewards before burning the NToken on liquidation/withdraw
      */
-
     function burn(
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) public virtual override onlyPool nonReentrant returns (bool) {
+    ) public virtual override onlyPool returns (bool) {
         _withdrawMAYC(tokenIds, from);
 
         return super.burn(from, receiverOfUnderlying, tokenIds);
@@ -114,19 +125,20 @@ contract NTokenMAYC is NToken {
         uint256 counter = 0;
 
         for (uint256 index = 0; index < tokenIdLength; index++) {
+
             (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
                 MAYC_POOL_ID,
                 tokenIds[index]
             );
 
-            uint256 totalAmount = stakedAmount +
-                _apeCoinStaking.pendingRewards(
-                    MAYC_POOL_ID,
-                    address(this),
-                    tokenIds[index]
-                );
+            if (stakedAmount > 0) {
+                uint256 pendingRewards =  _apeCoinStaking.pendingRewards(
+                        MAYC_POOL_ID,
+                        address(this),
+                        tokenIds[index]
+                    );
+                uint256 totalAmount = stakedAmount + pendingRewards;
 
-            if (totalAmount > 0) {
                 nfts[counter] = ApeCoinStaking.SingleNft({
                     tokenId: tokenIds[index],
                     amount: totalAmount
@@ -135,9 +147,8 @@ contract NTokenMAYC is NToken {
             }
         }
 
-        assembly { mstore(nfts, sub(mload(nfts), sub(tokenIdLength, counter))) }
-
-        if (nfts.length > 0) {
+        if (counter > 0) {
+            assembly { mstore(nfts, sub(mload(nfts), sub(tokenIdLength, counter))) }
             _apeCoinStaking.withdrawMAYC(nfts, _recipient);
         }
         

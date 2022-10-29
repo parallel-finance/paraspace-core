@@ -56,7 +56,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         string calldata nTokenName,
         string calldata nTokenSymbol,
         bytes calldata params
-    ) external override initializer {
+    ) public virtual override initializer {
         require(initializingPool == POOL, Errors.POOL_ADDRESSES_DO_NOT_MATCH);
         _setName(nTokenName);
         _setSymbol(nTokenSymbol);
