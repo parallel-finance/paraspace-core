@@ -4,7 +4,7 @@ pragma solidity 0.8.10;
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider.sol";
-
+import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
@@ -78,13 +78,7 @@ library MarketplaceLogic {
         orderInfo.taker = msg.sender;
         vars.ethLeft = msg.value;
 
-        if (
-            vars.ethLeft > 0 &&
-            orderInfo.consideration[0].itemType != ItemType.NATIVE
-        ) {
-            _depositETH(vars.weth, vars.ethLeft);
-            vars.ethLeft = 0;
-        }
+        _depositETH(vars, orderInfo);
 
         vars.ethLeft -= _buyWithCredit(
             ps._reserves,
@@ -206,13 +200,7 @@ library MarketplaceLogic {
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
-            if (
-                vars.ethLeft > 0 &&
-                orderInfo.consideration[0].itemType != ItemType.NATIVE
-            ) {
-                _depositETH(vars.weth, vars.ethLeft);
-                vars.ethLeft = 0;
-            }
+            _depositETH(vars, orderInfo);
 
             vars.ethLeft -= _buyWithCredit(
                 ps._reserves,
@@ -450,6 +438,7 @@ library MarketplaceLogic {
 
         require(vars.xTokenAddress != address(0), Errors.ASSET_NOT_LISTED);
         ValidationLogic.validateFlashloanSimple(reserve);
+        // TODO: support PToken
         IPToken(vars.xTokenAddress).transferUnderlyingTo(to, vars.creditAmount);
 
         if (vars.isETH) {
@@ -496,6 +485,11 @@ library MarketplaceLogic {
                     .UNDERLYING_ASSET_ADDRESS();
                 bool isNToken = reservesData[underlyingAsset].xTokenAddress ==
                     token;
+                require(
+                    INToken(token).getXTokenType() !=
+                        XTokenType.NTokenUniswapV3,
+                    Errors.UNIV3_NOT_ALLOWED
+                );
                 require(isNToken, Errors.ASSET_NOT_LISTED);
                 IERC721(token).safeTransferFrom(
                     address(this),
@@ -513,6 +507,11 @@ library MarketplaceLogic {
                 continue;
             }
 
+            require(
+                INToken(vars.xTokenAddress).getXTokenType() !=
+                    XTokenType.NTokenUniswapV3,
+                Errors.UNIV3_NOT_ALLOWED
+            );
             // item.token == underlyingAsset but supplied after listing/offering
             // so NToken is transferred instead
             if (INToken(vars.xTokenAddress).ownerOf(tokenId) == address(this)) {
@@ -593,8 +592,21 @@ library MarketplaceLogic {
         }
     }
 
-    function _depositETH(address weth, uint256 ethLeft) internal {
-        IWETH(weth).deposit{value: ethLeft}();
-        IERC20(weth).safeTransferFrom(address(this), msg.sender, ethLeft);
+    function _depositETH(
+        MarketplaceLocalVars memory vars,
+        DataTypes.OrderInfo memory orderInfo
+    ) internal {
+        if (
+            vars.ethLeft > 0 &&
+            orderInfo.consideration[0].itemType != ItemType.NATIVE
+        ) {
+            IWETH(vars.weth).deposit{value: vars.ethLeft}();
+            IERC20(vars.weth).safeTransferFrom(
+                address(this),
+                msg.sender,
+                vars.ethLeft
+            );
+            vars.ethLeft = 0;
+        }
     }
 }
