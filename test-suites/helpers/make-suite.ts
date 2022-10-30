@@ -102,7 +102,7 @@ import {
 } from "../../types";
 import {MintableERC721} from "../../types";
 import {Signer} from "ethers";
-import ParaSpaceConfig from "../../deploy/market-config";
+import {getParaSpaceConfig} from "../../deploy/helpers/misc-utils";
 
 chai.use(bignumberChai());
 chai.use(solidity);
@@ -246,9 +246,10 @@ export async function initializeMakeSuite() {
   testEnv.poolAdmin = deployer;
   testEnv.assetListingAdmin = deployer;
   testEnv.emergencyAdmin =
-    testEnv.users[ParaSpaceConfig.EmergencyAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
-  testEnv.riskAdmin = testEnv.users[ParaSpaceConfig.RiskAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
-  testEnv.gatewayAdmin = testEnv.users[ParaSpaceConfig.GatewayAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
+    testEnv.users[getParaSpaceConfig().EmergencyAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
+  testEnv.riskAdmin = testEnv.users[getParaSpaceConfig().RiskAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
+  testEnv.gatewayAdmin =
+    testEnv.users[getParaSpaceConfig().GatewayAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
 
   testEnv.pool = await getPoolProxy();
   testEnv.configurator = await getPoolConfiguratorProxy();
