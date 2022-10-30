@@ -158,6 +158,13 @@ const hardhatConfig: HardhatUserConfig = {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",
       },
     },
+    mainnet: {
+      chainId: MAINNET_CHAINID,
+      url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
+      accounts: {
+        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
+      },
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_KEY,
