@@ -1,6 +1,10 @@
 import {expect} from "chai";
 import {oneEther, ONE_ADDRESS, ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
+import {
+  evmRevert,
+  evmSnapshot,
+  getParaSpaceConfig,
+} from "../deploy/helpers/misc-utils";
 import {
   deployMintableERC20,
   deployMockAggregator,
@@ -10,7 +14,6 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import ParaSpaceConfig from "../deploy/market-config";
 
 describe("ParaSpaceOracle", () => {
   let snap: string;
@@ -30,7 +33,7 @@ describe("ParaSpaceOracle", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     mockToken = await deployMintableERC20(["MOCK", "MOCK", "18"]);
-    assetPrice = ParaSpaceConfig.Mocks.AllAssetsInitialPrices.WETH;
+    assetPrice = getParaSpaceConfig().Mocks.AllAssetsInitialPrices.WETH;
     mockAggregator = await deployMockAggregator("MOCK", assetPrice);
   });
 
@@ -136,7 +139,7 @@ describe("ParaSpaceOracle", () => {
 
     // Check returns the fixed price BASE_CURRENCY_UNIT
     expect(await paraspaceOracle.getAssetPrice(weth.address)).to.be.eq(
-      ParaSpaceConfig.Mocks.AllAssetsInitialPrices.WETH
+      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.WETH
     );
   });
 

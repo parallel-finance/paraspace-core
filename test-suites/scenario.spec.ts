@@ -1,11 +1,11 @@
 import fs from "fs";
-import ParaSpaceConfig from "../deploy/market-config";
 import {configuration as actionsConfiguration} from "./helpers/actions";
 import {configuration as calculationsConfiguration} from "./helpers/utils/calculations";
 import {executeStory} from "./helpers/scenario-engine";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {getParaSpaceConfig} from "../deploy/helpers/misc-utils";
 
 const scenarioFolder = "./test-suites/helpers/scenarios/";
 
@@ -23,7 +23,8 @@ fs.readdirSync(scenarioFolder).forEach((file) => {
       testEnv = await loadFixture(testEnvFixture);
       actionsConfiguration.skipIntegrityCheck = false; //set this to true to execute solidity-coverage
 
-      calculationsConfiguration.reservesParams = ParaSpaceConfig.ReservesConfig;
+      calculationsConfiguration.reservesParams =
+        getParaSpaceConfig().ReservesConfig;
     });
 
     for (const story of scenario.stories) {

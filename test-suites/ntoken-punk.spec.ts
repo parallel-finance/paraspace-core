@@ -3,21 +3,24 @@ import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import ParaSpaceConfig from "../deploy/market-config";
 import {testEnvFixture} from "./helpers/setup-env";
 
 describe("Punk nToken Mint and Burn Event Accounting", () => {
   let firstDaiDeposit;
   let secondDaiDeposit;
   let testEnv;
-  const wPunksFloorPrice = BigNumber.from(
-    ParaSpaceConfig.Mocks.AllAssetsInitialPrices.WPUNKS
-  );
+  let wPunksFloorPrice: BigNumber;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+    wPunksFloorPrice = BigNumber.from(
+      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.WPUNKS
+    );
+  });
 
   before("Initialize WPunk Gateway", async () => {
-    testEnv = await loadFixture(testEnvFixture);
     const {
       dai,
       wPunk,
