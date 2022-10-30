@@ -16,7 +16,7 @@ init: submodules
 
 .PHONY: test
 test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
 
 .PHONY: slow-test
 slow-test:
