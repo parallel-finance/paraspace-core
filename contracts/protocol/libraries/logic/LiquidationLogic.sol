@@ -37,6 +37,34 @@ library LiquidationLogic {
     using PRBMathUD60x18 for uint256;
     using GPv2SafeERC20 for IERC20;
 
+    /**
+     * @dev Default percentage of borrower's debt to be repaid in a liquidation.
+     * @dev Percentage applied when the users health factor is above `CLOSE_FACTOR_HF_THRESHOLD`
+     * Expressed in bps, a value of 0.5e4 results in 50.00%
+     */
+    uint256 internal constant DEFAULT_LIQUIDATION_CLOSE_FACTOR = 0.5e4;
+
+    /**
+     * @dev Maximum percentage of borrower's debt to be repaid in a liquidation
+     * @dev Percentage applied when the users health factor is below `CLOSE_FACTOR_HF_THRESHOLD`
+     * Expressed in bps, a value of 1e4 results in 100.00%
+     */
+    uint256 public constant MAX_LIQUIDATION_CLOSE_FACTOR = 1e4;
+
+    /**
+     * @dev Minimum percentage of borrower's debt to be repaid in a liquidation
+     * @dev Percentage applied never but works as a placeholder for ERC20 liquidation
+     * Expressed in bps, a value of 0e4 results in 0%
+     */
+    uint256 public constant MIN_LIQUIDATION_CLOSE_FACTOR = 0;
+
+    /**
+     * @dev This constant represents below which health factor value it is possible to liquidate
+     * an amount of debt corresponding to `MAX_LIQUIDATION_CLOSE_FACTOR`.
+     * A value of 0.95e18 results in 0.95
+     */
+    uint256 public constant CLOSE_FACTOR_HF_THRESHOLD = 0.95e18;
+
     // See `IPool` for descriptions
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -143,7 +171,9 @@ library LiquidationLogic {
 
         (vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
             vars.liquidationAssetReserveCache,
-            params
+            params,
+            vars.healthFactor,
+            MIN_LIQUIDATION_CLOSE_FACTOR
         );
 
         ValidationLogic.validateLiquidationCall(
@@ -209,7 +239,6 @@ library LiquidationLogic {
         }
 
         _burnDebtTokens(params, vars);
-
         liquidationAssetReserve.updateInterestRates(
             vars.liquidationAssetReserveCache,
             params.liquidationAsset,
@@ -298,7 +327,9 @@ library LiquidationLogic {
         if (vars.isLiquidationAssetBorrowed) {
             (vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
                 vars.liquidationAssetReserveCache,
-                params
+                params,
+                vars.healthFactor,
+                MAX_LIQUIDATION_CLOSE_FACTOR
             );
         }
 
@@ -602,12 +633,16 @@ library LiquidationLogic {
      * and corresponding close factor. we are always using max closing factor in this version
      * @param liquidationAssetReserveCache The reserve cache data object of the debt reserve
      * @param params The additional parameters needed to execute the liquidation function
+     * @param healthFactor The health factor of the position
+     * @param minimumCloseFactor The minimum close to be applied on user debt
      * @return The total debt of the user
      * @return The actual debt that is getting liquidated. If liquidation amount passed in by the liquidator is greater then the total user debt, then use the user total debt as the actual debt getting liquidated. If the user total debt is greater than the liquidation amount getting passed in by the liquidator, then use the liquidation amount the user is passing in.
      */
     function _calculateDebt(
         DataTypes.ReserveCache memory liquidationAssetReserveCache,
-        DataTypes.ExecuteLiquidationCallParams memory params
+        DataTypes.ExecuteLiquidationCallParams memory params,
+        uint256 healthFactor,
+        uint256 minimumCloseFactor
     ) internal view returns (uint256, uint256) {
         // userTotalDebt = debt of the borrowed position needed for liquidation
         uint256 userTotalDebt = Helpers.getUserCurrentDebt(
@@ -615,8 +650,17 @@ library LiquidationLogic {
             liquidationAssetReserveCache.variableDebtTokenAddress
         );
 
-        uint256 actualDebtToLiquidate = params.liquidationAmount > userTotalDebt
-            ? userTotalDebt
+        uint256 closeFactor = healthFactor > CLOSE_FACTOR_HF_THRESHOLD
+            ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
+            : MAX_LIQUIDATION_CLOSE_FACTOR;
+
+        uint256 maxLiquidatableDebt = userTotalDebt.percentMul(
+            closeFactor > minimumCloseFactor ? closeFactor : minimumCloseFactor
+        );
+
+        uint256 actualDebtToLiquidate = params.liquidationAmount >
+            maxLiquidatableDebt
+            ? maxLiquidatableDebt
             : params.liquidationAmount;
 
         return (userTotalDebt, actualDebtToLiquidate);
