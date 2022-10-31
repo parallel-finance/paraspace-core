@@ -96,7 +96,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-     ) internal returns (bool) {
+    ) internal returns (bool) {
         bool isLastUncollateralized = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
