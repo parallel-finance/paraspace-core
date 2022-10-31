@@ -16,11 +16,15 @@ init: submodules
 
 .PHONY: test
 test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} # --verbose
+	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+
+.PHONY: slow-test
+slow-test:
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
 
 .PHONY: size
 size:
