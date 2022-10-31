@@ -113,18 +113,12 @@ describe("ape coin staking", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
-    // const pendingRewards = await apeCoinStaking.pendingRewards(
-    //   1,
-    //   nBAYC.address,
-    //   "0"
-    // );
-
     await nBAYC
       .connect(user1.signer)
       .withdrawBAYC([{tokenId: "0", amount: amount}], user1.address);
   });
 
-  it("on bayc liquidation, the staked apecoins should be withdrawn", async () => {
+  it("on BAYC liquidation, the staked apecoins should be withdrawn", async () => {
     const {
       users: [user1, liquidator],
       pool,
@@ -168,7 +162,7 @@ describe("ape coin staking", () => {
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
   });
 
-  it("on bayc liquidation with receive ntoken, the staked apecoins should be withdrawn ", async () => {
+  it("on BAYC liquidation with receive ntoken, the staked apecoins should be withdrawn ", async () => {
     const {
       users: [user1, liquidator],
       pool,
@@ -327,7 +321,7 @@ describe("ape coin staking", () => {
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
   });
 
-  it("on bayc liquidation with receive ntoken, the staked apecoins should be withdrawn ", async () => {
+  it("on MAYC liquidation with receive ntoken, the staked apecoins should be withdrawn ", async () => {
     const {
       users: [user1, liquidator],
       pool,
@@ -359,7 +353,7 @@ describe("ape coin staking", () => {
     );
     const {startTime, tickLength} = await pool.getAuctionData(nMAYC.address, 0);
 
-    // try t1o liquidate the NFT
+    // try to liquidate the NFT
     await pool
       .connect(liquidator.signer)
       .liquidationERC721(
