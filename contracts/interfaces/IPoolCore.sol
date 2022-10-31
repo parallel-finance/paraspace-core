@@ -533,6 +533,7 @@ interface IPoolCore {
      * @notice Validates and finalizes an NToken transfer
      * @dev Only callable by the overlying xToken of the `asset`
      * @param asset The address of the underlying asset of the xToken
+     * @param tokenId The tokenId of the ERC721 asset
      * @param from The user from which the xTokens are transferred
      * @param to The user receiving the xTokens
      * @param balanceFromBefore The xToken balance of the `from` user before the transfer
@@ -540,6 +541,7 @@ interface IPoolCore {
      */
     function finalizeTransferERC721(
         address asset,
+        uint256 tokenId,
         address from,
         address to,
         bool usedAsCollateral,
@@ -587,12 +589,6 @@ interface IPoolCore {
      * @return The maximum number of reserves supported
      */
     function MAX_NUMBER_RESERVES() external view returns (uint16);
-
-    /**
-     * @notice Returns the maximum allowed number of atomic tokens per user
-     * @return The maximum allowed number of atomic tokens per user
-     */
-    function MAX_ATOMIC_TOKENS_ALLOWED() external view returns (uint24);
 
     /**
      * @notice Returns the auction recovery health factor

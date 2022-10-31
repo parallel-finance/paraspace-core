@@ -253,9 +253,6 @@ contract AirdropFlashClaimReceiver is
         uint256[] calldata nftTokenIds,
         bytes calldata params
     ) public pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(initiator, nftAsset, nftTokenIds, params)
-            );
+        return keccak256(abi.encode(initiator, nftAsset, nftTokenIds, params));
     }
 }

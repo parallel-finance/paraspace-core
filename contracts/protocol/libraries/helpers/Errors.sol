@@ -112,4 +112,5 @@ library Errors {
     string public constant LIQUIDATOR_CAN_NOT_BE_SELF = "117"; //user can not liquidate himself.
     string public constant INVALID_RECIPIENT = "118"; //invalid recipient specified in order.
     string public constant UNIV3_NOT_ALLOWED = "119"; //flash claim is not allowed for UniswapV3.
+    string public constant NTOKEN_BALANCE_EXCEEDED = "120"; //ntoken balance exceed limit.
 }
