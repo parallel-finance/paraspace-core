@@ -255,7 +255,7 @@ contract AirdropFlashClaimReceiver is
     ) public pure returns (bytes32) {
         return
             keccak256(
-                abi.encodePacked(initiator, nftAsset, nftTokenIds, params)
+                abi.encode(initiator, nftAsset, nftTokenIds, params)
             );
     }
 }
