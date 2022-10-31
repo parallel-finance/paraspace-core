@@ -89,6 +89,14 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
     ) public virtual override onlyPool nonReentrant returns (bool) {
+        return _burn(from, receiverOfUnderlying, tokenIds);
+    }
+
+    function _burn(
+        address from,
+        address receiverOfUnderlying,
+        uint256[] calldata tokenIds
+     ) internal returns (bool) {
         bool isLastUncollateralized = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {

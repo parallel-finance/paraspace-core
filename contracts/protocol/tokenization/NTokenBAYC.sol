@@ -109,12 +109,13 @@ contract NTokenBAYC is NToken {
         public
         override
         onlyPool
+        nonReentrant
     {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         _withdrawBAYC(tokenIds, from);
 
-        super.transferOnLiquidation(from, to, tokenId);
+        _transfer(from, to, tokenId, false);
     }
 
     /**
@@ -124,10 +125,10 @@ contract NTokenBAYC is NToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) public virtual override onlyPool returns (bool) {
+    ) public virtual override onlyPool nonReentrant returns (bool) {
         _withdrawBAYC(tokenIds, from);
 
-        return super.burn(from, receiverOfUnderlying, tokenIds);
+        return _burn(from, receiverOfUnderlying, tokenIds);
     }
 
     function _withdrawBAYC(uint256[] memory tokenIds, address _recipient)
