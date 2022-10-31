@@ -137,11 +137,11 @@ library SupplyLogic {
         //currently don't need to update state for erc721
         //reserve.updateState(reserveCache);
 
-        bool isFirstCollateralized = INToken(nTokenAddress).mint(
-            params.onBehalfOf,
-            params.tokenData
-        );
-        if (isFirstCollateralized) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = INToken(nTokenAddress).mint(params.onBehalfOf, params.tokenData);
+        if (oldCollateralizedBalance == 0 && newCollateralizedBalance > 0) {
             userConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -389,13 +389,16 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(reserveCache);
         uint256 amountToWithdraw = params.tokenIds.length;
 
-        bool isLastUncollateralized = INToken(reserveCache.xTokenAddress).burn(
-            msg.sender,
-            params.to,
-            params.tokenIds
-        );
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = INToken(reserveCache.xTokenAddress).burn(
+                msg.sender,
+                params.to,
+                params.tokenIds
+            );
 
-        if (userConfig.isUsingAsCollateral(reserve.id)) {
+        if (newCollateralizedBalance < oldCollateralizedBalance) {
             if (userConfig.isBorrowingAny()) {
                 ValidationLogic.validateHFAndLtvERC721(
                     reservesData,
@@ -409,7 +412,7 @@ library SupplyLogic {
                 );
             }
 
-            if (isLastUncollateralized) {
+            if (newCollateralizedBalance == 0) {
                 userConfig.setUsingAsCollateral(reserve.id, false);
                 emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
             }
