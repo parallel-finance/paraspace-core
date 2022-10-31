@@ -405,10 +405,17 @@ abstract contract MintableIncentivizedERC721 is
     function _mintMultiple(
         address to,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    ) internal virtual returns (bool) {
+    )
+        internal
+        virtual
+        returns (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        )
+    {
         require(to != address(0), "ERC721: mint to the zero address");
         uint64 oldBalance = _userState[to].balance;
-        uint64 oldCollaterizedBalance = _userState[to].collaterizedBalance;
+        oldCollateralizedBalance = _userState[to].collaterizedBalance;
         uint256 oldTotalSupply = totalSupply();
         uint64 collaterizedTokens = 0;
 
@@ -435,9 +442,10 @@ abstract contract MintableIncentivizedERC721 is
             emit Transfer(address(0), to, tokenId);
         }
 
-        _userState[to].collaterizedBalance =
-            oldCollaterizedBalance +
+        newCollateralizedBalance =
+            oldCollateralizedBalance +
             collaterizedTokens;
+        _userState[to].collaterizedBalance = newCollateralizedBalance;
 
         uint64 newBalance = oldBalance + uint64(tokenData.length);
         checkBalanceLimit(newBalance);
@@ -449,20 +457,23 @@ abstract contract MintableIncentivizedERC721 is
             rewardControllerLocal.handleAction(to, oldTotalSupply, oldBalance);
         }
 
-        return (oldCollaterizedBalance == 0 && collaterizedTokens != 0);
+        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     function _burnMultiple(address user, uint256[] calldata tokenIds)
         internal
         virtual
-        returns (bool allCollaterizedBurnt)
+        returns (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        )
     {
         uint64 burntCollaterizedTokens = 0;
         uint64 balanceToBurn;
         uint256 oldTotalSupply = totalSupply();
         uint256 oldBalance = _userState[user].balance;
 
-        uint64 oldCollaterizedBalance = _userState[user].collaterizedBalance;
+        oldCollateralizedBalance = _userState[user].collaterizedBalance;
 
         uint256 length = _allTokens.length;
 
@@ -491,9 +502,10 @@ abstract contract MintableIncentivizedERC721 is
         }
 
         _userState[user].balance -= balanceToBurn;
-        _userState[user].collaterizedBalance =
-            oldCollaterizedBalance -
+        newCollateralizedBalance =
+            oldCollateralizedBalance -
             burntCollaterizedTokens;
+        _userState[user].collaterizedBalance = newCollateralizedBalance;
 
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
@@ -506,8 +518,7 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        return (oldCollaterizedBalance != 0 &&
-            oldCollaterizedBalance == burntCollaterizedTokens);
+        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     /**
