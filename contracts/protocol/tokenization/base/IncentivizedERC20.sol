@@ -177,11 +177,12 @@ abstract contract IncentivizedERC20 is Context, IERC20Detailed {
     }
 
     /// @inheritdoc IERC20
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external virtual override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount)
+        external
+        virtual
+        override
+        returns (bool)
+    {
         uint128 castAmount = amount.toUint128();
         _approve(
             sender,
@@ -236,11 +237,10 @@ abstract contract IncentivizedERC20 is Context, IERC20Detailed {
      * @param recipient The destination address
      * @param amount The amount getting transferred
      */
-    function _transfer(
-        address sender,
-        address recipient,
-        uint128 amount
-    ) internal virtual {
+    function _transfer(address sender, address recipient, uint128 amount)
+        internal
+        virtual
+    {
         uint128 oldSenderBalance = _userState[sender].balance;
         _userState[sender].balance = oldSenderBalance - amount;
         uint128 oldRecipientBalance = _userState[recipient].balance;
@@ -271,11 +271,10 @@ abstract contract IncentivizedERC20 is Context, IERC20Detailed {
      * @param spender The address approved for spending
      * @param amount The amount of tokens to approve spending of
      */
-    function _approve(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal virtual {
+    function _approve(address owner, address spender, uint256 amount)
+        internal
+        virtual
+    {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }

@@ -51,11 +51,7 @@ interface IRewardController {
     function getAssetData(address asset)
         external
         view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        );
+        returns (uint256, uint256, uint256);
 
     /**
      * LEGACY **************************
@@ -66,11 +62,7 @@ interface IRewardController {
     function assets(address asset)
         external
         view
-        returns (
-            uint128,
-            uint128,
-            uint256
-        );
+        returns (uint128, uint128, uint256);
 
     /**
      * @notice Whitelists an address to claim the rewards on behalf of another address
@@ -126,11 +118,9 @@ interface IRewardController {
      * @param to Address that will be receiving the rewards
      * @return Rewards claimed
      **/
-    function claimRewards(
-        address[] calldata assets,
-        uint256 amount,
-        address to
-    ) external returns (uint256);
+    function claimRewards(address[] calldata assets, uint256 amount, address to)
+        external
+        returns (uint256);
 
     /**
      * @notice Claims reward for a user on its behalf, on the assets of the pool, accumulating the pending rewards.

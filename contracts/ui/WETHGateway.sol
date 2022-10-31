@@ -192,11 +192,10 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @param to recipient of the transfer
      * @param amount amount to send
      */
-    function emergencyTokenTransfer(
-        address token,
-        address to,
-        uint256 amount
-    ) external onlyOwner {
+    function emergencyTokenTransfer(address token, address to, uint256 amount)
+        external
+        onlyOwner
+    {
         IERC20(token).safeTransfer(to, amount);
     }
 

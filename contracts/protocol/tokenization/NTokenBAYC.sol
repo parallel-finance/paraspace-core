@@ -7,7 +7,6 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 
-
 /**
  * @title BAYC NToken
  *
@@ -23,7 +22,6 @@ contract NTokenBAYC is NToken {
      */
     constructor(IPool pool, address apeCoinStaking) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
-        
     }
 
     function initialize(
@@ -34,9 +32,19 @@ contract NTokenBAYC is NToken {
         string calldata nTokenSymbol,
         bytes calldata params
     ) public virtual override initializer {
-        _apeCoinStaking.apeCoin().approve(address(_apeCoinStaking), type(uint256).max);
-        
-        super.initialize(initializingPool, underlyingAsset, incentivesController, nTokenName, nTokenSymbol, params);
+        _apeCoinStaking.apeCoin().approve(
+            address(_apeCoinStaking),
+            type(uint256).max
+        );
+
+        super.initialize(
+            initializingPool,
+            underlyingAsset,
+            incentivesController,
+            nTokenName,
+            nTokenSymbol,
+            params
+        );
     }
 
     /**
@@ -47,7 +55,10 @@ contract NTokenBAYC is NToken {
      */
     function depositBAYC(ApeCoinStaking.SingleNft[] calldata _nfts) external {
         for (uint256 index = 0; index < _nfts.length; index++) {
-            require(ownerOf(_nfts[index].tokenId) == msg.sender, "NToken: not owner of token");
+            require(
+                ownerOf(_nfts[index].tokenId) == msg.sender,
+                "NToken: not owner of token"
+            );
 
             _apeCoinStaking.apeCoin().transferFrom(
                 msg.sender,
@@ -66,7 +77,10 @@ contract NTokenBAYC is NToken {
      */
     function claimBAYC(uint256[] calldata _nfts, address _recipient) external {
         for (uint256 index = 0; index < _nfts.length; index++) {
-            require(ownerOf(_nfts[index]) == msg.sender, "NToken: not owner of token");
+            require(
+                ownerOf(_nfts[index]) == msg.sender,
+                "NToken: not owner of token"
+            );
         }
 
         _apeCoinStaking.claimBAYC(_nfts, _recipient);
@@ -118,7 +132,7 @@ contract NTokenBAYC is NToken {
 
     function _withdrawBAYC(uint256[] memory tokenIds, address _recipient)
         internal
-    {   
+    {
         uint256 tokenIdLength = tokenIds.length;
 
         ApeCoinStaking.SingleNft[] memory nfts = new ApeCoinStaking.SingleNft[](
@@ -127,18 +141,17 @@ contract NTokenBAYC is NToken {
         uint256 counter = 0;
 
         for (uint256 index = 0; index < tokenIdLength; index++) {
-
             (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
                 BAYC_POOL_ID,
                 tokenIds[index]
             );
 
             if (stakedAmount > 0) {
-                uint256 pendingRewards =  _apeCoinStaking.pendingRewards(
-                        BAYC_POOL_ID,
-                        address(this),
-                        tokenIds[index]
-                    );
+                uint256 pendingRewards = _apeCoinStaking.pendingRewards(
+                    BAYC_POOL_ID,
+                    address(this),
+                    tokenIds[index]
+                );
                 uint256 totalAmount = stakedAmount + pendingRewards;
 
                 nfts[counter] = ApeCoinStaking.SingleNft({
@@ -150,9 +163,10 @@ contract NTokenBAYC is NToken {
         }
 
         if (counter > 0) {
-            assembly { mstore(nfts, sub(mload(nfts), sub(tokenIdLength, counter))) }
+            assembly {
+                mstore(nfts, sub(mload(nfts), sub(tokenIdLength, counter)))
+            }
             _apeCoinStaking.withdrawBAYC(nfts, _recipient);
         }
-        
     }
 }

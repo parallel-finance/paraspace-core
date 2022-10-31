@@ -20,11 +20,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    constructor(
-        address _factory,
-        address _manager,
-        address _addressProvider
-    ) {
+    constructor(address _factory, address _manager, address _addressProvider) {
         UNISWAP_V3_FACTORY = IUniswapV3Factory(_factory);
         UNISWAP_V3_POSITION_MANAGER = INonfungiblePositionManager(_manager);
         ADDRESSES_PROVIDER = IPoolAddressesProvider(_addressProvider);

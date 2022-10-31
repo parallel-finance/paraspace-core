@@ -32,9 +32,19 @@ contract NTokenMAYC is NToken {
         string calldata nTokenSymbol,
         bytes calldata params
     ) public virtual override initializer {
-        _apeCoinStaking.apeCoin().approve(address(_apeCoinStaking), type(uint256).max);
-        
-        super.initialize(initializingPool, underlyingAsset, incentivesController, nTokenName, nTokenSymbol, params);
+        _apeCoinStaking.apeCoin().approve(
+            address(_apeCoinStaking),
+            type(uint256).max
+        );
+
+        super.initialize(
+            initializingPool,
+            underlyingAsset,
+            incentivesController,
+            nTokenName,
+            nTokenSymbol,
+            params
+        );
     }
 
     /**
@@ -116,7 +126,7 @@ contract NTokenMAYC is NToken {
 
     function _withdrawMAYC(uint256[] memory tokenIds, address _recipient)
         internal
-    {   
+    {
         uint256 tokenIdLength = tokenIds.length;
 
         ApeCoinStaking.SingleNft[] memory nfts = new ApeCoinStaking.SingleNft[](
@@ -125,18 +135,17 @@ contract NTokenMAYC is NToken {
         uint256 counter = 0;
 
         for (uint256 index = 0; index < tokenIdLength; index++) {
-
             (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
                 MAYC_POOL_ID,
                 tokenIds[index]
             );
 
             if (stakedAmount > 0) {
-                uint256 pendingRewards =  _apeCoinStaking.pendingRewards(
-                        MAYC_POOL_ID,
-                        address(this),
-                        tokenIds[index]
-                    );
+                uint256 pendingRewards = _apeCoinStaking.pendingRewards(
+                    MAYC_POOL_ID,
+                    address(this),
+                    tokenIds[index]
+                );
                 uint256 totalAmount = stakedAmount + pendingRewards;
 
                 nfts[counter] = ApeCoinStaking.SingleNft({
@@ -148,9 +157,10 @@ contract NTokenMAYC is NToken {
         }
 
         if (counter > 0) {
-            assembly { mstore(nfts, sub(mload(nfts), sub(tokenIdLength, counter))) }
+            assembly {
+                mstore(nfts, sub(mload(nfts), sub(tokenIdLength, counter)))
+            }
             _apeCoinStaking.withdrawMAYC(nfts, _recipient);
         }
-        
     }
 }

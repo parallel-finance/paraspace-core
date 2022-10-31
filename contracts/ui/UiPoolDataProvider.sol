@@ -222,9 +222,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     baseCurrencyUnit
                 );
             }
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {
+        } catch (bytes memory /*lowLevelData*/) {
             baseCurrencyInfo.marketReferenceCurrencyUnit = ETH_CURRENCY_UNIT;
             baseCurrencyInfo
                 .marketReferenceCurrencyPriceInUsd = marketReferenceCurrencyPriceInUsdProxyAggregator

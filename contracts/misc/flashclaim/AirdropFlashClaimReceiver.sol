@@ -175,19 +175,19 @@ contract AirdropFlashClaimReceiver is
         return true;
     }
 
-    function transferERC20(
-        address token,
-        address to,
-        uint256 amount
-    ) external nonReentrant onlyOwner {
+    function transferERC20(address token, address to, uint256 amount)
+        external
+        nonReentrant
+        onlyOwner
+    {
         IERC20(token).safeTransfer(to, amount);
     }
 
-    function transferERC721(
-        address token,
-        address to,
-        uint256 id
-    ) external nonReentrant onlyOwner {
+    function transferERC721(address token, address to, uint256 id)
+        external
+        nonReentrant
+        onlyOwner
+    {
         IERC721(token).safeTransferFrom(address(this), to, id);
     }
 

@@ -634,16 +634,7 @@ library LiquidationLogic {
     function _getConfigurationData(
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ExecuteLiquidationCallParams memory params
-    )
-        internal
-        view
-        returns (
-            address,
-            address,
-            address,
-            uint256
-        )
-    {
+    ) internal view returns (address, address, address, uint256) {
         address collateralXToken = collateralReserve.xTokenAddress;
         uint256 liquidationBonus = collateralReserve
             .configuration
@@ -703,15 +694,7 @@ library LiquidationLogic {
         uint256 userCollateralBalance,
         uint256 liquidationBonus,
         IPriceOracleGetter oracle
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (uint256, uint256, uint256) {
         AvailableCollateralToLiquidateLocalVars memory vars;
 
         vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
@@ -803,16 +786,7 @@ library LiquidationLogic {
         uint256 collateralTokenId,
         bool auctionEnabled,
         IPriceOracleGetter oracle
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (uint256, uint256, uint256, uint256) {
         AvailableCollateralToLiquidateLocalVars memory vars;
         vars.collateralAsset = collateralAsset;
 

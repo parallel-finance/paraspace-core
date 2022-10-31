@@ -120,11 +120,13 @@ contract VariableDebtToken is
     }
 
     /// @inheritdoc IVariableDebtToken
-    function burn(
-        address from,
-        uint256 amount,
-        uint256 index
-    ) external virtual override onlyPool returns (uint256) {
+    function burn(address from, uint256 amount, uint256 index)
+        external
+        virtual
+        override
+        onlyPool
+        returns (uint256)
+    {
         _burnScaled(from, address(0), amount, index);
         return scaledTotalSupply();
     }
@@ -174,11 +176,12 @@ contract VariableDebtToken is
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 
-    function transferFrom(
-        address,
-        address,
-        uint256
-    ) external virtual override returns (bool) {
+    function transferFrom(address, address, uint256)
+        external
+        virtual
+        override
+        returns (bool)
+    {
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 
