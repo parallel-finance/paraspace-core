@@ -171,9 +171,11 @@ describe("user can withdraw un-collateralized nft when hf < 1", () => {
     } = testEnv;
 
     await supplyAndValidate(bayc, "2", user1, true);
-    await pool
-      .connect(user1.signer)
-      .setUserUseERC721AsCollateral(bayc.address, [1], false);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, [1], false)
+    );
   });
 
   it("User 2 deposits 100 ETH and User 1 borrows 30 ETH", async () => {
@@ -223,8 +225,8 @@ describe("user can withdraw un-collateralized nft when hf < 1", () => {
       pool,
     } = testEnv;
 
-    await expect(
-      pool
+    await waitForTx(
+      await pool
         .connect(user1.signer)
         .withdrawERC721(bayc.address, [1], user1.address)
     );
