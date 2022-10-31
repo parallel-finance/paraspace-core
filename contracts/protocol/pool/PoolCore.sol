@@ -434,6 +434,7 @@ contract PoolCore is
                 collateralAsset: collateralAsset,
                 liquidationAsset: liquidationAsset,
                 user: user,
+                liquidator: msg.sender,
                 receiveXToken: receivePToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
@@ -445,7 +446,6 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function liquidationERC721(
         address collateralAsset,
-        address liquidationAsset,
         address user,
         uint256 collateralTokenId,
         uint256 liquidationAmount,
@@ -461,39 +461,11 @@ contract PoolCore is
                 reservesCount: ps._reservesCount,
                 liquidationAmount: liquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
-                liquidationAsset: liquidationAsset,
-                collateralAsset: collateralAsset,
-                collateralTokenId: collateralTokenId,
-                user: user,
-                receiveXToken: receiveNToken,
-                priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
-            })
-        );
-    }
-
-    /// @inheritdoc IPoolCore
-    function liquidationERC721WithEther(
-        address collateralAsset,
-        address user,
-        uint256 collateralTokenId,
-        uint256 liquidationAmount,
-        bool receiveNToken
-    ) external virtual override nonReentrant {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        LiquidationLogic.executeERC721LiquidationWithEther(
-            ps._reserves,
-            ps._reservesList,
-            ps._usersConfig,
-            DataTypes.ExecuteLiquidationCallParams({
-                reservesCount: ps._reservesCount,
-                liquidationAmount: liquidationAmount,
-                auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 liquidationAsset: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
+                liquidator: msg.sender,
                 receiveXToken: receiveNToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()

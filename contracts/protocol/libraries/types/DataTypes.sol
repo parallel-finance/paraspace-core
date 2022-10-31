@@ -106,6 +106,7 @@ library DataTypes {
         address collateralAsset;
         address liquidationAsset;
         address user;
+        address liquidator;
         bool receiveXToken;
         address priceOracle;
         address priceOracleSentinel;

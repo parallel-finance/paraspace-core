@@ -111,7 +111,7 @@ describe("Liquidation Auction", () => {
     expect(
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721WithEther(
+        .liquidationERC721(
           bayc.address,
           borrower.address,
           0,
@@ -184,7 +184,7 @@ describe("Liquidation Auction", () => {
     expect(
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721WithEther(
+        .liquidationERC721(
           bayc.address,
           borrower.address,
           0,
@@ -255,7 +255,7 @@ describe("Liquidation Auction", () => {
     expect(
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721WithEther(
+        .liquidationERC721(
           bayc.address,
           borrower.address,
           0,
