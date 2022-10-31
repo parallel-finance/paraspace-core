@@ -171,7 +171,6 @@ interface IProtocolDataProvider {
      * @notice Returns the address of the Interest Rate strategy
      * @param asset The address of the underlying asset of the reserve
      * @return interestRateStrategyAddress The address of the Interest Rate strategy
-     * @return dynamicConfigsStrategyAddress The address of the DynamicConfigs strategy
      * @return auctionStrategyAddress The address of the Auction strategy
      */
     function getStrategyAddresses(address asset)
@@ -179,7 +178,6 @@ interface IProtocolDataProvider {
         view
         returns (
             address interestRateStrategyAddress,
-            address dynamicConfigsStrategyAddress,
             address auctionStrategyAddress
         );
 }

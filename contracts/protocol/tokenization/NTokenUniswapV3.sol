@@ -32,7 +32,7 @@ contract NTokenUniswapV3 is NToken {
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool) NToken(pool, true) {
-        // Intentionally left blank
+        _balanceLimit = 30;
     }
 
     function getXTokenType() external pure override returns (XTokenType) {

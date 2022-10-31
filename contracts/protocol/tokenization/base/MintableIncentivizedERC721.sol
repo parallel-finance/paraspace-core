@@ -98,6 +98,8 @@ abstract contract MintableIncentivizedERC721 is
 
     address internal _underlyingAsset;
 
+    uint64 internal _balanceLimit;
+
     mapping(uint256 => bool) _isUsedAsCollateral;
 
     mapping(uint256 => DataTypes.Auction) _auctions;
@@ -161,6 +163,24 @@ abstract contract MintableIncentivizedERC721 is
         onlyPoolAdmin
     {
         _rewardController = controller;
+    }
+
+    /**
+     * @notice Sets new Balance Limit
+     * @param limit the new Balance Limit
+     **/
+    function setBalanceLimit(uint64 limit) external onlyPoolAdmin {
+        _balanceLimit = limit;
+    }
+
+    function checkBalanceLimit(uint64 balance) internal view {
+        if (ATOMIC_PRICING) {
+            uint64 balanceLimit = _balanceLimit;
+            require(
+                balanceLimit == 0 || balance <= balanceLimit,
+                Errors.NTOKEN_BALANCE_EXCEEDED
+            );
+        }
     }
 
     /**
@@ -419,14 +439,9 @@ abstract contract MintableIncentivizedERC721 is
             oldCollaterizedBalance +
             collaterizedTokens;
 
-        _userState[to].balance = oldBalance + uint64(tokenData.length);
-        if (ATOMIC_PRICING) {
-            POOL.increaseUserTotalAtomicTokens(
-                _underlyingAsset,
-                to,
-                uint24(tokenData.length)
-            );
-        }
+        uint64 newBalance = oldBalance + uint64(tokenData.length);
+        checkBalanceLimit(newBalance);
+        _userState[to].balance = newBalance;
 
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
@@ -480,13 +495,6 @@ abstract contract MintableIncentivizedERC721 is
             oldCollaterizedBalance -
             burntCollaterizedTokens;
 
-        if (ATOMIC_PRICING) {
-            POOL.decreaseUserTotalAtomicTokens(
-                _underlyingAsset,
-                user,
-                uint24(tokenIds.length)
-            );
-        }
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
 
@@ -533,12 +541,9 @@ abstract contract MintableIncentivizedERC721 is
         uint64 oldSenderBalance = _userState[from].balance;
         _userState[from].balance = oldSenderBalance - 1;
         uint64 oldRecipientBalance = _userState[to].balance;
-        _userState[to].balance = oldRecipientBalance + 1;
-
-        if (ATOMIC_PRICING) {
-            POOL.decreaseUserTotalAtomicTokens(_underlyingAsset, from, 1);
-            POOL.increaseUserTotalAtomicTokens(_underlyingAsset, to, 1);
-        }
+        uint64 newRecipientBalance = oldRecipientBalance + 1;
+        checkBalanceLimit(newRecipientBalance);
+        _userState[to].balance = newRecipientBalance;
 
         _owners[tokenId] = to;
 

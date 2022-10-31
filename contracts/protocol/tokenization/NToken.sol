@@ -233,6 +233,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         if (validate) {
             POOL.finalizeTransferERC721(
                 underlyingAsset,
+                tokenId,
                 from,
                 to,
                 isUsedAsCollateral,
