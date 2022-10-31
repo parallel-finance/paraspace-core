@@ -651,19 +651,6 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function MAX_ATOMIC_TOKENS_ALLOWED()
-        external
-        view
-        virtual
-        override
-        returns (uint24)
-    {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        return ps._maxAtomicTokensAllowed;
-    }
-
-    /// @inheritdoc IPoolCore
     function AUCTION_RECOVERY_HEALTH_FACTOR()
         external
         view
@@ -713,6 +700,7 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function finalizeTransferERC721(
         address asset,
+        uint256 tokenId,
         address from,
         address to,
         bool usedAsCollateral,
@@ -729,12 +717,12 @@ contract PoolCore is
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
-            DataTypes.FinalizeTransferParams({
+            DataTypes.FinalizeTransferERC721Params({
                 asset: asset,
                 from: from,
                 to: to,
                 usedAsCollateral: usedAsCollateral,
-                amount: 1,
+                tokenId: tokenId,
                 balanceFromBefore: balanceFromBefore,
                 balanceToBefore: balanceToBefore,
                 reservesCount: ps._reservesCount,
