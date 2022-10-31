@@ -19,7 +19,6 @@ import {
   deployMockVariableDebtToken,
 } from "../deploy/helpers/contracts-deployments";
 import {getEthersSigners} from "../deploy/helpers/contracts-helpers";
-import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {
   InitializableImmutableAdminUpgradeabilityProxy,
   InitializableImmutableAdminUpgradeabilityProxy__factory,
@@ -35,7 +34,7 @@ describe("Upgradeability", () => {
   });
 
   context("VersionedInitializable", async () => {
-    it("Call initialize from the constructor function", async () => {
+    it("TC-upgradeability-01 Call initialize from the constructor function", async () => {
       const initValue = "1";
       const implementation = await deployMockInitializableFromConstructorImple([
         initValue,
@@ -43,7 +42,7 @@ describe("Upgradeability", () => {
       expect(await implementation.value()).to.be.eq(initValue);
     });
 
-    it("Call initialize from the initialize function (reentrant)", async () => {
+    it("TC-upgradeability-02 Call initialize from the initialize function (reentrant)", async () => {
       const initValue = 1;
       const finalValue = 2;
       const implementation = await deployMockReentrantInitializableImple();
@@ -54,7 +53,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("Tries to initialize once it is already initialized (revert expected)", async () => {
+    it("TC-upgradeability-03 Tries to initialize once it is already initialized (revert expected)", async () => {
       const implementation = await deployMockInitializableImple();
       expect(
         await implementation.initialize(
@@ -74,15 +73,16 @@ describe("Upgradeability", () => {
   });
 
   context("InitializableImmutableAdminUpgradeabilityProxy", async () => {
-    let snap: string;
-
-    // eslint-disable-next-line
-    let proxyAdminOwner, newAdmin, nonAdmin;
+    let proxyAdminOwner, nonAdmin;
     let implementationV1, implementationV2, proxiedImpl;
     let proxy: InitializableImmutableAdminUpgradeabilityProxy;
 
+    before(async () => {
+      [proxyAdminOwner, , nonAdmin] = await getEthersSigners();
+    });
+
     beforeEach(async () => {
-      snap = await evmSnapshot();
+      testEnv = await loadFixture(testEnvFixture);
 
       implementationV1 = await deployMockInitializableImple();
       implementationV2 = await deployMockInitializableImpleV2();
@@ -102,25 +102,15 @@ describe("Upgradeability", () => {
       );
       proxiedImpl = await getMockInitializableImple(proxy.address);
     });
-    afterEach(async () => {
-      await evmRevert(snap);
-    });
 
-    before(async () => {
-      const {users} = testEnv;
-      [proxyAdminOwner, newAdmin, nonAdmin] = users;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      [proxyAdminOwner, newAdmin, nonAdmin] = await getEthersSigners();
-    });
-
-    it("initialize() implementation version is correct", async () => {
+    it("TC-upgradeability-04 initialize() implementation version is correct", async () => {
       expect(await proxiedImpl.connect(nonAdmin).REVISION()).to.be.eq(
         1,
         "impl revision is not 1"
       );
     });
 
-    it("initialize() implementation initialization is correct", async () => {
+    it("TC-upgradeability-05 initialize() implementation initialization is correct", async () => {
       expect(await proxiedImpl.connect(nonAdmin).value()).to.be.eq(
         0,
         "impl value is not 0"
@@ -143,7 +133,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("initialize() when initializing the proxy once it is already initialized (revert expected)", async () => {
+    it("TC-upgradeability-06 initialize() when initializing the proxy once it is already initialized (revert expected)", async () => {
       const encodedInitialize = proxiedImpl.interface.encodeFunctionData(
         "initialize",
         [
@@ -157,7 +147,7 @@ describe("Upgradeability", () => {
       ).to.be.reverted;
     });
 
-    it("initialize() when initializing the impl from non-admin address once it is already initialized (revert expected)", async () => {
+    it("TC-upgradeability-07 initialize() when initializing the impl from non-admin address once it is already initialized (revert expected)", async () => {
       await expect(
         proxiedImpl.connect(nonAdmin).initialize(
           10, // value
@@ -167,7 +157,7 @@ describe("Upgradeability", () => {
       ).to.be.revertedWith("Contract instance has already been initialized");
     });
 
-    it("initialize() when initializing the impl from admin address once it is already initialized (revert expected)", async () => {
+    it("TC-upgradeability-08 initialize() when initializing the impl from admin address once it is already initialized (revert expected)", async () => {
       await expect(
         proxiedImpl.connect(proxyAdminOwner).initialize(
           10, // value
@@ -179,7 +169,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("initialize() deploy a proxy and call to initialize() with no initialization data", async () => {
+    it("TC-upgradeability-09 initialize() deploy a proxy and call to initialize() with no initialization data", async () => {
       proxy = await (
         await new InitializableImmutableAdminUpgradeabilityProxy__factory(
           await getFirstSigner()
@@ -188,7 +178,7 @@ describe("Upgradeability", () => {
       expect(await proxy.initialize(implementationV1.address, Buffer.from("")));
     });
 
-    it("initialize() while calling initialize() with wrong initialization data (revert expected)", async () => {
+    it("TC-upgradeability-10 initialize() while calling initialize() with wrong initialization data (revert expected)", async () => {
       proxy = await (
         await new InitializableImmutableAdminUpgradeabilityProxy__factory(
           await getFirstSigner()
@@ -203,30 +193,30 @@ describe("Upgradeability", () => {
       ).to.be.reverted;
     });
 
-    it("admin() non-view function from admin address", async () => {
+    it("TC-upgradeability-11 admin() non-view function from admin address", async () => {
       expect(await proxy.connect(proxyAdminOwner).admin());
     });
 
-    it("admin() non-view function from non-admin address", async () => {
+    it("TC-upgradeability-12 admin() non-view function from non-admin address", async () => {
       await expect(proxy.connect(nonAdmin).admin()).to.be.reverted;
     });
 
-    it("admin() callStatic from admin address", async () => {
+    it("TC-upgradeability-13 admin() callStatic from admin address", async () => {
       expect(await proxy.connect(proxyAdminOwner).callStatic.admin()).to.be.eq(
         proxyAdminOwner.address,
         "proxy admin address not correct"
       );
     });
 
-    it("implementation() non-view function from admin address", async () => {
+    it("TC-upgradeability-14 implementation() non-view function from admin address", async () => {
       expect(await proxy.connect(proxyAdminOwner).implementation());
     });
 
-    it("implementation() non-view function from non-admin address", async () => {
+    it("TC-upgradeability-15 implementation() non-view function from non-admin address", async () => {
       await expect(proxy.connect(nonAdmin).implementation()).to.be.reverted;
     });
 
-    it("implementation() callStatic from admin address", async () => {
+    it("TC-upgradeability-16 implementation() callStatic from admin address", async () => {
       expect(
         await proxy.connect(proxyAdminOwner).callStatic.implementation()
       ).to.be.eq(
@@ -235,12 +225,12 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("upgradeTo() to a new imple from non-admin address (revert expected)", async () => {
+    it("TC-upgradeability-17 upgradeTo() to a new imple from non-admin address (revert expected)", async () => {
       await expect(proxy.connect(nonAdmin).upgradeTo(implementationV2.address))
         .to.be.reverted;
     });
 
-    it("upgradeTo() to a non-contract imple from admin address (revert expected)", async () => {
+    it("TC-upgradeability-18 upgradeTo() to a non-contract imple from admin address (revert expected)", async () => {
       await expect(
         proxy.connect(proxyAdminOwner).upgradeTo(ONE_ADDRESS)
       ).to.be.revertedWith(
@@ -248,7 +238,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("upgradeTo() to a new imple from admin address", async () => {
+    it("TC-upgradeability-19 upgradeTo() to a new imple from admin address", async () => {
       expect(await proxiedImpl.connect(nonAdmin).REVISION()).to.be.eq(
         1,
         "impl revision is not 1"
@@ -316,7 +306,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("upgradeTo() when initializing the new imple from admin address (revert expected)", async () => {
+    it("TC-upgradeability-20 upgradeTo() when initializing the new imple from admin address (revert expected)", async () => {
       await expect(
         proxy.connect(proxyAdminOwner).upgradeTo(implementationV2.address)
       )
@@ -337,7 +327,7 @@ describe("Upgradeability", () => {
       ).to.be.revertedWith("Contract instance has already been initialized");
     });
 
-    it("upgradeToAndCall() to a new impl from non-admin address (revert expected)", async () => {
+    it("TC-upgradeability-21 upgradeToAndCall() to a new impl from non-admin address (revert expected)", async () => {
       await expect(
         proxy
           .connect(nonAdmin)
@@ -345,7 +335,7 @@ describe("Upgradeability", () => {
       ).to.be.reverted;
     });
 
-    it("upgradeToAndCall() to a non-contract impl from admin address (revert expected)", async () => {
+    it("TC-upgradeability-22 upgradeToAndCall() to a non-contract impl from admin address (revert expected)", async () => {
       await expect(
         proxy
           .connect(proxyAdminOwner)
@@ -355,7 +345,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("upgradeToAndCall() to a new impl from admin address", async () => {
+    it("TC-upgradeability-23 upgradeToAndCall() to a new impl from admin address", async () => {
       expect(await proxiedImpl.connect(nonAdmin).REVISION()).to.be.eq(
         1,
         "impl revision is not 1"
@@ -406,7 +396,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("upgradeToAndCall() for a new proxied contract with no initialize function (revert expected)", async () => {
+    it("TC-upgradeability-24 upgradeToAndCall() for a new proxied contract with no initialize function (revert expected)", async () => {
       const impl = await deployMockInitializableImple();
       const encodedInitialize = Buffer.from("");
       await expect(
@@ -416,7 +406,7 @@ describe("Upgradeability", () => {
       ).reverted;
     });
 
-    it("upgradeToAndCall() when initializing the new impl from admin address once it is already initialized (revert expected)", async () => {
+    it("TC-upgradeability-25 upgradeToAndCall() when initializing the new impl from admin address once it is already initialized (revert expected)", async () => {
       const encodedInitialize = implementationV1.interface.encodeFunctionData(
         "initialize",
         [
@@ -441,7 +431,7 @@ describe("Upgradeability", () => {
       ).to.be.revertedWith("Contract instance has already been initialized");
     });
 
-    it("implementation.setValue() call through the proxy", async () => {
+    it("TC-upgradeability-26 implementation.setValue() call through the proxy", async () => {
       const newValue = 123;
       expect(await proxiedImpl.connect(nonAdmin).value()).to.be.eq(
         0,
@@ -454,7 +444,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("implementation.setValue() direct call to the implementation", async () => {
+    it("TC-upgradeability-27 implementation.setValue() direct call to the implementation", async () => {
       const newValue = 123;
       expect(await implementationV1.value()).to.be.eq(0, "value not correct");
       expect(await implementationV1.setValue(newValue));
@@ -492,7 +482,7 @@ describe("Upgradeability", () => {
       newVariableTokenAddress = variableDebtTokenInstance.address;
     });
 
-    it("Tries to update the DAI Ptoken implementation with a different address than the poolManager", async () => {
+    it("TC-upgradeability-28 Tries to update the DAI Ptoken implementation with a different address than the poolManager (revert expected)", async () => {
       const {dai, configurator, users} = testEnv;
 
       const name = await (await getPToken(newPTokenAddress)).name();
@@ -522,7 +512,7 @@ describe("Upgradeability", () => {
       ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
     });
 
-    it("Upgrades the DAI Ptoken implementation ", async () => {
+    it("TC-upgradeability-29 Upgrades the DAI Ptoken implementation ", async () => {
       const {dai, configurator, pDai} = testEnv;
 
       const name = await (await getPToken(newPTokenAddress)).name();
@@ -555,7 +545,7 @@ describe("Upgradeability", () => {
       );
     });
 
-    it("Tries to update the DAI variable debt token implementation with a different address than the poolManager", async () => {
+    it("TC-upgradeability-30 Tries to update the DAI variable debt token implementation with a different address than the poolManager (revert expected)", async () => {
       const {dai, configurator, users} = testEnv;
 
       const name = await (
@@ -588,7 +578,7 @@ describe("Upgradeability", () => {
       ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
     });
 
-    it("Upgrades the DAI variable debt token implementation ", async () => {
+    it("TC-upgradeability-31 Upgrades the DAI variable debt token implementation ", async () => {
       const {dai, configurator, protocolDataProvider} = testEnv;
 
       const name = await (
