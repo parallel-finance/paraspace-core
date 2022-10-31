@@ -142,16 +142,9 @@ contract NTokenMAYC is NToken {
             );
 
             if (stakedAmount > 0) {
-                uint256 pendingRewards = _apeCoinStaking.pendingRewards(
-                    MAYC_POOL_ID,
-                    address(this),
-                    tokenIds[index]
-                );
-                uint256 totalAmount = stakedAmount + pendingRewards;
-
                 nfts[counter] = ApeCoinStaking.SingleNft({
                     tokenId: tokenIds[index],
-                    amount: totalAmount
+                    amount: stakedAmount
                 });
                 counter++;
             }

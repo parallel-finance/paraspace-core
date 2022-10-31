@@ -6,6 +6,7 @@ import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
+import "hardhat/console.sol";
 
 /**
  * @title BAYC NToken
@@ -148,16 +149,9 @@ contract NTokenBAYC is NToken {
             );
 
             if (stakedAmount > 0) {
-                uint256 pendingRewards = _apeCoinStaking.pendingRewards(
-                    BAYC_POOL_ID,
-                    address(this),
-                    tokenIds[index]
-                );
-                uint256 totalAmount = stakedAmount + pendingRewards;
-
                 nfts[counter] = ApeCoinStaking.SingleNft({
                     tokenId: tokenIds[index],
-                    amount: totalAmount
+                    amount: stakedAmount
                 });
                 counter++;
             }
