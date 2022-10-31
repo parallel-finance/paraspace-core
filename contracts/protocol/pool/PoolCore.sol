@@ -418,7 +418,7 @@ contract PoolCore is
         address collateralAsset,
         address liquidationAsset,
         address user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         bool receivePToken
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
@@ -429,7 +429,7 @@ contract PoolCore is
             ps._usersConfig,
             DataTypes.ExecuteLiquidationCallParams({
                 reservesCount: ps._reservesCount,
-                liquidationAmount: debtToCover,
+                liquidationAmount: liquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 liquidationAsset: liquidationAsset,
