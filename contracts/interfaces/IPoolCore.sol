@@ -436,6 +436,24 @@ interface IPoolCore {
     ) external;
 
     /**
+     * @notice Function to liquidate an ERC721 of a position if its Health Factor drops below 1. The caller (liquidator)
+     * can only swap it with WETH
+     * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
+     * @param user The address of the borrower getting liquidated
+     * @param collateralTokenId TokenId of the NFT collateral
+     * @param liquidationAmount amount of WETH
+     * @param receiveNToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
+     * to receive the underlying collateral asset directly
+     **/
+    function liquidationERC721WithEther(
+        address collateralAsset,
+        address user,
+        uint256 collateralTokenId,
+        uint256 liquidationAmount,
+        bool receiveNToken
+    ) external;
+
+    /**
      * @notice Start the auction on user's specific NFT collateral
      * @param user The address of the user
      * @param collateralAsset The address of the NFT collateral
