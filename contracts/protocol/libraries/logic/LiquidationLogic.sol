@@ -363,8 +363,8 @@ library LiquidationLogic {
                 liquidator: params.liquidator,
                 borrower: params.user,
                 globalDebt: vars.userGlobalDebt,
-                actualLiquidationAmount: vars.actualLiquidationAmount,
-                liquidationAmount: params.liquidationAmount,
+                actualLiquidationAmount: vars.actualLiquidationAmount + vars.liquidationProtocolFeeAmount,
+                maxLiquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
                 tokenId: params.collateralTokenId,
@@ -596,7 +596,7 @@ library LiquidationLogic {
                 vars.actualDebtToLiquidate,
                 vars.liquidationAssetReserveCache.nextVariableBorrowIndex
             );
-
+        // Update borrow & supply rate
         liquidationAssetReserve.updateInterestRates(
             vars.liquidationAssetReserveCache,
             params.liquidationAsset,
@@ -670,7 +670,7 @@ library LiquidationLogic {
      *   otherwise it might fail.
      * @param collateralReserve The data of the collateral reserve
      * @param params The additional parameters needed to execute the liquidation function
-     * @param callVars the executeLiquidationCall() function local vars
+     * @param superVars the executeLiquidationCall() function local vars
      * @return The user collateral balance
      * @return The maximum amount that is possible to liquidate given all the liquidation constraints (user balance, close factor)
      * @return The amount to repay with the liquidation
@@ -679,7 +679,7 @@ library LiquidationLogic {
     function _calculateERC20LiquidationParameters(
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ExecuteLiquidationCallParams memory params,
-        LiquidationCallLocalVars memory callVars
+        LiquidationCallLocalVars memory superVars
     )
         internal
         view
@@ -692,7 +692,7 @@ library LiquidationLogic {
     {
         LiquidationParametersLocalVars memory vars;
 
-        vars.userCollateral = IPToken(callVars.collateralXToken).balanceOf(
+        vars.userCollateral = IPToken(superVars.collateralXToken).balanceOf(
             params.user
         );
         vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
@@ -701,7 +701,7 @@ library LiquidationLogic {
             .getAssetPrice(params.liquidationAsset);
 
         vars.collateralDecimals = collateralReserve.configuration.getDecimals();
-        vars.liquidationAssetDecimals = callVars
+        vars.liquidationAssetDecimals = superVars
             .liquidationAssetReserveCache
             .reserveConfiguration
             .getDecimals();
@@ -719,17 +719,17 @@ library LiquidationLogic {
             params.liquidationAmount *
             vars.collateralAssetUnit) /
             (vars.collateralPrice * vars.liquidationAssetUnit)).percentMul(
-                callVars.liquidationBonus
+                superVars.liquidationBonus
             );
 
-        if (maxCollateralToLiquidate > callVars.userCollateral) {
-            vars.actualCollateralToLiquidate = callVars.userCollateral;
+        if (maxCollateralToLiquidate > superVars.userCollateral) {
+            vars.actualCollateralToLiquidate = superVars.userCollateral;
             vars.actualLiquidationAmount = (
                 ((vars.collateralPrice *
                     vars.actualCollateralToLiquidate *
                     vars.liquidationAssetUnit) /
                     (vars.liquidationAssetPrice * vars.collateralAssetUnit))
-            ).percentDiv(callVars.liquidationBonus);
+            ).percentDiv(superVars.liquidationBonus);
         } else {
             vars.actualCollateralToLiquidate = maxCollateralToLiquidate;
             vars.actualLiquidationAmount = params.liquidationAmount;
@@ -738,7 +738,7 @@ library LiquidationLogic {
         if (vars.liquidationProtocolFeePercentage != 0) {
             uint256 bonusCollateral = vars.actualCollateralToLiquidate -
                 vars.actualCollateralToLiquidate.percentDiv(
-                    callVars.liquidationBonus
+                    superVars.liquidationBonus
                 );
 
             vars.liquidationProtocolFee = bonusCollateral.percentMul(
@@ -768,7 +768,7 @@ library LiquidationLogic {
      *   otherwise it might fail.
      * @param collateralReserve The data of the collateral reserve
      * @param params The additional parameters needed to execute the liquidation function
-     * @param callVars the executeLiquidationCall() function local vars
+     * @param superVars the executeLiquidationCall() function local vars
      * @return The user collateral balance
      * @return The discounted nft price + the liquidationProtocolFee
      * @return The liquidationProtocolFee
@@ -777,7 +777,7 @@ library LiquidationLogic {
     function _calculateERC721LiquidationParameters(
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ExecuteLiquidationCallParams memory params,
-        LiquidationCallLocalVars memory callVars
+        LiquidationCallLocalVars memory superVars
     )
         internal
         view
@@ -790,7 +790,7 @@ library LiquidationLogic {
     {
         LiquidationParametersLocalVars memory vars;
 
-        vars.userCollateral = ICollaterizableERC721(callVars.collateralXToken)
+        vars.userCollateral = ICollaterizableERC721(superVars.collateralXToken)
             .collaterizedBalanceOf(params.user);
 
         // price of the asset that is used as collateral
@@ -806,7 +806,7 @@ library LiquidationLogic {
         }
 
         if (
-            callVars.auctionEnabled &&
+            superVars.auctionEnabled &&
             IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
                 params.collateralTokenId
             )
@@ -828,7 +828,7 @@ library LiquidationLogic {
         // price of the asset the liquidator is liquidating with
         vars.liquidationAssetPrice = IPriceOracleGetter(params.priceOracle)
             .getAssetPrice(params.liquidationAsset);
-        vars.liquidationAssetDecimals = callVars
+        vars.liquidationAssetDecimals = superVars
             .liquidationAssetReserveCache
             .reserveConfiguration
             .getDecimals();
@@ -845,7 +845,7 @@ library LiquidationLogic {
             vars.liquidationAssetUnit) / vars.liquidationAssetPrice;
 
         // base currency to convert to liquidation asset unit.
-        uint256 globalDebtAmount = (callVars.userGlobalDebt *
+        uint256 globalDebtAmount = (superVars.userGlobalDebt *
             vars.liquidationAssetUnit) / vars.liquidationAssetPrice;
 
         // (liquidation amount (passed in by liquidator, this has decimals) * liquidationAssetPrice) / number of decimals
@@ -857,7 +857,7 @@ library LiquidationLogic {
             vars.liquidationAssetUnit;
 
         vars.actualLiquidationAmount = collateralToLiquate.percentDiv(
-            callVars.liquidationBonus
+            superVars.liquidationBonus
         );
 
         if (vars.liquidationProtocolFeePercentage != 0) {
