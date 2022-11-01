@@ -437,7 +437,8 @@ contract PoolCore is
                 receiveXToken: receivePToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
-                collateralTokenId: 0
+                collateralTokenId: 0,
+                swapOnly: false
             })
         );
     }
@@ -467,7 +468,8 @@ contract PoolCore is
                 user: user,
                 receiveXToken: receiveNToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapOnly: false
             })
         );
     }
@@ -496,7 +498,8 @@ contract PoolCore is
                 user: user,
                 receiveXToken: receiveNToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapOnly: false
             })
         );
     }

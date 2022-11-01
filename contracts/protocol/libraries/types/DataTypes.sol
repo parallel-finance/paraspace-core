@@ -109,6 +109,7 @@ library DataTypes {
         bool receiveXToken;
         address priceOracle;
         address priceOracleSentinel;
+        bool swapOnly;
     }
 
     struct ExecuteAuctionParams {

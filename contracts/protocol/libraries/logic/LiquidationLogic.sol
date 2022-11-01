@@ -591,7 +591,7 @@ library LiquidationLogic {
             liquidationAssetReserveId
         );
 
-        if (vars.isLiquidationAssetBorrowed) {
+        if (vars.isLiquidationAssetBorrowed && !params.swapOnly) {
             (vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
                 vars.liquidationAssetReserveCache,
                 params
@@ -605,7 +605,11 @@ library LiquidationLogic {
             vars.liquidationBonus
         ) = _getConfigurationData(collateralReserve, params);
 
-        if (!vars.isLiquidationAssetBorrowed || vars.auctionEnabled) {
+        if (
+            !vars.isLiquidationAssetBorrowed ||
+            vars.auctionEnabled ||
+            params.swapOnly
+        ) {
             vars.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
         }
 
