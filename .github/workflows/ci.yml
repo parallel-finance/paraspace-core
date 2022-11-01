@@ -35,6 +35,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
           yarn doc
           yarn lint
 
@@ -64,6 +65,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
           yarn test
 
   coverage:
@@ -95,6 +97,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
         if: steps.cache.outputs.cache-hit != 'true'
       - run: |
           yarn cache clean --all
