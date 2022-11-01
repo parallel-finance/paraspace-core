@@ -6,6 +6,7 @@ import {
   getMockInitializableImple,
   getMockInitializableImpleV2,
   getMockVariableDebtToken,
+  getNToken,
   getPToken,
   getVariableDebtToken,
 } from "../deploy/helpers/contracts-getters";
@@ -14,6 +15,7 @@ import {
   deployMockInitializableFromConstructorImple,
   deployMockInitializableImple,
   deployMockInitializableImpleV2,
+  deployMockNToken,
   deployMockPToken,
   deployMockReentrantInitializableImple,
   deployMockVariableDebtToken,
@@ -466,9 +468,10 @@ describe("Upgradeability", () => {
     const {CALLER_NOT_POOL_ADMIN} = ProtocolErrors;
     let newPTokenAddress: string;
     let newVariableTokenAddress: string;
+    let newNTokenAddress: string;
 
     before("deploying instances", async () => {
-      const {dai, pool} = testEnv;
+      const {dai, pool, bayc} = testEnv;
       const xTokenInstance = await deployMockPToken([
         pool.address,
         dai.address,
@@ -488,8 +491,18 @@ describe("Upgradeability", () => {
         "0x10",
       ]);
 
+      const nTokenInstance = await deployMockNToken([
+        pool.address,
+        bayc.address,
+        ZERO_ADDRESS,
+        "ParaSpace NToken V2",
+        "nBAYC",
+        "0x10",
+      ]);
+
       newPTokenAddress = xTokenInstance.address;
       newVariableTokenAddress = variableDebtTokenInstance.address;
+      newNTokenAddress = nTokenInstance.address;
     });
 
     it("Tries to update the DAI Ptoken implementation with a different address than the poolManager", async () => {
@@ -553,6 +566,62 @@ describe("Upgradeability", () => {
         "ParaSpace Interest bearing DAI updated",
         "Invalid token name"
       );
+    });
+
+    it("Tries to update the BAYC Ntoken implementation with a different address than the poolManager", async () => {
+      const {bayc, configurator, users} = testEnv;
+
+      const name = await (await getNToken(newNTokenAddress)).name();
+      const symbol = await (await getNToken(newNTokenAddress)).symbol();
+
+      const updateNTokenInputParams: {
+        asset: string;
+        incentivesController: string;
+        name: string;
+        symbol: string;
+        implementation: string;
+        params: string;
+      } = {
+        asset: bayc.address,
+        incentivesController: ZERO_ADDRESS,
+        name: name,
+        symbol: symbol,
+        implementation: newNTokenAddress,
+        params: "0x10",
+      };
+      await expect(
+        configurator
+          .connect(users[1].signer)
+          .updateNToken(updateNTokenInputParams)
+      ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+    });
+
+    it("Upgrades the BAYC NToken implementation ", async () => {
+      const {bayc, configurator, nBAYC} = testEnv;
+
+      const name = await (await getNToken(newNTokenAddress)).name();
+      const symbol = await (await getNToken(newNTokenAddress)).symbol();
+
+      const updateNTokenInputParams: {
+        asset: string;
+        incentivesController: string;
+        name: string;
+        symbol: string;
+        implementation: string;
+        params: string;
+      } = {
+        asset: bayc.address,
+        incentivesController: ZERO_ADDRESS,
+        name: name,
+        symbol: symbol,
+        implementation: newNTokenAddress,
+        params: "0x10",
+      };
+      await configurator.updateNToken(updateNTokenInputParams);
+
+      const tokenName = await nBAYC.name();
+
+      expect(tokenName).to.be.eq("ParaSpace NToken V2", "Invalid ntoken name");
     });
 
     it("Tries to update the DAI variable debt token implementation with a different address than the poolManager", async () => {
