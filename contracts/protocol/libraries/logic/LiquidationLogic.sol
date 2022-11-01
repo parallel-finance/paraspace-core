@@ -1060,15 +1060,7 @@ library LiquidationLogic {
         uint256 collateralTokenId,
         bool auctionEnabled,
         IPriceOracleGetter oracle
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (uint256, uint256, uint256) {
         AvailableCollateralToLiquidateLocalVars memory vars;
         vars.collateralAsset = collateralAsset;
 

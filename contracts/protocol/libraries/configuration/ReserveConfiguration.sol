@@ -513,13 +513,7 @@ library ReserveConfiguration {
     function getParams(DataTypes.ReserveConfigurationMap memory self)
         internal
         pure
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
+        returns (uint256, uint256, uint256, uint256, uint256)
     {
         uint256 dataLocal = self.data;
 
