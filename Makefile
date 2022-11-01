@@ -151,7 +151,7 @@ test-nft-floor-price-oracle:
 
 .PHONY: test-weth-gateway
 test-weth-gateway:
-	make TEST_TARGET=weth-gateway.spec.ts test
+	make TEST_TARGET=_gateway_weth.spec.ts test
 
 .PHONY: test-mock-token-faucet
 test-mock-token-faucet:

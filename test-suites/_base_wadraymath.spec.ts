@@ -19,14 +19,14 @@ describe("WadRayMath", () => {
     wrapper = await ((await factory.deploy()) as WadRayMathWrapper).deployed();
   });
 
-  it("Plain getters", async () => {
+  it("TC-wadraymath-01 Plain constant getters", async () => {
     expect((await wrapper.wad()).toString()).to.be.eq(WAD);
     expect((await wrapper.halfWad()).toString()).to.be.eq(HALF_WAD);
     expect((await wrapper.ray()).toString()).to.be.eq(RAY);
     expect((await wrapper.halfRay()).toString()).to.be.eq(HALF_RAY);
   });
 
-  it("wadMul()", async () => {
+  it("TC-wadraymath-02 wadMul()", async () => {
     const a = BigNumber.from("134534543232342353231234");
     const b = BigNumber.from("13265462389132757665657");
 
@@ -41,7 +41,7 @@ describe("WadRayMath", () => {
     await expect(wrapper.wadMul(tooLargeA, b)).to.be.reverted;
   });
 
-  it("wadDiv()", async () => {
+  it("TC-wadraymath-03 wadDiv()", async () => {
     const a = BigNumber.from("134534543232342353231234");
     const b = BigNumber.from("13265462389132757665657");
 
@@ -58,7 +58,7 @@ describe("WadRayMath", () => {
     await expect(wrapper.wadDiv(a, 0)).to.be.reverted;
   });
 
-  it("rayMul()", async () => {
+  it("TC-wadraymath-04 rayMul()", async () => {
     const a = BigNumber.from("134534543232342353231234");
     const b = BigNumber.from("13265462389132757665657");
 
@@ -73,7 +73,7 @@ describe("WadRayMath", () => {
     await expect(wrapper.rayMul(tooLargeA, b)).to.be.reverted;
   });
 
-  it("rayDiv()", async () => {
+  it("TC-wadraymath-05 rayDiv()", async () => {
     const a = BigNumber.from("134534543232342353231234");
     const b = BigNumber.from("13265462389132757665657");
 
@@ -89,7 +89,7 @@ describe("WadRayMath", () => {
     await expect(wrapper.rayDiv(a, 0)).to.be.reverted;
   });
 
-  it("rayToWad()", async () => {
+  it("TC-wadraymath-06 rayToWad()", async () => {
     const half = BigNumber.from(10).pow(9).div(2);
 
     const a = BigNumber.from("10").pow(27);
@@ -105,7 +105,7 @@ describe("WadRayMath", () => {
     expect(await wrapper.rayToWad(tooLarge)).to.be.eq(tooLarge.rayToWad());
   });
 
-  it("wadToRay()", async () => {
+  it("TC-wadraymath-07 wadToRay()", async () => {
     const a = BigNumber.from("10").pow(18);
     expect(await wrapper.wadToRay(a)).to.be.eq(a.wadToRay());
 
