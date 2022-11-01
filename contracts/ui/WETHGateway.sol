@@ -10,7 +10,7 @@ import {IPToken} from "../interfaces/IPToken.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
-import {DataTypesHelper} from "./libraries/DataTypesHelper.sol";
+import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 
@@ -95,9 +95,9 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         override
         nonReentrant
     {
-        uint256 variableDebt = DataTypesHelper.getUserCurrentDebt(
+        uint256 variableDebt = Helpers.getUserCurrentDebt(
             onBehalfOf,
-            IPool(pool).getReserveData(address(WETH))
+            IPool(pool).getReserveData(address(WETH)).variableDebtTokenAddress
         );
 
         uint256 paybackAmount = variableDebt;

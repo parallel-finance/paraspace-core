@@ -4,9 +4,10 @@ import {
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
 import {
+  assertAlmostEqual,
   borrowAndValidate,
   changePriceAndValidate,
-  liquidateAndValidateERC721,
+  liquidateAndValidate,
   supplyAndValidate,
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
@@ -22,7 +23,7 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import "./helpers/utils/wadraymath";
 import {parseUnits} from "ethers/lib/utils";
 
-describe("Liquidation Tests", () => {
+describe("ERC721 Liquidation - non-borrowed token", () => {
   let testEnv: TestEnv;
 
   const {
@@ -81,7 +82,13 @@ describe("Liquidation Tests", () => {
     );
     expect((await nBAYC.getAuctionData(0)).startTime).to.be.gt(0);
 
-    const result = await liquidateAndValidateERC721(
+    const expectedAuctionData = await pool
+      .connect(liquidator.signer)
+      .getAuctionData(nBAYC.address, 0);
+
+    console.log(expectedAuctionData);
+
+    const result = await liquidateAndValidate(
       bayc,
       weth,
       "1000",
@@ -90,28 +97,39 @@ describe("Liquidation Tests", () => {
       false,
       0
     );
-    console.log("\n****liquidation params in test*****");
-    console.log(result);
 
     const {before, after} = result;
-    //liquidator supply liquadation asset on behalf of borrower to get his nft token
+    //liquidator supply liquidation asset on behalf of borrower to get his nft token
     assert(
-      before
-        .liquidatorLiquidationAssetBalance!.sub(
-          after.liquidatorLiquidationAssetBalance!
-        )
-        .eq(after.liquidationPTokenBalance!)
+      before.liquidatorLiquidationAssetBalance
+        .sub(after.liquidatorLiquidationAssetBalance)
+        .eq(after.borrowerLiquidationPTokenBalance)
     );
+
     //assert liquidator actually get the nft
     assert(
-      after.liquidatorTargetTokenBalance! > before.liquidatorTargetTokenBalance!
+      after.liquidatorCollateralTokenBalance >
+        before.liquidatorCollateralTokenBalance
     );
     //assert borrowing status correct
-    expect(before.isBorrowing).to.be.false;
-    expect(after.isBorrowing).to.be.false;
+    expect(before.isLiquidationAssetBorrowedPerConfig).to.be.false;
+    expect(after.isLiquidationAssetBorrowedPerConfig).to.be.false;
     //assert isUsingAsCollateral status correct
     expect(before.isUsingAsCollateral).to.be.false;
     expect(after.isUsingAsCollateral).to.be.true;
+    //assert ptoken balance of liquidation asset
+    assertAlmostEqual(
+      after.borrowerLiquidationPTokenBalance,
+      before.isAuctionStarted
+        ? // since it is dificult to predict the price in auction case
+          // we remove it from common validation logic to here
+          before.liquidatorLiquidationAssetBalance.sub(
+            after.liquidatorLiquidationAssetBalance
+          )
+        : before.borrowerLiquidationPTokenBalance.add(
+            before.liquidationAssetPrice
+          )
+    );
   });
 
   it("liquidates ERC-20 with non-borrowed token is not allowed", async () => {
@@ -192,10 +210,6 @@ describe("Liquidation Tests", () => {
 
     const userGlobalDataAfterPriceChange = await pool.getUserAccountData(
       borrower.address
-    );
-
-    console.log(
-      "userGlobalDataAfterPriceChange: " + userGlobalDataAfterPriceChange
     );
 
     expect(userGlobalDataAfterPriceChange.healthFactor).to.be.lt(

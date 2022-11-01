@@ -3,8 +3,8 @@ pragma solidity 0.8.10;
 
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
+import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
-import {IDynamicConfigsStrategy} from "../../../interfaces/IDynamicConfigsStrategy.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
@@ -14,6 +14,8 @@ import {PercentageMath} from "../math/PercentageMath.sol";
 import {WadRayMath} from "../math/WadRayMath.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
+import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
+import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 
 /**
  * @title GenericLogic library
@@ -48,11 +50,8 @@ library GenericLogic {
         uint256 avgERC721LiquidationThreshold;
         address currentReserveAddress;
         bool hasZeroLtvCollateral;
-        bool dynamicConfigs;
-        bool isAtomicPrice;
-        uint256 dynamicLTV;
-        uint256 dynamicLiquidationThreshold;
         address xTokenAddress;
+        XTokenType xTokenType;
     }
 
     /**
@@ -137,8 +136,7 @@ library GenericLogic {
                 vars.liquidationThreshold,
                 vars.liquidationBonus,
                 vars.decimals,
-                ,
-                vars.dynamicConfigs
+
             ) = currentReserve.configuration.getParams();
 
             unchecked {
@@ -197,25 +195,21 @@ library GenericLogic {
                 }
             } else {
                 if (
-                    (vars.liquidationThreshold != 0 || vars.dynamicConfigs) &&
+                    (vars.liquidationThreshold != 0) &&
                     params.userConfig.isUsingAsCollateral(vars.i)
                 ) {
-                    vars.isAtomicPrice = INToken(vars.xTokenAddress)
-                        .getAtomicPricingConfig();
-                    if (vars.dynamicConfigs) {
+                    vars.xTokenType = INToken(vars.xTokenAddress)
+                        .getXTokenType();
+                    if (vars.xTokenType == XTokenType.NTokenUniswapV3) {
                         (
                             vars.userBalanceInBaseCurrency,
-                            vars.dynamicLTV,
-                            vars.dynamicLiquidationThreshold
-                        ) = _getUserBalanceForDynamicConfigsAsset(
+                            vars.ltv,
+                            vars.liquidationThreshold
+                        ) = _getUserBalanceForUniswapV3(
+                            reservesData,
                             params,
-                            vars,
-                            currentReserve.dynamicConfigsStrategyAddress
+                            vars
                         );
-
-                        vars.liquidationThreshold = vars
-                            .dynamicLiquidationThreshold;
-                        vars.avgLtv += vars.dynamicLTV;
                     } else {
                         vars
                             .userBalanceInBaseCurrency = _getUserBalanceForERC721(
@@ -226,9 +220,7 @@ library GenericLogic {
                         vars.liquidationThreshold =
                             vars.userBalanceInBaseCurrency *
                             vars.liquidationThreshold;
-                        vars.avgLtv +=
-                            vars.userBalanceInBaseCurrency *
-                            vars.ltv;
+                        vars.ltv += vars.userBalanceInBaseCurrency * vars.ltv;
 
                         if (vars.ltv == 0) {
                             vars.hasZeroLtvCollateral = true;
@@ -239,10 +231,9 @@ library GenericLogic {
                         .liquidationThreshold;
                     vars.totalERC721CollateralInBaseCurrency += vars
                         .userBalanceInBaseCurrency;
-
                     vars.totalCollateralInBaseCurrency += vars
                         .userBalanceInBaseCurrency;
-
+                    vars.avgLtv += vars.ltv;
                     vars.avgLiquidationThreshold += vars.liquidationThreshold;
                 }
             }
@@ -351,12 +342,13 @@ library GenericLogic {
         ).scaledBalanceOf(user);
         if (userTotalDebt != 0) {
             userTotalDebt = userTotalDebt.rayMul(reserve.getNormalizedDebt());
-        }
+            userTotalDebt = assetPrice * userTotalDebt;
 
-        userTotalDebt = assetPrice * userTotalDebt;
-
-        unchecked {
-            return userTotalDebt / assetUnit;
+            unchecked {
+                return userTotalDebt / assetUnit;
+            }
+        } else {
+            return 0;
         }
     }
 
@@ -370,14 +362,16 @@ library GenericLogic {
         DataTypes.CalculateUserAccountDataParams memory params,
         CalculateUserAccountDataVars memory vars
     ) private view returns (uint256 totalValue) {
-        if (vars.isAtomicPrice) {
-            uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(
-                params.user
-            );
+        INToken nToken = INToken(vars.xTokenAddress);
+        bool isAtomicPrice = nToken.getAtomicPricingConfig();
+        if (isAtomicPrice) {
+            uint256 totalBalance = nToken.balanceOf(params.user);
 
             for (uint256 index = 0; index < totalBalance; index++) {
-                uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
-                    .tokenOfOwnerByIndex(params.user, index);
+                uint256 tokenId = nToken.tokenOfOwnerByIndex(
+                    params.user,
+                    index
+                );
                 if (
                     ICollaterizableERC721(vars.xTokenAddress)
                         .isUsedAsCollateral(tokenId)
@@ -402,10 +396,61 @@ library GenericLogic {
         }
     }
 
-    function _getUserBalanceForDynamicConfigsAsset(
+    function getLtvAndLTForUniswapV3(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        address uniswapV3Manager,
+        uint256 tokenId,
+        uint256 collectionLTV,
+        uint256 collectionLiquidationThreshold
+    ) internal view returns (uint256 ltv, uint256 liquidationThreshold) {
+        (
+            ,
+            ,
+            address token0,
+            address token1,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+
+        ) = INonfungiblePositionManager(uniswapV3Manager).positions(tokenId);
+
+        DataTypes.ReserveConfigurationMap memory token0Configs = reservesData[
+            token0
+        ].configuration;
+        DataTypes.ReserveConfigurationMap memory token1Configs = reservesData[
+            token1
+        ].configuration;
+
+        (
+            uint256 token0Ltv,
+            uint256 token0LiquidationThreshold,
+            ,
+            ,
+
+        ) = token0Configs.getParams();
+        (
+            uint256 token1Ltv,
+            uint256 token1LiquidationThreshold,
+            ,
+            ,
+
+        ) = token1Configs.getParams();
+
+        ltv = Math.min(Math.min(token0Ltv, token1Ltv), collectionLTV);
+        liquidationThreshold = Math.min(
+            Math.min(token0LiquidationThreshold, token1LiquidationThreshold),
+            collectionLiquidationThreshold
+        );
+    }
+
+    function _getUserBalanceForUniswapV3(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.CalculateUserAccountDataParams memory params,
-        CalculateUserAccountDataVars memory vars,
-        address dynamicConfigsStrategyAddress
+        CalculateUserAccountDataVars memory vars
     )
         private
         view
@@ -418,69 +463,40 @@ library GenericLogic {
         uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(
             params.user
         );
-        if (vars.isAtomicPrice) {
-            for (uint256 index = 0; index < totalBalance; index++) {
-                uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
-                    .tokenOfOwnerByIndex(params.user, index);
-                if (
-                    ICollaterizableERC721(vars.xTokenAddress)
-                        .isUsedAsCollateral(tokenId)
-                ) {
-                    uint256 tokenPrice = _getTokenPrice(
-                        params.oracle,
+        for (uint256 index = 0; index < totalBalance; index++) {
+            uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
+                .tokenOfOwnerByIndex(params.user, index);
+            if (
+                ICollaterizableERC721(vars.xTokenAddress).isUsedAsCollateral(
+                    tokenId
+                )
+            ) {
+                uint256 tokenPrice = _getTokenPrice(
+                    params.oracle,
+                    vars.currentReserveAddress,
+                    tokenId
+                );
+                totalValue += tokenPrice;
+
+                (
+                    uint256 tmpLTV,
+                    uint256 tmpLiquidationThreshold
+                ) = getLtvAndLTForUniswapV3(
+                        reservesData,
                         vars.currentReserveAddress,
-                        tokenId
+                        tokenId,
+                        vars.ltv,
+                        vars.liquidationThreshold
                     );
-                    totalValue += tokenPrice;
 
-                    (
-                        uint256 tmpLTV,
-                        uint256 tmpLiquidationThreshold
-                    ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
-                            .getConfigParams(tokenId);
-
-                    if (tmpLTV == 0) {
-                        vars.hasZeroLtvCollateral = true;
-                    }
-
-                    totalLTV += tmpLTV * tokenPrice;
-                    totalLiquidationThreshold +=
-                        tmpLiquidationThreshold *
-                        tokenPrice;
+                if (tmpLTV == 0) {
+                    vars.hasZeroLtvCollateral = true;
                 }
-            }
-        } else {
-            uint256 assetPrice = _getAssetPrice(
-                params.oracle,
-                vars.currentReserveAddress
-            );
-            totalValue =
-                ICollaterizableERC721(vars.xTokenAddress).collaterizedBalanceOf(
-                    params.user
-                ) *
-                assetPrice;
-            for (uint256 index = 0; index < totalBalance; index++) {
-                uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
-                    .tokenOfOwnerByIndex(params.user, index);
-                if (
-                    ICollaterizableERC721(vars.xTokenAddress)
-                        .isUsedAsCollateral(tokenId)
-                ) {
-                    (
-                        uint256 tmpLTV,
-                        uint256 tmpLiquidationThreshold
-                    ) = IDynamicConfigsStrategy(dynamicConfigsStrategyAddress)
-                            .getConfigParams(tokenId);
 
-                    if (tmpLTV == 0) {
-                        vars.hasZeroLtvCollateral = true;
-                    }
-
-                    totalLTV += tmpLTV * assetPrice;
-                    totalLiquidationThreshold +=
-                        tmpLiquidationThreshold *
-                        assetPrice;
-                }
+                totalLTV += tmpLTV * tokenPrice;
+                totalLiquidationThreshold +=
+                    tmpLiquidationThreshold *
+                    tokenPrice;
             }
         }
     }

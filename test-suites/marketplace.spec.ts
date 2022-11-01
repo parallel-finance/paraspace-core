@@ -2216,7 +2216,7 @@ describe("Leveraged Bid - Positive tests", () => {
   it("ERC20 <=> Punk via paraspace - partial borrow", async () => {
     const {
       usdc,
-      punk,
+      cryptoPunksMarket: punk,
       wPunk,
       nWPunk,
       conduitKey,

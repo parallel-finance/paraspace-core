@@ -42,7 +42,7 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     env:
-      RPC_URL: ${{ secrets.RPC_URL }}
+      INFURA_KEY: ${{ secrets.INFURA_KEY }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
       MOCHA_JOBS: 0
@@ -70,7 +70,7 @@ jobs:
     name: Coverage Check
     runs-on: ubuntu-latest
     env:
-      RPC_URL: ${{ secrets.RPC_URL }}
+      INFURA_KEY: ${{ secrets.INFURA_KEY }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
       REPORT_GAS: true

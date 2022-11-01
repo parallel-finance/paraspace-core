@@ -24,7 +24,6 @@ interface IUiPoolDataProvider {
         bool usageAsCollateralEnabled;
         bool borrowingEnabled;
         bool auctionEnabled;
-        bool dynamicConfigsEnabled;
         bool isActive;
         bool isFrozen;
         bool isPaused;
@@ -38,7 +37,6 @@ interface IUiPoolDataProvider {
         address variableDebtTokenAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
-        address dynamicConfigsStrategyAddress;
         uint256 availableLiquidity;
         uint256 totalScaledVariableDebt;
         uint256 priceInMarketReferenceCurrency;

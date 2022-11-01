@@ -9,9 +9,9 @@ import {
   approveTo,
 } from "../deploy/helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {getPoolConfiguratorProxy} from "../deploy/helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {ProtocolErrors} from "../deploy/helpers/types";
 
 describe("Atomic tokens limit", () => {
   describe("token limit behaviour", () => {
@@ -19,6 +19,7 @@ describe("Atomic tokens limit", () => {
     before(async () => {
       testEnv = await loadFixture(testEnvFixture);
     });
+    const {NTOKEN_BALANCE_EXCEEDED} = ProtocolErrors;
 
     it("Should allow supplying atomic tokens within limit [ @skip-on-coverage ]", async () => {
       const {
@@ -80,9 +81,7 @@ describe("Atomic tokens limit", () => {
 
       await nft.setApprovalForAll(pool.address, true);
 
-      const poolConfigurator = await getPoolConfiguratorProxy();
-
-      await waitForTx(await poolConfigurator.setMaxAtomicTokensAllowed(2));
+      await waitForTx(await nUniswapV3.setBalanceLimit(2));
 
       await pool.connect(user1.signer).supplyUniswapV3(
         nftPositionManager.address,
@@ -120,7 +119,7 @@ describe("Atomic tokens limit", () => {
             gasLimit: 12_450_000,
           }
         )
-      ).to.be.reverted;
+      ).to.be.revertedWith(NTOKEN_BALANCE_EXCEEDED);
     });
 
     it("Should allow transferring atomic tokens within of limit [ @skip-on-coverage ]", async () => {
@@ -191,7 +190,7 @@ describe("Atomic tokens limit", () => {
               gasLimit: 12_450_000,
             }
           )
-      ).to.be.reverted;
+      ).to.be.revertedWith(NTOKEN_BALANCE_EXCEEDED);
     });
 
     it("withdrawing atomic token should decrease the atomic token counter [ @skip-on-coverage ]", async () => {

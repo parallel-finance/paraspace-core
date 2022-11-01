@@ -140,7 +140,7 @@ library ConfiguratorLogic {
             input.asset
         );
 
-        (, , , uint256 decimals, , ) = cachedPool
+        (, , , uint256 decimals, ) = cachedPool
             .getConfiguration(input.asset)
             .getParams();
 
@@ -220,7 +220,7 @@ library ConfiguratorLogic {
             input.asset
         );
 
-        (, , , uint256 decimals, , ) = cachedPool
+        (, , , uint256 decimals, ) = cachedPool
             .getConfiguration(input.asset)
             .getParams();
 

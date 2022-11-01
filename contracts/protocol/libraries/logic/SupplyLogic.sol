@@ -137,11 +137,11 @@ library SupplyLogic {
         //currently don't need to update state for erc721
         //reserve.updateState(reserveCache);
 
-        bool isFirstCollateralized = INToken(nTokenAddress).mint(
-            params.onBehalfOf,
-            params.tokenData
-        );
-        if (isFirstCollateralized) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = INToken(nTokenAddress).mint(params.onBehalfOf, params.tokenData);
+        if (oldCollateralizedBalance == 0 && newCollateralizedBalance > 0) {
             userConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -353,7 +353,7 @@ library SupplyLogic {
 
         if (userConfig.isUsingAsCollateral(reserve.id)) {
             if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtv(
+                ValidationLogic.validateHFAndLtvERC20(
                     reservesData,
                     reservesList,
                     userConfig,
@@ -389,26 +389,30 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(reserveCache);
         uint256 amountToWithdraw = params.tokenIds.length;
 
-        bool isLastUncollateralized = INToken(reserveCache.xTokenAddress).burn(
-            msg.sender,
-            params.to,
-            params.tokenIds
-        );
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = INToken(reserveCache.xTokenAddress).burn(
+                msg.sender,
+                params.to,
+                params.tokenIds
+            );
 
-        if (userConfig.isUsingAsCollateral(reserve.id)) {
+        if (newCollateralizedBalance < oldCollateralizedBalance) {
             if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtv(
+                ValidationLogic.validateHFAndLtvERC721(
                     reservesData,
                     reservesList,
                     userConfig,
                     params.asset,
+                    params.tokenIds,
                     msg.sender,
                     params.reservesCount,
                     params.oracle
                 );
             }
 
-            if (isLastUncollateralized) {
+            if (newCollateralizedBalance == 0) {
                 userConfig.setUsingAsCollateral(reserve.id, false);
                 emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
             }
@@ -454,7 +458,7 @@ library SupplyLogic {
 
             if (fromConfig.isUsingAsCollateral(reserveId)) {
                 if (fromConfig.isBorrowingAny()) {
-                    ValidationLogic.validateHFAndLtv(
+                    ValidationLogic.validateHFAndLtvERC20(
                         reservesData,
                         reservesList,
                         usersConfig[params.from],
@@ -500,7 +504,7 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
-        DataTypes.FinalizeTransferParams memory params
+        DataTypes.FinalizeTransferERC721Params memory params
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
 
@@ -515,11 +519,14 @@ library SupplyLogic {
 
             if (params.usedAsCollateral) {
                 if (fromConfig.isBorrowingAny()) {
-                    ValidationLogic.validateHFAndLtv(
+                    uint256[] memory tokenIds = new uint256[](1);
+                    tokenIds[0] = params.tokenId;
+                    ValidationLogic.validateHFAndLtvERC721(
                         reservesData,
                         reservesList,
                         usersConfig[params.from],
                         params.asset,
+                        tokenIds,
                         params.from,
                         params.reservesCount,
                         params.oracle
@@ -580,7 +587,7 @@ library SupplyLogic {
             emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
         } else {
             userConfig.setUsingAsCollateral(reserve.id, false);
-            ValidationLogic.validateHFAndLtv(
+            ValidationLogic.validateHFAndLtvERC20(
                 reservesData,
                 reservesList,
                 userConfig,
@@ -671,11 +678,12 @@ library SupplyLogic {
             userConfig.setUsingAsCollateral(reserve.id, false);
             emit ReserveUsedAsCollateralDisabled(asset, sender);
         }
-        ValidationLogic.validateHFAndLtv(
+        ValidationLogic.validateHFAndLtvERC721(
             reservesData,
             reservesList,
             userConfig,
             asset,
+            tokenIds,
             sender,
             reservesCount,
             priceOracle

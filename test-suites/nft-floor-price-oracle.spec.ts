@@ -1,11 +1,14 @@
 import {expect} from "chai";
-import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  advanceTimeAndBlock,
+  getParaSpaceConfig,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {getEthersSigners} from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
-import {utils} from "ethers";
-import {MOCK_CHAINLINK_AGGREGATORS_PRICES} from "../deploy/market-config";
+import {utils, BigNumber} from "ethers";
 import {getNFTFloorOracle} from "../deploy/helpers/contracts-getters";
 import {deployERC721OracleWrapper} from "../deploy/helpers/contracts-deployments";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -14,9 +17,16 @@ import {testEnvFixture} from "./helpers/setup-env";
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
   let testEnv: TestEnv;
+  let baycFloorPrice: BigNumber;
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
+    baycFloorPrice = BigNumber.from(
+      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.BAYC
+    );
+  });
+
+  before(async () => {
     const {bayc, addressesProvider, paraspaceOracle, nftFloorOracle} = testEnv;
 
     const [deployer] = await getEthersSigners();
@@ -66,7 +76,7 @@ describe("NFT Oracle Tests", () => {
       .connect(deployer)
       .getAssetPrice(bayc.address);
 
-    expect(fallbackPrice).to.equal(MOCK_CHAINLINK_AGGREGATORS_PRICES.BAYC);
+    expect(fallbackPrice).to.equal(baycFloorPrice);
   });
 
   it("If NFT Oracle is paused, feeding new prices is not possible", async () => {

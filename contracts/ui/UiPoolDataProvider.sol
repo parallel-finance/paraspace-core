@@ -24,7 +24,6 @@ import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
-import {IDynamicConfigsStrategy} from "../interfaces/IDynamicConfigsStrategy.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -113,8 +112,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 .auctionStrategyAddress;
             reserveData.auctionEnabled =
                 reserveData.auctionStrategyAddress != address(0);
-            reserveData.dynamicConfigsStrategyAddress = baseData
-                .dynamicConfigsStrategyAddress;
 
             try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
                 uint256 price
@@ -173,8 +170,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.reserveLiquidationThreshold,
                 reserveData.reserveLiquidationBonus,
                 reserveData.decimals,
-                reserveData.reserveFactor,
-                reserveData.dynamicConfigsEnabled
+                reserveData.reserveFactor
             ) = reserveConfigurationMap.getParams();
             reserveData.usageAsCollateralEnabled =
                 reserveData.baseLTVasCollateral != 0;
@@ -292,7 +288,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         UniswapV3LpTokenInfo memory lpTokenInfo;
 
         IUniswapV3OracleWrapper source;
-        IDynamicConfigsStrategy dynamicConfigsStrategy;
         //avoid stack too deep
         {
             IParaSpaceOracle oracle = IParaSpaceOracle(
@@ -305,17 +300,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             source = IUniswapV3OracleWrapper(sourceAddress);
 
             IPool pool = IPool(provider.getPool());
-            DataTypes.ReserveData memory reserveData = pool.getReserveData(
-                lpTokenAddress
-            );
-            address dynamicConfigsStrategyAddress = reserveData
-                .dynamicConfigsStrategyAddress;
-            if (dynamicConfigsStrategyAddress == address(0)) {
-                return lpTokenInfo;
-            }
-            dynamicConfigsStrategy = IDynamicConfigsStrategy(
-                dynamicConfigsStrategyAddress
-            );
+            (
+                lpTokenInfo.baseLTVasCollateral,
+                lpTokenInfo.reserveLiquidationThreshold
+            ) = pool.getAssetLtvAndLT(lpTokenAddress, tokenId);
         }
 
         //try to catch invalid tokenId
@@ -341,11 +329,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 lpTokenInfo.lpFeeToken0Amount,
                 lpTokenInfo.lpFeeToken1Amount
             ) = source.getLpFeeAmountFromPositionData(positionData);
-
-            (
-                lpTokenInfo.baseLTVasCollateral,
-                lpTokenInfo.reserveLiquidationThreshold
-            ) = dynamicConfigsStrategy.getConfigParams(tokenId);
         } catch {}
 
         return lpTokenInfo;

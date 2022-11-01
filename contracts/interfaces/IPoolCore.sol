@@ -436,6 +436,24 @@ interface IPoolCore {
     ) external;
 
     /**
+     * @notice Function to liquidate an ERC721 of a position if its Health Factor drops below 1. The caller (liquidator)
+     * can only swap it with WETH
+     * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
+     * @param user The address of the borrower getting liquidated
+     * @param collateralTokenId TokenId of the NFT collateral
+     * @param liquidationAmount amount of WETH
+     * @param receiveNToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
+     * to receive the underlying collateral asset directly
+     **/
+    function liquidationERC721WithEther(
+        address collateralAsset,
+        address user,
+        uint256 collateralTokenId,
+        uint256 liquidationAmount,
+        bool receiveNToken
+    ) external;
+
+    /**
      * @notice Start the auction on user's specific NFT collateral
      * @param user The address of the user
      * @param collateralAsset The address of the NFT collateral
@@ -533,6 +551,7 @@ interface IPoolCore {
      * @notice Validates and finalizes an NToken transfer
      * @dev Only callable by the overlying xToken of the `asset`
      * @param asset The address of the underlying asset of the xToken
+     * @param tokenId The tokenId of the ERC721 asset
      * @param from The user from which the xTokens are transferred
      * @param to The user receiving the xTokens
      * @param balanceFromBefore The xToken balance of the `from` user before the transfer
@@ -540,6 +559,7 @@ interface IPoolCore {
      */
     function finalizeTransferERC721(
         address asset,
+        uint256 tokenId,
         address from,
         address to,
         bool usedAsCollateral,
@@ -587,12 +607,6 @@ interface IPoolCore {
      * @return The maximum number of reserves supported
      */
     function MAX_NUMBER_RESERVES() external view returns (uint16);
-
-    /**
-     * @notice Returns the maximum allowed number of atomic tokens per user
-     * @return The maximum allowed number of atomic tokens per user
-     */
-    function MAX_ATOMIC_TOKENS_ALLOWED() external view returns (uint24);
 
     /**
      * @notice Returns the auction recovery health factor
