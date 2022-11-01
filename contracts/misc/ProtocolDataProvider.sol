@@ -127,8 +127,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             liquidationThreshold,
             liquidationBonus,
             decimals,
-            reserveFactor,
-
+            reserveFactor
         ) = configuration.getParams();
 
         (isActive, isFrozen, borrowingEnabled, , ) = configuration.getFlags();
@@ -304,7 +303,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         view
         returns (
             address interestRateStrategyAddress,
-            address dynamicConfigsStrategyAddress,
             address auctionStrategyAddress
         )
     {
@@ -314,7 +312,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
 
         return (
             reserve.interestRateStrategyAddress,
-            reserve.dynamicConfigsStrategyAddress,
             reserve.auctionStrategyAddress
         );
     }

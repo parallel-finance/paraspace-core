@@ -8,6 +8,7 @@ import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
   borrowAndValidate,
+  changePriceAndValidate,
   supplyAndValidate,
   switchCollateralAndValidate,
   withdrawAndValidate,
@@ -153,5 +154,81 @@ describe("nToken Mint and Burn Event Accounting", () => {
     await expect(
       pool.connect(user1.signer).withdrawERC721(dai.address, [0], user1.address)
     ).to.be.revertedWith(ProtocolErrors.INVALID_ASSET_TYPE);
+  });
+});
+
+describe("user can withdraw un-collateralized nft when hf < 1", () => {
+  let testEnv: TestEnv;
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
+
+  it("User deposits 2 BAYC, only 1 collateralized", async () => {
+    const {
+      users: [user1],
+      bayc,
+      pool,
+    } = testEnv;
+
+    await supplyAndValidate(bayc, "2", user1, true);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, [1], false)
+    );
+  });
+
+  it("User 2 deposits 100 ETH and User 1 borrows 30 ETH", async () => {
+    const {
+      users: [user1, user2],
+      weth,
+      bayc,
+    } = testEnv;
+
+    await supplyAndValidate(weth, "100", user2, true);
+    await changePriceAndValidate(bayc, "100");
+    await borrowAndValidate(weth, "30", user1);
+  });
+
+  it("change bayc price and make user1's hf < 1", async () => {
+    const {
+      users: [user1],
+      bayc,
+      pool,
+    } = testEnv;
+
+    await changePriceAndValidate(bayc, "10");
+    const user1Data = await pool.getUserAccountData(user1.address);
+    expect(user1Data.healthFactor).to.lt("1000000000000000000");
+  });
+
+  it("User 1 tries to withdraw the collateralized BAYC (should fail)", async () => {
+    const {
+      bayc,
+      users: [user1],
+      pool,
+    } = testEnv;
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .withdrawERC721(bayc.address, [0], user1.address)
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
+  });
+
+  it("User 1 tries to withdraw the un-collateralized BAYC (should success)", async () => {
+    const {
+      bayc,
+      users: [user1],
+      pool,
+    } = testEnv;
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawERC721(bayc.address, [1], user1.address)
+    );
   });
 });

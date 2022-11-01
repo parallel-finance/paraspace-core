@@ -81,6 +81,10 @@ test-ntoken-punk:
 test-liquidation:
 	make TEST_TARGET=liquidation.spec.ts test
 
+.PHONY: test-liquidation-nft-with-weth
+test-liquidation-nft-with-weth:
+	make TEST_TARGET=liquidation-nft-with-weth.spec.ts test
+
 .PHONY: test-liquidation-non-borrowed
 test-liquidation-non-borrowed:
 	make TEST_TARGET=liquidation-non-borrowed.spec.ts test

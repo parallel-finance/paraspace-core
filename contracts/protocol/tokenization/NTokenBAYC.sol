@@ -126,7 +126,7 @@ contract NTokenBAYC is NToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) public virtual override onlyPool nonReentrant returns (bool) {
+    ) public virtual override onlyPool nonReentrant returns (uint64, uint64) {
         _withdrawBAYC(tokenIds, from);
 
         return _burn(from, receiverOfUnderlying, tokenIds);

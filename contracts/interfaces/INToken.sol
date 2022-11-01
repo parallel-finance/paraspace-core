@@ -72,12 +72,12 @@ interface INToken is
      * @notice Mints `amount` nTokens to `user`
      * @param onBehalfOf The address of the user that will receive the minted nTokens
      * @param tokenData The list of the tokens getting minted and their collateral configs
-     * @return `true` if this is the first time to supply this asset as collateral
+     * @return old and new collateralized balance
      */
     function mint(
         address onBehalfOf,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    ) external returns (bool);
+    ) external returns (uint64, uint64);
 
     /**
      * @notice Burns nTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
@@ -86,12 +86,13 @@ interface INToken is
      * @param from The address from which the nTokens will be burned
      * @param receiverOfUnderlying The address that will receive the underlying
      * @param tokenIds The ids of the tokens getting burned
+     * @return old and new collateralized balance
      **/
     function burn(
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) external returns (bool);
+    ) external returns (uint64, uint64);
 
     // TODO are we using the Treasury at all? Can we remove?
     // /**

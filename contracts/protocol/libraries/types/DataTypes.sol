@@ -34,8 +34,6 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
-        // the address of the dynamic strategy contract
-        address dynamicConfigsStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -69,9 +67,6 @@ library DataTypes {
          * asset is borrowed by the user.
          */
         uint256 data;
-        // counter for atomic erc721 tokens.
-        // this is used to limit the total number of atomic erc721 the user can supply
-        uint24 userAtomicTokens;
         // auction validity time for closing invalid auctions in one tx.
         uint256 auctionValidityTime;
     }
@@ -181,6 +176,18 @@ library DataTypes {
         address to;
         bool usedAsCollateral;
         uint256 amount;
+        uint256 balanceFromBefore;
+        uint256 balanceToBefore;
+        uint256 reservesCount;
+        address oracle;
+    }
+
+    struct FinalizeTransferERC721Params {
+        address asset;
+        address from;
+        address to;
+        bool usedAsCollateral;
+        uint256 tokenId;
         uint256 balanceFromBefore;
         uint256 balanceToBefore;
         uint256 reservesCount;
@@ -332,8 +339,6 @@ library DataTypes {
         mapping(uint256 => address) _reservesList;
         // Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
         uint16 _reservesCount;
-        // Maximum allowed number of atomic tokens per user
-        uint24 _maxAtomicTokensAllowed;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
     }

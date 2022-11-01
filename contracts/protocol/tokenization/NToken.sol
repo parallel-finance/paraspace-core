@@ -79,7 +79,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     function mint(
         address onBehalfOf,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    ) external virtual override onlyPool nonReentrant returns (bool) {
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         return _mintMultiple(onBehalfOf, tokenData);
     }
 
@@ -88,7 +88,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) public virtual override onlyPool nonReentrant returns (bool) {
+    ) public virtual override onlyPool nonReentrant returns (uint64, uint64) {
         return _burn(from, receiverOfUnderlying, tokenIds);
     }
 
@@ -96,8 +96,11 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) internal returns (bool) {
-        bool isLastUncollateralized = _burnMultiple(from, tokenIds);
+    ) internal returns (uint64, uint64) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
@@ -109,7 +112,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             }
         }
 
-        return isLastUncollateralized;
+        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     /// @inheritdoc INToken
@@ -240,6 +243,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         if (validate) {
             POOL.finalizeTransferERC721(
                 underlyingAsset,
+                tokenId,
                 from,
                 to,
                 isUsedAsCollateral,
