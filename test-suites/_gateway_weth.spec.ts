@@ -28,7 +28,7 @@ describe("WETH GateWay", () => {
     testWallets = getTestWallets();
   });
 
-  it("User 1 deposits 100 ETH via gateway", async () => {
+  it("TC-weth-gateway-01 User deposits 100 ETH via gateway", async () => {
     const {
       users: [user1],
       pWETH,
@@ -62,7 +62,7 @@ describe("WETH GateWay", () => {
     expect(await isAssetInCollateral(user1, weth.address));
   });
 
-  it("User 1 withdraws the deposited WETH", async () => {
+  it("TC-weth-gateway-02 User withdraws the deposited WETH", async () => {
     const {
       users: [user1],
       wETHGateway,
@@ -100,7 +100,7 @@ describe("WETH GateWay", () => {
     expect(await pWETH.balanceOf(user1.address)).to.eq(0);
   });
 
-  it("User 1 deposits ETH, signs signature and withdraws with permit", async () => {
+  it("TC-weth-gateway-03 User 1 deposits ETH, signs signature and withdraws with permit", async () => {
     const {
       users: [user1],
       weth,
@@ -158,7 +158,7 @@ describe("WETH GateWay", () => {
     expect(await pWETH.balanceOf(deployer.address)).to.eq(0);
   });
 
-  it("getWETH address returns correct address", async () => {
+  it("TC-weth-gateway-04 getWETH address returns correct address", async () => {
     const {
       users: [user1],
       weth,
@@ -172,7 +172,7 @@ describe("WETH GateWay", () => {
     expect(wETHAddress).to.be.equal(weth.address);
   });
 
-  it("Owner does emergency token transfer 50 WETH to User 1", async () => {
+  it("TC-weth-gateway-05 Owner does emergency token transfer 50 WETH to User 1", async () => {
     const {
       users: [user1],
       wETHGateway,
@@ -224,7 +224,7 @@ describe("WETH GateWay", () => {
     );
   });
 
-  it("Owner does emergency ether transfer 50 ETH to User 1", async () => {
+  it("TC-weth-gateway-06 Owner does emergency ether transfer 50 ETH to User 1", async () => {
     const {
       users: [user1],
       wETHGateway,
