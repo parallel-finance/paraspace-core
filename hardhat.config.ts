@@ -114,10 +114,6 @@ const hardhatConfig: HardhatUserConfig = {
       gas: 4e6,
       allowUnlimitedContractSize: true,
     },
-    localhost: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
-      chainId: HARDHAT_CHAINID,
-    },
     coverage: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.coverage],
       chainId: COVERAGE_CHAINID,
@@ -139,6 +135,11 @@ const hardhatConfig: HardhatUserConfig = {
         })
       ),
       forking: buildForkConfig(),
+      allowUnlimitedContractSize: true,
+    },
+    hardhat_local: {
+      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
+      chainId: HARDHAT_CHAINID,
       allowUnlimitedContractSize: true,
     },
     ganache: {

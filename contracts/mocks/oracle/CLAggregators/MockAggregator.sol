@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-contract MockAggregator {
-    int256 private _latestAnswer;
+import {IEACAggregatorProxy} from "../../../interfaces/IEACAggregatorProxy.sol";
 
-    event AnswerUpdated(
-        int256 indexed current,
-        uint256 indexed roundId,
-        uint256 updatedAt
-    );
+
+contract MockAggregator is IEACAggregatorProxy{
+    int256 private _latestAnswer;
 
     constructor(int256 initialAnswer) {
         _latestAnswer = initialAnswer;
@@ -30,5 +27,21 @@ contract MockAggregator {
 
     function decimals() external pure returns (uint8) {
         return 8;
+    }
+
+    function getTimestamp(uint256) external view override returns (uint256) {
+        return block.timestamp;
+    }
+
+    function latestRound() external pure override returns (uint256) {
+        return 0;
+    }
+
+    function getAnswer(uint256) external view override returns (int256) {
+        return _latestAnswer;
+    }
+
+    function latestTimestamp() external view returns (uint256) {
+        return block.timestamp;
     }
 }

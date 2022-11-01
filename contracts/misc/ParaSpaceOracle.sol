@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {AggregatorInterface} from "../dependencies/chainlink/AggregatorInterface.sol";
+import {IEACAggregatorProxy} from "../interfaces/IEACAggregatorProxy.sol";
 
 import {Errors} from "../protocol/libraries/helpers/Errors.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
@@ -119,7 +119,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         }
 
         uint256 price = 0;
-        AggregatorInterface source = AggregatorInterface(assetsSources[asset]);
+        IEACAggregatorProxy source = IEACAggregatorProxy(assetsSources[asset]);
         if (address(source) != address(0)) {
             price = uint256(source.latestAnswer());
         }
