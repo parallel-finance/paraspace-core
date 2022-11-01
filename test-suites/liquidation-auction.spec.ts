@@ -382,7 +382,7 @@ describe("Liquidation Auction", () => {
       // drop BAYC price to liquidation levels
       await changePriceAndValidate(bayc, "8");
 
-      // actualLiquidationAmount: 12 / 0.000908578801039414 / 1.05 = 12578.514285714287769 DAI
+      // actualLiquidationAmount: 8 / 1 / 1.05 = 7.6190476190476190476
 
       // disable auction first to test original liquidation
       await waitForTx(
@@ -402,8 +402,8 @@ describe("Liquidation Auction", () => {
       // DAI#100k
       // WETH#990
       //
-      // liquidationAmount: 12000000000000000000
-      // actualLiquidationAmount: 12578514285714287768609
+      // liquidationAmount: 7.5
+      // actualLiquidationAmount: 7.6190476190476190476
       await expect(
         pool
           .connect(liquidator.signer)
@@ -411,7 +411,7 @@ describe("Liquidation Auction", () => {
             bayc.address,
             borrower.address,
             0,
-            parseEther("12").toString(),
+            parseEther("7.5").toString(),
             false,
             {
               gasLimit: 5000000,
