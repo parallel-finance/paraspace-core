@@ -525,7 +525,6 @@ describe("Uniswap V3", () => {
         nftPositionManager,
         nUniswapV3,
       } = testEnv;
-      const preLiquidationSnapshot = await snapshot.take();
       await oracle.setAssetPrice(dai.address, "100000000000000"); //weth = 10000 dai
 
       const ethAmount = await convertToCurrencyDecimals(weth.address, "6");
@@ -536,6 +535,7 @@ describe("Uniswap V3", () => {
         user: liquidator,
       });
 
+      const preLiquidationSnapshot = await snapshot.take();
       const user1Balance = await nUniswapV3.balanceOf(borrower.address);
       const liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
       expect(user1Balance).to.eq(1);
@@ -557,6 +557,7 @@ describe("Uniswap V3", () => {
       const {
         users: [borrower, liquidator],
         nftPositionManager,
+        nUniswapV3,
         pool,
         weth,
       } = testEnv;
@@ -570,7 +571,7 @@ describe("Uniswap V3", () => {
       );
 
       const {startTime, tickLength} = await pool.getAuctionData(
-        nftPositionManager.address,
+        nUniswapV3.address,
         1
       );
 
@@ -582,7 +583,7 @@ describe("Uniswap V3", () => {
       await liquidateAndValidate(
         nftPositionManager,
         weth,
-        "6",
+        "5",
         liquidator,
         borrower,
         false,
@@ -598,275 +599,292 @@ describe("Uniswap V3", () => {
 
       await snapshot.revert(preLiquidationSnapshot);
     });
-    //
-    //   it("univ3 nft can be liquidated - receive nToken [ @skip-on-coverage ]", async () => {
-    //     const {
-    //       users: [user1, liquidator],
-    //       weth,
-    //       pool,
-    //       nftPositionManager,
-    //       nUniswapV3,
-    //     } = testEnv;
-    //     const ethAmount = await convertToCurrencyDecimals(weth.address, "6");
-    //     await fund({token: weth, user: liquidator, amount: ethAmount});
-    //     await approveTo({
-    //       target: pool.address,
-    //       token: weth,
-    //       user: liquidator,
-    //     });
-    //
-    //     let user1Balance = await nUniswapV3.balanceOf(user1.address);
-    //     let liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
-    //     expect(user1Balance).to.eq(1);
-    //     expect(liquidatorBalance).to.eq(0);
-    //
-    //     await waitForTx(
-    //       await pool
-    //         .connect(liquidator.signer)
-    //         .liquidationERC721(
-    //           nftPositionManager.address,
-    //           user1.address,
-    //           1,
-    //           ethAmount,
-    //           true
-    //         )
-    //     );
-    //
-    //     user1Balance = await nUniswapV3.balanceOf(user1.address);
-    //     liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
-    //     expect(user1Balance).to.eq(0);
-    //     expect(liquidatorBalance).to.eq(1);
-    //   });
-    //
-    //   it("liquidator can remove nUniswapV3 from collateral [ @skip-on-coverage ]", async () => {
-    //     const {
-    //       users: [, liquidator],
-    //       nftPositionManager,
-    //     } = testEnv;
-    //
-    //     await switchCollateralAndValidate(
-    //       liquidator,
-    //       nftPositionManager,
-    //       false,
-    //       1
-    //     );
-    //   });
-    //
-    //   it("liquidator can withdraw the nUniswapV3 [ @skip-on-coverage ]", async () => {
-    //     const {
-    //       users: [, liquidator],
-    //       nUniswapV3,
-    //       nftPositionManager,
-    //     } = testEnv;
-    //     const liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address); // 1
-    //
-    //     await withdrawAndValidate(
-    //       nftPositionManager,
-    //       liquidatorBalance.toString(),
-    //       liquidator,
-    //       1
-    //     );
-    //   });
-    // });
-    //
-    // describe("Uniswap V3 LTV Validation", () => {
-    //   let testEnv: TestEnv;
-    //   before(async () => {
-    //     testEnv = await loadFixture(testEnvFixture);
-    //   });
-    //
-    //   it("User creates new Uniswap V3 pool and mints NFT [ @skip-on-coverage ]", async () => {
-    //     const {
-    //       users: [user1],
-    //       dai,
-    //       weth,
-    //       nftPositionManager,
-    //       pool,
-    //     } = testEnv;
-    //
-    //     const userDaiAmount = await convertToCurrencyDecimals(
-    //       dai.address,
-    //       "10000"
-    //     );
-    //     const userWethAmount = await convertToCurrencyDecimals(
-    //       weth.address,
-    //       "10"
-    //     );
-    //     await fund({token: dai, user: user1, amount: userDaiAmount});
-    //     await fund({token: weth, user: user1, amount: userWethAmount});
-    //     const nft = nftPositionManager.connect(user1.signer);
-    //     await approveTo({
-    //       target: nftPositionManager.address,
-    //       token: dai,
-    //       user: user1,
-    //     });
-    //     await approveTo({
-    //       target: nftPositionManager.address,
-    //       token: weth,
-    //       user: user1,
-    //     });
-    //     const fee = 3000;
-    //     const tickSpacing = fee / 50;
-    //     const initialPrice = encodeSqrtRatioX96(1, 1000);
-    //     const lowerPrice = encodeSqrtRatioX96(1, 10000);
-    //     const upperPrice = encodeSqrtRatioX96(1, 100);
-    //     await createNewPool({
-    //       positionManager: nft,
-    //       token0: dai,
-    //       token1: weth,
-    //       fee: fee,
-    //       initialSqrtPrice: initialPrice.toString(),
-    //     });
-    //     await mintNewPosition({
-    //       nft: nft,
-    //       token0: dai,
-    //       token1: weth,
-    //       fee: fee,
-    //       user: user1,
-    //       tickSpacing: tickSpacing,
-    //       lowerPrice,
-    //       upperPrice,
-    //       token0Amount: userDaiAmount,
-    //       token1Amount: userWethAmount,
-    //     });
-    //     expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
-    //
-    //     await nft.setApprovalForAll(pool.address, true);
-    //
-    //     await pool
-    //       .connect(user1.signer)
-    //       .supplyUniswapV3(
-    //         nftPositionManager.address,
-    //         [{tokenId: 1, useAsCollateral: true}],
-    //         user1.address,
-    //         0,
-    //         {
-    //           gasLimit: 12_450_000,
-    //         }
-    //       );
-    //   });
-    //
-    //   it("check ltv strategy [ @skip-on-coverage ]", async () => {
-    //     const {
-    //       dai,
-    //       weth,
-    //       nftPositionManager,
-    //       pool,
-    //       configurator,
-    //       protocolDataProvider,
-    //     } = testEnv;
-    //
-    //     const daiConfig = await protocolDataProvider.getReserveConfigurationData(
-    //       dai.address
-    //     );
-    //     expect(daiConfig.ltv).to.be.equal(7500);
-    //     expect(daiConfig.liquidationThreshold).to.be.equal(8000);
-    //
-    //     const wethConfig = await protocolDataProvider.getReserveConfigurationData(
-    //       weth.address
-    //     );
-    //     expect(wethConfig.ltv).to.be.equal(8250);
-    //     expect(wethConfig.liquidationThreshold).to.be.equal(8500);
-    //
-    //     const uniCollectionConfig =
-    //       await protocolDataProvider.getReserveConfigurationData(
-    //         nftPositionManager.address
-    //       );
-    //     expect(uniCollectionConfig.ltv).to.be.equal(3000);
-    //     expect(uniCollectionConfig.liquidationThreshold).to.be.equal(7000);
-    //
-    //     let uniTokenConfig = await pool.getAssetLtvAndLT(
-    //       nftPositionManager.address,
-    //       1
-    //     );
-    //     expect(uniTokenConfig.ltv).to.be.equal(uniCollectionConfig.ltv);
-    //     expect(uniTokenConfig.lt).to.be.equal(
-    //       uniCollectionConfig.liquidationThreshold
-    //     );
-    //
-    //     // Set DAI LTV = 0
-    //     expect(
-    //       await configurator.configureReserveAsCollateral(
-    //         dai.address,
-    //         0,
-    //         8000,
-    //         10500
-    //       )
-    //     );
-    //
-    //     uniTokenConfig = await pool.getAssetLtvAndLT(
-    //       nftPositionManager.address,
-    //       1
-    //     );
-    //     expect(uniTokenConfig.ltv).to.be.equal(0);
-    //   });
-    //
-    //   it("user supply weth and borrow dai [ @skip-on-coverage ]", async () => {
-    //     const {
-    //       users: [user1, user2],
-    //       dai,
-    //       weth,
-    //       pool,
-    //     } = testEnv;
-    //
-    //     const daiSupplyAmount = await convertToCurrencyDecimals(
-    //       dai.address,
-    //       "100"
-    //     );
-    //     const daiBorrowAmount = await convertToCurrencyDecimals(dai.address, "1");
-    //     const wethSupplyAmount = await convertToCurrencyDecimals(
-    //       weth.address,
-    //       "10"
-    //     );
-    //     await fund({token: dai, user: user2, amount: daiSupplyAmount});
-    //     await fund({token: weth, user: user1, amount: wethSupplyAmount});
-    //     await approveTo({
-    //       target: pool.address,
-    //       token: dai,
-    //       user: user2,
-    //     });
-    //     await approveTo({
-    //       target: pool.address,
-    //       token: weth,
-    //       user: user1,
-    //     });
-    //
-    //     await pool
-    //       .connect(user2.signer)
-    //       .supply(dai.address, daiSupplyAmount, user2.address, 0);
-    //     await pool
-    //       .connect(user1.signer)
-    //       .supply(weth.address, wethSupplyAmount, user1.address, 0);
-    //
-    //     await pool
-    //       .connect(user1.signer)
-    //       .borrow(dai.address, daiBorrowAmount, 0, user1.address);
-    //   });
-    //
-    //   it("user can only withdraw uniswapv3 [ @skip-on-coverage ]", async () => {
-    //     const {
-    //       users: [user1],
-    //       weth,
-    //       nftPositionManager,
-    //       pool,
-    //     } = testEnv;
-    //     const {LTV_VALIDATION_FAILED} = ProtocolErrors;
-    //
-    //     const wethWithdrawAmount = await convertToCurrencyDecimals(
-    //       weth.address,
-    //       "10"
-    //     );
-    //     await expect(
-    //       pool
-    //         .connect(user1.signer)
-    //         .withdraw(weth.address, wethWithdrawAmount, user1.address)
-    //     ).to.be.revertedWith(LTV_VALIDATION_FAILED);
-    //
-    //     await expect(
-    //       await pool
-    //         .connect(user1.signer)
-    //         .withdrawERC721(nftPositionManager.address, [1], user1.address)
-    //     );
-    //   });
+
+    it("univ3 nft can be liquidated - receive nToken [ @skip-on-coverage ]", async () => {
+      const {
+        users: [borrower, liquidator],
+        weth,
+        pool,
+        nftPositionManager,
+        nUniswapV3,
+      } = testEnv;
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, nftPositionManager.address, 1)
+      );
+
+      const {startTime, tickLength} = await pool.getAuctionData(
+        nUniswapV3.address,
+        1
+      );
+
+      // prices drops to ~1 floor price
+      await advanceBlock(
+        startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
+      );
+
+      const ethAmount = await convertToCurrencyDecimals(weth.address, "6");
+      await fund({token: weth, user: liquidator, amount: ethAmount});
+      await approveTo({
+        target: pool.address,
+        token: weth,
+        user: liquidator,
+      });
+
+      let user1Balance = await nUniswapV3.balanceOf(borrower.address);
+      let liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
+      expect(user1Balance).to.eq(1);
+      expect(liquidatorBalance).to.eq(0);
+
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .liquidationERC721(
+            nftPositionManager.address,
+            borrower.address,
+            1,
+            ethAmount,
+            true
+          )
+      );
+
+      user1Balance = await nUniswapV3.balanceOf(borrower.address);
+      liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
+      expect(user1Balance).to.eq(0);
+      expect(liquidatorBalance).to.eq(1);
+    });
+
+    it("liquidator can remove nUniswapV3 from collateral [ @skip-on-coverage ]", async () => {
+      const {
+        users: [, liquidator],
+        nftPositionManager,
+      } = testEnv;
+
+      await switchCollateralAndValidate(
+        liquidator,
+        nftPositionManager,
+        false,
+        1
+      );
+    });
+
+    it("liquidator can withdraw the nUniswapV3 [ @skip-on-coverage ]", async () => {
+      const {
+        users: [, liquidator],
+        nUniswapV3,
+        nftPositionManager,
+      } = testEnv;
+      const liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address); // 1
+
+      await withdrawAndValidate(
+        nftPositionManager,
+        liquidatorBalance.toString(),
+        liquidator,
+        1
+      );
+    });
+  });
+
+  describe("Uniswap V3 LTV Validation", () => {
+    let testEnv: TestEnv;
+    before(async () => {
+      testEnv = await loadFixture(testEnvFixture);
+    });
+
+    it("User creates new Uniswap V3 pool and mints NFT [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        dai,
+        weth,
+        nftPositionManager,
+        pool,
+      } = testEnv;
+
+      const userDaiAmount = await convertToCurrencyDecimals(
+        dai.address,
+        "10000"
+      );
+      const userWethAmount = await convertToCurrencyDecimals(
+        weth.address,
+        "10"
+      );
+      await fund({token: dai, user: user1, amount: userDaiAmount});
+      await fund({token: weth, user: user1, amount: userWethAmount});
+      const nft = nftPositionManager.connect(user1.signer);
+      await approveTo({
+        target: nftPositionManager.address,
+        token: dai,
+        user: user1,
+      });
+      await approveTo({
+        target: nftPositionManager.address,
+        token: weth,
+        user: user1,
+      });
+      const fee = 3000;
+      const tickSpacing = fee / 50;
+      const initialPrice = encodeSqrtRatioX96(1, 1000);
+      const lowerPrice = encodeSqrtRatioX96(1, 10000);
+      const upperPrice = encodeSqrtRatioX96(1, 100);
+      await createNewPool({
+        positionManager: nft,
+        token0: dai,
+        token1: weth,
+        fee: fee,
+        initialSqrtPrice: initialPrice.toString(),
+      });
+      await mintNewPosition({
+        nft: nft,
+        token0: dai,
+        token1: weth,
+        fee: fee,
+        user: user1,
+        tickSpacing: tickSpacing,
+        lowerPrice,
+        upperPrice,
+        token0Amount: userDaiAmount,
+        token1Amount: userWethAmount,
+      });
+      expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
+
+      await nft.setApprovalForAll(pool.address, true);
+
+      await pool
+        .connect(user1.signer)
+        .supplyUniswapV3(
+          nftPositionManager.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user1.address,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        );
+    });
+
+    it("check ltv strategy [ @skip-on-coverage ]", async () => {
+      const {
+        dai,
+        weth,
+        nftPositionManager,
+        pool,
+        configurator,
+        protocolDataProvider,
+      } = testEnv;
+
+      const daiConfig = await protocolDataProvider.getReserveConfigurationData(
+        dai.address
+      );
+      expect(daiConfig.ltv).to.be.equal(7500);
+      expect(daiConfig.liquidationThreshold).to.be.equal(8000);
+
+      const wethConfig = await protocolDataProvider.getReserveConfigurationData(
+        weth.address
+      );
+      expect(wethConfig.ltv).to.be.equal(8250);
+      expect(wethConfig.liquidationThreshold).to.be.equal(8500);
+
+      const uniCollectionConfig =
+        await protocolDataProvider.getReserveConfigurationData(
+          nftPositionManager.address
+        );
+      expect(uniCollectionConfig.ltv).to.be.equal(3000);
+      expect(uniCollectionConfig.liquidationThreshold).to.be.equal(7000);
+
+      let uniTokenConfig = await pool.getAssetLtvAndLT(
+        nftPositionManager.address,
+        1
+      );
+      expect(uniTokenConfig.ltv).to.be.equal(uniCollectionConfig.ltv);
+      expect(uniTokenConfig.lt).to.be.equal(
+        uniCollectionConfig.liquidationThreshold
+      );
+
+      // Set DAI LTV = 0
+      expect(
+        await configurator.configureReserveAsCollateral(
+          dai.address,
+          0,
+          8000,
+          10500
+        )
+      );
+
+      uniTokenConfig = await pool.getAssetLtvAndLT(
+        nftPositionManager.address,
+        1
+      );
+      expect(uniTokenConfig.ltv).to.be.equal(0);
+    });
+
+    it("user supply weth and borrow dai [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1, user2],
+        dai,
+        weth,
+        pool,
+      } = testEnv;
+
+      const daiSupplyAmount = await convertToCurrencyDecimals(
+        dai.address,
+        "100"
+      );
+      const daiBorrowAmount = await convertToCurrencyDecimals(dai.address, "1");
+      const wethSupplyAmount = await convertToCurrencyDecimals(
+        weth.address,
+        "10"
+      );
+      await fund({token: dai, user: user2, amount: daiSupplyAmount});
+      await fund({token: weth, user: user1, amount: wethSupplyAmount});
+      await approveTo({
+        target: pool.address,
+        token: dai,
+        user: user2,
+      });
+      await approveTo({
+        target: pool.address,
+        token: weth,
+        user: user1,
+      });
+
+      await pool
+        .connect(user2.signer)
+        .supply(dai.address, daiSupplyAmount, user2.address, 0);
+      await pool
+        .connect(user1.signer)
+        .supply(weth.address, wethSupplyAmount, user1.address, 0);
+
+      await pool
+        .connect(user1.signer)
+        .borrow(dai.address, daiBorrowAmount, 0, user1.address);
+    });
+
+    it("user can only withdraw uniswapv3 [ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+      } = testEnv;
+      const {LTV_VALIDATION_FAILED} = ProtocolErrors;
+
+      const wethWithdrawAmount = await convertToCurrencyDecimals(
+        weth.address,
+        "10"
+      );
+      await expect(
+        pool
+          .connect(user1.signer)
+          .withdraw(weth.address, wethWithdrawAmount, user1.address)
+      ).to.be.revertedWith(LTV_VALIDATION_FAILED);
+
+      await expect(
+        await pool
+          .connect(user1.signer)
+          .withdrawERC721(nftPositionManager.address, [1], user1.address)
+      );
+    });
   });
 });

@@ -112,8 +112,6 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
         before.liquidatorCollateralTokenBalance
     );
     //assert borrowing status correct
-    expect(before.isLiquidationAssetBorrowedPerConfig).to.be.false;
-    expect(after.isLiquidationAssetBorrowedPerConfig).to.be.false;
     //assert isUsingAsCollateral status correct
     expect(before.isUsingAsCollateral).to.be.false;
     expect(after.isUsingAsCollateral).to.be.true;
