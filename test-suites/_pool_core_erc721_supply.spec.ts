@@ -10,7 +10,6 @@ import {
   supplyAndValidate,
   mintAndValidate,
 } from "./helpers/validated-steps";
-import {MintableERC721} from "../types";
 
 describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
   it("TC-erc721-supply-01:User shouldn't supply ERC721 token when he didn't own it", async () => {
@@ -21,9 +20,7 @@ describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
     } = await loadFixture(testEnvFixture);
 
     await waitForTx(
-      await (bayc as MintableERC721)
-        .connect(user1.signer)
-        .setApprovalForAll(pool.address, true)
+      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
     await expect(
       pool
@@ -71,14 +68,10 @@ describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
       await bayc.connect(user2.signer)["mint(address)"](user2.address)
     );
     await waitForTx(
-      await (bayc as MintableERC721)
-        .connect(user1.signer)
-        .setApprovalForAll(pool.address, true)
+      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
     await waitForTx(
-      await (bayc as MintableERC721)
-        .connect(user2.signer)
-        .setApprovalForAll(pool.address, true)
+      await bayc.connect(user2.signer).setApprovalForAll(pool.address, true)
     );
     await expect(
       pool.connect(user1.signer).supplyERC721(
@@ -102,7 +95,7 @@ describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
     await supplyAndValidate(bayc, "1", user1, true);
   });
 
-  describe("Supplying behaviors when user has supplies before", () => {
+  describe("Supplying behaviors when user has supplied before", () => {
     let testEnv: TestEnv;
     beforeEach(async () => {
       testEnv = await loadFixture(testEnvFixture);
@@ -114,7 +107,7 @@ describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
       await supplyAndValidate(bayc, "1", user1, true);
     });
 
-    it("TC-erc721-supply-05:User shouldn't transfer nToken", async () => {
+    it("TC-erc721-supply-05:User shouldn't transfer non-existent nToken", async () => {
       const {
         nBAYC,
         users: [user1, user2],
@@ -269,7 +262,7 @@ describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
           // .percentMul(9500)
           .toString()
       );
-      await expect(amountDAIToBorrow).to.be.gt(availableBorrowsBase);
+      expect(amountDAIToBorrow).to.be.gt(availableBorrowsBase);
       await expect(
         pool
           .connect(user1.signer)

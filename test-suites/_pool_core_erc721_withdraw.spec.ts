@@ -37,21 +37,6 @@ describe("Functionality tests of ERC721 withdraw in PoolCore contract", () => {
     );
   });
 
-  // it("TC-erc721-withdraw-03:User shouldn't withdraw ERC721 with an invalid address", async () => {
-  //   const {
-  //     users: [user1],
-  //     pool,
-  //     bayc,
-  //   } = await loadFixture(testEnvFixture);
-  //
-  //   await supplyAndValidate(bayc, "1", user1, true);
-  //   await expect(
-  //     pool.connect(user1.signer).withdrawERC721("", [], user1.address)
-  //   ).to.be.revertedWith(
-  //     'function returned an unexpected amount of data, but other exception was thrown: Error: network does not support ENS (operation="getResolver", network="unknown", code=UNSUPPORTED_OPERATION, version=providers/5.7.1)\n'
-  //   );
-  // });
-
   it("TC-erc721-withdraw-04:User shouldn't withdraw ERC721 when the address provided doesn't Implement ERC721", async () => {
     const {
       users: [user1],
@@ -64,7 +49,7 @@ describe("Functionality tests of ERC721 withdraw in PoolCore contract", () => {
     ).to.be.revertedWith(ProtocolErrors.INVALID_ASSET_TYPE);
   });
 
-  it("TC-erc721-withdraw-05:User should withdraw his ERC721 collateral when he doesn't have deb", async () => {
+  it("TC-erc721-withdraw-05:User should withdraw his ERC721 when he doesn't have debt", async () => {
     const {
       users: [user1],
       bayc,
