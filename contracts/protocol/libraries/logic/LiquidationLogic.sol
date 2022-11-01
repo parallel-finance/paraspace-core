@@ -148,6 +148,7 @@ library LiquidationLogic {
         uint256 actualLiquidationBonus;
         uint256 liquidationProtocolFeePercentage;
         uint256 liquidationProtocolFee;
+        // Auction related
         uint256 auctionMultiplier;
         uint256 auctionStartTime;
     }
@@ -179,10 +180,8 @@ library LiquidationLogic {
         DataTypes.UserConfigurationMap storage userConfig = usersConfig[
             params.user
         ];
-
         vars.minimumCloseFactor = MIN_LIQUIDATION_CLOSE_FACTOR;
         vars.liquidationAssetReserveCache = liquidationAssetReserve.cache();
-        vars.isLiquidationAssetBorrowed = true;
         liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
 
         (, , , , , , , vars.healthFactor, , ) = GenericLogic
@@ -233,15 +232,6 @@ library LiquidationLogic {
             userConfig.setBorrowing(liquidationAssetReserve.id, false);
         }
 
-        // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFeeAmount != 0) {
-            IPToken(vars.collateralXToken).transferOnLiquidation(
-                params.user,
-                IPToken(vars.collateralXToken).RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFeeAmount
-            );
-        }
-
         // If the collateral being liquidated is equal to the user balance,
         // we set the currency as not being used as collateral anymore
         if (vars.actualCollateralToLiquidate == vars.userCollateral) {
@@ -249,6 +239,15 @@ library LiquidationLogic {
             emit ReserveUsedAsCollateralDisabled(
                 params.collateralAsset,
                 params.user
+            );
+        }
+
+        // Transfer fee to treasury if it is non-zero
+        if (vars.liquidationProtocolFeeAmount != 0) {
+            IPToken(vars.collateralXToken).transferOnLiquidation(
+                params.user,
+                IPToken(vars.collateralXToken).RESERVE_TREASURY_ADDRESS(),
+                vars.liquidationProtocolFeeAmount
             );
         }
 
@@ -332,17 +331,21 @@ library LiquidationLogic {
             })
         );
 
+        (vars.collateralXToken, vars.liquidationBonus) = _getConfigurationData(
+            collateralReserve,
+            vars
+        );
+
+        if (!vars.isLiquidationAssetBorrowed || vars.auctionEnabled) {
+            vars.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
+        }
+
         if (vars.isLiquidationAssetBorrowed) {
             (vars.userDebt, vars.actualDebtToLiquidate) = _calculateDebt(
                 params,
                 vars
             );
         }
-
-        (vars.collateralXToken, vars.liquidationBonus) = _getConfigurationData(
-            collateralReserve,
-            vars
-        );
 
         (
             vars.userCollateral,
@@ -363,7 +366,8 @@ library LiquidationLogic {
                 liquidator: params.liquidator,
                 borrower: params.user,
                 globalDebt: vars.userGlobalDebt,
-                actualLiquidationAmount: vars.actualLiquidationAmount + vars.liquidationProtocolFeeAmount,
+                actualLiquidationAmount: vars.actualLiquidationAmount +
+                    vars.liquidationProtocolFeeAmount,
                 maxLiquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
@@ -432,16 +436,6 @@ library LiquidationLogic {
             userConfig.setBorrowing(vars.liquidationAssetReserveId, false);
         }
 
-        // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFeeAmount != 0) {
-            IERC20(params.liquidationAsset).safeTransferFrom(
-                params.liquidator,
-                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
-                    .RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFeeAmount
-            );
-        }
-
         // If the collateral being liquidated is equal to the user balance,
         // we set the currency as not being used as collateral anymore
         if (vars.userCollateral == 1) {
@@ -449,6 +443,16 @@ library LiquidationLogic {
             emit ReserveUsedAsCollateralDisabled(
                 params.collateralAsset,
                 params.user
+            );
+        }
+
+        // Transfer fee to treasury if it is non-zero
+        if (vars.liquidationProtocolFeeAmount != 0) {
+            IERC20(params.liquidationAsset).safeTransferFrom(
+                params.liquidator,
+                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
+                    .RESERVE_TREASURY_ADDRESS(),
+                vars.liquidationProtocolFeeAmount
             );
         }
 
@@ -644,6 +648,7 @@ library LiquidationLogic {
     /**
      * @notice Returns the configuration data for the debt and the collateral reserves.
      * @param collateralReserve The data of the collateral reserve
+     * @param vars the executeLiquidationCall() function local vars
      * @return The collateral xToken
      * @return The liquidation bonus to apply to the collateral
      */
@@ -655,10 +660,6 @@ library LiquidationLogic {
         uint256 liquidationBonus = collateralReserve
             .configuration
             .getLiquidationBonus();
-
-        if (!vars.isLiquidationAssetBorrowed || vars.auctionEnabled) {
-            liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
-        }
 
         return (collateralXToken, liquidationBonus);
     }
