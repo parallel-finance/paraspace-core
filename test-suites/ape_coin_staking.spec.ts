@@ -75,7 +75,7 @@ describe("ape coin staking", () => {
       await ape.connect(user1.signer).approve(nBAYC.address, MAX_UINT_AMOUNT)
     );
 
-    nBAYC.connect(user1.signer).depositBAYC([{tokenId: 0, amount: amount}]);
+    nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}]);
   });
 
   it("User 1 claim the full staked rewards", async () => {
@@ -95,7 +95,7 @@ describe("ape coin staking", () => {
       "0"
     );
 
-    await nBAYC.connect(user1.signer).claimBAYC(["0"], user1.address);
+    await nBAYC.connect(user1.signer).claimApeCoin(["0"], user1.address);
 
     const userBalance = await ape.balanceOf(user1.address);
 
@@ -115,7 +115,7 @@ describe("ape coin staking", () => {
 
     await nBAYC
       .connect(user1.signer)
-      .withdrawBAYC([{tokenId: "0", amount: amount}], user1.address);
+      .withdrawApeCoin([{tokenId: "0", amount: amount}], user1.address);
   });
 
   it("on BAYC liquidation, the staked apecoins should be withdrawn", async () => {
@@ -130,7 +130,7 @@ describe("ape coin staking", () => {
     } = testEnv;
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
-    nBAYC.connect(user1.signer).depositBAYC([{tokenId: 0, amount: amount}]);
+    nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}]);
 
     await supplyAndValidate(dai, "100000", liquidator, true, "200000");
 
@@ -174,7 +174,7 @@ describe("ape coin staking", () => {
     const amount = await convertToCurrencyDecimals(ape.address, "20");
     await switchCollateralAndValidate(user1, bayc, true, 1);
 
-    nBAYC.connect(user1.signer).depositBAYC([{tokenId: 1, amount: amount}]);
+    nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 1, amount: amount}]);
 
     await changePriceAndValidate(bayc, "1111");
 
@@ -222,7 +222,7 @@ describe("ape coin staking", () => {
       await ape.connect(user1.signer).approve(nMAYC.address, MAX_UINT_AMOUNT)
     );
 
-    nMAYC.connect(user1.signer).depositMAYC([{tokenId: 0, amount: amount}]);
+    nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}]);
   });
 
   it("User 1 claim the full staked MAYC rewards", async () => {
@@ -242,7 +242,7 @@ describe("ape coin staking", () => {
       "0"
     );
 
-    await nMAYC.connect(user1.signer).claimMAYC(["0"], user1.address);
+    await nMAYC.connect(user1.signer).claimApeCoin(["0"], user1.address);
 
     const userBalance = await ape.balanceOf(user1.address);
 
@@ -268,10 +268,7 @@ describe("ape coin staking", () => {
 
     await nMAYC
       .connect(user1.signer)
-      .withdrawMAYC(
-        [{tokenId: "0", amount: amount.add(pendingRewards)}],
-        user1.address
-      );
+      .withdrawApeCoin([{tokenId: "0", amount: amount}], user1.address);
   });
 
   it("on MAYC liquidation, the staked apecoins should be withdrawn", async () => {
@@ -287,7 +284,7 @@ describe("ape coin staking", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
-    nMAYC.connect(user1.signer).depositMAYC([{tokenId: 0, amount: amount}]);
+    nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}]);
 
     await switchCollateralAndValidate(user1, mayc, true, 0);
 
@@ -334,7 +331,7 @@ describe("ape coin staking", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
-    nMAYC.connect(user1.signer).depositMAYC([{tokenId: 1, amount: amount}]);
+    nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 1, amount: amount}]);
 
     await switchCollateralAndValidate(user1, mayc, true, 1);
 
