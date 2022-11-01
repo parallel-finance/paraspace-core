@@ -670,8 +670,8 @@ library LiquidationLogic {
                 superVars.liquidationBonus
             );
 
-        if (maxCollateralToLiquidate > superVars.userCollateral) {
-            vars.actualCollateralToLiquidate = superVars.userCollateral;
+        if (maxCollateralToLiquidate > vars.userCollateral) {
+            vars.actualCollateralToLiquidate = vars.userCollateral;
             vars.actualLiquidationAmount = (
                 ((vars.collateralPrice *
                     vars.actualCollateralToLiquidate *
