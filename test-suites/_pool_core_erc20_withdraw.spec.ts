@@ -33,12 +33,8 @@ const fixture = async () => {
 
 describe("pToken Withdraw Event Accounting", () => {
   const secondDaiDeposit = "20000";
-  let testEnv: TestEnv;
 
-  before("Initialize Depositors", async () => {
-    testEnv = await loadFixture(fixture);
-  });
-
+  //FIXME(alan): "User shouldn't withdraw supplied DAI if he doesn't have enough collateral"
   it("TC-erc20-withdraw-01 User 1 tries to withdraw from the deposited DAI without paying the repaying debt (should fail)", async () => {
     const {
       dai,
@@ -59,6 +55,7 @@ describe("pToken Withdraw Event Accounting", () => {
     );
   });
 
+  //FIXME(alan): "User shouldn't withdraw an asset if he hasn't supplied it"
   it("TC-erc20-withdraw-02 User 1 tries to withdraw an asset that does not have a supply (should fail)", async () => {
     const {
       wBTC,
@@ -78,6 +75,7 @@ describe("pToken Withdraw Event Accounting", () => {
     ).to.be.revertedWith(ProtocolErrors.NOT_ENOUGH_AVAILABLE_USER_BALANCE);
   });
 
+  //FIXME(alan): "User shouldn't withdraw asset more than supplied"
   it("TC-erc20-withdraw-03 User 2 tries to withdraw 20K exceeds the self supply 10K (should fail)", async () => {
     const {
       dai,
@@ -98,9 +96,12 @@ describe("pToken Withdraw Event Accounting", () => {
   });
 
   describe("withdraw erc20 token unit case", () => {
+    let testEnv: TestEnv;
     before("Initialize Depositors", async () => {
       testEnv = await loadFixture(fixture);
     });
+
+    //FIXME(alan): "User1 could withdraw collateral until his hf would be lower than 1"
     it("TC-erc20-withdraw-04 User 1 withdraw the deposited DAI up to debt value and reaches Health Factor 1~1.1", async () => {
       const {
         dai,
@@ -127,6 +128,7 @@ describe("pToken Withdraw Event Accounting", () => {
         .to.be.least(parseEther("1.0"));
     });
 
+    //FIXME(alan): it doesn't check the interest
     it("TC-erc20-withdraw-05 User 1 fully repays the loan plus any accrued interest", async () => {
       const {
         dai,
@@ -170,6 +172,7 @@ describe("pToken Withdraw Event Accounting", () => {
       );
     });
 
+    //FIXME(alan): it doesn't match the description
     it("TC-erc20-withdraw-06 User 1 can withdraw all deposited tokens if has no remaining debt", async () => {
       const {
         dai,

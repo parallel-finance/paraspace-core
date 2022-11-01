@@ -40,7 +40,7 @@ const fixture = async () => {
 describe("pToken Repay Event Accounting", () => {
   const firstDaiDeposit = "10000";
 
-  it("TC-erc20-repay-01 User 3 tries to make repayment without a loan block(should fail)", async () => {
+  it("TC-erc20-repay-01 User 3 tries to make repayment without loan (should fail)", async () => {
     const {
       users: [, , user3],
       dai,
@@ -51,7 +51,7 @@ describe("pToken Repay Event Accounting", () => {
     );
   });
 
-  it("TC-erc20-repay-02 User 1 tries to repay other user objects", async () => {
+  it("TC-erc20-repay-02 User1 tries to repay for other user", async () => {
     const {
       usdc,
       pool,
@@ -66,6 +66,7 @@ describe("pToken Repay Event Accounting", () => {
     await usdc.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
     // user 1 repay user 2 loan
+    // FIXME(alan): use `waitForTx` helper function
     const repayTx = await pool
       .connect(user1.signer)
       .repay(usdc.address, amount, user2.address);
@@ -75,6 +76,7 @@ describe("pToken Repay Event Accounting", () => {
     const availableToBorrowAfterRepay = (
       await pool.getUserAccountData(user2.address)
     ).availableBorrowsBase;
+    //FIXME(alan): Can we use exact value?
     expect(availableToBorrowAfterRepay).to.be.gt(availableToBorrowBeforeRepay);
   });
 
@@ -122,6 +124,7 @@ describe("pToken Repay Event Accounting", () => {
     );
   });
 
+  //FIXME(alan): "User's health factor should be increased after repay partial debt"
   it("TC-erc20-repay-04 User 2 Reaching the liquidation threshold 1~1.1, repay to make it recover health", async () => {
     const {
       usdc,
@@ -154,6 +157,7 @@ describe("pToken Repay Event Accounting", () => {
     const amount = await convertToCurrencyDecimals(dai.address, "100");
 
     await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    //FIXME(alan): It doesn't guarantee those two transactions in a same block
     await pool
       .connect(user3.signer)
       .borrow(dai.address, amount, "0", user3.address, {

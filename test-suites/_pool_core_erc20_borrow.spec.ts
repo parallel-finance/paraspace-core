@@ -22,7 +22,6 @@ const fixture = async () => {
   return testEnv;
 };
 
-//TODO(alan): Sync the UT index with the test case sheet.
 describe("pToken/debtToken Borrow Event Accounting", () => {
   const firstDaiDeposit = "10000";
   const secondDaiDeposit = "20000";
@@ -46,7 +45,6 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
   });
 
   //FIXME(alan): "User1 shouldn't borrow 20k USDC which would exceed his borrow limit"
-  //TODO(alan): The case doesn't appear in the test case sheet?
   it("TC-erc20-borrow-02 User 1 tries to Borrow 20K exceed the  borrow limit (should fail)", async () => {
     const {
       dai,
