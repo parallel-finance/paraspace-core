@@ -112,7 +112,7 @@ library LiquidationLogic {
         //user health factor
         uint256 healthFactor;
         //liquidation protocol fee to be sent to treasury
-        uint256 liquidationProtocolFeeAmount;
+        uint256 liquidationProtocolFee;
         //collateral P|N Token
         address collateralXToken;
         //whether auction is enabled
@@ -127,7 +127,6 @@ library LiquidationLogic {
         uint256 userCollateral;
         uint256 collateralPrice;
         uint256 liquidationAssetPrice;
-        uint256 liquidationAmountInBaseCurrency;
         uint256 liquidationAssetDecimals;
         uint256 collateralDecimals;
         uint256 collateralAssetUnit;
@@ -208,7 +207,7 @@ library LiquidationLogic {
             vars.userCollateral,
             vars.actualCollateralToLiquidate,
             vars.actualDebtToLiquidate,
-            vars.liquidationProtocolFeeAmount
+            vars.liquidationProtocolFee
         ) = _calculateERC20LiquidationParameters(
             collateralReserve,
             params,
@@ -230,11 +229,11 @@ library LiquidationLogic {
         }
 
         // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFeeAmount != 0) {
+        if (vars.liquidationProtocolFee != 0) {
             IPToken(vars.collateralXToken).transferOnLiquidation(
                 params.user,
                 IPToken(vars.collateralXToken).RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFeeAmount
+                vars.liquidationProtocolFee
             );
         }
 
@@ -317,7 +316,6 @@ library LiquidationLogic {
         (vars.collateralXToken, vars.liquidationBonus) = _getConfigurationData(
             collateralReserve
         );
-
         if (vars.auctionEnabled) {
             vars.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
         }
@@ -325,7 +323,7 @@ library LiquidationLogic {
         (
             vars.userCollateral,
             vars.actualLiquidationAmount,
-            vars.liquidationProtocolFeeAmount,
+            vars.liquidationProtocolFee,
             vars.userGlobalDebt
         ) = _calculateERC721LiquidationParameters(
             collateralReserve,
@@ -341,8 +339,7 @@ library LiquidationLogic {
                 liquidator: params.liquidator,
                 borrower: params.user,
                 globalDebt: vars.userGlobalDebt,
-                actualLiquidationAmount: vars.actualLiquidationAmount +
-                    vars.liquidationProtocolFeeAmount,
+                actualLiquidationAmount: vars.actualLiquidationAmount,
                 maxLiquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
@@ -379,7 +376,8 @@ library LiquidationLogic {
             userConfig,
             DataTypes.ExecuteSupplyParams({
                 asset: params.liquidationAsset,
-                amount: vars.actualLiquidationAmount,
+                amount: vars.actualLiquidationAmount -
+                    vars.liquidationProtocolFee,
                 onBehalfOf: params.user,
                 referralCode: 0
             })
@@ -406,12 +404,12 @@ library LiquidationLogic {
         }
 
         // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFeeAmount != 0) {
+        if (vars.liquidationProtocolFee != 0) {
             IERC20(params.liquidationAsset).safeTransferFrom(
                 params.liquidator,
                 IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
                     .RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFeeAmount
+                vars.liquidationProtocolFee
             );
         }
 
@@ -798,14 +796,6 @@ library LiquidationLogic {
         uint256 globalDebtAmount = (superVars.userGlobalDebt *
             vars.liquidationAssetUnit) / vars.liquidationAssetPrice;
 
-        // (liquidation amount (passed in by liquidator, this has decimals) * liquidationAssetPrice) / number of decimals
-        // ie. liquidation amount (10k DAI * 10^18) * price of DAI ($1) / 10^18 = 10k
-        // vars.liquidationAmountInBaseCurrency needs to be >= vars.actualLiquidationAmount otherwise the liquidator cannot buy the NFT
-        // in a scenario where there are multiple people trying to liquidate and the highest amount would pay back the more of the total global debt that user has to protocol
-        vars.liquidationAmountInBaseCurrency =
-            (params.liquidationAmount * vars.liquidationAssetPrice) /
-            vars.liquidationAssetUnit;
-
         vars.actualLiquidationAmount = collateralToLiquate.percentDiv(
             superVars.liquidationBonus
         );
@@ -820,7 +810,7 @@ library LiquidationLogic {
 
             return (
                 vars.userCollateral,
-                vars.actualLiquidationAmount,
+                vars.actualLiquidationAmount + vars.liquidationProtocolFee,
                 vars.liquidationProtocolFee,
                 globalDebtAmount
             );
