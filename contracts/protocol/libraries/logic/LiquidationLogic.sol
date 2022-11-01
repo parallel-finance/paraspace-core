@@ -53,13 +53,6 @@ library LiquidationLogic {
     uint256 public constant MAX_LIQUIDATION_CLOSE_FACTOR = 1e4;
 
     /**
-     * @dev Minimum percentage of borrower's debt to be repaid in a liquidation
-     * @dev Percentage applied never but works as a placeholder for ERC20 liquidation
-     * Expressed in bps, a value of 0e4 results in 0%
-     */
-    uint256 public constant MIN_LIQUIDATION_CLOSE_FACTOR = 0;
-
-    /**
      * @dev This constant represents below which health factor value it is possible to liquidate
      * an amount of debt corresponding to `MAX_LIQUIDATION_CLOSE_FACTOR`.
      * A value of 0.85e18 results in 85%
@@ -118,16 +111,12 @@ library LiquidationLogic {
         uint256 liquidationBonus;
         //user health factor
         uint256 healthFactor;
-        //minimum close factor
-        uint256 minimumCloseFactor;
         //liquidation protocol fee to be sent to treasury
         uint256 liquidationProtocolFeeAmount;
         //collateral P|N Token
         address collateralXToken;
         //whether auction is enabled
         bool auctionEnabled;
-        //whether user has debt in liquidation asset
-        bool isLiquidationAssetBorrowed;
         //liquidation asset reserve id
         uint16 liquidationAssetReserveId;
         //liquidation reserve cache
@@ -180,7 +169,6 @@ library LiquidationLogic {
         DataTypes.UserConfigurationMap storage userConfig = usersConfig[
             params.user
         ];
-        vars.minimumCloseFactor = MIN_LIQUIDATION_CLOSE_FACTOR;
         vars.liquidationAssetReserveCache = liquidationAssetReserve.cache();
         liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
 
@@ -213,8 +201,7 @@ library LiquidationLogic {
         );
 
         (vars.collateralXToken, vars.liquidationBonus) = _getConfigurationData(
-            collateralReserve,
-            vars
+            collateralReserve
         );
 
         (
@@ -298,11 +285,7 @@ library LiquidationLogic {
             params.user
         ];
 
-        vars.minimumCloseFactor = MAX_LIQUIDATION_CLOSE_FACTOR;
         vars.liquidationAssetReserveId = liquidationAssetReserve.id;
-        vars.isLiquidationAssetBorrowed = userConfig.isBorrowing(
-            vars.liquidationAssetReserveId
-        );
         vars.liquidationAssetReserveCache = liquidationAssetReserve.cache();
         liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
 
@@ -332,19 +315,11 @@ library LiquidationLogic {
         );
 
         (vars.collateralXToken, vars.liquidationBonus) = _getConfigurationData(
-            collateralReserve,
-            vars
+            collateralReserve
         );
 
-        if (!vars.isLiquidationAssetBorrowed || vars.auctionEnabled) {
+        if (vars.auctionEnabled) {
             vars.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
-        }
-
-        if (vars.isLiquidationAssetBorrowed) {
-            (vars.userDebt, vars.actualDebtToLiquidate) = _calculateDebt(
-                params,
-                vars
-            );
         }
 
         (
@@ -389,51 +364,35 @@ library LiquidationLogic {
             );
         }
 
-        if (vars.actualLiquidationAmount > vars.actualDebtToLiquidate) {
-            // the actualLiquidationAmount will never be greater than the amount the liquidator is passing in
-            // require(params.liquidationAmount >= params.actualLiquidationAmount) - line 669 of ValidationLogic.sol
-            // there will always be excess if actualLiquidationAmount > amount needed to liquidate
-            // vars.actualDebtToLiquidate = The actual debt that is getting liquidated.
-            // If liquidation amount passed in by the liquidator is greater then the total user debt,
-            // then use the user total debt as the actual debt getting liquidated.
-            // If the user total debt is greater than the liquidation amount getting passed in by the liquidator,
-            // then use the liquidation amount the user is passing in.
-            // userGlobalDebt = debt across all positions (ie. if there are multiple positions)
-            // if the global debt > the actual debt that is getting liquidated then the excess amount goes to pay protocol
-            SupplyLogic.executeSupply(
-                reservesData,
-                userConfig,
-                DataTypes.ExecuteSupplyParams({
-                    asset: params.liquidationAsset,
-                    amount: vars.actualLiquidationAmount -
-                        vars.actualDebtToLiquidate,
-                    onBehalfOf: params.user,
-                    referralCode: 0
-                })
+        // the actualLiquidationAmount will never be greater than the amount the liquidator is passing in
+        // require(params.liquidationAmount >= params.actualLiquidationAmount) - line 669 of ValidationLogic.sol
+        // there will always be excess if actualLiquidationAmount > amount needed to liquidate
+        // vars.actualDebtToLiquidate = The actual debt that is getting liquidated.
+        // If liquidation amount passed in by the liquidator is greater then the total user debt,
+        // then use the user total debt as the actual debt getting liquidated.
+        // If the user total debt is greater than the liquidation amount getting passed in by the liquidator,
+        // then use the liquidation amount the user is passing in.
+        // userGlobalDebt = debt across all positions (ie. if there are multiple positions)
+        // if the global debt > the actual debt that is getting liquidated then the excess amount goes to pay protocol
+        SupplyLogic.executeSupply(
+            reservesData,
+            userConfig,
+            DataTypes.ExecuteSupplyParams({
+                asset: params.liquidationAsset,
+                amount: vars.actualLiquidationAmount,
+                onBehalfOf: params.user,
+                referralCode: 0
+            })
+        );
+        if (!userConfig.isUsingAsCollateral(vars.liquidationAssetReserveId)) {
+            userConfig.setUsingAsCollateral(
+                vars.liquidationAssetReserveId,
+                true
             );
-            if (
-                !userConfig.isUsingAsCollateral(vars.liquidationAssetReserveId)
-            ) {
-                userConfig.setUsingAsCollateral(
-                    vars.liquidationAssetReserveId,
-                    true
-                );
-                emit ReserveUsedAsCollateralEnabled(
-                    params.liquidationAsset,
-                    params.user
-                );
-            }
-        } else {
-            // if the actual debt that is getting liquidated > discounted price then there is no excess amount
-            // update the actual debt that is getting liquidated to the discounted price of the nft
-            vars.actualDebtToLiquidate = vars.actualLiquidationAmount;
-        }
-
-        if (
-            vars.isLiquidationAssetBorrowed &&
-            vars.userDebt == vars.actualDebtToLiquidate
-        ) {
-            userConfig.setBorrowing(vars.liquidationAssetReserveId, false);
+            emit ReserveUsedAsCollateralEnabled(
+                params.liquidationAsset,
+                params.user
+            );
         }
 
         // If the collateral being liquidated is equal to the user balance,
@@ -456,10 +415,6 @@ library LiquidationLogic {
             );
         }
 
-        if (vars.actualDebtToLiquidate != 0) {
-            _burnDebtTokens(liquidationAssetReserve, params, vars);
-        }
-
         if (params.receiveXToken) {
             INToken(vars.collateralXToken).transferOnLiquidation(
                 params.user,
@@ -474,7 +429,7 @@ library LiquidationLogic {
             params.collateralAsset,
             params.liquidationAsset,
             params.user,
-            vars.actualDebtToLiquidate,
+            vars.actualLiquidationAmount,
             params.collateralTokenId,
             params.liquidator,
             params.receiveXToken
@@ -631,11 +586,7 @@ library LiquidationLogic {
             ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
             : MAX_LIQUIDATION_CLOSE_FACTOR;
 
-        uint256 maxLiquidatableDebt = userDebt.percentMul(
-            closeFactor > vars.minimumCloseFactor
-                ? closeFactor
-                : vars.minimumCloseFactor
-        );
+        uint256 maxLiquidatableDebt = userDebt.percentMul(closeFactor);
 
         uint256 actualDebtToLiquidate = params.liquidationAmount >
             maxLiquidatableDebt
@@ -648,13 +599,11 @@ library LiquidationLogic {
     /**
      * @notice Returns the configuration data for the debt and the collateral reserves.
      * @param collateralReserve The data of the collateral reserve
-     * @param vars the executeLiquidationCall() function local vars
      * @return The collateral xToken
      * @return The liquidation bonus to apply to the collateral
      */
     function _getConfigurationData(
-        DataTypes.ReserveData storage collateralReserve,
-        LiquidationCallLocalVars memory vars
+        DataTypes.ReserveData storage collateralReserve
     ) internal view returns (address, uint256) {
         address collateralXToken = collateralReserve.xTokenAddress;
         uint256 liquidationBonus = collateralReserve

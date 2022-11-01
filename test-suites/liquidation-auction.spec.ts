@@ -318,7 +318,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            dai.address,
             borrower.address,
             0,
             await convertToCurrencyDecimals(dai.address, "10000"),
@@ -362,7 +361,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            dai.address,
             borrower.address,
             0,
             await convertToCurrencyDecimals(dai.address, "10000"),
@@ -378,7 +376,6 @@ describe("Liquidation Auction", () => {
         users: [borrower, liquidator],
         pool,
         bayc,
-        dai,
         configurator,
       } = testEnv;
 
@@ -412,7 +409,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            dai.address,
             borrower.address,
             0,
             parseEther("12").toString(),
@@ -529,7 +525,6 @@ describe("Liquidation Auction", () => {
         users: [borrower, liquidator],
         pool,
         bayc,
-        weth,
       } = testEnv;
 
       await expect(
@@ -537,7 +532,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            weth.address,
             borrower.address,
             0,
             parseEther("36").toString(),
@@ -593,7 +587,6 @@ describe("Liquidation Auction", () => {
         pool,
         bayc,
         nBAYC,
-        weth,
         configurator,
       } = testEnv;
 
@@ -626,7 +619,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            weth.address,
             borrower.address,
             0,
             parseEther("12").toString(),

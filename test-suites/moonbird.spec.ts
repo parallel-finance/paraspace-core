@@ -135,7 +135,6 @@ describe("MoonBirds nToken and supply while nesting", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         moonbirds.address,
-        dai.address,
         borrower.address,
         0,
         daiAmount,
@@ -187,7 +186,6 @@ describe("MoonBirds nToken and supply while nesting", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         moonbirds.address,
-        dai.address,
         borrower.address,
         0,
         daiAmount,

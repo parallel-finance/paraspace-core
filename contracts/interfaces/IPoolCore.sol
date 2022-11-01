@@ -143,7 +143,7 @@ interface IPoolCore {
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
-     * @param maxLiquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
+     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param liquidatedCollateralTokenId The token id of ERC721 asset received by the liquidator
      * @param liquidator The address of the liquidator
      * @param receiveNToken True if the liquidators wants to receive the collateral NTokens, `false` if he wants
@@ -153,7 +153,7 @@ interface IPoolCore {
         address indexed collateralAsset,
         address indexed liquidationAsset,
         address indexed user,
-        uint256 maxLiquidationAmount,
+        uint256 liquidationAmount,
         uint256 liquidatedCollateralTokenId,
         address liquidator,
         bool receiveNToken

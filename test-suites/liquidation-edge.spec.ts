@@ -272,7 +272,6 @@ describe("Pool Liquidation: Edge cases", () => {
         .connect(liquidator.signer)
         .liquidationERC721(
           bayc.address,
-          dai.address,
           borrower.address,
           0,
           await convertToCurrencyDecimals(dai.address, "20"),

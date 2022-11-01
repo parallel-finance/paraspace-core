@@ -1183,7 +1183,6 @@ const liquidateAndValidateERC721 = async (
       .connect(liquidator.signer)
       .liquidationERC721(
         collateralToken.address,
-        liquidationToken.address,
         borrower.address,
         nftId != null ? nftId : 0,
         parseEther(amount).toString(),
@@ -1472,7 +1471,6 @@ export const liquidateAndValidateReverted = async (
         .connect(liquidator.signer)
         .liquidationERC721(
           collateralToken.address,
-          liquidationToken.address,
           borrower.address,
           nftId != null ? nftId : 0,
           parseEther(amount).toString(),
