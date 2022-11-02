@@ -7,14 +7,13 @@ import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {formatEther} from "ethers/lib/utils";
-
 import {
   borrowAndValidate,
   mintAndValidate,
   repayAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
+import {almostEqual} from "../deploy/helpers/uniswapv3-helper";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -40,9 +39,7 @@ const fixture = async () => {
 };
 
 describe("pToken Repay Event Accounting", () => {
-  const firstDaiDeposit = "10000";
-
-  it("TC-erc20-repay-01 User 3 tries to make repayment without loan (should fail)", async () => {
+  it("TC-erc20-repay-01: User 3 tries to make repayment without loan (should fail)", async () => {
     const {
       users: [, , user3],
       dai,
@@ -60,13 +57,14 @@ describe("pToken Repay Event Accounting", () => {
       oracle,
       users: [user1, user2],
     } = await loadFixture(fixture);
-    const availableToBorrowBeforeRepay = (
-      await pool.getUserAccountData(user2.address)
-    ).availableBorrowsBase;
-    const amount = await convertToCurrencyDecimals(usdc.address, "100");
+    const totalDebtBeforeRepay = (await pool.getUserAccountData(user2.address))
+      .totalDebtBase;
+
+    const repayAmount = "100";
+    const amount = await convertToCurrencyDecimals(usdc.address, repayAmount);
 
     const usdcPrice = await oracle.getAssetPrice(usdc.address);
-    const availableValue = usdcPrice.mul(formatEther(amount.toString()));
+    const availableValue = usdcPrice.mul(repayAmount);
 
     await mintAndValidate(usdc, "1000", user1);
     await usdc.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
@@ -79,18 +77,9 @@ describe("pToken Repay Event Accounting", () => {
     );
 
     // User 2 - Available to borrow should have increased
-    const availableToBorrowAfterRepay = (
-      await pool.getUserAccountData(user2.address)
-    ).availableBorrowsBase;
-
-    // FIXME(alan): Can we use exact value?
-    // When loan is large, there will be accuracy difference
-    // expect(availableToBorrowAfterRepay).to.be.equal(
-    //   availableToBorrowBeforeRepay.add(availableValue)
-    // );
-    expect(availableToBorrowAfterRepay).to.be.gt(
-      availableToBorrowBeforeRepay.add(availableValue)
-    );
+    const totalDebtAfterRepay = (await pool.getUserAccountData(user2.address))
+      .totalDebtBase;
+    almostEqual(totalDebtAfterRepay, totalDebtBeforeRepay.sub(availableValue));
   });
 
   it("TC-erc20-repay-03 User 1 fully repays the loan plus any accrued interest", async () => {
@@ -162,6 +151,7 @@ describe("pToken Repay Event Accounting", () => {
       pool,
       dai,
     } = await loadFixture(fixture);
+    const firstDaiDeposit = "10000";
     // User 3 - Deposit dai
     await supplyAndValidate(dai, firstDaiDeposit, user3, true);
 
@@ -186,7 +176,6 @@ describe("pToken Repay Event Accounting", () => {
   });
 
   describe("Repay interest token uint case", () => {
-    const firstDaiDeposit = "10000";
     let accruedInterest = BigNumber.from(0);
     let testEnv: TestEnv;
 
@@ -216,6 +205,7 @@ describe("pToken Repay Event Accounting", () => {
         users: [user1],
         dai,
       } = testEnv;
+      const firstDaiDeposit = "10000";
 
       await mintAndValidate(dai, firstDaiDeposit, user1);
       // User 1 - repay accrued interest
