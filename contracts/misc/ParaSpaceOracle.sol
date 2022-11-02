@@ -55,10 +55,10 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         uint256 baseCurrencyUnit
     ) {
         ADDRESSES_PROVIDER = provider;
-        _setFallbackOracle(fallbackOracle);
-        _setAssetsSources(assets, sources);
         BASE_CURRENCY = baseCurrency;
         BASE_CURRENCY_UNIT = baseCurrencyUnit;
+        _setFallbackOracle(fallbackOracle);
+        _setAssetsSources(assets, sources);
         emit BaseCurrencySet(baseCurrency, baseCurrencyUnit);
     }
 
@@ -93,6 +93,10 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         for (uint256 i = 0; i < assets.length; i++) {
+            require(
+                assets[i] != BASE_CURRENCY,
+                Errors.SET_ORACLE_SOURCE_NOT_ALLOWED
+            );
             assetsSources[assets[i]] = sources[i];
             emit AssetSourceUpdated(assets[i], sources[i]);
         }
@@ -127,7 +131,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             price = _fallbackOracle.getAssetPrice(asset);
         }
 
-        require(price != 0, "price not ready");
+        require(price != 0, Errors.ORACLE_PRICE_NOT_READY);
         return price;
     }
 
@@ -145,7 +149,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokenPrice(tokenId);
         }
 
-        revert("price not ready");
+        revert(Errors.ORACLE_PRICE_NOT_READY);
     }
 
     function getTokensPrices(address asset, uint256[] calldata tokenIds)
@@ -162,7 +166,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokensPrices(tokenIds);
         }
 
-        revert("price not ready");
+        revert(Errors.ORACLE_PRICE_NOT_READY);
     }
 
     function getTokensPricesSum(address asset, uint256[] calldata tokenIds)
@@ -179,7 +183,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return source.getTokensPricesSum(tokenIds);
         }
 
-        revert("price not ready");
+        revert(Errors.ORACLE_PRICE_NOT_READY);
     }
 
     /// @inheritdoc IParaSpaceOracle

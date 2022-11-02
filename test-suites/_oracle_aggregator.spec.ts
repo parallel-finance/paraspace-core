@@ -46,7 +46,7 @@ describe("ParaSpaceOracle", () => {
     );
     await expect(
       paraspaceOracle.getAssetPrice(mockToken.address)
-    ).to.be.revertedWith("price not ready");
+    ).to.be.revertedWith(ProtocolErrors.ORACLE_PRICE_NOT_READY);
 
     // Add asset source
     expect(
@@ -125,22 +125,14 @@ describe("ParaSpaceOracle", () => {
     ).to.be.revertedWith(CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
   });
 
-  it("Get price of BASE_CURRENCY asset with registered asset source for its address", async () => {
+  it("Set oracle for BASE_CURRENCY asset is not allowed", async () => {
     const {poolAdmin, paraspaceOracle, weth} = testEnv;
 
-    // Add asset source for BASE_CURRENCY address
-    expect(
-      await paraspaceOracle
+    await expect(
+      paraspaceOracle
         .connect(poolAdmin.signer)
         .setAssetSources([weth.address], [mockAggregator.address])
-    )
-      .to.emit(paraspaceOracle, "AssetSourceUpdated")
-      .withArgs(weth.address, mockAggregator.address);
-
-    // Check returns the fixed price BASE_CURRENCY_UNIT
-    expect(await paraspaceOracle.getAssetPrice(weth.address)).to.be.eq(
-      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.WETH
-    );
+    ).to.be.revertedWith(ProtocolErrors.SET_ORACLE_SOURCE_NOT_ALLOWED);
   });
 
   it("Get price of asset with no asset source", async () => {
@@ -184,7 +176,7 @@ describe("ParaSpaceOracle", () => {
     );
     await expect(
       paraspaceOracle.getAssetPrice(mockToken.address)
-    ).to.be.revertedWith("price not ready");
+    ).to.be.revertedWith(ProtocolErrors.ORACLE_PRICE_NOT_READY);
   });
 
   it("Get price of asset with 0 price but non-zero fallback price", async () => {
