@@ -88,7 +88,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) public virtual override onlyPool nonReentrant returns (uint64, uint64) {
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         return _burn(from, receiverOfUnderlying, tokenIds);
     }
 
@@ -117,7 +117,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
 
     /// @inheritdoc INToken
     function transferOnLiquidation(address from, address to, uint256 value)
-        public
+        external
         virtual
         override
         onlyPool

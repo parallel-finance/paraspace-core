@@ -55,18 +55,21 @@ abstract contract NTokenApeStaking is NToken {
     function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
         external
     {
+        uint256 totalAmount = 0;
+
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 ownerOf(_nfts[index].tokenId) == msg.sender,
                 "NToken: not owner of token"
             );
-
-            _apeCoinStaking.apeCoin().transferFrom(
-                msg.sender,
-                address(this),
-                _nfts[index].amount
-            );
+            totalAmount += _nfts[index].amount;
         }
+
+        _apeCoinStaking.apeCoin().transferFrom(
+            msg.sender,
+            address(this),
+            totalAmount
+        );
 
         _depositApeCoin(_nfts);
     }
@@ -99,7 +102,10 @@ abstract contract NTokenApeStaking is NToken {
         address _recipient
     ) external {
         for (uint256 index = 0; index < _nfts.length; index++) {
-            require(ownerOf(_nfts[index].tokenId) == msg.sender);
+            require(
+                ownerOf(_nfts[index].tokenId) == msg.sender,
+                "NToken: not owner of token"
+            );
         }
 
         _withdrawApeCoin(_nfts, _recipient);
@@ -109,7 +115,7 @@ abstract contract NTokenApeStaking is NToken {
      * @notice Overrides the transferOnLiquidation from NToken to withdraw all staked and pending rewards before transfer the asset on liquidation
      */
     function transferOnLiquidation(address from, address to, uint256 tokenId)
-        public
+        external
         override
         onlyPool
         nonReentrant
@@ -128,7 +134,7 @@ abstract contract NTokenApeStaking is NToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) public virtual override onlyPool nonReentrant returns (uint64, uint64) {
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         _withdraw(tokenIds, from);
 
         return _burn(from, receiverOfUnderlying, tokenIds);

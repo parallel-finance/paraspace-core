@@ -41,7 +41,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) public virtual override onlyPool nonReentrant returns (uint64, uint64) {
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         (
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
