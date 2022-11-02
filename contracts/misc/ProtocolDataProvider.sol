@@ -130,7 +130,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             reserveFactor
         ) = configuration.getParams();
 
-        (isActive, isFrozen, borrowingEnabled, , ) = configuration.getFlags();
+        (isActive, isFrozen, borrowingEnabled, , , ) = configuration.getFlags();
 
         usageAsCollateralEnabled = liquidationThreshold != 0;
     }
@@ -148,7 +148,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
 
     /// @inheritdoc IProtocolDataProvider
     function getPaused(address asset) external view returns (bool isPaused) {
-        (, , , isPaused, ) = IPool(ADDRESSES_PROVIDER.getPool())
+        (, , , isPaused, , ) = IPool(ADDRESSES_PROVIDER.getPool())
             .getConfiguration(asset)
             .getFlags();
     }

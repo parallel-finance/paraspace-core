@@ -214,6 +214,19 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
+    function setReserveActiveForUniV3(address asset, bool active)
+        public
+        override
+        onlyEmergencyOrPoolAdmin
+    {
+        DataTypes.ReserveConfigurationMap memory currentConfig = _pool
+            .getConfiguration(asset);
+        currentConfig.setActiveForUniV3(active);
+        _pool.setConfiguration(asset, currentConfig);
+        emit ReserveActiveForUniV3(asset, active);
+    }
+
+    /// @inheritdoc IPoolConfigurator
     function setReserveFactor(address asset, uint256 newReserveFactor)
         external
         override

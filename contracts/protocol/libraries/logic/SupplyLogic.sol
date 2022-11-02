@@ -15,7 +15,6 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 
 /**
  * @title SupplyLogic library
@@ -252,27 +251,14 @@ library SupplyLogic {
         );
 
         for (uint256 index = 0; index < params.tokenData.length; index++) {
-            (
-                ,
-                ,
-                address token0,
-                address token1,
-                ,
-                ,
-                ,
-                ,
-                ,
-                ,
-                ,
-
-            ) = INonfungiblePositionManager(params.asset).positions(
-                    params.tokenData[index].tokenId
-                );
-
-            require(
-                reservesData[token0].xTokenAddress != address(0) &&
-                    reservesData[token1].xTokenAddress != address(0),
-                Errors.ASSET_NOT_LISTED
+            ValidationLogic.validateForUniswapV3(
+                reservesData,
+                params.asset,
+                params.tokenData[index].tokenId,
+                true,
+                true,
+                true,
+                true
             );
 
             IERC721(params.asset).safeTransferFrom(
@@ -386,7 +372,12 @@ library SupplyLogic {
 
         reserve.updateState(reserveCache);
 
-        ValidationLogic.validateWithdrawERC721(reserveCache);
+        ValidationLogic.validateWithdrawERC721(
+            reservesData,
+            reserveCache,
+            params.asset,
+            params.tokenIds
+        );
         uint256 amountToWithdraw = params.tokenIds.length;
 
         (
@@ -447,7 +438,7 @@ library SupplyLogic {
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
 
-        ValidationLogic.validateTransfer(reserve);
+        ValidationLogic.validateTransferERC20(reserve);
 
         uint256 reserveId = reserve.id;
 
@@ -508,7 +499,12 @@ library SupplyLogic {
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
 
-        ValidationLogic.validateTransfer(reserve);
+        ValidationLogic.validateTransferERC721(
+            reservesData,
+            reserve,
+            params.asset,
+            params.tokenId
+        );
 
         uint256 reserveId = reserve.id;
 
@@ -621,7 +617,12 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
+        ValidationLogic.validateSetUseERC721AsCollateral(
+            reservesData,
+            reserveCache,
+            asset,
+            tokenIds
+        );
 
         (
             uint256 oldCollaterizedBalance,
@@ -662,7 +663,12 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
+        ValidationLogic.validateSetUseERC721AsCollateral(
+            reservesData,
+            reserveCache,
+            asset,
+            tokenIds
+        );
 
         (
             uint256 oldCollaterizedBalance,

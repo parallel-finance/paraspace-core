@@ -109,6 +109,7 @@ library ConfiguratorLogic {
         currentConfig.setActive(true);
         currentConfig.setPaused(false);
         currentConfig.setFrozen(false);
+        currentConfig.setActiveForUniV3(true);
 
         pool.setConfiguration(input.underlyingAsset, currentConfig);
 

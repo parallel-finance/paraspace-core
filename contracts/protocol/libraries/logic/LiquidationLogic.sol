@@ -338,6 +338,7 @@ library LiquidationLogic {
 
         vars.liquidator = msg.sender;
         ValidationLogic.validateERC721LiquidationCall(
+            reservesData,
             userConfig,
             collateralReserve,
             DataTypes.ValidateERC721LiquidationCallParams({
@@ -349,6 +350,7 @@ library LiquidationLogic {
                 liquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
+                collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 xTokenAddress: vars.collateralXToken,
                 auctionEnabled: vars.auctionEnabled,
@@ -510,6 +512,7 @@ library LiquidationLogic {
 
         //check
         ValidationLogic.validateERC721LiquidationCall(
+            reservesData,
             userConfig,
             collateralReserve,
             DataTypes.ValidateERC721LiquidationCallParams({
@@ -521,6 +524,7 @@ library LiquidationLogic {
                 liquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
+                collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 xTokenAddress: vars.collateralXToken,
                 auctionEnabled: vars.auctionEnabled,

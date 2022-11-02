@@ -17,7 +17,7 @@ library ReserveConfiguration {
     uint256 internal constant ACTIVE_MASK =                    0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant FROZEN_MASK =                    0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant BORROWING_MASK =                 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFFFFFFF; // prettier-ignore
-    uint256 internal constant STABLE_BORROWING_MASK =          0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFFFFFFFFF; // prettier-ignore
+    uint256 internal constant ACTIVE_FOR_UNIV3_MASK =          0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant PAUSED_MASK =                    0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant SILOED_BORROWING_MASK =          0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant RESERVE_FACTOR_MASK =            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFF; // prettier-ignore
@@ -34,7 +34,7 @@ library ReserveConfiguration {
     uint256 internal constant IS_ACTIVE_START_BIT_POSITION = 56;
     uint256 internal constant IS_FROZEN_START_BIT_POSITION = 57;
     uint256 internal constant BORROWING_ENABLED_START_BIT_POSITION = 58;
-    uint256 internal constant STABLE_BORROWING_ENABLED_START_BIT_POSITION = 59;
+    uint256 internal constant IS_ACTIVE_FOR_UNIV3_START_BIT_POSITION = 59;
     uint256 internal constant IS_PAUSED_START_BIT_POSITION = 60;
     uint256 internal constant SILOED_BORROWING_START_BIT_POSITION = 62;
     /// @dev bit 63 reserved
@@ -294,6 +294,34 @@ library ReserveConfiguration {
     }
 
     /**
+     * @notice Sets the paused state of the reserve
+     * @param self The reserve configuration
+     * @param isActive The active state
+     **/
+    function setActiveForUniV3(
+        DataTypes.ReserveConfigurationMap memory self,
+        bool isActive
+    ) internal pure {
+        self.data =
+            (self.data & ACTIVE_FOR_UNIV3_MASK) |
+            (uint256(isActive ? 1 : 0) <<
+                IS_ACTIVE_FOR_UNIV3_START_BIT_POSITION);
+    }
+
+    /**
+     * @notice Gets the paused state of the reserve
+     * @param self The reserve configuration
+     * @return The paused state
+     **/
+    function getActiveForUniV3(DataTypes.ReserveConfigurationMap memory self)
+        internal
+        pure
+        returns (bool)
+    {
+        return (self.data & ~ACTIVE_FOR_UNIV3_MASK) != 0;
+    }
+
+    /**
      * @notice Sets the siloed borrowing flag for the reserve.
      * @dev When this flag is set to true, users borrowing this asset will not be allowed to borrow any other asset.
      * @param self The reserve configuration
@@ -481,12 +509,14 @@ library ReserveConfiguration {
      * @return The state flag representing frozen
      * @return The state flag representing borrowing enabled
      * @return The state flag representing paused
+     * @return The state flag representing is active for UniswapV3
      * @return The asset type
      **/
     function getFlags(DataTypes.ReserveConfigurationMap memory self)
         internal
         pure
         returns (
+            bool,
             bool,
             bool,
             bool,
@@ -501,6 +531,7 @@ library ReserveConfiguration {
             (dataLocal & ~FROZEN_MASK) != 0,
             (dataLocal & ~BORROWING_MASK) != 0,
             (dataLocal & ~PAUSED_MASK) != 0,
+            (dataLocal & ~ACTIVE_FOR_UNIV3_MASK) != 0,
             DataTypes.AssetType(
                 (dataLocal & ~ASSET_TYPE_MASK) >> ASSET_TYPE_START_BIT_POSITION
             )

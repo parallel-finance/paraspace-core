@@ -320,7 +320,7 @@ library ReserveLogic {
         reserveCache.reserveConfiguration = reserve.configuration;
         reserveCache.xTokenAddress = reserve.xTokenAddress;
 
-        (, , , , DataTypes.AssetType reserveAssetType) = reserveCache
+        (, , , , , DataTypes.AssetType reserveAssetType) = reserveCache
             .reserveConfiguration
             .getFlags();
 

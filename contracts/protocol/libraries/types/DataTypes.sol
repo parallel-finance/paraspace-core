@@ -225,6 +225,7 @@ library DataTypes {
         address borrower;
         uint256 globalDebt;
         uint256 healthFactor;
+        address collateralAsset;
         uint256 tokenId;
         uint256 actualLiquidationAmount;
         uint256 liquidationAmount;
