@@ -343,4 +343,18 @@ library DataTypes {
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
     }
+
+    struct ReserveConfigData {
+        uint256 decimals;
+        uint256 ltv;
+        uint256 liquidationThreshold;
+        uint256 liquidationBonus;
+        uint256 reserveFactor;
+        bool usageAsCollateralEnabled;
+        bool borrowingEnabled;
+        bool isActive;
+        bool isFrozen;
+        bool isPaused;
+        bool isActiveForUniV3;
+    }
 }

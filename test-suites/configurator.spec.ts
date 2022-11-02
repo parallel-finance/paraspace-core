@@ -36,7 +36,7 @@ type ReserveConfigurationValues = {
   isActive: boolean;
   isFrozen: boolean;
   isPaused: boolean;
-  // eModeCategory: BigNumber;
+  isActiveForUniV3: boolean;
   borrowCap: string;
   supplyCap: string;
   liquidationProtocolFee: BigNumber;
@@ -47,7 +47,7 @@ const expectReserveConfigurationData = async (
   asset: string,
   values: ReserveConfigurationValues
 ) => {
-  const [reserveCfg, reserveCaps, isPaused, liquidationProtocolFee] =
+  const [reserveCfg, reserveCaps, liquidationProtocolFee] =
     await getReserveData(protocolDataProvider, asset);
   expect(reserveCfg.decimals).to.be.eq(
     values.reserveDecimals,
@@ -85,7 +85,14 @@ const expectReserveConfigurationData = async (
     values.isFrozen,
     "isFrozen is not correct"
   );
-  expect(isPaused).to.be.equal(values.isPaused, "isPaused is not correct");
+  expect(reserveCfg.isPaused).to.be.equal(
+    values.isPaused,
+    "isPaused is not correct"
+  );
+  expect(reserveCfg.isActiveForUniV3).to.be.equal(
+    values.isActiveForUniV3,
+    "isActiveForUniV3 is not correct"
+  );
   // expect(eModeCategory).to.be.eq(
   //   values.eModeCategory,
   //   "eModeCategory is not correct"
@@ -112,7 +119,6 @@ const getReserveData = async (
     protocolDataProvider.getReserveConfigurationData(asset),
     // protocolDataProvider.getReserveEModeCategory(asset),
     protocolDataProvider.getReserveCaps(asset),
-    protocolDataProvider.getPaused(asset),
     protocolDataProvider.getLiquidationProtocolFee(asset),
     // protocolDataProvider.getUnbackedMintCap(asset),
   ]);
@@ -145,7 +151,7 @@ describe("PoolConfigurator", () => {
       isActive: true,
       isFrozen: false,
       isPaused: false,
-      // eModeCategory: BigNumber.from(0),
+      isActiveForUniV3: true,
       borrowCap: borrowCap,
       supplyCap: supplyCap,
       liquidationProtocolFee: BigNumber.from(0),
@@ -361,6 +367,22 @@ describe("PoolConfigurator", () => {
     await expectReserveConfigurationData(protocolDataProvider, weth.address, {
       ...baseConfigValues,
     });
+  });
+
+  it("Deactivates the ETH reserve for UniV3", async () => {
+    const {configurator, weth, protocolDataProvider} = testEnv;
+    expect(await configurator.setReserveActiveForUniV3(weth.address, false));
+    const {isActiveForUniV3} =
+      await protocolDataProvider.getReserveConfigurationData(weth.address);
+    expect(isActiveForUniV3).to.be.equal(false);
+  });
+
+  it("Reactivates the ETH reserve for UniV3", async () => {
+    const {configurator, weth, protocolDataProvider} = testEnv;
+    expect(await configurator.setReserveActiveForUniV3(weth.address, true));
+    const {isActiveForUniV3} =
+      await protocolDataProvider.getReserveConfigurationData(weth.address);
+    expect(isActiveForUniV3).to.be.equal(true);
   });
 
   it("Deactivates the ETH reserve for borrowing via pool admin", async () => {

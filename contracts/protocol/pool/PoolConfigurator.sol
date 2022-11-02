@@ -217,7 +217,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     function setReserveActiveForUniV3(address asset, bool active)
         public
         override
-        onlyEmergencyOrPoolAdmin
+        onlyPoolAdmin
     {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
