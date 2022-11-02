@@ -26,6 +26,7 @@ import {
 import {waitForTx} from "../../deploy/helpers/misc-utils";
 import {
   ERC20,
+  ERC721,
   INonfungiblePositionManager,
   IPool,
   MintableERC20,
@@ -68,7 +69,7 @@ export const mintAndValidate = async (
       await waitForTx(
         await token.connect(user.signer)["mint(address)"](user.address)
       );
-      expect(await token.ownerOf(i)).to.be.equal(user.address);
+      expect(await (token as ERC721).ownerOf(i)).to.be.equal(user.address);
     }
   } else {
     await waitForTx(
