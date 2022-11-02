@@ -96,9 +96,16 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
 
     /// @inheritdoc IPoolConfigurator
     function updatePToken(
-        ConfiguratorInputTypes.UpdateXTokenInput calldata input
+        ConfiguratorInputTypes.UpdatePTokenInput calldata input
     ) external override onlyPoolAdmin {
-        ConfiguratorLogic.executeUpdateXToken(_pool, input);
+        ConfiguratorLogic.executeUpdatePToken(_pool, input);
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function updateNToken(
+        ConfiguratorInputTypes.UpdateNTokenInput calldata input
+    ) external override onlyPoolAdmin {
+        ConfiguratorLogic.executeUpdateNToken(_pool, input);
     }
 
     /// @inheritdoc IPoolConfigurator
