@@ -3,10 +3,12 @@ import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
+import {formatEther} from "ethers/lib/utils";
+
 import {
   borrowAndValidate,
   mintAndValidate,
@@ -55,6 +57,7 @@ describe("pToken Repay Event Accounting", () => {
     const {
       usdc,
       pool,
+      oracle,
       users: [user1, user2],
     } = await loadFixture(fixture);
     const availableToBorrowBeforeRepay = (
@@ -62,22 +65,32 @@ describe("pToken Repay Event Accounting", () => {
     ).availableBorrowsBase;
     const amount = await convertToCurrencyDecimals(usdc.address, "100");
 
+    const usdcPrice = await oracle.getAssetPrice(usdc.address);
+    const availableValue = usdcPrice.mul(formatEther(amount.toString()));
+
     await mintAndValidate(usdc, "1000", user1);
     await usdc.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
     // user 1 repay user 2 loan
-    // FIXME(alan): use `waitForTx` helper function
-    const repayTx = await pool
-      .connect(user1.signer)
-      .repay(usdc.address, amount, user2.address);
-    await repayTx.wait();
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .repay(usdc.address, amount, user2.address)
+    );
 
     // User 2 - Available to borrow should have increased
     const availableToBorrowAfterRepay = (
       await pool.getUserAccountData(user2.address)
     ).availableBorrowsBase;
-    //FIXME(alan): Can we use exact value?
-    expect(availableToBorrowAfterRepay).to.be.gt(availableToBorrowBeforeRepay);
+
+    // FIXME(alan): Can we use exact value?
+    // When loan is large, there will be accuracy difference
+    // expect(availableToBorrowAfterRepay).to.be.equal(
+    //   availableToBorrowBeforeRepay.add(availableValue)
+    // );
+    expect(availableToBorrowAfterRepay).to.be.gt(
+      availableToBorrowBeforeRepay.add(availableValue)
+    );
   });
 
   it("TC-erc20-repay-03 User 1 fully repays the loan plus any accrued interest", async () => {
@@ -98,12 +111,12 @@ describe("pToken Repay Event Accounting", () => {
     const debtBalanceBeforeRepay = await variableDebtDai.balanceOf(
       user1.address
     );
-
     // repay dai loan
-    const repayTx = await pool
-      .connect(user1.signer)
-      .repay(dai.address, MAX_UINT_AMOUNT, user1.address);
-    await repayTx.wait();
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .repay(dai.address, MAX_UINT_AMOUNT, user1.address)
+    );
 
     // User 1 - Available to borrow should have increased
     const availableToBorrowAfterRepay = (
@@ -124,8 +137,7 @@ describe("pToken Repay Event Accounting", () => {
     );
   });
 
-  //FIXME(alan): "User's health factor should be increased after repay partial debt"
-  it("TC-erc20-repay-04 User 2 Reaching the liquidation threshold 1~1.1, repay to make it recover health", async () => {
+  it("TC-erc20-repay-04 User 2 health factor should be increased after repay partial debt", async () => {
     const {
       usdc,
       pool,
@@ -158,12 +170,16 @@ describe("pToken Repay Event Accounting", () => {
 
     await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
     //FIXME(alan): It doesn't guarantee those two transactions in a same block
-    await pool
-      .connect(user3.signer)
-      .borrow(dai.address, amount, "0", user3.address, {
-        gasLimit: 5000000,
-      });
-    await pool.connect(user3.signer).repay(dai.address, amount, user3.address);
+    await waitForTx(
+      await pool
+        .connect(user3.signer)
+        .borrow(dai.address, amount, "0", user3.address, {
+          gasLimit: 5000000,
+        })
+    );
+    await waitForTx(
+      await pool.connect(user3.signer).repay(dai.address, amount, user3.address)
+    );
 
     const daiBalanceAfter = await dai.balanceOf(user3.address);
     expect(daiBalanceAfter).to.be.equal(daiBalance);

@@ -26,8 +26,7 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
   const firstDaiDeposit = "10000";
   const secondDaiDeposit = "20000";
 
-  //FIXME(alan): "User1 shouldn't borrow 16k usdc which would exceed current pool liquidity"
-  it("TC-erc20-borrow-01 User 1 tries to  borrow 16k which would exceed the now pool liquidity (should fail)", async () => {
+  it("TC-erc20-borrow-01 User 1 shouldn't borrow 16k usdc which would exceed current pool liquidity (should fail)", async () => {
     const {
       pool,
       users: [user1],
@@ -44,8 +43,7 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
     ).to.be.reverted;
   });
 
-  //FIXME(alan): "User1 shouldn't borrow 20k USDC which would exceed his borrow limit"
-  it("TC-erc20-borrow-02 User 1 tries to Borrow 20K exceed the  borrow limit (should fail)", async () => {
+  it("TC-erc20-borrow-02 User 1 shouldn't borrow 20k USDC which would exceed his borrow limit (should fail)", async () => {
     const {
       dai,
       pool,
@@ -133,6 +131,7 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
       // User 1 - Borrow dai
       await borrowAndValidate(dai, "8000", user1);
     });
+
     it("TC-erc20-borrow-06 User 1 acquires share of borrower interest", async () => {
       const {
         pDai,

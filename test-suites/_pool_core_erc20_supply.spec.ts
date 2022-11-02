@@ -24,8 +24,7 @@ describe("pToken Supply Event Accounting", () => {
     await supplyAndValidate(dai, firstDaiDeposit, user1, true);
   });
 
-  //FIXME(alan): "User1 supplies in batches"
-  it("TC-erc20-supply-02 User 1 multiple deposits 20k DAI", async () => {
+  it("TC-erc20-supply-02 User1 supplies in batches", async () => {
     const {
       dai,
       users: [user1],
@@ -36,8 +35,7 @@ describe("pToken Supply Event Accounting", () => {
     await supplyAndValidate(dai, secondDaiDeposit, user1, true);
   });
 
-  //FIXME(alan): "User1 shouldn't supply dai more than its allowance"
-  it("TC-erc20-supply-03 User 1 tries to supply dai exceed the approved 5K (should fail)", async () => {
+  it("TC-erc20-supply-03 User1 shouldn't supply dai more than its allowance (should fail)", async () => {
     const {
       dai,
       pool,
