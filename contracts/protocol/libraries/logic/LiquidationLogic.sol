@@ -351,7 +351,7 @@ library LiquidationLogic {
         );
 
         if (vars.auctionEnabled) {
-            IAuctionableERC721(collateralReserve.xTokenAddress).endAuction(
+            IAuctionableERC721(vars.collateralXToken).endAuction(
                 params.collateralTokenId
             );
             emit AuctionEnded(
@@ -742,7 +742,7 @@ library LiquidationLogic {
             .collaterizedBalanceOf(params.user);
 
         // price of the asset that is used as collateral
-        if (INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()) {
+        if (INToken(superVars.collateralXToken).getAtomicPricingConfig()) {
             vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
                 .getTokenPrice(
                     params.collateralAsset,
@@ -755,12 +755,12 @@ library LiquidationLogic {
 
         if (
             superVars.auctionEnabled &&
-            IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
+            IAuctionableERC721(superVars.collateralXToken).isAuctioned(
                 params.collateralTokenId
             )
         ) {
             vars.auctionStartTime = IAuctionableERC721(
-                collateralReserve.xTokenAddress
+                superVars.collateralXToken
             ).getAuctionData(params.collateralTokenId).startTime;
             vars.auctionMultiplier = IReserveAuctionStrategy(
                 collateralReserve.auctionStrategyAddress

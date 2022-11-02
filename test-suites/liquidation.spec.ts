@@ -10,6 +10,7 @@ import {
   withdrawAndValidate,
 } from "./helpers/validated-steps";
 import {waitForTx} from "../deploy/helpers/misc-utils";
+import {parseUnits} from "@ethersproject/units";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -100,7 +101,7 @@ describe("Liquidation Tests", () => {
     // BAYC price drops enough so that borrower becomes eligible for liquidation
     await changePriceAndValidate(bayc, "12");
 
-    await liquidateAndValidate(dai, dai, "1000", liquidator, borrower, false);
+    await liquidateAndValidate(dai, dai, "1", liquidator, borrower, false);
   });
 
   it("Liquidator fully liquidates ERC-20 - receives pToken", async () => {
@@ -147,7 +148,7 @@ describe("Liquidation Tests", () => {
     await liquidateAndValidate(
       bayc,
       dai,
-      "80000",
+      parseUnits("7.3", 18).toString(),
       liquidator,
       borrower,
       true,
@@ -183,7 +184,7 @@ describe("Liquidation Tests", () => {
     await liquidateAndValidate(
       bayc,
       dai,
-      "80000",
+      parseUnits("7.3", 18).toString(),
       liquidator,
       borrower,
       false,
@@ -225,7 +226,7 @@ describe("Liquidation Tests", () => {
     await liquidateAndValidate(
       bayc,
       dai,
-      "80000",
+      parseUnits("7.3", 18).toString(),
       liquidator,
       borrower,
       false,

@@ -271,7 +271,7 @@ describe("Liquidation Auction", () => {
       const {
         users: [borrower, liquidator],
         bayc,
-        dai,
+        weth,
       } = testEnv;
 
       // drop BAYC price to liquidation levels
@@ -279,7 +279,7 @@ describe("Liquidation Auction", () => {
 
       // try to liquidate the NFT
       await expect(
-        liquidateAndValidate(bayc, dai, "80000", liquidator, borrower, false, 0)
+        liquidateAndValidate(bayc, weth, "7.3", liquidator, borrower, false, 0)
       ).to.be.revertedWith(ProtocolErrors.AUCTION_NOT_STARTED);
     });
 

@@ -101,6 +101,14 @@ test-liquidation-edge:
 test-liquidation-ptoken:
 	make TEST_TARGET=liquidation-ptoken.spec.ts test
 
+.PHONY: test-liquidation-underlying
+test-liquidation-underlying:
+	make TEST_TARGET=liquidation-underlying.spec.ts test
+
+.PHONY: test-liquidation-with-fee
+test-liquidation-with-fee:
+	make TEST_TARGET=liquidation-with-fee.spec.ts test
+
 .PHONY: test-configurator-edge
 test-configurator-edge:
 	make TEST_TARGET=configurator-edge.spec.ts test

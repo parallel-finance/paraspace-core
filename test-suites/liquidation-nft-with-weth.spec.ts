@@ -1,7 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+// import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   getMockAggregator,
   getParaSpaceOracle,
@@ -18,7 +18,7 @@ import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getUserData} from "./helpers/utils/helpers";
 import {
-  assertAlmostEqual,
+  // assertAlmostEqual,
   borrowAndValidate,
   changePriceAndValidate,
   supplyAndValidate,
@@ -181,7 +181,7 @@ describe("Liquidation Auction", () => {
       .wadDiv(DRE.ethers.utils.parseUnits("1", 18));
     console.log("baycPrice: " + baycPrice);
     // liquidate the NFT
-    expect(
+    await waitForTx(
       await pool
         .connect(liquidator.signer)
         .liquidationERC721(

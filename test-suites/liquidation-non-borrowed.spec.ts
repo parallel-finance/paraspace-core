@@ -11,7 +11,7 @@ import {
   supplyAndValidate,
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
-import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
+import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumber} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -77,21 +77,14 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
         .startAuction(borrower.address, bayc.address, 0)
     );
     const {startTime, tickLength} = await pool.getAuctionData(nBAYC.address, 0);
-    await setBlocktime(
+    await advanceBlock(
       startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
     );
-    expect((await nBAYC.getAuctionData(0)).startTime).to.be.gt(0);
-
-    const expectedAuctionData = await pool
-      .connect(liquidator.signer)
-      .getAuctionData(nBAYC.address, 0);
-
-    console.log(expectedAuctionData);
 
     const result = await liquidateAndValidate(
       bayc,
       weth,
-      "1000",
+      "8",
       liquidator,
       borrower,
       false,
