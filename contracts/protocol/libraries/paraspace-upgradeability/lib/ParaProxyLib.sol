@@ -9,7 +9,9 @@ import {IParaProxy} from "../../../../interfaces/IParaProxy.sol";
 
 library ParaProxyLib {
     bytes32 constant PROXY_STORAGE_POSITION =
-        keccak256("paraspace.proxy.implementation.storage");
+        bytes32(
+            uint256(keccak256("paraspace.proxy.implementation.storage")) - 1
+        );
 
     struct ImplementationAddressAndPosition {
         address implAddress;

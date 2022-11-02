@@ -16,7 +16,15 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET}
+	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+
+.PHONY: slow-test
+slow-test:
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+
+.PHONY: fast-test
+fast-test:
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
 
 .PHONY: size
 size:
@@ -50,12 +58,16 @@ clean:
 	yarn clean
 
 .PHONY: ci
-ci: clean build lint doc test
+ci: clean build lint doc fast-test
 
 .PHONY: submodules
 submodules:
 	git submodule update --init --recursive
 	git submodule foreach git pull origin main
+
+.PHONY: test-pool-upgrade
+test-pool-upgrade:
+	make TEST_TARGET=pool-upgrade.spec.ts test
 
 .PHONY: test-ntoken
 test-ntoken:
@@ -68,6 +80,14 @@ test-ntoken-punk:
 .PHONY: test-liquidation
 test-liquidation:
 	make TEST_TARGET=liquidation.spec.ts test
+
+.PHONY: test-liquidation-nft-with-weth
+test-liquidation-nft-with-weth:
+	make TEST_TARGET=liquidation-nft-with-weth.spec.ts test
+
+.PHONY: test-liquidation-non-borrowed
+test-liquidation-non-borrowed:
+	make TEST_TARGET=liquidation-non-borrowed.spec.ts test
 
 .PHONY: test-liquidation-auction
 test-liquidation-auction:
@@ -92,6 +112,10 @@ test-debt-token-delegation-permit:
 .PHONY: test-ptoken-permit
 test-ptoken-permit:
 	make TEST_TARGET=ptoken-permit.spec.ts test
+
+.PHONY: test-ptoken-delegation-aware
+test-ptoken-delegation-aware:
+	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
 
 .PHONY: test-interest-overflow
 test-interest-overflow:
@@ -231,7 +255,7 @@ test-scenario:
 
 .PHONY: test-wallet-balance-provider
 test-wallet-balance-provider:
-	make TEST_TARGET=wallet-balance-provider.spec.ts test	
+	make TEST_TARGET=wallet-balance-provider.spec.ts test
 
 .PHONY: run
 run:
@@ -253,13 +277,13 @@ verify:
 deploy:
 	make TASK_NAME=deploy:all run-task
 
-.PHONY: deploy-mockERC20Tokens
-deploy-mockERC20Tokens:
-	make TASK_NAME=deploy:mock-erc20-tokens run-task
+.PHONY: deploy-ERC20Tokens
+deploy-ERC20Tokens:
+	make TASK_NAME=deploy:erc20-tokens run-task
 
-.PHONY: deploy-mockERC721Tokens
-deploy-mockERC721Tokens:
-	make TASK_NAME=deploy:mock-erc721-tokens run-task
+.PHONY: deploy-ERC721Tokens
+deploy-ERC721Tokens:
+	make TASK_NAME=deploy:erc721-tokens run-task
 
 .PHONY: deploy-faucet
 deploy-faucet:
@@ -273,10 +297,6 @@ deploy-addressProvider:
 deploy-aclManager:
 	make TASK_NAME=deploy:acl-manager run-task
 
-.PHONY: deploy-poolAddressesProviderRegistry
-deploy-poolAddressesProviderRegistry:
-	make TASK_NAME=deploy:pool-addresses-provider-registry run-task
-
 .PHONY: deploy-pool
 deploy-pool:
 	make TASK_NAME=deploy:pool run-task
@@ -289,13 +309,17 @@ deploy-poolConfigurator:
 deploy-reservesSetupHelper:
 	make TASK_NAME=deploy:reserves-setup-helper run-task
 
-.PHONY: deploy-priceOracle
-deploy-priceOracle:
-	make TASK_NAME=deploy:price-oracle run-task
+.PHONY: deploy-fallbackOracle
+deploy-fallbackOracle:
+	make TASK_NAME=deploy:fallback-oracle run-task
 
-.PHONY: deploy-allMockAggregators
-deploy-allMockAggregators:
-	make TASK_NAME=deploy:all-mock-aggregators run-task
+.PHONY: deploy-allAggregators
+deploy-allAggregators:
+	make TASK_NAME=deploy:all-aggregators run-task
+
+.PHONY: deploy-allReserves
+deploy-allReserves:
+	make TASK_NAME=deploy:all-allReserves run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
@@ -333,8 +357,15 @@ ad-hoc:
 fork:
 	npx ganache \
 	-d \
-	--chain.chainId 522 \
-	--fork ${RPC_URL}
+	--chain.chainId 522
+
+.PHONY: upgrade
+upgrade:
+	make TASK_NAME=upgrade:all run-task
+
+.PHONY: upgrade-pool
+upgrade-pool:
+	make TASK_NAME=upgrade:pool run-task
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

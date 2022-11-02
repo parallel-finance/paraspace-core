@@ -201,19 +201,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setDynamicConfigsEnabled(address asset, bool enabled)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
-        DataTypes.ReserveConfigurationMap memory currentConfig = _pool
-            .getConfiguration(asset);
-        currentConfig.setDynamicConfigs(enabled);
-        _pool.setConfiguration(asset, currentConfig);
-        emit ReserveDynamicConfigsEnabled(asset, enabled);
-    }
-
-    /// @inheritdoc IPoolConfigurator
     function setReservePause(address asset, bool paused)
         public
         override
@@ -330,25 +317,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReserveDynamicConfigsStrategyAddress(
-        address asset,
-        address newDynamicConfigsStrategyAddress
-    ) external override onlyRiskOrPoolAdmins {
-        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
-        address oldDynamicConfigsStrategyAddress = reserve
-            .dynamicConfigsStrategyAddress;
-        _pool.setReserveDynamicConfigsStrategyAddress(
-            asset,
-            newDynamicConfigsStrategyAddress
-        );
-        emit ReserveDynamicConfigsStrategyChanged(
-            asset,
-            oldDynamicConfigsStrategyAddress,
-            newDynamicConfigsStrategyAddress
-        );
-    }
-
-    /// @inheritdoc IPoolConfigurator
     function setReserveAuctionStrategyAddress(
         address asset,
         address newAuctionStrategyAddress
@@ -378,15 +346,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setMaxAtomicTokensAllowed(uint24 value)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
-        _pool.setMaxAtomicTokensAllowed(value);
-    }
-
-    /// @inheritdoc IPoolConfigurator
     function setAuctionRecoveryHealthFactor(uint64 value)
         external
         override
@@ -396,10 +355,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     function _checkNoSuppliers(address asset) internal view {
-        uint256 totalPTokens = IProtocolDataProvider(
+        uint256 totalXTokens = IProtocolDataProvider(
             _addressesProvider.getPoolDataProvider()
-        ).getPTokenTotalSupply(asset);
-        require(totalPTokens == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
+        ).getXTokenTotalSupply(asset);
+        require(totalXTokens == 0, Errors.RESERVE_LIQUIDITY_NOT_ZERO);
     }
 
     function _checkNoBorrowers(address asset) internal view {

@@ -8,6 +8,14 @@ import {
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {
+  approveTo,
+  createNewPool,
+  fund,
+  mintNewPosition,
+} from "../deploy/helpers/uniswapv3-helper";
+import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 
 describe("Flash Claim Test", () => {
   const tokenId = 0;
@@ -189,5 +197,84 @@ describe("Flash Claim Test", () => {
     expect(
       await mockAirdropERC1155Token.balanceOf(user1.address, erc1155Id)
     ).to.be.equal(await airdrop_project.erc1155Bonus());
+  });
+
+  it("user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {
+    const {
+      users: [user1],
+      pool,
+      dai,
+      weth,
+      nftPositionManager,
+    } = testEnv;
+
+    const userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    const nft = nftPositionManager.connect(user1.signer);
+    await approveTo({
+      target: nftPositionManager.address,
+      token: dai,
+      user: user1,
+    });
+    await approveTo({
+      target: nftPositionManager.address,
+      token: weth,
+      user: user1,
+    });
+    const fee = 3000;
+    const tickSpacing = fee / 50;
+    const initialPrice = encodeSqrtRatioX96(1, 1000);
+    const lowerPrice = encodeSqrtRatioX96(1, 10000);
+    const upperPrice = encodeSqrtRatioX96(1, 100);
+    await createNewPool({
+      positionManager: nft,
+      token0: dai,
+      token1: weth,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: dai,
+      token1: weth,
+      fee: fee,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userDaiAmount,
+      token1Amount: userWethAmount,
+    });
+
+    await nft.setApprovalForAll(pool.address, true);
+
+    await pool
+      .connect(user1.signer)
+      .supplyUniswapV3(
+        nftPositionManager.address,
+        [{tokenId: 1, useAsCollateral: true}],
+        user1.address,
+        0,
+        {
+          gasLimit: 12_450_000,
+        }
+      );
+
+    const user_registry = await getUserFlashClaimRegistry();
+    const flashClaimReceiverAddr = await user_registry.userReceivers(
+      user1.address
+    );
+    await expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          nftPositionManager.address,
+          [1],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith(ProtocolErrors.UNIV3_NOT_ALLOWED);
   });
 });

@@ -250,7 +250,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
 
     expect(expectedCollateralLiquidated).to.be.closeTo(
       userWethReserveDataBefore.currentPTokenBalance.sub(
-        userWethReserveDataAfter.currentPTokenBalance
+        userWethReserveDataAfter.currentXTokenBalance
       ),
       2,
       "Invalid collateral amount liquidated"
@@ -454,7 +454,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
 
     expect(expectedCollateralLiquidated).to.be.eq(
       userWethReserveDataBefore.currentPTokenBalance.sub(
-        userWethReserveDataAfter.currentPTokenBalance
+        userWethReserveDataAfter.currentXTokenBalance
       ),
       "Invalid collateral amount liquidated"
     );

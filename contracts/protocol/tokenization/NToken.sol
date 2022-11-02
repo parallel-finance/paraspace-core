@@ -19,6 +19,7 @@ import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
@@ -78,7 +79,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     function mint(
         address onBehalfOf,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    ) external virtual override onlyPool nonReentrant returns (bool) {
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         return _mintMultiple(onBehalfOf, tokenData);
     }
 
@@ -87,8 +88,11 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) external virtual override onlyPool nonReentrant returns (bool) {
-        bool isLastUncollateralized = _burnMultiple(from, tokenIds);
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
@@ -100,7 +104,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             }
         }
 
-        return isLastUncollateralized;
+        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     /// @inheritdoc INToken
@@ -232,6 +236,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         if (validate) {
             POOL.finalizeTransferERC721(
                 underlyingAsset,
+                tokenId,
                 from,
                 to,
                 isUsedAsCollateral,
@@ -309,5 +314,15 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
 
     function getAtomicPricingConfig() external view returns (bool) {
         return ATOMIC_PRICING;
+    }
+
+    function getXTokenType()
+        external
+        pure
+        virtual
+        override
+        returns (XTokenType)
+    {
+        return XTokenType.NToken;
     }
 }

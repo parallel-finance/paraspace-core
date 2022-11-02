@@ -15,6 +15,7 @@ import {NToken} from "./NToken.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title UniswapV3 NToken
@@ -31,7 +32,11 @@ contract NTokenUniswapV3 is NToken {
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool) NToken(pool, true) {
-        // Intentionally left blank
+        _balanceLimit = 30;
+    }
+
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.NTokenUniswapV3;
     }
 
     /**
@@ -100,9 +105,6 @@ contract NTokenUniswapV3 is NToken {
         (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
             .collect(collectParams);
 
-        require(amount0 >= amount0Min, "Insufficient amount0");
-        require(amount1 >= amount1Min, "Insufficient amount1");
-
         if (receiveEthAsWeth) {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
             if (balanceWeth > 0) {
@@ -134,7 +136,7 @@ contract NTokenUniswapV3 is NToken {
         uint256 amount0Min,
         uint256 amount1Min,
         bool receiveEthAsWeth
-    ) external {
+    ) external nonReentrant {
         // only the token owner of the NToken can decrease the underlying
         address sender = _msgSender();
         require(sender == ownerOf(tokenId), Errors.NOT_THE_OWNER);

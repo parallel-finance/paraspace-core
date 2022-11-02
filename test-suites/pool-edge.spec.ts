@@ -5,12 +5,10 @@ import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   deployReserveAuctionStrategy,
   deployMintableERC20,
-  // deployPool,
 } from "../deploy/helpers/contracts-deployments";
 import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {
   MockReserveInterestRateStrategy__factory,
-  // Pool__factory,
   PToken__factory,
   VariableDebtToken__factory,
 } from "../types";

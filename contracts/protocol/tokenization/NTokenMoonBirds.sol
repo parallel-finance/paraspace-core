@@ -17,6 +17,7 @@ import {NToken} from "./NToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title MoonBird NToken
@@ -32,12 +33,19 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         // Intentionally left blank
     }
 
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.NTokenMoonBirds;
+    }
+
     function burn(
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
-    ) external virtual override onlyPool returns (bool) {
-        bool isLastUncollateralized = _burnMultiple(from, tokenIds);
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
@@ -49,7 +57,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
             }
         }
 
-        return isLastUncollateralized;
+        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     function onERC721Received(

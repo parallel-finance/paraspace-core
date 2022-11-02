@@ -24,7 +24,6 @@ interface IUiPoolDataProvider {
         bool usageAsCollateralEnabled;
         bool borrowingEnabled;
         bool auctionEnabled;
-        bool dynamicConfigsEnabled;
         bool isActive;
         bool isFrozen;
         bool isPaused;
@@ -38,7 +37,6 @@ interface IUiPoolDataProvider {
         address variableDebtTokenAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
-        address dynamicConfigsStrategyAddress;
         uint256 availableLiquidity;
         uint256 totalScaledVariableDebt;
         uint256 priceInMarketReferenceCurrency;
@@ -56,6 +54,7 @@ interface IUiPoolDataProvider {
 
     struct UserReserveData {
         address underlyingAsset;
+        uint256 currentXTokenBalance;
         uint256 scaledXTokenBalance;
         uint256 collaterizedBalance;
         bool usageAsCollateralEnabledOnUser;
@@ -102,14 +101,12 @@ interface IUiPoolDataProvider {
         returns (UserReserveData[] memory);
 
     function getNTokenData(
-        address user,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view returns (DataTypes.NTokenData[][] memory);
 
     function getAuctionData(
         IPoolAddressesProvider provider,
-        address user,
         address[] memory nTokenAddresses,
         uint256[][] memory tokenIds
     ) external view returns (DataTypes.AuctionData[][] memory);

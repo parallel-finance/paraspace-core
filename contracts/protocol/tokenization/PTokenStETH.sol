@@ -5,6 +5,7 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {ILido} from "../../interfaces/ILido.sol";
 import {RebasingPToken} from "./RebasingPToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title stETH Rebasing PToken
@@ -24,5 +25,9 @@ contract PTokenStETH is RebasingPToken {
         // The 10**27 is picked to provide the same precision as the ParaSpace
         // liquidity index, which is in RAY (10**27).
         return ILido(_underlyingAsset).getPooledEthByShares(WadRayMath.RAY);
+    }
+
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.PTokenStETH;
     }
 }

@@ -6,7 +6,6 @@ import {IPool} from "../interfaces/IPool.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
-import {DataTypesHelper} from "./libraries/DataTypesHelper.sol";
 
 // ERC721 imports
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";

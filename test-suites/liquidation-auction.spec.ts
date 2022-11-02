@@ -458,11 +458,7 @@ describe("Liquidation Auction", () => {
     });
 
     it("BAYC#0 auction started", async () => {
-      const {
-        users: [borrower],
-        nBAYC,
-        poolDataProvider,
-      } = testEnv;
+      const {nBAYC, poolDataProvider} = testEnv;
 
       const {startTime} = await nBAYC.getAuctionData(0);
       const isAuctioned = await nBAYC.isAuctioned(0);
@@ -470,7 +466,6 @@ describe("Liquidation Auction", () => {
       expect(isAuctioned).to.be.true;
 
       const [[auctionData]] = await poolDataProvider.getNTokenData(
-        borrower.address,
         [nBAYC.address],
         [[0, 1, 2]]
       );
@@ -641,11 +636,7 @@ describe("Liquidation Auction", () => {
     });
 
     it("BAYC#0 auction ended automatically after liquidation", async () => {
-      const {
-        users: [borrower],
-        nBAYC,
-        poolDataProvider,
-      } = testEnv;
+      const {nBAYC, poolDataProvider} = testEnv;
 
       const {startTime} = await nBAYC.getAuctionData(0);
       const isAuctioned = await nBAYC.isAuctioned(0);
@@ -653,7 +644,6 @@ describe("Liquidation Auction", () => {
       expect(isAuctioned).to.be.false;
 
       const [[auctionData]] = await poolDataProvider.getNTokenData(
-        borrower.address,
         [nBAYC.address],
         [[0, 1, 2]]
       );
