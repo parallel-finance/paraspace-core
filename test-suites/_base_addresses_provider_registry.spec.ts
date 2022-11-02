@@ -20,7 +20,7 @@ describe("AddressesProviderRegistry", () => {
     ADDRESSES_PROVIDER_ALREADY_ADDED,
   } = ProtocolErrors;
 
-  it("Checks the addresses provider is added to the registry", async () => {
+  it("TC-addresses-provider-registry-01 Checks the addresses provider is added to the registry", async () => {
     const {addressesProvider, registry} = testEnv;
 
     const providers = await registry.getAddressesProvidersList();
@@ -35,7 +35,7 @@ describe("AddressesProviderRegistry", () => {
     );
   });
 
-  it("Tries to register an addresses provider with id 0 (revert expected)", async () => {
+  it("TC-addresses-provider-registry-02 Tries to register an addresses provider with id 0 (revert expected)", async () => {
     const {registry} = testEnv;
 
     await expect(
@@ -43,7 +43,7 @@ describe("AddressesProviderRegistry", () => {
     ).to.be.revertedWith(INVALID_ADDRESSES_PROVIDER_ID);
   });
 
-  it("Registers a mock addresses provider", async () => {
+  it("TC-addresses-provider-registry-03 Registers a mock addresses provider", async () => {
     const {registry} = testEnv;
 
     const providersBefore = await registry.getAddressesProvidersList();
@@ -82,7 +82,7 @@ describe("AddressesProviderRegistry", () => {
     );
   });
 
-  it("Registers users[2] as another addresses provider", async () => {
+  it("TC-addresses-provider-registry-04 Registers users[2] as another addresses provider", async () => {
     const {users, registry} = testEnv;
 
     // Simulating an addresses provider using the users[2] wallet address
@@ -107,7 +107,7 @@ describe("AddressesProviderRegistry", () => {
     );
   });
 
-  it("Removes the mock addresses provider", async () => {
+  it("TC-addresses-provider-registry-05 Removes the mock addresses provider", async () => {
     const {registry, addressesProvider} = testEnv;
 
     const providersBefore = await registry.getAddressesProvidersList();
@@ -136,7 +136,7 @@ describe("AddressesProviderRegistry", () => {
     );
   });
 
-  it("Tries to remove an already unregistered addressesProvider (revert expected)", async () => {
+  it("TC-addresses-provider-registry-06 Tries to remove an already unregistered addressesProvider (revert expected)", async () => {
     const {registry} = testEnv;
 
     await expect(
@@ -144,7 +144,7 @@ describe("AddressesProviderRegistry", () => {
     ).to.be.revertedWith(ADDRESSES_PROVIDER_NOT_REGISTERED);
   });
 
-  it("Tries to add an already registered addressesProvider with a different id (revert expected)", async () => {
+  it("TC-addresses-provider-registry-07 Tries to add an already registered addressesProvider with a different id (revert expected)", async () => {
     const {registry, addressesProvider} = testEnv;
 
     const id = await registry.getAddressesProviderIdByAddress(
@@ -176,7 +176,7 @@ describe("AddressesProviderRegistry", () => {
     );
   });
 
-  it("Tries to add an addressesProvider with an already used id (revert expected)", async () => {
+  it("TC-addresses-provider-registry-08 Tries to add an addressesProvider with an already used id (revert expected)", async () => {
     const {users, registry, addressesProvider} = testEnv;
 
     const id = await registry.getAddressesProviderIdByAddress(
@@ -206,7 +206,7 @@ describe("AddressesProviderRegistry", () => {
     }
   });
 
-  it("Reregisters the mock addresses provider after it being removed", async () => {
+  it("TC-addresses-provider-registry-09 Re-registers the mock addresses provider after it being removed", async () => {
     const {registry} = testEnv;
 
     const providersBefore = await registry.getAddressesProvidersList();
@@ -245,7 +245,7 @@ describe("AddressesProviderRegistry", () => {
     );
   });
 
-  it("Removes the last addresses provider", async () => {
+  it("TC-addresses-provider-registry-10 Removes the last addresses provider", async () => {
     const {registry, addressesProvider} = testEnv;
 
     const providersBefore = await registry.getAddressesProvidersList();
