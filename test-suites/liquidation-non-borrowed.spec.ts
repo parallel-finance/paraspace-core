@@ -111,7 +111,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
     //assert ptoken balance of liquidation asset
     assertAlmostEqual(
       after.borrowerLiquidationPTokenBalance,
-      before.isAuctionStarted
+      before.isAuctioned
         ? // since it is dificult to predict the price in auction case
           // we remove it from common validation logic to here
           before.liquidatorLiquidationAssetBalance.sub(

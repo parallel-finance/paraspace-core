@@ -10,7 +10,6 @@ import {
   withdrawAndValidate,
 } from "./helpers/validated-steps";
 import {waitForTx} from "../deploy/helpers/misc-utils";
-import {parseUnits} from "@ethersproject/units";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -122,6 +121,7 @@ describe("Liquidation Tests", () => {
       users: [borrower, liquidator],
       nBAYC,
       configurator,
+      weth,
       bayc,
       dai,
     } = await loadFixture(fixture);
@@ -145,15 +145,7 @@ describe("Liquidation Tests", () => {
     // verify NFT is available for auction
     expect(await nBAYC.isAuctioned(1));
 
-    await liquidateAndValidate(
-      bayc,
-      dai,
-      parseUnits("7.3", 18).toString(),
-      liquidator,
-      borrower,
-      true,
-      1
-    );
+    await liquidateAndValidate(bayc, weth, "10", liquidator, borrower, true, 1);
 
     // verify NFT is no longer available for auction
     expect(await nBAYC.isAuctioned(1)).not;
@@ -163,8 +155,8 @@ describe("Liquidation Tests", () => {
     const {
       users: [borrower, liquidator],
       nBAYC,
+      weth,
       bayc,
-      dai,
       configurator,
     } = await loadFixture(fixture);
 
@@ -181,15 +173,7 @@ describe("Liquidation Tests", () => {
     // verify NFT is available for auction
     expect(await nBAYC.isAuctioned(0));
 
-    await liquidateAndValidate(
-      bayc,
-      dai,
-      parseUnits("7.3", 18).toString(),
-      liquidator,
-      borrower,
-      false,
-      0
-    );
+    await liquidateAndValidate(bayc, weth, "5", liquidator, borrower, false, 0);
 
     // verify NFT is no longer available for auction
     expect(await nBAYC.isAuctioned(0)).not;
@@ -223,15 +207,7 @@ describe("Liquidation Tests", () => {
       )
     );
 
-    await liquidateAndValidate(
-      bayc,
-      dai,
-      parseUnits("7.3", 18).toString(),
-      liquidator,
-      borrower,
-      false,
-      0
-    );
+    await liquidateAndValidate(bayc, weth, "5", liquidator, borrower, false, 0);
 
     expect((await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
   });
@@ -240,7 +216,7 @@ describe("Liquidation Tests", () => {
     const {
       users: [borrower, liquidator],
       configurator,
-      dai,
+      weth,
       bayc,
       nBAYC,
     } = await loadFixture(fixture);
@@ -261,7 +237,7 @@ describe("Liquidation Tests", () => {
 
     await liquidateAndValidate(
       bayc,
-      dai,
+      weth,
       "80000",
       liquidator,
       borrower,
@@ -302,7 +278,7 @@ describe("Liquidation Tests", () => {
 
     await liquidateAndValidate(
       bayc,
-      dai,
+      weth,
       "80000",
       liquidator,
       borrower,

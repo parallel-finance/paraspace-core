@@ -1,7 +1,11 @@
 import chai from "chai";
 import {BigNumber, BigNumberish} from "ethers";
 import {formatEther, parseEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT, WAD} from "../../deploy/helpers/constants";
+import {
+  MAX_UINT_AMOUNT,
+  PERCENTAGE_FACTOR,
+  WAD,
+} from "../../deploy/helpers/constants";
 import {
   getMockAggregator,
   getParaSpaceOracle,
@@ -535,7 +539,7 @@ export const withdrawAndValidate = async (
 
 export interface LiquidationValidationData {
   borrower: SignerWithAddress;
-  isAuctionStarted: boolean;
+  isAuctioned: boolean;
   collateralToken: SupportedAsset;
   liquidationToken: SupportedAsset;
   receiveXToken: boolean;
@@ -559,6 +563,7 @@ export interface LiquidationValidationData {
   liquidationThreshold: BigNumber;
   isUsingAsCollateral: boolean;
   liquidationBonus: BigNumber;
+  liquidationProtocolFeePercentage: BigNumber;
   hasMoreCollateral: boolean;
   ltv: BigNumber;
   liquidationAssetPrice: BigNumber;
@@ -604,6 +609,13 @@ const checkAfterLiquidationERC20 = async (
       ? maxCollateralAmountThatCouldBeLiquidated
       : before.borrowerCollateralXTokenBalance;
 
+  const liquidationBonus = collateralAmountToLiquidateWithBonus.sub(
+    collateralAmountToLiquidateWithBonus.percentDiv(before.liquidationBonus)
+  );
+  const liquidationProtocolFee = liquidationBonus.percentMul(
+    before.liquidationProtocolFeePercentage
+  );
+
   const liquidationAmountToBeUsed = collateralAmountToLiquidateWithBonus
     .percentDiv(before.liquidationBonus)
     .wadMul(before.collateralAssetAuctionPrice)
@@ -637,9 +649,9 @@ const checkAfterLiquidationERC20 = async (
     // liquidator's collateral pToken balance is incremented in collateralAmountToLiquidateWithBonus
     assertAlmostEqual(
       after.liquidatorCollateralXTokenBalance,
-      before.liquidatorCollateralXTokenBalance.add(
-        collateralAmountToLiquidateWithBonus
-      )
+      before.liquidatorCollateralXTokenBalance
+        .add(collateralAmountToLiquidateWithBonus)
+        .sub(liquidationProtocolFee)
     );
     // Collateral token TVL stays the same
     assertAlmostEqual(after.collateralTokenTVL, before.collateralTokenTVL);
@@ -647,24 +659,17 @@ const checkAfterLiquidationERC20 = async (
     // receive underlying asset
     // liquidator's collateral Token balance is incremented in collateralAmountToLiquidateWithBonus
     // unless it's the same asset used for liquidation (then only bonus)
-    if (
-      (await before.liquidationToken.symbol()) ==
-      (await before.collateralToken.symbol())
-    ) {
+    if (before.liquidationToken.address == before.collateralToken.address) {
       expect(after.liquidatorCollateralTokenBalance).to.eq(
-        before.liquidatorCollateralTokenBalance.add(
-          collateralAmountToLiquidateWithBonus.sub(
-            collateralAmountToLiquidateWithBonus
-              .mul(10000)
-              .div(before.liquidationBonus)
-          )
-        )
+        before.liquidatorCollateralTokenBalance
+          .add(liquidationBonus)
+          .sub(liquidationProtocolFee)
       );
     } else {
       expect(after.liquidatorCollateralTokenBalance).to.eq(
-        before.liquidatorCollateralTokenBalance.add(
-          collateralAmountToLiquidateWithBonus
-        )
+        before.liquidatorCollateralTokenBalance
+          .add(collateralAmountToLiquidateWithBonus)
+          .sub(liquidationProtocolFee)
       );
     }
     // liquidator's liquidation pToken balance stays the same
@@ -720,11 +725,13 @@ const checkAfterLiquidationERC721 = async (
   after: LiquidationValidationData
 ) => {
   // auction should've ended
-  expect(after.isAuctionStarted).to.be.false;
+  expect(after.isAuctioned).to.be.false;
 
   // since we just do dutch auction + collateral swap so there is not discount
   const discountedNFTPriceInLiquidationAsset =
-    before.collateralAssetAuctionPrice.wadDiv(before.liquidationAssetPrice);
+    before.collateralAssetAuctionPrice
+      .wadDiv(before.liquidationAssetPrice)
+      .percentDiv(before.liquidationBonus);
   // borrower's collateral token balance in wallet is the same
   expect(after.borrowerCollateralTokenBalance).equal(
     before.borrowerCollateralTokenBalance
@@ -810,7 +817,9 @@ const checkAfterLiquidationERC721 = async (
 
   assertAlmostEqual(
     after.totalCollateral
-      .sub(before.collateralAssetAuctionPrice)
+      .sub(
+        before.collateralAssetAuctionPrice.percentDiv(before.liquidationBonus)
+      )
       .add(before.collateralAssetPrice),
     before.totalCollateral
   );
@@ -951,22 +960,15 @@ const fetchLiquidationData = async (
     .connect((await getDeployer()).signer)
     .getAssetPrice(liquidationToken.address);
 
-  const liquidationBonus = (
-    await protocolDataProvider.getReserveConfigurationData(
-      collateralToken.address
-    )
-  ).liquidationBonus;
-
   let currentPriceMultiplier = BigNumber.from(WAD);
-  let isAuctionStarted = false;
+  let isAuctioned = false;
   if (nftId != undefined) {
     const auctionData = await pool.getAuctionData(
       collateralXTokenAddress,
       nftId
     );
-    const isAuctioned = await (collateralXToken as NToken).isAuctioned(nftId);
-    isAuctionStarted = isAuctioned && auctionData.startTime.gt(0);
-    if (isAuctionStarted) {
+    isAuctioned = await (collateralXToken as NToken).isAuctioned(nftId);
+    if (isAuctioned) {
       currentPriceMultiplier = auctionData.currentPriceMultiplier;
     }
   }
@@ -979,6 +981,18 @@ const fetchLiquidationData = async (
   const collateralAssetAuctionPrice = collateralAssetPrice.wadMul(
     currentPriceMultiplier
   );
+  const liquidationBonus =
+    !isNFT || !isAuctioned
+      ? (
+          await protocolDataProvider.getReserveConfigurationData(
+            collateralToken.address
+          )
+        ).liquidationBonus
+      : BigNumber.from(PERCENTAGE_FACTOR);
+  const liquidationProtocolFeePercentage =
+    await protocolDataProvider.getLiquidationProtocolFee(
+      collateralToken.address
+    );
 
   const liquidationAssetData = await pool.getReserveData(
     liquidationToken.address
@@ -994,7 +1008,7 @@ const fetchLiquidationData = async (
 
   const data: LiquidationValidationData = {
     isNFT: isNFT,
-    isAuctionStarted: isAuctionStarted,
+    isAuctioned: isAuctioned,
     borrower: borrower,
     collateralToken: collateralToken,
     liquidationToken: liquidationToken,
@@ -1021,6 +1035,7 @@ const fetchLiquidationData = async (
     liquidationBonus: liquidationBonus,
     hasMoreCollateral: hasMoreCollateral,
     ltv: ltv,
+    liquidationProtocolFeePercentage: liquidationProtocolFeePercentage,
     liquidationAssetPrice: liquidationAssetPrice,
     collateralAssetAuctionPrice: collateralAssetAuctionPrice,
     collateralAssetPrice: collateralAssetPrice,
@@ -1114,7 +1129,10 @@ const liquidateAndValidateERC721 = async (
         borrower.address,
         nftId != null ? nftId : 0,
         parseEther(amount).toString(),
-        receiveNToken
+        receiveNToken,
+        {
+          gasLimit: 5000000,
+        }
       )
   );
 
@@ -1403,7 +1421,10 @@ export const liquidateAndValidateReverted = async (
           borrower.address,
           nftId != null ? nftId : 0,
           parseEther(amount).toString(),
-          receiveXToken
+          receiveXToken,
+          {
+            gasLimit: 5000000,
+          }
         )
     ).to.be.revertedWith(message);
   } else {
@@ -1415,7 +1436,10 @@ export const liquidateAndValidateReverted = async (
           liquidationToken.address,
           borrower.address,
           parseEther(amount).toString(),
-          receiveXToken
+          receiveXToken,
+          {
+            gasLimit: 5000000,
+          }
         )
     ).to.be.revertedWith(message);
   }
