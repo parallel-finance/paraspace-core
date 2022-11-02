@@ -12,7 +12,7 @@ import {IRewardController} from "../../interfaces/IRewardController.sol";
  *
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
-contract NTokenApeStaking is NToken {
+abstract contract NTokenApeStaking is NToken {
     ApeCoinStaking immutable _apeCoinStaking;
 
     /**
