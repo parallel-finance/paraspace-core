@@ -12,7 +12,13 @@ fi
 
 
 make format
-git add $(echo "$contracts" | paste -s -d " " -)
-git add $(echo "$scripts" | paste -s -d " " -)
-yarn typechain \
-  && yarn lint
+
+if [ ! -z "${contracts}" ]; then
+  yarn typechain
+  git add $(echo "$contracts" | paste -s -d " " -)
+fi
+
+if [ ! -z "${scripts}" ]; then
+  yarn lint
+  git add $(echo "$scripts" | paste -s -d " " -)
+fi
