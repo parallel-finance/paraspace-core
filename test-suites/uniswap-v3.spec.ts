@@ -338,7 +338,7 @@ describe("Uniswap V3", () => {
     });
   });
 
-  describe("Uniswap V3 NFT borrow, collateral and liquidation logic", () => {
+  describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transfer test", () => {
     let testEnv: TestEnv;
     before(async () => {
       testEnv = await loadFixture(testEnvFixture);
@@ -401,20 +401,459 @@ describe("Uniswap V3", () => {
       expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
 
       await nft.setApprovalForAll(pool.address, true);
+    });
 
-      await pool
-        .connect(user1.signer)
-        .supplyUniswapV3(
-          nftPositionManager.address,
-          [{tokenId: 1, useAsCollateral: true}],
-          user1.address,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        );
+    it("supply Uniswap V3 failed if underlying erc20 was inactive[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
 
+      await waitForTx(await configurator.setReserveActive(weth.address, false));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
+    });
+
+    it("supply Uniswap V3 success if underlying erc20 was active[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator,
+        nUniswapV3
+      } = testEnv;
+
+      await waitForTx(await configurator.setReserveActive(weth.address, true));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
       expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
+    });
+
+    it("supply Uniswap V3 failed if underlying erc20 was paused[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await withdrawAndValidate(
+          nftPositionManager,
+          "1",
+          user1,
+          1
+      );
+
+      await waitForTx(await configurator.setReservePause(weth.address, true));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
+    });
+
+    it("supply Uniswap V3 success if underlying erc20 was not paused[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator,
+        nUniswapV3
+      } = testEnv;
+
+      await waitForTx(await configurator.setReservePause(weth.address, false));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
+    });
+
+    it("supply Uniswap V3 failed if underlying erc20 was frozen[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await withdrawAndValidate(
+          nftPositionManager,
+          "1",
+          user1,
+          1
+      );
+
+      await waitForTx(await configurator.setReserveFreeze(weth.address, true));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_FROZEN);
+    });
+
+    it("supply Uniswap V3 success if underlying erc20 was not frozen[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator,
+        nUniswapV3
+      } = testEnv;
+
+      await waitForTx(await configurator.setReserveFreeze(weth.address, false));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
+    });
+
+    it("supply Uniswap V3 failed if underlying erc20 was not active for UniV3[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await withdrawAndValidate(
+          nftPositionManager,
+          "1",
+          user1,
+          1
+      );
+
+      await waitForTx(await configurator.setReserveActiveForUniV3(weth.address, false));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_NOT_ACTIVE_FOR_UNIV3);
+    });
+
+    it("supply Uniswap V3 success if underlying erc20 was active for UniV3[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator,
+        nUniswapV3
+      } = testEnv;
+
+      await waitForTx(await configurator.setReserveActiveForUniV3(weth.address, true));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
+    });
+
+    it("withdraw Uniswap V3 failed if underlying erc20 was not active[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(await configurator.setReserveActive(weth.address, false));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .withdrawERC721(
+                  nftPositionManager.address,
+                  [1],
+                  user1.address,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
+    });
+
+    it("withdraw Uniswap V3 success if underlying erc20 was active[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(await configurator.setReserveActive(weth.address, true));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .withdrawERC721(
+                  nftPositionManager.address,
+                  [1],
+                  user1.address,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
+    });
+
+    it("withdraw Uniswap V3 failed if underlying erc20 was paused[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      await waitForTx(await configurator.setReservePause(weth.address, true));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .withdrawERC721(
+                  nftPositionManager.address,
+                  [1],
+                  user1.address,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
+    });
+
+    it("withdraw Uniswap V3 success if underlying erc20 was not paused[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(await configurator.setReservePause(weth.address, false));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .withdrawERC721(
+                  nftPositionManager.address,
+                  [1],
+                  user1.address,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
+    });
+
+    it("setAsCollateral failed if underlying erc20 was not active[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .supplyUniswapV3(
+                  nftPositionManager.address,
+                  [{tokenId: 1, useAsCollateral: true}],
+                  user1.address,
+                  0,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      await waitForTx(await configurator.setReserveActive(weth.address, false));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .setUserUseERC721AsCollateral(
+                  nftPositionManager.address,
+                  [1],
+                  false,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
+    });
+
+    it("setAsCollateral success if underlying erc20 was active[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        nUniswapV3,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(await configurator.setReserveActive(weth.address, true));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .setUserUseERC721AsCollateral(
+                  nftPositionManager.address,
+                  [1],
+                  false,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      expect(await nUniswapV3.collaterizedBalanceOf(user1.address)).to.eq(0);
+    });
+
+    it("setAsCollateral failed if underlying erc20 was paused[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(await configurator.setReservePause(weth.address, true));
+      await expect(
+          await pool
+              .connect(user1.signer)
+              .setUserUseERC721AsCollateral(
+                  nftPositionManager.address,
+                  [1],
+                  true,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
+    });
+
+    it("setAsCollateral success if underlying erc20 was not paused[ @skip-on-coverage ]", async () => {
+      const {
+        users: [user1],
+        weth,
+        nftPositionManager,
+        nUniswapV3,
+        pool,
+        configurator
+      } = testEnv;
+
+      await waitForTx(await configurator.setReservePause(weth.address, false));
+      await waitForTx(
+          await pool
+              .connect(user1.signer)
+              .setUserUseERC721AsCollateral(
+                  nftPositionManager.address,
+                  [1],
+                  true,
+                  {
+                    gasLimit: 12_450_000,
+                  }
+              )
+      );
+      expect(await nUniswapV3.collaterizedBalanceOf(user1.address)).to.eq(1);
     });
 
     it("borrow asset by using univ3 as collateral [ @skip-on-coverage ]", async () => {
