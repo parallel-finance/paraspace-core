@@ -36,7 +36,6 @@ type ReserveConfigurationValues = {
   isActive: boolean;
   isFrozen: boolean;
   isPaused: boolean;
-  isActiveForUniV3: boolean;
   borrowCap: string;
   supplyCap: string;
   liquidationProtocolFee: BigNumber;
@@ -88,10 +87,6 @@ const expectReserveConfigurationData = async (
   expect(reserveCfg.isPaused).to.be.equal(
     values.isPaused,
     "isPaused is not correct"
-  );
-  expect(reserveCfg.isActiveForUniV3).to.be.equal(
-    values.isActiveForUniV3,
-    "isActiveForUniV3 is not correct"
   );
   // expect(eModeCategory).to.be.eq(
   //   values.eModeCategory,
@@ -151,7 +146,6 @@ describe("PoolConfigurator", () => {
       isActive: true,
       isFrozen: false,
       isPaused: false,
-      isActiveForUniV3: true,
       borrowCap: borrowCap,
       supplyCap: supplyCap,
       liquidationProtocolFee: BigNumber.from(0),
@@ -367,22 +361,6 @@ describe("PoolConfigurator", () => {
     await expectReserveConfigurationData(protocolDataProvider, weth.address, {
       ...baseConfigValues,
     });
-  });
-
-  it("Deactivates the ETH reserve for UniV3", async () => {
-    const {configurator, weth, protocolDataProvider} = testEnv;
-    expect(await configurator.setReserveActiveForUniV3(weth.address, false));
-    const {isActiveForUniV3} =
-      await protocolDataProvider.getReserveConfigurationData(weth.address);
-    expect(isActiveForUniV3).to.be.equal(false);
-  });
-
-  it("Reactivates the ETH reserve for UniV3", async () => {
-    const {configurator, weth, protocolDataProvider} = testEnv;
-    expect(await configurator.setReserveActiveForUniV3(weth.address, true));
-    const {isActiveForUniV3} =
-      await protocolDataProvider.getReserveConfigurationData(weth.address);
-    expect(isActiveForUniV3).to.be.equal(true);
   });
 
   it("Deactivates the ETH reserve for borrowing via pool admin", async () => {

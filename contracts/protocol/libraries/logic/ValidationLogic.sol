@@ -71,7 +71,6 @@ library ValidationLogic {
             bool isFrozen,
             ,
             bool isPaused,
-            ,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
 
@@ -163,7 +162,6 @@ library ValidationLogic {
             ,
             ,
             bool isPaused,
-            ,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
 
@@ -186,7 +184,6 @@ library ValidationLogic {
             ,
             ,
             bool isPaused,
-            ,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
 
@@ -204,7 +201,6 @@ library ValidationLogic {
                     reservesData,
                     asset,
                     tokenIds[index],
-                    false,
                     true,
                     true,
                     false
@@ -254,7 +250,6 @@ library ValidationLogic {
             vars.isFrozen,
             vars.borrowingEnabled,
             vars.isPaused,
-            ,
             vars.assetType
         ) = params.reserveCache.reserveConfiguration.getFlags();
 
@@ -372,7 +367,7 @@ library ValidationLogic {
             Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
         );
 
-        (bool isActive, , , bool isPaused, , ) = reserveCache
+        (bool isActive, , , bool isPaused, ) = reserveCache
             .reserveConfiguration
             .getFlags();
         require(isActive, Errors.RESERVE_INACTIVE);
@@ -406,7 +401,6 @@ library ValidationLogic {
             ,
             ,
             bool isPaused,
-            ,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
 
@@ -429,7 +423,6 @@ library ValidationLogic {
             ,
             ,
             bool isPaused,
-            ,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
 
@@ -447,7 +440,6 @@ library ValidationLogic {
                     reservesData,
                     asset,
                     tokenIds[index],
-                    false,
                     true,
                     true,
                     false
@@ -490,7 +482,6 @@ library ValidationLogic {
             ,
             ,
             vars.collateralReservePaused,
-            ,
             vars.collateralReserveAssetType
         ) = collateralReserve.configuration.getFlags();
 
@@ -504,7 +495,6 @@ library ValidationLogic {
             ,
             ,
             vars.principalReservePaused,
-            ,
 
         ) = params.liquidationAssetReserveCache.reserveConfiguration.getFlags();
 
@@ -570,7 +560,6 @@ library ValidationLogic {
             ,
             ,
             vars.collateralReservePaused,
-            ,
             vars.collateralReserveAssetType
         ) = collateralReserve.configuration.getFlags();
 
@@ -585,7 +574,6 @@ library ValidationLogic {
                 reservesData,
                 params.collateralAsset,
                 params.tokenId,
-                false,
                 true,
                 true,
                 false
@@ -597,7 +585,6 @@ library ValidationLogic {
             ,
             ,
             vars.principalReservePaused,
-            ,
 
         ) = params.liquidationAssetReserveCache.reserveConfiguration.getFlags();
 
@@ -721,7 +708,6 @@ library ValidationLogic {
             ,
             ,
             vars.collateralReservePaused,
-            ,
             vars.collateralReserveAssetType
         ) = collateralConfiguration.getFlags();
 
@@ -780,7 +766,6 @@ library ValidationLogic {
             ,
             ,
             vars.collateralReservePaused,
-            ,
             vars.collateralReserveAssetType
         ) = collateralReserve.configuration.getFlags();
 
@@ -927,7 +912,6 @@ library ValidationLogic {
                 reservesData,
                 asset,
                 tokenId,
-                false,
                 false,
                 true,
                 false
@@ -1093,18 +1077,15 @@ library ValidationLogic {
         bool token0IsActive;
         bool token0IsFrozen;
         bool token0IsPaused;
-        bool token0IsActiveForUniV3;
         bool token1IsActive;
         bool token1IsFrozen;
         bool token1IsPaused;
-        bool token1IsActiveForUniV3;
     }
 
     function validateForUniswapV3(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         address asset,
         uint256 tokenId,
-        bool checkActiveForUniV3,
         bool checkActive,
         bool checkNotPaused,
         bool checkNotFrozen
@@ -1130,7 +1111,6 @@ library ValidationLogic {
             vars.token0IsFrozen,
             ,
             vars.token0IsPaused,
-            vars.token0IsActiveForUniV3,
 
         ) = reservesData[token0].configuration.getFlags();
 
@@ -1139,16 +1119,9 @@ library ValidationLogic {
             vars.token1IsFrozen,
             ,
             vars.token1IsPaused,
-            vars.token1IsActiveForUniV3,
 
         ) = reservesData[token1].configuration.getFlags();
 
-        if (checkActiveForUniV3) {
-            require(
-                vars.token0IsActiveForUniV3 && vars.token1IsActiveForUniV3,
-                Errors.RESERVE_NOT_ACTIVE_FOR_UNIV3
-            );
-        }
         if (checkActive) {
             require(
                 vars.token0IsActive && vars.token1IsActive,

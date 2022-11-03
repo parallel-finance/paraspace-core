@@ -129,7 +129,6 @@ contract MockReserveConfiguration {
             bool,
             bool,
             bool,
-            bool,
             DataTypes.AssetType
         )
     {

@@ -66,13 +66,6 @@ interface IPoolConfigurator {
     event ReservePaused(address indexed asset, bool paused);
 
     /**
-     * @dev Emitted when a reserve is activated or deactivated for UniV3
-     * @param asset The address of the underlying asset of the reserve
-     * @param active True if reserve is active, false otherwise
-     **/
-    event ReserveActiveForUniV3(address indexed asset, bool active);
-
-    /**
      * @dev Emitted when a reserve is dropped.
      * @param asset The address of the underlying asset of the reserve
      **/
@@ -256,13 +249,6 @@ interface IPoolConfigurator {
      * @param paused True if pausing the reserve, false if unpausing
      **/
     function setReservePause(address asset, bool paused) external;
-
-    /**
-     * @notice Activate or deactivate a reserve for UNIV3
-     * @param asset The address of the underlying asset of the reserve
-     * @param active True if the reserve needs to be active for UNIV3, false otherwise
-     **/
-    function setReserveActiveForUniV3(address asset, bool active) external;
 
     /**
      * @notice set the auction recovery health factor

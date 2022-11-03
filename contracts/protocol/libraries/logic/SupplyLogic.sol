@@ -183,7 +183,6 @@ library SupplyLogic {
                     params.tokenData[index].tokenId,
                     true,
                     true,
-                    true,
                     true
                 );
             }

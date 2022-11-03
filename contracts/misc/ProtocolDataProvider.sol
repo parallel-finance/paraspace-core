@@ -125,7 +125,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             reserveData.isFrozen,
             reserveData.borrowingEnabled,
             reserveData.isPaused,
-            reserveData.isActiveForUniV3,
 
         ) = configuration.getFlags();
 

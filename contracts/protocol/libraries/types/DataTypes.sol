@@ -367,6 +367,5 @@ library DataTypes {
         bool isActive;
         bool isFrozen;
         bool isPaused;
-        bool isActiveForUniV3;
     }
 }

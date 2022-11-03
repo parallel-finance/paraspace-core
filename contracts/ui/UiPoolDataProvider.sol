@@ -134,7 +134,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.isFrozen,
                 reserveData.borrowingEnabled,
                 isPaused,
-                ,
                 assetType
             ) = reserveConfigurationMap.getFlags();
 
