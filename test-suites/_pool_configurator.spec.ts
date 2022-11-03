@@ -1,5 +1,6 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
+import {utils} from "ethers";
 import {BigNumber, BigNumberish} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import {
@@ -782,154 +783,6 @@ describe("PoolConfigurator", () => {
       .false;
   });
 
-  // it("Updates bridge protocol fee equal to PERCENTAGE_FACTOR", async () => {
-  //   const { pool, configurator } = testEnv;
-  //   const newProtocolFee = 10000;
-
-  //   const oldBridgeProtocolFee = await pool.BRIDGE_PROTOCOL_FEE();
-
-  //   expect(await configurator.updateBridgeProtocolFee(newProtocolFee))
-  //     .to.emit(configurator, "BridgeProtocolFeeUpdated")
-  //     .withArgs(oldBridgeProtocolFee, newProtocolFee);
-
-  //   expect(await pool.BRIDGE_PROTOCOL_FEE()).to.be.eq(newProtocolFee);
-  // });
-
-  // it("Updates bridge protocol fee", async () => {
-  //   const { pool, configurator } = testEnv;
-
-  //   const oldBridgeProtocolFee = await pool.BRIDGE_PROTOCOL_FEE();
-
-  //   const newProtocolFee = 2000;
-
-  //   expect(await configurator.updateBridgeProtocolFee(newProtocolFee))
-  //     .to.emit(configurator, "BridgeProtocolFeeUpdated")
-  //     .withArgs(oldBridgeProtocolFee, newProtocolFee);
-
-  //   expect(await pool.BRIDGE_PROTOCOL_FEE()).to.be.eq(newProtocolFee);
-  // });
-
-  // it("Updates flash loan premiums equal to PERCENTAGE_FACTOR: 10000 toProtocol, 10000 total", async () => {
-  //   const snapId = await evmSnapshot();
-
-  //   const { pool, configurator } = testEnv;
-
-  //   const oldFlashloanPremiumTotal = await pool.FLASHLOAN_PREMIUM_TOTAL();
-  //   const oldFlashloanPremiumToProtocol =
-  //     await pool.FLASHLOAN_PREMIUM_TO_PROTOCOL();
-
-  //   const newPremiumTotal = 10000;
-  //   const newPremiumToProtocol = 10000;
-
-  //   expect(await configurator.updateFlashloanPremiumTotal(newPremiumTotal))
-  //     .to.emit(configurator, "FlashloanPremiumTotalUpdated")
-  //     .withArgs(oldFlashloanPremiumTotal, newPremiumTotal);
-  //   expect(
-  //     await configurator.updateFlashloanPremiumToProtocol(newPremiumToProtocol)
-  //   )
-  //     .to.emit(configurator, "FlashloanPremiumToProtocolUpdated")
-  //     .withArgs(oldFlashloanPremiumToProtocol, newPremiumToProtocol);
-
-  //   expect(await pool.FLASHLOAN_PREMIUM_TOTAL()).to.be.eq(newPremiumTotal);
-  //   expect(await pool.FLASHLOAN_PREMIUM_TO_PROTOCOL()).to.be.eq(
-  //     newPremiumToProtocol
-  //   );
-
-  //   await evmRevert(snapId);
-  // });
-
-  // it("Updates flash loan premiums: 10 toProtocol, 40 total", async () => {
-  //   const { pool, configurator } = testEnv;
-
-  //   const oldFlashloanPremiumTotal = await pool.FLASHLOAN_PREMIUM_TOTAL();
-  //   const oldFlashloanPremiumToProtocol =
-  //     await pool.FLASHLOAN_PREMIUM_TO_PROTOCOL();
-
-  //   const newPremiumTotal = 40;
-  //   const newPremiumToProtocol = 10;
-
-  //   expect(await configurator.updateFlashloanPremiumTotal(newPremiumTotal))
-  //     .to.emit(configurator, "FlashloanPremiumTotalUpdated")
-  //     .withArgs(oldFlashloanPremiumTotal, newPremiumTotal);
-  //   expect(
-  //     await configurator.updateFlashloanPremiumToProtocol(newPremiumToProtocol)
-  //   )
-  //     .to.emit(configurator, "FlashloanPremiumToProtocolUpdated")
-  //     .withArgs(oldFlashloanPremiumToProtocol, newPremiumToProtocol);
-
-  //   expect(await pool.FLASHLOAN_PREMIUM_TOTAL()).to.be.eq(newPremiumTotal);
-  //   expect(await pool.FLASHLOAN_PREMIUM_TO_PROTOCOL()).to.be.eq(
-  //     newPremiumToProtocol
-  //   );
-  // });
-
-  // it("Adds a new eMode category for stablecoins", async () => {
-  //   const { configurator, pool, poolAdmin } = testEnv;
-
-  //   expect(
-  //     await configurator
-  //       .connect(poolAdmin.signer)
-  //       .setEModeCategory(
-  //         "1",
-  //         "9800",
-  //         "9800",
-  //         "10100",
-  //         ONE_ADDRESS,
-  //         "STABLECOINS"
-  //       )
-  //   )
-  //     .to.emit(configurator, "EModeCategoryAdded")
-  //     .withArgs(1, 9800, 9800, 10100, ONE_ADDRESS, "STABLECOINS");
-
-  //   const categoryData = await pool.getEModeCategoryData(1);
-  //   expect(categoryData.ltv).to.be.equal(9800, "invalid eMode category ltv");
-  //   expect(categoryData.liquidationThreshold).to.be.equal(
-  //     9800,
-  //     "invalid eMode category liq threshold"
-  //   );
-  //   expect(categoryData.liquidationBonus).to.be.equal(
-  //     10100,
-  //     "invalid eMode category liq bonus"
-  //   );
-  //   expect(categoryData.priceSource).to.be.equal(
-  //     ONE_ADDRESS,
-  //     "invalid eMode category price source"
-  //   );
-  // });
-
-  // it("Set a eMode category to an asset", async () => {
-  //   const { configurator, pool, protocolDataProvider, poolAdmin, dai } = testEnv;
-
-  //   const oldCategoryId = await protocolDataProvider.getReserveEModeCategory(
-  //     dai.address
-  //   );
-
-  //   const newCategoryId = 1;
-
-  //   expect(
-  //     await configurator
-  //       .connect(poolAdmin.signer)
-  //       .setAssetEModeCategory(dai.address, "1")
-  //   )
-  //     .to.emit(configurator, "EModeAssetCategoryChanged")
-  //     .withArgs(dai.address, oldCategoryId, newCategoryId);
-
-  //   const categoryData = await pool.getEModeCategoryData(newCategoryId);
-  //   expect(categoryData.ltv).to.be.equal(9800, "invalid eMode category ltv");
-  //   expect(categoryData.liquidationThreshold).to.be.equal(
-  //     9800,
-  //     "invalid eMode category liq threshold"
-  //   );
-  //   expect(categoryData.liquidationBonus).to.be.equal(
-  //     10100,
-  //     "invalid eMode category liq bonus"
-  //   );
-  //   expect(categoryData.priceSource).to.be.equal(
-  //     ONE_ADDRESS,
-  //     "invalid eMode category price source"
-  //   );
-  // });
-
   it("Sets siloed borrowing through the pool admin", async () => {
     const {configurator, protocolDataProvider, weth, poolAdmin} = testEnv;
 
@@ -1024,137 +877,103 @@ describe("PoolConfigurator", () => {
     await evmRevert(snap);
   });
 
-  // it("Sets a debt ceiling through the pool admin", async () => {
-  //   const { configurator, protocolDataProvider, weth, poolAdmin } = testEnv;
+  const {
+    XTOKEN_SUPPLY_NOT_ZERO,
+    VARIABLE_DEBT_SUPPLY_NOT_ZERO,
+    ASSET_NOT_LISTED,
+    ZERO_ADDRESS_NOT_VALID,
+  } = ProtocolErrors;
 
-  //   const oldDebtCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
+  it("User 1 deposits DAI, User 2 borrow DAI variable, should fail to drop DAI reserve", async () => {
+    const {
+      deployer,
+      users: [user1],
+      pool,
+      dai,
+      weth,
+      configurator,
+    } = testEnv;
+    const depositedAmount = utils.parseEther("1000");
+    const borrowedAmount = utils.parseEther("100");
+    // setting reserve factor to 0 to ease tests, no xToken accrued in reserve
+    await configurator.setReserveFactor(dai.address, 0);
+    await dai["mint(uint256)"](depositedAmount);
+    await dai.approve(pool.address, depositedAmount);
+    await dai.connect(user1.signer)["mint(uint256)"](depositedAmount);
+    await dai.connect(user1.signer).approve(pool.address, depositedAmount);
+    await weth.connect(user1.signer)["mint(uint256)"](depositedAmount);
+    await weth.connect(user1.signer).approve(pool.address, depositedAmount);
+    await pool.supply(dai.address, depositedAmount, deployer.address, 0);
+    await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
+      XTOKEN_SUPPLY_NOT_ZERO
+    );
+    await pool
+      .connect(user1.signer)
+      .supply(weth.address, depositedAmount, user1.address, 0);
+    await pool
+      .connect(user1.signer)
+      .borrow(dai.address, borrowedAmount, 0, user1.address);
+    await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
+      VARIABLE_DEBT_SUPPLY_NOT_ZERO
+    );
+    // await pool
+    //   .connect(user1.signer)
+    //   .borrow(dai.address, borrowedAmount, 1, 0, user1.address);
+    // await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
+    //   STABLE_DEBT_NOT_ZERO
+    // );
+  });
 
-  //   const newDebtCeiling = "1";
-  //   expect(
-  //     await configurator
-  //       .connect(poolAdmin.signer)
-  //       .setDebtCeiling(weth.address, newDebtCeiling)
-  //   )
-  //     .to.emit(configurator, "DebtCeilingChanged")
-  //     .withArgs(weth.address, oldDebtCeiling, newDebtCeiling);
+  it("User 2 repays debts, drop DAI reserve should fail", async () => {
+    const {
+      users: [user1],
+      pool,
+      dai,
+      configurator,
+    } = testEnv;
+    // expect(
+    //   await pool
+    //     .connect(user1.signer)
+    //     .repay(dai.address, MAX_UINT_AMOUNT, 1, user1.address)
+    // );
+    // await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
+    //   VARIABLE_DEBT_SUPPLY_NOT_ZERO
+    // );
+    expect(
+      await pool
+        .connect(user1.signer)
+        .repay(dai.address, MAX_UINT_AMOUNT, user1.address)
+    );
+    await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
+      XTOKEN_SUPPLY_NOT_ZERO
+    );
+  });
 
-  //   const newCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
+  it("User 1 withdraw DAI, drop DAI reserve should succeed", async () => {
+    const {deployer, pool, dai, configurator, protocolDataProvider} = testEnv;
+    await pool.withdraw(dai.address, MAX_UINT_AMOUNT, deployer.address);
+    const reserveCount = (await pool.getReservesList()).length;
+    expect(await configurator.dropReserve(dai.address));
+    const tokens = await pool.getReservesList();
+    expect(tokens.length).to.be.eq(reserveCount - 1);
+    expect(tokens.includes(dai.address)).to.be.false;
+    const {isActive} = await protocolDataProvider.getReserveConfigurationData(
+      dai.address
+    );
+    expect(isActive).to.be.false;
+  });
 
-  //   expect(newCeiling).to.be.eq(newDebtCeiling, "Invalid debt ceiling");
-  // });
+  it("Drop an asset that is not a listed reserve should fail", async () => {
+    const {users, configurator} = testEnv;
+    await expect(configurator.dropReserve(users[5].address)).to.be.revertedWith(
+      ASSET_NOT_LISTED
+    );
+  });
 
-  // it("Sets a debt ceiling through the risk admin", async () => {
-  //   const { configurator, protocolDataProvider, weth, riskAdmin } = testEnv;
-
-  //   const oldDebtCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
-
-  //   const newDebtCeiling = "10";
-  //   expect(
-  //     await configurator
-  //       .connect(riskAdmin.signer)
-  //       .setDebtCeiling(weth.address, newDebtCeiling)
-  //   )
-  //     .to.emit(configurator, "DebtCeilingChanged")
-  //     .withArgs(weth.address, oldDebtCeiling, newDebtCeiling);
-
-  //   const newCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
-
-  //   expect(newCeiling).to.be.eq(newDebtCeiling, "Invalid debt ceiling");
-  // });
-
-  // it("Sets a debt ceiling larger than max (revert expected)", async () => {
-  //   const { configurator, protocolDataProvider, weth, riskAdmin } = testEnv;
-
-  //   const MAX_VALID_DEBT_CEILING = BigNumber.from("1099511627775");
-  //   const debtCeiling = MAX_VALID_DEBT_CEILING.add(1);
-
-  //   const currentCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
-
-  //   await expect(
-  //     configurator
-  //       .connect(riskAdmin.signer)
-  //       .setDebtCeiling(weth.address, debtCeiling)
-  //   ).to.be.revertedWith(INVALID_DEBT_CEILING);
-
-  //   const newCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
-  //   expect(newCeiling).to.be.eq(currentCeiling, "Invalid debt ceiling");
-  // });
-
-  // it("Resets the WETH debt ceiling. Tries to set debt ceiling after liquidity has been provided (revert expected)", async () => {
-  //   const {
-  //     configurator,
-  //     weth,
-  //     riskAdmin,
-  //     pool,
-  //     users: [user1],
-  //   } = testEnv;
-
-  //   await configurator
-  //     .connect(riskAdmin.signer)
-  //     .setDebtCeiling(weth.address, "0");
-
-  //   // user 1 deposits
-  //   await weth.connect(user1.signer)["mint(uint256)"]("100");
-
-  //   await weth.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
-
-  //   await pool
-  //     .connect(user1.signer)
-  //     .supply(weth.address, "100", user1.address, "0");
-
-  //   await expect(
-  //     configurator.setDebtCeiling(weth.address, "100")
-  //   ).to.be.revertedWith(RESERVE_LIQUIDITY_NOT_ZERO);
-  // });
-
-  // it("Withdraws supplied liquidity, sets WETH debt ceiling", async () => {
-  //   const {
-  //     configurator,
-  //     protocolDataProvider,
-  //     weth,
-  //     riskAdmin,
-  //     pool,
-  //     users: [user1],
-  //   } = testEnv;
-
-  //   await pool
-  //     .connect(user1.signer)
-  //     .withdraw(weth.address, MAX_UINT_AMOUNT, user1.address);
-
-  //   await configurator
-  //     .connect(riskAdmin.signer)
-  //     .setDebtCeiling(weth.address, "100");
-
-  //   const newCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
-
-  //   expect(newCeiling).to.be.eq("100");
-  // });
-
-  // it("Readds liquidity, increases WETH debt ceiling", async () => {
-  //   const {
-  //     configurator,
-  //     protocolDataProvider,
-  //     weth,
-  //     riskAdmin,
-  //     pool,
-  //     users: [user1],
-  //   } = testEnv;
-
-  //   await pool
-  //     .connect(user1.signer)
-  //     .supply(weth.address, "100", user1.address, "0");
-
-  //   await configurator
-  //     .connect(riskAdmin.signer)
-  //     .setDebtCeiling(weth.address, "200");
-
-  //   const newCeiling = await protocolDataProvider.getDebtCeiling(weth.address);
-
-  //   expect(newCeiling).to.be.eq("200");
-  // });
-
-  // it("Read debt ceiling decimals", async () => {
-  //   const { protocolDataProvider } = testEnv;
-  //   expect(await protocolDataProvider.getDebtCeilingDecimals()).to.be.eq(2);
-  // });
+  it("Drop a zero asset that is not listed reserve should fail", async () => {
+    const {configurator} = testEnv;
+    await expect(configurator.dropReserve(ZERO_ADDRESS)).to.be.revertedWith(
+      ZERO_ADDRESS_NOT_VALID
+    );
+  });
 });
