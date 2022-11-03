@@ -170,6 +170,18 @@ library DataTypes {
         address oracle;
     }
 
+    struct ExecuteDecreaseUniswapV3LiquidityParams {
+        address user;
+        address asset;
+        uint256 tokenId;
+        uint256 reservesCount;
+        uint128 liquidityDecrease;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        bool receiveEthAsWeth;
+        address oracle;
+    }
+
     struct FinalizeTransferParams {
         address asset;
         address from;

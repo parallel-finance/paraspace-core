@@ -300,6 +300,25 @@ interface IPoolCore {
     ) external returns (uint256);
 
     /**
+     * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
+     * that the user respects liquidation checks.
+     * @param asset The asset address of uniswapV3
+     * @param tokenId The id of the erc721 token
+     * @param liquidityDecrease The amount of liquidity to remove of LP
+     * @param amount0Min The minimum amount to remove of token0
+     * @param amount1Min The minimum amount to remove of token1
+     * @param receiveEthAsWeth If convert weth to ETH
+     */
+    function decreaseUniswapV3Liquidity(
+        address asset,
+        uint256 tokenId,
+        uint128 liquidityDecrease,
+        uint256 amount0Min,
+        uint256 amount1Min,
+        bool receiveEthAsWeth
+    ) external;
+
+    /**
      * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
      * already supplied enough collateral, or he was given enough allowance by a credit delegator on the
      * corresponding debt token (VariableDebtToken)

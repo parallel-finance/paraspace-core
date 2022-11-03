@@ -16,6 +16,7 @@ import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
 
 /**
  * @title SupplyLogic library
@@ -336,7 +337,8 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        reserve.updateState(reserveCache);
+        //currently don't need to update state for erc721
+        //reserve.updateState(reserveCache);
 
         ValidationLogic.validateWithdrawERC721(
             reservesData,
@@ -383,6 +385,56 @@ library SupplyLogic {
         );
 
         return amountToWithdraw;
+    }
+
+    function executeDecreaseUniswapV3Liquidity(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ExecuteDecreaseUniswapV3LiquidityParams memory params
+    ) external {
+        DataTypes.ReserveData storage reserve = reservesData[params.asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        //currently don't need to update state for erc721
+        //reserve.updateState(reserveCache);
+
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        require(
+            nToken.getXTokenType() == XTokenType.NTokenUniswapV3,
+            Errors.ONLY_UNIV3_ALLOWED
+        );
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = params.tokenId;
+        ValidationLogic.validateWithdrawERC721(
+            reservesData,
+            reserveCache,
+            params.asset,
+            tokenIds
+        );
+
+        INTokenUniswapV3(reserveCache.xTokenAddress).decreaseUniswapV3Liquidity(
+                params.user,
+                params.tokenId,
+                params.liquidityDecrease,
+                params.amount0Min,
+                params.amount1Min,
+                params.receiveEthAsWeth
+            );
+
+        if (userConfig.isBorrowingAny()) {
+            ValidationLogic.validateHFAndLtvERC721(
+                reservesData,
+                reservesList,
+                userConfig,
+                params.asset,
+                tokenIds,
+                params.user,
+                params.reservesCount,
+                params.oracle
+            );
+        }
     }
 
     /**
