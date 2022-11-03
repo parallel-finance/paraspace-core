@@ -22,6 +22,7 @@ import {
 import {
   convertToCurrencyDecimals,
   getEthersSigners,
+  isUsingAsCollateral,
 } from "../../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../../deploy/helpers/misc-utils";
 import {
@@ -1442,9 +1443,3 @@ export const liquidateAndValidateReverted = async (
     ).to.be.revertedWith(message);
   }
 };
-
-const isUsingAsCollateral = (conf, id) =>
-  conf
-    .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2).add(1)))
-    .and(1)
-    .gt(0);

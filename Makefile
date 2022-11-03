@@ -97,6 +97,10 @@ test-liquidation-auction:
 test-liquidation-edge:
 	make TEST_TARGET=liquidation-edge.spec.ts test
 
+.PHONY: test-liquidation-close-factor
+test-liquidation-close-factor:
+	make TEST_TARGET=liquidation-close-factor.spec.ts test
+
 .PHONY: test-liquidation-ptoken
 test-liquidation-ptoken:
 	make TEST_TARGET=liquidation-ptoken.spec.ts test
