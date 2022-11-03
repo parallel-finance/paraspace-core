@@ -898,6 +898,47 @@ describe("PoolConfigurator", () => {
 
       await evmRevert(snap);
     });
+
+    it("set reserve auction strategy address through the pool admin", async () => {
+      const {configurator, weth, poolAdmin, pool} = testEnv;
+      const {auctionStrategyAddress: oldAuctionStrategyAddress} =
+        await pool.getReserveData(weth.address);
+      expect(
+        await configurator
+          .connect(poolAdmin.signer)
+          .setReserveAuctionStrategyAddress(weth.address, ZERO_ADDRESS)
+      )
+        .to.emit(configurator, "ReserveAuctionStrategyChanged")
+        .withArgs(weth.address, oldAuctionStrategyAddress, ZERO_ADDRESS);
+    });
+
+    it("set auction recovery health factor through the pool admin", async () => {
+      const {configurator, poolAdmin, pool} = testEnv;
+      const hf = "1500000000000000000";
+      expect(
+        await configurator
+          .connect(poolAdmin.signer)
+          .setAuctionRecoveryHealthFactor(hf)
+      );
+      const recoveryHealthFactor = await pool.AUCTION_RECOVERY_HEALTH_FACTOR();
+      expect(recoveryHealthFactor).to.be.equal(hf);
+    });
+
+    it("set invalid health factor through the pool admin (revert expected)", async () => {
+      const {configurator} = testEnv;
+      const {INVALID_AMOUNT} = ProtocolErrors;
+      const min_hf = "1";
+      const max_hf = "2000000000000000001";
+      expect(
+        configurator.setAuctionRecoveryHealthFactor(min_hf)
+      ).to.be.revertedWith(INVALID_AMOUNT);
+      expect(
+        configurator.setAuctionRecoveryHealthFactor(max_hf)
+      ).to.be.revertedWith(INVALID_AMOUNT);
+      expect(
+        configurator.setAuctionRecoveryHealthFactor("0")
+      ).to.be.revertedWith(INVALID_AMOUNT);
+    });
   });
 
   context("PoolConfigurator: Drop Reserve", () => {
