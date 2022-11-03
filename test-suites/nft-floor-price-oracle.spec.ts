@@ -22,7 +22,7 @@ describe("NFT Oracle Tests", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     baycFloorPrice = BigNumber.from(
-      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.BAYC
+      getParaSpaceConfig().Mocks!.AllAssetsInitialPrices.BAYC
     );
   });
 
