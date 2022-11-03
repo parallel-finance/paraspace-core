@@ -7,7 +7,11 @@ import {
   oneEther,
   ZERO_ADDRESS,
 } from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {
+  convertToCurrencyDecimals,
+  isBorrowing,
+  isUsingAsCollateral,
+} from "../deploy/helpers/contracts-helpers";
 import {evmRevert, evmSnapshot, waitForTx} from "../deploy/helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
 import {VariableDebtToken__factory} from "../types";
@@ -33,6 +37,131 @@ describe("Pool Liquidation: Edge cases", () => {
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
+  });
+
+  it("Liquidation liquidated borrower's collateral completely, asset should not be set as collateralized anymore", async () => {
+    const {
+      pool,
+      users,
+      configurator,
+      dai,
+      usdc,
+      weth,
+      oracle,
+      addressesProvider,
+    } = testEnv;
+
+    const depositor = users[0];
+    const borrower = users[1];
+
+    await waitForTx(
+      await configurator.setLiquidationProtocolFee(weth.address, "30")
+    );
+
+    await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
+
+    // Deposit dai
+    await dai
+      .connect(depositor.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(dai.address, "1000000")
+      );
+    await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(depositor.signer)
+      .supply(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, "10000"),
+        depositor.address,
+        0
+      );
+
+    // Deposit usdc
+    await usdc
+      .connect(depositor.signer)
+      ["mint(uint256)"](await convertToCurrencyDecimals(usdc.address, "10000"));
+    await usdc.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(depositor.signer)
+      .supply(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, "1000"),
+        depositor.address,
+        0
+      );
+
+    // Deposit eth, borrow dai
+    await weth.connect(borrower.signer)["mint(uint256)"](parseEther("2"));
+    await weth.connect(borrower.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(borrower.signer)
+      .supply(weth.address, parseEther("2"), borrower.address, 0);
+
+    // Borrow usdc
+    await pool
+      .connect(borrower.signer)
+      .borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, "1000"),
+        0,
+        borrower.address
+      );
+
+    // Borrow dai variable
+    await pool
+      .connect(borrower.signer)
+      .borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, "100"),
+        0,
+        borrower.address
+      );
+
+    // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
+
+    // Increase usdc price to allow liquidation
+    const usdcPrice = await oracle.getAssetPrice(usdc.address);
+    await oracle.setAssetPrice(usdc.address, usdcPrice.mul(10));
+
+    // HF: (2 * 0.85) / (1000 * 0.00915952223931999 + 100 * 0.000908578801039414) = 0.18377623168483023555
+
+    const usdcData = await pool.getReserveData(usdc.address);
+    const wethData = await pool.getReserveData(weth.address);
+    const variableDebtToken = VariableDebtToken__factory.connect(
+      usdcData.variableDebtTokenAddress,
+      depositor.signer
+    );
+
+    expect(await variableDebtToken.balanceOf(borrower.address)).to.be.gt(0);
+
+    const userConfigBefore = BigNumber.from(
+      (await pool.getUserConfiguration(borrower.address)).data
+    );
+
+    expect(
+      await pool
+        .connect(depositor.signer)
+        .liquidationCall(
+          weth.address,
+          usdc.address,
+          borrower.address,
+          MAX_UINT_AMOUNT,
+          false,
+          {gasLimit: 5000000}
+        )
+    );
+
+    const userConfigAfter = BigNumber.from(
+      (await pool.getUserConfiguration(borrower.address)).data
+    );
+
+    expect(await variableDebtToken.balanceOf(borrower.address)).to.be.gt(0);
+
+    expect(isUsingAsCollateral(userConfigBefore, wethData.id)).to.be.true;
+    expect(isUsingAsCollateral(userConfigAfter, wethData.id)).to.be.false;
+
+    expect(isBorrowing(userConfigBefore, usdcData.id)).to.be.true;
+    expect(isBorrowing(userConfigAfter, usdcData.id)).to.be.true;
   });
 
   it("Liquidation repay asset completely, asset should not be set as borrowed anymore", async () => {
@@ -100,9 +229,13 @@ describe("Pool Liquidation: Edge cases", () => {
         borrower.address
       );
 
+    // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
+
     // Increase usdc price to allow liquidation
     const usdcPrice = await oracle.getAssetPrice(usdc.address);
     await oracle.setAssetPrice(usdc.address, usdcPrice.mul(10));
+
+    // HF: (2 * 0.85) / (10000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 0.18377623168483023555
 
     const daiData = await pool.getReserveData(dai.address);
     const variableDebtToken = VariableDebtToken__factory.connect(
@@ -132,12 +265,6 @@ describe("Pool Liquidation: Edge cases", () => {
     const userConfigAfter = BigNumber.from(
       (await pool.getUserConfiguration(borrower.address)).data
     );
-
-    const isBorrowing = (conf, id) =>
-      conf
-        .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2)))
-        .and(1)
-        .gt(0);
 
     expect(await variableDebtToken.balanceOf(borrower.address)).to.be.eq(0);
 
