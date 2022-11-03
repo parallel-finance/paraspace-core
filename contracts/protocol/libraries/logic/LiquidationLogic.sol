@@ -115,10 +115,12 @@ library LiquidationLogic {
         uint256 liquidationProtocolFee;
         //collateral P|N Token
         address collateralXToken;
-        //whether auction is enabled
-        bool auctionEnabled;
+        //auction strategy
+        address auctionStrategyAddress;
         //liquidation asset reserve id
         uint16 liquidationAssetReserveId;
+        //whether auction is enabled
+        bool auctionEnabled;
         //liquidation reserve cache
         DataTypes.ReserveCache liquidationAssetReserveCache;
     }
@@ -220,7 +222,7 @@ library LiquidationLogic {
 
         // If the collateral being liquidated is equal to the user balance,
         // we set the currency as not being used as collateral anymore
-        if (vars.actualCollateralToLiquidate + vars.liquidationProtocolFee == vars.userCollateral) {
+        if (vars.actualCollateralToLiquidate == vars.userCollateral) {
             userConfig.setUsingAsCollateral(collateralReserve.id, false);
             emit ReserveUsedAsCollateralDisabled(
                 params.collateralAsset,
@@ -288,8 +290,8 @@ library LiquidationLogic {
         vars.liquidationAssetReserveCache = liquidationAssetReserve.cache();
         liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
 
-        vars.auctionEnabled =
-            collateralReserve.auctionStrategyAddress != address(0);
+        vars.auctionStrategyAddress = collateralReserve.auctionStrategyAddress;
+        vars.auctionEnabled = vars.auctionStrategyAddress != address(0);
 
         (
             vars.userGlobalCollateral,
@@ -664,7 +666,7 @@ library LiquidationLogic {
             .getLiquidationProtocolFee();
 
         uint256 maxCollateralToLiquidate = ((vars.liquidationAssetPrice *
-            params.liquidationAmount *
+            superVars.actualDebtToLiquidate *
             vars.collateralAssetUnit) /
             (vars.collateralPrice * vars.liquidationAssetUnit)).percentMul(
                 superVars.liquidationBonus
@@ -680,7 +682,7 @@ library LiquidationLogic {
             ).percentDiv(superVars.liquidationBonus);
         } else {
             vars.actualCollateralToLiquidate = maxCollateralToLiquidate;
-            vars.actualLiquidationAmount = params.liquidationAmount;
+            vars.actualLiquidationAmount = superVars.actualDebtToLiquidate;
         }
 
         if (vars.liquidationProtocolFeePercentage != 0) {
@@ -763,7 +765,7 @@ library LiquidationLogic {
                 superVars.collateralXToken
             ).getAuctionData(params.collateralTokenId).startTime;
             vars.auctionMultiplier = IReserveAuctionStrategy(
-                collateralReserve.auctionStrategyAddress
+                superVars.auctionStrategyAddress
             ).calculateAuctionPriceMultiplier(
                     vars.auctionStartTime,
                     block.timestamp

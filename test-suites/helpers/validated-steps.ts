@@ -95,6 +95,9 @@ export const supplyAndValidate = async (
     ? BigNumber.from(amount)
     : await convertToCurrencyDecimals(token.address, amount);
   const pool = await getPoolProxy();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const paraSpaceOracle = await getParaSpaceOracle();
+  const deployer = await getDeployer();
   const nftIdsToUse = isNFT ? [...Array(+amount).keys()] : null;
 
   if (mintTokens) {
@@ -105,20 +108,18 @@ export const supplyAndValidate = async (
   // approve protocol to access user wallet
   await approveTnx(token, isNFT, pool, user);
 
-  const protocolDataProvider = await getProtocolDataProvider();
   const pTokenAddress = (
     await protocolDataProvider.getReserveTokensAddresses(token.address)
   ).xTokenAddress;
   const pToken = await getPToken(pTokenAddress);
 
-  const assetPrice = await (await getParaSpaceOracle())
-    .connect((await getDeployer()).signer)
+  const assetPrice = await paraSpaceOracle
+    .connect(deployer.signer)
     .getAssetPrice(token.address);
   const tokenBalanceBefore = await token.balanceOf(user.address);
   const pTokenBalanceBefore = await pToken.balanceOf(user.address);
-  const totalCollateralBefore = (
-    await (await getPoolProxy()).getUserAccountData(user.address)
-  ).totalCollateralBase;
+  const totalCollateralBefore = (await pool.getUserAccountData(user.address))
+    .totalCollateralBase;
   const availableToBorrowBefore = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
   const healthFactorBefore = (await pool.getUserAccountData(user.address))
@@ -161,7 +162,8 @@ export const supplyAndValidate = async (
   const totalCollateral = (await pool.getUserAccountData(user.address))
     .totalCollateralBase;
   const depositedAmountInBaseUnits = BigNumber.from(amount).mul(assetPrice);
-  expect(totalCollateral).to.be.eq(
+  almostEqual(
+    totalCollateral,
     totalCollateralBefore.add(depositedAmountInBaseUnits)
   );
 
@@ -174,11 +176,13 @@ export const supplyAndValidate = async (
   ).ltv;
   const availableToBorrow = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
+  const expectedAvailableToBorrow = availableToBorrowBefore.add(
+    depositedAmountInBaseUnits.percentMul(ltvRatio)
+  );
   assertAlmostEqual(
     availableToBorrow,
-    availableToBorrowBefore.add(
-      depositedAmountInBaseUnits.mul(ltvRatio).div(10000)
-    )
+    expectedAvailableToBorrow,
+    expectedAvailableToBorrow.div(10000).mul(4)
   );
 
   // TVL must increase in supplied amount
@@ -216,6 +220,7 @@ export const borrowAndValidate = async (
     amount
   );
   const pool = await getPoolProxy();
+  const deployer = await getDeployer();
 
   // approve protocol to access user wallet
   await approveTnx(token, false, pool, user);
@@ -227,13 +232,11 @@ export const borrowAndValidate = async (
   const debtToken = await getVariableDebtToken(debtTokenAddress);
 
   const assetPrice = await (await getParaSpaceOracle())
-    .connect((await getDeployer()).signer)
+    .connect(deployer.signer)
     .getAssetPrice(token.address);
   const tokenBalanceBefore = await token.balanceOf(user.address);
   const debtTokenBalanceBefore = await debtToken.balanceOf(user.address);
-  const ltvBefore = (
-    await (await getPoolProxy()).getUserAccountData(user.address)
-  ).ltv;
+  const ltvBefore = (await pool.getUserAccountData(user.address)).ltv;
   const availableToBorrowBefore = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
   const healthFactorBefore = (await pool.getUserAccountData(user.address))
@@ -308,6 +311,7 @@ export const repayAndValidate = async (
     amount
   );
   const pool = await getPoolProxy();
+  const deployer = await getDeployer();
 
   // approve protocol to access user wallet
   await approveTnx(token, false, pool, user);
@@ -323,7 +327,7 @@ export const repayAndValidate = async (
   const debtToken = await getVariableDebtToken(debtTokenAddress);
 
   const assetPrice = await (await getParaSpaceOracle())
-    .connect((await getDeployer()).signer)
+    .connect(deployer.signer)
     .getAssetPrice(token.address);
   const tokenBalanceBefore = await token.balanceOf(user.address);
   const pTokenBalanceBefore = await pToken.balanceOf(user.address);
@@ -376,8 +380,7 @@ export const repayAndValidate = async (
   assertAlmostEqual(tvl, tvlBefore);
 
   // LTV is based on my collateral, should stay the same
-  const ltv = (await (await getPoolProxy()).getUserAccountData(user.address))
-    .ltv;
+  const ltv = (await pool.getUserAccountData(user.address)).ltv;
   expect(ltv).to.equal(ltvBefore);
 
   // total debt decreased in the repaid amount
@@ -407,6 +410,8 @@ export const withdrawAndValidate = async (
   const amountInBaseUnits = isNFT ? BigNumber.from(amount) : parseEther(amount);
 
   const pool = await getPoolProxy();
+  const deployer = await getDeployer();
+  const paraSpaceOracle = await getParaSpaceOracle();
 
   const protocolDataProvider = await getProtocolDataProvider();
   const pTokenAddress = (
@@ -416,17 +421,16 @@ export const withdrawAndValidate = async (
   const assetPrice =
     nftId != undefined && (await token.symbol()) == "UNI-V3-POS"
       ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId)
-      : await (await getParaSpaceOracle())
-          .connect((await getDeployer()).signer)
+      : await paraSpaceOracle
+          .connect(deployer.signer)
           .getAssetPrice(token.address);
   const tokenBalanceBefore = await token.balanceOf(user.address);
   const pTokenBalanceBefore = await pToken.balanceOf(user.address);
   const ltvBefore = (await pool.getUserAccountData(user.address)).ltv;
   const availableToBorrowBefore = (await pool.getUserAccountData(user.address))
     .availableBorrowsBase;
-  const totalCollateralBefore = (
-    await (await getPoolProxy()).getUserAccountData(user.address)
-  ).totalCollateralBase;
+  const totalCollateralBefore = (await pool.getUserAccountData(user.address))
+    .totalCollateralBase;
   const healthFactorBefore = (await pool.getUserAccountData(user.address))
     .healthFactor;
   const erc721HealthFactorBefore = (await pool.getUserAccountData(user.address))
@@ -504,8 +508,7 @@ export const withdrawAndValidate = async (
   assertAlmostEqual(totalDebt, totalDebtBefore);
 
   // LTV decreased, but only if asset was collateral
-  const ltv = (await (await getPoolProxy()).getUserAccountData(user.address))
-    .ltv;
+  const ltv = (await pool.getUserAccountData(user.address)).ltv;
   if (wasCollateral) {
     expect(ltv).to.be.equal(await calculateExpectedLTV(user));
   } else {
@@ -513,9 +516,8 @@ export const withdrawAndValidate = async (
   }
 
   // if asset was used as collateral, total collateral decreases in withdrawn amount
-  const totalCollateral = (
-    await (await getPoolProxy()).getUserAccountData(user.address)
-  ).totalCollateralBase;
+  const totalCollateral = (await pool.getUserAccountData(user.address))
+    .totalCollateralBase;
   if (wasCollateral) {
     assertAlmostEqual(
       totalCollateral,
