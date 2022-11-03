@@ -384,6 +384,7 @@ library LiquidationLogic {
                 amount: vars.actualLiquidationAmount -
                     vars.liquidationProtocolFee,
                 onBehalfOf: params.user,
+                spender: msg.sender,
                 referralCode: 0
             })
         );

@@ -102,6 +102,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -123,7 +124,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: msg.sender,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -144,7 +145,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: address(0),
+                spender: address(0),
                 referralCode: 0
             })
         );
@@ -166,7 +167,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: msg.sender,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -202,6 +203,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );

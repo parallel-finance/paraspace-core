@@ -125,6 +125,7 @@ library DataTypes {
         address asset;
         uint256 amount;
         address onBehalfOf;
+        address spender;
         uint16 referralCode;
     }
 
@@ -132,7 +133,7 @@ library DataTypes {
         address asset;
         DataTypes.ERC721SupplyParams[] tokenData;
         address onBehalfOf;
-        address actualSpender;
+        address spender;
         uint16 referralCode;
     }
 
