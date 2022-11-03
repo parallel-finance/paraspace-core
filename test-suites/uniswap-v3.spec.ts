@@ -94,7 +94,7 @@ describe("Uniswap V3", () => {
 
       await pool
         .connect(user1.signer)
-        .supplyUniswapV3(
+        .supplyERC721(
           nftPositionManager.address,
           [{tokenId: 1, useAsCollateral: true}],
           user1.address,
@@ -416,7 +416,7 @@ describe("Uniswap V3", () => {
       await expect(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -442,7 +442,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -475,7 +475,7 @@ describe("Uniswap V3", () => {
       await expect(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -501,7 +501,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -534,7 +534,7 @@ describe("Uniswap V3", () => {
       await expect(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -560,7 +560,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -593,7 +593,7 @@ describe("Uniswap V3", () => {
       await expect(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -619,7 +619,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -693,7 +693,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -755,7 +755,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
           await pool
               .connect(user1.signer)
-              .supplyUniswapV3(
+              .supplyERC721(
                   nftPositionManager.address,
                   [{tokenId: 1, useAsCollateral: true}],
                   user1.address,
@@ -1151,7 +1151,7 @@ describe("Uniswap V3", () => {
 
       await pool
         .connect(user1.signer)
-        .supplyUniswapV3(
+        .supplyERC721(
           nftPositionManager.address,
           [{tokenId: 1, useAsCollateral: true}],
           user1.address,

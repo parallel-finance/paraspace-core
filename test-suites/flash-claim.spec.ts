@@ -252,7 +252,7 @@ describe("Flash Claim Test", () => {
 
     await pool
       .connect(user1.signer)
-      .supplyUniswapV3(
+      .supplyERC721(
         nftPositionManager.address,
         [{tokenId: 1, useAsCollateral: true}],
         user1.address,

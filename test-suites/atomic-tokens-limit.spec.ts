@@ -83,7 +83,7 @@ describe("Atomic tokens limit", () => {
 
       await waitForTx(await nUniswapV3.setBalanceLimit(2));
 
-      await pool.connect(user1.signer).supplyUniswapV3(
+      await pool.connect(user1.signer).supplyERC721(
         nftPositionManager.address,
         [
           {tokenId: 1, useAsCollateral: true},
@@ -107,7 +107,7 @@ describe("Atomic tokens limit", () => {
       } = testEnv;
 
       expect(
-        pool.connect(user1.signer).supplyUniswapV3(
+        pool.connect(user1.signer).supplyERC721(
           nftPositionManager.address,
           [
             {tokenId: 3, useAsCollateral: true},
@@ -166,7 +166,7 @@ describe("Atomic tokens limit", () => {
 
       expect(await nUniswapV3.balanceOf(user2.address)).to.be.eq(2);
 
-      await pool.connect(user1.signer).supplyUniswapV3(
+      await pool.connect(user1.signer).supplyERC721(
         nftPositionManager.address,
         [
           {tokenId: 3, useAsCollateral: true},

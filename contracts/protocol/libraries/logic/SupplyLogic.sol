@@ -15,6 +15,7 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
+import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 
 /**
  * @title SupplyLogic library
@@ -172,6 +173,20 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            for (uint256 index = 0; index < params.tokenData.length; index++) {
+                ValidationLogic.validateForUniswapV3(
+                    reservesData,
+                    params.asset,
+                    params.tokenData[index].tokenId,
+                    true,
+                    true,
+                    true,
+                    true
+                );
+            }
+        }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
                 params.actualSpender,
@@ -233,55 +248,6 @@ library SupplyLogic {
             params.tokenData,
             params.referralCode,
             true
-        );
-    }
-
-    function executeSupplyUniswapV3(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        DataTypes.UserConfigurationMap storage userConfig,
-        DataTypes.ExecuteSupplyERC721Params memory params
-    ) external {
-        DataTypes.ReserveData storage reserve = reservesData[params.asset];
-        DataTypes.ReserveCache memory reserveCache = reserve.cache();
-
-        ValidationLogic.validateSupply(
-            reserveCache,
-            params.tokenData.length,
-            DataTypes.AssetType.ERC721
-        );
-
-        for (uint256 index = 0; index < params.tokenData.length; index++) {
-            ValidationLogic.validateForUniswapV3(
-                reservesData,
-                params.asset,
-                params.tokenData[index].tokenId,
-                true,
-                true,
-                true,
-                true
-            );
-
-            IERC721(params.asset).safeTransferFrom(
-                params.actualSpender,
-                reserveCache.xTokenAddress,
-                params.tokenData[index].tokenId
-            );
-        }
-
-        executeSupplyERC721Base(
-            reserve.id,
-            reserveCache.xTokenAddress,
-            userConfig,
-            params
-        );
-
-        emit SupplyERC721(
-            params.asset,
-            params.actualSpender,
-            params.onBehalfOf,
-            params.tokenData,
-            params.referralCode,
-            false
         );
     }
 
