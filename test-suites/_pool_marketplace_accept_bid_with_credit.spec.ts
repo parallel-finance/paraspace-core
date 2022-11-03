@@ -1499,7 +1499,7 @@ describe("Leveraged Bid - Negative tests", () => {
         .setApprovalForAll(wPunkGateway.address, true)
     );
 
-    // WPUNK
+    // mint WPUNK
     await waitForTx(
       await cryptoPunksMarket.connect(taker.signer)["getPunk(uint256)"](2)
     );
@@ -1509,7 +1509,9 @@ describe("Leveraged Bid - Negative tests", () => {
       await cryptoPunksMarket.connect(taker.signer).offerPunkForSale(2, 0)
     );
     await waitForTx(await wPunk.connect(taker.signer).registerProxy());
+
     const proxy = await wPunk.proxyInfo(taker.address);
+
     await waitForTx(
       await cryptoPunksMarket.connect(taker.signer).transferPunk(proxy, 2)
     );
