@@ -1649,7 +1649,7 @@ describe("Leveraged Bid - Negative tests", () => {
     ).to.be.revertedWith(COLLATERAL_CANNOT_COVER_NEW_BORROW);
   });
 
-  it("TC-erc721-bid-16 cannot purchase the NFT if the order price is greater than taker's balance + credit amount", async () => {
+  it("TC-erc721-bid-16 cannot purchase the NFT if the order price is greater than taker's balance + credit amount  (should fail)", async () => {
     const {
       bayc,
       dai,
