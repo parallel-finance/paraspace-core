@@ -159,7 +159,7 @@ test-nft-floor-price-oracle:
 
 .PHONY: test-weth-gateway
 test-weth-gateway:
-	make TEST_TARGET=weth-gateway.spec.ts test
+	make TEST_TARGET=_gateway_weth.spec.ts test
 
 .PHONY: test-mock-token-faucet
 test-mock-token-faucet:
@@ -241,14 +241,6 @@ test-user-configurator-used-as-collateral:
 test-rate-strategy:
 	make TEST_TARGET=rate-strategy.spec.ts test
 
-.PHONY: test-ui-pool-data-provider
-test-ui-pool-data-provider:
-	make TEST_TARGET=ui-pool-data-provider.spec.ts test
-
-.PHONY: test-ui-incentive-data-provider
-test-ui-incentive-data-provider:
-	make TEST_TARGET=ui-incentive-data-provider.spec.ts test
-
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
 	make TEST_TARGET=reserve-configuration.spec.ts test
@@ -261,9 +253,9 @@ test-dynamic-configs-strategy:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
-.PHONY: test-wallet-balance-provider
-test-wallet-balance-provider:
-	make TEST_TARGET=wallet-balance-provider.spec.ts test
+.PHONY: test-ui-providers
+test-ui-providers:
+	make TEST_TARGET=_ui_providers.spec.ts test
 
 .PHONY: run
 run:
@@ -374,6 +366,22 @@ upgrade:
 .PHONY: upgrade-pool
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
+
+.PHONY: upgrade-ptoken
+upgrade-ptoken:
+	make TASK_NAME=upgrade:ptoken run-task
+
+.PHONY: upgrade-ntoken
+upgrade-ntoken:
+	make TASK_NAME=upgrade:ntoken run-task
+
+.PHONY: upgrade-ntoken-uniswapv3
+upgrade-ntoken-uniswapv3:
+	make TASK_NAME=upgrade:ntoken_uniswapv3 run-task
+
+.PHONY: upgrade-ntoken-moonbirds
+upgrade-ntoken-moonbirds:
+	make TASK_NAME=upgrade:ntoken_moonbirds run-task
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

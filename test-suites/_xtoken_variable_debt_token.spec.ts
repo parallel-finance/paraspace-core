@@ -1,8 +1,6 @@
 import {expect} from "chai";
 import {utils} from "ethers";
 import {
-  evmRevert,
-  evmSnapshot,
   impersonateAccountsHardhat,
   increaseTime,
   waitForTx,
@@ -32,7 +30,7 @@ describe("VariableDebtToken", () => {
     CALLER_NOT_POOL_ADMIN,
   } = ProtocolErrors;
 
-  it("Check initialization", async () => {
+  it("TC-variable-debt-token-01 Check contract initialization", async () => {
     const {pool, weth, dai, protocolDataProvider, users} = testEnv;
     const daiVariableDebtTokenAddress = (
       await protocolDataProvider.getReserveTokensAddresses(dai.address)
@@ -58,7 +56,7 @@ describe("VariableDebtToken", () => {
     expect(scaledUserBalanceAndSupplyUser0Before[0]).to.be.eq(0);
     expect(scaledUserBalanceAndSupplyUser0Before[1]).to.be.eq(0);
 
-    // Need to create some debt to do this good
+    // Need to create some debt to do this right
     await dai
       .connect(users[0].signer)
       ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "1000"));
@@ -106,7 +104,7 @@ describe("VariableDebtToken", () => {
     );
   });
 
-  it("Tries to mint not being the Pool (revert expected)", async () => {
+  it("TC-variable-debt-token-02 Tries to mint not being the Pool (revert expected)", async () => {
     const {deployer, dai, protocolDataProvider} = testEnv;
 
     const daiVariableDebtTokenAddress = (
@@ -123,7 +121,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(CALLER_MUST_BE_POOL);
   });
 
-  it("Tries to burn not being the Pool (revert expected)", async () => {
+  it("TC-variable-debt-token-03 Tries to burn not being the Pool (revert expected)", async () => {
     const {deployer, dai, protocolDataProvider} = testEnv;
 
     const daiVariableDebtTokenAddress = (
@@ -140,7 +138,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(CALLER_MUST_BE_POOL);
   });
 
-  it("Tries to mint with amountScaled == 0 (revert expected)", async () => {
+  it("TC-variable-debt-token-04 Tries to mint with amountScaled == 0 (revert expected)", async () => {
     const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
 
     // Impersonate the Pool
@@ -168,7 +166,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(INVALID_MINT_AMOUNT);
   });
 
-  it("Tries to burn with amountScaled == 0 (revert expected)", async () => {
+  it("TC-variable-debt-token-05 Tries to burn with amountScaled == 0 (revert expected)", async () => {
     const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
 
     // Impersonate the Pool
@@ -196,7 +194,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(INVALID_BURN_AMOUNT);
   });
 
-  it("Tries to transfer debt tokens (revert expected)", async () => {
+  it("TC-variable-debt-token-06 Tries to transfer debt tokens (revert expected)", async () => {
     const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
       await protocolDataProvider.getReserveTokensAddresses(dai.address)
@@ -213,7 +211,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
   });
 
-  it("Tries to approve debt tokens (revert expected)", async () => {
+  it("TC-variable-debt-token-07 Tries to approve debt tokens (revert expected)", async () => {
     const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
       await protocolDataProvider.getReserveTokensAddresses(dai.address)
@@ -233,7 +231,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
   });
 
-  it("Tries to increaseAllowance (revert expected)", async () => {
+  it("TC-variable-debt-token-08 Tries to increaseAllowance (revert expected)", async () => {
     const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
       await protocolDataProvider.getReserveTokensAddresses(dai.address)
@@ -250,7 +248,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
   });
 
-  it("Tries to decreaseAllowance (revert expected)", async () => {
+  it("TC-variable-debt-token-09 Tries to decreaseAllowance (revert expected)", async () => {
     const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
       await protocolDataProvider.getReserveTokensAddresses(dai.address)
@@ -267,7 +265,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
   });
 
-  it("Tries to transferFrom debt tokens (revert expected)", async () => {
+  it("TC-variable-debt-token-10 Tries to transferFrom debt tokens (revert expected)", async () => {
     const {users, dai, protocolDataProvider} = testEnv;
     const daiVariableDebtTokenAddress = (
       await protocolDataProvider.getReserveTokensAddresses(dai.address)
@@ -284,63 +282,7 @@ describe("VariableDebtToken", () => {
     ).to.be.revertedWith(ProtocolErrors.OPERATION_NOT_SUPPORTED);
   });
 
-  it("setIncentivesController() ", async () => {
-    const snapshot = await evmSnapshot();
-    const {dai, protocolDataProvider, poolAdmin, aclManager, deployer} =
-      testEnv;
-    const daiVariableDebtTokenAddress = (
-      await protocolDataProvider.getReserveTokensAddresses(dai.address)
-    ).variableDebtTokenAddress;
-    const variableDebtContract = VariableDebtToken__factory.connect(
-      daiVariableDebtTokenAddress,
-      deployer.signer
-    );
-
-    expect(
-      await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address)
-    );
-
-    expect(await variableDebtContract.getIncentivesController()).to.not.be.eq(
-      ZERO_ADDRESS
-    );
-    expect(
-      await variableDebtContract
-        .connect(poolAdmin.signer)
-        .setIncentivesController(ZERO_ADDRESS)
-    );
-    expect(await variableDebtContract.getIncentivesController()).to.be.eq(
-      ZERO_ADDRESS
-    );
-
-    await evmRevert(snapshot);
-  });
-
-  it("setIncentivesController() from not pool admin (revert expected)", async () => {
-    const {
-      dai,
-      protocolDataProvider,
-      users: [user],
-    } = testEnv;
-    const daiVariableDebtTokenAddress = (
-      await protocolDataProvider.getReserveTokensAddresses(dai.address)
-    ).variableDebtTokenAddress;
-    const variableDebtContract = VariableDebtToken__factory.connect(
-      daiVariableDebtTokenAddress,
-      user.signer
-    );
-
-    expect(await variableDebtContract.getIncentivesController()).to.not.be.eq(
-      ZERO_ADDRESS
-    );
-
-    await expect(
-      variableDebtContract
-        .connect(user.signer)
-        .setIncentivesController(ZERO_ADDRESS)
-    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
-  });
-
-  it("Check Mint and Transfer events when borrowing on behalf", async () => {
+  it("TC-variable-debt-token-11 Check Mint and Transfer events when borrowing on behalf", async () => {
     const {
       pool,
       weth,
@@ -457,5 +399,59 @@ describe("VariableDebtToken", () => {
       2
     );
     expect(parsedMintEvent.args.balanceIncrease).to.be.closeTo(interest, 2);
+  });
+
+  it("TC-variable-debt-token-12 setIncentivesController() from not pool admin (revert expected)", async () => {
+    const {
+      dai,
+      protocolDataProvider,
+      users: [user],
+    } = testEnv;
+    const daiVariableDebtTokenAddress = (
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
+    ).variableDebtTokenAddress;
+    const variableDebtContract = VariableDebtToken__factory.connect(
+      daiVariableDebtTokenAddress,
+      user.signer
+    );
+
+    expect(await variableDebtContract.getIncentivesController()).to.not.be.eq(
+      ZERO_ADDRESS
+    );
+
+    await expect(
+      variableDebtContract
+        .connect(user.signer)
+        .setIncentivesController(ZERO_ADDRESS)
+    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+  });
+
+  it("TC-variable-debt-token-13 setIncentivesController() ", async () => {
+    const {dai, protocolDataProvider, poolAdmin, aclManager, deployer} =
+      testEnv;
+
+    const daiVariableDebtTokenAddress = (
+      await protocolDataProvider.getReserveTokensAddresses(dai.address)
+    ).variableDebtTokenAddress;
+    const variableDebtContract = VariableDebtToken__factory.connect(
+      daiVariableDebtTokenAddress,
+      deployer.signer
+    );
+
+    expect(
+      await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address)
+    );
+
+    expect(await variableDebtContract.getIncentivesController()).to.not.be.eq(
+      ZERO_ADDRESS
+    );
+    expect(
+      await variableDebtContract
+        .connect(poolAdmin.signer)
+        .setIncentivesController(ZERO_ADDRESS)
+    );
+    expect(await variableDebtContract.getIncentivesController()).to.be.eq(
+      ZERO_ADDRESS
+    );
   });
 });
