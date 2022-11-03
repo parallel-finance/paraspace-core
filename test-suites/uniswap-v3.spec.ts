@@ -1421,19 +1421,21 @@ describe("Uniswap V3", () => {
       });
       expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
 
-      await nft.setApprovalForAll(pool.address, true);
+      await waitForTx(await nft.setApprovalForAll(pool.address, true));
 
-      await pool
-        .connect(user1.signer)
-        .supplyERC721(
-          nftPositionManager.address,
-          [{tokenId: 1, useAsCollateral: true}],
-          user1.address,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        );
+      await waitForTx(
+        await pool
+          .connect(user1.signer)
+          .supplyERC721(
+            nftPositionManager.address,
+            [{tokenId: 1, useAsCollateral: true}],
+            user1.address,
+            0,
+            {
+              gasLimit: 12_450_000,
+            }
+          )
+      );
     });
 
     it("check ltv strategy [ @skip-on-coverage ]", async () => {
@@ -1475,7 +1477,7 @@ describe("Uniswap V3", () => {
       );
 
       // Set DAI LTV = 0
-      expect(
+      await waitForTx(
         await configurator.configureReserveAsCollateral(
           dai.address,
           0,
@@ -1521,16 +1523,22 @@ describe("Uniswap V3", () => {
         user: user1,
       });
 
-      await pool
-        .connect(user2.signer)
-        .supply(dai.address, daiSupplyAmount, user2.address, 0);
-      await pool
-        .connect(user1.signer)
-        .supply(weth.address, wethSupplyAmount, user1.address, 0);
+      await waitForTx(
+        await pool
+          .connect(user2.signer)
+          .supply(dai.address, daiSupplyAmount, user2.address, 0)
+      );
+      await waitForTx(
+        await pool
+          .connect(user1.signer)
+          .supply(weth.address, wethSupplyAmount, user1.address, 0)
+      );
 
-      await pool
-        .connect(user1.signer)
-        .borrow(dai.address, daiBorrowAmount, 0, user1.address);
+      await waitForTx(
+        await pool
+          .connect(user1.signer)
+          .borrow(dai.address, daiBorrowAmount, 0, user1.address)
+      );
     });
 
     it("user can only withdraw uniswapv3 [ @skip-on-coverage ]", async () => {
@@ -1552,8 +1560,8 @@ describe("Uniswap V3", () => {
           .withdraw(weth.address, wethWithdrawAmount, user1.address)
       ).to.be.revertedWith(LTV_VALIDATION_FAILED);
 
-      await expect(
-        pool
+      await waitForTx(
+        await pool
           .connect(user1.signer)
           .withdrawERC721(nftPositionManager.address, [1], user1.address)
       );
