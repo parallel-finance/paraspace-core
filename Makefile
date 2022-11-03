@@ -157,9 +157,9 @@ test-weth-gateway:
 test-mock-token-faucet:
 	make TEST_TARGET=mock-token-faucet.spec.ts test
 
-.PHONY: test-moonbird
-test-moonbird:
-	make TEST_TARGET=moonbird.spec.ts test
+.PHONY: test-moonbirds
+test-moonbirds:
+	make TEST_TARGET=_xtoken_ntoken_moonbirds.spec.ts test
 
 .PHONY: test-marketplace
 test-marketplace:
