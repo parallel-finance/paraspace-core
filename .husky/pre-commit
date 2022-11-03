@@ -10,7 +10,6 @@ if [ -z "${contracts}" ] && [ -z "${scripts}" ]; then
   exit 0
 fi
 
-
 make format
 
 if [ ! -z "${contracts}" ]; then
