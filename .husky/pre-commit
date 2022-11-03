@@ -2,11 +2,17 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 contracts=$((git diff --cached --name-only --diff-filter=ACMR | grep -Ei "\.sol$") || true)
+scripts=$((git diff --cached --name-only --diff-filter=ACMR | grep -Ei "\.ts$") || true)
 
-if [ ! -z "${contracts}" ]; then
-  make format
-  git add $(echo "$contracts" | paste -s -d " " -)
-  typos \
-    && yarn build \
-    && yarn lint
+typos
+
+if [ -z "${contracts}" ] && [ -z "${scripts}" ]; then
+  exit 0
 fi
+
+
+make format
+git add $(echo "$contracts" | paste -s -d " " -)
+git add $(echo "$scripts" | paste -s -d " " -)
+yarn typechain \
+  && yarn lint
