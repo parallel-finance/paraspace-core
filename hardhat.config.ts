@@ -137,9 +137,11 @@ const hardhatConfig: HardhatUserConfig = {
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
-    hardhat_local: {
+    localhost: {
+      hardfork: HARDFORK,
       url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
       chainId: HARDHAT_CHAINID,
+      forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
     ganache: {

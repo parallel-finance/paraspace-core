@@ -248,7 +248,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         view
         returns (bool)
     {
-        require(_price > 0, "NFTOracle: price can not be 0");
+        require(_price > 0, "NFTOracle: price should be more than 0");
         PriceInformation memory priceMapEntry = priceMap[_nftContract];
         uint128 price = priceMapEntry.twap;
         uint64 timestamp = priceMapEntry.lastUpdateTime;

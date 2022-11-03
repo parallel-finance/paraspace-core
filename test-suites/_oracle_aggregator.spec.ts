@@ -37,7 +37,7 @@ describe("ParaSpaceOracle", () => {
     mockAggregator = await deployMockAggregator("MOCK", assetPrice);
   });
 
-  it("Owner set a new asset source", async () => {
+  it("TC-oracle-aggregator-01:Owner set a new asset source", async () => {
     const {poolAdmin, paraspaceOracle} = testEnv;
 
     // Asset has no source
@@ -69,7 +69,7 @@ describe("ParaSpaceOracle", () => {
     expect(sourcesPrices).to.eql([assetPrice]);
   });
 
-  it("Owner update an existing asset source", async () => {
+  it("TC-oracle-aggregator-02:Owner update an existing asset source", async () => {
     const {poolAdmin, paraspaceOracle, dai} = testEnv;
 
     // DAI token has already a source
@@ -93,7 +93,7 @@ describe("ParaSpaceOracle", () => {
     );
   });
 
-  it("Owner tries to set a new asset source with wrong input params (revert expected)", async () => {
+  it("TC-oracle-aggregator-03:Owner tries to set a new asset source with wrong input params (revert expected)", async () => {
     const {poolAdmin, paraspaceOracle} = testEnv;
 
     await expect(
@@ -112,7 +112,7 @@ describe("ParaSpaceOracle", () => {
     ).to.be.eq(await paraspaceOracle.BASE_CURRENCY_UNIT());
   });
 
-  it("A non-owner user tries to set a new asset source (revert expected)", async () => {
+  it("TC-oracle-aggregator-04:A non-owner user tries to set a new asset source (revert expected)", async () => {
     const {users, paraspaceOracle} = testEnv;
     const user = users[0];
 
@@ -125,7 +125,7 @@ describe("ParaSpaceOracle", () => {
     ).to.be.revertedWith(CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
   });
 
-  it("Set oracle for BASE_CURRENCY asset is not allowed", async () => {
+  it("TC-oracle-aggregator-05:Set oracle for BASE_CURRENCY asset is not allowed", async () => {
     const {poolAdmin, paraspaceOracle, weth} = testEnv;
 
     await expect(
@@ -135,7 +135,7 @@ describe("ParaSpaceOracle", () => {
     ).to.be.revertedWith(ProtocolErrors.SET_ORACLE_SOURCE_NOT_ALLOWED);
   });
 
-  it("Get price of asset with no asset source", async () => {
+  it("Get price of asset with no asset source and will use fallback", async () => {
     const {paraspaceOracle, oracle} = testEnv;
     const fallbackPrice = oneEther;
 
@@ -153,7 +153,7 @@ describe("ParaSpaceOracle", () => {
     );
   });
 
-  it("Get price of asset with 0 price and no fallback price", async () => {
+  it("TC-oracle-aggregator-06:Get price of asset without source(reverted)", async () => {
     const {poolAdmin, paraspaceOracle} = testEnv;
     const zeroPriceMockAgg = await deployMockAggregator("MOCK", "0");
 
