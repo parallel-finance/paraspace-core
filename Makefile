@@ -137,13 +137,13 @@ test-erc20:
 test-flash-claim:
 	make TEST_TARGET=flash-claim.spec.ts test
 
-.PHONY: test-price-oracle-update
-test-price-oracle-update:
-	make TEST_TARGET=price-oracle-update.spec.ts test
+.PHONY: test-paraspace-oracle-aggregator
+test-paraspace-oracle-aggregator:
+	make TEST_TARGET=_oracle_aggregator.spec.ts test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
-	make TEST_TARGET=nft-floor-price-oracle.spec.ts test
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts test
 
 .PHONY: test-weth-gateway
 test-weth-gateway:
