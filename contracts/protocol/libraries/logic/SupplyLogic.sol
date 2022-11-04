@@ -142,7 +142,9 @@ library SupplyLogic {
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
         ) = INToken(nTokenAddress).mint(params.onBehalfOf, params.tokenData);
-        if (oldCollateralizedBalance == 0 && newCollateralizedBalance > 0) {
+        bool isFirstSupplyCollateral = (oldCollateralizedBalance == 0 &&
+            newCollateralizedBalance > 0);
+        if (isFirstSupplyCollateral) {
             userConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -356,7 +358,9 @@ library SupplyLogic {
                 params.tokenIds
             );
 
-        if (newCollateralizedBalance < oldCollateralizedBalance) {
+        bool isWithdrawCollateral = (newCollateralizedBalance <
+            oldCollateralizedBalance);
+        if (isWithdrawCollateral) {
             if (userConfig.isBorrowingAny()) {
                 ValidationLogic.validateHFAndLtvERC721(
                     reservesData,
@@ -422,17 +426,22 @@ library SupplyLogic {
                 params.receiveEthAsWeth
             );
 
-        if (userConfig.isBorrowingAny()) {
-            ValidationLogic.validateHFAndLtvERC721(
-                reservesData,
-                reservesList,
-                userConfig,
-                params.asset,
-                tokenIds,
-                params.user,
-                params.reservesCount,
-                params.oracle
-            );
+        bool isUsedAsCollateral = ICollaterizableERC721(
+            reserveCache.xTokenAddress
+        ).isUsedAsCollateral(params.tokenId);
+        if (isUsedAsCollateral) {
+            if (userConfig.isBorrowingAny()) {
+                ValidationLogic.validateHFAndLtvERC721(
+                    reservesData,
+                    reservesList,
+                    userConfig,
+                    params.asset,
+                    tokenIds,
+                    params.user,
+                    params.reservesCount,
+                    params.oracle
+                );
+            }
         }
     }
 
