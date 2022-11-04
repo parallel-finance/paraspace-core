@@ -471,8 +471,6 @@ describe("PoolAddressesProvider", () => {
     const poolAddress = await addressesProvider.getPool();
     expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
 
-    const poolAddressId = utils.formatBytes32String("POOL");
-
     // Update the Pool proxy
 
     await addressesProvider
@@ -508,8 +506,6 @@ describe("PoolAddressesProvider", () => {
     // Pool has already a proxy
     const poolAddress = await addressesProvider.getPool();
     expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
-
-    const poolAddressId = utils.formatBytes32String("POOL");
 
     // Update the Pool proxy
 
