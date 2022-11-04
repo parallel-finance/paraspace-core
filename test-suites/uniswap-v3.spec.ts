@@ -1155,7 +1155,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-              liquidationValue,
+            liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
@@ -1190,7 +1190,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-              liquidationValue,
+            liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
@@ -1224,7 +1224,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-              liquidationValue,
+            liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
@@ -1258,7 +1258,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-              liquidationValue,
+            liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
