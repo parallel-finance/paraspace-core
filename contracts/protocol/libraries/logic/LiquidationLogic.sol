@@ -55,9 +55,9 @@ library LiquidationLogic {
     /**
      * @dev This constant represents below which health factor value it is possible to liquidate
      * an amount of debt corresponding to `MAX_LIQUIDATION_CLOSE_FACTOR`.
-     * A value of 0.85e18 results in 85%
+     * A value of 0.95e18 results in 95%
      */
-    uint256 public constant CLOSE_FACTOR_HF_THRESHOLD = 0.85e18;
+    uint256 public constant CLOSE_FACTOR_HF_THRESHOLD = 0.95e18;
 
     // See `IPool` for descriptions
     event ReserveUsedAsCollateralEnabled(

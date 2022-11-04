@@ -30,7 +30,7 @@ describe("Pool Liquidation: Close Factor", () => {
     testEnv = await loadFixture(testEnvFixture);
   });
 
-  it("HF > 0.85 thus only half of the debt has been liquidated although the input is MAX_UINT_AMOUNT", async () => {
+  it("HF > 0.95 thus only half of the debt has been liquidated although the input is MAX_UINT_AMOUNT", async () => {
     const {
       pool,
       users: [depositor, borrower],
@@ -98,10 +98,10 @@ describe("Pool Liquidation: Close Factor", () => {
 
     // Increase usdc price to allow liquidation
     const usdcAgg = await getMockAggregator(undefined, "USDC");
-    const newUsdcPrice = parseEther("0.0019").toString();
+    const newUsdcPrice = parseEther("0.00169").toString();
     await usdcAgg.updateLatestAnswer(newUsdcPrice);
 
-    // HF: (2 * 0.85) / (1000 * 0.0019 + 100 * 0.000908578801039414) = 0.85390324291317273811
+    // HF: (2 * 0.85) / (1000 * 0.00169 + 100 * 0.000908578801039414) = 0.95459610729901587889
 
     const daiData = await pool.getReserveData(dai.address);
     const variableDebtToken = VariableDebtToken__factory.connect(
@@ -138,7 +138,7 @@ describe("Pool Liquidation: Close Factor", () => {
     expect(isBorrowing(userConfigAfter, daiData.id)).to.be.true;
   });
 
-  it("HF < 0.85 thus all of the debt has been liquidated", async () => {
+  it("HF < 0.95 thus all of the debt has been liquidated", async () => {
     const {
       pool,
       users: [depositor, borrower],
@@ -206,10 +206,10 @@ describe("Pool Liquidation: Close Factor", () => {
 
     // Increase usdc price to allow liquidation
     const usdcAgg = await getMockAggregator(undefined, "USDC");
-    const newUsdcPrice = parseEther("0.00191").toString();
+    const newUsdcPrice = parseEther("0.00170").toString();
     await usdcAgg.updateLatestAnswer(newUsdcPrice);
 
-    // HF: (2 * 0.85) / (1000 * 0.00191 + 100 * 0.000908578801039414) = 0.84963555727990420323
+    // HF: (2 * 0.85) / (1000 * 0.00170 + 100 * 0.000908578801039414) = 0.94926572280617376059
 
     const daiData = await pool.getReserveData(dai.address);
     const variableDebtToken = VariableDebtToken__factory.connect(
