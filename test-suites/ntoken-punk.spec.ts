@@ -16,7 +16,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     wPunksFloorPrice = BigNumber.from(
-      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.WPUNKS
+      getParaSpaceConfig().Mocks!.AllAssetsInitialPrices.WPUNKS
     );
   });
 

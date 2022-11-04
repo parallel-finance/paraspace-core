@@ -56,7 +56,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         string calldata nTokenName,
         string calldata nTokenSymbol,
         bytes calldata params
-    ) external override initializer {
+    ) public virtual override initializer {
         require(initializingPool == POOL, Errors.POOL_ADDRESSES_DO_NOT_MATCH);
         _setName(nTokenName);
         _setSymbol(nTokenSymbol);
@@ -89,6 +89,14 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
+        return _burn(from, receiverOfUnderlying, tokenIds);
+    }
+
+    function _burn(
+        address from,
+        address receiverOfUnderlying,
+        uint256[] calldata tokenIds
+    ) internal returns (uint64, uint64) {
         (
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
@@ -112,7 +120,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address to,
         uint256 value
-    ) external override onlyPool nonReentrant {
+    ) external virtual override onlyPool nonReentrant {
         _transfer(from, to, value, false);
     }
 

@@ -542,7 +542,7 @@ library MarketplaceLogic {
                     asset: token,
                     tokenData: tokenData,
                     onBehalfOf: onBehalfOf,
-                    actualSpender: address(this),
+                    spender: address(this),
                     referralCode: params.referralCode
                 })
             );

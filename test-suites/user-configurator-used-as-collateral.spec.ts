@@ -293,7 +293,6 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
         .connect(user1.signer)
         .liquidationERC721(
           bayc.address,
-          weth.address,
           user1.address,
           0,
           parseEther("20"),
@@ -316,7 +315,6 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
         .connect(liquidator.signer)
         .liquidationERC721(
           bayc.address,
-          weth.address,
           user1.address,
           0,
           parseEther("20"),

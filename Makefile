@@ -73,9 +73,9 @@ test-pool-upgrade:
 test-ntoken:
 	make TEST_TARGET=ntoken.spec.ts test
 
-.PHONY: test-ntoken-punk
-test-ntoken-punk:
-	make TEST_TARGET=ntoken-punk.spec.ts test
+.PHONY: test-punk-gateway
+test-punk-gateway:
+	make TEST_TARGET=_gateway_punk.spec.ts test
 
 .PHONY: test-liquidation
 test-liquidation:
@@ -97,9 +97,21 @@ test-liquidation-auction:
 test-liquidation-edge:
 	make TEST_TARGET=liquidation-edge.spec.ts test
 
+.PHONY: test-liquidation-close-factor
+test-liquidation-close-factor:
+	make TEST_TARGET=liquidation-close-factor.spec.ts test
+
 .PHONY: test-liquidation-ptoken
 test-liquidation-ptoken:
 	make TEST_TARGET=liquidation-ptoken.spec.ts test
+
+.PHONY: test-liquidation-underlying
+test-liquidation-underlying:
+	make TEST_TARGET=liquidation-underlying.spec.ts test
+
+.PHONY: test-liquidation-with-fee
+test-liquidation-with-fee:
+	make TEST_TARGET=liquidation-with-fee.spec.ts test
 
 .PHONY: test-configurator-edge
 test-configurator-edge:
@@ -116,10 +128,6 @@ test-ptoken-permit:
 .PHONY: test-ptoken-delegation-aware
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
-
-.PHONY: test-interest-overflow
-test-interest-overflow:
-	make TEST_TARGET=interest-overflow.spec.ts test
 
 .PHONY: test-ltv-validation
 test-ltv-validation:
@@ -141,13 +149,13 @@ test-erc20:
 test-flash-claim:
 	make TEST_TARGET=flash-claim.spec.ts test
 
-.PHONY: test-price-oracle-update
-test-price-oracle-update:
-	make TEST_TARGET=price-oracle-update.spec.ts test
+.PHONY: test-paraspace-oracle-aggregator
+test-paraspace-oracle-aggregator:
+	make TEST_TARGET=_oracle_aggregator.spec.ts test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
-	make TEST_TARGET=nft-floor-price-oracle.spec.ts test
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts test
 
 .PHONY: test-weth-gateway
 test-weth-gateway:
@@ -157,9 +165,9 @@ test-weth-gateway:
 test-mock-token-faucet:
 	make TEST_TARGET=mock-token-faucet.spec.ts test
 
-.PHONY: test-moonbird
-test-moonbird:
-	make TEST_TARGET=moonbird.spec.ts test
+.PHONY: test-moonbirds
+test-moonbirds:
+	make TEST_TARGET=_xtoken_ntoken_moonbirds.spec.ts test
 
 .PHONY: test-marketplace
 test-marketplace:
@@ -231,7 +239,7 @@ test-user-configurator-used-as-collateral:
 
 .PHONY: test-rate-strategy
 test-rate-strategy:
-	make TEST_TARGET=rate-strategy.spec.ts test
+	make TEST_TARGET=_base_interest_rate_strategy.spec.ts test
 
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
@@ -248,6 +256,10 @@ test-scenario:
 .PHONY: test-ui-providers
 test-ui-providers:
 	make TEST_TARGET=_ui_providers.spec.ts test
+
+.PHONY: test-ape-staking
+test-ape-staking:
+	make TEST_TARGET=ape_coin_staking.spec.ts test
 
 .PHONY: run
 run:
