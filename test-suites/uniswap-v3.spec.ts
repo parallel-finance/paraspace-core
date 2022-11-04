@@ -1108,7 +1108,7 @@ describe("Uniswap V3", () => {
       } = testEnv;
       await oracle.setAssetPrice(dai.address, "100000000000000"); //weth = 10000 dai
 
-      const ethAmount = await convertToCurrencyDecimals(weth.address, "6");
+      const ethAmount = await convertToCurrencyDecimals(weth.address, "20");
       await fund({token: weth, user: liquidator, amount: ethAmount});
       await approveTo({
         target: pool.address,
@@ -1116,7 +1116,6 @@ describe("Uniswap V3", () => {
         user: liquidator,
       });
 
-      const preLiquidationSnapshot = await snapshot.take();
       const user1Balance = await nUniswapV3.balanceOf(borrower.address);
       const liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
       expect(user1Balance).to.eq(1);
@@ -1130,8 +1129,6 @@ describe("Uniswap V3", () => {
       );
 
       expect(await nUniswapV3.isAuctioned(1)).to.be.true;
-
-      await snapshot.revert(preLiquidationSnapshot);
     });
 
     it("liquidation failed if underlying erc20 was not active [ @skip-on-coverage ]", async () => {
@@ -1146,9 +1143,9 @@ describe("Uniswap V3", () => {
 
       await waitForTx(await configurator.setReserveActive(dai.address, false));
 
-      const borrowableValue = await convertToCurrencyDecimals(
+      const liquidationValue = await convertToCurrencyDecimals(
         weth.address,
-        "6"
+        "20"
       );
 
       await expect(
@@ -1158,7 +1155,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-            borrowableValue,
+              liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
@@ -1181,9 +1178,9 @@ describe("Uniswap V3", () => {
 
       const preLiquidationSnapshot = await snapshot.take();
 
-      const borrowableValue = await convertToCurrencyDecimals(
+      const liquidationValue = await convertToCurrencyDecimals(
         weth.address,
-        "6"
+        "20"
       );
 
       await waitForTx(
@@ -1193,7 +1190,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-            borrowableValue,
+              liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
@@ -1215,9 +1212,9 @@ describe("Uniswap V3", () => {
 
       await waitForTx(await configurator.setReservePause(weth.address, true));
 
-      const borrowableValue = await convertToCurrencyDecimals(
+      const liquidationValue = await convertToCurrencyDecimals(
         weth.address,
-        "6"
+        "20"
       );
 
       await expect(
@@ -1227,7 +1224,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-            borrowableValue,
+              liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
@@ -1249,9 +1246,9 @@ describe("Uniswap V3", () => {
 
       const preLiquidationSnapshot = await snapshot.take();
 
-      const borrowableValue = await convertToCurrencyDecimals(
+      const liquidationValue = await convertToCurrencyDecimals(
         weth.address,
-        "6"
+        "20"
       );
 
       await waitForTx(
@@ -1261,7 +1258,7 @@ describe("Uniswap V3", () => {
             nftPositionManager.address,
             user1.address,
             1,
-            borrowableValue,
+              liquidationValue,
             true,
             {
               gasLimit: 12_450_000,
@@ -1281,13 +1278,6 @@ describe("Uniswap V3", () => {
         weth,
       } = testEnv;
       const preLiquidationSnapshot = await snapshot.take();
-
-      // start auction
-      await waitForTx(
-        await pool
-          .connect(liquidator.signer)
-          .startAuction(borrower.address, nftPositionManager.address, 1)
-      );
 
       const {startTime, tickLength} = await pool.getAuctionData(
         nUniswapV3.address,
@@ -1327,12 +1317,6 @@ describe("Uniswap V3", () => {
         nftPositionManager,
         nUniswapV3,
       } = testEnv;
-      // start auction
-      await waitForTx(
-        await pool
-          .connect(liquidator.signer)
-          .startAuction(borrower.address, nftPositionManager.address, 1)
-      );
 
       const {startTime, tickLength} = await pool.getAuctionData(
         nUniswapV3.address,
