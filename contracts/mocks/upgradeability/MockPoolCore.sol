@@ -43,7 +43,7 @@ contract PoolCoreV2 is
      * @param provider The address of the PoolAddressesProvider contract
      */
     constructor(IPoolAddressesProvider provider) PoolCore(provider){
-        
+
     }
 
     /// @inheritdoc IPoolCore
@@ -59,7 +59,6 @@ contract PoolCoreV2 is
 
     /// @inheritdoc IPoolCore
     function liquidationERC721(
-        address,
         address,
         address,
         uint256,

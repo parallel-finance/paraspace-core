@@ -122,7 +122,7 @@ interface IPoolCore {
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
-     * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param liquidatedCollateralAmount The amount of collateral received by the liquidator
      * @param liquidator The address of the liquidator
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
@@ -132,7 +132,7 @@ interface IPoolCore {
         address indexed collateralAsset,
         address indexed liquidationAsset,
         address indexed user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         uint256 liquidatedCollateralAmount,
         address liquidator,
         bool receivePToken
@@ -409,12 +409,12 @@ interface IPoolCore {
 
     /**
      * @notice Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
-     * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
+     * - The caller (liquidator) covers `liquidationAmount` amount of debt of the user getting liquidated, and receives
      *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
-     * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
      * to receive the underlying collateral asset directly
      **/
@@ -422,30 +422,11 @@ interface IPoolCore {
         address collateralAsset,
         address liquidationAsset,
         address user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         bool receivePToken
     ) external;
 
     function liquidationERC721(
-        address collateralAsset,
-        address liquidationAsset,
-        address user,
-        uint256 collateralTokenId,
-        uint256 liquidationAmount,
-        bool receiveNToken
-    ) external;
-
-    /**
-     * @notice Function to liquidate an ERC721 of a position if its Health Factor drops below 1. The caller (liquidator)
-     * can only swap it with WETH
-     * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-     * @param user The address of the borrower getting liquidated
-     * @param collateralTokenId TokenId of the NFT collateral
-     * @param liquidationAmount amount of WETH
-     * @param receiveNToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
-     * to receive the underlying collateral asset directly
-     **/
-    function liquidationERC721WithEther(
         address collateralAsset,
         address user,
         uint256 collateralTokenId,

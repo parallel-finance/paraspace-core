@@ -108,16 +108,16 @@ describe("ape coin staking", () => {
       pool,
       bayc,
       nBAYC,
-      dai,
+      weth,
       ape,
     } = testEnv;
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
     nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}]);
 
-    await supplyAndValidate(dai, "100000", liquidator, true, "200000");
+    await supplyAndValidate(weth, "91", liquidator, true, "200000");
 
-    await borrowAndValidate(dai, "15000", user1);
+    await borrowAndValidate(weth, "13", user1);
 
     // drop BAYC price to liquidation levels
     await changePriceAndValidate(bayc, "3");
@@ -134,11 +134,11 @@ describe("ape coin staking", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         bayc.address,
-        dai.address,
         user1.address,
         0,
-        await convertToCurrencyDecimals(dai.address, "15000"),
-        false
+        await convertToCurrencyDecimals(weth.address, "13"),
+        false,
+        {gasLimit: 5000000}
       );
 
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
@@ -150,7 +150,7 @@ describe("ape coin staking", () => {
       pool,
       bayc,
       nBAYC,
-      dai,
+      weth,
       ape,
     } = testEnv;
     const amount = await convertToCurrencyDecimals(ape.address, "20");
@@ -160,7 +160,7 @@ describe("ape coin staking", () => {
 
     await changePriceAndValidate(bayc, "1111");
 
-    await borrowAndValidate(dai, "15000", user1);
+    await borrowAndValidate(weth, "13", user1);
 
     // drop BAYC price to liquidation levels
     await changePriceAndValidate(bayc, "3");
@@ -177,11 +177,11 @@ describe("ape coin staking", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         bayc.address,
-        dai.address,
         user1.address,
         1,
-        await convertToCurrencyDecimals(dai.address, "15000"),
-        true
+        await convertToCurrencyDecimals(weth.address, "13"),
+        true,
+        {gasLimit: 5000000}
       );
 
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
@@ -247,7 +247,7 @@ describe("ape coin staking", () => {
       pool,
       mayc,
       nMAYC,
-      dai,
+      weth,
       ape,
     } = testEnv;
 
@@ -259,7 +259,7 @@ describe("ape coin staking", () => {
 
     await changePriceAndValidate(mayc, "100");
 
-    await borrowAndValidate(dai, "15000", user1);
+    await borrowAndValidate(weth, "13", user1);
 
     // drop MAYC price to liquidation levels
     await changePriceAndValidate(mayc, "3");
@@ -276,11 +276,11 @@ describe("ape coin staking", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         mayc.address,
-        dai.address,
         user1.address,
         0,
-        await convertToCurrencyDecimals(dai.address, "15000"),
-        false
+        await convertToCurrencyDecimals(weth.address, "13"),
+        false,
+        {gasLimit: 5000000}
       );
 
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
@@ -292,7 +292,7 @@ describe("ape coin staking", () => {
       pool,
       mayc,
       nMAYC,
-      dai,
+      weth,
       ape,
     } = testEnv;
 
@@ -304,7 +304,7 @@ describe("ape coin staking", () => {
 
     await changePriceAndValidate(mayc, "100");
 
-    await borrowAndValidate(dai, "15000", user1);
+    await borrowAndValidate(weth, "13", user1);
 
     // drop MAYC price to liquidation levels
     await changePriceAndValidate(mayc, "3");
@@ -321,11 +321,11 @@ describe("ape coin staking", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         mayc.address,
-        dai.address,
         user1.address,
         1,
-        await convertToCurrencyDecimals(dai.address, "15000"),
-        true
+        await convertToCurrencyDecimals(weth.address, "13"),
+        true,
+        {gasLimit: 5000000}
       );
 
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);

@@ -102,6 +102,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -123,7 +124,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: msg.sender,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -144,7 +145,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: address(0),
+                spender: address(0),
                 referralCode: 0
             })
         );
@@ -166,7 +167,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                actualSpender: msg.sender,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -202,6 +203,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
+                spender: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -418,7 +420,7 @@ contract PoolCore is
         address collateralAsset,
         address liquidationAsset,
         address user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         bool receivePToken
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
@@ -429,11 +431,12 @@ contract PoolCore is
             ps._usersConfig,
             DataTypes.ExecuteLiquidationCallParams({
                 reservesCount: ps._reservesCount,
-                liquidationAmount: debtToCover,
+                liquidationAmount: liquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 collateralAsset: collateralAsset,
                 liquidationAsset: liquidationAsset,
                 user: user,
+                liquidator: msg.sender,
                 receiveXToken: receivePToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
@@ -445,10 +448,9 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function liquidationERC721(
         address collateralAsset,
-        address liquidationAsset,
         address user,
         uint256 collateralTokenId,
-        uint256 liquidationAmount,
+        uint256 maxLiquidationAmount,
         bool receiveNToken
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
@@ -459,41 +461,13 @@ contract PoolCore is
             ps._usersConfig,
             DataTypes.ExecuteLiquidationCallParams({
                 reservesCount: ps._reservesCount,
-                liquidationAmount: liquidationAmount,
-                auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
-                liquidationAsset: liquidationAsset,
-                collateralAsset: collateralAsset,
-                collateralTokenId: collateralTokenId,
-                user: user,
-                receiveXToken: receiveNToken,
-                priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
-            })
-        );
-    }
-
-    /// @inheritdoc IPoolCore
-    function liquidationERC721WithEther(
-        address collateralAsset,
-        address user,
-        uint256 collateralTokenId,
-        uint256 liquidationAmount,
-        bool receiveNToken
-    ) external virtual override nonReentrant {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        LiquidationLogic.executeERC721LiquidationWithEther(
-            ps._reserves,
-            ps._reservesList,
-            ps._usersConfig,
-            DataTypes.ExecuteLiquidationCallParams({
-                reservesCount: ps._reservesCount,
-                liquidationAmount: liquidationAmount,
+                liquidationAmount: maxLiquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 liquidationAsset: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
                 collateralTokenId: collateralTokenId,
                 user: user,
+                liquidator: msg.sender,
                 receiveXToken: receiveNToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()

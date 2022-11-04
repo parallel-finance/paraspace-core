@@ -1,6 +1,7 @@
 import {expect} from "chai";
+import {BigNumber} from "ethers";
 import {TestEnv} from "./helpers/make-suite";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
@@ -514,7 +515,7 @@ describe("Uniswap V3", () => {
       );
     });
 
-    it("UniswapV3 asset cannot be auctioned [ @skip-on-coverage ]", async () => {
+    it("UniswapV3 asset can be auctioned [ @skip-on-coverage ]", async () => {
       const {
         users: [borrower, liquidator],
         pool,
@@ -534,38 +535,62 @@ describe("Uniswap V3", () => {
         user: liquidator,
       });
 
+      const preLiquidationSnapshot = await snapshot.take();
       const user1Balance = await nUniswapV3.balanceOf(borrower.address);
       const liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
       expect(user1Balance).to.eq(1);
       expect(liquidatorBalance).to.eq(0);
 
       // try to start auction
-      await expect(
-        pool
+      await waitForTx(
+        await pool
           .connect(liquidator.signer)
           .startAuction(borrower.address, nftPositionManager.address, 1)
-      ).to.be.revertedWith(ProtocolErrors.AUCTION_NOT_ENABLED);
+      );
+
+      expect(await nUniswapV3.isAuctioned(1)).to.be.true;
+
+      await snapshot.revert(preLiquidationSnapshot);
     });
 
     it("univ3 nft can be liquidated - receive UniswapV3 [ @skip-on-coverage ]", async () => {
       const {
-        users: [user1, liquidator],
+        users: [borrower, liquidator],
         nftPositionManager,
+        nUniswapV3,
+        pool,
         weth,
       } = testEnv;
       const preLiquidationSnapshot = await snapshot.take();
 
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, nftPositionManager.address, 1)
+      );
+
+      const {startTime, tickLength} = await pool.getAuctionData(
+        nUniswapV3.address,
+        1
+      );
+
+      // prices drops to ~1 floor price
+      await advanceBlock(
+        startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
+      );
+
       await liquidateAndValidate(
         nftPositionManager,
         weth,
-        "6",
+        "5",
         liquidator,
-        user1,
+        borrower,
         false,
         1
       );
 
-      const user1Balance = await nftPositionManager.balanceOf(user1.address);
+      const user1Balance = await nftPositionManager.balanceOf(borrower.address);
       const liquidatorBalance = await nftPositionManager.balanceOf(
         liquidator.address
       );
@@ -577,12 +602,29 @@ describe("Uniswap V3", () => {
 
     it("univ3 nft can be liquidated - receive nToken [ @skip-on-coverage ]", async () => {
       const {
-        users: [user1, liquidator],
+        users: [borrower, liquidator],
         weth,
         pool,
         nftPositionManager,
         nUniswapV3,
       } = testEnv;
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, nftPositionManager.address, 1)
+      );
+
+      const {startTime, tickLength} = await pool.getAuctionData(
+        nUniswapV3.address,
+        1
+      );
+
+      // prices drops to ~1 floor price
+      await advanceBlock(
+        startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
+      );
+
       const ethAmount = await convertToCurrencyDecimals(weth.address, "6");
       await fund({token: weth, user: liquidator, amount: ethAmount});
       await approveTo({
@@ -591,7 +633,7 @@ describe("Uniswap V3", () => {
         user: liquidator,
       });
 
-      let user1Balance = await nUniswapV3.balanceOf(user1.address);
+      let user1Balance = await nUniswapV3.balanceOf(borrower.address);
       let liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
       expect(user1Balance).to.eq(1);
       expect(liquidatorBalance).to.eq(0);
@@ -601,15 +643,14 @@ describe("Uniswap V3", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             nftPositionManager.address,
-            weth.address,
-            user1.address,
+            borrower.address,
             1,
             ethAmount,
             true
           )
       );
 
-      user1Balance = await nUniswapV3.balanceOf(user1.address);
+      user1Balance = await nUniswapV3.balanceOf(borrower.address);
       liquidatorBalance = await nUniswapV3.balanceOf(liquidator.address);
       expect(user1Balance).to.eq(0);
       expect(liquidatorBalance).to.eq(1);

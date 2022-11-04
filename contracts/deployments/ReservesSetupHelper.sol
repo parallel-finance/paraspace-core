@@ -14,6 +14,7 @@ contract ReservesSetupHelper is Ownable {
     struct ConfigureReserveInput {
         address asset;
         uint256 baseLTV;
+        uint256 liquidationProtocolFeePercentage;
         uint256 liquidationThreshold;
         uint256 liquidationBonus;
         uint256 reserveFactor;
@@ -39,6 +40,11 @@ contract ReservesSetupHelper is Ownable {
                 inputParams[i].liquidationThreshold,
                 inputParams[i].liquidationBonus
             );
+            if (inputParams[i].liquidationProtocolFeePercentage != 0) {
+                configurator.setLiquidationProtocolFee(
+inputParams[i].asset,
+                    inputParams[i].liquidationProtocolFeePercentage);
+            }
             if (inputParams[i].borrowingEnabled) {
                 configurator.setReserveBorrowing(inputParams[i].asset, true);
 
