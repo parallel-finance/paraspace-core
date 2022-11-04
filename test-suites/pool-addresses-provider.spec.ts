@@ -415,7 +415,7 @@ describe("PoolAddressesProvider", () => {
     );
   });
 
-  it("Owner updates the implementation of a proxy which is already initialized", async () => {
+  it("Owner updates the implementation by adding the same selectors", async () => {
     const snapId = await evmSnapshot();
 
     const {addressesProvider, users} = testEnv;
@@ -450,6 +450,92 @@ describe("PoolAddressesProvider", () => {
           ])
         )
     ).to.be.revertedWith("ParaProxy: Can't add function that already exists");
+
+    // Pool address should not change
+    expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
+
+    await evmRevert(snapId);
+  });
+
+  it("Owner updates the implementation of a proxy by updating existing selectors ", async () => {
+    const snapId = await evmSnapshot();
+
+    const {addressesProvider, users} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    const {poolCore, poolCoreSelectors} = await deployPoolComponents(
+      addressesProvider.address
+    );
+
+    // Pool has already a proxy
+    const poolAddress = await addressesProvider.getPool();
+    expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
+
+    // Update the Pool proxy
+
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .updatePoolImpl(
+        [
+          {
+            implAddress: poolCore.address,
+            action: 1,
+            functionSelectors: poolCoreSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x"
+      );
+
+    // Pool address should not change
+    expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
+
+    await evmRevert(snapId);
+  });
+
+  it("Owner updates the implementation of a proxy by deleting existing selectors then adding them", async () => {
+    const snapId = await evmSnapshot();
+
+    const {addressesProvider, users} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    const {poolCore, poolCoreSelectors} = await deployPoolComponents(
+      addressesProvider.address
+    );
+
+    // Pool has already a proxy
+    const poolAddress = await addressesProvider.getPool();
+    expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
+
+    // Update the Pool proxy
+
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .updatePoolImpl(
+        [
+          {
+            implAddress: ZERO_ADDRESS,
+            action: 2,
+            functionSelectors: poolCoreSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x"
+      );
+
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .updatePoolImpl(
+        [
+          {
+            implAddress: poolCore.address,
+            action: 0,
+            functionSelectors: poolCoreSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x"
+      );
 
     // Pool address should not change
     expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
