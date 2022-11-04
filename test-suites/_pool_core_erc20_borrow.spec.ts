@@ -7,7 +7,11 @@ import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {borrowAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {
+  assertHealthFactorCalculation,
+  borrowAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -184,6 +188,76 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
       expect(healthFactor)
         .to.be.most(parseEther("1.1"))
         .to.be.least(parseEther("1.0"));
+    });
+
+    it("TC-erc20-borrow-09 Health factor worses up over time for user with a borrow position due to accrued debt interest", async () => {
+      testEnv = await loadFixture(fixture);
+      const {
+        users: [user1, user2],
+        pool,
+        dai,
+      } = testEnv;
+
+      // User 2 - Deposit 10k DAI
+      await supplyAndValidate(dai, firstDaiDeposit, user2, true);
+      // User 2 - Borrow 5k DAI
+      await borrowAndValidate(dai, "5000", user2);
+
+      const initialHealthFactor1 = (
+        await pool.getUserAccountData(user1.address)
+      ).healthFactor;
+      const initialHealthFactor2 = (
+        await pool.getUserAccountData(user2.address)
+      ).healthFactor;
+
+      // Advance time and blocks
+      await advanceTimeAndBlock(parseInt(ONE_YEAR) * 100);
+
+      // health factor is expected to have worsen for User 2 due to interests on his acquired debt
+      expect(initialHealthFactor2).to.be.gt(
+        (await pool.getUserAccountData(user2.address)).healthFactor
+      );
+      // health factor for user 1 should've remained the same
+      expect(initialHealthFactor1).to.eq(
+        (await pool.getUserAccountData(user1.address)).healthFactor
+      );
+
+      await assertHealthFactorCalculation(user1);
+      await assertHealthFactorCalculation(user2);
+    });
+
+    it("TC-erc20-borrow-10 ERC-721 Health factor worses up over time for user with a borrow position due to accrued debt interest", async () => {
+      testEnv = await loadFixture(fixture);
+      const {
+        users: [user1, user2],
+        pool,
+        dai,
+        bayc,
+      } = testEnv;
+
+      // User 2 - Deposit 10k DAI
+      await supplyAndValidate(bayc, "1", user2, true);
+      // User 2 - Borrow 5k DAI
+      await borrowAndValidate(dai, "5000", user2);
+
+      const initialHealthFactor1 = (
+        await pool.getUserAccountData(user1.address)
+      ).erc721HealthFactor;
+      const initialHealthFactor2 = (
+        await pool.getUserAccountData(user2.address)
+      ).erc721HealthFactor;
+
+      // Advance time and blocks
+      await advanceTimeAndBlock(parseInt(ONE_YEAR) * 100);
+
+      // ERC721 health factor is expected to have worsen for User 2 due to interests on his acquired debt
+      expect(initialHealthFactor2).to.be.gt(
+        (await pool.getUserAccountData(user2.address)).erc721HealthFactor
+      );
+      // health factor for user 1 should've remained the same
+      expect(initialHealthFactor1).to.eq(
+        (await pool.getUserAccountData(user1.address)).erc721HealthFactor
+      );
     });
   });
 });
