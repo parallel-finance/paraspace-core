@@ -73,9 +73,9 @@ test-pool-upgrade:
 test-ntoken:
 	make TEST_TARGET=ntoken.spec.ts test
 
-.PHONY: test-ntoken-punk
-test-ntoken-punk:
-	make TEST_TARGET=ntoken-punk.spec.ts test
+.PHONY: test-punk-gateway
+test-punk-gateway:
+	make TEST_TARGET=_gateway_punk.spec.ts test
 
 .PHONY: test-liquidation
 test-liquidation:
