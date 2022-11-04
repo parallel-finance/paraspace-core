@@ -11,6 +11,8 @@ enum XTokenType {
     NToken,
     NTokenMoonBirds,
     NTokenUniswapV3,
+    NTokenBAYC,
+    NTokenMAYC,
     PToken,
     DelegationAwarePToken,
     RebasingPToken,
