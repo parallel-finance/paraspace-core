@@ -472,30 +472,28 @@ describe("PoolAddressesProvider", () => {
     expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
 
     const poolAddressId = utils.formatBytes32String("POOL");
-    const proxyAddress = await addressesProvider.getAddress(poolAddressId);
 
     // Update the Pool proxy
 
     await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .updatePoolImpl(
-          [
-            {
-              implAddress: poolCore.address,
-              action: 1,
-              functionSelectors: poolCoreSelectors,
-            },
-          ],
-          ZERO_ADDRESS,
-          '0x'
-        )
+      .connect(currentAddressesProviderOwner.signer)
+      .updatePoolImpl(
+        [
+          {
+            implAddress: poolCore.address,
+            action: 1,
+            functionSelectors: poolCoreSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x"
+      );
 
     // Pool address should not change
     expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
 
     await evmRevert(snapId);
   });
-
 
   it("Owner updates the implementation of a proxy by deleting existing selectors then adding them", async () => {
     const snapId = await evmSnapshot();
@@ -512,7 +510,6 @@ describe("PoolAddressesProvider", () => {
     expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
 
     const poolAddressId = utils.formatBytes32String("POOL");
-    const proxyAddress = await addressesProvider.getAddress(poolAddressId);
 
     // Update the Pool proxy
 
@@ -527,9 +524,9 @@ describe("PoolAddressesProvider", () => {
           },
         ],
         ZERO_ADDRESS,
-        '0x'
-      )
-  
+        "0x"
+      );
+
     await addressesProvider
       .connect(currentAddressesProviderOwner.signer)
       .updatePoolImpl(
@@ -541,8 +538,8 @@ describe("PoolAddressesProvider", () => {
           },
         ],
         ZERO_ADDRESS,
-        '0x'
-      )
+        "0x"
+      );
 
     // Pool address should not change
     expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
