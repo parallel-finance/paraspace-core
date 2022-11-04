@@ -33,7 +33,7 @@ describe("ParaSpaceOracle", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     mockToken = await deployMintableERC20(["MOCK", "MOCK", "18"]);
-    assetPrice = getParaSpaceConfig().Mocks.AllAssetsInitialPrices.WETH;
+    assetPrice = getParaSpaceConfig().Mocks!.AllAssetsInitialPrices.WETH;
     mockAggregator = await deployMockAggregator("MOCK", assetPrice);
   });
 

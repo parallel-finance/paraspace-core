@@ -38,7 +38,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     );
   });
 
-  it("TC-punks-gateway-01 User can mint PUNKS and offer them for sale", async () => {
+  it("User 3 can mint PUNKS and offer them for sale", async () => {
     const {
       cryptoPunksMarket,
       users: [, , user3],
@@ -64,7 +64,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     );
   });
 
-  it("TC-punks-gateway-02 User can supply WPUNK", async () => {
+  it("User 3 deposits WPUNK", async () => {
     const {
       wPunk,
       nWPunk,
@@ -104,14 +104,14 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(wPunkBalance).to.be.equal(0);
   });
 
-  it("TC-punks-gateway-03 User tries to withdraw the deposited WPUNK without paying borrowing accrued interest (should fail)", async () => {
+  it("User 2 deposits 10k DAI and User 3 borrows 8K DAI", async () => {
     const {
       dai,
       variableDebtDai,
       users: [, , user3],
       gatewayAdmin: user4,
-      wPunkGateway,
       pool,
+      protocolDataProvider,
     } = testEnv;
 
     await waitForTx(
@@ -143,12 +143,23 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
         .borrow(dai.address, borrowAmount, "0", user3.address)
     );
 
+    await variableDebtDai.balanceOf(user3.address);
+
+    await protocolDataProvider.getUserReserveData(dai.address, user3.address);
+  });
+
+  it("User 3 tries to withdraw the deposited WPUNK without paying the accrued interest (should fail)", async () => {
+    const {
+      users: [, , user3],
+      wPunkGateway,
+    } = testEnv;
+
     await expect(
       wPunkGateway.connect(user3.signer).withdrawPunk([0], user3.address)
     ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
   });
 
-  it("TC-punks-gateway-04 User tries to remove the deposited WPUNK from collateral without paying the accrued interest (should fail)", async () => {
+  it("User 3 tries to withdraw the deposited WPUNK from collateral without paying the accrued interest (should fail)", async () => {
     const {
       wPunk,
       users: [, , user3],
@@ -164,7 +175,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     );
   });
 
-  it("TC-punks-gateway-05 User with a borrow position tries to send the nToken to another user (should fail)", async () => {
+  it("User 3 tries to send the nToken to User 4 (should fail)", async () => {
     const {
       nWPunk,
       users: [, , user3],
@@ -172,13 +183,11 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     } = testEnv;
 
     await expect(
-      nWPunk.connect(user3.signer).transferFrom(user3.address, user4.address, 0)
-    ).to.be.revertedWith(
-      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-    );
+      nWPunk.connect(user3.signer).transferFrom(user3.address, user4.address, 1)
+    ).to.be.revertedWith("ERC721: operator query for nonexistent token");
   });
 
-  it("TC-punks-gateway-06 User adds enough collateral and then can remove his WPUNK from collateral without paying the accrued interest", async () => {
+  it("User 3 adds 20K dai as collateral and then removes their WPUNK from collateral without paying the accrued interest", async () => {
     const {
       dai,
       wPunk,
@@ -240,7 +249,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(nWPunkBalance).to.be.equal(1);
   });
 
-  it("TC-punks-gateway-07 User can redeem the supplied WPunks", async () => {
+  it("User 3 redeems the supplied WPunks", async () => {
     const {
       wPunk,
       nWPunk,
@@ -285,7 +294,33 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(newAvailableToBorrow).to.be.lt(availableToBorrow);
   });
 
-  it("TC-punks-gateway-08 getWPunkAddress() returns correct address", async () => {
+  it("User 3 tries to remove the deposited DAI from collateral without paying the accrued interest (should fail)", async () => {
+    const {
+      dai,
+      users: [, , user3],
+      pool,
+    } = testEnv;
+
+    await expect(
+      pool.connect(user3.signer).setUserUseERC20AsCollateral(dai.address, false)
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
+  });
+
+  it("User 3 tries to withdraw the deposited DAI without paying the accrued interest (should fail)", async () => {
+    const {
+      dai,
+      users: [, , user3],
+      pool,
+    } = testEnv;
+
+    await expect(
+      pool.connect(user3.signer).withdraw(dai.address, [0], user3.address)
+    ).to.be.revertedWith(ProtocolErrors.INVALID_AMOUNT);
+  });
+
+  it("getWPunk address returns correct address", async () => {
     const {
       wPunk,
       users: [, , user3],
@@ -299,7 +334,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(wPunkAddress).to.be.equal(wPunk.address);
   });
 
-  it("TC-punks-gateway-09 wPunkGateway can receive 1 WPUNK via safeTransfer()", async () => {
+  it("wPunkGateway receives 1 WPUNK and 1 PUNK", async () => {
     const {
       users: [, , user3],
       cryptoPunksMarket,
@@ -333,14 +368,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(
       await wPunk.connect(user3.signer).balanceOf(wPunkGateway.address)
     ).to.equal(1);
-  });
 
-  it("TC-punks-gateway-10 wPunkGateway can receive 1 PUNK via transferPunk()", async () => {
-    const {
-      users: [, , user3],
-      cryptoPunksMarket,
-      wPunkGateway,
-    } = testEnv;
     // PUNK
     await waitForTx(
       await cryptoPunksMarket.connect(user3.signer)["getPunk(uint256)"](3)
@@ -362,7 +390,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     ).to.equal(1);
   });
 
-  it("TC-punks-gateway-11 Gateway owner can do emergency WPUNK transfer to user", async () => {
+  it("Owner does emergency wpunk transfer of punk 2 to User 3", async () => {
     const {
       users: [, , user3],
       deployer,
@@ -389,7 +417,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     );
   });
 
-  it("TC-punks-gateway-12 Gateway owner can do emergency PUNK transfer to user", async () => {
+  it("Owner does emergency punk transfer of punk 3 to User 3", async () => {
     const {
       users: [, , user3],
       deployer,

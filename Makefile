@@ -97,9 +97,21 @@ test-liquidation-auction:
 test-liquidation-edge:
 	make TEST_TARGET=liquidation-edge.spec.ts test
 
+.PHONY: test-liquidation-close-factor
+test-liquidation-close-factor:
+	make TEST_TARGET=liquidation-close-factor.spec.ts test
+
 .PHONY: test-liquidation-ptoken
 test-liquidation-ptoken:
 	make TEST_TARGET=liquidation-ptoken.spec.ts test
+
+.PHONY: test-liquidation-underlying
+test-liquidation-underlying:
+	make TEST_TARGET=liquidation-underlying.spec.ts test
+
+.PHONY: test-liquidation-with-fee
+test-liquidation-with-fee:
+	make TEST_TARGET=liquidation-with-fee.spec.ts test
 
 .PHONY: test-configurator-edge
 test-configurator-edge:
@@ -244,6 +256,10 @@ test-scenario:
 .PHONY: test-ui-providers
 test-ui-providers:
 	make TEST_TARGET=_ui_providers.spec.ts test
+
+.PHONY: test-ape-staking
+test-ape-staking:
+	make TEST_TARGET=ape_coin_staking.spec.ts test
 
 .PHONY: run
 run:

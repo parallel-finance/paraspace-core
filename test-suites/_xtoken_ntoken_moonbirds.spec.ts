@@ -122,7 +122,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
       moonbirds,
       nMOONBIRD,
       configurator,
-      dai,
+      weth,
       pool,
     } = testEnv;
 
@@ -133,12 +133,12 @@ describe("MoonBirds nToken and supply while nesting", () => {
       )
     );
 
-    const daiAmount = await convertToCurrencyDecimals(dai.address, "1");
+    const wethAmount = await convertToCurrencyDecimals(weth.address, "0.00092");
     await waitForTx(
-      await dai.connect(liquidator.signer)["mint(uint256)"](daiAmount)
+      await weth.connect(liquidator.signer)["mint(uint256)"](wethAmount)
     );
     await waitForTx(
-      await dai
+      await weth
         .connect(liquidator.signer)
         .approve(pool.address, MAX_UINT_AMOUNT)
     );
@@ -151,10 +151,9 @@ describe("MoonBirds nToken and supply while nesting", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         moonbirds.address,
-        dai.address,
         borrower.address,
         0,
-        daiAmount,
+        wethAmount,
         true
       );
 
@@ -172,7 +171,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
       users: [borrower, , liquidator],
       moonbirds,
       nMOONBIRD,
-      dai,
+      weth,
       pool,
       configurator,
     } = testEnv;
@@ -184,12 +183,12 @@ describe("MoonBirds nToken and supply while nesting", () => {
       )
     );
 
-    const daiAmount = await convertToCurrencyDecimals(dai.address, "1");
+    const wethAmount = await convertToCurrencyDecimals(weth.address, "0.00092");
     await waitForTx(
-      await dai.connect(liquidator.signer)["mint(uint256)"](daiAmount)
+      await weth.connect(liquidator.signer)["mint(uint256)"](wethAmount)
     );
     await waitForTx(
-      await dai
+      await weth
         .connect(liquidator.signer)
         .approve(pool.address, MAX_UINT_AMOUNT)
     );
@@ -202,10 +201,9 @@ describe("MoonBirds nToken and supply while nesting", () => {
       .connect(liquidator.signer)
       .liquidationERC721(
         moonbirds.address,
-        dai.address,
         borrower.address,
         0,
-        daiAmount,
+        wethAmount,
         false
       );
 
