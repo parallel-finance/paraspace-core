@@ -8,7 +8,6 @@ import {
 import {
   convertToCurrencyDecimals,
   createSeaportOrder,
-  getEthersSigners,
 } from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {AdvancedOrder} from "../deploy/helpers/seaport-helpers/types";
@@ -40,10 +39,7 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 import {MintableERC20} from "../types";
-import {
-  getMintableERC20,
-  getMintableERC721,
-} from "../deploy/helpers/contracts-getters";
+import {getMintableERC721} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
   executeLooksrareBuyWithCredit,
@@ -79,30 +75,23 @@ describe("Leveraged Buy - Positive tests", () => {
       conduitKey,
       users: [maker, taker],
     } = testEnv;
-    const startAmount = await convertToCurrencyDecimals(usdt.address, "1000");
-    const endAmount = startAmount; // fixed price, offerer can afford this
+    const startNumber = "1000";
+    const startAmount = await convertToCurrencyDecimals(
+      usdt.address,
+      startNumber
+    );
+    const endAmount = startAmount;
     const nftId = 0;
 
-    // mint USDT to offerer
-    const mintableUsdt = await getMintableERC20(usdt.address);
-    await waitForTx(
-      await mintableUsdt.connect(taker.signer)["mint(uint256)"](startAmount)
-    );
-    expect(await usdt.balanceOf(taker.address)).to.be.equal(startAmount);
-
-    // mint BAYC to offer
-    const mintableBayc = await getMintableERC721(bayc.address);
-    await waitForTx(
-      await mintableBayc.connect(maker.signer)["mint(address)"](maker.address)
-    );
-    expect(await bayc.balanceOf(maker.address)).to.be.equal(1);
-    expect(await bayc.ownerOf(nftId)).to.be.equal(maker.address);
-
+    // mint USDT to offer
+    await mintAndValidate(usdt, startNumber, taker);
+    // mint BAYC to maker
+    await mintAndValidate(bayc, "1", maker);
     // approve BAYC to be transferred by seaport
-    // approve USDT to be transferred by seaport
     await waitForTx(
       await bayc.connect(maker.signer).approve(conduit.address, nftId)
     );
+    // approve USDT to be transferred by seaport
     await waitForTx(
       await usdt.connect(taker.signer).approve(conduit.address, startAmount)
     );
@@ -111,7 +100,6 @@ describe("Leveraged Buy - Positive tests", () => {
       const offers = [
         getOfferOrConsiderationItem(2, bayc.address, nftId, toBN(1), toBN(1)),
       ];
-
       const considerations = [
         getOfferOrConsiderationItem(
           1,
@@ -122,7 +110,6 @@ describe("Leveraged Buy - Positive tests", () => {
           maker.address
         ),
       ];
-
       return createSeaportOrder(
         seaport,
         maker,
@@ -133,19 +120,17 @@ describe("Leveraged Buy - Positive tests", () => {
         conduitKey
       );
     };
-
-    // middleman call seaport to match offer, offerer orders
-    const tx = seaport
-      .connect(taker.signer)
-      .fulfillAdvancedOrder(
-        await getSellOrder(),
-        [],
-        conduitKey,
-        taker.address
-      );
-
-    await (await tx).wait();
-
+    // middleman call seaport to match offer, offer orders
+    await waitForTx(
+      await seaport
+        .connect(taker.signer)
+        .fulfillAdvancedOrder(
+          await getSellOrder(),
+          [],
+          conduitKey,
+          taker.address
+        )
+    );
     expect(await bayc.balanceOf(taker.address)).to.be.equal(1);
     expect(await bayc.ownerOf(nftId)).to.be.equal(taker.address);
     expect(await usdt.balanceOf(maker.address)).to.be.equal(startAmount);
@@ -163,49 +148,26 @@ describe("Leveraged Buy - Positive tests", () => {
       pool,
       users: [maker, taker, middleman, platform],
     } = testEnv;
-    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
-    const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
+    const payNowNumber = "800";
+    const creditNumber = "200";
+    const payNowAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      creditNumber
+    );
     const startAmount = payNowAmount.add(creditAmount);
-    const endAmount = startAmount; // fixed price but offerer cannot afford this
+    const endAmount = startAmount;
     const nftId = "0";
 
-    // mint USDC to offerer and middleman
-    const mintableUsdc = await getMintableERC20(usdc.address);
-    await waitForTx(
-      await mintableUsdc
-        .connect(middleman.signer)
-        ["mint(uint256)"](creditAmount)
-    );
-    await waitForTx(
-      await mintableUsdc.connect(taker.signer)["mint(uint256)"](payNowAmount)
-    );
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(payNowAmount);
-    expect(await usdc.balanceOf(middleman.address)).to.be.equal(creditAmount);
-
-    // middleman supplies USDC to pool to be borrowed by offerer later
-    await waitForTx(
-      await usdc.connect(middleman.signer).approve(pool.address, creditAmount)
-    );
-    await waitForTx(
-      await pool
-        .connect(middleman.signer)
-        .supply(usdc.address, creditAmount, middleman.address, 0)
-    );
-
-    expect(
-      await usdc.balanceOf(
-        (
-          await pool.getReserveData(usdc.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount);
-
-    const mintableMayc = await getMintableERC721(mayc.address);
-    await waitForTx(
-      await mintableMayc.connect(maker.signer)["mint(address)"](maker.address)
-    );
-    expect(await mayc.ownerOf(nftId)).to.be.equal(maker.address);
-
+    // mint USDC to offer
+    await mintAndValidate(usdc, payNowNumber, taker);
+    // middleman supplies USDC to pool to be borrowed by offer later
+    await supplyAndValidate(usdc, creditNumber, middleman, true);
+    // maker mint mayc
+    await mintAndValidate(mayc, "1", maker);
     // approve
     await waitForTx(
       await mayc.connect(maker.signer).approve(conduit.address, nftId)
@@ -242,7 +204,6 @@ describe("Leveraged Buy - Positive tests", () => {
           platform.address
         ),
       ];
-
       return createSeaportOrder(
         seaport,
         maker,
@@ -253,30 +214,29 @@ describe("Leveraged Buy - Positive tests", () => {
         conduitKey
       );
     };
-
     const encodedData = seaport.interface.encodeFunctionData(
       "fulfillAdvancedOrder",
       [await getSellOrder(), [], conduitKey, pool.address]
     );
 
-    const tx = pool.connect(taker.signer).buyWithCredit(
-      PARASPACE_SEAPORT_ID,
-      `0x${encodedData.slice(10)}`,
-      {
-        token: usdc.address,
-        amount: creditAmount,
-        orderId: constants.HashZero,
-        v: 0,
-        r: constants.HashZero,
-        s: constants.HashZero,
-      },
-      0,
-      {
-        gasLimit: 5000000,
-      }
+    await waitForTx(
+      await pool.connect(taker.signer).buyWithCredit(
+        PARASPACE_SEAPORT_ID,
+        `0x${encodedData.slice(10)}`,
+        {
+          token: usdc.address,
+          amount: creditAmount,
+          orderId: constants.HashZero,
+          v: 0,
+          r: constants.HashZero,
+          s: constants.HashZero,
+        },
+        0,
+        {
+          gasLimit: 5000000,
+        }
+      )
     );
-
-    await (await tx).wait();
 
     expect(await mayc.balanceOf(taker.address)).to.be.equal(0);
     expect(await mayc.ownerOf(nftId)).to.be.equal(
@@ -324,15 +284,11 @@ describe("Leveraged Buy - Positive tests", () => {
       "1000"
     );
     const startAmount = payLaterAmount;
-    const endAmount = startAmount; // fixed price but taker cannot afford this
+    const endAmount = startAmount;
     const nftId = 0;
 
-    // mint USDC to middleman (liquidity provider)
-    await mintAndValidate(usdc, middlemanInitialBalance, middleman);
-
-    // middleman supplies USDC to pool to be borrowed by taker later
-    await supplyAndValidate(usdc, middlemanInitialBalance, middleman);
-
+    // mint USDC to middleman (liquidity provider) and supplies USDC to pool to be borrowed by taker later
+    await supplyAndValidate(usdc, middlemanInitialBalance, middleman, true);
     // mint BAYC to maker
     await mintAndValidate(bayc, "1", maker);
 
@@ -362,47 +318,24 @@ describe("Leveraged Buy - Positive tests", () => {
       pool,
       users: [maker, taker, middleman],
     } = testEnv;
-    const payNowAmount = await convertToCurrencyDecimals(dai.address, "800");
-    const creditAmount = await convertToCurrencyDecimals(dai.address, "200");
+    const payNowNumber = "800";
+    const creditNumber = "200";
+    const payNowAmount = await convertToCurrencyDecimals(
+      dai.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      dai.address,
+      creditNumber
+    );
     const startAmount = payNowAmount.add(creditAmount);
     const nftId = 0;
-
-    const mintableDai = await getMintableERC20(dai.address);
-    await waitForTx(
-      await mintableDai.connect(middleman.signer)["mint(uint256)"](creditAmount)
-    );
-    await waitForTx(
-      await mintableDai.connect(taker.signer)["mint(uint256)"](payNowAmount)
-    );
-    expect(await dai.balanceOf(taker.address)).to.be.equal(payNowAmount);
-    expect(await dai.balanceOf(middleman.address)).to.be.equal(creditAmount);
-
-    await waitForTx(
-      await dai.connect(middleman.signer).approve(pool.address, creditAmount)
-    );
-    await waitForTx(
-      await pool
-        .connect(middleman.signer)
-        .supply(dai.address, creditAmount, middleman.address, 0)
-    );
-
-    expect(
-      await dai.balanceOf(
-        (
-          await pool.getReserveData(dai.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount);
-
-    const mintableDoodles = await getMintableERC721(doodles.address);
-    await waitForTx(
-      await mintableDoodles
-        .connect(maker.signer)
-        ["mint(address)"](maker.address)
-    );
-
-    expect(await doodles.ownerOf(nftId)).to.be.equal(maker.address);
-
+    // mint DAI to offer
+    await mintAndValidate(dai, payNowNumber, taker);
+    // middleman supplies DAI to pool to be borrowed by offer later
+    await supplyAndValidate(dai, creditNumber, middleman, true);
+    // maker mint mayc
+    await mintAndValidate(doodles, "1", maker);
     // approve
     await waitForTx(
       await dai.connect(taker.signer).approve(pool.address, payNowAmount)
@@ -439,12 +372,8 @@ describe("Leveraged Buy - Positive tests", () => {
     );
     const startAmount = payLaterAmount;
     const nftId = 0;
-
-    // mint DAI to middleman (liquidity provider)
-    await mintAndValidate(dai, middlemanInitialBalance, middleman);
     // middleman supplies DAI to the pool
-    await supplyAndValidate(dai, middlemanInitialBalance, middleman);
-
+    await supplyAndValidate(dai, middlemanInitialBalance, middleman, true);
     // mint DOODLE to maker
     await mintAndValidate(doodles, "1", maker);
 
@@ -457,7 +386,6 @@ describe("Leveraged Buy - Positive tests", () => {
       maker,
       taker
     );
-
     expect(await doodles.balanceOf(taker.address)).to.be.equal(0);
     expect(await doodles.ownerOf(nftId)).to.be.equal(
       (await pool.getReserveData(doodles.address)).xTokenAddress
@@ -484,7 +412,7 @@ describe("Leveraged Buy - Positive tests", () => {
     const refundAmount = parseEther("1");
     const nftId = "0";
 
-    // middleman supplies ETH to pool to be borrowed by offerer later
+    // middleman supplies ETH to pool to be borrowed by offer later
     await waitForTx(
       await wETHGateway
         .connect(middleman.signer)
@@ -492,7 +420,6 @@ describe("Leveraged Buy - Positive tests", () => {
           value: creditAmount,
         })
     );
-
     // verify pool holds liquidity
     expect(
       await weth.balanceOf(
@@ -503,12 +430,7 @@ describe("Leveraged Buy - Positive tests", () => {
     ).to.be.equal(creditAmount);
 
     // mint MAYC to maker
-    const mintableMayc = await getMintableERC721(mayc.address);
-    await waitForTx(
-      await mintableMayc.connect(maker.signer)["mint(address)"](maker.address)
-    );
-    expect(await mayc.ownerOf(nftId)).to.be.equal(maker.address);
-
+    await mintAndValidate(mayc, "1", maker);
     // approve
     await waitForTx(
       await mayc.connect(maker.signer).approve(conduit.address, nftId)
@@ -520,7 +442,6 @@ describe("Leveraged Buy - Positive tests", () => {
       const offers = [
         getOfferOrConsiderationItem(2, mayc.address, nftId, toBN(1), toBN(1)),
       ];
-
       const considerations = [
         getItemETH(
           startAmount.sub(startAmount.div(100)),
@@ -533,7 +454,6 @@ describe("Leveraged Buy - Positive tests", () => {
           platform.address
         ),
       ];
-
       return createSeaportOrder(
         seaport,
         maker,
@@ -549,27 +469,26 @@ describe("Leveraged Buy - Positive tests", () => {
       "fulfillAdvancedOrder",
       [await getSellOrder(), [], conduitKey, pool.address]
     );
-
     const offerBeforeBalance = await taker.signer.getBalance();
-    const tx = pool.connect(taker.signer).buyWithCredit(
-      PARASPACE_SEAPORT_ID,
-      `0x${encodedData.slice(10)}`,
-      {
-        token: constants.AddressZero,
-        amount: creditAmount,
-        orderId: constants.HashZero,
-        v: 0,
-        r: constants.HashZero,
-        s: constants.HashZero,
-      },
-      0,
-      {
-        gasLimit: 5000000,
-        value: payNowAmount.add(refundAmount),
-      }
+    const txReceipt = await waitForTx(
+      await pool.connect(taker.signer).buyWithCredit(
+        PARASPACE_SEAPORT_ID,
+        `0x${encodedData.slice(10)}`,
+        {
+          token: constants.AddressZero,
+          amount: creditAmount,
+          orderId: constants.HashZero,
+          v: 0,
+          r: constants.HashZero,
+          s: constants.HashZero,
+        },
+        0,
+        {
+          gasLimit: 5000000,
+          value: payNowAmount.add(refundAmount),
+        }
+      )
     );
-
-    const txReceipt = await (await tx).wait();
     const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
 
     expect(await mayc.balanceOf(taker.address)).to.be.equal(0);
@@ -615,7 +534,6 @@ describe("Leveraged Buy - Positive tests", () => {
           value: creditAmount,
         })
     );
-
     // verify pool holds liquidity
     expect(
       await weth.balanceOf(
@@ -626,12 +544,7 @@ describe("Leveraged Buy - Positive tests", () => {
     ).to.be.equal(creditAmount);
 
     // mint MAYC to maker
-    const mintableMayc = await getMintableERC721(mayc.address);
-    await waitForTx(
-      await mintableMayc.connect(maker.signer)["mint(address)"](maker.address)
-    );
-    expect(await mayc.ownerOf(nftId)).to.be.equal(maker.address);
-
+    await mintAndValidate(mayc, "1", maker);
     // approve
     await waitForTx(
       await mayc.connect(maker.signer).approve(conduit.address, nftId)
@@ -646,7 +559,6 @@ describe("Leveraged Buy - Positive tests", () => {
       const offers = [
         getOfferOrConsiderationItem(2, mayc.address, nftId, toBN(1), toBN(1)),
       ];
-
       const considerations = [
         getOfferOrConsiderationItem(
           1,
@@ -665,7 +577,6 @@ describe("Leveraged Buy - Positive tests", () => {
           platform.address
         ),
       ];
-
       return createSeaportOrder(
         seaport,
         maker,
@@ -681,27 +592,26 @@ describe("Leveraged Buy - Positive tests", () => {
       "fulfillAdvancedOrder",
       [await getSellOrder(), [], conduitKey, pool.address]
     );
-
     const offerBeforeBalance = await taker.signer.getBalance();
-    const tx = pool.connect(taker.signer).buyWithCredit(
-      PARASPACE_SEAPORT_ID,
-      `0x${encodedData.slice(10)}`,
-      {
-        token: weth.address,
-        amount: creditAmount,
-        orderId: constants.HashZero,
-        v: 0,
-        r: constants.HashZero,
-        s: constants.HashZero,
-      },
-      0,
-      {
-        gasLimit: 5000000,
-        value: payNowAmount,
-      }
+    const txReceipt = await waitForTx(
+      await pool.connect(taker.signer).buyWithCredit(
+        PARASPACE_SEAPORT_ID,
+        `0x${encodedData.slice(10)}`,
+        {
+          token: weth.address,
+          amount: creditAmount,
+          orderId: constants.HashZero,
+          v: 0,
+          r: constants.HashZero,
+          s: constants.HashZero,
+        },
+        0,
+        {
+          gasLimit: 5000000,
+          value: payNowAmount,
+        }
+      )
     );
-
-    const txReceipt = await (await tx).wait();
     const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
 
     expect(await mayc.balanceOf(taker.address)).to.be.equal(0);
@@ -736,8 +646,8 @@ describe("Leveraged Buy - Positive tests", () => {
       weth,
       users: [maker, taker, middleman],
     } = testEnv;
-    const masGasFeeLeft = parseEther("4");
 
+    const masGasFeeLeft = parseEther("4");
     const totalPayNowAmount = (await taker.signer.getBalance()).sub(
       masGasFeeLeft
     );
@@ -755,7 +665,6 @@ describe("Leveraged Buy - Positive tests", () => {
           value: totalCreditAmount,
         })
     );
-
     // verify pool holds liquidity
     expect(
       await weth.balanceOf(
@@ -782,9 +691,7 @@ describe("Leveraged Buy - Positive tests", () => {
       const offers = [
         getOfferOrConsiderationItem(2, token, nftId, toBN(1), toBN(1)),
       ];
-
       const considerations = [getItemETH(listPrice, listPrice, maker.address)];
-
       return createSeaportOrder(
         seaport,
         maker,
@@ -841,24 +748,24 @@ describe("Leveraged Buy - Positive tests", () => {
     const makerETHBeforeBalance = await maker.signer.getBalance();
     const takerETHBeforeBalance = await taker.signer.getBalance();
 
-    const tx = pool
-      .connect(taker.signer)
-      .batchBuyWithCredit(
-        [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
-        [
-          getEncodedData(orderETH0),
-          getEncodedData(orderETH1),
-          getEncodedData(orderETH2),
-        ],
-        [creditETH0, creditETH1, creditETH2],
-        0,
-        {
-          gasLimit: 5000000,
-          value: totalPayNowAmount,
-        }
-      );
-
-    const txReceipt = await (await tx).wait();
+    const txReceipt = await waitForTx(
+      await pool
+        .connect(taker.signer)
+        .batchBuyWithCredit(
+          [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
+          [
+            getEncodedData(orderETH0),
+            getEncodedData(orderETH1),
+            getEncodedData(orderETH2),
+          ],
+          [creditETH0, creditETH1, creditETH2],
+          0,
+          {
+            gasLimit: 5000000,
+            value: totalPayNowAmount,
+          }
+        )
+    );
     const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
 
     expect(await mayc.balanceOf(maker.address)).to.be.equal(0);
@@ -1040,27 +947,25 @@ describe("Leveraged Buy - Positive tests", () => {
 
     const makerETHBeforeBalance = await maker.signer.getBalance();
     const takerETHBeforeBalance = await taker.signer.getBalance();
-
     const makerWETHBeforeBalance = await weth.balanceOf(maker.address);
-
-    const tx = pool
-      .connect(taker.signer)
-      .batchBuyWithCredit(
-        [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
-        [
-          getEncodedData(orderETH0),
-          getEncodedData(orderETH1),
-          getEncodedData(orderWETH2),
-        ],
-        [creditETH0, creditETH1, creditWETH2],
-        0,
-        {
-          gasLimit: 5000000,
-          value: totalPayNowAmount,
-        }
-      );
-
-    const txReceipt = await (await tx).wait();
+    const txReceipt = await waitForTx(
+      await pool
+        .connect(taker.signer)
+        .batchBuyWithCredit(
+          [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
+          [
+            getEncodedData(orderETH0),
+            getEncodedData(orderETH1),
+            getEncodedData(orderWETH2),
+          ],
+          [creditETH0, creditETH1, creditWETH2],
+          0,
+          {
+            gasLimit: 5000000,
+            value: totalPayNowAmount,
+          }
+        )
+    );
     const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
 
     expect(await mayc.balanceOf(maker.address)).to.be.equal(0);
@@ -1093,70 +998,29 @@ describe("Leveraged Buy - Positive tests", () => {
       pool,
       users: [maker, taker, middleman],
     } = testEnv;
-    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
-    const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
+    const payNowNumber = "800";
+    const creditNumber = "200";
+    const payNowAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      creditNumber
+    );
     const startAmount = payNowAmount.add(creditAmount);
-    const endAmount = startAmount; // fixed price but offerer cannot afford this
+    const endAmount = startAmount; // fixed price but offer cannot afford this
     const nftId = 0;
 
-    // mint USDT to taker and middleman
-    const mintableUsdc = await getMintableERC20(usdc.address);
-    await waitForTx(
-      await mintableUsdc
-        .connect(middleman.signer)
-        ["mint(uint256)"](creditAmount)
-    );
-    await waitForTx(
-      await mintableUsdc.connect(taker.signer)["mint(uint256)"](payNowAmount)
-    );
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(payNowAmount);
-    expect(await usdc.balanceOf(middleman.address)).to.be.equal(creditAmount);
-
-    // middleman supplies USDC to pool to be borrowed by offerer later
-    await waitForTx(
-      await usdc.connect(middleman.signer).approve(pool.address, creditAmount)
-    );
-    await waitForTx(
-      await pool
-        .connect(middleman.signer)
-        .supply(usdc.address, creditAmount, middleman.address, 0)
-    );
-
-    expect(
-      await usdc.balanceOf(
-        (
-          await pool.getReserveData(usdc.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount);
-
-    const mintableBayc = await getMintableERC721(bayc.address);
-    await waitForTx(
-      await mintableBayc.connect(maker.signer)["mint(address)"](maker.address)
-    );
-    expect(await bayc.ownerOf(nftId)).to.be.equal(maker.address);
-
-    await waitForTx(
-      await bayc.connect(maker.signer).approve(pool.address, nftId)
-    );
-    await waitForTx(
-      await pool
-        .connect(maker.signer)
-        .supplyERC721(
-          bayc.address,
-          [{tokenId: nftId, useAsCollateral: true}],
-          maker.address,
-          0
-        )
-    );
-
-    expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
-    expect(await nBAYC.collaterizedBalanceOf(maker.address)).to.be.equal(1);
+    // mint USDC to taker and middleman
+    await mintAndValidate(usdc, payNowNumber, taker);
+    // middleman supplies USDC to pool to be borrowed by offer later
+    await supplyAndValidate(usdc, creditNumber, middleman, true);
+    await supplyAndValidate(bayc, "1", maker, true);
 
     await waitForTx(
       await usdc.connect(taker.signer).approve(pool.address, startAmount)
     );
-
     await executeSeaportBuyWithCredit(
       nBAYC,
       usdc,
@@ -1178,135 +1042,51 @@ describe("Leveraged Buy - Positive tests", () => {
       bayc,
       nBAYC,
       usdc,
-      pausableZone,
-      seaport,
       pool,
-      conduit,
-      conduitKey,
-      users: [offer, offerer, middleman],
+      users: [maker, taker, middleman],
     } = testEnv;
-    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
-    const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
+    const payNowNumber = "800";
+    const creditNumber = "200";
+    const payNowAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      creditNumber
+    );
     const startAmount = payNowAmount.add(creditAmount);
-    const endAmount = startAmount; // fixed price but offerer cannot afford this
-    const nftId = "0";
+    const endAmount = startAmount; // fixed price but offer cannot afford this
+    const nftId = 0;
 
-    // mint USDT to offerer and middleman
-    const mintableUsdt = await getMintableERC20(usdc.address);
-    await waitForTx(
-      await mintableUsdt
-        .connect(middleman.signer)
-        ["mint(uint256)"](creditAmount)
-    );
-    await waitForTx(
-      await mintableUsdt.connect(offerer.signer)["mint(uint256)"](payNowAmount)
-    );
-    expect(await usdc.balanceOf(offerer.address)).to.be.equal(payNowAmount);
-    expect(await usdc.balanceOf(middleman.address)).to.be.equal(creditAmount);
+    // mint USDC to taker and middleman
+    await mintAndValidate(usdc, payNowNumber, taker);
+    // middleman supplies USDC to pool to be borrowed by offer later
+    await supplyAndValidate(usdc, creditNumber, middleman, true);
+    await supplyAndValidate(bayc, "1", maker, true);
 
-    // middleman supplies USDT to pool to be borrowed by offerer later
-    await waitForTx(
-      await usdc.connect(middleman.signer).approve(pool.address, creditAmount)
-    );
     await waitForTx(
       await pool
-        .connect(middleman.signer)
-        .supply(usdc.address, creditAmount, middleman.address, 0)
-    );
-
-    expect(
-      await usdc.balanceOf(
-        (
-          await pool.getReserveData(usdc.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount);
-
-    const mintableBayc = await getMintableERC721(bayc.address);
-    await waitForTx(
-      await mintableBayc.connect(offer.signer)["mint(address)"](offer.address)
-    );
-    expect(await bayc.ownerOf(nftId)).to.be.equal(offer.address);
-
-    await waitForTx(
-      await bayc.connect(offer.signer).approve(pool.address, nftId)
+        .connect(maker.signer)
+        .setUserUseERC721AsCollateral(bayc.address, [0], false)
     );
     await waitForTx(
-      await pool
-        .connect(offer.signer)
-        .supplyERC721(
-          bayc.address,
-          [{tokenId: nftId, useAsCollateral: false}],
-          offer.address,
-          0
-        )
+      await usdc.connect(taker.signer).approve(pool.address, startAmount)
+    );
+    await executeSeaportBuyWithCredit(
+      nBAYC,
+      usdc,
+      startAmount,
+      endAmount,
+      creditAmount,
+      nftId,
+      maker,
+      taker
     );
 
-    expect(await nBAYC.ownerOf(nftId)).to.be.equal(offer.address);
-    expect(await nBAYC.collaterizedBalanceOf(offer.address)).to.be.equal(0);
-
-    await waitForTx(
-      await nBAYC.connect(offer.signer).approve(conduit.address, nftId)
-    );
-
-    await waitForTx(
-      await usdc.connect(offerer.signer).approve(pool.address, startAmount)
-    );
-
-    const getSellOrder = async (): Promise<AdvancedOrder> => {
-      const offers = [
-        getOfferOrConsiderationItem(2, nBAYC.address, nftId, toBN(1), toBN(1)),
-      ];
-
-      const considerations = [
-        getOfferOrConsiderationItem(
-          1,
-          usdc.address,
-          toBN(0),
-          startAmount,
-          endAmount,
-          offer.address
-        ),
-      ];
-
-      return createSeaportOrder(
-        seaport,
-        offer,
-        offers,
-        considerations,
-        2,
-        pausableZone.address,
-        conduitKey
-      );
-    };
-
-    const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
-    );
-
-    const tx = pool.connect(offerer.signer).buyWithCredit(
-      PARASPACE_SEAPORT_ID,
-      `0x${encodedData.slice(10)}`,
-      {
-        token: usdc.address,
-        amount: creditAmount,
-        orderId: constants.HashZero,
-        v: 0,
-        r: constants.HashZero,
-        s: constants.HashZero,
-      },
-      0,
-      {
-        gasLimit: 5000000,
-      }
-    );
-
-    await (await tx).wait();
-
-    expect(await nBAYC.ownerOf(nftId)).to.be.equal(offerer.address);
-    expect(await nBAYC.collaterizedBalanceOf(offerer.address)).to.be.equal(1);
-    expect(await usdc.balanceOf(offer.address)).to.be.equal(startAmount);
+    expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
+    expect(await nBAYC.collaterizedBalanceOf(taker.address)).to.be.equal(1);
+    expect(await usdc.balanceOf(maker.address)).to.be.equal(startAmount);
   });
 
   it("TC-erc721-buy-12: (ERC721 & ERC721) <=> ERC20 via looksrare and x2y2 - partial borrow", async () => {
@@ -1339,7 +1119,6 @@ describe("Leveraged Buy - Positive tests", () => {
           value: payLaterAmount,
         })
     );
-
     // pool holds ETH liquidity
     expect(
       await weth.balanceOf(
@@ -1349,23 +1128,24 @@ describe("Leveraged Buy - Positive tests", () => {
       )
     ).to.be.equal(payLaterAmount);
 
-    const credit = "1000";
-    const creditAmount = await convertToCurrencyDecimals(dai.address, credit);
+    const creditNumber = "1000";
+    const creditAmount = await convertToCurrencyDecimals(
+      dai.address,
+      creditNumber
+    );
     const startAmountX2Y2 = creditAmount;
     const nftIdX2Y2 = 1;
 
     // mint DOODLE to maker
     await mintAndValidate(doodles, "2", maker);
     // middleman supplies DAI
-    await supplyAndValidate(dai, credit, middleman, true);
-
+    await supplyAndValidate(dai, creditNumber, middleman, true);
     // approve
     await waitForTx(
       await doodles
         .connect(maker.signer)
         .approve(erc721Delegate.address, nftIdX2Y2)
     );
-
     // Prepare X2Y2 order data
     waitForTx(
       await x2y2r1
@@ -1391,10 +1171,8 @@ describe("Leveraged Buy - Positive tests", () => {
       pool.address,
       []
     );
-
     // encode order data
     const encodedDataX2Y2 = x2y2r1.interface.encodeFunctionData("run", [input]);
-
     // Prepare Looksrare order
     await waitForTx(
       await doodles
@@ -1431,14 +1209,11 @@ describe("Leveraged Buy - Positive tests", () => {
     );
 
     const signatureHash = await signer._signTypedData(domain, type, value);
-
     const makerOrderWithSignature: MakerOrderWithSignature = {
       ...makerOrder,
       signature: signatureHash,
     };
-
     const vrs = splitSignature(makerOrderWithSignature.signature);
-
     const makerOrderWithVRS: MakerOrderWithVRS = {
       ...makerOrderWithSignature,
       ...vrs,
@@ -1457,36 +1232,35 @@ describe("Leveraged Buy - Positive tests", () => {
       "matchAskWithTakerBidUsingETHAndWETH",
       [takerOrder, makerOrderWithVRS]
     );
-
-    const tx = pool.connect(taker.signer).batchBuyWithCredit(
-      [LOOKSRARE_ID, X2Y2_ID],
-      [`0x${encodedData.slice(10)}`, `0x${encodedDataX2Y2.slice(10)}`],
-      [
+    await waitForTx(
+      await pool.connect(taker.signer).batchBuyWithCredit(
+        [LOOKSRARE_ID, X2Y2_ID],
+        [`0x${encodedData.slice(10)}`, `0x${encodedDataX2Y2.slice(10)}`],
+        [
+          {
+            token: constants.AddressZero,
+            amount: payLaterAmount,
+            orderId: constants.HashZero,
+            v: 0,
+            r: constants.HashZero,
+            s: constants.HashZero,
+          },
+          {
+            token: dai.address,
+            amount: creditAmount,
+            orderId: constants.HashZero,
+            v: 0,
+            r: constants.HashZero,
+            s: constants.HashZero,
+          },
+        ],
+        0,
         {
-          token: constants.AddressZero,
-          amount: payLaterAmount,
-          orderId: constants.HashZero,
-          v: 0,
-          r: constants.HashZero,
-          s: constants.HashZero,
-        },
-        {
-          token: dai.address,
-          amount: creditAmount,
-          orderId: constants.HashZero,
-          v: 0,
-          r: constants.HashZero,
-          s: constants.HashZero,
-        },
-      ],
-      0,
-      {
-        gasLimit: 5000000,
-        value: payNowAmount,
-      }
+          gasLimit: 5000000,
+          value: payNowAmount,
+        }
+      )
     );
-
-    await (await tx).wait();
 
     expect(await doodles.balanceOf(taker.address)).to.be.equal(0);
     expect(await doodles.ownerOf(nftId)).to.be.equal(
@@ -1510,52 +1284,30 @@ describe("Leveraged Buy - Positive tests", () => {
       pool,
       users: [maker, taker, middleman],
     } = testEnv;
-    waitForTx(
+
+    const payNowNumber = "800";
+    const creditNumber = "200";
+    const payNowAmount = await convertToCurrencyDecimals(
+      dai.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      dai.address,
+      creditNumber
+    );
+    const startAmount = payNowAmount.add(creditAmount);
+    const nftId = 0;
+    await waitForTx(
       await x2y2r1
         .connect(deployer.signer)
         .updateSigners([middleman.address], [])
     );
-    const payNowAmount = await convertToCurrencyDecimals(dai.address, "800");
-    const creditAmount = await convertToCurrencyDecimals(dai.address, "200");
-    const startAmount = payNowAmount.add(creditAmount);
-    const nftId = 0;
 
-    const mintableDai = await getMintableERC20(dai.address);
-    await waitForTx(
-      await mintableDai.connect(middleman.signer)["mint(uint256)"](creditAmount)
-    );
-    await waitForTx(
-      await mintableDai.connect(taker.signer)["mint(uint256)"](payNowAmount)
-    );
-    expect(await dai.balanceOf(taker.address)).to.be.equal(payNowAmount);
-    expect(await dai.balanceOf(middleman.address)).to.be.equal(creditAmount);
-
-    await waitForTx(
-      await dai.connect(middleman.signer).approve(pool.address, creditAmount)
-    );
-    await waitForTx(
-      await pool
-        .connect(middleman.signer)
-        .supply(dai.address, creditAmount, middleman.address, 0)
-    );
-
-    expect(
-      await dai.balanceOf(
-        (
-          await pool.getReserveData(dai.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount);
-
-    const mintableDoodles = await getMintableERC721(doodles.address);
-    await waitForTx(
-      await mintableDoodles
-        .connect(maker.signer)
-        ["mint(address)"](maker.address)
-    );
-
-    expect(await doodles.ownerOf(nftId)).to.be.equal(maker.address);
-
+    // mint USDC to taker and middleman
+    await mintAndValidate(dai, payNowNumber, taker);
+    // middleman supplies USDC to pool to be borrowed by offer later
+    await supplyAndValidate(dai, creditNumber, middleman, true);
+    await mintAndValidate(doodles, "1", maker);
     // approve
     await waitForTx(
       await dai.connect(taker.signer).approve(pool.address, payNowAmount)
@@ -1580,7 +1332,7 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await dai.balanceOf(maker.address)).to.be.equal(startAmount);
   });
 
-  it("TC-erc721-buy-014: ERC721 <=> ERC20 via x2y2 - full borrow", async () => {
+  it("TC-erc721-buy-14: ERC721 <=> ERC20 via x2y2 - full borrow", async () => {
     const {
       doodles,
       dai,
@@ -1588,15 +1340,18 @@ describe("Leveraged Buy - Positive tests", () => {
       deployer,
       users: [maker, taker, middleman],
     } = testEnv;
-    const credit = "1000";
-    const creditAmount = await convertToCurrencyDecimals(dai.address, credit);
+    const creditNumber = "1000";
+    const creditAmount = await convertToCurrencyDecimals(
+      dai.address,
+      creditNumber
+    );
     const startAmount = creditAmount;
     const nftId = 0;
 
     // mint DOODLE to maker
     await mintAndValidate(doodles, "1", maker);
     // middleman supplies DAI to the pool
-    await supplyAndValidate(dai, credit, middleman, true);
+    await supplyAndValidate(dai, creditNumber, middleman, true);
 
     await executeX2Y2BuyWithCredit(
       doodles,
@@ -1636,10 +1391,8 @@ describe("Leveraged Buy - Positive tests", () => {
 
     // mint DAI to taker
     await mintAndValidate(dai, takerInitialBalance, taker);
-
     // mint DOODLE to maker
     await mintAndValidate(doodles, "1", maker);
-
     // approve
     await waitForTx(
       await doodles
@@ -1650,16 +1403,14 @@ describe("Leveraged Buy - Positive tests", () => {
       await dai.connect(taker.signer).approve(pool.address, payNowAmount)
     );
 
-    expect(
-      await executeLooksrareBuyWithCredit(
-        doodles,
-        dai,
-        startAmount,
-        payLaterAmount,
-        nftId,
-        maker,
-        taker
-      )
+    await executeLooksrareBuyWithCredit(
+      doodles,
+      dai,
+      startAmount,
+      payLaterAmount,
+      nftId,
+      maker,
+      taker
     );
   });
 });
@@ -1869,25 +1620,20 @@ describe("Leveraged Buy - Negative tests", () => {
     const {
       bayc,
       dai,
+      oracle,
       users: [maker, taker],
-      paraspaceOracle,
       protocolDataProvider,
     } = testEnv;
-    const [deployer] = await getEthersSigners();
 
     // drop NFT price enough so that the NFT cannot cover a paylater of 200 DAI
     await changePriceAndValidate(bayc, "0.5");
 
-    const nftPrice = await paraspaceOracle
-      .connect(deployer)
-      .getAssetPrice(bayc.address);
+    const nftPrice = await oracle.getAssetPrice(bayc.address);
     const ltvRatio = (
       await protocolDataProvider.getReserveConfigurationData(bayc.address)
     ).ltv;
     const availableToBorrowInBaseUnits = nftPrice.mul(ltvRatio).div(10000);
-    const daiPrice = await paraspaceOracle
-      .connect(deployer)
-      .getAssetPrice(dai.address);
+    const daiPrice = await oracle.getAssetPrice(dai.address);
     // this is how much DAI I can borrow by putting this NFT in collateral
     const availableToBorrowInDai =
       +formatEther(availableToBorrowInBaseUnits.toString()) /
