@@ -473,10 +473,10 @@ library MarketplaceLogic {
                 Errors.INVALID_ASSET_TYPE
             );
 
+            // underlyingAsset
             address token = item.token;
             uint256 tokenId = item.identifierOrCriteria;
-            uint256[] memory tokenIds = new uint256[](1);
-            tokenIds[0] = tokenId;
+            // NToken
             vars.xTokenAddress = reservesData[token].xTokenAddress;
 
             // item.token == NToken
@@ -485,26 +485,9 @@ library MarketplaceLogic {
                     .UNDERLYING_ASSET_ADDRESS();
                 bool isNToken = reservesData[underlyingAsset].xTokenAddress ==
                     token;
-                require(
-                    INToken(token).getXTokenType() !=
-                        XTokenType.NTokenUniswapV3,
-                    Errors.UNIV3_NOT_ALLOWED
-                );
                 require(isNToken, Errors.ASSET_NOT_LISTED);
-                IERC721(token).safeTransferFrom(
-                    address(this),
-                    onBehalfOf,
-                    tokenId
-                );
-                SupplyLogic.executeCollateralizeERC721(
-                    reservesData,
-                    userConfig,
-                    underlyingAsset,
-                    tokenIds,
-                    onBehalfOf
-                );
-                // No need to supply anymore because it's already NToken
-                continue;
+                vars.xTokenAddress = token;
+                token = underlyingAsset;
             }
 
             require(
@@ -512,19 +495,16 @@ library MarketplaceLogic {
                     XTokenType.NTokenUniswapV3,
                 Errors.UNIV3_NOT_ALLOWED
             );
+
             // item.token == underlyingAsset but supplied after listing/offering
             // so NToken is transferred instead
             if (INToken(vars.xTokenAddress).ownerOf(tokenId) == address(this)) {
-                IERC721(vars.xTokenAddress).safeTransferFrom(
-                    address(this),
-                    onBehalfOf,
-                    tokenId
-                );
-                SupplyLogic.executeCollateralizeERC721(
+                _transferAndCollateralize(
                     reservesData,
                     userConfig,
+                    vars,
                     token,
-                    tokenIds,
+                    tokenId,
                     onBehalfOf
                 );
                 continue;
@@ -608,5 +588,30 @@ library MarketplaceLogic {
             );
             vars.ethLeft = 0;
         }
+    }
+
+    function _transferAndCollateralize(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.UserConfigurationMap storage userConfig,
+        MarketplaceLocalVars memory vars,
+        address token,
+        uint256 tokenId,
+        address onBehalfOf
+    ) internal {
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+
+        IERC721(vars.xTokenAddress).safeTransferFrom(
+            address(this),
+            onBehalfOf,
+            tokenId
+        );
+        SupplyLogic.executeCollateralizeERC721(
+            reservesData,
+            userConfig,
+            token,
+            tokenIds,
+            onBehalfOf
+        );
     }
 }
