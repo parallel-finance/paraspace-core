@@ -1,14 +1,10 @@
 import {expect} from "chai";
-import {
-  advanceTimeAndBlock,
-  getParaSpaceConfig,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {getEthersSigners} from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
-import {utils, BigNumber} from "ethers";
+import {utils} from "ethers";
 import {getNFTFloorOracle} from "../deploy/helpers/contracts-getters";
 import {deployERC721OracleWrapper} from "../deploy/helpers/contracts-deployments";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -17,13 +13,9 @@ import {testEnvFixture} from "./helpers/setup-env";
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
   let testEnv: TestEnv;
-  let baycFloorPrice: BigNumber;
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    baycFloorPrice = BigNumber.from(
-      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.BAYC
-    );
   });
 
   before(async () => {
