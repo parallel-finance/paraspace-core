@@ -208,13 +208,11 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function withdraw(address asset, uint256 amount, address to)
-        external
-        virtual
-        override
-        nonReentrant
-        returns (uint256)
-    {
+    function withdraw(
+        address asset,
+        uint256 amount,
+        address to
+    ) external virtual override nonReentrant returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
@@ -283,13 +281,11 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function repay(address asset, uint256 amount, address onBehalfOf)
-        external
-        virtual
-        override
-        nonReentrant
-        returns (uint256)
-    {
+    function repay(
+        address asset,
+        uint256 amount,
+        address onBehalfOf
+    ) external virtual override nonReentrant returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
@@ -809,11 +805,12 @@ contract PoolCore is
     }
 
     // This function is necessary when receive erc721 from looksrare
-    function onERC721Received(address, address, uint256, bytes memory)
-        external
-        virtual
-        returns (bytes4)
-    {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external virtual returns (bytes4) {
         return this.onERC721Received.selector;
     }
 

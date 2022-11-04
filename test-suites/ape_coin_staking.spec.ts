@@ -1,25 +1,17 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {
-  getMockAggregator,
-  getPoolProxy,
-  getProtocolDataProvider,
-} from "../deploy/helpers/contracts-getters";
+import {getMockAggregator} from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {waitForTx} from "../deploy/helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
 import {
   borrowAndValidate,
   changePriceAndValidate,
-  repayAndValidate,
   supplyAndValidate,
   switchCollateralAndValidate,
-  withdrawAndValidate,
 } from "./helpers/validated-steps";
 
 describe("ape coin staking", () => {
@@ -30,7 +22,6 @@ describe("ape coin staking", () => {
       users: [user1],
       bayc,
       mayc,
-      nBAYC,
       ape,
       apeCoinStaking,
     } = testEnv;
@@ -57,10 +48,8 @@ describe("ape coin staking", () => {
   it("User 1 stakes some apecoing with their BAYC", async () => {
     const {
       users: [user1],
-      bayc,
       nBAYC,
       ape,
-      mayc,
     } = testEnv;
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
@@ -81,13 +70,10 @@ describe("ape coin staking", () => {
   it("User 1 claim the full staked rewards", async () => {
     const {
       users: [user1],
-      bayc,
       nBAYC,
       ape,
       apeCoinStaking,
     } = testEnv;
-
-    const amount = await convertToCurrencyDecimals(ape.address, "20");
 
     const pendingRewards = await apeCoinStaking.pendingRewards(
       1,
@@ -105,10 +91,8 @@ describe("ape coin staking", () => {
   it("User 1 withdraw the full staked balance + rewards", async () => {
     const {
       users: [user1],
-      bayc,
       nBAYC,
       ape,
-      apeCoinStaking,
     } = testEnv;
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
@@ -126,7 +110,6 @@ describe("ape coin staking", () => {
       nBAYC,
       dai,
       ape,
-      apeCoinStaking,
     } = testEnv;
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
@@ -145,7 +128,6 @@ describe("ape coin staking", () => {
         .connect(liquidator.signer)
         .startAuction(user1.address, bayc.address, 0)
     );
-    const {startTime, tickLength} = await pool.getAuctionData(nBAYC.address, 0);
 
     // try to liquidate the NFT
     await pool
@@ -189,7 +171,6 @@ describe("ape coin staking", () => {
         .connect(liquidator.signer)
         .startAuction(user1.address, bayc.address, 1)
     );
-    const {startTime, tickLength} = await pool.getAuctionData(nBAYC.address, 0);
 
     // try to liquidate the NFT
     await pool
@@ -228,13 +209,10 @@ describe("ape coin staking", () => {
   it("User 1 claim the full staked MAYC rewards", async () => {
     const {
       users: [user1],
-      mayc,
       nMAYC,
       ape,
       apeCoinStaking,
     } = testEnv;
-
-    const amount = await convertToCurrencyDecimals(ape.address, "20");
 
     const pendingRewards = await apeCoinStaking.pendingRewards(
       2,
@@ -252,19 +230,11 @@ describe("ape coin staking", () => {
   it("User 1 withdraw the full staked balance + rewards", async () => {
     const {
       users: [user1],
-      mayc,
       nMAYC,
       ape,
-      apeCoinStaking,
     } = testEnv;
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
-
-    const pendingRewards = await apeCoinStaking.pendingRewards(
-      2,
-      nMAYC.address,
-      "0"
-    );
 
     await nMAYC
       .connect(user1.signer)
@@ -279,7 +249,6 @@ describe("ape coin staking", () => {
       nMAYC,
       dai,
       ape,
-      apeCoinStaking,
     } = testEnv;
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
@@ -301,7 +270,6 @@ describe("ape coin staking", () => {
         .connect(liquidator.signer)
         .startAuction(user1.address, mayc.address, 0)
     );
-    const {startTime, tickLength} = await pool.getAuctionData(nMAYC.address, 0);
 
     // try t1o liquidate the NFT
     await pool
@@ -326,7 +294,6 @@ describe("ape coin staking", () => {
       nMAYC,
       dai,
       ape,
-      apeCoinStaking,
     } = testEnv;
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
@@ -348,7 +315,6 @@ describe("ape coin staking", () => {
         .connect(liquidator.signer)
         .startAuction(user1.address, mayc.address, 1)
     );
-    const {startTime, tickLength} = await pool.getAuctionData(nMAYC.address, 0);
 
     // try to liquidate the NFT
     await pool

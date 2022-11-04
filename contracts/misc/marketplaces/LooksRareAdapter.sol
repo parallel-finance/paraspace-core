@@ -64,12 +64,9 @@ contract LooksRareAdapter is IMarketplace {
         orderInfo.consideration = consideration;
     }
 
-    function getBidOrderInfo(bytes memory /*params*/)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory)
-    {
+    function getBidOrderInfo(
+        bytes memory /*params*/
+    ) external pure override returns (DataTypes.OrderInfo memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 

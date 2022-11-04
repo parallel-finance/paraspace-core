@@ -111,7 +111,11 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
     function nestingPeriod(uint256 tokenId)
         external
         view
-        returns (bool nesting, uint256 current, uint256 total)
+        returns (
+            bool nesting,
+            uint256 current,
+            uint256 total
+        )
     {
         return IMoonBird(_underlyingAsset).nestingPeriod(tokenId);
     }

@@ -285,12 +285,11 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721-transferFrom}.
      */
-    function transferFrom(address from, address to, uint256 tokenId)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external virtual override nonReentrant {
         //solhint-disable-next-line max-line-length
         require(
             _isApprovedOrOwner(_msgSender(), tokenId),
@@ -303,12 +302,11 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721-safeTransferFrom}.
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external virtual override nonReentrant {
         _safeTransferFrom(from, to, tokenId, "");
     }
 
@@ -534,10 +532,11 @@ abstract contract MintableIncentivizedERC721 is
      *
      * Emits a {Transfer} event.
      */
-    function _transfer(address from, address to, uint256 tokenId)
-        internal
-        virtual
-    {
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {
         require(
             ownerOf(tokenId) == from,
             "ERC721: transfer from incorrect owner"
@@ -595,10 +594,11 @@ abstract contract MintableIncentivizedERC721 is
      *
      * Emits a {ApprovalForAll} event.
      */
-    function _setApprovalForAll(address owner, address operator, bool approved)
-        internal
-        virtual
-    {
+    function _setApprovalForAll(
+        address owner,
+        address operator,
+        bool approved
+    ) internal virtual {
         require(owner != operator, "ERC721: approve to caller");
         _operatorApprovals[owner][operator] = approved;
         emit ApprovalForAll(owner, operator, approved);
@@ -607,11 +607,11 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev update collateral information on transfer
      */
-    function _transferCollaterizable(address from, address to, uint256 tokenId)
-        internal
-        virtual
-        returns (bool isUsedAsCollateral_)
-    {
+    function _transferCollaterizable(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual returns (bool isUsedAsCollateral_) {
         isUsedAsCollateral_ = _isUsedAsCollateral[tokenId];
 
         if (from != to && isUsedAsCollateral_) {
@@ -831,10 +831,11 @@ abstract contract MintableIncentivizedERC721 is
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
-        internal
-        virtual
-    {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {
         // super._beforeTokenTransfer(from, to, tokenId);
 
         // TODO remove the if (from == 0) and (to == 0) since they are handled in mint and burn already

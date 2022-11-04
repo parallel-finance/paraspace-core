@@ -54,6 +54,7 @@ abstract contract NTokenApeStaking is NToken {
      */
     function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
         external
+        nonReentrant
     {
         uint256 totalAmount = 0;
 
@@ -81,6 +82,7 @@ abstract contract NTokenApeStaking is NToken {
      */
     function claimApeCoin(uint256[] calldata _nfts, address _recipient)
         external
+        nonReentrant
     {
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
@@ -100,7 +102,7 @@ abstract contract NTokenApeStaking is NToken {
     function withdrawApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts,
         address _recipient
-    ) external {
+    ) external nonReentrant {
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 ownerOf(_nfts[index].tokenId) == msg.sender,
@@ -114,12 +116,11 @@ abstract contract NTokenApeStaking is NToken {
     /**
      * @notice Overrides the transferOnLiquidation from NToken to withdraw all staked and pending rewards before transfer the asset on liquidation
      */
-    function transferOnLiquidation(address from, address to, uint256 tokenId)
-        external
-        override
-        onlyPool
-        nonReentrant
-    {
+    function transferOnLiquidation(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external override onlyPool nonReentrant {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         _withdraw(tokenIds, from);

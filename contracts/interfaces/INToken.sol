@@ -108,8 +108,11 @@ interface INToken is
      * @param to The recipient
      * @param tokenId The id of the token getting transferred
      **/
-    function transferOnLiquidation(address from, address to, uint256 tokenId)
-        external;
+    function transferOnLiquidation(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /**
      * @notice Transfers the underlying asset to `target`.
@@ -141,7 +144,11 @@ interface INToken is
      * @param to The address of the recipient
      * @param amount The amount being rescued
      **/
-    function rescueERC20(address token, address to, uint256 amount) external;
+    function rescueERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external;
 
     /**
      * @notice Rescue ERC721 Token.
@@ -149,8 +156,11 @@ interface INToken is
      * @param to The address of the recipient
      * @param ids The ids of the tokens being rescued
      **/
-    function rescueERC721(address token, address to, uint256[] calldata ids)
-        external;
+    function rescueERC721(
+        address token,
+        address to,
+        uint256[] calldata ids
+    ) external;
 
     /**
      * @notice Rescue ERC1155 Token.

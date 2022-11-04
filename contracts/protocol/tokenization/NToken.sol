@@ -116,30 +116,28 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     /// @inheritdoc INToken
-    function transferOnLiquidation(address from, address to, uint256 value)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
+    function transferOnLiquidation(
+        address from,
+        address to,
+        uint256 value
+    ) external virtual override onlyPool nonReentrant {
         _transfer(from, to, value, false);
     }
 
-    function rescueERC20(address token, address to, uint256 amount)
-        external
-        override
-        onlyPoolAdmin
-    {
+    function rescueERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external override onlyPoolAdmin {
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
     }
 
-    function rescueERC721(address token, address to, uint256[] calldata ids)
-        external
-        override
-        onlyPoolAdmin
-    {
+    function rescueERC721(
+        address token,
+        address to,
+        uint256[] calldata ids
+    ) external override onlyPoolAdmin {
         require(
             token != _underlyingAsset,
             Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
@@ -231,9 +229,12 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      * @param tokenId The amount getting transferred
      * @param validate True if the transfer needs to be validated, false otherwise
      **/
-    function _transfer(address from, address to, uint256 tokenId, bool validate)
-        internal
-    {
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        bool validate
+    ) internal {
         address underlyingAsset = _underlyingAsset;
 
         uint256 fromBalanceBefore = collaterizedBalanceOf(from);
@@ -259,19 +260,20 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      * @param to The destination address
      * @param tokenId The token id getting transferred
      **/
-    function _transfer(address from, address to, uint256 tokenId)
-        internal
-        override
-    {
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override {
         _transfer(from, to, tokenId, true);
     }
 
-    function onERC721Received(address, address, uint256, bytes memory)
-        external
-        virtual
-        override
-        returns (bytes4)
-    {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external virtual override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 

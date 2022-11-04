@@ -97,10 +97,11 @@ interface IRewardsDistributor {
      * @param reward The reward token of the incentivized asset
      * @return The current user asset index, not including new distributions
      **/
-    function getUserAssetIndex(address user, address asset, address reward)
-        external
-        view
-        returns (uint256);
+    function getUserAssetIndex(
+        address user,
+        address asset,
+        address reward
+    ) external view returns (uint256);
 
     /**
      * @dev Returns the configuration of the distribution reward for a certain asset
@@ -114,7 +115,12 @@ interface IRewardsDistributor {
     function getRewardsData(address asset, address reward)
         external
         view
-        returns (uint256, uint256, uint256, uint256);
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
     /**
      * @dev Returns the list of available reward token addresses of an incentivized asset

@@ -61,8 +61,11 @@ interface IPToken is
      * @param to The recipient
      * @param value The amount of tokens getting transferred
      **/
-    function transferOnLiquidation(address from, address to, uint256 value)
-        external;
+    function transferOnLiquidation(
+        address from,
+        address to,
+        uint256 value
+    ) external;
 
     /**
      * @notice Transfers the underlying asset to `target`.
@@ -136,5 +139,9 @@ interface IPToken is
      * @param to The address of the recipient
      * @param amount The amount of token to transfer
      */
-    function rescueTokens(address token, address to, uint256 amount) external;
+    function rescueTokens(
+        address token,
+        address to,
+        uint256 amount
+    ) external;
 }

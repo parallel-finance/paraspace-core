@@ -40,7 +40,11 @@ contract WPunkGateway is
      * @param _wpunk Address of the Wrapped Punk contract
      * @param _pool Address of the proxy pool of this contract
      **/
-    constructor(address _punk, address _wpunk, address _pool) {
+    constructor(
+        address _punk,
+        address _wpunk,
+        address _pool
+    ) {
         punk = _punk;
         wpunk = _wpunk;
         pool = _pool;
@@ -195,10 +199,11 @@ contract WPunkGateway is
      * @param to recipient of the transfer
      * @param tokenId tokenId to send
      */
-    function emergencyTokenTransfer(address from, address to, uint256 tokenId)
-        external
-        onlyOwner
-    {
+    function emergencyTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external onlyOwner {
         IERC721(address(WPunk)).safeTransferFrom(from, to, tokenId);
     }
 
@@ -222,12 +227,12 @@ contract WPunkGateway is
         return address(WPunk);
     }
 
-    function onERC721Received(address, address, uint256, bytes memory)
-        public
-        virtual
-        override
-        returns (bytes4)
-    {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) public virtual override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

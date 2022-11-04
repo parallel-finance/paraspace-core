@@ -286,9 +286,11 @@ interface IPoolCore {
      *   different wallet
      * @return The final amount withdrawn
      **/
-    function withdraw(address asset, uint256 amount, address to)
-        external
-        returns (uint256);
+    function withdraw(
+        address asset,
+        uint256 amount,
+        address to
+    ) external returns (uint256);
 
     /**
      * @notice Withdraws multiple `tokenIds` of underlying ERC721  asset from the reserve, burning the equivalent nTokens owned
@@ -339,9 +341,11 @@ interface IPoolCore {
      * other borrower whose debt should be removed
      * @return The final amount repaid
      **/
-    function repay(address asset, uint256 amount, address onBehalfOf)
-        external
-        returns (uint256);
+    function repay(
+        address asset,
+        uint256 amount,
+        address onBehalfOf
+    ) external returns (uint256);
 
     /**
      * @notice Repays a borrowed `amount` on a specific reserve using the reserve xTokens, burning the

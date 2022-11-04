@@ -486,7 +486,13 @@ library ReserveConfiguration {
     function getFlags(DataTypes.ReserveConfigurationMap memory self)
         internal
         pure
-        returns (bool, bool, bool, bool, DataTypes.AssetType)
+        returns (
+            bool,
+            bool,
+            bool,
+            bool,
+            DataTypes.AssetType
+        )
     {
         uint256 dataLocal = self.data;
 
@@ -513,7 +519,13 @@ library ReserveConfiguration {
     function getParams(DataTypes.ReserveConfigurationMap memory self)
         internal
         pure
-        returns (uint256, uint256, uint256, uint256, uint256)
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
     {
         uint256 dataLocal = self.data;
 

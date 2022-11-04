@@ -128,11 +128,11 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function transferOnLiquidation(address from, address to, uint256 value)
-        external
-        override
-        onlyPool
-    {
+    function transferOnLiquidation(
+        address from,
+        address to,
+        uint256 value
+    ) external override onlyPool {
         _transfer(from, to, value, false);
     }
 
@@ -253,9 +253,12 @@ contract PToken is
      * @param amount The amount getting transferred
      * @param validate True if the transfer needs to be validated, false otherwise
      **/
-    function _transfer(address from, address to, uint256 amount, bool validate)
-        internal
-    {
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount,
+        bool validate
+    ) internal {
         address underlyingAsset = _underlyingAsset;
 
         uint256 index = POOL.getReserveNormalizedIncome(underlyingAsset);
@@ -284,10 +287,11 @@ contract PToken is
      * @param to The destination address
      * @param amount The amount getting transferred
      **/
-    function _transfer(address from, address to, uint128 amount)
-        internal
-        override
-    {
+    function _transfer(
+        address from,
+        address to,
+        uint128 amount
+    ) internal override {
         _transfer(from, to, amount, true);
     }
 
@@ -323,11 +327,11 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function rescueTokens(address token, address to, uint256 amount)
-        external
-        override
-        onlyPoolAdmin
-    {
+    function rescueTokens(
+        address token,
+        address to,
+        uint256 amount
+    ) external override onlyPoolAdmin {
         require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
         IERC20(token).safeTransfer(to, amount);
     }
