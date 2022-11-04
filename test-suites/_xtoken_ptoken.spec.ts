@@ -2,7 +2,7 @@ import type {HardhatRuntimeEnvironment} from "hardhat/types";
 
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {utils} from "ethers";
+import {BigNumber, utils} from "ethers";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   deployDelegationAwarePToken,
@@ -15,8 +15,10 @@ import {getTestWallets} from "./helpers/utils/wallets";
 import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
 import {
   buildPermitParams,
+  convertToCurrencyDecimals,
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
+import {supplyAndValidate} from "./helpers/validated-steps";
 
 declare let hre: HardhatRuntimeEnvironment;
 describe("Ptoken delegation", () => {
@@ -437,5 +439,181 @@ describe("Functionalities of ptoken permit", () => {
     };
     const domainSeparator = utils._TypedDataEncoder.hashDomain(domain);
     expect(separator).to.be.equal(domainSeparator, "Invalid domain separator");
+  });
+});
+
+describe("Tests for events in ptoken functions", () => {
+  const fixture = async () => {
+    const {
+      dai,
+      pDai,
+      users: [depositor, receiver],
+      pool,
+      protocolDataProvider,
+    } = await loadFixture(testEnvFixture);
+    const firstDaiDeposit = await convertToCurrencyDecimals(
+      dai.address,
+      "10000"
+    );
+
+    // mints DAI to depositor
+    await waitForTx(
+      await dai
+        .connect(depositor.signer)
+        ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "10000"))
+    );
+
+    // approve protocol to access depositor wallet
+    await waitForTx(
+      await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+
+    const daiReserveData = await protocolDataProvider.getReserveData(
+      dai.address
+    );
+    return {
+      depositor,
+      receiver,
+      firstDaiDeposit,
+      dai,
+      pDai,
+      daiReserveData,
+      pool,
+    };
+  };
+  it("TC-ptoken-event-01: `supply` should emit `Mint` event correctly when depositing for himself", async () => {
+    const {depositor, firstDaiDeposit, dai, pDai, daiReserveData, pool} =
+      await loadFixture(fixture);
+    const expectedBalanceIncrease = 0;
+
+    await expect(
+      pool
+        .connect(depositor.signer)
+        .supply(dai.address, firstDaiDeposit, depositor.address, "0")
+    )
+      .to.emit(pDai, "Mint")
+      .withArgs(
+        depositor.address,
+        depositor.address,
+        firstDaiDeposit,
+        expectedBalanceIncrease,
+        daiReserveData.liquidityIndex
+      );
+
+    const pDaiBalance = await pDai.balanceOf(depositor.address);
+    expect(pDaiBalance).to.be.equal(firstDaiDeposit);
+  });
+
+  it("TC-ptoken-event-02: `supply` should emit `Mint` event correctly when is on behave of others", async () => {
+    const {
+      depositor,
+      receiver,
+      firstDaiDeposit,
+      dai,
+      pDai,
+      daiReserveData,
+      pool,
+    } = await loadFixture(fixture);
+
+    const expectedBalanceIncrease = 0;
+
+    await expect(
+      pool
+        .connect(depositor.signer)
+        .supply(dai.address, firstDaiDeposit, receiver.address, "0")
+    )
+      .to.emit(pDai, "Mint")
+      .withArgs(
+        depositor.address,
+        receiver.address,
+        firstDaiDeposit,
+        expectedBalanceIncrease,
+        daiReserveData.liquidityIndex
+      );
+
+    const pDaiBalance = await pDai.balanceOf(receiver.address);
+    expect(pDaiBalance).to.be.equal(firstDaiDeposit);
+  });
+});
+
+describe("Ptoken transfer tests", () => {
+  let amountDAItoDeposit: BigNumber;
+
+  const fixture = async () => {
+    const testEnv = await loadFixture(testEnvFixture);
+    const {users, pool, dai, weth} = testEnv;
+    const DAI_AMOUNT_TO_DEPOSIT = "1000";
+
+    amountDAItoDeposit = await convertToCurrencyDecimals(
+      dai.address,
+      DAI_AMOUNT_TO_DEPOSIT
+    );
+
+    await dai.connect(users[0].signer)["mint(uint256)"](amountDAItoDeposit);
+    await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(users[0].signer)
+      .supply(dai.address, amountDAItoDeposit, users[0].address, "0");
+
+    await supplyAndValidate(weth, "1", users[2], true);
+    return testEnv;
+  };
+
+  it("TC-ptoken-transfer-01: user should transfer ptoken when underlying assets are collateral", async () => {
+    const {users, pDai} = await loadFixture(fixture);
+    expect(
+      await pDai
+        .connect(users[0].signer)
+        .transfer(users[0].address, amountDAItoDeposit)
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(users[0].address, users[0].address, amountDAItoDeposit);
+
+    const fromBalance = await pDai.balanceOf(users[0].address);
+    const toBalance = await pDai.balanceOf(users[0].address);
+    expect(fromBalance.toString()).to.be.eq(toBalance.toString());
+  });
+
+  it("TC-ptoken-transfer-02: user should transfer ptoken when underlying assets ain't collateral", async () => {
+    const {users, pool, dai, pDai} = await loadFixture(fixture);
+    await pool
+      .connect(users[0].signer)
+      .setUserUseERC20AsCollateral(dai.address, false);
+
+    expect(
+      await pDai
+        .connect(users[0].signer)
+        .transfer(users[1].address, amountDAItoDeposit)
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(users[0].address, users[1].address, amountDAItoDeposit);
+
+    const fromBalance = await pDai.balanceOf(users[0].address);
+    const toBalance = await pDai.balanceOf(users[1].address);
+    expect(fromBalance.toString()).to.be.equal("0");
+    expect(toBalance.toString()).to.be.equal(amountDAItoDeposit.toString());
+  });
+
+  it("TC-ptoken-transfer-05: user shouldn't transfer all his tokens if he has loans", async () => {
+    const {users, pDai, weth, pool} = await loadFixture(fixture);
+
+    await pool
+      .connect(users[0].signer)
+      .borrow(
+        weth.address,
+        await convertToCurrencyDecimals(weth.address, "0.1"),
+        "0",
+        users[0].address,
+        {gasLimit: 500000}
+      );
+
+    const user0Balance = await pDai.balanceOf(users[0].address);
+
+    await expect(
+      pDai.connect(users[0].signer).transfer(users[1].address, user0Balance),
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 });
