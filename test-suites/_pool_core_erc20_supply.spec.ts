@@ -162,7 +162,7 @@ describe("pToken Supply Event Accounting", () => {
   });
 });
 
-describe("PoolConfigurator: Supply Cap", () => {
+describe("pToken: Supply Cap Changed", () => {
   let testEnv: TestEnv;
   const {SUPPLY_CAP_EXCEEDED, INVALID_SUPPLY_CAP} = ProtocolErrors;
 
@@ -180,7 +180,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     await usdc.approve(pool.address, MAX_UINT_AMOUNT);
   });
 
-  it("Reserves should initially have supply cap disabled (supplyCap = 0)", async () => {
+  it("TC-erc20-supplyCap-01: Reserves should initially have supply cap disabled (supplyCap = 0)", async () => {
     const {dai, usdc, protocolDataProvider} = testEnv;
 
     const usdcSupplyCap = (
@@ -194,7 +194,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     expect(daiSupplyCap).to.be.equal("0");
   });
 
-  it("Supply 1000 Dai, 1000 USDC and 1000 WETH", async () => {
+  it("TC-erc20-supplyCap-02: Supply 1000 Dai, 1000 USDC and 1000 WETH", async () => {
     const {weth, pool, dai, usdc, deployer} = testEnv;
 
     const suppliedAmount = "1000";
@@ -220,7 +220,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     );
   });
 
-  it("Sets the supply cap for DAI and USDC to 1000 Unit, leaving 0 Units to reach the limit", async () => {
+  it("TC-erc20-supplyCap-03: Sets the supply cap for DAI and USDC to 1000 Unit, leaving 0 Units to reach the limit", async () => {
     const {configurator, dai, usdc, protocolDataProvider} = testEnv;
 
     const {supplyCap: oldUsdcSupplyCap} =
@@ -247,7 +247,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     expect(daiSupplyCap).to.be.equal(newCap);
   });
 
-  it("Tries to supply any DAI or USDC (> SUPPLY_CAP) (revert expected)", async () => {
+  it("TC-erc20-supplyCap-04: Tries to supply any DAI or USDC (> SUPPLY_CAP) (revert expected)", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
     const suppliedAmount = "10";
 
@@ -265,7 +265,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     ).to.be.revertedWith(SUPPLY_CAP_EXCEEDED);
   });
 
-  it("Tries to set the supply cap for USDC and DAI to > MAX_SUPPLY_CAP (revert expected)", async () => {
+  it("TC-erc20-supplyCap-05: Tries to set the supply cap for USDC and DAI to > MAX_SUPPLY_CAP (revert expected)", async () => {
     const {configurator, usdc, dai} = testEnv;
     const newCap = Number(MAX_SUPPLY_CAP) + 1;
 
@@ -277,7 +277,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     ).to.be.revertedWith(INVALID_SUPPLY_CAP);
   });
 
-  it("Sets the supply cap for usdc and DAI to 1110 Units, leaving 110 Units to reach the limit", async () => {
+  it("TC-erc20-supplyCap-06: Sets the supply cap for usdc and DAI to 1110 Units, leaving 110 Units to reach the limit", async () => {
     const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
     const {supplyCap: oldUsdcSupplyCap} =
@@ -303,7 +303,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     expect(daiSupplyCap).to.be.equal(newCap);
   });
 
-  it("Supply 10 DAI and 10 USDC, leaving 100 Units to reach the limit", async () => {
+  it("TC-erc20-supplyCap-07: Supply 10 DAI and 10 USDC, leaving 100 Units to reach the limit", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
 
     const suppliedAmount = "10";
@@ -322,7 +322,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     );
   });
 
-  it("Tries to supply 101 DAI and 101 USDC (> SUPPLY_CAP) 1 unit above the limit (revert expected)", async () => {
+  it("TC-erc20-supplyCap-08: Tries to supply 101 DAI and 101 USDC (> SUPPLY_CAP) 1 unit above the limit (revert expected)", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
 
     const suppliedAmount = "101";
@@ -346,7 +346,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     ).to.be.revertedWith(SUPPLY_CAP_EXCEEDED);
   });
 
-  it("Supply 99 DAI and 99 USDC (< SUPPLY_CAP), leaving 1 Units to reach the limit", async () => {
+  it("TC-erc20-supplyCap-09: Supply 99 DAI and 99 USDC (< SUPPLY_CAP), leaving 1 Units to reach the limit", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
 
     const suppliedAmount = "99";
@@ -365,7 +365,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     );
   });
 
-  it("Supply 1 DAI and 1 USDC (= SUPPLY_CAP), reaching the limit", async () => {
+  it("TC-erc20-supplyCap-10: Supply 1 DAI and 1 USDC (= SUPPLY_CAP), reaching the limit", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
 
     const suppliedAmount = "1";
@@ -384,7 +384,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     );
   });
 
-  it("Time flies and DAI and USDC supply amount goes above the limit due to accrued interests", async () => {
+  it("TC-erc20-supplyCap-11: Time flies and DAI and USDC supply amount goes above the limit due to accrued interests", async () => {
     const {usdc, dai, protocolDataProvider} = testEnv;
 
     // Advance blocks
@@ -399,7 +399,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     expect(usdcData.totalPToken).gt(usdcCaps.supplyCap);
   });
 
-  it("Raises the supply cap for USDC and DAI to 2000 Units, leaving 800 Units to reach the limit", async () => {
+  it("TC-erc20-supplyCap-12: Raises the supply cap for USDC and DAI to 2000 Units, leaving 800 Units to reach the limit", async () => {
     const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
     const {supplyCap: oldUsdcSupplyCap} =
@@ -425,7 +425,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     expect(daiSupplyCap).to.be.equal(newCap);
   });
 
-  it("Supply 100 DAI and 100 USDC, leaving 700 Units to reach the limit", async () => {
+  it("TC-erc20-supplyCap-13: Supply 100 DAI and 100 USDC, leaving 700 Units to reach the limit", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
 
     const suppliedAmount = "100";
@@ -444,7 +444,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     );
   });
 
-  it("Lowers the supply cap for USDC and DAI to 1200 Units (suppliedAmount > supplyCap)", async () => {
+  it("TC-erc20-supplyCap-14: Lowers the supply cap for USDC and DAI to 1200 Units (suppliedAmount > supplyCap)", async () => {
     const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
     const {supplyCap: oldUsdcSupplyCap} =
@@ -470,7 +470,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     expect(daiSupplyCap).to.be.equal(newCap);
   });
 
-  it("Tries to supply 100 DAI and 100 USDC (> SUPPLY_CAP) (revert expected)", async () => {
+  it("TC-erc20-supplyCap-15: Tries to supply 100 DAI and 100 USDC (> SUPPLY_CAP) (revert expected)", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
 
     const suppliedAmount = "100";
@@ -494,7 +494,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     ).to.be.revertedWith(SUPPLY_CAP_EXCEEDED);
   });
 
-  it("Raises the supply cap for USDC and DAI to MAX_SUPPLY_CAP", async () => {
+  it("TC-erc20-supplyCap-16: Raises the supply cap for USDC and DAI to MAX_SUPPLY_CAP", async () => {
     const {configurator, usdc, dai, protocolDataProvider} = testEnv;
 
     const {supplyCap: oldUsdcSupplyCap} =
@@ -520,7 +520,7 @@ describe("PoolConfigurator: Supply Cap", () => {
     expect(daiSupplyCap).to.be.equal(newCap);
   });
 
-  it("Supply 100 DAI and 100 USDC", async () => {
+  it("TC-erc20-supplyCap-17: Supply 100 DAI and 100 USDC", async () => {
     const {usdc, pool, dai, deployer} = testEnv;
 
     const suppliedAmount = "100";
