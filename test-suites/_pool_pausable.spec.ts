@@ -21,7 +21,7 @@ describe("PausablePool", () => {
     // _mockFlashLoanReceiver = await getMockFlashLoanReceiver();
   });
 
-  it("User 0 supplys 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
+  it("TC-poolPausable-01: User 0 supplys 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
     const {users, pool, dai, pDai, configurator, emergencyAdmin} = testEnv;
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
@@ -83,7 +83,7 @@ describe("PausablePool", () => {
     );
   });
 
-  it("Deposit", async () => {
+  it("TC-poolPausable-02: Supply revert due to pausable pool", async () => {
     const {users, pool, dai, configurator, emergencyAdmin} = testEnv;
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
@@ -108,7 +108,7 @@ describe("PausablePool", () => {
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
 
-  it("Withdraw", async () => {
+  it("TC-poolPausable-03: Supply succeed and then pause pool, withdraw revert", async () => {
     const {users, pool, dai, configurator, emergencyAdmin} = testEnv;
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
@@ -138,7 +138,7 @@ describe("PausablePool", () => {
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
 
-  it("Borrow", async () => {
+  it("TC-poolPausable-04: Borrow revert due to pausable pool", async () => {
     const {pool, dai, configurator, emergencyAdmin} = testEnv;
 
     const user = emergencyAdmin;
@@ -154,7 +154,7 @@ describe("PausablePool", () => {
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
 
-  it("Repay", async () => {
+  it("TC-poolPausable-05: Repay revert due to pausable pool", async () => {
     const {pool, dai, configurator, emergencyAdmin} = testEnv;
 
     const user = emergencyAdmin;
@@ -170,37 +170,7 @@ describe("PausablePool", () => {
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
 
-  // it("Flash loan", async () => {
-  //   const { dai, pool, weth, users, configurator } = testEnv;
-
-  //   const caller = users[3];
-
-  //   const flashAmount = utils.parseEther("0.8");
-
-  //   await _mockFlashLoanReceiver.setFailExecutionTransfer(true);
-
-  //   // Pause pool
-  //   await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
-
-  //   await expect(
-  //     pool
-  //       .connect(caller.signer)
-  //       .flashLoan(
-  //         _mockFlashLoanReceiver.address,
-  //         [weth.address],
-  //         [flashAmount],
-  //         [1],
-  //         caller.address,
-  //         "0x10",
-  //         "0"
-  //       )
-  //   ).to.be.revertedWith(RESERVE_PAUSED);
-
-  //   // Unpause pool
-  //   await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
-  // });
-
-  it("Liquidation call", async () => {
+  it("TC-poolPausable-06: Supply and borrow succeed, pause pool, then liquidation call revert", async () => {
     const {
       users,
       pool,
@@ -301,7 +271,7 @@ describe("PausablePool", () => {
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
 
-  it("setUserUseERC20AsCollateral", async () => {
+  it("TC-poolPausable-07: SetUserUseERC20AsCollateral revert due to pausable pool", async () => {
     // eslint-disable-next-line no-unused-vars
     const {pool, weth, configurator, emergencyAdmin} = testEnv;
     const user = emergencyAdmin;
@@ -323,96 +293,4 @@ describe("PausablePool", () => {
     // Unpause pool
     await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
   });
-
-  // it("Configurator pauses Pool with a ZERO_ADDRESS reserve", async () => {
-  //   const {poolAdmin, emergencyAdmin, deployer} = testEnv;
-  //
-  //   const snapId = await evmSnapshot();
-  //
-  //   // Deploy a mock Pool
-  //   const mockPool = await deployMockPool();
-  //
-  //   // Deploy a new PoolConfigurator
-  //   const configuratorLogic = await (
-  //     await new ConfiguratorLogic__factory(await getFirstSigner()).deploy()
-  //   ).deployed();
-  //   const poolConfigurator = await (
-  //     await new PoolConfigurator__factory(
-  //       {
-  //         ["contracts/protocol/libraries/logic/ConfiguratorLogic.sol:ConfiguratorLogic"]:
-  //           configuratorLogic.address,
-  //       },
-  //       await getFirstSigner()
-  //     ).deploy()
-  //   ).deployed();
-  //
-  //   // Deploy a new PoolAddressesProvider
-  //   const MARKET_ID = "1";
-  //   const poolAddressesProvider = await (
-  //     await new PoolAddressesProvider__factory(await getFirstSigner()).deploy(
-  //       MARKET_ID,
-  //       deployer.address
-  //     )
-  //   ).deployed();
-  //
-  //   // Set the ACL admin
-  //   expect(await poolAddressesProvider.setACLAdmin(poolAdmin.address));
-  //
-  //   // Update the ACLManager
-  //   const aclManager = await (
-  //     await new ACLManager__factory(await getFirstSigner()).deploy(
-  //       poolAddressesProvider.address
-  //     )
-  //   ).deployed();
-  //   expect(await poolAddressesProvider.setACLManager(aclManager.address))
-  //     .to.emit(poolAddressesProvider, "ACLManagerUpdated")
-  //     .withArgs(ZERO_ADDRESS, aclManager.address);
-  //
-  //   // Set role of EmergencyAdmin
-  //   const emergencyAdminRole = await aclManager.EMERGENCY_ADMIN_ROLE();
-  //   expect(await aclManager.addEmergencyAdmin(emergencyAdmin.address))
-  //     .to.emit(aclManager, "RoleGranted")
-  //     .withArgs(emergencyAdminRole, emergencyAdmin.address, poolAdmin.address);
-  //
-  //   const poolSelectors = getFunctionSignatures(
-  //     mockPool.interface.format(FormatTypes.json)
-  //   );
-  //
-  //   expect(
-  //     await poolAddressesProvider.updatePoolImpl(
-  //       [[mockPool.address, 0, poolSelectors]],
-  //       ZERO_ADDRESS,
-  //       "0x"
-  //     )
-  //   ).to.emit(poolAddressesProvider, "PoolUpdated");
-  //
-  //   // Add ZERO_ADDRESS as a reserve
-  //   const proxiedMockPoolAddress = await poolAddressesProvider.getPool();
-  //   const proxiedMockPool = await getMockPool(proxiedMockPoolAddress);
-  //   expect(await proxiedMockPool.addReserveToReservesList(ZERO_ADDRESS));
-  //
-  //   // Update the PoolConfigurator impl with the PoolConfigurator
-  //   expect(
-  //     await poolAddressesProvider.setPoolConfiguratorImpl(
-  //       poolConfigurator.address
-  //     )
-  //   )
-  //     .to.emit(poolAddressesProvider, "PoolConfiguratorUpdated")
-  //     .withArgs(ZERO_ADDRESS, poolConfigurator.address);
-  //
-  //   const proxiedPoolConfiguratorAddress =
-  //     await poolAddressesProvider.getPoolConfigurator();
-  //   const proxiedPoolConfigurator = await getPoolConfiguratorProxy(
-  //     proxiedPoolConfiguratorAddress
-  //   );
-  //
-  //   // Pause reserve
-  //   expect(
-  //     await proxiedPoolConfigurator
-  //       .connect(emergencyAdmin.signer)
-  //       .setPoolPause(true)
-  //   );
-  //
-  //   await evmRevert(snapId);
-  // });
 });
