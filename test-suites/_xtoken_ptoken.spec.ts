@@ -8,7 +8,10 @@ import {
   deployDelegationAwarePToken,
   deployMintableDelegationERC20,
 } from "../deploy/helpers/contracts-deployments";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  impersonateAccountsHardhat,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getTestWallets} from "./helpers/utils/wallets";
@@ -19,6 +22,8 @@ import {
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
 import {supplyAndValidate} from "./helpers/validated-steps";
+import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+import {TestEnv} from "./helpers/make-suite";
 
 declare let hre: HardhatRuntimeEnvironment;
 describe("Ptoken delegation", () => {
@@ -573,7 +578,6 @@ describe("Ptoken transfer tests", () => {
     const toBalance = await pDai.balanceOf(users[0].address);
     expect(fromBalance.toString()).to.be.eq(toBalance.toString());
   });
-
   it("TC-ptoken-transfer-02: user should transfer ptoken when underlying assets ain't collateral", async () => {
     const {users, pool, dai, pDai} = await loadFixture(fixture);
     await pool
@@ -744,5 +748,286 @@ describe("Repay behaviors for ptoken", () => {
 
     expect(debtAfter).to.be.eq(0);
     expect(balanceAfter).to.be.eq(balanceBefore.sub(repayAmount));
+  });
+});
+
+describe("Ptoken edge cases", () => {
+  it("TC-ptoken-edge-01: check getter", async () => {
+    const {pool, users, dai, pDai} = await loadFixture(testEnvFixture);
+
+    expect(await pDai.decimals()).to.be.eq(await dai.decimals());
+    expect(await pDai.UNDERLYING_ASSET_ADDRESS()).to.be.eq(dai.address);
+    expect(await pDai.POOL()).to.be.eq(pool.address);
+    expect(await pDai.getIncentivesController()).to.not.be.eq(ZERO_ADDRESS);
+
+    const scaledUserBalanceAndSupplyBefore =
+      await pDai.getScaledUserBalanceAndSupply(users[0].address);
+    expect(scaledUserBalanceAndSupplyBefore[0]).to.be.eq(0);
+    expect(scaledUserBalanceAndSupplyBefore[1]).to.be.eq(0);
+
+    await waitForTx(
+      await dai
+        .connect(users[0].signer)
+        ["mint(address,uint256)"](
+          users[0].address,
+          await convertToCurrencyDecimals(dai.address, "1000")
+        )
+    );
+    await waitForTx(
+      await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await pool
+        .connect(users[0].signer)
+        .supply(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, "1000"),
+          users[0].address,
+          0
+        )
+    );
+    const scaledUserBalanceAndSupplyAfter =
+      await pDai.getScaledUserBalanceAndSupply(users[0].address);
+    expect(scaledUserBalanceAndSupplyAfter[0]).to.be.eq(
+      await convertToCurrencyDecimals(pDai.address, "1000")
+    );
+    expect(scaledUserBalanceAndSupplyAfter[1]).to.be.eq(
+      await convertToCurrencyDecimals(pDai.address, "1000")
+    );
+  });
+
+  it("TC-ptoken-edge-02: `approve` should work", async () => {
+    const {users, pDai} = await loadFixture(testEnvFixture);
+    await pDai
+      .connect(users[0].signer)
+      .approve(users[1].address, MAX_UINT_AMOUNT);
+    expect(await pDai.allowance(users[0].address, users[1].address)).to.be.eq(
+      MAX_UINT_AMOUNT
+    );
+  });
+
+  it("TC-ptoken-edge-03: `approve` should work when spender is zero address", async () => {
+    const {users, pDai} = await loadFixture(testEnvFixture);
+    expect(
+      await pDai.connect(users[0].signer).approve(ZERO_ADDRESS, MAX_UINT_AMOUNT)
+    )
+      .to.emit(pDai, "Approval")
+      .withArgs(users[0].address, ZERO_ADDRESS, MAX_UINT_AMOUNT);
+  });
+
+  it("TC-ptoken-edge-04: `transferFrom` should work", async () => {
+    const {users, pDai} = await loadFixture(testEnvFixture);
+    await pDai
+      .connect(users[1].signer)
+      .transferFrom(users[0].address, users[1].address, 0);
+  });
+
+  describe("Allowance", () => {
+    let users: TestEnv["users"];
+    let pDai: TestEnv["pDai"];
+    before(async () => {
+      const testEnv = await loadFixture(testEnvFixture);
+      users = testEnv.users;
+      pDai = testEnv.pDai;
+    });
+    it("TC-ptoken-edge-05: `increaseAllowance` should work", async () => {
+      const {users, pDai} = await loadFixture(testEnvFixture);
+      expect(await pDai.allowance(users[1].address, users[0].address)).to.be.eq(
+        0
+      );
+      await pDai
+        .connect(users[1].signer)
+        .increaseAllowance(
+          users[0].address,
+          await convertToCurrencyDecimals(pDai.address, "1")
+        );
+      expect(await pDai.allowance(users[1].address, users[0].address)).to.be.eq(
+        await convertToCurrencyDecimals(pDai.address, "1")
+      );
+    });
+    it("TC-ptoken-edge-06: `decreaseAllowance` should work", async () => {
+      expect(await pDai.allowance(users[1].address, users[0].address)).to.be.eq(
+        await convertToCurrencyDecimals(pDai.address, "1")
+      );
+      await pDai
+        .connect(users[1].signer)
+        .decreaseAllowance(
+          users[0].address,
+          await convertToCurrencyDecimals(pDai.address, "1")
+        );
+      expect(await pDai.allowance(users[1].address, users[0].address)).to.be.eq(
+        0
+      );
+    });
+  });
+
+  it("TC-ptoken-edge-07: `transferFrom` should work if recipient is zero address", async () => {
+    const {users, pDai} = await loadFixture(testEnvFixture);
+    expect(await pDai.connect(users[1].signer).transfer(ZERO_ADDRESS, 0))
+      .to.emit(pDai, "Transfer")
+      .withArgs(users[1].address, ZERO_ADDRESS, 0);
+  });
+
+  it("TC-ptoken-edge-08: `transferFrom` should work if origin is zero address but amount is zero", async () => {
+    const {users, pDai} = await loadFixture(testEnvFixture);
+    expect(
+      await pDai
+        .connect(users[1].signer)
+        .transferFrom(ZERO_ADDRESS, users[1].address, 0)
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(ZERO_ADDRESS, users[1].address, 0);
+  });
+
+  it("TC-ptoken-edge-09: `transfer` shouldn't work if amount is greater than allowance", async () => {
+    const {users, pDai} = await loadFixture(testEnvFixture);
+    expect(
+      await pDai
+        .connect(users[1].signer)
+        .transferFrom(ZERO_ADDRESS, users[1].address, 0)
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(ZERO_ADDRESS, users[1].address, 0);
+  });
+
+  it("TC-ptoken-edge-10: `mint` shouldn't work if amount is zero", async () => {
+    const {pool, pDai, users} = await loadFixture(testEnvFixture);
+    await impersonateAccountsHardhat([pool.address]);
+    const poolSigner = await hre.ethers.getSigner(pool.address);
+
+    await expect(
+      pDai
+        .connect(poolSigner)
+        .mint(users[0].address, users[0].address, 0, utils.parseUnits("1", 27))
+    ).to.be.revertedWith(ProtocolErrors.INVALID_MINT_AMOUNT);
+  });
+
+  it("TC-ptoken-edge-11: `mint` should work on behave of zero address", async () => {
+    const {pool, pDai, deployer} = await loadFixture(testEnvFixture);
+
+    await deployer.signer.sendTransaction({
+      to: pool.address,
+      value: hre.ethers.utils.parseEther("1"),
+    });
+    await impersonateAccountsHardhat([pool.address]);
+    const poolSigner = await hre.ethers.getSigner(pool.address);
+    const mintingAmount = await convertToCurrencyDecimals(pDai.address, "100");
+
+    expect(
+      await pDai
+        .connect(poolSigner)
+        .mint(
+          ZERO_ADDRESS,
+          ZERO_ADDRESS,
+          mintingAmount,
+          utils.parseUnits("1", 27)
+        )
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(ZERO_ADDRESS, ZERO_ADDRESS, mintingAmount);
+  });
+
+  it("TC-ptoken-edge-12: `burn` shouldn't work when amount is zero", async () => {
+    const {pool, pDai, users} = await loadFixture(testEnvFixture);
+
+    await impersonateAccountsHardhat([pool.address]);
+    const poolSigner = await hre.ethers.getSigner(pool.address);
+
+    await expect(
+      pDai
+        .connect(poolSigner)
+        .burn(users[0].address, users[0].address, 0, utils.parseUnits("1", 27))
+    ).to.be.revertedWith(ProtocolErrors.INVALID_BURN_AMOUNT);
+  });
+
+  it("TC-ptoken-edge-13: `burn` shouldn't work oh behalf on zero address", async () => {
+    const {deployer, pool, pDai} = await loadFixture(testEnvFixture);
+    await deployer.signer.sendTransaction({
+      to: pool.address,
+      value: hre.ethers.utils.parseEther("1"),
+    });
+    await impersonateAccountsHardhat([pool.address]);
+    const poolSigner = await hre.ethers.getSigner(pool.address);
+
+    const amount = await convertToCurrencyDecimals(pDai.address, "100");
+    await pDai
+      .connect(poolSigner)
+      .mint(
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        await convertToCurrencyDecimals(pDai.address, "100"),
+        utils.parseUnits("1", 27)
+      );
+
+    expect(
+      await pDai
+        .connect(poolSigner)
+        .burn(ZERO_ADDRESS, pDai.address, amount, utils.parseUnits("1", 27), {
+          gasLimit: 500000,
+        })
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(ZERO_ADDRESS, ZERO_ADDRESS, amount);
+  });
+
+  it("TC-ptoken-edge-14: `mintToTreasury` should work when amount is zero", async () => {
+    const {deployer, pool, pDai} = await loadFixture(testEnvFixture);
+
+    // Impersonate Pool
+    await topUpNonPayableWithEther(
+      deployer.signer,
+      [pool.address],
+      utils.parseEther("1")
+    );
+    await impersonateAccountsHardhat([pool.address]);
+    const poolSigner = await hre.ethers.getSigner(pool.address);
+
+    expect(
+      await pDai
+        .connect(poolSigner)
+        .mintToTreasury(0, utils.parseUnits("1", 27))
+    );
+  });
+
+  it("TC-ptoken-edge-15: `setIncentivesController` should work", async () => {
+    const {deployer, poolAdmin, pWETH, aclManager} = await loadFixture(
+      testEnvFixture
+    );
+
+    expect(
+      await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address)
+    );
+
+    expect(await pWETH.getIncentivesController()).to.not.be.eq(ZERO_ADDRESS);
+    expect(
+      await pWETH
+        .connect(poolAdmin.signer)
+        .setIncentivesController(ZERO_ADDRESS)
+    );
+    expect(await pWETH.getIncentivesController()).to.be.eq(ZERO_ADDRESS);
+  });
+
+  it("TC-ptoken-edge-16: `setIncentivesController` shouldn't be called by whom isn't POOL_ADMIN", async () => {
+    const {
+      users: [user],
+      pWETH,
+    } = await loadFixture(testEnvFixture);
+
+    expect(await pWETH.getIncentivesController()).to.not.be.eq(ZERO_ADDRESS);
+
+    await expect(
+      pWETH.connect(user.signer).setIncentivesController(ZERO_ADDRESS)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
+  });
+
+  it("TC-ptoken-edge-17: `transfer` amount shouldn't be greater than MAX_UINT_128", async () => {
+    const {
+      pDai,
+      users: [, borrower],
+    } = await loadFixture(testEnvFixture);
+
+    expect(pDai.transfer(borrower.address, MAX_UINT_AMOUNT)).to.be.revertedWith(
+      ProtocolErrors.SAFECAST_UINT128_OVERFLOW
+    );
   });
 });
