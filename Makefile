@@ -117,10 +117,6 @@ test-ptoken-permit:
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
 
-.PHONY: test-interest-overflow
-test-interest-overflow:
-	make TEST_TARGET=interest-overflow.spec.ts test
-
 .PHONY: test-ltv-validation
 test-ltv-validation:
 	make TEST_TARGET=ltv-validation.spec.ts test
@@ -231,7 +227,7 @@ test-user-configurator-used-as-collateral:
 
 .PHONY: test-rate-strategy
 test-rate-strategy:
-	make TEST_TARGET=rate-strategy.spec.ts test
+	make TEST_TARGET=_base_interest_rate_strategy.spec.ts test
 
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
