@@ -18,30 +18,22 @@ describe("Mock Token Faucet", () => {
   let maycMintValue: string;
   let doodleMintValue: string;
   let cryptoPunkMintValue: string;
+  let tokenFaucetMintValue: {[key: string]: number} | undefined;
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
+    tokenFaucetMintValue = getParaSpaceConfig().Mocks!.TokenFaucetMintValue;
 
-    daiMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.DAI.toString();
-    usdcMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.USDC.toString();
-    usdtMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.USDT.toString();
-    apeMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.APE.toString();
-    wBTCMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.WBTC.toString();
-    stETHMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.stETH.toString();
-    baycMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.BAYC.toString();
-    maycMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.MAYC.toString();
-    doodleMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.DOODLE.toString();
-    cryptoPunkMintValue =
-      getParaSpaceConfig().Mocks.TokenFaucetMintValue.CRYPTO_PUNK.toString();
+    daiMintValue = tokenFaucetMintValue.DAI.toString();
+    usdcMintValue = tokenFaucetMintValue.USDC.toString();
+    usdtMintValue = tokenFaucetMintValue.USDT.toString();
+    apeMintValue = tokenFaucetMintValue.APE.toString();
+    wBTCMintValue = tokenFaucetMintValue.WBTC.toString();
+    stETHMintValue = tokenFaucetMintValue.stETH.toString();
+    baycMintValue = tokenFaucetMintValue.BAYC.toString();
+    maycMintValue = tokenFaucetMintValue.MAYC.toString();
+    doodleMintValue = tokenFaucetMintValue.DOODLE.toString();
+    cryptoPunkMintValue = tokenFaucetMintValue.CRYPTO_PUNK.toString();
   });
 
   it("User mint all mock Tokens", async () => {

@@ -40,6 +40,9 @@ import {
   getPTokenStETH,
   getWPunkGatewayProxy,
   getWETHGatewayProxy,
+  getNTokenBAYC,
+  getNTokenMAYC,
+  getApeCoinStaking,
 } from "../../deploy/helpers/contracts-getters";
 import {
   eContractid,
@@ -50,10 +53,13 @@ import {
   tEthereumAddress,
 } from "../../deploy/helpers/types";
 import {
+  ApeCoinStaking,
   Conduit,
   ERC721Delegate,
   IPool,
   NFTFloorOracle,
+  NTokenBAYC,
+  NTokenMAYC,
   NTokenMoonBirds,
   NTokenUniswapV3,
   PausableZone,
@@ -135,7 +141,7 @@ export interface TestEnv {
   pUsdc: PToken;
   usdc: MintableERC20;
   usdt: MintableERC20;
-  nBAYC: NToken;
+  nBAYC: NTokenBAYC;
   bayc: MintableERC721;
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
@@ -147,7 +153,7 @@ export interface TestEnv {
   stETH: StETH;
   pstETH: PTokenStETH;
   ape: MintableERC20;
-  nMAYC: NToken;
+  nMAYC: NTokenMAYC;
   mayc: MintableERC721;
   nDOODLES: NToken;
   doodles: MintableERC721;
@@ -171,6 +177,7 @@ export interface TestEnv {
   nftPositionManager: INonfungiblePositionManager;
   nUniswapV3: NTokenUniswapV3;
   nftFloorOracle: NFTFloorOracle;
+  apeCoinStaking: ApeCoinStaking;
 }
 
 export async function initializeMakeSuite() {
@@ -198,7 +205,7 @@ export async function initializeMakeSuite() {
     pUsdc: {} as PToken,
     usdc: {} as MintableERC20,
     usdt: {} as MintableERC20,
-    nBAYC: {} as NToken,
+    nBAYC: {} as NTokenBAYC,
     nMOONBIRD: {} as NTokenMoonBirds,
     bayc: {} as MintableERC721,
     addressesProvider: {} as PoolAddressesProvider,
@@ -281,6 +288,8 @@ export async function initializeMakeSuite() {
 
   testEnv.x2y2r1 = await getX2Y2R1();
   testEnv.erc721Delegate = await getERC721Delegate();
+
+  testEnv.apeCoinStaking = await getApeCoinStaking();
 
   const allTokens = await testEnv.protocolDataProvider.getAllXTokens();
 
@@ -395,8 +404,8 @@ export async function initializeMakeSuite() {
   testEnv.paWETH = await getPTokenAToken(paWEthAddress);
   testEnv.pstETH = await getPTokenStETH(pstEthAddress);
 
-  testEnv.nBAYC = await getNToken(nBAYCAddress);
-  testEnv.nMAYC = await getNToken(nMAYCAddress);
+  testEnv.nBAYC = await getNTokenBAYC(nBAYCAddress);
+  testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
   testEnv.nDOODLES = await getNToken(nDOODLESAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);

@@ -34,8 +34,6 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
-        // the address of the dynamic strategy contract
-        address dynamicConfigsStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -69,9 +67,6 @@ library DataTypes {
          * asset is borrowed by the user.
          */
         uint256 data;
-        // counter for atomic erc721 tokens.
-        // this is used to limit the total number of atomic erc721 the user can supply
-        uint24 userAtomicTokens;
         // auction validity time for closing invalid auctions in one tx.
         uint256 auctionValidityTime;
     }
@@ -111,6 +106,7 @@ library DataTypes {
         address collateralAsset;
         address liquidationAsset;
         address user;
+        address liquidator;
         bool receiveXToken;
         address priceOracle;
         address priceOracleSentinel;
@@ -129,6 +125,7 @@ library DataTypes {
         address asset;
         uint256 amount;
         address onBehalfOf;
+        address spender;
         uint16 referralCode;
     }
 
@@ -136,7 +133,7 @@ library DataTypes {
         address asset;
         DataTypes.ERC721SupplyParams[] tokenData;
         address onBehalfOf;
-        address actualSpender;
+        address spender;
         uint16 referralCode;
     }
 
@@ -187,6 +184,18 @@ library DataTypes {
         address oracle;
     }
 
+    struct FinalizeTransferERC721Params {
+        address asset;
+        address from;
+        address to;
+        bool usedAsCollateral;
+        uint256 tokenId;
+        uint256 balanceFromBefore;
+        uint256 balanceToBefore;
+        uint256 reservesCount;
+        address oracle;
+    }
+
     struct CalculateUserAccountDataParams {
         UserConfigurationMap userConfig;
         uint256 reservesCount;
@@ -220,7 +229,7 @@ library DataTypes {
         uint256 healthFactor;
         uint256 tokenId;
         uint256 actualLiquidationAmount;
-        uint256 liquidationAmount;
+        uint256 maxLiquidationAmount;
         uint256 auctionRecoveryHealthFactor;
         address priceOracleSentinel;
         address xTokenAddress;
@@ -332,8 +341,6 @@ library DataTypes {
         mapping(uint256 => address) _reservesList;
         // Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
         uint16 _reservesCount;
-        // Maximum allowed number of atomic tokens per user
-        uint24 _maxAtomicTokensAllowed;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
     }

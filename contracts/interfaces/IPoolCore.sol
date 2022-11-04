@@ -122,7 +122,7 @@ interface IPoolCore {
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
-     * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param liquidatedCollateralAmount The amount of collateral received by the liquidator
      * @param liquidator The address of the liquidator
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
@@ -132,7 +132,7 @@ interface IPoolCore {
         address indexed collateralAsset,
         address indexed liquidationAsset,
         address indexed user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         uint256 liquidatedCollateralAmount,
         address liquidator,
         bool receivePToken
@@ -409,12 +409,12 @@ interface IPoolCore {
 
     /**
      * @notice Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
-     * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
+     * - The caller (liquidator) covers `liquidationAmount` amount of debt of the user getting liquidated, and receives
      *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
-     * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
      * to receive the underlying collateral asset directly
      **/
@@ -422,13 +422,12 @@ interface IPoolCore {
         address collateralAsset,
         address liquidationAsset,
         address user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         bool receivePToken
     ) external;
 
     function liquidationERC721(
         address collateralAsset,
-        address liquidationAsset,
         address user,
         uint256 collateralTokenId,
         uint256 liquidationAmount,
@@ -533,6 +532,7 @@ interface IPoolCore {
      * @notice Validates and finalizes an NToken transfer
      * @dev Only callable by the overlying xToken of the `asset`
      * @param asset The address of the underlying asset of the xToken
+     * @param tokenId The tokenId of the ERC721 asset
      * @param from The user from which the xTokens are transferred
      * @param to The user receiving the xTokens
      * @param balanceFromBefore The xToken balance of the `from` user before the transfer
@@ -540,6 +540,7 @@ interface IPoolCore {
      */
     function finalizeTransferERC721(
         address asset,
+        uint256 tokenId,
         address from,
         address to,
         bool usedAsCollateral,
@@ -587,12 +588,6 @@ interface IPoolCore {
      * @return The maximum number of reserves supported
      */
     function MAX_NUMBER_RESERVES() external view returns (uint16);
-
-    /**
-     * @notice Returns the maximum allowed number of atomic tokens per user
-     * @return The maximum allowed number of atomic tokens per user
-     */
-    function MAX_ATOMIC_TOKENS_ALLOWED() external view returns (uint24);
 
     /**
      * @notice Returns the auction recovery health factor

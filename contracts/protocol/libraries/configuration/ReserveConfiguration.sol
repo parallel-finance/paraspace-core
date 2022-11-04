@@ -25,7 +25,7 @@ library ReserveConfiguration {
     uint256 internal constant SUPPLY_CAP_MASK =                0xFFFFFFFFFFFFFFFFFFFFFFFFFF000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant LIQUIDATION_PROTOCOL_FEE_MASK =  0xFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
     uint256 internal constant ASSET_TYPE_MASK =                0xFFFFFFFFFFFFFFFFFFFFF0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
-    uint256 internal constant DYNAMIC_CONFIGS_MASK =           0xFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
+    //uint256 internal constant DYNAMIC_CONFIGS_MASK =           0xFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
 
     /// @dev For the LTV, the start bit is 0 (up to 15), hence no bitshifting is needed
     uint256 internal constant LIQUIDATION_THRESHOLD_START_BIT_POSITION = 16;
@@ -44,7 +44,6 @@ library ReserveConfiguration {
     uint256 internal constant SUPPLY_CAP_START_BIT_POSITION = 116;
     uint256 internal constant LIQUIDATION_PROTOCOL_FEE_START_BIT_POSITION = 152;
     uint256 internal constant ASSET_TYPE_START_BIT_POSITION = 168;
-    uint256 internal constant IS_DYNAMIC_CONFIGS_START_BIT_POSITION = 172;
 
     uint256 internal constant MAX_VALID_LTV = 65535;
     uint256 internal constant MAX_VALID_LIQUIDATION_THRESHOLD = 65535;
@@ -516,7 +515,6 @@ library ReserveConfiguration {
      * @return The state param representing liquidation bonus
      * @return The state param representing reserve decimals
      * @return The state param representing reserve factor
-     * @return The state param representing dynamic configs
      **/
     function getParams(DataTypes.ReserveConfigurationMap memory self)
         internal
@@ -526,8 +524,7 @@ library ReserveConfiguration {
             uint256,
             uint256,
             uint256,
-            uint256,
-            bool
+            uint256
         )
     {
         uint256 dataLocal = self.data;
@@ -540,8 +537,7 @@ library ReserveConfiguration {
                 LIQUIDATION_BONUS_START_BIT_POSITION,
             (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
             (dataLocal & ~RESERVE_FACTOR_MASK) >>
-                RESERVE_FACTOR_START_BIT_POSITION,
-            (dataLocal & ~DYNAMIC_CONFIGS_MASK) != 0
+                RESERVE_FACTOR_START_BIT_POSITION
         );
     }
 
@@ -562,32 +558,5 @@ library ReserveConfiguration {
             (dataLocal & ~BORROW_CAP_MASK) >> BORROW_CAP_START_BIT_POSITION,
             (dataLocal & ~SUPPLY_CAP_MASK) >> SUPPLY_CAP_START_BIT_POSITION
         );
-    }
-
-    /**
-     * @notice Sets the dynamic LTV state of the reserve
-     * @param self The reserve configuration
-     * @param active The active state
-     **/
-    function setDynamicConfigs(
-        DataTypes.ReserveConfigurationMap memory self,
-        bool active
-    ) internal pure {
-        self.data =
-            (self.data & DYNAMIC_CONFIGS_MASK) |
-            (uint256(active ? 1 : 0) << IS_DYNAMIC_CONFIGS_START_BIT_POSITION);
-    }
-
-    /**
-     * @notice Gets the dynamic LTV state of the reserve
-     * @param self The reserve configuration
-     * @return The active state
-     **/
-    function getDynamicConfigs(DataTypes.ReserveConfigurationMap memory self)
-        internal
-        pure
-        returns (bool)
-    {
-        return (self.data & ~DYNAMIC_CONFIGS_MASK) != 0;
     }
 }

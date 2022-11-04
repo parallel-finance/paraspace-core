@@ -1,14 +1,10 @@
 import {expect} from "chai";
-import {
-  advanceTimeAndBlock,
-  getParaSpaceConfig,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {getEthersSigners} from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
-import {utils, BigNumber} from "ethers";
+import {utils} from "ethers";
 import {getNFTFloorOracle} from "../deploy/helpers/contracts-getters";
 import {deployERC721OracleWrapper} from "../deploy/helpers/contracts-deployments";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -17,13 +13,9 @@ import {testEnvFixture} from "./helpers/setup-env";
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
   let testEnv: TestEnv;
-  let baycFloorPrice: BigNumber;
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    baycFloorPrice = BigNumber.from(
-      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.BAYC
-    );
   });
 
   before(async () => {
@@ -58,28 +50,25 @@ describe("NFT Oracle Tests", () => {
     await snapshot.revert(snapthotId);
   });
 
-  it("FallbackOracle is used when NFTFloorOracle replies a zero price", async () => {
+  it("TC-oracle-nft-floor-price-03:Update NFT price in NFTOracle then can get the new price from ParaSpaceOracle", async () => {
     const {bayc, paraspaceOracle, nftFloorOracle} = testEnv;
     const [deployer, updater] = await getEthersSigners();
 
-    // set BAYC price to 0 on NFT oracle (failure price)
-    nftFloorOracle
-      .connect(deployer) // zero price needs to be fed by admin
-      .setPrice(bayc.address, "0");
-    const twap = await (await getNFTFloorOracle())
+    await nftFloorOracle.connect(deployer).setPrice(bayc.address, "5");
+
+    const twapFromNftOracle = await (await getNFTFloorOracle())
       .connect(updater)
       .getTwap(bayc.address);
-    expect(twap).to.equal("0");
+    expect(twapFromNftOracle).to.equal("5");
 
-    // price should now be requested to the fallback oracle
-    const fallbackPrice = await paraspaceOracle
+    const price = await paraspaceOracle
       .connect(deployer)
       .getAssetPrice(bayc.address);
 
-    expect(fallbackPrice).to.equal(baycFloorPrice);
+    expect(price).to.equal(twapFromNftOracle);
   });
 
-  it("If NFT Oracle is paused, feeding new prices is not possible", async () => {
+  it("TC-oracle-nft-floor-price-06:If NFT Oracle is paused, feeding new prices is not possible", async () => {
     const {bayc, paraspaceOracle} = testEnv;
 
     const [deployer, updater] = await getEthersSigners();
@@ -115,7 +104,7 @@ describe("NFT Oracle Tests", () => {
     expect(postBaycPrice).to.equal(newPrice);
   });
 
-  it("Can get quote for a new asset", async () => {
+  it("TC-oracle-nft-floor-price-07:Can get quote for a new asset", async () => {
     const {dai} = testEnv;
     const [deployer, updater] = await getEthersSigners();
 
@@ -136,7 +125,7 @@ describe("NFT Oracle Tests", () => {
     ).to.equal(price);
   });
 
-  it("Cannot get quote for a removed asset", async () => {
+  it("TC-oracle-nft-floor-price-08:Cannot get quote for a removed asset", async () => {
     const {bayc, paraspaceOracle} = testEnv;
     const [deployer, updater] = await getEthersSigners();
     const preBaycPrice = await paraspaceOracle
@@ -161,7 +150,7 @@ describe("NFT Oracle Tests", () => {
     expect(currentPrice).to.equal(preBaycPrice);
   });
 
-  it("Oracle feeders list can be updated", async () => {
+  it("TC-oracle-nft-floor-price-09:Oracle feeders list can be updated from owner and rejected from other", async () => {
     const {
       bayc,
       users: [, , user3],
@@ -183,9 +172,15 @@ describe("NFT Oracle Tests", () => {
     expect(
       await (await getNFTFloorOracle()).connect(updater).getTwap(bayc.address)
     ).to.equal(price);
+
+    await expect(
+      (await getNFTFloorOracle())
+        .connect(user3.signer)
+        .setOracles([user3.address])
+    ).to.be.reverted;
   });
 
-  it("Feeders, updater and admin can feed a price", async () => {
+  it("TC-oracle-nft-floor-price-10:Feeders, updater and admin can feed a price", async () => {
     const {
       bayc,
       users: [, , user3],
@@ -231,12 +226,12 @@ describe("NFT Oracle Tests", () => {
       (await getNFTFloorOracle())
         .connect(user3.signer)
         .setPrice(bayc.address, "0")
-    ).to.be.revertedWith("NFTOracle: price can not be 0");
+    ).to.be.revertedWith("NFTOracle: price should be more than 0");
 
     // feed with updater(should revert)
     await expect(
       (await getNFTFloorOracle()).connect(updater).setPrice(bayc.address, "0")
-    ).to.be.revertedWith("NFTOracle: price can not be 0");
+    ).to.be.revertedWith("NFTOracle: price should be more than 0");
 
     // feed with admin (deployer) - ok
     expect(
@@ -246,7 +241,7 @@ describe("NFT Oracle Tests", () => {
     );
   });
 
-  it("Administrator role can be granted to another user", async () => {
+  it("TC-oracle-nft-floor-price-11:Administrator role can be granted to another user", async () => {
     const {
       bayc,
       users: [, , user3],
@@ -284,7 +279,7 @@ describe("NFT Oracle Tests", () => {
     ).to.be.reverted;
   });
 
-  it("Feeders with revoked rights cannot feed price", async () => {
+  it("TC-oracle-nft-floor-price-10:Feeders with revoked rights cannot feed price", async () => {
     const {
       bayc,
       users: [, , user3],
@@ -308,7 +303,7 @@ describe("NFT Oracle Tests", () => {
     ).to.be.reverted;
   });
 
-  it("Only when minCountToAggregate is reached, median value from the different providers is returned", async () => {
+  it("TC-oracle-nft-floor-price-12:Only when minCountToAggregate is reached, median value from the different providers is returned", async () => {
     const {
       bayc,
       users: [, user2, user3, user4],
@@ -371,7 +366,7 @@ describe("NFT Oracle Tests", () => {
     ).to.equal(parseEther("2")); // array position int(3/2)=1 of (1, 2, 3)
   });
 
-  it("Oracle quotes expire based on expirationPeriod", async () => {
+  it("TC-oracle-nft-floor-price-13:Oracle quotes expire based on expirationPeriod", async () => {
     const {
       bayc,
       users: [, user2, user3, user4],
@@ -418,7 +413,7 @@ describe("NFT Oracle Tests", () => {
     ).to.equal(parseEther("5"));
   });
 
-  it("Price changes away from maxPriceDeviation are not taken into account", async () => {
+  it("TC-oracle-nft-floor-price-14:Price changes away from maxPriceDeviation are not taken into account", async () => {
     const {
       bayc,
       users: [, user2, user3, user4],

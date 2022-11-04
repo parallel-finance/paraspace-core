@@ -96,9 +96,16 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
 
     /// @inheritdoc IPoolConfigurator
     function updatePToken(
-        ConfiguratorInputTypes.UpdateXTokenInput calldata input
+        ConfiguratorInputTypes.UpdatePTokenInput calldata input
     ) external override onlyPoolAdmin {
-        ConfiguratorLogic.executeUpdateXToken(_pool, input);
+        ConfiguratorLogic.executeUpdatePToken(_pool, input);
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function updateNToken(
+        ConfiguratorInputTypes.UpdateNTokenInput calldata input
+    ) external override onlyPoolAdmin {
+        ConfiguratorLogic.executeUpdateNToken(_pool, input);
     }
 
     /// @inheritdoc IPoolConfigurator
@@ -198,19 +205,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
         currentConfig.setFrozen(freeze);
         _pool.setConfiguration(asset, currentConfig);
         emit ReserveFrozen(asset, freeze);
-    }
-
-    /// @inheritdoc IPoolConfigurator
-    function setDynamicConfigsEnabled(address asset, bool enabled)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
-        DataTypes.ReserveConfigurationMap memory currentConfig = _pool
-            .getConfiguration(asset);
-        currentConfig.setDynamicConfigs(enabled);
-        _pool.setConfiguration(asset, currentConfig);
-        emit ReserveDynamicConfigsEnabled(asset, enabled);
     }
 
     /// @inheritdoc IPoolConfigurator
@@ -330,25 +324,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReserveDynamicConfigsStrategyAddress(
-        address asset,
-        address newDynamicConfigsStrategyAddress
-    ) external override onlyRiskOrPoolAdmins {
-        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
-        address oldDynamicConfigsStrategyAddress = reserve
-            .dynamicConfigsStrategyAddress;
-        _pool.setReserveDynamicConfigsStrategyAddress(
-            asset,
-            newDynamicConfigsStrategyAddress
-        );
-        emit ReserveDynamicConfigsStrategyChanged(
-            asset,
-            oldDynamicConfigsStrategyAddress,
-            newDynamicConfigsStrategyAddress
-        );
-    }
-
-    /// @inheritdoc IPoolConfigurator
     function setReserveAuctionStrategyAddress(
         address asset,
         address newAuctionStrategyAddress
@@ -375,15 +350,6 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
                 setReservePause(reserves[i], paused);
             }
         }
-    }
-
-    /// @inheritdoc IPoolConfigurator
-    function setMaxAtomicTokensAllowed(uint24 value)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
-        _pool.setMaxAtomicTokensAllowed(value);
     }
 
     /// @inheritdoc IPoolConfigurator
