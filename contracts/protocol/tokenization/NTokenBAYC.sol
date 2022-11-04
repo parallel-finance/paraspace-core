@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {NTokenApeStaking} from "./NTokenApeStaking.sol";
 import {IPool} from "../../interfaces/IPool.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title BAYC NToken
@@ -42,5 +43,9 @@ contract NTokenBAYC is NTokenApeStaking {
 
     function POOL_ID() internal virtual override returns (uint256) {
         return BAYC_POOL_ID;
+    }
+
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.NTokenBAYC;
     }
 }
