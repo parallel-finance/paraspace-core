@@ -795,19 +795,19 @@ library LiquidationLogic {
             .configuration
             .getLiquidationProtocolFee();
 
-        uint256 collateralToLiquate = (vars.collateralPrice *
+        uint256 collateralToLiquidate = (vars.collateralPrice *
             vars.liquidationAssetUnit) / vars.liquidationAssetPrice;
 
         // base currency to convert to liquidation asset unit.
         uint256 globalDebtAmount = (superVars.userGlobalDebt *
             vars.liquidationAssetUnit) / vars.liquidationAssetPrice;
 
-        vars.actualLiquidationAmount = collateralToLiquate.percentDiv(
+        vars.actualLiquidationAmount = collateralToLiquidate.percentDiv(
             superVars.liquidationBonus
         );
 
         if (vars.liquidationProtocolFeePercentage != 0) {
-            uint256 bonusCollateral = collateralToLiquate -
+            uint256 bonusCollateral = collateralToLiquidate -
                 vars.actualLiquidationAmount;
 
             vars.liquidationProtocolFee = bonusCollateral.percentMul(
