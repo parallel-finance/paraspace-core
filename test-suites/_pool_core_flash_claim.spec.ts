@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {DRE} from "../deploy/helpers/misc-utils";
+import {DRE, evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
@@ -20,6 +20,7 @@ import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 describe("Flash Claim Test", () => {
   const tokenId = 0;
   let testEnv: TestEnv;
+  let snapShot: string;
   let receiverEncodedData;
   let mockAirdropERC20Token;
   let mockAirdropERC721Token;
@@ -71,13 +72,27 @@ describe("Flash Claim Test", () => {
         applyAirdropEncodedData,
       ]
     );
-  });
 
-  it("user register receiver", async function () {
     const {
+      bayc,
+      nBAYC,
       users: [user1],
+      pool,
     } = testEnv;
 
+    // supply bayc and mint ntoken
+    await bayc.connect(user1.signer)["mint(address)"](user1.address);
+    expect(await bayc.ownerOf(tokenId)).to.equal(user1.address);
+    await bayc.connect(user1.signer).setApprovalForAll(pool.address, true);
+    await pool
+      .connect(user1.signer)
+      .supplyERC721(
+        bayc.address,
+        [{tokenId: tokenId, useAsCollateral: true}],
+        user1.address,
+        0
+      );
+    expect(await nBAYC.ownerOf(tokenId)).to.equal(user1.address);
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
     const flashClaimReceiverAddr = await user_registry.userReceivers(
@@ -92,16 +107,24 @@ describe("Flash Claim Test", () => {
     expect(await flashClaimReceiver.owner()).to.be.equal(user1.address);
   });
 
-  it("User cannot flash claim an airdrop if the asset is not supplied into the pool", async function () {
+  beforeEach(async () => {
+    snapShot = await evmSnapshot();
+  });
+
+  afterEach(async () => {
+    await evmRevert(snapShot);
+  });
+
+  it("TC-flash-claim-01:User cannot flash claim an airdrop if the asset is not supplied into the pool", async function () {
     const {
       users: [user1],
       bayc,
       pool,
     } = testEnv;
 
-    // mint bayc
+    // mint another bayc with tokenId as 1 without supply
     await bayc.connect(user1.signer)["mint(address)"](user1.address);
-    expect(await bayc.ownerOf(tokenId)).to.equal(user1.address);
+    expect(await bayc.ownerOf(1)).to.equal(user1.address);
 
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
@@ -109,40 +132,20 @@ describe("Flash Claim Test", () => {
       user1.address
     );
 
+    // expect flashClaim will be reverted
     expect(
       pool
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
           bayc.address,
-          [tokenId],
+          [1],
           receiverEncodedData
         )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
   });
 
-  it("supply bayc and mint ntoken", async function () {
-    const {
-      bayc,
-      nBAYC,
-      users: [user1],
-      pool,
-    } = testEnv;
-
-    // supply bayc and mint ntoken
-    await bayc.connect(user1.signer).setApprovalForAll(pool.address, true);
-    await pool
-      .connect(user1.signer)
-      .supplyERC721(
-        bayc.address,
-        [{tokenId: tokenId, useAsCollateral: true}],
-        user1.address,
-        0
-      );
-    expect(await nBAYC.ownerOf(tokenId)).to.equal(user1.address);
-  });
-
-  it("someone else can not flash claim airdrop", async function () {
+  it("TC-flash-claim-02:someone else not owner can not flash claim airdrop", async function () {
     const {
       bayc,
       users: [, user2],
@@ -167,7 +170,7 @@ describe("Flash Claim Test", () => {
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
   });
 
-  it("owner can flash claim airdrop", async function () {
+  it("TC-flash-claim-03:owner can flash claim airdrop", async function () {
     const {
       bayc,
       users: [user1],
@@ -199,7 +202,7 @@ describe("Flash Claim Test", () => {
     ).to.be.equal(await airdrop_project.erc1155Bonus());
   });
 
-  it("user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {
+  it("TC-flash-claim-04:user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {
     const {
       users: [user1],
       pool,

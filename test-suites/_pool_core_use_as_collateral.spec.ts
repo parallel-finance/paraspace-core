@@ -20,7 +20,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     testEnv = await loadFixture(testEnvFixture);
   });
 
-  it("check by supply and withdraw", async () => {
+  it("TC-use-as-collateral-01:check by supply and withdraw", async () => {
     const {
       bayc,
       nBAYC,
@@ -100,7 +100,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
   });
 
-  it("check by supply and transfer", async () => {
+  it("TC-use-as-collateral-02:check by supply and transfer", async () => {
     const {
       bayc,
       nBAYC,
@@ -154,7 +154,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.false;
   });
 
-  it("check setUserUseERC721AsCollateral", async () => {
+  it("TC-use-as-collateral-03:check setUserUseERC721AsCollateral", async () => {
     const {
       bayc,
       nBAYC,
@@ -231,7 +231,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.false;
   });
 
-  it("check liquidation", async () => {
+  it("TC-use-as-collateral-04:check liquidation", async () => {
     const {
       weth,
       bayc,
@@ -293,7 +293,6 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
         .connect(user1.signer)
         .liquidationERC721(
           bayc.address,
-          weth.address,
           user1.address,
           0,
           parseEther("20"),
@@ -316,7 +315,6 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
         .connect(liquidator.signer)
         .liquidationERC721(
           bayc.address,
-          weth.address,
           user1.address,
           0,
           parseEther("20"),
@@ -343,7 +341,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     expect(isUsingAsCollateral(liquidatorConfig, baycData.id)).to.be.false;
   });
 
-  it("special case for supply and transfer", async () => {
+  it("TC-use-as-collateral-05:supply multiple nft with some as collateral and some are not,then transfer and check", async () => {
     const {
       bayc,
       nBAYC,
