@@ -617,3 +617,132 @@ describe("Ptoken transfer tests", () => {
     );
   });
 });
+
+describe("Repay behaviors for ptoken", () => {
+  const fixture = async () => {
+    const testEnv = await loadFixture(testEnvFixture);
+    const {
+      weth,
+      pool,
+      dai,
+      users: [user0, user1],
+    } = testEnv;
+
+    const daiAmount = utils.parseEther("100");
+    const wethAmount = utils.parseEther("1");
+    await waitForTx(
+      await dai.connect(user0.signer)["mint(uint256)"](daiAmount)
+    );
+    await waitForTx(
+      await weth.connect(user1.signer)["mint(uint256)"](wethAmount)
+    );
+
+    await waitForTx(
+      await dai.connect(user0.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await weth.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+
+    await pool
+      .connect(user0.signer)
+      .supply(dai.address, daiAmount, user0.address, 0);
+    await pool
+      .connect(user1.signer)
+      .supply(weth.address, wethAmount, user1.address, 0);
+    await pool
+      .connect(user1.signer)
+      .borrow(dai.address, daiAmount.div(2), 0, user1.address);
+    return testEnv;
+  };
+
+  it("TC-ptoken-repay-02: use should repay debt with all ptoken held", async () => {
+    const {
+      pool,
+      dai,
+      pDai,
+      variableDebtDai,
+      users: [user0, user1],
+    } = await loadFixture(fixture);
+
+    await pDai
+      .connect(user0.signer)
+      .transfer(user1.address, utils.parseEther("25"));
+
+    const debtBefore = await variableDebtDai.balanceOf(user1.address, {
+      blockTag: "pending",
+    });
+
+    const tx = await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT)
+    );
+
+    const repayEventSignature = utils.keccak256(
+      utils.toUtf8Bytes("Repay(address,address,address,uint256,bool)")
+    );
+
+    const rawRepayEvents = tx.logs.filter(
+      (log) => log.topics[0] === repayEventSignature
+    );
+    const parsedRepayEvent = pool.interface.parseLog(rawRepayEvents[0]);
+
+    expect(parsedRepayEvent.args.usePTokens).to.be.true;
+    expect(parsedRepayEvent.args.reserve).to.be.eq(dai.address);
+    expect(parsedRepayEvent.args.repayer).to.be.eq(user1.address);
+    expect(parsedRepayEvent.args.user).to.be.eq(user1.address);
+
+    const repayAmount = parsedRepayEvent.args.amount;
+    const balanceAfter = await pDai.balanceOf(user1.address);
+    const debtAfter = await variableDebtDai.balanceOf(user1.address);
+
+    expect(balanceAfter).to.be.eq(0);
+    expect(debtAfter).to.be.closeTo(debtBefore.sub(repayAmount), 2);
+  });
+
+  it("TC-ptoken-repay-03: user should repay all debt", async () => {
+    const {
+      pool,
+      dai,
+      pDai,
+      variableDebtDai,
+      users: [user0, user1],
+    } = await loadFixture(fixture);
+
+    await pDai
+      .connect(user0.signer)
+      .transfer(user1.address, utils.parseEther("55"));
+
+    const balanceBefore = await pDai.balanceOf(user1.address, {
+      blockTag: "pending",
+    });
+
+    const tx = await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .repayWithPTokens(dai.address, MAX_UINT_AMOUNT)
+    );
+
+    const repayEventSignature = utils.keccak256(
+      utils.toUtf8Bytes("Repay(address,address,address,uint256,bool)")
+    );
+
+    const rawRepayEvents = tx.logs.filter(
+      (log) => log.topics[0] === repayEventSignature
+    );
+    const parsedRepayEvent = pool.interface.parseLog(rawRepayEvents[0]);
+
+    expect(parsedRepayEvent.args.usePTokens).to.be.true;
+    expect(parsedRepayEvent.args.reserve).to.be.eq(dai.address);
+    expect(parsedRepayEvent.args.repayer).to.be.eq(user1.address);
+    expect(parsedRepayEvent.args.user).to.be.eq(user1.address);
+
+    const repayAmount = parsedRepayEvent.args.amount;
+    const balanceAfter = await pDai.balanceOf(user1.address);
+    const debtAfter = await variableDebtDai.balanceOf(user1.address);
+
+    expect(debtAfter).to.be.eq(0);
+    expect(balanceAfter).to.be.eq(balanceBefore.sub(repayAmount));
+  });
+});
