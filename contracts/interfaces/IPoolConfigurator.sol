@@ -188,11 +188,19 @@ interface IPoolConfigurator {
     ) external;
 
     /**
-     * @dev Updates the xToken implementation for the reserve.
-     * @param input The xToken update parameters
+     * @dev Updates the pToken implementation for the reserve.
+     * @param input The pToken update parameters
      **/
     function updatePToken(
-        ConfiguratorInputTypes.UpdateXTokenInput calldata input
+        ConfiguratorInputTypes.UpdatePTokenInput calldata input
+    ) external;
+
+    /**
+     * @dev Updates the nToken implementation for the reserve.
+     * @param input The nToken update parameters
+     **/
+    function updateNToken(
+        ConfiguratorInputTypes.UpdateNTokenInput calldata input
     ) external;
 
     /**

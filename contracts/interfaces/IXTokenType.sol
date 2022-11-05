@@ -7,10 +7,12 @@ pragma solidity 0.8.10;
  * @notice Defines the basic interface for an IXTokenType.
  **/
 enum XTokenType {
-    NoneType, // unused
+    PhantomData, // unused
     NToken,
     NTokenMoonBirds,
     NTokenUniswapV3,
+    NTokenBAYC,
+    NTokenMAYC,
     PToken,
     DelegationAwarePToken,
     RebasingPToken,

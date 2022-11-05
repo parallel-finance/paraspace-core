@@ -122,7 +122,7 @@ interface IPoolCore {
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
-     * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param liquidatedCollateralAmount The amount of collateral received by the liquidator
      * @param liquidator The address of the liquidator
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
@@ -132,7 +132,7 @@ interface IPoolCore {
         address indexed collateralAsset,
         address indexed liquidationAsset,
         address indexed user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         uint256 liquidatedCollateralAmount,
         address liquidator,
         bool receivePToken
@@ -240,16 +240,6 @@ interface IPoolCore {
     ) external;
 
     /**
-     * @notice Same as `supplyERC721` but this can only be used by supplying UniswapV3 NFT.
-     **/
-    function supplyUniswapV3(
-        address asset,
-        DataTypes.ERC721SupplyParams[] calldata tokenData,
-        address onBehalfOf,
-        uint16 referralCode
-    ) external;
-
-    /**
      * @notice Supply with transfer approval of asset to be supplied done via permit function
      * see: https://eips.ethereum.org/EIPS/eip-2612 and https://eips.ethereum.org/EIPS/eip-713
      * @param asset The address of the underlying asset to supply
@@ -308,6 +298,25 @@ interface IPoolCore {
         uint256[] calldata tokenIds,
         address to
     ) external returns (uint256);
+
+    /**
+     * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
+     * that the user respects liquidation checks.
+     * @param asset The asset address of uniswapV3
+     * @param tokenId The id of the erc721 token
+     * @param liquidityDecrease The amount of liquidity to remove of LP
+     * @param amount0Min The minimum amount to remove of token0
+     * @param amount1Min The minimum amount to remove of token1
+     * @param receiveEthAsWeth If convert weth to ETH
+     */
+    function decreaseUniswapV3Liquidity(
+        address asset,
+        uint256 tokenId,
+        uint128 liquidityDecrease,
+        uint256 amount0Min,
+        uint256 amount1Min,
+        bool receiveEthAsWeth
+    ) external;
 
     /**
      * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
@@ -409,12 +418,12 @@ interface IPoolCore {
 
     /**
      * @notice Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
-     * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
+     * - The caller (liquidator) covers `liquidationAmount` amount of debt of the user getting liquidated, and receives
      *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
      * @param user The address of the borrower getting liquidated
-     * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
+     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
      * to receive the underlying collateral asset directly
      **/
@@ -422,18 +431,17 @@ interface IPoolCore {
         address collateralAsset,
         address liquidationAsset,
         address user,
-        uint256 debtToCover,
+        uint256 liquidationAmount,
         bool receivePToken
-    ) external;
+    ) external payable;
 
     function liquidationERC721(
         address collateralAsset,
-        address liquidationAsset,
         address user,
         uint256 collateralTokenId,
         uint256 liquidationAmount,
         bool receiveNToken
-    ) external;
+    ) external payable;
 
     /**
      * @notice Start the auction on user's specific NFT collateral

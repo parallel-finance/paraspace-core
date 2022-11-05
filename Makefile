@@ -73,13 +73,21 @@ test-pool-upgrade:
 test-ntoken:
 	make TEST_TARGET=ntoken.spec.ts test
 
-.PHONY: test-ntoken-punk
-test-ntoken-punk:
-	make TEST_TARGET=ntoken-punk.spec.ts test
+.PHONY: test-punk-gateway
+test-punk-gateway:
+	make TEST_TARGET=_gateway_punk.spec.ts test
 
 .PHONY: test-liquidation
 test-liquidation:
 	make TEST_TARGET=liquidation.spec.ts test
+
+.PHONY: test-liquidation-nft-with-weth
+test-liquidation-nft-with-weth:
+	make TEST_TARGET=liquidation-nft-with-weth.spec.ts test
+
+.PHONY: test-liquidation-with-eth
+test-liquidation-with-eth:
+	make TEST_TARGET=liquidation-with-eth.spec.ts test
 
 .PHONY: test-liquidation-non-borrowed
 test-liquidation-non-borrowed:
@@ -93,9 +101,21 @@ test-liquidation-auction:
 test-liquidation-edge:
 	make TEST_TARGET=liquidation-edge.spec.ts test
 
+.PHONY: test-liquidation-close-factor
+test-liquidation-close-factor:
+	make TEST_TARGET=liquidation-close-factor.spec.ts test
+
 .PHONY: test-liquidation-ptoken
 test-liquidation-ptoken:
 	make TEST_TARGET=liquidation-ptoken.spec.ts test
+
+.PHONY: test-liquidation-underlying
+test-liquidation-underlying:
+	make TEST_TARGET=liquidation-underlying.spec.ts test
+
+.PHONY: test-liquidation-with-fee
+test-liquidation-with-fee:
+	make TEST_TARGET=liquidation-with-fee.spec.ts test
 
 .PHONY: test-configurator-edge
 test-configurator-edge:
@@ -112,15 +132,7 @@ test-ptoken-permit:
 .PHONY: test-ptoken-delegation-aware
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
-
-.PHONY: test-interest-overflow
-test-interest-overflow:
-	make TEST_TARGET=interest-overflow.spec.ts test
-
-.PHONY: test-ltv-validation
-test-ltv-validation:
-	make TEST_TARGET=ltv-validation.spec.ts test
-
+	
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
@@ -137,25 +149,25 @@ test-erc20:
 test-flash-claim:
 	make TEST_TARGET=flash-claim.spec.ts test
 
-.PHONY: test-price-oracle-update
-test-price-oracle-update:
-	make TEST_TARGET=price-oracle-update.spec.ts test
+.PHONY: test-paraspace-oracle-aggregator
+test-paraspace-oracle-aggregator:
+	make TEST_TARGET=_oracle_aggregator.spec.ts test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
-	make TEST_TARGET=nft-floor-price-oracle.spec.ts test
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts test
 
 .PHONY: test-weth-gateway
 test-weth-gateway:
-	make TEST_TARGET=weth-gateway.spec.ts test
+	make TEST_TARGET=_gateway_weth.spec.ts test
 
 .PHONY: test-mock-token-faucet
 test-mock-token-faucet:
 	make TEST_TARGET=mock-token-faucet.spec.ts test
 
-.PHONY: test-moonbird
-test-moonbird:
-	make TEST_TARGET=moonbird.spec.ts test
+.PHONY: test-moonbirds
+test-moonbirds:
+	make TEST_TARGET=_xtoken_ntoken_moonbirds.spec.ts test
 
 .PHONY: test-marketplace
 test-marketplace:
@@ -187,7 +199,7 @@ test-ptoken-repay:
 
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
-	make TEST_TARGET=variable-debt-token.spec.ts test
+	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
 
 .PHONY: test-paraspace-oracle
 test-paraspace-oracle:
@@ -209,6 +221,10 @@ test-rebasing-tokens:
 test-pool-addresses-provider:
 	make TEST_TARGET=pool-addresses-provider.spec.ts test
 
+.PHONY: test-addresses-provider-registry
+test-addresses-provider-registry:
+	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test	
+
 .PHONY: test-pausable-pool
 test-pausable-pool:
 	make TEST_TARGET=pausable-pool.spec.ts test
@@ -227,15 +243,7 @@ test-user-configurator-used-as-collateral:
 
 .PHONY: test-rate-strategy
 test-rate-strategy:
-	make TEST_TARGET=rate-strategy.spec.ts test
-
-.PHONY: test-ui-pool-data-provider
-test-ui-pool-data-provider:
-	make TEST_TARGET=ui-pool-data-provider.spec.ts test
-
-.PHONY: test-ui-incentive-data-provider
-test-ui-incentive-data-provider:
-	make TEST_TARGET=ui-incentive-data-provider.spec.ts test
+	make TEST_TARGET=_base_interest_rate_strategy.spec.ts test
 
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
@@ -249,9 +257,13 @@ test-dynamic-configs-strategy:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
-.PHONY: test-wallet-balance-provider
-test-wallet-balance-provider:
-	make TEST_TARGET=wallet-balance-provider.spec.ts test
+.PHONY: test-ui-providers
+test-ui-providers:
+	make TEST_TARGET=_ui_providers.spec.ts test
+
+.PHONY: test-ape-staking
+test-ape-staking:
+	make TEST_TARGET=ape_coin_staking.spec.ts test
 
 .PHONY: run
 run:
@@ -362,6 +374,22 @@ upgrade:
 .PHONY: upgrade-pool
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
+
+.PHONY: upgrade-ptoken
+upgrade-ptoken:
+	make TASK_NAME=upgrade:ptoken run-task
+
+.PHONY: upgrade-ntoken
+upgrade-ntoken:
+	make TASK_NAME=upgrade:ntoken run-task
+
+.PHONY: upgrade-ntoken-uniswapv3
+upgrade-ntoken-uniswapv3:
+	make TASK_NAME=upgrade:ntoken_uniswapv3 run-task
+
+.PHONY: upgrade-ntoken-moonbirds
+upgrade-ntoken-moonbirds:
+	make TASK_NAME=upgrade:ntoken_moonbirds run-task
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

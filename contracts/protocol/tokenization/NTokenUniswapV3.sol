@@ -16,16 +16,15 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
 
 /**
  * @title UniswapV3 NToken
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract NTokenUniswapV3 is NToken {
+contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
     using SafeERC20 for IERC20;
-
-    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
     /**
      * @dev Constructor.
@@ -50,6 +49,7 @@ contract NTokenUniswapV3 is NToken {
      * @return amount1 The amount returned back in token1
      */
     function _decreaseLiquidity(
+        address user,
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
@@ -93,11 +93,10 @@ contract NTokenUniswapV3 is NToken {
         receiveEthAsWeth = (receiveEthAsWeth &&
             (token0 == weth || token1 == weth));
 
-        address sender = msg.sender;
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
-                recipient: receiveEthAsWeth ? address(this) : sender,
+                recipient: receiveEthAsWeth ? address(this) : user,
                 amount0Max: type(uint128).max,
                 amount1Max: type(uint128).max
             });
@@ -109,54 +108,36 @@ contract NTokenUniswapV3 is NToken {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
             if (balanceWeth > 0) {
                 IWETH(weth).withdraw(balanceWeth);
-                _safeTransferETH(sender, balanceWeth);
+                _safeTransferETH(user, balanceWeth);
             }
 
             address pairToken = (token0 == weth) ? token1 : token0;
             uint256 balanceToken = IERC20(pairToken).balanceOf(address(this));
             if (balanceToken > 0) {
-                IERC20(pairToken).safeTransfer(sender, balanceToken);
+                IERC20(pairToken).safeTransfer(user, balanceToken);
             }
         }
     }
 
-    /**
-     * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
-     * that the user respects liquidation checks.
-     * @dev Pool must be initialized already to add liquidity
-     * @param tokenId The id of the erc721 token
-     * @param liquidityDecrease The amount of liquidity to remove of LP
-     * @param amount0Min The minimum amount to remove of token0
-     * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEthAsWeth If convert weth to ETH
-     */
+    /// @inheritdoc INTokenUniswapV3
     function decreaseUniswapV3Liquidity(
+        address user,
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
         bool receiveEthAsWeth
-    ) external nonReentrant {
-        // only the token owner of the NToken can decrease the underlying
-        address sender = _msgSender();
-        require(sender == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+    ) external onlyPool nonReentrant {
+        require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
         // interact with Uniswap V3
         _decreaseLiquidity(
+            user,
             tokenId,
             liquidityDecrease,
             amount0Min,
             amount1Min,
             receiveEthAsWeth
-        );
-
-        // return data about the users healthFactor after decrease
-        (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(sender);
-
-        // revert if decrease would result in a liquidation
-        require(
-            healthFactor > HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
     }
 

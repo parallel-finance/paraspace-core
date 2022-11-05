@@ -10,7 +10,10 @@ import {
 } from "./deploy/helpers/hardhat-constants";
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
-import {buildForkConfig, NETWORKS_RPC_URL} from "./deploy/helper-hardhat-config";
+import {
+  buildForkConfig,
+  NETWORKS_RPC_URL,
+} from "./deploy/helper-hardhat-config";
 import fs from "fs";
 
 dotenv.config();
@@ -28,7 +31,7 @@ import {eEthereumNetwork} from "./deploy/helpers/types";
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
-const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4")
+const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4");
 
 require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
@@ -114,10 +117,6 @@ const hardhatConfig: HardhatUserConfig = {
       gas: 4e6,
       allowUnlimitedContractSize: true,
     },
-    localhost: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
-      chainId: HARDHAT_CHAINID,
-    },
     coverage: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.coverage],
       chainId: COVERAGE_CHAINID,
@@ -138,6 +137,13 @@ const hardhatConfig: HardhatUserConfig = {
           balance,
         })
       ),
+      forking: buildForkConfig(),
+      allowUnlimitedContractSize: true,
+    },
+    localhost: {
+      hardfork: HARDFORK,
+      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
+      chainId: HARDHAT_CHAINID,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },

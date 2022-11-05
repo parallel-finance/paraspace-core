@@ -271,7 +271,7 @@ describe("Liquidation Auction", () => {
       const {
         users: [borrower, liquidator],
         bayc,
-        dai,
+        weth,
       } = testEnv;
 
       // drop BAYC price to liquidation levels
@@ -279,7 +279,7 @@ describe("Liquidation Auction", () => {
 
       // try to liquidate the NFT
       await expect(
-        liquidateAndValidate(bayc, dai, "80000", liquidator, borrower, false, 0)
+        liquidateAndValidate(bayc, weth, "7.3", liquidator, borrower, false, 0)
       ).to.be.revertedWith(ProtocolErrors.AUCTION_NOT_STARTED);
     });
 
@@ -318,7 +318,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            dai.address,
             borrower.address,
             0,
             await convertToCurrencyDecimals(dai.address, "10000"),
@@ -362,7 +361,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            dai.address,
             borrower.address,
             0,
             await convertToCurrencyDecimals(dai.address, "10000"),
@@ -378,14 +376,13 @@ describe("Liquidation Auction", () => {
         users: [borrower, liquidator],
         pool,
         bayc,
-        dai,
         configurator,
       } = testEnv;
 
       // drop BAYC price to liquidation levels
       await changePriceAndValidate(bayc, "8");
 
-      // actualLiquidationAmount: 12 / 0.000908578801039414 / 1.05 = 12578.514285714287769 DAI
+      // actualLiquidationAmount: 8 / 1 / 1.05 = 7.6190476190476190476
 
       // disable auction first to test original liquidation
       await waitForTx(
@@ -405,17 +402,16 @@ describe("Liquidation Auction", () => {
       // DAI#100k
       // WETH#990
       //
-      // liquidationAmount: 12000000000000000000
-      // actualLiquidationAmount: 12578514285714287768609
+      // liquidationAmount: 7.5
+      // actualLiquidationAmount: 7.6190476190476190476
       await expect(
         pool
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            dai.address,
             borrower.address,
             0,
-            parseEther("12").toString(),
+            parseEther("7.5").toString(),
             false,
             {
               gasLimit: 5000000,
@@ -529,7 +525,6 @@ describe("Liquidation Auction", () => {
         users: [borrower, liquidator],
         pool,
         bayc,
-        weth,
       } = testEnv;
 
       await expect(
@@ -537,7 +532,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            weth.address,
             borrower.address,
             0,
             parseEther("36").toString(),
@@ -593,7 +587,6 @@ describe("Liquidation Auction", () => {
         pool,
         bayc,
         nBAYC,
-        weth,
         configurator,
       } = testEnv;
 
@@ -626,7 +619,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .liquidationERC721(
             bayc.address,
-            weth.address,
             borrower.address,
             0,
             parseEther("12").toString(),
