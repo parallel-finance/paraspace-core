@@ -27,16 +27,20 @@ describe("PoolAddressesProvider", () => {
   let testEnv: TestEnv;
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
 
+  const fixture = async () => {
+    const testEnv = await loadFixture(testEnvFixture);
+    // Transfer ownership to user 1
+    await testEnv.addressesProvider.transferOwnership(testEnv.users[1].address);
+    return testEnv;
+  };
+
   before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
+    testEnv = await loadFixture(fixture);
   });
 
-  it("Test the onlyOwner accessibility of the PoolAddressesProvider", async () => {
-    const {addressesProvider, users} = testEnv;
+  it("TC-addresses-provider-01 Test the onlyOwner accessibility of the PoolAddressesProvider", async () => {
+    const {addressesProvider} = testEnv;
     const mockAddress = createRandomAddress();
-
-    // Transfer ownership to user 1
-    await addressesProvider.transferOwnership(users[1].address);
 
     // Test accessibility with user 0
     for (const contractFunction of [
@@ -71,18 +75,23 @@ describe("PoolAddressesProvider", () => {
     ).to.be.revertedWith(OWNABLE_ONLY_OWNER);
   });
 
-  it("Owner adds a new address as proxy", async () => {
+  it("TC-addresses-provider-02 Owner adds a new address as proxy", async () => {
     const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
 
-    const {poolCore} = await deployPoolComponents(addressesProvider.address);
+    const mockPool = await (
+      await new MockPeripheryContractV2__factory(
+        await getFirstSigner()
+      ).deploy()
+    ).deployed();
+
     const proxiedAddressId = utils.formatBytes32String("RANDOM_PROXIED");
 
     expect(
       await addressesProvider
         .connect(currentAddressesProviderOwner.signer)
-        .setAddressAsProxy(proxiedAddressId, poolCore.address)
+        .setAddressAsProxy(proxiedAddressId, mockPool.address)
     )
       .to.emit(addressesProvider, "AddressSetAsProxy")
       .to.emit(addressesProvider, "ProxyCreated");
@@ -92,10 +101,10 @@ describe("PoolAddressesProvider", () => {
       addressesProvider.address,
       proxyAddress
     );
-    expect(implAddress).to.be.eq(poolCore.address);
+    expect(implAddress).to.be.eq(mockPool.address);
   });
 
-  it("Owner adds a new address with no proxy", async () => {
+  it("TC-addresses-provider-03 Owner adds a new address with no proxy", async () => {
     const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
@@ -115,7 +124,7 @@ describe("PoolAddressesProvider", () => {
       (await addressesProvider.getAddress(nonProxiedAddressId)).toLowerCase()
     ).to.be.eq(mockNonProxiedAddress.toLowerCase());
 
-    // fails with hardhat exception
+    //fails with hardhat exception
     // const proxyAddress = await addressesProvider.getAddress(
     //   nonProxiedAddressId
     // );
@@ -124,12 +133,17 @@ describe("PoolAddressesProvider", () => {
     // ).to.be.reverted;
   });
 
-  it("Owner adds a new address with no proxy and turns it into a proxy", async () => {
+  it("TC-addresses-provider-04 Owner adds a new address with no proxy and turns it into a proxy", async () => {
     const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
-    const {poolCore} = await deployPoolComponents(addressesProvider.address);
-    const mockConvertibleAddress = poolCore.address;
+    const mockPool = await (
+      await new MockPeripheryContractV2__factory(
+        await getFirstSigner()
+      ).deploy()
+    ).deployed();
+
+    const mockConvertibleAddress = mockPool.address;
     const convertibleAddressId = utils.formatBytes32String(
       "CONVERTIBLE_ADDRESS"
     );
@@ -191,7 +205,7 @@ describe("PoolAddressesProvider", () => {
     expect(implAddress).to.be.eq(mockConvertibleAddress);
   });
 
-  it("Unregister a proxy address", async () => {
+  it("TC-addresses-provider-05 Unregister a proxy address", async () => {
     const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
@@ -223,12 +237,16 @@ describe("PoolAddressesProvider", () => {
     // ).to.be.reverted;
   });
 
-  it("Owner adds a new address with proxy and turns it into a no proxy", async () => {
+  it("TC-addresses-provider-06 Owner adds a new address with proxy and turns it into a no proxy", async () => {
     const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
-    const {poolCore} = await deployPoolComponents(addressesProvider.address);
-    const mockConvertibleAddress = poolCore.address;
+    const mockPool = await (
+      await new MockPeripheryContractV2__factory(
+        await getFirstSigner()
+      ).deploy()
+    ).deployed();
+    const mockConvertibleAddress = mockPool.address;
     const convertibleAddressId = utils.formatBytes32String(
       "CONVERTIBLE_ADDRESS2"
     );
@@ -283,7 +301,7 @@ describe("PoolAddressesProvider", () => {
     ).to.be.reverted;
   });
 
-  it("Unregister a no proxy address", async () => {
+  it("TC-addresses-provider-07 Unregister a no proxy address", async () => {
     const {addressesProvider, users} = testEnv;
 
     const currentAddressesProviderOwner = users[1];
@@ -317,7 +335,7 @@ describe("PoolAddressesProvider", () => {
     ).to.be.reverted;
   });
 
-  it("Owner registers an existing contract (with proxy) and upgrade it", async () => {
+  it("TC-addresses-provider-08 Owner registers an existing contract (with proxy) and upgrade it", async () => {
     const {addressesProvider, users} = testEnv;
     const proxyAdminOwner = users[0];
 
@@ -415,9 +433,7 @@ describe("PoolAddressesProvider", () => {
     );
   });
 
-  it("Owner updates the implementation by adding the same selectors", async () => {
-    const snapId = await evmSnapshot();
-
+  it("TC-addresses-provider-09 Owner updates the implementation of a proxy which is already initialized (revert expected)", async () => {
     const {addressesProvider, users} = testEnv;
     const currentAddressesProviderOwner = users[1];
 
@@ -453,11 +469,9 @@ describe("PoolAddressesProvider", () => {
 
     // Pool address should not change
     expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
-
-    await evmRevert(snapId);
   });
 
-  it("Owner updates the implementation of a proxy by updating existing selectors ", async () => {
+  it("TC-addresses-provider-10 Owner updates the MarketId", async () => {
     const snapId = await evmSnapshot();
 
     const {addressesProvider, users} = testEnv;
@@ -493,9 +507,204 @@ describe("PoolAddressesProvider", () => {
     await evmRevert(snapId);
   });
 
-  it("Owner updates the implementation of a proxy by deleting existing selectors then adding them", async () => {
-    const snapId = await evmSnapshot();
+  it("TC-addresses-provider-11 Owner updates the PoolConfigurator", async () => {
+    testEnv = await loadFixture(fixture);
+    const {addressesProvider, configurator, users} = testEnv;
 
+    const currentAddressesProviderOwner = users[1];
+
+    const newPoolConfiguratorImpl = (
+      await (
+        await new MockPeripheryContractV2__factory(
+          await getFirstSigner()
+        ).deploy()
+      ).deployed()
+    ).address;
+
+    expect(await addressesProvider.getPoolConfigurator(), configurator.address);
+
+    const poolConfiguratorAddressId =
+      utils.formatBytes32String("POOL_CONFIGURATOR");
+    const proxyAddress = await addressesProvider.getAddress(
+      poolConfiguratorAddressId
+    );
+    const implementationAddress = await getProxyImplementation(
+      addressesProvider.address,
+      proxyAddress
+    );
+
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setPoolConfiguratorImpl(newPoolConfiguratorImpl)
+    )
+      .to.emit(addressesProvider, "PoolConfiguratorUpdated")
+      .withArgs(implementationAddress, newPoolConfiguratorImpl);
+
+    expect(await addressesProvider.getPoolConfigurator()).to.be.eq(
+      configurator.address
+    );
+    const implementationAddressAfter = await getProxyImplementation(
+      addressesProvider.address,
+      proxyAddress
+    );
+    expect(implementationAddressAfter).to.be.not.eq(implementationAddress);
+    expect(implementationAddressAfter).to.be.eq(newPoolConfiguratorImpl);
+  });
+
+  it("TC-addresses-provider-12 Owner updates the PriceOracle", async () => {
+    testEnv = await loadFixture(fixture);
+
+    const {addressesProvider, oracle, users} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    const newPriceOracleAddress = createRandomAddress();
+
+    expect(await addressesProvider.getPriceOracle(), oracle.address);
+
+    const priceOracleAddressId = utils.formatBytes32String("PRICE_ORACLE");
+    const registeredAddress = await addressesProvider.getAddress(
+      priceOracleAddressId
+    );
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setPriceOracle(newPriceOracleAddress)
+    )
+      .to.emit(addressesProvider, "PriceOracleUpdated")
+      .withArgs(registeredAddress, newPriceOracleAddress);
+
+    expect(await addressesProvider.getPriceOracle()).to.be.not.eq(
+      oracle.address
+    );
+    expect(await addressesProvider.getPriceOracle()).to.be.eq(
+      newPriceOracleAddress
+    );
+  });
+
+  it("TC-addresses-provider-13 Owner updates the ACLManager", async () => {
+    testEnv = await loadFixture(fixture);
+
+    const {addressesProvider, users, aclManager} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    const newACLManagerAddress = createRandomAddress();
+
+    expect(await addressesProvider.getACLManager(), aclManager.address);
+
+    const aclManagerAddressId = utils.formatBytes32String("ACL_MANAGER");
+    const registeredAddress = await addressesProvider.getAddress(
+      aclManagerAddressId
+    );
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setACLManager(newACLManagerAddress)
+    )
+      .to.emit(addressesProvider, "ACLManagerUpdated")
+      .withArgs(registeredAddress, newACLManagerAddress);
+
+    expect(await addressesProvider.getACLManager()).to.be.not.eq(
+      aclManager.address
+    );
+    expect(await addressesProvider.getACLManager()).to.be.eq(
+      newACLManagerAddress
+    );
+  });
+
+  it("TC-addresses-provider-14 Owner updates the ACLAdmin", async () => {
+    testEnv = await loadFixture(fixture);
+
+    const {addressesProvider, users, deployer} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    const newACLAdminAddress = createRandomAddress();
+
+    expect(await addressesProvider.getACLAdmin(), deployer.address);
+
+    const aclAdminAddressId = utils.formatBytes32String("ACL_ADMIN");
+    const registeredAddress = await addressesProvider.getAddress(
+      aclAdminAddressId
+    );
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setACLAdmin(newACLAdminAddress)
+    )
+      .to.emit(addressesProvider, "ACLAdminUpdated")
+      .withArgs(registeredAddress, newACLAdminAddress);
+
+    expect(await addressesProvider.getACLAdmin()).to.be.not.eq(
+      deployer.address
+    );
+    expect(await addressesProvider.getACLAdmin()).to.be.eq(newACLAdminAddress);
+  });
+
+  it("TC-addresses-provider-15 Owner updates the PriceOracleSentinel", async () => {
+    testEnv = await loadFixture(fixture);
+
+    const {addressesProvider, users} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    const newPriceOracleSentinelAddress = createRandomAddress();
+
+    const priceOracleSentinelAddressId = utils.formatBytes32String(
+      "PRICE_ORACLE_SENTINEL"
+    );
+    const registeredAddress = await addressesProvider.getAddress(
+      priceOracleSentinelAddressId
+    );
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setPriceOracleSentinel(newPriceOracleSentinelAddress)
+    )
+      .to.emit(addressesProvider, "PriceOracleSentinelUpdated")
+      .withArgs(registeredAddress, newPriceOracleSentinelAddress);
+
+    expect(await addressesProvider.getPriceOracleSentinel()).to.be.not.eq(
+      registeredAddress
+    );
+    expect(await addressesProvider.getPriceOracleSentinel()).to.be.eq(
+      newPriceOracleSentinelAddress
+    );
+  });
+
+  it("TC-addresses-provider-16 Owner updates the DataProvider", async () => {
+    testEnv = await loadFixture(fixture);
+
+    const {addressesProvider, protocolDataProvider, users} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    expect(
+      await addressesProvider.getPoolDataProvider(),
+      protocolDataProvider.address
+    );
+
+    const newDataProviderAddress = createRandomAddress();
+
+    const dataProviderAddressId = utils.formatBytes32String("DATA_PROVIDER");
+    const registeredAddress = await addressesProvider.getAddress(
+      dataProviderAddressId
+    );
+    expect(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setProtocolDataProvider(newDataProviderAddress)
+    )
+      .to.emit(addressesProvider, "ProtocolDataProviderUpdated")
+      .withArgs(registeredAddress, newDataProviderAddress);
+
+    expect(await addressesProvider.getPoolDataProvider()).to.be.not.eq(
+      protocolDataProvider.address
+    );
+    expect(await addressesProvider.getPoolDataProvider()).to.be.eq(
+      newDataProviderAddress
+    );
+  });
+
+  it("TC-addresses-provider-17 Owner updates the implementation of a proxy by deleting existing selectors then adding them", async () => {
+    testEnv = await loadFixture(fixture);
     const {addressesProvider, users} = testEnv;
     const currentAddressesProviderOwner = users[1];
 
@@ -539,235 +748,5 @@ describe("PoolAddressesProvider", () => {
 
     // Pool address should not change
     expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
-
-    await evmRevert(snapId);
-  });
-
-  it("Owner updates the MarketId", async () => {
-    const snapId = await evmSnapshot();
-
-    const {addressesProvider, users} = testEnv;
-    const currentAddressesProviderOwner = users[1];
-
-    const NEW_MARKET_ID = "NEW_MARKET";
-
-    // Current MarketId
-    const oldMarketId = await addressesProvider.getMarketId();
-
-    // Update the MarketId
-    expect(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setMarketId(NEW_MARKET_ID)
-    )
-      .to.emit(addressesProvider, "MarketIdSet")
-      .withArgs(oldMarketId, NEW_MARKET_ID);
-
-    expect(await addressesProvider.getMarketId()).to.be.not.eq(oldMarketId);
-    expect(await addressesProvider.getMarketId()).to.be.eq(NEW_MARKET_ID);
-
-    await evmRevert(snapId);
-  });
-
-  // it("Owner updates the PoolConfigurator", async () => {
-  //   const snapId = await evmSnapshot();
-
-  //   const { addressesProvider, configurator, users } = testEnv;
-  //   const currentAddressesProviderOwner = users[1];
-
-  //   const newPoolConfiguratorImpl = (await deployMockPool()).address;
-
-  //   expect(await addressesProvider.getPoolConfigurator(), configurator.address);
-
-  //   const poolConfiguratorAddressId =
-  //     utils.formatBytes32String("POOL_CONFIGURATOR");
-  //   const proxyAddress = await addressesProvider.getAddress(
-  //     poolConfiguratorAddressId
-  //   );
-  //   const implementationAddress = await getProxyImplementation(
-  //     addressesProvider.address,
-  //     proxyAddress
-  //   );
-
-  //   expect(
-  //     await addressesProvider
-  //       .connect(currentAddressesProviderOwner.signer)
-  //       .setPoolConfiguratorImpl(newPoolConfiguratorImpl)
-  //   )
-  //     .to.emit(addressesProvider, "PoolConfiguratorUpdated")
-  //     .withArgs(implementationAddress, newPoolConfiguratorImpl);
-
-  //   expect(await addressesProvider.getPoolConfigurator()).to.be.eq(
-  //     configurator.address
-  //   );
-  //   const implementationAddressAfter = await getProxyImplementation(
-  //     addressesProvider.address,
-  //     proxyAddress
-  //   );
-  //   expect(implementationAddressAfter).to.be.not.eq(implementationAddress);
-  //   expect(implementationAddressAfter).to.be.eq(newPoolConfiguratorImpl);
-
-  //   await evmRevert(snapId);
-  // });
-
-  it("Owner updates the PriceOracle", async () => {
-    const snapId = await evmSnapshot();
-
-    const {addressesProvider, oracle, users} = testEnv;
-    const currentAddressesProviderOwner = users[1];
-
-    const newPriceOracleAddress = createRandomAddress();
-
-    expect(await addressesProvider.getPriceOracle(), oracle.address);
-
-    const priceOracleAddressId = utils.formatBytes32String("PRICE_ORACLE");
-    const registeredAddress = await addressesProvider.getAddress(
-      priceOracleAddressId
-    );
-    expect(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setPriceOracle(newPriceOracleAddress)
-    )
-      .to.emit(addressesProvider, "PriceOracleUpdated")
-      .withArgs(registeredAddress, newPriceOracleAddress);
-
-    expect(await addressesProvider.getPriceOracle()).to.be.not.eq(
-      oracle.address
-    );
-    expect(await addressesProvider.getPriceOracle()).to.be.eq(
-      newPriceOracleAddress
-    );
-
-    await evmRevert(snapId);
-  });
-
-  it("Owner updates the ACLManager", async () => {
-    const snapId = await evmSnapshot();
-
-    const {addressesProvider, users, aclManager} = testEnv;
-    const currentAddressesProviderOwner = users[1];
-
-    const newACLManagerAddress = createRandomAddress();
-
-    expect(await addressesProvider.getACLManager(), aclManager.address);
-
-    const aclManagerAddressId = utils.formatBytes32String("ACL_MANAGER");
-    const registeredAddress = await addressesProvider.getAddress(
-      aclManagerAddressId
-    );
-    expect(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setACLManager(newACLManagerAddress)
-    )
-      .to.emit(addressesProvider, "ACLManagerUpdated")
-      .withArgs(registeredAddress, newACLManagerAddress);
-
-    expect(await addressesProvider.getACLManager()).to.be.not.eq(
-      aclManager.address
-    );
-    expect(await addressesProvider.getACLManager()).to.be.eq(
-      newACLManagerAddress
-    );
-
-    await evmRevert(snapId);
-  });
-
-  it("Owner updates the ACLAdmin", async () => {
-    const snapId = await evmSnapshot();
-
-    const {addressesProvider, users, deployer} = testEnv;
-    const currentAddressesProviderOwner = users[1];
-
-    const newACLAdminAddress = createRandomAddress();
-
-    expect(await addressesProvider.getACLAdmin(), deployer.address);
-
-    const aclAdminAddressId = utils.formatBytes32String("ACL_ADMIN");
-    const registeredAddress = await addressesProvider.getAddress(
-      aclAdminAddressId
-    );
-    expect(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setACLAdmin(newACLAdminAddress)
-    )
-      .to.emit(addressesProvider, "ACLAdminUpdated")
-      .withArgs(registeredAddress, newACLAdminAddress);
-
-    expect(await addressesProvider.getACLAdmin()).to.be.not.eq(
-      deployer.address
-    );
-    expect(await addressesProvider.getACLAdmin()).to.be.eq(newACLAdminAddress);
-
-    await evmRevert(snapId);
-  });
-
-  it("Owner updates the PriceOracleSentinel", async () => {
-    const snapId = await evmSnapshot();
-
-    const {addressesProvider, users} = testEnv;
-    const currentAddressesProviderOwner = users[1];
-
-    const newPriceOracleSentinelAddress = createRandomAddress();
-
-    const priceOracleSentinelAddressId = utils.formatBytes32String(
-      "PRICE_ORACLE_SENTINEL"
-    );
-    const registeredAddress = await addressesProvider.getAddress(
-      priceOracleSentinelAddressId
-    );
-    expect(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setPriceOracleSentinel(newPriceOracleSentinelAddress)
-    )
-      .to.emit(addressesProvider, "PriceOracleSentinelUpdated")
-      .withArgs(registeredAddress, newPriceOracleSentinelAddress);
-
-    expect(await addressesProvider.getPriceOracleSentinel()).to.be.not.eq(
-      registeredAddress
-    );
-    expect(await addressesProvider.getPriceOracleSentinel()).to.be.eq(
-      newPriceOracleSentinelAddress
-    );
-
-    await evmRevert(snapId);
-  });
-
-  it("Owner updates the DataProvider", async () => {
-    const snapId = await evmSnapshot();
-
-    const {addressesProvider, protocolDataProvider, users} = testEnv;
-    const currentAddressesProviderOwner = users[1];
-
-    expect(
-      await addressesProvider.getPoolDataProvider(),
-      protocolDataProvider.address
-    );
-
-    const newDataProviderAddress = createRandomAddress();
-
-    const dataProviderAddressId = utils.formatBytes32String("DATA_PROVIDER");
-    const registeredAddress = await addressesProvider.getAddress(
-      dataProviderAddressId
-    );
-    expect(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setProtocolDataProvider(newDataProviderAddress)
-    )
-      .to.emit(addressesProvider, "ProtocolDataProviderUpdated")
-      .withArgs(registeredAddress, newDataProviderAddress);
-
-    expect(await addressesProvider.getPoolDataProvider()).to.be.not.eq(
-      protocolDataProvider.address
-    );
-    expect(await addressesProvider.getPoolDataProvider()).to.be.eq(
-      newDataProviderAddress
-    );
-
-    await evmRevert(snapId);
   });
 });

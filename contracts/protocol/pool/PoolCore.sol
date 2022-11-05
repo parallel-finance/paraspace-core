@@ -26,6 +26,7 @@ import {Errors} from "../libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
+import {IWETH} from "../../misc/interfaces/IWETH.sol";
 
 /**
  * @title Pool contract
@@ -102,7 +103,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
-                spender: msg.sender,
+                payer: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -124,7 +125,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                spender: msg.sender,
+                payer: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -145,30 +146,8 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                spender: address(0),
+                payer: address(0),
                 referralCode: 0
-            })
-        );
-    }
-
-    /// @inheritdoc IPoolCore
-    function supplyUniswapV3(
-        address asset,
-        DataTypes.ERC721SupplyParams[] calldata tokenData,
-        address onBehalfOf,
-        uint16 referralCode
-    ) external virtual override nonReentrant {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        SupplyLogic.executeSupplyUniswapV3(
-            ps._reserves,
-            ps._usersConfig[onBehalfOf],
-            DataTypes.ExecuteSupplyERC721Params({
-                asset: asset,
-                tokenData: tokenData,
-                onBehalfOf: onBehalfOf,
-                spender: msg.sender,
-                referralCode: referralCode
             })
         );
     }
@@ -203,7 +182,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
-                spender: msg.sender,
+                payer: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -250,6 +229,35 @@ contract PoolCore is
                     tokenIds: tokenIds,
                     to: to,
                     reservesCount: ps._reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                })
+            );
+    }
+
+    function decreaseUniswapV3Liquidity(
+        address asset,
+        uint256 tokenId,
+        uint128 liquidityDecrease,
+        uint256 amount0Min,
+        uint256 amount1Min,
+        bool receiveEthAsWeth
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        return
+            SupplyLogic.executeDecreaseUniswapV3Liquidity(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
+                DataTypes.ExecuteDecreaseUniswapV3LiquidityParams({
+                    user: msg.sender,
+                    asset: asset,
+                    tokenId: tokenId,
+                    reservesCount: ps._reservesCount,
+                    liquidityDecrease: liquidityDecrease,
+                    amount0Min: amount0Min,
+                    amount1Min: amount1Min,
+                    receiveEthAsWeth: receiveEthAsWeth,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle()
                 })
             );
@@ -422,7 +430,7 @@ contract PoolCore is
         address user,
         uint256 liquidationAmount,
         bool receivePToken
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         LiquidationLogic.executeLiquidationCall(
@@ -433,6 +441,7 @@ contract PoolCore is
                 reservesCount: ps._reservesCount,
                 liquidationAmount: liquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
+                weth: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
                 liquidationAsset: liquidationAsset,
                 user: user,
@@ -452,7 +461,7 @@ contract PoolCore is
         uint256 collateralTokenId,
         uint256 maxLiquidationAmount,
         bool receiveNToken
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         LiquidationLogic.executeERC721LiquidationCall(
@@ -463,8 +472,9 @@ contract PoolCore is
                 reservesCount: ps._reservesCount,
                 liquidationAmount: maxLiquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
-                liquidationAsset: ADDRESSES_PROVIDER.getWETH(),
+                weth: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
+                liquidationAsset: ADDRESSES_PROVIDER.getWETH(),
                 collateralTokenId: collateralTokenId,
                 user: user,
                 liquidator: msg.sender,

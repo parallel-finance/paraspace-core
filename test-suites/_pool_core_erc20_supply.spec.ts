@@ -1,10 +1,12 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
+import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
+  assertHealthFactorCalculation,
   mintAndValidate,
   supplyAndValidate,
   switchCollateralAndValidate,
@@ -131,5 +133,28 @@ describe("pToken Supply Event Accounting", () => {
 
     // user 2 ptoken  should increase
     expect(user2BalanceAfter).to.be.equal(user2balance.add(amount));
+  });
+
+  it("TC-erc20-supply-09 Health factor remains the same over time if user has only a ERC-20 supply position", async () => {
+    const {
+      dai,
+      pool,
+      users: [user1],
+    } = await loadFixture(testEnvFixture);
+
+    // User 1 - Deposit DAI
+    await supplyAndValidate(dai, firstDaiDeposit, user1, true);
+
+    const initialHealthFactor = (await pool.getUserAccountData(user1.address))
+      .healthFactor;
+    await assertHealthFactorCalculation(user1);
+
+    // Advance time and blocks
+    await advanceTimeAndBlock(parseInt(ONE_YEAR) * 100);
+
+    // health factor should remain the same
+    expect(initialHealthFactor).to.eq(
+      (await pool.getUserAccountData(user1.address)).healthFactor
+    );
   });
 });

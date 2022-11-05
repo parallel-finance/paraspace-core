@@ -53,7 +53,7 @@ contract PoolCoreV2 is
         address,
         uint256,
         bool
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         revert(EMEGENCY_DISABLE_CALL);
     }
 
@@ -64,7 +64,7 @@ contract PoolCoreV2 is
         uint256,
         uint256,
         bool
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         revert(EMEGENCY_DISABLE_CALL);
     }
 }

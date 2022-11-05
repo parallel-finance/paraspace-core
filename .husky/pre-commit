@@ -12,7 +12,8 @@ if [ ! -z "${contracts}" ]; then
   yarn typechain
   git add $(echo "$contracts" | paste -s -d " " -)
 fi
-if [ ! -z "${scripts}" ] || [ ! -z "${contracts}" ]; then
-  yarn lint
+
+yarn lint
+if [ ! -z "${scripts}" ]; then
   git add $(echo "$scripts" | paste -s -d " " -)
 fi

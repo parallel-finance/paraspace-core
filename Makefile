@@ -85,6 +85,10 @@ test-liquidation:
 test-liquidation-nft-with-weth:
 	make TEST_TARGET=liquidation-nft-with-weth.spec.ts test
 
+.PHONY: test-liquidation-with-eth
+test-liquidation-with-eth:
+	make TEST_TARGET=liquidation-with-eth.spec.ts test
+
 .PHONY: test-liquidation-non-borrowed
 test-liquidation-non-borrowed:
 	make TEST_TARGET=liquidation-non-borrowed.spec.ts test
@@ -128,18 +132,14 @@ test-ptoken-permit:
 .PHONY: test-ptoken-delegation-aware
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
-
-.PHONY: test-ltv-validation
-test-ltv-validation:
-	make TEST_TARGET=ltv-validation.spec.ts test
-
+	
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
 
 .PHONY: test-upgradeability
 test-upgradeability:
-	make TEST_TARGET=upgradeability.spec.ts test
+	make TEST_TARGET=_base_upgradeability.spec.ts test
 
 .PHONY: test-erc20
 test-erc20:
@@ -195,7 +195,7 @@ test-ptoken-repay:
 
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
-	make TEST_TARGET=variable-debt-token.spec.ts test
+	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
 
 .PHONY: test-paraspace-oracle
 test-paraspace-oracle:
@@ -215,7 +215,11 @@ test-rebasing-tokens:
 
 .PHONY: test-pool-addresses-provider
 test-pool-addresses-provider:
-	make TEST_TARGET=pool-addresses-provider.spec.ts test
+	make TEST_TARGET=_base_addresses_provider.spec.ts test
+
+.PHONY: test-addresses-provider-registry
+test-addresses-provider-registry:
+	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test	
 
 .PHONY: test-pausable-pool
 test-pausable-pool:
