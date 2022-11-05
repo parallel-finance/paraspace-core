@@ -25,7 +25,6 @@ import {
   PToken__factory,
   VariableDebtToken__factory,
 } from "../types";
-// import {strategyWETH} from "../market-config/reservesConfigs";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -125,35 +124,35 @@ const getReserveData = async (
 
 describe("PoolConfigurator: Common", () => {
   let testEnv: TestEnv;
-  let baseConfigValues: ReserveConfigurationValues;
+  const {
+    reserveDecimals,
+    baseLTVAsCollateral,
+    liquidationThreshold,
+    liquidationBonus,
+    reserveFactor,
+    borrowingEnabled,
+    borrowCap,
+    supplyCap,
+  } = strategyWETH;
+  const baseConfigValues = {
+    reserveDecimals,
+    baseLTVAsCollateral,
+    liquidationThreshold,
+    liquidationBonus,
+    reserveFactor,
+    usageAsCollateralEnabled: true,
+    borrowingEnabled,
+    isActive: true,
+    isFrozen: false,
+    isPaused: false,
+    // eModeCategory: BigNumber.from(0),
+    borrowCap: borrowCap,
+    supplyCap: supplyCap,
+    liquidationProtocolFee: BigNumber.from(0),
+  };
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {
-      reserveDecimals,
-      baseLTVAsCollateral,
-      liquidationThreshold,
-      liquidationBonus,
-      reserveFactor,
-      borrowingEnabled,
-      borrowCap,
-      supplyCap,
-    } = strategyWETH;
-    baseConfigValues = {
-      reserveDecimals,
-      baseLTVAsCollateral,
-      liquidationThreshold,
-      liquidationBonus,
-      reserveFactor,
-      usageAsCollateralEnabled: true,
-      borrowingEnabled,
-      isActive: true,
-      isFrozen: false,
-      isPaused: false,
-      borrowCap: borrowCap,
-      supplyCap: supplyCap,
-      liquidationProtocolFee: BigNumber.from(0),
-    };
   });
 
   it("TC-poolConfigurator-initReserves-01: InitReserves via AssetListing admin", async () => {
@@ -164,7 +163,7 @@ describe("PoolConfigurator: Common", () => {
       aclManager,
       pool,
       assetListingAdmin,
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
 
     // Add new AssetListingAdmin
     expect(
@@ -199,22 +198,7 @@ describe("PoolConfigurator: Common", () => {
       ]
     );
     // Init the reserve
-    const initInputParams: {
-      xTokenImpl: string;
-      variableDebtTokenImpl: string;
-      assetType: BigNumberish;
-      underlyingAssetDecimals: BigNumberish;
-      interestRateStrategyAddress: string;
-      auctionStrategyAddress: string;
-      underlyingAsset: string;
-      treasury: string;
-      incentivesController: string;
-      xTokenName: string;
-      xTokenSymbol: string;
-      variableDebtTokenName: string;
-      variableDebtTokenSymbol: string;
-      params: string;
-    }[] = [
+    const initInputParams = [
       {
         xTokenImpl: xTokenImplementation.address,
         variableDebtTokenImpl: variableDebtTokenImplementation.address,
