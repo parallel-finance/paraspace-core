@@ -172,6 +172,18 @@ library DataTypes {
         address oracle;
     }
 
+    struct ExecuteDecreaseUniswapV3LiquidityParams {
+        address user;
+        address asset;
+        uint256 tokenId;
+        uint256 reservesCount;
+        uint128 liquidityDecrease;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        bool receiveEthAsWeth;
+        address oracle;
+    }
+
     struct FinalizeTransferParams {
         address asset;
         address from;
@@ -227,6 +239,7 @@ library DataTypes {
         address borrower;
         uint256 globalDebt;
         uint256 healthFactor;
+        address collateralAsset;
         uint256 tokenId;
         uint256 actualLiquidationAmount;
         uint256 maxLiquidationAmount;
@@ -343,5 +356,18 @@ library DataTypes {
         uint16 _reservesCount;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
+    }
+
+    struct ReserveConfigData {
+        uint256 decimals;
+        uint256 ltv;
+        uint256 liquidationThreshold;
+        uint256 liquidationBonus;
+        uint256 reserveFactor;
+        bool usageAsCollateralEnabled;
+        bool borrowingEnabled;
+        bool isActive;
+        bool isFrozen;
+        bool isPaused;
     }
 }

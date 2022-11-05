@@ -337,6 +337,7 @@ library LiquidationLogic {
         );
 
         ValidationLogic.validateERC721LiquidationCall(
+            reservesData,
             userConfig,
             collateralReserve,
             DataTypes.ValidateERC721LiquidationCallParams({
@@ -348,6 +349,7 @@ library LiquidationLogic {
                 maxLiquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
+                collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 xTokenAddress: vars.collateralXToken,
                 auctionEnabled: vars.auctionEnabled,

@@ -115,4 +115,5 @@ library Errors {
     string public constant NTOKEN_BALANCE_EXCEEDED = "120"; //ntoken balance exceed limit.
     string public constant ORACLE_PRICE_NOT_READY = "121"; // oracle price not ready
     string public constant SET_ORACLE_SOURCE_NOT_ALLOWED = "122"; // source of oracle not allowed to set
+    string public constant ONLY_UNIV3_ALLOWED = "123"; //only UniswapV3 allowed.
 }

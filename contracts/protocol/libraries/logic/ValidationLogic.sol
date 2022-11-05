@@ -26,6 +26,7 @@ import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.so
 import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
+import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 
 /**
  * @title ReserveLogic library
@@ -172,10 +173,12 @@ library ValidationLogic {
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
-    function validateWithdrawERC721(DataTypes.ReserveCache memory reserveCache)
-        internal
-        pure
-    {
+    function validateWithdrawERC721(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.ReserveCache memory reserveCache,
+        address asset,
+        uint256[] memory tokenIds
+    ) internal view {
         (
             bool isActive,
             ,
@@ -190,6 +193,20 @@ library ValidationLogic {
         );
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
+
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            for (uint256 index = 0; index < tokenIds.length; index++) {
+                ValidationLogic.validateForUniswapV3(
+                    reservesData,
+                    asset,
+                    tokenIds[index],
+                    true,
+                    true,
+                    false
+                );
+            }
+        }
     }
 
     struct ValidateBorrowLocalVars {
@@ -396,8 +413,11 @@ library ValidationLogic {
     }
 
     function validateSetUseERC721AsCollateral(
-        DataTypes.ReserveCache memory reserveCache
-    ) internal pure {
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.ReserveCache memory reserveCache,
+        address asset,
+        uint256[] calldata tokenIds
+    ) internal view {
         (
             bool isActive,
             ,
@@ -412,6 +432,20 @@ library ValidationLogic {
         );
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
+
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            for (uint256 index = 0; index < tokenIds.length; index++) {
+                ValidationLogic.validateForUniswapV3(
+                    reservesData,
+                    asset,
+                    tokenIds[index],
+                    true,
+                    true,
+                    false
+                );
+            }
+        }
     }
 
     struct ValidateLiquidationCallLocalVars {
@@ -509,6 +543,7 @@ library ValidationLogic {
      * @param params Additional parameters needed for the validation
      */
     function validateERC721LiquidationCall(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ValidateERC721LiquidationCallParams memory params
@@ -532,6 +567,18 @@ library ValidationLogic {
             vars.collateralReserveAssetType == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
         );
+
+        INToken nToken = INToken(collateralReserve.xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            ValidationLogic.validateForUniswapV3(
+                reservesData,
+                params.collateralAsset,
+                params.tokenId,
+                true,
+                true,
+                false
+            );
+        }
 
         (
             vars.principalReserveActive,
@@ -841,11 +888,35 @@ library ValidationLogic {
      * @notice Validates a transfer action.
      * @param reserve The reserve object
      */
-    function validateTransfer(DataTypes.ReserveData storage reserve)
+    function validateTransferERC20(DataTypes.ReserveData storage reserve)
         internal
         view
     {
         require(!reserve.configuration.getPaused(), Errors.RESERVE_PAUSED);
+    }
+
+    /**
+     * @notice Validates a transfer action.
+     * @param reserve The reserve object
+     */
+    function validateTransferERC721(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.ReserveData storage reserve,
+        address asset,
+        uint256 tokenId
+    ) internal view {
+        require(!reserve.configuration.getPaused(), Errors.RESERVE_PAUSED);
+        INToken nToken = INToken(reserve.xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            ValidationLogic.validateForUniswapV3(
+                reservesData,
+                asset,
+                tokenId,
+                false,
+                true,
+                false
+            );
+        }
     }
 
     /**
@@ -1000,5 +1071,74 @@ library ValidationLogic {
                     address(this)
                 )
             );
+    }
+
+    struct ValidateForUniswapV3LocalVars {
+        bool token0IsActive;
+        bool token0IsFrozen;
+        bool token0IsPaused;
+        bool token1IsActive;
+        bool token1IsFrozen;
+        bool token1IsPaused;
+    }
+
+    function validateForUniswapV3(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        address asset,
+        uint256 tokenId,
+        bool checkActive,
+        bool checkNotPaused,
+        bool checkNotFrozen
+    ) internal view {
+        (
+            ,
+            ,
+            address token0,
+            address token1,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+
+        ) = INonfungiblePositionManager(asset).positions(tokenId);
+
+        ValidateForUniswapV3LocalVars memory vars;
+        (
+            vars.token0IsActive,
+            vars.token0IsFrozen,
+            ,
+            vars.token0IsPaused,
+
+        ) = reservesData[token0].configuration.getFlags();
+
+        (
+            vars.token1IsActive,
+            vars.token1IsFrozen,
+            ,
+            vars.token1IsPaused,
+
+        ) = reservesData[token1].configuration.getFlags();
+
+        if (checkActive) {
+            require(
+                vars.token0IsActive && vars.token1IsActive,
+                Errors.RESERVE_INACTIVE
+            );
+        }
+        if (checkNotPaused) {
+            require(
+                !vars.token0IsPaused && !vars.token1IsPaused,
+                Errors.RESERVE_PAUSED
+            );
+        }
+        if (checkNotFrozen) {
+            require(
+                !vars.token0IsFrozen && !vars.token1IsFrozen,
+                Errors.RESERVE_FROZEN
+            );
+        }
     }
 }
