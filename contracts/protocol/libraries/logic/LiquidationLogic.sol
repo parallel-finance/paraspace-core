@@ -869,7 +869,7 @@ library LiquidationLogic {
             return;
         }
         vars.payer = address(this);
-        IWETH(params.weth).deposit{value: vars.actualLiquidationAmount};
+        IWETH(params.weth).deposit{value: vars.actualLiquidationAmount}();
         if (msg.value > vars.actualLiquidationAmount) {
             Address.sendValue(
                 payable(msg.sender),
