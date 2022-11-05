@@ -5,6 +5,7 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts//IERC20.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
+import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {Helpers} from "../../libraries/helpers/Helpers.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
@@ -617,10 +618,10 @@ library LiquidationLogic {
 
         uint256 maxLiquidatableDebt = userDebt.percentMul(closeFactor);
 
-        uint256 actualLiquidationAmount = params.liquidationAmount >
+        uint256 actualLiquidationAmount = Math.min(
+            params.liquidationAmount,
             maxLiquidatableDebt
-            ? maxLiquidatableDebt
-            : params.liquidationAmount;
+        );
 
         return (userDebt, actualLiquidationAmount);
     }

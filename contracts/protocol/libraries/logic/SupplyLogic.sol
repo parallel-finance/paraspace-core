@@ -254,68 +254,6 @@ library SupplyLogic {
         );
     }
 
-    function executeSupplyUniswapV3(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        DataTypes.UserConfigurationMap storage userConfig,
-        DataTypes.ExecuteSupplyERC721Params memory params
-    ) external {
-        DataTypes.ReserveData storage reserve = reservesData[params.asset];
-        DataTypes.ReserveCache memory reserveCache = reserve.cache();
-
-        ValidationLogic.validateSupply(
-            reserveCache,
-            params.tokenData.length,
-            DataTypes.AssetType.ERC721
-        );
-
-        for (uint256 index = 0; index < params.tokenData.length; index++) {
-            (
-                ,
-                ,
-                address token0,
-                address token1,
-                ,
-                ,
-                ,
-                ,
-                ,
-                ,
-                ,
-
-            ) = INonfungiblePositionManager(params.asset).positions(
-                    params.tokenData[index].tokenId
-                );
-
-            require(
-                reservesData[token0].xTokenAddress != address(0) &&
-                    reservesData[token1].xTokenAddress != address(0),
-                Errors.ASSET_NOT_LISTED
-            );
-
-            IERC721(params.asset).safeTransferFrom(
-                params.payer,
-                reserveCache.xTokenAddress,
-                params.tokenData[index].tokenId
-            );
-        }
-
-        executeSupplyERC721Base(
-            reserve.id,
-            reserveCache.xTokenAddress,
-            userConfig,
-            params
-        );
-
-        emit SupplyERC721(
-            params.asset,
-            msg.sender,
-            params.onBehalfOf,
-            params.tokenData,
-            params.referralCode,
-            false
-        );
-    }
-
     /**
      * @notice Implements the withdraw feature. Through `withdraw()`, users redeem their xTokens for the underlying asset
      * previously supplied in the ParaSpace protocol.
