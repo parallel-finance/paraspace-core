@@ -106,33 +106,30 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     function getReserveConfigurationData(address asset)
         external
         view
-        returns (
-            uint256 decimals,
-            uint256 ltv,
-            uint256 liquidationThreshold,
-            uint256 liquidationBonus,
-            uint256 reserveFactor,
-            bool usageAsCollateralEnabled,
-            bool borrowingEnabled,
-            bool isActive,
-            bool isFrozen
-        )
+        returns (DataTypes.ReserveConfigData memory reserveData)
     {
         DataTypes.ReserveConfigurationMap memory configuration = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getConfiguration(asset);
 
         (
-            ltv,
-            liquidationThreshold,
-            liquidationBonus,
-            decimals,
-            reserveFactor
+            reserveData.ltv,
+            reserveData.liquidationThreshold,
+            reserveData.liquidationBonus,
+            reserveData.decimals,
+            reserveData.reserveFactor
         ) = configuration.getParams();
 
-        (isActive, isFrozen, borrowingEnabled, , ) = configuration.getFlags();
+        (
+            reserveData.isActive,
+            reserveData.isFrozen,
+            reserveData.borrowingEnabled,
+            reserveData.isPaused,
 
-        usageAsCollateralEnabled = liquidationThreshold != 0;
+        ) = configuration.getFlags();
+
+        reserveData.usageAsCollateralEnabled =
+            reserveData.liquidationThreshold != 0;
     }
 
     /// @inheritdoc IProtocolDataProvider
@@ -144,13 +141,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         (borrowCap, supplyCap) = IPool(ADDRESSES_PROVIDER.getPool())
             .getConfiguration(asset)
             .getCaps();
-    }
-
-    /// @inheritdoc IProtocolDataProvider
-    function getPaused(address asset) external view returns (bool isPaused) {
-        (, , , isPaused, ) = IPool(ADDRESSES_PROVIDER.getPool())
-            .getConfiguration(asset)
-            .getFlags();
     }
 
     /// @inheritdoc IProtocolDataProvider

@@ -36,7 +36,6 @@ type ReserveConfigurationValues = {
   isActive: boolean;
   isFrozen: boolean;
   isPaused: boolean;
-  // eModeCategory: BigNumber;
   borrowCap: string;
   supplyCap: string;
   liquidationProtocolFee: BigNumber;
@@ -47,7 +46,7 @@ const expectReserveConfigurationData = async (
   asset: string,
   values: ReserveConfigurationValues
 ) => {
-  const [reserveCfg, reserveCaps, isPaused, liquidationProtocolFee] =
+  const [reserveCfg, reserveCaps, liquidationProtocolFee] =
     await getReserveData(protocolDataProvider, asset);
   expect(reserveCfg.decimals).to.be.eq(
     values.reserveDecimals,
@@ -85,7 +84,10 @@ const expectReserveConfigurationData = async (
     values.isFrozen,
     "isFrozen is not correct"
   );
-  expect(isPaused).to.be.equal(values.isPaused, "isPaused is not correct");
+  expect(reserveCfg.isPaused).to.be.equal(
+    values.isPaused,
+    "isPaused is not correct"
+  );
   // expect(eModeCategory).to.be.eq(
   //   values.eModeCategory,
   //   "eModeCategory is not correct"
@@ -112,7 +114,6 @@ const getReserveData = async (
     protocolDataProvider.getReserveConfigurationData(asset),
     // protocolDataProvider.getReserveEModeCategory(asset),
     protocolDataProvider.getReserveCaps(asset),
-    protocolDataProvider.getPaused(asset),
     protocolDataProvider.getLiquidationProtocolFee(asset),
     // protocolDataProvider.getUnbackedMintCap(asset),
   ]);
@@ -145,7 +146,6 @@ describe("PoolConfigurator", () => {
       isActive: true,
       isFrozen: false,
       isPaused: false,
-      // eModeCategory: BigNumber.from(0),
       borrowCap: borrowCap,
       supplyCap: supplyCap,
       liquidationProtocolFee: BigNumber.from(0),

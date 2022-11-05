@@ -240,16 +240,6 @@ interface IPoolCore {
     ) external;
 
     /**
-     * @notice Same as `supplyERC721` but this can only be used by supplying UniswapV3 NFT.
-     **/
-    function supplyUniswapV3(
-        address asset,
-        DataTypes.ERC721SupplyParams[] calldata tokenData,
-        address onBehalfOf,
-        uint16 referralCode
-    ) external;
-
-    /**
      * @notice Supply with transfer approval of asset to be supplied done via permit function
      * see: https://eips.ethereum.org/EIPS/eip-2612 and https://eips.ethereum.org/EIPS/eip-713
      * @param asset The address of the underlying asset to supply
@@ -308,6 +298,25 @@ interface IPoolCore {
         uint256[] calldata tokenIds,
         address to
     ) external returns (uint256);
+
+    /**
+     * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
+     * that the user respects liquidation checks.
+     * @param asset The asset address of uniswapV3
+     * @param tokenId The id of the erc721 token
+     * @param liquidityDecrease The amount of liquidity to remove of LP
+     * @param amount0Min The minimum amount to remove of token0
+     * @param amount1Min The minimum amount to remove of token1
+     * @param receiveEthAsWeth If convert weth to ETH
+     */
+    function decreaseUniswapV3Liquidity(
+        address asset,
+        uint256 tokenId,
+        uint128 liquidityDecrease,
+        uint256 amount0Min,
+        uint256 amount1Min,
+        bool receiveEthAsWeth
+    ) external;
 
     /**
      * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
