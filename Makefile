@@ -95,7 +95,7 @@ test-liquidation-non-borrowed:
 
 .PHONY: test-liquidation-auction
 test-liquidation-auction:
-	make TEST_TARGET=liquidation-auction.spec.ts test
+	make TEST_TARGET=_pool_core_auction.spec.ts test
 
 .PHONY: test-liquidation-edge
 test-liquidation-edge:
@@ -147,7 +147,7 @@ test-erc20:
 
 .PHONY: test-flash-claim
 test-flash-claim:
-	make TEST_TARGET=flash-claim.spec.ts test
+	make TEST_TARGET=_pool_core_flash_claim.spec.ts test
 
 .PHONY: test-paraspace-oracle-aggregator
 test-paraspace-oracle-aggregator:
@@ -183,11 +183,7 @@ test-uniswap-v3-oracle:
 
 .PHONY: test-auction-strategy
 test-auction-strategy:
-	make TEST_TARGET=auction-strategy.spec.ts test
-
-.PHONY: test-auction-configuration
-test-auction-configuration:
-	make TEST_TARGET=auction-configuration.spec.ts test
+	make TEST_TARGET=_base_auction_strategy.spec.ts test
 
 .PHONY: test-ptoken-transfer
 test-ptoken-transfer:
@@ -239,7 +235,7 @@ test-price-oracle-sentinel:
 
 .PHONY: test-user-configurator-used-as-collateral
 test-user-configurator-used-as-collateral:
-	make TEST_TARGET=user-configurator-used-as-collateral.spec.ts test
+	make TEST_TARGET=_pool_core_use_as_collateral.spec.ts test
 
 .PHONY: test-rate-strategy
 test-rate-strategy:
