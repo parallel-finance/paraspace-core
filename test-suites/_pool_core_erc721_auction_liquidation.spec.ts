@@ -4,7 +4,6 @@ import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {getMockAggregator} from "../deploy/helpers/contracts-getters";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
   advanceBlock,
   setBlocktime,
@@ -586,7 +585,6 @@ describe("Liquidation Auction", () => {
         pool,
         bayc,
         nBAYC,
-        dai,
       } = testEnv;
 
       // drop BAYC price to liquidation levels (HF = 0.6)
