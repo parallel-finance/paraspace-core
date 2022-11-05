@@ -100,7 +100,8 @@ describe("Liquidation (using ETH)", () => {
       .wadMul(actualPriceMultiplier)
       .wadDiv(DRE.ethers.utils.parseUnits("1", 18));
     // liquidate the NFT
-    const liquidationAmount = baycPrice;
+    const actualLiquidationAmount = baycPrice;
+    const liquidationAmount = utils.parseEther("10").toString();
     const tx = pool
       .connect(liquidator.signer)
       .liquidationERC721(
@@ -132,7 +133,7 @@ describe("Liquidation (using ETH)", () => {
       baycPrice
     );
     expect(liquidatorBalanceAfter).to.be.eq(
-      liquidatorBalanceBefore.sub(baycPrice).sub(gasUsed)
+      liquidatorBalanceBefore.sub(actualLiquidationAmount).sub(gasUsed)
     );
   });
 
