@@ -139,7 +139,7 @@ test-pausable-reserve:
 
 .PHONY: test-upgradeability
 test-upgradeability:
-	make TEST_TARGET=upgradeability.spec.ts test
+	make TEST_TARGET=_base_upgradeability.spec.ts test
 
 .PHONY: test-erc20
 test-erc20:
