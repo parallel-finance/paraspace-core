@@ -1,7 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {utils} from "ethers";
-import {BigNumber, BigNumberish} from "ethers";
+import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import {
   MAX_UINT_AMOUNT,
