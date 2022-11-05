@@ -221,6 +221,10 @@ test-rebasing-tokens:
 test-pool-addresses-provider:
 	make TEST_TARGET=pool-addresses-provider.spec.ts test
 
+.PHONY: test-addresses-provider-registry
+test-addresses-provider-registry:
+	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test	
+
 .PHONY: test-pausable-pool
 test-pausable-pool:
 	make TEST_TARGET=pausable-pool.spec.ts test
