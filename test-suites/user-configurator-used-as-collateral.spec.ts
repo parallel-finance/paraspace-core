@@ -7,12 +7,7 @@ import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-
-const isUsingAsCollateral = (conf, id) =>
-  conf
-    .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2).add(1)))
-    .and(1)
-    .gt(0);
+import {isUsingAsCollateral} from "../deploy/helpers/contracts-helpers";
 
 describe("UserConfigurator for ERC721: check user usedAsCollateral and collaterizedBalance status", () => {
   let testEnv: TestEnv;
