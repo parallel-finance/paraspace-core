@@ -99,7 +99,7 @@ library SupplyLogic {
         );
 
         IERC20(params.asset).safeTransferFrom(
-            msg.sender,
+            params.payer,
             reserveCache.xTokenAddress,
             params.amount
         );
@@ -175,7 +175,7 @@ library SupplyLogic {
 
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
-                params.spender,
+                params.payer,
                 reserveCache.xTokenAddress,
                 params.tokenData[index].tokenId
             );
@@ -190,7 +190,7 @@ library SupplyLogic {
 
         emit SupplyERC721(
             params.asset,
-            params.spender,
+            msg.sender,
             params.onBehalfOf,
             params.tokenData,
             params.referralCode,
@@ -276,7 +276,7 @@ library SupplyLogic {
             );
 
             IERC721(params.asset).safeTransferFrom(
-                params.spender,
+                params.payer,
                 reserveCache.xTokenAddress,
                 params.tokenData[index].tokenId
             );
@@ -291,7 +291,7 @@ library SupplyLogic {
 
         emit SupplyERC721(
             params.asset,
-            params.spender,
+            msg.sender,
             params.onBehalfOf,
             params.tokenData,
             params.referralCode,

@@ -22,7 +22,7 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 
-describe("Liquidation Auction", () => {
+describe("Liquidation NFT (using WETH)", () => {
   let testEnv: TestEnv;
   let snapShot: string;
 

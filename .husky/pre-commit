@@ -17,7 +17,7 @@ if [ ! -z "${contracts}" ]; then
   git add $(echo "$contracts" | paste -s -d " " -)
 fi
 
+yarn lint
 if [ ! -z "${scripts}" ]; then
-  yarn lint
   git add $(echo "$scripts" | paste -s -d " " -)
 fi

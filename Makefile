@@ -85,6 +85,10 @@ test-liquidation:
 test-liquidation-nft-with-weth:
 	make TEST_TARGET=liquidation-nft-with-weth.spec.ts test
 
+.PHONY: test-liquidation-with-eth
+test-liquidation-with-eth:
+	make TEST_TARGET=liquidation-with-eth.spec.ts test
+
 .PHONY: test-liquidation-non-borrowed
 test-liquidation-non-borrowed:
 	make TEST_TARGET=liquidation-non-borrowed.spec.ts test

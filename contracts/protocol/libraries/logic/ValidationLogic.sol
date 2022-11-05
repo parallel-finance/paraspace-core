@@ -456,6 +456,16 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
 
+        require(
+            msg.value == 0 || params.liquidationAsset == params.weth,
+            Errors.INVALID_LIQUIDATION_ASSET
+        );
+
+        require(
+            msg.value == 0 || msg.value >= params.actualLiquidationAmount,
+            Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
+        );
+
         (
             vars.principalReserveActive,
             ,
@@ -578,7 +588,8 @@ library ValidationLogic {
         }
 
         require(
-            params.maxLiquidationAmount >= params.actualLiquidationAmount,
+            params.maxLiquidationAmount >= params.actualLiquidationAmount &&
+                (msg.value == 0 || msg.value >= params.maxLiquidationAmount),
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
