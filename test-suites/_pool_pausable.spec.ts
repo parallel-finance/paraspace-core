@@ -4,25 +4,19 @@ import {utils} from "ethers";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 
 describe("PausablePool", () => {
-  let testEnv: TestEnv;
-  const INVALID_TO_BALANCE_AFTER_TRANSFER =
-    "Invalid 'TO' balance after transfer!";
-  const INVALID_FROM_BALANCE_AFTER_TRANSFER =
-    "Invalid 'FROMO' balance after transfer!";
   const {RESERVE_PAUSED} = ProtocolErrors;
 
-  before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-    // _mockFlashLoanReceiver = await getMockFlashLoanReceiver();
-  });
-
   it("TC-poolPausable-01: User 0 supplys 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
-    const {users, pool, dai, pDai, configurator, emergencyAdmin} = testEnv;
+    const INVALID_TO_BALANCE_AFTER_TRANSFER =
+      "Invalid 'TO' balance after transfer!";
+    const INVALID_FROM_BALANCE_AFTER_TRANSFER =
+      "Invalid 'FROMO' balance after transfer!";
+    const {users, pool, dai, pDai, configurator, emergencyAdmin} =
+      await loadFixture(testEnvFixture);
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
@@ -84,7 +78,9 @@ describe("PausablePool", () => {
   });
 
   it("TC-poolPausable-02: Supply revert due to pausable pool", async () => {
-    const {users, pool, dai, configurator, emergencyAdmin} = testEnv;
+    const {users, pool, dai, configurator, emergencyAdmin} = await loadFixture(
+      testEnvFixture
+    );
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
@@ -109,7 +105,9 @@ describe("PausablePool", () => {
   });
 
   it("TC-poolPausable-03: Supply succeed and then pause pool, withdraw revert", async () => {
-    const {users, pool, dai, configurator, emergencyAdmin} = testEnv;
+    const {users, pool, dai, configurator, emergencyAdmin} = await loadFixture(
+      testEnvFixture
+    );
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
@@ -139,7 +137,9 @@ describe("PausablePool", () => {
   });
 
   it("TC-poolPausable-04: Borrow revert due to pausable pool", async () => {
-    const {pool, dai, configurator, emergencyAdmin} = testEnv;
+    const {pool, dai, configurator, emergencyAdmin} = await loadFixture(
+      testEnvFixture
+    );
 
     const user = emergencyAdmin;
     // Pause the pool
@@ -155,7 +155,9 @@ describe("PausablePool", () => {
   });
 
   it("TC-poolPausable-05: Repay revert due to pausable pool", async () => {
-    const {pool, dai, configurator, emergencyAdmin} = testEnv;
+    const {pool, dai, configurator, emergencyAdmin} = await loadFixture(
+      testEnvFixture
+    );
 
     const user = emergencyAdmin;
     // Pause the pool
@@ -180,7 +182,7 @@ describe("PausablePool", () => {
       configurator,
       protocolDataProvider,
       emergencyAdmin,
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const supplyor = users[3];
     const borrower = users[4];
 
@@ -273,7 +275,9 @@ describe("PausablePool", () => {
 
   it("TC-poolPausable-07: SetUserUseERC20AsCollateral revert due to pausable pool", async () => {
     // eslint-disable-next-line no-unused-vars
-    const {pool, weth, configurator, emergencyAdmin} = testEnv;
+    const {pool, weth, configurator, emergencyAdmin} = await loadFixture(
+      testEnvFixture
+    );
     const user = emergencyAdmin;
 
     const amountWETHToDeposit = utils.parseEther("1");
