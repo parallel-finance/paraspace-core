@@ -433,7 +433,7 @@ interface IPoolCore {
         address user,
         uint256 liquidationAmount,
         bool receivePToken
-    ) external;
+    ) external payable;
 
     function liquidationERC721(
         address collateralAsset,
@@ -441,7 +441,7 @@ interface IPoolCore {
         uint256 collateralTokenId,
         uint256 liquidationAmount,
         bool receiveNToken
-    ) external;
+    ) external payable;
 
     /**
      * @notice Start the auction on user's specific NFT collateral

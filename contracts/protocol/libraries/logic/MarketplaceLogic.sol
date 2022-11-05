@@ -222,6 +222,7 @@ library MarketplaceLogic {
                 })
             );
         }
+
         _refundETH(vars.ethLeft);
     }
 
@@ -521,7 +522,7 @@ library MarketplaceLogic {
                     asset: token,
                     tokenData: tokenData,
                     onBehalfOf: onBehalfOf,
-                    spender: address(this),
+                    payer: address(this),
                     referralCode: params.referralCode
                 })
             );

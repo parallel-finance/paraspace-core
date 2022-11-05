@@ -5,6 +5,7 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
+import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
@@ -100,7 +101,7 @@ library SupplyLogic {
         );
 
         IERC20(params.asset).safeTransferFrom(
-            msg.sender,
+            params.payer,
             reserveCache.xTokenAddress,
             params.amount
         );
@@ -191,7 +192,7 @@ library SupplyLogic {
         }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
-                params.spender,
+                params.payer,
                 reserveCache.xTokenAddress,
                 params.tokenData[index].tokenId
             );
@@ -206,7 +207,7 @@ library SupplyLogic {
 
         emit SupplyERC721(
             params.asset,
-            params.spender,
+            msg.sender,
             params.onBehalfOf,
             params.tokenData,
             params.referralCode,

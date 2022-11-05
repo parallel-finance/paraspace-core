@@ -490,6 +490,16 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
 
+        require(
+            msg.value == 0 || params.liquidationAsset == params.weth,
+            Errors.INVALID_LIQUIDATION_ASSET
+        );
+
+        require(
+            msg.value == 0 || msg.value >= params.actualLiquidationAmount,
+            Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
+        );
+
         (
             vars.principalReserveActive,
             ,
@@ -625,7 +635,8 @@ library ValidationLogic {
         }
 
         require(
-            params.maxLiquidationAmount >= params.actualLiquidationAmount,
+            params.maxLiquidationAmount >= params.actualLiquidationAmount &&
+                (msg.value == 0 || msg.value >= params.maxLiquidationAmount),
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
@@ -641,10 +652,7 @@ library ValidationLogic {
             vars.isCollateralEnabled,
             Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
         );
-        require(
-            params.globalDebt != 0,
-            Errors.SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER
-        );
+        require(params.globalDebt != 0, Errors.GLOBAL_DEBT_IS_ZERO);
     }
 
     /**

@@ -103,6 +103,7 @@ library DataTypes {
         uint256 liquidationAmount;
         uint256 collateralTokenId;
         uint256 auctionRecoveryHealthFactor;
+        address weth;
         address collateralAsset;
         address liquidationAsset;
         address user;
@@ -125,7 +126,7 @@ library DataTypes {
         address asset;
         uint256 amount;
         address onBehalfOf;
-        address spender;
+        address payer;
         uint16 referralCode;
     }
 
@@ -133,7 +134,7 @@ library DataTypes {
         address asset;
         DataTypes.ERC721SupplyParams[] tokenData;
         address onBehalfOf;
-        address spender;
+        address payer;
         uint16 referralCode;
     }
 
@@ -228,8 +229,12 @@ library DataTypes {
 
     struct ValidateLiquidationCallParams {
         ReserveCache liquidationAssetReserveCache;
+        address liquidationAsset;
+        address weth;
         uint256 totalDebt;
         uint256 healthFactor;
+        uint256 liquidationAmount;
+        uint256 actualLiquidationAmount;
         address priceOracleSentinel;
     }
 
