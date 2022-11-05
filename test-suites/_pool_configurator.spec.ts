@@ -27,7 +27,6 @@ import {
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-
 describe("PoolConfigurator: Common", () => {
   type ReserveConfigurationValues = {
     reserveDecimals: string;
@@ -50,7 +49,7 @@ describe("PoolConfigurator: Common", () => {
     asset: string,
     values: ReserveConfigurationValues
   ) => {
-    const [reserveCfg, reserveCaps, isPaused, liquidationProtocolFee] =
+    const [reserveCfg, reserveCaps, liquidationProtocolFee] =
       await getReserveData(protocolDataProvider, asset);
     expect(reserveCfg.decimals).to.be.eq(
       values.reserveDecimals,
@@ -88,7 +87,10 @@ describe("PoolConfigurator: Common", () => {
       values.isFrozen,
       "isFrozen is not correct"
     );
-    expect(isPaused).to.be.equal(values.isPaused, "isPaused is not correct");
+    expect(reserveCfg.isPaused).to.be.equal(
+      values.isPaused,
+      "isPaused is not correct"
+    );
     expect(reserveCaps.borrowCap).to.be.eq(
       values.borrowCap,
       "borrowCap is not correct"
@@ -110,7 +112,6 @@ describe("PoolConfigurator: Common", () => {
     return Promise.all([
       protocolDataProvider.getReserveConfigurationData(asset),
       protocolDataProvider.getReserveCaps(asset),
-      protocolDataProvider.getPaused(asset),
       protocolDataProvider.getLiquidationProtocolFee(asset),
     ]);
   };

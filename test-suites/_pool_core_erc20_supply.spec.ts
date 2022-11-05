@@ -1,7 +1,11 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT, ONE_YEAR, MAX_SUPPLY_CAP} from "../deploy/helpers/constants";
+import {
+  MAX_UINT_AMOUNT,
+  ONE_YEAR,
+  MAX_SUPPLY_CAP,
+} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
