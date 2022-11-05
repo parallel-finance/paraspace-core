@@ -302,7 +302,7 @@ library LiquidationLogic {
 
         vars.liquidationAssetReserveId = liquidationAssetReserve.id;
         vars.liquidationAssetReserveCache = liquidationAssetReserve.cache();
-        liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
+        // liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
 
         vars.auctionStrategyAddress = collateralReserve.auctionStrategyAddress;
         vars.auctionEnabled = vars.auctionStrategyAddress != address(0);
