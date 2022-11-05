@@ -1,7 +1,12 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
+import {utils} from "ethers";
+import {
+  MAX_UINT_AMOUNT,
+  ONE_YEAR,
+  MAX_BORROW_CAP,
+} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
@@ -319,5 +324,460 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
       // expect(userData.totalCollateralBase).to.be.eq(parseUnits("10", 8));
       expect(userData.totalDebtBase).to.be.eq(0);
     });
+  });
+});
+
+describe("pToken: Borrow Cap Changed", () => {
+  let testEnv: TestEnv;
+  const {INVALID_BORROW_CAP, BORROW_CAP_EXCEEDED} = ProtocolErrors;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+    const {
+      weth,
+      pool,
+      dai,
+      usdc,
+      users: [user1],
+    } = testEnv;
+
+    const mintedAmount = utils.parseEther("1000000000");
+    // minting for main user
+    expect(await dai["mint(uint256)"](mintedAmount));
+    expect(await weth["mint(uint256)"](mintedAmount));
+    expect(await usdc["mint(uint256)"](mintedAmount));
+
+    // minting for lp user
+    expect(await dai.connect(user1.signer)["mint(uint256)"](mintedAmount));
+    expect(await weth.connect(user1.signer)["mint(uint256)"](mintedAmount));
+    expect(await usdc.connect(user1.signer)["mint(uint256)"](mintedAmount));
+
+    expect(await dai.approve(pool.address, MAX_UINT_AMOUNT));
+    expect(await weth.approve(pool.address, MAX_UINT_AMOUNT));
+    expect(await usdc.approve(pool.address, MAX_UINT_AMOUNT));
+    expect(
+      await dai.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    expect(
+      await weth.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    expect(
+      await usdc.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+  });
+
+  it("TC-erc20-borrowCap-01: Reserves should initially have borrow cap disabled (borrowCap = 0)", async () => {
+    const {dai, usdc, protocolDataProvider} = testEnv;
+
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
+      dai.address
+    );
+
+    expect(usdcBorrowCap).to.be.equal("0");
+    expect(daiBorrowCap).to.be.equal("0");
+  });
+
+  it("TC-erc20-borrowCap-02: Borrows 10 variable DAI, 10 variable USDC", async () => {
+    const {
+      weth,
+      pool,
+      dai,
+      usdc,
+      deployer,
+      users: [user1],
+    } = testEnv;
+
+    const suppliedAmount = "1000";
+    const borrowedAmount = "10";
+
+    // Deposit collateral
+    expect(
+      await pool.supply(
+        weth.address,
+        await convertToCurrencyDecimals(weth.address, suppliedAmount),
+        deployer.address,
+        0
+      )
+    );
+    // User 1 deposit more DAI and USDC to be able to borrow
+    expect(
+      await pool
+        .connect(user1.signer)
+        .supply(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, suppliedAmount),
+          user1.address,
+          0
+        )
+    );
+
+    expect(
+      await pool
+        .connect(user1.signer)
+        .supply(
+          usdc.address,
+          await convertToCurrencyDecimals(dai.address, suppliedAmount),
+          user1.address,
+          0
+        )
+    );
+
+    // Borrow
+    expect(
+      await pool.borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+
+    expect(
+      await pool.borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+  });
+
+  it("TC-erc20-borrowCap-03: Sets the borrow cap for DAI and USDC to 10 Units", async () => {
+    const {configurator, dai, usdc, protocolDataProvider} = testEnv;
+
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
+
+    const newCap = 10;
+    expect(await configurator.setBorrowCap(usdc.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(usdc.address, daiOldBorrowCap, newCap);
+    expect(await configurator.setBorrowCap(dai.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(dai.address, usdcOldBorrowCap, newCap);
+
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
+      dai.address
+    );
+
+    expect(usdcBorrowCap).to.be.equal(newCap);
+    expect(daiBorrowCap).to.be.equal(newCap);
+  });
+
+  it("TC-erc20-borrowCap-04: Tries to borrow any variable DAI or USDC, (> BORROW_CAP) (revert expected)", async () => {
+    const {usdc, pool, dai, deployer} = testEnv;
+    const borrowedAmount = "10";
+
+    await expect(
+      pool.borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    ).to.be.revertedWith(BORROW_CAP_EXCEEDED);
+
+    await expect(
+      pool.borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    ).to.be.revertedWith(BORROW_CAP_EXCEEDED);
+  });
+
+  it("TC-erc20-borrowCap-05: Tries to set the borrow cap for USDC and DAI to > MAX_BORROW_CAP (revert expected)", async () => {
+    const {configurator, usdc, dai} = testEnv;
+    const newCap = Number(MAX_BORROW_CAP) + 1;
+
+    await expect(
+      configurator.setBorrowCap(usdc.address, newCap)
+    ).to.be.revertedWith(INVALID_BORROW_CAP);
+    await expect(
+      configurator.setBorrowCap(dai.address, newCap)
+    ).to.be.revertedWith(INVALID_BORROW_CAP);
+  });
+
+  it("TC-erc20-borrowCap-06: Sets the borrow cap for DAI and USDC to 120 Units", async () => {
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
+    const newCap = "120";
+
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
+
+    expect(await configurator.setBorrowCap(usdc.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(usdc.address, usdcOldBorrowCap, newCap);
+    expect(await configurator.setBorrowCap(dai.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(dai.address, daiOldBorrowCap, newCap);
+
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
+      dai.address
+    );
+
+    expect(usdcBorrowCap).to.be.equal(newCap);
+    expect(daiBorrowCap).to.be.equal(newCap);
+  });
+
+  it("TC-erc20-borrowCap-07: Borrows 10 variable DAI and 10 variable USDC", async () => {
+    const {usdc, pool, dai, deployer} = testEnv;
+
+    const borrowedAmount = "10";
+    expect(
+      await pool.borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+
+    expect(
+      await pool.borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+  });
+
+  it("TC-erc20-borrowCap-08: Sets the borrow cap for WETH to 2 Units", async () => {
+    const {configurator, weth, protocolDataProvider} = testEnv;
+
+    const {borrowCap: wethOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(weth.address);
+
+    const newCap = 2;
+    expect(await configurator.setBorrowCap(weth.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(weth.address, wethOldBorrowCap, newCap);
+
+    const wethBorrowCap = (
+      await protocolDataProvider.getReserveCaps(weth.address)
+    ).borrowCap;
+
+    expect(wethBorrowCap).to.be.equal(newCap);
+  });
+
+  it("TC-erc20-borrowCap-09: Borrows 2 variable WETH (= BORROW_CAP)", async () => {
+    const {weth, pool, deployer} = testEnv;
+
+    const borrowedAmount = "2";
+
+    await pool.borrow(
+      weth.address,
+      await convertToCurrencyDecimals(weth.address, borrowedAmount),
+      0,
+      deployer.address
+    );
+  });
+
+  it("TC-erc20-borrowCap-10: Time flies and ETH debt amount goes above the limit due to accrued interests", async () => {
+    const {weth, protocolDataProvider} = testEnv;
+
+    // Advance blocks
+    await advanceTimeAndBlock(3600);
+
+    const wethData = await protocolDataProvider.getReserveData(weth.address);
+    const totalDebt = wethData.totalVariableDebt;
+    const wethCaps = await protocolDataProvider.getReserveCaps(weth.address);
+
+    expect(totalDebt).gt(wethCaps.borrowCap);
+  });
+
+  it("TC-erc20-borrowCap-11: Tries to borrow any variable ETH (> BORROW_CAP) (revert expected)", async () => {
+    const {weth, pool, deployer} = testEnv;
+
+    const borrowedAmount = "1";
+    await expect(
+      pool.borrow(
+        weth.address,
+        await convertToCurrencyDecimals(weth.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    ).to.be.revertedWith(BORROW_CAP_EXCEEDED);
+  });
+
+  it("TC-erc20-borrowCap-12: Borrows 99 variable DAI and 99 variable USDC (< BORROW_CAP)", async () => {
+    const {usdc, pool, dai, deployer} = testEnv;
+
+    const borrowedAmount = "99";
+    expect(
+      await pool.borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+
+    expect(
+      await pool.borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+  });
+
+  it("TC-erc20-borrowCap-13: Raises the borrow cap for USDC and DAI to 1000 Units", async () => {
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
+
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
+
+    const newCap = "1000";
+    expect(await configurator.setBorrowCap(usdc.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(usdc.address, usdcOldBorrowCap, newCap);
+    expect(await configurator.setBorrowCap(dai.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(dai.address, daiOldBorrowCap, newCap);
+
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
+      dai.address
+    );
+
+    expect(usdcBorrowCap).to.be.equal(newCap);
+    expect(daiBorrowCap).to.be.equal(newCap);
+  });
+
+  it("TC-erc20-borrowCap-14: Borrows 100 variable DAI and 100 variable USDC (< BORROW_CAP)", async () => {
+    const {usdc, pool, dai, deployer} = testEnv;
+
+    const borrowedAmount = "100";
+    expect(
+      await pool.borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+
+    expect(
+      await pool.borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+  });
+
+  it("TC-erc20-borrowCap-15: Lowers the borrow cap for USDC and DAI to 200 Units", async () => {
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
+
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
+
+    const newCap = "200";
+    expect(await configurator.setBorrowCap(usdc.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(usdc.address, usdcOldBorrowCap, newCap);
+    expect(await configurator.setBorrowCap(dai.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(dai.address, daiOldBorrowCap, newCap);
+
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
+      dai.address
+    );
+
+    expect(usdcBorrowCap).to.be.equal(newCap);
+    expect(daiBorrowCap).to.be.equal(newCap);
+  });
+
+  it("TC-erc20-borrowCap-16: Tries to borrows 100 variable DAI and 100 variable USDC (> BORROW_CAP) (revert expected)", async () => {
+    const {usdc, pool, dai, deployer} = testEnv;
+
+    const borrowedAmount = "100";
+    await expect(
+      pool.borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    ).to.be.revertedWith(BORROW_CAP_EXCEEDED);
+
+    await expect(
+      pool.borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    ).to.be.revertedWith(BORROW_CAP_EXCEEDED);
+  });
+
+  it("TC-erc20-borrowCap-17: Raises the borrow cap for USDC and DAI to MAX_BORROW_CAP", async () => {
+    const {configurator, usdc, dai, protocolDataProvider} = testEnv;
+
+    const {borrowCap: usdcOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiOldBorrowCap} =
+      await protocolDataProvider.getReserveCaps(dai.address);
+
+    const newCap = MAX_BORROW_CAP;
+    expect(await configurator.setBorrowCap(usdc.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(usdc.address, usdcOldBorrowCap, newCap);
+    expect(await configurator.setBorrowCap(dai.address, newCap))
+      .to.emit(configurator, "BorrowCapChanged")
+      .withArgs(dai.address, daiOldBorrowCap, newCap);
+
+    const {borrowCap: usdcBorrowCap} =
+      await protocolDataProvider.getReserveCaps(usdc.address);
+    const {borrowCap: daiBorrowCap} = await protocolDataProvider.getReserveCaps(
+      dai.address
+    );
+
+    expect(usdcBorrowCap).to.be.equal(newCap);
+    expect(daiBorrowCap).to.be.equal(newCap);
+  });
+
+  it("TC-erc20-borrowCap-18: Borrows 100 variable DAI and 100 variable USDC (< BORROW_CAP)", async () => {
+    const {usdc, pool, dai, deployer} = testEnv;
+
+    const borrowedAmount = "100";
+    expect(
+      await pool.borrow(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
+    expect(
+      await pool.borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, borrowedAmount),
+        0,
+        deployer.address
+      )
+    );
   });
 });
