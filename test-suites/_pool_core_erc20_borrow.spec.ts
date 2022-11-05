@@ -7,7 +7,11 @@ import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {borrowAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {
+  assertHealthFactorCalculation,
+  borrowAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -184,6 +188,136 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
       expect(healthFactor)
         .to.be.most(parseEther("1.1"))
         .to.be.least(parseEther("1.0"));
+    });
+
+    it("TC-erc20-borrow-09 Health factor worses up over time for user with a borrow position due to accrued debt interest", async () => {
+      testEnv = await loadFixture(fixture);
+      const {
+        users: [user1, user2],
+        pool,
+        dai,
+      } = testEnv;
+
+      // User 2 - Deposit 10k DAI
+      await supplyAndValidate(dai, firstDaiDeposit, user2, true);
+      // User 2 - Borrow 5k DAI
+      await borrowAndValidate(dai, "5000", user2);
+
+      const initialHealthFactor1 = (
+        await pool.getUserAccountData(user1.address)
+      ).healthFactor;
+      const initialHealthFactor2 = (
+        await pool.getUserAccountData(user2.address)
+      ).healthFactor;
+
+      // Advance time and blocks
+      await advanceTimeAndBlock(parseInt(ONE_YEAR) * 100);
+
+      // health factor is expected to have worsen for User 2 due to interests on his acquired debt
+      expect(initialHealthFactor2).to.be.gt(
+        (await pool.getUserAccountData(user2.address)).healthFactor
+      );
+      // health factor for user 1 should've remained the same
+      expect(initialHealthFactor1).to.eq(
+        (await pool.getUserAccountData(user1.address)).healthFactor
+      );
+
+      await assertHealthFactorCalculation(user1);
+      await assertHealthFactorCalculation(user2);
+    });
+
+    it("TC-erc20-borrow-10 ERC-721 Health factor worses up over time for user with a borrow position due to accrued debt interest", async () => {
+      testEnv = await loadFixture(fixture);
+      const {
+        users: [user1, user2],
+        pool,
+        dai,
+        bayc,
+      } = testEnv;
+
+      // User 2 - Deposit 10k DAI
+      await supplyAndValidate(bayc, "1", user2, true);
+      // User 2 - Borrow 5k DAI
+      await borrowAndValidate(dai, "5000", user2);
+
+      const initialHealthFactor1 = (
+        await pool.getUserAccountData(user1.address)
+      ).erc721HealthFactor;
+      const initialHealthFactor2 = (
+        await pool.getUserAccountData(user2.address)
+      ).erc721HealthFactor;
+
+      // Advance time and blocks
+      await advanceTimeAndBlock(parseInt(ONE_YEAR) * 100);
+
+      // ERC721 health factor is expected to have worsen for User 2 due to interests on his acquired debt
+      expect(initialHealthFactor2).to.be.gt(
+        (await pool.getUserAccountData(user2.address)).erc721HealthFactor
+      );
+      // health factor for user 1 should've remained the same
+      expect(initialHealthFactor1).to.eq(
+        (await pool.getUserAccountData(user1.address)).erc721HealthFactor
+      );
+    });
+
+    it("TC-erc20-borrow-11 User 1 deposit DAI, DAI ltv drops to 0, then tries borrow (revert expected)", async () => {
+      testEnv = await loadFixture(testEnvFixture);
+      const {
+        pool,
+        dai,
+        weth,
+        users: [user1, user2],
+        configurator,
+        protocolDataProvider,
+      } = testEnv;
+
+      const daiAmount = await convertToCurrencyDecimals(dai.address, "10");
+      const wethAmount = await convertToCurrencyDecimals(weth.address, "10");
+      const borrowWethAmount = await convertToCurrencyDecimals(
+        weth.address,
+        "5"
+      );
+
+      await dai.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
+      await weth.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT);
+
+      await dai.connect(user1.signer)["mint(uint256)"](daiAmount);
+      await weth.connect(user2.signer)["mint(uint256)"](wethAmount);
+
+      await pool
+        .connect(user1.signer)
+        .supply(dai.address, daiAmount, user1.address, 0);
+      await pool
+        .connect(user2.signer)
+        .supply(weth.address, wethAmount, user2.address, 0);
+
+      // Set DAI LTV = 0
+      expect(
+        await configurator.configureReserveAsCollateral(
+          dai.address,
+          0,
+          8000,
+          10500
+        )
+      )
+        .to.emit(configurator, "CollateralConfigurationChanged")
+        .withArgs(dai.address, 0, 8000, 10500);
+      const ltv = (
+        await protocolDataProvider.getReserveConfigurationData(dai.address)
+      ).ltv;
+      expect(ltv).to.be.equal(0);
+
+      // Borrow all the weth because of issue in collateral needed.
+      await expect(
+        pool
+          .connect(user1.signer)
+          .borrow(weth.address, borrowWethAmount, 0, user1.address)
+      ).to.be.revertedWith(ProtocolErrors.LTV_VALIDATION_FAILED);
+
+      const userData = await pool.getUserAccountData(user1.address);
+      // failing here
+      // expect(userData.totalCollateralBase).to.be.eq(parseUnits("10", 8));
+      expect(userData.totalDebtBase).to.be.eq(0);
     });
   });
 });

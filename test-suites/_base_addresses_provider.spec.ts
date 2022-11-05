@@ -1,7 +1,11 @@
 import hre from "hardhat";
 import {expect} from "chai";
 import {utils} from "ethers";
-import {createRandomAddress} from "../deploy/helpers/misc-utils";
+import {
+  createRandomAddress,
+  evmRevert,
+  evmSnapshot,
+} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
@@ -468,26 +472,39 @@ describe("PoolAddressesProvider", () => {
   });
 
   it("TC-addresses-provider-10 Owner updates the MarketId", async () => {
-    testEnv = await loadFixture(fixture);
+    const snapId = await evmSnapshot();
+
     const {addressesProvider, users} = testEnv;
     const currentAddressesProviderOwner = users[1];
 
-    const NEW_MARKET_ID = "NEW_MARKET";
+    const {poolCore, poolCoreSelectors} = await deployPoolComponents(
+      addressesProvider.address
+    );
 
-    // Current MarketId
-    const oldMarketId = await addressesProvider.getMarketId();
+    // Pool has already a proxy
+    const poolAddress = await addressesProvider.getPool();
+    expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
 
-    // Update the MarketId
-    expect(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setMarketId(NEW_MARKET_ID)
-    )
-      .to.emit(addressesProvider, "MarketIdSet")
-      .withArgs(oldMarketId, NEW_MARKET_ID);
+    // Update the Pool proxy
 
-    expect(await addressesProvider.getMarketId()).to.be.not.eq(oldMarketId);
-    expect(await addressesProvider.getMarketId()).to.be.eq(NEW_MARKET_ID);
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .updatePoolImpl(
+        [
+          {
+            implAddress: poolCore.address,
+            action: 1,
+            functionSelectors: poolCoreSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x"
+      );
+
+    // Pool address should not change
+    expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
+
+    await evmRevert(snapId);
   });
 
   it("TC-addresses-provider-11 Owner updates the PoolConfigurator", async () => {
@@ -684,5 +701,52 @@ describe("PoolAddressesProvider", () => {
     expect(await addressesProvider.getPoolDataProvider()).to.be.eq(
       newDataProviderAddress
     );
+  });
+
+  it("TC-addresses-provider-17 Owner updates the implementation of a proxy by deleting existing selectors then adding them", async () => {
+    testEnv = await loadFixture(fixture);
+    const {addressesProvider, users} = testEnv;
+    const currentAddressesProviderOwner = users[1];
+
+    const {poolCore, poolCoreSelectors} = await deployPoolComponents(
+      addressesProvider.address
+    );
+
+    // Pool has already a proxy
+    const poolAddress = await addressesProvider.getPool();
+    expect(poolAddress).to.be.not.eq(ZERO_ADDRESS);
+
+    // Update the Pool proxy
+
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .updatePoolImpl(
+        [
+          {
+            implAddress: ZERO_ADDRESS,
+            action: 2,
+            functionSelectors: poolCoreSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x"
+      );
+
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .updatePoolImpl(
+        [
+          {
+            implAddress: poolCore.address,
+            action: 0,
+            functionSelectors: poolCoreSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x"
+      );
+
+    // Pool address should not change
+    expect(await addressesProvider.getPool()).to.be.eq(poolAddress);
   });
 });
