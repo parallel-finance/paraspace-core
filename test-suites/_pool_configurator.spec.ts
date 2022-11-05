@@ -13,7 +13,6 @@ import {
 } from "../deploy/helpers/constants";
 import {deployReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
-import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
 import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {strategyWETH} from "../deploy/market-config/reservesConfigs";
@@ -28,102 +27,93 @@ import {
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-type ReserveConfigurationValues = {
-  reserveDecimals: string;
-  baseLTVAsCollateral: string;
-  liquidationThreshold: string;
-  liquidationBonus: string;
-  reserveFactor: string;
-  usageAsCollateralEnabled: boolean;
-  borrowingEnabled: boolean;
-  isActive: boolean;
-  isFrozen: boolean;
-  isPaused: boolean;
-  borrowCap: string;
-  supplyCap: string;
-  liquidationProtocolFee: BigNumber;
-};
-
-const expectReserveConfigurationData = async (
-  protocolDataProvider: ProtocolDataProvider,
-  asset: string,
-  values: ReserveConfigurationValues
-) => {
-  const [reserveCfg, reserveCaps, liquidationProtocolFee] =
-    await getReserveData(protocolDataProvider, asset);
-  expect(reserveCfg.decimals).to.be.eq(
-    values.reserveDecimals,
-    "reserveDecimals is not correct"
-  );
-  expect(reserveCfg.ltv).to.be.eq(
-    values.baseLTVAsCollateral,
-    "ltv is not correct"
-  );
-  expect(reserveCfg.liquidationThreshold).to.be.eq(
-    values.liquidationThreshold,
-    "liquidationThreshold is not correct"
-  );
-  expect(reserveCfg.liquidationBonus).to.be.eq(
-    values.liquidationBonus,
-    "liquidationBonus is not correct"
-  );
-  expect(reserveCfg.reserveFactor).to.be.eq(
-    values.reserveFactor,
-    "reserveFactor is not correct"
-  );
-  expect(reserveCfg.usageAsCollateralEnabled).to.be.eq(
-    values.usageAsCollateralEnabled,
-    "usageAsCollateralEnabled is not correct"
-  );
-  expect(reserveCfg.borrowingEnabled).to.be.eq(
-    values.borrowingEnabled,
-    "borrowingEnabled is not correct"
-  );
-  expect(reserveCfg.isActive).to.be.eq(
-    values.isActive,
-    "isActive is not correct"
-  );
-  expect(reserveCfg.isFrozen).to.be.eq(
-    values.isFrozen,
-    "isFrozen is not correct"
-  );
-  expect(reserveCfg.isPaused).to.be.equal(
-    values.isPaused,
-    "isPaused is not correct"
-  );
-  // expect(eModeCategory).to.be.eq(
-  //   values.eModeCategory,
-  //   "eModeCategory is not correct"
-  // );
-  expect(reserveCaps.borrowCap).to.be.eq(
-    values.borrowCap,
-    "borrowCap is not correct"
-  );
-  expect(reserveCaps.supplyCap).to.be.eq(
-    values.supplyCap,
-    "supplyCap is not correct"
-  );
-  expect(liquidationProtocolFee).to.be.eq(
-    values.liquidationProtocolFee,
-    "liquidationProtocolFee is not correct"
-  );
-};
-
-const getReserveData = async (
-  protocolDataProvider: ProtocolDataProvider,
-  asset: string
-) => {
-  return Promise.all([
-    protocolDataProvider.getReserveConfigurationData(asset),
-    // protocolDataProvider.getReserveEModeCategory(asset),
-    protocolDataProvider.getReserveCaps(asset),
-    protocolDataProvider.getLiquidationProtocolFee(asset),
-    // protocolDataProvider.getUnbackedMintCap(asset),
-  ]);
-};
 
 describe("PoolConfigurator: Common", () => {
-  let testEnv: TestEnv;
+  type ReserveConfigurationValues = {
+    reserveDecimals: string;
+    baseLTVAsCollateral: string;
+    liquidationThreshold: string;
+    liquidationBonus: string;
+    reserveFactor: string;
+    usageAsCollateralEnabled: boolean;
+    borrowingEnabled: boolean;
+    isActive: boolean;
+    isFrozen: boolean;
+    isPaused: boolean;
+    borrowCap: string;
+    supplyCap: string;
+    liquidationProtocolFee: BigNumber;
+  };
+
+  const expectReserveConfigurationData = async (
+    protocolDataProvider: ProtocolDataProvider,
+    asset: string,
+    values: ReserveConfigurationValues
+  ) => {
+    const [reserveCfg, reserveCaps, isPaused, liquidationProtocolFee] =
+      await getReserveData(protocolDataProvider, asset);
+    expect(reserveCfg.decimals).to.be.eq(
+      values.reserveDecimals,
+      "reserveDecimals is not correct"
+    );
+    expect(reserveCfg.ltv).to.be.eq(
+      values.baseLTVAsCollateral,
+      "ltv is not correct"
+    );
+    expect(reserveCfg.liquidationThreshold).to.be.eq(
+      values.liquidationThreshold,
+      "liquidationThreshold is not correct"
+    );
+    expect(reserveCfg.liquidationBonus).to.be.eq(
+      values.liquidationBonus,
+      "liquidationBonus is not correct"
+    );
+    expect(reserveCfg.reserveFactor).to.be.eq(
+      values.reserveFactor,
+      "reserveFactor is not correct"
+    );
+    expect(reserveCfg.usageAsCollateralEnabled).to.be.eq(
+      values.usageAsCollateralEnabled,
+      "usageAsCollateralEnabled is not correct"
+    );
+    expect(reserveCfg.borrowingEnabled).to.be.eq(
+      values.borrowingEnabled,
+      "borrowingEnabled is not correct"
+    );
+    expect(reserveCfg.isActive).to.be.eq(
+      values.isActive,
+      "isActive is not correct"
+    );
+    expect(reserveCfg.isFrozen).to.be.eq(
+      values.isFrozen,
+      "isFrozen is not correct"
+    );
+    expect(isPaused).to.be.equal(values.isPaused, "isPaused is not correct");
+    expect(reserveCaps.borrowCap).to.be.eq(
+      values.borrowCap,
+      "borrowCap is not correct"
+    );
+    expect(reserveCaps.supplyCap).to.be.eq(
+      values.supplyCap,
+      "supplyCap is not correct"
+    );
+    expect(liquidationProtocolFee).to.be.eq(
+      values.liquidationProtocolFee,
+      "liquidationProtocolFee is not correct"
+    );
+  };
+
+  const getReserveData = async (
+    protocolDataProvider: ProtocolDataProvider,
+    asset: string
+  ) => {
+    return Promise.all([
+      protocolDataProvider.getReserveConfigurationData(asset),
+      protocolDataProvider.getReserveCaps(asset),
+      protocolDataProvider.getPaused(asset),
+      protocolDataProvider.getLiquidationProtocolFee(asset),
+    ]);
+  };
   const {
     reserveDecimals,
     baseLTVAsCollateral,
@@ -145,15 +135,10 @@ describe("PoolConfigurator: Common", () => {
     isActive: true,
     isFrozen: false,
     isPaused: false,
-    // eModeCategory: BigNumber.from(0),
     borrowCap: borrowCap,
     supplyCap: supplyCap,
     liquidationProtocolFee: BigNumber.from(0),
   };
-
-  before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-  });
 
   it("TC-poolConfigurator-initReserves-01: InitReserves via AssetListing admin", async () => {
     const {
@@ -237,7 +222,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveActive-01: Deactivates the ETH reserve", async () => {
-    const {configurator, weth, protocolDataProvider} = testEnv;
+    const {configurator, weth, protocolDataProvider} = await loadFixture(
+      testEnvFixture
+    );
     expect(await configurator.setReserveActive(weth.address, false));
     const {isActive} = await protocolDataProvider.getReserveConfigurationData(
       weth.address
@@ -246,7 +233,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveActive-02: Reactivates the ETH reserve", async () => {
-    const {configurator, weth, protocolDataProvider} = testEnv;
+    const {configurator, weth, protocolDataProvider} = await loadFixture(
+      testEnvFixture
+    );
     expect(await configurator.setReserveActive(weth.address, true));
     const {isActive} = await protocolDataProvider.getReserveConfigurationData(
       weth.address
@@ -255,7 +244,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReservePause-01: Pauses the ETH reserve by pool admin", async () => {
-    const {configurator, weth, protocolDataProvider} = testEnv;
+    const {configurator, weth, protocolDataProvider} = await loadFixture(
+      testEnvFixture
+    );
     expect(await configurator.setReservePause(weth.address, true))
       .to.emit(configurator, "ReservePaused")
       .withArgs(weth.address, true);
@@ -267,7 +258,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReservePause-02: Unpauses the ETH reserve by pool admin", async () => {
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
     expect(await configurator.setReservePause(weth.address, false))
       .to.emit(configurator, "ReservePaused")
       .withArgs(weth.address, false);
@@ -278,7 +271,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReservePause-03: Pauses the ETH reserve by emergency admin", async () => {
-    const {configurator, weth, protocolDataProvider, emergencyAdmin} = testEnv;
+    const {configurator, weth, protocolDataProvider, emergencyAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(emergencyAdmin.signer)
@@ -294,7 +288,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReservePause-04: Unpauses the ETH reserve by emergency admin", async () => {
-    const {configurator, protocolDataProvider, weth, emergencyAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, emergencyAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(emergencyAdmin.signer)
@@ -309,7 +304,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveFreeze-01: Freezes the ETH reserve by pool Admin", async () => {
-    const {configurator, weth, protocolDataProvider} = testEnv;
+    const {configurator, weth, protocolDataProvider} = await loadFixture(
+      testEnvFixture
+    );
 
     expect(await configurator.setReserveFreeze(weth.address, true))
       .to.emit(configurator, "ReserveFrozen")
@@ -322,7 +319,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveFreeze-02: Unfreezes the ETH reserve by Pool admin", async () => {
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
     expect(await configurator.setReserveFreeze(weth.address, false))
       .to.emit(configurator, "ReserveFrozen")
       .withArgs(weth.address, false);
@@ -333,7 +332,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveFreeze-03: Freezes the ETH reserve by Risk Admin", async () => {
-    const {configurator, weth, protocolDataProvider, riskAdmin} = testEnv;
+    const {configurator, weth, protocolDataProvider, riskAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(riskAdmin.signer)
@@ -349,7 +349,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveFreeze-04: Unfreezes the ETH reserve by Risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(riskAdmin.signer)
@@ -364,8 +365,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveBorrowing-01: Deactivates the ETH reserve for borrowing via pool admin", async () => {
-    const snap = await evmSnapshot();
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
     expect(await configurator.setReserveBorrowing(weth.address, false))
       .to.emit(configurator, "ReserveBorrowing")
       .withArgs(weth.address, false);
@@ -374,11 +376,11 @@ describe("PoolConfigurator: Common", () => {
       ...baseConfigValues,
       borrowingEnabled: false,
     });
-    await evmRevert(snap);
   });
 
   it("TC-poolConfigurator-setReserveBorrowing-02: Deactivates the ETH reserve for borrowing via risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(riskAdmin.signer)
@@ -394,8 +396,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveBorrowing-03: Activates the ETH reserve for borrowing via pool admin", async () => {
-    const snap = await evmSnapshot();
-    const {configurator, weth, protocolDataProvider} = testEnv;
+    const {configurator, weth, protocolDataProvider} = await loadFixture(
+      testEnvFixture
+    );
     expect(await configurator.setReserveBorrowing(weth.address, true))
       .to.emit(configurator, "ReserveBorrowing")
       .withArgs(weth.address, true);
@@ -408,11 +411,11 @@ describe("PoolConfigurator: Common", () => {
       ...baseConfigValues,
     });
     expect(variableBorrowIndex.toString()).to.be.equal(RAY);
-    await evmRevert(snap);
   });
 
   it("TC-poolConfigurator-setReserveBorrowing-04: Activates the ETH reserve for borrowing via risk admin", async () => {
-    const {configurator, weth, protocolDataProvider, riskAdmin} = testEnv;
+    const {configurator, weth, protocolDataProvider, riskAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(riskAdmin.signer)
@@ -432,7 +435,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-configureReserveAsCollateral-01: Deactivates the ETH reserve as collateral via pool admin", async () => {
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
     expect(
       await configurator.configureReserveAsCollateral(weth.address, 0, 0, 0)
     )
@@ -449,7 +454,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-configureReserveAsCollateral-02: Activates the ETH reserve as collateral via pool admin", async () => {
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
     expect(
       await configurator.configureReserveAsCollateral(
         weth.address,
@@ -475,7 +482,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-configureReserveAsCollateral-03: Deactivates the ETH reserve as collateral via risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(riskAdmin.signer)
@@ -494,7 +502,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-configureReserveAsCollateral-04: Activates the ETH reserve as collateral via risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
     expect(
       await configurator
         .connect(riskAdmin.signer)
@@ -522,7 +531,9 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveFactor-01: Changes the reserve factor of WETH via pool admin", async () => {
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
 
     const {reserveFactor: oldReserveFactor} =
       await protocolDataProvider.getReserveConfigurationData(weth.address);
@@ -539,7 +550,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveFactor-02: Changes the reserve factor of WETH via risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
 
     const {reserveFactor: oldReserveFactor} =
       await protocolDataProvider.getReserveConfigurationData(weth.address);
@@ -560,8 +572,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setReserveFactor-03: Updates the reserve factor of WETH equal to PERCENTAGE_FACTOR", async () => {
-    const snapId = await evmSnapshot();
-    const {configurator, protocolDataProvider, weth, poolAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, poolAdmin} =
+      await loadFixture(testEnvFixture);
 
     const {reserveFactor: oldReserveFactor} =
       await protocolDataProvider.getReserveConfigurationData(weth.address);
@@ -579,11 +591,12 @@ describe("PoolConfigurator: Common", () => {
       ...baseConfigValues,
       reserveFactor: newReserveFactor,
     });
-    await evmRevert(snapId);
   });
 
   it("TC-poolConfigurator-setBorrowCap-01: Updates the borrowCap of WETH via pool admin", async () => {
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
 
     const {borrowCap: wethOldBorrowCap} =
       await protocolDataProvider.getReserveCaps(weth.address);
@@ -600,7 +613,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setBorrowCap-02: Updates the borrowCap of WETH risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
 
     const {borrowCap: wethOldBorrowCap} =
       await protocolDataProvider.getReserveCaps(weth.address);
@@ -621,12 +635,13 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setSupplyCap-01: Updates the supplyCap of WETH via pool admin", async () => {
-    const {configurator, protocolDataProvider, weth} = testEnv;
+    const {configurator, protocolDataProvider, weth} = await loadFixture(
+      testEnvFixture
+    );
 
     const {supplyCap: oldWethSupplyCap} =
       await protocolDataProvider.getReserveCaps(weth.address);
 
-    const newBorrowCap = "3000000";
     const newSupplyCap = "3000000";
     expect(await configurator.setSupplyCap(weth.address, newSupplyCap))
       .to.emit(configurator, "SupplyCapChanged")
@@ -634,18 +649,17 @@ describe("PoolConfigurator: Common", () => {
 
     await expectReserveConfigurationData(protocolDataProvider, weth.address, {
       ...baseConfigValues,
-      borrowCap: newBorrowCap,
       supplyCap: newSupplyCap,
     });
   });
 
   it("TC-poolConfigurator-setSupplyCap-02: Updates the supplyCap of WETH via risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
 
     const {supplyCap: oldWethSupplyCap} =
       await protocolDataProvider.getReserveCaps(weth.address);
 
-    const newBorrowCap = "3000000";
     const newSupplyCap = "3000000";
     expect(
       await configurator
@@ -657,13 +671,14 @@ describe("PoolConfigurator: Common", () => {
 
     await expectReserveConfigurationData(protocolDataProvider, weth.address, {
       ...baseConfigValues,
-      borrowCap: newBorrowCap,
       supplyCap: newSupplyCap,
     });
   });
 
   it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-01: Updates the ReserveInterestRateStrategy address of WETH via pool admin", async () => {
-    const {poolAdmin, pool, configurator, weth} = testEnv;
+    const {poolAdmin, pool, configurator, weth} = await loadFixture(
+      testEnvFixture
+    );
 
     const {interestRateStrategyAddress: interestRateStrategyAddressBefore} =
       await pool.getReserveData(weth.address);
@@ -680,18 +695,12 @@ describe("PoolConfigurator: Common", () => {
 
     expect(interestRateStrategyAddressBefore).to.not.be.eq(ZERO_ADDRESS);
     expect(interestRateStrategyAddressAfter).to.be.eq(ZERO_ADDRESS);
-
-    //reset interest rate strategy to the correct one
-    await configurator
-      .connect(poolAdmin.signer)
-      .setReserveInterestRateStrategyAddress(
-        weth.address,
-        interestRateStrategyAddressBefore
-      );
   });
 
   it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-02: Updates the ReserveInterestRateStrategy address of WETH via risk admin", async () => {
-    const {riskAdmin, pool, configurator, weth} = testEnv;
+    const {riskAdmin, pool, configurator, weth} = await loadFixture(
+      testEnvFixture
+    );
 
     const {interestRateStrategyAddress: interestRateStrategyAddressBefore} =
       await pool.getReserveData(weth.address);
@@ -708,18 +717,11 @@ describe("PoolConfigurator: Common", () => {
 
     expect(interestRateStrategyAddressBefore).to.not.be.eq(ONE_ADDRESS);
     expect(interestRateStrategyAddressAfter).to.be.eq(ONE_ADDRESS);
-
-    //reset interest rate strategy to the correct one
-    await configurator
-      .connect(riskAdmin.signer)
-      .setReserveInterestRateStrategyAddress(
-        weth.address,
-        interestRateStrategyAddressBefore
-      );
   });
 
   it("TC-poolConfigurator-setSiloedBorrowing-01: Sets siloed borrowing through the pool admin", async () => {
-    const {configurator, protocolDataProvider, weth, poolAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, poolAdmin} =
+      await loadFixture(testEnvFixture);
 
     const oldSiloedBorrowing = await protocolDataProvider.getSiloedBorrowing(
       weth.address
@@ -741,7 +743,8 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setSiloedBorrowing-02: Sets siloed borrowing through the risk admin", async () => {
-    const {configurator, protocolDataProvider, weth, riskAdmin} = testEnv;
+    const {configurator, protocolDataProvider, weth, riskAdmin} =
+      await loadFixture(testEnvFixture);
 
     const oldSiloedBorrowing = await protocolDataProvider.getSiloedBorrowing(
       weth.address
@@ -766,8 +769,6 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setSiloedBorrowing-03: Resets the siloed borrowing mode. Tries to set siloed borrowing after the asset has been borrowed (revert expected)", async () => {
-    const snap = await evmSnapshot();
-
     const {
       configurator,
       weth,
@@ -775,7 +776,7 @@ describe("PoolConfigurator: Common", () => {
       riskAdmin,
       pool,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
 
     await configurator
       .connect(riskAdmin.signer)
@@ -808,12 +809,12 @@ describe("PoolConfigurator: Common", () => {
     await expect(
       configurator.setSiloedBorrowing(weth.address, true)
     ).to.be.revertedWith(ProtocolErrors.RESERVE_DEBT_NOT_ZERO);
-
-    await evmRevert(snap);
   });
 
   it("TC-poolConfigurator-setReserveAuctionStrategyAddress-01: Set reserve auction strategy address through the pool admin", async () => {
-    const {configurator, weth, poolAdmin, pool} = testEnv;
+    const {configurator, weth, poolAdmin, pool} = await loadFixture(
+      testEnvFixture
+    );
     const {auctionStrategyAddress: oldAuctionStrategyAddress} =
       await pool.getReserveData(weth.address);
     expect(
@@ -826,18 +827,10 @@ describe("PoolConfigurator: Common", () => {
     const {auctionStrategyAddress: newAuctionStrategyAddress} =
       await pool.getReserveData(weth.address);
     expect(newAuctionStrategyAddress).to.be.equal(ZERO_ADDRESS);
-
-    //reset interest rate strategy to the correct one
-    await configurator
-      .connect(poolAdmin.signer)
-      .setReserveAuctionStrategyAddress(
-        weth.address,
-        oldAuctionStrategyAddress
-      );
   });
 
   it("TC-poolConfigurator-setAuctionRecoveryHealthFactor-01: Set auction recovery health factor through the pool admin", async () => {
-    const {configurator, poolAdmin, pool} = testEnv;
+    const {configurator, poolAdmin, pool} = await loadFixture(testEnvFixture);
     const hf = "1500000000000000000";
     expect(
       await configurator
@@ -849,7 +842,7 @@ describe("PoolConfigurator: Common", () => {
   });
 
   it("TC-poolConfigurator-setAuctionRecoveryHealthFactor-02: Set invalid health factor through the pool admin (revert expected)", async () => {
-    const {configurator} = testEnv;
+    const {configurator} = await loadFixture(testEnvFixture);
     const {INVALID_AMOUNT} = ProtocolErrors;
     const min_hf = "1";
     const max_hf = "2000000000000000001";
@@ -887,8 +880,8 @@ describe("PoolConfigurator: Drop Reserve", () => {
       weth,
       configurator,
     } = testEnv;
-    const depositedAmount = utils.parseEther("1000");
     const borrowedAmount = utils.parseEther("100");
+    const depositedAmount = utils.parseEther("1000");
     // setting reserve factor to 0 to ease tests, no xToken accrued in reserve
     await configurator.setReserveFactor(dai.address, 0);
     await dai["mint(uint256)"](depositedAmount);
@@ -897,6 +890,7 @@ describe("PoolConfigurator: Drop Reserve", () => {
     await dai.connect(user1.signer).approve(pool.address, depositedAmount);
     await weth.connect(user1.signer)["mint(uint256)"](depositedAmount);
     await weth.connect(user1.signer).approve(pool.address, depositedAmount);
+
     await pool.supply(dai.address, depositedAmount, deployer.address, 0);
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO
@@ -910,12 +904,6 @@ describe("PoolConfigurator: Drop Reserve", () => {
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       VARIABLE_DEBT_SUPPLY_NOT_ZERO
     );
-    // await pool
-    //   .connect(user1.signer)
-    //   .borrow(dai.address, borrowedAmount, 1, 0, user1.address);
-    // await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
-    //   STABLE_DEBT_NOT_ZERO
-    // );
   });
 
   it("TC-poolConfigurator-dropReserve-02: User 2 repays debts, drop DAI reserve should fail", async () => {
@@ -925,14 +913,6 @@ describe("PoolConfigurator: Drop Reserve", () => {
       dai,
       configurator,
     } = testEnv;
-    // expect(
-    //   await pool
-    //     .connect(user1.signer)
-    //     .repay(dai.address, MAX_UINT_AMOUNT, 1, user1.address)
-    // );
-    // await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
-    //   VARIABLE_DEBT_SUPPLY_NOT_ZERO
-    // );
     expect(
       await pool
         .connect(user1.signer)
@@ -958,14 +938,14 @@ describe("PoolConfigurator: Drop Reserve", () => {
   });
 
   it("TC-poolConfigurator-dropReserve-04: Drop an asset that is not a listed reserve should fail", async () => {
-    const {users, configurator} = testEnv;
+    const {users, configurator} = await loadFixture(testEnvFixture);
     await expect(configurator.dropReserve(users[5].address)).to.be.revertedWith(
       ASSET_NOT_LISTED
     );
   });
 
   it("TC-poolConfigurator-dropReserve-05: Drop a zero asset that is not listed reserve should fail", async () => {
-    const {configurator} = testEnv;
+    const {configurator} = await loadFixture(testEnvFixture);
     await expect(configurator.dropReserve(ZERO_ADDRESS)).to.be.revertedWith(
       ZERO_ADDRESS_NOT_VALID
     );
@@ -973,25 +953,8 @@ describe("PoolConfigurator: Drop Reserve", () => {
 });
 
 describe("PoolConfigurator: Liquidation Protocol Fee", () => {
-  let testEnv: TestEnv;
-  const {INVALID_LIQUIDATION_PROTOCOL_FEE} = ProtocolErrors;
-
-  before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-    const {weth, pool, dai, usdc} = testEnv;
-
-    const mintedAmount = utils.parseEther("1000000000");
-    await dai["mint(uint256)"](mintedAmount);
-    await weth["mint(uint256)"](mintedAmount);
-    await usdc["mint(uint256)"](mintedAmount);
-
-    await dai.approve(pool.address, MAX_UINT_AMOUNT);
-    await weth.approve(pool.address, MAX_UINT_AMOUNT);
-    await usdc.approve(pool.address, MAX_UINT_AMOUNT);
-  });
-
   it("TC-poolConfigurator-liquidationProtocolFee-01: Reserves should initially have protocol liquidation fee set to 0", async () => {
-    const {dai, usdc, protocolDataProvider} = testEnv;
+    const {dai, usdc, protocolDataProvider} = await loadFixture(testEnvFixture);
 
     const usdcLiquidationProtocolFee =
       await protocolDataProvider.getLiquidationProtocolFee(usdc.address);
@@ -1003,7 +966,9 @@ describe("PoolConfigurator: Liquidation Protocol Fee", () => {
   });
 
   it("TC-poolConfigurator-setLiquidationProtocolFee-01: Sets the protocol liquidation fee to 1000 (10.00%)", async () => {
-    const {configurator, dai, usdc, protocolDataProvider} = testEnv;
+    const {configurator, dai, usdc, protocolDataProvider} = await loadFixture(
+      testEnvFixture
+    );
 
     const oldUsdcLiquidationProtocolFee =
       await protocolDataProvider.getLiquidationProtocolFee(usdc.address);
@@ -1047,7 +1012,9 @@ describe("PoolConfigurator: Liquidation Protocol Fee", () => {
   });
 
   it("TC-poolConfigurator-setLiquidationProtocolFee-02: Sets the protocol liquidation fee to 10000 (100.00%) equal to PERCENTAGE_FACTOR", async () => {
-    const {configurator, dai, usdc, protocolDataProvider} = testEnv;
+    const {configurator, dai, usdc, protocolDataProvider} = await loadFixture(
+      testEnvFixture
+    );
 
     const oldUsdcLiquidationProtocolFee =
       await protocolDataProvider.getLiquidationProtocolFee(usdc.address);
@@ -1091,8 +1058,8 @@ describe("PoolConfigurator: Liquidation Protocol Fee", () => {
   });
 
   it("TC-poolConfigurator-setLiquidationProtocolFee-03: Tries to set the protocol liquidation fee to 10001 (100.01%) > PERCENTAGE_FACTOR (revert expected)", async () => {
-    const {configurator, dai, usdc} = testEnv;
-
+    const {configurator, dai, usdc} = await loadFixture(testEnvFixture);
+    const {INVALID_LIQUIDATION_PROTOCOL_FEE} = ProtocolErrors;
     const liquidationProtocolFee = 10001;
 
     expect(
@@ -1111,10 +1078,6 @@ describe("PoolConfigurator: Liquidation Protocol Fee", () => {
 });
 
 describe("PoolConfigurator: Modifiers", () => {
-  let testEnv: TestEnv;
-  before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-  });
   const {
     CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN,
     CALLER_NOT_EMERGENCY_ADMIN,
@@ -1124,7 +1087,7 @@ describe("PoolConfigurator: Modifiers", () => {
   } = ProtocolErrors;
 
   it("TC-poolConfigurator-modifiers-01: Test the accessibility of onlyAssetListingOrPoolAdmins modified functions", async () => {
-    const {configurator, users} = testEnv;
+    const {configurator, users} = await loadFixture(testEnvFixture);
     const nonPoolAdmin = users[2];
 
     const randomAddress = ONE_ADDRESS;
@@ -1158,7 +1121,7 @@ describe("PoolConfigurator: Modifiers", () => {
   });
 
   it("TC-poolConfigurator-modifiers-02: Test the accessibility of onlyPoolAdmin modified functions", async () => {
-    const {configurator, users} = testEnv;
+    const {configurator, users} = await loadFixture(testEnvFixture);
     const nonPoolAdmin = users[2];
 
     const randomAddress = ONE_ADDRESS;
@@ -1197,7 +1160,7 @@ describe("PoolConfigurator: Modifiers", () => {
   });
 
   it("TC-poolConfigurator-modifiers-03: Test the accessibility of onlyRiskOrPoolAdmins modified functions", async () => {
-    const {configurator, users} = testEnv;
+    const {configurator, users} = await loadFixture(testEnvFixture);
     const nonRiskOrPoolAdmins = users[3];
 
     const randomAddress = ONE_ADDRESS;
@@ -1229,7 +1192,7 @@ describe("PoolConfigurator: Modifiers", () => {
   });
 
   it("TC-poolConfigurator-modifiers-04: Tries to pause reserve with non-emergency-admin account (revert expected)", async () => {
-    const {configurator, weth, riskAdmin} = testEnv;
+    const {configurator, weth, riskAdmin} = await loadFixture(testEnvFixture);
     await expect(
       configurator
         .connect(riskAdmin.signer)
@@ -1239,7 +1202,7 @@ describe("PoolConfigurator: Modifiers", () => {
   });
 
   it("TC-poolConfigurator-modifiers-05: Tries to unpause reserve with non-emergency-admin account (revert expected)", async () => {
-    const {configurator, weth, riskAdmin} = testEnv;
+    const {configurator, weth, riskAdmin} = await loadFixture(testEnvFixture);
     await expect(
       configurator
         .connect(riskAdmin.signer)
@@ -1249,7 +1212,7 @@ describe("PoolConfigurator: Modifiers", () => {
   });
 
   it("TC-poolConfigurator-modifiers-06: Tries to pause pool with not emergency admin (revert expected)", async () => {
-    const {configurator, riskAdmin} = testEnv;
+    const {configurator, riskAdmin} = await loadFixture(testEnvFixture);
     await expect(
       configurator.connect(riskAdmin.signer).setPoolPause(true)
     ).to.be.revertedWith(CALLER_NOT_EMERGENCY_ADMIN);
@@ -1257,10 +1220,6 @@ describe("PoolConfigurator: Modifiers", () => {
 });
 
 describe("PoolConfigurator: Edge cases", () => {
-  let testEnv: TestEnv;
-  before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-  });
   const {
     INVALID_RESERVE_FACTOR,
     INVALID_RESERVE_PARAMS,
@@ -1272,7 +1231,7 @@ describe("PoolConfigurator: Edge cases", () => {
   } = ProtocolErrors;
 
   it("TC-poolConfigurator-Edge-configureReserveAsCollateral-01: ReserveConfiguration setLiquidationBonus() threshold > MAX_VALID_LIQUIDATION_THRESHOLD", async () => {
-    const {poolAdmin, dai, configurator} = testEnv;
+    const {poolAdmin, dai, configurator} = await loadFixture(testEnvFixture);
     await expect(
       configurator
         .connect(poolAdmin.signer)
@@ -1281,7 +1240,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-setReserveFactor-01: PoolConfigurator setReserveFactor() reserveFactor > PERCENTAGE_FACTOR (revert expected)", async () => {
-    const {dai, configurator} = testEnv;
+    const {dai, configurator} = await loadFixture(testEnvFixture);
     const invalidReserveFactor = 20000;
     await expect(
       configurator.setReserveFactor(dai.address, invalidReserveFactor)
@@ -1289,7 +1248,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-setReserveFactor-02: ReserveConfiguration setReserveFactor() reserveFactor > MAX_VALID_RESERVE_FACTOR", async () => {
-    const {dai, configurator} = testEnv;
+    const {dai, configurator} = await loadFixture(testEnvFixture);
     const invalidReserveFactor = 65536;
     await expect(
       configurator.setReserveFactor(dai.address, invalidReserveFactor)
@@ -1297,7 +1256,8 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-configureReserveAsCollateral-02: PoolConfigurator configureReserveAsCollateral() ltv > liquidationThreshold", async () => {
-    const {poolAdmin, dai, configurator, protocolDataProvider} = testEnv;
+    const {poolAdmin, dai, configurator, protocolDataProvider} =
+      await loadFixture(testEnvFixture);
 
     const config = await protocolDataProvider.getReserveConfigurationData(
       dai.address
@@ -1316,7 +1276,8 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-configureReserveAsCollateral-03: PoolConfigurator configureReserveAsCollateral() liquidationBonus < 10000", async () => {
-    const {poolAdmin, dai, configurator, protocolDataProvider} = testEnv;
+    const {poolAdmin, dai, configurator, protocolDataProvider} =
+      await loadFixture(testEnvFixture);
 
     const config = await protocolDataProvider.getReserveConfigurationData(
       dai.address
@@ -1335,7 +1296,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-configureReserveAsCollateral-04: PoolConfigurator configureReserveAsCollateral() liquidationThreshold.percentMul(liquidationBonus) > PercentageMath.PERCENTAGE_FACTOR", async () => {
-    const {poolAdmin, dai, configurator} = testEnv;
+    const {poolAdmin, dai, configurator} = await loadFixture(testEnvFixture);
 
     await expect(
       configurator
@@ -1345,7 +1306,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-configureReserveAsCollateral-05: PoolConfigurator configureReserveAsCollateral() liquidationThreshold == 0 && liquidationBonus > 0", async () => {
-    const {poolAdmin, dai, configurator} = testEnv;
+    const {poolAdmin, dai, configurator} = await loadFixture(testEnvFixture);
 
     await expect(
       configurator
@@ -1355,7 +1316,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-setBorrowCap-01: Tries to update borrowCap > MAX_BORROW_CAP (revert expected)", async () => {
-    const {configurator, weth} = testEnv;
+    const {configurator, weth} = await loadFixture(testEnvFixture);
     await expect(
       configurator.setBorrowCap(
         weth.address,
@@ -1365,7 +1326,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-setSupplyCap-01: Tries to update supplyCap > MAX_SUPPLY_CAP (revert expected)", async () => {
-    const {configurator, weth} = testEnv;
+    const {configurator, weth} = await loadFixture(testEnvFixture);
     await expect(
       configurator.setSupplyCap(
         weth.address,
@@ -1375,7 +1336,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-setBorrowCap-02: Tries to set borrowCap of MAX_BORROW_CAP an unlisted asset", async () => {
-    const {configurator, users} = testEnv;
+    const {configurator, users} = await loadFixture(testEnvFixture);
     const newCap = 10;
     await expect(
       configurator.setBorrowCap(users[5].address, newCap)
@@ -1383,7 +1344,7 @@ describe("PoolConfigurator: Edge cases", () => {
   });
 
   it("TC-poolConfigurator-Edge-setReserveActive: Tries to disable the DAI reserve with liquidity on it (revert expected)", async () => {
-    const {dai, pool, configurator} = testEnv;
+    const {dai, pool, configurator} = await loadFixture(testEnvFixture);
     const userAddress = await pool.signer.getAddress();
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
