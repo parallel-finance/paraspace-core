@@ -132,11 +132,7 @@ test-ptoken-permit:
 .PHONY: test-ptoken-delegation-aware
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
-
-.PHONY: test-ltv-validation
-test-ltv-validation:
-	make TEST_TARGET=ltv-validation.spec.ts test
-
+	
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
@@ -203,7 +199,7 @@ test-ptoken-repay:
 
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
-	make TEST_TARGET=variable-debt-token.spec.ts test
+	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
 
 .PHONY: test-paraspace-oracle
 test-paraspace-oracle:
