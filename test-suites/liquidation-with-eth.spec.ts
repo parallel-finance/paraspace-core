@@ -1,7 +1,6 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {BigNumber} from "ethers";
-import {parseEther} from "ethers/lib/utils";
+import {BigNumber, utils} from "ethers";
 import {
   getMockAggregator,
   getParaSpaceOracle,
@@ -85,6 +84,9 @@ describe("Liquidation (using ETH)", () => {
     await advanceTimeAndBlock(
       startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
     );
+    const liquidatorBalanceBefore = await pool.provider.getBalance(
+      liquidator.address
+    );
     const auctionDataAfter = await pool.getAuctionData(nBAYC.address, 0);
     const actualPriceMultiplier = auctionDataAfter.currentPriceMultiplier.lte(
       auctionDataAfter.minPriceMultiplier
@@ -98,23 +100,27 @@ describe("Liquidation (using ETH)", () => {
       .wadMul(actualPriceMultiplier)
       .wadDiv(DRE.ethers.utils.parseUnits("1", 18));
     // liquidate the NFT
-    const liquidationAmount = parseEther("10").toString();
-    expect(
-      await pool
-        .connect(liquidator.signer)
-        .liquidationERC721(
-          bayc.address,
-          borrower.address,
-          0,
-          liquidationAmount,
-          false,
-          {
-            gasLimit: 5000000,
-            value: liquidationAmount,
-          }
-        )
-    );
+    const liquidationAmount = baycPrice;
+    const tx = pool
+      .connect(liquidator.signer)
+      .liquidationERC721(
+        bayc.address,
+        borrower.address,
+        0,
+        liquidationAmount,
+        false,
+        {
+          gasLimit: 5000000,
+          value: liquidationAmount,
+        }
+      );
 
+    const txReceipt = await (await tx).wait();
+    const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+
+    const liquidatorBalanceAfter = await pool.provider.getBalance(
+      liquidator.address
+    );
     const borrowerWethReserveDataAfter = await getUserData(
       pool,
       protocolDataProvider,
@@ -125,52 +131,55 @@ describe("Liquidation (using ETH)", () => {
     expect(borrowerWethReserveDataAfter.currentPTokenBalance).to.be.eq(
       baycPrice
     );
+    expect(liquidatorBalanceAfter).to.be.eq(
+      liquidatorBalanceBefore.sub(baycPrice).sub(gasUsed)
+    );
   });
 
-  // it("liquidation ERC20 using ETH", async () => {
-  //   const {
-  //     users: [borrower, liquidator],
-  //     pool,
-  //     bayc,
-  //     nBAYC,
-  //     dai,
-  //     weth,
-  //     protocolDataProvider,
-  //   } = testEnv;
-  //
-  //   // 10k DAI ~= 9 ETH
-  //   await borrowAndValidate(dai, "10000", borrower);
-  //
-  //   // drop BAYC price to liquidation levels (HF = 0.6)
-  //   await changePriceAndValidate(bayc, "8");
-  //
-  //   // liquidate the
-  //   const liquidationAmount = parseEther("10").toString();
-  //   expect(
-  //     await pool
-  //       .connect(liquidator.signer)
-  //       .liquidationERC721(
-  //         bayc.address,
-  //         borrower.address,
-  //         0,
-  //         liquidationAmount,
-  //         false,
-  //         {
-  //           gasLimit: 5000000,
-  //           value: liquidationAmount,
-  //         }
-  //       )
-  //   );
-  //
-  //   const borrowerWethReserveDataAfter = await getUserData(
-  //     pool,
-  //     protocolDataProvider,
-  //     weth.address,
-  //     borrower.address
-  //   );
-  //   //assert nbayc fully swap to pweth
-  //   expect(borrowerWethReserveDataAfter.currentPTokenBalance).to.be.eq(
-  //     baycPrice
-  //   );
-  // });
+  it("liquidation ERC20 using ETH, extra ETH refunded correctly", async () => {
+    const {
+      users: [borrower, liquidator],
+      pool,
+      bayc,
+      dai,
+      weth,
+    } = testEnv;
+
+    // 10k DAI ~= 9 ETH
+    await borrowAndValidate(weth, "9", borrower);
+
+    // drop BAYC price to liquidation levels (HF = 0.6)
+    await changePriceAndValidate(bayc, "8");
+
+    // 100 * 908578801039414 / 1e18 / 1.05 = 0.086531314384706095238
+    const actualLiquidationAmount = BigNumber.from("100")
+      .mul("908578801039414")
+      .percentDiv("10500");
+    const liquidationAmount = utils.parseEther("1").toString();
+    const liquidatorBalanceBefore = await pool.provider.getBalance(
+      liquidator.address
+    );
+    const tx = pool
+      .connect(liquidator.signer)
+      .liquidationCall(
+        dai.address,
+        weth.address,
+        borrower.address,
+        liquidationAmount,
+        false,
+        {
+          gasLimit: 5000000,
+          value: liquidationAmount,
+        }
+      );
+    const txReceipt = await (await tx).wait();
+    const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+
+    const liquidatorBalanceAfter = await pool.provider.getBalance(
+      liquidator.address
+    );
+    expect(liquidatorBalanceAfter).to.be.eq(
+      liquidatorBalanceBefore.sub(actualLiquidationAmount).sub(gasUsed)
+    );
+  });
 });
