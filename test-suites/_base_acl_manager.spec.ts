@@ -483,7 +483,11 @@ describe("Access Control List Manager", () => {
         aclManager
           .connect(user.signer)
           .setRoleAdmin(FLASH_BORROW_ROLE, FLASH_BORROW_ADMIN_ROLE)
-      ).to.be.reverted;
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
     }
     const afterRevertFlashBorrowerRoleAdmin = await aclManager.getRoleAdmin(
       FLASH_BORROW_ROLE
@@ -497,8 +501,13 @@ describe("Access Control List Manager", () => {
     const {
       users: [user1, user2],
     } = testEnv;
-    await expect(aclManager.connect(user1.signer).addPoolAdmin(user2.address))
-      .to.be.reverted;
+    await expect(
+      aclManager.connect(user1.signer).addPoolAdmin(user2.address)
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isPoolAdmin(user2.address)).to.be.eq(false);
   });
 
@@ -510,7 +519,11 @@ describe("Access Control List Manager", () => {
     await aclManager.connect(deployer.signer).addPoolAdmin(user2.address);
     await expect(
       aclManager.connect(user1.signer).removePoolAdmin(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isPoolAdmin(user2.address)).to.be.eq(true);
   });
 
@@ -520,7 +533,11 @@ describe("Access Control List Manager", () => {
     } = testEnv;
     await expect(
       aclManager.connect(user1.signer).addEmergencyAdmin(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isEmergencyAdmin(user2.address)).to.be.eq(false);
   });
 
@@ -532,7 +549,11 @@ describe("Access Control List Manager", () => {
     await aclManager.connect(deployer.signer).addEmergencyAdmin(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeEmergencyAdmin(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isEmergencyAdmin(user2.address)).to.be.eq(true);
   });
 
@@ -540,8 +561,13 @@ describe("Access Control List Manager", () => {
     const {
       users: [user1, user2],
     } = testEnv;
-    await expect(aclManager.connect(user1.signer).addRiskAdmin(user2.address))
-      .to.be.reverted;
+    await expect(
+      aclManager.connect(user1.signer).addRiskAdmin(user2.address)
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isRiskAdmin(user2.address)).to.be.eq(false);
   });
 
@@ -553,7 +579,11 @@ describe("Access Control List Manager", () => {
     await aclManager.connect(deployer.signer).addRiskAdmin(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeRiskAdmin(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isRiskAdmin(user2.address)).to.be.eq(true);
   });
 
@@ -563,7 +593,11 @@ describe("Access Control List Manager", () => {
     } = testEnv;
     await expect(
       aclManager.connect(user1.signer).addFlashBorrower(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isFlashBorrower(user2.address)).to.be.eq(false);
   });
 
@@ -575,7 +609,11 @@ describe("Access Control List Manager", () => {
     await aclManager.connect(deployer.signer).addFlashBorrower(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeFlashBorrower(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isFlashBorrower(user2.address)).to.be.eq(true);
   });
 
@@ -583,8 +621,13 @@ describe("Access Control List Manager", () => {
     const {
       users: [user1, user2],
     } = testEnv;
-    await expect(aclManager.connect(user1.signer).addBridge(user2.address)).to
-      .be.reverted;
+    await expect(
+      aclManager.connect(user1.signer).addBridge(user2.address)
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isBridge(user2.address)).to.be.eq(false);
   });
 
@@ -594,8 +637,13 @@ describe("Access Control List Manager", () => {
       users: [user1, user2],
     } = testEnv;
     await aclManager.connect(deployer.signer).addBridge(user2.address);
-    await expect(aclManager.connect(user1.signer).removeBridge(user2.address))
-      .to.be.reverted;
+    await expect(
+      aclManager.connect(user1.signer).removeBridge(user2.address)
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isBridge(user2.address)).to.be.eq(true);
   });
 
@@ -605,7 +653,11 @@ describe("Access Control List Manager", () => {
     } = testEnv;
     await expect(
       aclManager.connect(user1.signer).addAssetListingAdmin(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isAssetListingAdmin(user2.address)).to.be.eq(false);
   });
 
@@ -619,7 +671,11 @@ describe("Access Control List Manager", () => {
       .addAssetListingAdmin(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeAssetListingAdmin(user2.address)
-    ).to.be.reverted;
+    ).to.be.revertedWith(
+      `'AccessControl: account ${user1.address.toLowerCase()} is missing role ${
+        constants.HashZero
+      }'`
+    );
     expect(await aclManager.isAssetListingAdmin(user2.address)).to.be.eq(true);
   });
 
@@ -654,7 +710,11 @@ describe("Access Control List Manager", () => {
     ]) {
       await expect(
         aclManager.connect(user.signer).addFlashBorrower(flashBorrower.address)
-      ).to.be.reverted;
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
     }
   });
 
@@ -689,7 +749,9 @@ describe("Access Control List Manager", () => {
         aclManager
           .connect(user.signer)
           .removeFlashBorrower(flashBorrower.address)
-      ).to.be.reverted;
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${FLASH_BORROW_ADMIN_ROLE}'`
+      );
     }
   });
 
@@ -717,8 +779,13 @@ describe("Access Control List Manager", () => {
       bridge,
       assetListingAdmin,
     ]) {
-      await expect(aclManager.connect(user.signer).addPoolAdmin(commonUser)).to
-        .be.reverted;
+      await expect(
+        aclManager.connect(user.signer).addPoolAdmin(commonUser)
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isPoolAdmin(commonUser)).to.be.eq(false);
     }
   });
@@ -748,8 +815,13 @@ describe("Access Control List Manager", () => {
       bridge,
       assetListingAdmin,
     ]) {
-      await expect(aclManager.connect(user.signer).removePoolAdmin(commonUser))
-        .to.be.reverted;
+      await expect(
+        aclManager.connect(user.signer).removePoolAdmin(commonUser)
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isPoolAdmin(commonUser)).to.be.eq(true);
     }
   });
@@ -780,7 +852,11 @@ describe("Access Control List Manager", () => {
     ]) {
       await expect(
         aclManager.connect(user.signer).addEmergencyAdmin(commonUser)
-      ).to.be.reverted;
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isEmergencyAdmin(commonUser)).to.be.eq(false);
     }
   });
@@ -812,7 +888,11 @@ describe("Access Control List Manager", () => {
     ]) {
       await expect(
         aclManager.connect(user.signer).removeEmergencyAdmin(commonUser)
-      ).to.be.reverted;
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isEmergencyAdmin(commonUser)).to.be.eq(true);
     }
   });
@@ -841,8 +921,13 @@ describe("Access Control List Manager", () => {
       bridge,
       assetListingAdmin,
     ]) {
-      await expect(aclManager.connect(user.signer).addRiskAdmin(commonUser)).to
-        .be.reverted;
+      await expect(
+        aclManager.connect(user.signer).addRiskAdmin(commonUser)
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isRiskAdmin(commonUser)).to.be.eq(false);
     }
   });
@@ -872,8 +957,13 @@ describe("Access Control List Manager", () => {
       bridge,
       assetListingAdmin,
     ]) {
-      await expect(aclManager.connect(user.signer).removeRiskAdmin(commonUser))
-        .to.be.reverted;
+      await expect(
+        aclManager.connect(user.signer).removeRiskAdmin(commonUser)
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isRiskAdmin(commonUser)).to.be.eq(true);
     }
   });
@@ -902,8 +992,13 @@ describe("Access Control List Manager", () => {
       bridge,
       assetListingAdmin,
     ]) {
-      await expect(aclManager.connect(user.signer).addBridge(bridge.address)).to
-        .be.reverted;
+      await expect(
+        aclManager.connect(user.signer).addBridge(bridge.address)
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isBridge(bridge.address)).to.be.eq(false);
     }
   });
@@ -931,8 +1026,13 @@ describe("Access Control List Manager", () => {
       bridge,
       assetListingAdmin,
     ]) {
-      await expect(aclManager.connect(user.signer).removeBridge(bridge.address))
-        .to.be.reverted;
+      await expect(
+        aclManager.connect(user.signer).removeBridge(bridge.address)
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(await aclManager.isBridge(bridge.address)).to.be.eq(true);
     }
   });
@@ -967,7 +1067,11 @@ describe("Access Control List Manager", () => {
         aclManager
           .connect(user.signer)
           .addAssetListingAdmin(assetListingAdmin.address)
-      ).to.be.reverted;
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(
         await aclManager.isAssetListingAdmin(assetListingAdmin.address)
       ).to.be.eq(false);
@@ -1001,7 +1105,11 @@ describe("Access Control List Manager", () => {
         aclManager
           .connect(user.signer)
           .removeAssetListingAdmin(assetListingAdmin.address)
-      ).to.be.reverted;
+      ).to.be.revertedWith(
+        `'AccessControl: account ${user.address.toLowerCase()} is missing role ${
+          constants.HashZero
+        }'`
+      );
       expect(
         await aclManager.isAssetListingAdmin(assetListingAdmin.address)
       ).to.be.eq(true);
