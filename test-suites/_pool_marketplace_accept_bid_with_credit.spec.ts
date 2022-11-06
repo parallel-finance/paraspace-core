@@ -43,19 +43,14 @@ import {executeAcceptBidWithCredit} from "./helpers/marketplace-helper";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
-describe("Leveraged Bid - Positive tests", () => {
-  let testEnv: TestEnv;
-  beforeEach("Take Blockchain Snapshot", async () => {
-    testEnv = await loadFixture(testEnvFixture);
-  });
-
+describe("Leveraged Bid - unit tests", () => {
   it("TC-erc721-bid-01 ERC20 <=> ERC721 accept buy in full no loan offer", async () => {
     const {
       doodles,
       usdc,
       pool,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "100";
     const payNowAmount = await convertToCurrencyDecimals(
       usdc.address,
@@ -131,7 +126,7 @@ describe("Leveraged Bid - Positive tests", () => {
       pool,
       oracle,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
     const middlemanInitialBalance = "200";
     const payNowAmount = await convertToCurrencyDecimals(dai.address, "800");
@@ -224,7 +219,7 @@ describe("Leveraged Bid - Positive tests", () => {
       pool,
       oracle,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const middlemanInitialBalance = "1000";
     const payLaterAmount = await convertToCurrencyDecimals(
       usdc.address,
@@ -299,7 +294,7 @@ describe("Leveraged Bid - Positive tests", () => {
       pool,
       oracle,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
     const middlemanInitialBalance = "200";
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
@@ -383,7 +378,7 @@ describe("Leveraged Bid - Positive tests", () => {
       conduitKey,
       pausableZone,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
     const payNowAmount = await convertToCurrencyDecimals(
       usdc.address,
@@ -669,7 +664,7 @@ describe("Leveraged Bid - Positive tests", () => {
       pausableZone,
       seaport,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
     const middlemanInitialBalance = "200";
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
@@ -850,7 +845,7 @@ describe("Leveraged Bid - Positive tests", () => {
       pausableZone,
       seaport,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
     const middlemanInitialBalance = "200";
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
@@ -1044,7 +1039,7 @@ describe("Leveraged Bid - Positive tests", () => {
       pausableZone,
       seaport,
       users: [maker, taker, middleman, platform, platform1],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
     const middlemanInitialBalance = "200";
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
@@ -1571,7 +1566,6 @@ describe("Leveraged Bid - Negative tests", () => {
     const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
     const startAmount = payNowAmount.add(creditAmount);
     const endAmount = startAmount; // fixed price but offerer cannot afford this
-    const nftId = "2";
 
     await waitForTx(
       await wPunk
