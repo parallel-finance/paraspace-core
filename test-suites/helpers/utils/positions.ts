@@ -16,7 +16,7 @@ type PositionInfo = {
   erc20XTokenDebt: BigNumber;
   collateralEnable: boolean;
   // NFT supply
-  nftCollaterizedBalance: BigNumber;
+  nftCollateralizedBalance: BigNumber;
 };
 
 export const getUserPositions = async (user: SignerWithAddress) => {
@@ -36,7 +36,7 @@ export const getUserPositions = async (user: SignerWithAddress) => {
           xTokenBalance: each.scaledXTokenBalance,
           erc20XTokenDebt: each.scaledVariableDebt,
           collateralEnable: each.usageAsCollateralEnabledOnUser,
-          nftCollaterizedBalance: each.collaterizedBalance,
+          nftCollateralizedBalance: each.collateralizedBalance,
         },
       } as TokenPositionInfo)
   );

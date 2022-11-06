@@ -1212,7 +1212,7 @@ export async function calculateExpectedLTV(user: SignerWithAddress) {
   let collateralAccumulator = 0;
   let weightedAmountAccumulator = 0;
   for (const asset of assetsInCollateral) {
-    const isNFT = asset.positionInfo.nftCollaterizedBalance.gt(0);
+    const isNFT = asset.positionInfo.nftCollateralizedBalance.gt(0);
     const assetPrice = await (await getParaSpaceOracle())
       .connect((await getDeployer()).signer)
       .getAssetPrice(asset.underlyingAsset);
@@ -1227,7 +1227,7 @@ export async function calculateExpectedLTV(user: SignerWithAddress) {
 
     // 2. get base units amount for those assets
     const valueInCollateral = isNFT
-      ? +asset.positionInfo.nftCollaterizedBalance * +formatEther(assetPrice)
+      ? +asset.positionInfo.nftCollateralizedBalance * +formatEther(assetPrice)
       : +(await convertFromCurrencyDecimals(
           asset.underlyingAsset,
           pTokenBalance.toString()
@@ -1263,7 +1263,7 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
   let collateralAccumulator = 0;
   let weightedlTAccumulator = 0;
   for (const asset of assetsInCollateral) {
-    const isNFT = asset.positionInfo.nftCollaterizedBalance.gt(0);
+    const isNFT = asset.positionInfo.nftCollateralizedBalance.gt(0);
     let assetPrice: BigNumber;
     // TODO(ivan.solomonoff): would need a mechanism to know the token ids in collateral, to fetch their price
     if (
@@ -1286,7 +1286,7 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
 
     // 2. get base units amount for those assets
     const valueInCollateral = isNFT
-      ? +asset.positionInfo.nftCollaterizedBalance * +formatEther(assetPrice)
+      ? +asset.positionInfo.nftCollateralizedBalance * +formatEther(assetPrice)
       : +(await convertFromCurrencyDecimals(
           asset.underlyingAsset,
           pTokenBalance.toString()

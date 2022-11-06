@@ -6,7 +6,7 @@ import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IE
 import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
@@ -373,7 +373,7 @@ library GenericLogic {
                     index
                 );
                 if (
-                    ICollaterizableERC721(vars.xTokenAddress)
+                    ICollateralizableERC721(vars.xTokenAddress)
                         .isUsedAsCollateral(tokenId)
                 ) {
                     totalValue += _getTokenPrice(
@@ -389,9 +389,8 @@ library GenericLogic {
                 vars.currentReserveAddress
             );
             totalValue =
-                ICollaterizableERC721(vars.xTokenAddress).collaterizedBalanceOf(
-                    params.user
-                ) *
+                ICollateralizableERC721(vars.xTokenAddress)
+                    .collateralizedBalanceOf(params.user) *
                 assetPrice;
         }
     }
@@ -467,7 +466,7 @@ library GenericLogic {
             uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
                 .tokenOfOwnerByIndex(params.user, index);
             if (
-                ICollaterizableERC721(vars.xTokenAddress).isUsedAsCollateral(
+                ICollateralizableERC721(vars.xTokenAddress).isUsedAsCollateral(
                     tokenId
                 )
             ) {

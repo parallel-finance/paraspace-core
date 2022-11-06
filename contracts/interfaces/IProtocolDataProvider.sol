@@ -110,7 +110,7 @@ interface IProtocolDataProvider {
      * @param user The address of the user
      * @return currentXTokenBalance The current XToken balance of the user
      * @return scaledXTokenBalance The scaled XToken balance of the user
-     * @return collaterizedBalance The collaterized balance of the user
+     * @return collateralizedBalance The collateralized balance of the user
      * @return currentVariableDebt The current variable debt of the user
      * @return scaledVariableDebt The scaled variable debt of the user
      * @return liquidityRate The liquidity rate of the reserve
@@ -123,7 +123,7 @@ interface IProtocolDataProvider {
         returns (
             uint256 currentXTokenBalance,
             uint256 scaledXTokenBalance,
-            uint256 collaterizedBalance,
+            uint256 collateralizedBalance,
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,

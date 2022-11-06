@@ -9,7 +9,7 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
-import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IScaledBalanceToken} from "../interfaces/IScaledBalanceToken.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
@@ -232,7 +232,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         returns (
             uint256 currentXTokenBalance,
             uint256 scaledXTokenBalance,
-            uint256 collaterizedBalance,
+            uint256 collateralizedBalance,
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,
@@ -263,8 +263,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             scaledXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
                 user
             );
-            collaterizedBalance = ICollaterizableERC721(reserve.xTokenAddress)
-                .collaterizedBalanceOf(user);
+            collateralizedBalance = ICollateralizableERC721(
+                reserve.xTokenAddress
+            ).collateralizedBalanceOf(user);
         }
 
         currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress)

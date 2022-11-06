@@ -9,7 +9,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {isUsingAsCollateral} from "../deploy/helpers/contracts-helpers";
 
-describe("UserConfigurator for ERC721: check user usedAsCollateral and collaterizedBalance status", () => {
+describe("UserConfigurator for ERC721: check user usedAsCollateral and collateralizedBalance status", () => {
   let testEnv: TestEnv;
   beforeEach(async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -50,7 +50,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
       (await pool.getUserConfiguration(user1.address)).data
     );
 
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
     expect(isUsingAsCollateral(userConfig, baycData.id)).to.be.false;
 
     await waitForTx(
@@ -68,7 +68,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     );
 
     expect(isUsingAsCollateral(userConfig, baycData.id)).to.be.true;
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(1);
 
     await waitForTx(
       await pool
@@ -80,7 +80,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     );
 
     expect(isUsingAsCollateral(userConfig, baycData.id)).to.be.false;
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
 
     await waitForTx(
       await pool
@@ -92,7 +92,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     );
 
     expect(isUsingAsCollateral(userConfig, baycData.id)).to.be.false;
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
   });
 
   it("TC-use-as-collateral-02:check by supply and transfer", async () => {
@@ -127,7 +127,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
       (await pool.getUserConfiguration(user1.address)).data
     );
 
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(1);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.true;
 
     await waitForTx(
@@ -139,13 +139,13 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     user1Config = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.false;
 
     const user2Config = BigNumber.from(
       (await pool.getUserConfiguration(user2.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user2.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user2.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.false;
   });
 
@@ -189,7 +189,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
       (await pool.getUserConfiguration(user1.address)).data
     );
 
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.false;
 
     await waitForTx(
@@ -200,7 +200,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     user1Config = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(3);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(3);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.true;
 
     await waitForTx(
@@ -211,7 +211,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     user1Config = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(1);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.true;
 
     await waitForTx(
@@ -222,7 +222,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     user1Config = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.false;
   });
 
@@ -323,14 +323,14 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     const user1Config = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.false;
 
     //6 check liquidator's config
     const liquidatorConfig = BigNumber.from(
       (await pool.getUserConfiguration(liquidator.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(liquidator.address)).to.be.equal(
+    expect(await nBAYC.collateralizedBalanceOf(liquidator.address)).to.be.equal(
       0
     );
     expect(isUsingAsCollateral(liquidatorConfig, baycData.id)).to.be.false;
@@ -388,13 +388,13 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     let user1Config = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(1);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.true;
 
     let user2Config = BigNumber.from(
       (await pool.getUserConfiguration(user2.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user2.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user2.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.false;
 
     await waitForTx(
@@ -406,13 +406,13 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collateri
     user1Config = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user1.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user1Config, baycData.id)).to.be.false;
 
     user2Config = BigNumber.from(
       (await pool.getUserConfiguration(user2.address)).data
     );
-    expect(await nBAYC.collaterizedBalanceOf(user2.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(user2.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.false;
   });
 });

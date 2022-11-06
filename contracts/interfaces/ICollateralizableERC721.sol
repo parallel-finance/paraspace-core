@@ -2,15 +2,15 @@
 pragma solidity 0.8.10;
 
 /**
- * @title ICollaterizableERC721
+ * @title ICollateralizableERC721
  * @author Parallel
- * @notice Defines the basic interface for an CollaterizableERC721.
+ * @notice Defines the basic interface for an CollateralizableERC721.
  **/
-interface ICollaterizableERC721 {
+interface ICollateralizableERC721 {
     /**
-     * @dev get the collaterized balance of a specific user
+     * @dev get the collateralized balance of a specific user
      */
-    function collaterizedBalanceOf(address user)
+    function collateralizedBalanceOf(address user)
         external
         view
         returns (uint256);
@@ -32,7 +32,7 @@ interface ICollaterizableERC721 {
 
     /**
      * @dev the ids of the token want to change the collateral state
-     * @return uint256 (user's old collaterized balance), uint256 (user's new collaterized balance)
+     * @return uint256 (user's old collateralized balance), uint256 (user's new collateralized balance)
      */
     function batchSetIsUsedAsCollateral(
         uint256[] calldata tokenIds,

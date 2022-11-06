@@ -9,7 +9,7 @@ import {IReserveInterestRateStrategy} from "../../../interfaces/IReserveInterest
 import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {SignatureChecker} from "../../../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
@@ -643,7 +643,7 @@ library ValidationLogic {
         vars.isCollateralEnabled =
             collateralReserve.configuration.getLiquidationThreshold() != 0 &&
             userConfig.isUsingAsCollateral(collateralReserve.id) &&
-            ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
+            ICollateralizableERC721(params.xTokenAddress).isUsedAsCollateral(
                 params.tokenId
             );
 
@@ -752,7 +752,7 @@ library ValidationLogic {
         vars.isCollateralEnabled =
             collateralConfiguration.getLiquidationThreshold() != 0 &&
             userConfig.isUsingAsCollateral(collateralReserve.id) &&
-            ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
+            ICollateralizableERC721(params.xTokenAddress).isUsedAsCollateral(
                 params.tokenId
             );
 
