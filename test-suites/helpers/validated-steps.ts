@@ -711,7 +711,7 @@ const checkAfterLiquidationERC20 = async (
   );
 };
 
-const checkAfterLiquidationERC721 = async (
+const checkAfterLiquidateERC721 = async (
   before: LiquidationValidationData,
   after: LiquidationValidationData
 ) => {
@@ -1068,7 +1068,7 @@ const liquidateAndValidateERC20 = async (
   await waitForTx(
     await (await getPoolProxy())
       .connect(liquidator.signer)
-      .liquidationCall(
+      .liquidateERC20(
         collateralToken.address,
         liquidationToken.address,
         borrower.address,
@@ -1123,7 +1123,7 @@ const liquidateAndValidateERC721 = async (
   await waitForTx(
     await (await getPoolProxy())
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         collateralToken.address,
         borrower.address,
         nftId != null ? nftId : 0,
@@ -1145,7 +1145,7 @@ const liquidateAndValidateERC721 = async (
     nftId
   );
 
-  await checkAfterLiquidationERC721(before, after);
+  await checkAfterLiquidateERC721(before, after);
 
   return {before, after};
 };
@@ -1415,7 +1415,7 @@ export const liquidateAndValidateReverted = async (
     await expect(
       pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           collateralToken.address,
           borrower.address,
           nftId != null ? nftId : 0,
@@ -1430,7 +1430,7 @@ export const liquidateAndValidateReverted = async (
     await expect(
       pool
         .connect(liquidator.signer)
-        .liquidationCall(
+        .liquidateERC20(
           collateralToken.address,
           liquidationToken.address,
           borrower.address,

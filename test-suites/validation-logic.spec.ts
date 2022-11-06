@@ -338,7 +338,7 @@ describe("ValidationLogic: Edge cases", () => {
     ).to.be.revertedWith(HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
   });
 
-  it("validateLiquidationCall() when healthFactor > threshold (revert expected)", async () => {
+  it("validateLiquidateERC20() when healthFactor > threshold (revert expected)", async () => {
     // Liquidation something that is not liquidatable
     const {pool, users, dai, usdc} = testEnv;
     const depositor = users[0];
@@ -382,7 +382,7 @@ describe("ValidationLogic: Edge cases", () => {
     await expect(
       pool
         .connect(depositor.signer)
-        .liquidationCall(usdc.address, dai.address, borrower.address, 0, false)
+        .liquidateERC20(usdc.address, dai.address, borrower.address, 0, false)
     ).to.be.revertedWith(HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
   });
 

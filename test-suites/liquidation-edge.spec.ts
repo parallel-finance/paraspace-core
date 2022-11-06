@@ -141,7 +141,7 @@ describe("Pool Liquidation: Edge cases", () => {
     expect(
       await pool
         .connect(depositor.signer)
-        .liquidationCall(
+        .liquidateERC20(
           weth.address,
           usdc.address,
           borrower.address,
@@ -252,7 +252,7 @@ describe("Pool Liquidation: Edge cases", () => {
     expect(
       await pool
         .connect(depositor.signer)
-        .liquidationCall(
+        .liquidateERC20(
           weth.address,
           dai.address,
           borrower.address,
@@ -399,7 +399,7 @@ describe("Pool Liquidation: Edge cases", () => {
     await waitForTx(
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,

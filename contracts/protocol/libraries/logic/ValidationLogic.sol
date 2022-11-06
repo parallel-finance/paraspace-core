@@ -448,7 +448,7 @@ library ValidationLogic {
         }
     }
 
-    struct ValidateLiquidationCallLocalVars {
+    struct ValidateLiquidateLocalVars {
         bool collateralReserveActive;
         bool collateralReservePaused;
         bool principalReserveActive;
@@ -470,12 +470,12 @@ library ValidationLogic {
      * @param collateralReserve The reserve data of the collateral
      * @param params Additional parameters needed for the validation
      */
-    function validateLiquidationCall(
+    function validateLiquidateERC20(
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ValidateLiquidationCallParams memory params
+        DataTypes.ValidateLiquidateERC20Params memory params
     ) internal view {
-        ValidateLiquidationCallLocalVars memory vars;
+        ValidateLiquidateLocalVars memory vars;
 
         (
             vars.collateralReserveActive,
@@ -552,18 +552,18 @@ library ValidationLogic {
      * @param collateralReserve The reserve data of the collateral
      * @param params Additional parameters needed for the validation
      */
-    function validateERC721LiquidationCall(
+    function validateLiquidateERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ValidateERC721LiquidationCallParams memory params
+        DataTypes.ValidateLiquidateERC721Params memory params
     ) internal view {
         require(
             params.liquidator != params.borrower,
             Errors.LIQUIDATOR_CAN_NOT_BE_SELF
         );
 
-        ValidateLiquidationCallLocalVars memory vars;
+        ValidateLiquidateLocalVars memory vars;
 
         (
             vars.collateralReserveActive,

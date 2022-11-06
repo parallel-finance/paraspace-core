@@ -1151,7 +1151,7 @@ describe("Uniswap V3", () => {
       await expect(
         pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             nftPositionManager.address,
             user1.address,
             1,
@@ -1186,7 +1186,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
         await pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             nftPositionManager.address,
             user1.address,
             1,
@@ -1220,7 +1220,7 @@ describe("Uniswap V3", () => {
       await expect(
         pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             nftPositionManager.address,
             user1.address,
             1,
@@ -1254,7 +1254,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
         await pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             nftPositionManager.address,
             user1.address,
             1,
@@ -1344,7 +1344,7 @@ describe("Uniswap V3", () => {
       await waitForTx(
         await pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             nftPositionManager.address,
             borrower.address,
             1,
