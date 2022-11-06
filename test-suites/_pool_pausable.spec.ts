@@ -260,7 +260,7 @@ describe("PausablePool", () => {
 
     // Do liquidation
     await expect(
-      pool.liquidationCall(
+      pool.liquidateERC20(
         weth.address,
         usdc.address,
         borrower.address,

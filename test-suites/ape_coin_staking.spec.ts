@@ -132,7 +132,7 @@ describe("ape coin staking", () => {
     // try to liquidate the NFT
     await pool
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         bayc.address,
         user1.address,
         0,
@@ -175,7 +175,7 @@ describe("ape coin staking", () => {
     // try to liquidate the NFT
     await pool
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         bayc.address,
         user1.address,
         1,
@@ -274,7 +274,7 @@ describe("ape coin staking", () => {
     // try t1o liquidate the NFT
     await pool
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         mayc.address,
         user1.address,
         0,
@@ -319,7 +319,7 @@ describe("ape coin staking", () => {
     // try to liquidate the NFT
     await pool
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         mayc.address,
         user1.address,
         1,

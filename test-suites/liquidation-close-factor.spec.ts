@@ -118,7 +118,7 @@ describe("Pool Liquidation: Close Factor", () => {
     expect(
       await pool
         .connect(depositor.signer)
-        .liquidationCall(
+        .liquidateERC20(
           weth.address,
           dai.address,
           borrower.address,
@@ -226,7 +226,7 @@ describe("Pool Liquidation: Close Factor", () => {
     expect(
       await pool
         .connect(depositor.signer)
-        .liquidationCall(
+        .liquidateERC20(
           weth.address,
           dai.address,
           borrower.address,

@@ -219,7 +219,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
 
     const tx = await pool
       .connect(liquidator.signer)
-      .liquidationCall(
+      .liquidateERC20(
         weth.address,
         dai.address,
         borrower.address,
@@ -441,7 +441,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
 
     await pool
       .connect(liquidator.signer)
-      .liquidationCall(
+      .liquidateERC20(
         weth.address,
         usdc.address,
         borrower.address,
@@ -632,7 +632,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
 
   //   await pool
   //     .connect(liquidator.signer)
-  //     .liquidationCall(
+  //     .liquidateERC20(
   //       dai.address,
   //       usdc.address,
   //       borrower.address,
@@ -826,7 +826,7 @@ describe("Pool Liquidation: Add fee to liquidations", () => {
 
   //   await pool
   //     .connect(liquidator.signer)
-  //     .liquidationCall(
+  //     .liquidateERC20(
   //       dai.address,
   //       usdc.address,
   //       borrower.address,

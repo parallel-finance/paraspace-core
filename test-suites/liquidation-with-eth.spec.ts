@@ -104,7 +104,7 @@ describe("Liquidation (using ETH)", () => {
     const liquidationAmount = utils.parseEther("10").toString();
     const tx = pool
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         bayc.address,
         borrower.address,
         0,
@@ -162,7 +162,7 @@ describe("Liquidation (using ETH)", () => {
     );
     const tx = pool
       .connect(liquidator.signer)
-      .liquidationCall(
+      .liquidateERC20(
         dai.address,
         weth.address,
         borrower.address,

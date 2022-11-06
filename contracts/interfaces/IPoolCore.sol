@@ -121,17 +121,17 @@ interface IPoolCore {
      * @dev Emitted when a borrower is liquidated.
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
-     * @param user The address of the borrower getting liquidated
+     * @param borrower The address of the borrower getting liquidated
      * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param liquidatedCollateralAmount The amount of collateral received by the liquidator
      * @param liquidator The address of the liquidator
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
      * to receive the underlying collateral asset directly
      **/
-    event LiquidationCall(
+    event LiquidateERC20(
         address indexed collateralAsset,
         address indexed liquidationAsset,
-        address indexed user,
+        address indexed borrower,
         uint256 liquidationAmount,
         uint256 liquidatedCollateralAmount,
         address liquidator,
@@ -142,17 +142,17 @@ interface IPoolCore {
      * @dev Emitted when a borrower's ERC721 asset is liquidated.
      * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
      * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
-     * @param user The address of the borrower getting liquidated
+     * @param borrower The address of the borrower getting liquidated
      * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
      * @param liquidatedCollateralTokenId The token id of ERC721 asset received by the liquidator
      * @param liquidator The address of the liquidator
      * @param receiveNToken True if the liquidators wants to receive the collateral NTokens, `false` if he wants
      * to receive the underlying collateral asset directly
      **/
-    event ERC721LiquidationCall(
+    event LiquidateERC721(
         address indexed collateralAsset,
         address indexed liquidationAsset,
-        address indexed user,
+        address indexed borrower,
         uint256 liquidationAmount,
         uint256 liquidatedCollateralTokenId,
         address liquidator,
@@ -427,7 +427,7 @@ interface IPoolCore {
      * @param receivePToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
      * to receive the underlying collateral asset directly
      **/
-    function liquidationCall(
+    function liquidateERC20(
         address collateralAsset,
         address liquidationAsset,
         address user,
@@ -435,7 +435,7 @@ interface IPoolCore {
         bool receivePToken
     ) external payable;
 
-    function liquidationERC721(
+    function liquidateERC721(
         address collateralAsset,
         address user,
         uint256 collateralTokenId,

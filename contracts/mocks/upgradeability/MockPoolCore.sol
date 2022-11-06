@@ -47,7 +47,7 @@ contract PoolCoreV2 is
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationCall(
+    function liquidateERC20(
         address,
         address,
         address,
@@ -58,7 +58,7 @@ contract PoolCoreV2 is
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationERC721(
+    function liquidateERC721(
         address,
         address,
         uint256,

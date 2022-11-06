@@ -100,7 +100,7 @@ describe("Liquidation NFT (using WETH)", () => {
     expect(
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,

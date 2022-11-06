@@ -194,7 +194,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
 
     //someone tries to liquidate user 2
     await expect(
-      pool.liquidationCall(weth.address, dai.address, borrower.address, 1, true)
+      pool.liquidateERC20(weth.address, dai.address, borrower.address, 1, true)
     ).to.be.revertedWith(HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
     await changePriceAndValidate(dai, daiPrice.percentMul(12000).toString());
@@ -212,7 +212,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
     await expect(
       pool
         .connect(liquidator.signer)
-        .liquidationCall(
+        .liquidateERC20(
           weth.address,
           usdc.address,
           borrower.address,
