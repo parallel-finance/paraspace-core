@@ -7,7 +7,7 @@ import {
   WAD,
 } from "../../deploy/helpers/constants";
 import {
-  getMockAggregator,
+  getAggregator,
   getParaSpaceOracle,
   getPToken,
   getPoolProxy,
@@ -40,7 +40,7 @@ import {getUserPositions} from "./utils/positions";
 import {convertFromCurrencyDecimals} from "./utils/helpers";
 import "../helpers/utils/wadraymath";
 import {XTokenType} from "../../deploy/helpers/types";
-import {almostEqual} from "../../deploy/helpers/uniswapv3-helper";
+import {almostEqual} from "../helpers/uniswapv3-helper";
 
 const {expect} = chai;
 type SupportedAsset =
@@ -1356,7 +1356,7 @@ export const changePriceAndValidate = async (
   newPrice: string
 ) => {
   const [deployer] = await getEthersSigners();
-  const agg = await getMockAggregator(undefined, await token.symbol());
+  const agg = await getAggregator(undefined, await token.symbol());
   await agg.updateLatestAnswer(parseEther(newPrice));
 
   const actualPrice = await (await getParaSpaceOracle())

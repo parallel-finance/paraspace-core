@@ -132,7 +132,7 @@ test-ptoken-permit:
 .PHONY: test-ptoken-delegation-aware
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
-	
+
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
@@ -219,7 +219,7 @@ test-pool-addresses-provider:
 
 .PHONY: test-addresses-provider-registry
 test-addresses-provider-registry:
-	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test	
+	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
 
 .PHONY: test-pausable-pool
 test-pausable-pool:
@@ -357,12 +357,6 @@ deploy-flashClaimRegistry:
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
 
-.PHONY: fork
-fork:
-	npx ganache \
-	-d \
-	--chain.chainId 522
-
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
@@ -386,6 +380,10 @@ upgrade-ntoken-uniswapv3:
 .PHONY: upgrade-ntoken-moonbirds
 upgrade-ntoken-moonbirds:
 	make TASK_NAME=upgrade:ntoken_moonbirds run-task
+
+.PHONY: fork
+fork:
+	FORK=mainnet npx hardhat node
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

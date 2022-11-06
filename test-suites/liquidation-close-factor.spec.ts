@@ -12,8 +12,8 @@ import {TestEnv} from "./helpers/make-suite";
 import {VariableDebtToken__factory} from "../types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {getMockAggregator} from "../deploy/helpers/contracts-getters";
-import {almostEqual} from "../deploy/helpers/uniswapv3-helper";
+import {getAggregator} from "../deploy/helpers/contracts-getters";
+import {almostEqual} from "./helpers/uniswapv3-helper";
 
 describe("Pool Liquidation: Close Factor", () => {
   let snap: string;
@@ -97,7 +97,7 @@ describe("Pool Liquidation: Close Factor", () => {
     // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
 
     // Increase usdc price to allow liquidation
-    const usdcAgg = await getMockAggregator(undefined, "USDC");
+    const usdcAgg = await getAggregator(undefined, "USDC");
     const newUsdcPrice = parseEther("0.00169").toString();
     await usdcAgg.updateLatestAnswer(newUsdcPrice);
 
@@ -205,7 +205,7 @@ describe("Pool Liquidation: Close Factor", () => {
     // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
 
     // Increase usdc price to allow liquidation
-    const usdcAgg = await getMockAggregator(undefined, "USDC");
+    const usdcAgg = await getAggregator(undefined, "USDC");
     const newUsdcPrice = parseEther("0.00170").toString();
     await usdcAgg.updateLatestAnswer(newUsdcPrice);
 

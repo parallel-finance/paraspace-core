@@ -12,7 +12,7 @@ import {
   swapToken,
   fund,
   approveTo,
-} from "../deploy/helpers/uniswapv3-helper";
+} from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {getUniswapV3OracleWrapper} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";

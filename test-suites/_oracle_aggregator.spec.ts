@@ -7,7 +7,7 @@ import {
 } from "../deploy/helpers/misc-utils";
 import {
   deployMintableERC20,
-  deployMockAggregator,
+  deployAggregator,
 } from "../deploy/helpers/contracts-deployments";
 import {MintableERC20, MockAggregator} from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
@@ -34,7 +34,7 @@ describe("ParaSpaceOracle", () => {
     testEnv = await loadFixture(testEnvFixture);
     mockToken = await deployMintableERC20(["MOCK", "MOCK", "18"]);
     assetPrice = getParaSpaceConfig().Mocks!.AllAssetsInitialPrices.WETH;
-    mockAggregator = await deployMockAggregator("MOCK", assetPrice);
+    mockAggregator = await deployAggregator("MOCK", assetPrice);
   });
 
   it("TC-oracle-aggregator-01:Owner set a new asset source", async () => {
@@ -155,7 +155,7 @@ describe("ParaSpaceOracle", () => {
 
   it("TC-oracle-aggregator-06:Get price of asset without source(reverted)", async () => {
     const {poolAdmin, paraspaceOracle} = testEnv;
-    const zeroPriceMockAgg = await deployMockAggregator("MOCK", "0");
+    const zeroPriceMockAgg = await deployAggregator("MOCK", "0");
 
     // Asset has no source
     expect(await paraspaceOracle.getSourceOfAsset(mockToken.address)).to.be.eq(
@@ -181,7 +181,7 @@ describe("ParaSpaceOracle", () => {
 
   it("Get price of asset with 0 price but non-zero fallback price", async () => {
     const {poolAdmin, paraspaceOracle, oracle} = testEnv;
-    const zeroPriceMockAgg = await deployMockAggregator("MOCK", "0");
+    const zeroPriceMockAgg = await deployAggregator("MOCK", "0");
     const fallbackPrice = oneEther;
 
     // Register price on FallbackOracle

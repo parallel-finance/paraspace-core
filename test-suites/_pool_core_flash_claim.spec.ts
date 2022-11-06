@@ -14,7 +14,7 @@ import {
   createNewPool,
   fund,
   mintNewPosition,
-} from "../deploy/helpers/uniswapv3-helper";
+} from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 
 describe("Flash Claim Test", () => {

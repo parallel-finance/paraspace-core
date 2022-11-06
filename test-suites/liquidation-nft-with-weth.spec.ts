@@ -2,7 +2,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {
-  getMockAggregator,
+  getAggregator,
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
@@ -38,7 +38,7 @@ describe("Liquidation NFT (using WETH)", () => {
     // assure asset prices for correct health factor calculations
     await changePriceAndValidate(bayc, "101");
 
-    const daiAgg = await getMockAggregator(undefined, "DAI");
+    const daiAgg = await getAggregator(undefined, "DAI");
     await daiAgg.updateLatestAnswer("908578801039414");
 
     // Borrower deposits 3 BAYC and 5k DAI

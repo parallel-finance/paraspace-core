@@ -14,7 +14,7 @@ import {
   fund,
   approveTo,
   getV3Pool,
-} from "../deploy/helpers/uniswapv3-helper";
+} from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
