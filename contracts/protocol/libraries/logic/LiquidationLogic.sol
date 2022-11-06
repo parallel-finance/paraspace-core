@@ -17,7 +17,7 @@ import {ReserveConfiguration} from "../../libraries/configuration/ReserveConfigu
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {IWETH} from "../../../misc/interfaces/IWETH.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {PRBMath} from "../../../dependencies/math/PRBMath.sol";
@@ -770,8 +770,9 @@ library LiquidationLogic {
     {
         LiquidationParametersLocalVars memory vars;
 
-        vars.userCollateral = ICollaterizableERC721(superVars.collateralXToken)
-            .collaterizedBalanceOf(params.user);
+        vars.userCollateral = ICollateralizableERC721(
+            superVars.collateralXToken
+        ).collateralizedBalanceOf(params.user);
 
         // price of the asset that is used as collateral
         if (INToken(superVars.collateralXToken).getAtomicPricingConfig()) {
