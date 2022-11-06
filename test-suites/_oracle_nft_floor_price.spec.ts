@@ -9,6 +9,7 @@ import {getNFTFloorOracle} from "../deploy/helpers/contracts-getters";
 import {deployERC721OracleWrapper} from "../deploy/helpers/contracts-deployments";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {ERC721TokenContractId} from "../deploy/helpers/types";
 
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
@@ -31,6 +32,7 @@ describe("NFT Oracle Tests", () => {
       addressesProvider.address,
       nftFloorOracle.address,
       bayc.address,
+      ERC721TokenContractId.BAYC,
       false
     );
 

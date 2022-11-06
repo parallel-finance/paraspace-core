@@ -3,7 +3,7 @@ import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {getMockAggregator} from "../deploy/helpers/contracts-getters";
+import {getAggregator} from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
@@ -35,7 +35,7 @@ describe("Liquidation Auction", () => {
     // assure asset prices for correct health factor calculations
     await changePriceAndValidate(bayc, "101");
 
-    const daiAgg = await getMockAggregator(undefined, "DAI");
+    const daiAgg = await getAggregator(undefined, "DAI");
     await daiAgg.updateLatestAnswer("908578801039414");
 
     // Borrower deposits 3 BAYC and 5k DAI

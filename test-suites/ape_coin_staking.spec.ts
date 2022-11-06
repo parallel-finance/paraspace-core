@@ -1,7 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {getMockAggregator} from "../deploy/helpers/contracts-getters";
+import {getAggregator} from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
@@ -26,7 +26,7 @@ describe("ape coin staking", () => {
       apeCoinStaking,
     } = testEnv;
 
-    const daiAgg = await getMockAggregator(undefined, "DAI");
+    const daiAgg = await getAggregator(undefined, "DAI");
     await daiAgg.updateLatestAnswer("908578801039414");
 
     // send extra tokens to the apestaking contract for rewards

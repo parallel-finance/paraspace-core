@@ -29,7 +29,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
   getFirstSigner,
-  getMockAggregator,
+  getAggregator,
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
@@ -362,7 +362,7 @@ describe("Interest Rate Tests", () => {
         await getParaSpaceOracle()
       ).setAssetSources(
         [mockToken.address],
-        [(await getMockAggregator(undefined, "DAI")).address]
+        [(await getAggregator(undefined, "DAI")).address]
       );
 
       return testEnv;
