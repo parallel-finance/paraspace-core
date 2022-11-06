@@ -13,7 +13,7 @@ import {VariableDebtToken__factory} from "../types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getMockAggregator} from "../deploy/helpers/contracts-getters";
-import {almostEqual} from "../deploy/helpers/uniswapv3-helper";
+import {almostEqual} from "./helpers/uniswapv3-helper";
 
 describe("Pool Liquidation: Close Factor", () => {
   let snap: string;
