@@ -616,12 +616,7 @@ library ValidationLogic {
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
 
-        if (!params.auctionEnabled) {
-            require(
-                params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-            );
-        } else {
+        if (params.auctionEnabled) {
             require(
                 params.healthFactor < params.auctionRecoveryHealthFactor,
                 Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
@@ -631,6 +626,11 @@ library ValidationLogic {
                     params.tokenId
                 ),
                 Errors.AUCTION_NOT_STARTED
+            );
+        } else {
+            require(
+                params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
             );
         }
 
