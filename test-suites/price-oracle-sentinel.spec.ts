@@ -282,7 +282,7 @@ describe("PriceOracleSentinel", () => {
 
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
     await expect(
-      pool.liquidationCall(
+      pool.liquidateERC20(
         weth.address,
         dai.address,
         borrower.address,
@@ -351,7 +351,7 @@ describe("PriceOracleSentinel", () => {
 
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
 
-    const tx = await pool.liquidationCall(
+    const tx = await pool.liquidateERC20(
       weth.address,
       dai.address,
       borrower.address,
@@ -629,7 +629,7 @@ describe("PriceOracleSentinel", () => {
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
 
     // The supply is the same, but there should be a change in who has what. The liquidator should have received what the borrower lost.
-    const tx = await pool.liquidationCall(
+    const tx = await pool.liquidateERC20(
       weth.address,
       dai.address,
       borrower.address,

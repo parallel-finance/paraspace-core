@@ -9,7 +9,7 @@ import {IUiPoolDataProvider} from "./interfaces/IUiPoolDataProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
-import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
@@ -270,7 +270,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
-                tokenData[i][j].useAsCollateral = ICollaterizableERC721(asset)
+                tokenData[i][j].useAsCollateral = ICollateralizableERC721(asset)
                     .isUsedAsCollateral(tokenIds[i][j]);
                 tokenData[i][j].isAuctioned = IAuctionableERC721(asset)
                     .isAuctioned(tokenIds[i][j]);
@@ -376,9 +376,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 userReservesData[i].scaledXTokenBalance = INToken(
                     baseData.xTokenAddress
                 ).balanceOf(user);
-                userReservesData[i].collaterizedBalance = ICollaterizableERC721(
+                userReservesData[i]
+                    .collateralizedBalance = ICollateralizableERC721(
                     baseData.xTokenAddress
-                ).collaterizedBalanceOf(user);
+                ).collateralizedBalanceOf(user);
             }
 
             if (userConfig.isBorrowing(i)) {

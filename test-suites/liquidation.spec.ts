@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {getMockAggregator} from "../deploy/helpers/contracts-getters";
+import {getAggregator} from "../deploy/helpers/contracts-getters";
 import {
   borrowAndValidate,
   changePriceAndValidate,
@@ -27,7 +27,7 @@ const fixture = async () => {
   // assure asset prices for correct health factor calculations
   await changePriceAndValidate(bayc, "101");
 
-  const daiAgg = await getMockAggregator(undefined, "DAI");
+  const daiAgg = await getAggregator(undefined, "DAI");
   await daiAgg.updateLatestAnswer("908578801039414");
 
   // Borrower deposits 3 BAYC and 5k DAI

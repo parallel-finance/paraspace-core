@@ -98,14 +98,15 @@ library DataTypes {
         uint40 reserveLastUpdateTimestamp;
     }
 
-    struct ExecuteLiquidationCallParams {
+    struct ExecuteLiquidateParams {
         uint256 reservesCount;
         uint256 liquidationAmount;
         uint256 collateralTokenId;
         uint256 auctionRecoveryHealthFactor;
+        address weth;
         address collateralAsset;
         address liquidationAsset;
-        address user;
+        address borrower;
         address liquidator;
         bool receiveXToken;
         address priceOracle;
@@ -125,7 +126,7 @@ library DataTypes {
         address asset;
         uint256 amount;
         address onBehalfOf;
-        address spender;
+        address payer;
         uint16 referralCode;
     }
 
@@ -133,7 +134,7 @@ library DataTypes {
         address asset;
         DataTypes.ERC721SupplyParams[] tokenData;
         address onBehalfOf;
-        address spender;
+        address payer;
         uint16 referralCode;
     }
 
@@ -226,14 +227,18 @@ library DataTypes {
         address priceOracleSentinel;
     }
 
-    struct ValidateLiquidationCallParams {
+    struct ValidateLiquidateERC20Params {
         ReserveCache liquidationAssetReserveCache;
+        address liquidationAsset;
+        address weth;
         uint256 totalDebt;
         uint256 healthFactor;
+        uint256 liquidationAmount;
+        uint256 actualLiquidationAmount;
         address priceOracleSentinel;
     }
 
-    struct ValidateERC721LiquidationCallParams {
+    struct ValidateLiquidateERC721Params {
         ReserveCache liquidationAssetReserveCache;
         address liquidator;
         address borrower;

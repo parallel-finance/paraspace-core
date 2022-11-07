@@ -237,9 +237,9 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     ) internal {
         address underlyingAsset = _underlyingAsset;
 
-        uint256 fromBalanceBefore = collaterizedBalanceOf(from);
-        uint256 toBalanceBefore = collaterizedBalanceOf(to);
-        bool isUsedAsCollateral = _transferCollaterizable(from, to, tokenId);
+        uint256 fromBalanceBefore = collateralizedBalanceOf(from);
+        uint256 toBalanceBefore = collateralizedBalanceOf(to);
+        bool isUsedAsCollateral = _transferCollateralizable(from, to, tokenId);
 
         if (validate) {
             POOL.finalizeTransferERC721(

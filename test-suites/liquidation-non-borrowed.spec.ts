@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {
-  getMockAggregator,
+  getAggregator,
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
 import {
@@ -49,7 +49,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
     // assure asset prices for correct health factor calculations
     await changePriceAndValidate(bayc, "101");
 
-    const daiAgg = await getMockAggregator(undefined, "DAI");
+    const daiAgg = await getAggregator(undefined, "DAI");
     await daiAgg.updateLatestAnswer("908578801039414");
 
     // Borrower deposits 3 BAYC and 5k DAI
@@ -194,7 +194,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
 
     //someone tries to liquidate user 2
     await expect(
-      pool.liquidationCall(weth.address, dai.address, borrower.address, 1, true)
+      pool.liquidateERC20(weth.address, dai.address, borrower.address, 1, true)
     ).to.be.revertedWith(HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
     await changePriceAndValidate(dai, daiPrice.percentMul(12000).toString());
@@ -212,7 +212,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
     await expect(
       pool
         .connect(liquidator.signer)
-        .liquidationCall(
+        .liquidateERC20(
           weth.address,
           usdc.address,
           borrower.address,

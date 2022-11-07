@@ -2029,7 +2029,7 @@ contract ERC721 is
     ) internal virtual {
         require(
             ERC721.ownerOf(tokenId) == from,
-            "ERC721: transfer of token that is not own"
+            "ERC721: transfer from incorrect owner"
         ); // internal owner
         require(to != address(0), "ERC721: transfer to the zero address");
 

@@ -7,7 +7,7 @@ import {
   WAD,
 } from "../../deploy/helpers/constants";
 import {
-  getMockAggregator,
+  getAggregator,
   getParaSpaceOracle,
   getPToken,
   getPoolProxy,
@@ -40,7 +40,7 @@ import {getUserPositions} from "./utils/positions";
 import {convertFromCurrencyDecimals} from "./utils/helpers";
 import "../helpers/utils/wadraymath";
 import {XTokenType} from "../../deploy/helpers/types";
-import {almostEqual} from "../../deploy/helpers/uniswapv3-helper";
+import {almostEqual} from "../helpers/uniswapv3-helper";
 
 const {expect} = chai;
 type SupportedAsset =
@@ -711,7 +711,7 @@ const checkAfterLiquidationERC20 = async (
   );
 };
 
-const checkAfterLiquidationERC721 = async (
+const checkAfterLiquidateERC721 = async (
   before: LiquidationValidationData,
   after: LiquidationValidationData
 ) => {
@@ -1068,7 +1068,7 @@ const liquidateAndValidateERC20 = async (
   await waitForTx(
     await (await getPoolProxy())
       .connect(liquidator.signer)
-      .liquidationCall(
+      .liquidateERC20(
         collateralToken.address,
         liquidationToken.address,
         borrower.address,
@@ -1123,7 +1123,7 @@ const liquidateAndValidateERC721 = async (
   await waitForTx(
     await (await getPoolProxy())
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         collateralToken.address,
         borrower.address,
         nftId != null ? nftId : 0,
@@ -1145,7 +1145,7 @@ const liquidateAndValidateERC721 = async (
     nftId
   );
 
-  await checkAfterLiquidationERC721(before, after);
+  await checkAfterLiquidateERC721(before, after);
 
   return {before, after};
 };
@@ -1212,7 +1212,7 @@ export async function calculateExpectedLTV(user: SignerWithAddress) {
   let collateralAccumulator = 0;
   let weightedAmountAccumulator = 0;
   for (const asset of assetsInCollateral) {
-    const isNFT = asset.positionInfo.nftCollaterizedBalance.gt(0);
+    const isNFT = asset.positionInfo.nftCollateralizedBalance.gt(0);
     const assetPrice = await (await getParaSpaceOracle())
       .connect((await getDeployer()).signer)
       .getAssetPrice(asset.underlyingAsset);
@@ -1227,7 +1227,7 @@ export async function calculateExpectedLTV(user: SignerWithAddress) {
 
     // 2. get base units amount for those assets
     const valueInCollateral = isNFT
-      ? +asset.positionInfo.nftCollaterizedBalance * +formatEther(assetPrice)
+      ? +asset.positionInfo.nftCollateralizedBalance * +formatEther(assetPrice)
       : +(await convertFromCurrencyDecimals(
           asset.underlyingAsset,
           pTokenBalance.toString()
@@ -1263,7 +1263,7 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
   let collateralAccumulator = 0;
   let weightedlTAccumulator = 0;
   for (const asset of assetsInCollateral) {
-    const isNFT = asset.positionInfo.nftCollaterizedBalance.gt(0);
+    const isNFT = asset.positionInfo.nftCollateralizedBalance.gt(0);
     let assetPrice: BigNumber;
     // TODO(ivan.solomonoff): would need a mechanism to know the token ids in collateral, to fetch their price
     if (
@@ -1286,7 +1286,7 @@ export async function calculateHealthFactor(user: SignerWithAddress) {
 
     // 2. get base units amount for those assets
     const valueInCollateral = isNFT
-      ? +asset.positionInfo.nftCollaterizedBalance * +formatEther(assetPrice)
+      ? +asset.positionInfo.nftCollateralizedBalance * +formatEther(assetPrice)
       : +(await convertFromCurrencyDecimals(
           asset.underlyingAsset,
           pTokenBalance.toString()
@@ -1356,7 +1356,7 @@ export const changePriceAndValidate = async (
   newPrice: string
 ) => {
   const [deployer] = await getEthersSigners();
-  const agg = await getMockAggregator(undefined, await token.symbol());
+  const agg = await getAggregator(undefined, await token.symbol());
   await agg.updateLatestAnswer(parseEther(newPrice));
 
   const actualPrice = await (await getParaSpaceOracle())
@@ -1415,7 +1415,7 @@ export const liquidateAndValidateReverted = async (
     await expect(
       pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           collateralToken.address,
           borrower.address,
           nftId != null ? nftId : 0,
@@ -1430,7 +1430,7 @@ export const liquidateAndValidateReverted = async (
     await expect(
       pool
         .connect(liquidator.signer)
-        .liquidationCall(
+        .liquidateERC20(
           collateralToken.address,
           liquidationToken.address,
           borrower.address,

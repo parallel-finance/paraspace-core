@@ -26,6 +26,7 @@ import {Errors} from "../libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
+import {IWETH} from "../../misc/interfaces/IWETH.sol";
 
 /**
  * @title Pool contract
@@ -102,7 +103,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
-                spender: msg.sender,
+                payer: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -124,7 +125,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                spender: msg.sender,
+                payer: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -145,7 +146,7 @@ contract PoolCore is
                 asset: asset,
                 tokenData: tokenData,
                 onBehalfOf: onBehalfOf,
-                spender: address(0),
+                payer: address(0),
                 referralCode: 0
             })
         );
@@ -181,7 +182,7 @@ contract PoolCore is
                 asset: asset,
                 amount: amount,
                 onBehalfOf: onBehalfOf,
-                spender: msg.sender,
+                payer: msg.sender,
                 referralCode: referralCode
             })
         );
@@ -423,26 +424,27 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationCall(
+    function liquidateERC20(
         address collateralAsset,
         address liquidationAsset,
-        address user,
+        address borrower,
         uint256 liquidationAmount,
         bool receivePToken
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        LiquidationLogic.executeLiquidationCall(
+        LiquidationLogic.executeLiquidateERC20(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
-            DataTypes.ExecuteLiquidationCallParams({
+            DataTypes.ExecuteLiquidateParams({
                 reservesCount: ps._reservesCount,
                 liquidationAmount: liquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
+                weth: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
                 liquidationAsset: liquidationAsset,
-                user: user,
+                borrower: borrower,
                 liquidator: msg.sender,
                 receiveXToken: receivePToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
@@ -453,27 +455,28 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationERC721(
+    function liquidateERC721(
         address collateralAsset,
-        address user,
+        address borrower,
         uint256 collateralTokenId,
         uint256 maxLiquidationAmount,
         bool receiveNToken
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        LiquidationLogic.executeERC721LiquidationCall(
+        LiquidationLogic.executeLiquidateERC721(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
-            DataTypes.ExecuteLiquidationCallParams({
+            DataTypes.ExecuteLiquidateParams({
                 reservesCount: ps._reservesCount,
                 liquidationAmount: maxLiquidationAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
-                liquidationAsset: ADDRESSES_PROVIDER.getWETH(),
+                weth: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
+                liquidationAsset: ADDRESSES_PROVIDER.getWETH(),
                 collateralTokenId: collateralTokenId,
-                user: user,
+                borrower: borrower,
                 liquidator: msg.sender,
                 receiveXToken: receiveNToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),

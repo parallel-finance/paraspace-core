@@ -3,10 +3,7 @@ import {waitForTx} from "../deploy/helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
-import {
-  getMockAggregator,
-  getMoonBirds,
-} from "../deploy/helpers/contracts-getters";
+import {getAggregator, getMoonBirds} from "../deploy/helpers/contracts-getters";
 import {parseEther} from "ethers/lib/utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -109,7 +106,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
     );
 
     // drop price
-    const agg = await getMockAggregator(undefined, "MOONBIRD");
+    const agg = await getAggregator(undefined, "MOONBIRD");
     await agg.updateLatestAnswer(parseEther("0.00092").toString()); // dai price: 0.000908578801039414 ETH
 
     return testEnv;
@@ -149,7 +146,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
 
     await pool
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         moonbirds.address,
         borrower.address,
         0,
@@ -199,7 +196,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
 
     await pool
       .connect(liquidator.signer)
-      .liquidationERC721(
+      .liquidateERC721(
         moonbirds.address,
         borrower.address,
         0,

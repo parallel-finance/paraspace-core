@@ -56,7 +56,7 @@ interface IUiPoolDataProvider {
         address underlyingAsset;
         uint256 currentXTokenBalance;
         uint256 scaledXTokenBalance;
-        uint256 collaterizedBalance;
+        uint256 collateralizedBalance;
         bool usageAsCollateralEnabledOnUser;
         uint256 scaledVariableDebt;
     }
