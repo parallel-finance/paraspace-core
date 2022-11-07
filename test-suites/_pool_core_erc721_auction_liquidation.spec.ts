@@ -3,12 +3,8 @@ import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {getMockAggregator} from "../deploy/helpers/contracts-getters";
-import {
-  advanceBlock,
-  setBlocktime,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {getAggregator} from "../deploy/helpers/contracts-getters";
+import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -37,7 +33,7 @@ describe("Liquidation Auction", () => {
     // assure asset prices for correct health factor calculations
     await changePriceAndValidate(bayc, "101");
 
-    const daiAgg = await getMockAggregator(undefined, "DAI");
+    const daiAgg = await getAggregator(undefined, "DAI");
     await daiAgg.updateLatestAnswer("908578801039414");
 
     // Borrower deposits 3 BAYC and 5k DAI
@@ -191,7 +187,7 @@ describe("Liquidation Auction", () => {
       await expect(
         pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             bayc.address,
             borrower.address,
             0,
@@ -219,7 +215,7 @@ describe("Liquidation Auction", () => {
       await expect(
         pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             bayc.address,
             borrower.address,
             0,
@@ -255,7 +251,7 @@ describe("Liquidation Auction", () => {
       );
       pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,
@@ -290,7 +286,7 @@ describe("Liquidation Auction", () => {
         nBAYC.address,
         0
       );
-      await setBlocktime(
+      await advanceBlock(
         startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
       );
 
@@ -301,7 +297,7 @@ describe("Liquidation Auction", () => {
 
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,
@@ -335,7 +331,7 @@ describe("Liquidation Auction", () => {
         nBAYC.address,
         0
       );
-      await setBlocktime(
+      await advanceBlock(
         startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
       );
 
@@ -346,7 +342,7 @@ describe("Liquidation Auction", () => {
       await expect(
         pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             bayc.address,
             borrower.address,
             0,
@@ -482,7 +478,7 @@ describe("Liquidation Auction", () => {
       );
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,
@@ -605,7 +601,7 @@ describe("Liquidation Auction", () => {
       // try to liquidate the NFT
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,
@@ -651,7 +647,7 @@ describe("Liquidation Auction", () => {
       await expect(
         pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             bayc.address,
             borrower.address,
             0,
@@ -703,7 +699,7 @@ describe("Liquidation Auction", () => {
       // try to liquidate the NFT
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,
@@ -747,7 +743,7 @@ describe("Liquidation Auction", () => {
       await expect(
         pool
           .connect(liquidator.signer)
-          .liquidationERC721(
+          .liquidateERC721(
             bayc.address,
             borrower.address,
             0,
@@ -795,7 +791,7 @@ describe("Liquidation Auction", () => {
       // try to liquidate the NFT
       await pool
         .connect(liquidator.signer)
-        .liquidationERC721(
+        .liquidateERC721(
           bayc.address,
           borrower.address,
           0,
@@ -828,91 +824,6 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .startAuction(borrower.address, bayc.address, 0)
       ).to.be.revertedWith(ProtocolErrors.AUCTION_ALREADY_STARTED);
-    });
-  });
-
-  describe("Do not revert to snapshot on every step", () => {
-    it("TC-auction-liquidation-4 Auction Price has to fit the formula", async () => {
-      const {
-        users: [borrower, liquidator],
-        pool,
-        bayc,
-        nBAYC,
-        configurator,
-      } = testEnv;
-
-      // drop BAYC price to liquidation levels
-      await changePriceAndValidate(bayc, "8");
-
-      // Borrower
-      //
-      // collaterals:
-      // BAYC#0 = 0.3 * 8 ~= 2.7 ETH
-      //
-      // borrows:
-      // DAI = (15000 - 1000 - (5000 - 1050) / 1.05) * 0.000908578801039414 ~= 9.3021162963559052379 ETH
-      //
-      // HF = (0.7 * 8) / (9.3021162963559052379) ~= 0.60201354418604660996
-      // ERC721HF = (0.7 * 8) / (9.3021162963559052379) ~= 0.60201354418604660996
-
-      await waitForTx(
-        await configurator.setAuctionRecoveryHealthFactor("1500000000000000000")
-      );
-
-      await waitForTx(
-        await pool
-          .connect(liquidator.signer)
-          .startAuction(borrower.address, bayc.address, 0)
-      );
-
-      const {startTime, tickLength, currentPriceMultiplier} =
-        await pool.getAuctionData(nBAYC.address, 0);
-
-      expect(currentPriceMultiplier.toString()).to.be.equal(
-        "3000000000000000000"
-      );
-
-      // prices drops to ~0.5 floor price
-      await advanceBlock(
-        startTime.add(tickLength.mul(BigNumber.from(30))).toNumber()
-      );
-
-      expect(
-        (
-          await pool.getAuctionData(nBAYC.address, 0)
-        ).currentPriceMultiplier.toString()
-      ).to.be.equal("500000000000000000");
-    });
-
-    it("TC-auction-liquidation-05 When auction is started a startTimestamp is set", async () => {
-      const {pool, nBAYC} = testEnv;
-      const {startTime} = await pool.getAuctionData(nBAYC.address, 0);
-      expect(startTime).to.be.gt(0);
-    });
-
-    it("TC-auction-liquidation-10 After successful liquidation, the ERC721 is removed from the auction list", async () => {
-      const {
-        nBAYC,
-        pool,
-        bayc,
-        users: [borrower, liquidator],
-      } = testEnv;
-
-      await pool
-        .connect(liquidator.signer)
-        .liquidationERC721(
-          bayc.address,
-          borrower.address,
-          0,
-          parseEther("24").toString(),
-          false,
-          {gasLimit: 5000000}
-        );
-
-      const {startTime} = await nBAYC.getAuctionData(0);
-      const isAuctioned = await nBAYC.isAuctioned(0);
-      expect(startTime).to.be.eq(0);
-      expect(isAuctioned).to.be.false;
     });
   });
 });

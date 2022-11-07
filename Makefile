@@ -95,7 +95,7 @@ test-liquidation-non-borrowed:
 
 .PHONY: test-liquidation-auction
 test-liquidation-auction:
-	make TEST_TARGET=_pool_core_auction.spec.ts test
+	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
 
 .PHONY: test-liquidation-edge
 test-liquidation-edge:
