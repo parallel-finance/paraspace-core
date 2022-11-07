@@ -406,7 +406,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await wPunkGateway
         .connect(owner.signer)
-        .emergencyTokenTransfer(wPunkGateway.address, user3.address, 2)
+        .emergencyERC721TokenTransfer(wPunk.address, 2, user3.address)
     );
     expect(
       await wPunk.connect(user3.signer).balanceOf(wPunkGateway.address)

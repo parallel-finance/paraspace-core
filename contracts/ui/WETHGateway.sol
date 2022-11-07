@@ -198,6 +198,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         uint256 amount
     ) external onlyOwner {
         IERC20(token).safeTransfer(to, amount);
+        emit EmergencyTokenTransfer(token, to, amount);
     }
 
     /**
