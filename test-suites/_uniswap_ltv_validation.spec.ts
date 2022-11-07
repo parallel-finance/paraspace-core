@@ -7,7 +7,7 @@ import {
     mintNewPosition,
     fund,
     approveTo,
-} from "../deploy/helpers/uniswapv3-helper";
+} from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -205,7 +205,6 @@ describe("Uniswap V3 LTV Validation", () => {
         const {
             users: [user1],
             weth,
-            nftPositionManager,
             pool,
         } = testEnv;
         const {LTV_VALIDATION_FAILED} = ProtocolErrors;
@@ -219,12 +218,6 @@ describe("Uniswap V3 LTV Validation", () => {
                 .connect(user1.signer)
                 .withdraw(weth.address, wethWithdrawAmount, user1.address)
         ).to.be.revertedWith(LTV_VALIDATION_FAILED);
-
-        await waitForTx(
-            await pool
-                .connect(user1.signer)
-                .withdrawERC721(nftPositionManager.address, [1], user1.address)
-        );
     });
 
     it("user can withdraw uniswapv3 [ @skip-on-coverage ]", async () => {

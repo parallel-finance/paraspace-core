@@ -9,7 +9,7 @@ import {
     mintNewPosition,
     fund,
     approveTo,
-} from "../deploy/helpers/uniswapv3-helper";
+} from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {getUniswapV3OracleWrapper} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
@@ -403,7 +403,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
                     }
                 )
         );
-        expect(await nUniswapV3.collaterizedBalanceOf(user1.address)).to.eq(0);
+        expect(await nUniswapV3.collateralizedBalanceOf(user1.address)).to.eq(0);
     });
 
     it("setAsCollateral failed if underlying erc20 was paused[ @skip-on-coverage ]", async () => {
@@ -443,7 +443,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
                     gasLimit: 12_450_000,
                 })
         );
-        expect(await nUniswapV3.collaterizedBalanceOf(user1.address)).to.eq(1);
+        expect(await nUniswapV3.collateralizedBalanceOf(user1.address)).to.eq(1);
     });
 
     it("decreaseUniswapV3Liquidity failed if underlying erc20 was not active [ @skip-on-coverage ]", async () => {
@@ -794,7 +794,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
         await expect(
             pool
                 .connect(liquidator.signer)
-                .liquidationERC721(
+                .liquidateERC721(
                     nftPositionManager.address,
                     user1.address,
                     1,
@@ -829,7 +829,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
         await waitForTx(
             await pool
                 .connect(liquidator.signer)
-                .liquidationERC721(
+                .liquidateERC721(
                     nftPositionManager.address,
                     user1.address,
                     1,
@@ -863,7 +863,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
         await expect(
             pool
                 .connect(liquidator.signer)
-                .liquidationERC721(
+                .liquidateERC721(
                     nftPositionManager.address,
                     user1.address,
                     1,
@@ -897,7 +897,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
         await waitForTx(
             await pool
                 .connect(liquidator.signer)
-                .liquidationERC721(
+                .liquidateERC721(
                     nftPositionManager.address,
                     user1.address,
                     1,

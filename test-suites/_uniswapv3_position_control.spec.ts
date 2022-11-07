@@ -10,7 +10,7 @@ import {
     swapToken,
     fund,
     approveTo,
-} from "../deploy/helpers/uniswapv3-helper";
+} from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {DRE} from "../deploy/helpers/misc-utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
