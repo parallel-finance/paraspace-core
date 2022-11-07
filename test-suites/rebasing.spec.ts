@@ -7,11 +7,32 @@ import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
-describe("Rebasing tokens", () => {
+describe("Rebasing tokens", async () => {
   let testEnv: TestEnv;
+  const rebasingIndex = "1080000000000000000000000000";
+  const oneRAY = "1000000000000000000000000000";
+
+  let supplyAmountBaseUnits;
+  let userStETHAmount;
+  let borrowAmountBaseUnits;
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
+    const {
+      users: [user1, user2],
+      pool,
+      stETH,
+      pstETH,
+      weth,
+      variableDebtStETH,
+    } = testEnv;
+
+    supplyAmountBaseUnits = await convertToCurrencyDecimals(
+      weth.address,
+      "80000"
+    );
+    userStETHAmount = await convertToCurrencyDecimals(stETH.address, "1");
+    borrowAmountBaseUnits = await convertToCurrencyDecimals(stETH.address, "1");
   });
 
   it("should be able to supply stETH and mint rebasing PToken", async () => {
@@ -21,16 +42,11 @@ describe("Rebasing tokens", () => {
       stETH,
     } = testEnv;
 
-    const userStETHAmount = await convertToCurrencyDecimals(
-      stETH.address,
-      "10000"
-    );
-
     await waitForTx(
       await stETH.connect(user1.signer)["mint(uint256)"](userStETHAmount)
     );
 
-    await stETH.setPooledEthBaseShares("1080000000000000000000000000");
+    await stETH.setPooledEthBaseShares(rebasingIndex);
 
     await waitForTx(
       await stETH.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
@@ -52,15 +68,8 @@ describe("Rebasing tokens", () => {
       pstETH,
     } = testEnv;
 
-    const userStETHAmount = await convertToCurrencyDecimals(
-      stETH.address,
-      "10000"
-    );
-
     expect(await pstETH.scaledBalanceOf(user1.address)).to.be.eq(
-      BigNumber.from("1080000000000000000000000000")
-        .mul(userStETHAmount)
-        .div("1000000000000000000000000000")
+      BigNumber.from(rebasingIndex).mul(userStETHAmount).div(oneRAY)
     );
   });
 
@@ -71,20 +80,8 @@ describe("Rebasing tokens", () => {
       stETH,
       pstETH,
       weth,
+      variableDebtStETH,
     } = testEnv;
-
-    const supplyAmountBaseUnits = await convertToCurrencyDecimals(
-      weth.address,
-      "80000"
-    );
-    const userStETHAmount = await convertToCurrencyDecimals(
-      stETH.address,
-      "10000"
-    );
-    const borrowAmountBaseUnits = await convertToCurrencyDecimals(
-      stETH.address,
-      "1"
-    );
 
     await waitForTx(
       await weth.connect(user2.signer)["mint(uint256)"](supplyAmountBaseUnits)
@@ -110,12 +107,22 @@ describe("Rebasing tokens", () => {
         })
     );
 
+    expect(await pstETH.balanceOf(user1.address)).to.be.eq(
+      BigNumber.from(rebasingIndex).mul(userStETHAmount).div(oneRAY)
+    );
+
+    expect(await variableDebtStETH.balanceOf(user2.address)).to.be.eq(
+      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
+    );
+
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 
     expect(await pstETH.balanceOf(user1.address)).to.be.gt(
-      BigNumber.from("1080000000000000000000000000")
-        .mul(userStETHAmount)
-        .div("1000000000000000000000000000")
+      BigNumber.from(rebasingIndex).mul(userStETHAmount).div(oneRAY)
+    );
+
+    expect(await variableDebtStETH.balanceOf(user2.address)).to.be.gt(
+      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
     );
   });
 
@@ -136,28 +143,50 @@ describe("Rebasing tokens", () => {
       await aWETH.connect(user1.signer)["mint(uint256)"](userAETHAmount)
     );
 
-    await aWETH.setIncomeIndex("1080000000000000000000000000");
+    await aWETH.setIncomeIndex(rebasingIndex);
 
-    it("should be able to supply aWETH and mint rebasing PToken", async () => {
-      await waitForTx(
-        await aWETH.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
-      );
+    await waitForTx(
+      await aWETH.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
 
-      await waitForTx(
-        await pool
-          .connect(user1.signer)
-          .supply(aWETH.address, userAETHAmount, user1.address, "0", {
-            gasLimit: 12_450_000,
-          })
-      );
-    });
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supply(aWETH.address, userAETHAmount, user1.address, "0", {
+          gasLimit: 12_450_000,
+        })
+    );
 
-    it("expect the scaled balance to be the principal balance multiplied by Aave pool liquidity index divided by RAY (2^27)", async () => {
-      expect(await paWETH.scaledBalanceOf(user1.address)).to.be.eq(
-        BigNumber.from("1080000000000000000000000000")
-          .mul(userAETHAmount)
-          .div("1000000000000000000000000000")
-      );
-    });
+    expect(await paWETH.scaledBalanceOf(user1.address)).to.be.eq(
+      BigNumber.from(rebasingIndex).mul(userAETHAmount).div(oneRAY)
+    );
+  });
+
+  it("aWETH borrower should have debt balance multiplied by rebasing index", async () => {
+    const {
+      users: [user1, user2],
+      pool,
+      aWETH,
+      paWETH,
+      variableDebtAWeth,
+    } = testEnv;
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .borrow(aWETH.address, borrowAmountBaseUnits, "0", user2.address, {
+          gasLimit: 12_450_000,
+        })
+    );
+
+    expect(await variableDebtAWeth.balanceOf(user2.address)).to.be.eq(
+      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
+    );
+
+    await advanceTimeAndBlock(parseInt(ONE_YEAR));
+
+    expect(await variableDebtAWeth.balanceOf(user2.address)).to.be.gt(
+      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
+    );
   });
 });
