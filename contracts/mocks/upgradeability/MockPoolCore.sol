@@ -47,24 +47,24 @@ contract PoolCoreV2 is
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationCall(
+    function liquidateERC20(
         address,
         address,
         address,
         uint256,
         bool
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         revert(EMEGENCY_DISABLE_CALL);
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationERC721(
+    function liquidateERC721(
         address,
         address,
         uint256,
         uint256,
         bool
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         revert(EMEGENCY_DISABLE_CALL);
     }
 }

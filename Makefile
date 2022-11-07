@@ -85,13 +85,17 @@ test-liquidation:
 test-liquidation-nft-with-weth:
 	make TEST_TARGET=liquidation-nft-with-weth.spec.ts test
 
+.PHONY: test-liquidation-with-eth
+test-liquidation-with-eth:
+	make TEST_TARGET=liquidation-with-eth.spec.ts test
+
 .PHONY: test-liquidation-non-borrowed
 test-liquidation-non-borrowed:
 	make TEST_TARGET=liquidation-non-borrowed.spec.ts test
 
 .PHONY: test-liquidation-auction
 test-liquidation-auction:
-	make TEST_TARGET=liquidation-auction.spec.ts test
+	make TEST_TARGET=_pool_core_auction.spec.ts test
 
 .PHONY: test-liquidation-edge
 test-liquidation-edge:
@@ -129,17 +133,13 @@ test-ptoken-permit:
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
 
-.PHONY: test-ltv-validation
-test-ltv-validation:
-	make TEST_TARGET=ltv-validation.spec.ts test
-
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
 
 .PHONY: test-upgradeability
 test-upgradeability:
-	make TEST_TARGET=upgradeability.spec.ts test
+	make TEST_TARGET=_base_upgradeability.spec.ts test
 
 .PHONY: test-erc20
 test-erc20:
@@ -147,7 +147,7 @@ test-erc20:
 
 .PHONY: test-flash-claim
 test-flash-claim:
-	make TEST_TARGET=flash-claim.spec.ts test
+	make TEST_TARGET=_pool_core_flash_claim.spec.ts test
 
 .PHONY: test-paraspace-oracle-aggregator
 test-paraspace-oracle-aggregator:
@@ -183,11 +183,7 @@ test-uniswap-v3-oracle:
 
 .PHONY: test-auction-strategy
 test-auction-strategy:
-	make TEST_TARGET=auction-strategy.spec.ts test
-
-.PHONY: test-auction-configuration
-test-auction-configuration:
-	make TEST_TARGET=auction-configuration.spec.ts test
+	make TEST_TARGET=_base_auction_strategy.spec.ts test
 
 .PHONY: test-ptoken-transfer
 test-ptoken-transfer:
@@ -199,7 +195,7 @@ test-ptoken-repay:
 
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
-	make TEST_TARGET=variable-debt-token.spec.ts test
+	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
 
 .PHONY: test-paraspace-oracle
 test-paraspace-oracle:
@@ -219,7 +215,11 @@ test-rebasing-tokens:
 
 .PHONY: test-pool-addresses-provider
 test-pool-addresses-provider:
-	make TEST_TARGET=pool-addresses-provider.spec.ts test
+	make TEST_TARGET=_base_addresses_provider.spec.ts test
+
+.PHONY: test-addresses-provider-registry
+test-addresses-provider-registry:
+	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
 
 .PHONY: test-pausable-pool
 test-pausable-pool:
@@ -235,7 +235,7 @@ test-price-oracle-sentinel:
 
 .PHONY: test-user-configurator-used-as-collateral
 test-user-configurator-used-as-collateral:
-	make TEST_TARGET=user-configurator-used-as-collateral.spec.ts test
+	make TEST_TARGET=_pool_core_use_as_collateral.spec.ts test
 
 .PHONY: test-rate-strategy
 test-rate-strategy:
@@ -357,12 +357,6 @@ deploy-flashClaimRegistry:
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
 
-.PHONY: fork
-fork:
-	npx ganache \
-	-d \
-	--chain.chainId 522
-
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
@@ -386,6 +380,10 @@ upgrade-ntoken-uniswapv3:
 .PHONY: upgrade-ntoken-moonbirds
 upgrade-ntoken-moonbirds:
 	make TASK_NAME=upgrade:ntoken_moonbirds run-task
+
+.PHONY: fork
+fork:
+	FORK=mainnet npx hardhat node
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

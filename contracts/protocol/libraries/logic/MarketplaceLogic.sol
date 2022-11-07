@@ -5,7 +5,7 @@ import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol"
 import {INToken} from "../../../interfaces/INToken.sol";
 import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {Errors} from "../helpers/Errors.sol";
@@ -222,6 +222,7 @@ library MarketplaceLogic {
                 })
             );
         }
+
         _refundETH(vars.ethLeft);
     }
 
@@ -521,7 +522,7 @@ library MarketplaceLogic {
                     asset: token,
                     tokenData: tokenData,
                     onBehalfOf: onBehalfOf,
-                    spender: address(this),
+                    payer: address(this),
                     referralCode: params.referralCode
                 })
             );

@@ -45,7 +45,7 @@ describe("AuctionStrategy", () => {
     ]);
   });
 
-  it("DefaultReserveAuctionStrategy with maxPriceRatio: 300%, minExpPriceRatio: 120%, minPriceRatio: 50%, stepLinearRatio: 5.7%, lamda: 0.08", async () => {
+  it("TC-auctionStrategy-ExponentialReserveAuctionStrategy with maxPriceRatio: 300%, minExpPriceRatio: 120%, minPriceRatio: 50%, stepLinearRatio: 5.7%, lamda: 0.08", async () => {
     const auctionStartTimestamp = 0;
     const tickResults = [
       3.0,
@@ -108,7 +108,7 @@ describe("AuctionStrategy", () => {
     );
   });
 
-  it("MockReserveAuctionStrategy with maxPriceRatio: 300%, minExpPriceRatio: 100%, minPriceRatio: 50%, stepLinearRatio: 5%, lamda: 0.1", async () => {
+  it("TC-auctionStrategy-LinearReserveAuctionStrategy with maxPriceRatio: 300%, minExpPriceRatio: 100%, minPriceRatio: 50%, stepLinearRatio: 5%, lamda: 0.1", async () => {
     const auctionStartTimestamp = 0;
     const tickResults = [
       3.0, // eslint-disable-next-line

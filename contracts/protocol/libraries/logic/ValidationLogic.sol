@@ -9,7 +9,7 @@ import {IReserveInterestRateStrategy} from "../../../interfaces/IReserveInterest
 import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {SignatureChecker} from "../../../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
@@ -448,7 +448,7 @@ library ValidationLogic {
         }
     }
 
-    struct ValidateLiquidationCallLocalVars {
+    struct ValidateLiquidateLocalVars {
         bool collateralReserveActive;
         bool collateralReservePaused;
         bool principalReserveActive;
@@ -470,12 +470,12 @@ library ValidationLogic {
      * @param collateralReserve The reserve data of the collateral
      * @param params Additional parameters needed for the validation
      */
-    function validateLiquidationCall(
+    function validateLiquidateERC20(
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ValidateLiquidationCallParams memory params
+        DataTypes.ValidateLiquidateERC20Params memory params
     ) internal view {
-        ValidateLiquidationCallLocalVars memory vars;
+        ValidateLiquidateLocalVars memory vars;
 
         (
             vars.collateralReserveActive,
@@ -488,6 +488,16 @@ library ValidationLogic {
         require(
             vars.collateralReserveAssetType == DataTypes.AssetType.ERC20,
             Errors.INVALID_ASSET_TYPE
+        );
+
+        require(
+            msg.value == 0 || params.liquidationAsset == params.weth,
+            Errors.INVALID_LIQUIDATION_ASSET
+        );
+
+        require(
+            msg.value == 0 || msg.value >= params.actualLiquidationAmount,
+            Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
         (
@@ -542,18 +552,18 @@ library ValidationLogic {
      * @param collateralReserve The reserve data of the collateral
      * @param params Additional parameters needed for the validation
      */
-    function validateERC721LiquidationCall(
+    function validateLiquidateERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ValidateERC721LiquidationCallParams memory params
+        DataTypes.ValidateLiquidateERC721Params memory params
     ) internal view {
         require(
             params.liquidator != params.borrower,
             Errors.LIQUIDATOR_CAN_NOT_BE_SELF
         );
 
-        ValidateLiquidationCallLocalVars memory vars;
+        ValidateLiquidateLocalVars memory vars;
 
         (
             vars.collateralReserveActive,
@@ -625,14 +635,15 @@ library ValidationLogic {
         }
 
         require(
-            params.maxLiquidationAmount >= params.actualLiquidationAmount,
+            params.maxLiquidationAmount >= params.actualLiquidationAmount &&
+                (msg.value == 0 || msg.value >= params.maxLiquidationAmount),
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
         vars.isCollateralEnabled =
             collateralReserve.configuration.getLiquidationThreshold() != 0 &&
             userConfig.isUsingAsCollateral(collateralReserve.id) &&
-            ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
+            ICollateralizableERC721(params.xTokenAddress).isUsedAsCollateral(
                 params.tokenId
             );
 
@@ -641,10 +652,7 @@ library ValidationLogic {
             vars.isCollateralEnabled,
             Errors.COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED
         );
-        require(
-            params.globalDebt != 0,
-            Errors.SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER
-        );
+        require(params.globalDebt != 0, Errors.GLOBAL_DEBT_IS_ZERO);
     }
 
     /**
@@ -744,7 +752,7 @@ library ValidationLogic {
         vars.isCollateralEnabled =
             collateralConfiguration.getLiquidationThreshold() != 0 &&
             userConfig.isUsingAsCollateral(collateralReserve.id) &&
-            ICollaterizableERC721(params.xTokenAddress).isUsedAsCollateral(
+            ICollateralizableERC721(params.xTokenAddress).isUsedAsCollateral(
                 params.tokenId
             );
 

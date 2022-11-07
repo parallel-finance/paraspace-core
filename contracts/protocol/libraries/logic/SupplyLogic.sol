@@ -5,8 +5,9 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
+import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
@@ -100,7 +101,7 @@ library SupplyLogic {
         );
 
         IERC20(params.asset).safeTransferFrom(
-            msg.sender,
+            params.payer,
             reserveCache.xTokenAddress,
             params.amount
         );
@@ -191,7 +192,7 @@ library SupplyLogic {
         }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
-                params.spender,
+                params.payer,
                 reserveCache.xTokenAddress,
                 params.tokenData[index].tokenId
             );
@@ -206,7 +207,7 @@ library SupplyLogic {
 
         emit SupplyERC721(
             params.asset,
-            params.spender,
+            msg.sender,
             params.onBehalfOf,
             params.tokenData,
             params.referralCode,
@@ -426,7 +427,7 @@ library SupplyLogic {
                 params.receiveEthAsWeth
             );
 
-        bool isUsedAsCollateral = ICollaterizableERC721(
+        bool isUsedAsCollateral = ICollateralizableERC721(
             reserveCache.xTokenAddress
         ).isUsedAsCollateral(params.tokenId);
         if (isUsedAsCollateral) {
@@ -651,12 +652,12 @@ library SupplyLogic {
         );
 
         (
-            uint256 oldCollaterizedBalance,
-            uint256 newCollaterizedBalance
-        ) = ICollaterizableERC721(reserveCache.xTokenAddress)
+            uint256 oldCollateralizedBalance,
+            uint256 newCollateralizedBalance
+        ) = ICollateralizableERC721(reserveCache.xTokenAddress)
                 .batchSetIsUsedAsCollateral(tokenIds, true, sender);
 
-        if (oldCollaterizedBalance == 0 && newCollaterizedBalance != 0) {
+        if (oldCollateralizedBalance == 0 && newCollateralizedBalance != 0) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(asset, sender);
         }
@@ -697,16 +698,16 @@ library SupplyLogic {
         );
 
         (
-            uint256 oldCollaterizedBalance,
-            uint256 newCollaterizedBalance
-        ) = ICollaterizableERC721(reserveCache.xTokenAddress)
+            uint256 oldCollateralizedBalance,
+            uint256 newCollateralizedBalance
+        ) = ICollateralizableERC721(reserveCache.xTokenAddress)
                 .batchSetIsUsedAsCollateral(tokenIds, false, sender);
 
-        if (oldCollaterizedBalance == newCollaterizedBalance) {
+        if (oldCollateralizedBalance == newCollateralizedBalance) {
             return;
         }
 
-        if (newCollaterizedBalance == 0) {
+        if (newCollateralizedBalance == 0) {
             userConfig.setUsingAsCollateral(reserve.id, false);
             emit ReserveUsedAsCollateralDisabled(asset, sender);
         }
