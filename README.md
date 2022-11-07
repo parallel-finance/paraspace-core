@@ -7,8 +7,8 @@
 [![CI](https://github.com/para-space/paraspace-core/workflows/CI/badge.svg)](https://github.com/para-space/paraspace-core/actions)
 [![License](https://img.shields.io/github/license/para-space/paraspace-core?color=green)](https://github.com/para-space/paraspace-core/blob/main/LICENSE)
 
-[![Twitter URL](https://img.shields.io/twitter/follow/Para_Space?style=social)](https://twitter.com/Para_Space)
-[![Telegram](https://img.shields.io/badge/Telegram-gray?logo=telegram)](https://t.me/ParaSpace)
+[![Twitter URL](https://img.shields.io/twitter/follow/ParallelFi?style=social)](https://twitter.com/ParallelFi)
+[![Telegram](https://img.shields.io/badge/Telegram-gray?logo=telegram)](https://t.me/parallelfi_community)
 [![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://medium.com/@paraspace)
 [![Discourse](https://img.shields.io/badge/Forum-gray?logo=discourse)](https://discourse.para.space)
 
