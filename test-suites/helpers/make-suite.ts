@@ -95,9 +95,6 @@ import {
   LooksRareExchange,
   StrategyStandardSaleForFixedPrice,
   TransferManagerERC721,
-  // X2Y2R1,
-  // ERC721Delegate,
-  // Moonbirds,
   Moonbirds,
   UniswapV3Factory,
   INonfungiblePositionManager,
@@ -138,6 +135,7 @@ export interface TestEnv {
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
+  variableDebtWeth: VariableDebtToken;
   pUsdc: PToken;
   usdc: MintableERC20;
   usdt: MintableERC20;
@@ -202,6 +200,7 @@ export async function initializeMakeSuite() {
     dai: {} as MintableERC20,
     pDai: {} as PToken,
     variableDebtDai: {} as VariableDebtToken,
+    variableDebtWeth: {} as VariableDebtToken,
     pUsdc: {} as PToken,
     usdc: {} as MintableERC20,
     usdt: {} as MintableERC20,
@@ -358,6 +357,11 @@ export async function initializeMakeSuite() {
     (token) => token.symbol === ERC20TokenContractId.WETH
   )?.tokenAddress;
 
+  const {variableDebtTokenAddress: variableDebtWethAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      wethAddress || ""
+    );
+
   const aWETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.aWETH
   )?.tokenAddress;
@@ -399,6 +403,9 @@ export async function initializeMakeSuite() {
 
   testEnv.pDai = await getPToken(pDaiAddress);
   testEnv.variableDebtDai = await getVariableDebtToken(variableDebtDaiAddress);
+  testEnv.variableDebtWeth = await getVariableDebtToken(
+    variableDebtWethAddress
+  );
   testEnv.pUsdc = await getPToken(pUsdcAddress);
   testEnv.pWETH = await getPToken(pWEthAddress);
   testEnv.paWETH = await getPTokenAToken(paWEthAddress);

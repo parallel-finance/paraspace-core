@@ -146,10 +146,17 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         reserveData.underlyingAsset
                     ).symbol();
                     reserveData.symbol = bytes32ToString(symbol);
+                    bytes32 name = IERC20DetailedBytes(
+                        reserveData.underlyingAsset
+                    ).name();
+                    reserveData.name = bytes32ToString(name);
                 } else {
                     reserveData.symbol = IERC20Detailed(
                         reserveData.underlyingAsset
                     ).symbol();
+                    reserveData.name = IERC20Detailed(
+                        reserveData.underlyingAsset
+                    ).name();
                 }
 
                 reserveData.availableLiquidity = IERC20Detailed(
@@ -159,6 +166,8 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.symbol = IERC721Metadata(
                     reserveData.underlyingAsset
                 ).symbol();
+                reserveData.name = IERC721Metadata(reserveData.underlyingAsset)
+                    .name();
 
                 reserveData.availableLiquidity = IERC721(
                     reserveData.underlyingAsset
