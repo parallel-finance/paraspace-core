@@ -64,9 +64,6 @@ describe("Uniswap V3 Oracle", () => {
     const initialPrice = encodeSqrtRatioX96(1, 1000);
     const lowerPrice = encodeSqrtRatioX96(1, 10000);
     const upperPrice = encodeSqrtRatioX96(1, 100);
-    console.log("initialPrice:" + initialPrice);
-    console.log("lowerPrice:" + lowerPrice.toString());
-    console.log("upperPrice:" + upperPrice.toString());
     await createNewPool({
       positionManager: nft,
       token0: dai,
@@ -138,7 +135,6 @@ describe("Uniswap V3 Oracle", () => {
     });
 
     let currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice in range:" + currentPrice);
     expect(currentPrice).to.gt(lowerPrice.toString());
     expect(currentPrice).to.lt(upperPrice.toString());
 
@@ -169,7 +165,6 @@ describe("Uniswap V3 Oracle", () => {
       zeroForOne: true,
     });
     currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice below range:" + currentPrice);
     expect(currentPrice).to.lt(lowerPrice.toString());
 
     const addDaiFeeCap = await convertToCurrencyDecimals(dai.address, "300");
@@ -194,7 +189,6 @@ describe("Uniswap V3 Oracle", () => {
       zeroForOne: false,
     });
     currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice:" + currentPrice);
     expect(currentPrice).to.gt(upperPrice.toString());
 
     const addEthFeeCap = await convertToCurrencyDecimals(weth.address, "30");
@@ -231,9 +225,6 @@ describe("Uniswap V3 Oracle", () => {
     const initialPrice = encodeSqrtRatioX96("1000000000", 1);
     const lowerPrice = encodeSqrtRatioX96("100000000", 1);
     const upperPrice = encodeSqrtRatioX96("10000000000", 1);
-    console.log("initialPrice:" + initialPrice);
-    console.log("lowerPrice:" + lowerPrice.toString());
-    console.log("upperPrice:" + upperPrice.toString());
     await createNewPool({
       positionManager: nft,
       token0: usdc,
@@ -279,7 +270,6 @@ describe("Uniswap V3 Oracle", () => {
 
     const uniV3Pool = await getV3Pool({token0: usdc, token1: weth, fee});
     //check lp fee in range
-    console.log("start swap.................");
     let traderUsdcAmount = await convertToCurrencyDecimals(
       usdc.address,
       "1000"
@@ -309,7 +299,6 @@ describe("Uniswap V3 Oracle", () => {
     });
 
     let currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice:" + currentPrice);
     expect(currentPrice).to.gt(lowerPrice.toString());
     expect(currentPrice).to.lt(upperPrice.toString());
 
@@ -340,7 +329,6 @@ describe("Uniswap V3 Oracle", () => {
       zeroForOne: true,
     });
     currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice:" + currentPrice);
     expect(currentPrice).to.lt(lowerPrice.toString());
 
     const addUsdcFeeCap = await convertToCurrencyDecimals(usdc.address, "300");
@@ -367,7 +355,6 @@ describe("Uniswap V3 Oracle", () => {
       zeroForOne: false,
     });
     currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice:" + currentPrice);
     expect(currentPrice).to.gt(upperPrice.toString());
 
     const addEthFeeCap = await convertToCurrencyDecimals(weth.address, "30");
@@ -404,9 +391,6 @@ describe("Uniswap V3 Oracle", () => {
     const initialPrice = encodeSqrtRatioX96(1, "1000000000");
     const lowerPrice = encodeSqrtRatioX96(1, "10000000000");
     const upperPrice = encodeSqrtRatioX96(1, "100000000");
-    console.log("initialPrice:" + initialPrice);
-    console.log("lowerPrice:" + lowerPrice.toString());
-    console.log("upperPrice:" + upperPrice.toString());
     await createNewPool({
       positionManager: nft,
       token0: weth,
@@ -452,7 +436,6 @@ describe("Uniswap V3 Oracle", () => {
 
     const uniV3Pool = await getV3Pool({token0: usdt, token1: weth, fee});
     //check lp fee in range
-    console.log("start swap.................");
     let traderUsdtAmount = await convertToCurrencyDecimals(
       usdt.address,
       "1000"
@@ -482,7 +465,6 @@ describe("Uniswap V3 Oracle", () => {
     });
 
     let currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice:" + currentPrice);
     expect(currentPrice).to.gt(lowerPrice.toString());
     expect(currentPrice).to.lt(upperPrice.toString());
 
@@ -513,7 +495,6 @@ describe("Uniswap V3 Oracle", () => {
       zeroForOne: false,
     });
     currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice:" + currentPrice);
     expect(currentPrice).to.gt(upperPrice.toString());
 
     const addUsdtFeeCap = await convertToCurrencyDecimals(usdt.address, "300");
@@ -540,7 +521,6 @@ describe("Uniswap V3 Oracle", () => {
       zeroForOne: true,
     });
     currentPrice = (await uniV3Pool.slot0()).sqrtPriceX96;
-    console.log("currentPrice:" + currentPrice);
     expect(currentPrice).to.lt(lowerPrice.toString());
 
     const addEthFeeCap = await convertToCurrencyDecimals(weth.address, "30");
