@@ -18,10 +18,7 @@ describe("Rebasing tokens", async () => {
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {
-      stETH,
-      weth,
-    } = testEnv;
+    const {stETH, weth} = testEnv;
 
     supplyAmountBaseUnits = await convertToCurrencyDecimals(
       weth.address,
