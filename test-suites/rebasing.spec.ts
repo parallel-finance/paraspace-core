@@ -19,12 +19,8 @@ describe("Rebasing tokens", async () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
-      users: [user1, user2],
-      pool,
       stETH,
-      pstETH,
       weth,
-      variableDebtStETH,
     } = testEnv;
 
     supplyAmountBaseUnits = await convertToCurrencyDecimals(
@@ -64,7 +60,6 @@ describe("Rebasing tokens", async () => {
   it("expect the scaled balance to be the principal balance multiplied by Lido pool shares divided by RAY (2^27)", async () => {
     const {
       users: [user1],
-      stETH,
       pstETH,
     } = testEnv;
 
@@ -164,10 +159,9 @@ describe("Rebasing tokens", async () => {
 
   it("aWETH borrower should have debt balance multiplied by rebasing index", async () => {
     const {
-      users: [user1, user2],
+      users: [user2],
       pool,
       aWETH,
-      paWETH,
       variableDebtAWeth,
     } = testEnv;
 
