@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {
-  getMockAggregator,
+  getAggregator,
   getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
 import {
@@ -11,7 +11,7 @@ import {
   supplyAndValidate,
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
-import {setBlocktime, waitForTx} from "../deploy/helpers/misc-utils";
+import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumber} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -49,7 +49,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
     // assure asset prices for correct health factor calculations
     await changePriceAndValidate(bayc, "101");
 
-    const daiAgg = await getMockAggregator(undefined, "DAI");
+    const daiAgg = await getAggregator(undefined, "DAI");
     await daiAgg.updateLatestAnswer("908578801039414");
 
     // Borrower deposits 3 BAYC and 5k DAI
@@ -77,21 +77,14 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
         .startAuction(borrower.address, bayc.address, 0)
     );
     const {startTime, tickLength} = await pool.getAuctionData(nBAYC.address, 0);
-    await setBlocktime(
+    await advanceBlock(
       startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
     );
-    expect((await nBAYC.getAuctionData(0)).startTime).to.be.gt(0);
-
-    const expectedAuctionData = await pool
-      .connect(liquidator.signer)
-      .getAuctionData(nBAYC.address, 0);
-
-    console.log(expectedAuctionData);
 
     const result = await liquidateAndValidate(
       bayc,
       weth,
-      "1000",
+      "8",
       liquidator,
       borrower,
       false,
@@ -112,15 +105,13 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
         before.liquidatorCollateralTokenBalance
     );
     //assert borrowing status correct
-    expect(before.isLiquidationAssetBorrowedPerConfig).to.be.false;
-    expect(after.isLiquidationAssetBorrowedPerConfig).to.be.false;
     //assert isUsingAsCollateral status correct
     expect(before.isUsingAsCollateral).to.be.false;
     expect(after.isUsingAsCollateral).to.be.true;
     //assert ptoken balance of liquidation asset
     assertAlmostEqual(
       after.borrowerLiquidationPTokenBalance,
-      before.isAuctionStarted
+      before.isAuctioned
         ? // since it is dificult to predict the price in auction case
           // we remove it from common validation logic to here
           before.liquidatorLiquidationAssetBalance.sub(
@@ -203,7 +194,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
 
     //someone tries to liquidate user 2
     await expect(
-      pool.liquidationCall(weth.address, dai.address, borrower.address, 1, true)
+      pool.liquidateERC20(weth.address, dai.address, borrower.address, 1, true)
     ).to.be.revertedWith(HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
     await changePriceAndValidate(dai, daiPrice.percentMul(12000).toString());
@@ -221,7 +212,7 @@ describe("ERC721 Liquidation - non-borrowed token", () => {
     await expect(
       pool
         .connect(liquidator.signer)
-        .liquidationCall(
+        .liquidateERC20(
           weth.address,
           usdc.address,
           borrower.address,

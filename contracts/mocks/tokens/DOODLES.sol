@@ -1901,6 +1901,10 @@ contract Doodles is ERC721, ERC721Enumerable, Ownable {
         mint(numberOfTokens, msg.sender);
     }
 
+    function mint(address to) public payable {
+        mint(1, to);
+    }
+
     function mint(uint256 numberOfTokens, address to) public payable {
         uint256 ts = totalSupply();
         require(saleIsActive, "Sale must be active to mint tokens");

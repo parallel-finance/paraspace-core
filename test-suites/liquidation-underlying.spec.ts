@@ -40,7 +40,7 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
     await configurator.setReserveActive(weth.address, false);
 
     await expect(
-      pool.liquidationCall(
+      pool.liquidateERC20(
         weth.address,
         dai.address,
         user.address,
@@ -54,7 +54,7 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
     await configurator.setReserveActive(dai.address, false);
 
     await expect(
-      pool.liquidationCall(
+      pool.liquidateERC20(
         weth.address,
         dai.address,
         user.address,
@@ -192,7 +192,7 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
 
     const tx = await pool
       .connect(liquidator.signer)
-      .liquidationCall(
+      .liquidateERC20(
         weth.address,
         dai.address,
         borrower.address,
@@ -372,7 +372,7 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
 
     await pool
       .connect(liquidator.signer)
-      .liquidationCall(
+      .liquidateERC20(
         weth.address,
         usdc.address,
         borrower.address,
@@ -517,7 +517,7 @@ describe("Pool Liquidation: Liquidator receiving the underlying asset", () => {
 
   //     await pool
   //       .connect(liquidator.signer)
-  //       .liquidationCall(
+  //       .liquidateERC20(
   //         paraspace.address,
   //         usdc.address,
   //         borrower.address,

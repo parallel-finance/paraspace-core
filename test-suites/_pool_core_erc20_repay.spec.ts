@@ -13,7 +13,7 @@ import {
   repayAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
-import {almostEqual} from "../deploy/helpers/uniswapv3-helper";
+import {almostEqual} from "./helpers/uniswapv3-helper";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);

@@ -1151,7 +1151,7 @@ describe("Leveraged Buy - Positive tests", () => {
     );
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
-    expect(await nBAYC.collaterizedBalanceOf(maker.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(maker.address)).to.be.equal(1);
 
     await waitForTx(
       await usdc.connect(taker.signer).approve(pool.address, startAmount)
@@ -1169,7 +1169,7 @@ describe("Leveraged Buy - Positive tests", () => {
     );
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
-    expect(await nBAYC.collaterizedBalanceOf(taker.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
     expect(await usdc.balanceOf(maker.address)).to.be.equal(startAmount);
   });
 
@@ -1243,7 +1243,7 @@ describe("Leveraged Buy - Positive tests", () => {
     );
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(offer.address);
-    expect(await nBAYC.collaterizedBalanceOf(offer.address)).to.be.equal(0);
+    expect(await nBAYC.collateralizedBalanceOf(offer.address)).to.be.equal(0);
 
     await waitForTx(
       await nBAYC.connect(offer.signer).approve(conduit.address, nftId)
@@ -1305,7 +1305,7 @@ describe("Leveraged Buy - Positive tests", () => {
     await (await tx).wait();
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(offerer.address);
-    expect(await nBAYC.collaterizedBalanceOf(offerer.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(offerer.address)).to.be.equal(1);
     expect(await usdc.balanceOf(offer.address)).to.be.equal(startAmount);
   });
 

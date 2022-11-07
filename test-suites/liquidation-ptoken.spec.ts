@@ -101,7 +101,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
 
     //someone tries to liquidate user 2
     await expect(
-      pool.liquidationCall(weth.address, dai.address, borrower.address, 1, true)
+      pool.liquidateERC20(weth.address, dai.address, borrower.address, 1, true)
     ).to.be.revertedWith(HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
   });
 
@@ -130,7 +130,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     } = testEnv;
     //user 2 tries to borrow
     await expect(
-      pool.liquidationCall(
+      pool.liquidateERC20(
         weth.address,
         weth.address,
         borrower.address,
@@ -148,7 +148,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     } = testEnv;
 
     await expect(
-      pool.liquidationCall(
+      pool.liquidateERC20(
         dai.address,
         dai.address,
         borrower.address,
@@ -204,7 +204,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
 
     // The supply is the same, but there should be a change in who has what. The liquidator should have received what the borrower lost.
-    const tx = await pool.liquidationCall(
+    const tx = await pool.liquidateERC20(
       weth.address,
       dai.address,
       borrower.address,
@@ -406,7 +406,7 @@ describe("Pool Liquidation: Liquidator receiving xToken", () => {
 
     const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
 
-    await pool.liquidationCall(
+    await pool.liquidateERC20(
       weth.address,
       usdc.address,
       borrower.address,

@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {getMockAggregator} from "../deploy/helpers/contracts-getters";
+import {getAggregator} from "../deploy/helpers/contracts-getters";
 import {
   borrowAndValidate,
   changePriceAndValidate,
@@ -27,7 +27,7 @@ const fixture = async () => {
   // assure asset prices for correct health factor calculations
   await changePriceAndValidate(bayc, "101");
 
-  const daiAgg = await getMockAggregator(undefined, "DAI");
+  const daiAgg = await getAggregator(undefined, "DAI");
   await daiAgg.updateLatestAnswer("908578801039414");
 
   // Borrower deposits 3 BAYC and 5k DAI
@@ -100,7 +100,7 @@ describe("Liquidation Tests", () => {
     // BAYC price drops enough so that borrower becomes eligible for liquidation
     await changePriceAndValidate(bayc, "12");
 
-    await liquidateAndValidate(dai, dai, "1000", liquidator, borrower, false);
+    await liquidateAndValidate(dai, dai, "1", liquidator, borrower, false);
   });
 
   it("Liquidator fully liquidates ERC-20 - receives pToken", async () => {
@@ -121,6 +121,7 @@ describe("Liquidation Tests", () => {
       users: [borrower, liquidator],
       nBAYC,
       configurator,
+      weth,
       bayc,
       dai,
     } = await loadFixture(fixture);
@@ -144,15 +145,7 @@ describe("Liquidation Tests", () => {
     // verify NFT is available for auction
     expect(await nBAYC.isAuctioned(1));
 
-    await liquidateAndValidate(
-      bayc,
-      dai,
-      "80000",
-      liquidator,
-      borrower,
-      true,
-      1
-    );
+    await liquidateAndValidate(bayc, weth, "10", liquidator, borrower, true, 1);
 
     // verify NFT is no longer available for auction
     expect(await nBAYC.isAuctioned(1)).not;
@@ -162,8 +155,8 @@ describe("Liquidation Tests", () => {
     const {
       users: [borrower, liquidator],
       nBAYC,
+      weth,
       bayc,
-      dai,
       configurator,
     } = await loadFixture(fixture);
 
@@ -180,15 +173,7 @@ describe("Liquidation Tests", () => {
     // verify NFT is available for auction
     expect(await nBAYC.isAuctioned(0));
 
-    await liquidateAndValidate(
-      bayc,
-      dai,
-      "80000",
-      liquidator,
-      borrower,
-      false,
-      0
-    );
+    await liquidateAndValidate(bayc, weth, "5", liquidator, borrower, false, 0);
 
     // verify NFT is no longer available for auction
     expect(await nBAYC.isAuctioned(0)).not;
@@ -222,15 +207,7 @@ describe("Liquidation Tests", () => {
       )
     );
 
-    await liquidateAndValidate(
-      bayc,
-      dai,
-      "80000",
-      liquidator,
-      borrower,
-      false,
-      0
-    );
+    await liquidateAndValidate(bayc, weth, "5", liquidator, borrower, false, 0);
 
     expect((await nBAYC.getAuctionData(0)).startTime).to.be.eq(0);
   });
@@ -239,7 +216,7 @@ describe("Liquidation Tests", () => {
     const {
       users: [borrower, liquidator],
       configurator,
-      dai,
+      weth,
       bayc,
       nBAYC,
     } = await loadFixture(fixture);
@@ -260,7 +237,7 @@ describe("Liquidation Tests", () => {
 
     await liquidateAndValidate(
       bayc,
-      dai,
+      weth,
       "80000",
       liquidator,
       borrower,
@@ -301,7 +278,7 @@ describe("Liquidation Tests", () => {
 
     await liquidateAndValidate(
       bayc,
-      dai,
+      weth,
       "80000",
       liquidator,
       borrower,
