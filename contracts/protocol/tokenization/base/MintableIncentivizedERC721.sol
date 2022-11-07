@@ -481,7 +481,7 @@ abstract contract MintableIncentivizedERC721 is
             uint256 tokenId = tokenIds[index];
             address owner = ownerOf(tokenId);
             require(owner == user, "not the owner of Ntoken");
-            require(!_isAuctioned(tokenId), "token in auction");
+            require(!_isAuctioned(tokenId), Errors.TOKEN_IN_AUCTION);
 
             _removeTokenFromAllTokensEnumeration(tokenId, length - index);
             _removeTokenFromOwnerEnumeration(user, tokenId, oldBalance - index);
@@ -542,7 +542,7 @@ abstract contract MintableIncentivizedERC721 is
             "ERC721: transfer from incorrect owner"
         );
         require(to != address(0), "ERC721: transfer to the zero address");
-        require(!_isAuctioned(tokenId), "token in auction");
+        require(!_isAuctioned(tokenId), Errors.TOKEN_IN_AUCTION);
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -678,7 +678,7 @@ abstract contract MintableIncentivizedERC721 is
         require(owner == sender, "not owner");
 
         if (!useAsCollateral) {
-            require(!_isAuctioned(tokenId), "token in auction");
+            require(!_isAuctioned(tokenId), Errors.TOKEN_IN_AUCTION);
         }
 
         uint64 collateralizedBalance = _userState[owner].collateralizedBalance;
