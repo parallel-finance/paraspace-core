@@ -75,7 +75,7 @@ library LiquidationLogic {
     event LiquidateERC20(
         address indexed collateralAsset,
         address indexed liquidationAsset,
-        address indexed user,
+        address indexed borrower,
         uint256 liquidationAmount,
         uint256 liquidatedCollateralAmount,
         address liquidator,
@@ -84,7 +84,7 @@ library LiquidationLogic {
     event LiquidateERC721(
         address indexed collateralAsset,
         address indexed liquidationAsset,
-        address indexed user,
+        address indexed borrower,
         uint256 liquidationAmount,
         uint256 liquidatedCollateralTokenId,
         address liquidator,

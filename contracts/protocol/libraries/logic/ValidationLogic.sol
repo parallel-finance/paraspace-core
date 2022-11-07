@@ -367,11 +367,19 @@ library ValidationLogic {
             Errors.NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF
         );
 
-        (bool isActive, , , bool isPaused, ) = reserveCache
-            .reserveConfiguration
-            .getFlags();
+        (
+            bool isActive,
+            ,
+            ,
+            bool isPaused,
+            DataTypes.AssetType assetType
+        ) = reserveCache.reserveConfiguration.getFlags();
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
+        require(
+            assetType == DataTypes.AssetType.ERC20,
+            Errors.INVALID_ASSET_TYPE
+        );
 
         uint256 variableDebtPreviousIndex = IScaledBalanceToken(
             reserveCache.variableDebtTokenAddress
@@ -616,12 +624,7 @@ library ValidationLogic {
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
 
-        if (!params.auctionEnabled) {
-            require(
-                params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-            );
-        } else {
+        if (params.auctionEnabled) {
             require(
                 params.healthFactor < params.auctionRecoveryHealthFactor,
                 Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
@@ -631,6 +634,11 @@ library ValidationLogic {
                     params.tokenId
                 ),
                 Errors.AUCTION_NOT_STARTED
+            );
+        } else {
+            require(
+                params.healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.ERC721_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
             );
         }
 
@@ -994,10 +1002,19 @@ library ValidationLogic {
         internal
         view
     {
-        DataTypes.ReserveConfigurationMap memory configuration = reserve
-            .configuration;
-        require(!configuration.getPaused(), Errors.RESERVE_PAUSED);
-        require(configuration.getActive(), Errors.RESERVE_INACTIVE);
+        (
+            bool isActive,
+            ,
+            ,
+            bool isPaused,
+            DataTypes.AssetType assetType
+        ) = reserve.configuration.getFlags();
+        require(isActive, Errors.RESERVE_INACTIVE);
+        require(!isPaused, Errors.RESERVE_PAUSED);
+        require(
+            assetType == DataTypes.AssetType.ERC20,
+            Errors.INVALID_ASSET_TYPE
+        );
     }
 
     function validateBuyWithCredit(

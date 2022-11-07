@@ -14,7 +14,7 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 
-describe("ape coin staking", () => {
+describe("APE coin staking", () => {
   let testEnv: TestEnv;
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);

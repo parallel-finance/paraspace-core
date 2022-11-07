@@ -195,16 +195,17 @@ contract WPunkGateway is
     /**
      * @dev transfer ERC721 from the utility contract, for ERC721 recovery in case of stuck tokens due
      * direct transfers to the contract address.
-     * @param from punk owner of the transfer
-     * @param to recipient of the transfer
+     * @param token ERC721 token to transfer
      * @param tokenId tokenId to send
+     * @param to recipient of the transfer
      */
-    function emergencyTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
+    function emergencyERC721TokenTransfer(
+        address token,
+        uint256 tokenId,
+        address to
     ) external onlyOwner {
-        IERC721(address(WPunk)).safeTransferFrom(from, to, tokenId);
+        IERC721(token).safeTransferFrom(address(this), to, tokenId);
+        emit EmergencyERC721TokenTransfer(token, tokenId, to);
     }
 
     /**
@@ -218,6 +219,7 @@ contract WPunkGateway is
         onlyOwner
     {
         Punk.transferPunk(to, punkIndex);
+        emit EmergencyPunkTransfer(to, punkIndex);
     }
 
     /**
