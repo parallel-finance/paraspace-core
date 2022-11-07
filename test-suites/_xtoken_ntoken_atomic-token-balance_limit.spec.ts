@@ -146,15 +146,15 @@ describe("Atomic tokens balance limit test", () => {
         )
     );
     await waitForTx(
-        await nUniswapV3
-            .connect(user1.signer)
-            ["safeTransferFrom(address,address,uint256)"](
-            user1.address,
-            user2.address,
-            2,
-            {
-              gasLimit: 12_450_000,
-            }
+      await nUniswapV3
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user2.address,
+          2,
+          {
+            gasLimit: 12_450_000,
+          }
         )
     );
 
