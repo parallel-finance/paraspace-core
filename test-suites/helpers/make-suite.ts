@@ -8,7 +8,7 @@ import {
   getPoolConfiguratorProxy,
   getPriceOracle,
   getPoolAddressesProviderRegistry,
-  getWETHMocked,
+  getWETH,
   getVariableDebtToken,
   getParaSpaceOracle,
   getACLManager,
@@ -421,7 +421,7 @@ export async function initializeMakeSuite() {
   testEnv.usdc = await getMintableERC20(usdcAddress);
   testEnv.usdt = await getMintableERC20(usdtAddress);
 
-  testEnv.weth = await getWETHMocked(wethAddress);
+  testEnv.weth = await getWETH(wethAddress);
 
   testEnv.bayc = await getMintableERC721(baycAddress);
 

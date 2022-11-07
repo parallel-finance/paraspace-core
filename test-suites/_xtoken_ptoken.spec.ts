@@ -24,6 +24,7 @@ import {
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {TestEnv} from "./helpers/make-suite";
+import {almostEqual} from "./helpers/uniswapv3-helper";
 
 declare let hre: HardhatRuntimeEnvironment;
 describe("Ptoken delegation", () => {
@@ -747,7 +748,7 @@ describe("Repay behaviors for ptoken", () => {
     const debtAfter = await variableDebtDai.balanceOf(user1.address);
 
     expect(debtAfter).to.be.eq(0);
-    expect(balanceAfter).to.be.eq(balanceBefore.sub(repayAmount));
+    almostEqual(balanceAfter, balanceBefore.sub(repayAmount));
   });
 });
 

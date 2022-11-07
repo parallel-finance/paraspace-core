@@ -159,6 +159,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     ).name();
                 }
 
+                reserveData.isAtomicPricing = false;
                 reserveData.availableLiquidity = IERC20Detailed(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
@@ -172,6 +173,8 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.availableLiquidity = IERC721(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
+                reserveData.isAtomicPricing = INToken(reserveData.xTokenAddress)
+                    .getAtomicPricingConfig();
             }
 
             (
