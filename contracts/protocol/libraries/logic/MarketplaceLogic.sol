@@ -508,24 +508,23 @@ library MarketplaceLogic {
                     tokenId,
                     onBehalfOf
                 );
-                continue;
+                // item.token == underlyingAsset and underlyingAsset stays in wallet
+            } else {
+                DataTypes.ERC721SupplyParams[]
+                    memory tokenData = new DataTypes.ERC721SupplyParams[](1);
+                tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
+                SupplyLogic.executeSupplyERC721(
+                    reservesData,
+                    userConfig,
+                    DataTypes.ExecuteSupplyERC721Params({
+                        asset: token,
+                        tokenData: tokenData,
+                        onBehalfOf: onBehalfOf,
+                        payer: address(this),
+                        referralCode: params.referralCode
+                    })
+                );
             }
-
-            // item.token == underlyingAsset and underlyingAsset stays in wallet
-            DataTypes.ERC721SupplyParams[]
-                memory tokenData = new DataTypes.ERC721SupplyParams[](1);
-            tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
-            SupplyLogic.executeSupplyERC721(
-                reservesData,
-                userConfig,
-                DataTypes.ExecuteSupplyERC721Params({
-                    asset: token,
-                    tokenData: tokenData,
-                    onBehalfOf: onBehalfOf,
-                    payer: address(this),
-                    referralCode: params.referralCode
-                })
-            );
         }
 
         if (vars.creditAmount == 0) {

@@ -77,45 +77,13 @@ test-ntoken:
 test-punk-gateway:
 	make TEST_TARGET=_gateway_punk.spec.ts test
 
-.PHONY: test-liquidation
-test-liquidation:
-	make TEST_TARGET=liquidation.spec.ts test
+.PHONY: test-erc20-liquidation
+test-erc20-liquidation:
+	make TEST_TARGET=_pool_core_erc20_liquidation.spec.ts test
 
-.PHONY: test-liquidation-nft-with-weth
-test-liquidation-nft-with-weth:
-	make TEST_TARGET=liquidation-nft-with-weth.spec.ts test
-
-.PHONY: test-liquidation-with-eth
-test-liquidation-with-eth:
-	make TEST_TARGET=liquidation-with-eth.spec.ts test
-
-.PHONY: test-liquidation-non-borrowed
-test-liquidation-non-borrowed:
-	make TEST_TARGET=liquidation-non-borrowed.spec.ts test
-
-.PHONY: test-liquidation-auction
-test-liquidation-auction:
+.PHONY: test-erc721-auction-liquidation
+test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
-
-.PHONY: test-liquidation-edge
-test-liquidation-edge:
-	make TEST_TARGET=liquidation-edge.spec.ts test
-
-.PHONY: test-liquidation-close-factor
-test-liquidation-close-factor:
-	make TEST_TARGET=liquidation-close-factor.spec.ts test
-
-.PHONY: test-liquidation-ptoken
-test-liquidation-ptoken:
-	make TEST_TARGET=liquidation-ptoken.spec.ts test
-
-.PHONY: test-liquidation-underlying
-test-liquidation-underlying:
-	make TEST_TARGET=liquidation-underlying.spec.ts test
-
-.PHONY: test-liquidation-with-fee
-test-liquidation-with-fee:
-	make TEST_TARGET=liquidation-with-fee.spec.ts test
 
 .PHONY: test-configurator-edge
 test-configurator-edge:
