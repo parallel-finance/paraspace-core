@@ -8,7 +8,7 @@
     "types"
   ],
   "scripts": {
-    "postinstall": "husky install && yarn build",
+    "postinstall": "husky install && (yarn build || yarn build || yarn build)",
     "prepack": "pinst --disable",
     "postpack": "pinst --enable",
     "size": "hardhat size-contracts",
