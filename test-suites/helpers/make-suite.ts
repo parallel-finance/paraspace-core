@@ -135,6 +135,8 @@ export interface TestEnv {
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
+  variableDebtStETH: VariableDebtToken;
+  variableDebtAWeth: VariableDebtToken;
   variableDebtWeth: VariableDebtToken;
   pUsdc: PToken;
   usdc: MintableERC20;
@@ -365,6 +367,10 @@ export async function initializeMakeSuite() {
   const aWETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.aWETH
   )?.tokenAddress;
+  const {variableDebtTokenAddress: variableDebtAWethAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      aWETHAddress || ""
+    );
   const baycAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.BAYC
   )?.tokenAddress;
@@ -381,6 +387,12 @@ export async function initializeMakeSuite() {
   const stETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.stETH
   )?.tokenAddress;
+
+  const {variableDebtTokenAddress: variableDebtStETHAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      stETHAddress || ""
+    );
+
   const apeAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.APE
   )?.tokenAddress;
@@ -410,6 +422,12 @@ export async function initializeMakeSuite() {
   testEnv.pWETH = await getPToken(pWEthAddress);
   testEnv.paWETH = await getPTokenAToken(paWEthAddress);
   testEnv.pstETH = await getPTokenStETH(pstEthAddress);
+  testEnv.variableDebtStETH = await getVariableDebtToken(
+    variableDebtStETHAddress
+  );
+  testEnv.variableDebtAWeth = await getVariableDebtToken(
+    variableDebtAWethAddress
+  );
 
   testEnv.nBAYC = await getNTokenBAYC(nBAYCAddress);
   testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
@@ -442,5 +460,6 @@ export async function initializeMakeSuite() {
   testEnv.nftPositionManager = await getNonfungiblePositionManager();
   testEnv.nUniswapV3 = await getNTokenUniswapV3(nUniwapV3Address);
   testEnv.nftFloorOracle = await getNFTFloorOracle();
+
   return testEnv;
 }
