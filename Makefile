@@ -85,6 +85,10 @@ test-punk-gateway:
 test-erc20-liquidation:
 	make TEST_TARGET=_pool_core_erc20_liquidation.spec.ts test
 
+.PHONY: test-erc721-liquidation
+test-erc721-liquidation:
+	make TEST_TARGET=_pool_core_erc721_liquidation.spec.ts test	
+
 .PHONY: test-erc721-auction-liquidation
 test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
