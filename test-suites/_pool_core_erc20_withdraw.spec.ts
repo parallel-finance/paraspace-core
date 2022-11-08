@@ -6,6 +6,7 @@ import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
+import {parseUnits} from "@ethersproject/units";
 import {
   borrowAndValidate,
   supplyAndValidate,
@@ -208,7 +209,10 @@ describe("pToken Withdraw Event Accounting", () => {
 
   context("LTV validation", () => {
     let testEnv: TestEnv;
-    const {LTV_VALIDATION_FAILED} = ProtocolErrors;
+    const {
+      LTV_VALIDATION_FAILED,
+      HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD,
+    } = ProtocolErrors;
 
     before(async () => {
       testEnv = await loadFixture(testEnvFixture);
@@ -318,6 +322,63 @@ describe("pToken Withdraw Event Accounting", () => {
       const pDaiBalanceAfter = await pDai.balanceOf(user1.address);
 
       expect(pDaiBalanceAfter).to.be.eq(pDaiBalanceBefore.sub(withdrawnAmount));
+    });
+
+    it("TC-erc20-withdraw-09 validateHFAndLtv() with HF < 1 for 0 LTV asset (revert expected)", async () => {
+      testEnv = await loadFixture(testEnvFixture);
+      const {
+        usdc,
+        dai,
+        pool,
+        poolAdmin,
+        configurator,
+        protocolDataProvider,
+        users: [user, usdcProvider],
+      } = testEnv;
+
+      // Supply usdc
+      await usdc
+        .connect(usdcProvider.signer)
+        ["mint(uint256)"](parseUnits("1000", 6));
+      await usdc
+        .connect(usdcProvider.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(usdcProvider.signer)
+        .supply(usdc.address, parseUnits("1000", 6), usdcProvider.address, 0);
+
+      // Supply dai
+      await dai.connect(user.signer)["mint(uint256)"](parseUnits("1000", 18));
+      await dai.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(user.signer)
+        .supply(dai.address, parseUnits("1000", 18), user.address, 0);
+
+      // Borrow usdc
+      await pool
+        .connect(user.signer)
+        .borrow(usdc.address, parseUnits("500", 6), 0, user.address);
+
+      // Drop LTV
+      const daiData = await protocolDataProvider.getReserveConfigurationData(
+        dai.address
+      );
+
+      await configurator
+        .connect(poolAdmin.signer)
+        .configureReserveAsCollateral(
+          dai.address,
+          0,
+          daiData.liquidationThreshold,
+          daiData.liquidationBonus
+        );
+
+      // Withdraw all my dai
+      await expect(
+        pool
+          .connect(user.signer)
+          .withdraw(dai.address, parseUnits("500", 18), user.address)
+      ).to.be.revertedWith(HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
     });
   });
 });

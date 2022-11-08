@@ -3,7 +3,12 @@ import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  advanceTimeAndBlock,
+  setAutomine,
+  setAutomineEvm,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -14,6 +19,10 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
+import {utils} from "ethers";
+import {getVariableDebtToken} from "../deploy/helpers/contracts-getters";
+
+const {RESERVE_INACTIVE, SAME_BLOCK_BORROW_REPAY} = ProtocolErrors;
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -179,7 +188,7 @@ describe("pToken Repay Event Accounting", () => {
     let accruedInterest = BigNumber.from(0);
     let testEnv: TestEnv;
 
-    before("Initialize Depositors", async () => {
+    before("Load fixture", async () => {
       testEnv = await loadFixture(fixture);
     });
 
@@ -225,6 +234,146 @@ describe("pToken Repay Event Accounting", () => {
       const pDaiBalanceAfter = await pDai.balanceOf(user1.address);
       expect(pDaiBalanceAfter).to.be.gt(pDaiBalance);
       expect(pDaiBalanceAfter.sub(pDaiBalance)).to.be.lt(accruedInterest);
+    });
+  });
+
+  describe("Repay validations", () => {
+    let testEnv: TestEnv;
+
+    beforeEach("Load fixture", async () => {
+      testEnv = await loadFixture(testEnvFixture);
+    });
+
+    it("TC-erc20-repay-09 validateRepay() when reserve is not active (revert expected)", async () => {
+      // Unsure how we can end in this scenario. Would require that it could be deactivated after someone have borrowed
+      const {pool, users, dai, protocolDataProvider, configurator, poolAdmin} =
+        testEnv;
+      const user = users[0];
+
+      const configBefore =
+        await protocolDataProvider.getReserveConfigurationData(dai.address);
+      expect(configBefore.isActive).to.be.eq(true);
+      expect(configBefore.isFrozen).to.be.eq(false);
+
+      await configurator
+        .connect(poolAdmin.signer)
+        .setReserveActive(dai.address, false);
+
+      const configAfter =
+        await protocolDataProvider.getReserveConfigurationData(dai.address);
+      expect(configAfter.isActive).to.be.eq(false);
+      expect(configAfter.isFrozen).to.be.eq(false);
+
+      await expect(
+        pool
+          .connect(user.signer)
+          .repay(dai.address, utils.parseEther("1"), user.address)
+      ).to.be.revertedWith(RESERVE_INACTIVE);
+    });
+
+    it("TC-erc20-repay-10 validateRepay() when variable borrowing and repaying in same block (revert expected)", async () => {
+      // Same block repay
+
+      const {pool, users, dai, pDai, usdc} = await loadFixture(testEnvFixture);
+      const user = users[0];
+
+      // We need some debt.
+      await usdc
+        .connect(user.signer)
+        ["mint(uint256)"](utils.parseEther("2000"));
+      await usdc.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(user.signer)
+        .supply(usdc.address, utils.parseEther("2000"), user.address, 0);
+      await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("2000"));
+      await dai
+        .connect(user.signer)
+        .transfer(pDai.address, utils.parseEther("2000"));
+
+      // Turn off automining - pretty sure that coverage is getting messed up here.
+      await setAutomine(false);
+
+      // Borrow 500 dai
+      await pool
+        .connect(user.signer)
+        .borrow(dai.address, utils.parseEther("500"), 0, user.address);
+
+      // Turn on automining, but not mine a new block until next tx
+      await setAutomineEvm(true);
+
+      await expect(
+        pool
+          .connect(user.signer)
+          .repay(dai.address, utils.parseEther("500"), user.address)
+      ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
+    });
+
+    it("TC-erc20-repay-11 validateRepay() when variable borrowing and repaying in same block using credit delegation (revert expected)", async () => {
+      const {
+        pool,
+        dai,
+        weth,
+        users: [user1, user2, user3],
+      } = await loadFixture(testEnvFixture);
+
+      // Add liquidity
+      await dai
+        .connect(user3.signer)
+        ["mint(uint256)"](utils.parseUnits("1000", 18));
+      await dai.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(user3.signer)
+        .supply(dai.address, utils.parseUnits("1000", 18), user3.address, 0);
+
+      // User1 supplies 10 WETH
+      await dai
+        .connect(user1.signer)
+        ["mint(uint256)"](utils.parseUnits("100", 18));
+      await dai.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
+      await weth
+        .connect(user1.signer)
+        ["mint(uint256)"](utils.parseUnits("10", 18));
+      await weth.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(user1.signer)
+        .supply(weth.address, utils.parseUnits("10", 18), user1.address, 0);
+
+      const daiData = await pool.getReserveData(dai.address);
+      const variableDebtToken = await getVariableDebtToken(
+        daiData.variableDebtTokenAddress
+      );
+
+      // User1 approves User2 to borrow 1000 DAI
+      expect(
+        await variableDebtToken
+          .connect(user1.signer)
+          .approveDelegation(user2.address, utils.parseUnits("1000", 18))
+      );
+
+      // User2 borrows on behalf of User1
+      const borrowOnBehalfAmount = utils.parseUnits("100", 18);
+      expect(
+        await pool
+          .connect(user2.signer)
+          .borrow(dai.address, borrowOnBehalfAmount, 0, user1.address)
+      );
+
+      // Turn off automining to simulate actions in same block
+      await setAutomine(false);
+
+      // User2 borrows 2 DAI on behalf of User1
+      await pool
+        .connect(user2.signer)
+        .borrow(dai.address, utils.parseEther("2"), 0, user1.address);
+
+      // Turn on automining, but not mine a new block until next tx
+      await setAutomineEvm(true);
+
+      await expect(
+        pool
+          .connect(user1.signer)
+          .repay(dai.address, utils.parseEther("2"), user1.address)
+      ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
     });
   });
 });
