@@ -21,7 +21,7 @@ import {
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
 } from "../deploy/helpers/contracts-helpers";
-import {supplyAndValidate} from "./helpers/validated-steps";
+import {assertAlmostEqual, supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {TestEnv} from "./helpers/make-suite";
 import {almostEqual} from "./helpers/uniswapv3-helper";
@@ -703,7 +703,7 @@ describe("Repay behaviors for ptoken", () => {
     const debtAfter = await variableDebtDai.balanceOf(user1.address);
 
     expect(balanceAfter).to.be.eq(0);
-    expect(debtAfter).to.be.closeTo(debtBefore.sub(repayAmount), 2);
+    assertAlmostEqual(debtAfter, debtBefore.sub(repayAmount));
   });
 
   it("TC-ptoken-repay-03: user should repay all debt", async () => {
