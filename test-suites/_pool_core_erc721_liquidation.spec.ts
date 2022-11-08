@@ -138,7 +138,6 @@ describe("ERC-721 Liquidation", () => {
   it("TC-erc721-liquidation-04 Liquidator liquidates NFT - with full global debt in WETH", async () => {
     const {
       users: [borrower, liquidator],
-      dai,
       bayc,
       weth,
     } = testEnv;
@@ -191,8 +190,6 @@ describe("ERC-721 Liquidation", () => {
       dai,
       bayc,
       weth,
-      pool,
-      protocolDataProvider,
     } = testEnv;
     // borrow 10k DAI
     await borrowAndValidate(dai, "10000", borrower);
@@ -295,6 +292,58 @@ describe("ERC-721 Liquidation", () => {
     );
     expect(liquidatorBalanceAfter).to.be.eq(
       liquidatorBalanceBefore.sub(actualLiquidationAmount).sub(gasUsed)
+    );
+  });
+
+  it("TC-erc721-liquidation-08 Liquidator liquidates ERC-721 - with a protocol fee of 10%", async () => {
+    const {
+      configurator,
+      weth,
+      users: [borrower, liquidator],
+      dai,
+      pWETH,
+      protocolDataProvider,
+      bayc,
+    } = testEnv;
+
+    const baycLiquidationProtocolFeeInput = 1000;
+    // set BAYC liquidation fee
+    await configurator.setLiquidationProtocolFee(
+      bayc.address,
+      baycLiquidationProtocolFeeInput
+    );
+
+    // borrow 10k DAI
+    await borrowAndValidate(dai, "10000", borrower);
+
+    // drop BAYC price to liquidation range
+    const baycPrice = "10";
+    await changePriceAndValidate(bayc, baycPrice);
+
+    const treasuryAddress = await pWETH.RESERVE_TREASURY_ADDRESS();
+    const treasuryDataBefore = await protocolDataProvider.getUserReserveData(
+      weth.address,
+      treasuryAddress
+    );
+    const treasuryBalanceBefore = treasuryDataBefore.currentXTokenBalance;
+
+    await liquidateAndValidate(bayc, weth, "5000", liquidator, borrower, false);
+
+    const treasuryDataAfter = await protocolDataProvider.getUserReserveData(
+      dai.address,
+      treasuryAddress
+    );
+    const treasuryBalanceAfter = treasuryDataAfter.currentXTokenBalance;
+
+    const liquidationAmount = parseEther("10"); // bayc price
+    const feeAmount = liquidationAmount.percentMul(
+      baycLiquidationProtocolFeeInput
+    );
+
+    // 10% went to treasury
+    expect(treasuryBalanceAfter).to.be.closeTo(
+      treasuryBalanceBefore.add(feeAmount),
+      feeAmount
     );
   });
 });
