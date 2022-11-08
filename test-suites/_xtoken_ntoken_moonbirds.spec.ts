@@ -116,6 +116,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
   });
 
   it("TC-moonbirds-05 Cannot use safeTransfer() to transfer another asset to nMoonbird (revert expected)", async () => {
+    testEnv = await loadFixture(testEnvFixture);
     const {
       users: [, user2],
       pool,
@@ -153,8 +154,6 @@ describe("MoonBirds nToken and supply while nesting", () => {
       usdc,
       bayc,
       pool,
-      oracle,
-      protocolDataProvider,
     } = testEnv;
 
     const creditAmount = "1000";
@@ -177,16 +176,6 @@ describe("MoonBirds nToken and supply while nesting", () => {
 
     const balance = await nMOONBIRD.balanceOf(user1.address);
     expect(balance.toNumber()).equal(1);
-    //
-    console.log(await oracle.getAssetPrice(moonbirds.address));
-    const nftPrice = await oracle.getAssetPrice(moonbirds.address);
-    const ltvRatio = (
-      await protocolDataProvider.getReserveConfigurationData(moonbirds.address)
-    ).ltv;
-    const availableToBorrowInBaseUnits = nftPrice.mul(ltvRatio).div(10000);
-    console.log(
-      "availableToBorrowInBaseUnits   " + availableToBorrowInBaseUnits
-    );
     const startAmount = await convertToCurrencyDecimals(
       usdc.address,
       creditAmount
