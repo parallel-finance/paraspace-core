@@ -2,7 +2,6 @@ import path from "path";
 import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
-  HARDHAT_CHAINID,
   COVERAGE_CHAINID,
   FORK_MAINNET_CHAINID,
   MAINNET_CHAINID,
@@ -12,6 +11,7 @@ import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {
   buildForkConfig,
+  CHAIN_ID_TO_FORK,
   NETWORKS_RPC_URL,
 } from "./deploy/helper-hardhat-config";
 import fs from "fs";
@@ -128,7 +128,7 @@ const hardhatConfig: HardhatUserConfig = {
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
       gasPrice: 8000000000,
-      chainId: HARDHAT_CHAINID,
+      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts: accounts.map(
@@ -143,7 +143,7 @@ const hardhatConfig: HardhatUserConfig = {
     localhost: {
       hardfork: HARDFORK,
       url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
-      chainId: HARDHAT_CHAINID,
+      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
