@@ -1,10 +1,5 @@
 import {expect} from "chai";
-import {
-  DRE,
-  evmRevert,
-  evmSnapshot,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {DRE, waitForTx} from "../deploy/helpers/misc-utils";
 import {
   convertToCurrencyDecimals,
   createSeaportOrder,
@@ -51,18 +46,9 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {AdvancedOrderStruct} from "../types/dependencies/seaport/contracts/Seaport";
 
 describe("Leveraged Buy - Positive tests", () => {
-  let snapShot: string;
   let testEnv: TestEnv;
-
-  before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-  });
   beforeEach(async () => {
-    snapShot = await evmSnapshot();
-  });
-
-  afterEach(async () => {
-    await evmRevert(snapShot);
+    testEnv = await loadFixture(testEnvFixture);
   });
 
   it("TC-erc721-buy-01: ERC721 <=> ERC20 via seaport - no loan", async () => {
@@ -1422,7 +1408,7 @@ describe("Leveraged Buy - Negative tests", () => {
   let payLaterAmount: BigNumber;
   const {COLLATERAL_CANNOT_COVER_NEW_BORROW} = ProtocolErrors;
   let testEnv: TestEnv;
-  before(async () => {
+  beforeEach(async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       bayc,
@@ -1459,15 +1445,6 @@ describe("Leveraged Buy - Negative tests", () => {
     await waitForTx(
       await dai.connect(taker.signer).approve(pool.address, payNowAmount)
     );
-  });
-
-  let snapShot: string;
-  beforeEach(async () => {
-    snapShot = await evmSnapshot();
-  });
-
-  afterEach(async () => {
-    await evmRevert(snapShot);
   });
 
   it("TC-erc721-buy-16: Cannot purchase nToken in collateral covering an ongoing borrow position", async () => {
