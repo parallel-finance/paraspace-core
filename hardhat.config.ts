@@ -3,7 +3,7 @@ import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
   COVERAGE_CHAINID,
-  FORK_MAINNET_CHAINID,
+  FORK_CHAINID,
   MAINNET_CHAINID,
   GOERLI_CHAINID,
 } from "./deploy/helpers/hardhat-constants";
@@ -28,7 +28,7 @@ import "solidity-coverage";
 import "hardhat-contract-sizer";
 import {eEthereumNetwork} from "./deploy/helpers/types";
 
-const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
+const DEFAULT_BLOCK_GAS_LIMIT = 30000000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
 const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4");
@@ -127,7 +127,7 @@ const hardhatConfig: HardhatUserConfig = {
       hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
-      gasPrice: 8000000000,
+      gasPrice: "auto",
       chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
@@ -149,7 +149,7 @@ const hardhatConfig: HardhatUserConfig = {
     },
     ganache: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.ganache],
-      chainId: FORK_MAINNET_CHAINID,
+      chainId: FORK_CHAINID,
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",
         path: "m/44'/60'/0'/0",

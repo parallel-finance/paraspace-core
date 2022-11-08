@@ -355,7 +355,7 @@ upgrade-ntoken-moonbirds:
 
 .PHONY: fork
 fork:
-	npx hardhat node --hostname 0.0.0.0
+	FORK=mainnet npx hardhat node --hostname 0.0.0.0
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
