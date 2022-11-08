@@ -187,7 +187,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     ).to.be.revertedWith("ERC721: operator query for nonexistent token");
   });
 
-  it("User 3 adds 20K dai as collateral and then removes their WPUNK from collateral without paying the accrued interest", async () => {
+  it("User 3 adds 20K dai as collateral and then removes their WPUNK from collateral without paying the accrued interest [ @skip-on-coverage ]", async () => {
     const {
       dai,
       wPunk,
