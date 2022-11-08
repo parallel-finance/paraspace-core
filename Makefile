@@ -2,7 +2,7 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-NETWORK                  := goerli
+NETWORK                  := hardhat
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
