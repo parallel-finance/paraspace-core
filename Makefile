@@ -355,7 +355,14 @@ upgrade-ntoken-moonbirds:
 
 .PHONY: fork
 fork:
-	FORK=mainnet npx hardhat node --hostname 0.0.0.0
+	npx hardhat node --hostname 0.0.0.0
+
+.PHONY: image
+image:
+	DOCKER_BUILDKIT=1 docker build \
+		-c 512 \
+		-t parallelfinance/paraspace:latest \
+		-f Dockerfile .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
