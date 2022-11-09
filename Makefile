@@ -2,7 +2,7 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-NETWORK                  := goerli
+NETWORK                  := hardhat
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
@@ -85,9 +85,25 @@ test-punk-gateway:
 test-erc20-liquidation:
 	make TEST_TARGET=_pool_core_erc20_liquidation.spec.ts test
 
+.PHONY: test-erc20-borrow
+test-erc20-borrow:
+	make TEST_TARGET=_pool_core_erc20_borrow.spec.ts test
+
+.PHONY: test-erc20-supply
+test-erc20-supply:
+	make TEST_TARGET=_pool_core_erc20_supply.spec.ts test
+
+.PHONY: test-erc20-withdraw
+test-erc20-withdraw:
+	make TEST_TARGET=_pool_core_erc20_withdraw.spec.ts test
+
+.PHONY: test-erc20-repay
+test-erc20-repay:
+	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test
+
 .PHONY: test-erc721-liquidation
 test-erc721-liquidation:
-	make TEST_TARGET=_pool_core_erc721_liquidation.spec.ts test	
+	make TEST_TARGET=_pool_core_erc721_liquidation.spec.ts test
 
 .PHONY: test-erc721-auction-liquidation
 test-erc721-auction-liquidation:
@@ -164,10 +180,6 @@ test-auction-strategy:
 .PHONY: test-ptoken-transfer
 test-ptoken-transfer:
 	make TEST_TARGET=ptoken-transfer.spec.ts test
-
-.PHONY: test-ptoken-repay
-test-ptoken-repay:
-	make TEST_TARGET=ptoken-repay.spec.ts test
 
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
@@ -359,7 +371,27 @@ upgrade-ntoken-moonbirds:
 
 .PHONY: fork
 fork:
-	FORK=mainnet npx hardhat node
+	npx hardhat node --hostname 0.0.0.0
+
+.PHONY: image
+image:
+	DOCKER_BUILDKIT=1 docker build \
+		-c 512 \
+		-t parallelfinance/paraspace:latest \
+		-f Dockerfile .
+
+.PHONY: launch
+launch:
+	docker-compose \
+		up \
+		-d --build
+
+.PHONY: shutdown
+shutdown:
+	docker-compose \
+		down \
+		--remove-orphans > /dev/null 2>&1 || true
+	docker volume prune -f
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

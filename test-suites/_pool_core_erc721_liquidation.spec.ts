@@ -198,7 +198,7 @@ describe("ERC-721 Liquidation", () => {
     const baycPrice = "10";
     await changePriceAndValidate(bayc, baycPrice);
 
-    // try to liquidate wih DAI
+    // try to liquidate with DAI
     await liquidateAndValidate(bayc, weth, "50000", liquidator, borrower, true);
   });
 
