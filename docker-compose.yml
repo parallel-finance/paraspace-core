@@ -6,6 +6,3 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8545:8545
-    command: make fork && make deploy
-    volumes:
-      - ${PWD}/deployed-contracts.json:/paraspace/deployed-contracts.json
