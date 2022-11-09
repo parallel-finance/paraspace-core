@@ -13,7 +13,7 @@ RUN wget -O /root/.cache/hardhat-nodejs/compilers/linux-amd64/solc-linux-amd64-v
 RUN yarn
 
 # https://docs.docker.com/config/containers/multi-service_container/
-RUN echo '#!/bin/bash\nset -m\nmake fork &\nmake deploy\nfg %1' > .entrypoint.sh
+RUN echo '#!/bin/bash\nset -m\nmake fork &\nmake deploy\nmake transfer-tokens\nfg %1' > .entrypoint.sh
 RUN chmod u+x .entrypoint.sh
 
 ENTRYPOINT ["/paraspace/.entrypoint.sh"]
