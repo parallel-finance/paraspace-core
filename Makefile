@@ -85,6 +85,22 @@ test-punk-gateway:
 test-erc20-liquidation:
 	make TEST_TARGET=_pool_core_erc20_liquidation.spec.ts test
 
+.PHONY: test-erc20-borrow
+test-erc20-borrow:
+	make TEST_TARGET=_pool_core_erc20_borrow.spec.ts test	
+
+.PHONY: test-erc20-supply
+test-erc20-supply:
+	make TEST_TARGET=_pool_core_erc20_supply.spec.ts test		
+
+.PHONY: test-erc20-withdraw
+test-erc20-withdraw:
+	make TEST_TARGET=_pool_core_erc20_withdraw.spec.ts test		
+
+.PHONY: test-erc20-repay
+test-erc20-repay:
+	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test	
+
 .PHONY: test-erc721-auction-liquidation
 test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
@@ -160,10 +176,6 @@ test-auction-strategy:
 .PHONY: test-ptoken-transfer
 test-ptoken-transfer:
 	make TEST_TARGET=ptoken-transfer.spec.ts test
-
-.PHONY: test-ptoken-repay
-test-ptoken-repay:
-	make TEST_TARGET=ptoken-repay.spec.ts test
 
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
