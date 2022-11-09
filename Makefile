@@ -2,7 +2,7 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-NETWORK                  := goerli
+NETWORK                  := hardhat
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
@@ -355,7 +355,27 @@ upgrade-ntoken-moonbirds:
 
 .PHONY: fork
 fork:
-	FORK=mainnet npx hardhat node
+	npx hardhat node --hostname 0.0.0.0
+
+.PHONY: image
+image:
+	DOCKER_BUILDKIT=1 docker build \
+		-c 512 \
+		-t parallelfinance/paraspace:latest \
+		-f Dockerfile .
+
+.PHONY: launch
+launch:
+	docker-compose \
+		up \
+		-d --build
+
+.PHONY: shutdown
+shutdown:
+	docker-compose \
+		down \
+		--remove-orphans > /dev/null 2>&1 || true
+	docker volume prune -f
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
