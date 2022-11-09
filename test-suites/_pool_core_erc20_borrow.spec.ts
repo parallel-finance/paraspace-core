@@ -8,7 +8,7 @@ import {
   MAX_BORROW_CAP,
 } from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -324,6 +324,248 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
       // expect(userData.totalCollateralBase).to.be.eq(parseUnits("10", 8));
       expect(userData.totalDebtBase).to.be.eq(0);
     });
+  });
+});
+
+describe("Borrow validations", () => {
+  const {
+    RESERVE_FROZEN,
+    RESERVE_INACTIVE,
+    INVALID_AMOUNT,
+    BORROWING_NOT_ENABLED,
+    HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD,
+  } = ProtocolErrors;
+  let testEnv: TestEnv;
+
+  beforeEach("Initialize fixture", async () => {
+    testEnv = await loadFixture(testEnvFixture);
+    const {addressesProvider, oracle} = testEnv;
+
+    await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
+  });
+
+  it("TC-erc20-borrow-12 validateBorrow() when reserve is not active (revert expected)", async () => {
+    /**
+     * Unclear how we should enter this stage with normal usage.
+     * Can be done by sending dai directly to pDai contract after it have been deactivated.
+     * If deposited normally it is not possible for us deactivate.
+     */
+
+    const {
+      pool,
+      poolAdmin,
+      configurator,
+      protocolDataProvider,
+      users,
+      dai,
+      pDai,
+      usdc,
+    } = testEnv;
+    const user = users[0];
+
+    await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("10000"));
+    await usdc
+      .connect(user.signer)
+      .approve(pool.address, utils.parseEther("10000"));
+    await pool
+      .connect(user.signer)
+      .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
+
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
+      dai.address
+    );
+    expect(configBefore.isActive).to.be.eq(true);
+    expect(configBefore.isFrozen).to.be.eq(false);
+
+    await configurator
+      .connect(poolAdmin.signer)
+      .setReserveActive(dai.address, false);
+
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
+      dai.address
+    );
+    expect(configAfter.isActive).to.be.eq(false);
+    expect(configAfter.isFrozen).to.be.eq(false);
+
+    // Transferring directly into pDai such that we can borrow
+    await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("1000"));
+    await dai
+      .connect(user.signer)
+      .transfer(pDai.address, utils.parseEther("1000"));
+
+    await expect(
+      pool
+        .connect(user.signer)
+        .borrow(dai.address, utils.parseEther("1000"), 0, user.address)
+    ).to.be.revertedWith(RESERVE_INACTIVE);
+  });
+
+  it("TC-erc20-borrow-13 validateBorrow() when reserve is frozen (revert expected)", async () => {
+    const {
+      pool,
+      poolAdmin,
+      configurator,
+      protocolDataProvider,
+      users,
+      dai,
+      usdc,
+    } = testEnv;
+    const user = users[0];
+
+    await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("1000"));
+    await dai
+      .connect(user.signer)
+      .approve(pool.address, utils.parseEther("1000"));
+    await pool
+      .connect(user.signer)
+      .supply(dai.address, utils.parseEther("1000"), user.address, 0);
+
+    await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("10000"));
+    await usdc
+      .connect(user.signer)
+      .approve(pool.address, utils.parseEther("10000"));
+    await pool
+      .connect(user.signer)
+      .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
+
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
+      dai.address
+    );
+    expect(configBefore.isActive).to.be.eq(true);
+    expect(configBefore.isFrozen).to.be.eq(false);
+
+    await configurator
+      .connect(poolAdmin.signer)
+      .setReserveFreeze(dai.address, true);
+
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
+      dai.address
+    );
+    expect(configAfter.isActive).to.be.eq(true);
+    expect(configAfter.isFrozen).to.be.eq(true);
+
+    await expect(
+      pool
+        .connect(user.signer)
+        .borrow(dai.address, utils.parseEther("1000"), 0, user.address)
+    ).to.be.revertedWith(RESERVE_FROZEN);
+  });
+
+  it("TC-erc20-borrow-14 validateBorrow() when amount == 0 (revert expected)", async () => {
+    testEnv = await loadFixture(testEnvFixture);
+    const {pool, users, dai} = testEnv;
+    const user = users[0];
+
+    await expect(
+      pool.connect(user.signer).borrow(dai.address, 0, 0, user.address)
+    ).to.be.revertedWith(INVALID_AMOUNT);
+  });
+
+  it("TC-erc20-borrow-15 validateBorrow() when borrowing is not enabled (revert expected)", async () => {
+    const {
+      pool,
+      poolAdmin,
+      configurator,
+      protocolDataProvider,
+      users,
+      dai,
+      usdc,
+    } = testEnv;
+    const user = users[0];
+
+    await dai.connect(user.signer)["mint(uint256)"](utils.parseEther("1000"));
+    await dai
+      .connect(user.signer)
+      .approve(pool.address, utils.parseEther("1000"));
+    await pool
+      .connect(user.signer)
+      .supply(dai.address, utils.parseEther("1000"), user.address, 0);
+
+    await usdc.connect(user.signer)["mint(uint256)"](utils.parseEther("10000"));
+    await usdc
+      .connect(user.signer)
+      .approve(pool.address, utils.parseEther("10000"));
+    await pool
+      .connect(user.signer)
+      .supply(usdc.address, utils.parseEther("10000"), user.address, 0);
+
+    const configBefore = await protocolDataProvider.getReserveConfigurationData(
+      dai.address
+    );
+    expect(configBefore.borrowingEnabled).to.be.eq(true);
+
+    await configurator
+      .connect(poolAdmin.signer)
+      .setReserveBorrowing(dai.address, false);
+
+    const configAfter = await protocolDataProvider.getReserveConfigurationData(
+      dai.address
+    );
+    expect(configAfter.borrowingEnabled).to.be.eq(false);
+
+    await expect(
+      pool
+        .connect(user.signer)
+        .borrow(dai.address, utils.parseEther("1000"), 0, user.address)
+    ).to.be.revertedWith(BORROWING_NOT_ENABLED);
+  });
+
+  it("TC-erc20-borrow-16 validateBorrow() borrowing when user has already a HF < threshold (revert expected)", async () => {
+    const {pool, users, dai, usdc, oracle, addressesProvider} = testEnv;
+    await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
+
+    const user = users[0];
+    const depositor = users[1];
+
+    await dai
+      .connect(depositor.signer)
+      ["mint(uint256)"](await convertToCurrencyDecimals(dai.address, "2000"));
+    await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(depositor.signer)
+      .supply(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, "2000"),
+        depositor.address,
+        0
+      );
+
+    await usdc
+      .connect(user.signer)
+      ["mint(uint256)"](await convertToCurrencyDecimals(usdc.address, "2000"));
+    await usdc.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(user.signer)
+      .supply(
+        usdc.address,
+        await convertToCurrencyDecimals(usdc.address, "2000"),
+        user.address,
+        0
+      );
+
+    await pool
+      .connect(user.signer)
+      .borrow(
+        dai.address,
+        await convertToCurrencyDecimals(dai.address, "1000"),
+        0,
+        user.address
+      );
+
+    const daiPrice = await oracle.getAssetPrice(dai.address);
+
+    await oracle.setAssetPrice(dai.address, daiPrice.mul(2));
+
+    await expect(
+      pool
+        .connect(user.signer)
+        .borrow(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, "200"),
+          0,
+          user.address
+        )
+    ).to.be.revertedWith(HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
   });
 });
 

@@ -8,15 +8,18 @@ on:
   workflow_dispatch: {}
 
 env:
-  AWS_REGION: 'us-east-2'
+  AWS_REGION: "us-east-2"
   S3_BUCKET_NAME: paraspace-core-docs
   CLOUDFLARE_PURGE_URLS: '["https://api-docs.para.space/"]'
-  AWS_CLOUDFRONT_DISTRIBUTION_ID: 'E29T1DS5QA33RG'
+  AWS_CLOUDFRONT_DISTRIBUTION_ID: "E29T1DS5QA33RG"
 
 jobs:
   deploy-output-to-s3:
     name: Deploy output files to S3
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -24,10 +27,10 @@ jobs:
           token: ${{ secrets.PAT }}
           submodules: true
 
-      - name: Use node version 16
+      - name: Setup nodejs
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
           registry-url: https://registry.npmjs.org
       - name: Generate Documentation
         run: |

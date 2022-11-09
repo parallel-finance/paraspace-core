@@ -1,0 +1,8 @@
+version: "3.7"
+services:
+  hardhat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8545:8545

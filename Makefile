@@ -87,23 +87,19 @@ test-erc20-liquidation:
 
 .PHONY: test-erc20-borrow
 test-erc20-borrow:
-	make TEST_TARGET=_pool_core_erc20_borrow.spec.ts test
+	make TEST_TARGET=_pool_core_erc20_borrow.spec.ts test	
 
 .PHONY: test-erc20-supply
 test-erc20-supply:
-	make TEST_TARGET=_pool_core_erc20_supply.spec.ts test
+	make TEST_TARGET=_pool_core_erc20_supply.spec.ts test		
 
 .PHONY: test-erc20-withdraw
 test-erc20-withdraw:
-	make TEST_TARGET=_pool_core_erc20_withdraw.spec.ts test
+	make TEST_TARGET=_pool_core_erc20_withdraw.spec.ts test		
 
 .PHONY: test-erc20-repay
 test-erc20-repay:
-	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test
-
-.PHONY: test-erc721-liquidation
-test-erc721-liquidation:
-	make TEST_TARGET=_pool_core_erc721_liquidation.spec.ts test
+	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test	
 
 .PHONY: test-erc721-auction-liquidation
 test-erc721-auction-liquidation:

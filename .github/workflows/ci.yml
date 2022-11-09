@@ -16,6 +16,9 @@ jobs:
   lint:
     name: Lint Check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18]
 
     steps:
       - name: Checkout Repository
@@ -24,10 +27,10 @@ jobs:
           token: ${{ secrets.PAT }}
           submodules: true
 
-      - name: Use node version 16
+      - name: Setup nodejs
         uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
           registry-url: https://registry.npmjs.org
 
       - name: Run lint
@@ -41,6 +44,9 @@ jobs:
   tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18]
     env:
       INFURA_KEY: ${{ secrets.INFURA_KEY }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
@@ -53,10 +59,10 @@ jobs:
           token: ${{ secrets.PAT }}
           submodules: true
 
-      - name: Use node version 16
+      - name: Setup nodejs
         uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
           registry-url: https://registry.npmjs.org
 
       - name: Run unit tests
@@ -69,6 +75,9 @@ jobs:
   coverage:
     name: Coverage Check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18]
     env:
       INFURA_KEY: ${{ secrets.INFURA_KEY }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
@@ -82,9 +91,10 @@ jobs:
           token: ${{ secrets.PAT }}
           submodules: true
           fetch-depth: 2
-      - uses: actions/setup-node@v3
+      - name: Setup nodejs
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
       - run: |
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
