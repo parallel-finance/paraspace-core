@@ -4,8 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - FORK=$(FORK)
     ports:
       - 8545:8545
-    command: bin/bash -c "make fork && make deploy"
+    command: make fork && make deploy
+    volumes:
+      - ${PWD}/deployed-contracts.json:/paraspace/deployed-contracts.json

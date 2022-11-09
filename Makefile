@@ -366,7 +366,7 @@ image:
 
 .PHONY: launch
 launch:
-	FORK=${FORK} docker-compose \
+	docker-compose \
 		up \
 		-d --build
 
