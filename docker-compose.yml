@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - FORK=mainnet
+      - FORK=$(FORK)
     ports:
       - 8545:8545
     command: bin/bash -c "make fork && make deploy"

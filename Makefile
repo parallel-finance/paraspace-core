@@ -364,5 +364,18 @@ image:
 		-t parallelfinance/paraspace:latest \
 		-f Dockerfile .
 
+.PHONY: launch
+launch:
+	FORK=${FORK} docker-compose \
+		up \
+		-d --build
+
+.PHONY: shutdown
+shutdown:
+	docker-compose \
+		down \
+		--remove-orphans > /dev/null 2>&1 || true
+	docker volume prune -f
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
