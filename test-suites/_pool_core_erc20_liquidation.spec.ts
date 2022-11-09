@@ -17,6 +17,11 @@ import {
   convertToCurrencyDecimals,
   isBorrowing,
 } from "../deploy/helpers/contracts-helpers";
+import {parseEther} from "ethers/lib/utils";
+import {TestEnv} from "./helpers/make-suite";
+import {VariableDebtToken__factory} from "../types";
+import {almostEqual} from "./helpers/uniswapv3-helper";
+import {getAggregator} from "../deploy/helpers/contracts-getters";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -54,7 +59,7 @@ const fixture = async () => {
 };
 
 describe("ERC-20 Liquidation Tests", () => {
-  it("TC-erc20-liquidation-01 Liquidator tries to liquidate a healthy position (HF ~ 1.0 - 1.1) (should be reverted)", async () => {
+  it("TC-erc20-liquidation-01 Liquidator tries to liquidate a healthy position (HF ~ 1.0 - 1.1) (revert expected)", async () => {
     const {
       users: [borrower, liquidator],
       dai,
@@ -161,7 +166,7 @@ describe("ERC-20 Liquidation Tests", () => {
     );
   });
 
-  it("TC-erc20-liquidation-06 Liquidator liquidates half of global debt and get pToken (closeFactor = 0.5)", async () => {
+  it("TC-erc20-liquidation-06 Liquidator liquidates half of global debt and gets pToken (healthFactor > 0.95)", async () => {
     const {
       weth,
       users: [borrower, liquidator],
@@ -181,7 +186,7 @@ describe("ERC-20 Liquidation Tests", () => {
     );
   });
 
-  it("TC-erc20-liquidation-07 Liquidator liquidates full global debt and get underlyingAsset (closeFactor <= 0.95)", async () => {
+  it("TC-erc20-liquidation-07 Liquidator liquidates full global debt and get underlyingAsset (healthFactor <= 0.95)", async () => {
     const {
       weth,
       users: [borrower, liquidator],
@@ -435,7 +440,7 @@ describe("ERC-20 Liquidation Tests", () => {
     );
   });
 
-  it("TC-erc20-liquidation-15 Liquidator liquidates all debt by passing 'MAX_INT' amount of WETH", async () => {
+  it("TC-erc20-liquidation-15 Liquidator liquidates all debt by passing 'MAX_UINT' amount of WETH", async () => {
     const {
       weth,
       users: [borrower, liquidator],
@@ -532,5 +537,306 @@ describe("ERC-20 Liquidation Tests", () => {
     expect(liquidatorBalanceAfter).to.be.eq(
       liquidatorBalanceBefore.sub(gasFee).sub(actualLiquidationAmount)
     );
+  });
+
+  it("TC-erc20-liquidation-17 Liquidate ERC20 using ETH, extra ETH refunded correctly", async () => {
+    const {
+      users: [borrower, liquidator],
+      pool,
+      bayc,
+      dai,
+      weth,
+    } = await loadFixture(testEnvFixture);
+    // assure asset prices for correct health factor calculations
+    await changePriceAndValidate(bayc, "101");
+
+    const daiAgg = await getAggregator(undefined, "DAI");
+    await daiAgg.updateLatestAnswer("908578801039414");
+
+    // Borrower deposits 3 BAYC and 5k DAI
+    await supplyAndValidate(bayc, "1", borrower, true);
+    await supplyAndValidate(dai, "100", borrower, true);
+
+    // Liquidator deposits 100k DAI and 100 wETH
+    await supplyAndValidate(weth, "100", liquidator, true, "1000");
+    await supplyAndValidate(dai, "100000", liquidator, true, "200000");
+
+    // 10k DAI ~= 10 ETH
+    await borrowAndValidate(weth, "10", borrower);
+
+    // drop BAYC price to liquidation levels (HF ~= 0.6)
+    await changePriceAndValidate(bayc, "8");
+
+    // 100 * 908578801039414 / 1e18 / 1.05 = 0.086531314384706095238
+    const actualLiquidationAmount = BigNumber.from("100")
+      .mul("908578801039414")
+      .percentDiv("10500");
+    const liquidationAmount = utils.parseEther("1").toString();
+    const liquidatorBalanceBefore = await pool.provider.getBalance(
+      liquidator.address
+    );
+    const tx = pool
+      .connect(liquidator.signer)
+      .liquidateERC20(
+        dai.address,
+        weth.address,
+        borrower.address,
+        liquidationAmount,
+        false,
+        {
+          gasLimit: 5000000,
+          value: liquidationAmount,
+        }
+      );
+    const txReceipt = await (await tx).wait();
+    const gasUsed = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+
+    const liquidatorBalanceAfter = await pool.provider.getBalance(
+      liquidator.address
+    );
+    expect(liquidatorBalanceAfter).to.be.eq(
+      liquidatorBalanceBefore.sub(actualLiquidationAmount).sub(gasUsed)
+    );
+  });
+
+  context("Liquidation: Close Factor", () => {
+    let testEnv: TestEnv;
+
+    beforeEach(async () => {
+      testEnv = await loadFixture(testEnvFixture);
+    });
+
+    it("TC-erc20-liquidation-18 HF > 0.95 thus only half of the debt has been liquidated although the input is MAX_UINT_AMOUNT", async () => {
+      const {
+        pool,
+        users: [depositor, borrower],
+        dai,
+        usdc,
+        weth,
+      } = testEnv;
+      // Deposit dai
+      await dai
+        .connect(depositor.signer)
+        ["mint(uint256)"](
+          await convertToCurrencyDecimals(dai.address, "1000000")
+        );
+      await dai
+        .connect(depositor.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(depositor.signer)
+        .supply(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, "10000"),
+          depositor.address,
+          0
+        );
+
+      // Deposit usdc
+      await usdc
+        .connect(depositor.signer)
+        ["mint(uint256)"](
+          await convertToCurrencyDecimals(usdc.address, "1000")
+        );
+      await usdc
+        .connect(depositor.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(depositor.signer)
+        .supply(
+          usdc.address,
+          await convertToCurrencyDecimals(usdc.address, "1000"),
+          depositor.address,
+          0
+        );
+
+      // Deposit eth, borrow dai
+      await weth.connect(borrower.signer)["mint(uint256)"](parseEther("2"));
+      await weth
+        .connect(borrower.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(borrower.signer)
+        .supply(weth.address, parseEther("2"), borrower.address, 0);
+
+      // Borrow usdc
+      await pool
+        .connect(borrower.signer)
+        .borrow(
+          usdc.address,
+          await convertToCurrencyDecimals(usdc.address, "1000"),
+          0,
+          borrower.address
+        );
+      // Borrow dai variable
+      await pool
+        .connect(borrower.signer)
+        .borrow(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, "100"),
+          0,
+          borrower.address
+        );
+
+      // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
+
+      // Increase usdc price to allow liquidation
+      const usdcAgg = await getAggregator(undefined, "USDC");
+      const newUsdcPrice = parseEther("0.00169").toString();
+      await usdcAgg.updateLatestAnswer(newUsdcPrice);
+
+      // HF: (2 * 0.85) / (1000 * 0.00169 + 100 * 0.000908578801039414) = 0.95459610729901587889
+
+      const daiData = await pool.getReserveData(dai.address);
+      const variableDebtToken = VariableDebtToken__factory.connect(
+        daiData.variableDebtTokenAddress,
+        depositor.signer
+      );
+
+      const debtBefore = await variableDebtToken.balanceOf(borrower.address);
+      const userConfigBefore = BigNumber.from(
+        (await pool.getUserConfiguration(borrower.address)).data
+      );
+
+      // liquidate maximum half of the whole debt
+      expect(
+        await pool
+          .connect(depositor.signer)
+          .liquidateERC20(
+            weth.address,
+            dai.address,
+            borrower.address,
+            MAX_UINT_AMOUNT,
+            false,
+            {gasLimit: 5000000}
+          )
+      );
+
+      const debtAfter = await variableDebtToken.balanceOf(borrower.address);
+      const userConfigAfter = BigNumber.from(
+        (await pool.getUserConfiguration(borrower.address)).data
+      );
+
+      almostEqual(debtBefore.sub(debtBefore.percentMul("5000")), debtAfter);
+      expect(isBorrowing(userConfigBefore, daiData.id)).to.be.true;
+      expect(isBorrowing(userConfigAfter, daiData.id)).to.be.true;
+    });
+
+    it("TC-erc20-liquidation-19 HF < 0.95 thus all of the debt has been liquidated", async () => {
+      const {
+        pool,
+        users: [depositor, borrower],
+        dai,
+        usdc,
+        weth,
+      } = testEnv;
+      // Deposit dai
+      await dai
+        .connect(depositor.signer)
+        ["mint(uint256)"](
+          await convertToCurrencyDecimals(dai.address, "1000000")
+        );
+      await dai
+        .connect(depositor.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(depositor.signer)
+        .supply(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, "10000"),
+          depositor.address,
+          0
+        );
+
+      // Deposit usdc
+      await usdc
+        .connect(depositor.signer)
+        ["mint(uint256)"](
+          await convertToCurrencyDecimals(usdc.address, "1000")
+        );
+      await usdc
+        .connect(depositor.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(depositor.signer)
+        .supply(
+          usdc.address,
+          await convertToCurrencyDecimals(usdc.address, "1000"),
+          depositor.address,
+          0
+        );
+
+      // Deposit eth, borrow dai
+      await weth.connect(borrower.signer)["mint(uint256)"](parseEther("2"));
+      await weth
+        .connect(borrower.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT);
+      await pool
+        .connect(borrower.signer)
+        .supply(weth.address, parseEther("2"), borrower.address, 0);
+
+      // Borrow usdc
+      await pool
+        .connect(borrower.signer)
+        .borrow(
+          usdc.address,
+          await convertToCurrencyDecimals(usdc.address, "1000"),
+          0,
+          borrower.address
+        );
+      // Borrow dai variable
+      await pool
+        .connect(borrower.signer)
+        .borrow(
+          dai.address,
+          await convertToCurrencyDecimals(dai.address, "100"),
+          0,
+          borrower.address
+        );
+
+      // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
+
+      // Increase usdc price to allow liquidation
+      const usdcAgg = await getAggregator(undefined, "USDC");
+      const newUsdcPrice = parseEther("0.00170").toString();
+      await usdcAgg.updateLatestAnswer(newUsdcPrice);
+
+      // HF: (2 * 0.85) / (1000 * 0.00170 + 100 * 0.000908578801039414) = 0.94926572280617376059
+
+      const daiData = await pool.getReserveData(dai.address);
+      const variableDebtToken = VariableDebtToken__factory.connect(
+        daiData.variableDebtTokenAddress,
+        depositor.signer
+      );
+
+      const debtBefore = await variableDebtToken.balanceOf(borrower.address);
+      const userConfigBefore = BigNumber.from(
+        (await pool.getUserConfiguration(borrower.address)).data
+      );
+
+      // liquidate maximum half of the whole debt
+      expect(
+        await pool
+          .connect(depositor.signer)
+          .liquidateERC20(
+            weth.address,
+            dai.address,
+            borrower.address,
+            MAX_UINT_AMOUNT,
+            false,
+            {gasLimit: 5000000}
+          )
+      );
+
+      const debtAfter = await variableDebtToken.balanceOf(borrower.address);
+      const userConfigAfter = BigNumber.from(
+        (await pool.getUserConfiguration(borrower.address)).data
+      );
+
+      expect(debtBefore).to.be.gt(0);
+      expect(debtAfter).to.be.eq(0);
+      expect(isBorrowing(userConfigBefore, daiData.id)).to.be.true;
+      expect(isBorrowing(userConfigAfter, daiData.id)).to.be.false;
+    });
   });
 });
