@@ -1,6 +1,5 @@
 import {task} from "hardhat/config";
-
-const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
+import {ETHERSCAN_VERIFICATION} from "../../deploy/helpers/hardhat-constants";
 
 task(
   "deploy:faucet",
@@ -10,5 +9,5 @@ task(
   const {step_03} = await import(
     "../../deploy/tasks/deployments/full-deployment/steps/03_faucet"
   );
-  await step_03(verify);
+  await step_03(ETHERSCAN_VERIFICATION);
 });

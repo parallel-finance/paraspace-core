@@ -1,8 +1,10 @@
 #!make
-include .env
-export $(shell sed 's/=.*//' .env)
 
 NETWORK                  := hardhat
+
+include .env
+export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
+
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
@@ -385,6 +387,7 @@ launch:
 	docker-compose \
 		up \
 		-d --build
+	docker-compose logs -f
 
 .PHONY: shutdown
 shutdown:

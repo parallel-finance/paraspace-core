@@ -61,6 +61,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
 
       - name: Get deployment date
         id: deploymentInfo

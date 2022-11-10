@@ -2,9 +2,16 @@ import path from "path";
 import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
-  COVERAGE_CHAINID,
   MAINNET_CHAINID,
   GOERLI_CHAINID,
+  MOCHA_JOBS,
+  HARDFORK,
+  DEFAULT_BLOCK_GAS_LIMIT,
+  ETHERSCAN_KEY,
+  REPORT_GAS,
+  DEPLOYER_MNEMONIC,
+  TENDERLY_PROJECT,
+  TENDERLY_USERNAME,
 } from "./deploy/helpers/hardhat-constants";
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
@@ -26,11 +33,6 @@ import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
 import {eEthereumNetwork} from "./deploy/helpers/types";
-
-const DEFAULT_BLOCK_GAS_LIMIT = 30000000;
-const HARDFORK = "london";
-const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
-const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4");
 
 require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
@@ -62,7 +64,7 @@ const hardhatConfig: HardhatUserConfig = {
     exclude: ["dependencies", "deployments", "mocks"],
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS == "true" ? true : false,
+    enabled: REPORT_GAS,
   },
   solidity: {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
@@ -101,8 +103,8 @@ const hardhatConfig: HardhatUserConfig = {
     timeout: 200000,
   },
   tenderly: {
-    project: process.env.TENDERLY_PROJECT || "",
-    username: process.env.TENDERLY_USERNAME || "",
+    project: TENDERLY_PROJECT,
+    username: TENDERLY_USERNAME,
     forkNetwork: `${MAINNET_CHAINID}`, //Network id of the network we want to fork
   },
   networks: {
@@ -115,12 +117,6 @@ const hardhatConfig: HardhatUserConfig = {
       gasPrice: 4e9,
       gas: 4e6,
       allowUnlimitedContractSize: true,
-    },
-    coverage: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.coverage],
-      chainId: COVERAGE_CHAINID,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
     },
     hardhat: {
       hardfork: HARDFORK,
@@ -143,14 +139,14 @@ const hardhatConfig: HardhatUserConfig = {
       chainId: GOERLI_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
       accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
+        mnemonic: DEPLOYER_MNEMONIC || "",
       },
     },
     mainnet: {
       chainId: MAINNET_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
       accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
+        mnemonic: DEPLOYER_MNEMONIC || "",
       },
     },
   },

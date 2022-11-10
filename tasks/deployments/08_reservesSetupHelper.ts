@@ -1,6 +1,5 @@
 import {task} from "hardhat/config";
-
-const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
+import {ETHERSCAN_VERIFICATION} from "../../deploy/helpers/hardhat-constants";
 
 task("deploy:reserves-setup-helper", "Deploy reserves setup helper").setAction(
   async (_, DRE) => {
@@ -8,6 +7,6 @@ task("deploy:reserves-setup-helper", "Deploy reserves setup helper").setAction(
     const {step_08} = await import(
       "../../deploy/tasks/deployments/full-deployment/steps/08_reservesSetupHelper"
     );
-    await step_08(verify);
+    await step_08(ETHERSCAN_VERIFICATION);
   }
 );
