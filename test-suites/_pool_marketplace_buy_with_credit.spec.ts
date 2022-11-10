@@ -46,11 +46,6 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {AdvancedOrderStruct} from "../types/dependencies/seaport/contracts/Seaport";
 
 describe("Leveraged Buy - Positive tests", () => {
-  let testEnv: TestEnv;
-  beforeEach(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-  });
-
   it("TC-erc721-buy-01: ERC721 <=> ERC20 via seaport - no loan", async () => {
     const {
       bayc,
@@ -60,7 +55,7 @@ describe("Leveraged Buy - Positive tests", () => {
       pausableZone,
       conduitKey,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const startNumber = "1000";
     const startAmount = await convertToCurrencyDecimals(
       usdt.address,
@@ -133,7 +128,7 @@ describe("Leveraged Buy - Positive tests", () => {
       seaport,
       pool,
       users: [maker, taker, middleman, platform],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const payNowNumber = "800";
     const creditNumber = "200";
     const payNowAmount = await convertToCurrencyDecimals(
@@ -263,7 +258,7 @@ describe("Leveraged Buy - Positive tests", () => {
       usdc,
       pool,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const middlemanInitialBalance = "1000";
     const payLaterAmount = await convertToCurrencyDecimals(
       usdc.address,
@@ -303,7 +298,7 @@ describe("Leveraged Buy - Positive tests", () => {
       dai,
       pool,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const payNowNumber = "800";
     const creditNumber = "200";
     const payNowAmount = await convertToCurrencyDecimals(
@@ -350,7 +345,7 @@ describe("Leveraged Buy - Positive tests", () => {
       dai,
       pool,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const middlemanInitialBalance = "200";
     const payLaterAmount = await convertToCurrencyDecimals(
       dai.address,
@@ -390,7 +385,7 @@ describe("Leveraged Buy - Positive tests", () => {
       wETHGateway,
       weth,
       users: [maker, taker, middleman, platform],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const masGasFeeLeft = parseEther("5");
     const payNowAmount = (await taker.signer.getBalance()).sub(masGasFeeLeft);
     const creditAmount = parseEther("2");
@@ -505,7 +500,7 @@ describe("Leveraged Buy - Positive tests", () => {
       wETHGateway,
       weth,
       users: [maker, taker, middleman, platform],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const masGasFeeLeft = parseEther("5");
     const payNowAmount = (await taker.signer.getBalance()).sub(masGasFeeLeft);
     const creditAmount = parseEther("2");
@@ -631,7 +626,7 @@ describe("Leveraged Buy - Positive tests", () => {
       wETHGateway,
       weth,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
 
     const masGasFeeLeft = parseEther("4");
     const totalPayNowAmount = (await taker.signer.getBalance()).sub(
@@ -782,7 +777,7 @@ describe("Leveraged Buy - Positive tests", () => {
       wETHGateway,
       weth,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const masGasFeeLeft = parseEther("4");
 
     const totalPayNowAmount = (await taker.signer.getBalance()).sub(
@@ -983,7 +978,7 @@ describe("Leveraged Buy - Positive tests", () => {
       usdc,
       pool,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const payNowNumber = "800";
     const creditNumber = "200";
     const payNowAmount = await convertToCurrencyDecimals(
@@ -1019,7 +1014,7 @@ describe("Leveraged Buy - Positive tests", () => {
     );
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
-    expect(await nBAYC.collaterizedBalanceOf(taker.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
     expect(await usdc.balanceOf(maker.address)).to.be.equal(startAmount);
   });
 
@@ -1030,7 +1025,7 @@ describe("Leveraged Buy - Positive tests", () => {
       usdc,
       pool,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const payNowNumber = "800";
     const creditNumber = "200";
     const payNowAmount = await convertToCurrencyDecimals(
@@ -1071,7 +1066,7 @@ describe("Leveraged Buy - Positive tests", () => {
     );
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
-    expect(await nBAYC.collaterizedBalanceOf(taker.address)).to.be.equal(1);
+    expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
     expect(await usdc.balanceOf(maker.address)).to.be.equal(startAmount);
   });
 
@@ -1089,7 +1084,7 @@ describe("Leveraged Buy - Positive tests", () => {
       x2y2r1,
       erc721Delegate,
       deployer,
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
 
     const masGasFeeLeft = parseEther("5");
     const payNowAmount = (await taker.signer.getBalance()).sub(masGasFeeLeft);
@@ -1269,7 +1264,7 @@ describe("Leveraged Buy - Positive tests", () => {
       deployer,
       pool,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
 
     const payNowNumber = "800";
     const creditNumber = "200";
@@ -1325,7 +1320,7 @@ describe("Leveraged Buy - Positive tests", () => {
       pool,
       deployer,
       users: [maker, taker, middleman],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const creditNumber = "1000";
     const creditAmount = await convertToCurrencyDecimals(
       dai.address,
@@ -1365,7 +1360,7 @@ describe("Leveraged Buy - Positive tests", () => {
       transferManagerERC721,
       pool,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(testEnvFixture);
     const takerInitialBalance = "1000";
     const payNowAmount = await convertToCurrencyDecimals(
       dai.address,
@@ -1408,8 +1403,9 @@ describe("Leveraged Buy - Negative tests", () => {
   let payLaterAmount: BigNumber;
   const {COLLATERAL_CANNOT_COVER_NEW_BORROW} = ProtocolErrors;
   let testEnv: TestEnv;
-  beforeEach(async () => {
+  const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
+
     const {
       bayc,
       dai,
@@ -1445,7 +1441,8 @@ describe("Leveraged Buy - Negative tests", () => {
     await waitForTx(
       await dai.connect(taker.signer).approve(pool.address, payNowAmount)
     );
-  });
+    return testEnv;
+  };
 
   it("TC-erc721-buy-16: Cannot purchase nToken in collateral covering an ongoing borrow position", async () => {
     const {
@@ -1454,7 +1451,7 @@ describe("Leveraged Buy - Negative tests", () => {
       dai,
       conduit,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     // maker supplies BAYC
     await supplyAndValidate(bayc, "1", maker);
@@ -1490,7 +1487,7 @@ describe("Leveraged Buy - Negative tests", () => {
       pool,
       mayc,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     // taker supplies MAYC and borrows 1100 DAI, so 100 are left in protocol liquidity
     await supplyAndValidate(mayc, "1", taker, true);
@@ -1520,7 +1517,7 @@ describe("Leveraged Buy - Negative tests", () => {
       bayc,
       dai,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     // try to buy NFT id = 1, not listed
     await expect(
@@ -1542,7 +1539,7 @@ describe("Leveraged Buy - Negative tests", () => {
       bayc,
       dai,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     await executeSeaportBuyWithCredit(
       bayc,
@@ -1576,7 +1573,7 @@ describe("Leveraged Buy - Negative tests", () => {
       bayc,
       pDai,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     // use aDai contract as purchase currency
     await expect(
@@ -1600,7 +1597,7 @@ describe("Leveraged Buy - Negative tests", () => {
       oracle,
       users: [maker, taker],
       protocolDataProvider,
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     // drop NFT price enough so that the NFT cannot cover a paylater of 200 DAI
     await changePriceAndValidate(bayc, "0.5");
@@ -1638,7 +1635,8 @@ describe("Leveraged Buy - Negative tests", () => {
       bayc,
       dai,
       users: [maker, taker],
-    } = testEnv;
+    } = await loadFixture(fixture);
+
     payLaterAmount = await convertToCurrencyDecimals(dai.address, "50"); // credit amount that won't be enough for purchase
     await expect(
       executeSeaportBuyWithCredit(
