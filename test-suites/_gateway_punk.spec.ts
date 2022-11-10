@@ -240,7 +240,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(nWPunkBalance).to.be.equal(1);
   });
 
-  it("TC-punks-gateway-07 User can redeem the supplied WPunks", async () => {
+  it("TC-punks-gateway-07 User can redeem the supplied WPunks [ @skip-on-coverage ]", async () => {
     const {
       wPunk,
       nWPunk,
