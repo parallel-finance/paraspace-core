@@ -178,7 +178,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     );
   });
 
-  it("TC-punks-gateway-06 User adds enough collateral and then can remove his WPUNK from collateral without paying the accrued interest", async () => {
+  it("TC-punks-gateway-06 User adds enough collateral and then can remove his WPUNK from collateral without paying the accrued interest [ @skip-on-coverage ]", async () => {
     const {
       dai,
       wPunk,
