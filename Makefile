@@ -1,8 +1,10 @@
 #!make
-include .env
-export $(shell sed 's/=.*//' .env)
 
 NETWORK                  := goerli
+
+include .env
+export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
+
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
