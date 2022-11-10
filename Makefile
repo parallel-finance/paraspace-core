@@ -387,6 +387,7 @@ launch:
 	docker-compose \
 		up \
 		-d --build
+	docker-compose logs -f
 
 .PHONY: shutdown
 shutdown:
