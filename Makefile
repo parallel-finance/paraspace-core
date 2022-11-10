@@ -2,7 +2,7 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-NETWORK                  := goerli
+NETWORK                  := hardhat
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
@@ -16,11 +16,15 @@ init: submodules
 
 .PHONY: test
 test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET}
+	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+
+.PHONY: slow-test
+slow-test:
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET}
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
 
 .PHONY: size
 size:
@@ -54,40 +58,52 @@ clean:
 	yarn clean
 
 .PHONY: ci
-ci: clean build lint doc test
+ci: clean build lint doc fast-test
 
 .PHONY: submodules
 submodules:
 	git submodule update --init --recursive
 	git submodule foreach git pull origin main
 
+.PHONY: test-pool-upgrade
+test-pool-upgrade:
+	make TEST_TARGET=pool-upgrade.spec.ts test
+
 .PHONY: test-ntoken
 test-ntoken:
 	make TEST_TARGET=ntoken.spec.ts test
 
-.PHONY: test-ntoken-punk
-test-ntoken-punk:
-	make TEST_TARGET=ntoken-punk.spec.ts test
+.PHONY: test-ptoken
+test-ptoken:
+	make TEST_TARGET=_xtoken_ptoken.spec.ts test
 
-.PHONY: test-liquidation
-test-liquidation:
-	make TEST_TARGET=liquidation.spec.ts test
+.PHONY: test-punk-gateway
+test-punk-gateway:
+	make TEST_TARGET=_gateway_punk.spec.ts test
 
-.PHONY: test-liquidation-non-borrowed
-test-liquidation-non-borrowed:
-	make TEST_TARGET=liquidation-non-borrowed.spec.ts test
+.PHONY: test-erc20-liquidation
+test-erc20-liquidation:
+	make TEST_TARGET=_pool_core_erc20_liquidation.spec.ts test
 
-.PHONY: test-liquidation-auction
-test-liquidation-auction:
-	make TEST_TARGET=liquidation-auction.spec.ts test
+.PHONY: test-erc20-borrow
+test-erc20-borrow:
+	make TEST_TARGET=_pool_core_erc20_borrow.spec.ts test
 
-.PHONY: test-liquidation-edge
-test-liquidation-edge:
-	make TEST_TARGET=liquidation-edge.spec.ts test
+.PHONY: test-erc20-supply
+test-erc20-supply:
+	make TEST_TARGET=_pool_core_erc20_supply.spec.ts test
 
-.PHONY: test-liquidation-ptoken
-test-liquidation-ptoken:
-	make TEST_TARGET=liquidation-ptoken.spec.ts test
+.PHONY: test-erc20-withdraw
+test-erc20-withdraw:
+	make TEST_TARGET=_pool_core_erc20_withdraw.spec.ts test
+
+.PHONY: test-erc20-repay
+test-erc20-repay:
+	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test
+
+.PHONY: test-erc721-auction-liquidation
+test-erc721-auction-liquidation:
+	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
 
 .PHONY: test-configurator-edge
 test-configurator-edge:
@@ -105,21 +121,13 @@ test-ptoken-permit:
 test-ptoken-delegation-aware:
 	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
 
-.PHONY: test-interest-overflow
-test-interest-overflow:
-	make TEST_TARGET=interest-overflow.spec.ts test
-
-.PHONY: test-ltv-validation
-test-ltv-validation:
-	make TEST_TARGET=ltv-validation.spec.ts test
-
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
 
 .PHONY: test-upgradeability
 test-upgradeability:
-	make TEST_TARGET=upgradeability.spec.ts test
+	make TEST_TARGET=_base_upgradeability.spec.ts test
 
 .PHONY: test-erc20
 test-erc20:
@@ -127,27 +135,27 @@ test-erc20:
 
 .PHONY: test-flash-claim
 test-flash-claim:
-	make TEST_TARGET=flash-claim.spec.ts test
+	make TEST_TARGET=_pool_core_flash_claim.spec.ts test
 
-.PHONY: test-price-oracle-update
-test-price-oracle-update:
-	make TEST_TARGET=price-oracle-update.spec.ts test
+.PHONY: test-paraspace-oracle-aggregator
+test-paraspace-oracle-aggregator:
+	make TEST_TARGET=_oracle_aggregator.spec.ts test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
-	make TEST_TARGET=nft-floor-price-oracle.spec.ts test
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts test
 
 .PHONY: test-weth-gateway
 test-weth-gateway:
-	make TEST_TARGET=weth-gateway.spec.ts test
+	make TEST_TARGET=_gateway_weth.spec.ts test
 
 .PHONY: test-mock-token-faucet
 test-mock-token-faucet:
 	make TEST_TARGET=mock-token-faucet.spec.ts test
 
-.PHONY: test-moonbird
-test-moonbird:
-	make TEST_TARGET=moonbird.spec.ts test
+.PHONY: test-moonbirds
+test-moonbirds:
+	make TEST_TARGET=_xtoken_ntoken_moonbirds.spec.ts test
 
 .PHONY: test-marketplace
 test-marketplace:
@@ -163,23 +171,15 @@ test-uniswap-v3-oracle:
 
 .PHONY: test-auction-strategy
 test-auction-strategy:
-	make TEST_TARGET=auction-strategy.spec.ts test
-
-.PHONY: test-auction-configuration
-test-auction-configuration:
-	make TEST_TARGET=auction-configuration.spec.ts test
+	make TEST_TARGET=_base_auction_strategy.spec.ts test
 
 .PHONY: test-ptoken-transfer
 test-ptoken-transfer:
 	make TEST_TARGET=ptoken-transfer.spec.ts test
 
-.PHONY: test-ptoken-repay
-test-ptoken-repay:
-	make TEST_TARGET=ptoken-repay.spec.ts test
-
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
-	make TEST_TARGET=variable-debt-token.spec.ts test
+	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
 
 .PHONY: test-paraspace-oracle
 test-paraspace-oracle:
@@ -199,7 +199,11 @@ test-rebasing-tokens:
 
 .PHONY: test-pool-addresses-provider
 test-pool-addresses-provider:
-	make TEST_TARGET=pool-addresses-provider.spec.ts test
+	make TEST_TARGET=_base_addresses_provider.spec.ts test
+
+.PHONY: test-addresses-provider-registry
+test-addresses-provider-registry:
+	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
 
 .PHONY: test-pausable-pool
 test-pausable-pool:
@@ -215,19 +219,11 @@ test-price-oracle-sentinel:
 
 .PHONY: test-user-configurator-used-as-collateral
 test-user-configurator-used-as-collateral:
-	make TEST_TARGET=user-configurator-used-as-collateral.spec.ts test
+	make TEST_TARGET=_pool_core_use_as_collateral.spec.ts test
 
 .PHONY: test-rate-strategy
 test-rate-strategy:
-	make TEST_TARGET=rate-strategy.spec.ts test
-
-.PHONY: test-ui-pool-data-provider
-test-ui-pool-data-provider:
-	make TEST_TARGET=ui-pool-data-provider.spec.ts test
-
-.PHONY: test-ui-incentive-data-provider
-test-ui-incentive-data-provider:
-	make TEST_TARGET=ui-incentive-data-provider.spec.ts test
+	make TEST_TARGET=_base_interest_rate_strategy.spec.ts test
 
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
@@ -241,9 +237,13 @@ test-dynamic-configs-strategy:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
-.PHONY: test-wallet-balance-provider
-test-wallet-balance-provider:
-	make TEST_TARGET=wallet-balance-provider.spec.ts test
+.PHONY: test-ui-providers
+test-ui-providers:
+	make TEST_TARGET=_ui_providers.spec.ts test
+
+.PHONY: test-ape-staking
+test-ape-staking:
+	make TEST_TARGET=ape_coin_staking.spec.ts test
 
 .PHONY: run
 run:
@@ -265,13 +265,13 @@ verify:
 deploy:
 	make TASK_NAME=deploy:all run-task
 
-.PHONY: deploy-mockERC20Tokens
-deploy-mockERC20Tokens:
-	make TASK_NAME=deploy:mock-erc20-tokens run-task
+.PHONY: deploy-ERC20Tokens
+deploy-ERC20Tokens:
+	make TASK_NAME=deploy:erc20-tokens run-task
 
-.PHONY: deploy-mockERC721Tokens
-deploy-mockERC721Tokens:
-	make TASK_NAME=deploy:mock-erc721-tokens run-task
+.PHONY: deploy-ERC721Tokens
+deploy-ERC721Tokens:
+	make TASK_NAME=deploy:erc721-tokens run-task
 
 .PHONY: deploy-faucet
 deploy-faucet:
@@ -285,10 +285,6 @@ deploy-addressProvider:
 deploy-aclManager:
 	make TASK_NAME=deploy:acl-manager run-task
 
-.PHONY: deploy-poolAddressesProviderRegistry
-deploy-poolAddressesProviderRegistry:
-	make TASK_NAME=deploy:pool-addresses-provider-registry run-task
-
 .PHONY: deploy-pool
 deploy-pool:
 	make TASK_NAME=deploy:pool run-task
@@ -301,13 +297,17 @@ deploy-poolConfigurator:
 deploy-reservesSetupHelper:
 	make TASK_NAME=deploy:reserves-setup-helper run-task
 
-.PHONY: deploy-priceOracle
-deploy-priceOracle:
-	make TASK_NAME=deploy:price-oracle run-task
+.PHONY: deploy-fallbackOracle
+deploy-fallbackOracle:
+	make TASK_NAME=deploy:fallback-oracle run-task
 
-.PHONY: deploy-allMockAggregators
-deploy-allMockAggregators:
-	make TASK_NAME=deploy:all-mock-aggregators run-task
+.PHONY: deploy-allAggregators
+deploy-allAggregators:
+	make TASK_NAME=deploy:all-aggregators run-task
+
+.PHONY: deploy-allReserves
+deploy-allReserves:
+	make TASK_NAME=deploy:all-allReserves run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
@@ -341,12 +341,57 @@ deploy-flashClaimRegistry:
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
 
+.PHONY: transfer-tokens
+transfer-tokens:
+	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
+
+.PHONY: upgrade
+upgrade:
+	make TASK_NAME=upgrade:all run-task
+
+.PHONY: upgrade-pool
+upgrade-pool:
+	make TASK_NAME=upgrade:pool run-task
+
+.PHONY: upgrade-ptoken
+upgrade-ptoken:
+	make TASK_NAME=upgrade:ptoken run-task
+
+.PHONY: upgrade-ntoken
+upgrade-ntoken:
+	make TASK_NAME=upgrade:ntoken run-task
+
+.PHONY: upgrade-ntoken-uniswapv3
+upgrade-ntoken-uniswapv3:
+	make TASK_NAME=upgrade:ntoken_uniswapv3 run-task
+
+.PHONY: upgrade-ntoken-moonbirds
+upgrade-ntoken-moonbirds:
+	make TASK_NAME=upgrade:ntoken_moonbirds run-task
+
 .PHONY: fork
 fork:
-	npx ganache \
-	-d \
-	--chain.chainId 522 \
-	--fork ${RPC_URL}
+	npx hardhat node --hostname 0.0.0.0
+
+.PHONY: image
+image:
+	DOCKER_BUILDKIT=1 docker build \
+		-c 512 \
+		-t parallelfinance/paraspace:latest \
+		-f Dockerfile .
+
+.PHONY: launch
+launch:
+	docker-compose \
+		up \
+		-d --build
+
+.PHONY: shutdown
+shutdown:
+	docker-compose \
+		down \
+		--remove-orphans > /dev/null 2>&1 || true
+	docker volume prune -f
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

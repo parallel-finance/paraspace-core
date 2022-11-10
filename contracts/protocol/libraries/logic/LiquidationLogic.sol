@@ -5,6 +5,7 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts//IERC20.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
+import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {Helpers} from "../../libraries/helpers/Helpers.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
@@ -13,8 +14,10 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {UserConfiguration} from "../../libraries/configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../../libraries/configuration/ReserveConfiguration.sol";
+import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {IWETH} from "../../../misc/interfaces/IWETH.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {PRBMath} from "../../../dependencies/math/PRBMath.sol";
@@ -22,6 +25,8 @@ import {PRBMathUD60x18} from "../../../dependencies/math/PRBMathUD60x18.sol";
 import {IReserveAuctionStrategy} from "../../../interfaces/IReserveAuctionStrategy.sol";
 import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
+import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider.sol";
+import {Errors} from "../../libraries/helpers/Errors.sol";
 
 /**
  * @title LiquidationLogic library
@@ -37,6 +42,27 @@ library LiquidationLogic {
     using PRBMathUD60x18 for uint256;
     using GPv2SafeERC20 for IERC20;
 
+    /**
+     * @dev Default percentage of borrower's debt to be repaid in a liquidation.
+     * @dev Percentage applied when the users health factor is above `CLOSE_FACTOR_HF_THRESHOLD`
+     * Expressed in bps, a value of 0.5e4 results in 50.00%
+     */
+    uint256 internal constant DEFAULT_LIQUIDATION_CLOSE_FACTOR = 0.5e4;
+
+    /**
+     * @dev Maximum percentage of borrower's debt to be repaid in a liquidation
+     * @dev Percentage applied when the users health factor is below `CLOSE_FACTOR_HF_THRESHOLD`
+     * Expressed in bps, a value of 1e4 results in 100.00%
+     */
+    uint256 public constant MAX_LIQUIDATION_CLOSE_FACTOR = 1e4;
+
+    /**
+     * @dev This constant represents below which health factor value it is possible to liquidate
+     * an amount of debt corresponding to `MAX_LIQUIDATION_CLOSE_FACTOR`.
+     * A value of 0.95e18 results in 95%
+     */
+    uint256 public constant CLOSE_FACTOR_HF_THRESHOLD = 0.95e18;
+
     // See `IPool` for descriptions
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -46,19 +72,19 @@ library LiquidationLogic {
         address indexed reserve,
         address indexed user
     );
-    event LiquidationCall(
+    event LiquidateERC20(
         address indexed collateralAsset,
         address indexed liquidationAsset,
-        address indexed user,
+        address indexed borrower,
         uint256 liquidationAmount,
         uint256 liquidatedCollateralAmount,
         address liquidator,
         bool receivePToken
     );
-    event ERC721LiquidationCall(
+    event LiquidateERC721(
         address indexed collateralAsset,
         address indexed liquidationAsset,
-        address indexed user,
+        address indexed borrower,
         uint256 liquidationAmount,
         uint256 liquidatedCollateralTokenId,
         address liquidator,
@@ -70,52 +96,75 @@ library LiquidationLogic {
         uint256 indexed collateralTokenId
     );
 
-    struct LiquidationCallLocalVars {
-        address liquidator;
-        //userCollateralBalance from collateralReserve
-        uint256 userCollateralBalance;
-        //userGlobalCollateralBalance from all reserves
-        uint256 userGlobalCollateralBalance;
-        //userTotalDebt from liquadationReserve
-        uint256 userTotalDebt;
+    struct ExecuteLiquidateLocalVars {
+        //userCollateral from collateralReserve
+        uint256 userCollateral;
+        //userGlobalCollateral from all reserves
+        uint256 userGlobalCollateral;
+        //userDebt from liquadationReserve
+        uint256 userDebt;
         //userGlobalDebt from all reserves
         uint256 userGlobalDebt;
-        //actualDebt allowed to liquidate
-        uint256 actualDebtToLiquidate;
         //actualLiquidationAmount to repay based on collateral
         uint256 actualLiquidationAmount;
         //actualCollateral allowed to liquidate
         uint256 actualCollateralToLiquidate;
         //liquidationBonusRate from reserve config
         uint256 liquidationBonus;
+        //user health factor
         uint256 healthFactor;
-        uint256 liquidationProtocolFeeAmount;
-        address collateralPriceSource;
-        address debtPriceSource;
+        //liquidation protocol fee to be sent to treasury
+        uint256 liquidationProtocolFee;
+        //liquidation funds payer
+        address payer;
+        //collateral P|N Token
         address collateralXToken;
-        bool isLiquidationAssetBorrowed;
-        DataTypes.ReserveCache liquidationAssetReserveCache;
-        DataTypes.AssetType assetType;
+        //auction strategy
+        address auctionStrategyAddress;
+        //liquidation asset reserve id
+        uint16 liquidationAssetReserveId;
+        //whether auction is enabled
         bool auctionEnabled;
+        //liquidation reserve cache
+        DataTypes.ReserveCache liquidationAssetReserveCache;
+    }
+
+    struct LiquidateParametersLocalVars {
+        uint256 userCollateral;
+        uint256 collateralPrice;
+        uint256 liquidationAssetPrice;
+        uint256 liquidationAssetDecimals;
+        uint256 collateralDecimals;
+        uint256 collateralAssetUnit;
+        uint256 liquidationAssetUnit;
+        uint256 actualCollateralToLiquidate;
+        uint256 actualLiquidationAmount;
+        uint256 actualLiquidationBonus;
+        uint256 liquidationProtocolFeePercentage;
+        uint256 liquidationProtocolFee;
+        // Auction related
+        uint256 auctionMultiplier;
+        uint256 auctionStartTime;
     }
 
     /**
      * @notice Function to liquidate a position if its Health Factor drops below 1. The caller (liquidator)
      * covers `liquidationAmount` amount of debt of the user getting liquidated, and receives
      * a proportional amount of the `collateralAsset` plus a bonus to cover market risk
-     * @dev Emits the `LiquidationCall()` event
+     * @dev Emits the `LiquidateERC20()` event
      * @param reservesData The state of all the reserves
      * @param reservesList The addresses of all the active reserves
      * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
      * @param params The additional parameters needed to execute the liquidation function
+     * @return actualLiquidationAmount The actual debt that is getting liquidated.
      **/
-    function executeLiquidationCall(
+    function executeLiquidateERC20(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
-        DataTypes.ExecuteLiquidationCallParams memory params
-    ) external {
-        LiquidationCallLocalVars memory vars;
+        DataTypes.ExecuteLiquidateParams memory params
+    ) external returns (uint256) {
+        ExecuteLiquidateLocalVars memory vars;
 
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
@@ -124,7 +173,7 @@ library LiquidationLogic {
             params.liquidationAsset
         ];
         DataTypes.UserConfigurationMap storage userConfig = usersConfig[
-            params.user
+            params.borrower
         ];
         vars.liquidationAssetReserveCache = liquidationAssetReserve.cache();
         liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
@@ -136,86 +185,73 @@ library LiquidationLogic {
                 DataTypes.CalculateUserAccountDataParams({
                     userConfig: userConfig,
                     reservesCount: params.reservesCount,
-                    user: params.user,
+                    user: params.borrower,
                     oracle: params.priceOracle
                 })
             );
 
-        (vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
-            vars.liquidationAssetReserveCache,
-            params
+        (vars.userDebt, vars.actualLiquidationAmount) = _calculateDebt(
+            params,
+            vars
         );
 
-        ValidationLogic.validateLiquidationCall(
+        (vars.collateralXToken, vars.liquidationBonus) = _getConfigurationData(
+            collateralReserve
+        );
+
+        (
+            vars.userCollateral,
+            vars.actualCollateralToLiquidate,
+            vars.actualLiquidationAmount,
+            vars.liquidationProtocolFee
+        ) = _calculateERC20LiquidationParameters(
+            collateralReserve,
+            params,
+            vars
+        );
+
+        ValidationLogic.validateLiquidateERC20(
             userConfig,
             collateralReserve,
-            DataTypes.ValidateLiquidationCallParams({
+            DataTypes.ValidateLiquidateERC20Params({
                 liquidationAssetReserveCache: vars.liquidationAssetReserveCache,
-                totalDebt: vars.userTotalDebt,
+                weth: params.weth,
+                liquidationAmount: params.liquidationAmount,
+                actualLiquidationAmount: vars.actualLiquidationAmount,
+                liquidationAsset: params.liquidationAsset,
+                totalDebt: vars.userDebt,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel
             })
         );
 
-        (
-            vars.collateralXToken,
-            vars.collateralPriceSource,
-            vars.debtPriceSource,
-            vars.liquidationBonus
-        ) = _getConfigurationData(collateralReserve, params);
-
-        vars.userCollateralBalance = IPToken(vars.collateralXToken).balanceOf(
-            params.user
-        );
-
-        (
-            vars.actualCollateralToLiquidate,
-            vars.actualDebtToLiquidate,
-            vars.liquidationProtocolFeeAmount
-        ) = _calculateERC20LiquidationParameters(
-            collateralReserve,
-            vars.liquidationAssetReserveCache,
-            vars.collateralPriceSource,
-            vars.debtPriceSource,
-            vars.actualDebtToLiquidate,
-            vars.userCollateralBalance,
-            vars.liquidationBonus,
-            IPriceOracleGetter(params.priceOracle)
-        );
-
-        if (vars.userTotalDebt == vars.actualDebtToLiquidate) {
+        if (vars.userDebt == vars.actualLiquidationAmount) {
             userConfig.setBorrowing(liquidationAssetReserve.id, false);
-        }
-
-        vars.liquidator = msg.sender;
-
-        // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFeeAmount != 0) {
-            IPToken(vars.collateralXToken).transferOnLiquidation(
-                params.user,
-                IPToken(vars.collateralXToken).RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFeeAmount
-            );
         }
 
         // If the collateral being liquidated is equal to the user balance,
         // we set the currency as not being used as collateral anymore
-        if (vars.actualCollateralToLiquidate == vars.userCollateralBalance) {
+        if (
+            vars.actualCollateralToLiquidate + vars.liquidationProtocolFee ==
+            vars.userCollateral
+        ) {
             userConfig.setUsingAsCollateral(collateralReserve.id, false);
             emit ReserveUsedAsCollateralDisabled(
                 params.collateralAsset,
-                params.user
+                params.borrower
             );
         }
 
-        _burnDebtTokens(params, vars);
+        // Transfer fee to treasury if it is non-zero
+        if (vars.liquidationProtocolFee != 0) {
+            IPToken(vars.collateralXToken).transferOnLiquidation(
+                params.borrower,
+                IPToken(vars.collateralXToken).RESERVE_TREASURY_ADDRESS(),
+                vars.liquidationProtocolFee
+            );
+        }
 
-        liquidationAssetReserve.updateInterestRates(
-            vars.liquidationAssetReserveCache,
-            params.liquidationAsset,
-            vars.actualDebtToLiquidate,
-            0
-        );
+        _burnDebtTokens(liquidationAssetReserve, params, vars);
 
         if (params.receiveXToken) {
             _liquidatePTokens(usersConfig, collateralReserve, params, vars);
@@ -223,54 +259,57 @@ library LiquidationLogic {
             _burnCollateralPTokens(collateralReserve, params, vars);
         }
 
-        emit LiquidationCall(
+        emit LiquidateERC20(
             params.collateralAsset,
             params.liquidationAsset,
-            params.user,
-            vars.actualDebtToLiquidate,
+            params.borrower,
+            vars.actualLiquidationAmount,
             vars.actualCollateralToLiquidate,
-            vars.liquidator,
+            params.liquidator,
             params.receiveXToken
         );
+
+        return vars.actualLiquidationAmount;
     }
 
     /**
      * @notice Function to liquidate an ERC721 of a position if its Health Factor drops below 1. The caller (liquidator)
      * covers `liquidationAmount` amount of debt of the user getting liquidated, and receives
      * a proportional tokenId of the `collateralAsset` minus a bonus to cover market risk
-     * @dev Emits the `ERC721LiquidationCall()` event
+     * @dev Emits the `LiquidateERC721()` event
      * @param reservesData The state of all the reserves
      * @param reservesList The addresses of all the active reserves
      * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
      * @param params The additional parameters needed to execute the liquidation function
+     * @return actualLiquidationAmount The actual liquidation amount.
      **/
-    function executeERC721LiquidationCall(
+    function executeLiquidateERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
-        DataTypes.ExecuteLiquidationCallParams memory params
-    ) external {
-        LiquidationCallLocalVars memory vars;
+        DataTypes.ExecuteLiquidateParams memory params
+    ) external returns (uint256) {
+        ExecuteLiquidateLocalVars memory vars;
 
         DataTypes.ReserveData storage collateralReserve = reservesData[
             params.collateralAsset
         ];
-
         DataTypes.ReserveData storage liquidationAssetReserve = reservesData[
             params.liquidationAsset
         ];
         DataTypes.UserConfigurationMap storage userConfig = usersConfig[
-            params.user
+            params.borrower
         ];
-        uint16 liquidationAssetReserveId = liquidationAssetReserve.id;
+
+        vars.liquidationAssetReserveId = liquidationAssetReserve.id;
         vars.liquidationAssetReserveCache = liquidationAssetReserve.cache();
+        // liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
 
-        vars.auctionEnabled =
-            collateralReserve.auctionStrategyAddress != address(0);
+        vars.auctionStrategyAddress = collateralReserve.auctionStrategyAddress;
+        vars.auctionEnabled = vars.auctionStrategyAddress != address(0);
 
-        liquidationAssetReserve.updateState(vars.liquidationAssetReserveCache);
         (
-            vars.userGlobalCollateralBalance,
+            vars.userGlobalCollateral,
             ,
             vars.userGlobalDebt, //in base currency
             ,
@@ -286,69 +325,43 @@ library LiquidationLogic {
             DataTypes.CalculateUserAccountDataParams({
                 userConfig: userConfig,
                 reservesCount: params.reservesCount,
-                user: params.user,
+                user: params.borrower,
                 oracle: params.priceOracle
             })
         );
 
-        vars.isLiquidationAssetBorrowed = userConfig.isBorrowing(
-            liquidationAssetReserveId
+        (vars.collateralXToken, vars.liquidationBonus) = _getConfigurationData(
+            collateralReserve
         );
-
-        if (vars.isLiquidationAssetBorrowed) {
-            (vars.userTotalDebt, vars.actualDebtToLiquidate) = _calculateDebt(
-                vars.liquidationAssetReserveCache,
-                params
-            );
-        }
-
-        (
-            vars.collateralXToken,
-            vars.collateralPriceSource,
-            vars.debtPriceSource,
-            vars.liquidationBonus
-        ) = _getConfigurationData(collateralReserve, params);
-
-        if (!vars.isLiquidationAssetBorrowed || vars.auctionEnabled) {
+        if (vars.auctionEnabled) {
             vars.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR;
         }
 
-        vars.userCollateralBalance = ICollaterizableERC721(
-            vars.collateralXToken
-        ).collaterizedBalanceOf(params.user);
-
-        // vars.userGlobalDebt is set twice to get amount here
         (
+            vars.userCollateral,
             vars.actualLiquidationAmount,
-            vars.liquidationProtocolFeeAmount,
-            vars.userGlobalDebt,
-
+            vars.liquidationProtocolFee,
+            vars.userGlobalDebt
         ) = _calculateERC721LiquidationParameters(
             collateralReserve,
-            vars.liquidationAssetReserveCache,
-            vars.collateralPriceSource,
-            vars.debtPriceSource,
-            vars.userGlobalDebt,
-            vars.actualDebtToLiquidate,
-            vars.liquidationBonus,
-            params.collateralTokenId,
-            vars.auctionEnabled,
-            IPriceOracleGetter(params.priceOracle)
+            params,
+            vars
         );
 
-        vars.liquidator = msg.sender;
-        ValidationLogic.validateERC721LiquidationCall(
+        ValidationLogic.validateLiquidateERC721(
+            reservesData,
             userConfig,
             collateralReserve,
-            DataTypes.ValidateERC721LiquidationCallParams({
+            DataTypes.ValidateLiquidateERC721Params({
                 liquidationAssetReserveCache: vars.liquidationAssetReserveCache,
-                liquidator: vars.liquidator,
-                borrower: params.user,
+                liquidator: params.liquidator,
+                borrower: params.borrower,
                 globalDebt: vars.userGlobalDebt,
                 actualLiquidationAmount: vars.actualLiquidationAmount,
-                liquidationAmount: params.liquidationAmount,
+                maxLiquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
+                collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
                 xTokenAddress: vars.collateralXToken,
                 auctionEnabled: vars.auctionEnabled,
@@ -357,113 +370,59 @@ library LiquidationLogic {
         );
 
         if (vars.auctionEnabled) {
-            IAuctionableERC721(collateralReserve.xTokenAddress).endAuction(
+            IAuctionableERC721(vars.collateralXToken).endAuction(
                 params.collateralTokenId
             );
             emit AuctionEnded(
-                params.user,
+                params.borrower,
                 params.collateralAsset,
                 params.collateralTokenId
             );
         }
 
-        uint256 debtCanBeCovered = vars.actualLiquidationAmount -
-            vars.liquidationProtocolFeeAmount;
-        // Debt to be covered for the nft = discounted price for NFT, not including protocol fees
-        // actualLiquidationAmount includes the fees by default so you need to subtract them
-
-        if (debtCanBeCovered > vars.actualDebtToLiquidate) {
-            // the actualLiquidationAmount will never be greater than the amount the liquidator is passing in
-            // require(params.liquidationAmount >= params.actualLiquidationAmount) - line 669 of ValidationLogic.sol
-            // there will always be excess if actualLiquidationAmount > amount needed to liquidate
-            // vars.actualDebtToLiquidate = The actual debt that is getting liquidated.
-            // If liquidation amount passed in by the liquidator is greater then the total user debt,
-            // then use the user total debt as the actual debt getting liquidated.
-            // If the user total debt is greater than the liquidation amount getting passed in by the liquidator,
-            // then use the liquidation amount the user is passing in.
-            if (vars.userGlobalDebt > vars.actualDebtToLiquidate) {
-                // userGlobalDebt = debt across all positions (ie. if there are multiple positions)
-                // if the global debt > the actual debt that is getting liquidated then the excess amount goes to pay protocol
-                SupplyLogic.executeSupply(
-                    reservesData,
-                    userConfig,
-                    DataTypes.ExecuteSupplyParams({
-                        asset: params.liquidationAsset,
-                        amount: debtCanBeCovered - vars.actualDebtToLiquidate,
-                        onBehalfOf: params.user,
-                        referralCode: 0
-                    })
-                );
-            } else {
-                // if the actual debt that is getting liquidated > user global debt then pay back excess to user
-                IERC20(params.liquidationAsset).safeTransferFrom(
-                    vars.liquidator,
-                    params.user,
-                    debtCanBeCovered - vars.actualDebtToLiquidate
-                );
-            }
-        } else {
-            // if the actual debt that is getting liquidated > discounted price then there is no excess amount
-            // update the actual debt that is getting liquidated to the discounted price of the nft
-            vars.actualDebtToLiquidate = debtCanBeCovered;
-        }
-
-        if (
-            vars.isLiquidationAssetBorrowed &&
-            vars.userTotalDebt == vars.actualDebtToLiquidate
-        ) {
-            userConfig.setBorrowing(liquidationAssetReserve.id, false);
-        }
-
-        // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFeeAmount != 0) {
-            IERC20(params.liquidationAsset).safeTransferFrom(
-                vars.liquidator,
-                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
-                    .RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFeeAmount
-            );
-        }
+        _supplyNewCollateral(reservesData, userConfig, params, vars);
 
         // If the collateral being liquidated is equal to the user balance,
         // we set the currency as not being used as collateral anymore
-        if (vars.userCollateralBalance == 1) {
+        if (vars.userCollateral == 1) {
             userConfig.setUsingAsCollateral(collateralReserve.id, false);
             emit ReserveUsedAsCollateralDisabled(
                 params.collateralAsset,
-                params.user
+                params.borrower
             );
         }
 
-        if (vars.actualDebtToLiquidate != 0) {
-            _burnDebtTokens(params, vars);
-            liquidationAssetReserve.updateInterestRates(
-                vars.liquidationAssetReserveCache,
-                params.liquidationAsset,
-                vars.actualDebtToLiquidate,
-                0
+        // Transfer fee to treasury if it is non-zero
+        if (vars.liquidationProtocolFee != 0) {
+            IERC20(params.liquidationAsset).safeTransferFrom(
+                vars.payer,
+                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
+                    .RESERVE_TREASURY_ADDRESS(),
+                vars.liquidationProtocolFee
             );
         }
 
         if (params.receiveXToken) {
             INToken(vars.collateralXToken).transferOnLiquidation(
-                params.user,
-                vars.liquidator,
+                params.borrower,
+                params.liquidator,
                 params.collateralTokenId
             );
         } else {
             _burnCollateralNTokens(params, vars);
         }
 
-        emit ERC721LiquidationCall(
+        emit LiquidateERC721(
             params.collateralAsset,
             params.liquidationAsset,
-            params.user,
-            vars.actualDebtToLiquidate,
+            params.borrower,
+            vars.actualLiquidationAmount,
             params.collateralTokenId,
-            vars.liquidator,
+            params.liquidator,
             params.receiveXToken
         );
+
+        return vars.actualLiquidationAmount;
     }
 
     /**
@@ -471,12 +430,12 @@ library LiquidationLogic {
      * @dev   The function also updates the state and the interest rate of the collateral reserve.
      * @param collateralReserve The data of the collateral reserve
      * @param params The additional parameters needed to execute the liquidation function
-     * @param vars The executeLiquidationCall() function local vars
+     * @param vars The executeLiquidateERC20() function local vars
      */
     function _burnCollateralPTokens(
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ExecuteLiquidationCallParams memory params,
-        LiquidationCallLocalVars memory vars
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
     ) internal {
         DataTypes.ReserveCache memory collateralReserveCache = collateralReserve
             .cache();
@@ -490,8 +449,8 @@ library LiquidationLogic {
 
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         IPToken(vars.collateralXToken).burn(
-            params.user,
-            vars.liquidator,
+            params.borrower,
+            params.liquidator,
             vars.actualCollateralToLiquidate,
             collateralReserveCache.nextLiquidityIndex
         );
@@ -501,18 +460,18 @@ library LiquidationLogic {
      * @notice Burns the collateral xTokens and transfers the underlying to the liquidator.
      * @dev   The function also updates the state and the interest rate of the collateral reserve.
      * @param params The additional parameters needed to execute the liquidation function
-     * @param vars The executeLiquidationCall() function local vars
+     * @param vars The executeLiquidateERC20() function local vars
      */
     function _burnCollateralNTokens(
-        DataTypes.ExecuteLiquidationCallParams memory params,
-        LiquidationCallLocalVars memory vars
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
     ) internal {
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = params.collateralTokenId;
         INToken(vars.collateralXToken).burn(
-            params.user,
-            vars.liquidator,
+            params.borrower,
+            params.liquidator,
             tokenIds
         );
     }
@@ -524,32 +483,32 @@ library LiquidationLogic {
      * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
      * @param collateralReserve The data of the collateral reserve
      * @param params The additional parameters needed to execute the liquidation function
-     * @param vars The executeLiquidationCall() function local vars
+     * @param vars The executeLiquidateERC20() function local vars
      */
     function _liquidatePTokens(
         mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ExecuteLiquidationCallParams memory params,
-        LiquidationCallLocalVars memory vars
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
     ) internal {
         IPToken pToken = IPToken(vars.collateralXToken);
         uint256 liquidatorPreviousPTokenBalance = pToken.balanceOf(
-            vars.liquidator
+            params.liquidator
         );
         pToken.transferOnLiquidation(
-            params.user,
-            vars.liquidator,
+            params.borrower,
+            params.liquidator,
             vars.actualCollateralToLiquidate
         );
 
         if (liquidatorPreviousPTokenBalance == 0) {
             DataTypes.UserConfigurationMap
-                storage liquidatorConfig = usersConfig[vars.liquidator];
+                storage liquidatorConfig = usersConfig[params.liquidator];
 
             liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.collateralAsset,
-                vars.liquidator
+                params.liquidator
             );
         }
     }
@@ -557,113 +516,131 @@ library LiquidationLogic {
     /**
      * @notice Burns the debt tokens of the user up to the amount being repaid by the liquidator.
      * @dev The function alters the `liquidationAssetReserveCache` state in `vars` to update the debt related data.
+     * @param liquidationAssetReserve The data of the liquidation reserve
      * @param params The additional parameters needed to execute the liquidation function
-     * @param vars the executeLiquidationCall() function local vars
+     * @param vars the executeLiquidateERC20() function local vars
      */
     function _burnDebtTokens(
-        DataTypes.ExecuteLiquidationCallParams memory params,
-        LiquidationCallLocalVars memory vars
+        DataTypes.ReserveData storage liquidationAssetReserve,
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
     ) internal {
+        _depositETH(params, vars);
+
         // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
         IERC20(params.liquidationAsset).safeTransferFrom(
-            vars.liquidator,
+            vars.payer,
             vars.liquidationAssetReserveCache.xTokenAddress,
-            vars.actualDebtToLiquidate
+            vars.actualLiquidationAmount
         );
         // Handle payment
         IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
-            .handleRepayment(vars.liquidator, vars.actualDebtToLiquidate);
+            .handleRepayment(params.liquidator, vars.actualLiquidationAmount);
         // Burn borrower's debt token
         vars
             .liquidationAssetReserveCache
             .nextScaledVariableDebt = IVariableDebtToken(
             vars.liquidationAssetReserveCache.variableDebtTokenAddress
         ).burn(
-                params.user,
-                vars.actualDebtToLiquidate,
+                params.borrower,
+                vars.actualLiquidationAmount,
                 vars.liquidationAssetReserveCache.nextVariableBorrowIndex
             );
+        // Update borrow & supply rate
+        liquidationAssetReserve.updateInterestRates(
+            vars.liquidationAssetReserveCache,
+            params.liquidationAsset,
+            vars.actualLiquidationAmount,
+            0
+        );
+    }
+
+    /**
+     * @notice Supply new collateral for taking out of borrower's another collateral
+     * @param userConfig The user configuration that track the supplied/borrowed assets
+     * @param params The additional parameters needed to execute the liquidation function
+     * @param vars the executeLiquidateERC20() function local vars
+     */
+    function _supplyNewCollateral(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
+    ) internal {
+        _depositETH(params, vars);
+
+        SupplyLogic.executeSupply(
+            reservesData,
+            userConfig,
+            DataTypes.ExecuteSupplyParams({
+                asset: params.liquidationAsset,
+                amount: vars.actualLiquidationAmount -
+                    vars.liquidationProtocolFee,
+                onBehalfOf: params.borrower,
+                payer: vars.payer,
+                referralCode: 0
+            })
+        );
+
+        if (!userConfig.isUsingAsCollateral(vars.liquidationAssetReserveId)) {
+            userConfig.setUsingAsCollateral(
+                vars.liquidationAssetReserveId,
+                true
+            );
+            emit ReserveUsedAsCollateralEnabled(
+                params.liquidationAsset,
+                params.borrower
+            );
+        }
     }
 
     /**
      * @notice Calculates the total debt of the user and the actual amount to liquidate depending on the health factor
      * and corresponding close factor. we are always using max closing factor in this version
-     * @param liquidationAssetReserveCache The reserve cache data object of the debt reserve
      * @param params The additional parameters needed to execute the liquidation function
+     * @param vars the executeLiquidateERC20() function local vars
      * @return The total debt of the user
      * @return The actual debt that is getting liquidated. If liquidation amount passed in by the liquidator is greater then the total user debt, then use the user total debt as the actual debt getting liquidated. If the user total debt is greater than the liquidation amount getting passed in by the liquidator, then use the liquidation amount the user is passing in.
      */
     function _calculateDebt(
-        DataTypes.ReserveCache memory liquidationAssetReserveCache,
-        DataTypes.ExecuteLiquidationCallParams memory params
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
     ) internal view returns (uint256, uint256) {
-        // userTotalDebt = debt of the borrowed position needed for liquidation
-        uint256 userTotalDebt = Helpers.getUserCurrentDebt(
-            params.user,
-            liquidationAssetReserveCache
+        // userDebt = debt of the borrowed position needed for liquidation
+        uint256 userDebt = Helpers.getUserCurrentDebt(
+            params.borrower,
+            vars.liquidationAssetReserveCache.variableDebtTokenAddress
         );
 
-        uint256 actualDebtToLiquidate = params.liquidationAmount > userTotalDebt
-            ? userTotalDebt
-            : params.liquidationAmount;
+        uint256 closeFactor = vars.healthFactor > CLOSE_FACTOR_HF_THRESHOLD
+            ? DEFAULT_LIQUIDATION_CLOSE_FACTOR
+            : MAX_LIQUIDATION_CLOSE_FACTOR;
 
-        return (userTotalDebt, actualDebtToLiquidate);
+        uint256 maxLiquidatableDebt = userDebt.percentMul(closeFactor);
+
+        uint256 actualLiquidationAmount = Math.min(
+            params.liquidationAmount,
+            maxLiquidatableDebt
+        );
+
+        return (userDebt, actualLiquidationAmount);
     }
 
     /**
      * @notice Returns the configuration data for the debt and the collateral reserves.
      * @param collateralReserve The data of the collateral reserve
-     * @param params The additional parameters needed to execute the liquidation function
      * @return The collateral xToken
-     * @return The address to use as price source for the collateral
-     * @return The address to use as price source for the debt
      * @return The liquidation bonus to apply to the collateral
      */
     function _getConfigurationData(
-        DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ExecuteLiquidationCallParams memory params
-    )
-        internal
-        view
-        returns (
-            address,
-            address,
-            address,
-            uint256
-        )
-    {
+        DataTypes.ReserveData storage collateralReserve
+    ) internal view returns (address, uint256) {
         address collateralXToken = collateralReserve.xTokenAddress;
         uint256 liquidationBonus = collateralReserve
             .configuration
             .getLiquidationBonus();
 
-        address collateralPriceSource = params.collateralAsset;
-        address debtPriceSource = params.liquidationAsset;
-
-        return (
-            collateralXToken,
-            collateralPriceSource,
-            debtPriceSource,
-            liquidationBonus
-        );
-    }
-
-    struct AvailableCollateralToLiquidateLocalVars {
-        uint256 collateralPrice;
-        uint256 liquidationAssetPrice;
-        uint256 debtToCoverInBaseCurrency;
-        uint256 liquidationAssetDecimals;
-        uint256 collateralDecimals;
-        uint256 collateralAssetUnit;
-        uint256 liquidationAssetUnit;
-        uint256 actualCollateralToLiquidate;
-        uint256 actualLiquidationAmount;
-        uint256 actualLiquidationBonus;
-        uint256 liquidationProtocolFeePercentage;
-        uint256 liquidationProtocolFee;
-        address collateralAsset;
-        uint256 multiplier;
-        uint256 startTime;
+        return (collateralXToken, liquidationBonus);
     }
 
     /**
@@ -672,41 +649,40 @@ library LiquidationLogic {
      * @dev This function needs to be called after all the checks to validate the liquidation have been performed,
      *   otherwise it might fail.
      * @param collateralReserve The data of the collateral reserve
-     * @param liquidationAssetReserveCache The cached data of the debt reserve
-     * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-     * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
-     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
-     * @param userCollateralBalance The collateral balance for the specific `collateralAsset` of the user being liquidated
-     * @param liquidationBonus The collateral bonus percentage to receive as result of the liquidation
+     * @param params The additional parameters needed to execute the liquidation function
+     * @param superVars the executeLiquidateERC20() function local vars
+     * @return The user collateral balance
      * @return The maximum amount that is possible to liquidate given all the liquidation constraints (user balance, close factor)
      * @return The amount to repay with the liquidation
      * @return The fee taken from the liquidation bonus amount to be paid to the protocol
      **/
     function _calculateERC20LiquidationParameters(
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ReserveCache memory liquidationAssetReserveCache,
-        address collateralAsset,
-        address liquidationAsset,
-        uint256 liquidationAmount,
-        uint256 userCollateralBalance,
-        uint256 liquidationBonus,
-        IPriceOracleGetter oracle
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory superVars
     )
         internal
         view
         returns (
             uint256,
             uint256,
+            uint256,
             uint256
         )
     {
-        AvailableCollateralToLiquidateLocalVars memory vars;
+        LiquidateParametersLocalVars memory vars;
 
-        vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
-        vars.liquidationAssetPrice = oracle.getAssetPrice(liquidationAsset);
+        vars.userCollateral = IPToken(superVars.collateralXToken).balanceOf(
+            params.borrower
+        );
+        vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
+            .getAssetPrice(params.collateralAsset);
+        vars.liquidationAssetPrice = IPriceOracleGetter(params.priceOracle)
+            .getAssetPrice(params.liquidationAsset);
 
         vars.collateralDecimals = collateralReserve.configuration.getDecimals();
-        vars.liquidationAssetDecimals = liquidationAssetReserveCache
+        vars.liquidationAssetDecimals = superVars
+            .liquidationAssetReserveCache
             .reserveConfiguration
             .getDecimals();
 
@@ -720,40 +696,44 @@ library LiquidationLogic {
             .getLiquidationProtocolFee();
 
         uint256 maxCollateralToLiquidate = ((vars.liquidationAssetPrice *
-            liquidationAmount *
+            superVars.actualLiquidationAmount *
             vars.collateralAssetUnit) /
             (vars.collateralPrice * vars.liquidationAssetUnit)).percentMul(
-                liquidationBonus
+                superVars.liquidationBonus
             );
 
-        if (maxCollateralToLiquidate > userCollateralBalance) {
-            vars.actualCollateralToLiquidate = userCollateralBalance;
+        if (maxCollateralToLiquidate > vars.userCollateral) {
+            vars.actualCollateralToLiquidate = vars.userCollateral;
             vars.actualLiquidationAmount = (
                 ((vars.collateralPrice *
                     vars.actualCollateralToLiquidate *
                     vars.liquidationAssetUnit) /
                     (vars.liquidationAssetPrice * vars.collateralAssetUnit))
-            ).percentDiv(liquidationBonus);
+            ).percentDiv(superVars.liquidationBonus);
         } else {
             vars.actualCollateralToLiquidate = maxCollateralToLiquidate;
-            vars.actualLiquidationAmount = liquidationAmount;
+            vars.actualLiquidationAmount = superVars.actualLiquidationAmount;
         }
 
         if (vars.liquidationProtocolFeePercentage != 0) {
             uint256 bonusCollateral = vars.actualCollateralToLiquidate -
-                vars.actualCollateralToLiquidate.percentDiv(liquidationBonus);
+                vars.actualCollateralToLiquidate.percentDiv(
+                    superVars.liquidationBonus
+                );
 
             vars.liquidationProtocolFee = bonusCollateral.percentMul(
                 vars.liquidationProtocolFeePercentage
             );
 
             return (
+                vars.userCollateral,
                 vars.actualCollateralToLiquidate - vars.liquidationProtocolFee,
                 vars.actualLiquidationAmount,
                 vars.liquidationProtocolFee
             );
         } else {
             return (
+                vars.userCollateral,
                 vars.actualCollateralToLiquidate,
                 vars.actualLiquidationAmount,
                 0
@@ -767,30 +747,17 @@ library LiquidationLogic {
      * @dev This function needs to be called after all the checks to validate the liquidation have been performed,
      *   otherwise it might fail.
      * @param collateralReserve The data of the collateral reserve
-     * @param liquidationAssetReserveCache The cached data of the debt reserve
-     * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-     * @param liquidationAsset The address of the underlying borrowed asset to be repaid with the liquidation
-     * @param userGlobalDebt The total debt the user has
-     * @param liquidationAmount The debt amount of borrowed `asset` the liquidator wants to cover
-     * @param liquidationBonus The collateral bonus percentage to receive as result of the liquidation
-     * @param auctionEnabled If the auction is enabled or not on the collateral asset
-     * @param collateralTokenId The collateral token id
+     * @param params The additional parameters needed to execute the liquidation function
+     * @param superVars the executeLiquidateERC20() function local vars
+     * @return The user collateral balance
      * @return The discounted nft price + the liquidationProtocolFee
      * @return The liquidationProtocolFee
      * @return The debt price you are paying in (for example, USD or ETH)
-     * @return The amount of debt the liquidator can cover using the base currency they are using for liquidation
      **/
     function _calculateERC721LiquidationParameters(
         DataTypes.ReserveData storage collateralReserve,
-        DataTypes.ReserveCache memory liquidationAssetReserveCache,
-        address collateralAsset,
-        address liquidationAsset,
-        uint256 userGlobalDebt,
-        uint256 liquidationAmount,
-        uint256 liquidationBonus,
-        uint256 collateralTokenId,
-        bool auctionEnabled,
-        IPriceOracleGetter oracle
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory superVars
     )
         internal
         view
@@ -801,37 +768,49 @@ library LiquidationLogic {
             uint256
         )
     {
-        AvailableCollateralToLiquidateLocalVars memory vars;
-        vars.collateralAsset = collateralAsset;
+        LiquidateParametersLocalVars memory vars;
+
+        vars.userCollateral = ICollateralizableERC721(
+            superVars.collateralXToken
+        ).collateralizedBalanceOf(params.borrower);
 
         // price of the asset that is used as collateral
-        if (INToken(collateralReserve.xTokenAddress).getAtomicPricingConfig()) {
-            vars.collateralPrice = oracle.getTokenPrice(
-                collateralAsset,
-                collateralTokenId
-            );
+        if (INToken(superVars.collateralXToken).getAtomicPricingConfig()) {
+            vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
+                .getTokenPrice(
+                    params.collateralAsset,
+                    params.collateralTokenId
+                );
         } else {
-            vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
+            vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
+                .getAssetPrice(params.collateralAsset);
         }
 
         if (
-            auctionEnabled &&
-            IAuctionableERC721(collateralReserve.xTokenAddress).isAuctioned(
-                collateralTokenId
+            superVars.auctionEnabled &&
+            IAuctionableERC721(superVars.collateralXToken).isAuctioned(
+                params.collateralTokenId
             )
         ) {
-            vars.startTime = IAuctionableERC721(collateralReserve.xTokenAddress)
-                .getAuctionData(collateralTokenId)
-                .startTime;
-            vars.multiplier = IReserveAuctionStrategy(
-                collateralReserve.auctionStrategyAddress
-            ).calculateAuctionPriceMultiplier(vars.startTime, block.timestamp);
-            vars.collateralPrice = vars.collateralPrice.mul(vars.multiplier);
+            vars.auctionStartTime = IAuctionableERC721(
+                superVars.collateralXToken
+            ).getAuctionData(params.collateralTokenId).startTime;
+            vars.auctionMultiplier = IReserveAuctionStrategy(
+                superVars.auctionStrategyAddress
+            ).calculateAuctionPriceMultiplier(
+                    vars.auctionStartTime,
+                    block.timestamp
+                );
+            vars.collateralPrice = vars.collateralPrice.mul(
+                vars.auctionMultiplier
+            );
         }
 
         // price of the asset the liquidator is liquidating with
-        vars.liquidationAssetPrice = oracle.getAssetPrice(liquidationAsset);
-        vars.liquidationAssetDecimals = liquidationAssetReserveCache
+        vars.liquidationAssetPrice = IPriceOracleGetter(params.priceOracle)
+            .getAssetPrice(params.liquidationAsset);
+        vars.liquidationAssetDecimals = superVars
+            .liquidationAssetReserveCache
             .reserveConfiguration
             .getDecimals();
 
@@ -843,27 +822,19 @@ library LiquidationLogic {
             .configuration
             .getLiquidationProtocolFee();
 
-        uint256 collateralToLiquate = (vars.collateralPrice *
+        uint256 collateralToLiquidate = (vars.collateralPrice *
             vars.liquidationAssetUnit) / vars.liquidationAssetPrice;
 
         // base currency to convert to liquidation asset unit.
-        uint256 globalDebtAmount = (userGlobalDebt *
+        uint256 globalDebtAmount = (superVars.userGlobalDebt *
             vars.liquidationAssetUnit) / vars.liquidationAssetPrice;
 
-        // (liquidation amount (passed in by liquidator, this has decimals) * liquidationAssetPrice) / number of decimals
-        // ie. liquidation amount (10k DAI * 10^18) * price of DAI ($1) / 10^18 = 10k
-        // vars.debtToCoverInBaseCurrency needs to be >= vars.actualLiquidationAmount otherwise the liquidator cannot buy the NFT
-        // in a scenario where there are multiple people trying to liquidate and the highest amount would pay back the more of the total global debt that user has to protocol
-        vars.debtToCoverInBaseCurrency =
-            (liquidationAmount * vars.liquidationAssetPrice) /
-            vars.liquidationAssetUnit;
-
-        vars.actualLiquidationAmount = collateralToLiquate.percentDiv(
-            liquidationBonus
+        vars.actualLiquidationAmount = collateralToLiquidate.percentDiv(
+            superVars.liquidationBonus
         );
 
         if (vars.liquidationProtocolFeePercentage != 0) {
-            uint256 bonusCollateral = collateralToLiquate -
+            uint256 bonusCollateral = collateralToLiquidate -
                 vars.actualLiquidationAmount;
 
             vars.liquidationProtocolFee = bonusCollateral.percentMul(
@@ -871,18 +842,41 @@ library LiquidationLogic {
             );
 
             return (
+                vars.userCollateral,
                 vars.actualLiquidationAmount + vars.liquidationProtocolFee,
                 vars.liquidationProtocolFee,
-                globalDebtAmount,
-                vars.debtToCoverInBaseCurrency
+                globalDebtAmount
             );
         } else {
             return (
+                vars.userCollateral,
                 vars.actualLiquidationAmount,
                 0,
-                globalDebtAmount,
-                vars.debtToCoverInBaseCurrency
+                globalDebtAmount
             );
+        }
+    }
+
+    /**
+     * @notice Convert msg.value to WETH and check if liquidationAsset is WETH (if msg.value > 0)
+     * @param params The additional parameters needed to execute the liquidation function
+     * @param vars the executeLiquidateERC20() function local vars
+     */
+    function _depositETH(
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
+    ) internal {
+        if (msg.value == 0) {
+            vars.payer = msg.sender;
+        } else {
+            vars.payer = address(this);
+            IWETH(params.weth).deposit{value: vars.actualLiquidationAmount}();
+            if (msg.value > vars.actualLiquidationAmount) {
+                Address.sendValue(
+                    payable(msg.sender),
+                    msg.value - vars.actualLiquidationAmount
+                );
+            }
         }
     }
 }

@@ -2,16 +2,17 @@ import path from "path";
 import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
-  HARDHAT_CHAINID,
   COVERAGE_CHAINID,
-  FORK_MAINNET_CHAINID,
-  RINKEBY_CHAINID,
   MAINNET_CHAINID,
   GOERLI_CHAINID,
 } from "./deploy/helpers/hardhat-constants";
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
-import {buildForkConfig} from "./deploy/helper-hardhat-config";
+import {
+  buildForkConfig,
+  CHAIN_ID_TO_FORK,
+  NETWORKS_RPC_URL,
+} from "./deploy/helper-hardhat-config";
 import fs from "fs";
 
 dotenv.config();
@@ -24,11 +25,12 @@ import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
+import {eEthereumNetwork} from "./deploy/helpers/types";
 
-const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
+const DEFAULT_BLOCK_GAS_LIMIT = 30000000;
 const HARDFORK = "london";
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
-const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4")
+const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4");
 
 require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
@@ -70,7 +72,7 @@ const hardhatConfig: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 10000,
+            runs: 8000,
           },
           evmVersion: "london",
         },
@@ -104,8 +106,8 @@ const hardhatConfig: HardhatUserConfig = {
     forkNetwork: `${MAINNET_CHAINID}`, //Network id of the network we want to fork
   },
   networks: {
-    evm: {
-      url: "http://localhost:29933",
+    parallel: {
+      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
       chainId: 1592,
       accounts: evmAccounts.map(
         ({secretKey}: {secretKey: string; balance: string}) => secretKey
@@ -114,12 +116,8 @@ const hardhatConfig: HardhatUserConfig = {
       gas: 4e6,
       allowUnlimitedContractSize: true,
     },
-    localhost: {
-      url: "http://localhost:8545",
-      chainId: HARDHAT_CHAINID,
-    },
     coverage: {
-      url: "http://localhost:8555",
+      url: NETWORKS_RPC_URL[eEthereumNetwork.coverage],
       chainId: COVERAGE_CHAINID,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
@@ -128,8 +126,8 @@ const hardhatConfig: HardhatUserConfig = {
       hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
-      gasPrice: 8000000000,
-      chainId: HARDHAT_CHAINID,
+      gasPrice: "auto",
+      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts: accounts.map(
@@ -141,26 +139,16 @@ const hardhatConfig: HardhatUserConfig = {
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
-    ganache: {
-      url: "http://localhost:8545",
-      chainId: FORK_MAINNET_CHAINID,
-      accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
-    },
-    rinkeby: {
-      chainId: RINKEBY_CHAINID,
-      url: process.env.RPC_URL || "",
-      accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
-      },
-    },
     goerli: {
       chainId: GOERLI_CHAINID,
-      url: process.env.RPC_URL || "",
+      url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
+      accounts: {
+        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
+      },
+    },
+    mainnet: {
+      chainId: MAINNET_CHAINID,
+      url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || "",
       },

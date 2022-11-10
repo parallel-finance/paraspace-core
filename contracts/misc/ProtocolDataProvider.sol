@@ -9,7 +9,7 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
-import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IScaledBalanceToken} from "../interfaces/IScaledBalanceToken.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
@@ -106,34 +106,30 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     function getReserveConfigurationData(address asset)
         external
         view
-        returns (
-            uint256 decimals,
-            uint256 ltv,
-            uint256 liquidationThreshold,
-            uint256 liquidationBonus,
-            uint256 reserveFactor,
-            bool usageAsCollateralEnabled,
-            bool borrowingEnabled,
-            bool isActive,
-            bool isFrozen
-        )
+        returns (DataTypes.ReserveConfigData memory reserveData)
     {
         DataTypes.ReserveConfigurationMap memory configuration = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getConfiguration(asset);
 
         (
-            ltv,
-            liquidationThreshold,
-            liquidationBonus,
-            decimals,
-            reserveFactor,
-
+            reserveData.ltv,
+            reserveData.liquidationThreshold,
+            reserveData.liquidationBonus,
+            reserveData.decimals,
+            reserveData.reserveFactor
         ) = configuration.getParams();
 
-        (isActive, isFrozen, borrowingEnabled, , ) = configuration.getFlags();
+        (
+            reserveData.isActive,
+            reserveData.isFrozen,
+            reserveData.borrowingEnabled,
+            reserveData.isPaused,
 
-        usageAsCollateralEnabled = liquidationThreshold != 0;
+        ) = configuration.getFlags();
+
+        reserveData.usageAsCollateralEnabled =
+            reserveData.liquidationThreshold != 0;
     }
 
     /// @inheritdoc IProtocolDataProvider
@@ -145,13 +141,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         (borrowCap, supplyCap) = IPool(ADDRESSES_PROVIDER.getPool())
             .getConfiguration(asset)
             .getCaps();
-    }
-
-    /// @inheritdoc IProtocolDataProvider
-    function getPaused(address asset) external view returns (bool isPaused) {
-        (, , , isPaused, ) = IPool(ADDRESSES_PROVIDER.getPool())
-            .getConfiguration(asset)
-            .getFlags();
     }
 
     /// @inheritdoc IProtocolDataProvider
@@ -243,7 +232,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         returns (
             uint256 currentXTokenBalance,
             uint256 scaledXTokenBalance,
-            uint256 collaterizedBalance,
+            uint256 collateralizedBalance,
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,
@@ -274,8 +263,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             scaledXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
                 user
             );
-            collaterizedBalance = ICollaterizableERC721(reserve.xTokenAddress)
-                .collaterizedBalanceOf(user);
+            collateralizedBalance = ICollateralizableERC721(
+                reserve.xTokenAddress
+            ).collateralizedBalanceOf(user);
         }
 
         currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress)
@@ -304,7 +294,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         view
         returns (
             address interestRateStrategyAddress,
-            address dynamicConfigsStrategyAddress,
             address auctionStrategyAddress
         )
     {
@@ -314,7 +303,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
 
         return (
             reserve.interestRateStrategyAddress,
-            reserve.dynamicConfigsStrategyAddress,
             reserve.auctionStrategyAddress
         );
     }

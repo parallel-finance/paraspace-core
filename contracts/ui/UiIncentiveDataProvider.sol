@@ -134,11 +134,12 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
                         .getIncentivesController()
                 )
             );
-            address[] memory vTokenRewardAddresses = vTokenIncentiveController
-                .getRewardsByAsset(baseData.variableDebtTokenAddress);
-            RewardInfo[] memory vRewardsInformation;
 
             if (address(vTokenIncentiveController) != address(0)) {
+                address[]
+                    memory vTokenRewardAddresses = vTokenIncentiveController
+                        .getRewardsByAsset(baseData.variableDebtTokenAddress);
+                RewardInfo[] memory vRewardsInformation;
                 vRewardsInformation = new RewardInfo[](
                     vTokenRewardAddresses.length
                 );
@@ -179,13 +180,13 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
 
                     vRewardsInformation[j] = rewardInformation;
                 }
-            }
 
-            reserveIncentiveData.vIncentiveData = IncentiveData(
-                baseData.variableDebtTokenAddress,
-                address(vTokenIncentiveController),
-                vRewardsInformation
-            );
+                reserveIncentiveData.vIncentiveData = IncentiveData(
+                    baseData.variableDebtTokenAddress,
+                    address(vTokenIncentiveController),
+                    vRewardsInformation
+                );
+            }
         }
 
         return (reservesIncentiveData);

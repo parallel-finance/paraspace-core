@@ -9,7 +9,7 @@ import {IUiPoolDataProvider} from "./interfaces/IUiPoolDataProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
-import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
@@ -24,7 +24,6 @@ import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
-import {IDynamicConfigsStrategy} from "../interfaces/IDynamicConfigsStrategy.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -113,8 +112,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 .auctionStrategyAddress;
             reserveData.auctionEnabled =
                 reserveData.auctionStrategyAddress != address(0);
-            reserveData.dynamicConfigsStrategyAddress = baseData
-                .dynamicConfigsStrategyAddress;
 
             try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
                 uint256 price
@@ -149,12 +146,20 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         reserveData.underlyingAsset
                     ).symbol();
                     reserveData.symbol = bytes32ToString(symbol);
+                    bytes32 name = IERC20DetailedBytes(
+                        reserveData.underlyingAsset
+                    ).name();
+                    reserveData.name = bytes32ToString(name);
                 } else {
                     reserveData.symbol = IERC20Detailed(
                         reserveData.underlyingAsset
                     ).symbol();
+                    reserveData.name = IERC20Detailed(
+                        reserveData.underlyingAsset
+                    ).name();
                 }
 
+                reserveData.isAtomicPricing = false;
                 reserveData.availableLiquidity = IERC20Detailed(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
@@ -162,10 +167,14 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.symbol = IERC721Metadata(
                     reserveData.underlyingAsset
                 ).symbol();
+                reserveData.name = IERC721Metadata(reserveData.underlyingAsset)
+                    .name();
 
                 reserveData.availableLiquidity = IERC721(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
+                reserveData.isAtomicPricing = INToken(reserveData.xTokenAddress)
+                    .getAtomicPricingConfig();
             }
 
             (
@@ -173,8 +182,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.reserveLiquidationThreshold,
                 reserveData.reserveLiquidationBonus,
                 reserveData.decimals,
-                reserveData.reserveFactor,
-                reserveData.dynamicConfigsEnabled
+                reserveData.reserveFactor
             ) = reserveConfigurationMap.getParams();
             reserveData.usageAsCollateralEnabled =
                 reserveData.baseLTVasCollateral != 0;
@@ -274,7 +282,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
-                tokenData[i][j].useAsCollateral = ICollaterizableERC721(asset)
+                tokenData[i][j].useAsCollateral = ICollateralizableERC721(asset)
                     .isUsedAsCollateral(tokenIds[i][j]);
                 tokenData[i][j].isAuctioned = IAuctionableERC721(asset)
                     .isAuctioned(tokenIds[i][j]);
@@ -292,7 +300,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         UniswapV3LpTokenInfo memory lpTokenInfo;
 
         IUniswapV3OracleWrapper source;
-        IDynamicConfigsStrategy dynamicConfigsStrategy;
         //avoid stack too deep
         {
             IParaSpaceOracle oracle = IParaSpaceOracle(
@@ -305,17 +312,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             source = IUniswapV3OracleWrapper(sourceAddress);
 
             IPool pool = IPool(provider.getPool());
-            DataTypes.ReserveData memory reserveData = pool.getReserveData(
-                lpTokenAddress
-            );
-            address dynamicConfigsStrategyAddress = reserveData
-                .dynamicConfigsStrategyAddress;
-            if (dynamicConfigsStrategyAddress == address(0)) {
-                return lpTokenInfo;
-            }
-            dynamicConfigsStrategy = IDynamicConfigsStrategy(
-                dynamicConfigsStrategyAddress
-            );
+            (
+                lpTokenInfo.baseLTVasCollateral,
+                lpTokenInfo.reserveLiquidationThreshold
+            ) = pool.getAssetLtvAndLT(lpTokenAddress, tokenId);
         }
 
         //try to catch invalid tokenId
@@ -341,11 +341,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 lpTokenInfo.lpFeeToken0Amount,
                 lpTokenInfo.lpFeeToken1Amount
             ) = source.getLpFeeAmountFromPositionData(positionData);
-
-            (
-                lpTokenInfo.baseLTVasCollateral,
-                lpTokenInfo.reserveLiquidationThreshold
-            ) = dynamicConfigsStrategy.getConfigParams(tokenId);
         } catch {}
 
         return lpTokenInfo;
@@ -393,9 +388,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 userReservesData[i].scaledXTokenBalance = INToken(
                     baseData.xTokenAddress
                 ).balanceOf(user);
-                userReservesData[i].collaterizedBalance = ICollaterizableERC721(
+                userReservesData[i]
+                    .collateralizedBalance = ICollateralizableERC721(
                     baseData.xTokenAddress
-                ).collaterizedBalanceOf(user);
+                ).collateralizedBalanceOf(user);
             }
 
             if (userConfig.isBorrowing(i)) {

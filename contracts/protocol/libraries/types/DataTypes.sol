@@ -34,8 +34,6 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
-        // the address of the dynamic strategy contract
-        address dynamicConfigsStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -69,9 +67,6 @@ library DataTypes {
          * asset is borrowed by the user.
          */
         uint256 data;
-        // counter for atomic erc721 tokens.
-        // this is used to limit the total number of atomic erc721 the user can supply
-        uint24 userAtomicTokens;
         // auction validity time for closing invalid auctions in one tx.
         uint256 auctionValidityTime;
     }
@@ -103,14 +98,16 @@ library DataTypes {
         uint40 reserveLastUpdateTimestamp;
     }
 
-    struct ExecuteLiquidationCallParams {
+    struct ExecuteLiquidateParams {
         uint256 reservesCount;
         uint256 liquidationAmount;
         uint256 collateralTokenId;
         uint256 auctionRecoveryHealthFactor;
+        address weth;
         address collateralAsset;
         address liquidationAsset;
-        address user;
+        address borrower;
+        address liquidator;
         bool receiveXToken;
         address priceOracle;
         address priceOracleSentinel;
@@ -129,6 +126,7 @@ library DataTypes {
         address asset;
         uint256 amount;
         address onBehalfOf;
+        address payer;
         uint16 referralCode;
     }
 
@@ -136,7 +134,7 @@ library DataTypes {
         address asset;
         DataTypes.ERC721SupplyParams[] tokenData;
         address onBehalfOf;
-        address actualSpender;
+        address payer;
         uint16 referralCode;
     }
 
@@ -175,12 +173,36 @@ library DataTypes {
         address oracle;
     }
 
+    struct ExecuteDecreaseUniswapV3LiquidityParams {
+        address user;
+        address asset;
+        uint256 tokenId;
+        uint256 reservesCount;
+        uint128 liquidityDecrease;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        bool receiveEthAsWeth;
+        address oracle;
+    }
+
     struct FinalizeTransferParams {
         address asset;
         address from;
         address to;
         bool usedAsCollateral;
         uint256 amount;
+        uint256 balanceFromBefore;
+        uint256 balanceToBefore;
+        uint256 reservesCount;
+        address oracle;
+    }
+
+    struct FinalizeTransferERC721Params {
+        address asset;
+        address from;
+        address to;
+        bool usedAsCollateral;
+        uint256 tokenId;
         uint256 balanceFromBefore;
         uint256 balanceToBefore;
         uint256 reservesCount;
@@ -205,22 +227,27 @@ library DataTypes {
         address priceOracleSentinel;
     }
 
-    struct ValidateLiquidationCallParams {
+    struct ValidateLiquidateERC20Params {
         ReserveCache liquidationAssetReserveCache;
+        address liquidationAsset;
+        address weth;
         uint256 totalDebt;
         uint256 healthFactor;
+        uint256 liquidationAmount;
+        uint256 actualLiquidationAmount;
         address priceOracleSentinel;
     }
 
-    struct ValidateERC721LiquidationCallParams {
+    struct ValidateLiquidateERC721Params {
         ReserveCache liquidationAssetReserveCache;
         address liquidator;
         address borrower;
         uint256 globalDebt;
         uint256 healthFactor;
+        address collateralAsset;
         uint256 tokenId;
         uint256 actualLiquidationAmount;
-        uint256 liquidationAmount;
+        uint256 maxLiquidationAmount;
         uint256 auctionRecoveryHealthFactor;
         address priceOracleSentinel;
         address xTokenAddress;
@@ -332,9 +359,20 @@ library DataTypes {
         mapping(uint256 => address) _reservesList;
         // Maximum number of active reserves there have been in the protocol. It is the upper bound of the reserves list
         uint16 _reservesCount;
-        // Maximum allowed number of atomic tokens per user
-        uint24 _maxAtomicTokensAllowed;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
+    }
+
+    struct ReserveConfigData {
+        uint256 decimals;
+        uint256 ltv;
+        uint256 liquidationThreshold;
+        uint256 liquidationBonus;
+        uint256 reserveFactor;
+        bool usageAsCollateralEnabled;
+        bool borrowingEnabled;
+        bool isActive;
+        bool isFrozen;
+        bool isPaused;
     }
 }

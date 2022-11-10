@@ -70,30 +70,11 @@ interface IProtocolDataProvider {
      * @notice Returns the configuration data of the reserve
      * @dev Not returning borrow and supply caps for compatibility, nor pause flag
      * @param asset The address of the underlying asset of the reserve
-     * @return decimals The number of decimals of the reserve
-     * @return ltv The ltv of the reserve
-     * @return liquidationThreshold The liquidationThreshold of the reserve
-     * @return liquidationBonus The liquidationBonus of the reserve
-     * @return reserveFactor The reserveFactor of the reserve
-     * @return usageAsCollateralEnabled True if the usage as collateral is enabled, false otherwise
-     * @return borrowingEnabled True if borrowing is enabled, false otherwise
-     * @return isActive True if it is active, false otherwise
-     * @return isFrozen True if it is frozen, false otherwise
      **/
     function getReserveConfigurationData(address asset)
         external
         view
-        returns (
-            uint256 decimals,
-            uint256 ltv,
-            uint256 liquidationThreshold,
-            uint256 liquidationBonus,
-            uint256 reserveFactor,
-            bool usageAsCollateralEnabled,
-            bool borrowingEnabled,
-            bool isActive,
-            bool isFrozen
-        );
+        returns (DataTypes.ReserveConfigData memory reserveData);
 
     /**
      * @notice Returns the caps parameters of the reserve
@@ -105,13 +86,6 @@ interface IProtocolDataProvider {
         external
         view
         returns (uint256, uint256);
-
-    /**
-     * @notice Returns if the pool is paused
-     * @param asset The address of the underlying asset of the reserve
-     * @return isPaused True if the pool is paused, false otherwise
-     **/
-    function getPaused(address asset) external view returns (bool);
 
     /**
      * @notice Returns the siloed borrowing flag
@@ -136,7 +110,7 @@ interface IProtocolDataProvider {
      * @param user The address of the user
      * @return currentXTokenBalance The current XToken balance of the user
      * @return scaledXTokenBalance The scaled XToken balance of the user
-     * @return collaterizedBalance The collaterized balance of the user
+     * @return collateralizedBalance The collateralized balance of the user
      * @return currentVariableDebt The current variable debt of the user
      * @return scaledVariableDebt The scaled variable debt of the user
      * @return liquidityRate The liquidity rate of the reserve
@@ -149,7 +123,7 @@ interface IProtocolDataProvider {
         returns (
             uint256 currentXTokenBalance,
             uint256 scaledXTokenBalance,
-            uint256 collaterizedBalance,
+            uint256 collateralizedBalance,
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,
@@ -171,7 +145,6 @@ interface IProtocolDataProvider {
      * @notice Returns the address of the Interest Rate strategy
      * @param asset The address of the underlying asset of the reserve
      * @return interestRateStrategyAddress The address of the Interest Rate strategy
-     * @return dynamicConfigsStrategyAddress The address of the DynamicConfigs strategy
      * @return auctionStrategyAddress The address of the Auction strategy
      */
     function getStrategyAddresses(address asset)
@@ -179,7 +152,6 @@ interface IProtocolDataProvider {
         view
         returns (
             address interestRateStrategyAddress,
-            address dynamicConfigsStrategyAddress,
             address auctionStrategyAddress
         );
 }

@@ -1,16 +1,41 @@
 import {expect} from "chai";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../deploy/helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
-import {MOCK_TOKEN_MINT_VALUE} from "../deploy/market-config";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
 describe("Mock Token Faucet", () => {
   let testEnv: TestEnv;
+
+  let daiMintValue: string;
+  let usdcMintValue: string;
+  let usdtMintValue: string;
+  let apeMintValue: string;
+  let wBTCMintValue: string;
+  let stETHMintValue: string;
+  let baycMintValue: string;
+  let maycMintValue: string;
+  let doodleMintValue: string;
+  let cryptoPunkMintValue: string;
+  let tokenFaucetMintValue: {[key: string]: number} | undefined;
+
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
+    tokenFaucetMintValue = getParaSpaceConfig().Mocks!.TokenFaucetMintValue;
+
+    daiMintValue = tokenFaucetMintValue.DAI.toString();
+    usdcMintValue = tokenFaucetMintValue.USDC.toString();
+    usdtMintValue = tokenFaucetMintValue.USDT.toString();
+    apeMintValue = tokenFaucetMintValue.APE.toString();
+    wBTCMintValue = tokenFaucetMintValue.WBTC.toString();
+    stETHMintValue = tokenFaucetMintValue.stETH.toString();
+    baycMintValue = tokenFaucetMintValue.BAYC.toString();
+    maycMintValue = tokenFaucetMintValue.MAYC.toString();
+    doodleMintValue = tokenFaucetMintValue.DOODLE.toString();
+    cryptoPunkMintValue = tokenFaucetMintValue.CRYPTO_PUNK.toString();
   });
+
   it("User mint all mock Tokens", async () => {
     const {
       mockTokenFaucet,
@@ -20,7 +45,7 @@ describe("Mock Token Faucet", () => {
       ape,
       wBTC,
       stETH,
-      punk,
+      cryptoPunksMarket: punk,
       bayc,
       mayc,
       doodles,
@@ -34,78 +59,49 @@ describe("Mock Token Faucet", () => {
 
     const daiBalance = await dai.balanceOf(user1.address);
     expect(daiBalance).to.be.equal(
-      await convertToCurrencyDecimals(
-        dai.address,
-        MOCK_TOKEN_MINT_VALUE.DAI.toString()
-      )
+      await convertToCurrencyDecimals(dai.address, daiMintValue)
     );
 
     const usdcBalance = await usdc.balanceOf(user1.address);
     expect(usdcBalance).to.be.equal(
-      await convertToCurrencyDecimals(
-        usdc.address,
-        MOCK_TOKEN_MINT_VALUE.USDC.toString()
-      )
+      await convertToCurrencyDecimals(usdc.address, usdcMintValue)
     );
 
     const usdtBalance = await usdt.balanceOf(user1.address);
     expect(usdtBalance).to.be.equal(
-      await convertToCurrencyDecimals(
-        usdt.address,
-        MOCK_TOKEN_MINT_VALUE.USDT.toString()
-      )
+      await convertToCurrencyDecimals(usdt.address, usdtMintValue)
     );
 
     const apeBalance = await ape.balanceOf(user1.address);
     expect(apeBalance).to.be.equal(
-      await convertToCurrencyDecimals(
-        ape.address,
-        MOCK_TOKEN_MINT_VALUE.APE.toString()
-      )
+      await convertToCurrencyDecimals(ape.address, apeMintValue)
     );
 
     const wBTCBalance = await wBTC.balanceOf(user1.address);
     expect(wBTCBalance).to.be.equal(
-      await convertToCurrencyDecimals(
-        wBTC.address,
-        MOCK_TOKEN_MINT_VALUE.WBTC.toString()
-      )
+      await convertToCurrencyDecimals(wBTC.address, wBTCMintValue)
     );
 
     const stETHBalance = await stETH.balanceOf(user1.address);
     expect(stETHBalance).to.be.equal(
-      await convertToCurrencyDecimals(
-        stETH.address,
-        MOCK_TOKEN_MINT_VALUE.stETH.toString()
-      )
+      await convertToCurrencyDecimals(stETH.address, stETHMintValue)
     );
     const aWETHBalance = await aWETH.balanceOf(user1.address);
     expect(aWETHBalance).to.be.equal(
-      await convertToCurrencyDecimals(
-        aWETH.address,
-        MOCK_TOKEN_MINT_VALUE.stETH.toString()
-      )
+      await convertToCurrencyDecimals(aWETH.address, stETHMintValue)
     );
 
     const baycBalance = await bayc.balanceOf(user1.address);
-    expect(baycBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.BAYC.toString()
-    );
+    expect(baycBalance.toString()).to.be.equal(baycMintValue);
 
     const maycBalance = await mayc.balanceOf(user1.address);
-    expect(maycBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.MAYC.toString()
-    );
+    expect(maycBalance.toString()).to.be.equal(maycMintValue);
 
     const doodleBalance = await doodles.balanceOf(user1.address);
-    expect(doodleBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.DOODLE.toString()
-    );
+    expect(doodleBalance.toString()).to.be.equal(doodleMintValue);
 
     const punkBalance = await punk.balanceOf(user1.address);
-    expect(punkBalance.toString()).to.be.equal(
-      MOCK_TOKEN_MINT_VALUE.CRYPTO_PUNK.toString()
-    );
+    expect(punkBalance.toString()).to.be.equal(cryptoPunkMintValue);
   });
 
   it("update DAI config and mint", async () => {
@@ -175,7 +171,7 @@ describe("Mock Token Faucet", () => {
   it("update PUNK config and mint", async () => {
     const {
       mockTokenFaucet,
-      punk,
+      cryptoPunksMarket: punk,
       deployer,
       users: [user1],
     } = testEnv;

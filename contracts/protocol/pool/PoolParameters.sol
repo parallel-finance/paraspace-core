@@ -32,7 +32,6 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
  * @notice Main point of interaction with an ParaSpace protocol's market
  * - Users can:
  *   - mintToTreasury
- *   - setMaxAtomicTokensAllowed
  *   - ...
  * @dev To be covered by a proxy contract, owned by the PoolAddressesProvider of the specific market
  * @dev All admin functions are callable by the PoolConfigurator contract defined also in the
@@ -179,23 +178,6 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function setReserveDynamicConfigsStrategyAddress(
-        address asset,
-        address dynamicConfigsStrategyAddress
-    ) external virtual override onlyPoolConfigurator {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        require(
-            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
-            Errors.ASSET_NOT_LISTED
-        );
-        ps
-            ._reserves[asset]
-            .dynamicConfigsStrategyAddress = dynamicConfigsStrategyAddress;
-    }
-
-    /// @inheritdoc IPoolParameters
     function setConfiguration(
         address asset,
         DataTypes.ReserveConfigurationMap calldata configuration
@@ -218,56 +200,6 @@ contract PoolParameters is
         uint256 amountOrTokenId
     ) external virtual override onlyPoolAdmin {
         PoolLogic.executeRescueTokens(assetType, token, to, amountOrTokenId);
-    }
-
-    /// @inheritdoc IPoolParameters
-    function increaseUserTotalAtomicTokens(
-        address asset,
-        address user,
-        uint24 changeBy
-    ) external virtual override {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        require(
-            msg.sender == ps._reserves[asset].xTokenAddress,
-            Errors.CALLER_NOT_XTOKEN
-        );
-        uint24 newUserAtomicTokens = ps._usersConfig[user].userAtomicTokens +
-            changeBy;
-
-        require(newUserAtomicTokens <= ps._maxAtomicTokensAllowed);
-
-        ps._usersConfig[user].userAtomicTokens = newUserAtomicTokens;
-    }
-
-    /// @inheritdoc IPoolParameters
-    function decreaseUserTotalAtomicTokens(
-        address asset,
-        address user,
-        uint24 changeBy
-    ) external virtual override {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        require(
-            msg.sender == ps._reserves[asset].xTokenAddress,
-            Errors.CALLER_NOT_XTOKEN
-        );
-
-        ps._usersConfig[user].userAtomicTokens -= changeBy;
-    }
-
-    /// @inheritdoc IPoolParameters
-    function setMaxAtomicTokensAllowed(uint24 value)
-        external
-        virtual
-        override
-        onlyPoolConfigurator
-    {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        require(value != 0, Errors.INVALID_AMOUNT);
-
-        ps._maxAtomicTokensAllowed = value;
     }
 
     /// @inheritdoc IPoolParameters
@@ -314,6 +246,17 @@ contract PoolParameters is
                 ps,
                 ADDRESSES_PROVIDER.getPriceOracle()
             );
+    }
+
+    function getAssetLtvAndLT(address asset, uint256 tokenId)
+        external
+        view
+        virtual
+        override
+        returns (uint256 ltv, uint256 lt)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return PoolLogic.executeGetAssetLtvAndLT(ps, asset, tokenId);
     }
 
     /// @inheritdoc IPoolParameters

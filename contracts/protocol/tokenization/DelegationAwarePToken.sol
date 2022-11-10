@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IPool} from "../../interfaces/IPool.sol";
 import {IDelegationToken} from "../../interfaces/IDelegationToken.sol";
 import {PToken} from "./PToken.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title DelegationAwarePToken
@@ -33,5 +34,9 @@ contract DelegationAwarePToken is PToken {
     function delegateUnderlyingTo(address delegatee) external onlyPoolAdmin {
         IDelegationToken(_underlyingAsset).delegate(delegatee);
         emit DelegateUnderlyingTo(delegatee);
+    }
+
+    function getXTokenType() external pure override returns (XTokenType) {
+        return XTokenType.DelegationAwarePToken;
     }
 }

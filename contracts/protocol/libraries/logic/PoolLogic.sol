@@ -13,6 +13,7 @@ import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import {IXTokenType, XTokenType} from "../../../interfaces/IXTokenType.sol";
 
 /**
  * @title PoolLogic library
@@ -206,5 +207,31 @@ library PoolLogic {
             totalDebtBase,
             ltv
         );
+    }
+
+    function executeGetAssetLtvAndLT(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        uint256 tokenId
+    ) external view returns (uint256 ltv, uint256 lt) {
+        DataTypes.ReserveData storage assetReserve = ps._reserves[asset];
+        DataTypes.ReserveConfigurationMap memory assetConfig = assetReserve
+            .configuration;
+        (uint256 collectionLtv, uint256 collectionLT, , , ) = assetConfig
+            .getParams();
+        XTokenType tokenType = IXTokenType(assetReserve.xTokenAddress)
+            .getXTokenType();
+        if (tokenType == XTokenType.NTokenUniswapV3) {
+            return
+                GenericLogic.getLtvAndLTForUniswapV3(
+                    ps._reserves,
+                    asset,
+                    tokenId,
+                    collectionLtv,
+                    collectionLT
+                );
+        } else {
+            return (collectionLtv, collectionLT);
+        }
     }
 }

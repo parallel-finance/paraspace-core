@@ -129,7 +129,7 @@ contract MockTokenFaucet is Ownable {
         uint256 mintValue
     ) public {
         IMintERC721 mintToken = IMintERC721(token);
-        mintToken.mint(mintValue, to);
+        try mintToken.mint(mintValue, to) {} catch {}
     }
 
     function mintERC20s(address to) internal {

@@ -5,8 +5,9 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
+import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
@@ -15,7 +16,8 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
+import {XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
 
 /**
  * @title SupplyLogic library
@@ -99,7 +101,7 @@ library SupplyLogic {
         );
 
         IERC20(params.asset).safeTransferFrom(
-            msg.sender,
+            params.payer,
             reserveCache.xTokenAddress,
             params.amount
         );
@@ -137,11 +139,13 @@ library SupplyLogic {
         //currently don't need to update state for erc721
         //reserve.updateState(reserveCache);
 
-        bool isFirstCollateralized = INToken(nTokenAddress).mint(
-            params.onBehalfOf,
-            params.tokenData
-        );
-        if (isFirstCollateralized) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = INToken(nTokenAddress).mint(params.onBehalfOf, params.tokenData);
+        bool isFirstSupplyCollateral = (oldCollateralizedBalance == 0 &&
+            newCollateralizedBalance > 0);
+        if (isFirstSupplyCollateral) {
             userConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(
                 params.asset,
@@ -173,9 +177,22 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            for (uint256 index = 0; index < params.tokenData.length; index++) {
+                ValidationLogic.validateForUniswapV3(
+                    reservesData,
+                    params.asset,
+                    params.tokenData[index].tokenId,
+                    true,
+                    true,
+                    true
+                );
+            }
+        }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
-                params.actualSpender,
+                params.payer,
                 reserveCache.xTokenAddress,
                 params.tokenData[index].tokenId
             );
@@ -190,7 +207,7 @@ library SupplyLogic {
 
         emit SupplyERC721(
             params.asset,
-            params.actualSpender,
+            msg.sender,
             params.onBehalfOf,
             params.tokenData,
             params.referralCode,
@@ -234,68 +251,6 @@ library SupplyLogic {
             params.tokenData,
             params.referralCode,
             true
-        );
-    }
-
-    function executeSupplyUniswapV3(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        DataTypes.UserConfigurationMap storage userConfig,
-        DataTypes.ExecuteSupplyERC721Params memory params
-    ) external {
-        DataTypes.ReserveData storage reserve = reservesData[params.asset];
-        DataTypes.ReserveCache memory reserveCache = reserve.cache();
-
-        ValidationLogic.validateSupply(
-            reserveCache,
-            params.tokenData.length,
-            DataTypes.AssetType.ERC721
-        );
-
-        for (uint256 index = 0; index < params.tokenData.length; index++) {
-            (
-                ,
-                ,
-                address token0,
-                address token1,
-                ,
-                ,
-                ,
-                ,
-                ,
-                ,
-                ,
-
-            ) = INonfungiblePositionManager(params.asset).positions(
-                    params.tokenData[index].tokenId
-                );
-
-            require(
-                reservesData[token0].xTokenAddress != address(0) &&
-                    reservesData[token1].xTokenAddress != address(0),
-                Errors.ASSET_NOT_LISTED
-            );
-
-            IERC721(params.asset).safeTransferFrom(
-                params.actualSpender,
-                reserveCache.xTokenAddress,
-                params.tokenData[index].tokenId
-            );
-        }
-
-        executeSupplyERC721Base(
-            reserve.id,
-            reserveCache.xTokenAddress,
-            userConfig,
-            params
-        );
-
-        emit SupplyERC721(
-            params.asset,
-            params.actualSpender,
-            params.onBehalfOf,
-            params.tokenData,
-            params.referralCode,
-            false
         );
     }
 
@@ -353,7 +308,7 @@ library SupplyLogic {
 
         if (userConfig.isUsingAsCollateral(reserve.id)) {
             if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtv(
+                ValidationLogic.validateHFAndLtvERC20(
                     reservesData,
                     reservesList,
                     userConfig,
@@ -384,31 +339,43 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        reserve.updateState(reserveCache);
+        //currently don't need to update state for erc721
+        //reserve.updateState(reserveCache);
 
-        ValidationLogic.validateWithdrawERC721(reserveCache);
-        uint256 amountToWithdraw = params.tokenIds.length;
-
-        bool isLastUncollateralized = INToken(reserveCache.xTokenAddress).burn(
-            msg.sender,
-            params.to,
+        ValidationLogic.validateWithdrawERC721(
+            reservesData,
+            reserveCache,
+            params.asset,
             params.tokenIds
         );
+        uint256 amountToWithdraw = params.tokenIds.length;
 
-        if (userConfig.isUsingAsCollateral(reserve.id)) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        ) = INToken(reserveCache.xTokenAddress).burn(
+                msg.sender,
+                params.to,
+                params.tokenIds
+            );
+
+        bool isWithdrawCollateral = (newCollateralizedBalance <
+            oldCollateralizedBalance);
+        if (isWithdrawCollateral) {
             if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtv(
+                ValidationLogic.validateHFAndLtvERC721(
                     reservesData,
                     reservesList,
                     userConfig,
                     params.asset,
+                    params.tokenIds,
                     msg.sender,
                     params.reservesCount,
                     params.oracle
                 );
             }
 
-            if (isLastUncollateralized) {
+            if (newCollateralizedBalance == 0) {
                 userConfig.setUsingAsCollateral(reserve.id, false);
                 emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
             }
@@ -422,6 +389,61 @@ library SupplyLogic {
         );
 
         return amountToWithdraw;
+    }
+
+    function executeDecreaseUniswapV3Liquidity(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ExecuteDecreaseUniswapV3LiquidityParams memory params
+    ) external {
+        DataTypes.ReserveData storage reserve = reservesData[params.asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        //currently don't need to update state for erc721
+        //reserve.updateState(reserveCache);
+
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        require(
+            nToken.getXTokenType() == XTokenType.NTokenUniswapV3,
+            Errors.ONLY_UNIV3_ALLOWED
+        );
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = params.tokenId;
+        ValidationLogic.validateWithdrawERC721(
+            reservesData,
+            reserveCache,
+            params.asset,
+            tokenIds
+        );
+
+        INTokenUniswapV3(reserveCache.xTokenAddress).decreaseUniswapV3Liquidity(
+                params.user,
+                params.tokenId,
+                params.liquidityDecrease,
+                params.amount0Min,
+                params.amount1Min,
+                params.receiveEthAsWeth
+            );
+
+        bool isUsedAsCollateral = ICollateralizableERC721(
+            reserveCache.xTokenAddress
+        ).isUsedAsCollateral(params.tokenId);
+        if (isUsedAsCollateral) {
+            if (userConfig.isBorrowingAny()) {
+                ValidationLogic.validateHFAndLtvERC721(
+                    reservesData,
+                    reservesList,
+                    userConfig,
+                    params.asset,
+                    tokenIds,
+                    params.user,
+                    params.reservesCount,
+                    params.oracle
+                );
+            }
+        }
     }
 
     /**
@@ -443,7 +465,7 @@ library SupplyLogic {
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
 
-        ValidationLogic.validateTransfer(reserve);
+        ValidationLogic.validateTransferERC20(reserve);
 
         uint256 reserveId = reserve.id;
 
@@ -454,7 +476,7 @@ library SupplyLogic {
 
             if (fromConfig.isUsingAsCollateral(reserveId)) {
                 if (fromConfig.isBorrowingAny()) {
-                    ValidationLogic.validateHFAndLtv(
+                    ValidationLogic.validateHFAndLtvERC20(
                         reservesData,
                         reservesList,
                         usersConfig[params.from],
@@ -500,11 +522,16 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         mapping(address => DataTypes.UserConfigurationMap) storage usersConfig,
-        DataTypes.FinalizeTransferParams memory params
+        DataTypes.FinalizeTransferERC721Params memory params
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
 
-        ValidationLogic.validateTransfer(reserve);
+        ValidationLogic.validateTransferERC721(
+            reservesData,
+            reserve,
+            params.asset,
+            params.tokenId
+        );
 
         uint256 reserveId = reserve.id;
 
@@ -515,11 +542,14 @@ library SupplyLogic {
 
             if (params.usedAsCollateral) {
                 if (fromConfig.isBorrowingAny()) {
-                    ValidationLogic.validateHFAndLtv(
+                    uint256[] memory tokenIds = new uint256[](1);
+                    tokenIds[0] = params.tokenId;
+                    ValidationLogic.validateHFAndLtvERC721(
                         reservesData,
                         reservesList,
                         usersConfig[params.from],
                         params.asset,
+                        tokenIds,
                         params.from,
                         params.reservesCount,
                         params.oracle
@@ -580,7 +610,7 @@ library SupplyLogic {
             emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
         } else {
             userConfig.setUsingAsCollateral(reserve.id, false);
-            ValidationLogic.validateHFAndLtv(
+            ValidationLogic.validateHFAndLtvERC20(
                 reservesData,
                 reservesList,
                 userConfig,
@@ -614,15 +644,20 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
+        ValidationLogic.validateSetUseERC721AsCollateral(
+            reservesData,
+            reserveCache,
+            asset,
+            tokenIds
+        );
 
         (
-            uint256 oldCollaterizedBalance,
-            uint256 newCollaterizedBalance
-        ) = ICollaterizableERC721(reserveCache.xTokenAddress)
+            uint256 oldCollateralizedBalance,
+            uint256 newCollateralizedBalance
+        ) = ICollateralizableERC721(reserveCache.xTokenAddress)
                 .batchSetIsUsedAsCollateral(tokenIds, true, sender);
 
-        if (oldCollaterizedBalance == 0 && newCollaterizedBalance != 0) {
+        if (oldCollateralizedBalance == 0 && newCollateralizedBalance != 0) {
             userConfig.setUsingAsCollateral(reserve.id, true);
             emit ReserveUsedAsCollateralEnabled(asset, sender);
         }
@@ -655,27 +690,33 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-        ValidationLogic.validateSetUseERC721AsCollateral(reserveCache);
+        ValidationLogic.validateSetUseERC721AsCollateral(
+            reservesData,
+            reserveCache,
+            asset,
+            tokenIds
+        );
 
         (
-            uint256 oldCollaterizedBalance,
-            uint256 newCollaterizedBalance
-        ) = ICollaterizableERC721(reserveCache.xTokenAddress)
+            uint256 oldCollateralizedBalance,
+            uint256 newCollateralizedBalance
+        ) = ICollateralizableERC721(reserveCache.xTokenAddress)
                 .batchSetIsUsedAsCollateral(tokenIds, false, sender);
 
-        if (oldCollaterizedBalance == newCollaterizedBalance) {
+        if (oldCollateralizedBalance == newCollateralizedBalance) {
             return;
         }
 
-        if (newCollaterizedBalance == 0) {
+        if (newCollateralizedBalance == 0) {
             userConfig.setUsingAsCollateral(reserve.id, false);
             emit ReserveUsedAsCollateralDisabled(asset, sender);
         }
-        ValidationLogic.validateHFAndLtv(
+        ValidationLogic.validateHFAndLtvERC721(
             reservesData,
             reservesList,
             userConfig,
             asset,
+            tokenIds,
             sender,
             reservesCount,
             priceOracle

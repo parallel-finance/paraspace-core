@@ -24,10 +24,10 @@ interface IUiPoolDataProvider {
         bool usageAsCollateralEnabled;
         bool borrowingEnabled;
         bool auctionEnabled;
-        bool dynamicConfigsEnabled;
         bool isActive;
         bool isFrozen;
         bool isPaused;
+        bool isAtomicPricing;
         // base data
         uint128 liquidityIndex;
         uint128 variableBorrowIndex;
@@ -38,7 +38,6 @@ interface IUiPoolDataProvider {
         address variableDebtTokenAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
-        address dynamicConfigsStrategyAddress;
         uint256 availableLiquidity;
         uint256 totalScaledVariableDebt;
         uint256 priceInMarketReferenceCurrency;
@@ -58,7 +57,7 @@ interface IUiPoolDataProvider {
         address underlyingAsset;
         uint256 currentXTokenBalance;
         uint256 scaledXTokenBalance;
-        uint256 collaterizedBalance;
+        uint256 collateralizedBalance;
         bool usageAsCollateralEnabledOnUser;
         uint256 scaledVariableDebt;
     }

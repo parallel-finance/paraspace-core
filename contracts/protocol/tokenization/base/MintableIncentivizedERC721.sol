@@ -8,7 +8,7 @@ import {IERC165} from "../../../dependencies/openzeppelin/contracts/IERC165.sol"
 import {IERC721Metadata} from "../../../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {IERC721Receiver} from "../../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
-import {ICollaterizableERC721} from "../../../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
@@ -27,7 +27,7 @@ import {ReentrancyGuard} from "../../../dependencies/openzeppelin/contracts/Reen
  **/
 abstract contract MintableIncentivizedERC721 is
     ReentrancyGuard,
-    ICollaterizableERC721,
+    ICollateralizableERC721,
     IAuctionableERC721,
     Context,
     IERC721Metadata,
@@ -66,7 +66,7 @@ abstract contract MintableIncentivizedERC721 is
      */
     struct UserState {
         uint64 balance;
-        uint64 collaterizedBalance;
+        uint64 collateralizedBalance;
         uint128 additionalData;
     }
 
@@ -97,6 +97,8 @@ abstract contract MintableIncentivizedERC721 is
     bool public immutable ATOMIC_PRICING;
 
     address internal _underlyingAsset;
+
+    uint64 internal _balanceLimit;
 
     mapping(uint256 => bool) _isUsedAsCollateral;
 
@@ -161,6 +163,24 @@ abstract contract MintableIncentivizedERC721 is
         onlyPoolAdmin
     {
         _rewardController = controller;
+    }
+
+    /**
+     * @notice Sets new Balance Limit
+     * @param limit the new Balance Limit
+     **/
+    function setBalanceLimit(uint64 limit) external onlyPoolAdmin {
+        _balanceLimit = limit;
+    }
+
+    function checkBalanceLimit(uint64 balance) internal view {
+        if (ATOMIC_PRICING) {
+            uint64 balanceLimit = _balanceLimit;
+            require(
+                balanceLimit == 0 || balance <= balanceLimit,
+                Errors.NTOKEN_BALANCE_EXCEEDED
+            );
+        }
     }
 
     /**
@@ -385,12 +405,19 @@ abstract contract MintableIncentivizedERC721 is
     function _mintMultiple(
         address to,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    ) internal virtual returns (bool) {
+    )
+        internal
+        virtual
+        returns (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        )
+    {
         require(to != address(0), "ERC721: mint to the zero address");
         uint64 oldBalance = _userState[to].balance;
-        uint64 oldCollaterizedBalance = _userState[to].collaterizedBalance;
+        oldCollateralizedBalance = _userState[to].collateralizedBalance;
         uint256 oldTotalSupply = totalSupply();
-        uint64 collaterizedTokens = 0;
+        uint64 collateralizedTokens = 0;
 
         uint256 length = _allTokens.length;
 
@@ -409,24 +436,20 @@ abstract contract MintableIncentivizedERC721 is
                 !_isUsedAsCollateral[tokenId]
             ) {
                 _isUsedAsCollateral[tokenId] = true;
-                collaterizedTokens++;
+                collateralizedTokens++;
             }
 
             emit Transfer(address(0), to, tokenId);
         }
 
-        _userState[to].collaterizedBalance =
-            oldCollaterizedBalance +
-            collaterizedTokens;
+        newCollateralizedBalance =
+            oldCollateralizedBalance +
+            collateralizedTokens;
+        _userState[to].collateralizedBalance = newCollateralizedBalance;
 
-        _userState[to].balance = oldBalance + uint64(tokenData.length);
-        if (ATOMIC_PRICING) {
-            POOL.increaseUserTotalAtomicTokens(
-                _underlyingAsset,
-                to,
-                uint24(tokenData.length)
-            );
-        }
+        uint64 newBalance = oldBalance + uint64(tokenData.length);
+        checkBalanceLimit(newBalance);
+        _userState[to].balance = newBalance;
 
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
@@ -434,20 +457,23 @@ abstract contract MintableIncentivizedERC721 is
             rewardControllerLocal.handleAction(to, oldTotalSupply, oldBalance);
         }
 
-        return (oldCollaterizedBalance == 0 && collaterizedTokens != 0);
+        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     function _burnMultiple(address user, uint256[] calldata tokenIds)
         internal
         virtual
-        returns (bool allCollaterizedBurnt)
+        returns (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        )
     {
-        uint64 burntCollaterizedTokens = 0;
+        uint64 burntCollateralizedTokens = 0;
         uint64 balanceToBurn;
         uint256 oldTotalSupply = totalSupply();
         uint256 oldBalance = _userState[user].balance;
 
-        uint64 oldCollaterizedBalance = _userState[user].collaterizedBalance;
+        oldCollateralizedBalance = _userState[user].collateralizedBalance;
 
         uint256 length = _allTokens.length;
 
@@ -455,7 +481,7 @@ abstract contract MintableIncentivizedERC721 is
             uint256 tokenId = tokenIds[index];
             address owner = ownerOf(tokenId);
             require(owner == user, "not the owner of Ntoken");
-            require(!_isAuctioned(tokenId), "token in auction");
+            require(!_isAuctioned(tokenId), Errors.TOKEN_IN_AUCTION);
 
             _removeTokenFromAllTokensEnumeration(tokenId, length - index);
             _removeTokenFromOwnerEnumeration(user, tokenId, oldBalance - index);
@@ -468,7 +494,7 @@ abstract contract MintableIncentivizedERC721 is
 
             if (_isUsedAsCollateral[tokenId]) {
                 delete _isUsedAsCollateral[tokenId];
-                burntCollaterizedTokens++;
+                burntCollateralizedTokens++;
             }
             emit Transfer(owner, address(0), tokenId);
 
@@ -476,17 +502,11 @@ abstract contract MintableIncentivizedERC721 is
         }
 
         _userState[user].balance -= balanceToBurn;
-        _userState[user].collaterizedBalance =
-            oldCollaterizedBalance -
-            burntCollaterizedTokens;
+        newCollateralizedBalance =
+            oldCollateralizedBalance -
+            burntCollateralizedTokens;
+        _userState[user].collateralizedBalance = newCollateralizedBalance;
 
-        if (ATOMIC_PRICING) {
-            POOL.decreaseUserTotalAtomicTokens(
-                _underlyingAsset,
-                user,
-                uint24(tokenIds.length)
-            );
-        }
         // calculate incentives
         IRewardController rewardControllerLocal = _rewardController;
 
@@ -498,8 +518,7 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        return (oldCollaterizedBalance != 0 &&
-            oldCollaterizedBalance == burntCollaterizedTokens);
+        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     /**
@@ -523,7 +542,7 @@ abstract contract MintableIncentivizedERC721 is
             "ERC721: transfer from incorrect owner"
         );
         require(to != address(0), "ERC721: transfer to the zero address");
-        require(!_isAuctioned(tokenId), "token in auction");
+        require(!_isAuctioned(tokenId), Errors.TOKEN_IN_AUCTION);
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -533,12 +552,9 @@ abstract contract MintableIncentivizedERC721 is
         uint64 oldSenderBalance = _userState[from].balance;
         _userState[from].balance = oldSenderBalance - 1;
         uint64 oldRecipientBalance = _userState[to].balance;
-        _userState[to].balance = oldRecipientBalance + 1;
-
-        if (ATOMIC_PRICING) {
-            POOL.decreaseUserTotalAtomicTokens(_underlyingAsset, from, 1);
-            POOL.increaseUserTotalAtomicTokens(_underlyingAsset, to, 1);
-        }
+        uint64 newRecipientBalance = oldRecipientBalance + 1;
+        checkBalanceLimit(newRecipientBalance);
+        _userState[to].balance = newRecipientBalance;
 
         _owners[tokenId] = to;
 
@@ -591,7 +607,7 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev update collateral information on transfer
      */
-    function _transferCollaterizable(
+    function _transferCollateralizable(
         address from,
         address to,
         uint256 tokenId
@@ -599,25 +615,25 @@ abstract contract MintableIncentivizedERC721 is
         isUsedAsCollateral_ = _isUsedAsCollateral[tokenId];
 
         if (from != to && isUsedAsCollateral_) {
-            _userState[from].collaterizedBalance -= 1;
+            _userState[from].collateralizedBalance -= 1;
             delete _isUsedAsCollateral[tokenId];
         }
 
         MintableIncentivizedERC721._transfer(from, to, tokenId);
     }
 
-    /// @inheritdoc ICollaterizableERC721
-    function collaterizedBalanceOf(address account)
+    /// @inheritdoc ICollateralizableERC721
+    function collateralizedBalanceOf(address account)
         public
         view
         virtual
         override
         returns (uint256)
     {
-        return _userState[account].collaterizedBalance;
+        return _userState[account].collateralizedBalance;
     }
 
-    /// @inheritdoc ICollaterizableERC721
+    /// @inheritdoc ICollateralizableERC721
     function setIsUsedAsCollateral(
         uint256 tokenId,
         bool useAsCollateral,
@@ -626,7 +642,7 @@ abstract contract MintableIncentivizedERC721 is
         return _setIsUsedAsCollateral(tokenId, useAsCollateral, sender);
     }
 
-    /// @inheritdoc ICollaterizableERC721
+    /// @inheritdoc ICollateralizableERC721
     function batchSetIsUsedAsCollateral(
         uint256[] calldata tokenIds,
         bool useAsCollateral,
@@ -637,15 +653,18 @@ abstract contract MintableIncentivizedERC721 is
         override
         onlyPool
         nonReentrant
-        returns (uint256 oldCollaterizedBalance, uint256 newCollaterizedBalance)
+        returns (
+            uint256 oldCollateralizedBalance,
+            uint256 newCollateralizedBalance
+        )
     {
-        oldCollaterizedBalance = _userState[sender].collaterizedBalance;
+        oldCollateralizedBalance = _userState[sender].collateralizedBalance;
 
         for (uint256 index = 0; index < tokenIds.length; index++) {
             _setIsUsedAsCollateral(tokenIds[index], useAsCollateral, sender);
         }
 
-        newCollaterizedBalance = _userState[sender].collaterizedBalance;
+        newCollateralizedBalance = _userState[sender].collateralizedBalance;
     }
 
     function _setIsUsedAsCollateral(
@@ -659,20 +678,20 @@ abstract contract MintableIncentivizedERC721 is
         require(owner == sender, "not owner");
 
         if (!useAsCollateral) {
-            require(!_isAuctioned(tokenId), "token in auction");
+            require(!_isAuctioned(tokenId), Errors.TOKEN_IN_AUCTION);
         }
 
-        uint64 collaterizedBalance = _userState[owner].collaterizedBalance;
+        uint64 collateralizedBalance = _userState[owner].collateralizedBalance;
         _isUsedAsCollateral[tokenId] = useAsCollateral;
-        collaterizedBalance = useAsCollateral
-            ? collaterizedBalance + 1
-            : collaterizedBalance - 1;
-        _userState[owner].collaterizedBalance = collaterizedBalance;
+        collateralizedBalance = useAsCollateral
+            ? collateralizedBalance + 1
+            : collateralizedBalance - 1;
+        _userState[owner].collateralizedBalance = collateralizedBalance;
 
         return true;
     }
 
-    /// @inheritdoc ICollaterizableERC721
+    /// @inheritdoc ICollateralizableERC721
     function isUsedAsCollateral(uint256 tokenId)
         external
         view

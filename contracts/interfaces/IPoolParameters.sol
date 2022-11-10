@@ -104,47 +104,6 @@ interface IPoolParameters {
     ) external;
 
     /**
-     * @notice Updates the address of the dynamic configs strategy contract
-     * @dev Only callable by the PoolConfigurator contract
-     * @param asset The address of the underlying asset of the reserve
-     * @param dynamicConfigsStrategyAddress The address of the interest rate strategy contract
-     **/
-    function setReserveDynamicConfigsStrategyAddress(
-        address asset,
-        address dynamicConfigsStrategyAddress
-    ) external;
-
-    /**
-     * @notice increase user's total atomic tokens counter
-     * @param asset The address of the ntoken underlying asset
-     * @param user The address of the user
-     * @param changeBy The amount to increase by
-     */
-    function increaseUserTotalAtomicTokens(
-        address asset,
-        address user,
-        uint24 changeBy
-    ) external;
-
-    /**
-     * @notice decrease user's total atomic tokens counter
-     * @param asset The address of the ntoken underlying asset
-     * @param user The address of the user
-     * @param changeBy The amount to decrease by
-     */
-    function decreaseUserTotalAtomicTokens(
-        address asset,
-        address user,
-        uint24 changeBy
-    ) external;
-
-    /**
-     * @notice set the maximum allowed atomic tokens per user
-     * @param value The maximum amount
-     */
-    function setMaxAtomicTokensAllowed(uint24 value) external;
-
-    /**
      * @notice Set the auction recovery health factor
      * @param value The new auction health factor
      */
@@ -178,4 +137,16 @@ interface IPoolParameters {
             uint256 healthFactor,
             uint256 erc721HealthFactor
         );
+
+    /**
+     * @notice Returns Ltv and Liquidation Threshold for the asset
+     * @param asset The address of the asset
+     * @param tokenId The tokenId of the asset
+     * @return ltv The loan to value of the asset
+     * @return lt The liquidation threshold value of the asset
+     **/
+    function getAssetLtvAndLT(address asset, uint256 tokenId)
+        external
+        view
+        returns (uint256 ltv, uint256 lt);
 }
