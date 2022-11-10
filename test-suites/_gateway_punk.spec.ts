@@ -382,33 +382,33 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   });
 });
 
-const fixture = async () => {
-  const testEnv = await loadFixture(testEnvFixture);
-  const {
-    cryptoPunksMarket,
-    users: [user1],
-  } = testEnv;
-
-  await waitForTx(
-    await cryptoPunksMarket.connect(user1.signer)["getPunk(uint256)"](0)
-  );
-  await waitForTx(
-    await cryptoPunksMarket.connect(user1.signer).offerPunkForSale(0, 0)
-  );
-
-  await waitForTx(
-    await cryptoPunksMarket.connect(user1.signer)["getPunk(uint256)"](1)
-  );
-  await waitForTx(
-    await cryptoPunksMarket.connect(user1.signer).offerPunkForSale(1, 0)
-  );
-  expect(
-    await cryptoPunksMarket.connect(user1.signer).balanceOf(user1.address)
-  ).to.equal(2);
-  return testEnv;
-};
-
 describe("gateway Punk unit tests", () => {
+  const fixture = async () => {
+    const testEnv = await loadFixture(testEnvFixture);
+    const {
+      cryptoPunksMarket,
+      users: [user1],
+    } = testEnv;
+
+    await waitForTx(
+      await cryptoPunksMarket.connect(user1.signer)["getPunk(uint256)"](0)
+    );
+    await waitForTx(
+      await cryptoPunksMarket.connect(user1.signer).offerPunkForSale(0, 0)
+    );
+
+    await waitForTx(
+      await cryptoPunksMarket.connect(user1.signer)["getPunk(uint256)"](1)
+    );
+    await waitForTx(
+      await cryptoPunksMarket.connect(user1.signer).offerPunkForSale(1, 0)
+    );
+    expect(
+      await cryptoPunksMarket.connect(user1.signer).balanceOf(user1.address)
+    ).to.equal(2);
+    return testEnv;
+  };
+
   it("TC-punks-gateway-13 User Health factor remains the same over time if user has only a punk supply position", async () => {
     const {
       users: [user1],
