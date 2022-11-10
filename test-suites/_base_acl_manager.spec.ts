@@ -3,14 +3,14 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {constants, utils, Wallet} from "ethers";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {ProtocolErrors} from "../deploy/helpers/types";
-import {ACLManager, ACLManager__factory} from "../types";
+import {ACLManager__factory} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
 const fixture = async () => {
-  let testEnv = await loadFixture(testEnvFixture);
+  const testEnv = await loadFixture(testEnvFixture);
   const {deployer, addressesProvider} = testEnv;
-  let aclManager = await new ACLManager__factory(deployer.signer).deploy(
+  const aclManager = await new ACLManager__factory(deployer.signer).deploy(
     addressesProvider.address
   );
   testEnv.aclManager = aclManager;
@@ -457,7 +457,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-19 only DEFAULT_ROLE_ADMIN can setRoleAdmin", async () => {
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       aclManager,
@@ -739,7 +739,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-33 none Flash borrower admin call removeFlashBorrower - revert expected", async () => {
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       deployer,
@@ -779,7 +779,7 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-34 only DEFAULT_ROLE_ADMIN can addPoolAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       aclManager,
@@ -816,7 +816,7 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-35 only DEFAULT_ROLE_ADMIN can removePoolAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       deployer,
@@ -854,7 +854,7 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-36 only DEFAULT_ROLE_ADMIN can addEmergencyAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       aclManager,
@@ -891,7 +891,7 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-37 only DEFAULT_ROLE_ADMIN can removeEmergencyAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       deployer,
@@ -929,7 +929,7 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-38 only DEFAULT_ROLE_ADMIN can addRiskAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       aclManager,
@@ -966,7 +966,7 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-39 only DEFAULT_ROLE_ADMIN can removeRiskAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       deployer,
@@ -1003,7 +1003,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-40 only DEFAULT_ROLE_ADMIN can addBridge", async () => {
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       deployer,
@@ -1040,7 +1040,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-41 only DEFAULT_ROLE_ADMIN can removeBridge", async () => {
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       aclManager,
@@ -1076,7 +1076,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-42 only DEFAULT_ROLE_ADMIN can addAssetListingAdmin", async () => {
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       deployer,
@@ -1119,7 +1119,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-43 only DEFAULT_ROLE_ADMIN can removeAssetListingAdmin", async () => {
-    let t = await loadFixture(fixture);
+    const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
       aclManager,
