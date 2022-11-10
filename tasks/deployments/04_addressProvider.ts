@@ -1,6 +1,5 @@
 import {task} from "hardhat/config";
-
-const verify = process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
+import {ETHERSCAN_VERIFICATION} from "../../deploy/helpers/hardhat-constants";
 
 task("deploy:address-provider", "Deploy addresses provider").setAction(
   async (_, DRE) => {
@@ -8,6 +7,6 @@ task("deploy:address-provider", "Deploy addresses provider").setAction(
     const {step_04} = await import(
       "../../deploy/tasks/deployments/full-deployment/steps/04_addressProvider"
     );
-    await step_04(verify);
+    await step_04(ETHERSCAN_VERIFICATION);
   }
 );
