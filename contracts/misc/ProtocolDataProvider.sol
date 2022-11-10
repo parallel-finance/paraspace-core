@@ -15,6 +15,7 @@ import {INToken} from "../interfaces/INToken.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IProtocolDataProvider} from "../interfaces/IProtocolDataProvider.sol";
+import "hardhat/console.sol";
 
 /**
  * @title ProtocolDataProvider
@@ -300,7 +301,6 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
-
         return (
             reserve.interestRateStrategyAddress,
             reserve.auctionStrategyAddress
