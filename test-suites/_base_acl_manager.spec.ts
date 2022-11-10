@@ -6,37 +6,27 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {ACLManager, ACLManager__factory} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
+
+const fixture = async () => {
+  let testEnv = await loadFixture(testEnvFixture);
+  const {deployer, addressesProvider} = testEnv;
+  let aclManager = await new ACLManager__factory(deployer.signer).deploy(
+    addressesProvider.address
+  );
+  testEnv.aclManager = aclManager;
+  return testEnv;
+};
+
+const FLASH_BORROW_ADMIN_ROLE = utils.keccak256(
+  utils.formatBytes32String("FLASH_BORROWER_ADMIN")
+);
 
 describe("Access Control List Manager", () => {
-  let aclManager: ACLManager;
-  let testEnv: TestEnv;
-
-  const FLASH_BORROW_ADMIN_ROLE = utils.keccak256(
-    utils.formatBytes32String("FLASH_BORROWER_ADMIN")
-  );
-
-  let mySnapshot;
-  before(async () => {
-    testEnv = await loadFixture(testEnvFixture);
-    const {deployer, addressesProvider} = testEnv;
-    aclManager = await new ACLManager__factory(deployer.signer).deploy(
-      addressesProvider.address
-    );
-  });
-  beforeEach(async () => {
-    // before every case running, save the snapshot in order to easily recover environment to a initial state in afterEach
-    mySnapshot = await evmSnapshot();
-  });
-  afterEach(async () => {
-    // recover the env to a initial state
-    await evmRevert(mySnapshot);
-  });
-
   // initialize all the ADMINS(including bridge)
   const setUpAllRoles = async (t: TestEnv) => {
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -72,7 +62,7 @@ describe("Access Control List Manager", () => {
   };
 
   it("TC-ACLManager-01 Check deployer is just DEFAULT_ADMIN_ROLE after deployed", async () => {
-    const {deployer} = testEnv;
+    const {deployer, aclManager} = await loadFixture(fixture);
     const DEFAULT_ADMIN_ROLE = await aclManager.DEFAULT_ADMIN_ROLE();
 
     expect(
@@ -90,7 +80,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-02 Check common users are none of ADMINS or roles", async () => {
-    const {users} = testEnv;
+    const {users, aclManager} = await loadFixture(fixture);
     const DEFAULT_ADMIN_ROLE = await aclManager.DEFAULT_ADMIN_ROLE();
 
     for (const user of users) {
@@ -112,8 +102,9 @@ describe("Access Control List Manager", () => {
     it("grant", async () => {
       const {
         deployer,
+        aclManager,
         users: [flashBorrowAdmin],
-      } = testEnv;
+      } = await loadFixture(fixture);
       expect(
         await aclManager.hasRole(
           FLASH_BORROW_ADMIN_ROLE,
@@ -133,8 +124,9 @@ describe("Access Control List Manager", () => {
     it("revoke", async () => {
       const {
         deployer,
+        aclManager,
         users: [flashBorrowAdmin],
-      } = testEnv;
+      } = await loadFixture(fixture);
       await aclManager
         .connect(deployer.signer)
         .revokeRole(FLASH_BORROW_ADMIN_ROLE, flashBorrowAdmin.address);
@@ -150,8 +142,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-04 deployer Add and Remove POOL_ADMIN", async () => {
     const {
       deployer,
+      aclManager,
       users: [, poolAdmin],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     expect(await aclManager.isPoolAdmin(poolAdmin.address)).to.be.eq(false);
 
@@ -167,8 +160,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-05 deployer Add multiple POOL_ADMINS", async () => {
     const {
       deployer,
+      aclManager,
       users: [poolAdmin1, poolAdmin2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin1.address);
     await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin2.address);
     expect(await aclManager.isPoolAdmin(poolAdmin1.address)).to.be.eq(true);
@@ -178,8 +172,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-06 deployer Add and Remove EMERGENCY_ADMIN", async () => {
     const {
       deployer,
+      aclManager,
       users: [, , emergencyAdmin],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     expect(await aclManager.isEmergencyAdmin(emergencyAdmin.address)).to.be.eq(
       false
@@ -202,8 +197,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-07 deployer Add multiple EMERGENCY_ADMINS", async () => {
     const {
       deployer,
+      aclManager,
       users: [emergencyAdmin1, emergencyAdmin2],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     await aclManager
       .connect(deployer.signer)
@@ -222,8 +218,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-08 deployer Add and Remove BRIDGE", async () => {
     const {
       deployer,
+      aclManager,
       users: [, , , bridge],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     expect(await aclManager.isBridge(bridge.address)).to.be.eq(false);
     await aclManager.connect(deployer.signer).addBridge(bridge.address);
@@ -236,8 +233,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-09 deployer Add multiple BRIDGEs", async () => {
     const {
       deployer,
+      aclManager,
       users: [bridge1, bridge2],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     await aclManager.connect(deployer.signer).addBridge(bridge1.address);
     await aclManager.connect(deployer.signer).addBridge(bridge2.address);
@@ -248,8 +246,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-10 deployer Add and Remove RISK_ADMIN", async () => {
     const {
       deployer,
+      aclManager,
       users: [, , , , riskAdmin],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     expect(await aclManager.isRiskAdmin(riskAdmin.address)).to.be.eq(false);
     await aclManager.connect(deployer.signer).addRiskAdmin(riskAdmin.address);
@@ -264,8 +263,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-11 deployer Add multiple RISK_ADMINS", async () => {
     const {
       deployer,
+      aclManager,
       users: [riskAdmin1, riskAdmin2],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     await aclManager.connect(deployer.signer).addRiskAdmin(riskAdmin1.address);
     await aclManager.connect(deployer.signer).addRiskAdmin(riskAdmin2.address);
@@ -276,8 +276,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-12 deployer Add and Remove ASSET_LISTING_ADMIN", async () => {
     const {
       deployer,
+      aclManager,
       users: [, , , , , assetListingAdmin],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     expect(
       await aclManager.isAssetListingAdmin(assetListingAdmin.address)
@@ -301,8 +302,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-13 deployer Add multiple ASSET_LISTING_ADMINS", async () => {
     const {
       deployer,
+      aclManager,
       users: [assetListingAdmin1, assetListingAdmin2],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     await aclManager
       .connect(deployer.signer)
@@ -319,7 +321,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-14 deployer set and (un)set FLASH_BORROW_ADMIN_ROLE admin of FLASH_BORROWER_ROLE", async () => {
-    const {deployer} = testEnv;
+    const {deployer, aclManager} = await loadFixture(fixture);
     const DEFAULT_ADMIN_ROLE = await aclManager.DEFAULT_ADMIN_ROLE();
     const FLASH_BORROW_ROLE = await aclManager.FLASH_BORROWER_ROLE();
     expect(await aclManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.not.be.eq(
@@ -347,8 +349,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-15 FLASH_BORROWER_ADMIN Add and Remove FLASH_BORROWER", async () => {
     const {
       deployer,
+      aclManager,
       users: [flashBorrowAdmin, flashBorrower],
-    } = testEnv;
+    } = await loadFixture(fixture);
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(
       false
     );
@@ -389,8 +392,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-16 user only FLASH_BORROW_ADMIN_ROLE granted can NOT addFlashBorrower(NOT setRoleAdmin) - revert expected", async () => {
     const {
       deployer,
+      aclManager,
       users: [flashBorrowAdmin, flashBorrower],
-    } = testEnv;
+    } = await loadFixture(fixture);
 
     await aclManager
       .connect(deployer.signer)
@@ -419,8 +423,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-17 DEFAULT_ADMIN revoke FLASH_BORROW_ROLE should fail(reverted) after changing default FLASH_BORROW_ROLE's admin to others", async () => {
     const {
       deployer,
+      aclManager,
       users: [flashBorrowAdmin, flashBorrower],
-    } = testEnv;
+    } = await loadFixture(fixture);
     const FLASH_BORROW_ROLE = await aclManager.FLASH_BORROWER_ROLE();
 
     await aclManager
@@ -440,7 +445,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-18 Tries to deploy ACLManager when ACLAdmin is ZERO_ADDRESS (revert expected)", async () => {
-    const {deployer, addressesProvider} = testEnv;
+    const {deployer, addressesProvider} = await loadFixture(fixture);
 
     expect(await addressesProvider.setACLAdmin(ZERO_ADDRESS));
     const deployTx = new ACLManager__factory(deployer.signer).deploy(
@@ -452,8 +457,10 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-19 only DEFAULT_ROLE_ADMIN can setRoleAdmin", async () => {
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -463,7 +470,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
 
     const FLASH_BORROW_ROLE = await aclManager.FLASH_BORROWER_ROLE();
     const beforeRevertFlashBorrowerRoleAdmin = await aclManager.getRoleAdmin(
@@ -499,8 +506,9 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-20 common users call addPoolAdmin - revert expected", async () => {
     const {
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await expect(
       aclManager.connect(user1.signer).addPoolAdmin(user2.address)
     ).to.be.revertedWith(
@@ -514,8 +522,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-21 common users call removePoolAdmin - revert expected", async () => {
     const {
       deployer,
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager.connect(deployer.signer).addPoolAdmin(user2.address);
     await expect(
       aclManager.connect(user1.signer).removePoolAdmin(user2.address)
@@ -529,8 +538,9 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-22 common users call addEmergencyAdmin - revert expected", async () => {
     const {
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await expect(
       aclManager.connect(user1.signer).addEmergencyAdmin(user2.address)
     ).to.be.revertedWith(
@@ -544,8 +554,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-23 common users call removeEmergencyAdmin - revert expected", async () => {
     const {
       deployer,
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager.connect(deployer.signer).addEmergencyAdmin(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeEmergencyAdmin(user2.address)
@@ -559,8 +570,9 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-24 common users call addRiskAdmin - revert expected", async () => {
     const {
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await expect(
       aclManager.connect(user1.signer).addRiskAdmin(user2.address)
     ).to.be.revertedWith(
@@ -574,8 +586,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-25 common users call removeRiskAdmin - revert expected", async () => {
     const {
       deployer,
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager.connect(deployer.signer).addRiskAdmin(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeRiskAdmin(user2.address)
@@ -589,8 +602,9 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-26 common users call addFlashBorrower - revert expected", async () => {
     const {
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await expect(
       aclManager.connect(user1.signer).addFlashBorrower(user2.address)
     ).to.be.revertedWith(
@@ -603,9 +617,10 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-27 common users call removeFlashBorrower - revert expected", async () => {
     const {
+      aclManager,
       deployer,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager.connect(deployer.signer).addFlashBorrower(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeFlashBorrower(user2.address)
@@ -619,8 +634,9 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-28 common users call addBridge - revert expected", async () => {
     const {
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await expect(
       aclManager.connect(user1.signer).addBridge(user2.address)
     ).to.be.revertedWith(
@@ -634,8 +650,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-29 common users call removeBridge - revert expected", async () => {
     const {
       deployer,
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager.connect(deployer.signer).addBridge(user2.address);
     await expect(
       aclManager.connect(user1.signer).removeBridge(user2.address)
@@ -649,8 +666,9 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-30 common users call addAssetListingAdmin - revert expected", async () => {
     const {
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await expect(
       aclManager.connect(user1.signer).addAssetListingAdmin(user2.address)
     ).to.be.revertedWith(
@@ -664,8 +682,9 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-31 common users call removeAssetListingAdmin - revert expected", async () => {
     const {
       deployer,
+      aclManager,
       users: [user1, user2],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager
       .connect(deployer.signer)
       .addAssetListingAdmin(user2.address);
@@ -682,6 +701,7 @@ describe("Access Control List Manager", () => {
   it("TC-ACLManager-32 none Flash borrower admin call addFlashBorrower - revert expected", async () => {
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         flashBorrower,
@@ -690,7 +710,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = await loadFixture(fixture);
     await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address);
     await aclManager
       .connect(deployer.signer)
@@ -719,9 +739,11 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-33 none Flash borrower admin call removeFlashBorrower - revert expected", async () => {
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         ,
@@ -731,7 +753,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.eq(
       true
     );
@@ -757,8 +779,10 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-34 only DEFAULT_ROLE_ADMIN can addPoolAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -768,7 +792,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
 
     for (const user of [
       poolAdmin,
@@ -792,9 +816,11 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-35 only DEFAULT_ROLE_ADMIN can removePoolAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -804,7 +830,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
     await aclManager.connect(deployer.signer).addPoolAdmin(commonUser);
     for (const user of [
       poolAdmin,
@@ -828,8 +854,10 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-36 only DEFAULT_ROLE_ADMIN can addEmergencyAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -839,7 +867,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
 
     for (const user of [
       poolAdmin,
@@ -863,9 +891,11 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-37 only DEFAULT_ROLE_ADMIN can removeEmergencyAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -875,7 +905,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
     await aclManager.connect(deployer.signer).addEmergencyAdmin(commonUser);
     for (const user of [
       poolAdmin,
@@ -899,8 +929,10 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-38 only DEFAULT_ROLE_ADMIN can addRiskAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -910,7 +942,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
 
     for (const user of [
       poolAdmin,
@@ -934,9 +966,11 @@ describe("Access Control List Manager", () => {
 
   it("TC-ACLManager-39 only DEFAULT_ROLE_ADMIN can removeRiskAdmin", async () => {
     const commonUser = await Wallet.createRandom().getAddress();
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -946,7 +980,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
     await aclManager.connect(deployer.signer).addRiskAdmin(commonUser);
     for (const user of [
       poolAdmin,
@@ -969,9 +1003,11 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-40 only DEFAULT_ROLE_ADMIN can addBridge", async () => {
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -981,7 +1017,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
     await aclManager.connect(deployer.signer).removeBridge(bridge.address);
     for (const user of [
       poolAdmin,
@@ -1004,8 +1040,10 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-41 only DEFAULT_ROLE_ADMIN can removeBridge", async () => {
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -1015,7 +1053,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
 
     for (const user of [
       poolAdmin,
@@ -1038,9 +1076,11 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-42 only DEFAULT_ROLE_ADMIN can addAssetListingAdmin", async () => {
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
       deployer,
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -1050,7 +1090,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
     await aclManager
       .connect(deployer.signer)
       .removeAssetListingAdmin(assetListingAdmin.address);
@@ -1079,8 +1119,10 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-43 only DEFAULT_ROLE_ADMIN can removeAssetListingAdmin", async () => {
-    await setUpAllRoles(testEnv);
+    let t = await loadFixture(fixture);
+    await setUpAllRoles(t);
     const {
+      aclManager,
       users: [
         poolAdmin,
         flashBorrowAdmin,
@@ -1090,7 +1132,7 @@ describe("Access Control List Manager", () => {
         bridge,
         assetListingAdmin,
       ],
-    } = testEnv;
+    } = t;
 
     for (const user of [
       poolAdmin,
