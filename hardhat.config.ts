@@ -3,7 +3,6 @@ import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
   COVERAGE_CHAINID,
-  FORK_CHAINID,
   MAINNET_CHAINID,
   GOERLI_CHAINID,
 } from "./deploy/helpers/hardhat-constants";
@@ -139,23 +138,6 @@ const hardhatConfig: HardhatUserConfig = {
       ),
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
-    },
-    localhost: {
-      hardfork: HARDFORK,
-      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
-      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
-      forking: buildForkConfig(),
-      allowUnlimitedContractSize: true,
-    },
-    ganache: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.ganache],
-      chainId: FORK_CHAINID,
-      accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
     },
     goerli: {
       chainId: GOERLI_CHAINID,
