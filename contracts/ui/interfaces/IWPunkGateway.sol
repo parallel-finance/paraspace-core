@@ -4,6 +4,14 @@ pragma solidity 0.8.10;
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 interface IWPunkGateway {
+    event EmergencyERC721TokenTransfer(
+        address token,
+        uint256 tokenId,
+        address to
+    );
+
+    event EmergencyPunkTransfer(address to, uint256 punkIndex);
+
     function supplyPunk(
         DataTypes.ERC721SupplyParams[] calldata punkIndexes,
         address onBehalfOf,

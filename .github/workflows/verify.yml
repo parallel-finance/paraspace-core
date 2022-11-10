@@ -23,11 +23,13 @@ on:
         default: "1"
         required: true
 
-
 jobs:
   verification:
     name: Verification
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18]
     env:
       INFURA_KEY: ${{ secrets.INFURA_KEY }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
@@ -48,10 +50,10 @@ jobs:
           submodules: true
           ref: ${{ env.REF }}
 
-      - name: Use node version 16
+      - name: Setup nodejs
         uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies

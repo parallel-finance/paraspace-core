@@ -16,7 +16,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     wPunksFloorPrice = BigNumber.from(
-      getParaSpaceConfig().Mocks.AllAssetsInitialPrices.WPUNKS
+      getParaSpaceConfig().Mocks!.AllAssetsInitialPrices.WPUNKS
     );
   });
 
@@ -187,7 +187,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     ).to.be.revertedWith("ERC721: operator query for nonexistent token");
   });
 
-  it("User 3 adds 20K dai as collateral and then removes their WPUNK from collateral without paying the accrued interest", async () => {
+  it("User 3 adds 20K dai as collateral and then removes their WPUNK from collateral without paying the accrued interest [ @skip-on-coverage ]", async () => {
     const {
       dai,
       wPunk,
@@ -406,7 +406,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await wPunkGateway
         .connect(owner.signer)
-        .emergencyTokenTransfer(wPunkGateway.address, user3.address, 2)
+        .emergencyERC721TokenTransfer(wPunk.address, 2, user3.address)
     );
     expect(
       await wPunk.connect(user3.signer).balanceOf(wPunkGateway.address)

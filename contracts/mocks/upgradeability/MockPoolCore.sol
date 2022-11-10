@@ -43,29 +43,28 @@ contract PoolCoreV2 is
      * @param provider The address of the PoolAddressesProvider contract
      */
     constructor(IPoolAddressesProvider provider) PoolCore(provider){
-        
+
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationCall(
+    function liquidateERC20(
         address,
         address,
         address,
         uint256,
         bool
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         revert(EMEGENCY_DISABLE_CALL);
     }
 
     /// @inheritdoc IPoolCore
-    function liquidationERC721(
-        address,
+    function liquidateERC721(
         address,
         address,
         uint256,
         uint256,
         bool
-    ) external virtual override nonReentrant {
+    ) external payable virtual override nonReentrant {
         revert(EMEGENCY_DISABLE_CALL);
     }
 }

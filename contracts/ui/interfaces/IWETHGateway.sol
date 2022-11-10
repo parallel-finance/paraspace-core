@@ -4,6 +4,8 @@ pragma solidity 0.8.10;
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 interface IWETHGateway {
+    event EmergencyTokenTransfer(address token, address to, uint256 amount);
+
     function depositETH(address onBehalfOf, uint16 referralCode)
         external
         payable;

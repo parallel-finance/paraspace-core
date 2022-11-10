@@ -8,7 +8,7 @@ import {
   getPoolConfiguratorProxy,
   getPriceOracle,
   getPoolAddressesProviderRegistry,
-  getWETHMocked,
+  getWETH,
   getVariableDebtToken,
   getParaSpaceOracle,
   getACLManager,
@@ -40,6 +40,9 @@ import {
   getPTokenStETH,
   getWPunkGatewayProxy,
   getWETHGatewayProxy,
+  getNTokenBAYC,
+  getNTokenMAYC,
+  getApeCoinStaking,
 } from "../../deploy/helpers/contracts-getters";
 import {
   eContractid,
@@ -50,10 +53,13 @@ import {
   tEthereumAddress,
 } from "../../deploy/helpers/types";
 import {
+  ApeCoinStaking,
   Conduit,
   ERC721Delegate,
   IPool,
   NFTFloorOracle,
+  NTokenBAYC,
+  NTokenMAYC,
   NTokenMoonBirds,
   NTokenUniswapV3,
   PausableZone,
@@ -89,9 +95,6 @@ import {
   LooksRareExchange,
   StrategyStandardSaleForFixedPrice,
   TransferManagerERC721,
-  // X2Y2R1,
-  // ERC721Delegate,
-  // Moonbirds,
   Moonbirds,
   UniswapV3Factory,
   INonfungiblePositionManager,
@@ -132,10 +135,13 @@ export interface TestEnv {
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
+  variableDebtStETH: VariableDebtToken;
+  variableDebtAWeth: VariableDebtToken;
+  variableDebtWeth: VariableDebtToken;
   pUsdc: PToken;
   usdc: MintableERC20;
   usdt: MintableERC20;
-  nBAYC: NToken;
+  nBAYC: NTokenBAYC;
   bayc: MintableERC721;
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
@@ -147,7 +153,7 @@ export interface TestEnv {
   stETH: StETH;
   pstETH: PTokenStETH;
   ape: MintableERC20;
-  nMAYC: NToken;
+  nMAYC: NTokenMAYC;
   mayc: MintableERC721;
   nDOODLES: NToken;
   doodles: MintableERC721;
@@ -171,6 +177,7 @@ export interface TestEnv {
   nftPositionManager: INonfungiblePositionManager;
   nUniswapV3: NTokenUniswapV3;
   nftFloorOracle: NFTFloorOracle;
+  apeCoinStaking: ApeCoinStaking;
 }
 
 export async function initializeMakeSuite() {
@@ -195,10 +202,11 @@ export async function initializeMakeSuite() {
     dai: {} as MintableERC20,
     pDai: {} as PToken,
     variableDebtDai: {} as VariableDebtToken,
+    variableDebtWeth: {} as VariableDebtToken,
     pUsdc: {} as PToken,
     usdc: {} as MintableERC20,
     usdt: {} as MintableERC20,
-    nBAYC: {} as NToken,
+    nBAYC: {} as NTokenBAYC,
     nMOONBIRD: {} as NTokenMoonBirds,
     bayc: {} as MintableERC721,
     addressesProvider: {} as PoolAddressesProvider,
@@ -282,6 +290,8 @@ export async function initializeMakeSuite() {
   testEnv.x2y2r1 = await getX2Y2R1();
   testEnv.erc721Delegate = await getERC721Delegate();
 
+  testEnv.apeCoinStaking = await getApeCoinStaking();
+
   const allTokens = await testEnv.protocolDataProvider.getAllXTokens();
 
   const pDaiAddress = allTokens.find(
@@ -349,9 +359,18 @@ export async function initializeMakeSuite() {
     (token) => token.symbol === ERC20TokenContractId.WETH
   )?.tokenAddress;
 
+  const {variableDebtTokenAddress: variableDebtWethAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      wethAddress || ""
+    );
+
   const aWETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.aWETH
   )?.tokenAddress;
+  const {variableDebtTokenAddress: variableDebtAWethAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      aWETHAddress || ""
+    );
   const baycAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.BAYC
   )?.tokenAddress;
@@ -368,6 +387,12 @@ export async function initializeMakeSuite() {
   const stETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.stETH
   )?.tokenAddress;
+
+  const {variableDebtTokenAddress: variableDebtStETHAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      stETHAddress || ""
+    );
+
   const apeAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.APE
   )?.tokenAddress;
@@ -390,13 +415,22 @@ export async function initializeMakeSuite() {
 
   testEnv.pDai = await getPToken(pDaiAddress);
   testEnv.variableDebtDai = await getVariableDebtToken(variableDebtDaiAddress);
+  testEnv.variableDebtWeth = await getVariableDebtToken(
+    variableDebtWethAddress
+  );
   testEnv.pUsdc = await getPToken(pUsdcAddress);
   testEnv.pWETH = await getPToken(pWEthAddress);
   testEnv.paWETH = await getPTokenAToken(paWEthAddress);
   testEnv.pstETH = await getPTokenStETH(pstEthAddress);
+  testEnv.variableDebtStETH = await getVariableDebtToken(
+    variableDebtStETHAddress
+  );
+  testEnv.variableDebtAWeth = await getVariableDebtToken(
+    variableDebtAWethAddress
+  );
 
-  testEnv.nBAYC = await getNToken(nBAYCAddress);
-  testEnv.nMAYC = await getNToken(nMAYCAddress);
+  testEnv.nBAYC = await getNTokenBAYC(nBAYCAddress);
+  testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
   testEnv.nDOODLES = await getNToken(nDOODLESAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);
@@ -405,7 +439,7 @@ export async function initializeMakeSuite() {
   testEnv.usdc = await getMintableERC20(usdcAddress);
   testEnv.usdt = await getMintableERC20(usdtAddress);
 
-  testEnv.weth = await getWETHMocked(wethAddress);
+  testEnv.weth = await getWETH(wethAddress);
 
   testEnv.bayc = await getMintableERC721(baycAddress);
 
@@ -426,5 +460,6 @@ export async function initializeMakeSuite() {
   testEnv.nftPositionManager = await getNonfungiblePositionManager();
   testEnv.nUniswapV3 = await getNTokenUniswapV3(nUniwapV3Address);
   testEnv.nftFloorOracle = await getNFTFloorOracle();
+
   return testEnv;
 }

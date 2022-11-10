@@ -98,14 +98,16 @@ library DataTypes {
         uint40 reserveLastUpdateTimestamp;
     }
 
-    struct ExecuteLiquidationCallParams {
+    struct ExecuteLiquidateParams {
         uint256 reservesCount;
         uint256 liquidationAmount;
         uint256 collateralTokenId;
         uint256 auctionRecoveryHealthFactor;
+        address weth;
         address collateralAsset;
         address liquidationAsset;
-        address user;
+        address borrower;
+        address liquidator;
         bool receiveXToken;
         address priceOracle;
         address priceOracleSentinel;
@@ -124,6 +126,7 @@ library DataTypes {
         address asset;
         uint256 amount;
         address onBehalfOf;
+        address payer;
         uint16 referralCode;
     }
 
@@ -131,7 +134,7 @@ library DataTypes {
         address asset;
         DataTypes.ERC721SupplyParams[] tokenData;
         address onBehalfOf;
-        address actualSpender;
+        address payer;
         uint16 referralCode;
     }
 
@@ -167,6 +170,18 @@ library DataTypes {
         uint256[] tokenIds;
         address to;
         uint256 reservesCount;
+        address oracle;
+    }
+
+    struct ExecuteDecreaseUniswapV3LiquidityParams {
+        address user;
+        address asset;
+        uint256 tokenId;
+        uint256 reservesCount;
+        uint128 liquidityDecrease;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        bool receiveEthAsWeth;
         address oracle;
     }
 
@@ -212,22 +227,27 @@ library DataTypes {
         address priceOracleSentinel;
     }
 
-    struct ValidateLiquidationCallParams {
+    struct ValidateLiquidateERC20Params {
         ReserveCache liquidationAssetReserveCache;
+        address liquidationAsset;
+        address weth;
         uint256 totalDebt;
         uint256 healthFactor;
+        uint256 liquidationAmount;
+        uint256 actualLiquidationAmount;
         address priceOracleSentinel;
     }
 
-    struct ValidateERC721LiquidationCallParams {
+    struct ValidateLiquidateERC721Params {
         ReserveCache liquidationAssetReserveCache;
         address liquidator;
         address borrower;
         uint256 globalDebt;
         uint256 healthFactor;
+        address collateralAsset;
         uint256 tokenId;
         uint256 actualLiquidationAmount;
-        uint256 liquidationAmount;
+        uint256 maxLiquidationAmount;
         uint256 auctionRecoveryHealthFactor;
         address priceOracleSentinel;
         address xTokenAddress;
@@ -341,5 +361,18 @@ library DataTypes {
         uint16 _reservesCount;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
+    }
+
+    struct ReserveConfigData {
+        uint256 decimals;
+        uint256 ltv;
+        uint256 liquidationThreshold;
+        uint256 liquidationBonus;
+        uint256 reserveFactor;
+        bool usageAsCollateralEnabled;
+        bool borrowingEnabled;
+        bool isActive;
+        bool isFrozen;
+        bool isPaused;
     }
 }

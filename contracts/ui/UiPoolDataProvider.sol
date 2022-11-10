@@ -9,7 +9,7 @@ import {IUiPoolDataProvider} from "./interfaces/IUiPoolDataProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
-import {ICollaterizableERC721} from "../interfaces/ICollaterizableERC721.sol";
+import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
@@ -146,12 +146,20 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         reserveData.underlyingAsset
                     ).symbol();
                     reserveData.symbol = bytes32ToString(symbol);
+                    bytes32 name = IERC20DetailedBytes(
+                        reserveData.underlyingAsset
+                    ).name();
+                    reserveData.name = bytes32ToString(name);
                 } else {
                     reserveData.symbol = IERC20Detailed(
                         reserveData.underlyingAsset
                     ).symbol();
+                    reserveData.name = IERC20Detailed(
+                        reserveData.underlyingAsset
+                    ).name();
                 }
 
+                reserveData.isAtomicPricing = false;
                 reserveData.availableLiquidity = IERC20Detailed(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
@@ -159,10 +167,14 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.symbol = IERC721Metadata(
                     reserveData.underlyingAsset
                 ).symbol();
+                reserveData.name = IERC721Metadata(reserveData.underlyingAsset)
+                    .name();
 
                 reserveData.availableLiquidity = IERC721(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
+                reserveData.isAtomicPricing = INToken(reserveData.xTokenAddress)
+                    .getAtomicPricingConfig();
             }
 
             (
@@ -270,7 +282,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
             for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
-                tokenData[i][j].useAsCollateral = ICollaterizableERC721(asset)
+                tokenData[i][j].useAsCollateral = ICollateralizableERC721(asset)
                     .isUsedAsCollateral(tokenIds[i][j]);
                 tokenData[i][j].isAuctioned = IAuctionableERC721(asset)
                     .isAuctioned(tokenIds[i][j]);
@@ -376,9 +388,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 userReservesData[i].scaledXTokenBalance = INToken(
                     baseData.xTokenAddress
                 ).balanceOf(user);
-                userReservesData[i].collaterizedBalance = ICollaterizableERC721(
+                userReservesData[i]
+                    .collateralizedBalance = ICollateralizableERC721(
                     baseData.xTokenAddress
-                ).collaterizedBalanceOf(user);
+                ).collateralizedBalanceOf(user);
             }
 
             if (userConfig.isBorrowing(i)) {

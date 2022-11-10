@@ -262,7 +262,7 @@ describe("PausableReserve", () => {
       .setReservePause(usdc.address, true);
     // Do liquidation
     await expect(
-      pool.liquidationCall(
+      pool.liquidateERC20(
         weth.address,
         usdc.address,
         borrower.address,

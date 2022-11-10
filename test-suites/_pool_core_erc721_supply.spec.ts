@@ -1,7 +1,8 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
+import {ONE_YEAR} from "../deploy/helpers/constants";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -291,5 +292,27 @@ describe("Functionality tests of ERC721 supply in PoolCore contract", () => {
     } = await loadFixture(testEnvFixture);
 
     await supplyAndValidate(mayc, "3", user1, true);
+  });
+
+  it("TC-erc721-supply-14: ERC-721 health factor is the same over time if user has only a supplied position", async () => {
+    const {
+      users: [user1],
+      pool,
+      bayc,
+    } = await loadFixture(testEnvFixture);
+
+    // User 1 - Deposit BAYC
+    await supplyAndValidate(bayc, "1", user1, true);
+
+    const initialHealthFactor = (await pool.getUserAccountData(user1.address))
+      .erc721HealthFactor;
+
+    // Advance time and blocks
+    await advanceTimeAndBlock(parseInt(ONE_YEAR) * 100);
+
+    // health factor should remain the same
+    expect(initialHealthFactor).to.eq(
+      (await pool.getUserAccountData(user1.address)).erc721HealthFactor
+    );
   });
 });

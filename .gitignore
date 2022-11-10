@@ -27,3 +27,7 @@ docs.restore
 coverage
 *sol.html
 coverage.json
+remix-compiler.config.js
+logs
+*data
+*.swp

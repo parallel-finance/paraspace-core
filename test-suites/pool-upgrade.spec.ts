@@ -25,7 +25,7 @@ describe("Pool: Upgrade", () => {
     await evmRevert(snapShot);
   });
 
-  it("upgrade:disable liquidation by remove liquidationCall in current pool", async () => {
+  it("upgrade:disable liquidation by remove liquidateERC20 in current pool", async () => {
     const {
       addressesProvider,
       weth,
@@ -44,9 +44,9 @@ describe("Pool: Upgrade", () => {
       ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
     );
 
-    const liquidationCallSignature = getFunctionSignatures(
+    const liquidateERC20Signature = getFunctionSignatures(
       PoolCore__factory.abi
-    ).filter((s) => s.name.includes("liquidationCall"))[0].signature;
+    ).filter((s) => s.name.includes("liquidateERC20"))[0].signature;
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -54,7 +54,7 @@ describe("Pool: Upgrade", () => {
           {
             implAddress: ZERO_ADDRESS,
             action: 2, //remove function
-            functionSelectors: [liquidationCallSignature],
+            functionSelectors: [liquidateERC20Signature],
           },
         ],
         ZERO_ADDRESS,
@@ -74,7 +74,7 @@ describe("Pool: Upgrade", () => {
     );
   });
 
-  it("upgrade:disable liquidation by upgrading to a new pool contract which will revert liquidationCall", async () => {
+  it("upgrade:disable liquidation by upgrading to a new pool contract which will revert liquidateERC20", async () => {
     const {
       addressesProvider,
       weth,
