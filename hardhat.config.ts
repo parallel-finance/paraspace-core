@@ -2,7 +2,6 @@ import path from "path";
 import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
-  COVERAGE_CHAINID,
   MAINNET_CHAINID,
   GOERLI_CHAINID,
 } from "./deploy/helpers/hardhat-constants";
@@ -115,12 +114,6 @@ const hardhatConfig: HardhatUserConfig = {
       gasPrice: 4e9,
       gas: 4e6,
       allowUnlimitedContractSize: true,
-    },
-    coverage: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.coverage],
-      chainId: COVERAGE_CHAINID,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
     },
     hardhat: {
       hardfork: HARDFORK,

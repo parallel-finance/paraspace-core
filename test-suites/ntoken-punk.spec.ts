@@ -249,7 +249,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(nWPunkBalance).to.be.equal(1);
   });
 
-  it("User 3 redeems the supplied WPunks", async () => {
+  it("User 3 redeems the supplied WPunks [ @skip-on-coverage ]", async () => {
     const {
       wPunk,
       nWPunk,
@@ -294,7 +294,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     expect(newAvailableToBorrow).to.be.lt(availableToBorrow);
   });
 
-  it("User 3 tries to remove the deposited DAI from collateral without paying the accrued interest (should fail)", async () => {
+  it("User 3 tries to remove the deposited DAI from collateral without paying the accrued interest (should fail) [ @skip-on-coverage ]", async () => {
     const {
       dai,
       users: [, , user3],
