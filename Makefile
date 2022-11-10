@@ -1,6 +1,6 @@
 #!make
 
-NETWORK                  := goerli
+NETWORK                  := hardhat
 
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
