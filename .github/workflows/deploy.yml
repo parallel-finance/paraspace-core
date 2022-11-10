@@ -1,6 +1,7 @@
 name: Deployment
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       network:
@@ -49,6 +50,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
 
       - name: Deploy
         run: |
