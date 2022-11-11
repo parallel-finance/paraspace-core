@@ -21,6 +21,7 @@ import {
   liquidateAndValidate,
   liquidateAndValidateReverted,
   supplyAndValidate,
+  switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
 
@@ -345,5 +346,47 @@ describe("ERC-721 Liquidation", () => {
       treasuryBalanceBefore.add(feeAmount),
       feeAmount
     );
+  });
+
+  it("TC-erc721-liquidation-09 Supply WETH but no collateral.After liquidation, whether WETH has been changed to collateral status.", async () => {
+    const {
+      users: [borrower, liquidator],
+      pool,
+      bayc,
+      weth,
+      dai,
+      protocolDataProvider,
+    } = testEnv;
+
+    await supplyAndValidate(weth, "1", borrower, true);
+    await switchCollateralAndValidate(borrower, weth, false);
+    await borrowAndValidate(dai, "20000", borrower);
+    // reduce BAYC price to liquidation levels
+    await changePriceAndValidate(bayc, "2");
+    await pool
+      .connect(liquidator.signer)
+      .liquidateERC721(
+        bayc.address,
+        borrower.address,
+        0,
+        parseEther("2").toString(),
+        false,
+        {gasLimit: 5000000}
+      );
+
+    const liquidatedWeth = DRE.ethers.utils
+      .parseUnits("2", 20)
+      .div(105)
+      .add(DRE.ethers.utils.parseUnits("1", 18));
+
+    const borrowerCollateralWeth =
+      await protocolDataProvider.getUserReserveData(
+        weth.address,
+        borrower.address
+      );
+
+    const borrowerWethAfter = borrowerCollateralWeth.currentXTokenBalance;
+    expect(borrowerWethAfter).to.be.closeTo(liquidatedWeth, 1);
+    expect(await weth.balanceOf(borrower.address)).to.be.equal(0);
   });
 });
