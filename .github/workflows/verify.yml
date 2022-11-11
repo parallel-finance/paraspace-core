@@ -18,7 +18,7 @@ on:
         description: Number of jobs for verification.
         default: "1"
         required: true
-      maxRetries::
+      maxRetries:
         description: Maximum retries if verification fails.
         default: "3"
         required: true
