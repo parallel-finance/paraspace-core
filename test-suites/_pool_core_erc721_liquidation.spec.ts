@@ -348,7 +348,7 @@ describe("ERC-721 Liquidation", () => {
     );
   });
 
-  it("TC-erc721-liquidation-09 Supply WETH but no collateral.After liquidation, whether WETH has been changed to collateral status.", async () => {
+  it("TC-erc721-liquidation-09 If supplied WETH is not in collateral, after liquidation it should be collateralize", async () => {
     const {
       users: [borrower, liquidator],
       pool,
