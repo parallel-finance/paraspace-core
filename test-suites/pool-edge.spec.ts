@@ -5,7 +5,6 @@ import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   deployReserveAuctionStrategy,
   deployMintableERC20,
-  deployPoolComponents,
   deployPoolCoreLibraries,
 } from "../deploy/helpers/contracts-deployments";
 import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
