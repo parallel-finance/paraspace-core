@@ -73,7 +73,7 @@ test-pool-upgrade:
 
 .PHONY: test-ntoken
 test-ntoken:
-	make TEST_TARGET=ntoken.spec.ts test
+	make TEST_TARGET=_xtoken_ntoken.spec.ts test
 
 .PHONY: test-ptoken
 test-ptoken:
@@ -107,21 +107,9 @@ test-erc20-repay:
 test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
 
-.PHONY: test-configurator-edge
-test-configurator-edge:
-	make TEST_TARGET=configurator-edge.spec.ts test
-
-.PHONY: test-debt-token-delegation-permit
-test-debt-token-delegation-permit:
-	make TEST_TARGET=debt-token-delegation-permit.spec.ts test
-
-.PHONY: test-ptoken-permit
-test-ptoken-permit:
-	make TEST_TARGET=ptoken-permit.spec.ts test
-
-.PHONY: test-ptoken-delegation-aware
-test-ptoken-delegation-aware:
-	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
+.PHONY: test-configurator
+test-configurator:
+	make TEST_TARGET=_pool_configurator.spec.ts test
 
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
@@ -130,10 +118,6 @@ test-pausable-reserve:
 .PHONY: test-upgradeability
 test-upgradeability:
 	make TEST_TARGET=_base_upgradeability.spec.ts test
-
-.PHONY: test-erc20
-test-erc20:
-	make TEST_TARGET=erc20.spec.ts test
 
 .PHONY: test-flash-claim
 test-flash-claim:
@@ -159,33 +143,37 @@ test-mock-token-faucet:
 test-moonbirds:
 	make TEST_TARGET=_xtoken_ntoken_moonbirds.spec.ts test
 
-.PHONY: test-marketplace
-test-marketplace:
-	make TEST_TARGET=marketplace.spec.ts test
+.PHONY: test-marketplace-buy
+test-marketplace-buy:
+	make TEST_TARGET=_pool_marketplace_buy_with_credit.spec.ts test
 
-.PHONY: test-uniswap-v3
-test-uniswap-v3:
-	make TEST_TARGET=uniswap-v3.spec.ts test
+.PHONY: test-marketplace-accept-bid
+test-marketplace-accept-bid:
+	make TEST_TARGET=_pool_marketplace_accept_bid_credit.spec.ts test
 
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
-	make TEST_TARGET=uniswap-v3-oracle.spec.ts test
+	make TEST_TARGET=_uniswap-v3-oracle.spec.ts test
+
+.PHONY: test-uniswap-v3-ltv-validation
+test-uniswap-v3-ltv-validation:
+	make TEST_TARGET=_uniswap_ltv_validation.spec.ts test
+
+.PHONY: test-uniswap-v3-pool-operation
+test-uniswap-v3-pool-operation:
+	make TEST_TARGET=_uniswapv3_pool_operation.spec.ts test
+
+.PHONY: test-uniswap-v3-position-control
+test-uniswap-v3-position-control:
+	make TEST_TARGET=_uniswapv3_position_control.spec.ts test
 
 .PHONY: test-auction-strategy
 test-auction-strategy:
 	make TEST_TARGET=_base_auction_strategy.spec.ts test
 
-.PHONY: test-ptoken-transfer
-test-ptoken-transfer:
-	make TEST_TARGET=ptoken-transfer.spec.ts test
-
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
 	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
-
-.PHONY: test-paraspace-oracle
-test-paraspace-oracle:
-	make TEST_TARGET=paraspace-oracle.spec.ts test
 
 .PHONY: test-no-incentives-controller
 test-no-incentives-controller:
@@ -193,7 +181,7 @@ test-no-incentives-controller:
 
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
-	make TEST_TARGET=atomic-tokens-limit.spec.ts test
+	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
@@ -206,14 +194,6 @@ test-pool-addresses-provider:
 .PHONY: test-addresses-provider-registry
 test-addresses-provider-registry:
 	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
-
-.PHONY: test-pausable-pool
-test-pausable-pool:
-	make TEST_TARGET=pausable-pool.spec.ts test
-
-.PHONY: test-pool-drop-reserve
-test-pool-drop-reserve:
-	make TEST_TARGET=pool-drop-reserve.spec.ts test
 
 .PHONY: test-price-oracle-sentinel
 test-price-oracle-sentinel:
@@ -230,10 +210,6 @@ test-rate-strategy:
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
 	make TEST_TARGET=reserve-configuration.spec.ts test
-
-.PHONY: test-dynamic-configs-strategy
-test-dynamic-configs-strategy:
-	make TEST_TARGET=dynamic-configs-strategy.spec.ts test
 
 .PHONY: test-scenario
 test-scenario:

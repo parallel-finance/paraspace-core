@@ -99,7 +99,7 @@ describe("pToken Withdraw Event Accounting", () => {
       );
     });
 
-    it("TC-erc20-withdraw-04 User 1 could withdraw collateral until his hf would reaches Health Factor 1~1.1", async () => {
+    it("TC-erc20-withdraw-04 User 1 could withdraw collateral until his hf would reaches Health Factor 1.2~1.3", async () => {
       const {
         dai,
         pool,
@@ -107,6 +107,7 @@ describe("pToken Withdraw Event Accounting", () => {
         users: [user1],
       } = testEnv;
 
+      // HF = 20000 * 0.000908578801039414 * 0.9 / (8500 * 0.000908578801039414) = 2.1176470588235294118
       const debtBalanceBeforeWithdraw = await variableDebtDai.balanceOf(
         user1.address
       );
@@ -117,12 +118,14 @@ describe("pToken Withdraw Event Accounting", () => {
         formatEther(debtBalanceBeforeWithdraw.toString()),
         user1
       );
-      // user1 - healthFactor value is between 1.1 - 1.0
+
+      // HF = (20000 - 8500) * 0.000908578801039414 * 0.9 / (8500 * 0.000908578801039414) = 1.2176470588235294118
+      // user1 - healthFactor value is between 1.2 - 1.3
       const healthFactor = (await pool.getUserAccountData(user1.address))
         .healthFactor;
       expect(healthFactor)
-        .to.be.most(parseEther("1.1"))
-        .to.be.least(parseEther("1.0"));
+        .to.be.most(parseEther("1.3"))
+        .to.be.least(parseEther("1.2"));
     });
 
     it("TC-erc20-withdraw-05 User 1 fully repays the loan", async () => {

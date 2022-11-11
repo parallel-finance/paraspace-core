@@ -465,7 +465,7 @@ describe("Liquidation Auction", () => {
 
       // prices drops to ~0.5 floor price
       await advanceBlock(
-        startTime.add(tickLength.mul(BigNumber.from(30))).toNumber()
+        startTime.add(tickLength.mul(BigNumber.from(50))).toNumber()
       );
 
       const {currentPriceMultiplier} = await pool.getAuctionData(

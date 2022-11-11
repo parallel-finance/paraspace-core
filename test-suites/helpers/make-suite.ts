@@ -407,9 +407,11 @@ export async function initializeMakeSuite() {
   )?.tokenAddress;
 
   if (!pDaiAddress || !pWEthAddress || !nBAYCAddress) {
+    console.error("no pDAI|pWETH|nBAYC address");
     process.exit(1);
   }
   if (!daiAddress || !usdcAddress || !wethAddress || !baycAddress) {
+    console.error("no DAI|USDC|WETH|BAYC address");
     process.exit(1);
   }
 

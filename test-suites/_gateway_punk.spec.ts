@@ -8,6 +8,7 @@ import {
   advanceTimeAndBlock,
 } from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {strategyWPunks} from "../deploy/market-config/reservesConfigs";
 import {testEnvFixture} from "./helpers/setup-env";
 
 import {borrowAndValidate, supplyAndValidate} from "./helpers/validated-steps";
@@ -95,9 +96,9 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     const newAvailableToBorrow = (await pool.getUserAccountData(user3.address))
       .availableBorrowsBase;
 
-    const expectedAvailableToBorrow = wPunksFloorPrice
-      .mul(BigNumber.from(30))
-      .div(BigNumber.from(100));
+    const expectedAvailableToBorrow = wPunksFloorPrice.percentMul(
+      strategyWPunks.baseLTVAsCollateral
+    );
     expect(newAvailableToBorrow).to.be.eq(expectedAvailableToBorrow);
 
     const wPunkBalance = await wPunk.balanceOf(user3.address);
@@ -474,9 +475,9 @@ describe("gateway Punk unit tests", () => {
     const newAvailableToBorrow = (await pool.getUserAccountData(user1.address))
       .availableBorrowsBase;
 
-    const expectedAvailableToBorrow = wPunksFloorPrice
-      .mul(BigNumber.from(30))
-      .div(BigNumber.from(100));
+    const expectedAvailableToBorrow = wPunksFloorPrice.percentMul(
+      strategyWPunks.baseLTVAsCollateral
+    );
     expect(newAvailableToBorrow).to.be.eq(expectedAvailableToBorrow);
   });
 

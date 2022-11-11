@@ -90,14 +90,14 @@ describe("Uniswap V3 LTV Validation", () => {
     const daiConfig = await protocolDataProvider.getReserveConfigurationData(
       dai.address
     );
-    expect(daiConfig.ltv).to.be.equal(7500);
-    expect(daiConfig.liquidationThreshold).to.be.equal(8000);
+    expect(daiConfig.ltv).to.be.equal(7700);
+    expect(daiConfig.liquidationThreshold).to.be.equal(9000);
 
     const wethConfig = await protocolDataProvider.getReserveConfigurationData(
       weth.address
     );
     expect(wethConfig.ltv).to.be.equal(8250);
-    expect(wethConfig.liquidationThreshold).to.be.equal(8500);
+    expect(wethConfig.liquidationThreshold).to.be.equal(8600);
 
     const uniCollectionConfig =
       await protocolDataProvider.getReserveConfigurationData(
