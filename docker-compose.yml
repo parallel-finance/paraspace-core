@@ -8,7 +8,7 @@ services:
       - 8545:8545
 
   redis_db:
-    image: 'redis:alpine'
+    image: "redis:alpine"
     ports:
       - 6379:6379
     container_name: redis_db
@@ -19,11 +19,11 @@ services:
   db:
     image: postgres:14
     restart: always
-    container_name: 'postgres'
+    container_name: "postgres"
     environment:
-        POSTGRES_PASSWORD: ''
-        POSTGRES_USER: 'postgres'
-        POSTGRES_HOST_AUTH_METHOD: 'trust'
+      POSTGRES_PASSWORD: ""
+      POSTGRES_USER: "postgres"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
     ports:
       - 7432:5432
 
@@ -34,30 +34,30 @@ services:
       - redis_db
     image: blockscout/blockscout:${DOCKER_TAG:-latest}
     restart: always
-    container_name: 'blockscout'
+    container_name: "blockscout"
     links:
       - db:database
     command: bash -c "bin/blockscout eval \"Elixir.Explorer.ReleaseTasks.create_and_migrate()\" && bin/blockscout start"
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - "host.docker.internal:host-gateway"
     environment:
-        PORT: 4000
-        ETHEREUM_JSONRPC_VARIANT: 'geth'
-        ETHEREUM_JSONRPC_HTTP_URL: http://host.docker.internal:8545/
-        ETHEREUM_JSONRPC_WS_URL: ws://host.docker.internal:8545/
-        ETHEREUM_JSONRPC_TRACE_URL: http://host.docker.internal:8545/
-        INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: 'true'
-        DATABASE_URL: postgresql://postgres:@host.docker.internal:7432/blockscout?ssl=false
-        ECTO_USE_SSL: 'false'
-        SECRET_KEY_BASE: '56NtB48ear7+wMSf0IQuWDAAazhpb31qyc7GiyspBP2vh7t5zlCsF5QDv76chXeN'
-        SUBNETWORK: ParaSpace chain
-        ACCOUNT_ENABLED: false
-        ACCOUNT_REDIS_URL: redis://redis_db:6379
-        RUST_VERIFICATION_SERVICE_URL: http://host.docker.internal:8043/
-        ENABLE_RUST_VERIFICATION_SERVICE: true
-        ALLOWED_EVM_VERSIONS: homestead,tangerineWhistle,spuriousDragon,byzantium,constantinople,petersburg,istanbul,berlin,london,default
-        POOL_SIZE: 40
-        POOL_SIZE_API: 10
+      PORT: 4000
+      ETHEREUM_JSONRPC_VARIANT: "geth"
+      ETHEREUM_JSONRPC_HTTP_URL: http://host.docker.internal:8545/
+      ETHEREUM_JSONRPC_WS_URL: ws://host.docker.internal:8545/
+      ETHEREUM_JSONRPC_TRACE_URL: http://host.docker.internal:8545/
+      INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: "true"
+      DATABASE_URL: postgresql://postgres:@host.docker.internal:7432/blockscout?ssl=false
+      ECTO_USE_SSL: "false"
+      SECRET_KEY_BASE: "56NtB48ear7+wMSf0IQuWDAAazhpb31qyc7GiyspBP2vh7t5zlCsF5QDv76chXeN"
+      SUBNETWORK: ParaSpace chain
+      ACCOUNT_ENABLED: "false"
+      ACCOUNT_REDIS_URL: redis://redis_db:6379
+      RUST_VERIFICATION_SERVICE_URL: http://host.docker.internal:8043/
+      ENABLE_RUST_VERIFICATION_SERVICE: "true"
+      ALLOWED_EVM_VERSIONS: homestead,tangerineWhistle,spuriousDragon,byzantium,constantinople,petersburg,istanbul,berlin,london,default
+      POOL_SIZE: 40
+      POOL_SIZE_API: 10
     ports:
       - 4000:4000
     volumes:
@@ -66,22 +66,22 @@ services:
   smart-contract-verifier:
     image: ghcr.io/blockscout/smart-contract-verifier:${SMART_CONTRACT_VERIFIER_DOCKER_TAG:-latest}
     restart: always
-    container_name: 'smart-contract-verifier'
+    container_name: "smart-contract-verifier"
     environment:
-        SMART_CONTRACT_VERIFIER__SERVER__ADDR: 0.0.0.0:8043
-        SMART_CONTRACT_VERIFIER__SOLIDITY__ENABLED: true
-        SMART_CONTRACT_VERIFIER__SOLIDITY__COMPILERS_DIR: /tmp/solidity-compilers
-        SMART_CONTRACT_VERIFIER__SOLIDITY__REFRESH_VERSIONS_SCHEDULE: 0 0 * * * * *
-        SMART_CONTRACT_VERIFIER__SOLIDITY__FETCHER__LIST__LIST_URL: https://solc-bin.ethereum.org/linux-amd64/list.json
-        SMART_CONTRACT_VERIFIER__VYPER__ENABLED: true
-        SMART_CONTRACT_VERIFIER__VYPER__COMPILERS_DIR: /tmp/vyper-compilers
-        SMART_CONTRACT_VERIFIER__VYPER__FETCHER__LIST__LIST_URL: https://raw.githubusercontent.com/blockscout/solc-bin/main/vyper.list.json
-        SMART_CONTRACT_VERIFIER__VYPER__REFRESH_VERSIONS_SCHEDULE: 0 0 * * * * *
-        SMART_CONTRACT_VERIFIER__SOURCIFY__ENABLED: true
-        SMART_CONTRACT_VERIFIER__SOURCIFY__API_URL: https://sourcify.dev/server/
-        SMART_CONTRACT_VERIFIER__SOURCIFY__VERIFICATION_ATTEMPTS: 3
-        SMART_CONTRACT_VERIFIER__SOURCIFY__REQUEST_TIMEOUT: 10
-        SMART_CONTRACT_VERIFIER__METRICS__ENABLED: false
-        SMART_CONTRACT_VERIFIER__JAEGER__ENABLED: false
+      SMART_CONTRACT_VERIFIER__SERVER__ADDR: 0.0.0.0:8043
+      SMART_CONTRACT_VERIFIER__SOLIDITY__ENABLED: "true"
+      SMART_CONTRACT_VERIFIER__SOLIDITY__COMPILERS_DIR: /tmp/solidity-compilers
+      SMART_CONTRACT_VERIFIER__SOLIDITY__REFRESH_VERSIONS_SCHEDULE: 0 0 * * * * *
+      SMART_CONTRACT_VERIFIER__SOLIDITY__FETCHER__LIST__LIST_URL: https://solc-bin.ethereum.org/linux-amd64/list.json
+      SMART_CONTRACT_VERIFIER__VYPER__ENABLED: "true"
+      SMART_CONTRACT_VERIFIER__VYPER__COMPILERS_DIR: /tmp/vyper-compilers
+      SMART_CONTRACT_VERIFIER__VYPER__FETCHER__LIST__LIST_URL: https://raw.githubusercontent.com/blockscout/solc-bin/main/vyper.list.json
+      SMART_CONTRACT_VERIFIER__VYPER__REFRESH_VERSIONS_SCHEDULE: 0 0 * * * * *
+      SMART_CONTRACT_VERIFIER__SOURCIFY__ENABLED: "true"
+      SMART_CONTRACT_VERIFIER__SOURCIFY__API_URL: https://sourcify.dev/server/
+      SMART_CONTRACT_VERIFIER__SOURCIFY__VERIFICATION_ATTEMPTS: 3
+      SMART_CONTRACT_VERIFIER__SOURCIFY__REQUEST_TIMEOUT: 10
+      SMART_CONTRACT_VERIFIER__METRICS__ENABLED: "false"
+      SMART_CONTRACT_VERIFIER__JAEGER__ENABLED: "false"
     ports:
       - 8043:8043
