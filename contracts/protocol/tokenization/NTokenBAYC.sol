@@ -12,8 +12,6 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
 contract NTokenBAYC is NTokenApeStaking {
-    uint256 constant BAYC_POOL_ID = 1;
-
     constructor(IPool pool, address apeCoinStaking)
         NTokenApeStaking(pool, apeCoinStaking)
     {}
