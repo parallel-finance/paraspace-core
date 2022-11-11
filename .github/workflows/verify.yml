@@ -63,16 +63,16 @@ jobs:
           yarn
           yarn build
 
-      - name: Get deployment date
+      - name: Get short deployment id
         id: deploymentInfo
         run: |
-          echo "date=$(git show -s --format=%cd --date=format:%m%d ${{ env.REF }})" >> $GITHUB_OUTPUT
+          echo "id=$(git rev-parse --short ${{ env.REF }})" >> $GITHUB_OUTPUT
 
       - name: Download deployed-contracts.json
         run: |
           curl -H 'Authorization: token ${{ secrets.PAT }}' \
             -H 'Accept: application/vnd.github.v3.raw' \
-            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.${{ steps.deploymentInfo.outputs.date }}.json
+            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.${{ steps.deploymentInfo.outputs.id }}.json
 
       - name: Verification
         run: |
