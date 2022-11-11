@@ -108,6 +108,13 @@ const hardhatConfig: HardhatUserConfig = {
     forkNetwork: `${MAINNET_CHAINID}`, //Network id of the network we want to fork
   },
   networks: {
+    localhost: {
+      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
+      accounts: "remote",
+      gasPrice: "auto",
+      gas: "auto",
+      allowUnlimitedContractSize: true,
+    },
     parallel: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
       chainId: 1592,
