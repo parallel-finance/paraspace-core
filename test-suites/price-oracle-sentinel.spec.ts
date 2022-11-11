@@ -22,6 +22,7 @@ import {getReserveData, getUserData} from "./helpers/utils/helpers";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {strategyWETH} from "../deploy/market-config/reservesConfigs";
 
 describe("PriceOracleSentinel", () => {
   let testEnv: TestEnv;
@@ -391,7 +392,7 @@ describe("PriceOracleSentinel", () => {
 
     const expectedCollateralLiquidated = principalPrice
       .mul(amountToLiquidate)
-      .percentMul(10500)
+      .percentMul(strategyWETH.liquidationBonus)
       .mul(BigNumber.from(10).pow(collateralDecimals))
       .div(collateralPrice.mul(BigNumber.from(10).pow(principalDecimals)));
 
@@ -669,7 +670,7 @@ describe("PriceOracleSentinel", () => {
 
     const expectedCollateralLiquidated = principalPrice
       .mul(amountToLiquidate)
-      .percentMul(10500)
+      .percentMul(strategyWETH.liquidationBonus)
       .mul(BigNumber.from(10).pow(collateralDecimals))
       .div(collateralPrice.mul(BigNumber.from(10).pow(principalDecimals)));
 
