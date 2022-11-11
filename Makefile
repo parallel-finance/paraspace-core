@@ -185,7 +185,7 @@ test-atomic-tokens-limit:
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
-	make TEST_TARGET=rebasing.spec.ts test
+	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
 
 .PHONY: test-pool-addresses-provider
 test-pool-addresses-provider:
@@ -221,7 +221,7 @@ test-ui-providers:
 
 .PHONY: test-ape-staking
 test-ape-staking:
-	make TEST_TARGET=ape_coin_staking.spec.ts test
+	make TEST_TARGET=_xtoken_ntoken_ape_staking.spec.ts test
 
 .PHONY: run
 run:
