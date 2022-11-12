@@ -8,7 +8,6 @@ import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {snapshot} from "./helpers/snapshot-manager";
 import {
   borrowAndValidate,
   changePriceAndValidate,
