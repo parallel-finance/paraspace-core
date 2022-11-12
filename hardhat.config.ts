@@ -158,7 +158,21 @@ const hardhatConfig: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: ETHERSCAN_KEY,
+    apiKey: {
+      mainnet: ETHERSCAN_KEY,
+      goerli: ETHERSCAN_KEY,
+      localhost: "YOUR_OPTIMISTIC_ETHERSCAN_API_KEY",
+    },
+    customChains: [
+      {
+        network: "localhost",
+        chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat]?? 31337,
+        urls: {
+          apiURL: "http://localhost:4000/api",
+          browserURL: "http://localhost:4000"
+        }
+      }
+    ]
   },
 };
 
