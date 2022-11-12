@@ -160,6 +160,7 @@ const hardhatConfig: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       mainnet: ETHERSCAN_KEY,
+      goerli: ETHERSCAN_KEY,
       localhost: "YOUR_OPTIMISTIC_ETHERSCAN_API_KEY",
     },
     customChains: [
