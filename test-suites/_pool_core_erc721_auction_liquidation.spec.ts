@@ -18,10 +18,8 @@ import {
 } from "./helpers/validated-steps";
 
 describe("Liquidation Auction", () => {
-  let snapshotId: string;
   let testEnv: TestEnv;
-
-  before("Setup Borrower and Liquidator positions", async () => {
+  const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       users: [borrower, liquidator],
@@ -49,15 +47,13 @@ describe("Liquidation Auction", () => {
 
     // Borrower borrows 15k DAI
     await borrowAndValidate(dai, "15000", borrower);
-  });
 
-  describe("Revert to snapshot on every step", () => {
+    return testEnv;
+  };
+
+  describe("ERC721 auction and auction liquidation test", () => {
     beforeEach("Take Blockchain Snapshot", async () => {
-      snapshotId = await snapshot.take();
-    });
-
-    afterEach("Revert Blockchain to Snapshot", async () => {
-      await snapshot.revert(snapshotId);
+      testEnv = await loadFixture(fixture);
     });
 
     it("TC-auction-liquidation-01 When user ERC721 HF is < 1, an auction can be started", async () => {
@@ -465,7 +461,7 @@ describe("Liquidation Auction", () => {
 
       // prices drops to ~0.5 floor price
       await advanceBlock(
-        startTime.add(tickLength.mul(BigNumber.from(50))).toNumber()
+        startTime.add(tickLength.mul(BigNumber.from(30))).toNumber()
       );
 
       const {currentPriceMultiplier} = await pool.getAuctionData(
@@ -824,6 +820,37 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .startAuction(borrower.address, bayc.address, 0)
       ).to.be.revertedWith(ProtocolErrors.AUCTION_ALREADY_STARTED);
+    });
+
+    it("TC-auction-liquidation-30 Liquidator with a small amount of WETH to swap ERC721 (should be reverted)", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+      } = testEnv;
+
+      await changePriceAndValidate(bayc, "8");
+
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+
+      // try to liquidate use a small amount of money
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .liquidateERC721(
+            bayc.address,
+            borrower.address,
+            0,
+            parseEther("4").toString(),
+            false,
+            {gasLimit: 5000000}
+          )
+      ).revertedWith(ProtocolErrors.LIQUIDATION_AMOUNT_NOT_ENOUGH);
     });
   });
 });
