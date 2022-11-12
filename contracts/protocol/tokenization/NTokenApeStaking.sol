@@ -9,6 +9,7 @@ import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import "hardhat/console.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -109,12 +110,19 @@ abstract contract NTokenApeStaking is NToken {
             );
             totalAmount += _nftPairs[index].amount;
 
-            IERC721(_apeCoinStaking.nftContracts(POOL_ID())).transferFrom(
-                msg.sender,
-                address(this),
-                _nftPairs[index].bakcTokenId
-            );
+            IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID))
+                .safeTransferFrom(
+                    msg.sender,
+                    address(this),
+                    _nftPairs[index].bakcTokenId
+                );
         }
+
+        _apeCoinStaking.apeCoin().transferFrom(
+            msg.sender,
+            address(this),
+            totalAmount
+        );
 
         ApeCoinStaking.PairNftWithAmount[]
             memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
@@ -194,27 +202,40 @@ abstract contract NTokenApeStaking is NToken {
      * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
      * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
      */
-    function withdrawBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
-        external
-        nonReentrant
-    {
+    function withdrawBAKC(
+        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
+        address _apeRecipient,
+        address _bakcRecipient
+    ) external nonReentrant {
+        _withdrawBAKC(_nftPairs, true, _apeRecipient, _bakcRecipient);
+    }
+
+    function _withdrawBAKC(
+        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
+        bool validate,
+        address _apeRecipient,
+        address _bakcRecipient
+    ) internal {
         uint256 totalAmount = 0;
 
         for (uint256 index = 0; index < _nftPairs.length; index++) {
-            require(
-                ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
-                "NToken: not owner of token"
-            );
+            if (validate) {
+                require(
+                    ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
+                    "NToken: not owner of token"
+                );
+            }
+
             (uint256 stakedAmount, int256 rewardsDebt) = _apeCoinStaking
                 .nftPosition(BAKC_POOL_ID, _nftPairs[index].bakcTokenId);
 
-            if (stakedAmount == _nftPairs[index].amount) {
-                (
-                    ,
-                    ,
-                    uint256 stakedAmount,
-                    uint256 accumulatedRewardsPerShare
-                ) = _apeCoinStaking.pools(BAKC_POOL_ID);
+            if (
+                stakedAmount == _nftPairs[index].amount ||
+                _nftPairs[index].amount == 0
+            ) {
+                _nftPairs[index].amount = stakedAmount;
+                (, , , uint256 accumulatedRewardsPerShare) = _apeCoinStaking
+                    .pools(BAKC_POOL_ID);
                 int256 accumulatedApeCoins = (stakedAmount *
                     accumulatedRewardsPerShare).toInt256();
                 totalAmount +=
@@ -236,14 +257,14 @@ abstract contract NTokenApeStaking is NToken {
         }
 
         for (uint256 index = 0; index < _nftPairs.length; index++) {
-            IERC721(_apeCoinStaking.nftContracts(POOL_ID())).transferFrom(
+            IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID)).transferFrom(
                 address(this),
-                msg.sender,
+                _bakcRecipient,
                 _nftPairs[index].bakcTokenId
             );
         }
 
-        IERC20(_apeCoinStaking.apeCoin()).safeTransfer(msg.sender, totalAmount);
+        _apeCoinStaking.apeCoin().safeTransfer(_apeRecipient, totalAmount);
     }
 
     /**
@@ -281,7 +302,13 @@ abstract contract NTokenApeStaking is NToken {
         ApeCoinStaking.SingleNft[] memory nfts = new ApeCoinStaking.SingleNft[](
             tokenIdLength
         );
+        ApeCoinStaking.PairNftWithAmount[]
+            memory _bakcPairs = new ApeCoinStaking.PairNftWithAmount[](
+                tokenIdLength
+            );
+
         uint256 counter = 0;
+        uint256 pairdBakcCounter = 0;
 
         for (uint256 index = 0; index < tokenIdLength; index++) {
             (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
@@ -296,13 +323,37 @@ abstract contract NTokenApeStaking is NToken {
                 });
                 counter++;
             }
+
+            (uint256 bakcTokenId, bool isPaired) = _apeCoinStaking.mainToBakc(
+                POOL_ID(),
+                tokenIds[index]
+            );
+            if (isPaired) {
+                _bakcPairs[index] = ApeCoinStaking.PairNftWithAmount({
+                    mainTokenId: tokenIds[index],
+                    bakcTokenId: bakcTokenId,
+                    amount: 0
+                });
+                pairdBakcCounter++;
+            }
         }
+        console.log(
+            "amount in contract before",
+            _apeCoinStaking.apeCoin().balanceOf(address(_apeCoinStaking))
+        );
 
         if (counter > 0) {
             assembly {
                 mstore(nfts, counter)
             }
             _withdrawApeCoin(nfts, _recipient);
+        }
+
+        if (pairdBakcCounter > 0) {
+            assembly {
+                mstore(_bakcPairs, pairdBakcCounter)
+            }
+            _withdrawBAKC(_bakcPairs, false, _recipient, _recipient);
         }
     }
 

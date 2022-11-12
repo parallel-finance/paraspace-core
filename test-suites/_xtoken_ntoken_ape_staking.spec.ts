@@ -1,9 +1,19 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
-import {getAggregator} from "../deploy/helpers/contracts-getters";
+import {
+  getAggregator,
+  getAllERC721Tokens,
+  getMintableERC721,
+} from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  advanceTimeAndBlock,
+  DRE,
+  getDb,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
+import {MintableERC721} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -16,6 +26,8 @@ import {
 
 describe("APE coin staking", () => {
   let testEnv: TestEnv;
+  let bakc: MintableERC721;
+
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
@@ -33,6 +45,14 @@ describe("APE coin staking", () => {
     await supplyAndValidate(mayc, "2", user1, true);
     await switchCollateralAndValidate(user1, mayc, false, 0);
     await switchCollateralAndValidate(user1, mayc, false, 1);
+
+    const db = getDb();
+
+    const address = db.get(`BAKC.${DRE.network.name}`).value()?.address;
+
+    bakc = await getMintableERC721(address);
+
+    await waitForTx(await bakc["mint(uint256,address)"]("2", user1.address));
   });
 
   it("TC-ntoken-ape-staking-01 User 1 stakes some apecoin with their BAYC", async () => {
@@ -56,6 +76,36 @@ describe("APE coin staking", () => {
 
     expect(
       nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}])
+    );
+  });
+
+  it("TC-ntoken-ape-staking-02 User 1 stakes some apecoin with their BAKC paird with BAYC", async () => {
+    const {
+      users: [user1],
+      nBAYC,
+      ape,
+    } = testEnv;
+
+    await waitForTx(
+      await bakc.connect(user1.signer).setApprovalForAll(nBAYC.address, true)
+    );
+
+    const amount = await convertToCurrencyDecimals(ape.address, "20");
+
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        ["mint(address,uint256)"](user1.address, amount)
+    );
+
+    expect(
+      nBAYC.connect(user1.signer).depositBAKC([
+        {
+          mainTokenId: "0",
+          bakcTokenId: "0",
+          amount: amount,
+        },
+      ])
     );
   });
 
