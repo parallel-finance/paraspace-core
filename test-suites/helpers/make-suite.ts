@@ -14,7 +14,7 @@ import {
   getACLManager,
   getMintableERC721,
   getWPunk,
-  getCryptoPunksMarket,
+  getPunks,
   getMockTokenFaucet,
   getConduitController,
   getPausableZoneController,
@@ -146,7 +146,7 @@ export interface TestEnv {
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
   aclManager: ACLManager;
-  cryptoPunksMarket: CryptoPunksMarket;
+  punks: CryptoPunksMarket;
   wPunk: WPunk;
   nWPunk: NToken;
   wBTC: MintableERC20;
@@ -212,7 +212,7 @@ export async function initializeMakeSuite() {
     addressesProvider: {} as PoolAddressesProvider,
     registry: {} as PoolAddressesProviderRegistry,
     aclManager: {} as ACLManager,
-    cryptoPunksMarket: {} as CryptoPunksMarket,
+    punks: {} as CryptoPunksMarket,
     wPunk: {} as WPunk,
     nWPunk: {} as NToken,
     wBTC: {} as MintableERC20,
@@ -374,8 +374,8 @@ export async function initializeMakeSuite() {
   const baycAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.BAYC
   )?.tokenAddress;
-  const punkAddress = reservesTokens.find(
-    (token) => token.symbol === eContractid.CryptoPunksMarket
+  const punksAddress = reservesTokens.find(
+    (token) => token.symbol === eContractid.PUNKS
   )?.tokenAddress;
 
   const wpunkAddress = reservesTokens.find(
@@ -446,7 +446,7 @@ export async function initializeMakeSuite() {
   testEnv.bayc = await getMintableERC721(baycAddress);
 
   testEnv.nWPunk = await getNToken(nWPunkAddress);
-  testEnv.cryptoPunksMarket = await getCryptoPunksMarket(punkAddress);
+  testEnv.punks = await getPunks(punksAddress);
   testEnv.wPunk = await getWPunk(wpunkAddress);
   testEnv.wPunkGateway = await getWPunkGatewayProxy();
   testEnv.wETHGateway = await getWETHGatewayProxy();
