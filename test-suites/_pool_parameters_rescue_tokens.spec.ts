@@ -15,7 +15,7 @@ describe("Pool: rescue tokens", () => {
     testEnv = await loadFixture(testEnvFixture);
   });
 
-  it("PoolAdmin can rescue ERC20 tokens locked in pool contract", async () => {
+  it("TC-pool-rescue-tokens-01 PoolAdmin can rescue ERC20 tokens locked in pool contract", async () => {
     const {
       dai,
       poolAdmin,
@@ -37,7 +37,7 @@ describe("Pool: rescue tokens", () => {
     );
   });
 
-  it("PoolAdmin can rescue ERC721 tokens locked in pool contract", async () => {
+  it("TC-pool-rescue-tokens-02 PoolAdmin can rescue ERC721 tokens locked in pool contract", async () => {
     const {
       bayc,
       poolAdmin,
@@ -58,7 +58,7 @@ describe("Pool: rescue tokens", () => {
     );
   });
 
-  it("normal user can't rescue tokens locked in pool contract", async () => {
+  it("TC-pool-rescue-tokens-03 Normal user can't rescue tokens locked in pool contract", async () => {
     const {
       dai,
       poolAdmin,
