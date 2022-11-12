@@ -8,7 +8,6 @@ import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {snapshot} from "./helpers/snapshot-manager";
 import {
   borrowAndValidate,
   changePriceAndValidate,
@@ -18,10 +17,8 @@ import {
 } from "./helpers/validated-steps";
 
 describe("Liquidation Auction", () => {
-  let snapshotId: string;
   let testEnv: TestEnv;
-
-  before("Setup Borrower and Liquidator positions", async () => {
+  const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       users: [borrower, liquidator],
@@ -49,15 +46,13 @@ describe("Liquidation Auction", () => {
 
     // Borrower borrows 15k DAI
     await borrowAndValidate(dai, "15000", borrower);
-  });
 
-  describe("Revert to snapshot on every step", () => {
-    beforeEach("Take Blockchain Snapshot", async () => {
-      snapshotId = await snapshot.take();
-    });
+    return testEnv;
+  };
 
-    afterEach("Revert Blockchain to Snapshot", async () => {
-      await snapshot.revert(snapshotId);
+  describe("ERC721 auction and auction liquidation test", () => {
+    beforeEach("Load the initial environment variables", async () => {
+      testEnv = await loadFixture(fixture);
     });
 
     it("TC-auction-liquidation-01 When user ERC721 HF is < 1, an auction can be started", async () => {
@@ -463,9 +458,9 @@ describe("Liquidation Auction", () => {
         0
       );
 
-      // prices drops to ~0.5 floor price
+      // prices drops to ~1.5 floor price
       await advanceBlock(
-        startTime.add(tickLength.mul(BigNumber.from(50))).toNumber()
+        startTime.add(tickLength.mul(BigNumber.from(30))).toNumber()
       );
 
       const {currentPriceMultiplier} = await pool.getAuctionData(
@@ -474,7 +469,7 @@ describe("Liquidation Auction", () => {
       );
 
       expect(currentPriceMultiplier.toString()).to.be.equal(
-        "500000000000000000"
+        "1500000000000000000"
       );
       await pool
         .connect(liquidator.signer)
@@ -482,7 +477,7 @@ describe("Liquidation Auction", () => {
           bayc.address,
           borrower.address,
           0,
-          parseEther("4").toString(),
+          parseEther("12").toString(),
           false,
           {gasLimit: 5000000}
         );
@@ -824,6 +819,37 @@ describe("Liquidation Auction", () => {
           .connect(liquidator.signer)
           .startAuction(borrower.address, bayc.address, 0)
       ).to.be.revertedWith(ProtocolErrors.AUCTION_ALREADY_STARTED);
+    });
+
+    it("TC-auction-liquidation-30 Liquidator with a small amount of WETH to swap ERC721 (should be reverted)", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+      } = testEnv;
+
+      await changePriceAndValidate(bayc, "8");
+
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+
+      // try to liquidate use a small amount of money
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .liquidateERC721(
+            bayc.address,
+            borrower.address,
+            0,
+            parseEther("4").toString(),
+            false,
+            {gasLimit: 5000000}
+          )
+      ).revertedWith(ProtocolErrors.LIQUIDATION_AMOUNT_NOT_ENOUGH);
     });
   });
 });
