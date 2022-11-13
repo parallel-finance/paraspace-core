@@ -1,6 +1,7 @@
 #!make
 
 NETWORK                  := hardhat
+DISABLE_INDEXER          := true
 
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
@@ -71,6 +72,10 @@ submodules:
 test-pool-upgrade:
 	make TEST_TARGET=pool-upgrade.spec.ts test
 
+.PHONY: test-pool-edge
+test-pool-edge:
+	make TEST_TARGET=pool-edge.spec.ts test
+
 .PHONY: test-ntoken
 test-ntoken:
 	make TEST_TARGET=_xtoken_ntoken.spec.ts test
@@ -118,6 +123,10 @@ test-configurator:
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
+
+.PHONY: test-rescue-tokens
+test-rescue-tokens:
+	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test	
 
 .PHONY: test-upgradeability
 test-upgradeability:

@@ -58,6 +58,7 @@ services:
       ALLOWED_EVM_VERSIONS: homestead,tangerineWhistle,spuriousDragon,byzantium,constantinople,petersburg,istanbul,berlin,london,default
       POOL_SIZE: 40
       POOL_SIZE_API: 10
+      DISABLE_INDEXER: ${DISABLE_INDEXER:-true}
     ports:
       - 4000:4000
     volumes:
