@@ -458,7 +458,7 @@ describe("VariableDebtToken", () => {
 
       expect(
         await aclManager
-          .connect(deployer.signer)
+          .connect(poolAdmin.signer)
           .addPoolAdmin(poolAdmin.address)
       );
 

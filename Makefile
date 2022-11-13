@@ -75,6 +75,10 @@ test-pool-upgrade:
 test-ntoken:
 	make TEST_TARGET=_xtoken_ntoken.spec.ts test
 
+.PHONY: test-ntoken-punk
+test-ntoken-punk:
+	make TEST_TARGET=ntoken-punk.spec.ts test
+
 .PHONY: test-ptoken
 test-ptoken:
 	make TEST_TARGET=_xtoken_ptoken.spec.ts test
@@ -187,8 +191,8 @@ test-atomic-tokens-limit:
 test-rebasing-tokens:
 	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
 
-.PHONY: test-pool-addresses-provider
-test-pool-addresses-provider:
+.PHONY: test-addresses-provider
+test-addresses-provider:
 	make TEST_TARGET=_base_addresses_provider.spec.ts test
 
 .PHONY: test-addresses-provider-registry
@@ -222,6 +226,10 @@ test-ui-providers:
 .PHONY: test-ape-staking
 test-ape-staking:
 	make TEST_TARGET=_xtoken_ntoken_ape_staking.spec.ts test
+
+.PHONY: test-acl-manager
+test-acl-manager:
+	make TEST_TARGET=acl-manager.spec.ts test
 
 .PHONY: run
 run:

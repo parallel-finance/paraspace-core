@@ -307,11 +307,11 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   it("TC-punks-gateway-11 Gateway owner can do emergency WPUNK transfer to user", async () => {
     const {
       users: [, , user3],
-      deployer,
+      gatewayAdmin,
       wPunkGateway,
       wPunk,
     } = testEnv;
-    const owner = deployer;
+    const owner = gatewayAdmin;
 
     const userBalance = await wPunk
       .connect(user3.signer)
@@ -320,7 +320,9 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await wPunkGateway
         .connect(owner.signer)
-        .emergencyERC721TokenTransfer(wPunk.address, 2, user3.address)
+        .emergencyERC721TokenTransfer(wPunk.address, 2, user3.address, {
+          gasLimit: 5000000,
+        })
     );
     expect(
       await wPunk.connect(user3.signer).balanceOf(wPunkGateway.address)
@@ -334,11 +336,11 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   it("TC-punks-gateway-12 Gateway owner can do emergency PUNK transfer to user", async () => {
     const {
       users: [, , user3],
-      deployer,
+      gatewayAdmin,
       wPunkGateway,
       punks,
     } = testEnv;
-    const owner = deployer;
+    const owner = gatewayAdmin;
 
     const userBalance = await punks
       .connect(user3.signer)
@@ -347,7 +349,9 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(
       await wPunkGateway
         .connect(owner.signer)
-        .emergencyPunkTransfer(user3.address, 3)
+        .emergencyPunkTransfer(user3.address, 3, {
+          gasLimit: 5000000,
+        })
     );
     expect(
       await punks.connect(user3.signer).balanceOf(wPunkGateway.address)

@@ -88,9 +88,9 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     const newAvailableToBorrow = (await pool.getUserAccountData(user3.address))
       .availableBorrowsBase;
 
-    const expectedAvailableToBorrow = wPunksFloorPrice.percentMul(
-      strategyWPunks.baseLTVAsCollateral
-    );
+    const expectedAvailableToBorrow = wPunksFloorPrice
+      .mul(strategyWPunks.baseLTVAsCollateral)
+      .div("10000");
     expect(newAvailableToBorrow).to.be.eq(expectedAvailableToBorrow);
 
     const wPunkBalance = await wPunk.balanceOf(user3.address);
@@ -372,11 +372,11 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   it("Owner does emergency wpunk transfer of punk 2 to User 3", async () => {
     const {
       users: [, , user3],
-      deployer,
+      gatewayAdmin,
       wPunkGateway,
       wPunk,
     } = testEnv;
-    const owner = deployer;
+    const owner = gatewayAdmin;
 
     const userBalance = await wPunk
       .connect(user3.signer)
@@ -399,11 +399,11 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
   it("Owner does emergency punk transfer of punk 3 to User 3", async () => {
     const {
       users: [, , user3],
-      deployer,
+      gatewayAdmin,
       wPunkGateway,
       punks,
     } = testEnv;
-    const owner = deployer;
+    const owner = gatewayAdmin;
 
     const userBalance = await punks
       .connect(user3.signer)

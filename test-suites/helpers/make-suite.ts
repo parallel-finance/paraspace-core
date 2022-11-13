@@ -257,16 +257,26 @@ export async function initializeMakeSuite() {
   testEnv.gatewayAdmin = signers[paraSpaceConfig.GatewayAdminIndex];
 
   testEnv.pool = await getPoolProxy();
-  testEnv.configurator = await getPoolConfiguratorProxy();
+  testEnv.configurator = (await getPoolConfiguratorProxy()).connect(
+    testEnv.poolAdmin.signer
+  );
   testEnv.poolDataProvider = await getUiPoolDataProvider();
 
-  testEnv.addressesProvider = await getPoolAddressesProvider();
+  testEnv.addressesProvider = (await getPoolAddressesProvider()).connect(
+    testEnv.poolAdmin.signer
+  );
 
-  testEnv.registry = await getPoolAddressesProviderRegistry();
-  testEnv.aclManager = await getACLManager();
+  testEnv.registry = (await getPoolAddressesProviderRegistry()).connect(
+    testEnv.poolAdmin.signer
+  );
+  testEnv.aclManager = (await getACLManager()).connect(
+    testEnv.poolAdmin.signer
+  );
 
   testEnv.oracle = await getPriceOracle();
-  testEnv.paraspaceOracle = await getParaSpaceOracle();
+  testEnv.paraspaceOracle = (await getParaSpaceOracle()).connect(
+    testEnv.poolAdmin.signer
+  );
 
   testEnv.protocolDataProvider = await getProtocolDataProvider();
 
@@ -457,8 +467,12 @@ export async function initializeMakeSuite() {
   testEnv.moonbirds = await getMoonBirds(moonbirdsAddress);
   testEnv.uniswapV3Factory = await getUniswapV3Factory();
   testEnv.nftPositionManager = await getNonfungiblePositionManager();
-  testEnv.nUniswapV3 = await getNTokenUniswapV3(nUniwapV3Address);
-  testEnv.nftFloorOracle = await getNFTFloorOracle();
+  testEnv.nUniswapV3 = (await getNTokenUniswapV3(nUniwapV3Address)).connect(
+    testEnv.poolAdmin.signer
+  );
+  testEnv.nftFloorOracle = (await getNFTFloorOracle()).connect(
+    testEnv.poolAdmin.signer
+  );
 
   return testEnv;
 }
