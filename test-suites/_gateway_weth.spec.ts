@@ -139,7 +139,7 @@ describe("WETH GateWay", () => {
 
     const userEthBalanceBefore = await user1.signer.getBalance();
 
-    const ownerPrivateKey = testWallets[0].secretKey;
+    const ownerPrivateKey = testWallets[0].privateKey;
     const {v, r, s} = getSignatureFromTypedData(ownerPrivateKey, msgParams);
 
     // withdraws with permit

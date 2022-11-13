@@ -276,7 +276,8 @@ describe("Flash Claim Test", () => {
           flashClaimReceiverAddr,
           nftPositionManager.address,
           [1],
-          receiverEncodedData
+          receiverEncodedData,
+          {gasLimit: 12_450_000}
         )
     ).to.be.revertedWith(ProtocolErrors.UNIV3_NOT_ALLOWED);
   });

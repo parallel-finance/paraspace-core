@@ -126,7 +126,7 @@ describe("Functionalities of ptoken permit", () => {
     );
     return {
       ...testEnv,
-      ownerPrivateKey: testWallets[0].secretKey,
+      ownerPrivateKey: testWallets[0].privateKey,
     };
   };
   const EIP712_REVISION = "1";
