@@ -18,15 +18,15 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -347,8 +347,8 @@ upgrade-ntoken-uniswapv3:
 upgrade-ntoken-moonbirds:
 	make TASK_NAME=upgrade:ntoken_moonbirds run-task
 
-.PHONY: fork
-fork:
+.PHONY: node
+node:
 	npx hardhat node --hostname 0.0.0.0
 
 .PHONY: image
