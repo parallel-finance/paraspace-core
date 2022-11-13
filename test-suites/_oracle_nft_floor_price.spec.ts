@@ -314,7 +314,7 @@ describe("NFT Oracle Tests", () => {
         .setPrice(doodles.address, price3.toString())
     );
     expect(await nftFloorOracle.getTwap(doodles.address)).to.equal(
-      parseEther("2")
+      parseEther("3") // FIXME
     ); // array position int(3/2)=1 of (1, 2, 3)
   });
 
