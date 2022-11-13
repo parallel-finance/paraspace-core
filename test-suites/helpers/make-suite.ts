@@ -238,26 +238,23 @@ export async function initializeMakeSuite() {
     moonbirds: {} as Moonbirds,
     nftFloorOracle: {} as NFTFloorOracle,
   } as TestEnv;
-  const [_deployer, ...restSigners] = await getEthersSigners();
-  const deployer: SignerWithAddress = {
-    address: await _deployer.getAddress(),
-    signer: _deployer,
-  };
-
-  for (const signer of restSigners) {
-    testEnv.users.push({
+  const paraSpaceConfig = getParaSpaceConfig();
+  const signers = await Promise.all(
+    (
+      await getEthersSigners()
+    ).map(async (signer) => ({
       signer,
       address: await signer.getAddress(),
-    });
-  }
+    }))
+  );
+  const [deployer, ...restSigners] = signers;
+  testEnv.users = restSigners;
   testEnv.deployer = deployer;
-  testEnv.poolAdmin = deployer;
-  testEnv.assetListingAdmin = deployer;
-  testEnv.emergencyAdmin =
-    testEnv.users[getParaSpaceConfig().EmergencyAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
-  testEnv.riskAdmin = testEnv.users[getParaSpaceConfig().RiskAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
-  testEnv.gatewayAdmin =
-    testEnv.users[getParaSpaceConfig().GatewayAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
+  testEnv.poolAdmin = signers[paraSpaceConfig.ParaSpaceAdminIndex];
+  testEnv.assetListingAdmin = signers[paraSpaceConfig.ParaSpaceAdminIndex];
+  testEnv.emergencyAdmin = signers[paraSpaceConfig.EmergencyAdminIndex];
+  testEnv.riskAdmin = signers[paraSpaceConfig.RiskAdminIndex];
+  testEnv.gatewayAdmin = signers[paraSpaceConfig.GatewayAdminIndex];
 
   testEnv.pool = await getPoolProxy();
   testEnv.configurator = await getPoolConfiguratorProxy();
