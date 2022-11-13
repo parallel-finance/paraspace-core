@@ -19,15 +19,15 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -79,6 +79,10 @@ test-pool-edge:
 .PHONY: test-ntoken
 test-ntoken:
 	make TEST_TARGET=_xtoken_ntoken.spec.ts test
+
+.PHONY: test-ntoken-punk
+test-ntoken-punk:
+	make TEST_TARGET=ntoken-punk.spec.ts test
 
 .PHONY: test-ptoken
 test-ptoken:
@@ -196,8 +200,8 @@ test-atomic-tokens-limit:
 test-rebasing-tokens:
 	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
 
-.PHONY: test-pool-addresses-provider
-test-pool-addresses-provider:
+.PHONY: test-addresses-provider
+test-addresses-provider:
 	make TEST_TARGET=_base_addresses_provider.spec.ts test
 
 .PHONY: test-addresses-provider-registry
@@ -231,6 +235,10 @@ test-ui-providers:
 .PHONY: test-ape-staking
 test-ape-staking:
 	make TEST_TARGET=_xtoken_ntoken_ape_staking.spec.ts test
+
+.PHONY: test-acl-manager
+test-acl-manager:
+	make TEST_TARGET=acl-manager.spec.ts test
 
 .PHONY: run
 run:
@@ -324,6 +332,10 @@ deploy-x2y2:
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
 
+.PHONY: deploy-renounceOwnership
+deploy-renounceOwnership:
+	make TASK_NAME=deploy:renounce-ownership run-task
+
 .PHONY: ad-hoc
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
@@ -356,8 +368,8 @@ upgrade-ntoken-uniswapv3:
 upgrade-ntoken-moonbirds:
 	make TASK_NAME=upgrade:ntoken_moonbirds run-task
 
-.PHONY: fork
-fork:
+.PHONY: node
+node:
 	npx hardhat node --hostname 0.0.0.0
 
 .PHONY: image

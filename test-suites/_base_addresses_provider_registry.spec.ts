@@ -36,23 +36,27 @@ describe("AddressesProviderRegistry", () => {
   });
 
   it("TC-addresses-provider-registry-02 Tries to register an addresses provider with id 0 (revert expected)", async () => {
-    const {registry} = testEnv;
+    const {registry, poolAdmin} = testEnv;
 
     await expect(
-      registry.registerAddressesProvider(NEW_ADDRESSES_PROVIDER_ADDRESS, "0")
+      registry
+        .connect(poolAdmin.signer)
+        .registerAddressesProvider(NEW_ADDRESSES_PROVIDER_ADDRESS, "0")
     ).to.be.revertedWith(INVALID_ADDRESSES_PROVIDER_ID);
   });
 
   it("TC-addresses-provider-registry-03 Registers a mock addresses provider", async () => {
-    const {registry} = testEnv;
+    const {registry, poolAdmin} = testEnv;
 
     const providersBefore = await registry.getAddressesProvidersList();
 
     expect(
-      await registry.registerAddressesProvider(
-        NEW_ADDRESSES_PROVIDER_ADDRESS,
-        NEW_ADDRESSES_PROVIDER_ID_2
-      )
+      await registry
+        .connect(poolAdmin.signer)
+        .registerAddressesProvider(
+          NEW_ADDRESSES_PROVIDER_ADDRESS,
+          NEW_ADDRESSES_PROVIDER_ID_2
+        )
     )
       .to.emit(registry, "AddressesProviderRegistered")
       .withArgs(NEW_ADDRESSES_PROVIDER_ADDRESS, NEW_ADDRESSES_PROVIDER_ID_2);

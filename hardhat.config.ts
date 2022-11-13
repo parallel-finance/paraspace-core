@@ -9,7 +9,6 @@ import {
   DEFAULT_BLOCK_GAS_LIMIT,
   ETHERSCAN_KEY,
   REPORT_GAS,
-  DEPLOYER_MNEMONIC,
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
 } from "./deploy/helpers/hardhat-constants";
@@ -17,7 +16,7 @@ import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {
   buildForkConfig,
-  CHAIN_ID_TO_FORK,
+  CHAINS_ID,
   NETWORKS_RPC_URL,
 } from "./deploy/helper-hardhat-config";
 import fs from "fs";
@@ -109,18 +108,16 @@ const hardhatConfig: HardhatUserConfig = {
   },
   networks: {
     localhost: {
-      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
-      accounts: "remote",
+      chainId: CHAINS_ID[eEthereumNetwork.hardhat],
+      accounts: accounts.map(({privateKey}) => privateKey),
       gasPrice: "auto",
       gas: "auto",
       allowUnlimitedContractSize: true,
     },
     parallel: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
-      chainId: 1592,
-      accounts: evmAccounts.map(
-        ({secretKey}: {secretKey: string; balance: string}) => secretKey
-      ),
+      chainId: CHAINS_ID[eEthereumNetwork.parallel],
+      accounts: evmAccounts.map(({privateKey}) => privateKey),
       gasPrice: 4e9,
       gas: 4e6,
       allowUnlimitedContractSize: true,
@@ -130,31 +127,22 @@ const hardhatConfig: HardhatUserConfig = {
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
       gasPrice: "auto",
-      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
+      chainId: CHAINS_ID[eEthereumNetwork.hardhat],
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
-      accounts: accounts.map(
-        ({secretKey, balance}: {secretKey: string; balance: string}) => ({
-          privateKey: secretKey,
-          balance,
-        })
-      ),
+      accounts,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
     goerli: {
       chainId: GOERLI_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
-      accounts: {
-        mnemonic: DEPLOYER_MNEMONIC || "",
-      },
+      accounts: accounts.map(({privateKey}) => privateKey),
     },
     mainnet: {
       chainId: MAINNET_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
-      accounts: {
-        mnemonic: DEPLOYER_MNEMONIC || "",
-      },
+      accounts: accounts.map(({privateKey}) => privateKey),
     },
   },
   etherscan: {
@@ -166,7 +154,7 @@ const hardhatConfig: HardhatUserConfig = {
     customChains: [
       {
         network: eEthereumNetwork.localhost,
-        chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat]!,
+        chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
         urls: {
           apiURL: "http://localhost:4000/api",
           browserURL: "http://localhost:4000",
