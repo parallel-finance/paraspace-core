@@ -340,6 +340,11 @@ upgrade:
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: clean-pool
+clean-pool:
+# e.g: disable liquidation(function signatures in deployed-contracts.json)
+	FUNCS_TO_REMOVE=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:clean-pool run-task
+
 .PHONY: upgrade-ptoken
 upgrade-ptoken:
 	make TASK_NAME=upgrade:ptoken run-task
