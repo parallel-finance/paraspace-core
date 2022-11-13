@@ -323,6 +323,10 @@ deploy-x2y2:
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
 
+.PHONY: deploy-renounceOwnership
+deploy-renounceOwnership:
+	make TASK_NAME=deploy:renounce-ownership run-task
+
 .PHONY: ad-hoc
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
