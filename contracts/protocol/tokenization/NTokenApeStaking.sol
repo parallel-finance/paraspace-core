@@ -9,7 +9,6 @@ import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
-import "hardhat/console.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -226,26 +225,29 @@ abstract contract NTokenApeStaking is NToken {
                 );
             }
 
-            (uint256 stakedAmount, int256 rewardsDebt) = _apeCoinStaking
-                .nftPosition(BAKC_POOL_ID, _nftPairs[index].bakcTokenId);
+            (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
+                BAKC_POOL_ID,
+                _nftPairs[index].bakcTokenId
+            );
 
             if (
-                stakedAmount == _nftPairs[index].amount ||
-                _nftPairs[index].amount == 0
+                _nftPairs[index].amount == 0 ||
+                _nftPairs[index].amount == stakedAmount
             ) {
                 _nftPairs[index].amount = stakedAmount;
-                (, , , uint256 accumulatedRewardsPerShare) = _apeCoinStaking
-                    .pools(BAKC_POOL_ID);
-                int256 accumulatedApeCoins = (stakedAmount *
-                    accumulatedRewardsPerShare).toInt256();
-                totalAmount +=
-                    stakedAmount +
-                    (accumulatedApeCoins - rewardsDebt).toUint256() /
-                    APE_COIN_PRECISION;
-            } else {
-                totalAmount += _nftPairs[index].amount;
+
+                IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID))
+                    .transferFrom(
+                        address(this),
+                        _bakcRecipient,
+                        _nftPairs[index].bakcTokenId
+                    );
             }
         }
+
+        uint256 balanceBefore = _apeCoinStaking.apeCoin().balanceOf(
+            address(this)
+        );
 
         ApeCoinStaking.PairNftWithAmount[]
             memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
@@ -256,15 +258,14 @@ abstract contract NTokenApeStaking is NToken {
             _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
         }
 
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
-            IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID)).transferFrom(
-                address(this),
-                _bakcRecipient,
-                _nftPairs[index].bakcTokenId
-            );
-        }
+        uint256 balanceAfter = _apeCoinStaking.apeCoin().balanceOf(
+            address(this)
+        );
 
-        _apeCoinStaking.apeCoin().safeTransfer(_apeRecipient, totalAmount);
+        _apeCoinStaking.apeCoin().safeTransfer(
+            _apeRecipient,
+            balanceAfter - balanceBefore
+        );
     }
 
     /**
@@ -337,10 +338,6 @@ abstract contract NTokenApeStaking is NToken {
                 pairdBakcCounter++;
             }
         }
-        console.log(
-            "amount in contract before",
-            _apeCoinStaking.apeCoin().balanceOf(address(_apeCoinStaking))
-        );
 
         if (counter > 0) {
             assembly {

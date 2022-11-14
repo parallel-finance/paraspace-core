@@ -109,7 +109,87 @@ describe("APE coin staking", () => {
     );
   });
 
-  it("TC-ntoken-ape-staking-02 User 1 claims the full staked rewards (BAYC)", async () => {
+  it("TC-ntoken-ape-staking-03 User 1 claims the full staked rewards (BAKC)", async () => {
+    const {
+      users: [user1],
+      nBAYC,
+      ape,
+      apeCoinStaking,
+    } = testEnv;
+
+    // Advance time and blocks
+    await advanceTimeAndBlock(parseInt(ONE_YEAR));
+
+    const pendingRewards = await apeCoinStaking.pendingRewards(
+      3,
+      nBAYC.address,
+      "0"
+    );
+
+    // send extra tokens to the apestaking contract for rewards
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        ["mint(address,uint256)"](apeCoinStaking.address, pendingRewards.mul(2))
+    );
+
+    const userBalance = await ape.balanceOf(user1.address);
+
+    await nBAYC.connect(user1.signer).claimBAKC(
+      [
+        {
+          mainTokenId: "0",
+          bakcTokenId: "0",
+        },
+      ],
+      user1.address
+    );
+
+    expect(await ape.balanceOf(user1.address)).to.be.eq(
+      userBalance.add(pendingRewards)
+    );
+  });
+
+  it("TC-ntoken-ape-staking-04 User 1 withdraws BAKC staked amount", async () => {
+    const {
+      users: [user1],
+      nBAYC,
+      ape,
+    } = testEnv;
+    const amount = await convertToCurrencyDecimals(ape.address, "20");
+
+    const userBalance = await ape.balanceOf(user1.address);
+
+    await waitForTx(
+      await nBAYC.connect(user1.signer).withdrawBAKC(
+        [
+          {
+            mainTokenId: "0",
+            bakcTokenId: "0",
+            amount: amount,
+          },
+        ],
+        user1.address,
+        user1.address
+      )
+    );
+
+    expect(await ape.balanceOf(user1.address)).to.be.eq(
+      userBalance.add(amount)
+    );
+    expect(await bakc.ownerOf("0")).to.be.eq(user1.address);
+    expect(
+      nBAYC.connect(user1.signer).depositBAKC([
+        {
+          mainTokenId: "0",
+          bakcTokenId: "0",
+          amount: amount,
+        },
+      ])
+    );
+  });
+
+  it("TC-ntoken-ape-staking-05 User 1 claims the full staked rewards (BAYC)", async () => {
     const {
       users: [user1],
       nBAYC,
@@ -132,14 +212,16 @@ describe("APE coin staking", () => {
         .connect(user1.signer)
         ["mint(address,uint256)"](apeCoinStaking.address, pendingRewards.mul(2))
     );
+    const userBalance = await ape.balanceOf(user1.address);
 
     await nBAYC.connect(user1.signer).claimApeCoin(["0"], user1.address);
 
-    const userBalance = await ape.balanceOf(user1.address);
-    expect(userBalance).to.be.eq(pendingRewards);
+    expect(await ape.balanceOf(user1.address)).to.be.eq(
+      userBalance.add(pendingRewards)
+    );
   });
 
-  it("TC-ntoken-ape-staking-03 User 1 withdraws the full staked balance + rewards (BAYC)", async () => {
+  it("TC-ntoken-ape-staking-06 User 1 withdraws the full staked balance + rewards (BAYC)", async () => {
     const {
       users: [user1],
       nBAYC,
@@ -178,7 +260,7 @@ describe("APE coin staking", () => {
     );
   });
 
-  it("TC-ntoken-ape-staking-04 On BAYC liquidation, the staked apecoins should be withdrawn", async () => {
+  it("TC-ntoken-ape-staking-07 On BAYC liquidation, the staked apecoins should be withdrawn alongside BAKC", async () => {
     const {
       users: [user1, liquidator],
       pool,
@@ -218,9 +300,11 @@ describe("APE coin staking", () => {
       );
 
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
+
+    expect(await bakc.ownerOf("0")).to.be.eq(user1.address);
   });
 
-  it("TC-ntoken-ape-staking-05 On BAYC liquidation with receive ntoken, the staked apecoins should be withdrawn", async () => {
+  it("TC-ntoken-ape-staking-08 On BAYC liquidation with receive ntoken, the staked apecoins should be withdrawn", async () => {
     const {
       users: [user1, liquidator],
       pool,
@@ -263,7 +347,7 @@ describe("APE coin staking", () => {
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
   });
 
-  it("TC-ntoken-ape-staking-06 User 1 stakes some apecoin with their MAYC", async () => {
+  it("TC-ntoken-ape-staking-09 User 1 stakes some apecoin with their MAYC", async () => {
     const {
       users: [user1],
       mayc,
@@ -284,7 +368,7 @@ describe("APE coin staking", () => {
     );
   });
 
-  it("TC-ntoken-ape-staking-07 User 1 claim the full staked rewards (MAYC)", async () => {
+  it("TC-ntoken-ape-staking-10 User 1 claim the full staked rewards (MAYC)", async () => {
     const {
       users: [user1],
       nMAYC,
@@ -316,7 +400,7 @@ describe("APE coin staking", () => {
     expect(userBalance).to.be.eq(userBalanceBefore.add(pendingRewards));
   });
 
-  it("TC-ntoken-ape-staking-08 User 1 withdraw the full staked balance + rewards (MAYC)", async () => {
+  it("TC-ntoken-ape-staking-11 User 1 withdraw the full staked balance + rewards (MAYC)", async () => {
     const {
       users: [user1],
       nMAYC,
@@ -355,7 +439,7 @@ describe("APE coin staking", () => {
     );
   });
 
-  it("TC-ntoken-ape-staking-09 On MAYC liquidation, the staked apecoins should be withdrawn", async () => {
+  it("TC-ntoken-ape-staking-12 On MAYC liquidation, the staked apecoins should be withdrawn", async () => {
     const {
       users: [user1, liquidator],
       pool,
@@ -400,7 +484,7 @@ describe("APE coin staking", () => {
     expect(await ape.balanceOf(user1.address)).to.be.gte(amount);
   });
 
-  it("TC-ntoken-ape-staking-10 On MAYC liquidation with receive ntoken, the staked apecoins should be withdrawn ", async () => {
+  it("TC-ntoken-ape-staking-13 On MAYC liquidation with receive ntoken, the staked apecoins should be withdrawn ", async () => {
     const {
       users: [user1, liquidator],
       pool,
