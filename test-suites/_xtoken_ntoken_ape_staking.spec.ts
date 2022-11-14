@@ -175,9 +175,6 @@ describe("APE coin staking", () => {
         user1.address
       )
     );
-    console.log("nBAYC", nBAYC.address);
-    console.log("user1", user1.address);
-    console.log("owner", await bakc.ownerOf("0"));
 
     expect(await ape.balanceOf(user1.address)).to.be.eq(
       userBalance.add(amount)
