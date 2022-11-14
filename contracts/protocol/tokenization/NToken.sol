@@ -40,7 +40,10 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, bool atomic_pricing)
+    constructor(
+        IPool pool,
+        bool atomic_pricing
+    )
         MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
@@ -196,13 +199,10 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     /// @inheritdoc INToken
-    function transferUnderlyingTo(address target, uint256 tokenId)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
+    function transferUnderlyingTo(
+        address target,
+        uint256 tokenId
+    ) external virtual override onlyPool nonReentrant {
         IERC721(_underlyingAsset).safeTransferFrom(
             address(this),
             target,
@@ -211,13 +211,10 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     /// @inheritdoc INToken
-    function handleRepayment(address user, uint256 amount)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
+    function handleRepayment(
+        address user,
+        uint256 amount
+    ) external virtual override onlyPool nonReentrant {
         // Intentionally left blank
     }
 
@@ -277,46 +274,12 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         return this.onERC721Received.selector;
     }
 
-    function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external pure override returns (bytes4) {
-        operator;
-        from;
-        id;
-        value;
-        data;
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external pure override returns (bytes4) {
-        operator;
-        from;
-        ids;
-        values;
-        data;
-        return this.onERC1155BatchReceived.selector;
-    }
-
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
         return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
     }
 

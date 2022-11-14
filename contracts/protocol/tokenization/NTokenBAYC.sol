@@ -13,9 +13,10 @@ import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
 contract NTokenBAYC is NTokenApeStaking {
-    constructor(IPool pool, address apeCoinStaking)
-        NTokenApeStaking(pool, apeCoinStaking)
-    {}
+    constructor(
+        IPool pool,
+        address apeCoinStaking
+    ) NTokenApeStaking(pool, apeCoinStaking) {}
 
     /**
      * @notice Deposit ApeCoin to the BAYC Pool
@@ -23,10 +24,9 @@ contract NTokenBAYC is NTokenApeStaking {
      * @dev Commits 1 or more BAYC NFTs, each with an ApeCoin amount to the BAYC pool.\
      * Each BAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the BAYC pool cap amount.
      */
-    function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
-        external
-        nonReentrant
-    {
+    function depositApeCoin(
+        ApeCoinStaking.SingleNft[] calldata _nfts
+    ) external nonReentrant {
         ApeStakingLogic.executeDepositBAYC(_owners, _apeCoinStaking, _nfts);
     }
 
@@ -35,10 +35,10 @@ contract NTokenBAYC is NTokenApeStaking {
      * @param _nfts Array of NFTs owned and committed by the msg.sender
      * @param _recipient Address to send claim reward to
      */
-    function claimApeCoin(uint256[] calldata _nfts, address _recipient)
-        external
-        nonReentrant
-    {
+    function claimApeCoin(
+        uint256[] calldata _nfts,
+        address _recipient
+    ) external nonReentrant {
         ApeStakingLogic.executeClaimBAYC(
             _owners,
             _apeCoinStaking,
@@ -71,10 +71,9 @@ contract NTokenBAYC is NTokenApeStaking {
      * Each BAKC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the Pair pool cap amount.\
      * Example: BAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"]]\
      */
-    function depositBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
-        external
-        nonReentrant
-    {
+    function depositBAKC(
+        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
+    ) external nonReentrant {
         ApeStakingLogic.executeDepositBAKCWithBAYC(
             _owners,
             _apeCoinStaking,

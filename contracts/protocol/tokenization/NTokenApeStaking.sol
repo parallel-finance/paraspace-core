@@ -55,12 +55,11 @@ abstract contract NTokenApeStaking is NToken {
     /**
      * @notice Overrides the transferOnLiquidation from NToken to withdraw all staked and pending rewards before transfer the asset on liquidation
      */
-    function transferOnLiquidation(address from, address to, uint256 tokenId)
-        external
-        override
-        onlyPool
-        nonReentrant
-    {
+    function transferOnLiquidation(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external override onlyPool nonReentrant {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         ApeStakingLogic.executeAutoWithdraw(

@@ -19,7 +19,6 @@ interface INToken is
     IERC721Enumerable,
     IInitializableNToken,
     IERC721Receiver,
-    IERC1155Receiver,
     IXTokenType
 {
     /**
@@ -144,11 +143,7 @@ interface INToken is
      * @param to The address of the recipient
      * @param amount The amount being rescued
      **/
-    function rescueERC20(
-        address token,
-        address to,
-        uint256 amount
-    ) external;
+    function rescueERC20(address token, address to, uint256 amount) external;
 
     /**
      * @notice Rescue ERC721 Token.
