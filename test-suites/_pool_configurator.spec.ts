@@ -1162,7 +1162,7 @@ describe("PoolConfigurator: Modifiers", () => {
 
   it("TC-poolConfigurator-modifiers-03: Test the accessibility of onlyRiskOrPoolAdmins modified functions", async () => {
     const {configurator, users} = await loadFixture(testEnvFixture);
-    const nonRiskOrPoolAdmins = users[3];
+    const nonRiskOrPoolAdmins = users[5];
 
     const randomAddress = ONE_ADDRESS;
     const randomNumber = "0";

@@ -38,6 +38,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
           yarn doc
           yarn lint
 
@@ -70,6 +71,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
           yarn test
 
   coverage:
@@ -99,6 +101,7 @@ jobs:
           yarn cache clean --all
           YARN_CHECKSUM_BEHAVIOR=update yarn
           yarn
+          yarn build
           yarn coverage
         env:
           NODE_OPTIONS: --max_old_space_size=8192

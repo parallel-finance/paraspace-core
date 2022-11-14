@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import {ConduitInterface} from "../interfaces/ConduitInterface.sol";
+import { ConduitInterface } from "../interfaces/ConduitInterface.sol";
 
-import {INToken} from "../../../../interfaces/INToken.sol";
-import {IProtocolDataProvider} from "../../../../interfaces/IProtocolDataProvider.sol";
+import { ConduitItemType } from "./lib/ConduitEnums.sol";
 
-import {ConduitItemType} from "./lib/ConduitEnums.sol";
+import { TokenTransferrer } from "../lib/TokenTransferrer.sol";
 
-import {TokenTransferrer} from "../lib/TokenTransferrer.sol";
-
-import {ConduitTransfer, ConduitBatch1155Transfer} from "./lib/ConduitStructs.sol";
+import {
+    ConduitTransfer,
+    ConduitBatch1155Transfer
+} from "./lib/ConduitStructs.sol";
 
 import "./lib/ConduitConstants.sol";
+
+import { INToken } from "../../../../interfaces/INToken.sol";
+import { IProtocolDataProvider } from "../../../../interfaces/IProtocolDataProvider.sol";
 
 /**
  * @title Conduit

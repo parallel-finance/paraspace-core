@@ -7,6 +7,8 @@ import {getAggregator, getMoonBirds} from "../deploy/helpers/contracts-getters";
 import {parseEther} from "ethers/lib/utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {executeSeaportBuyWithCredit} from "./helpers/marketplace-helper";
+import {supplyAndValidate} from "./helpers/validated-steps";
 
 describe("MoonBirds nToken and supply while nesting", () => {
   let testEnv: TestEnv;
@@ -68,21 +70,170 @@ describe("MoonBirds nToken and supply while nesting", () => {
     ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
   });
 
+  it("TC-moonbirds-04 User deposits a nesting moonbird from transfer and withdraws after", async () => {
+    const {
+      users: [, user2],
+      pool,
+      moonbirds,
+      nMOONBIRD,
+    } = testEnv;
+
+    await waitForTx(
+      await moonbirds.connect(user2.signer)["mint(address)"](user2.address)
+    );
+
+    await waitForTx(
+      await moonbirds
+        .connect(user2.signer)
+        .setApprovalForAll(pool.address, true)
+    );
+
+    await moonbirds.setNestingOpen(true);
+
+    await waitForTx(await moonbirds.connect(user2.signer).toggleNesting(["1"]));
+
+    await moonbirds
+      .connect(user2.signer)
+      .safeTransferWhileNesting(user2.address, nMOONBIRD.address, "1");
+
+    const nTokenBalance = await nMOONBIRD.balanceOf(user2.address);
+    expect(nTokenBalance.toNumber()).equal(1);
+
+    expect((await moonbirds.nestingPeriod("1")).nesting).equal(true);
+
+    await pool
+      .connect(user2.signer)
+      .withdrawERC721(moonbirds.address, [1], user2.address);
+
+    const balance = await nMOONBIRD.balanceOf(user2.address);
+    expect(balance.toNumber()).equal(0);
+
+    const moonBalance = await moonbirds.balanceOf(user2.address);
+    expect(moonBalance.toNumber()).equal(1);
+
+    const nesting = await moonbirds.nestingPeriod(1);
+    expect(nesting.nesting).equal(true);
+  });
+
+  it("TC-moonbirds-05 Cannot use safeTransfer() to transfer another asset to nMoonbird (revert expected)", async () => {
+    testEnv = await loadFixture(testEnvFixture);
+    const {
+      users: [, user2],
+      pool,
+      bayc,
+      moonbirds,
+      nMOONBIRD,
+    } = testEnv;
+
+    await waitForTx(
+      await moonbirds.connect(user2.signer)["mint(address)"](user2.address)
+    );
+
+    await waitForTx(
+      await bayc.connect(user2.signer).setApprovalForAll(pool.address, true)
+    );
+
+    expect(
+      bayc
+        .connect(user2.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user2.address,
+          nMOONBIRD.address,
+          "3"
+        )
+    ).to.be.reverted;
+  });
+
+  it("TC-moonbirds-06 Selling a moonbird in the nesting will not interrupt the nesting", async () => {
+    testEnv = await loadFixture(testEnvFixture);
+
+    const {
+      users: [user1, buyer, liquidity3],
+      moonbirds,
+      nMOONBIRD,
+      usdc,
+      bayc,
+      pool,
+    } = testEnv;
+
+    const creditAmount = "1000";
+    await supplyAndValidate(usdc, creditAmount, liquidity3, true);
+    await supplyAndValidate(bayc, "5", buyer, true);
+    await waitForTx(
+      await usdc.connect(buyer.signer)["mint(uint256)"](creditAmount)
+    );
+    await waitForTx(
+      await usdc.connect(buyer.signer).approve(pool.address, creditAmount)
+    );
+    await waitForTx(
+      await moonbirds.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await moonbirds.setNestingOpen(true);
+    await waitForTx(await moonbirds.connect(user1.signer).toggleNesting(["0"]));
+    await moonbirds
+      .connect(user1.signer)
+      .safeTransferWhileNesting(user1.address, nMOONBIRD.address, "0");
+
+    const balance = await nMOONBIRD.balanceOf(user1.address);
+    expect(balance.toNumber()).equal(1);
+    const startAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      creditAmount
+    );
+    const endAmount = startAmount; // fixed price, offerer can afford this
+    const nftId = 0;
+    const payLaterAmount = startAmount;
+
+    await executeSeaportBuyWithCredit(
+      nMOONBIRD,
+      usdc,
+      startAmount,
+      endAmount,
+      payLaterAmount,
+      nftId,
+      user1,
+      buyer
+    );
+
+    const balanceMaker = await nMOONBIRD.balanceOf(user1.address);
+    expect(balanceMaker.toNumber()).equal(0);
+    const balanceBuyer = await nMOONBIRD.balanceOf(buyer.address);
+    expect(balanceBuyer.toNumber()).equal(1);
+
+    // should stay nested
+    const nMoonBird = await getMoonBirds(nMOONBIRD.address);
+    const newNestingBuyer = await nMoonBird.nestingPeriod(0);
+    expect(newNestingBuyer.nesting).equal(true);
+  });
+});
+
+describe("MoonBirds nToken and supply while nesting", () => {
+  let testEnv: TestEnv;
   const liquidationFixture = async () => {
+    testEnv = await loadFixture(testEnvFixture);
     // User 2 deposits DAI and user 1 borrows DAI
     // Then Moonbird price drops enough so that borrower becomes eligible for liquidation
     const {
       users: [user1, user2],
       pool,
       dai,
+      moonbirds,
+      nMOONBIRD,
     } = testEnv;
 
-    const daiAmount = await convertToCurrencyDecimals(dai.address, "40000");
+    await waitForTx(
+      await moonbirds.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await moonbirds.setNestingOpen(true);
+    await waitForTx(await moonbirds.connect(user1.signer).toggleNesting(["0"]));
+    await moonbirds
+      .connect(user1.signer)
+      .safeTransferWhileNesting(user1.address, nMOONBIRD.address, "0");
 
+    const daiAmount = await convertToCurrencyDecimals(dai.address, "40000");
     await waitForTx(
       await dai.connect(user2.signer)["mint(uint256)"](daiAmount)
     );
-
     // approve protocol to access depositor wallet
     await waitForTx(
       await dai.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
@@ -112,8 +263,11 @@ describe("MoonBirds nToken and supply while nesting", () => {
     return testEnv;
   };
 
-  it("TC-moonbirds-04 Liquidator liquidates Moonbird while it's nesting - gets nToken", async () => {
+  beforeEach(async () => {
     testEnv = await loadFixture(liquidationFixture);
+  });
+
+  it("TC-moonbirds-07 Liquidator liquidates Moonbird while it's nesting - gets nToken", async () => {
     const {
       users: [borrower, , liquidator],
       moonbirds,
@@ -162,8 +316,7 @@ describe("MoonBirds nToken and supply while nesting", () => {
     expect(newNesting.nesting).equal(true);
   });
 
-  it("TC-moonbirds-05 Liquidator liquidates Moonbird while it's nesting - gets Moonbird", async () => {
-    testEnv = await loadFixture(liquidationFixture);
+  it("TC-moonbirds-08 Liquidator liquidates Moonbird while it's nesting - gets Moonbird", async () => {
     const {
       users: [borrower, , liquidator],
       moonbirds,
@@ -210,78 +363,5 @@ describe("MoonBirds nToken and supply while nesting", () => {
     // should stay nested
     const newNesting = await moonbirds.nestingPeriod(0);
     expect(newNesting.nesting).equal(true);
-  });
-
-  it("TC-moonbirds-06 User deposits a nesting moonbird from transfer and withdraws after", async () => {
-    const {
-      users: [, user2],
-      pool,
-      moonbirds,
-      nMOONBIRD,
-    } = testEnv;
-
-    await waitForTx(
-      await moonbirds.connect(user2.signer)["mint(address)"](user2.address)
-    );
-
-    await waitForTx(
-      await moonbirds
-        .connect(user2.signer)
-        .setApprovalForAll(pool.address, true)
-    );
-
-    await moonbirds.setNestingOpen(true);
-
-    await waitForTx(await moonbirds.connect(user2.signer).toggleNesting(["1"]));
-
-    await moonbirds
-      .connect(user2.signer)
-      .safeTransferWhileNesting(user2.address, nMOONBIRD.address, "1");
-
-    const nTokenBalance = await nMOONBIRD.balanceOf(user2.address);
-    expect(nTokenBalance.toNumber()).equal(1);
-
-    expect((await moonbirds.nestingPeriod("1")).nesting).equal(true);
-
-    await pool
-      .connect(user2.signer)
-      .withdrawERC721(moonbirds.address, [1], user2.address);
-
-    const balance = await nMOONBIRD.balanceOf(user2.address);
-    expect(balance.toNumber()).equal(0);
-
-    const moonBalance = await moonbirds.balanceOf(user2.address);
-    expect(moonBalance.toNumber()).equal(1);
-
-    const nesting = await moonbirds.nestingPeriod(1);
-    expect(nesting.nesting).equal(true);
-  });
-
-  it("TC-moonbirds-07 Cannot use safeTransfer() to transfer another asset to nMoonbird (revert expected)", async () => {
-    const {
-      users: [, user2],
-      pool,
-      bayc,
-      moonbirds,
-      nMOONBIRD,
-    } = testEnv;
-
-    await waitForTx(
-      await moonbirds.connect(user2.signer)["mint(address)"](user2.address)
-    );
-
-    await waitForTx(
-      await bayc.connect(user2.signer).setApprovalForAll(pool.address, true)
-    );
-
-    expect(
-      bayc
-        .connect(user2.signer)
-        ["safeTransferFrom(address,address,uint256)"](
-          user2.address,
-          nMOONBIRD.address,
-          "3"
-        )
-    ).to.be.reverted;
   });
 });

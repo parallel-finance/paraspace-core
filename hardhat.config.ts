@@ -2,16 +2,21 @@ import path from "path";
 import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
-  COVERAGE_CHAINID,
-  FORK_CHAINID,
   MAINNET_CHAINID,
   GOERLI_CHAINID,
+  MOCHA_JOBS,
+  HARDFORK,
+  DEFAULT_BLOCK_GAS_LIMIT,
+  ETHERSCAN_KEY,
+  REPORT_GAS,
+  TENDERLY_PROJECT,
+  TENDERLY_USERNAME,
 } from "./deploy/helpers/hardhat-constants";
 import {accounts} from "./deploy/test-wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {
   buildForkConfig,
-  CHAIN_ID_TO_FORK,
+  CHAINS_ID,
   NETWORKS_RPC_URL,
 } from "./deploy/helper-hardhat-config";
 import fs from "fs";
@@ -27,11 +32,6 @@ import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
 import {eEthereumNetwork} from "./deploy/helpers/types";
-
-const DEFAULT_BLOCK_GAS_LIMIT = 30000000;
-const HARDFORK = "london";
-const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
-const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS ?? "4");
 
 require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
 
@@ -63,7 +63,7 @@ const hardhatConfig: HardhatUserConfig = {
     exclude: ["dependencies", "deployments", "mocks"],
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS == "true" ? true : false,
+    enabled: REPORT_GAS,
   },
   solidity: {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
@@ -102,78 +102,65 @@ const hardhatConfig: HardhatUserConfig = {
     timeout: 200000,
   },
   tenderly: {
-    project: process.env.TENDERLY_PROJECT || "",
-    username: process.env.TENDERLY_USERNAME || "",
+    project: TENDERLY_PROJECT,
+    username: TENDERLY_USERNAME,
     forkNetwork: `${MAINNET_CHAINID}`, //Network id of the network we want to fork
   },
   networks: {
+    localhost: {
+      chainId: CHAINS_ID[eEthereumNetwork.hardhat],
+      accounts: accounts.map(({privateKey}) => privateKey),
+      gasPrice: "auto",
+      gas: "auto",
+      allowUnlimitedContractSize: true,
+    },
     parallel: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
-      chainId: 1592,
-      accounts: evmAccounts.map(
-        ({secretKey}: {secretKey: string; balance: string}) => secretKey
-      ),
+      chainId: CHAINS_ID[eEthereumNetwork.parallel],
+      accounts: evmAccounts.map(({privateKey}) => privateKey),
       gasPrice: 4e9,
       gas: 4e6,
       allowUnlimitedContractSize: true,
-    },
-    coverage: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.coverage],
-      chainId: COVERAGE_CHAINID,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
     },
     hardhat: {
       hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
       gasPrice: "auto",
-      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
+      chainId: CHAINS_ID[eEthereumNetwork.hardhat],
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
-      accounts: accounts.map(
-        ({secretKey, balance}: {secretKey: string; balance: string}) => ({
-          privateKey: secretKey,
-          balance,
-        })
-      ),
+      accounts,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
-    },
-    localhost: {
-      hardfork: HARDFORK,
-      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
-      chainId: CHAIN_ID_TO_FORK[eEthereumNetwork.hardhat],
-      forking: buildForkConfig(),
-      allowUnlimitedContractSize: true,
-    },
-    ganache: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.ganache],
-      chainId: FORK_CHAINID,
-      accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
     },
     goerli: {
       chainId: GOERLI_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
-      accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
-      },
+      accounts: accounts.map(({privateKey}) => privateKey),
     },
     mainnet: {
       chainId: MAINNET_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
-      accounts: {
-        mnemonic: process.env.DEPLOYER_MNEMONIC || "",
-      },
+      accounts: accounts.map(({privateKey}) => privateKey),
     },
   },
   etherscan: {
-    apiKey: ETHERSCAN_KEY,
+    apiKey: {
+      mainnet: ETHERSCAN_KEY,
+      goerli: ETHERSCAN_KEY,
+      localhost: ETHERSCAN_KEY,
+    },
+    customChains: [
+      {
+        network: eEthereumNetwork.localhost,
+        chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
+        urls: {
+          apiURL: "http://localhost:4000/api",
+          browserURL: "http://localhost:4000",
+        },
+      },
+    ],
   },
 };
 

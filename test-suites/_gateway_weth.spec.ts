@@ -13,7 +13,10 @@ import {DRE} from "../deploy/helpers/misc-utils";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {isAssetInCollateral} from "./helpers/validated-steps";
+import {
+  assertAlmostEqual,
+  isAssetInCollateral,
+} from "./helpers/validated-steps";
 
 declare let hre: HardhatRuntimeEnvironment;
 
@@ -139,7 +142,7 @@ describe("WETH GateWay", () => {
 
     const userEthBalanceBefore = await user1.signer.getBalance();
 
-    const ownerPrivateKey = testWallets[0].secretKey;
+    const ownerPrivateKey = testWallets[0].privateKey;
     const {v, r, s} = getSignatureFromTypedData(ownerPrivateKey, msgParams);
 
     // withdraws with permit
@@ -175,11 +178,11 @@ describe("WETH GateWay", () => {
   it("TC-weth-gateway-05 Owner does emergency token transfer 50 WETH to User 1", async () => {
     const {
       users: [user1],
+      gatewayAdmin,
       wETHGateway,
       weth,
-      deployer,
     } = testEnv;
-    const owner = deployer;
+    const owner = gatewayAdmin;
 
     // User 1 deposits 1 ETH
     const ethValue = {
@@ -227,11 +230,11 @@ describe("WETH GateWay", () => {
   it("TC-weth-gateway-06 Owner does emergency ether transfer 50 ETH to User 1", async () => {
     const {
       users: [user1],
+      gatewayAdmin,
       wETHGateway,
       weth,
-      deployer,
     } = testEnv;
-    const owner = deployer;
+    const owner = gatewayAdmin;
 
     const amountETHtoTransfer = await convertToCurrencyDecimals(
       weth.address,
@@ -267,7 +270,8 @@ describe("WETH GateWay", () => {
     );
 
     expect(await weth.balanceOf(user1.address)).to.eq(userWETHBalanceBefore);
-    expect(await user1.signer.getBalance()).to.eq(
+    assertAlmostEqual(
+      await user1.signer.getBalance(),
       userETHBalanceBefore.add(amountETHtoTransfer)
     );
   });

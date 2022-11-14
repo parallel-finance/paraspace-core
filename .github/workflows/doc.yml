@@ -35,9 +35,8 @@ jobs:
       - name: Generate Documentation
         run: |
           yarn
-          touch .env
-          make build
-          make doc
+          yarn build
+          yarn doc
           mkdir bin
           curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.21/mdbook-v0.4.21-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
           bin/mdbook init paraspace-core-docs --title "paraspace core" --ignore none

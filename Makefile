@@ -1,8 +1,11 @@
 #!make
-include .env
-export $(shell sed 's/=.*//' .env)
 
 NETWORK                  := hardhat
+DISABLE_INDEXER          := true
+
+include .env
+export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
+
 SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
@@ -16,15 +19,15 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -69,9 +72,17 @@ submodules:
 test-pool-upgrade:
 	make TEST_TARGET=pool-upgrade.spec.ts test
 
+.PHONY: test-pool-edge
+test-pool-edge:
+	make TEST_TARGET=pool-edge.spec.ts test
+
 .PHONY: test-ntoken
 test-ntoken:
-	make TEST_TARGET=ntoken.spec.ts test
+	make TEST_TARGET=_xtoken_ntoken.spec.ts test
+
+.PHONY: test-ntoken-punk
+test-ntoken-punk:
+	make TEST_TARGET=ntoken-punk.spec.ts test
 
 .PHONY: test-ptoken
 test-ptoken:
@@ -105,33 +116,21 @@ test-erc20-repay:
 test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
 
-.PHONY: test-configurator-edge
-test-configurator-edge:
-	make TEST_TARGET=configurator-edge.spec.ts test
-
-.PHONY: test-debt-token-delegation-permit
-test-debt-token-delegation-permit:
-	make TEST_TARGET=debt-token-delegation-permit.spec.ts test
-
-.PHONY: test-ptoken-permit
-test-ptoken-permit:
-	make TEST_TARGET=ptoken-permit.spec.ts test
-
-.PHONY: test-ptoken-delegation-aware
-test-ptoken-delegation-aware:
-	make TEST_TARGET=ptoken-delegation-aware.spec.ts test
+.PHONY: test-configurator
+test-configurator:
+	make TEST_TARGET=_pool_configurator.spec.ts test
 
 .PHONY: test-pausable-reserve
 test-pausable-reserve:
 	make TEST_TARGET=pausable-reserve.spec.ts test
 
+.PHONY: test-rescue-tokens
+test-rescue-tokens:
+	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test	
+
 .PHONY: test-upgradeability
 test-upgradeability:
 	make TEST_TARGET=_base_upgradeability.spec.ts test
-
-.PHONY: test-erc20
-test-erc20:
-	make TEST_TARGET=erc20.spec.ts test
 
 .PHONY: test-flash-claim
 test-flash-claim:
@@ -157,33 +156,37 @@ test-mock-token-faucet:
 test-moonbirds:
 	make TEST_TARGET=_xtoken_ntoken_moonbirds.spec.ts test
 
-.PHONY: test-marketplace
-test-marketplace:
-	make TEST_TARGET=marketplace.spec.ts test
+.PHONY: test-marketplace-buy
+test-marketplace-buy:
+	make TEST_TARGET=_pool_marketplace_buy_with_credit.spec.ts test
 
-.PHONY: test-uniswap-v3
-test-uniswap-v3:
-	make TEST_TARGET=uniswap-v3.spec.ts test
+.PHONY: test-marketplace-accept-bid
+test-marketplace-accept-bid:
+	make TEST_TARGET=_pool_marketplace_accept_bid_credit.spec.ts test
 
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
-	make TEST_TARGET=uniswap-v3-oracle.spec.ts test
+	make TEST_TARGET=_uniswap-v3-oracle.spec.ts test
+
+.PHONY: test-uniswap-v3-ltv-validation
+test-uniswap-v3-ltv-validation:
+	make TEST_TARGET=_uniswap_ltv_validation.spec.ts test
+
+.PHONY: test-uniswap-v3-pool-operation
+test-uniswap-v3-pool-operation:
+	make TEST_TARGET=_uniswapv3_pool_operation.spec.ts test
+
+.PHONY: test-uniswap-v3-position-control
+test-uniswap-v3-position-control:
+	make TEST_TARGET=_uniswapv3_position_control.spec.ts test
 
 .PHONY: test-auction-strategy
 test-auction-strategy:
 	make TEST_TARGET=_base_auction_strategy.spec.ts test
 
-.PHONY: test-ptoken-transfer
-test-ptoken-transfer:
-	make TEST_TARGET=ptoken-transfer.spec.ts test
-
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
 	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
-
-.PHONY: test-paraspace-oracle
-test-paraspace-oracle:
-	make TEST_TARGET=paraspace-oracle.spec.ts test
 
 .PHONY: test-no-incentives-controller
 test-no-incentives-controller:
@@ -191,27 +194,19 @@ test-no-incentives-controller:
 
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
-	make TEST_TARGET=atomic-tokens-limit.spec.ts test
+	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
-	make TEST_TARGET=rebasing.spec.ts test
+	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
 
-.PHONY: test-pool-addresses-provider
-test-pool-addresses-provider:
+.PHONY: test-addresses-provider
+test-addresses-provider:
 	make TEST_TARGET=_base_addresses_provider.spec.ts test
 
 .PHONY: test-addresses-provider-registry
 test-addresses-provider-registry:
 	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
-
-.PHONY: test-pausable-pool
-test-pausable-pool:
-	make TEST_TARGET=pausable-pool.spec.ts test
-
-.PHONY: test-pool-drop-reserve
-test-pool-drop-reserve:
-	make TEST_TARGET=pool-drop-reserve.spec.ts test
 
 .PHONY: test-price-oracle-sentinel
 test-price-oracle-sentinel:
@@ -229,10 +224,6 @@ test-rate-strategy:
 test-reserve-configuration:
 	make TEST_TARGET=reserve-configuration.spec.ts test
 
-.PHONY: test-dynamic-configs-strategy
-test-dynamic-configs-strategy:
-	make TEST_TARGET=dynamic-configs-strategy.spec.ts test
-
 .PHONY: test-scenario
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
@@ -243,7 +234,11 @@ test-data-providers:
 
 .PHONY: test-ape-staking
 test-ape-staking:
-	make TEST_TARGET=ape_coin_staking.spec.ts test
+	make TEST_TARGET=_xtoken_ntoken_ape_staking.spec.ts test
+
+.PHONY: test-acl-manager
+test-acl-manager:
+	make TEST_TARGET=acl-manager.spec.ts test
 
 .PHONY: run
 run:
@@ -337,6 +332,10 @@ deploy-x2y2:
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
 
+.PHONY: deploy-renounceOwnership
+deploy-renounceOwnership:
+	make TASK_NAME=deploy:renounce-ownership run-task
+
 .PHONY: ad-hoc
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
@@ -369,8 +368,8 @@ upgrade-ntoken-uniswapv3:
 upgrade-ntoken-moonbirds:
 	make TASK_NAME=upgrade:ntoken_moonbirds run-task
 
-.PHONY: fork
-fork:
+.PHONY: node
+node:
 	npx hardhat node --hostname 0.0.0.0
 
 .PHONY: image
@@ -385,6 +384,7 @@ launch:
 	docker-compose \
 		up \
 		-d --build
+	docker-compose logs -f
 
 .PHONY: shutdown
 shutdown:

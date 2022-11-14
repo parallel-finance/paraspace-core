@@ -53,7 +53,7 @@ const fixture = async () => {
   // Borrower borrows 65 wETH
   await borrowAndValidate(weth, "65", borrower);
 
-  // HF = 100 * 1 * 0.8 / 65 = 1.2307692307692307692
+  // HF = 100 * 1 * 0.9 / 65 = 1.3846153846153846154
 
   return testEnv;
 };
@@ -85,7 +85,8 @@ describe("ERC-20 Liquidation Tests", () => {
       users: [borrower, liquidator],
       dai,
     } = await loadFixture(fixture);
-    await changePriceAndValidate(dai, "0.80");
+    await changePriceAndValidate(dai, "0.70");
+    // HF = 100 * 0.7 * 0.9 / 65 = 0.96923076923076923077
 
     // try to liquidate with DAI
     await liquidateAndValidateReverted(
@@ -105,7 +106,8 @@ describe("ERC-20 Liquidation Tests", () => {
       weth,
       dai,
     } = await loadFixture(fixture);
-    await changePriceAndValidate(dai, "0.80");
+    await changePriceAndValidate(dai, "0.70");
+    // HF = 100 * 0.7 * 0.9 / 65 = 0.96923076923076923077
 
     // try to liquidate wETH
     await liquidateAndValidateReverted(
@@ -172,9 +174,8 @@ describe("ERC-20 Liquidation Tests", () => {
       users: [borrower, liquidator],
       dai,
     } = await loadFixture(fixture);
-    await changePriceAndValidate(dai, "0.80");
-    // supplied 100 DAI and borrowed 65 WETH
-    // HF = 100 * 0.8 * 0.8 / 65 = 0.98461538461538461538
+    await changePriceAndValidate(dai, "0.70");
+    // HF = 100 * 0.7 * 0.9 / 65 = 0.96923076923076923077
 
     await liquidateAndValidate(
       dai,
@@ -193,13 +194,12 @@ describe("ERC-20 Liquidation Tests", () => {
       dai,
       pool,
     } = await loadFixture(fixture);
-    // HF = 100 * 0.8 * 1 / 65 = 1.2307692307692307692
+    // HF = 100 * 1 * 0.9 / 65 = 1.3846153846153846154
     await borrowAndValidate(weth, "5", borrower);
-    // supplied 100 DAI and borrowed 70 WETH
-    // HF = 100 * 0.8 * 1 / 70 = 1.1428571428571428571
+    // HF = 100 * 1 * 0.9 / 70 = 1.2857142857142857143
 
-    await changePriceAndValidate(dai, "0.80");
-    // HF = 100 * 0.8 * 0.8 / 70 = 0.91428571428571428571
+    await changePriceAndValidate(dai, "0.73");
+    // HF = 100 * 0.73 * 0.9 / 70 = 0.93857142857142857143
 
     await liquidateAndValidate(
       dai,
@@ -226,11 +226,10 @@ describe("ERC-20 Liquidation Tests", () => {
       variableDebtWeth,
     } = await loadFixture(fixture);
     await borrowAndValidate(wBTC, "5", borrower);
-    // supplied 100 DAI and borrowed 65 WETH and 5 WBTC
-    // HF = 100 * 0.8 * 1 / (65 + 5) = 1.1428571428571428571
+    // HF = 100 * 1 * 0.9 / (65 + 5) = 1.2857142857142857143
 
-    await changePriceAndValidate(dai, "0.80");
-    // HF = 100 * 0.8 * 0.8 / (65 + 5) = 0.91428571428571428571
+    await changePriceAndValidate(dai, "0.70");
+    // HF = 100 * 0.7 * 0.9 / (65 + 5) = 0.9
 
     const wethData = await pool.getReserveData(weth.address);
     const userConfigBefore = BigNumber.from(
@@ -269,8 +268,8 @@ describe("ERC-20 Liquidation Tests", () => {
       dai,
       variableDebtWeth,
     } = await loadFixture(fixture);
-    await changePriceAndValidate(dai, "0.75");
-    // HF = 100 * 0.8 * 0.75 / 65 = 0.92307692307692307692
+    await changePriceAndValidate(dai, "0.65");
+    // HF = 100 * 0.9 * 0.65 / 65 = 0.9
 
     await liquidateAndValidate(
       dai,
@@ -296,8 +295,8 @@ describe("ERC-20 Liquidation Tests", () => {
     await borrowAndValidate(wBTC, "2", borrower);
     await borrowAndValidate(usdc, "5", borrower);
 
-    await changePriceAndValidate(dai, "0.80");
-    // HF = 100 * 0.8 * 0.8 / (65 + 2 + 0.5 * 5) = 0.92086330935251798561
+    await changePriceAndValidate(dai, "0.70");
+    // HF = 100 * 0.7 * 0.9 / (65 + 2 + 0.5 * 5) = 0.90647482014388489209
 
     await liquidateAndValidate(dai, weth, "65", liquidator, borrower, false);
   });
@@ -372,8 +371,8 @@ describe("ERC-20 Liquidation Tests", () => {
       daiLiquidationProtocolFeeInput
     );
 
-    await changePriceAndValidate(dai, "0.75");
-    // HF = 100 * 0.8 * 0.75 / 65 = 0.92307692307692307692
+    await changePriceAndValidate(dai, "0.6");
+    // HF = 100 * 0.9 * 0.6 / 65 = 0.83076923076923076923
 
     await liquidateAndValidate(dai, weth, "75", liquidator, borrower, true);
   });
@@ -394,8 +393,8 @@ describe("ERC-20 Liquidation Tests", () => {
       daiLiquidationProtocolFeeInput
     );
 
-    await changePriceAndValidate(dai, "0.75");
-    // HF = 100 * 0.8 * 0.75 / 65 = 0.92307692307692307692
+    await changePriceAndValidate(dai, "0.6");
+    // HF = 100 * 0.8 * 0.6 / 65 = 0.73846153846153846154
 
     const treasuryAddress = await pDai.RESERVE_TREASURY_ADDRESS();
     const treasuryDataBefore = await protocolDataProvider.getUserReserveData(
@@ -447,9 +446,8 @@ describe("ERC-20 Liquidation Tests", () => {
       dai,
       pool,
     } = await loadFixture(fixture);
-    await changePriceAndValidate(dai, "0.75");
-    // HF = 100 * 0.8 * 0.75/ 65 = 0.92307692307692307692
-    // 100 * 0.75 / 1.05 = 71.428571428571428571
+    await changePriceAndValidate(dai, "0.68");
+    // HF = 100 * 0.9 * 0.68 / 65 = 0.94153846153846153846
 
     // liquidate asset
     await waitForTx(
@@ -564,13 +562,17 @@ describe("ERC-20 Liquidation Tests", () => {
     // 10k DAI ~= 10 ETH
     await borrowAndValidate(weth, "10", borrower);
 
+    // HF = (101 * 1 * 0.7 + 100 * 0.000908578801039414 * 0.9) / 10 = 7.078177209209354726
+
     // drop BAYC price to liquidation levels (HF ~= 0.6)
     await changePriceAndValidate(bayc, "8");
 
-    // 100 * 908578801039414 / 1e18 / 1.05 = 0.086531314384706095238
+    // HF = (8 * 1 * 0.7 + 100 * 0.000908578801039414 * 0.9) / 10 = 0.568177209209354726
+
+    // 100 * 908578801039414 / 1e18 / 1.04 = 0.087363346253789807692
     const actualLiquidationAmount = BigNumber.from("100")
       .mul("908578801039414")
-      .percentDiv("10500");
+      .percentDiv("10400");
     const liquidationAmount = utils.parseEther("1").toString();
     const liquidatorBalanceBefore = await pool.provider.getBalance(
       liquidator.address
@@ -678,14 +680,14 @@ describe("ERC-20 Liquidation Tests", () => {
           borrower.address
         );
 
-      // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
+      // HF = (2 * 0.86) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.7083658508244377412
 
       // Increase usdc price to allow liquidation
       const usdcAgg = await getAggregator(undefined, "USDC");
       const newUsdcPrice = parseEther("0.00169").toString();
       await usdcAgg.updateLatestAnswer(newUsdcPrice);
 
-      // HF: (2 * 0.85) / (1000 * 0.00169 + 100 * 0.000908578801039414) = 0.95459610729901587889
+      // HF: (2 * 0.86) / (1000 * 0.00169 + 100 * 0.000908578801039414) = 0.96582664973782783041
 
       const daiData = await pool.getReserveData(dai.address);
       const variableDebtToken = VariableDebtToken__factory.connect(
@@ -794,14 +796,14 @@ describe("ERC-20 Liquidation Tests", () => {
           borrower.address
         );
 
-      // HF: (2 * 0.85) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.6885011316288047442
+      // HF = (2 * 0.86) / (1000 * 0.000915952223931999 + 100 * 0.000908578801039414) = 1.7083658508244377412
 
       // Increase usdc price to allow liquidation
       const usdcAgg = await getAggregator(undefined, "USDC");
-      const newUsdcPrice = parseEther("0.00170").toString();
+      const newUsdcPrice = parseEther("0.00172").toString();
       await usdcAgg.updateLatestAnswer(newUsdcPrice);
 
-      // HF: (2 * 0.85) / (1000 * 0.00170 + 100 * 0.000908578801039414) = 0.94926572280617376059
+      // HF: (2 * 0.86) / (1000 * 0.00172 + 100 * 0.000908578801039414) = 0.94982605697431857539
 
       const daiData = await pool.getReserveData(dai.address);
       const variableDebtToken = VariableDebtToken__factory.connect(
