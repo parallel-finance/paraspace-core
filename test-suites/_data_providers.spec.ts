@@ -576,11 +576,11 @@ describe("UI Contracts Tests", () => {
 
       expect(variableDebtDai.address).to.eq(daiVariableDebtTokenAddress);
 
-      const daiPTokenAdress = (
+      const daiPTokenAddress = (
         await protocolDataProvider.getReserveTokensAddresses(dai.address)
       ).xTokenAddress;
 
-      expect(pDai.address).to.eq(daiPTokenAdress);
+      expect(pDai.address).to.eq(daiPTokenAddress);
     });
 
     it("TC-protocol-data-provider-12 Test getStrategyAddresses()", async () => {
