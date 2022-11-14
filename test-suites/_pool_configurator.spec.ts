@@ -18,6 +18,9 @@ import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {strategyWETH} from "../deploy/market-config/reservesConfigs";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
+  ERC20,
+  ERC20__factory,
+  MintableERC20,
   MintableERC20__factory,
   MockReserveInterestRateStrategy__factory,
   ProtocolDataProvider,
@@ -26,6 +29,9 @@ import {
 } from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
+import {waitForTx} from "../deploy/helpers/misc-utils";
+import {BigNumberish} from "ethers";
+import "./helpers/utils/wadraymath";
 
 describe("PoolConfigurator: Common", () => {
   type ReserveConfigurationValues = {
@@ -1367,5 +1373,485 @@ describe("PoolConfigurator: Edge cases", () => {
       configurator.setReserveActive(dai.address, false),
       RESERVE_LIQUIDITY_NOT_ZERO
     ).to.be.revertedWith(RESERVE_LIQUIDITY_NOT_ZERO);
+  });
+});
+
+describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
+  let mockToken: MintableERC20;
+  let pMockToken: ERC20;
+  let testEnv: TestEnv;
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+    const {pool, poolAdmin, oracle, configurator, dai, protocolDataProvider} =
+      testEnv;
+
+    mockToken = await new MintableERC20__factory(await getFirstSigner()).deploy(
+      "MOCK",
+      "MOCK",
+      "18"
+    );
+
+    const variableDebtTokenImplementation =
+      await new VariableDebtToken__factory(await getFirstSigner()).deploy(
+        pool.address
+      );
+    const xTokenImplementation = await new PToken__factory(
+      await getFirstSigner()
+    ).deploy(pool.address);
+
+    const daiData = await pool.getReserveData(dai.address);
+    await waitForTx(
+      await oracle
+        .connect(poolAdmin.signer)
+        .setAssetPrice(
+          mockToken.address,
+          parseEther("0.000908578801039414").toString()
+        )
+    );
+
+    const interestRateStrategyAddress = daiData.interestRateStrategyAddress;
+    const mockAuctionStrategy = await deployReserveAuctionStrategy(
+      eContractid.DefaultReserveAuctionStrategy,
+      [
+        auctionStrategyExp.maxPriceMultiplier,
+        auctionStrategyExp.minExpPriceMultiplier,
+        auctionStrategyExp.minPriceMultiplier,
+        auctionStrategyExp.stepLinear,
+        auctionStrategyExp.stepExp,
+        auctionStrategyExp.tickLength,
+      ]
+    );
+
+    // Init the reserve
+    const initInputParams: {
+      xTokenImpl: string;
+      variableDebtTokenImpl: string;
+      underlyingAssetDecimals: BigNumberish;
+      interestRateStrategyAddress: string;
+      auctionStrategyAddress: string;
+      underlyingAsset: string;
+      assetType: BigNumberish;
+      treasury: string;
+      incentivesController: string;
+      xTokenName: string;
+      xTokenSymbol: string;
+      variableDebtTokenName: string;
+      variableDebtTokenSymbol: string;
+      params: string;
+    }[] = [
+      {
+        xTokenImpl: xTokenImplementation.address,
+        variableDebtTokenImpl: variableDebtTokenImplementation.address,
+        underlyingAssetDecimals: 18,
+        interestRateStrategyAddress: interestRateStrategyAddress,
+        auctionStrategyAddress: mockAuctionStrategy.address,
+        underlyingAsset: mockToken.address,
+        assetType: 0,
+        treasury: ZERO_ADDRESS,
+        incentivesController: ZERO_ADDRESS,
+        xTokenName: "PMOCK",
+        xTokenSymbol: "PMOCK",
+        variableDebtTokenName: "VMOCK",
+        variableDebtTokenSymbol: "VMOCK",
+        params: "0x10",
+      },
+    ];
+
+    // Add the mock reserve
+    await configurator.connect(poolAdmin.signer).initReserves(initInputParams);
+
+    // Configuration
+    const daiReserveConfigurationData =
+      await protocolDataProvider.getReserveConfigurationData(dai.address);
+
+    const inputParams: {
+      asset: string;
+      baseLTV: BigNumberish;
+      liquidationThreshold: BigNumberish;
+      liquidationBonus: BigNumberish;
+      reserveFactor: BigNumberish;
+      borrowCap: BigNumberish;
+      supplyCap: BigNumberish;
+      borrowingEnabled: boolean;
+    }[] = [
+      {
+        asset: mockToken.address,
+        baseLTV: daiReserveConfigurationData.ltv,
+        liquidationThreshold: daiReserveConfigurationData.liquidationThreshold,
+        liquidationBonus: daiReserveConfigurationData.liquidationBonus,
+        reserveFactor: daiReserveConfigurationData.reserveFactor,
+        borrowCap: 68719476735,
+        supplyCap: 68719476735,
+        borrowingEnabled: true,
+      },
+    ];
+
+    const i = 0;
+    await configurator
+      .connect(poolAdmin.signer)
+      .configureReserveAsCollateral(
+        inputParams[i].asset,
+        inputParams[i].baseLTV,
+        inputParams[i].liquidationThreshold,
+        inputParams[i].liquidationBonus
+      );
+    await configurator
+      .connect(poolAdmin.signer)
+      .setReserveBorrowing(inputParams[i].asset, true);
+
+    await configurator.setBorrowCap(
+      inputParams[i].asset,
+      inputParams[i].borrowCap
+    );
+
+    await configurator
+      .connect(poolAdmin.signer)
+      .setSupplyCap(inputParams[i].asset, inputParams[i].supplyCap);
+    await configurator
+      .connect(poolAdmin.signer)
+      .setReserveFactor(inputParams[i].asset, inputParams[i].reserveFactor);
+
+    const reserveData = await pool.getReserveData(mockToken.address);
+    pMockToken = ERC20__factory.connect(
+      reserveData.xTokenAddress,
+      await getFirstSigner()
+    );
+  });
+
+  it("TC-poolConfigurator-no-incentives-01 Deposit mock tokens into paraspace - no incentives controller", async () => {
+    const {
+      pool,
+      users: [user],
+    } = testEnv;
+
+    expect(await pMockToken.balanceOf(user.address)).to.be.eq(0);
+
+    await mockToken
+      .connect(user.signer)
+      ["mint(uint256)"](
+        await convertToCurrencyDecimals(mockToken.address, "10000")
+      );
+    await mockToken.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(user.signer)
+      .supply(
+        mockToken.address,
+        await convertToCurrencyDecimals(mockToken.address, "1000"),
+        user.address,
+        0
+      );
+
+    expect(await pMockToken.balanceOf(user.address)).to.be.eq(
+      await convertToCurrencyDecimals(pMockToken.address, "1000")
+    );
+  });
+
+  it("TC-poolConfigurator-no-incentives-02 Transfer pMock tokens - no incentives controller", async () => {
+    const {
+      users: [sender, receiver],
+    } = testEnv;
+
+    expect(await pMockToken.balanceOf(sender.address)).to.be.eq(
+      await convertToCurrencyDecimals(pMockToken.address, "1000")
+    );
+    expect(await pMockToken.balanceOf(receiver.address)).to.be.eq(0);
+
+    await pMockToken
+      .connect(sender.signer)
+      .transfer(
+        receiver.address,
+        await convertToCurrencyDecimals(pMockToken.address, "1000")
+      );
+    expect(await pMockToken.balanceOf(sender.address)).to.be.eq(0);
+    expect(await pMockToken.balanceOf(receiver.address)).to.be.eq(
+      await convertToCurrencyDecimals(pMockToken.address, "1000")
+    );
+  });
+
+  it("TC-poolConfigurator-no-incentives-03 Withdraw pMock tokens - no incentives controller", async () => {
+    const {
+      pool,
+      users: [, user],
+    } = testEnv;
+
+    expect(await mockToken.balanceOf(user.address)).to.be.eq(0);
+
+    const pMockTokenBalanceBefore = await pMockToken.balanceOf(user.address, {
+      blockTag: "pending",
+    });
+
+    await pMockToken
+      .connect(user.signer)
+      .approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(user.signer)
+      .withdraw(mockToken.address, pMockTokenBalanceBefore, user.address);
+
+    expect(await pMockToken.balanceOf(user.address)).to.be.eq(0);
+    expect(await mockToken.balanceOf(user.address)).to.be.eq(
+      pMockTokenBalanceBefore
+    );
+  });
+});
+
+describe("PoolConfigurator: Pausable Reserve", () => {
+  let testEnv: TestEnv;
+  const {RESERVE_PAUSED} = ProtocolErrors;
+  const INVALID_TO_BALANCE_AFTER_TRANSFER =
+    "Invalid 'TO' balance after transfer!";
+  const INVALID_FROM_BALANCE_AFTER_TRANSFER =
+    "Invalid 'FROMO' balance after transfer!";
+
+  before(async () => {
+    testEnv = await loadFixture(testEnvFixture);
+  });
+
+  it("TC-poolConfigurator-pausable-reserve-01 User 0 supplies 1000 DAI. Configurator pauses pool. Transfers to user 1 reverts. Configurator unpauses the network and next transfer succeeds", async () => {
+    const {users, pool, dai, pDai, configurator, emergencyAdmin} = testEnv;
+    const amountDAItoDeposit = await convertToCurrencyDecimals(
+      dai.address,
+      "1000"
+    );
+    await dai.connect(users[0].signer)["mint(uint256)"](amountDAItoDeposit);
+    // user 0 supplys 1000 DAI
+    await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(users[0].signer)
+      .supply(dai.address, amountDAItoDeposit, users[0].address, "0");
+    const user0Balance = await pDai.balanceOf(users[0].address);
+    const user1Balance = await pDai.balanceOf(users[1].address);
+    // Configurator pauses the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, true);
+    // User 0 tries the transfer to User 1
+    await expect(
+      pDai
+        .connect(users[0].signer)
+        .transfer(users[1].address, amountDAItoDeposit)
+    ).to.revertedWith(RESERVE_PAUSED);
+    const pausedFromBalance = await pDai.balanceOf(users[0].address);
+    const pausedToBalance = await pDai.balanceOf(users[1].address);
+    expect(pausedFromBalance).to.be.equal(
+      user0Balance.toString(),
+      INVALID_TO_BALANCE_AFTER_TRANSFER
+    );
+    expect(pausedToBalance.toString()).to.be.equal(
+      user1Balance.toString(),
+      INVALID_FROM_BALANCE_AFTER_TRANSFER
+    );
+    // Configurator unpauses the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, false);
+    // User 0 succeeds transfer to User 1
+    expect(
+      await pDai
+        .connect(users[0].signer)
+        .transfer(users[1].address, amountDAItoDeposit)
+    );
+    const fromBalance = await pDai.balanceOf(users[0].address);
+    const toBalance = await pDai.balanceOf(users[1].address);
+    expect(fromBalance.toString()).to.be.equal(
+      user0Balance.sub(amountDAItoDeposit),
+      INVALID_FROM_BALANCE_AFTER_TRANSFER
+    );
+    expect(toBalance.toString()).to.be.equal(
+      user1Balance.add(amountDAItoDeposit),
+      INVALID_TO_BALANCE_AFTER_TRANSFER
+    );
+  });
+
+  it("TC-poolConfigurator-pausable-reserve-02 User cannot supply if reserve is paused (revert expected)", async () => {
+    const {users, pool, dai, configurator, emergencyAdmin} = testEnv;
+    const amountDAItoDeposit = await convertToCurrencyDecimals(
+      dai.address,
+      "1000"
+    );
+    await dai.connect(users[0].signer)["mint(uint256)"](amountDAItoDeposit);
+    // user 0 supplys 1000 DAI
+    await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT);
+    // Configurator pauses the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, true);
+    await expect(
+      pool
+        .connect(users[0].signer)
+        .supply(dai.address, amountDAItoDeposit, users[0].address, "0")
+    ).to.revertedWith(RESERVE_PAUSED);
+    // Configurator unpauses the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, false);
+  });
+
+  it("TC-poolConfigurator-pausable-reserve-03 User cannot withdraw if reserve is paused (revert expected)", async () => {
+    const {users, pool, dai, configurator, emergencyAdmin} = testEnv;
+    const amountDAItoDeposit = await convertToCurrencyDecimals(
+      dai.address,
+      "1000"
+    );
+    await dai.connect(users[0].signer)["mint(uint256)"](amountDAItoDeposit);
+    // user 0 supplys 1000 DAI
+    await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(users[0].signer)
+      .supply(dai.address, amountDAItoDeposit, users[0].address, "0");
+    // Configurator pauses the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, true);
+    // user tries to burn
+    await expect(
+      pool
+        .connect(users[0].signer)
+        .withdraw(dai.address, amountDAItoDeposit, users[0].address)
+    ).to.revertedWith(RESERVE_PAUSED);
+    // Configurator unpauses the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, false);
+  });
+
+  it("TC-poolConfigurator-pausable-reserve-04 User cannot borrow if reserve is paused (revert expected)", async () => {
+    const {pool, dai, configurator, emergencyAdmin} = testEnv;
+    const user = emergencyAdmin;
+    // Pause the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, true);
+    // Try to execute liquidation
+    await expect(
+      pool.connect(user.signer).borrow(dai.address, "1", "0", user.address)
+    ).to.be.revertedWith(RESERVE_PAUSED);
+    // Unpause the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, false);
+  });
+
+  it("TC-poolConfigurator-pausable-reserve-05 User cannot repay if reserve is paused (revert expected)", async () => {
+    const {pool, dai, configurator, emergencyAdmin} = testEnv;
+    const user = emergencyAdmin;
+    // Pause the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, true);
+    // Try to execute liquidation
+    await expect(
+      pool.connect(user.signer).repay(dai.address, "1", user.address)
+    ).to.be.revertedWith(RESERVE_PAUSED);
+    // Unpause the pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(dai.address, false);
+  });
+
+  it("TC-poolConfigurator-pausable-reserve-06 User cannot liquidate if reserve is paused (revert expected)", async () => {
+    const {
+      users,
+      pool,
+      usdc,
+      oracle,
+      weth,
+      configurator,
+      protocolDataProvider,
+      emergencyAdmin,
+    } = testEnv;
+    const supplyor = users[3];
+    const borrower = users[4];
+    //mints USDC to supplyor
+    await usdc
+      .connect(supplyor.signer)
+      ["mint(uint256)"](await convertToCurrencyDecimals(usdc.address, "1000"));
+    //approve protocol to access supplyor wallet
+    await usdc.connect(supplyor.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    //user 3 supplys 1000 USDC
+    const amountUSDCtoDeposit = await convertToCurrencyDecimals(
+      usdc.address,
+      "1000"
+    );
+    await pool
+      .connect(supplyor.signer)
+      .supply(usdc.address, amountUSDCtoDeposit, supplyor.address, "0");
+    //user 4 supplys ETH
+    const amountETHtoDeposit = await convertToCurrencyDecimals(
+      weth.address,
+      "0.06775"
+    );
+    //mints WETH to borrower
+    await weth.connect(borrower.signer)["mint(uint256)"](amountETHtoDeposit);
+    //approve protocol to access borrower wallet
+    await weth.connect(borrower.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(borrower.signer)
+      .supply(weth.address, amountETHtoDeposit, borrower.address, "0");
+    //user 4 borrows
+    const userGlobalData = await pool.getUserAccountData(borrower.address);
+    const usdcPrice = await oracle.getAssetPrice(usdc.address);
+    const amountUSDCToBorrow = await convertToCurrencyDecimals(
+      usdc.address,
+      userGlobalData.availableBorrowsBase
+        .div(usdcPrice)
+        .percentMul(9502)
+        .toString()
+    );
+    await pool
+      .connect(borrower.signer)
+      .borrow(usdc.address, amountUSDCToBorrow, "0", borrower.address);
+    // Drops HF below 1
+    await oracle.setAssetPrice(usdc.address, usdcPrice.percentMul(12000));
+    //mints dai to the liquidator
+    await usdc["mint(uint256)"](
+      await convertToCurrencyDecimals(usdc.address, "1000")
+    );
+    await usdc.approve(pool.address, MAX_UINT_AMOUNT);
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
+      usdc.address,
+      borrower.address
+    );
+    const amountToLiquidate = userReserveDataBefore.currentVariableDebt.div(2);
+    // Pause pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(usdc.address, true);
+    // Do liquidation
+    await expect(
+      pool.liquidateERC20(
+        weth.address,
+        usdc.address,
+        borrower.address,
+        amountToLiquidate,
+        true
+      )
+    ).to.be.revertedWith(RESERVE_PAUSED);
+    // Unpause pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(usdc.address, false);
+  });
+
+  it("TC-poolConfigurator-pausable-reserve-07 User cannot setUserUseERC20AsCollateral if reserve is paused.", async () => {
+    const {pool, weth, configurator, emergencyAdmin} = testEnv;
+    const user = emergencyAdmin;
+    const amountWETHToDeposit = utils.parseEther("1");
+    await weth.connect(user.signer)["mint(uint256)"](amountWETHToDeposit);
+    await weth.connect(user.signer).approve(pool.address, MAX_UINT_AMOUNT);
+    await pool
+      .connect(user.signer)
+      .supply(weth.address, amountWETHToDeposit, user.address, "0");
+    // Pause pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(weth.address, true);
+    await expect(
+      pool.connect(user.signer).setUserUseERC20AsCollateral(weth.address, false)
+    ).to.be.revertedWith(RESERVE_PAUSED);
+    // Unpause pool
+    await configurator
+      .connect(emergencyAdmin.signer)
+      .setReservePause(weth.address, false);
   });
 });
