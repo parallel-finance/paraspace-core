@@ -18,10 +18,10 @@ contract NTokenMAYC is NTokenApeStaking {
     {}
 
     /**
-     * @notice Deposit ApeCoin to the BAYC Pool
+     * @notice Deposit ApeCoin to the MAYC Pool
      * @param _nfts Array of SingleNft structs
-     * @dev Commits 1 or more BAYC NFTs, each with an ApeCoin amount to the BAYC pool.\
-     * Each BAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the BAYC pool cap amount.
+     * @dev Commits 1 or more MAYC NFTs, each with an ApeCoin amount to the MAYC pool.\
+     * Each MAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the MAYC pool cap amount.
      */
     function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
         external
@@ -31,7 +31,7 @@ contract NTokenMAYC is NTokenApeStaking {
     }
 
     /**
-     * @notice Claim rewards for array of BAYC NFTs and send to recipient
+     * @notice Claim rewards for array of MAYC NFTs and send to recipient
      * @param _nfts Array of NFTs owned and committed by the msg.sender
      * @param _recipient Address to send claim reward to
      */
@@ -48,8 +48,8 @@ contract NTokenMAYC is NTokenApeStaking {
     }
 
     /**
-     * @notice Withdraw staked ApeCoin from the BAYC pool.  If withdraw is total staked amount, performs an automatic claim.
-     * @param _nfts Array of BAYC NFT's with staked amounts
+     * @notice Withdraw staked ApeCoin from the MAYC pool.  If withdraw is total staked amount, performs an automatic claim.
+     * @param _nfts Array of MAYC NFT's with staked amounts
      * @param _recipient Address to send withdraw amount and claim to
      */
     function withdrawApeCoin(
@@ -65,13 +65,11 @@ contract NTokenMAYC is NTokenApeStaking {
     }
 
     /**
-     * @notice Deposit ApeCoin to the Pair Pool, where Pair = (BAYC + BAKC) or (MAYC + BAKC)
+     * @notice Deposit ApeCoin to the Pair Pool, where Pair = (MAYC + BAKC)
      * @param _nftPairs Array of PairNftWithAmount structs
      * @dev Commits 1 or more Pairs, each with an ApeCoin amount to the Pair pool.\
      * Each BAKC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the Pair pool cap amount.\
-     * Example 1: BAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"],[]]\
-     * Example 2: MAYC + BAKC + 1 ApeCoin:  [[], [0, 0, "1000000000000000000"]]\
-     * Example 3: (BAYC + BAKC + 1 ApeCoin) and (MAYC + BAKC + 1 ApeCoin): [[0, 0, "1000000000000000000"], [0, 1, "1000000000000000000"]]
+     * Example: MAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"]]\
      */
     function depositBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
         external
@@ -86,7 +84,7 @@ contract NTokenMAYC is NTokenApeStaking {
 
     /**
      * @notice Claim rewards for array of Paired NFTs and send to recipient
-     * @param _nftPairs Array of Paired BAYC/MAYC NFTs owned and committed by the msg.sender
+     * @param _nftPairs Array of Paired MAYC NFTs owned and committed by the msg.sender
      * @param _recipient Address to send claim reward to
      */
     function claimBAKC(
@@ -103,7 +101,7 @@ contract NTokenMAYC is NTokenApeStaking {
 
     /**
      * @notice Withdraw staked ApeCoin from the Pair pool.  If withdraw is total staked amount, performs an automatic claim.
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
+     * @param _nftPairs Array of Paired MAYC NFT's with staked amounts
      * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
      */
     function withdrawBAKC(
