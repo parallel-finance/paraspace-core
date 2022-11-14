@@ -458,7 +458,7 @@ describe("VariableDebtToken", () => {
 
       expect(
         await aclManager
-          .connect(deployer.signer)
+          .connect(poolAdmin.signer)
           .addPoolAdmin(poolAdmin.address)
       );
 
@@ -570,7 +570,7 @@ describe("VariableDebtToken", () => {
         permitAmount.toString()
       );
 
-      const user2PrivateKey = testWallets[1].secretKey;
+      const user2PrivateKey = testWallets[1].privateKey;
       expect(
         (
           await variableDebtDai.borrowAllowance(user2.address, user3.address)
@@ -632,7 +632,7 @@ describe("VariableDebtToken", () => {
         permitAmount.toString()
       );
 
-      const user2PrivateKey = testWallets[1].secretKey;
+      const user2PrivateKey = testWallets[1].privateKey;
       expect(
         (
           await variableDebtDai.borrowAllowance(user2.address, user3.address)
@@ -685,7 +685,7 @@ describe("VariableDebtToken", () => {
         permitAmount.toString()
       );
 
-      const user2PrivateKey = testWallets[1].secretKey;
+      const user2PrivateKey = testWallets[1].privateKey;
       expect(
         (
           await variableDebtDai.borrowAllowance(user2.address, user3.address)
@@ -738,7 +738,7 @@ describe("VariableDebtToken", () => {
         permitAmount.toString()
       );
 
-      const user2PrivateKey = testWallets[1].secretKey;
+      const user2PrivateKey = testWallets[1].privateKey;
       expect(
         (
           await variableDebtDai.borrowAllowance(user2.address, user3.address)

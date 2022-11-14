@@ -30,7 +30,6 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {
   getFirstSigner,
   getAggregator,
-  getParaSpaceOracle,
 } from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
@@ -254,6 +253,7 @@ describe("Interest Rate Tests", () => {
         poolAdmin,
         configurator,
         dai,
+        paraspaceOracle,
         protocolDataProvider,
         addressesProvider,
       } = testEnv;
@@ -274,7 +274,7 @@ describe("Interest Rate Tests", () => {
         await getFirstSigner()
       ).deploy(addressesProvider.address, 0, 0, 0, 0);
 
-      mockAuctionStrategy = await await deployReserveAuctionStrategy(
+      mockAuctionStrategy = await deployReserveAuctionStrategy(
         eContractid.DefaultReserveAuctionStrategy,
         [
           auctionStrategyExp.maxPriceMultiplier,
@@ -358,9 +358,7 @@ describe("Interest Rate Tests", () => {
         .connect(poolAdmin.signer)
         .setReserveFactor(inputParams[i].asset, inputParams[i].reserveFactor);
 
-      await (
-        await getParaSpaceOracle()
-      ).setAssetSources(
+      await paraspaceOracle.setAssetSources(
         [mockToken.address],
         [(await getAggregator(undefined, "DAI")).address]
       );

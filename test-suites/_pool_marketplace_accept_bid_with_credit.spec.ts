@@ -1560,7 +1560,7 @@ describe("Leveraged Bid - Negative tests", () => {
       pool,
       users: [maker, taker, middleman],
       wPunkGateway,
-      cryptoPunksMarket,
+      punks,
     } = testEnv;
     const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
     const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
@@ -1574,21 +1574,15 @@ describe("Leveraged Bid - Negative tests", () => {
     );
 
     // mint WPUNK
-    await waitForTx(
-      await cryptoPunksMarket.connect(taker.signer)["getPunk(uint256)"](2)
-    );
-    await cryptoPunksMarket.connect(taker.signer).balanceOf(taker.address);
+    await waitForTx(await punks.connect(taker.signer)["getPunk(uint256)"](2));
+    await punks.connect(taker.signer).balanceOf(taker.address);
 
-    await waitForTx(
-      await cryptoPunksMarket.connect(taker.signer).offerPunkForSale(2, 0)
-    );
+    await waitForTx(await punks.connect(taker.signer).offerPunkForSale(2, 0));
     await waitForTx(await wPunk.connect(taker.signer).registerProxy());
 
     const proxy = await wPunk.proxyInfo(taker.address);
 
-    await waitForTx(
-      await cryptoPunksMarket.connect(taker.signer).transferPunk(proxy, 2)
-    );
+    await waitForTx(await punks.connect(taker.signer).transferPunk(proxy, 2));
     await waitForTx(await wPunk.connect(taker.signer).mint(2));
 
     // mint USDC to maker and middleman
