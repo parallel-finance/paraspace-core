@@ -150,6 +150,52 @@ describe("APE coin staking", () => {
     );
   });
 
+  it("TC-ntoken-ape-staking-04 User 1 withdraws portion of BAKC staked amount", async () => {
+    const {
+      users: [user1],
+      nBAYC,
+      ape,
+    } = testEnv;
+    const amount = await (
+      await convertToCurrencyDecimals(ape.address, "20")
+    ).div(2);
+
+    const userBalance = await ape.balanceOf(user1.address);
+
+    await waitForTx(
+      await nBAYC.connect(user1.signer).withdrawBAKC(
+        [
+          {
+            mainTokenId: "0",
+            bakcTokenId: "0",
+            amount: amount,
+          },
+        ],
+        user1.address,
+        user1.address
+      )
+    );
+    console.log("nBAYC", nBAYC.address);
+    console.log("user1", user1.address);
+    console.log("owner", await bakc.ownerOf("0"));
+
+    expect(await ape.balanceOf(user1.address)).to.be.eq(
+      userBalance.add(amount)
+    );
+
+    expect(await bakc.ownerOf("0")).to.be.eq(nBAYC.address);
+
+    expect(
+      nBAYC.connect(user1.signer).depositBAKC([
+        {
+          mainTokenId: "0",
+          bakcTokenId: "0",
+          amount: amount,
+        },
+      ])
+    );
+  });
+
   it("TC-ntoken-ape-staking-04 User 1 withdraws BAKC staked amount", async () => {
     const {
       users: [user1],

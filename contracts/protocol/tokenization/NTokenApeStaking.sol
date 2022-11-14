@@ -109,12 +109,19 @@ abstract contract NTokenApeStaking is NToken {
             );
             totalAmount += _nftPairs[index].amount;
 
-            IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID))
-                .safeTransferFrom(
+            IERC721 bakcContract = IERC721(
+                _apeCoinStaking.nftContracts(BAKC_POOL_ID)
+            );
+            if (
+                bakcContract.ownerOf(_nftPairs[index].bakcTokenId) !=
+                address(this)
+            ) {
+                bakcContract.safeTransferFrom(
                     msg.sender,
                     address(this),
                     _nftPairs[index].bakcTokenId
                 );
+            }
         }
 
         _apeCoinStaking.apeCoin().transferFrom(
