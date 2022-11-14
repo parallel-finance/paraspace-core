@@ -215,8 +215,6 @@ abstract contract NTokenApeStaking is NToken {
         address _apeRecipient,
         address _bakcRecipient
     ) internal {
-        uint256 totalAmount = 0;
-
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             if (validate) {
                 require(
