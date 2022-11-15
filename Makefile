@@ -120,10 +120,6 @@ test-erc721-auction-liquidation:
 test-configurator:
 	make TEST_TARGET=_pool_configurator.spec.ts test
 
-.PHONY: test-pausable-reserve
-test-pausable-reserve:
-	make TEST_TARGET=pausable-reserve.spec.ts test
-
 .PHONY: test-rescue-tokens
 test-rescue-tokens:
 	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test	
@@ -187,10 +183,6 @@ test-auction-strategy:
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
 	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
-
-.PHONY: test-no-incentives-controller
-test-no-incentives-controller:
-	make TEST_TARGET=no-incentives-controller.spec.ts test
 
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
