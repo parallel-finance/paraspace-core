@@ -300,6 +300,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
+        
         return (
             reserve.interestRateStrategyAddress,
             reserve.auctionStrategyAddress
