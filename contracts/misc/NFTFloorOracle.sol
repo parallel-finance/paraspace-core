@@ -23,7 +23,7 @@ struct OracleConfig {
 struct PriceInformation {
     /// @dev last reported floor price
     uint256 twap;
-    uint256 lastUpdateTime;
+    uint256 updatedAt;
 }
 
 struct FeederRegistrar {
@@ -218,10 +218,10 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         require(_price > 0, "NFTOracle: price should be more than 0");
         PriceInformation memory priceMapEntry = priceMap[_nftContract];
         uint256 price = priceMapEntry.twap;
-        uint256 timestamp = priceMapEntry.lastUpdateTime;
+        uint256 updatedAt = priceMapEntry.updatedAt;
         uint256 priceDeviation;
         //first price is always valid
-        if (price == 0 || timestamp == 0) {
+        if (price == 0 || updatedAt == 0) {
             return true;
         }
         priceDeviation = _price > price
@@ -264,12 +264,8 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     function finalizePrice(address token, uint256 twap) internal {
         PriceInformation storage priceMapEntry = priceMap[token];
         priceMapEntry.twap = twap;
-        priceMapEntry.lastUpdateTime = block.number;
-        emit AssetDataSet(
-            token,
-            priceMapEntry.twap,
-            priceMapEntry.lastUpdateTime
-        );
+        priceMapEntry.updatedAt = block.number;
+        emit AssetDataSet(token, priceMapEntry.twap, priceMapEntry.updatedAt);
     }
 
     function addRawValue(address token, uint256 twap) internal {
@@ -278,7 +274,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
             msg.sender
         ];
         priceInfo.twap = twap;
-        priceInfo.lastUpdateTime = block.number;
+        priceInfo.updatedAt = block.number;
     }
 
     function combine(address token, uint256 twap)
@@ -296,12 +292,12 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         uint256[] memory validPriceList = new uint256[](feeders.length);
         uint256 validNum = 0;
         //aggeregate with price in each ring position of all feeders
-        for (uint256 j = 0; j < feeders.length; j++) {
+        for (uint256 i = 0; i < feeders.length; i++) {
             PriceInformation memory priceInfo = feederRegistrar.feederPrice[
-                feeders[j]
+                feeders[i]
             ];
-            if (priceInfo.lastUpdateTime > 0) {
-                uint256 diffTime = currentTime - priceInfo.lastUpdateTime;
+            if (priceInfo.updatedAt > 0) {
+                uint256 diffTime = currentTime - priceInfo.updatedAt;
                 if (diffTime < config.expirationPeriod) {
                     validPriceList[validNum] = priceInfo.twap;
                     validNum++;
@@ -339,13 +335,13 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     }
 
     /// @param token The nft contract
-    /// @return timestamp The timestamp of the last update for an asset
+    /// @return blocknumber The blocknumber of the last update for an asset
     function getLastUpdateTime(address token)
         external
         view
-        returns (uint256 timestamp)
+        returns (uint256 blocknumber)
     {
-        return priceMap[token].lastUpdateTime;
+        return priceMap[token].updatedAt;
     }
 
     function getFeeders() external view returns (address[] memory) {
