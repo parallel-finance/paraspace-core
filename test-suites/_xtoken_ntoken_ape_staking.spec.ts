@@ -3,7 +3,6 @@ import {expect} from "chai";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
 import {
   getAggregator,
-  getAllERC721Tokens,
   getMintableERC721,
 } from "../deploy/helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
