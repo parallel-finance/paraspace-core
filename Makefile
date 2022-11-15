@@ -122,7 +122,7 @@ test-configurator:
 
 .PHONY: test-rescue-tokens
 test-rescue-tokens:
-	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test	
+	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test
 
 .PHONY: test-upgradeability
 test-upgradeability:
@@ -158,7 +158,7 @@ test-marketplace-buy:
 
 .PHONY: test-marketplace-accept-bid
 test-marketplace-accept-bid:
-	make TEST_TARGET=_pool_marketplace_accept_bid_credit.spec.ts test
+	make TEST_TARGET=_pool_marketplace_accept_bid_with_credit.spec.ts test
 
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
@@ -372,7 +372,7 @@ image:
 		-f Dockerfile .
 
 .PHONY: launch
-launch:
+launch: shutdown
 	docker-compose \
 		up \
 		-d --build
@@ -384,6 +384,8 @@ shutdown:
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
 	docker volume prune -f
+	rm -fr redis-data || true
+	rm -fr logs || true
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
