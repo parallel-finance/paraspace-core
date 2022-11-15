@@ -27,7 +27,7 @@ contract NTokenBAYC is NTokenApeStaking {
     function depositApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts
     ) external nonReentrant {
-        ApeStakingLogic.executeDepositBAYC(_owners, _apeCoinStaking, _nfts);
+        ApeStakingLogic.executeDepositBAYC(_ERC721Data.owners, _apeCoinStaking, _nfts);
     }
 
     /**
@@ -40,7 +40,7 @@ contract NTokenBAYC is NTokenApeStaking {
         address _recipient
     ) external nonReentrant {
         ApeStakingLogic.executeClaimBAYC(
-            _owners,
+            _ERC721Data.owners,
             _apeCoinStaking,
             _nfts,
             _recipient
@@ -57,7 +57,7 @@ contract NTokenBAYC is NTokenApeStaking {
         address _recipient
     ) external nonReentrant {
         ApeStakingLogic.executeWithdrawBAYC(
-            _owners,
+            _ERC721Data.owners,
             _apeCoinStaking,
             _nfts,
             _recipient
@@ -75,7 +75,7 @@ contract NTokenBAYC is NTokenApeStaking {
         ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
     ) external nonReentrant {
         ApeStakingLogic.executeDepositBAKCWithBAYC(
-            _owners,
+            _ERC721Data.owners,
             _apeCoinStaking,
             _nftPairs
         );
@@ -91,7 +91,7 @@ contract NTokenBAYC is NTokenApeStaking {
         address _recipient
     ) external nonReentrant {
         ApeStakingLogic.executeClaimBAKCWithBAYC(
-            _owners,
+            _ERC721Data.owners,
             _apeCoinStaking,
             _nftPairs,
             _recipient
@@ -109,7 +109,7 @@ contract NTokenBAYC is NTokenApeStaking {
         address _bakcRecipient
     ) external nonReentrant {
         ApeStakingLogic.executeWithdrawBAKCWithBAYC(
-            _owners,
+            _ERC721Data.owners,
             _apeCoinStaking,
             _nftPairs,
             _apeRecipient,

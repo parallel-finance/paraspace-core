@@ -63,7 +63,7 @@ abstract contract NTokenApeStaking is NToken {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
         ApeStakingLogic.executeAutoWithdraw(
-            _owners,
+            _ERC721Data.owners,
             _apeCoinStaking,
             POOL_ID(),
             tokenIds,
@@ -82,7 +82,7 @@ abstract contract NTokenApeStaking is NToken {
         uint256[] calldata tokenIds
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         ApeStakingLogic.executeAutoWithdraw(
-            _owners,
+            _ERC721Data.owners,
             _apeCoinStaking,
             POOL_ID(),
             tokenIds,

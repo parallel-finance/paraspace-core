@@ -66,7 +66,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
 
         require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         _underlyingAsset = underlyingAsset;
-        _rewardController = incentivesController;
+        _ERC721Data.rewardController = incentivesController;
 
         emit Initialized(
             underlyingAsset,
