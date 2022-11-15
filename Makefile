@@ -214,7 +214,7 @@ test-rate-strategy:
 
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
-	make TEST_TARGET=reserve-configuration.spec.ts test
+	make TEST_TARGET=_base_reserve_configuration.spec.ts test
 
 .PHONY: test-scenario
 test-scenario:
