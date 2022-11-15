@@ -120,13 +120,9 @@ test-erc721-auction-liquidation:
 test-configurator:
 	make TEST_TARGET=_pool_configurator.spec.ts test
 
-.PHONY: test-pausable-reserve
-test-pausable-reserve:
-	make TEST_TARGET=pausable-reserve.spec.ts test
-
 .PHONY: test-rescue-tokens
 test-rescue-tokens:
-	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test	
+	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test
 
 .PHONY: test-upgradeability
 test-upgradeability:
@@ -162,7 +158,7 @@ test-marketplace-buy:
 
 .PHONY: test-marketplace-accept-bid
 test-marketplace-accept-bid:
-	make TEST_TARGET=_pool_marketplace_accept_bid_credit.spec.ts test
+	make TEST_TARGET=_pool_marketplace_accept_bid_with_credit.spec.ts test
 
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
@@ -187,10 +183,6 @@ test-auction-strategy:
 .PHONY: test-variable-debt-token
 test-variable-debt-token:
 	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
-
-.PHONY: test-no-incentives-controller
-test-no-incentives-controller:
-	make TEST_TARGET=no-incentives-controller.spec.ts test
 
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
@@ -222,7 +214,7 @@ test-rate-strategy:
 
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
-	make TEST_TARGET=reserve-configuration.spec.ts test
+	make TEST_TARGET=_base_reserve_configuration.spec.ts test
 
 .PHONY: test-scenario
 test-scenario:
@@ -380,7 +372,7 @@ image:
 		-f Dockerfile .
 
 .PHONY: launch
-launch:
+launch: shutdown
 	docker-compose \
 		up \
 		-d --build
@@ -392,6 +384,8 @@ shutdown:
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
 	docker volume prune -f
+	rm -fr redis-data || true
+	rm -fr logs || true
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
