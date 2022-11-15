@@ -19,6 +19,7 @@ interface INToken is
     IERC721Enumerable,
     IInitializableNToken,
     IERC721Receiver,
+    IERC1155Receiver,
     IXTokenType
 {
     /**

@@ -277,6 +277,36 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         return this.onERC721Received.selector;
     }
 
+    function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external pure override returns (bytes4) {
+        operator;
+        from;
+        id;
+        value;
+        data;
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external pure override returns (bytes4) {
+        operator;
+        from;
+        ids;
+        values;
+        data;
+        return this.onERC1155BatchReceived.selector;
+    }
+
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
