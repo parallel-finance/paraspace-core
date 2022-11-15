@@ -11,6 +11,7 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
     INFTFloorOracle private oracleAddress;
     address private immutable asset;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    uint256 expirationPeriod;
 
     /**
      * @dev Only asset listing or pool admin can call functions marked by this modifier.
@@ -34,11 +35,13 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
     constructor(
         address _provider,
         address _oracleAddress,
-        address _asset
+        address _asset,
+        uint256 _expirationPeriod
     ) {
         ADDRESSES_PROVIDER = IPoolAddressesProvider(_provider);
         oracleAddress = INFTFloorOracle(_oracleAddress);
         asset = _asset;
+        expirationPeriod = _expirationPeriod;
     }
 
     function setOracle(address _oracleAddress)
@@ -48,12 +51,24 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
         oracleAddress = INFTFloorOracle(_oracleAddress);
     }
 
+    function setExpirationPeriod(uint256 _expirationPeriod)
+        external
+        onlyAssetListingOrPoolAdmins
+    {
+        expirationPeriod = _expirationPeriod;
+    }
+
     function decimals() external pure override returns (uint8) {
         return 18;
     }
 
     function latestAnswer() external view override returns (int256) {
-        return int256(uint256(oracleAddress.getTwap(asset)));
+        uint256 lastUpdatedTime = oracleAddress.getLastUpdateTime(asset);
+        int256 lastUpdateTwap = int256(oracleAddress.getTwap(asset));
+        if ((block.number - lastUpdatedTime) > expirationPeriod) {
+            revert(Errors.ORACLE_PRICE_EXPIRED);
+        }
+        return lastUpdateTwap;
     }
 
     function latestTimestamp() external view override returns (uint256) {
@@ -65,7 +80,7 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
     }
 
     function getAnswer(uint256) external view override returns (int256) {
-        return int256(uint256(oracleAddress.getTwap(asset)));
+        return int256(oracleAddress.getTwap(asset));
     }
 
     function getTimestamp(uint256) external view override returns (uint256) {
