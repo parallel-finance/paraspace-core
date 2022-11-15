@@ -15,7 +15,6 @@ import {INToken} from "../interfaces/INToken.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IProtocolDataProvider} from "../interfaces/IProtocolDataProvider.sol";
-import "hardhat/console.sol";
 
 /**
  * @title ProtocolDataProvider
