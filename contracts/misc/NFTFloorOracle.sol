@@ -58,25 +58,35 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @dev Aggregated price with address
     // the NFT contract -> price information
-    mapping(address => PriceInformation) internal priceMap;
+    mapping(address => PriceInformation) public priceMap;
 
     /// @dev All valid feeders
-    address[] internal feeders;
+    address[] public feeders;
 
     /// @dev All asset list
-    address[] internal nfts;
+    address[] public nfts;
 
     /// @dev Original raw value to aggregate with
     // contract address -> FeederRegistrar
-    mapping(address => FeederRegistrar) internal priceFeederMap;
+    mapping(address => FeederRegistrar) public priceFeederMap;
 
     /// @dev storage for oracle configurations
-    OracleConfig internal config;
+    OracleConfig public config;
 
     modifier whenNotPaused(address _nftContract) {
         if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
             _whenNotPaused(_nftContract);
         }
+        _;
+    }
+
+    modifier onlyWhenKeyExisted(address _nftContract) {
+        require(_isExistedKey(_nftContract), "NFTOracle: asset not existed");
+        _;
+    }
+
+    modifier onlyWhenKeyNotExisted(address _nftContract) {
+        require(!_isExistedKey(_nftContract), "NFTOracle: asset existed");
         _;
     }
 
@@ -93,17 +103,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         emit OracleNftPaused(_nftContract, val);
     }
 
-    modifier onlyWhenKeyExisted(address _nftContract) {
-        require(isExistedKey(_nftContract), "NFTOracle: asset not existed");
-        _;
-    }
-
-    modifier onlyWhenKeyNotExisted(address _nftContract) {
-        require(!isExistedKey(_nftContract), "NFTOracle: asset existed");
-        _;
-    }
-
-    function isExistedKey(address _nftContract) private view returns (bool) {
+    function _isExistedKey(address _nftContract) internal view returns (bool) {
         return priceFeederMap[_nftContract].registered;
     }
 
@@ -210,8 +210,8 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         _setConfig(expirationPeriod, maxPriceDeviation);
     }
 
-    function checkValidityOfPrice(address _nftContract, uint256 _price)
-        private
+    function _checkValidityOfPrice(address _nftContract, uint256 _price)
+        internal
         view
         returns (bool)
     {
@@ -246,29 +246,29 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     {
         bool dataValidity = false;
         if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
-            finalizePrice(token, twap);
+            _finalizePrice(token, twap);
             return;
         }
-        dataValidity = checkValidityOfPrice(token, twap);
+        dataValidity = _checkValidityOfPrice(token, twap);
         require(dataValidity, "NFTOracle: invalid price data");
         // add price to raw feeder storage
-        addRawValue(token, twap);
+        _addRawValue(token, twap);
         uint256 medianPrice;
         // set twap price only when median value is valid
-        (dataValidity, medianPrice) = combine(token, twap);
+        (dataValidity, medianPrice) = _combine(token, twap);
         if (dataValidity) {
-            finalizePrice(token, medianPrice);
+            _finalizePrice(token, medianPrice);
         }
     }
 
-    function finalizePrice(address token, uint256 twap) internal {
+    function _finalizePrice(address token, uint256 twap) internal {
         PriceInformation storage priceMapEntry = priceMap[token];
         priceMapEntry.twap = twap;
         priceMapEntry.updatedAt = block.number;
         emit AssetDataSet(token, priceMapEntry.twap, priceMapEntry.updatedAt);
     }
 
-    function addRawValue(address token, uint256 twap) internal {
+    function _addRawValue(address token, uint256 twap) internal {
         FeederRegistrar storage feederRegistrar = priceFeederMap[token];
         PriceInformation storage priceInfo = feederRegistrar.feederPrice[
             msg.sender
@@ -277,7 +277,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         priceInfo.updatedAt = block.number;
     }
 
-    function combine(address token, uint256 twap)
+    function _combine(address token, uint256 twap)
         internal
         view
         returns (bool, uint256)
@@ -298,17 +298,18 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
             ];
             if (priceInfo.updatedAt > 0) {
                 uint256 diffTime = currentTime - priceInfo.updatedAt;
-                if (diffTime < config.expirationPeriod) {
+                if (diffTime <= config.expirationPeriod) {
                     validPriceList[validNum] = priceInfo.twap;
                     validNum++;
                 }
             }
         }
-        //we allow at most 1 feeder down
-        if (validNum < (feeders.length - 1)) {
+        //we will add 3 feeders at mainet launch and allow at most 1/3=1 feeder down
+        uint256 validNumThreshold = (2 * (feeders.length)) / 3;
+        if (validNum < validNumThreshold) {
             return (false, priceMap[token].twap);
         }
-        quickSort(validPriceList, 0, int256(validNum - 1));
+        _quickSort(validPriceList, 0, int256(validNum - 1));
         return (true, validPriceList[validNum / 2]);
     }
 
@@ -330,7 +331,12 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @param token The nft contract
     /// @return twap The most recent twap on chain
-    function getTwap(address token) external view returns (uint256 twap) {
+    function getTwap(address token)
+        external
+        view
+        override
+        returns (uint256 twap)
+    {
         return priceMap[token].twap;
     }
 
@@ -339,33 +345,13 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     function getLastUpdateTime(address token)
         external
         view
+        override
         returns (uint256 blocknumber)
     {
         return priceMap[token].updatedAt;
     }
 
-    function getFeeders() external view returns (address[] memory) {
-        return feeders;
-    }
-
-    function getFeederPrice(address token, address feeder)
-        external
-        view
-        returns (PriceInformation memory)
-    {
-        FeederRegistrar storage feederRegistrar = priceFeederMap[token];
-        return feederRegistrar.feederPrice[feeder];
-    }
-
-    function getConfig() external view returns (OracleConfig memory) {
-        return config;
-    }
-
-    function getAssets() external view returns (address[] memory) {
-        return nfts;
-    }
-
-    function quickSort(
+    function _quickSort(
         uint256[] memory arr,
         int256 left,
         int256 right
@@ -386,7 +372,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
                 j--;
             }
         }
-        if (left < j) quickSort(arr, left, j);
-        if (i < right) quickSort(arr, i, right);
+        if (left < j) _quickSort(arr, left, j);
+        if (i < right) _quickSort(arr, i, right);
     }
 }

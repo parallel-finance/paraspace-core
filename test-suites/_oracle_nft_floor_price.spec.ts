@@ -38,11 +38,15 @@ describe("NFT Oracle Tests", () => {
 
     try {
       await waitForTx(await nftFloorOracle.addAssets([mockToken.address]));
+      //set 5 oracles so threshold is 5*2/3=3 means we need at least 3 oracles alive
+      //and in testnet deployment user4 is admin so skip it here
       await waitForTx(
         await nftFloorOracle.setOracles([
           testEnv.users[0].address,
           testEnv.users[1].address,
           testEnv.users[2].address,
+          testEnv.users[3].address,
+          testEnv.users[4].address,
         ])
       );
     } catch (err) {
@@ -261,7 +265,8 @@ describe("NFT Oracle Tests", () => {
   it("TC-oracle-nft-floor-price-12:Only when minCountToAggregate is reached, median value from the different providers is returned", async () => {
     const {
       nftFloorOracle,
-      users: [user1, user2, user3],
+      //user 4 is admin in test deployment so skip it
+      users: [user1, user2, user3, , user4],
     } = testEnv;
 
     //120 blocks as expiration and 20 times as deviation
@@ -280,6 +285,8 @@ describe("NFT Oracle Tests", () => {
     const price1 = parseEther("1");
     const price2 = parseEther("2");
     const price3 = parseEther("3");
+    const price4 = parseEther("4");
+    const price5 = parseEther("5");
 
     // set first price,not enough price so still initial
     await waitForTx(
@@ -291,7 +298,7 @@ describe("NFT Oracle Tests", () => {
     twapPrice = await nftFloorOracle.getTwap(mockToken.address);
     expect(twapPrice).to.equal(initialPrice);
 
-    //set second price, aggregate [1,2]=1
+    //set second price, not enough, so still initial
     await waitForTx(
       await nftFloorOracle
         .connect(user2.signer)
@@ -299,23 +306,42 @@ describe("NFT Oracle Tests", () => {
     );
 
     twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-    expect(twapPrice).to.equal(price2);
+    expect(twapPrice).to.equal(initialPrice);
 
-    // set third price, aggregate [1,2,3]=2
+    // set third price>=threshold(3) so aggregate [1,2,3]=2
     await waitForTx(
       await nftFloorOracle
         .connect(user3.signer)
         .setPrice(mockToken.address, price3.toString())
     );
-
     twapPrice = await nftFloorOracle.getTwap(mockToken.address);
     expect(twapPrice).to.equal(price2);
+
+    // set fourth price, aggregate [1,2,3,4]=3
+    await waitForTx(
+      await nftFloorOracle
+        .connect(user4.signer)
+        .setPrice(mockToken.address, price4.toString())
+    );
+
+    twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(price3);
+
+    // set fifth price, aggregate [1,2,3,4,5]=3
+    await waitForTx(
+      await nftFloorOracle
+        .connect(user4.signer)
+        .setPrice(mockToken.address, price5.toString())
+    );
+
+    twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(price3);
   });
 
   it("TC-oracle-nft-floor-price-13:Oracle quotes expire based on expirationPeriod", async () => {
     const {
       nftFloorOracle,
-      users: [user1, user2, user3],
+      users: [user1, user2, user3, , user4],
     } = testEnv;
     // set expiration period to 5 block and deviation as 20
     await nftFloorOracle.setConfig(5, 2000);
@@ -337,13 +363,13 @@ describe("NFT Oracle Tests", () => {
         .setPrice(mockToken.address, parseEther("2").toString())
     );
 
-    // prices user1:[1] and user2:[2] are aggregated as [1,2] and finalized as 2
+    // prices user1:1 and user2:2 not enough so still use previous
     expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-      parseEther("2")
+      parseEther("1")
     );
 
-    // set price so block=3 now,user1:1 and user2:2 and user3:3
-    // and aggregated to [1,2,3] and 2 will be finalized
+    // set price so block=3 now,user1:1 and user2:2 and user3:5
+    // and aggregated to [1,2,5] and 2 will be finalized
     expect(
       await nftFloorOracle
         .connect(user3.signer)
@@ -353,24 +379,23 @@ describe("NFT Oracle Tests", () => {
       parseEther("2")
     );
 
-    //mine block will not change price but price from user1 and user2 will be expired
+    //mine block will not change price
     await mine(); //block 4
     await mine(); //block 5
-    await mine(); //block 6
     expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
       parseEther("2")
     );
 
-    //set price at block 7
+    //set price at block 6, and 6-1=5 so price from user1 expired
     expect(
       await nftFloorOracle
-        .connect(user1.signer)
+        .connect(user4.signer)
         .setPrice(mockToken.address, parseEther("4").toString())
     );
-    //price from user2 expired and with user1:4 and user3:5 so aggregated to [4,5]
-    //and 5 will be finalized
+    //so now price are: user2:2,user3:5,user4:4
+    //which aggregated to [2,4,5] and 4 will be finalized
     expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-      parseEther("5")
+      parseEther("4")
     );
   });
 
