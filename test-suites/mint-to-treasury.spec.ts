@@ -95,4 +95,20 @@ describe("Mint To Treasury", () => {
       "Invalid treasury balance after minting"
     );
   });
+
+  it("Call `mintToTreasury()` on a pool with an inactive reserve", async () => {
+    const {pool, poolAdmin, dai, users, configurator} = await loadFixture(
+      testEnvFixture
+    );
+
+    // Deactivate reserve
+    expect(
+      await configurator
+        .connect(poolAdmin.signer)
+        .setReserveActive(dai.address, false)
+    );
+
+    // MintToTreasury
+    expect(await pool.connect(users[0].signer).mintToTreasury([dai.address]));
+  });
 });

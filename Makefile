@@ -72,9 +72,9 @@ submodules:
 test-pool-upgrade:
 	make TEST_TARGET=pool-upgrade.spec.ts test
 
-.PHONY: test-pool-edge
-test-pool-edge:
-	make TEST_TARGET=pool-edge.spec.ts test
+.PHONY: test-pool-initialization
+test-pool-initialization:
+	make TEST_TARGET=_pool_initialization.spec.ts test
 
 .PHONY: test-ntoken
 test-ntoken:

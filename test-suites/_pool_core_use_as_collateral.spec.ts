@@ -8,6 +8,7 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {isUsingAsCollateral} from "../deploy/helpers/contracts-helpers";
+import {utils} from "ethers";
 
 describe("UserConfigurator for ERC721: check user usedAsCollateral and collateralizedBalance status", () => {
   let testEnv: TestEnv;
@@ -408,5 +409,88 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collatera
     );
     expect(await nBAYC.collateralizedBalanceOf(user2.address)).to.be.equal(0);
     expect(isUsingAsCollateral(user2Config, baycData.id)).to.be.false;
+  });
+
+  it("TC-use-as-collateral-06:Call `setUserUseERC20AsCollateral()` to use an asset as collateral when the asset is already set as collateral", async () => {
+    const {
+      pool,
+      protocolDataProvider,
+      dai,
+      users: [user0],
+    } = await loadFixture(testEnvFixture);
+
+    const amount = utils.parseUnits("10", 18);
+    await dai.connect(user0.signer)["mint(uint256)"](amount);
+    await dai.connect(user0.signer).approve(pool.address, MAX_UINT_AMOUNT);
+
+    expect(
+      await pool
+        .connect(user0.signer)
+        .supply(dai.address, amount, user0.address, 0)
+    );
+
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
+      dai.address,
+      user0.address
+    );
+    expect(userReserveDataBefore.usageAsCollateralEnabled).to.be.true;
+
+    expect(
+      await pool
+        .connect(user0.signer)
+        .setUserUseERC20AsCollateral(dai.address, true)
+    ).to.not.emit(pool, "ReserveUsedAsCollateralEnabled");
+
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
+      dai.address,
+      user0.address
+    );
+    expect(userReserveDataAfter.usageAsCollateralEnabled).to.be.true;
+  });
+
+  it("TC-use-as-collateral-07:Call `setUserUseERC20AsCollateral()` to disable an asset as collateral when the asset is already disabled as collateral", async () => {
+    const {
+      pool,
+      protocolDataProvider,
+      dai,
+      users: [user0],
+    } = await loadFixture(testEnvFixture);
+
+    const amount = utils.parseUnits("10", 18);
+    await dai.connect(user0.signer)["mint(uint256)"](amount);
+    await dai.connect(user0.signer).approve(pool.address, MAX_UINT_AMOUNT);
+
+    expect(
+      await pool
+        .connect(user0.signer)
+        .supply(dai.address, amount, user0.address, 0)
+    );
+
+    // Disable asset as collateral
+    expect(
+      await pool
+        .connect(user0.signer)
+        .setUserUseERC20AsCollateral(dai.address, false)
+    )
+      .to.emit(pool, "ReserveUsedAsCollateralDisabled")
+      .withArgs(dai.address, user0.address);
+
+    const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
+      dai.address,
+      user0.address
+    );
+    expect(userReserveDataBefore.usageAsCollateralEnabled).to.be.false;
+
+    expect(
+      await pool
+        .connect(user0.signer)
+        .setUserUseERC20AsCollateral(dai.address, false)
+    ).to.not.emit(pool, "ReserveUsedAsCollateralDisabled");
+
+    const userReserveDataAfter = await protocolDataProvider.getUserReserveData(
+      dai.address,
+      user0.address
+    );
+    expect(userReserveDataAfter.usageAsCollateralEnabled).to.be.false;
   });
 });
