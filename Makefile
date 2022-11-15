@@ -372,7 +372,7 @@ image:
 		-f Dockerfile .
 
 .PHONY: launch
-launch:
+launch: shutdown
 	docker-compose \
 		up \
 		-d --build
