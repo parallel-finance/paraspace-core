@@ -10,8 +10,8 @@ uint8 constant MAX_SUBMISSION = 3;
 //expirationPeriod at least the interval of client to feed data(currently 6h=21600s/12=1800 in mainnet)
 //we do not accept price lags behind to much
 uint128 constant EXPIRATION_PERIOD = 1800;
-//reject when price increase/decrease 3 times more than original value
-uint128 constant MAX_DEVIATION_RATE = 300;
+//reject when price increase/decrease 1.5 times more than original value
+uint128 constant MAX_DEVIATION_RATE = 150;
 
 struct OracleConfig {
     // Expiration Period for each feed price
@@ -26,13 +26,6 @@ struct PriceInformation {
     uint256 lastUpdateTime;
 }
 
-struct PriceInformationBuffer {
-    /// @dev next index in ring buffer
-    uint8 next;
-    /// @dev last reported floor price
-    PriceInformation[MAX_SUBMISSION] ring;
-}
-
 struct FeederRegistrar {
     // if asset not registered,reject the price
     bool registered;
@@ -40,8 +33,8 @@ struct FeederRegistrar {
     uint8 index;
     // if asset paused,reject the price
     bool paused;
-    // feeder -> PriceInformationBuffer
-    mapping(address => PriceInformationBuffer) feederBuffer;
+    // feeder -> PriceInformation
+    mapping(address => PriceInformation) feederPrice;
 }
 
 /// @title A simple on-chain price oracle mechanism
@@ -281,16 +274,11 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     function addRawValue(address token, uint256 twap) internal {
         FeederRegistrar storage feederRegistrar = priceFeederMap[token];
-        PriceInformationBuffer storage priceBuffer = feederRegistrar
-            .feederBuffer[msg.sender];
-        if (priceBuffer.next >= MAX_SUBMISSION) {
-            priceBuffer.next -= MAX_SUBMISSION;
-        }
-        priceBuffer.ring[priceBuffer.next] = PriceInformation({
-            twap: twap,
-            lastUpdateTime: uint64(block.number)
-        });
-        priceBuffer.next += 1;
+        PriceInformation storage priceInfo = feederRegistrar.feederPrice[
+            msg.sender
+        ];
+        priceInfo.twap = twap;
+        priceInfo.lastUpdateTime = block.number;
     }
 
     function combine(address token, uint256 twap)
@@ -305,37 +293,27 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
             return (true, twap);
         }
         //use memory here so allocate with maximum length
-        uint256[] memory validPriceList = new uint256[](
-            feeders.length * MAX_SUBMISSION
-        );
+        uint256[] memory validPriceList = new uint256[](feeders.length);
         uint256 validNum = 0;
         //aggeregate with price in each ring position of all feeders
-        for (uint256 i = 0; i < MAX_SUBMISSION; i++) {
-            for (uint256 j = 0; j < feeders.length; j++) {
-                PriceInformationBuffer memory feederBuffer = feederRegistrar
-                    .feederBuffer[feeders[j]];
-                PriceInformation memory priceInfo = feederBuffer.ring[i];
-                if (priceInfo.lastUpdateTime > 0) {
-                    uint256 diffTime = currentTime - priceInfo.lastUpdateTime;
-                    if (diffTime < config.expirationPeriod) {
-                        validPriceList[validNum] = priceInfo.twap;
-                        validNum++;
-                    }
+        for (uint256 j = 0; j < feeders.length; j++) {
+            PriceInformation memory priceInfo = feederRegistrar.feederPrice[
+                feeders[j]
+            ];
+            if (priceInfo.lastUpdateTime > 0) {
+                uint256 diffTime = currentTime - priceInfo.lastUpdateTime;
+                if (diffTime < config.expirationPeriod) {
+                    validPriceList[validNum] = priceInfo.twap;
+                    validNum++;
                 }
             }
-            //break earlier if we have enough valid prices
-            if (validNum >= feeders.length) {
-                break;
-            }
         }
-
-        // only calculate median value when number of valid data greater than minCountToAggregate
-        if (validNum >= feeders.length) {
-            // ignore sort for saving gas, we just pick fixed element from validPriceList
-            return (true, validPriceList[validNum / 2]);
+        //we allow at most 1 feeder down
+        if (validNum < (feeders.length - 1)) {
+            return (false, priceMap[token].twap);
         }
-        // or use the previous twap instead
-        return (false, priceMap[token].twap);
+        quickSort(validPriceList, 0, int256(validNum - 1));
+        return (true, validPriceList[validNum / 2]);
     }
 
     /// @notice Allows owner to set new price on PriceInformation and updates the
@@ -374,16 +352,13 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         return feeders;
     }
 
-    function getFeederPriceList(address token, address feeder)
+    function getFeederPrice(address token, address feeder)
         external
         view
-        returns (PriceInformation[MAX_SUBMISSION] memory)
+        returns (PriceInformation memory)
     {
         FeederRegistrar storage feederRegistrar = priceFeederMap[token];
-        PriceInformation[MAX_SUBMISSION] memory pricesList = feederRegistrar
-            .feederBuffer[feeder]
-            .ring;
-        return pricesList;
+        return feederRegistrar.feederPrice[feeder];
     }
 
     function getConfig() external view returns (OracleConfig memory) {
@@ -392,5 +367,30 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     function getAssets() external view returns (address[] memory) {
         return nfts;
+    }
+
+    function quickSort(
+        uint256[] memory arr,
+        int256 left,
+        int256 right
+    ) internal pure {
+        int256 i = left;
+        int256 j = right;
+        if (i == j) return;
+        uint256 pivot = arr[uint256(left + (right - left) / 2)];
+        while (i <= j) {
+            while (arr[uint256(i)] < pivot) i++;
+            while (pivot < arr[uint256(j)]) j--;
+            if (i <= j) {
+                (arr[uint256(i)], arr[uint256(j)]) = (
+                    arr[uint256(j)],
+                    arr[uint256(i)]
+                );
+                i++;
+                j--;
+            }
+        }
+        if (left < j) quickSort(arr, left, j);
+        if (i < right) quickSort(arr, i, right);
     }
 }
