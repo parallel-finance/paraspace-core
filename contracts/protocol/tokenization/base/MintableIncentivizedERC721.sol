@@ -375,7 +375,7 @@ abstract contract MintableIncentivizedERC721 is
         return
             MintableERC721Logic.executeMintMultiple(
                 _ERC721Data,
-        ATOMIC_PRICING,
+                ATOMIC_PRICING,
                 to,
                 tokenData
             );
@@ -414,7 +414,14 @@ abstract contract MintableIncentivizedERC721 is
         address to,
         uint256 tokenId
     ) internal virtual {
-        MintableERC721Logic.executeTransfer(_ERC721Data, POOL, ATOMIC_PRICING, from, to, tokenId);
+        MintableERC721Logic.executeTransfer(
+            _ERC721Data,
+            POOL,
+            ATOMIC_PRICING,
+            from,
+            to,
+            tokenId
+        );
     }
 
     /**
@@ -426,7 +433,14 @@ abstract contract MintableIncentivizedERC721 is
         uint256 tokenId
     ) internal virtual returns (bool isUsedAsCollateral_) {
         isUsedAsCollateral_ = MintableERC721Logic
-            .executeTransferCollateralizable(_ERC721Data, POOL, ATOMIC_PRICING, from, to, tokenId);
+            .executeTransferCollateralizable(
+                _ERC721Data,
+                POOL,
+                ATOMIC_PRICING,
+                from,
+                to,
+                tokenId
+            );
     }
 
     /// @inheritdoc ICollateralizableERC721
@@ -508,11 +522,7 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (bool)
     {
-        return MintableERC721Logic.isAuctioned(
-            _ERC721Data,
-            POOL,
-            tokenId
-        );
+        return MintableERC721Logic.isAuctioned(_ERC721Data, POOL, tokenId);
     }
 
     /// @inheritdoc IAuctionableERC721

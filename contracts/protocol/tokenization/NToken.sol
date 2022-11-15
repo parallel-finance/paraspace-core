@@ -40,10 +40,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(
-        IPool pool,
-        bool atomic_pricing
-    )
+    constructor(IPool pool, bool atomic_pricing)
         MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
@@ -199,10 +196,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     /// @inheritdoc INToken
-    function transferUnderlyingTo(
-        address target,
-        uint256 tokenId
-    ) external virtual override onlyPool nonReentrant {
+    function transferUnderlyingTo(address target, uint256 tokenId)
+        external
+        virtual
+        override
+        onlyPool
+        nonReentrant
+    {
         IERC721(_underlyingAsset).safeTransferFrom(
             address(this),
             target,
@@ -211,10 +211,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     /// @inheritdoc INToken
-    function handleRepayment(
-        address user,
-        uint256 amount
-    ) external virtual override onlyPool nonReentrant {
+    function handleRepayment(address user, uint256 amount)
+        external
+        virtual
+        override
+        onlyPool
+        nonReentrant
+    {
         // Intentionally left blank
     }
 
@@ -277,9 +280,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(
-        uint256 tokenId
-    ) public view virtual override returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
         return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
     }
 

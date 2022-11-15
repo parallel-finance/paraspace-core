@@ -51,7 +51,7 @@ struct MintableERC721Data {
  */
 library MintableERC721Logic {
     /**
- * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
+     * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */
     event Transfer(
         address indexed from,
@@ -186,10 +186,13 @@ library MintableERC721Logic {
         bool ATOMIC_PRICING,
         address to,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    ) external returns (
-        uint64 oldCollateralizedBalance,
-        uint64 newCollateralizedBalance
-    ) {
+    )
+        external
+        returns (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        )
+    {
         require(to != address(0), "ERC721: mint to the zero address");
         uint64 oldBalance = erc721Data.userState[to].balance;
         oldCollateralizedBalance = erc721Data
@@ -256,10 +259,13 @@ library MintableERC721Logic {
         IPool POOL,
         address user,
         uint256[] calldata tokenIds
-    ) external returns (
-        uint64 oldCollateralizedBalance,
-        uint64 newCollateralizedBalance
-    ) {
+    )
+        external
+        returns (
+            uint64 oldCollateralizedBalance,
+            uint64 newCollateralizedBalance
+        )
+    {
         uint64 burntCollateralizedTokens = 0;
         uint64 balanceToBurn;
         uint256 oldTotalSupply = erc721Data.allTokens.length;
@@ -377,8 +383,14 @@ library MintableERC721Logic {
         IPool POOL,
         uint256 tokenId
     ) external {
-        require(isAuctioned(erc721Data, POOL, tokenId), Errors.AUCTION_NOT_STARTED);
-        require(_exists(erc721Data, tokenId), "ERC721: endAuction for nonexistent token");
+        require(
+            isAuctioned(erc721Data, POOL, tokenId),
+            Errors.AUCTION_NOT_STARTED
+        );
+        require(
+            _exists(erc721Data, tokenId),
+            "ERC721: endAuction for nonexistent token"
+        );
         delete erc721Data.auctions[tokenId];
     }
 
