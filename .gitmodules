@@ -1,3 +1,6 @@
 [submodule "deploy"]
 	path = deploy
 	url = git@github.com:para-space/paraspace-deploy.git
+[submodule "lib/pnm-contracts"]
+	path = lib/pnm-contracts
+	url = https://github.com/pwnednomore/pnm-contracts
