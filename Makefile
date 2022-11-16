@@ -21,6 +21,11 @@ init: submodules
 test:
 	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
+# run make deploy first then run each test without redeploy
+.PHONY: test-only
+test-only:
+	DB_PATH=deployed-contracts.json TEST_ONLY=true npx hardhat test ./test-suites/${TEST_TARGET} --network localhost --verbose
+
 .PHONY: slow-test
 slow-test:
 	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
@@ -139,6 +144,14 @@ test-flash-claim:
 .PHONY: test-paraspace-oracle-aggregator
 test-paraspace-oracle-aggregator:
 	make TEST_TARGET=_oracle_aggregator.spec.ts test
+
+.PHONY: test-nft-floor-price-oracle-without-deploy
+test-nft-floor-price-oracle-without-deploy:
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts test-only
+
+.PHONY: test-nft-floor-price-oracle-single-testcase
+test-nft-floor-price-oracle-single-testcase:
+	SKIP_LOAD=false TEST_ONLY=true npx hardhat test ./test-suites/_oracle_nft_floor_price.spec.ts --grep "TC-oracle-nft-floor-price-06" --network localhost --verbose
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
@@ -288,9 +301,9 @@ deploy-poolConfigurator:
 deploy-reservesSetupHelper:
 	make TASK_NAME=deploy:reserves-setup-helper run-task
 
-.PHONY: deploy-fallbackOracle
-deploy-fallbackOracle:
-	make TASK_NAME=deploy:fallback-oracle run-task
+.PHONY: deploy-oracle
+deploy-oracle:
+	make TASK_NAME=deploy:oracle run-task
 
 .PHONY: deploy-allAggregators
 deploy-allAggregators:
