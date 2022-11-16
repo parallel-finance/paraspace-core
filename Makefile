@@ -220,9 +220,9 @@ test-reserve-configuration:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
-.PHONY: test-ui-providers
-test-ui-providers:
-	make TEST_TARGET=_ui_providers.spec.ts test
+.PHONY: test-data-providers
+test-data-providers:
+	make TEST_TARGET=_data_providers.spec.ts test
 
 .PHONY: test-ape-staking
 test-ape-staking:
