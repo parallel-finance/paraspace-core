@@ -31,7 +31,7 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool) NToken(pool, true) {
-        _balanceLimit = 30;
+        _ERC721Data.balanceLimit = 30;
     }
 
     function getXTokenType() external pure override returns (XTokenType) {

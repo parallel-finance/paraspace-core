@@ -116,6 +116,10 @@ test-erc20-withdraw:
 test-erc20-repay:
 	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test
 
+.PHONY: test-erc721-liquidation
+test-erc721-liquidation:
+	make TEST_TARGET=_pool_core_erc721_liquidation.spec.ts test
+
 .PHONY: test-erc721-auction-liquidation
 test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
@@ -228,9 +232,9 @@ test-reserve-configuration:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
-.PHONY: test-ui-providers
-test-ui-providers:
-	make TEST_TARGET=_ui_providers.spec.ts test
+.PHONY: test-data-providers
+test-data-providers:
+	make TEST_TARGET=_data_providers.spec.ts test
 
 .PHONY: test-ape-staking
 test-ape-staking:
