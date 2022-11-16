@@ -188,6 +188,10 @@ test-variable-debt-token:
 test-atomic-tokens-limit:
 	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
 
+.PHONY: test-mint-to-treasury
+test-mint-to-treasury:
+	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test	
+
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
 	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
