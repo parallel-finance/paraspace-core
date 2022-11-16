@@ -12,7 +12,7 @@ import {
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
 } from "./deploy/helpers/hardhat-constants";
-import {accounts} from "./deploy/test-wallets";
+import {accounts} from "./deploy/wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {
   buildForkConfig,
@@ -133,6 +133,10 @@ const hardhatConfig: HardhatUserConfig = {
       accounts,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
+      mining: {
+        auto: false,
+        interval: 3000,
+      },
     },
     goerli: {
       chainId: GOERLI_CHAINID,

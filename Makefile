@@ -366,7 +366,7 @@ upgrade-ntoken-moonbirds:
 
 .PHONY: node
 node:
-	npx hardhat node --hostname 0.0.0.0
+	NETWORK=hardhat npx hardhat node --hostname 0.0.0.0
 
 .PHONY: image
 image:
