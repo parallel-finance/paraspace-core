@@ -10,7 +10,7 @@ import {afterAll} from "../../deploy/tasks/deployments/full-deployment/steps/aft
 task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   //for test_only mode we run each test in a live hardhat network without redeploy
-  if (process.env["TEST_ONLY"] == "true") {
+  if (DEPLOY_END - DEPLOY_START < 1) {
     return;
   }
 

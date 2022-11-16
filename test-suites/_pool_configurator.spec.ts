@@ -32,6 +32,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumberish} from "ethers";
 import "./helpers/utils/wadraymath";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 describe("PoolConfigurator: Common", () => {
   type ReserveConfigurationValues = {
@@ -187,7 +188,8 @@ describe("PoolConfigurator: Common", () => {
         auctionStrategyExp.stepLinear,
         auctionStrategyExp.stepExp,
         auctionStrategyExp.tickLength,
-      ]
+      ],
+      ETHERSCAN_VERIFICATION
     );
     // Init the reserve
     const initInputParams = [
@@ -1420,7 +1422,8 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
         auctionStrategyExp.stepLinear,
         auctionStrategyExp.stepExp,
         auctionStrategyExp.tickLength,
-      ]
+      ],
+      ETHERSCAN_VERIFICATION
     );
 
     // Init the reserve

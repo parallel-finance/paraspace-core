@@ -20,10 +20,9 @@ init: submodules
 test:
 	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
-# run make deploy first then run each test without redeploy
-.PHONY: test-only
-test-only:
-	DB_PATH=deployed-contracts.json TEST_ONLY=true npx hardhat test ./test-suites/${TEST_TARGET} --network localhost --verbose
+.PHONY: dry-test
+dry-test:
+	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
@@ -146,11 +145,7 @@ test-paraspace-oracle-aggregator:
 
 .PHONY: test-nft-floor-price-oracle-without-deploy
 test-nft-floor-price-oracle-without-deploy:
-	make TEST_TARGET=_oracle_nft_floor_price.spec.ts test-only
-
-.PHONY: test-nft-floor-price-oracle-single-testcase
-test-nft-floor-price-oracle-single-testcase:
-	SKIP_LOAD=false TEST_ONLY=true npx hardhat test ./test-suites/_oracle_nft_floor_price.spec.ts --grep "TC-oracle-nft-floor-price-06" --network localhost --verbose
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts dry-test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
@@ -378,7 +373,7 @@ upgrade-ntoken-moonbirds:
 
 .PHONY: node
 node:
-	NETWORK=hardhat npx hardhat node --hostname 0.0.0.0
+	npx hardhat node --hostname 0.0.0.0
 
 .PHONY: image
 image:

@@ -11,6 +11,7 @@ import {
   REPORT_GAS,
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
+  DEPLOYER_MNEMONIC,
 } from "./deploy/helpers/hardhat-constants";
 import {accounts} from "./deploy/wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
@@ -131,19 +132,23 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts,
-      loggingEnabled: false,
+      loggingEnabled: true,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
     goerli: {
       chainId: GOERLI_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
-      accounts: accounts.map(({privateKey}) => privateKey),
+      accounts: {
+        mnemonic: DEPLOYER_MNEMONIC,
+      },
     },
     mainnet: {
       chainId: MAINNET_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
-      accounts: accounts.map(({privateKey}) => privateKey),
+      accounts: {
+        mnemonic: DEPLOYER_MNEMONIC,
+      },
     },
   },
   etherscan: {
