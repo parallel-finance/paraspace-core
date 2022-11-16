@@ -40,7 +40,6 @@ contract FundLossTest is PTest {
     }
 
     function testFundLoss() external {
-        console.logBytes(address(0xeE45cAB7495Ab8057b956b42487A5e333A5b7081).code);
         invariantFundLoss();
     }
 }

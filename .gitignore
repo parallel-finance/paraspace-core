@@ -31,3 +31,6 @@ remix-compiler.config.js
 logs
 *data
 *.swp
+
+lib/
+out/
