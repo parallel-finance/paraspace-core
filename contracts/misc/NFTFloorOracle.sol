@@ -5,8 +5,8 @@ import "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "./interfaces/INFTFloorOracle.sol";
 
-//keep 3 submissions at most for each feeder
-uint8 constant MAX_SUBMISSION = 3;
+//we need to deploy 3 oracle at least
+uint8 constant MIN_ORACLES_NUM = 3;
 //expirationPeriod at least the interval of client to feed data(currently 6h=21600s/12=1800 in mainnet)
 //we do not accept price lags behind to much
 uint128 constant EXPIRATION_PERIOD = 1800;
@@ -60,7 +60,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     // the NFT contract -> price information
     mapping(address => PriceInformation) public priceMap;
 
-    /// @dev All valid feeders
+    /// @dev All feeders
     address[] public feeders;
 
     /// @dev All asset list
@@ -304,11 +304,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
                 }
             }
         }
-        //we will add 3-5 feeders at mainet launch and allow less than 1/3 feeders down
-        uint256 minThreshold = (2 * (feeders.length)) / 3;
-        //at same time we need 3 feeders at least to aggeregate with
-        uint256 validNumThreshold = minThreshold < 3 ? 3 : minThreshold;
-        if (validNum < validNumThreshold) {
+        if (validNum < MIN_ORACLES_NUM) {
             return (false, priceMap[token].twap);
         }
         _quickSort(validPriceList, 0, int256(validNum - 1));
