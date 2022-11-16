@@ -21,6 +21,7 @@ import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 declare let hre: HardhatRuntimeEnvironment;
 
@@ -556,7 +557,7 @@ describe("Pool: Edge cases", () => {
     const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
       await getFirstSigner()
     ).deploy(addressesProvider.address, 0, 0, 0, 0);
-    const mockAuctionStrategy = await await deployReserveAuctionStrategy(
+    const mockAuctionStrategy = await deployReserveAuctionStrategy(
       eContractid.DefaultReserveAuctionStrategy,
       [
         auctionStrategyExp.maxPriceMultiplier,
@@ -565,7 +566,8 @@ describe("Pool: Edge cases", () => {
         auctionStrategyExp.stepLinear,
         auctionStrategyExp.stepExp,
         auctionStrategyExp.tickLength,
-      ]
+      ],
+      ETHERSCAN_VERIFICATION
     );
 
     // Init the reserve

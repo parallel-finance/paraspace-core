@@ -16,6 +16,7 @@ import {utils} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {eContractid} from "../deploy/helpers/types";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 describe("AuctionStrategy", () => {
   let strategyInstanceExp: DefaultReserveAuctionStrategy;
@@ -32,17 +33,21 @@ describe("AuctionStrategy", () => {
         auctionStrategyExp.stepLinear,
         auctionStrategyExp.stepExp,
         auctionStrategyExp.tickLength,
-      ]
+      ],
+      ETHERSCAN_VERIFICATION
     );
 
-    strategyInstanceLinear = await deployMockReserveAuctionStrategy([
-      auctionStrategyLinear.maxPriceMultiplier,
-      auctionStrategyLinear.minExpPriceMultiplier,
-      auctionStrategyLinear.minPriceMultiplier,
-      auctionStrategyLinear.stepLinear,
-      auctionStrategyLinear.stepExp,
-      auctionStrategyLinear.tickLength,
-    ]);
+    strategyInstanceLinear = await deployMockReserveAuctionStrategy(
+      [
+        auctionStrategyLinear.maxPriceMultiplier,
+        auctionStrategyLinear.minExpPriceMultiplier,
+        auctionStrategyLinear.minPriceMultiplier,
+        auctionStrategyLinear.stepLinear,
+        auctionStrategyLinear.stepExp,
+        auctionStrategyLinear.tickLength,
+      ],
+      ETHERSCAN_VERIFICATION
+    );
   });
 
   it("TC-auctionStrategy-ExponentialReserveAuctionStrategy with maxPriceRatio: 300%, minExpPriceRatio: 120%, minPriceRatio: 50%, stepLinearRatio: 5.7%, lamda: 0.08", async () => {

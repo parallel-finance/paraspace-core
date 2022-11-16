@@ -5,11 +5,12 @@ import {MockReserveConfiguration} from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 describe("ReserveConfiguration", async () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
-    configMock = await deployMockReserveConfiguration();
+    configMock = await deployMockReserveConfiguration(ETHERSCAN_VERIFICATION);
     return testEnv;
   };
 

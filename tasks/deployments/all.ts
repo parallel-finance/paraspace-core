@@ -4,11 +4,13 @@ import {
   DEPLOY_START,
   ETHERSCAN_VERIFICATION,
 } from "../../deploy/helpers/hardhat-constants";
+import {beforeAll} from "../../deploy/tasks/deployments/full-deployment/steps/before-all";
+import {afterAll} from "../../deploy/tasks/deployments/full-deployment/steps/after-all";
 
 task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   //for test_only mode we run each test in a live hardhat network without redeploy
-  if (process.env["TEST_ONLY"] == "true") {
+  if (DEPLOY_END - DEPLOY_START < 1) {
     return;
   }
 
@@ -20,12 +22,14 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
 
   console.time("setup");
 
+  await beforeAll();
   for (let i = DEPLOY_START; i < DEPLOY_END; i++) {
     await steps[i](ETHERSCAN_VERIFICATION);
     console.log(
       `------------ step ${i.toString().padStart(2, "0")} done ------------`
     );
   }
+  await afterAll();
 
   await printContracts();
 
