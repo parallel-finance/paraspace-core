@@ -4,7 +4,6 @@ pragma solidity 0.8.10;
 import "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "./interfaces/INFTFloorOracle.sol";
-import "../protocol/libraries/helpers/Errors.sol";
 
 //keep 3 submissions at most for each feeder
 uint8 constant MAX_SUBMISSION = 3;
@@ -306,9 +305,9 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
             }
         }
         //we will add 3-5 feeders at mainet launch and allow less than 1/3 feeders down
-        uint256 validNumThreshold = ((2 * (feeders.length)) / 3) < 3
-            ? 3
-            : ((2 * (feeders.length)) / 3);
+        uint256 minThreshold = (2 * (feeders.length)) / 3;
+        //at same time we need 3 feeders at least to aggeregate with
+        uint256 validNumThreshold = minThreshold < 3 ? 3 : minThreshold;
         if (validNum < validNumThreshold) {
             return (false, priceMap[token].twap);
         }
@@ -340,10 +339,10 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         override
         returns (uint256 twap)
     {
-        uint256 lastUpdated = priceMap[token].twap;
+        uint256 updatedAt = priceMap[token].updatedAt;
         require(
-            (block.number - lastUpdated) <= config.expirationPeriod,
-            Errors.ORACLE_PRICE_EXPIRED
+            (block.number - updatedAt) <= config.expirationPeriod,
+            "NFTOracle: asset price expired"
         );
         return priceMap[token].twap;
     }

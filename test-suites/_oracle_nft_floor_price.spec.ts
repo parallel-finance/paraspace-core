@@ -94,7 +94,6 @@ describe("NFT Oracle Tests", () => {
 
   it("TC-oracle-nft-floor-price-06:If NFT Oracle is paused, feeding new prices is not possible", async () => {
     const {
-      paraspaceOracle,
       nftFloorOracle,
       users: [updater],
     } = testEnv;
@@ -112,332 +111,340 @@ describe("NFT Oracle Tests", () => {
     // unpause the oracle
     await nftFloorOracle.setPause(mockToken.address, false);
 
-    // feed a new price
+    // admin can feed a new price
     const newPrice = parseEther("8");
+    await nftFloorOracle.setPrice(mockToken.address, newPrice.toString());
+
+    // updater also can feed price
     await nftFloorOracle
       .connect(updater.signer)
       .setPrice(mockToken.address, newPrice.toString());
 
     // price should've been updated
-    const postPrice = await paraspaceOracle.getAssetPrice(mockToken.address);
+    const postPrice = await nftFloorOracle.getTwap(mockToken.address);
 
     expect(postPrice).to.equal(newPrice);
   });
 
-  // it("TC-oracle-nft-floor-price-07:Can get quote for a new asset", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     dai,
-  //     users: [updater],
-  //   } = testEnv;
+  it("TC-oracle-nft-floor-price-07:Can get quote for a new asset", async () => {
+    const {
+      nftFloorOracle,
+      dai,
+      users: [updater],
+    } = testEnv;
 
-  //   // add a new asset
-  //   try {
-  //     await nftFloorOracle.addAssets([dai.address]);
-  //   } catch (e) {
-  //     //just ignore
-  //   }
+    // add a new asset
+    try {
+      await nftFloorOracle.addAssets([dai.address]);
+    } catch (e) {
+      //just ignore
+    }
 
-  //   // set price for new asset
-  //   const price = parseEther("5");
-  //   await nftFloorOracle
-  //     .connect(updater.signer)
-  //     .setPrice(dai.address, price.toString());
+    // set price for new asset
+    const price = parseEther("5");
+    await nftFloorOracle
+      .connect(updater.signer)
+      .setPrice(dai.address, price.toString());
 
-  //   // price set should be fetch successfully
-  //   expect(await nftFloorOracle.getTwap(dai.address)).to.equal(price);
-  // });
+    // price set should be fetch successfully
+    expect(await nftFloorOracle.getTwap(dai.address)).to.equal(price);
+  });
 
-  // it("TC-oracle-nft-floor-price-08:Cannot get quote for a removed asset", async () => {
-  //   const {paraspaceOracle, nftFloorOracle} = testEnv;
+  it("TC-oracle-nft-floor-price-08:Cannot get quote for a removed asset", async () => {
+    const {paraspaceOracle, nftFloorOracle} = testEnv;
 
-  //   // remove nft from assets
-  //   await nftFloorOracle.removeAsset(mockToken.address);
+    // remove nft from assets
+    await nftFloorOracle.removeAsset(mockToken.address);
 
-  //   // get price for an unknown asset from nftOracle will return 0
-  //   expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(0);
+    // get price for an unknown asset from nftOracle will return 0
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(0);
 
-  //   // get price for an unknown asset from paraspaceOracle should be reverted
-  //   await expect(
-  //     paraspaceOracle.getAssetPrice(mockToken.address)
-  //   ).to.be.revertedWith(ProtocolErrors.ORACLE_PRICE_NOT_READY);
-  // });
+    // get price for an unknown asset from paraspaceOracle should be reverted
+    await expect(
+      paraspaceOracle.getAssetPrice(mockToken.address)
+    ).to.be.revertedWith(ProtocolErrors.ORACLE_PRICE_NOT_READY);
+  });
 
-  // it("TC-oracle-nft-floor-price-09:Oracle feeders list can be updated from owner and rejected from other", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     users: [, , user3],
-  //   } = testEnv;
-  //   // grant feeder rights to user3
-  //   await nftFloorOracle.setOracles([user3.address]);
+  it("TC-oracle-nft-floor-price-09:Oracle feeders list can be updated from owner and rejected from other", async () => {
+    const {
+      nftFloorOracle,
+      users: [, , user3],
+    } = testEnv;
+    // grant feeder rights to user3
+    await nftFloorOracle.setOracles([user3.address]);
 
-  //   // feed new price with user3
-  //   const price = parseEther("2");
-  //   await nftFloorOracle
-  //     .connect(user3.signer)
-  //     .setPrice(mockToken.address, price.toString());
+    // feed new price with user3
+    const price = parseEther("2");
+    await nftFloorOracle
+      .connect(user3.signer)
+      .setPrice(mockToken.address, price.toString());
 
-  //   // verify new price was successfully set
-  //   expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(price);
+    // verify new price was successfully set
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(price);
 
-  //   // but feeder can not set oracles
-  //   await expect(
-  //     nftFloorOracle.connect(user3.signer).setOracles([user3.address])
-  //   ).to.be.reverted;
-  // });
+    // but feeder can not set oracles
+    await expect(
+      nftFloorOracle.connect(user3.signer).setOracles([user3.address])
+    ).to.be.reverted;
+  });
 
-  // it("TC-oracle-nft-floor-price-10:Feeders, updater and admin can feed a price", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     users: [updater],
-  //   } = testEnv;
+  it("TC-oracle-nft-floor-price-10:Feeders, updater and admin can feed a price", async () => {
+    const {
+      nftFloorOracle,
+      users: [updater],
+    } = testEnv;
 
-  //   // feed with admin
-  //   const price = parseEther("1");
-  //   expect(await nftFloorOracle.setPrice(mockToken.address, price.toString()));
+    // feed with admin
+    const price = parseEther("1");
+    expect(await nftFloorOracle.setPrice(mockToken.address, price.toString()));
 
-  //   // feed with updater
-  //   const price2 = parseEther("1.2");
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(updater.signer)
-  //       .setPrice(mockToken.address, price2.toString())
-  //   );
-  // });
+    // feed with updater
+    const price2 = parseEther("1.2");
+    expect(
+      await nftFloorOracle
+        .connect(updater.signer)
+        .setPrice(mockToken.address, price2.toString())
+    );
+  });
 
-  // it("TC-oracle-nft-floor-price-11:Administrator role can be granted to another user", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     users: [updater, , user3],
-  //     aclManager,
-  //   } = testEnv;
-  //   // user3 cannot pause the contract
-  //   await expect(
-  //     nftFloorOracle.connect(user3.signer).setPause(mockToken.address, true)
-  //   ).to.be.reverted;
+  it("TC-oracle-nft-floor-price-11:Administrator role can be granted to another user", async () => {
+    const {
+      nftFloorOracle,
+      users: [updater, , user3],
+      aclManager,
+    } = testEnv;
+    // user3 cannot pause the contract
+    await expect(
+      nftFloorOracle.connect(user3.signer).setPause(mockToken.address, true)
+    ).to.be.reverted;
 
-  //   // grant admin role to user3
-  //   await nftFloorOracle.grantRole(
-  //     aclManager.DEFAULT_ADMIN_ROLE(),
-  //     user3.address
-  //   );
+    // grant admin role to user3
+    await nftFloorOracle.grantRole(
+      aclManager.DEFAULT_ADMIN_ROLE(),
+      user3.address
+    );
 
-  //   // now user3 can pause the contract
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(user3.signer)
-  //       .setPause(mockToken.address, true)
-  //   );
+    // now user3 can pause the contract
+    expect(
+      await nftFloorOracle
+        .connect(user3.signer)
+        .setPause(mockToken.address, true)
+    );
 
-  //   // previous DEFAULT_ADMIN_ROLE can also unpause the contract
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(testEnv.poolAdmin.signer)
-  //       .setPause(mockToken.address, false)
-  //   );
+    // previous DEFAULT_ADMIN_ROLE can also unpause the contract
+    expect(
+      await nftFloorOracle
+        .connect(testEnv.poolAdmin.signer)
+        .setPause(mockToken.address, false)
+    );
 
-  //   // but UPDATER user cannot pause the contract
-  //   await expect(
-  //     nftFloorOracle.connect(updater.signer).setPause(mockToken.address, true)
-  //   ).to.be.reverted;
-  // });
+    // but UPDATER user cannot pause the contract
+    await expect(
+      nftFloorOracle.connect(updater.signer).setPause(mockToken.address, true)
+    ).to.be.reverted;
+  });
 
-  // it("TC-oracle-nft-floor-price-10:Feeders with revoked rights cannot feed price", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     users: [, , user3],
-  //   } = testEnv;
+  it("TC-oracle-nft-floor-price-10:Feeders with revoked rights cannot feed price", async () => {
+    const {
+      nftFloorOracle,
+      users: [, , user3],
+    } = testEnv;
 
-  //   // revoke UPDATER role from user3
-  //   await nftFloorOracle.revokeRole(
-  //     utils.keccak256(utils.toUtf8Bytes("UPDATER_ROLE")),
-  //     user3.address
-  //   );
+    // revoke UPDATER role from user3
+    await nftFloorOracle.revokeRole(
+      utils.keccak256(utils.toUtf8Bytes("UPDATER_ROLE")),
+      user3.address
+    );
 
-  //   const price = parseEther("3");
-  //   // try to feed new price with user3
-  //   await expect(
-  //     nftFloorOracle
-  //       .connect(user3.signer)
-  //       .setPrice(mockToken.address, price.toString())
-  //   ).to.be.reverted;
-  // });
+    const price = parseEther("3");
+    // try to feed new price with user3
+    await expect(
+      nftFloorOracle
+        .connect(user3.signer)
+        .setPrice(mockToken.address, price.toString())
+    ).to.be.reverted;
+  });
 
-  // it("TC-oracle-nft-floor-price-12:Only when minCountToAggregate is reached, median value from the different providers is returned", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     //user 4 is admin in test deployment so skip it
-  //     users: [user1, user2, user3, , user4, user5],
-  //   } = testEnv;
+  it("TC-oracle-nft-floor-price-12:Only when minCountToAggregate is reached, median value from the different providers is returned", async () => {
+    const {
+      nftFloorOracle,
+      //user 4 is admin in test deployment so skip it
+      users: [user1, user2, user3, , user4, user5],
+    } = testEnv;
 
-  //   //120 blocks as expiration and 20 times as deviation
-  //   await waitForTx(await nftFloorOracle.setConfig(120, 2000));
+    //120 blocks as expiration and 20 times as deviation
+    await waitForTx(await nftFloorOracle.setConfig(120, 2000));
 
-  //   // set initial price to 10 ETH
-  //   const initialPrice = parseEther("10");
-  //   await waitForTx(
-  //     await nftFloorOracle.setPrice(mockToken.address, initialPrice)
-  //   );
+    // set initial price to 10 ETH
+    const initialPrice = parseEther("10");
+    await waitForTx(
+      await nftFloorOracle.setPrice(mockToken.address, initialPrice)
+    );
 
-  //   let twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    let twapPrice = await nftFloorOracle.getTwap(mockToken.address);
 
-  //   expect(twapPrice).to.equal(initialPrice);
+    expect(twapPrice).to.equal(initialPrice);
 
-  //   const price1 = parseEther("1");
-  //   const price2 = parseEther("2");
-  //   const price3 = parseEther("3");
-  //   const price4 = parseEther("4");
-  //   const price5 = parseEther("5");
+    const price1 = parseEther("1");
+    const price2 = parseEther("2");
+    const price3 = parseEther("3");
+    const price4 = parseEther("4");
+    const price5 = parseEther("5");
 
-  //   // set first price,not enough price so still initial
-  //   await waitForTx(
-  //     await nftFloorOracle
-  //       .connect(user1.signer)
-  //       .setPrice(mockToken.address, price1.toString())
-  //   );
+    // set first price,not enough price so still initial
+    await waitForTx(
+      await nftFloorOracle
+        .connect(user1.signer)
+        .setPrice(mockToken.address, price1.toString())
+    );
 
-  //   twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-  //   expect(twapPrice).to.equal(initialPrice);
+    twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(initialPrice);
 
-  //   //set second price, not enough, so still initial
-  //   await waitForTx(
-  //     await nftFloorOracle
-  //       .connect(user2.signer)
-  //       .setPrice(mockToken.address, price2.toString())
-  //   );
+    //set second price, not enough, so still initial
+    await waitForTx(
+      await nftFloorOracle
+        .connect(user2.signer)
+        .setPrice(mockToken.address, price2.toString())
+    );
 
-  //   twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-  //   expect(twapPrice).to.equal(initialPrice);
+    twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(initialPrice);
 
-  //   // set third price,not enough still initial
-  //   await waitForTx(
-  //     await nftFloorOracle
-  //       .connect(user3.signer)
-  //       .setPrice(mockToken.address, price3.toString())
-  //   );
-  //   twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-  //   expect(twapPrice).to.equal(initialPrice);
+    // set third price,not enough still initial
+    await waitForTx(
+      await nftFloorOracle
+        .connect(user3.signer)
+        .setPrice(mockToken.address, price3.toString())
+    );
+    twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(initialPrice);
 
-  //   // set fourth price,since threshold=4,enough so aggregate with [1,2,3,4]=3
-  //   await waitForTx(
-  //     await nftFloorOracle
-  //       .connect(user4.signer)
-  //       .setPrice(mockToken.address, price4.toString())
-  //   );
+    // set fourth price,since threshold=4,enough so aggregate with [1,2,3,4]=3
+    await waitForTx(
+      await nftFloorOracle
+        .connect(user4.signer)
+        .setPrice(mockToken.address, price4.toString())
+    );
 
-  //   twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-  //   expect(twapPrice).to.equal(price3);
+    twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(price3);
 
-  //   // set fifth price, aggregate [1,2,3,4,5]=3
-  //   await waitForTx(
-  //     await nftFloorOracle
-  //       .connect(user5.signer)
-  //       .setPrice(mockToken.address, price5.toString())
-  //   );
+    // set fifth price, aggregate [1,2,3,4,5]=3
+    await waitForTx(
+      await nftFloorOracle
+        .connect(user5.signer)
+        .setPrice(mockToken.address, price5.toString())
+    );
 
-  //   twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-  //   expect(twapPrice).to.equal(price3);
-  // });
+    twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(price3);
+  });
 
-  // it("TC-oracle-nft-floor-price-13:Oracle quotes expire based on expirationPeriod", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     users: [user1, user2, user3, , user4],
-  //   } = testEnv;
-  //   // set expiration period to 5 block and deviation as 20
-  //   await nftFloorOracle.setConfig(5, 2000);
+  it("TC-oracle-nft-floor-price-13:Oracle quotes expire based on expirationPeriod", async () => {
+    const {
+      nftFloorOracle,
+      users: [user1, user2, user3, , user4],
+    } = testEnv;
+    // set expiration period to 5 block and deviation as 20
+    await nftFloorOracle.setConfig(5, 2000);
 
-  //   //user1 set price as 1,block:1
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(user1.signer)
-  //       .setPrice(mockToken.address, parseEther("1").toString())
-  //   );
+    //user1 set price as 1,block:1
+    expect(
+      await nftFloorOracle
+        .connect(user1.signer)
+        .setPrice(mockToken.address, parseEther("1").toString())
+    );
 
-  //   const twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-  //   expect(twapPrice).to.equal(parseEther("1"));
+    const twapPrice = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapPrice).to.equal(parseEther("1"));
 
-  //   //user2 set price as 2,block:2
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(user2.signer)
-  //       .setPrice(mockToken.address, parseEther("2").toString())
-  //   );
+    //user2 set price as 2,block:2
+    expect(
+      await nftFloorOracle
+        .connect(user2.signer)
+        .setPrice(mockToken.address, parseEther("2").toString())
+    );
 
-  //   // prices user1:1 and user2:2 not enough so still use previous
-  //   expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-  //     parseEther("1")
-  //   );
+    // prices user1:1 and user2:2 not enough so still use previous
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
+      parseEther("1")
+    );
 
-  //   // set price so block=3 now,user1:1 and user2:2 and user3:3
-  //   // still not enough and use init price
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(user3.signer)
-  //       .setPrice(mockToken.address, parseEther("3").toString())
-  //   );
-  //   expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-  //     parseEther("1")
-  //   );
+    // set price so block=3 now,user1:1 and user2:2 and user3:3
+    // still not enough and use init price
+    expect(
+      await nftFloorOracle
+        .connect(user3.signer)
+        .setPrice(mockToken.address, parseEther("3").toString())
+    );
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
+      parseEther("1")
+    );
 
-  //   // set price so block=4 now,user1:1 and user2:2 and user3:4,user4:4
-  //   // now reach threshold and can be aggregated [1,2,3,4]=3
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(user4.signer)
-  //       .setPrice(mockToken.address, parseEther("4").toString())
-  //   );
-  //   expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-  //     parseEther("3")
-  //   );
+    // set price so block=4 now,user1:1 and user2:2 and user3:4,user4:4
+    // now reach threshold and can be aggregated [1,2,3,4]=3
+    expect(
+      await nftFloorOracle
+        .connect(user4.signer)
+        .setPrice(mockToken.address, parseEther("4").toString())
+    );
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
+      parseEther("3")
+    );
 
-  //   // and aggregated to [1,2,5] and 2 will be finalized
-  //   //mine block will not change price
-  //   await mine(); //block 5
-  //   expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-  //     parseEther("3")
-  //   );
+    await mine(); //block 5
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
+      parseEther("3")
+    );
 
-  //   //set price at block 6, and 6-1=5 so price from user1 expired
-  //   expect(
-  //     await nftFloorOracle
-  //       .connect(user4.signer)
-  //       .setPrice(mockToken.address, parseEther("2").toString())
-  //   );
-  //   //so now price are: user2:2,user3:3,user4:2
-  //   //which aggregated to [1,2,2] and 2 will be finalized
-  //   expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-  //     parseEther("2")
-  //   );
-  // });
+    //set price at block 6, and 6-1=5 so price from user1 expired
+    expect(
+      await nftFloorOracle
+        .connect(user4.signer)
+        .setPrice(mockToken.address, parseEther("2").toString())
+    );
+    //so now price are: user2:2,user3:3,user4:2
+    //which aggregated to [2,3,2] and 2 will be finalized
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
+      parseEther("2")
+    );
+    //mine another 10 block to make all price expired
+    for (let i = 0; i < 10; i++) {
+      await mine();
+    }
+    await expect(nftFloorOracle.getTwap(mockToken.address)).to.be.revertedWith(
+      "NFTOracle: asset price expired"
+    );
+  });
 
-  // it("TC-oracle-nft-floor-price-14:Price changes away from maxPriceDeviation are not taken into account", async () => {
-  //   const {
-  //     nftFloorOracle,
-  //     users: [user1, user2],
-  //   } = testEnv;
+  it("TC-oracle-nft-floor-price-14:Price changes away from maxPriceDeviation are not taken into account", async () => {
+    const {
+      nftFloorOracle,
+      users: [user1, user2],
+    } = testEnv;
 
-  //   // set maxPriceDeviation to 200%
-  //   await nftFloorOracle.setConfig(60, 200);
+    // set maxPriceDeviation to 200%
+    await nftFloorOracle.setConfig(60, 200);
 
-  //   // set initial price to 1 ETH
-  //   await nftFloorOracle.setPrice(mockToken.address, parseEther("1"));
+    // set initial price to 1 ETH
+    await nftFloorOracle.setPrice(mockToken.address, parseEther("1"));
 
-  //   const twapFromNftOracle = await nftFloorOracle.getTwap(mockToken.address);
-  //   expect(twapFromNftOracle).to.equal(parseEther("1"));
+    const twapFromNftOracle = await nftFloorOracle.getTwap(mockToken.address);
+    expect(twapFromNftOracle).to.equal(parseEther("1"));
 
-  //   // try to set price to 0.25 ETH (should be reverted)
-  //   await expect(
-  //     nftFloorOracle
-  //       .connect(user1.signer)
-  //       .setPrice(mockToken.address, parseEther("1").div(4))
-  //   ).to.be.revertedWith("NFTOracle: invalid price data");
+    // try to set price to 0.25 ETH (should be reverted)
+    await expect(
+      nftFloorOracle
+        .connect(user1.signer)
+        .setPrice(mockToken.address, parseEther("1").div(4))
+    ).to.be.revertedWith("NFTOracle: invalid price data");
 
-  //   // try to set price to 3 ETH (should be reverted)
-  //   await expect(
-  //     nftFloorOracle
-  //       .connect(user2.signer)
-  //       .setPrice(mockToken.address, parseEther("3"))
-  //   ).to.be.revertedWith("NFTOracle: invalid price data");
-  // });
+    // try to set price to 3 ETH (should be reverted)
+    await expect(
+      nftFloorOracle
+        .connect(user2.signer)
+        .setPrice(mockToken.address, parseEther("3"))
+    ).to.be.revertedWith("NFTOracle: invalid price data");
+  });
 });
