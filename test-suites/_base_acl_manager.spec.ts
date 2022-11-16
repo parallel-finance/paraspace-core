@@ -14,8 +14,7 @@ const fixture = async () => {
     addressesProvider.address
   );
 return {
-  aclManager,
-  ...testEnv
+ ...testEnv,
 }
 };
 
