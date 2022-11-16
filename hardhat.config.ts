@@ -16,6 +16,7 @@ import {accounts} from "./deploy/wallets";
 import {accounts as evmAccounts} from "./deploy/evm-wallets";
 import {
   buildForkConfig,
+  buildMiningConfig,
   CHAINS_ID,
   NETWORKS_RPC_URL,
 } from "./deploy/helper-hardhat-config";
@@ -133,10 +134,7 @@ const hardhatConfig: HardhatUserConfig = {
       accounts,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
-      mining: {
-        auto: false,
-        interval: 3000,
-      },
+      mining: buildMiningConfig(),
     },
     goerli: {
       chainId: GOERLI_CHAINID,
