@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "./interfaces/INFTFloorOracle.sol";
+import "../protocol/libraries/helpers/Errors.sol";
 
 //keep 3 submissions at most for each feeder
 uint8 constant MAX_SUBMISSION = 3;
@@ -339,6 +340,11 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         override
         returns (uint256 twap)
     {
+        uint256 lastUpdated = priceMap[token].twap;
+        require(
+            (block.number - lastUpdated) <= config.expirationPeriod,
+            Errors.ORACLE_PRICE_EXPIRED
+        );
         return priceMap[token].twap;
     }
 

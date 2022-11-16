@@ -1,6 +1,6 @@
 #!make
 
-NETWORK                  := hardhat
+NETWORK                  := localhost
 DISABLE_INDEXER          := true
 
 include .env
