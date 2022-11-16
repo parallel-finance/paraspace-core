@@ -9,7 +9,7 @@ on:
         required: true
       verifyContracts:
         description: Contracts to be verified on etherscan (separated by comma).
-        default: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport"
+        default: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport,ApeCoinStaking"
         required: true
       ref:
         description: The deployment commit hash.

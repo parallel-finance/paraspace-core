@@ -19,15 +19,15 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network hardhat # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -80,6 +80,10 @@ test-pool-edge:
 test-ntoken:
 	make TEST_TARGET=_xtoken_ntoken.spec.ts test
 
+.PHONY: test-ntoken-punk
+test-ntoken-punk:
+	make TEST_TARGET=ntoken-punk.spec.ts test
+
 .PHONY: test-ptoken
 test-ptoken:
 	make TEST_TARGET=_xtoken_ptoken.spec.ts test
@@ -108,6 +112,10 @@ test-erc20-withdraw:
 test-erc20-repay:
 	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test
 
+.PHONY: test-erc721-liquidation
+test-erc721-liquidation:
+	make TEST_TARGET=_pool_core_erc721_liquidation.spec.ts test
+
 .PHONY: test-erc721-auction-liquidation
 test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
@@ -116,13 +124,9 @@ test-erc721-auction-liquidation:
 test-configurator:
 	make TEST_TARGET=_pool_configurator.spec.ts test
 
-.PHONY: test-pausable-reserve
-test-pausable-reserve:
-	make TEST_TARGET=pausable-reserve.spec.ts test
-
 .PHONY: test-rescue-tokens
 test-rescue-tokens:
-	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test	
+	make TEST_TARGET=_pool_parameters_rescue_tokens.spec.ts test
 
 .PHONY: test-upgradeability
 test-upgradeability:
@@ -158,7 +162,7 @@ test-marketplace-buy:
 
 .PHONY: test-marketplace-accept-bid
 test-marketplace-accept-bid:
-	make TEST_TARGET=_pool_marketplace_accept_bid_credit.spec.ts test
+	make TEST_TARGET=_pool_marketplace_accept_bid_with_credit.spec.ts test
 
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
@@ -184,10 +188,6 @@ test-auction-strategy:
 test-variable-debt-token:
 	make TEST_TARGET=_xtoken_variable_debt_token.spec.ts test
 
-.PHONY: test-no-incentives-controller
-test-no-incentives-controller:
-	make TEST_TARGET=no-incentives-controller.spec.ts test
-
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
 	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
@@ -196,8 +196,8 @@ test-atomic-tokens-limit:
 test-rebasing-tokens:
 	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
 
-.PHONY: test-pool-addresses-provider
-test-pool-addresses-provider:
+.PHONY: test-addresses-provider
+test-addresses-provider:
 	make TEST_TARGET=_base_addresses_provider.spec.ts test
 
 .PHONY: test-addresses-provider-registry
@@ -218,19 +218,23 @@ test-rate-strategy:
 
 .PHONY: test-reserve-configuration
 test-reserve-configuration:
-	make TEST_TARGET=reserve-configuration.spec.ts test
+	make TEST_TARGET=_base_reserve_configuration.spec.ts test
 
 .PHONY: test-scenario
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
-.PHONY: test-ui-providers
-test-ui-providers:
-	make TEST_TARGET=_ui_providers.spec.ts test
+.PHONY: test-data-providers
+test-data-providers:
+	make TEST_TARGET=_data_providers.spec.ts test
 
 .PHONY: test-ape-staking
 test-ape-staking:
 	make TEST_TARGET=_xtoken_ntoken_ape_staking.spec.ts test
+
+.PHONY: test-acl-manager
+test-acl-manager:
+	make TEST_TARGET=acl-manager.spec.ts test
 
 .PHONY: run
 run:
@@ -324,6 +328,10 @@ deploy-x2y2:
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
 
+.PHONY: deploy-renounceOwnership
+deploy-renounceOwnership:
+	make TASK_NAME=deploy:renounce-ownership run-task
+
 .PHONY: ad-hoc
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
@@ -356,8 +364,8 @@ upgrade-ntoken-uniswapv3:
 upgrade-ntoken-moonbirds:
 	make TASK_NAME=upgrade:ntoken_moonbirds run-task
 
-.PHONY: fork
-fork:
+.PHONY: node
+node:
 	npx hardhat node --hostname 0.0.0.0
 
 .PHONY: image
@@ -368,7 +376,7 @@ image:
 		-f Dockerfile .
 
 .PHONY: launch
-launch:
+launch: shutdown
 	docker-compose \
 		up \
 		-d --build
@@ -380,6 +388,8 @@ shutdown:
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
 	docker volume prune -f
+	rm -fr redis-data || true
+	rm -fr logs || true
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

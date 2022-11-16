@@ -14,7 +14,7 @@ import {
   getACLManager,
   getMintableERC721,
   getWPunk,
-  getCryptoPunksMarket,
+  getPunks,
   getMockTokenFaucet,
   getConduitController,
   getPausableZoneController,
@@ -146,7 +146,7 @@ export interface TestEnv {
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
   aclManager: ACLManager;
-  cryptoPunksMarket: CryptoPunksMarket;
+  punks: CryptoPunksMarket;
   wPunk: WPunk;
   nWPunk: NToken;
   wBTC: MintableERC20;
@@ -212,7 +212,7 @@ export async function initializeMakeSuite() {
     addressesProvider: {} as PoolAddressesProvider,
     registry: {} as PoolAddressesProviderRegistry,
     aclManager: {} as ACLManager,
-    cryptoPunksMarket: {} as CryptoPunksMarket,
+    punks: {} as CryptoPunksMarket,
     wPunk: {} as WPunk,
     nWPunk: {} as NToken,
     wBTC: {} as MintableERC20,
@@ -238,38 +238,45 @@ export async function initializeMakeSuite() {
     moonbirds: {} as Moonbirds,
     nftFloorOracle: {} as NFTFloorOracle,
   } as TestEnv;
-  const [_deployer, ...restSigners] = await getEthersSigners();
-  const deployer: SignerWithAddress = {
-    address: await _deployer.getAddress(),
-    signer: _deployer,
-  };
-
-  for (const signer of restSigners) {
-    testEnv.users.push({
+  const paraSpaceConfig = getParaSpaceConfig();
+  const signers = await Promise.all(
+    (
+      await getEthersSigners()
+    ).map(async (signer) => ({
       signer,
       address: await signer.getAddress(),
-    });
-  }
+    }))
+  );
+  const [deployer, ...restSigners] = signers;
+  testEnv.users = restSigners;
   testEnv.deployer = deployer;
-  testEnv.poolAdmin = deployer;
-  testEnv.assetListingAdmin = deployer;
-  testEnv.emergencyAdmin =
-    testEnv.users[getParaSpaceConfig().EmergencyAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
-  testEnv.riskAdmin = testEnv.users[getParaSpaceConfig().RiskAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
-  testEnv.gatewayAdmin =
-    testEnv.users[getParaSpaceConfig().GatewayAdminIndex - 1]; // -1 is because we removed deployer from testEnv.users
+  testEnv.poolAdmin = signers[paraSpaceConfig.ParaSpaceAdminIndex];
+  testEnv.assetListingAdmin = signers[paraSpaceConfig.ParaSpaceAdminIndex];
+  testEnv.emergencyAdmin = signers[paraSpaceConfig.EmergencyAdminIndex];
+  testEnv.riskAdmin = signers[paraSpaceConfig.RiskAdminIndex];
+  testEnv.gatewayAdmin = signers[paraSpaceConfig.GatewayAdminIndex];
 
   testEnv.pool = await getPoolProxy();
-  testEnv.configurator = await getPoolConfiguratorProxy();
+  testEnv.configurator = (await getPoolConfiguratorProxy()).connect(
+    testEnv.poolAdmin.signer
+  );
   testEnv.poolDataProvider = await getUiPoolDataProvider();
 
-  testEnv.addressesProvider = await getPoolAddressesProvider();
+  testEnv.addressesProvider = (await getPoolAddressesProvider()).connect(
+    testEnv.poolAdmin.signer
+  );
 
-  testEnv.registry = await getPoolAddressesProviderRegistry();
-  testEnv.aclManager = await getACLManager();
+  testEnv.registry = (await getPoolAddressesProviderRegistry()).connect(
+    testEnv.poolAdmin.signer
+  );
+  testEnv.aclManager = (await getACLManager()).connect(
+    testEnv.poolAdmin.signer
+  );
 
   testEnv.oracle = await getPriceOracle();
-  testEnv.paraspaceOracle = await getParaSpaceOracle();
+  testEnv.paraspaceOracle = (await getParaSpaceOracle()).connect(
+    testEnv.poolAdmin.signer
+  );
 
   testEnv.protocolDataProvider = await getProtocolDataProvider();
 
@@ -374,8 +381,8 @@ export async function initializeMakeSuite() {
   const baycAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.BAYC
   )?.tokenAddress;
-  const punkAddress = reservesTokens.find(
-    (token) => token.symbol === eContractid.CryptoPunksMarket
+  const punksAddress = reservesTokens.find(
+    (token) => token.symbol === eContractid.PUNKS
   )?.tokenAddress;
 
   const wpunkAddress = reservesTokens.find(
@@ -446,7 +453,7 @@ export async function initializeMakeSuite() {
   testEnv.bayc = await getMintableERC721(baycAddress);
 
   testEnv.nWPunk = await getNToken(nWPunkAddress);
-  testEnv.cryptoPunksMarket = await getCryptoPunksMarket(punkAddress);
+  testEnv.punks = await getPunks(punksAddress);
   testEnv.wPunk = await getWPunk(wpunkAddress);
   testEnv.wPunkGateway = await getWPunkGatewayProxy();
   testEnv.wETHGateway = await getWETHGatewayProxy();
@@ -460,8 +467,12 @@ export async function initializeMakeSuite() {
   testEnv.moonbirds = await getMoonBirds(moonbirdsAddress);
   testEnv.uniswapV3Factory = await getUniswapV3Factory();
   testEnv.nftPositionManager = await getNonfungiblePositionManager();
-  testEnv.nUniswapV3 = await getNTokenUniswapV3(nUniwapV3Address);
-  testEnv.nftFloorOracle = await getNFTFloorOracle();
+  testEnv.nUniswapV3 = (await getNTokenUniswapV3(nUniwapV3Address)).connect(
+    testEnv.poolAdmin.signer
+  );
+  testEnv.nftFloorOracle = (await getNFTFloorOracle()).connect(
+    testEnv.poolAdmin.signer
+  );
 
   return testEnv;
 }
