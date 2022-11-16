@@ -379,7 +379,7 @@ launch: shutdown
 	docker-compose \
 		up \
 		-d --build
-	docker-compose logs -f
+	docker-compose logs -f hardhat
 
 .PHONY: shutdown
 shutdown:
