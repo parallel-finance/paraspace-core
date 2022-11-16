@@ -8,7 +8,7 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {isUsingAsCollateral} from "../deploy/helpers/contracts-helpers";
-import {utils} from "ethers";
+import {supplyAndValidate} from "./helpers/validated-steps";
 
 describe("UserConfigurator for ERC721: check user usedAsCollateral and collateralizedBalance status", () => {
   let testEnv: TestEnv;
@@ -419,15 +419,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collatera
       users: [user0],
     } = await loadFixture(testEnvFixture);
 
-    const amount = utils.parseUnits("10", 18);
-    await dai.connect(user0.signer)["mint(uint256)"](amount);
-    await dai.connect(user0.signer).approve(pool.address, MAX_UINT_AMOUNT);
-
-    expect(
-      await pool
-        .connect(user0.signer)
-        .supply(dai.address, amount, user0.address, 0)
-    );
+    await supplyAndValidate(dai, "10", user0, true);
 
     const userReserveDataBefore = await protocolDataProvider.getUserReserveData(
       dai.address,
@@ -456,15 +448,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collatera
       users: [user0],
     } = await loadFixture(testEnvFixture);
 
-    const amount = utils.parseUnits("10", 18);
-    await dai.connect(user0.signer)["mint(uint256)"](amount);
-    await dai.connect(user0.signer).approve(pool.address, MAX_UINT_AMOUNT);
-
-    expect(
-      await pool
-        .connect(user0.signer)
-        .supply(dai.address, amount, user0.address, 0)
-    );
+    await supplyAndValidate(dai, "10", user0, true);
 
     // Disable asset as collateral
     expect(
