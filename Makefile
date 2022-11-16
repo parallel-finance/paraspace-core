@@ -1,7 +1,6 @@
 #!make
 
 NETWORK                  := hardhat
-DISABLE_INDEXER          := true
 
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
