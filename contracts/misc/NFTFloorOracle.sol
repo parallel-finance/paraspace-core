@@ -304,8 +304,10 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
                 }
             }
         }
-        //we will add 3 feeders at mainet launch and allow at most 1/3=1 feeder down
-        uint256 validNumThreshold = (2 * (feeders.length)) / 3;
+        //we will add 3-5 feeders at mainet launch and allow less than 1/3 feeders down
+        uint256 validNumThreshold = ((2 * (feeders.length)) / 3) < 3
+            ? 3
+            : ((2 * (feeders.length)) / 3);
         if (validNum < validNumThreshold) {
             return (false, priceMap[token].twap);
         }
