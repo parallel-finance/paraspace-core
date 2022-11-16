@@ -9,7 +9,7 @@ on:
         required: true
       verifyContracts:
         description: Contracts to be verified on etherscan (separated by comma).
-        default: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport"
+        default: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport,ApeCoinStaking"
         required: true
       ref:
         description: The deployment commit hash.
@@ -18,9 +18,9 @@ on:
         description: Number of jobs for verification.
         default: "1"
         required: true
-      maxRetries::
+      maxRetries:
         description: Maximum retries if verification fails.
-        default: "1"
+        default: "3"
         required: true
 
 jobs:
@@ -63,16 +63,16 @@ jobs:
           yarn
           yarn build
 
-      - name: Get deployment date
+      - name: Get short deployment id
         id: deploymentInfo
         run: |
-          echo "date=$(git show -s --format=%cd --date=format:%m%d ${{ env.REF }})" >> $GITHUB_OUTPUT
+          echo "id=$(git rev-parse --short ${{ env.REF }})" >> $GITHUB_OUTPUT
 
       - name: Download deployed-contracts.json
         run: |
           curl -H 'Authorization: token ${{ secrets.PAT }}' \
             -H 'Accept: application/vnd.github.v3.raw' \
-            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.${{ steps.deploymentInfo.outputs.date }}.json
+            -fLo deployed-contracts.json ${{ env.CONFIGS_BASE_URL }}/deployed-contracts.${{ steps.deploymentInfo.outputs.id }}.json
 
       - name: Verification
         run: |
@@ -86,4 +86,5 @@ jobs:
           echo ETHERSCAN_VERIFICATION=${{ env.ETHERSCAN_VERIFICATION }} >> .env
           echo ETHERSCAN_VERIFICATION_CONTRACTS=${{ env.ETHERSCAN_VERIFICATION_CONTRACTS }} >> .env
           echo ETHERSCAN_VERIFICATION_JOBS=${{ env.ETHERSCAN_VERIFICATION_JOBS }} >> .env
+          echo ETHERSCAN_VERIFICATION_MAX_RETRIES=${{ env.ETHERSCAN_VERIFICATION_MAX_RETRIES }} >> .env
           make verify

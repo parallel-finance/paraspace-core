@@ -63,7 +63,7 @@ const executeAction = async (
 
   const user = users[parseInt(userIndex)];
 
-  const userPrivateKey = getTestWallets()[parseInt(userIndex) + 1].secretKey;
+  const userPrivateKey = getTestWallets()[parseInt(userIndex) + 1].privateKey;
 
   switch (name) {
     case "mint":

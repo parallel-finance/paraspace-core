@@ -33,7 +33,7 @@ describe("Mock Token Faucet", () => {
     baycMintValue = tokenFaucetMintValue.BAYC.toString();
     maycMintValue = tokenFaucetMintValue.MAYC.toString();
     doodleMintValue = tokenFaucetMintValue.DOODLE.toString();
-    cryptoPunkMintValue = tokenFaucetMintValue.CRYPTO_PUNK.toString();
+    cryptoPunkMintValue = tokenFaucetMintValue.PUNKS.toString();
   });
 
   it("User mint all mock Tokens", async () => {
@@ -45,7 +45,7 @@ describe("Mock Token Faucet", () => {
       ape,
       wBTC,
       stETH,
-      cryptoPunksMarket: punk,
+      punks: punk,
       bayc,
       mayc,
       doodles,
@@ -171,7 +171,7 @@ describe("Mock Token Faucet", () => {
   it("update PUNK config and mint", async () => {
     const {
       mockTokenFaucet,
-      cryptoPunksMarket: punk,
+      punks: punk,
       deployer,
       users: [user1],
     } = testEnv;

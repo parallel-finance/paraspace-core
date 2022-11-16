@@ -139,6 +139,8 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
 
       // User 1 - Borrow dai
       await borrowAndValidate(dai, "8000", user1);
+
+      // HF = 20000 * 0.9 / 8000 = 2.25
     });
 
     it("TC-erc20-borrow-06 User 1 acquires share of borrower interest", async () => {
@@ -184,7 +186,7 @@ describe("pToken/debtToken Borrow Event Accounting", () => {
       await supplyAndValidate(usdc, secondDaiDeposit, user2, true);
 
       // User 2 - Borrow usdc
-      await borrowAndValidate(usdc, "16000", user2);
+      await borrowAndValidate(usdc, "17000", user2);
 
       // user1 - healthFactor value is between 1.1 - 1.0
       const healthFactor = (await pool.getUserAccountData(user2.address))
