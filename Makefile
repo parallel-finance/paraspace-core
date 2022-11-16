@@ -388,8 +388,8 @@ shutdown:
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
 	docker volume prune -f
-	rm -fr redis-data || true
-	rm -fr logs || true
+	sudo rm -fr redis-data || true
+	sudo rm -fr logs || true
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
