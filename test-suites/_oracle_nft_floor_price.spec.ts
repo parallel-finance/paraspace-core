@@ -38,8 +38,7 @@ describe("NFT Oracle Tests", () => {
 
     try {
       await waitForTx(await nftFloorOracle.addAssets([mockToken.address]));
-      //set 5 oracles so threshold is 5*2/3=3 means we need at least 3 oracles alive
-      //and in testnet deployment user4 is admin so skip it here
+      //set 7 oracles so threshold is 7*2/3=4 means we need at least 4 oracles alive
       await waitForTx(
         await nftFloorOracle.setOracles([
           testEnv.users[0].address,
@@ -47,6 +46,8 @@ describe("NFT Oracle Tests", () => {
           testEnv.users[2].address,
           testEnv.users[3].address,
           testEnv.users[4].address,
+          testEnv.users[5].address,
+          testEnv.users[6].address,
         ])
       );
     } catch (err) {
@@ -266,7 +267,7 @@ describe("NFT Oracle Tests", () => {
     const {
       nftFloorOracle,
       //user 4 is admin in test deployment so skip it
-      users: [user1, user2, user3, , user4],
+      users: [user1, user2, user3, , user4, user5],
     } = testEnv;
 
     //120 blocks as expiration and 20 times as deviation
@@ -308,16 +309,16 @@ describe("NFT Oracle Tests", () => {
     twapPrice = await nftFloorOracle.getTwap(mockToken.address);
     expect(twapPrice).to.equal(initialPrice);
 
-    // set third price>=threshold(3) so aggregate [1,2,3]=2
+    // set third price,not enough still initial
     await waitForTx(
       await nftFloorOracle
         .connect(user3.signer)
         .setPrice(mockToken.address, price3.toString())
     );
     twapPrice = await nftFloorOracle.getTwap(mockToken.address);
-    expect(twapPrice).to.equal(price2);
+    expect(twapPrice).to.equal(initialPrice);
 
-    // set fourth price, aggregate [1,2,3,4]=3
+    // set fourth price,since threshold=4,enough so aggregate with [1,2,3,4]=3
     await waitForTx(
       await nftFloorOracle
         .connect(user4.signer)
@@ -330,7 +331,7 @@ describe("NFT Oracle Tests", () => {
     // set fifth price, aggregate [1,2,3,4,5]=3
     await waitForTx(
       await nftFloorOracle
-        .connect(user4.signer)
+        .connect(user5.signer)
         .setPrice(mockToken.address, price5.toString())
     );
 
@@ -368,34 +369,45 @@ describe("NFT Oracle Tests", () => {
       parseEther("1")
     );
 
-    // set price so block=3 now,user1:1 and user2:2 and user3:5
-    // and aggregated to [1,2,5] and 2 will be finalized
+    // set price so block=3 now,user1:1 and user2:2 and user3:3
+    // still not enough and use init price
     expect(
       await nftFloorOracle
         .connect(user3.signer)
-        .setPrice(mockToken.address, parseEther("5").toString())
+        .setPrice(mockToken.address, parseEther("3").toString())
     );
     expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-      parseEther("2")
+      parseEther("1")
     );
 
+    // set price so block=4 now,user1:1 and user2:2 and user3:4,user4:4
+    // now reach threshold and can be aggregated [1,2,3,4]=3
+    expect(
+      await nftFloorOracle
+        .connect(user4.signer)
+        .setPrice(mockToken.address, parseEther("4").toString())
+    );
+    expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
+      parseEther("3")
+    );
+
+    // and aggregated to [1,2,5] and 2 will be finalized
     //mine block will not change price
-    await mine(); //block 4
     await mine(); //block 5
     expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-      parseEther("2")
+      parseEther("3")
     );
 
     //set price at block 6, and 6-1=5 so price from user1 expired
     expect(
       await nftFloorOracle
         .connect(user4.signer)
-        .setPrice(mockToken.address, parseEther("4").toString())
+        .setPrice(mockToken.address, parseEther("2").toString())
     );
-    //so now price are: user2:2,user3:5,user4:4
-    //which aggregated to [2,4,5] and 4 will be finalized
+    //so now price are: user2:2,user3:3,user4:2
+    //which aggregated to [1,2,2] and 2 will be finalized
     expect(await nftFloorOracle.getTwap(mockToken.address)).to.equal(
-      parseEther("4")
+      parseEther("2")
     );
   });
 
