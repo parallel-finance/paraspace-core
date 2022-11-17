@@ -35,6 +35,7 @@ import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {increaseTime} from "../deploy/helpers/misc-utils";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 type CalculateInterestRatesParams = {
   liquidityAdded: BigNumberish;
@@ -70,7 +71,8 @@ describe("Interest Rate Tests", () => {
           rateStrategyStableTwo.baseVariableBorrowRate,
           rateStrategyStableTwo.variableRateSlope1,
           rateStrategyStableTwo.variableRateSlope2,
-        ]
+        ],
+        ETHERSCAN_VERIFICATION
       );
     });
 
@@ -283,7 +285,8 @@ describe("Interest Rate Tests", () => {
           auctionStrategyExp.stepLinear,
           auctionStrategyExp.stepExp,
           auctionStrategyExp.tickLength,
-        ]
+        ],
+        ETHERSCAN_VERIFICATION
       );
 
       // Init the reserve

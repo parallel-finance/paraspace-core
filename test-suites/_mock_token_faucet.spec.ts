@@ -36,7 +36,7 @@ describe("Mock Token Faucet", () => {
     cryptoPunkMintValue = tokenFaucetMintValue.PUNKS.toString();
   });
 
-  it("User mint all mock Tokens", async () => {
+  it("TC-mock-token-faucet-01 User mints all mock Tokens", async () => {
     const {
       mockTokenFaucet,
       dai,
@@ -104,7 +104,7 @@ describe("Mock Token Faucet", () => {
     expect(punkBalance.toString()).to.be.equal(cryptoPunkMintValue);
   });
 
-  it("update DAI config and mint", async () => {
+  it("TC-mock-token-faucet-02 Update ERC20 config and mint", async () => {
     const {
       mockTokenFaucet,
       dai,
@@ -137,7 +137,7 @@ describe("Mock Token Faucet", () => {
     );
   });
 
-  it("update BAYC config and mint", async () => {
+  it("TC-mock-token-faucet-03 Update ERC721 config and mint", async () => {
     const {
       mockTokenFaucet,
       bayc,
@@ -168,7 +168,7 @@ describe("Mock Token Faucet", () => {
     );
   });
 
-  it("update PUNK config and mint", async () => {
+  it("TC-mock-token-faucet-04 Update PUNK config and mint", async () => {
     const {
       mockTokenFaucet,
       punks: punk,

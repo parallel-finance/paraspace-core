@@ -34,6 +34,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {liquidateAndValidateReverted} from "./helpers/validated-steps";
 import {waitForTx} from "../deploy/helpers/misc-utils";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 describe("Upgradeability", () => {
   let testEnv: TestEnv;
@@ -44,16 +45,19 @@ describe("Upgradeability", () => {
   context("VersionedInitializable", async () => {
     it("TC-upgradeability-01 Call initialize from the constructor function", async () => {
       const initValue = "1";
-      const implementation = await deployMockInitializableFromConstructorImple([
-        initValue,
-      ]);
+      const implementation = await deployMockInitializableFromConstructorImple(
+        [initValue],
+        ETHERSCAN_VERIFICATION
+      );
       expect(await implementation.value()).to.be.eq(initValue);
     });
 
     it("TC-upgradeability-02 Call initialize from the initialize function (reentrant)", async () => {
       const initValue = 1;
       const finalValue = 2;
-      const implementation = await deployMockReentrantInitializableImple();
+      const implementation = await deployMockReentrantInitializableImple(
+        ETHERSCAN_VERIFICATION
+      );
       expect(await implementation.initialize(initValue));
       expect(await implementation.value()).to.be.eq(
         finalValue,
@@ -62,7 +66,9 @@ describe("Upgradeability", () => {
     });
 
     it("TC-upgradeability-03 Tries to initialize once it is already initialized (revert expected)", async () => {
-      const implementation = await deployMockInitializableImple();
+      const implementation = await deployMockInitializableImple(
+        ETHERSCAN_VERIFICATION
+      );
       expect(
         await implementation.initialize(
           10, // value
@@ -92,8 +98,12 @@ describe("Upgradeability", () => {
     beforeEach(async () => {
       testEnv = await loadFixture(testEnvFixture);
 
-      implementationV1 = await deployMockInitializableImple();
-      implementationV2 = await deployMockInitializableImpleV2();
+      implementationV1 = await deployMockInitializableImple(
+        ETHERSCAN_VERIFICATION
+      );
+      implementationV2 = await deployMockInitializableImpleV2(
+        ETHERSCAN_VERIFICATION
+      );
       const encodedInitialize = implementationV1.interface.encodeFunctionData(
         "initialize",
         [
@@ -102,9 +112,10 @@ describe("Upgradeability", () => {
           [1, 2, 3], // values
         ]
       );
-      proxy = await deployInitializableImmutableAdminUpgradeabilityProxy([
-        proxyAdminOwner.address,
-      ]);
+      proxy = await deployInitializableImmutableAdminUpgradeabilityProxy(
+        [proxyAdminOwner.address],
+        ETHERSCAN_VERIFICATION
+      );
       expect(
         await proxy.initialize(implementationV1.address, encodedInitialize)
       );
@@ -405,7 +416,7 @@ describe("Upgradeability", () => {
     });
 
     it("TC-upgradeability-24 upgradeToAndCall() for a new proxied contract with no initialize function (revert expected)", async () => {
-      const impl = await deployMockInitializableImple();
+      const impl = await deployMockInitializableImple(ETHERSCAN_VERIFICATION);
       const encodedInitialize = Buffer.from("");
       await expect(
         proxy
@@ -467,24 +478,30 @@ describe("Upgradeability", () => {
 
     before("deploying instances", async () => {
       const {dai, pool} = testEnv;
-      const xTokenInstance = await deployMockPToken([
-        pool.address,
-        dai.address,
-        ZERO_ADDRESS,
-        ZERO_ADDRESS,
-        "ParaSpace Interest bearing DAI updated",
-        "pDAI",
-        "0x10",
-      ]);
+      const xTokenInstance = await deployMockPToken(
+        [
+          pool.address,
+          dai.address,
+          ZERO_ADDRESS,
+          ZERO_ADDRESS,
+          "ParaSpace Interest bearing DAI updated",
+          "pDAI",
+          "0x10",
+        ],
+        ETHERSCAN_VERIFICATION
+      );
 
-      const variableDebtTokenInstance = await deployMockVariableDebtToken([
-        pool.address,
-        dai.address,
-        ZERO_ADDRESS,
-        "ParaSpace variable debt bearing DAI updated",
-        "variableDebtDAI",
-        "0x10",
-      ]);
+      const variableDebtTokenInstance = await deployMockVariableDebtToken(
+        [
+          pool.address,
+          dai.address,
+          ZERO_ADDRESS,
+          "ParaSpace variable debt bearing DAI updated",
+          "variableDebtDAI",
+          "0x10",
+        ],
+        ETHERSCAN_VERIFICATION
+      );
 
       newPTokenAddress = xTokenInstance.address;
       newVariableTokenAddress = variableDebtTokenInstance.address;
@@ -708,7 +725,9 @@ describe("Upgradeability", () => {
         PoolCoreV2__factory.abi
       ).map((s) => s.signature);
 
-      const coreLibraries = await deployPoolCoreLibraries();
+      const coreLibraries = await deployPoolCoreLibraries(
+        ETHERSCAN_VERIFICATION
+      );
 
       const poolCoreV2 = await new PoolCoreV2__factory(
         coreLibraries,

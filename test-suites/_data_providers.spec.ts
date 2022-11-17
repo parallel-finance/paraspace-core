@@ -28,6 +28,7 @@ import {
   mintNewPosition,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
+import {ERC20TokenContractId} from "../deploy/helpers/types";
 
 const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -387,6 +388,216 @@ describe("UI Contracts Tests", () => {
       expect(daiData.vTokenIncentivesUserData.tokenAddress).to.eq(
         expectedReserveData.variableDebtTokenAddress
       );
+    });
+  });
+
+  context("Protocol Data Provider", () => {
+    let testEnv;
+
+    before("Load fixture", async () => {
+      testEnv = await loadFixture(testEnvFixture);
+      const {
+        dai,
+        users: [user1, user2],
+      } = testEnv;
+
+      // user 1 and user 2 supply some DAI
+      await supplyAndValidate(dai, "10000", user1, true);
+      await supplyAndValidate(dai, "5000", user2, true);
+      // user 1 borrows DAI
+      await borrowAndValidate(dai, "2000", user1);
+    });
+
+    it("TC-protocol-data-provider-01 Test getReservesData()", async () => {
+      const {protocolDataProvider, pool, dai} = testEnv;
+
+      const expectedReserveData = await pool.getReserveData(dai.address);
+      const actualData = await protocolDataProvider.getReserveData(dai.address);
+
+      expect(actualData.accruedToTreasuryScaled).to.eq(
+        expectedReserveData.accruedToTreasury
+      );
+      expect(actualData.liquidityRate).to.eq(
+        expectedReserveData.currentLiquidityRate
+      );
+      expect(actualData.variableBorrowRate).to.eq(
+        expectedReserveData.currentVariableBorrowRate
+      );
+      expect(actualData.liquidityIndex).to.eq(
+        expectedReserveData.liquidityIndex
+      );
+      expect(actualData.variableBorrowIndex).to.eq(
+        expectedReserveData.variableBorrowIndex
+      );
+      expect(actualData.lastUpdateTimestamp).to.eq(
+        expectedReserveData.lastUpdateTimestamp
+      );
+    });
+
+    it("TC-protocol-data-provider-02 Test getXTokenTotalSupply()", async () => {
+      const {protocolDataProvider, dai, pDai} = testEnv;
+
+      const expectedTotalSupply = await pDai.totalSupply();
+      const actualData = await protocolDataProvider.getXTokenTotalSupply(
+        dai.address
+      );
+
+      expect(actualData).to.eq(expectedTotalSupply);
+    });
+
+    it("TC-protocol-data-provider-03 Test getTotalDebt()", async () => {
+      const {protocolDataProvider, variableDebtDai, dai} = testEnv;
+
+      const expectedTotalDebt = await variableDebtDai.totalSupply();
+      const actualData = await protocolDataProvider.getTotalDebt(dai.address);
+
+      expect(actualData).to.eq(expectedTotalDebt);
+    });
+
+    it("TC-protocol-data-provider-04 Test getAllReservesTokens()", async () => {
+      const {protocolDataProvider, dai} = testEnv;
+
+      const reservesTokens = await protocolDataProvider.getAllReservesTokens();
+      const daiAddress = reservesTokens.find(
+        (token: {symbol: ERC20TokenContractId}) =>
+          token.symbol === ERC20TokenContractId.DAI
+      )[1];
+
+      expect(dai.address).to.eq(daiAddress);
+    });
+
+    it("TC-protocol-data-provider-05 Test getAllXTokens()", async () => {
+      const {protocolDataProvider, pDai} = testEnv;
+
+      const xTokens = await protocolDataProvider.getAllXTokens();
+      const pDaiAddress = xTokens.find(
+        (token: {symbol: string}) => token.symbol === "pDAI"
+      )[1];
+
+      expect(pDai.address).to.eq(pDaiAddress);
+    });
+
+    it("TC-protocol-data-provider-06 Test getReserveConfigurationData()", async () => {
+      const {protocolDataProvider, configurator, weth} = testEnv;
+
+      // Set new configuration with active turned off
+      await configurator.setReserveActive(weth.address, false);
+
+      let updatedConfiguration =
+        await protocolDataProvider.getReserveConfigurationData(weth.address);
+      expect(updatedConfiguration.isActive).to.be.false;
+
+      // restore
+      await configurator.setReserveActive(weth.address, true);
+
+      updatedConfiguration =
+        await protocolDataProvider.getReserveConfigurationData(weth.address);
+      expect(updatedConfiguration.isActive).to.be.true;
+    });
+
+    it("TC-protocol-data-provider-07 Test getReserveCaps()", async () => {
+      const {configurator, protocolDataProvider, weth} = testEnv;
+
+      const setBorrowCap = "3000000";
+      const setSupplyCap = "6000000";
+      await configurator.setBorrowCap(weth.address, setBorrowCap);
+      await configurator.setSupplyCap(weth.address, setSupplyCap);
+
+      const {borrowCap: newWethBorrowCap, supplyCap: newWethSupplyCap} =
+        await protocolDataProvider.getReserveCaps(weth.address);
+
+      expect(newWethSupplyCap).to.eq(setSupplyCap);
+      expect(newWethBorrowCap).to.eq(setBorrowCap);
+    });
+
+    it("TC-protocol-data-provider-08 Test getSiloedBorrowing()", async () => {
+      const {configurator, protocolDataProvider, weth} = testEnv;
+
+      await configurator.setSiloedBorrowing(weth.address, true);
+
+      let siloedBorrowing = await protocolDataProvider.getSiloedBorrowing(
+        weth.address
+      );
+
+      expect(siloedBorrowing).to.be.true;
+
+      await configurator.setSiloedBorrowing(weth.address, false);
+
+      siloedBorrowing = await protocolDataProvider.getSiloedBorrowing(
+        weth.address
+      );
+      expect(siloedBorrowing).to.be.false;
+    });
+
+    it("TC-protocol-data-provider-09 Test getLiquidationProtocolFee()", async () => {
+      const {configurator, protocolDataProvider, weth} = testEnv;
+
+      const setProtocolFee = "5000";
+      await configurator.setLiquidationProtocolFee(
+        weth.address,
+        setProtocolFee
+      );
+
+      const protocolFee = await protocolDataProvider.getLiquidationProtocolFee(
+        weth.address
+      );
+
+      expect(protocolFee).to.eq(setProtocolFee);
+    });
+
+    it("TC-protocol-data-provider-10 Test getUserReserveData()", async () => {
+      const {
+        protocolDataProvider,
+        variableDebtDai,
+        dai,
+        users: [user1],
+      } = testEnv;
+
+      const userDaiData = await protocolDataProvider.getUserReserveData(
+        dai.address,
+        user1.address
+      );
+
+      expect(userDaiData.usageAsCollateralEnabled).to.be.true;
+      expect(userDaiData.scaledXTokenBalance).to.be.gte(
+        await convertToCurrencyDecimals(dai.address, "10000")
+      ); // supplied amount
+      expect(userDaiData.currentVariableDebt).to.be.eq(
+        await variableDebtDai.balanceOf(user1.address)
+      );
+    });
+
+    it("TC-protocol-data-provider-11 Test getReserveTokensAddresses()", async () => {
+      const {protocolDataProvider, variableDebtDai, pDai, dai} = testEnv;
+
+      const daiVariableDebtTokenAddress = (
+        await protocolDataProvider.getReserveTokensAddresses(dai.address)
+      ).variableDebtTokenAddress;
+
+      expect(variableDebtDai.address).to.eq(daiVariableDebtTokenAddress);
+
+      const daiPTokenAddress = (
+        await protocolDataProvider.getReserveTokensAddresses(dai.address)
+      ).xTokenAddress;
+
+      expect(pDai.address).to.eq(daiPTokenAddress);
+    });
+
+    it("TC-protocol-data-provider-12 Test getStrategyAddresses()", async () => {
+      const {protocolDataProvider, pool, dai} = testEnv;
+
+      const {
+        interestRateStrategyAddress: expectedInterestRateStrategyAddress,
+        auctionStrategyAddress: expectedAuctionStrategyAddress,
+      } = await pool.getReserveData(dai.address);
+
+      const {interestRateStrategyAddress, auctionStrategyAddress} =
+        await protocolDataProvider.getStrategyAddresses(dai.address);
+
+      expect(interestRateStrategyAddress).to.eq(
+        expectedInterestRateStrategyAddress
+      );
+      expect(auctionStrategyAddress).to.eq(expectedAuctionStrategyAddress);
     });
   });
 });

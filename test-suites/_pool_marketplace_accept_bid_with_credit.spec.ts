@@ -24,7 +24,7 @@ import {
   toFulfillment,
 } from "../deploy/helpers/seaport-helpers/encoding";
 import {PARASPACE_SEAPORT_ID} from "../deploy/helpers/constants";
-import {formatEther, arrayify, splitSignature} from "ethers/lib/utils";
+import {arrayify, splitSignature} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {
   borrowAndValidate,
@@ -1261,7 +1261,7 @@ describe("Leveraged Bid - unit tests", () => {
 
 describe("Leveraged Bid - Negative tests", () => {
   const nftId = 0;
-  const payLaterAmount = "200";
+  const payLaterAmount = "230";
   let startAmount: BigNumber;
   let endAmount: BigNumber;
   let testEnv: TestEnv;
@@ -1501,17 +1501,18 @@ describe("Leveraged Bid - Negative tests", () => {
     const ltvRatio = (
       await protocolDataProvider.getReserveConfigurationData(bayc.address)
     ).ltv;
-    const availableToBorrowInBaseUnits = nftPrice.mul(ltvRatio).div(10000);
+    const availableToBorrowInBaseUnits = nftPrice.percentMul(ltvRatio);
     const daiPrice = await paraspaceOracle
       .connect(deployer)
       .getAssetPrice(dai.address);
     // this is how much DAI I can borrow by putting this NFT in collateral
-    const availableToBorrowInDai =
-      +formatEther(availableToBorrowInBaseUnits.toString()) /
-      +formatEther(daiPrice.toString());
+    const availableToBorrowInDai = await convertToCurrencyDecimals(
+      dai.address,
+      availableToBorrowInBaseUnits.div(daiPrice).toString()
+    );
 
     // maker cannot get the needed credit
-    expect(Math.floor(availableToBorrowInDai)).to.be.lt(creditAmount);
+    expect(availableToBorrowInDai).to.be.lt(creditAmount);
 
     await expect(
       executeAcceptBidWithCredit(

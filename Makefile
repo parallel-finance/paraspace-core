@@ -1,7 +1,6 @@
 #!make
 
 NETWORK                  := hardhat
-DISABLE_INDEXER          := true
 
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
@@ -20,6 +19,10 @@ init: submodules
 .PHONY: test
 test:
 	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+
+.PHONY: local-test
+local-test:
+	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
@@ -112,6 +115,10 @@ test-erc20-withdraw:
 test-erc20-repay:
 	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test
 
+.PHONY: test-erc721-liquidation
+test-erc721-liquidation:
+	make TEST_TARGET=_pool_core_erc721_liquidation.spec.ts test
+
 .PHONY: test-erc721-auction-liquidation
 test-erc721-auction-liquidation:
 	make TEST_TARGET=_pool_core_erc721_auction_liquidation.spec.ts test
@@ -136,6 +143,10 @@ test-flash-claim:
 test-paraspace-oracle-aggregator:
 	make TEST_TARGET=_oracle_aggregator.spec.ts test
 
+.PHONY: test-nft-floor-price-oracle-without-deploy
+test-nft-floor-price-oracle-without-deploy:
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts local-test
+
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
 	make TEST_TARGET=_oracle_nft_floor_price.spec.ts test
@@ -146,7 +157,7 @@ test-weth-gateway:
 
 .PHONY: test-mock-token-faucet
 test-mock-token-faucet:
-	make TEST_TARGET=mock-token-faucet.spec.ts test
+	make TEST_TARGET=_mock_token_faucet.spec.ts test
 
 .PHONY: test-moonbirds
 test-moonbirds:
@@ -200,9 +211,9 @@ test-addresses-provider:
 test-addresses-provider-registry:
 	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
 
-.PHONY: test-price-oracle-sentinel
-test-price-oracle-sentinel:
-	make TEST_TARGET=price-oracle-sentinel.spec.ts test
+.PHONY: test-oracle-sentinel
+test-oracle-sentinel:
+	make TEST_TARGET=_oracle_sentinel.spec.ts test
 
 .PHONY: test-user-configurator-used-as-collateral
 test-user-configurator-used-as-collateral:
@@ -220,9 +231,9 @@ test-reserve-configuration:
 test-scenario:
 	make TEST_TARGET=scenario.spec.ts test
 
-.PHONY: test-ui-providers
-test-ui-providers:
-	make TEST_TARGET=_ui_providers.spec.ts test
+.PHONY: test-data-providers
+test-data-providers:
+	make TEST_TARGET=_data_providers.spec.ts test
 
 .PHONY: test-ape-staking
 test-ape-staking:
@@ -284,9 +295,9 @@ deploy-poolConfigurator:
 deploy-reservesSetupHelper:
 	make TASK_NAME=deploy:reserves-setup-helper run-task
 
-.PHONY: deploy-fallbackOracle
-deploy-fallbackOracle:
-	make TASK_NAME=deploy:fallback-oracle run-task
+.PHONY: deploy-oracle
+deploy-oracle:
+	make TASK_NAME=deploy:oracle run-task
 
 .PHONY: deploy-allAggregators
 deploy-allAggregators:
@@ -376,7 +387,7 @@ launch: shutdown
 	docker-compose \
 		up \
 		-d --build
-	docker-compose logs -f
+	docker-compose logs -f hardhat
 
 .PHONY: shutdown
 shutdown:
@@ -384,8 +395,8 @@ shutdown:
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
 	docker volume prune -f
-	rm -fr redis-data || true
-	rm -fr logs || true
+	sudo rm -fr redis-data || true
+	sudo rm -fr logs || true
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
