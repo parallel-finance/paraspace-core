@@ -27,13 +27,14 @@ import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {BigNumberish, utils} from "ethers";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 declare let hre: HardhatRuntimeEnvironment;
 
 describe("ReserveConfiguration", async () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
-    configMock = await deployMockReserveConfiguration();
+    configMock = await deployMockReserveConfiguration(ETHERSCAN_VERIFICATION);
     return testEnv;
   };
 

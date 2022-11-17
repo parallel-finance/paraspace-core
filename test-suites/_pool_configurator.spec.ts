@@ -38,6 +38,7 @@ import "./helpers/utils/wadraymath";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 declare let hre: HardhatRuntimeEnvironment;
 
@@ -195,7 +196,8 @@ describe("PoolConfigurator: Common", () => {
         auctionStrategyExp.stepLinear,
         auctionStrategyExp.stepExp,
         auctionStrategyExp.tickLength,
-      ]
+      ],
+      ETHERSCAN_VERIFICATION
     );
     // Init the reserve
     const initInputParams = [
@@ -1488,7 +1490,8 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
         auctionStrategyExp.stepLinear,
         auctionStrategyExp.stepExp,
         auctionStrategyExp.tickLength,
-      ]
+      ],
+      ETHERSCAN_VERIFICATION
     );
 
     // Init the reserve

@@ -118,4 +118,5 @@ library Errors {
     string public constant INVALID_LIQUIDATION_ASSET = "123"; //invalid liquidation asset.
     string public constant ONLY_UNIV3_ALLOWED = "124"; //only UniswapV3 allowed.
     string public constant GLOBAL_DEBT_IS_ZERO = "125"; //liquidation is not allowed when global debt is zero.
+    string public constant ORACLE_PRICE_EXPIRED = "126"; //oracle price expired.
 }

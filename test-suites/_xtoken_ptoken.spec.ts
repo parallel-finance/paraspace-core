@@ -15,7 +15,10 @@ import {
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getTestWallets} from "./helpers/utils/wallets";
-import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
+import {
+  ETHERSCAN_VERIFICATION,
+  HARDHAT_CHAINID,
+} from "../deploy/helpers/hardhat-constants";
 import {
   buildPermitParams,
   convertToCurrencyDecimals,
@@ -31,19 +34,21 @@ describe("Ptoken delegation", () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
     const {pool} = testEnv;
-    const delegationERC20 = await deployMintableDelegationERC20([
-      "DEL",
-      "DEL",
-      "18",
-    ]);
-    const delegationPToken = await deployDelegationAwarePToken([
-      pool.address,
-      delegationERC20.address,
-      ZERO_ADDRESS,
-      ZERO_ADDRESS,
-      "aDEL",
-      "aDEL",
-    ]);
+    const delegationERC20 = await deployMintableDelegationERC20(
+      ["DEL", "DEL", "18"],
+      ETHERSCAN_VERIFICATION
+    );
+    const delegationPToken = await deployDelegationAwarePToken(
+      [
+        pool.address,
+        delegationERC20.address,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        "aDEL",
+        "aDEL",
+      ],
+      ETHERSCAN_VERIFICATION
+    );
     return {
       ...testEnv,
       delegationERC20,

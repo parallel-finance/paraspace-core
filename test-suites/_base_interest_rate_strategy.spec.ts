@@ -40,6 +40,7 @@ import {
 } from "../deploy/helpers/misc-utils";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 type CalculateInterestRatesParams = {
   liquidityAdded: BigNumberish;
@@ -76,7 +77,8 @@ describe("Interest Rate Tests", () => {
           rateStrategyStableTwo.baseVariableBorrowRate,
           rateStrategyStableTwo.variableRateSlope1,
           rateStrategyStableTwo.variableRateSlope2,
-        ]
+        ],
+        ETHERSCAN_VERIFICATION
       );
     });
 
@@ -313,7 +315,8 @@ describe("Interest Rate Tests", () => {
           auctionStrategyExp.stepLinear,
           auctionStrategyExp.stepExp,
           auctionStrategyExp.tickLength,
-        ]
+        ],
+        ETHERSCAN_VERIFICATION
       );
 
       // Init the reserve
