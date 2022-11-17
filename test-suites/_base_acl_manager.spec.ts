@@ -13,8 +13,7 @@ const fixture = async () => {
   const aclManager = await new ACLManager__factory(deployer.signer).deploy(
     addressesProvider.address
   );
-  testEnv.aclManager = aclManager;
-  return testEnv;
+  return {...testEnv, aclManager};
 };
 
 const FLASH_BORROW_ADMIN_ROLE = utils.keccak256(
