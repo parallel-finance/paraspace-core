@@ -59,7 +59,7 @@ describe("PriceOracleSentinel", () => {
     await waitForTx(await addressesProvider.setPriceOracle(oracle.address));
   });
 
-  it("Admin sets a PriceOracleSentinel and activate it for DAI and WETH", async () => {
+  it("TC-oracle-sentinel-01 Admin sets a PriceOracleSentinel and activates it for DAI and WETH", async () => {
     const {addressesProvider, poolAdmin} = testEnv;
 
     expect(
@@ -79,7 +79,7 @@ describe("PriceOracleSentinel", () => {
     expect(answer[3]).to.be.eq(0);
   });
 
-  it("Pooladmin updates grace period for sentinel", async () => {
+  it("TC-oracle-sentinel-02 Pooladmin updates grace period for sentinel", async () => {
     const {poolAdmin} = testEnv;
 
     const newGracePeriod = 0;
@@ -93,7 +93,7 @@ describe("PriceOracleSentinel", () => {
     expect(await priceOracleSentinel.getGracePeriod()).to.be.eq(newGracePeriod);
   });
 
-  it("Risk admin updates grace period for sentinel", async () => {
+  it("TC-oracle-sentinel-03 Risk admin updates grace period for sentinel", async () => {
     const {riskAdmin} = testEnv;
 
     expect(await priceOracleSentinel.getGracePeriod()).to.be.eq(0);
@@ -108,7 +108,7 @@ describe("PriceOracleSentinel", () => {
   });
 
   // set emergency admin
-  it("User tries to set grace period for sentinel", async () => {
+  it("TC-oracle-sentinel-04 User tries to set grace period for sentinel", async () => {
     const {
       users: [user],
     } = testEnv;
@@ -120,7 +120,7 @@ describe("PriceOracleSentinel", () => {
     expect(await priceOracleSentinel.getGracePeriod()).to.not.be.eq(0);
   });
 
-  it("Pooladmin update the sequencer oracle", async () => {
+  it("TC-oracle-sentinel-05 Pooladmin update the sequencer oracle", async () => {
     const {poolAdmin} = testEnv;
 
     const newSequencerOracle = ZERO_ADDRESS;
@@ -151,7 +151,7 @@ describe("PriceOracleSentinel", () => {
     );
   });
 
-  it("User tries to update sequencer oracle", async () => {
+  it("TC-oracle-sentinel-06 User tries to update sequencer oracle", async () => {
     const {
       users: [user],
     } = testEnv;
@@ -170,15 +170,15 @@ describe("PriceOracleSentinel", () => {
     );
   });
 
-  it("Borrow DAI", async () => {
+  it("TC-oracle-sentinel-07 Tries to liquidate borrower when sequencer is down (HF > 0.95) (revert expected)", async () => {
     const {
       dai,
       weth,
       users: [depositor, borrower, borrower2],
       pool,
       oracle,
+      protocolDataProvider,
     } = testEnv;
-
     //mints DAI to depositor
     await dai
       .connect(depositor.signer)
@@ -187,7 +187,7 @@ describe("PriceOracleSentinel", () => {
     //approve protocol to access depositor wallet
     await dai.connect(depositor.signer).approve(pool.address, MAX_UINT_AMOUNT);
 
-    //user 1 deposits 1000 DAI
+    //depositor deposits 2000 DAI
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
       "2000"
@@ -200,10 +200,10 @@ describe("PriceOracleSentinel", () => {
       weth.address,
       "0.06775"
     );
-
     for (let i = 0; i < 2; i++) {
       const borrowers = [borrower, borrower2];
       const currBorrower = borrowers[i];
+
       //mints WETH to borrower
       await weth
         .connect(currBorrower.signer)
@@ -214,60 +214,38 @@ describe("PriceOracleSentinel", () => {
         .connect(currBorrower.signer)
         .approve(pool.address, MAX_UINT_AMOUNT);
 
-      //user 2 deposits 1 WETH
+      //borrower deposits 0.06775 WETH
       await pool
         .connect(currBorrower.signer)
         .supply(weth.address, amountETHtoDeposit, currBorrower.address, "0");
 
-      //user 2 borrows
-      const userGlobalData = await pool.getUserAccountData(
-        currBorrower.address
-      );
-      const daiPrice = await oracle.getAssetPrice(dai.address);
-
+      // and borrows
       const amountDAIToBorrow = await convertToCurrencyDecimals(
         dai.address,
-        userGlobalData.availableBorrowsBase
-          .div(daiPrice.toString())
-          .percentMul(9500)
-          .toString()
+        "60"
       );
-
       await pool
         .connect(currBorrower.signer)
         .borrow(dai.address, amountDAIToBorrow, "0", currBorrower.address);
     }
-  });
 
-  it("Kill sequencer and drop health factor below 1", async () => {
-    const {
-      dai,
-      users: [, borrower],
-      pool,
-      oracle,
-    } = testEnv;
-
+    // Kill sequencer and drop health factor below 1
     const daiPrice = await oracle.getAssetPrice(dai.address);
     await oracle.setAssetPrice(dai.address, daiPrice.percentMul(11000));
-    await pool.getUserAccountData(borrower.address);
+    const userGlobalData = await pool.getUserAccountData(borrower.address);
 
-    // failing here
-    // expect(userGlobalData.healthFactor).to.be.lt(
-    //   utils.parseUnits("1", 18),
-    //   INVALID_HF
-    // );
+    // assure correct HF
+    expect(userGlobalData.healthFactor).to.be.lt(
+      utils.parseUnits("1", 18),
+      INVALID_HF
+    );
+    expect(userGlobalData.healthFactor).to.be.gt(
+      utils.parseUnits("0.95", 18),
+      INVALID_HF
+    );
+
     const currAnswer = await sequencerOracle.latestRoundData();
     waitForTx(await sequencerOracle.setAnswer(true, currAnswer[3]));
-  });
-
-  it("Tries to liquidate borrower when sequencer is down (HF > 0.95) (revert expected)", async () => {
-    const {
-      pool,
-      dai,
-      weth,
-      users: [, borrower],
-      protocolDataProvider,
-    } = testEnv;
 
     await dai["mint(uint256)"](
       await convertToCurrencyDecimals(dai.address, "1000")
@@ -293,25 +271,7 @@ describe("PriceOracleSentinel", () => {
     ).to.be.revertedWith(PRICE_ORACLE_SENTINEL_CHECK_FAILED);
   });
 
-  it("Drop health factor lower", async () => {
-    const {
-      dai,
-      users: [, borrower],
-      pool,
-      oracle,
-    } = testEnv;
-
-    const daiPrice = await oracle.getAssetPrice(dai.address);
-    await oracle.setAssetPrice(dai.address, daiPrice.percentMul(11000));
-    const userGlobalData = await pool.getUserAccountData(borrower.address);
-
-    expect(userGlobalData.healthFactor).to.be.lt(
-      utils.parseUnits("1", 18),
-      INVALID_HF
-    );
-  });
-
-  it("Liquidates borrower when sequencer is down (HF < 0.95)", async () => {
+  it("TC-oracle-sentinel-08 Liquidates borrower when sequencer is down (HF < 0.95)", async () => {
     const {
       pool,
       dai,
@@ -321,6 +281,16 @@ describe("PriceOracleSentinel", () => {
       protocolDataProvider,
       deployer,
     } = testEnv;
+
+    // Drop health factor lower
+    const daiPrice = await oracle.getAssetPrice(dai.address);
+    await oracle.setAssetPrice(dai.address, daiPrice.percentMul(11000));
+    const userGlobalData = await pool.getUserAccountData(borrower.address);
+
+    expect(userGlobalData.healthFactor).to.be.lt(
+      utils.parseUnits("0.95", 18),
+      INVALID_HF
+    );
 
     await dai["mint(uint256)"](
       await convertToCurrencyDecimals(dai.address, "1000")
@@ -459,8 +429,7 @@ describe("PriceOracleSentinel", () => {
     ).to.be.true;
   });
 
-  // set emergency admin
-  it("User tries to borrow (revert expected)", async () => {
+  it("TC-oracle-sentinel-09 User tries to borrow with sequencer down (revert expected)", async () => {
     const {
       dai,
       weth,
@@ -483,11 +452,15 @@ describe("PriceOracleSentinel", () => {
     ).to.be.revertedWith(PRICE_ORACLE_SENTINEL_CHECK_FAILED);
   });
 
-  it("Turn on sequencer", async () => {
-    await waitForTx(await sequencerOracle.setAnswer(false, await timeLatest()));
+  it("TC-oracle-sentinel-10 Can turn sequencer back on", async () => {
+    expect(
+      await waitForTx(
+        await sequencerOracle.setAnswer(false, await timeLatest())
+      )
+    );
   });
 
-  it("User tries to borrow (revert expected)", async () => {
+  it("TC-oracle-sentinel-11 User tries to borrow with sequencer on but time behind grace period (revert expected)", async () => {
     const {
       dai,
       weth,
@@ -510,19 +483,18 @@ describe("PriceOracleSentinel", () => {
     ).to.be.revertedWith(PRICE_ORACLE_SENTINEL_CHECK_FAILED);
   });
 
-  it("Turn off sequencer + increase time more than grace period", async () => {
+  it("TC-oracle-sentinel-12 User tries to borrow with sequencer off and time over grace period (revert expected)", async () => {
+    const {
+      dai,
+      weth,
+      users: [, , , user],
+      pool,
+    } = testEnv;
+
+    // turns off sequencer + increases time over grace period
     const currAnswer = await sequencerOracle.latestRoundData();
     await waitForTx(await sequencerOracle.setAnswer(true, currAnswer[3]));
     await increaseTime(GRACE_PERIOD.mul(2).toNumber());
-  });
-
-  it("User tries to borrow (revert expected)", async () => {
-    const {
-      dai,
-      weth,
-      users: [, , , user],
-      pool,
-    } = testEnv;
 
     await weth
       .connect(user.signer)
@@ -539,18 +511,17 @@ describe("PriceOracleSentinel", () => {
     ).to.be.revertedWith(PRICE_ORACLE_SENTINEL_CHECK_FAILED);
   });
 
-  it("Turn on sequencer + increase time past grace period", async () => {
-    await waitForTx(await sequencerOracle.setAnswer(false, await timeLatest()));
-    await increaseTime(GRACE_PERIOD.mul(2).toNumber());
-  });
-
-  it("User tries to borrow", async () => {
+  it("TC-oracle-sentinel-13 User can borrow with sequencer on and time over grace period", async () => {
     const {
       dai,
       weth,
       users: [, , , user],
       pool,
     } = testEnv;
+
+    // Turn on sequencer + increase time past grace period
+    await waitForTx(await sequencerOracle.setAnswer(false, await timeLatest()));
+    await increaseTime(GRACE_PERIOD.mul(2).toNumber());
 
     await weth
       .connect(user.signer)
@@ -560,35 +531,16 @@ describe("PriceOracleSentinel", () => {
       .connect(user.signer)
       .supply(weth.address, utils.parseUnits("0.06775", 18), user.address, 0);
 
-    await waitForTx(
-      await pool
-        .connect(user.signer)
-        .borrow(dai.address, utils.parseUnits("100", 18), 0, user.address)
+    expect(
+      await waitForTx(
+        await pool
+          .connect(user.signer)
+          .borrow(dai.address, utils.parseUnits("100", 18), 0, user.address)
+      )
     );
   });
 
-  it("Increase health factor", async () => {
-    const {
-      dai,
-      users: [, borrower],
-      pool,
-      oracle,
-    } = testEnv;
-    const daiPrice = await oracle.getAssetPrice(dai.address);
-    await oracle.setAssetPrice(dai.address, daiPrice.percentMul(9500));
-    const userGlobalData = await pool.getUserAccountData(borrower.address);
-
-    expect(userGlobalData.healthFactor).to.be.lt(
-      utils.parseUnits("1", 18),
-      INVALID_HF
-    );
-    expect(userGlobalData.healthFactor).to.be.gt(
-      utils.parseUnits("0.95", 18),
-      INVALID_HF
-    );
-  });
-
-  it("Liquidates borrower when sequencer is up again", async () => {
+  it("TC-oracle-sentinel-14 Can liquidate borrower when sequencer is up again", async () => {
     const {
       pool,
       dai,
@@ -598,6 +550,16 @@ describe("PriceOracleSentinel", () => {
       protocolDataProvider,
       deployer,
     } = testEnv;
+
+    // increase health factor
+    const daiPrice = await oracle.getAssetPrice(dai.address);
+    await oracle.setAssetPrice(dai.address, daiPrice.percentMul(9500));
+    const userGlobalData = await pool.getUserAccountData(borrower.address);
+
+    expect(userGlobalData.healthFactor).to.be.lt(
+      utils.parseUnits("1", 18),
+      INVALID_HF
+    );
 
     await dai["mint(uint256)"](
       await convertToCurrencyDecimals(dai.address, "1000")
