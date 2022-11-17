@@ -17,15 +17,24 @@ import {
   deployMockPToken,
   deployMockReentrantInitializableImple,
   deployMockVariableDebtToken,
+  deployPoolCoreLibraries,
 } from "../deploy/helpers/contracts-deployments";
-import {getEthersSigners} from "../deploy/helpers/contracts-helpers";
+import {
+  getEthersSigners,
+  getFunctionSignatures,
+} from "../deploy/helpers/contracts-helpers";
 import {
   InitializableImmutableAdminUpgradeabilityProxy,
   InitializableImmutableAdminUpgradeabilityProxy__factory,
+  PoolCoreV2__factory,
+  PoolCore__factory,
 } from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {liquidateAndValidateReverted} from "./helpers/validated-steps";
+import {waitForTx} from "../deploy/helpers/misc-utils";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 describe("Upgradeability", () => {
   let testEnv: TestEnv;
@@ -36,16 +45,19 @@ describe("Upgradeability", () => {
   context("VersionedInitializable", async () => {
     it("TC-upgradeability-01 Call initialize from the constructor function", async () => {
       const initValue = "1";
-      const implementation = await deployMockInitializableFromConstructorImple([
-        initValue,
-      ]);
+      const implementation = await deployMockInitializableFromConstructorImple(
+        [initValue],
+        ETHERSCAN_VERIFICATION
+      );
       expect(await implementation.value()).to.be.eq(initValue);
     });
 
     it("TC-upgradeability-02 Call initialize from the initialize function (reentrant)", async () => {
       const initValue = 1;
       const finalValue = 2;
-      const implementation = await deployMockReentrantInitializableImple();
+      const implementation = await deployMockReentrantInitializableImple(
+        ETHERSCAN_VERIFICATION
+      );
       expect(await implementation.initialize(initValue));
       expect(await implementation.value()).to.be.eq(
         finalValue,
@@ -54,7 +66,9 @@ describe("Upgradeability", () => {
     });
 
     it("TC-upgradeability-03 Tries to initialize once it is already initialized (revert expected)", async () => {
-      const implementation = await deployMockInitializableImple();
+      const implementation = await deployMockInitializableImple(
+        ETHERSCAN_VERIFICATION
+      );
       expect(
         await implementation.initialize(
           10, // value
@@ -84,8 +98,12 @@ describe("Upgradeability", () => {
     beforeEach(async () => {
       testEnv = await loadFixture(testEnvFixture);
 
-      implementationV1 = await deployMockInitializableImple();
-      implementationV2 = await deployMockInitializableImpleV2();
+      implementationV1 = await deployMockInitializableImple(
+        ETHERSCAN_VERIFICATION
+      );
+      implementationV2 = await deployMockInitializableImpleV2(
+        ETHERSCAN_VERIFICATION
+      );
       const encodedInitialize = implementationV1.interface.encodeFunctionData(
         "initialize",
         [
@@ -94,9 +112,10 @@ describe("Upgradeability", () => {
           [1, 2, 3], // values
         ]
       );
-      proxy = await deployInitializableImmutableAdminUpgradeabilityProxy([
-        proxyAdminOwner.address,
-      ]);
+      proxy = await deployInitializableImmutableAdminUpgradeabilityProxy(
+        [proxyAdminOwner.address],
+        ETHERSCAN_VERIFICATION
+      );
       expect(
         await proxy.initialize(implementationV1.address, encodedInitialize)
       );
@@ -397,7 +416,7 @@ describe("Upgradeability", () => {
     });
 
     it("TC-upgradeability-24 upgradeToAndCall() for a new proxied contract with no initialize function (revert expected)", async () => {
-      const impl = await deployMockInitializableImple();
+      const impl = await deployMockInitializableImple(ETHERSCAN_VERIFICATION);
       const encodedInitialize = Buffer.from("");
       await expect(
         proxy
@@ -459,24 +478,30 @@ describe("Upgradeability", () => {
 
     before("deploying instances", async () => {
       const {dai, pool} = testEnv;
-      const xTokenInstance = await deployMockPToken([
-        pool.address,
-        dai.address,
-        ZERO_ADDRESS,
-        ZERO_ADDRESS,
-        "ParaSpace Interest bearing DAI updated",
-        "pDAI",
-        "0x10",
-      ]);
+      const xTokenInstance = await deployMockPToken(
+        [
+          pool.address,
+          dai.address,
+          ZERO_ADDRESS,
+          ZERO_ADDRESS,
+          "ParaSpace Interest bearing DAI updated",
+          "pDAI",
+          "0x10",
+        ],
+        ETHERSCAN_VERIFICATION
+      );
 
-      const variableDebtTokenInstance = await deployMockVariableDebtToken([
-        pool.address,
-        dai.address,
-        ZERO_ADDRESS,
-        "ParaSpace variable debt bearing DAI updated",
-        "variableDebtDAI",
-        "0x10",
-      ]);
+      const variableDebtTokenInstance = await deployMockVariableDebtToken(
+        [
+          pool.address,
+          dai.address,
+          ZERO_ADDRESS,
+          "ParaSpace variable debt bearing DAI updated",
+          "variableDebtDAI",
+          "0x10",
+        ],
+        ETHERSCAN_VERIFICATION
+      );
 
       newPTokenAddress = xTokenInstance.address;
       newVariableTokenAddress = variableDebtTokenInstance.address;
@@ -618,6 +643,120 @@ describe("Upgradeability", () => {
       expect(tokenName).to.be.eq(
         "ParaSpace variable debt bearing DAI updated",
         "Invalid token name"
+      );
+    });
+  });
+
+  context("Pool Upgrade", () => {
+    let testEnv: TestEnv;
+
+    beforeEach(async () => {
+      testEnv = await loadFixture(testEnvFixture);
+    });
+
+    it("TC-upgradeability-32 Disable liquidation by remove liquidateERC20 in current pool", async () => {
+      const {
+        addressesProvider,
+        weth,
+        usdc,
+        users: [borrower, liquidator],
+      } = testEnv;
+
+      await liquidateAndValidateReverted(
+        weth,
+        usdc,
+        "1000",
+        liquidator,
+        borrower,
+        false,
+        //before upgrade only protocolError
+        ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+      );
+
+      const liquidateERC20Signature = getFunctionSignatures(
+        PoolCore__factory.abi
+      ).filter((s) => s.name.includes("liquidateERC20"))[0].signature;
+
+      await waitForTx(
+        await addressesProvider.updatePoolImpl(
+          [
+            {
+              implAddress: ZERO_ADDRESS,
+              action: 2, //remove function
+              functionSelectors: [liquidateERC20Signature],
+            },
+          ],
+          ZERO_ADDRESS,
+          "0x"
+        )
+      );
+
+      await liquidateAndValidateReverted(
+        weth,
+        usdc,
+        "1000",
+        liquidator,
+        borrower,
+        false,
+        //after upgrade error as "function does not exist"
+        "ParaProxy: Function does not exist"
+      );
+    });
+
+    it("TC-upgradeability-33: Disable liquidation by upgrading to a new pool contract which will revert liquidateERC20", async () => {
+      const {
+        addressesProvider,
+        weth,
+        usdc,
+        users: [borrower, liquidator],
+      } = testEnv;
+
+      await liquidateAndValidateReverted(
+        weth,
+        usdc,
+        "1000",
+        liquidator,
+        borrower,
+        false,
+        ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+      );
+
+      const poolCoreV2Selectors = getFunctionSignatures(
+        PoolCoreV2__factory.abi
+      ).map((s) => s.signature);
+
+      const coreLibraries = await deployPoolCoreLibraries(
+        ETHERSCAN_VERIFICATION
+      );
+
+      const poolCoreV2 = await new PoolCoreV2__factory(
+        coreLibraries,
+        await getFirstSigner()
+      ).deploy(addressesProvider.address);
+
+      await waitForTx(
+        await addressesProvider.updatePoolImpl(
+          [
+            {
+              implAddress: poolCoreV2.address,
+              action: 1, //replace
+              functionSelectors: poolCoreV2Selectors,
+            },
+          ],
+          ZERO_ADDRESS,
+          "0x"
+        )
+      );
+
+      await liquidateAndValidateReverted(
+        weth,
+        usdc,
+        "1000",
+        liquidator,
+        borrower,
+        false,
+        //after upgrading to a new contract error as "emergency disable call"
+        ProtocolErrors.EMEGENCY_DISABLE_CALL
       );
     });
   });

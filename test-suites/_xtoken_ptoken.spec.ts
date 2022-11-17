@@ -15,7 +15,10 @@ import {
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getTestWallets} from "./helpers/utils/wallets";
-import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
+import {
+  ETHERSCAN_VERIFICATION,
+  HARDHAT_CHAINID,
+} from "../deploy/helpers/hardhat-constants";
 import {
   buildPermitParams,
   convertToCurrencyDecimals,
@@ -31,19 +34,21 @@ describe("Ptoken delegation", () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
     const {pool} = testEnv;
-    const delegationERC20 = await deployMintableDelegationERC20([
-      "DEL",
-      "DEL",
-      "18",
-    ]);
-    const delegationPToken = await deployDelegationAwarePToken([
-      pool.address,
-      delegationERC20.address,
-      ZERO_ADDRESS,
-      ZERO_ADDRESS,
-      "aDEL",
-      "aDEL",
-    ]);
+    const delegationERC20 = await deployMintableDelegationERC20(
+      ["DEL", "DEL", "18"],
+      ETHERSCAN_VERIFICATION
+    );
+    const delegationPToken = await deployDelegationAwarePToken(
+      [
+        pool.address,
+        delegationERC20.address,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        "aDEL",
+        "aDEL",
+      ],
+      ETHERSCAN_VERIFICATION
+    );
     return {
       ...testEnv,
       delegationERC20,
@@ -65,10 +70,15 @@ describe("Ptoken delegation", () => {
   it("TC-ptoken-delegation-aware-02: POOL_ADMIN should delegate to external address", async () => {
     const {
       users: [user2],
+      poolAdmin,
       delegationERC20,
       delegationPToken,
     } = await loadFixture(fixture);
-    expect(await delegationPToken.delegateUnderlyingTo(user2.address))
+    expect(
+      await delegationPToken
+        .connect(poolAdmin.signer)
+        .delegateUnderlyingTo(user2.address)
+    )
       .to.emit(delegationPToken, "DelegateUnderlyingTo")
       .withArgs(user2.address);
 
@@ -126,7 +136,7 @@ describe("Functionalities of ptoken permit", () => {
     );
     return {
       ...testEnv,
-      ownerPrivateKey: testWallets[0].secretKey,
+      ownerPrivateKey: testWallets[0].privateKey,
     };
   };
   const EIP712_REVISION = "1";
@@ -991,12 +1001,10 @@ describe("Ptoken edge cases", () => {
   });
 
   it("TC-ptoken-edge-15: `setIncentivesController` should work", async () => {
-    const {deployer, poolAdmin, pWETH, aclManager} = await loadFixture(
-      testEnvFixture
-    );
+    const {poolAdmin, pWETH, aclManager} = await loadFixture(testEnvFixture);
 
     expect(
-      await aclManager.connect(deployer.signer).addPoolAdmin(poolAdmin.address)
+      await aclManager.connect(poolAdmin.signer).addPoolAdmin(poolAdmin.address)
     );
 
     expect(await pWETH.getIncentivesController()).to.not.be.eq(ZERO_ADDRESS);

@@ -61,11 +61,11 @@ describe("Access Control List Manager", () => {
   };
 
   it("TC-ACLManager-01 Check deployer is just DEFAULT_ADMIN_ROLE after deployed", async () => {
-    const {deployer, aclManager} = await loadFixture(fixture);
+    const {deployer, aclManager, poolAdmin} = await loadFixture(fixture);
     const DEFAULT_ADMIN_ROLE = await aclManager.DEFAULT_ADMIN_ROLE();
 
     expect(
-      await aclManager.hasRole(DEFAULT_ADMIN_ROLE, deployer.address)
+      await aclManager.hasRole(DEFAULT_ADMIN_ROLE, poolAdmin.address)
     ).to.be.eq(true);
     // check deployer is none of the other roles
     expect(await aclManager.isEmergencyAdmin(deployer.address)).to.be.eq(false);
@@ -320,7 +320,7 @@ describe("Access Control List Manager", () => {
   });
 
   it("TC-ACLManager-14 deployer set and (un)set FLASH_BORROW_ADMIN_ROLE admin of FLASH_BORROWER_ROLE", async () => {
-    const {deployer, aclManager} = await loadFixture(fixture);
+    const {deployer, aclManager, poolAdmin} = await loadFixture(fixture);
     const DEFAULT_ADMIN_ROLE = await aclManager.DEFAULT_ADMIN_ROLE();
     const FLASH_BORROW_ROLE = await aclManager.FLASH_BORROWER_ROLE();
     expect(await aclManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.not.be.eq(
@@ -328,7 +328,7 @@ describe("Access Control List Manager", () => {
     );
 
     await aclManager
-      .connect(deployer.signer)
+      .connect(poolAdmin.signer)
       .setRoleAdmin(FLASH_BORROW_ROLE, FLASH_BORROW_ADMIN_ROLE);
     expect(await aclManager.getRoleAdmin(FLASH_BORROW_ROLE)).to.be.eq(
       FLASH_BORROW_ADMIN_ROLE
@@ -423,6 +423,7 @@ describe("Access Control List Manager", () => {
     const {
       deployer,
       aclManager,
+      poolAdmin,
       users: [flashBorrowAdmin, flashBorrower],
     } = await loadFixture(fixture);
     const FLASH_BORROW_ROLE = await aclManager.FLASH_BORROWER_ROLE();
@@ -436,10 +437,10 @@ describe("Access Control List Manager", () => {
 
     await expect(
       aclManager
-        .connect(deployer.signer)
+        .connect(poolAdmin.signer)
         .removeFlashBorrower(flashBorrower.address)
     ).to.be.revertedWith(
-      `'AccessControl: account ${deployer.address.toLowerCase()} is missing role ${FLASH_BORROW_ADMIN_ROLE}'`
+      `'AccessControl: account ${poolAdmin.address.toLowerCase()} is missing role ${FLASH_BORROW_ADMIN_ROLE}'`
     );
   });
 
@@ -1078,7 +1079,6 @@ describe("Access Control List Manager", () => {
     const t = await loadFixture(fixture);
     await setUpAllRoles(t);
     const {
-      deployer,
       aclManager,
       users: [
         poolAdmin,
@@ -1091,7 +1091,7 @@ describe("Access Control List Manager", () => {
       ],
     } = t;
     await aclManager
-      .connect(deployer.signer)
+      .connect(poolAdmin.signer)
       .removeAssetListingAdmin(assetListingAdmin.address);
     for (const user of [
       poolAdmin,

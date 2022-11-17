@@ -5,6 +5,7 @@ import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {NTokenApeStaking} from "./NTokenApeStaking.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 
 /**
  * @title MAYC NToken
@@ -12,33 +13,113 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
 contract NTokenMAYC is NTokenApeStaking {
-    uint256 constant MAYC_POOL_ID = 2;
-
     constructor(IPool pool, address apeCoinStaking)
         NTokenApeStaking(pool, apeCoinStaking)
     {}
 
-    function _depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
-        internal
-        virtual
-        override
+    /**
+     * @notice Deposit ApeCoin to the MAYC Pool
+     * @param _nfts Array of SingleNft structs
+     * @dev Commits 1 or more MAYC NFTs, each with an ApeCoin amount to the MAYC pool.\
+     * Each MAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the MAYC pool cap amount.
+     */
+    function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
+        external
+        nonReentrant
     {
-        _apeCoinStaking.depositMAYC(_nfts);
+        ApeStakingLogic.executeDepositMAYC(
+            _ERC721Data.owners,
+            _apeCoinStaking,
+            _nfts
+        );
     }
 
-    function _claimApeCoin(uint256[] calldata _nfts, address _recipient)
-        internal
-        virtual
-        override
+    /**
+     * @notice Claim rewards for array of MAYC NFTs and send to recipient
+     * @param _nfts Array of NFTs owned and committed by the msg.sender
+     * @param _recipient Address to send claim reward to
+     */
+    function claimApeCoin(uint256[] calldata _nfts, address _recipient)
+        external
+        nonReentrant
     {
-        _apeCoinStaking.claimMAYC(_nfts, _recipient);
+        ApeStakingLogic.executeClaimMAYC(
+            _ERC721Data.owners,
+            _apeCoinStaking,
+            _nfts,
+            _recipient
+        );
     }
 
-    function _withdrawApeCoin(
-        ApeCoinStaking.SingleNft[] memory _nfts,
+    /**
+     * @notice Withdraw staked ApeCoin from the MAYC pool.  If withdraw is total staked amount, performs an automatic claim.
+     * @param _nfts Array of MAYC NFT's with staked amounts
+     * @param _recipient Address to send withdraw amount and claim to
+     */
+    function withdrawApeCoin(
+        ApeCoinStaking.SingleNft[] calldata _nfts,
         address _recipient
-    ) internal virtual override {
-        _apeCoinStaking.withdrawMAYC(_nfts, _recipient);
+    ) external nonReentrant {
+        ApeStakingLogic.executeWithdrawMAYC(
+            _ERC721Data.owners,
+            _apeCoinStaking,
+            _nfts,
+            _recipient
+        );
+    }
+
+    /**
+     * @notice Deposit ApeCoin to the Pair Pool, where Pair = (MAYC + BAKC)
+     * @param _nftPairs Array of PairNftWithAmount structs
+     * @dev Commits 1 or more Pairs, each with an ApeCoin amount to the Pair pool.\
+     * Each BAKC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the Pair pool cap amount.\
+     * Example: MAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"]]\
+     */
+    function depositBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
+        external
+        nonReentrant
+    {
+        ApeStakingLogic.executeDepositBAKCWithMAYC(
+            _ERC721Data.owners,
+            _apeCoinStaking,
+            _nftPairs
+        );
+    }
+
+    /**
+     * @notice Claim rewards for array of Paired NFTs and send to recipient
+     * @param _nftPairs Array of Paired MAYC NFTs owned and committed by the msg.sender
+     * @param _recipient Address to send claim reward to
+     */
+    function claimBAKC(
+        ApeCoinStaking.PairNft[] calldata _nftPairs,
+        address _recipient
+    ) external nonReentrant {
+        ApeStakingLogic.executeClaimBAKCWithMAYC(
+            _ERC721Data.owners,
+            _apeCoinStaking,
+            _nftPairs,
+            _recipient
+        );
+    }
+
+    /**
+     * @notice Withdraw staked ApeCoin from the Pair pool.  If withdraw is total staked amount, performs an automatic claim.
+     * @param _nftPairs Array of Paired MAYC NFT's with staked amounts
+     * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
+     */
+    function withdrawBAKC(
+        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
+        address _apeRecipient,
+        address _bakcRecipient
+    ) external nonReentrant {
+        ApeStakingLogic.executeWithdrawBAKCWithMAYC(
+            _ERC721Data.owners,
+            _apeCoinStaking,
+            _nftPairs,
+            _apeRecipient,
+            _bakcRecipient
+        );
     }
 
     function POOL_ID() internal virtual override returns (uint256) {

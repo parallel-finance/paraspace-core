@@ -5,10 +5,12 @@ import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {
   deployReserveAuctionStrategy,
   deployMintableERC20,
+  deployPoolCoreLibraries,
 } from "../deploy/helpers/contracts-deployments";
 import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {
   MockReserveInterestRateStrategy__factory,
+  PoolCore__factory,
   PToken__factory,
   VariableDebtToken__factory,
 } from "../types";
@@ -19,6 +21,7 @@ import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 declare let hre: HardhatRuntimeEnvironment;
 
@@ -32,6 +35,7 @@ describe("Pool: Edge cases", () => {
     NOT_CONTRACT,
     RESERVE_ALREADY_INITIALIZED,
     RESERVE_ALREADY_ADDED,
+    INVALID_ADDRESSES_PROVIDER,
   } = ProtocolErrors;
 
   const MAX_NUMBER_RESERVES = 128;
@@ -114,23 +118,22 @@ describe("Pool: Edge cases", () => {
   //   expect(userReserveDataAfter.healthFactor).to.be.eq(MAX_UINT_AMOUNT);
   // });
 
-  // it("Initialize fresh deployment with incorrect addresses provider (revert expected)", async () => {
-  //   const {
-  //     addressesProvider,
-  //     users: [deployer],
-  //   } = testEnv;
-  //
-  //   const NEW_POOL_IMPL_ARTIFACT = await deployPool(addressesProvider.address);
-  //
-  //   const freshPool = Pool__factory.connect(
-  //     NEW_POOL_IMPL_ARTIFACT.address,
-  //     deployer.signer
-  //   );
-  //
-  //   await expect(freshPool.initialize(deployer.address)).to.be.revertedWith(
-  //     INVALID_ADDRESSES_PROVIDER
-  //   );
-  // });
+  it("Initialize fresh deployment with incorrect addresses provider (revert expected)", async () => {
+    const {
+      addressesProvider,
+      users: [deployer],
+    } = testEnv;
+
+    const coreLibraries = await deployPoolCoreLibraries(false);
+    const poolCore = await new PoolCore__factory(
+      coreLibraries,
+      await getFirstSigner()
+    ).deploy(addressesProvider.address);
+
+    await expect(poolCore.initialize(deployer.address)).to.be.revertedWith(
+      INVALID_ADDRESSES_PROVIDER
+    );
+  });
 
   it("Check initialization", async () => {
     const {pool} = testEnv;
@@ -554,7 +557,7 @@ describe("Pool: Edge cases", () => {
     const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
       await getFirstSigner()
     ).deploy(addressesProvider.address, 0, 0, 0, 0);
-    const mockAuctionStrategy = await await deployReserveAuctionStrategy(
+    const mockAuctionStrategy = await deployReserveAuctionStrategy(
       eContractid.DefaultReserveAuctionStrategy,
       [
         auctionStrategyExp.maxPriceMultiplier,
@@ -563,7 +566,8 @@ describe("Pool: Edge cases", () => {
         auctionStrategyExp.stepLinear,
         auctionStrategyExp.stepExp,
         auctionStrategyExp.tickLength,
-      ]
+      ],
+      ETHERSCAN_VERIFICATION
     );
 
     // Init the reserve
