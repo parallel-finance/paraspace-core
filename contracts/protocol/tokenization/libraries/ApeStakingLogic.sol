@@ -487,7 +487,10 @@ library ApeStakingLogic {
             hfLimit < HEALTH_FACTOR_LIQUIDATION_THRESHOLD * 2,
             "Value Too High"
         );
+        uint256 oldValue = stakingParameter.unstakeHFLimit;
+        require(oldValue != hfLimit, "Same Value");
         stakingParameter.unstakeHFLimit = hfLimit;
+        emit UnstakeApeHFLimitUpdated(oldValue, hfLimit);
     }
 
     function executeSetUnstakeApeIncentive(
@@ -498,7 +501,10 @@ library ApeStakingLogic {
             incentive < PercentageMath.HALF_PERCENTAGE_FACTOR,
             "Value Too High"
         );
+        uint256 oldValue = stakingParameter.unstakeIncentive;
+        require(oldValue != incentive, "Same Value");
         stakingParameter.unstakeIncentive = incentive;
+        emit UnstakeApeIncentiveUpdated(oldValue, incentive);
     }
 
     function executeUnstakePositionAndRepay(
@@ -561,6 +567,8 @@ library ApeStakingLogic {
                     } else {
                         _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
                     }
+                    IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID))
+                        .transferFrom(address(this), user, bakcTokenId);
                 }
             }
         }
