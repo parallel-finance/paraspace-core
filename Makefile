@@ -157,7 +157,7 @@ test-weth-gateway:
 
 .PHONY: test-mock-token-faucet
 test-mock-token-faucet:
-	make TEST_TARGET=mock-token-faucet.spec.ts test
+	make TEST_TARGET=_mock_token_faucet.spec.ts test
 
 .PHONY: test-moonbirds
 test-moonbirds:
@@ -211,9 +211,9 @@ test-addresses-provider:
 test-addresses-provider-registry:
 	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
 
-.PHONY: test-price-oracle-sentinel
-test-price-oracle-sentinel:
-	make TEST_TARGET=price-oracle-sentinel.spec.ts test
+.PHONY: test-oracle-sentinel
+test-oracle-sentinel:
+	make TEST_TARGET=_oracle_sentinel.spec.ts test
 
 .PHONY: test-user-configurator-used-as-collateral
 test-user-configurator-used-as-collateral:
