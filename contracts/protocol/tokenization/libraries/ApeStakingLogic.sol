@@ -4,6 +4,10 @@ import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import "../../../interfaces/IPool.sol";
+import {DataTypes} from "../../libraries/types/DataTypes.sol";
+import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
+import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 
 /**
  * @title ApeStakingLogic library
@@ -12,10 +16,19 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
  */
 library ApeStakingLogic {
     using SafeERC20 for IERC20;
+    using PercentageMath for uint256;
 
     uint256 constant BAYC_POOL_ID = 1;
     uint256 constant MAYC_POOL_ID = 2;
     uint256 constant BAKC_POOL_ID = 3;
+
+    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
+    struct APEStakingParameter {
+        uint256 unstakeHFLimit;
+        uint256 unstakeIncentive;
+    }
+    event UnstakeApeHFLimitUpdated(uint256 oldValue, uint256 newValue);
+    event UnstakeApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
      * @notice Deposit ApeCoin to the BAYC Pool
@@ -462,6 +475,124 @@ library ApeStakingLogic {
                 _recipient,
                 _recipient
             );
+        }
+    }
+
+    function executeSetUnstakeApeHFLimit(
+        APEStakingParameter storage stakingParameter,
+        uint256 hfLimit
+    ) external {
+        require(hfLimit > HEALTH_FACTOR_LIQUIDATION_THRESHOLD, "Value Too Low");
+        require(
+            hfLimit < HEALTH_FACTOR_LIQUIDATION_THRESHOLD * 2,
+            "Value Too High"
+        );
+        stakingParameter.unstakeHFLimit = hfLimit;
+    }
+
+    function executeSetUnstakeApeIncentive(
+        APEStakingParameter storage stakingParameter,
+        uint256 incentive
+    ) external {
+        require(
+            incentive < PercentageMath.HALF_PERCENTAGE_FACTOR,
+            "Value Too High"
+        );
+        stakingParameter.unstakeIncentive = incentive;
+    }
+
+    function executeUnstakePositionAndRepay(
+        APEStakingParameter storage stakingParameter,
+        IPool POOL,
+        ApeCoinStaking _apeCoinStaking,
+        address user,
+        uint256 poolId,
+        uint256 tokenId
+    ) external {
+        //1 check user hf
+        {
+            (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(user);
+            require(healthFactor < stakingParameter.unstakeHFLimit, "HF Error");
+        }
+
+        //2 unstake all position
+        {
+            //2.1 unstake Main pool position
+            (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
+                poolId,
+                tokenId
+            );
+            if (stakedAmount > 0) {
+                ApeCoinStaking.SingleNft[]
+                    memory nfts = new ApeCoinStaking.SingleNft[](1);
+                nfts[0].tokenId = tokenId;
+                nfts[0].amount = stakedAmount;
+                if (poolId == BAYC_POOL_ID) {
+                    _apeCoinStaking.withdrawBAYC(nfts, address(this));
+                } else {
+                    _apeCoinStaking.withdrawMAYC(nfts, address(this));
+                }
+            }
+            //2.2 unstake bakc pool position
+            (uint256 bakcTokenId, bool isPaired) = _apeCoinStaking.mainToBakc(
+                poolId,
+                tokenId
+            );
+            if (isPaired) {
+                (stakedAmount, ) = _apeCoinStaking.nftPosition(
+                    BAKC_POOL_ID,
+                    bakcTokenId
+                );
+                if (stakedAmount > 0) {
+                    ApeCoinStaking.PairNftWithAmount[]
+                        memory _nftPairs = new ApeCoinStaking.PairNftWithAmount[](
+                            1
+                        );
+                    _nftPairs[0].mainTokenId = tokenId;
+                    _nftPairs[0].bakcTokenId = bakcTokenId;
+                    _nftPairs[0].amount = stakedAmount;
+                    ApeCoinStaking.PairNftWithAmount[]
+                        memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](
+                            0
+                        );
+
+                    if (poolId == BAYC_POOL_ID) {
+                        _apeCoinStaking.withdrawBAKC(_nftPairs, _otherPairs);
+                    } else {
+                        _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
+                    }
+                }
+            }
+        }
+
+        IERC20 _apeCoin = _apeCoinStaking.apeCoin();
+        uint256 apeBalance = _apeCoin.balanceOf(address(this));
+        if (apeBalance == 0) {
+            return;
+        }
+        //3 send incentive to caller
+        uint256 unstakeIncentive = stakingParameter.unstakeIncentive;
+        if (unstakeIncentive > 0) {
+            uint256 incentiveAmount = apeBalance.percentMul(unstakeIncentive);
+            _apeCoin.safeTransfer(msg.sender, incentiveAmount);
+            apeBalance = apeBalance - incentiveAmount;
+        }
+
+        //4 repay ape coin debt if user have
+        DataTypes.ReserveData memory apeCoinData = POOL.getReserveData(
+            address(_apeCoin)
+        );
+        uint256 userDebt = IERC20(apeCoinData.variableDebtTokenAddress)
+            .balanceOf(user);
+        if (userDebt > 0) {
+            uint256 repayDebt = Math.min(userDebt, apeBalance);
+            POOL.repay(address(_apeCoin), repayDebt, user);
+            apeBalance = apeBalance - repayDebt;
+        }
+
+        //5 supply remaining ape coin
+        if (apeBalance > 0) {
+            POOL.supply(address(_apeCoin), apeBalance, user, 0);
         }
     }
 }

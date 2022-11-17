@@ -8,6 +8,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
+import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -17,9 +18,10 @@ import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 abstract contract NTokenApeStaking is NToken {
     ApeCoinStaking immutable _apeCoinStaking;
 
-    uint256 constant BAYC_POOL_ID = 1;
-    uint256 constant MAYC_POOL_ID = 2;
-    uint256 constant BAKC_POOL_ID = 3;
+    bytes32 constant APE_STAKING_DATA_STORAGE_POSITION =
+        bytes32(
+            uint256(keccak256("paraspace.proxy.ntoken.apestaking.storage")) - 1
+        );
 
     /**
      * @dev Constructor.
@@ -37,10 +39,9 @@ abstract contract NTokenApeStaking is NToken {
         string calldata nTokenSymbol,
         bytes calldata params
     ) public virtual override initializer {
-        _apeCoinStaking.apeCoin().approve(
-            address(_apeCoinStaking),
-            type(uint256).max
-        );
+        IERC20 _apeCoin = _apeCoinStaking.apeCoin();
+        _apeCoin.approve(address(_apeCoinStaking), type(uint256).max);
+        _apeCoin.approve(address(POOL), type(uint256).max);
 
         super.initialize(
             initializingPool,
@@ -50,6 +51,8 @@ abstract contract NTokenApeStaking is NToken {
             nTokenSymbol,
             params
         );
+
+        initializeStakingData();
     }
 
     /**
@@ -95,5 +98,49 @@ abstract contract NTokenApeStaking is NToken {
     function POOL_ID() internal virtual returns (uint256) {
         // should be overridden
         return 0;
+    }
+
+    function initializeStakingData() internal {
+        ApeStakingLogic.APEStakingParameter
+            storage dataStorage = apeStakingDataStorage();
+        ApeStakingLogic.executeSetUnstakeApeHFLimit(dataStorage, 1.1e18);
+        ApeStakingLogic.executeSetUnstakeApeIncentive(dataStorage, 100);
+    }
+
+    function setUnstakeApeHFLimit(uint256 hfLimit) external onlyPoolAdmin {
+        ApeStakingLogic.executeSetUnstakeApeHFLimit(
+            apeStakingDataStorage(),
+            hfLimit
+        );
+    }
+
+    function setUnstakeApeIncentive(uint256 incentive) external onlyPoolAdmin {
+        ApeStakingLogic.executeSetUnstakeApeIncentive(
+            apeStakingDataStorage(),
+            incentive
+        );
+    }
+
+    function apeStakingDataStorage()
+        internal
+        pure
+        returns (ApeStakingLogic.APEStakingParameter storage rgs)
+    {
+        bytes32 position = APE_STAKING_DATA_STORAGE_POSITION;
+        assembly {
+            rgs.slot := position
+        }
+    }
+
+    function unstakePositionAndRepay(uint256 tokenId) external nonReentrant {
+        address user = ownerOf(tokenId);
+        ApeStakingLogic.executeUnstakePositionAndRepay(
+            apeStakingDataStorage(),
+            POOL,
+            _apeCoinStaking,
+            user,
+            POOL_ID(),
+            tokenId
+        );
     }
 }

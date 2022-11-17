@@ -123,7 +123,7 @@ contract NTokenMAYC is NTokenApeStaking {
     }
 
     function POOL_ID() internal virtual override returns (uint256) {
-        return MAYC_POOL_ID;
+        return ApeStakingLogic.MAYC_POOL_ID;
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
