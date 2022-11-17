@@ -20,8 +20,8 @@ init: submodules
 test:
 	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
 
-.PHONY: dry-test
-dry-test:
+.PHONY: local-test
+local-test:
 	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
 
 .PHONY: slow-test
@@ -145,7 +145,7 @@ test-paraspace-oracle-aggregator:
 
 .PHONY: test-nft-floor-price-oracle-without-deploy
 test-nft-floor-price-oracle-without-deploy:
-	make TEST_TARGET=_oracle_nft_floor_price.spec.ts dry-test
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts local-test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
