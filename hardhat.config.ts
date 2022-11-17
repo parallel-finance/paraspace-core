@@ -132,7 +132,7 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts,
-      loggingEnabled: true,
+      loggingEnabled: false,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },

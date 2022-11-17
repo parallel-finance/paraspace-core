@@ -24,7 +24,7 @@ import {
   PARASPACE_SEAPORT_ID,
   X2Y2_ID,
 } from "../deploy/helpers/constants";
-import {formatEther, parseEther, splitSignature} from "ethers/lib/utils";
+import {parseEther, splitSignature} from "ethers/lib/utils";
 import {BigNumber, BigNumberish, constants} from "ethers";
 import {
   borrowAndValidate,
@@ -1419,7 +1419,7 @@ describe("Leveraged Buy - Negative tests", () => {
       takerInitialBalance
     );
     const middlemanInitialBalance = "1200";
-    payLaterAmount = await convertToCurrencyDecimals(dai.address, "200");
+    payLaterAmount = await convertToCurrencyDecimals(dai.address, "230");
     startAmount = payNowAmount.add(payLaterAmount);
     endAmount = startAmount; // fixed price but taker cannot afford this
 
@@ -1594,7 +1594,7 @@ describe("Leveraged Buy - Negative tests", () => {
     const {
       bayc,
       dai,
-      oracle,
+      paraspaceOracle,
       users: [maker, taker],
       protocolDataProvider,
     } = await loadFixture(fixture);
@@ -1602,19 +1602,20 @@ describe("Leveraged Buy - Negative tests", () => {
     // drop NFT price enough so that the NFT cannot cover a paylater of 200 DAI
     await changePriceAndValidate(bayc, "0.5");
 
-    const nftPrice = await oracle.getAssetPrice(bayc.address);
+    const nftPrice = await paraspaceOracle.getAssetPrice(bayc.address);
     const ltvRatio = (
       await protocolDataProvider.getReserveConfigurationData(bayc.address)
     ).ltv;
-    const availableToBorrowInBaseUnits = nftPrice.mul(ltvRatio).div(10000);
-    const daiPrice = await oracle.getAssetPrice(dai.address);
+    const availableToBorrowInBaseUnits = nftPrice.percentMul(ltvRatio);
+    const daiPrice = await paraspaceOracle.getAssetPrice(dai.address);
     // this is how much DAI I can borrow by putting this NFT in collateral
-    const availableToBorrowInDai =
-      +formatEther(availableToBorrowInBaseUnits.toString()) /
-      +formatEther(daiPrice.toString());
+    const availableToBorrowInDai = await convertToCurrencyDecimals(
+      dai.address,
+      availableToBorrowInBaseUnits.div(daiPrice).toString()
+    );
 
     // ensure the LTV cannot cover the credit
-    expect(Math.floor(availableToBorrowInDai)).to.be.lt(payLaterAmount);
+    expect(availableToBorrowInDai).to.be.lt(payLaterAmount);
 
     await expect(
       executeSeaportBuyWithCredit(
