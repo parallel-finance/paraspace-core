@@ -1,11 +1,35 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {deployMockReserveConfiguration} from "../deploy/helpers/contracts-deployments";
-import {MockReserveConfiguration} from "../types";
+import {
+  deployMockReserveConfiguration,
+  deployPoolCoreLibraries,
+  deployReserveAuctionStrategy,
+} from "../deploy/helpers/contracts-deployments";
+import {
+  ERC20__factory,
+  IPool,
+  IPoolAddressesProvider,
+  MintableERC20__factory,
+  MockReserveConfiguration,
+  MockReserveInterestRateStrategy__factory,
+  PoolCore__factory,
+  PToken__factory,
+  VariableDebtToken__factory,
+} from "../types";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+import {impersonateAccountsHardhat} from "../deploy/helpers/misc-utils";
+import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
+import {getFirstSigner} from "../deploy/helpers/contracts-getters";
+import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
+import {BigNumberish, utils} from "ethers";
+import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+
+declare let hre: HardhatRuntimeEnvironment;
 
 describe("ReserveConfiguration", async () => {
   const fixture = async () => {
@@ -388,4 +412,386 @@ describe("ReserveConfiguration", async () => {
     ).to.be.revertedWith(ProtocolErrors.INVALID_LIQUIDATION_PROTOCOL_FEE);
     expect(await configMock.getLiquidationProtocolFee()).to.be.eq(ZERO);
   });
+
+  it("TC-reserve-configuration-20 Initialize an already initialized reserve. ReserveLogic `init` where xTokenAddress != ZERO_ADDRESS (revert expected)", async () => {
+    const {pool, dai, deployer, configurator} = await loadFixture(
+      testEnvFixture
+    );
+
+    // Impersonate PoolConfigurator
+    await topUpNonPayableWithEther(
+      deployer.signer,
+      [configurator.address],
+      utils.parseEther("1")
+    );
+    await impersonateAccountsHardhat([configurator.address]);
+    const configSigner = await hre.ethers.getSigner(configurator.address);
+
+    const config = await pool.getReserveData(dai.address);
+
+    await expect(
+      pool.connect(configSigner).initReserve(
+        dai.address,
+        config.xTokenAddress, // just need a non-used reserve token
+        config.variableDebtTokenAddress,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS
+      )
+    ).to.be.revertedWith(ProtocolErrors.RESERVE_ALREADY_INITIALIZED);
+  });
+
+  it("TC-reserve-configuration-21 Init reserve with ZERO_ADDRESS as xToken twice, to enter `_addReserveToList()` already added (revert expected)", async () => {
+    /**
+     * To get into this case, we need to init a reserve with `xTokenAddress = address(0)` twice.
+     * `_addReserveToList()` is called from `initReserve`. However, in `initReserve` we run `init` before the `_addReserveToList()`,
+     * and in `init` we are checking if `xTokenAddress == address(0)`, so to bypass that we need this odd init.
+     */
+    const {pool, dai, deployer, configurator} = await loadFixture(
+      testEnvFixture
+    );
+
+    // Impersonate PoolConfigurator
+    await topUpNonPayableWithEther(
+      deployer.signer,
+      [configurator.address],
+      utils.parseEther("1")
+    );
+    await impersonateAccountsHardhat([configurator.address]);
+    const configSigner = await hre.ethers.getSigner(configurator.address);
+
+    const config = await pool.getReserveData(dai.address);
+
+    const poolListBefore = await pool.getReservesList();
+
+    expect(
+      await pool
+        .connect(configSigner)
+        .initReserve(
+          config.xTokenAddress,
+          ZERO_ADDRESS,
+          config.variableDebtTokenAddress,
+          ZERO_ADDRESS,
+          ZERO_ADDRESS
+        )
+    );
+    const poolListMid = await pool.getReservesList();
+    expect(poolListBefore.length + 1).to.be.eq(poolListMid.length);
+
+    // Add it again.
+    await expect(
+      pool
+        .connect(configSigner)
+        .initReserve(
+          config.xTokenAddress,
+          ZERO_ADDRESS,
+          config.variableDebtTokenAddress,
+          ZERO_ADDRESS,
+          ZERO_ADDRESS
+        )
+    ).to.be.revertedWith(ProtocolErrors.RESERVE_ALREADY_ADDED);
+    const poolListAfter = await pool.getReservesList();
+    expect(poolListAfter.length).to.be.eq(poolListMid.length);
+  });
+
+  it("TC-reserve-configuration-22 Initialize reserves until max, then add one more (revert expected)", async () => {
+    const {addressesProvider, poolAdmin, pool, configurator} =
+      await loadFixture(testEnvFixture);
+
+    const currentNumReserves = (await pool.getReservesList()).length;
+    const expectedMaxReserves = 128;
+
+    // Check the limit
+    expect(await pool.MAX_NUMBER_RESERVES()).to.be.eq(expectedMaxReserves);
+
+    for (let i = currentNumReserves + 1; i == expectedMaxReserves; i++) {
+      // Deploy mock `InitReserveInput`
+      const initInputParams = await getReserveParams(pool, addressesProvider);
+
+      if (i == expectedMaxReserves) {
+        await expect(
+          await configurator
+            .connect(poolAdmin.signer)
+            .initReserves(initInputParams)
+        ).to.be.revertedWith(ProtocolErrors.NO_MORE_RESERVES_ALLOWED);
+      } else {
+        expect(
+          await configurator
+            .connect(poolAdmin.signer)
+            .initReserves(initInputParams)
+        );
+      }
+    }
+  });
+
+  it("TC-reserve-configuration-23 Add asset after multiple drops", async () => {
+    /**
+     * 1. Init assets (done through setup so get this for free)
+     * 2. Drop some reserves
+     * 3. Init a new asset.
+     * Intended behaviour new asset is inserted into one of the available spots in
+     */
+    const {configurator, pool, poolAdmin, addressesProvider} =
+      await loadFixture(testEnvFixture);
+
+    const reservesListBefore = await pool
+      .connect(configurator.signer)
+      .getReservesList();
+
+    // Remove first 2 assets that has no borrows
+    let dropped = 0;
+    for (let i = 0; i < reservesListBefore.length; i++) {
+      if (dropped == 2) {
+        break;
+      }
+      const reserveAsset = reservesListBefore[i];
+      const assetData = await pool.getReserveData(reserveAsset);
+
+      if (
+        assetData.currentLiquidityRate.eq(0) &&
+        assetData.currentVariableBorrowRate.eq(0)
+      ) {
+        await configurator.connect(poolAdmin.signer).dropReserve(reserveAsset);
+        dropped++;
+      }
+    }
+
+    const reservesListAfterDrop = await pool
+      .connect(configurator.signer)
+      .getReservesList();
+    expect(reservesListAfterDrop.length).to.be.eq(
+      reservesListBefore.length - 2
+    );
+
+    // Init the reserve
+    const initInputParams = await getReserveParams(pool, addressesProvider);
+    expect(
+      await configurator.connect(poolAdmin.signer).initReserves(initInputParams)
+    );
+    const reservesListAfterInit = await pool
+      .connect(configurator.signer)
+      .getReservesList();
+
+    const occurrences = reservesListAfterInit.filter(
+      (v) => v == initInputParams[0].underlyingAsset
+    ).length;
+    expect(occurrences).to.be.eq(
+      1,
+      "Asset has multiple occurrences in the reserves list"
+    );
+
+    expect(reservesListAfterInit.length).to.be.eq(
+      reservesListAfterDrop.length + 1,
+      "Reserves list was increased by more than 1"
+    );
+  });
+
+  it("TC-reserve-configuration-24 Initialize reserves until max-1, then (drop one and add a new) x 2, finally add to hit max", async () => {
+    /**
+     * 1. Update max number of assets to current number og assets
+     * 2. Drop some reserves
+     * 3. Init a new asset.
+     * Intended behaviour: new asset is inserted into one of the available spots in `_reservesList` and `_reservesCount` kept the same
+     */
+    const {addressesProvider, poolAdmin, pool, configurator} =
+      await loadFixture(testEnvFixture);
+
+    const currentNumReserves = (await pool.getReservesList()).length;
+    const expectedMaxReserves = 128;
+
+    for (let i = currentNumReserves + 1; i == expectedMaxReserves; i++) {
+      // Init the reserve
+      const initInputParams = await getReserveParams(pool, addressesProvider);
+
+      if (i == expectedMaxReserves - 1) {
+        // drop one, add new
+        for (let dropped = 0; dropped < 2; dropped++) {
+          // drop one
+          const reservesListBefore = await pool
+            .connect(configurator.signer)
+            .getReservesList();
+          for (let i = 0; i < reservesListBefore.length; i++) {
+            const reserveAsset = reservesListBefore[i];
+            const assetData = await pool.getReserveData(reserveAsset);
+
+            if (assetData.xTokenAddress == ZERO_ADDRESS) {
+              continue;
+            }
+
+            if (
+              assetData.currentLiquidityRate.eq(0) &&
+              assetData.currentVariableBorrowRate.eq(0)
+            ) {
+              await configurator
+                .connect(poolAdmin.signer)
+                .dropReserve(reserveAsset);
+              break;
+            }
+          }
+
+          // add new
+          const initInputParams = await getReserveParams(
+            pool,
+            addressesProvider
+          );
+          expect(
+            await configurator
+              .connect(poolAdmin.signer)
+              .initReserves(initInputParams)
+          );
+        }
+      } else if (i == expectedMaxReserves) {
+        // add to hit max
+        const initInputParams = await getReserveParams(pool, addressesProvider);
+
+        await expect(
+          await configurator
+            .connect(poolAdmin.signer)
+            .initReserves(initInputParams)
+        ).to.be.revertedWith(ProtocolErrors.NO_MORE_RESERVES_ALLOWED);
+      } else {
+        // keep adding reserves
+        expect(
+          await configurator
+            .connect(poolAdmin.signer)
+            .initReserves(initInputParams)
+        );
+      }
+    }
+  });
+
+  it("Tries to initialize a reserve with a PToken and VariableDebt each deployed with the wrong pool address (revert expected)", async () => {
+    const {pool, deployer, configurator, addressesProvider} = await loadFixture(
+      testEnvFixture
+    );
+
+    const coreLibraries = await deployPoolCoreLibraries(false);
+    const NEW_POOL_IMPL_ARTIFACT = await new PoolCore__factory(
+      coreLibraries,
+      await getFirstSigner()
+    ).deploy(addressesProvider.address);
+
+    const xTokenImp = await new PToken__factory(await getFirstSigner()).deploy(
+      pool.address
+    );
+    const variableDebtTokenImp = await new VariableDebtToken__factory(
+      deployer.signer
+    ).deploy(pool.address);
+
+    const xTokenWrongPool = await new PToken__factory(
+      await getFirstSigner()
+    ).deploy(NEW_POOL_IMPL_ARTIFACT.address);
+
+    const variableDebtTokenWrongPool = await new VariableDebtToken__factory(
+      deployer.signer
+    ).deploy(NEW_POOL_IMPL_ARTIFACT.address);
+
+    const mockErc20 = await new ERC20__factory(deployer.signer).deploy(
+      "mock",
+      "MOCK"
+    );
+    const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
+      await getFirstSigner()
+    ).deploy(addressesProvider.address, 0, 0, 0, 0);
+    const mockAuctionStrategy = await deployReserveAuctionStrategy("test", [
+      auctionStrategyExp.maxPriceMultiplier,
+      auctionStrategyExp.minExpPriceMultiplier,
+      auctionStrategyExp.minPriceMultiplier,
+      auctionStrategyExp.stepLinear,
+      auctionStrategyExp.stepExp,
+      auctionStrategyExp.tickLength,
+    ]);
+
+    // Init the reserve
+    const initInputParams: {
+      xTokenImpl: string;
+      variableDebtTokenImpl: string;
+      underlyingAssetDecimals: BigNumberish;
+      interestRateStrategyAddress: string;
+      auctionStrategyAddress: string;
+      underlyingAsset: string;
+      assetType: BigNumberish;
+      treasury: string;
+      incentivesController: string;
+      underlyingAssetName: string;
+      xTokenName: string;
+      xTokenSymbol: string;
+      variableDebtTokenName: string;
+      variableDebtTokenSymbol: string;
+      stableDebtTokenName: string;
+      stableDebtTokenSymbol: string;
+      params: string;
+    }[] = [
+      {
+        xTokenImpl: xTokenImp.address,
+        variableDebtTokenImpl: variableDebtTokenImp.address,
+        underlyingAssetDecimals: 18,
+        interestRateStrategyAddress: mockRateStrategy.address,
+        auctionStrategyAddress: mockAuctionStrategy.address,
+        underlyingAsset: mockErc20.address,
+        assetType: 0,
+        treasury: ZERO_ADDRESS,
+        incentivesController: ZERO_ADDRESS,
+        underlyingAssetName: "MOCK",
+        xTokenName: "PMOCK",
+        xTokenSymbol: "PMOCK",
+        variableDebtTokenName: "VMOCK",
+        variableDebtTokenSymbol: "VMOCK",
+        stableDebtTokenName: "SMOCK",
+        stableDebtTokenSymbol: "SMOCK",
+        params: "0x10",
+      },
+    ];
+
+    initInputParams[0].xTokenImpl = xTokenWrongPool.address;
+    await expect(configurator.initReserves(initInputParams)).to.be.reverted;
+    initInputParams[0].xTokenImpl = xTokenImp.address;
+
+    initInputParams[0].variableDebtTokenImpl =
+      variableDebtTokenWrongPool.address;
+    await expect(configurator.initReserves(initInputParams)).to.be.reverted;
+    initInputParams[0].variableDebtTokenImpl = variableDebtTokenImp.address;
+
+    expect(await configurator.initReserves(initInputParams));
+  });
 });
+
+const getReserveParams = async (
+  pool: IPool,
+  addressesProvider: IPoolAddressesProvider
+): Promise<ConfiguratorInputTypes.InitReserveInputStruct[]> => {
+  // Deploy mock `InitReserveInput`
+  const mockToken = await new MintableERC20__factory(
+    await getFirstSigner()
+  ).deploy("MOCK", "MOCK", "18");
+  const variableDebtTokenImplementation = await new VariableDebtToken__factory(
+    await getFirstSigner()
+  ).deploy(pool.address);
+  const xTokenImplementation = await new PToken__factory(
+    await getFirstSigner()
+  ).deploy(pool.address);
+  const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
+    await getFirstSigner()
+  ).deploy(addressesProvider.address, 0, 0, 0, 0);
+
+  // Init the reserve
+  const initInputParams = [
+    {
+      xTokenImpl: xTokenImplementation.address,
+      variableDebtTokenImpl: variableDebtTokenImplementation.address,
+      assetType: 0,
+      underlyingAssetDecimals: 18,
+      interestRateStrategyAddress: mockRateStrategy.address,
+      auctionStrategyAddress: ZERO_ADDRESS,
+      underlyingAsset: mockToken.address,
+      treasury: ZERO_ADDRESS,
+      incentivesController: ZERO_ADDRESS,
+      xTokenName: "PMOCK",
+      xTokenSymbol: "PMOCK",
+      variableDebtTokenName: "VMOCK",
+      variableDebtTokenSymbol: "VMOCK",
+      params: "0x10",
+    },
+  ];
+
+  return initInputParams;
+};

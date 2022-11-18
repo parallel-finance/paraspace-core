@@ -299,6 +299,24 @@ describe("pToken Supply Event Accounting", () => {
       pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, false)
     ).to.be.revertedWith(UNDERLYING_BALANCE_ZERO);
   });
+
+  it("TC-erc20-supply-14 Tries to call `finalizeTransfer()` by a non-xToken address (revert expected)", async () => {
+    const {pool, dai, users} = await loadFixture(testEnvFixture);
+
+    await expect(
+      pool
+        .connect(users[0].signer)
+        .finalizeTransfer(
+          dai.address,
+          users[0].address,
+          users[1].address,
+          false,
+          0,
+          0,
+          0
+        )
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_XTOKEN);
+  });
 });
 
 describe("pToken: Supply Cap Changed", () => {
