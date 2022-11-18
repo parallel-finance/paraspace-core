@@ -133,12 +133,11 @@ abstract contract NTokenApeStaking is NToken {
     }
 
     function unstakePositionAndRepay(uint256 tokenId) external nonReentrant {
-        address user = ownerOf(tokenId);
         ApeStakingLogic.executeUnstakePositionAndRepay(
+            _ERC721Data.owners,
             apeStakingDataStorage(),
             POOL,
             _apeCoinStaking,
-            user,
             POOL_ID(),
             tokenId
         );

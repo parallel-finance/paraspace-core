@@ -508,16 +508,18 @@ library ApeStakingLogic {
     }
 
     function executeUnstakePositionAndRepay(
+        mapping(uint256 => address) storage _owners,
         APEStakingParameter storage stakingParameter,
         IPool POOL,
         ApeCoinStaking _apeCoinStaking,
-        address user,
         uint256 poolId,
         uint256 tokenId
     ) external {
+        address positionOwner = _owners[tokenId];
+        bool isOwnerSelf = (msg.sender == positionOwner);
         //1 check user hf
-        {
-            (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(user);
+        if (!isOwnerSelf) {
+            (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(positionOwner);
             require(healthFactor < stakingParameter.unstakeHFLimit, "HF Error");
         }
 
@@ -568,7 +570,7 @@ library ApeStakingLogic {
                         _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
                     }
                     IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID))
-                        .transferFrom(address(this), user, bakcTokenId);
+                        .transferFrom(address(this), positionOwner, bakcTokenId);
                 }
             }
         }
@@ -579,11 +581,13 @@ library ApeStakingLogic {
             return;
         }
         //3 send incentive to caller
-        uint256 unstakeIncentive = stakingParameter.unstakeIncentive;
-        if (unstakeIncentive > 0) {
-            uint256 incentiveAmount = apeBalance.percentMul(unstakeIncentive);
-            _apeCoin.safeTransfer(msg.sender, incentiveAmount);
-            apeBalance = apeBalance - incentiveAmount;
+        if (!isOwnerSelf) {
+            uint256 unstakeIncentive = stakingParameter.unstakeIncentive;
+            if (unstakeIncentive > 0) {
+                uint256 incentiveAmount = apeBalance.percentMul(unstakeIncentive);
+                _apeCoin.safeTransfer(msg.sender, incentiveAmount);
+                apeBalance = apeBalance - incentiveAmount;
+            }
         }
 
         //4 repay ape coin debt if user have
@@ -591,16 +595,16 @@ library ApeStakingLogic {
             address(_apeCoin)
         );
         uint256 userDebt = IERC20(apeCoinData.variableDebtTokenAddress)
-            .balanceOf(user);
+            .balanceOf(positionOwner);
         if (userDebt > 0) {
             uint256 repayDebt = Math.min(userDebt, apeBalance);
-            POOL.repay(address(_apeCoin), repayDebt, user);
+            POOL.repay(address(_apeCoin), repayDebt, positionOwner);
             apeBalance = apeBalance - repayDebt;
         }
 
         //5 supply remaining ape coin
         if (apeBalance > 0) {
-            POOL.supply(address(_apeCoin), apeBalance, user, 0);
+            POOL.supply(address(_apeCoin), apeBalance, positionOwner, 0);
         }
     }
 }
