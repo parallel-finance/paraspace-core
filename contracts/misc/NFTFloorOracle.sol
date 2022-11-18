@@ -30,7 +30,7 @@ struct PriceInformation {
 }
 
 struct FeederRegistrar {
-    // if asset not registered,reject the price
+    // if asset registered or not
     bool registered;
     // index in asset list
     uint8 index;
@@ -38,6 +38,13 @@ struct FeederRegistrar {
     bool paused;
     // feeder -> PriceInformation
     mapping(address => PriceInformation) feederPrice;
+}
+
+struct FeederPosition {
+    // if feeder registered or not
+    bool registered;
+    // index in feeder list
+    uint8 index;
 }
 
 /// @title A simple on-chain price oracle mechanism
@@ -71,7 +78,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @dev feeder map
     // feeder address -> index in feeder list
-    mapping(address => uint8) private feederIndexMap;
+    mapping(address => FeederPosition) private feederPositionMap;
 
     /// @dev All asset list
     address[] public assets;
@@ -263,7 +270,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     }
 
     function _isFeederExisted(address _feeder) internal view returns (bool) {
-        return feederIndexMap[_feeder] > 0;
+        return feederPositionMap[_feeder].registered;
     }
 
     function _addAsset(address _asset)
@@ -300,7 +307,8 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         onlyWhenFeederNotExisted(_feeder)
     {
         feeders.push(_feeder);
-        feederIndexMap[_feeder] = uint8(feeders.length);
+        feederPositionMap[_feeder].index = uint8(feeders.length - 1);
+        feederPositionMap[_feeder].registered = true;
         _setupRole(UPDATER_ROLE, _feeder);
         emit FeederAdded(_feeder);
     }
@@ -317,12 +325,12 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         internal
         onlyWhenFeederExisted(_feeder)
     {
-        uint8 feederIndex = feederIndexMap[_feeder] - 1;
+        uint8 feederIndex = feederPositionMap[_feeder].index;
         if (feederIndex >= 0 && feeders[feederIndex] == _feeder) {
             feeders[feederIndex] = feeders[feeders.length - 1];
             feeders.pop();
         }
-        delete feederIndexMap[_feeder];
+        delete feederPositionMap[_feeder];
         revokeRole(UPDATER_ROLE, _feeder);
         emit FeederRemoved(_feeder);
     }

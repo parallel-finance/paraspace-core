@@ -207,6 +207,12 @@ describe("NFT Oracle Tests", () => {
     //assert the previous last feeder is swapped into
     const feeder6 = await nftFloorOracle.feeders(1);
     expect(feeder6).to.equal(users[6].address);
+    //now remove from 0 position should still be fine
+    const feeder0 = await nftFloorOracle.feeders(0);
+    expect(feeder0).to.equal(users[0].address);
+    await nftFloorOracle.removeFeeder(feeder0);
+    const feederSizeAgain = await nftFloorOracle.getFeederSize();
+    expect(feederSizeAgain.toNumber()).to.equal(feederSizeAfter.toNumber() - 1);
   });
 
   it("TC-oracle-nft-floor-price-10:Feeders, updater and admin can feed a price", async () => {
