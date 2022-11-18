@@ -54,7 +54,7 @@ const hardhatConfig: HardhatUserConfig = {
   },
   paths: {
     sources: "./contracts",
-    tests: "./test-suites",
+    tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts",
   },
@@ -132,7 +132,7 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts,
-      loggingEnabled: true,
+      loggingEnabled: false,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },

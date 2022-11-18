@@ -7,5 +7,5 @@ interface INFTFloorOracle {
     function getLastUpdateTime(address token)
         external
         view
-        returns (uint256 blocknum);
+        returns (uint256 timestamp);
 }

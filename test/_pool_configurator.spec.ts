@@ -29,10 +29,18 @@ import {
 } from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {
+  impersonateAccountsHardhat,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {BigNumberish} from "ethers";
 import "./helpers/utils/wadraymath";
+import {supplyAndValidate} from "./helpers/validated-steps";
+import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+
+declare let hre: HardhatRuntimeEnvironment;
 
 describe("PoolConfigurator: Common", () => {
   type ReserveConfigurationValues = {
@@ -728,6 +736,53 @@ describe("PoolConfigurator: Common", () => {
     expect(interestRateStrategyAddressAfter).to.be.eq(ONE_ADDRESS);
   });
 
+  it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-03 PoolConfigurator updates the ReserveInterestRateStrategy address for asset 0 (revert expected)", async () => {
+    const {pool, deployer, configurator} = await loadFixture(testEnvFixture);
+
+    // Impersonate PoolConfigurator
+    await topUpNonPayableWithEther(
+      deployer.signer,
+      [configurator.address],
+      utils.parseEther("1")
+    );
+    await impersonateAccountsHardhat([configurator.address]);
+    const configSigner = await hre.ethers.getSigner(configurator.address);
+
+    await expect(
+      pool
+        .connect(configSigner)
+        .setReserveInterestRateStrategyAddress(ZERO_ADDRESS, ZERO_ADDRESS)
+    ).to.be.revertedWith(ProtocolErrors.ZERO_ADDRESS_NOT_VALID);
+  });
+
+  it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-04 PoolConfigurator updates the ReserveInterestRateStrategy address for an unlisted asset (revert expected)", async () => {
+    const {pool, deployer, configurator, users} = await loadFixture(
+      testEnvFixture
+    );
+
+    // Impersonate PoolConfigurator
+    await topUpNonPayableWithEther(
+      deployer.signer,
+      [configurator.address],
+      utils.parseEther("1")
+    );
+    await impersonateAccountsHardhat([configurator.address]);
+    const configSigner = await hre.ethers.getSigner(configurator.address);
+
+    await expect(
+      pool
+        .connect(configSigner)
+        .setReserveInterestRateStrategyAddress(users[5].address, ZERO_ADDRESS)
+    ).to.be.revertedWith(ProtocolErrors.ASSET_NOT_LISTED);
+  });
+
+  it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-05 Activates the zero address reserve for borrowing via pool admin (expect revert)", async () => {
+    const {configurator} = await loadFixture(testEnvFixture);
+    await expect(
+      configurator.setReserveBorrowing(ZERO_ADDRESS, true)
+    ).to.be.revertedWith(ProtocolErrors.ZERO_ADDRESS_NOT_VALID);
+  });
+
   it("TC-poolConfigurator-setSiloedBorrowing-01: Sets siloed borrowing through the pool admin", async () => {
     const {configurator, protocolDataProvider, weth, poolAdmin} =
       await loadFixture(testEnvFixture);
@@ -957,6 +1012,19 @@ describe("PoolConfigurator: Drop Reserve", () => {
     const {configurator} = await loadFixture(testEnvFixture);
     await expect(configurator.dropReserve(ZERO_ADDRESS)).to.be.revertedWith(
       ZERO_ADDRESS_NOT_VALID
+    );
+  });
+
+  it("TC-poolConfigurator-dropReserve-06: Cannot drop asset with supplied liquidity", async () => {
+    const {
+      configurator,
+      weth,
+      users: [user0],
+    } = await loadFixture(testEnvFixture);
+    await supplyAndValidate(weth, "10", user0, true);
+
+    await expect(configurator.dropReserve(weth.address)).to.be.revertedWith(
+      ProtocolErrors.XTOKEN_SUPPLY_NOT_ZERO
     );
   });
 });

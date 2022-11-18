@@ -18,19 +18,19 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
-.PHONY: dry-test
-dry-test:
+.PHONY: local-test
+local-test:
 	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -75,9 +75,9 @@ submodules:
 test-pool-upgrade:
 	make TEST_TARGET=pool-upgrade.spec.ts test
 
-.PHONY: test-pool-edge
-test-pool-edge:
-	make TEST_TARGET=pool-edge.spec.ts test
+.PHONY: test-pool-initialization
+test-pool-initialization:
+	make TEST_TARGET=_pool_initialization.spec.ts test
 
 .PHONY: test-ntoken
 test-ntoken:
@@ -145,7 +145,7 @@ test-paraspace-oracle-aggregator:
 
 .PHONY: test-nft-floor-price-oracle-without-deploy
 test-nft-floor-price-oracle-without-deploy:
-	make TEST_TARGET=_oracle_nft_floor_price.spec.ts dry-test
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts local-test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
@@ -198,6 +198,10 @@ test-variable-debt-token:
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
 	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
+
+.PHONY: test-mint-to-treasury
+test-mint-to-treasury:
+	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test	
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:

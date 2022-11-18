@@ -24,6 +24,7 @@ struct PriceInformation {
     /// @dev last reported floor price
     uint256 twap;
     uint256 updatedAt;
+    uint256 updatedTimeStamp;
 }
 
 struct FeederRegistrar {
@@ -265,6 +266,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         PriceInformation storage priceMapEntry = priceMap[token];
         priceMapEntry.twap = twap;
         priceMapEntry.updatedAt = block.number;
+        priceMapEntry.updatedTimeStamp = block.timestamp;
         emit AssetDataSet(token, priceMapEntry.twap, priceMapEntry.updatedAt);
     }
 
@@ -344,14 +346,14 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     }
 
     /// @param token The nft contract
-    /// @return blocknumber The blocknumber of the last update for an asset
+    /// @return timestamp The timestamp of the last update for an asset
     function getLastUpdateTime(address token)
         external
         view
         override
-        returns (uint256 blocknumber)
+        returns (uint256 timestamp)
     {
-        return priceMap[token].updatedAt;
+        return priceMap[token].updatedTimeStamp;
     }
 
     function _quickSort(
