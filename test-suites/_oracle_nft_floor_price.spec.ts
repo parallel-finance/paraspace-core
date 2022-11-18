@@ -191,8 +191,8 @@ describe("NFT Oracle Tests", () => {
 
   it("TC-oracle-nft-floor-price-09.1:Feeder can be removed by admin and remove feeder not exist will be reverted", async () => {
     const {nftFloorOracle, users} = testEnv;
-    let feederSizeBefore = await nftFloorOracle.getFeederSize();
-    let feeder1 = await nftFloorOracle.feeders(1);
+    const feederSizeBefore = await nftFloorOracle.getFeederSize();
+    const feeder1 = await nftFloorOracle.feeders(1);
     expect(feeder1).to.equal(users[1].address);
     // admin can remove exist feeder
     await nftFloorOracle.removeFeeder(users[1].address);
@@ -200,12 +200,12 @@ describe("NFT Oracle Tests", () => {
     await expect(
       nftFloorOracle.removeFeeder(users[1].address)
     ).to.be.revertedWith("NFTOracle: feeder not existed");
-    let feederSizeAfter = await nftFloorOracle.getFeederSize();
+    const feederSizeAfter = await nftFloorOracle.getFeederSize();
     expect(feederSizeAfter.toNumber()).to.equal(
       feederSizeBefore.toNumber() - 1
     );
     //assert the previous last feeder is swapped into
-    let feeder6 = await nftFloorOracle.feeders(1);
+    const feeder6 = await nftFloorOracle.feeders(1);
     expect(feeder6).to.equal(users[6].address);
   });
 
