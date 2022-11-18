@@ -17,6 +17,8 @@ import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 abstract contract NTokenApeStaking is NToken {
     ApeCoinStaking immutable _apeCoinStaking;
 
+    mapping(address => uint256) userStakeBalance;
+
     uint256 constant BAYC_POOL_ID = 1;
     uint256 constant MAYC_POOL_ID = 2;
     uint256 constant BAKC_POOL_ID = 3;
@@ -95,5 +97,9 @@ abstract contract NTokenApeStaking is NToken {
     function POOL_ID() internal virtual returns (uint256) {
         // should be overridden
         return 0;
+    }
+
+    function getUserStakedBalance(address user) external view returns (uint256) {
+        return userStakeBalance[user];
     }
 }

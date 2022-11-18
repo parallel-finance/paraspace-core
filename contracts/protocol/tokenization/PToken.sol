@@ -291,7 +291,7 @@ contract PToken is
         address from,
         address to,
         uint128 amount
-    ) internal override {
+    ) internal override virtual {
         _transfer(from, to, amount, true);
     }
 
