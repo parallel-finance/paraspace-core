@@ -14,11 +14,11 @@
     "size": "hardhat size-contracts",
     "build": "hardhat compile",
     "typechain": "hardhat typechain",
-    "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts' && eslint . --ext .ts",
-    "coverage": "hardhat coverage --testfiles 'test-suites/*.ts'",
-    "format": "prettier --write 'contracts/**/*.sol' 'deploy/**/*.ts' 'test-suites/**/*.ts'",
+    "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'deploy/**/*.ts' 'test/**/*.ts' && eslint . --ext .ts",
+    "coverage": "hardhat coverage --testfiles 'test/*.ts'",
+    "format": "prettier --write 'contracts/**/*.sol' 'deploy/**/*.ts' 'test/**/*.ts'",
     "doc": "hardhat docgen",
-    "test": "hardhat test ./test-suites/*.ts",
+    "test": "hardhat test ./test/*.ts",
     "clean": "hardhat clean"
   },
   "devDependencies": {
