@@ -75,9 +75,9 @@ submodules:
 test-pool-upgrade:
 	make TEST_TARGET=pool-upgrade.spec.ts test
 
-.PHONY: test-pool-edge
-test-pool-edge:
-	make TEST_TARGET=pool-edge.spec.ts test
+.PHONY: test-pool-initialization
+test-pool-initialization:
+	make TEST_TARGET=_pool_initialization.spec.ts test
 
 .PHONY: test-ntoken
 test-ntoken:
@@ -198,6 +198,10 @@ test-variable-debt-token:
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
 	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
+
+.PHONY: test-mint-to-treasury
+test-mint-to-treasury:
+	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test	
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
