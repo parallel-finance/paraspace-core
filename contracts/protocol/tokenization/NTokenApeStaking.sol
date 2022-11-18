@@ -9,13 +9,15 @@ import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
+import "../../interfaces/INTokenApeStaking.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
 
 /**
  * @title ApeCoinStaking NToken
  *
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
-abstract contract NTokenApeStaking is NToken {
+abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     ApeCoinStaking immutable _apeCoinStaking;
 
     bytes32 constant APE_STAKING_DATA_STORAGE_POSITION =
@@ -42,6 +44,7 @@ abstract contract NTokenApeStaking is NToken {
         IERC20 _apeCoin = _apeCoinStaking.apeCoin();
         _apeCoin.approve(address(_apeCoinStaking), type(uint256).max);
         _apeCoin.approve(address(POOL), type(uint256).max);
+        getBAKC().setApprovalForAll(address(POOL), true);
 
         super.initialize(
             initializingPool,
@@ -55,6 +58,14 @@ abstract contract NTokenApeStaking is NToken {
         initializeStakingData();
     }
 
+    function getBAKC() public view returns (IERC721) {
+        return _apeCoinStaking.nftContracts(ApeStakingLogic.BAKC_POOL_ID);
+    }
+
+    function getApeStaking() external view returns (ApeCoinStaking) {
+        return _apeCoinStaking;
+    }
+
     /**
      * @notice Overrides the transferOnLiquidation from NToken to withdraw all staked and pending rewards before transfer the asset on liquidation
      */
@@ -65,12 +76,13 @@ abstract contract NTokenApeStaking is NToken {
     ) external override onlyPool nonReentrant {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
-        ApeStakingLogic.executeAutoWithdraw(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            POOL_ID(),
-            tokenIds,
-            from
+        require(
+            !ApeStakingLogic.isApeStakingPositionExisted(
+                POOL_ID(),
+                _apeCoinStaking,
+                tokenIds
+            ),
+            Errors.APE_STAKING_POSITION_EXISTED
         );
 
         _transfer(from, to, tokenId, false);
@@ -84,18 +96,39 @@ abstract contract NTokenApeStaking is NToken {
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
-        ApeStakingLogic.executeAutoWithdraw(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            POOL_ID(),
-            tokenIds,
-            from
+        require(
+            !ApeStakingLogic.isApeStakingPositionExisted(
+                POOL_ID(),
+                _apeCoinStaking,
+                tokenIds
+            ),
+            Errors.APE_STAKING_POSITION_EXISTED
         );
 
         return _burn(from, receiverOfUnderlying, tokenIds);
     }
 
-    function POOL_ID() internal virtual returns (uint256) {
+    function startAuction(uint256 tokenId)
+        public
+        virtual
+        override
+        onlyPool
+        nonReentrant
+    {
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        require(
+            !ApeStakingLogic.isApeStakingPositionExisted(
+                POOL_ID(),
+                _apeCoinStaking,
+                tokenIds
+            ),
+            Errors.APE_STAKING_POSITION_EXISTED
+        );
+        super.startAuction(tokenId);
+    }
+
+    function POOL_ID() internal pure virtual returns (uint256) {
         // should be overridden
         return 0;
     }
@@ -104,7 +137,7 @@ abstract contract NTokenApeStaking is NToken {
         ApeStakingLogic.APEStakingParameter
             storage dataStorage = apeStakingDataStorage();
         ApeStakingLogic.executeSetUnstakeApeHFLimit(dataStorage, 1.1e18);
-        ApeStakingLogic.executeSetUnstakeApeIncentive(dataStorage, 100);
+        ApeStakingLogic.executeSetUnstakeApeIncentive(dataStorage, 30);
     }
 
     function setUnstakeApeHFLimit(uint256 hfLimit) external onlyPoolAdmin {
@@ -132,12 +165,17 @@ abstract contract NTokenApeStaking is NToken {
         }
     }
 
-    function unstakePositionAndRepay(uint256 tokenId) external nonReentrant {
+    function unstakePositionAndRepay(uint256 tokenId, address unstaker)
+        external
+        onlyPool
+        nonReentrant
+    {
         ApeStakingLogic.executeUnstakePositionAndRepay(
             _ERC721Data.owners,
             apeStakingDataStorage(),
             POOL,
             _apeCoinStaking,
+            unstaker,
             POOL_ID(),
             tokenId
         );

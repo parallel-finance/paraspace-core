@@ -24,7 +24,7 @@ import {ReserveLogic} from "./ReserveLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IToken} from "../../../interfaces/IToken.sol";
-import {XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 
@@ -403,6 +403,12 @@ library ValidationLogic {
         uint256 userBalance
     ) internal pure {
         require(userBalance != 0, Errors.UNDERLYING_BALANCE_ZERO);
+
+        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
+        );
 
         (
             bool isActive,

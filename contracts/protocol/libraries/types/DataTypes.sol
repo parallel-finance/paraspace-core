@@ -9,6 +9,8 @@ library DataTypes {
         ERC721
     }
 
+    address public constant SApeAddress = address(0x1);
+
     struct ReserveData {
         //stores the reserve configuration
         ReserveConfigurationMap configuration;

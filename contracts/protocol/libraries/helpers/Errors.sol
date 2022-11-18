@@ -119,4 +119,6 @@ library Errors {
     string public constant ONLY_UNIV3_ALLOWED = "124"; //only UniswapV3 allowed.
     string public constant GLOBAL_DEBT_IS_ZERO = "125"; //liquidation is not allowed when global debt is zero.
     string public constant ORACLE_PRICE_EXPIRED = "126"; //oracle price expired.
+    string public constant APE_STAKING_POSITION_EXISTED = "127"; //ape staking position is existed.
+    string public constant SAPE_NOT_ALLOWED = "128"; //operation is not allow for sApe.
 }

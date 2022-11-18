@@ -25,13 +25,10 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
         external
+        onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeDepositBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nfts
-        );
+        ApeStakingLogic.executeDepositBAYC(_apeCoinStaking, _nfts);
     }
 
     /**
@@ -41,14 +38,10 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function claimApeCoin(uint256[] calldata _nfts, address _recipient)
         external
+        onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeClaimBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nfts,
-            _recipient
-        );
+        ApeStakingLogic.executeClaimBAYC(_apeCoinStaking, _nfts, _recipient);
     }
 
     /**
@@ -59,13 +52,8 @@ contract NTokenBAYC is NTokenApeStaking {
     function withdrawApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts,
         address _recipient
-    ) external nonReentrant {
-        ApeStakingLogic.executeWithdrawBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nfts,
-            _recipient
-        );
+    ) external onlyPool nonReentrant {
+        ApeStakingLogic.executeWithdrawBAYC(_apeCoinStaking, _nfts, _recipient);
     }
 
     /**
@@ -77,13 +65,10 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function depositBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
         external
+        onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeDepositBAKCWithBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nftPairs
-        );
+        ApeStakingLogic.executeDepositBAKCWithBAYC(_apeCoinStaking, _nftPairs);
     }
 
     /**
@@ -94,9 +79,8 @@ contract NTokenBAYC is NTokenApeStaking {
     function claimBAKC(
         ApeCoinStaking.PairNft[] calldata _nftPairs,
         address _recipient
-    ) external nonReentrant {
+    ) external onlyPool nonReentrant {
         ApeStakingLogic.executeClaimBAKCWithBAYC(
-            _ERC721Data.owners,
             _apeCoinStaking,
             _nftPairs,
             _recipient
@@ -110,19 +94,16 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function withdrawBAKC(
         ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
-        address _apeRecipient,
-        address _bakcRecipient
-    ) external nonReentrant {
+        address _apeRecipient
+    ) external onlyPool nonReentrant {
         ApeStakingLogic.executeWithdrawBAKCWithBAYC(
-            _ERC721Data.owners,
             _apeCoinStaking,
             _nftPairs,
-            _apeRecipient,
-            _bakcRecipient
+            _apeRecipient
         );
     }
 
-    function POOL_ID() internal virtual override returns (uint256) {
+    function POOL_ID() internal pure virtual override returns (uint256) {
         return ApeStakingLogic.BAYC_POOL_ID;
     }
 
