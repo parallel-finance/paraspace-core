@@ -45,9 +45,9 @@ struct MintableERC721Data {
 }
 
 /**
- * @title ApeStakingLogic library
+ * @title MintableERC721 library
  *
- * @notice Implements the base logic for ApeStaking
+ * @notice Implements the base logic for MintableERC721
  */
 library MintableERC721Logic {
     /**
@@ -106,8 +106,11 @@ library MintableERC721Logic {
         uint64 newRecipientBalance = oldRecipientBalance + 1;
         _checkBalanceLimit(erc721Data, ATOMIC_PRICING, newRecipientBalance);
         erc721Data.userState[to].balance = newRecipientBalance;
-
         erc721Data.owners[tokenId] = to;
+
+        if (from != to && erc721Data.auctions[tokenId].startTime > 0) {
+            delete erc721Data.auctions[tokenId];
+        }
 
         IRewardController rewardControllerLocal = erc721Data.rewardController;
         if (address(rewardControllerLocal) != address(0)) {
@@ -301,13 +304,15 @@ library MintableERC721Logic {
             balanceToBurn++;
             delete erc721Data.owners[tokenId];
 
+            if (erc721Data.auctions[tokenId].startTime > 0) {
+                delete erc721Data.auctions[tokenId];
+            }
+
             if (erc721Data.isUsedAsCollateral[tokenId]) {
                 delete erc721Data.isUsedAsCollateral[tokenId];
                 burntCollateralizedTokens++;
             }
             emit Transfer(owner, address(0), tokenId);
-
-            // _afterTokenTransfer(owner, address(0), tokenId);
         }
 
         erc721Data.userState[user].balance -= balanceToBurn;
