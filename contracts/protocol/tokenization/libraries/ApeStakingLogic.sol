@@ -273,12 +273,6 @@ library ApeStakingLogic {
                     } else {
                         _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
                     }
-                    IERC721(_apeCoinStaking.nftContracts(BAKC_POOL_ID))
-                        .transferFrom(
-                            address(this),
-                            positionOwner,
-                            bakcTokenId
-                        );
                 }
             }
         }
