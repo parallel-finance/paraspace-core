@@ -57,8 +57,9 @@ describe("APE coin staking", () => {
   it("TC-ntoken-ape-staking-01 User 1 stakes some apecoin with their BAYC", async () => {
     const {
       users: [user1],
-      nBAYC,
+      bayc,
       ape,
+      pool,
     } = testEnv;
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
@@ -70,23 +71,26 @@ describe("APE coin staking", () => {
     );
 
     await waitForTx(
-      await ape.connect(user1.signer).approve(nBAYC.address, MAX_UINT_AMOUNT)
+      await ape.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
     expect(
-      nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}])
+      await pool
+        .connect(user1.signer)
+        .depositApeCoin(bayc.address, [{tokenId: 0, amount: amount}])
     );
   });
 
   it("TC-ntoken-ape-staking-02 User 1 stakes some apecoin with their BAKC paird with BAYC", async () => {
     const {
       users: [user1],
-      nBAYC,
+      bayc,
       ape,
+      pool,
     } = testEnv;
 
     await waitForTx(
-      await bakc.connect(user1.signer).setApprovalForAll(nBAYC.address, true)
+      await bakc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
@@ -98,7 +102,7 @@ describe("APE coin staking", () => {
     );
 
     expect(
-      nBAYC.connect(user1.signer).depositBAKC([
+      await pool.connect(user1.signer).depositBAKC(bayc.address, [
         {
           mainTokenId: "0",
           bakcTokenId: "0",
@@ -106,14 +110,17 @@ describe("APE coin staking", () => {
         },
       ])
     );
+    expect(await bakc.balanceOf(user1.address)).equal(2);
   });
 
   it("TC-ntoken-ape-staking-03 User 1 claims the full staked rewards (BAKC)", async () => {
     const {
       users: [user1],
-      nBAYC,
+      bayc,
       ape,
       apeCoinStaking,
+      pool,
+      nBAYC,
     } = testEnv;
 
     // Advance time and blocks
@@ -134,15 +141,12 @@ describe("APE coin staking", () => {
 
     const userBalance = await ape.balanceOf(user1.address);
 
-    await nBAYC.connect(user1.signer).claimBAKC(
-      [
-        {
-          mainTokenId: "0",
-          bakcTokenId: "0",
-        },
-      ],
-      user1.address
-    );
+    await pool.connect(user1.signer).claimBAKC(bayc.address, [
+      {
+        mainTokenId: "0",
+        bakcTokenId: "0",
+      },
+    ]);
 
     expect(await ape.balanceOf(user1.address)).to.be.eq(
       userBalance.add(pendingRewards)
@@ -152,8 +156,9 @@ describe("APE coin staking", () => {
   it("TC-ntoken-ape-staking-04 User 1 withdraws portion of BAKC staked amount", async () => {
     const {
       users: [user1],
-      nBAYC,
       ape,
+      pool,
+      bayc,
     } = testEnv;
     const amount = await (
       await convertToCurrencyDecimals(ape.address, "20")
@@ -162,27 +167,23 @@ describe("APE coin staking", () => {
     const userBalance = await ape.balanceOf(user1.address);
 
     await waitForTx(
-      await nBAYC.connect(user1.signer).withdrawBAKC(
-        [
-          {
-            mainTokenId: "0",
-            bakcTokenId: "0",
-            amount: amount,
-          },
-        ],
-        user1.address,
-        user1.address
-      )
+      await pool.connect(user1.signer).withdrawBAKC(bayc.address, [
+        {
+          mainTokenId: "0",
+          bakcTokenId: "0",
+          amount: amount,
+        },
+      ])
     );
 
     expect(await ape.balanceOf(user1.address)).to.be.eq(
       userBalance.add(amount)
     );
 
-    expect(await bakc.ownerOf("0")).to.be.eq(nBAYC.address);
+    expect(await bakc.balanceOf(user1.address)).to.be.eq(2);
 
     expect(
-      nBAYC.connect(user1.signer).depositBAKC([
+      pool.connect(user1.signer).depositBAKC(bayc.address, [
         {
           mainTokenId: "0",
           bakcTokenId: "0",
@@ -195,25 +196,22 @@ describe("APE coin staking", () => {
   it("TC-ntoken-ape-staking-04 User 1 withdraws BAKC staked amount", async () => {
     const {
       users: [user1],
-      nBAYC,
       ape,
+      pool,
+      bayc,
     } = testEnv;
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
     const userBalance = await ape.balanceOf(user1.address);
 
     await waitForTx(
-      await nBAYC.connect(user1.signer).withdrawBAKC(
-        [
-          {
-            mainTokenId: "0",
-            bakcTokenId: "0",
-            amount: amount,
-          },
-        ],
-        user1.address,
-        user1.address
-      )
+      await pool.connect(user1.signer).withdrawBAKC(bayc.address, [
+        {
+          mainTokenId: "0",
+          bakcTokenId: "0",
+          amount: amount,
+        },
+      ])
     );
 
     expect(await ape.balanceOf(user1.address)).to.be.eq(
@@ -221,7 +219,7 @@ describe("APE coin staking", () => {
     );
     expect(await bakc.ownerOf("0")).to.be.eq(user1.address);
     expect(
-      nBAYC.connect(user1.signer).depositBAKC([
+      pool.connect(user1.signer).depositBAKC(bayc.address, [
         {
           mainTokenId: "0",
           bakcTokenId: "0",
@@ -237,6 +235,8 @@ describe("APE coin staking", () => {
       nBAYC,
       ape,
       apeCoinStaking,
+      pool,
+      bayc,
     } = testEnv;
 
     // Advance time and blocks
@@ -256,7 +256,7 @@ describe("APE coin staking", () => {
     );
     const userBalance = await ape.balanceOf(user1.address);
 
-    await nBAYC.connect(user1.signer).claimApeCoin(["0"], user1.address);
+    await pool.connect(user1.signer).claimApeCoin(bayc.address, ["0"]);
 
     expect(await ape.balanceOf(user1.address)).to.be.eq(
       userBalance.add(pendingRewards)
@@ -269,6 +269,8 @@ describe("APE coin staking", () => {
       nBAYC,
       ape,
       apeCoinStaking,
+      pool,
+      bayc,
     } = testEnv;
 
     // Advance time and blocks
@@ -291,9 +293,9 @@ describe("APE coin staking", () => {
     );
 
     expect(
-      await nBAYC
+      await pool
         .connect(user1.signer)
-        .withdrawApeCoin([{tokenId: "0", amount: amount}], user1.address)
+        .withdrawApeCoin(bayc.address, [{tokenId: "0", amount: amount}])
     );
 
     const userBalanceAfter = await ape.balanceOf(user1.address);
@@ -307,13 +309,16 @@ describe("APE coin staking", () => {
       users: [user1, liquidator],
       pool,
       bayc,
-      nBAYC,
       weth,
       ape,
     } = testEnv;
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
-    nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .depositApeCoin(bayc.address, [{tokenId: 0, amount: amount}])
+    );
 
     await supplyAndValidate(weth, "91", liquidator, true, "200000");
 
@@ -351,14 +356,17 @@ describe("APE coin staking", () => {
       users: [user1, liquidator],
       pool,
       bayc,
-      nBAYC,
       weth,
       ape,
     } = testEnv;
     const amount = await convertToCurrencyDecimals(ape.address, "20");
     await switchCollateralAndValidate(user1, bayc, true, 1);
 
-    nBAYC.connect(user1.signer).depositApeCoin([{tokenId: 1, amount: amount}]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .depositApeCoin(bayc.address, [{tokenId: 1, amount: amount}])
+    );
 
     await changePriceAndValidate(bayc, "1111");
 
@@ -393,8 +401,8 @@ describe("APE coin staking", () => {
     const {
       users: [user1],
       mayc,
-      nMAYC,
       ape,
+      pool,
     } = testEnv;
 
     await switchCollateralAndValidate(user1, mayc, false, 0);
@@ -402,11 +410,13 @@ describe("APE coin staking", () => {
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
     await waitForTx(
-      await ape.connect(user1.signer).approve(nMAYC.address, MAX_UINT_AMOUNT)
+      await ape.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
     expect(
-      nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}])
+      await pool
+        .connect(user1.signer)
+        .depositApeCoin(mayc.address, [{tokenId: 0, amount: amount}])
     );
   });
 
@@ -416,6 +426,8 @@ describe("APE coin staking", () => {
       nMAYC,
       ape,
       apeCoinStaking,
+      pool,
+      mayc,
     } = testEnv;
 
     // Advance time and blocks
@@ -436,7 +448,7 @@ describe("APE coin staking", () => {
         ["mint(address,uint256)"](apeCoinStaking.address, pendingRewards.mul(2))
     );
 
-    await nMAYC.connect(user1.signer).claimApeCoin(["0"], user1.address);
+    await pool.connect(user1.signer).claimApeCoin(mayc.address, ["0"]);
 
     const userBalance = await ape.balanceOf(user1.address);
     expect(userBalance).to.be.eq(userBalanceBefore.add(pendingRewards));
@@ -448,6 +460,8 @@ describe("APE coin staking", () => {
       nMAYC,
       ape,
       apeCoinStaking,
+      pool,
+      mayc,
     } = testEnv;
 
     // Advance time and blocks
@@ -470,9 +484,9 @@ describe("APE coin staking", () => {
     );
 
     expect(
-      await nMAYC
+      await pool
         .connect(user1.signer)
-        .withdrawApeCoin([{tokenId: "0", amount: amount}], user1.address)
+        .withdrawApeCoin(mayc.address, [{tokenId: "0", amount: amount}])
     );
 
     const userBalanceAfter = await ape.balanceOf(user1.address);
@@ -486,14 +500,17 @@ describe("APE coin staking", () => {
       users: [user1, liquidator],
       pool,
       mayc,
-      nMAYC,
       weth,
       ape,
     } = testEnv;
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
-    nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .depositApeCoin(mayc.address, [{tokenId: 0, amount: amount}])
+    );
 
     await switchCollateralAndValidate(user1, mayc, true, 0);
 
@@ -538,7 +555,11 @@ describe("APE coin staking", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "20");
 
-    nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 1, amount: amount}]);
+    await waitForTx(
+      await nMAYC
+        .connect(user1.signer)
+        .depositApeCoin([{tokenId: 1, amount: amount}])
+    );
 
     await switchCollateralAndValidate(user1, mayc, true, 1);
 

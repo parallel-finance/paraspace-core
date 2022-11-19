@@ -41,7 +41,9 @@ library PoolLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.InitReserveParams memory params
     ) external returns (bool) {
-        require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
+        if (params.asset != DataTypes.SApeAddress) {
+            require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
+        }
         reservesData[params.asset].init(
             params.xTokenAddress,
             params.variableDebtAddress,

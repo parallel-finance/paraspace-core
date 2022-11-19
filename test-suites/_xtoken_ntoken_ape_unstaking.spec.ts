@@ -24,6 +24,7 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
+import {ProtocolErrors} from "../deploy/helpers/types";
 
 describe("APE Coin Unstaking", () => {
   let snap: string;
@@ -40,6 +41,7 @@ describe("APE Coin Unstaking", () => {
       users: [user1, depositor],
       protocolDataProvider,
       nMAYC,
+      pool,
     } = testEnv;
     const {
       xTokenAddress: pApeCoinAddress,
@@ -62,10 +64,10 @@ describe("APE Coin Unstaking", () => {
     await waitForTx(await bakc["mint(uint256,address)"]("1", user1.address));
 
     await waitForTx(
-      await ape.connect(user1.signer).approve(nMAYC.address, MAX_UINT_AMOUNT)
+      await ape.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
-      await bakc.connect(user1.signer).setApprovalForAll(nMAYC.address, true)
+      await bakc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
   });
 
@@ -81,7 +83,7 @@ describe("APE Coin Unstaking", () => {
       users: [user1, unstaker],
       ape,
       mayc,
-      nMAYC,
+      pool,
     } = testEnv;
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -90,23 +92,27 @@ describe("APE Coin Unstaking", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-      nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}])
+      await pool
+        .connect(user1.signer)
+        .depositApeCoin(mayc.address, [{tokenId: 0, amount: amount}])
     );
+    await expect(
+      pool.connect(unstaker.signer).unstakeApePositionAndRepay(mayc.address, 0)
+    ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
-    expect(
-      nMAYC.connect(unstaker.signer).unstakePositionAndRepay(0)
-    ).to.be.revertedWith("HF Error");
-
-    await changePriceAndValidate(ape, "0.00231");
+    await changePriceAndValidate(ape, "0.01");
 
     let unstakerApeBalance = await ape.balanceOf(unstaker.address);
     expect(unstakerApeBalance).equal(0);
-    await waitForTx(
-      await nMAYC.connect(unstaker.signer).unstakePositionAndRepay(0)
-    );
-    unstakerApeBalance = await ape.balanceOf(unstaker.address);
-    expect(unstakerApeBalance).equal(amount.div(100));
 
+    await waitForTx(
+      await pool
+        .connect(unstaker.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
+    );
+
+    unstakerApeBalance = await ape.balanceOf(unstaker.address);
+    expect(unstakerApeBalance).equal(amount.mul(3).div(1000));
     const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
     almostEqual(apeDebt, unstakerApeBalance);
   });
@@ -117,6 +123,7 @@ describe("APE Coin Unstaking", () => {
       ape,
       mayc,
       nMAYC,
+      pool,
     } = testEnv;
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -132,22 +139,26 @@ describe("APE Coin Unstaking", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "20000");
     expect(
-      nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}])
+      await pool
+        .connect(user1.signer)
+        .depositApeCoin(mayc.address, [{tokenId: 0, amount: amount}])
     );
 
-    expect(
-      nMAYC.connect(unstaker.signer).unstakePositionAndRepay(0)
-    ).to.be.revertedWith("HF Error");
+    await expect(
+      pool.connect(unstaker.signer).unstakeApePositionAndRepay(mayc.address, 0)
+    ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
 
-    await changePriceAndValidate(ape, "0.00231");
+    await changePriceAndValidate(ape, "0.01");
 
     let unstakerApeBalance = await ape.balanceOf(unstaker.address);
     expect(unstakerApeBalance).equal(0);
     await waitForTx(
-      await nMAYC.connect(unstaker.signer).unstakePositionAndRepay(0)
+      await pool
+        .connect(unstaker.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
     );
     unstakerApeBalance = await ape.balanceOf(unstaker.address);
-    expect(unstakerApeBalance).equal(amount.div(100));
+    expect(unstakerApeBalance).equal(amount.mul(3).div(1000));
 
     const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
     almostEqual(apeDebt, 0);
@@ -155,7 +166,7 @@ describe("APE Coin Unstaking", () => {
     const apeDeposit = await pApeCoin.balanceOf(user1.address);
     almostEqual(
       apeDeposit,
-      await convertToCurrencyDecimals(ape.address, "4800")
+      await convertToCurrencyDecimals(ape.address, "4940")
     );
   });
 
@@ -165,6 +176,7 @@ describe("APE Coin Unstaking", () => {
       ape,
       mayc,
       nMAYC,
+      pool,
     } = testEnv;
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -180,27 +192,35 @@ describe("APE Coin Unstaking", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "10000");
     expect(
-      nMAYC.connect(user1.signer).depositApeCoin([{tokenId: 0, amount: amount}])
-    );
-    expect(
-      nMAYC
+      await pool
         .connect(user1.signer)
-        .depositBAKC([{mainTokenId: 0, bakcTokenId: 0, amount: amount}])
+        .depositApeCoin(mayc.address, [{tokenId: 0, amount: amount}])
     );
-
+    expect(await bakc.balanceOf(user1.address)).equal(1);
     expect(
-      nMAYC.connect(unstaker.signer).unstakePositionAndRepay(0)
-    ).to.be.revertedWith("HF Error");
+      await pool
+        .connect(user1.signer)
+        .depositBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount},
+        ])
+    );
+    expect(await bakc.balanceOf(user1.address)).equal(1);
 
-    await changePriceAndValidate(ape, "0.00231");
+    await expect(
+      pool.connect(unstaker.signer).unstakeApePositionAndRepay(mayc.address, 0)
+    ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
+
+    await changePriceAndValidate(ape, "0.01");
 
     let unstakerApeBalance = await ape.balanceOf(unstaker.address);
     expect(unstakerApeBalance).equal(0);
     await waitForTx(
-      await nMAYC.connect(unstaker.signer).unstakePositionAndRepay(0)
+      await pool
+        .connect(unstaker.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
     );
     unstakerApeBalance = await ape.balanceOf(unstaker.address);
-    expect(unstakerApeBalance).equal(amount.mul(2).div(100));
+    expect(unstakerApeBalance).equal(amount.mul(6).div(1000));
 
     const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
     almostEqual(apeDebt, 0);
@@ -208,7 +228,7 @@ describe("APE Coin Unstaking", () => {
     const apeDeposit = await pApeCoin.balanceOf(user1.address);
     almostEqual(
       apeDeposit,
-      await convertToCurrencyDecimals(ape.address, "4800")
+      await convertToCurrencyDecimals(ape.address, "4940")
     );
   });
 });

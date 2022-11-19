@@ -315,7 +315,6 @@ contract PoolApeStaking is
 
     function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
         external
-        nonReentrant
     {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
@@ -362,12 +361,6 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage erc20Reserve = ps._reserves[
             DataTypes.SApeAddress
         ];
-        DataTypes.ReserveCache memory erc20ReserveCache = erc20Reserve.cache();
-        ValidationLogic.validateSupply(
-            erc20ReserveCache,
-            amount,
-            DataTypes.AssetType.ERC20
-        );
         bool isFirstSupply = IPToken(erc20Reserve.xTokenAddress).mint(
             msg.sender,
             msg.sender,
@@ -397,11 +390,6 @@ contract PoolApeStaking is
         DataTypes.ReserveCache memory erc20ReserveCache = erc20Reserve.cache();
         uint256 userBalance = IPToken(erc20ReserveCache.xTokenAddress)
             .balanceOf(msg.sender);
-        ValidationLogic.validateWithdraw(
-            erc20ReserveCache,
-            amountToWithdraw,
-            userBalance
-        );
         IPToken(erc20Reserve.xTokenAddress).burn(
             msg.sender,
             msg.sender,
@@ -412,26 +400,24 @@ contract PoolApeStaking is
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
             msg.sender
         ];
-        if (userConfig.isUsingAsCollateral(erc20Reserve.id)) {
-            if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtvERC20(
-                    ps._reserves,
-                    ps._reservesList,
-                    userConfig,
-                    DataTypes.SApeAddress,
-                    msg.sender,
-                    ps._reservesCount,
-                    ADDRESSES_PROVIDER.getPriceOracle()
-                );
-            }
+        if (userConfig.isBorrowingAny()) {
+            ValidationLogic.validateHFAndLtvERC20(
+                ps._reserves,
+                ps._reservesList,
+                userConfig,
+                DataTypes.SApeAddress,
+                msg.sender,
+                ps._reservesCount,
+                ADDRESSES_PROVIDER.getPriceOracle()
+            );
+        }
 
-            if (amountToWithdraw == userBalance) {
-                userConfig.setUsingAsCollateral(erc20Reserve.id, false);
-                emit ReserveUsedAsCollateralDisabled(
-                    DataTypes.SApeAddress,
-                    msg.sender
-                );
-            }
+        if (amountToWithdraw == userBalance) {
+            userConfig.setUsingAsCollateral(erc20Reserve.id, false);
+            emit ReserveUsedAsCollateralDisabled(
+                DataTypes.SApeAddress,
+                msg.sender
+            );
         }
     }
 }
