@@ -4,3 +4,4 @@ coverage/
 contracts/dependencies
 contracts/deployments
 contracts/mocks
+contracts/test
