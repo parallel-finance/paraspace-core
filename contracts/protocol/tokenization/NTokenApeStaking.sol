@@ -118,15 +118,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     function initializeStakingData() internal {
         ApeStakingLogic.APEStakingParameter
             storage dataStorage = apeStakingDataStorage();
-        ApeStakingLogic.executeSetUnstakeApeHFLimit(dataStorage, 1.1e18);
         ApeStakingLogic.executeSetUnstakeApeIncentive(dataStorage, 30);
-    }
-
-    function setUnstakeApeHFLimit(uint256 hfLimit) external onlyPoolAdmin {
-        ApeStakingLogic.executeSetUnstakeApeHFLimit(
-            apeStakingDataStorage(),
-            hfLimit
-        );
     }
 
     function setUnstakeApeIncentive(uint256 incentive) external onlyPoolAdmin {

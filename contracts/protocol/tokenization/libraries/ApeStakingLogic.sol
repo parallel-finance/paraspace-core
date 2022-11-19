@@ -22,12 +22,9 @@ library ApeStakingLogic {
     uint256 constant MAYC_POOL_ID = 2;
     uint256 constant BAKC_POOL_ID = 3;
 
-    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
     struct APEStakingParameter {
-        uint256 unstakeHFLimit;
         uint256 unstakeIncentive;
     }
-    event UnstakeApeHFLimitUpdated(uint256 oldValue, uint256 newValue);
     event UnstakeApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
@@ -205,21 +202,6 @@ library ApeStakingLogic {
         _apeCoinStaking.apeCoin().safeTransfer(_apeRecipient, balance);
     }
 
-    function executeSetUnstakeApeHFLimit(
-        APEStakingParameter storage stakingParameter,
-        uint256 hfLimit
-    ) external {
-        require(hfLimit > HEALTH_FACTOR_LIQUIDATION_THRESHOLD, "Value Too Low");
-        require(
-            hfLimit < HEALTH_FACTOR_LIQUIDATION_THRESHOLD * 2,
-            "Value Too High"
-        );
-        uint256 oldValue = stakingParameter.unstakeHFLimit;
-        require(oldValue != hfLimit, "Same Value");
-        stakingParameter.unstakeHFLimit = hfLimit;
-        emit UnstakeApeHFLimitUpdated(oldValue, hfLimit);
-    }
-
     function executeSetUnstakeApeIncentive(
         APEStakingParameter storage stakingParameter,
         uint256 incentive
@@ -334,33 +316,5 @@ library ApeStakingLogic {
         if (apeBalance > 0) {
             POOL.supply(address(_apeCoin), apeBalance, positionOwner, 0);
         }
-    }
-
-    function isApeStakingPositionExisted(
-        uint256 poolId,
-        ApeCoinStaking _apeCoinStaking,
-        uint256[] memory tokenIds
-    ) external view returns (bool) {
-        uint256 tokenIdLength = tokenIds.length;
-        for (uint256 index = 0; index < tokenIdLength; index++) {
-            (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
-                poolId,
-                tokenIds[index]
-            );
-
-            if (stakedAmount > 0) {
-                return true;
-            }
-
-            (, bool isPaired) = _apeCoinStaking.mainToBakc(
-                poolId,
-                tokenIds[index]
-            );
-            if (isPaired) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
