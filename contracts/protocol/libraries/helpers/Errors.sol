@@ -121,4 +121,6 @@ library Errors {
     string public constant ORACLE_PRICE_EXPIRED = "126"; //oracle price expired.
     string public constant APE_STAKING_POSITION_EXISTED = "127"; //ape staking position is existed.
     string public constant SAPE_NOT_ALLOWED = "128"; //operation is not allow for sApe.
+    string public constant APE_STAKING_AMOUNT_CHANGE = "129"; //ape staking amount should not change when flash claim.
+    string public constant APE_STAKING_AMOUNT_NON_ZERO = "130"; //ape staking amount should be zero when supply bayc/mayc.
 }

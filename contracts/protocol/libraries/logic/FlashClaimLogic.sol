@@ -7,6 +7,8 @@ import {INToken} from "../../../interfaces/INToken.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
+import "../../../interfaces/INTokenApeStaking.sol";
+import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 
 library FlashClaimLogic {
     // See `IPool` for descriptions
@@ -23,6 +25,22 @@ library FlashClaimLogic {
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.nftAsset];
         ValidationLogic.validateFlashClaim(reserve, params);
+
+        address xTokenAddress = reserve.xTokenAddress;
+        bool needCheckApeStaking = false;
+        uint256 beforeStakingAmount = 0;
+        XTokenType tokenType = INToken(xTokenAddress).getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenBAYC ||
+            tokenType == XTokenType.NTokenMAYC
+        ) {
+            needCheckApeStaking = true;
+        }
+
+        if (needCheckApeStaking) {
+            beforeStakingAmount = INTokenApeStaking(xTokenAddress)
+                .getApeStakingAmount(params.nftTokenIds);
+        }
 
         uint256 i;
         // step 1: moving underlying asset forward to receiver contract
@@ -56,6 +74,15 @@ library FlashClaimLogic {
                 msg.sender,
                 params.nftAsset,
                 params.nftTokenIds[i]
+            );
+        }
+
+        if (needCheckApeStaking) {
+            uint256 afterStakingAmount = INTokenApeStaking(xTokenAddress)
+                .getApeStakingAmount(params.nftTokenIds);
+            require(
+                beforeStakingAmount == afterStakingAmount,
+                Errors.APE_STAKING_AMOUNT_CHANGE
             );
         }
     }

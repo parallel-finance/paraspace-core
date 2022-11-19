@@ -34,4 +34,9 @@ interface INTokenApeStaking {
 
     function unstakePositionAndRepay(uint256 tokenId, address unstaker)
         external;
+
+    function getApeStakingAmount(uint256[] memory tokenIds)
+        external
+        view
+        returns (uint256);
 }

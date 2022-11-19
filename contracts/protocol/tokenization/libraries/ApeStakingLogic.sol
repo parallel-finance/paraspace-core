@@ -8,6 +8,7 @@ import "../../../interfaces/IPool.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
 import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
+import "./MintableERC721Logic.sol";
 
 /**
  * @title ApeStakingLogic library
@@ -310,5 +311,61 @@ library ApeStakingLogic {
         if (apeBalance > 0) {
             POOL.supply(address(_apeCoin), apeBalance, positionOwner, 0);
         }
+    }
+
+    function getUserTotalStakingAmount(
+        mapping(address => UserState) storage userState,
+        mapping(address => mapping(uint256 => uint256)) storage ownedTokens,
+        address user,
+        uint256 poolId,
+        ApeCoinStaking _apeCoinStaking
+    ) external view returns (uint256) {
+        uint256 totalBalance = uint256(userState[user].balance);
+        uint256 totalAmount;
+        for (uint256 index = 0; index < totalBalance; index++) {
+            uint256 tokenId = ownedTokens[user][index];
+            totalAmount += getTokenIdStakingAmount(
+                poolId,
+                _apeCoinStaking,
+                tokenId
+            );
+        }
+
+        return totalAmount;
+    }
+
+    function getApeStakingAmount(
+        uint256 poolId,
+        ApeCoinStaking _apeCoinStaking,
+        uint256[] memory tokenIds
+    ) public view returns (uint256) {
+        uint256 totalAmount;
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            uint256 tokenId = tokenIds[index];
+            totalAmount += getTokenIdStakingAmount(
+                poolId,
+                _apeCoinStaking,
+                tokenId
+            );
+        }
+        return totalAmount;
+    }
+
+    function getTokenIdStakingAmount(
+        uint256 poolId,
+        ApeCoinStaking _apeCoinStaking,
+        uint256 tokenId
+    ) public view returns (uint256) {
+        (uint256 apeStakedAmount, ) = _apeCoinStaking.nftPosition(
+            poolId,
+            tokenId
+        );
+
+        (uint256 bakcStakedAmount, ) = _apeCoinStaking.mainToBakc(
+            poolId,
+            tokenId
+        );
+
+        return apeStakedAmount + bakcStakedAmount;
     }
 }

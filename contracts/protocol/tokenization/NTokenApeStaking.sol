@@ -154,4 +154,17 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             incentiveReceiver
         );
     }
+
+    function getApeStakingAmount(uint256[] memory tokenIds)
+        external
+        view
+        returns (uint256)
+    {
+        return
+            ApeStakingLogic.getApeStakingAmount(
+                POOL_ID(),
+                _apeCoinStaking,
+                tokenIds
+            );
+    }
 }

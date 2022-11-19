@@ -11,6 +11,7 @@ import {INToken} from "../../interfaces/INToken.sol";
 import {IPToken} from "../../interfaces/IPToken.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
+import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 
 /**
  * @title sApe PToken

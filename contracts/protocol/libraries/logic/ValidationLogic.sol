@@ -27,6 +27,7 @@ import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
+import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
  * @title ReserveLogic library
@@ -1191,5 +1192,17 @@ library ValidationLogic {
                 Errors.RESERVE_FROZEN
             );
         }
+    }
+
+    function validateForApeStaking(
+        INTokenApeStaking nToken,
+        DataTypes.ExecuteSupplyERC721Params memory params
+    ) internal view {
+        uint256[] memory tokenIds = new uint256[](params.tokenData.length);
+        for (uint256 index = 0; index < params.tokenData.length; index++) {
+            tokenIds[index] = params.tokenData[index].tokenId;
+        }
+        uint256 stakingAmount = nToken.getApeStakingAmount(tokenIds);
+        require(stakingAmount == 0, Errors.APE_STAKING_AMOUNT_NON_ZERO);
     }
 }

@@ -70,10 +70,12 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        INToken nToken = INToken(nftReserve.xTokenAddress);
+        address xTokenAddress = nftReserve.xTokenAddress;
+        INToken nToken = INToken(xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() == XTokenType.NTokenBAYC ||
-                nToken.getXTokenType() == XTokenType.NTokenMAYC,
+            tokenType == XTokenType.NTokenBAYC ||
+                tokenType == XTokenType.NTokenMAYC,
             Errors.INVALID_ASSET_TYPE
         );
 
@@ -85,12 +87,10 @@ contract PoolApeStaking is
             );
             totalAmount += _nfts[index].amount;
         }
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
-            nftReserve.xTokenAddress
-        );
+        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         nTokenApeStaking.getApeStaking().apeCoin().safeTransferFrom(
             msg.sender,
-            nftReserve.xTokenAddress,
+            xTokenAddress,
             totalAmount
         );
 
@@ -105,10 +105,12 @@ contract PoolApeStaking is
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        INToken nToken = INToken(nftReserve.xTokenAddress);
+        address xTokenAddress = nftReserve.xTokenAddress;
+        INToken nToken = INToken(xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() == XTokenType.NTokenBAYC ||
-                nToken.getXTokenType() == XTokenType.NTokenMAYC,
+            tokenType == XTokenType.NTokenBAYC ||
+                tokenType == XTokenType.NTokenMAYC,
             Errors.INVALID_ASSET_TYPE
         );
         uint256 amountToWithdraw = 0;
@@ -134,10 +136,12 @@ contract PoolApeStaking is
     {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        INToken nToken = INToken(nftReserve.xTokenAddress);
+        address xTokenAddress = nftReserve.xTokenAddress;
+        INToken nToken = INToken(xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() == XTokenType.NTokenBAYC ||
-                nToken.getXTokenType() == XTokenType.NTokenMAYC,
+            tokenType == XTokenType.NTokenBAYC ||
+                tokenType == XTokenType.NTokenMAYC,
             Errors.INVALID_ASSET_TYPE
         );
         for (uint256 index = 0; index < _nfts.length; index++) {
@@ -147,10 +151,7 @@ contract PoolApeStaking is
             );
         }
 
-        INTokenApeStaking(nftReserve.xTokenAddress).claimApeCoin(
-            _nfts,
-            msg.sender
-        );
+        INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, msg.sender);
     }
 
     function depositBAKC(
@@ -159,16 +160,16 @@ contract PoolApeStaking is
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        INToken nToken = INToken(nftReserve.xTokenAddress);
+        address xTokenAddress = nftReserve.xTokenAddress;
+        INToken nToken = INToken(xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() == XTokenType.NTokenBAYC ||
-                nToken.getXTokenType() == XTokenType.NTokenMAYC,
+            tokenType == XTokenType.NTokenBAYC ||
+                tokenType == XTokenType.NTokenMAYC,
             Errors.INVALID_ASSET_TYPE
         );
 
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
-            nftReserve.xTokenAddress
-        );
+        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
         uint256 totalAmount = 0;
         for (uint256 index = 0; index < _nftPairs.length; index++) {
@@ -180,13 +181,13 @@ contract PoolApeStaking is
 
             bakcContract.safeTransferFrom(
                 msg.sender,
-                nftReserve.xTokenAddress,
+                xTokenAddress,
                 _nftPairs[index].bakcTokenId
             );
         }
         nTokenApeStaking.getApeStaking().apeCoin().safeTransferFrom(
             msg.sender,
-            nftReserve.xTokenAddress,
+            xTokenAddress,
             totalAmount
         );
 
@@ -197,7 +198,7 @@ contract PoolApeStaking is
         //transfer BAKC back for user
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             bakcContract.safeTransferFrom(
-                nftReserve.xTokenAddress,
+                xTokenAddress,
                 msg.sender,
                 _nftPairs[index].bakcTokenId
             );
@@ -209,24 +210,27 @@ contract PoolApeStaking is
         ApeCoinStaking.PairNftWithAmount[] memory _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        INToken nToken = INToken(nftReserve.xTokenAddress);
-        require(
-            nToken.getXTokenType() == XTokenType.NTokenBAYC ||
-                nToken.getXTokenType() == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
-        );
+        address xTokenAddress;
+        {
+            DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
+            xTokenAddress = nftReserve.xTokenAddress;
+            XTokenType tokenType = INToken(xTokenAddress).getXTokenType();
+            require(
+                tokenType == XTokenType.NTokenBAYC ||
+                    tokenType == XTokenType.NTokenMAYC,
+                Errors.INVALID_ASSET_TYPE
+            );
+        }
 
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
-            nftReserve.xTokenAddress
-        );
+        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
         uint256 amountToWithdraw = 0;
         uint256[] memory transferedTokenIds = new uint256[](_nftPairs.length);
         uint256 actualTransferAmount = 0;
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
-                nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
+                INToken(xTokenAddress).ownerOf(_nftPairs[index].mainTokenId) ==
+                    msg.sender,
                 Errors.NOT_THE_OWNER
             );
 
@@ -244,7 +248,7 @@ contract PoolApeStaking is
             if (_nftPairs[index].amount != stakedAmount) {
                 bakcContract.safeTransferFrom(
                     msg.sender,
-                    nftReserve.xTokenAddress,
+                    xTokenAddress,
                     _nftPairs[index].bakcTokenId
                 );
                 transferedTokenIds[actualTransferAmount] = _nftPairs[index]
@@ -256,15 +260,12 @@ contract PoolApeStaking is
 
         executeWithdrawSApe(ps, amountToWithdraw);
 
-        INTokenApeStaking(nftReserve.xTokenAddress).withdrawBAKC(
-            _nftPairs,
-            msg.sender
-        );
+        nTokenApeStaking.withdrawBAKC(_nftPairs, msg.sender);
 
         ////transfer BAKC back for user
         for (uint256 index = 0; index < actualTransferAmount; index++) {
             bakcContract.safeTransferFrom(
-                nftReserve.xTokenAddress,
+                xTokenAddress,
                 msg.sender,
                 transferedTokenIds[index]
             );
@@ -277,16 +278,16 @@ contract PoolApeStaking is
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        INToken nToken = INToken(nftReserve.xTokenAddress);
+        address xTokenAddress = nftReserve.xTokenAddress;
+        INToken nToken = INToken(xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() == XTokenType.NTokenBAYC ||
-                nToken.getXTokenType() == XTokenType.NTokenMAYC,
+            tokenType == XTokenType.NTokenBAYC ||
+                tokenType == XTokenType.NTokenMAYC,
             Errors.INVALID_ASSET_TYPE
         );
 
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
-            nftReserve.xTokenAddress
-        );
+        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
@@ -295,7 +296,7 @@ contract PoolApeStaking is
             );
             bakcContract.safeTransferFrom(
                 msg.sender,
-                nftReserve.xTokenAddress,
+                xTokenAddress,
                 _nftPairs[index].bakcTokenId
             );
         }
@@ -305,7 +306,7 @@ contract PoolApeStaking is
         //transfer BAKC back for user
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             bakcContract.safeTransferFrom(
-                nftReserve.xTokenAddress,
+                xTokenAddress,
                 msg.sender,
                 _nftPairs[index].bakcTokenId
             );
@@ -318,16 +319,16 @@ contract PoolApeStaking is
     {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        INToken nToken = INToken(nftReserve.xTokenAddress);
+        address xTokenAddress = nftReserve.xTokenAddress;
+        INToken nToken = INToken(xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() == XTokenType.NTokenBAYC ||
-                nToken.getXTokenType() == XTokenType.NTokenMAYC,
+            tokenType == XTokenType.NTokenBAYC ||
+                tokenType == XTokenType.NTokenMAYC,
             Errors.INVALID_ASSET_TYPE
         );
 
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
-            nftReserve.xTokenAddress
-        );
+        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         address incentiveReceiver = address(0);
         address positionOwner = nToken.ownerOf(tokenId);
         if (msg.sender != positionOwner) {
