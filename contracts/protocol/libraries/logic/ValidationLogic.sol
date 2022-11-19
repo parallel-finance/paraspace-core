@@ -66,6 +66,12 @@ library ValidationLogic {
     ) internal view {
         require(amount != 0, Errors.INVALID_AMOUNT);
 
+        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
+        );
+
         (
             bool isActive,
             bool isFrozen,
@@ -155,6 +161,12 @@ library ValidationLogic {
         require(
             amount <= userBalance,
             Errors.NOT_ENOUGH_AVAILABLE_USER_BALANCE
+        );
+
+        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
         );
 
         (
