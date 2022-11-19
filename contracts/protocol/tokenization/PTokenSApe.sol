@@ -33,6 +33,10 @@ contract PTokenSApe is PToken {
         _burnScaled(from, receiverOfUnderlying, amount, index);
     }
 
+    function balanceOf(address user) public view override returns (uint256) {
+        return IncentivizedERC20.balanceOf(user);
+    }
+
     function transferUnderlyingTo(address, uint256)
         external
         virtual
