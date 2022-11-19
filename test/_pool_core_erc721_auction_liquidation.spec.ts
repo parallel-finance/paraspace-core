@@ -47,6 +47,9 @@ describe("Liquidation Auction", () => {
     // Borrower borrows 15k DAI
     await borrowAndValidate(dai, "15000", borrower);
 
+    // HF = (0.8 * 101 + 5000 * 0.000908578801039414 * 0.9) / (15000 * 0.000908578801039414) = 6.2286730666666676349
+    // ERC721 HF = (0.8 * 101) / (15000 * 0.000908578801039414 - 5000 * 0.000908578801039414) = 8.8930096000000014524
+
     return testEnv;
   };
 
@@ -850,6 +853,97 @@ describe("Liquidation Auction", () => {
             {gasLimit: 5000000}
           )
       ).revertedWith(ProtocolErrors.LIQUIDATION_AMOUNT_NOT_ENOUGH);
+    });
+
+    it("TC-auction-liquidation-31 When validity time is set, auction will be invalidated, transfer the NFT will reset the auction state", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+        nBAYC,
+      } = testEnv;
+      // decrease BAYC price to liquidation levels
+      await changePriceAndValidate(bayc, "8");
+      // HF = (0.8 * 8 + 5000 * 0.000908578801039414 * 0.9) / (15000 * 0.000908578801039414) = 0.76959786666666674336
+      // ERC721 HF = (0.8 * 8) / (15000 * 0.000908578801039414 - 5000 * 0.000908578801039414) = 0.70439680000000011504
+
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+      expect(await nBAYC.isAuctioned(0)).to.be.true;
+
+      // resume price
+      await changePriceAndValidate(bayc, "101");
+
+      // set BAYC#1 as collateral so that BAYC#0 can be transferred out
+      await switchCollateralAndValidate(borrower, bayc, true, 1);
+
+      await waitForTx(
+        await pool
+          .connect(borrower.signer)
+          .setAuctionValidityTime(borrower.address, {
+            gasLimit: 5000000,
+          })
+      );
+
+      expect(await nBAYC.isAuctioned(0)).to.be.false;
+
+      await waitForTx(
+        await nBAYC
+          .connect(borrower.signer)
+          .transferFrom(borrower.address, liquidator.address, "0", {
+            gasLimit: 5000000,
+          })
+      );
+
+      expect(await nBAYC.isAuctioned(0)).to.be.false;
+    });
+
+    it("TC-auction-liquidation-32 When validity time is set, auction will be invalidated, withdraw the NFT will reset the auction state", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+        nBAYC,
+      } = testEnv;
+      // decrease BAYC price to liquidation levels
+      await changePriceAndValidate(bayc, "8");
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+      expect(await nBAYC.isAuctioned(0)).to.be.true;
+
+      // resume price
+      await changePriceAndValidate(bayc, "101");
+
+      // set BAYC#1 as collateral so that BAYC#0 can be withdrawn
+      await switchCollateralAndValidate(borrower, bayc, true, 1);
+
+      await waitForTx(
+        await pool
+          .connect(borrower.signer)
+          .setAuctionValidityTime(borrower.address, {
+            gasLimit: 5000000,
+          })
+      );
+
+      expect(await nBAYC.isAuctioned(0)).to.be.false;
+
+      await waitForTx(
+        await pool
+          .connect(borrower.signer)
+          .withdrawERC721(bayc.address, ["0"], borrower.address, {
+            gasLimit: 5000000,
+          })
+      );
+
+      expect(await nBAYC.isAuctioned(0)).to.be.false;
     });
   });
 });

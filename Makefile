@@ -201,7 +201,7 @@ test-atomic-tokens-limit:
 
 .PHONY: test-mint-to-treasury
 test-mint-to-treasury:
-	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test	
+	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
