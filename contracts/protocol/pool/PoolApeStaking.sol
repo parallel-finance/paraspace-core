@@ -177,16 +177,11 @@ contract PoolApeStaking is
             );
             totalAmount += _nftPairs[index].amount;
 
-            if (
-                bakcContract.ownerOf(_nftPairs[index].bakcTokenId) !=
-                address(this)
-            ) {
-                bakcContract.safeTransferFrom(
-                    msg.sender,
-                    nftReserve.xTokenAddress,
-                    _nftPairs[index].bakcTokenId
-                );
-            }
+            bakcContract.safeTransferFrom(
+                msg.sender,
+                nftReserve.xTokenAddress,
+                _nftPairs[index].bakcTokenId
+            );
         }
         nTokenApeStaking.getApeStaking().apeCoin().safeTransferFrom(
             msg.sender,
@@ -197,6 +192,15 @@ contract PoolApeStaking is
         executeSupplySApe(ps, totalAmount);
 
         nTokenApeStaking.depositBAKC(_nftPairs);
+
+        //transfer BAKC back for user
+        for (uint256 index = 0; index < _nftPairs.length; index++) {
+            bakcContract.safeTransferFrom(
+                nftReserve.xTokenAddress,
+                msg.sender,
+                _nftPairs[index].bakcTokenId
+            );
+        }
     }
 
     function withdrawBAKC(
@@ -217,6 +221,8 @@ contract PoolApeStaking is
         );
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
         uint256 amountToWithdraw = 0;
+        uint256[] memory transferedTokenIds = new uint256[](_nftPairs.length);
+        uint256 actualTransferAmount = 0;
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
@@ -233,12 +239,16 @@ contract PoolApeStaking is
             if (_nftPairs[index].amount == 0) {
                 _nftPairs[index].amount = stakedAmount;
             }
-            if (_nftPairs[index].amount == stakedAmount) {
+            //only partially withdraw need user's BAKC
+            if (_nftPairs[index].amount != stakedAmount) {
                 bakcContract.safeTransferFrom(
-                    nftReserve.xTokenAddress,
                     msg.sender,
+                    nftReserve.xTokenAddress,
                     _nftPairs[index].bakcTokenId
                 );
+                transferedTokenIds[actualTransferAmount] = _nftPairs[index]
+                    .bakcTokenId;
+                actualTransferAmount++;
             }
             amountToWithdraw += _nftPairs[index].amount;
         }
@@ -249,6 +259,15 @@ contract PoolApeStaking is
             _nftPairs,
             msg.sender
         );
+
+        ////transfer BAKC back for user
+        for (uint256 index = 0; index < actualTransferAmount; index++) {
+            bakcContract.safeTransferFrom(
+                nftReserve.xTokenAddress,
+                msg.sender,
+                transferedTokenIds[index]
+            );
+        }
     }
 
     function claimBAKC(
@@ -268,12 +287,26 @@ contract PoolApeStaking is
                 nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
                 Errors.NOT_THE_OWNER
             );
+            bakcContract.safeTransferFrom(
+                msg.sender,
+                nftReserve.xTokenAddress,
+                _nftPairs[index].bakcTokenId
+            );
         }
 
         INTokenApeStaking(nftReserve.xTokenAddress).claimBAKC(
             _nftPairs,
             msg.sender
         );
+
+        //transfer BAKC back for user
+        for (uint256 index = 0; index < _nftPairs.length; index++) {
+            bakcContract.safeTransferFrom(
+                nftReserve.xTokenAddress,
+                msg.sender,
+                _nftPairs[index].bakcTokenId
+            );
+        }
     }
 
     function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
