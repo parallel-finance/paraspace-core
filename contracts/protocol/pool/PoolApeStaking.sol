@@ -14,6 +14,7 @@ import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.so
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
+import {GenericLogic} from "../libraries/logic/GenericLogic.sol";
 import {UserConfiguration} from "../libraries/configuration/UserConfiguration.sol";
 import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 
@@ -282,6 +283,11 @@ contract PoolApeStaking is
                 nToken.getXTokenType() == XTokenType.NTokenMAYC,
             Errors.INVALID_ASSET_TYPE
         );
+
+        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
+            nftReserve.xTokenAddress
+        );
+        IERC721 bakcContract = nTokenApeStaking.getBAKC();
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
@@ -294,10 +300,7 @@ contract PoolApeStaking is
             );
         }
 
-        INTokenApeStaking(nftReserve.xTokenAddress).claimBAKC(
-            _nftPairs,
-            msg.sender
-        );
+        nTokenApeStaking.claimBAKC(_nftPairs, msg.sender);
 
         //transfer BAKC back for user
         for (uint256 index = 0; index < _nftPairs.length; index++) {
@@ -325,7 +328,31 @@ contract PoolApeStaking is
         INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
             nftReserve.xTokenAddress
         );
-        nTokenApeStaking.unstakePositionAndRepay(tokenId, msg.sender);
+        address incentiveReceiver = address(0);
+        address positionOwner = nToken.ownerOf(tokenId);
+        if (msg.sender != positionOwner) {
+            DataTypes.CalculateUserAccountDataParams memory params = DataTypes
+                .CalculateUserAccountDataParams({
+                    userConfig: ps._usersConfig[positionOwner],
+                    reservesCount: ps._reservesCount,
+                    user: positionOwner,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                });
+
+            (, , , , , , , uint256 healthFactor, , ) = GenericLogic
+                .calculateUserAccountData(
+                    ps._reserves,
+                    ps._reservesList,
+                    params
+                );
+            require(
+                healthFactor < DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+            incentiveReceiver = msg.sender;
+        }
+
+        nTokenApeStaking.unstakePositionAndRepay(tokenId, incentiveReceiver);
     }
 
     function executeSupplySApe(DataTypes.PoolStorage storage ps, uint256 amount)

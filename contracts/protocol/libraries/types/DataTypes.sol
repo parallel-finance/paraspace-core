@@ -10,6 +10,7 @@ library DataTypes {
     }
 
     address public constant SApeAddress = address(0x1);
+    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
     struct ReserveData {
         //stores the reserve configuration

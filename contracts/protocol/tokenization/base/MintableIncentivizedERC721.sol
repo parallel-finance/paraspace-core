@@ -527,7 +527,7 @@ abstract contract MintableIncentivizedERC721 is
 
     /// @inheritdoc IAuctionableERC721
     function startAuction(uint256 tokenId)
-        public
+        external
         virtual
         override
         onlyPool

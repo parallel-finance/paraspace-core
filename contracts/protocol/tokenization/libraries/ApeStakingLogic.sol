@@ -239,23 +239,15 @@ library ApeStakingLogic {
         APEStakingParameter storage stakingParameter,
         IPool POOL,
         ApeCoinStaking _apeCoinStaking,
-        address unstaker,
         uint256 poolId,
-        uint256 tokenId
+        uint256 tokenId,
+        address incentiveReceiver
     ) external {
         address positionOwner = _owners[tokenId];
-        bool isOwnerSelf = (unstaker == positionOwner);
-        //1 check user hf
-        if (!isOwnerSelf) {
-            (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(
-                positionOwner
-            );
-            require(healthFactor < stakingParameter.unstakeHFLimit, "HF Error");
-        }
 
-        //2 unstake all position
+        //1 unstake all position
         {
-            //2.1 unstake Main pool position
+            //1.1 unstake Main pool position
             (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
                 poolId,
                 tokenId
@@ -271,7 +263,7 @@ library ApeStakingLogic {
                     _apeCoinStaking.withdrawMAYC(nfts, address(this));
                 }
             }
-            //2.2 unstake bakc pool position
+            //1.2 unstake bakc pool position
             (uint256 bakcTokenId, bool isPaired) = _apeCoinStaking.mainToBakc(
                 poolId,
                 tokenId
@@ -314,19 +306,19 @@ library ApeStakingLogic {
         if (apeBalance == 0) {
             return;
         }
-        //3 send incentive to caller
-        if (!isOwnerSelf) {
+        //2 send incentive to caller
+        if (incentiveReceiver != address(0)) {
             uint256 unstakeIncentive = stakingParameter.unstakeIncentive;
             if (unstakeIncentive > 0) {
                 uint256 incentiveAmount = apeBalance.percentMul(
                     unstakeIncentive
                 );
-                _apeCoin.safeTransfer(unstaker, incentiveAmount);
+                _apeCoin.safeTransfer(incentiveReceiver, incentiveAmount);
                 apeBalance = apeBalance - incentiveAmount;
             }
         }
 
-        //4 repay ape coin debt if user have
+        //3 repay ape coin debt if user have
         DataTypes.ReserveData memory apeCoinData = POOL.getReserveData(
             address(_apeCoin)
         );
@@ -338,7 +330,7 @@ library ApeStakingLogic {
             apeBalance = apeBalance - repayDebt;
         }
 
-        //5 supply remaining ape coin
+        //4 supply remaining ape coin
         if (apeBalance > 0) {
             POOL.supply(address(_apeCoin), apeBalance, positionOwner, 0);
         }

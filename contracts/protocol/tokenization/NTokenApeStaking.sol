@@ -74,15 +74,14 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         address to,
         uint256 tokenId
     ) external override onlyPool nonReentrant {
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = tokenId;
-        require(
-            !ApeStakingLogic.isApeStakingPositionExisted(
-                POOL_ID(),
-                _apeCoinStaking,
-                tokenIds
-            ),
-            Errors.APE_STAKING_POSITION_EXISTED
+        ApeStakingLogic.executeUnstakePositionAndRepay(
+            _ERC721Data.owners,
+            apeStakingDataStorage(),
+            POOL,
+            _apeCoinStaking,
+            POOL_ID(),
+            tokenId,
+            address(0)
         );
 
         _transfer(from, to, tokenId, false);
@@ -96,36 +95,19 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         address receiverOfUnderlying,
         uint256[] calldata tokenIds
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
-        require(
-            !ApeStakingLogic.isApeStakingPositionExisted(
-                POOL_ID(),
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            ApeStakingLogic.executeUnstakePositionAndRepay(
+                _ERC721Data.owners,
+                apeStakingDataStorage(),
+                POOL,
                 _apeCoinStaking,
-                tokenIds
-            ),
-            Errors.APE_STAKING_POSITION_EXISTED
-        );
+                POOL_ID(),
+                tokenIds[index],
+                address(0)
+            );
+        }
 
         return _burn(from, receiverOfUnderlying, tokenIds);
-    }
-
-    function startAuction(uint256 tokenId)
-        public
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = tokenId;
-        require(
-            !ApeStakingLogic.isApeStakingPositionExisted(
-                POOL_ID(),
-                _apeCoinStaking,
-                tokenIds
-            ),
-            Errors.APE_STAKING_POSITION_EXISTED
-        );
-        super.startAuction(tokenId);
     }
 
     function POOL_ID() internal pure virtual returns (uint256) {
@@ -165,7 +147,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         }
     }
 
-    function unstakePositionAndRepay(uint256 tokenId, address unstaker)
+    function unstakePositionAndRepay(uint256 tokenId, address incentiveReceiver)
         external
         onlyPool
         nonReentrant
@@ -175,9 +157,9 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             apeStakingDataStorage(),
             POOL,
             _apeCoinStaking,
-            unstaker,
             POOL_ID(),
-            tokenId
+            tokenId,
+            incentiveReceiver
         );
     }
 }
