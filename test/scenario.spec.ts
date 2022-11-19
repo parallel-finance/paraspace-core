@@ -7,7 +7,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getParaSpaceConfig} from "../deploy/helpers/misc-utils";
 
-const scenarioFolder = "./test-suites/helpers/scenarios/";
+const scenarioFolder = "./test/helpers/scenarios/";
 
 const selectedScenarios: string[] = []; //"borrow-repay-stable-edge.json", "borrow-repay-stable.json"];
 

@@ -26,7 +26,7 @@ foundy-test:
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: local-test
 local-test:
@@ -34,11 +34,11 @@ local-test:
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -209,7 +209,7 @@ test-atomic-tokens-limit:
 
 .PHONY: test-mint-to-treasury
 test-mint-to-treasury:
-	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test	
+	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
