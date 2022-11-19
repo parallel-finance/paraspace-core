@@ -514,6 +514,14 @@ library ValidationLogic {
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
+        IXTokenType xToken = IXTokenType(
+            params.liquidationAssetReserveCache.xTokenAddress
+        );
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
+        );
+
         (
             vars.principalReserveActive,
             ,
