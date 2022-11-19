@@ -5,7 +5,7 @@ import "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "./interfaces/INFTFloorOracle.sol";
 
-//we need to deploy 3 oracle at least
+//we need to deploy 3 oracles at least
 uint8 constant MIN_ORACLES_NUM = 3;
 //expirationPeriod at least the interval of client to feed data(currently 6h=21600s/12=1800 in mainnet)
 //we do not accept price lags behind to much
@@ -21,14 +21,16 @@ struct OracleConfig {
 }
 
 struct PriceInformation {
-    /// @dev last reported floor price
+    // last reported floor price(offchain twap)
     uint256 twap;
+    // last updated blocknumber
     uint256 updatedAt;
-    uint256 updatedTimeStamp;
+    // last updated timestamp
+    uint256 updatedTimestamp;
 }
 
 struct FeederRegistrar {
-    // if asset not registered,reject the price
+    // if asset registered or not
     bool registered;
     // index in asset list
     uint8 index;
@@ -36,6 +38,13 @@ struct FeederRegistrar {
     bool paused;
     // feeder -> PriceInformation
     mapping(address => PriceInformation) feederPrice;
+}
+
+struct FeederPosition {
+    // if feeder registered or not
+    bool registered;
+    // index in feeder list
+    uint8 index;
 }
 
 /// @title A simple on-chain price oracle mechanism
@@ -46,128 +55,284 @@ struct FeederRegistrar {
 contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     event AssetAdded(address indexed asset);
     event AssetRemoved(address indexed asset);
+    event AssetPaused(address indexed asset, bool paused);
+
+    event FeederAdded(address indexed asset);
+    event FeederRemoved(address indexed asset);
+
+    event OracleConfigSet(uint128 expirationPeriod, uint128 maxPriceDeviation);
     event AssetDataSet(
         address indexed asset,
-        uint256 price,
-        uint256 lastUpdated
+        uint256 twap,
+        uint256 lastUpdatedBlock
     );
-    event OracleNodesSet(address[] indexed nodes);
-    event OracleConfigSet(uint128 expirationPeriod, uint128 maxPriceDeviation);
-    event OracleNftPaused(address indexed asset, bool paused);
 
     bytes32 public constant UPDATER_ROLE = keccak256("UPDATER_ROLE");
 
     /// @dev Aggregated price with address
-    // the NFT contract -> price information
-    mapping(address => PriceInformation) public priceMap;
+    // the NFT contract -> latest price information
+    mapping(address => PriceInformation) public assetPriceMap;
 
     /// @dev All feeders
     address[] public feeders;
 
+    /// @dev feeder map
+    // feeder address -> index in feeder list
+    mapping(address => FeederPosition) private feederPositionMap;
+
     /// @dev All asset list
-    address[] public nfts;
+    address[] public assets;
 
     /// @dev Original raw value to aggregate with
-    // contract address -> FeederRegistrar
-    mapping(address => FeederRegistrar) public priceFeederMap;
+    // the NFT contract address -> FeederRegistrar which contains price from each feeder
+    mapping(address => FeederRegistrar) public assetFeederMap;
 
     /// @dev storage for oracle configurations
     OracleConfig public config;
 
-    modifier whenNotPaused(address _nftContract) {
+    /// @notice Allow contract creator to set admin and updaters
+    /// @param _admin The admin who can change roles
+    /// @param _feeders The initial updaters
+    /// @param _assets The initial nft assets
+    function initialize(
+        address _admin,
+        address[] memory _feeders,
+        address[] memory _assets
+    ) public initializer {
+        _addAssets(_assets);
+        _addFeeders(_feeders);
+        _setupRole(DEFAULT_ADMIN_ROLE, _admin);
+        _setConfig(EXPIRATION_PERIOD, MAX_DEVIATION_RATE);
+    }
+
+    modifier whenNotPaused(address _asset) {
         if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
-            _whenNotPaused(_nftContract);
+            _whenNotPaused(_asset);
         }
         _;
     }
 
-    modifier onlyWhenKeyExisted(address _nftContract) {
-        require(_isExistedKey(_nftContract), "NFTOracle: asset not existed");
+    modifier onlyWhenAssetExisted(address _asset) {
+        require(_isAssetExisted(_asset), "NFTOracle: asset not existed");
         _;
     }
 
-    modifier onlyWhenKeyNotExisted(address _nftContract) {
-        require(!_isExistedKey(_nftContract), "NFTOracle: asset existed");
+    modifier onlyWhenAssetNotExisted(address _asset) {
+        require(!_isAssetExisted(_asset), "NFTOracle: asset existed");
         _;
     }
 
-    function _whenNotPaused(address _nftContract) internal view {
-        bool _paused = priceFeederMap[_nftContract].paused;
+    modifier onlyWhenFeederExisted(address _feeder) {
+        require(_isFeederExisted(_feeder), "NFTOracle: feeder not existed");
+        _;
+    }
+
+    modifier onlyWhenFeederNotExisted(address _feeder) {
+        require(!_isFeederExisted(_feeder), "NFTOracle: feeder existed");
+        _;
+    }
+
+    /// @notice Allows owner to add assets.
+    /// @param _assets assets to add
+    function addAssets(address[] calldata _assets)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _addAssets(_assets);
+    }
+
+    /// @notice Allows owner to remove asset.
+    /// @param _asset asset to remove
+    function removeAsset(address _asset)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyWhenAssetExisted(_asset)
+    {
+        _removeAsset(_asset);
+    }
+
+    /// @notice Allows owner to add feeders.
+    /// @param _feeders feeders to add
+    function addFeeders(address[] calldata _feeders)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _addFeeders(_feeders);
+    }
+
+    /// @notice Allows owner to remove feeder.
+    /// @param _feeder feeder to remove
+    function removeFeeder(address _feeder)
+        external
+        onlyWhenFeederExisted(_feeder)
+    {
+        _removeFeeder(_feeder);
+    }
+
+    /// @notice Allows owner to update oracle configs
+    function setConfig(uint128 expirationPeriod, uint128 maxPriceDeviation)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setConfig(expirationPeriod, maxPriceDeviation);
+    }
+
+    /// @notice Allows owner to pause asset
+    function setPause(address _asset, bool _flag)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        assetFeederMap[_asset].paused = _flag;
+        emit AssetPaused(_asset, _flag);
+    }
+
+    /// @notice Allows updater to set new price on PriceInformation and updates the
+    /// internal Median cumulativePrice.
+    /// @param _asset The nft contract to set a floor price for
+    /// @param _twap The last floor twap
+    function setPrice(address _asset, uint256 _twap)
+        public
+        onlyRole(UPDATER_ROLE)
+        onlyWhenAssetExisted(_asset)
+        whenNotPaused(_asset)
+    {
+        bool dataValidity = false;
+        if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
+            _finalizePrice(_asset, _twap);
+            return;
+        }
+        dataValidity = _checkValidity(_asset, _twap);
+        require(dataValidity, "NFTOracle: invalid price data");
+        // add price to raw feeder storage
+        _addRawValue(_asset, _twap);
+        uint256 medianPrice;
+        // set twap price only when median value is valid
+        (dataValidity, medianPrice) = _combine(_asset, _twap);
+        if (dataValidity) {
+            _finalizePrice(_asset, medianPrice);
+        }
+    }
+
+    /// @notice Allows owner to set new price on PriceInformation and updates the
+    /// internal Median cumulativePrice.
+    /// @param _assets The nft contract to set a floor price for
+    function setMultiplePrices(
+        address[] calldata _assets,
+        uint256[] calldata _twaps
+    ) external onlyRole(UPDATER_ROLE) {
+        require(
+            _assets.length == _twaps.length,
+            "NFTOracle: Tokens and price length differ"
+        );
+        for (uint256 i = 0; i < _assets.length; i++) {
+            setPrice(_assets[i], _twaps[i]);
+        }
+    }
+
+    /// @param _asset The nft contract
+    /// @return price The most recent price on chain
+    function getPrice(address _asset)
+        external
+        view
+        override
+        returns (uint256 price)
+    {
+        uint256 updatedAt = assetPriceMap[_asset].updatedAt;
+        require(
+            (block.number - updatedAt) <= config.expirationPeriod,
+            "NFTOracle: asset price expired"
+        );
+        return assetPriceMap[_asset].twap;
+    }
+
+    /// @param _asset The nft contract
+    /// @return timestamp The timestamp of the last update for an asset
+    function getLastUpdateTime(address _asset)
+        external
+        view
+        override
+        returns (uint256 timestamp)
+    {
+        return assetPriceMap[_asset].updatedTimestamp;
+    }
+
+    function getFeederSize() public view returns (uint256) {
+        return feeders.length;
+    }
+
+    function _whenNotPaused(address _asset) internal view {
+        bool _paused = assetFeederMap[_asset].paused;
         require(!_paused, "NFTOracle: nft price feed paused");
     }
 
-    function setPause(address _nftContract, bool val)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        priceFeederMap[_nftContract].paused = val;
-        emit OracleNftPaused(_nftContract, val);
+    function _isAssetExisted(address _asset) internal view returns (bool) {
+        return assetFeederMap[_asset].registered;
     }
 
-    function _isExistedKey(address _nftContract) internal view returns (bool) {
-        return priceFeederMap[_nftContract].registered;
+    function _isFeederExisted(address _feeder) internal view returns (bool) {
+        return feederPositionMap[_feeder].registered;
     }
 
-    function _addAsset(address _nftContract)
+    function _addAsset(address _asset)
         internal
-        onlyWhenKeyNotExisted(_nftContract)
+        onlyWhenAssetNotExisted(_asset)
     {
-        priceFeederMap[_nftContract].registered = true;
-        nfts.push(_nftContract);
-        priceFeederMap[_nftContract].index = uint8(nfts.length - 1);
-        emit AssetAdded(_nftContract);
+        assetFeederMap[_asset].registered = true;
+        assets.push(_asset);
+        assetFeederMap[_asset].index = uint8(assets.length - 1);
+        emit AssetAdded(_asset);
     }
 
-    function _removeAsset(address _nftContract)
+    /// @notice add nft assets.
+    /// @param _assets assets to add
+    function _addAssets(address[] memory _assets) internal {
+        for (uint256 i = 0; i < _assets.length; i++) {
+            _addAsset(_assets[i]);
+        }
+    }
+
+    function _removeAsset(address _asset)
         internal
-        onlyWhenKeyExisted(_nftContract)
+        onlyWhenAssetExisted(_asset)
     {
-        delete priceMap[_nftContract];
-        if (nfts[priceFeederMap[_nftContract].index] == _nftContract) {
-            delete nfts[priceFeederMap[_nftContract].index];
-        }
-        delete priceFeederMap[_nftContract];
-        emit AssetRemoved(_nftContract);
+        uint8 assetIndex = assetFeederMap[_asset].index;
+        delete assets[assetIndex];
+        delete assetPriceMap[_asset];
+        delete assetFeederMap[_asset];
+        emit AssetRemoved(_asset);
     }
 
-    function addAssets(address[] calldata _nftContracts)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
+    function _addFeeder(address _feeder)
+        internal
+        onlyWhenFeederNotExisted(_feeder)
     {
-        for (uint256 i = 0; i < _nftContracts.length; i++) {
-            _addAsset(_nftContracts[i]);
-        }
+        feeders.push(_feeder);
+        feederPositionMap[_feeder].index = uint8(feeders.length - 1);
+        feederPositionMap[_feeder].registered = true;
+        _setupRole(UPDATER_ROLE, _feeder);
+        emit FeederAdded(_feeder);
     }
 
-    function removeAsset(address _nftContract)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        onlyWhenKeyExisted(_nftContract)
-    {
-        _removeAsset(_nftContract);
-    }
-
-    /// @notice set nft assets.
-    /// @param assets assets to set
-    function _addAssets(address[] memory assets) internal {
-        for (uint256 i = 0; i < assets.length; i++) {
-            _addAsset(assets[i]);
+    /// @notice set feeders.
+    /// @param _feeders feeders to set
+    function _addFeeders(address[] memory _feeders) internal {
+        for (uint256 i = 0; i < _feeders.length; i++) {
+            _addFeeder(_feeders[i]);
         }
     }
 
-    /// @notice Allow contract creator to set admin and first updater
-    /// @param admin The admin who can change roles
-    /// @param updaters The initial updaters
-    /// @param assets The initial nft assets
-    function initialize(
-        address admin,
-        address[] memory updaters,
-        address[] memory assets
-    ) public initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, admin);
-        _addAssets(assets);
-        _setOracles(updaters);
-        _setConfig(EXPIRATION_PERIOD, MAX_DEVIATION_RATE);
+    function _removeFeeder(address _feeder)
+        internal
+        onlyWhenFeederExisted(_feeder)
+    {
+        uint8 feederIndex = feederPositionMap[_feeder].index;
+        if (feederIndex >= 0 && feeders[feederIndex] == _feeder) {
+            feeders[feederIndex] = feeders[feeders.length - 1];
+            feeders.pop();
+        }
+        delete feederPositionMap[_feeder];
+        revokeRole(UPDATER_ROLE, _feeder);
+        emit FeederRemoved(_feeder);
     }
 
     /// @notice set oracle configs
@@ -181,53 +346,24 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         emit OracleConfigSet(_expirationPeriod, _maxPriceDeviation);
     }
 
-    /// @notice set oracles.
-    /// @param nodes feeders to set
-    function _setOracles(address[] memory nodes) internal {
-        for (uint256 i = 0; i < feeders.length; i++) {
-            revokeRole(UPDATER_ROLE, feeders[i]);
-        }
-        for (uint256 i = 0; i < nodes.length; i++) {
-            _setupRole(UPDATER_ROLE, nodes[i]);
-        }
-        feeders = nodes;
-        emit OracleNodesSet(nodes);
-    }
-
-    /// @notice Allows owner to change oracles.
-    /// @param nodes feeders to set
-    function setOracles(address[] calldata nodes)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        _setOracles(nodes);
-    }
-
-    /// @notice Allows owner to update oracle configs
-    function setConfig(uint64 expirationPeriod, uint128 maxPriceDeviation)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        _setConfig(expirationPeriod, maxPriceDeviation);
-    }
-
-    function _checkValidityOfPrice(address _nftContract, uint256 _price)
+    function _checkValidity(address _asset, uint256 _twap)
         internal
         view
         returns (bool)
     {
-        require(_price > 0, "NFTOracle: price should be more than 0");
-        PriceInformation memory priceMapEntry = priceMap[_nftContract];
-        uint256 price = priceMapEntry.twap;
-        uint256 updatedAt = priceMapEntry.updatedAt;
+        require(_twap > 0, "NFTOracle: price should be more than 0");
+        PriceInformation memory assetPriceMapEntry = assetPriceMap[_asset];
+        uint256 _priorTwap = assetPriceMapEntry.twap;
+        uint256 _updatedAt = assetPriceMapEntry.updatedAt;
         uint256 priceDeviation;
         //first price is always valid
-        if (price == 0 || updatedAt == 0) {
+        if (_priorTwap == 0 || _updatedAt == 0) {
             return true;
         }
-        priceDeviation = _price > price
-            ? (_price * 100) / price
-            : (price * 100) / _price;
+        priceDeviation = _twap > _priorTwap
+            ? (_twap * 100) / _priorTwap
+            : (_priorTwap * 100) / _twap;
+
         // config maxPriceDeviation as multiple directly(not percent) for simplicity
         if (priceDeviation >= config.maxPriceDeviation) {
             return false;
@@ -235,125 +371,60 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         return true;
     }
 
-    /// @notice Allows updater to set new price on PriceInformation and updates the
-    /// internal TWAP cumulativePrice.
-    /// @param token The nft contracts to set a floor price for
-    /// @param twap The last floor twap
-    function setPrice(address token, uint256 twap)
-        public
-        onlyRole(UPDATER_ROLE)
-        onlyWhenKeyExisted(token)
-        whenNotPaused(token)
-    {
-        bool dataValidity = false;
-        if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
-            _finalizePrice(token, twap);
-            return;
-        }
-        dataValidity = _checkValidityOfPrice(token, twap);
-        require(dataValidity, "NFTOracle: invalid price data");
-        // add price to raw feeder storage
-        _addRawValue(token, twap);
-        uint256 medianPrice;
-        // set twap price only when median value is valid
-        (dataValidity, medianPrice) = _combine(token, twap);
-        if (dataValidity) {
-            _finalizePrice(token, medianPrice);
-        }
+    function _finalizePrice(address _asset, uint256 _twap) internal {
+        PriceInformation storage assetPriceMapEntry = assetPriceMap[_asset];
+        assetPriceMapEntry.twap = _twap;
+        assetPriceMapEntry.updatedAt = block.number;
+        assetPriceMapEntry.updatedTimestamp = block.timestamp;
+        emit AssetDataSet(
+            _asset,
+            assetPriceMapEntry.twap,
+            assetPriceMapEntry.updatedAt
+        );
     }
 
-    function _finalizePrice(address token, uint256 twap) internal {
-        PriceInformation storage priceMapEntry = priceMap[token];
-        priceMapEntry.twap = twap;
-        priceMapEntry.updatedAt = block.number;
-        priceMapEntry.updatedTimeStamp = block.timestamp;
-        emit AssetDataSet(token, priceMapEntry.twap, priceMapEntry.updatedAt);
-    }
-
-    function _addRawValue(address token, uint256 twap) internal {
-        FeederRegistrar storage feederRegistrar = priceFeederMap[token];
+    function _addRawValue(address _asset, uint256 _twap) internal {
+        FeederRegistrar storage feederRegistrar = assetFeederMap[_asset];
         PriceInformation storage priceInfo = feederRegistrar.feederPrice[
             msg.sender
         ];
-        priceInfo.twap = twap;
+        priceInfo.twap = _twap;
         priceInfo.updatedAt = block.number;
     }
 
-    function _combine(address token, uint256 twap)
+    function _combine(address _asset, uint256 _twap)
         internal
         view
         returns (bool, uint256)
     {
-        FeederRegistrar storage feederRegistrar = priceFeederMap[token];
-        uint64 currentTime = uint64(block.number);
+        FeederRegistrar storage feederRegistrar = assetFeederMap[_asset];
+        uint256 currentBlock = block.number;
         //first time just use the feeding value
-        if (priceMap[token].twap == 0) {
-            return (true, twap);
+        if (assetPriceMap[_asset].twap == 0) {
+            return (true, _twap);
         }
         //use memory here so allocate with maximum length
-        uint256[] memory validPriceList = new uint256[](feeders.length);
+        uint256 feederSize = feeders.length;
+        uint256[] memory validPriceList = new uint256[](feederSize - 1);
         uint256 validNum = 0;
-        //aggeregate with price in each ring position of all feeders
-        for (uint256 i = 0; i < feeders.length; i++) {
+        //aggeregate with price from all feeders
+        for (uint256 i = 0; i < feederSize; i++) {
             PriceInformation memory priceInfo = feederRegistrar.feederPrice[
                 feeders[i]
             ];
             if (priceInfo.updatedAt > 0) {
-                uint256 diffTime = currentTime - priceInfo.updatedAt;
-                if (diffTime <= config.expirationPeriod) {
+                uint256 diffBlock = currentBlock - priceInfo.updatedAt;
+                if (diffBlock <= config.expirationPeriod) {
                     validPriceList[validNum] = priceInfo.twap;
                     validNum++;
                 }
             }
         }
         if (validNum < MIN_ORACLES_NUM) {
-            return (false, priceMap[token].twap);
+            return (false, assetPriceMap[_asset].twap);
         }
         _quickSort(validPriceList, 0, int256(validNum - 1));
         return (true, validPriceList[validNum / 2]);
-    }
-
-    /// @notice Allows owner to set new price on PriceInformation and updates the
-    /// internal TWAP cumulativePrice.
-    /// @param tokens The nft contract to set a floor price for
-    function setMultiplePrices(
-        address[] calldata tokens,
-        uint256[] calldata twaps
-    ) external onlyRole(UPDATER_ROLE) {
-        require(
-            tokens.length == twaps.length,
-            "Tokens and price length differ"
-        );
-        for (uint256 i = 0; i < tokens.length; i++) {
-            setPrice(tokens[i], twaps[i]);
-        }
-    }
-
-    /// @param token The nft contract
-    /// @return twap The most recent twap on chain
-    function getTwap(address token)
-        external
-        view
-        override
-        returns (uint256 twap)
-    {
-        uint256 updatedAt = priceMap[token].updatedAt;
-        require(
-            (block.number - updatedAt) <= config.expirationPeriod,
-            "NFTOracle: asset price expired"
-        );
-        return priceMap[token].twap;
-    }
-
-    /// @param token The nft contract
-    /// @return timestamp The timestamp of the last update for an asset
-    function getLastUpdateTime(address token)
-        external
-        view
-        override
-        returns (uint256 timestamp)
-    {
-        return priceMap[token].updatedTimeStamp;
     }
 
     function _quickSort(
