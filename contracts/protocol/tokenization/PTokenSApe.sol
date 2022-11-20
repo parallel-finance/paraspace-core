@@ -33,14 +33,6 @@ contract PTokenSApe is PToken {
         nMAYC = INTokenApeStaking(_nMAYC);
     }
 
-    function getNToken()
-        external
-        view
-        returns (INTokenApeStaking, INTokenApeStaking)
-    {
-        return (nBAYC, nMAYC);
-    }
-
     function mint(
         address,
         address,

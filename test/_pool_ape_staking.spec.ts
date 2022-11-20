@@ -2,17 +2,12 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {
-  getMintableERC20,
   getMintableERC721,
-  getParaSpaceOracle,
   getPToken,
   getPTokenSApe,
   getVariableDebtToken,
 } from "../deploy/helpers/contracts-getters";
-import {
-  convertToCurrencyDecimals,
-  getEthersSigners,
-} from "../deploy/helpers/contracts-helpers";
+import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
   DRE,
   evmRevert,
@@ -25,7 +20,6 @@ import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
 import {
-  borrowAndValidate,
   changePriceAndValidate,
   changeSApePriceAndValidate,
   mintAndValidate,

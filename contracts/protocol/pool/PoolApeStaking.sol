@@ -296,7 +296,7 @@ contract PoolApeStaking is
         }
 
         // 5 set sape as collateral
-        setSApeUseAsCollateral(msg.sender, true);
+        setSApeUseAsCollateral(msg.sender);
 
         // 6 mint debt token
         if (stakingInfo.borrowAmount > 0) {
@@ -350,7 +350,7 @@ contract PoolApeStaking is
         );
     }
 
-    function setSApeUseAsCollateral(address user, bool asCollateral) internal {
+    function setSApeUseAsCollateral(address user) internal {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage sApeReserve = ps._reserves[
             DataTypes.SApeAddress
@@ -359,19 +359,9 @@ contract PoolApeStaking is
             user
         ];
         bool currentStatus = userConfig.isUsingAsCollateral(sApeReserve.id);
-        if (asCollateral != currentStatus) {
-            userConfig.setUsingAsCollateral(sApeReserve.id, asCollateral);
-            if (asCollateral) {
-                emit ReserveUsedAsCollateralEnabled(
-                    DataTypes.SApeAddress,
-                    user
-                );
-            } else {
-                emit ReserveUsedAsCollateralDisabled(
-                    DataTypes.SApeAddress,
-                    user
-                );
-            }
+        if (currentStatus != true) {
+            userConfig.setUsingAsCollateral(sApeReserve.id, true);
+            emit ReserveUsedAsCollateralEnabled(DataTypes.SApeAddress, user);
         }
     }
 
