@@ -3,11 +3,16 @@ import {expect} from "chai";
 import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
 import {
   getMintableERC20,
-  getMintableERC721, getParaSpaceOracle, getPToken,
+  getMintableERC721,
+  getParaSpaceOracle,
+  getPToken,
   getPTokenSApe,
   getVariableDebtToken,
 } from "../deploy/helpers/contracts-getters";
-import {convertToCurrencyDecimals, getEthersSigners} from "../deploy/helpers/contracts-helpers";
+import {
+  convertToCurrencyDecimals,
+  getEthersSigners,
+} from "../deploy/helpers/contracts-helpers";
 import {
   DRE,
   evmRevert,
@@ -21,7 +26,9 @@ import {testEnvFixture} from "./helpers/setup-env";
 
 import {
   borrowAndValidate,
-  changePriceAndValidate, changeSApePriceAndValidate, mintAndValidate,
+  changePriceAndValidate,
+  changeSApePriceAndValidate,
+  mintAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
@@ -52,14 +59,9 @@ describe("APE Coin Unstaking", () => {
     const {
       xTokenAddress: pApeCoinAddress,
       variableDebtTokenAddress: variableDebtApeCoinAddress,
-    } = await protocolDataProvider.getReserveTokensAddresses(
-        ape.address
-    );
-    const {
-      xTokenAddress: pSApeCoinAddress,
-    } = await protocolDataProvider.getReserveTokensAddresses(
-        sApeAddress
-    );
+    } = await protocolDataProvider.getReserveTokensAddresses(ape.address);
+    const {xTokenAddress: pSApeCoinAddress} =
+      await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
 
     variableDebtApeCoin = await getVariableDebtToken(
       variableDebtApeCoinAddress
@@ -104,7 +106,7 @@ describe("APE Coin Unstaking", () => {
       ape,
       mayc,
       pool,
-        nMAYC,
+      nMAYC,
       weth,
     } = testEnv;
 
@@ -115,15 +117,15 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: 0,
-              cashAmount: amount,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -140,10 +142,15 @@ describe("APE Coin Unstaking", () => {
 
     const userAccount = await pool.getUserAccountData(user1.address);
     //50 + 15000*0.001 = 65
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "65"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "65")
+    );
     expect(userAccount.totalDebtBase).equal(0);
     //50 * 0.325 + 15 * 0.7 = 26.75
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "26.75"));
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "26.75")
+    );
   });
 
   it("test borrowApeAndStake: part cash, part debt", async () => {
@@ -163,15 +170,15 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount2,
-              cashAmount: amount1,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -188,11 +195,18 @@ describe("APE Coin Unstaking", () => {
 
     const userAccount = await pool.getUserAccountData(user1.address);
     //50 + 15000*0.001 = 65
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "65"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "65")
+    );
     //8000*0.001 = 8
-    expect(userAccount.totalDebtBase).equal(await convertToCurrencyDecimals(weth.address, "8"));
+    expect(userAccount.totalDebtBase).equal(
+      await convertToCurrencyDecimals(weth.address, "8")
+    );
     //50 * 0.325 + 15 * 0.7 - 8= 18.75
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "18.75"));
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "18.75")
+    );
   });
 
   it("test borrowApeAndStake: use debt", async () => {
@@ -211,15 +225,15 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -236,14 +250,21 @@ describe("APE Coin Unstaking", () => {
 
     const userAccount = await pool.getUserAccountData(user1.address);
     //50 + 15000*0.001 = 65
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "65"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "65")
+    );
     //15000*0.001 = 15
-    expect(userAccount.totalDebtBase).equal(await convertToCurrencyDecimals(weth.address, "15"));
+    expect(userAccount.totalDebtBase).equal(
+      await convertToCurrencyDecimals(weth.address, "15")
+    );
     //50 * 0.325 + 15 * 0.7 - 15= 11.75
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "11.75"));
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "11.75")
+    );
   });
 
-  it("test withdrawApeCoin failed when hf < 1", async () => {
+  it("test withdrawBAKC failed when hf < 1", async () => {
     const {
       users: [user1],
       ape,
@@ -259,15 +280,15 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     await changePriceAndValidate(mayc, "40");
@@ -275,36 +296,45 @@ describe("APE Coin Unstaking", () => {
     await changeSApePriceAndValidate(sApeAddress, "0.002");
     const userAccount = await pool.getUserAccountData(user1.address);
     //40 + 15000*0.002 = 70
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "70"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "70")
+    );
     //15000*0.002 = 30
-    almostEqual(userAccount.totalDebtBase, await convertToCurrencyDecimals(weth.address, "30"));
+    almostEqual(
+      userAccount.totalDebtBase,
+      await convertToCurrencyDecimals(weth.address, "30")
+    );
     //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "4"));
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "4")
+    );
 
     let withdrawAmount = await convertToCurrencyDecimals(ape.address, "3000");
     expect(
-        await pool.connect(user1.signer).withdrawApeCoin(
-            mayc.address,
-            [{tokenId: 0, amount: withdrawAmount}],
-        )
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: withdrawAmount}])
     );
     withdrawAmount = await convertToCurrencyDecimals(ape.address, "4000");
     expect(
-        await pool.connect(user1.signer).withdrawApeCoin(
-            mayc.address,
-            [{tokenId: 0, amount: withdrawAmount}],
-        )
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: withdrawAmount}])
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
     expect(totalStake).equal(amount2);
 
     await expect(
-        pool.connect(user1.signer).withdrawBAKC(
-            mayc.address,
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
-        )
-    ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
+      pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2},
+        ])
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
   it("test withdrawApeCoin failed when hf < 1", async () => {
@@ -323,15 +353,15 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     await changePriceAndValidate(mayc, "40");
@@ -339,24 +369,34 @@ describe("APE Coin Unstaking", () => {
     await changeSApePriceAndValidate(sApeAddress, "0.002");
     const userAccount = await pool.getUserAccountData(user1.address);
     //40 + 15000*0.002 = 70
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "70"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "70")
+    );
     //15000*0.002 = 30
-    almostEqual(userAccount.totalDebtBase, await convertToCurrencyDecimals(weth.address, "30"));
+    almostEqual(
+      userAccount.totalDebtBase,
+      await convertToCurrencyDecimals(weth.address, "30")
+    );
     //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "4"));
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "4")
+    );
 
     const withdrawAmount = await convertToCurrencyDecimals(ape.address, "4000");
     expect(
-        await pool.connect(user1.signer).withdrawBAKC(
-            mayc.address,
-            [{mainTokenId: 0, bakcTokenId: 0, amount: withdrawAmount}],
-        )
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: withdrawAmount},
+        ])
     );
     expect(
-        await pool.connect(user1.signer).withdrawBAKC(
-            mayc.address,
-            [{mainTokenId: 0, bakcTokenId: 0, amount: withdrawAmount}],
-        )
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: withdrawAmount},
+        ])
     );
 
     const bakcBalance = await bakc.balanceOf(user1.address);
@@ -366,14 +406,15 @@ describe("APE Coin Unstaking", () => {
     expect(totalStake).equal(amount1);
 
     await expect(
-        pool.connect(user1.signer).withdrawApeCoin(
-            mayc.address,
-            [{tokenId: 0, amount: amount1}],
-        )
-    ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD);
+      pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount1}])
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 
-  it("test withdrawApeCoin failed when hf < 1", async () => {
+  it("test claimBAKC success when hf > 1", async () => {
     const {
       users: [user1],
       ape,
@@ -389,15 +430,15 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     await changePriceAndValidate(mayc, "40");
@@ -405,18 +446,21 @@ describe("APE Coin Unstaking", () => {
     await changeSApePriceAndValidate(sApeAddress, "0.002");
     const userAccount = await pool.getUserAccountData(user1.address);
     //40 + 15000*0.002 = 70
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "70"));
-    //15000*0.002 = 30
-    almostEqual(userAccount.totalDebtBase, await convertToCurrencyDecimals(weth.address, "30"));
-    //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "4"));
-
-    expect(
-        await pool.connect(user1.signer).claimApeCoin(
-            mayc.address,
-            [0],
-        )
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "70")
     );
+    //15000*0.002 = 30
+    almostEqual(
+      userAccount.totalDebtBase,
+      await convertToCurrencyDecimals(weth.address, "30")
+    );
+    //40 * 0.325 + 30 * 0.7 - 30= 4
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "4")
+    );
+
+    expect(await pool.connect(user1.signer).claimApeCoin(mayc.address, [0]));
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
     expect(totalStake).equal(amount);
@@ -445,15 +489,15 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     await changePriceAndValidate(mayc, "40");
@@ -461,17 +505,24 @@ describe("APE Coin Unstaking", () => {
     await changeSApePriceAndValidate(sApeAddress, "0.002");
     const userAccount = await pool.getUserAccountData(user1.address);
     //40 + 15000*0.002 = 70
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "70"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "70")
+    );
     //15000*0.002 = 30
-    almostEqual(userAccount.totalDebtBase, await convertToCurrencyDecimals(weth.address, "30"));
+    almostEqual(
+      userAccount.totalDebtBase,
+      await convertToCurrencyDecimals(weth.address, "30")
+    );
     //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "4"));
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "4")
+    );
 
     expect(
-        await pool.connect(user1.signer).claimBAKC(
-            mayc.address,
-            [{mainTokenId: 0, bakcTokenId: 0}],
-        )
+      await pool
+        .connect(user1.signer)
+        .claimBAKC(mayc.address, [{mainTokenId: 0, bakcTokenId: 0}])
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -491,7 +542,7 @@ describe("APE Coin Unstaking", () => {
       ape,
       mayc,
       pool,
-      nMAYC
+      nMAYC,
     } = testEnv;
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -500,22 +551,21 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     expect(
-        await pool.connect(user1.signer).unstakeApePositionAndRepay(
-            mayc.address,
-            0,
-        )
+      await pool
+        .connect(user1.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -538,7 +588,7 @@ describe("APE Coin Unstaking", () => {
       ape,
       mayc,
       pool,
-      nMAYC
+      nMAYC,
     } = testEnv;
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -547,22 +597,21 @@ describe("APE Coin Unstaking", () => {
     const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount2,
-              cashAmount: amount1,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     expect(
-        await pool.connect(user1.signer).unstakeApePositionAndRepay(
-            mayc.address,
-            0,
-        )
+      await pool
+        .connect(user1.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -592,22 +641,19 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     await expect(
-        pool.connect(unstaker.signer).unstakeApePositionAndRepay(
-            mayc.address,
-            0,
-        )
+      pool.connect(unstaker.signer).unstakeApePositionAndRepay(mayc.address, 0)
     ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
   });
 
@@ -626,25 +672,24 @@ describe("APE Coin Unstaking", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: amount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     await changePriceAndValidate(mayc, "40");
     await changePriceAndValidate(ape, "0.08");
 
     expect(
-        await pool.connect(unstaker.signer).unstakeApePositionAndRepay(
-            mayc.address,
-            0,
-        )
+      await pool
+        .connect(unstaker.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -660,7 +705,6 @@ describe("APE Coin Unstaking", () => {
     const target = await convertToCurrencyDecimals(ape.address, "45");
     almostEqual(apeDebt, target);
   });
-
 
   it("complex scene", async () => {
     const {
@@ -681,27 +725,33 @@ describe("APE Coin Unstaking", () => {
     const halfAmount = await convertToCurrencyDecimals(ape.address, "9000");
     const totalAmount = await convertToCurrencyDecimals(ape.address, "18000");
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: halfAmount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount}, {tokenId: 1, amount: amount}],
-            [{mainTokenId: 1, bakcTokenId: 0, amount: amount}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: halfAmount,
+          cashAmount: 0,
+        },
+        [
+          {tokenId: 0, amount: amount},
+          {tokenId: 1, amount: amount},
+        ],
+        [{mainTokenId: 1, bakcTokenId: 0, amount: amount}]
+      )
     );
 
     expect(
-        await pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: bayc.address,
-              borrowAmount: halfAmount,
-              cashAmount: 0,
-            },
-            [{tokenId: 0, amount: amount}, {tokenId: 1, amount: amount}],
-            [{mainTokenId: 1, bakcTokenId: 1, amount: amount}]
-        )
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAmount: halfAmount,
+          cashAmount: 0,
+        },
+        [
+          {tokenId: 0, amount: amount},
+          {tokenId: 1, amount: amount},
+        ],
+        [{mainTokenId: 1, bakcTokenId: 1, amount: amount}]
+      )
     );
 
     let maycStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -721,11 +771,19 @@ describe("APE Coin Unstaking", () => {
 
     let userAccount = await pool.getUserAccountData(user1.address);
     //50 * 4 + 18000*0.001 = 218
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "218"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "218")
+    );
     //18000*0.001 = 18
-    almostEqual(userAccount.totalDebtBase, await convertToCurrencyDecimals(weth.address, "18"));
+    almostEqual(
+      userAccount.totalDebtBase,
+      await convertToCurrencyDecimals(weth.address, "18")
+    );
     //50 * 2 * 0.4 + 50 * 2 * 0.325 + 18 * 0.7 - 18 = 67.1
-    almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "67.1"));
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "67.1")
+    );
 
     await changePriceAndValidate(mayc, "10");
     await changePriceAndValidate(bayc, "10");
@@ -733,10 +791,9 @@ describe("APE Coin Unstaking", () => {
     await changeSApePriceAndValidate(sApeAddress, "0.01");
 
     expect(
-        await pool.connect(unstaker.signer).unstakeApePositionAndRepay(
-            mayc.address,
-            1,
-        )
+      await pool
+        .connect(unstaker.signer)
+        .unstakeApePositionAndRepay(mayc.address, 1)
     );
 
     maycStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -750,20 +807,27 @@ describe("APE Coin Unstaking", () => {
 
     apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
     //12000 + 6000*3/1000
-    almostEqual(apeDebt, amount.add(halfAmount).add(await convertToCurrencyDecimals(weth.address, "18")));
+    almostEqual(
+      apeDebt,
+      amount
+        .add(halfAmount)
+        .add(await convertToCurrencyDecimals(weth.address, "18"))
+    );
 
     bakcBalance = await bakc.balanceOf(user1.address);
     expect(bakcBalance).equal(2);
 
     userAccount = await pool.getUserAccountData(user1.address);
     //10 * 4 + 12000*0.01 = 160
-    expect(userAccount.totalCollateralBase).equal(await convertToCurrencyDecimals(weth.address, "160"));
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "160")
+    );
     //12018*0.01 = 120.18
-    almostEqual(userAccount.totalDebtBase, await convertToCurrencyDecimals(weth.address, "120.18"));
+    almostEqual(
+      userAccount.totalDebtBase,
+      await convertToCurrencyDecimals(weth.address, "120.18")
+    );
     // //10 * 2 * 0.4 + 10 * 2 * 0.325 + 18 * 0.7 - 18 = 67.1
     // almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "67.1"));
-
-
   });
-
 });

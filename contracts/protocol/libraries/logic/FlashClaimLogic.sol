@@ -78,8 +78,8 @@ library FlashClaimLogic {
                 accountParams
             );
         require(
-            healthFactor < DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            healthFactor > DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
     }
 }

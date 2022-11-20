@@ -74,15 +74,12 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         address to,
         uint256 tokenId
     ) external override onlyPool nonReentrant {
-        ApeStakingLogic.executeUnstakePositionAndRepay(
-            _ERC721Data.owners,
-            apeStakingDataStorage(),
-            POOL,
-            _apeCoinStaking,
+        uint256 positionAmount = ApeStakingLogic.getTokenIdStakingAmount(
             POOL_ID(),
-            tokenId,
-            address(0)
+            _apeCoinStaking,
+            tokenId
         );
+        require(positionAmount == 0, Errors.APE_STAKING_POSITION_EXISTED);
 
         _transfer(from, to, tokenId, false);
     }
@@ -96,15 +93,12 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         uint256[] calldata tokenIds
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         for (uint256 index = 0; index < tokenIds.length; index++) {
-            ApeStakingLogic.executeUnstakePositionAndRepay(
-                _ERC721Data.owners,
-                apeStakingDataStorage(),
-                POOL,
-                _apeCoinStaking,
+            uint256 positionAmount = ApeStakingLogic.getTokenIdStakingAmount(
                 POOL_ID(),
-                tokenIds[index],
-                address(0)
+                _apeCoinStaking,
+                tokenIds[index]
             );
+            require(positionAmount == 0, Errors.APE_STAKING_POSITION_EXISTED);
         }
 
         return _burn(from, receiverOfUnderlying, tokenIds);

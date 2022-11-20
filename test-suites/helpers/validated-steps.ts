@@ -1425,16 +1425,16 @@ export const changePriceAndValidate = async (
 };
 
 export const changeSApePriceAndValidate = async (
-    tokenAddress: string,
-    newPrice: string
+  tokenAddress: string,
+  newPrice: string
 ) => {
   const [deployer] = await getEthersSigners();
   const agg = await getAggregator(undefined, "sAPE");
   await agg.updateLatestAnswer(parseEther(newPrice));
 
   const actualPrice = await (await getParaSpaceOracle())
-      .connect(deployer)
-      .getAssetPrice(tokenAddress);
+    .connect(deployer)
+    .getAssetPrice(tokenAddress);
 
   expect(parseEther(newPrice)).to.eq(actualPrice);
 };

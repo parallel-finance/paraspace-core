@@ -153,7 +153,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     reserveData.name = bytes32ToString(name);
                 } else if (reserveData.underlyingAsset == SAPE_ADDRESS) {
                     reserveData.symbol = "SApe";
-                    reserveData.symbol = "SApe";
+                    reserveData.name = "SApe";
                 } else {
                     reserveData.symbol = IERC20Detailed(
                         reserveData.underlyingAsset

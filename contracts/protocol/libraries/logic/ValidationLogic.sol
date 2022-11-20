@@ -1007,6 +1007,11 @@ library ValidationLogic {
         );
 
         INToken nToken = INToken(reserve.xTokenAddress);
+        require(
+            nToken.getXTokenType() != XTokenType.NTokenUniswapV3,
+            Errors.UNIV3_NOT_ALLOWED
+        );
+
         // only token owner can do flash claim
         for (uint256 i = 0; i < params.nftTokenIds.length; i++) {
             require(

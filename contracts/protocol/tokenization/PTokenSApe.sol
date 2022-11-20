@@ -33,7 +33,11 @@ contract PTokenSApe is PToken {
         nMAYC = INTokenApeStaking(_nMAYC);
     }
 
-    function getNToken() external view returns(INTokenApeStaking, INTokenApeStaking) {
+    function getNToken()
+        external
+        view
+        returns (INTokenApeStaking, INTokenApeStaking)
+    {
         return (nBAYC, nMAYC);
     }
 
@@ -59,14 +63,16 @@ contract PTokenSApe is PToken {
         require(address(nBAYC) != address(0) && address(nMAYC) != address(0));
         uint256 totalStakedAPE = nBAYC.getUserApeStakingAmount(user) +
             nMAYC.getUserApeStakingAmount(user);
+        //incase apeStakingContract got a problem
+        require(totalStakedAPE < 1000 * 10000 * 1e18);
         return totalStakedAPE;
     }
 
     function scaledBalanceOf(address user)
-    public
-    view
-    override
-    returns (uint256)
+        public
+        view
+        override
+        returns (uint256)
     {
         return balanceOf(user);
     }
