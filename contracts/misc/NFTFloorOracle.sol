@@ -57,8 +57,8 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     event AssetRemoved(address indexed asset);
     event AssetPaused(address indexed asset, bool paused);
 
-    event FeederAdded(address indexed asset);
-    event FeederRemoved(address indexed asset);
+    event FeederAdded(address indexed feeder);
+    event FeederRemoved(address indexed feeder);
 
     event OracleConfigSet(uint128 expirationPeriod, uint128 maxPriceDeviation);
     event AssetDataSet(
@@ -102,6 +102,8 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         _addAssets(_assets);
         _addFeeders(_feeders);
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);
+        //still need to grant update_role to admin for emergency call
+        _setupRole(UPDATER_ROLE, _admin);
         _setConfig(EXPIRATION_PERIOD, MAX_DEVIATION_RATE);
     }
 
@@ -405,7 +407,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         }
         //use memory here so allocate with maximum length
         uint256 feederSize = feeders.length;
-        uint256[] memory validPriceList = new uint256[](feederSize - 1);
+        uint256[] memory validPriceList = new uint256[](feederSize);
         uint256 validNum = 0;
         //aggeregate with price from all feeders
         for (uint256 i = 0; i < feederSize; i++) {

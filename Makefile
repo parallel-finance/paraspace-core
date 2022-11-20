@@ -16,6 +16,14 @@ init: submodules
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
 
+initFoundry: 
+	forge install --no-commit --no-git https://github.com/dapphub/ds-test
+	forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
+
+.PHONY: foundy-test
+foundy-test:
+	forge test -vvvv
+
 .PHONY: test
 test:
 	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
