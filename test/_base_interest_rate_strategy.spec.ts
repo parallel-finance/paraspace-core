@@ -34,7 +34,12 @@ import {
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {increaseTime} from "../deploy/helpers/misc-utils";
+import {
+  impersonateAccountsHardhat,
+  increaseTime,
+} from "../deploy/helpers/misc-utils";
+import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 type CalculateInterestRatesParams = {
@@ -46,6 +51,7 @@ type CalculateInterestRatesParams = {
   xToken: string;
 };
 
+declare let hre: HardhatRuntimeEnvironment;
 const SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits";
 
 describe("Interest Rate Tests", () => {
@@ -239,6 +245,30 @@ describe("Interest Rate Tests", () => {
           ]
         )
       ).to.be.revertedWith(INVALID_OPTIMAL_USAGE_RATIO);
+    });
+
+    it("TC-interest-rate-strategy-07 PoolConfigurator updates the ReserveInterestRateStrategy address", async () => {
+      const {pool, deployer, dai, configurator} = await loadFixture(
+        testEnvFixture
+      );
+
+      // Impersonate PoolConfigurator
+      await topUpNonPayableWithEther(
+        deployer.signer,
+        [configurator.address],
+        utils.parseEther("1")
+      );
+      await impersonateAccountsHardhat([configurator.address]);
+      const configSigner = await hre.ethers.getSigner(configurator.address);
+
+      expect(
+        await pool
+          .connect(configSigner)
+          .setReserveInterestRateStrategyAddress(dai.address, ZERO_ADDRESS)
+      );
+
+      const config = await pool.getReserveData(dai.address);
+      expect(config.interestRateStrategyAddress).to.be.eq(ZERO_ADDRESS);
     });
   });
 

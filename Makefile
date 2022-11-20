@@ -16,9 +16,17 @@ init: submodules
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	yarn
 
+initFoundry: 
+	forge install --no-commit --no-git https://github.com/dapphub/ds-test
+	forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
+
+.PHONY: foundy-test
+foundy-test:
+	forge test -vvvv
+
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: local-test
 local-test:
@@ -26,11 +34,11 @@ local-test:
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -75,9 +83,9 @@ submodules:
 test-pool-upgrade:
 	make TEST_TARGET=pool-upgrade.spec.ts test
 
-.PHONY: test-pool-edge
-test-pool-edge:
-	make TEST_TARGET=pool-edge.spec.ts test
+.PHONY: test-pool-initialization
+test-pool-initialization:
+	make TEST_TARGET=_pool_initialization.spec.ts test
 
 .PHONY: test-ntoken
 test-ntoken:
@@ -198,6 +206,10 @@ test-variable-debt-token:
 .PHONY: test-atomic-tokens-limit
 test-atomic-tokens-limit:
 	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
+
+.PHONY: test-mint-to-treasury
+test-mint-to-treasury:
+	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:

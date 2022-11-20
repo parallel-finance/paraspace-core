@@ -54,14 +54,14 @@ const hardhatConfig: HardhatUserConfig = {
   },
   paths: {
     sources: "./contracts",
-    tests: "./test-suites",
+    tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts",
   },
   docgen: {
     outputDir: "docs",
     pages: "items",
-    exclude: ["dependencies", "deployments", "mocks"],
+    exclude: ["dependencies", "deployments", "mocks", "test"],
   },
   gasReporter: {
     enabled: REPORT_GAS,

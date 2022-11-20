@@ -12,7 +12,7 @@ describe("Mint To Treasury", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
   });
-  it("User 0 deposits 1000 DAI. Borrower borrows 100 DAI. Clock moved forward one year. Calculates and verifies the amount accrued to the treasury", async () => {
+  it("TC-pool-mint-to-treasury-01 User 0 deposits 1000 DAI. Borrower borrows 100 DAI. Clock moved forward one year. Calculates and verifies the amount accrued to the treasury", async () => {
     const {users, pool, dai, protocolDataProvider} = testEnv;
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
@@ -74,7 +74,7 @@ describe("Mint To Treasury", () => {
     expect(accruedToTreasury).to.be.closeTo(expectedAccruedToTreasury, 2);
   });
 
-  it("Mints the accrued to the treasury", async () => {
+  it("TC-pool-mint-to-treasury-02 Mints the accrued to the treasury", async () => {
     const {users, pool, dai, pDai} = testEnv;
 
     const treasuryAddress = await pDai.RESERVE_TREASURY_ADDRESS();
@@ -94,5 +94,21 @@ describe("Mint To Treasury", () => {
       2,
       "Invalid treasury balance after minting"
     );
+  });
+
+  it("TC-pool-mint-to-treasury-03 Call `mintToTreasury()` on a pool with an inactive reserve", async () => {
+    const {pool, poolAdmin, dai, users, configurator} = await loadFixture(
+      testEnvFixture
+    );
+
+    // Deactivate reserve
+    expect(
+      await configurator
+        .connect(poolAdmin.signer)
+        .setReserveActive(dai.address, false)
+    );
+
+    // MintToTreasury
+    expect(await pool.connect(users[0].signer).mintToTreasury([dai.address]));
   });
 });
