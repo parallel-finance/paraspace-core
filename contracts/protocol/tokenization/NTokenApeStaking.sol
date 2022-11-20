@@ -155,16 +155,18 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         );
     }
 
-    function getApeStakingAmount(uint256[] memory tokenIds)
+    function getUserApeStakingAmount(address user)
         external
         view
         returns (uint256)
     {
         return
-            ApeStakingLogic.getApeStakingAmount(
+            ApeStakingLogic.getUserTotalStakingAmount(
+                _ERC721Data.userState,
+                _ERC721Data.ownedTokens,
+                user,
                 POOL_ID(),
-                _apeCoinStaking,
-                tokenIds
+                _apeCoinStaking
             );
     }
 }

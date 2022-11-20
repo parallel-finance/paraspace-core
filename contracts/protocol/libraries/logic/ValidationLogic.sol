@@ -1007,11 +1007,6 @@ library ValidationLogic {
         );
 
         INToken nToken = INToken(reserve.xTokenAddress);
-        require(
-            nToken.getXTokenType() != XTokenType.NTokenUniswapV3,
-            Errors.UNIV3_NOT_ALLOWED
-        );
-
         // only token owner can do flash claim
         for (uint256 i = 0; i < params.nftTokenIds.length; i++) {
             require(
@@ -1192,17 +1187,5 @@ library ValidationLogic {
                 Errors.RESERVE_FROZEN
             );
         }
-    }
-
-    function validateForApeStaking(
-        INTokenApeStaking nToken,
-        DataTypes.ExecuteSupplyERC721Params memory params
-    ) internal view {
-        uint256[] memory tokenIds = new uint256[](params.tokenData.length);
-        for (uint256 index = 0; index < params.tokenData.length; index++) {
-            tokenIds[index] = params.tokenData[index].tokenId;
-        }
-        uint256 stakingAmount = nToken.getApeStakingAmount(tokenIds);
-        require(stakingAmount == 0, Errors.APE_STAKING_AMOUNT_NON_ZERO);
     }
 }

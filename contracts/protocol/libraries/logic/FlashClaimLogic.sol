@@ -9,6 +9,7 @@ import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import "../../../interfaces/INTokenApeStaking.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
+import {GenericLogic} from "./GenericLogic.sol";
 
 library FlashClaimLogic {
     // See `IPool` for descriptions
@@ -20,27 +21,11 @@ library FlashClaimLogic {
     );
 
     function executeFlashClaim(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteFlashClaimParams memory params
     ) external {
-        DataTypes.ReserveData storage reserve = reservesData[params.nftAsset];
+        DataTypes.ReserveData storage reserve = ps._reserves[params.nftAsset];
         ValidationLogic.validateFlashClaim(reserve, params);
-
-        address xTokenAddress = reserve.xTokenAddress;
-        bool needCheckApeStaking = false;
-        uint256 beforeStakingAmount = 0;
-        XTokenType tokenType = INToken(xTokenAddress).getXTokenType();
-        if (
-            tokenType == XTokenType.NTokenBAYC ||
-            tokenType == XTokenType.NTokenMAYC
-        ) {
-            needCheckApeStaking = true;
-        }
-
-        if (needCheckApeStaking) {
-            beforeStakingAmount = INTokenApeStaking(xTokenAddress)
-                .getApeStakingAmount(params.nftTokenIds);
-        }
 
         uint256 i;
         // step 1: moving underlying asset forward to receiver contract
@@ -77,13 +62,24 @@ library FlashClaimLogic {
             );
         }
 
-        if (needCheckApeStaking) {
-            uint256 afterStakingAmount = INTokenApeStaking(xTokenAddress)
-                .getApeStakingAmount(params.nftTokenIds);
-            require(
-                beforeStakingAmount == afterStakingAmount,
-                Errors.APE_STAKING_AMOUNT_CHANGE
+        // step 4: check hf
+        DataTypes.CalculateUserAccountDataParams
+            memory accountParams = DataTypes.CalculateUserAccountDataParams({
+                userConfig: ps._usersConfig[msg.sender],
+                reservesCount: ps._reservesCount,
+                user: msg.sender,
+                oracle: params.oracle
+            });
+
+        (, , , , , , , uint256 healthFactor, , ) = GenericLogic
+            .calculateUserAccountData(
+                ps._reserves,
+                ps._reservesList,
+                accountParams
             );
-        }
+        require(
+            healthFactor < DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+        );
     }
 }

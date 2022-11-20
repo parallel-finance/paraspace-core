@@ -192,15 +192,6 @@ library SupplyLogic {
                 );
             }
         }
-        if (
-            tokenType == XTokenType.NTokenBAYC ||
-            tokenType == XTokenType.NTokenMAYC
-        ) {
-            ValidationLogic.validateForApeStaking(
-                INTokenApeStaking(reserveCache.xTokenAddress),
-                params
-            );
-        }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
                 params.payer,

@@ -290,6 +290,7 @@ library DataTypes {
         address nftAsset;
         uint256[] nftTokenIds;
         bytes params;
+        address oracle;
     }
 
     struct Credit {

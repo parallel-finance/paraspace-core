@@ -28,7 +28,7 @@ contract NTokenMAYC is NTokenApeStaking {
         onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeDepositMAYC(_apeCoinStaking, _nfts);
+        _apeCoinStaking.depositMAYC(_nfts);
     }
 
     /**
@@ -41,7 +41,7 @@ contract NTokenMAYC is NTokenApeStaking {
         onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeClaimMAYC(_apeCoinStaking, _nfts, _recipient);
+        _apeCoinStaking.claimMAYC(_nfts, _recipient);
     }
 
     /**
@@ -53,7 +53,7 @@ contract NTokenMAYC is NTokenApeStaking {
         ApeCoinStaking.SingleNft[] calldata _nfts,
         address _recipient
     ) external onlyPool nonReentrant {
-        ApeStakingLogic.executeWithdrawMAYC(_apeCoinStaking, _nfts, _recipient);
+        _apeCoinStaking.withdrawMAYC(_nfts, _recipient);
     }
 
     /**
@@ -68,7 +68,10 @@ contract NTokenMAYC is NTokenApeStaking {
         onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeDepositBAKCWithMAYC(_apeCoinStaking, _nftPairs);
+        ApeCoinStaking.PairNftWithAmount[]
+            memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
+
+        _apeCoinStaking.depositBAKC(_otherPairs, _nftPairs);
     }
 
     /**
@@ -80,11 +83,10 @@ contract NTokenMAYC is NTokenApeStaking {
         ApeCoinStaking.PairNft[] calldata _nftPairs,
         address _recipient
     ) external onlyPool nonReentrant {
-        ApeStakingLogic.executeClaimBAKCWithMAYC(
-            _apeCoinStaking,
-            _nftPairs,
-            _recipient
-        );
+        ApeCoinStaking.PairNft[]
+            memory _otherPairs = new ApeCoinStaking.PairNft[](0);
+
+        _apeCoinStaking.claimBAKC(_otherPairs, _nftPairs, _recipient);
     }
 
     /**
@@ -96,8 +98,9 @@ contract NTokenMAYC is NTokenApeStaking {
         ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
         address _apeRecipient
     ) external onlyPool nonReentrant {
-        ApeStakingLogic.executeWithdrawBAKCWithMAYC(
+        ApeStakingLogic.withdrawBAKC(
             _apeCoinStaking,
+            POOL_ID(),
             _nftPairs,
             _apeRecipient
         );

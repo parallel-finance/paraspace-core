@@ -541,12 +541,13 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         FlashClaimLogic.executeFlashClaim(
-            ps._reserves,
+            ps,
             DataTypes.ExecuteFlashClaimParams({
                 receiverAddress: receiverAddress,
                 nftAsset: nftAsset,
                 nftTokenIds: nftTokenIds,
-                params: params
+                params: params,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle()
             })
         );
     }

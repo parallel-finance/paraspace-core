@@ -220,7 +220,7 @@ library GenericLogic {
                         vars.liquidationThreshold =
                             vars.userBalanceInBaseCurrency *
                             vars.liquidationThreshold;
-                        vars.ltv += vars.userBalanceInBaseCurrency * vars.ltv;
+                        vars.ltv = vars.userBalanceInBaseCurrency * vars.ltv;
 
                         if (vars.ltv == 0) {
                             vars.hasZeroLtvCollateral = true;

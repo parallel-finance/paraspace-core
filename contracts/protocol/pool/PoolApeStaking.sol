@@ -17,6 +17,7 @@ import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {GenericLogic} from "../libraries/logic/GenericLogic.sol";
 import {UserConfiguration} from "../libraries/configuration/UserConfiguration.sol";
 import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
+import "../libraries/logic/BorrowLogic.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -31,21 +32,11 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 1;
 
-    /**
-     * @dev Emitted on setUserUseERC20AsCollateral()
-     * @param reserve The address of the underlying asset of the reserve
-     * @param user The address of the user enabling the usage as collateral
-     **/
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
         address indexed user
     );
 
-    /**
-     * @dev Emitted on setUserUseERC20AsCollateral()
-     * @param reserve The address of the underlying asset of the reserve
-     * @param user The address of the user enabling the usage as collateral
-     **/
     event ReserveUsedAsCollateralDisabled(
         address indexed reserve,
         address indexed user
@@ -63,42 +54,6 @@ contract PoolApeStaking is
         return POOL_REVISION;
     }
 
-    function depositApeCoin(
-        address nftAsset,
-        ApeCoinStaking.SingleNft[] calldata _nfts
-    ) external nonReentrant {
-        DataTypes.PoolStorage storage ps = poolStorage();
-
-        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        address xTokenAddress = nftReserve.xTokenAddress;
-        INToken nToken = INToken(xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        require(
-            tokenType == XTokenType.NTokenBAYC ||
-                tokenType == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
-        );
-
-        uint256 totalAmount = 0;
-        for (uint256 index = 0; index < _nfts.length; index++) {
-            require(
-                nToken.ownerOf(_nfts[index].tokenId) == msg.sender,
-                Errors.NOT_THE_OWNER
-            );
-            totalAmount += _nfts[index].amount;
-        }
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
-        nTokenApeStaking.getApeStaking().apeCoin().safeTransferFrom(
-            msg.sender,
-            xTokenAddress,
-            totalAmount
-        );
-
-        executeSupplySApe(ps, totalAmount);
-
-        nTokenApeStaking.depositApeCoin(_nfts);
-    }
-
     function withdrawApeCoin(
         address nftAsset,
         ApeCoinStaking.SingleNft[] calldata _nfts
@@ -107,12 +62,7 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        require(
-            tokenType == XTokenType.NTokenBAYC ||
-                tokenType == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
-        );
+
         uint256 amountToWithdraw = 0;
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
@@ -122,11 +72,15 @@ contract PoolApeStaking is
             amountToWithdraw += _nfts[index].amount;
         }
 
-        executeWithdrawSApe(ps, amountToWithdraw);
-
         INTokenApeStaking(nftReserve.xTokenAddress).withdrawApeCoin(
             _nfts,
             msg.sender
+        );
+
+        require(
+            getUserHf(msg.sender) >
+                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
     }
 
@@ -138,12 +92,6 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        require(
-            tokenType == XTokenType.NTokenBAYC ||
-                tokenType == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
-        );
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 nToken.ownerOf(_nfts[index]) == msg.sender,
@@ -152,57 +100,12 @@ contract PoolApeStaking is
         }
 
         INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, msg.sender);
-    }
 
-    function depositBAKC(
-        address nftAsset,
-        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
-    ) external nonReentrant {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        address xTokenAddress = nftReserve.xTokenAddress;
-        INToken nToken = INToken(xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
         require(
-            tokenType == XTokenType.NTokenBAYC ||
-                tokenType == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
+            getUserHf(msg.sender) >
+                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
-
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
-        IERC721 bakcContract = nTokenApeStaking.getBAKC();
-        uint256 totalAmount = 0;
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
-            require(
-                nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
-                Errors.NOT_THE_OWNER
-            );
-            totalAmount += _nftPairs[index].amount;
-
-            bakcContract.safeTransferFrom(
-                msg.sender,
-                xTokenAddress,
-                _nftPairs[index].bakcTokenId
-            );
-        }
-        nTokenApeStaking.getApeStaking().apeCoin().safeTransferFrom(
-            msg.sender,
-            xTokenAddress,
-            totalAmount
-        );
-
-        executeSupplySApe(ps, totalAmount);
-
-        nTokenApeStaking.depositBAKC(_nftPairs);
-
-        //transfer BAKC back for user
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
-            bakcContract.safeTransferFrom(
-                xTokenAddress,
-                msg.sender,
-                _nftPairs[index].bakcTokenId
-            );
-        }
     }
 
     function withdrawBAKC(
@@ -214,12 +117,6 @@ contract PoolApeStaking is
         {
             DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
             xTokenAddress = nftReserve.xTokenAddress;
-            XTokenType tokenType = INToken(xTokenAddress).getXTokenType();
-            require(
-                tokenType == XTokenType.NTokenBAYC ||
-                    tokenType == XTokenType.NTokenMAYC,
-                Errors.INVALID_ASSET_TYPE
-            );
         }
 
         INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
@@ -258,8 +155,6 @@ contract PoolApeStaking is
             amountToWithdraw += _nftPairs[index].amount;
         }
 
-        executeWithdrawSApe(ps, amountToWithdraw);
-
         nTokenApeStaking.withdrawBAKC(_nftPairs, msg.sender);
 
         ////transfer BAKC back for user
@@ -270,6 +165,12 @@ contract PoolApeStaking is
                 transferedTokenIds[index]
             );
         }
+
+        require(
+            getUserHf(msg.sender) >
+                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+        );
     }
 
     function claimBAKC(
@@ -311,6 +212,119 @@ contract PoolApeStaking is
                 _nftPairs[index].bakcTokenId
             );
         }
+
+        require(
+            getUserHf(msg.sender) >
+                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+        );
+    }
+
+    function borrowApeAndStake(
+        StakingInfo calldata stakingInfo,
+        ApeCoinStaking.SingleNft[] calldata _nfts,
+        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
+    ) external nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        address nTokenAddress = ps
+            ._reserves[stakingInfo.nftAsset]
+            .xTokenAddress;
+        IERC20 apeCoin;
+        {
+            INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
+                nTokenAddress
+            );
+            apeCoin = nTokenApeStaking.getApeStaking().apeCoin();
+
+            DataTypes.ReserveData storage apeReserve = ps._reserves[
+                address(apeCoin)
+            ];
+            DataTypes.ReserveCache memory apeReserveCache = apeReserve.cache();
+
+            // 1, send borrow part to xTokenAddress
+            if (stakingInfo.borrowAmount > 0) {
+                ValidationLogic.validateFlashloanSimple(apeReserve);
+                IPToken(apeReserveCache.xTokenAddress).transferUnderlyingTo(
+                    nTokenAddress,
+                    stakingInfo.borrowAmount
+                );
+            }
+
+            // 2, send cash part to xTokenAddress
+            if (stakingInfo.cashAmount > 0) {
+                apeCoin.safeTransferFrom(
+                    msg.sender,
+                    nTokenAddress,
+                    stakingInfo.cashAmount
+                );
+            }
+
+            // 3, deposit bayc or mayc pool
+            INToken nToken = INToken(nTokenAddress);
+            for (uint256 index = 0; index < _nfts.length; index++) {
+                require(
+                    nToken.ownerOf(_nfts[index].tokenId) == msg.sender,
+                    Errors.NOT_THE_OWNER
+                );
+            }
+            nTokenApeStaking.depositApeCoin(_nfts);
+
+            // 4, deposit bakc pool
+            IERC721 bakcContract = nTokenApeStaking.getBAKC();
+            for (uint256 index = 0; index < _nftPairs.length; index++) {
+                require(
+                    nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
+                    Errors.NOT_THE_OWNER
+                );
+
+                bakcContract.safeTransferFrom(
+                    msg.sender,
+                    nTokenAddress,
+                    _nftPairs[index].bakcTokenId
+                );
+            }
+            nTokenApeStaking.depositBAKC(_nftPairs);
+            //transfer BAKC back for user
+            for (uint256 index = 0; index < _nftPairs.length; index++) {
+                bakcContract.safeTransferFrom(
+                    nTokenAddress,
+                    msg.sender,
+                    _nftPairs[index].bakcTokenId
+                );
+            }
+        }
+
+        // 5 set sape as collateral
+        setSApeUseAsCollateral(msg.sender, true);
+
+        // 6 mint debt token
+        if (stakingInfo.borrowAmount > 0) {
+            BorrowLogic.executeBorrow(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
+                DataTypes.ExecuteBorrowParams({
+                    asset: address(apeCoin),
+                    user: msg.sender,
+                    onBehalfOf: msg.sender,
+                    amount: stakingInfo.borrowAmount,
+                    referralCode: 0,
+                    releaseUnderlying: false,
+                    reservesCount: ps._reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                    priceOracleSentinel: ADDRESSES_PROVIDER
+                        .getPriceOracleSentinel()
+                })
+            );
+        }
+
+        // 7 check user hf
+        require(
+            getUserHf(msg.sender) >
+                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+        );
     }
 
     function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
@@ -319,105 +333,60 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
-        INToken nToken = INToken(xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        require(
-            tokenType == XTokenType.NTokenBAYC ||
-                tokenType == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
-        );
-
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         address incentiveReceiver = address(0);
-        address positionOwner = nToken.ownerOf(tokenId);
+        address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
         if (msg.sender != positionOwner) {
-            DataTypes.CalculateUserAccountDataParams memory params = DataTypes
-                .CalculateUserAccountDataParams({
-                    userConfig: ps._usersConfig[positionOwner],
-                    reservesCount: ps._reservesCount,
-                    user: positionOwner,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
-                });
-
-            (, , , , , , , uint256 healthFactor, , ) = GenericLogic
-                .calculateUserAccountData(
-                    ps._reserves,
-                    ps._reservesList,
-                    params
-                );
             require(
-                healthFactor < DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                getUserHf(positionOwner) <
+                    DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
                 Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
             );
             incentiveReceiver = msg.sender;
         }
 
-        nTokenApeStaking.unstakePositionAndRepay(tokenId, incentiveReceiver);
+        INTokenApeStaking(xTokenAddress).unstakePositionAndRepay(
+            tokenId,
+            incentiveReceiver
+        );
     }
 
-    function executeSupplySApe(DataTypes.PoolStorage storage ps, uint256 amount)
-        internal
-    {
-        DataTypes.ReserveData storage erc20Reserve = ps._reserves[
+    function setSApeUseAsCollateral(address user, bool asCollateral) internal {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage sApeReserve = ps._reserves[
             DataTypes.SApeAddress
         ];
-        bool isFirstSupply = IPToken(erc20Reserve.xTokenAddress).mint(
-            msg.sender,
-            msg.sender,
-            amount,
-            WadRayMath.RAY
-        );
-
-        if (isFirstSupply) {
-            DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-                msg.sender
-            ];
-            userConfig.setUsingAsCollateral(erc20Reserve.id, true);
-            emit ReserveUsedAsCollateralEnabled(
-                DataTypes.SApeAddress,
-                msg.sender
-            );
-        }
-    }
-
-    function executeWithdrawSApe(
-        DataTypes.PoolStorage storage ps,
-        uint256 amountToWithdraw
-    ) internal {
-        DataTypes.ReserveData storage erc20Reserve = ps._reserves[
-            DataTypes.SApeAddress
-        ];
-        DataTypes.ReserveCache memory erc20ReserveCache = erc20Reserve.cache();
-        uint256 userBalance = IPToken(erc20ReserveCache.xTokenAddress)
-            .balanceOf(msg.sender);
-        IPToken(erc20Reserve.xTokenAddress).burn(
-            msg.sender,
-            msg.sender,
-            amountToWithdraw,
-            WadRayMath.RAY
-        );
-
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            msg.sender
+            user
         ];
-        if (userConfig.isBorrowingAny()) {
-            ValidationLogic.validateHFAndLtvERC20(
-                ps._reserves,
-                ps._reservesList,
-                userConfig,
-                DataTypes.SApeAddress,
-                msg.sender,
-                ps._reservesCount,
-                ADDRESSES_PROVIDER.getPriceOracle()
-            );
+        bool currentStatus = userConfig.isUsingAsCollateral(sApeReserve.id);
+        if (asCollateral != currentStatus) {
+            userConfig.setUsingAsCollateral(sApeReserve.id, asCollateral);
+            if (asCollateral) {
+                emit ReserveUsedAsCollateralEnabled(
+                    DataTypes.SApeAddress,
+                    user
+                );
+            } else {
+                emit ReserveUsedAsCollateralDisabled(
+                    DataTypes.SApeAddress,
+                    user
+                );
+            }
         }
+    }
 
-        if (amountToWithdraw == userBalance) {
-            userConfig.setUsingAsCollateral(erc20Reserve.id, false);
-            emit ReserveUsedAsCollateralDisabled(
-                DataTypes.SApeAddress,
-                msg.sender
-            );
-        }
+    function getUserHf(address user) internal view returns (uint256) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.CalculateUserAccountDataParams memory params = DataTypes
+            .CalculateUserAccountDataParams({
+                userConfig: ps._usersConfig[user],
+                reservesCount: ps._reservesCount,
+                user: user,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle()
+            });
+
+        (, , , , , , , uint256 healthFactor, , ) = GenericLogic
+            .calculateUserAccountData(ps._reserves, ps._reservesList, params);
+        return healthFactor;
     }
 }

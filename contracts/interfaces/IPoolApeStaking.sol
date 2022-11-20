@@ -9,9 +9,16 @@ import "../dependencies/yoga-labs/ApeCoinStaking.sol";
  * @notice Defines the basic interface for an ParaSpace Ape Staking Pool.
  **/
 interface IPoolApeStaking {
-    function depositApeCoin(
-        address nftAsset,
-        ApeCoinStaking.SingleNft[] calldata _nfts
+    struct StakingInfo {
+        address nftAsset;
+        uint256 borrowAmount;
+        uint256 cashAmount;
+    }
+
+    function borrowApeAndStake(
+        StakingInfo calldata stakingInfo,
+        ApeCoinStaking.SingleNft[] calldata _nfts,
+        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
     ) external;
 
     function withdrawApeCoin(
@@ -20,11 +27,6 @@ interface IPoolApeStaking {
     ) external;
 
     function claimApeCoin(address nftAsset, uint256[] calldata _nfts) external;
-
-    function depositBAKC(
-        address nftAsset,
-        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
-    ) external;
 
     function withdrawBAKC(
         address nftAsset,

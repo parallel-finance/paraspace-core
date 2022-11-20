@@ -28,167 +28,12 @@ library ApeStakingLogic {
     }
     event UnstakeApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
-    /**
-     * @notice Deposit ApeCoin to the BAYC Pool
-     * @param _nfts Array of SingleNft structs
-     * @dev Commits 1 or more BAYC NFTs, each with an ApeCoin amount to the BAYC pool.\
-     * Each BAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the BAYC pool cap amount.
-     */
-    function executeDepositBAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.SingleNft[] calldata _nfts
-    ) external {
-        _apeCoinStaking.depositBAYC(_nfts);
-    }
-
-    /**
-     * @notice Deposit ApeCoin to the MAYC Pool
-     * @param _nfts Array of SingleNft structs
-     * @dev Commits 1 or more MAYC NFTs, each with an ApeCoin amount to the MAYC pool.\
-     * Each MAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the MAYC pool cap amount.
-     */
-    function executeDepositMAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.SingleNft[] calldata _nfts
-    ) external {
-        _apeCoinStaking.depositMAYC(_nfts);
-    }
-
-    /**
-     * @notice Claim rewards for array of BAYC NFTs and send to recipient
-     * @param _nfts Array of NFTs owned and committed by the msg.sender
-     * @param _recipient Address to send claim reward to
-     */
-    function executeClaimBAYC(
-        ApeCoinStaking _apeCoinStaking,
-        uint256[] calldata _nfts,
-        address _recipient
-    ) external {
-        _apeCoinStaking.claimBAYC(_nfts, _recipient);
-    }
-
-    /**
-     * @notice Claim rewards for array of MAYC NFTs and send to recipient
-     * @param _nfts Array of NFTs owned and committed by the msg.sender
-     * @param _recipient Address to send claim reward to
-     */
-    function executeClaimMAYC(
-        ApeCoinStaking _apeCoinStaking,
-        uint256[] calldata _nfts,
-        address _recipient
-    ) external {
-        _apeCoinStaking.claimMAYC(_nfts, _recipient);
-    }
-
-    /**
-     * @notice Withdraw staked ApeCoin from the BAYC pool.  If withdraw is total staked amount, performs an automatic claim.
-     * @param _nfts Array of BAYC NFT's with staked amounts
-     * @param _recipient Address to send withdraw amount and claim to
-     */
-    function executeWithdrawBAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.SingleNft[] calldata _nfts,
-        address _recipient
-    ) external {
-        _apeCoinStaking.withdrawBAYC(_nfts, _recipient);
-    }
-
-    /**
-     * @notice Withdraw staked ApeCoin from the MAYC pool.  If withdraw is total staked amount, performs an automatic claim.
-     * @param _nfts Array of MAYC NFT's with staked amounts
-     * @param _recipient Address to send withdraw amount and claim to
-     */
-    function executeWithdrawMAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.SingleNft[] calldata _nfts,
-        address _recipient
-    ) external {
-        _apeCoinStaking.withdrawMAYC(_nfts, _recipient);
-    }
-
-    /**
-     * @notice Deposit ApeCoin to the Pair Pool, where Pair = (BAYC + BAKC) or (MAYC + BAKC)
-     * @param _nftPairs Array of PairNftWithAmount structs
-     * @dev Commits 1 or more Pairs, each with an ApeCoin amount to the Pair pool.\
-     * Each BAKC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the Pair pool cap amount.\
-     * Example 1: BAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"],[]]\
-     * Example 2: MAYC + BAKC + 1 ApeCoin:  [[], [0, 0, "1000000000000000000"]]\
-     * Example 3: (BAYC + BAKC + 1 ApeCoin) and (MAYC + BAKC + 1 ApeCoin): [[0, 0, "1000000000000000000"], [0, 1, "1000000000000000000"]]
-     */
-    function executeDepositBAKCWithBAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
-    ) external {
-        ApeCoinStaking.PairNftWithAmount[]
-            memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
-
-        _apeCoinStaking.depositBAKC(_nftPairs, _otherPairs);
-    }
-
-    function executeDepositBAKCWithMAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
-    ) external {
-        ApeCoinStaking.PairNftWithAmount[]
-            memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
-
-        _apeCoinStaking.depositBAKC(_otherPairs, _nftPairs);
-    }
-
-    /**
-     * @notice Claim rewards for array of Paired NFTs and send to recipient
-     * @param _nftPairs Array of Paired BAYC/MAYC NFTs owned and committed by the msg.sender
-     * @param _recipient Address to send claim reward to
-     */
-    function executeClaimBAKCWithBAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.PairNft[] calldata _nftPairs,
-        address _recipient
-    ) external {
-        ApeCoinStaking.PairNft[]
-            memory _otherPairs = new ApeCoinStaking.PairNft[](0);
-
-        _apeCoinStaking.claimBAKC(_nftPairs, _otherPairs, _recipient);
-    }
-
-    function executeClaimBAKCWithMAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.PairNft[] calldata _nftPairs,
-        address _recipient
-    ) external {
-        ApeCoinStaking.PairNft[]
-            memory _otherPairs = new ApeCoinStaking.PairNft[](0);
-
-        _apeCoinStaking.claimBAKC(_otherPairs, _nftPairs, _recipient);
-    }
-
-    /**
-     * @notice Withdraw staked ApeCoin from the Pair pool.  If withdraw is total staked amount, performs an automatic claim.
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
-     * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
-     */
-    function executeWithdrawBAKCWithBAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
-        address _apeRecipient
-    ) external {
-        _withdrawBAKC(_apeCoinStaking, BAYC_POOL_ID, _nftPairs, _apeRecipient);
-    }
-
-    function executeWithdrawBAKCWithMAYC(
-        ApeCoinStaking _apeCoinStaking,
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
-        address _apeRecipient
-    ) external {
-        _withdrawBAKC(_apeCoinStaking, MAYC_POOL_ID, _nftPairs, _apeRecipient);
-    }
-
-    function _withdrawBAKC(
+    function withdrawBAKC(
         ApeCoinStaking _apeCoinStaking,
         uint256 poolId,
         ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
         address _apeRecipient
-    ) internal {
+    ) external {
         ApeCoinStaking.PairNftWithAmount[]
             memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
 
@@ -334,23 +179,6 @@ library ApeStakingLogic {
         return totalAmount;
     }
 
-    function getApeStakingAmount(
-        uint256 poolId,
-        ApeCoinStaking _apeCoinStaking,
-        uint256[] memory tokenIds
-    ) public view returns (uint256) {
-        uint256 totalAmount;
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            uint256 tokenId = tokenIds[index];
-            totalAmount += getTokenIdStakingAmount(
-                poolId,
-                _apeCoinStaking,
-                tokenId
-            );
-        }
-        return totalAmount;
-    }
-
     function getTokenIdStakingAmount(
         uint256 poolId,
         ApeCoinStaking _apeCoinStaking,
@@ -361,11 +189,31 @@ library ApeStakingLogic {
             tokenId
         );
 
-        (uint256 bakcStakedAmount, ) = _apeCoinStaking.mainToBakc(
+        uint256 apeReward = _apeCoinStaking.pendingRewards(
+            poolId,
+            address(this),
+            tokenId
+        );
+
+        (uint256 bakcTokenId, bool isPaired) = _apeCoinStaking.mainToBakc(
             poolId,
             tokenId
         );
 
-        return apeStakedAmount + bakcStakedAmount;
+        if (isPaired) {
+            (uint256 bakcStakedAmount, ) = _apeCoinStaking.nftPosition(
+                BAKC_POOL_ID,
+                bakcTokenId
+            );
+            apeStakedAmount += bakcStakedAmount;
+
+            apeReward += _apeCoinStaking.pendingRewards(
+                BAKC_POOL_ID,
+                address(this),
+                bakcTokenId
+            );
+        }
+
+        return apeStakedAmount + apeReward;
     }
 }
