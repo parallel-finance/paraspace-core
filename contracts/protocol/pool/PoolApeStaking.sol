@@ -122,7 +122,7 @@ contract PoolApeStaking is
         INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
         uint256 amountToWithdraw = 0;
-        uint256[] memory transferedTokenIds = new uint256[](_nftPairs.length);
+        uint256[] memory transferredTokenIds = new uint256[](_nftPairs.length);
         uint256 actualTransferAmount = 0;
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
@@ -148,7 +148,7 @@ contract PoolApeStaking is
                     xTokenAddress,
                     _nftPairs[index].bakcTokenId
                 );
-                transferedTokenIds[actualTransferAmount] = _nftPairs[index]
+                transferredTokenIds[actualTransferAmount] = _nftPairs[index]
                     .bakcTokenId;
                 actualTransferAmount++;
             }
@@ -162,7 +162,7 @@ contract PoolApeStaking is
             bakcContract.safeTransferFrom(
                 xTokenAddress,
                 msg.sender,
-                transferedTokenIds[index]
+                transferredTokenIds[index]
             );
         }
 
@@ -375,7 +375,7 @@ contract PoolApeStaking is
             user
         ];
         bool currentStatus = userConfig.isUsingAsCollateral(sApeReserve.id);
-        if (currentStatus != true) {
+        if (!currentStatus) {
             userConfig.setUsingAsCollateral(sApeReserve.id, true);
             emit ReserveUsedAsCollateralEnabled(DataTypes.SApeAddress, user);
         }
