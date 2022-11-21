@@ -450,7 +450,7 @@ contract PoolApeStaking is
         return healthFactor;
     }
 
-    function checkSApeIsNotPaused(DataTypes.PoolStorage storage ps) internal {
+    function checkSApeIsNotPaused(DataTypes.PoolStorage storage ps) internal view {
         DataTypes.ReserveData storage reserve = ps._reserves[DataTypes.SApeAddress];
 
         (
@@ -458,7 +458,7 @@ contract PoolApeStaking is
             ,
             ,
             bool isPaused,
-            DataTypes.AssetType reserveAssetType
+
         ) = reserve.configuration.getFlags();
 
         require(isActive, Errors.RESERVE_INACTIVE);
