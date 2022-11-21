@@ -1,7 +1,6 @@
 name: Deployment
 
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       network:
@@ -28,9 +27,9 @@ jobs:
       INFURA_KEY: ${{ secrets.INFURA_KEY }}
       DEPLOYER_MNEMONIC: ${{ secrets.DEPLOYER_MNEMONIC }}
       ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
-      NETWORK: "goerli"
-      ETHERSCAN_VERIFICATION: "false"
-      ETHERSCAN_VERIFICATION_CONTRACTS: "*Logic,Pool*,*Oracle,*Gateway*,*DataProvider,ACLManager,Seaport"
+      NETWORK: ${{ github.event.inputs.network }}
+      ETHERSCAN_VERIFICATION: ${{ github.event.inputs.verification }}
+      ETHERSCAN_VERIFICATION_CONTRACTS: ${{ github.event.inputs.verifyContract }}
 
     steps:
       - name: Checkout Repository
