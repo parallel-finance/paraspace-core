@@ -220,6 +220,14 @@ contract PoolApeStaking is
         );
     }
 
+    struct BorrowAndStakeLocalVar {
+        address nTokenAddress;
+        IERC20 apeCoin;
+        uint256 beforeBalance;
+        IERC721 bakcContract;
+        DataTypes.ReserveCache apeReserveCache;
+    }
+
     function borrowApeAndStake(
         StakingInfo calldata stakingInfo,
         ApeCoinStaking.SingleNft[] calldata _nfts,
@@ -227,72 +235,74 @@ contract PoolApeStaking is
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        address nTokenAddress = ps
+        BorrowAndStakeLocalVar memory localVar;
+        localVar.nTokenAddress = ps
             ._reserves[stakingInfo.nftAsset]
             .xTokenAddress;
-        IERC20 apeCoin;
-        {
-            INTokenApeStaking nTokenApeStaking = INTokenApeStaking(
-                nTokenAddress
-            );
-            apeCoin = nTokenApeStaking.getApeStaking().apeCoin();
+        localVar.apeCoin = INTokenApeStaking(localVar.nTokenAddress)
+            .getApeStaking()
+            .apeCoin();
+        localVar.beforeBalance = localVar.apeCoin.balanceOf(address(this));
+        localVar.bakcContract = INTokenApeStaking(localVar.nTokenAddress)
+            .getBAKC();
 
-            DataTypes.ReserveData storage apeReserve = ps._reserves[
-                address(apeCoin)
-            ];
-            DataTypes.ReserveCache memory apeReserveCache = apeReserve.cache();
+        DataTypes.ReserveData storage apeReserve = ps._reserves[
+            address(localVar.apeCoin)
+        ];
+        localVar.apeReserveCache = apeReserve.cache();
 
-            // 1, send borrow part to xTokenAddress
-            if (stakingInfo.borrowAmount > 0) {
-                ValidationLogic.validateFlashloanSimple(apeReserve);
-                IPToken(apeReserveCache.xTokenAddress).transferUnderlyingTo(
-                    nTokenAddress,
+        // 1, send borrow part to xTokenAddress
+        if (stakingInfo.borrowAmount > 0) {
+            ValidationLogic.validateFlashloanSimple(apeReserve);
+            IPToken(localVar.apeReserveCache.xTokenAddress)
+                .transferUnderlyingTo(
+                    localVar.nTokenAddress,
                     stakingInfo.borrowAmount
                 );
-            }
+        }
 
-            // 2, send cash part to xTokenAddress
-            if (stakingInfo.cashAmount > 0) {
-                apeCoin.safeTransferFrom(
+        // 2, send cash part to xTokenAddress
+        if (stakingInfo.cashAmount > 0) {
+            localVar.apeCoin.safeTransferFrom(
+                msg.sender,
+                localVar.nTokenAddress,
+                stakingInfo.cashAmount
+            );
+        }
+
+        // 3, deposit bayc or mayc pool
+        for (uint256 index = 0; index < _nfts.length; index++) {
+            require(
+                INToken(localVar.nTokenAddress).ownerOf(_nfts[index].tokenId) ==
                     msg.sender,
-                    nTokenAddress,
-                    stakingInfo.cashAmount
-                );
-            }
+                Errors.NOT_THE_OWNER
+            );
+        }
+        INTokenApeStaking(localVar.nTokenAddress).depositApeCoin(_nfts);
 
-            // 3, deposit bayc or mayc pool
-            INToken nToken = INToken(nTokenAddress);
-            for (uint256 index = 0; index < _nfts.length; index++) {
-                require(
-                    nToken.ownerOf(_nfts[index].tokenId) == msg.sender,
-                    Errors.NOT_THE_OWNER
-                );
-            }
-            nTokenApeStaking.depositApeCoin(_nfts);
+        // 4, deposit bakc pool
+        for (uint256 index = 0; index < _nftPairs.length; index++) {
+            require(
+                INToken(localVar.nTokenAddress).ownerOf(
+                    _nftPairs[index].mainTokenId
+                ) == msg.sender,
+                Errors.NOT_THE_OWNER
+            );
 
-            // 4, deposit bakc pool
-            IERC721 bakcContract = nTokenApeStaking.getBAKC();
-            for (uint256 index = 0; index < _nftPairs.length; index++) {
-                require(
-                    nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
-                    Errors.NOT_THE_OWNER
-                );
-
-                bakcContract.safeTransferFrom(
-                    msg.sender,
-                    nTokenAddress,
-                    _nftPairs[index].bakcTokenId
-                );
-            }
-            nTokenApeStaking.depositBAKC(_nftPairs);
-            //transfer BAKC back for user
-            for (uint256 index = 0; index < _nftPairs.length; index++) {
-                bakcContract.safeTransferFrom(
-                    nTokenAddress,
-                    msg.sender,
-                    _nftPairs[index].bakcTokenId
-                );
-            }
+            localVar.bakcContract.safeTransferFrom(
+                msg.sender,
+                localVar.nTokenAddress,
+                _nftPairs[index].bakcTokenId
+            );
+        }
+        INTokenApeStaking(localVar.nTokenAddress).depositBAKC(_nftPairs);
+        //transfer BAKC back for user
+        for (uint256 index = 0; index < _nftPairs.length; index++) {
+            localVar.bakcContract.safeTransferFrom(
+                localVar.nTokenAddress,
+                msg.sender,
+                _nftPairs[index].bakcTokenId
+            );
         }
 
         // 5 set sape as collateral
@@ -305,7 +315,7 @@ contract PoolApeStaking is
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
                 DataTypes.ExecuteBorrowParams({
-                    asset: address(apeCoin),
+                    asset: address(localVar.apeCoin),
                     user: msg.sender,
                     onBehalfOf: msg.sender,
                     amount: stakingInfo.borrowAmount,
@@ -319,7 +329,13 @@ contract PoolApeStaking is
             );
         }
 
-        // 7 check user hf
+        //7 checkout ape balance
+        require(
+            localVar.apeCoin.balanceOf(address(this)) == localVar.beforeBalance,
+            Errors.TOTAL_STAKING_AMOUNT_WRONG
+        );
+
+        // 8 check user hf
         require(
             getUserHf(msg.sender) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
