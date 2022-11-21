@@ -450,16 +450,15 @@ contract PoolApeStaking is
         return healthFactor;
     }
 
-    function checkSApeIsNotPaused(DataTypes.PoolStorage storage ps) internal view {
-        DataTypes.ReserveData storage reserve = ps._reserves[DataTypes.SApeAddress];
+    function checkSApeIsNotPaused(DataTypes.PoolStorage storage ps)
+        internal
+        view
+    {
+        DataTypes.ReserveData storage reserve = ps._reserves[
+            DataTypes.SApeAddress
+        ];
 
-        (
-            bool isActive,
-            ,
-            ,
-            bool isPaused,
-
-        ) = reserve.configuration.getFlags();
+        (bool isActive, , , bool isPaused, ) = reserve.configuration.getFlags();
 
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
