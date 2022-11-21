@@ -29,6 +29,7 @@ contract PoolApeStaking is
     using ReserveLogic for DataTypes.ReserveData;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using SafeERC20 for IERC20;
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 1;
@@ -60,6 +61,8 @@ contract PoolApeStaking is
         ApeCoinStaking.SingleNft[] calldata _nfts
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
+
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
@@ -90,6 +93,8 @@ contract PoolApeStaking is
         nonReentrant
     {
         DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
+
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
@@ -114,6 +119,8 @@ contract PoolApeStaking is
         ApeCoinStaking.PairNftWithAmount[] memory _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
+
         address xTokenAddress;
         {
             DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
@@ -179,6 +186,8 @@ contract PoolApeStaking is
         ApeCoinStaking.PairNft[] calldata _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
+
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
@@ -235,6 +244,7 @@ contract PoolApeStaking is
         ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
 
         BorrowAndStakeLocalVar memory localVar;
         localVar.nTokenAddress = ps
@@ -438,5 +448,20 @@ contract PoolApeStaking is
         (, , , , , , , uint256 healthFactor, , ) = GenericLogic
             .calculateUserAccountData(ps._reserves, ps._reservesList, params);
         return healthFactor;
+    }
+
+    function checkSApeIsNotPaused(DataTypes.PoolStorage storage ps) internal {
+        DataTypes.ReserveData storage reserve = ps._reserves[DataTypes.SApeAddress];
+
+        (
+            bool isActive,
+            ,
+            ,
+            bool isPaused,
+            DataTypes.AssetType reserveAssetType
+        ) = reserve.configuration.getFlags();
+
+        require(isActive, Errors.RESERVE_INACTIVE);
+        require(!isPaused, Errors.RESERVE_PAUSED);
     }
 }
