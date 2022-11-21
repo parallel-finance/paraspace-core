@@ -387,11 +387,11 @@ contract PoolApeStaking is
                 ps._reserves,
                 ps._usersConfig[onBehalfOf],
                 DataTypes.ExecuteRepayParams({
-            asset: repayAsset,
-            amount: repayAmount,
-            onBehalfOf: onBehalfOf,
-            usePTokens: false
-            })
+                    asset: repayAsset,
+                    amount: repayAmount,
+                    onBehalfOf: onBehalfOf,
+                    usePTokens: false
+                })
             );
         }
 
