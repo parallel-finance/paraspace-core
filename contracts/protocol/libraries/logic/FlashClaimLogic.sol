@@ -7,6 +7,9 @@ import {INToken} from "../../../interfaces/INToken.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
+import "../../../interfaces/INTokenApeStaking.sol";
+import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
+import {GenericLogic} from "./GenericLogic.sol";
 
 library FlashClaimLogic {
     // See `IPool` for descriptions
@@ -18,16 +21,17 @@ library FlashClaimLogic {
     );
 
     function executeFlashClaim(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteFlashClaimParams memory params
     ) external {
-        DataTypes.ReserveData storage reserve = reservesData[params.nftAsset];
-        ValidationLogic.validateFlashClaim(reserve, params);
+        DataTypes.ReserveData storage reserve = ps._reserves[params.nftAsset];
+        address nTokenAddress = reserve.xTokenAddress;
+        ValidationLogic.validateFlashClaim(ps, params);
 
         uint256 i;
         // step 1: moving underlying asset forward to receiver contract
         for (i = 0; i < params.nftTokenIds.length; i++) {
-            INToken(reserve.xTokenAddress).transferUnderlyingTo(
+            INToken(nTokenAddress).transferUnderlyingTo(
                 params.receiverAddress,
                 params.nftTokenIds[i]
             );
@@ -47,7 +51,7 @@ library FlashClaimLogic {
         for (i = 0; i < params.nftTokenIds.length; i++) {
             IERC721(params.nftAsset).safeTransferFrom(
                 params.receiverAddress,
-                reserve.xTokenAddress,
+                nTokenAddress,
                 params.nftTokenIds[i]
             );
 
@@ -58,5 +62,25 @@ library FlashClaimLogic {
                 params.nftTokenIds[i]
             );
         }
+
+        // step 4: check hf
+        DataTypes.CalculateUserAccountDataParams
+            memory accountParams = DataTypes.CalculateUserAccountDataParams({
+                userConfig: ps._usersConfig[msg.sender],
+                reservesCount: ps._reservesCount,
+                user: msg.sender,
+                oracle: params.oracle
+            });
+
+        (, , , , , , , uint256 healthFactor, , ) = GenericLogic
+            .calculateUserAccountData(
+                ps._reserves,
+                ps._reservesList,
+                accountParams
+            );
+        require(
+            healthFactor > DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+        );
     }
 }

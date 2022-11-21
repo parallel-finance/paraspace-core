@@ -37,6 +37,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     uint256 public constant ETH_CURRENCY_UNIT = 1 ether;
     address public constant MKR_ADDRESS =
         0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
+    address public constant SAPE_ADDRESS = address(0x1);
 
     constructor(
         IEACAggregatorProxy _networkBaseTokenPriceInUsdProxyAggregator,
@@ -150,6 +151,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         reserveData.underlyingAsset
                     ).name();
                     reserveData.name = bytes32ToString(name);
+                } else if (reserveData.underlyingAsset == SAPE_ADDRESS) {
+                    reserveData.symbol = "SApe";
+                    reserveData.name = "SApe";
                 } else {
                     reserveData.symbol = IERC20Detailed(
                         reserveData.underlyingAsset
@@ -160,9 +164,11 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 }
 
                 reserveData.isAtomicPricing = false;
-                reserveData.availableLiquidity = IERC20Detailed(
-                    reserveData.underlyingAsset
-                ).balanceOf(reserveData.xTokenAddress);
+                if (reserveData.underlyingAsset != SAPE_ADDRESS) {
+                    reserveData.availableLiquidity = IERC20Detailed(
+                        reserveData.underlyingAsset
+                    ).balanceOf(reserveData.xTokenAddress);
+                }
             } else {
                 reserveData.symbol = IERC721Metadata(
                     reserveData.underlyingAsset

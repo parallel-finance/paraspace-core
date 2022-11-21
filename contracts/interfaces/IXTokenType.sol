@@ -17,7 +17,8 @@ enum XTokenType {
     DelegationAwarePToken,
     RebasingPToken,
     PTokenAToken,
-    PTokenStETH
+    PTokenStETH,
+    PTokenSApe
 }
 
 interface IXTokenType {
