@@ -990,13 +990,14 @@ library ValidationLogic {
 
     /**
      * @notice Validates a flash claim.
-     * @param reserve The reserve object
+     * @param ps The pool storage
      * @param params The flash claim params
      */
     function validateFlashClaim(
-        DataTypes.ReserveData storage reserve,
+        DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteFlashClaimParams memory params
     ) internal view {
+        DataTypes.ReserveData storage reserve = ps._reserves[params.nftAsset];
         require(
             reserve.configuration.getAssetType() == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
@@ -1007,10 +1008,28 @@ library ValidationLogic {
         );
 
         INToken nToken = INToken(reserve.xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() != XTokenType.NTokenUniswapV3,
+            tokenType != XTokenType.NTokenUniswapV3,
             Errors.UNIV3_NOT_ALLOWED
         );
+
+        // need check sApe status when flash claim for bayc or mayc
+        if (
+            tokenType == XTokenType.NTokenBAYC ||
+            tokenType == XTokenType.NTokenMAYC
+        ) {
+            DataTypes.ReserveData storage sApeReserve = ps._reserves[
+                DataTypes.SApeAddress
+            ];
+
+            (bool isActive, , , bool isPaused, ) = sApeReserve
+                .configuration
+                .getFlags();
+
+            require(isActive, Errors.RESERVE_INACTIVE);
+            require(!isPaused, Errors.RESERVE_PAUSED);
+        }
 
         // only token owner can do flash claim
         for (uint256 i = 0; i < params.nftTokenIds.length; i++) {

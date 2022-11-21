@@ -25,12 +25,13 @@ library FlashClaimLogic {
         DataTypes.ExecuteFlashClaimParams memory params
     ) external {
         DataTypes.ReserveData storage reserve = ps._reserves[params.nftAsset];
-        ValidationLogic.validateFlashClaim(reserve, params);
+        address nTokenAddress = reserve.xTokenAddress;
+        ValidationLogic.validateFlashClaim(ps, params);
 
         uint256 i;
         // step 1: moving underlying asset forward to receiver contract
         for (i = 0; i < params.nftTokenIds.length; i++) {
-            INToken(reserve.xTokenAddress).transferUnderlyingTo(
+            INToken(nTokenAddress).transferUnderlyingTo(
                 params.receiverAddress,
                 params.nftTokenIds[i]
             );
@@ -50,7 +51,7 @@ library FlashClaimLogic {
         for (i = 0; i < params.nftTokenIds.length; i++) {
             IERC721(params.nftAsset).safeTransferFrom(
                 params.receiverAddress,
-                reserve.xTokenAddress,
+                nTokenAddress,
                 params.nftTokenIds[i]
             );
 
