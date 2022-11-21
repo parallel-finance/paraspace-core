@@ -11,8 +11,12 @@ import {PoolParameters} from "../../contracts/protocol/pool/PoolParameters.sol";
 import {PoolMarketplace} from "../../contracts/protocol/pool/PoolMarketplace.sol";
 import {IParaProxy} from "../../contracts/interfaces/IParaProxy.sol";
 import {IPoolAddressesProvider} from "../../contracts/interfaces/IPoolAddressesProvider.sol";
+import {PoolConfigurator} from "../../contracts/protocol/pool/PoolConfigurator.sol";
+import {ReservesSetupHelper} from "../../contracts/deployments/ReservesSetupHelper.sol";
+import {PriceOracle} from "../../contracts/mocks/oracle/PriceOracle.sol";
+import {IPoolConfigurator} from "../../contracts/interfaces/IPoolConfigurator.sol";
 
-contract CounterTest is Test {
+contract SupplyTest is Test {
     MockTokenFaucet.Token[] _ERC20;
     MockTokenFaucet.Token[] _ERC721;
 
@@ -55,6 +59,9 @@ contract CounterTest is Test {
 
         //Step6: set up pool
         setupPool(provider);
+
+        setupPoolConfigurator(provider);
+        // setupOracle();
 
         emit log_address(provider.getAddress("POOL"));
     }
@@ -166,6 +173,33 @@ contract CounterTest is Test {
             provider.getAddress("POOL"),
             _calldata
         );
+
+        // address memory poolProxy = provider.getPoolProxy()
+    }
+
+    function setupPoolConfigurator(IPoolAddressesProvider provider) public {
+        PoolConfigurator poolConfigurator = new PoolConfigurator();
+        provider.setPoolConfiguratorImpl(address(poolConfigurator));
+        IPoolConfigurator(provider.getPoolConfigurator())
+            .setAuctionRecoveryHealthFactor(1500000000000000000);
+        ReservesSetupHelper reserversSetupHealper = new ReservesSetupHelper();
+    }
+
+    function setupOracle(
+        address[] memory erc20Tokens,
+        address[] memory erc721Tokens
+    ) public {
+        PriceOracle oracle = new PriceOracle();
+        oracle.setEthUsdPrice(5848466240000000);
+        for (uint256 index = 0; index < erc20Tokens.length; index++) {
+            oracle.setAssetPrice(
+                erc20Tokens[index],
+                0.000908578801039414 ether
+            );
+        }
+        for (uint256 index = 0; index < erc721Tokens.length; index++) {
+            oracle.setAssetPrice(erc721Tokens[index], 101 ether);
+        }
     }
 
     function testSupply() public {
