@@ -62,42 +62,48 @@ library ApeStakingLogic {
         emit UnstakeApeIncentiveUpdated(oldValue, incentive);
     }
 
+    struct UnstakeAndRepayParams {
+        IPool POOL;
+        ApeCoinStaking _apeCoinStaking;
+        address _underlyingAsset;
+        uint256 poolId;
+        uint256 tokenId;
+        address incentiveReceiver;
+    }
+
     function executeUnstakePositionAndRepay(
         mapping(uint256 => address) storage _owners,
         APEStakingParameter storage stakingParameter,
-        IPool POOL,
-        ApeCoinStaking _apeCoinStaking,
-        uint256 poolId,
-        uint256 tokenId,
-        address incentiveReceiver
+        UnstakeAndRepayParams memory params
     ) external {
-        address positionOwner = _owners[tokenId];
+        address positionOwner = _owners[params.tokenId];
+        IERC20 _apeCoin = params._apeCoinStaking.apeCoin();
+        uint256 balanceBefore = _apeCoin.balanceOf(address(this));
 
         //1 unstake all position
         {
             //1.1 unstake Main pool position
-            (uint256 stakedAmount, ) = _apeCoinStaking.nftPosition(
-                poolId,
-                tokenId
+            (uint256 stakedAmount, ) = params._apeCoinStaking.nftPosition(
+                params.poolId,
+                params.tokenId
             );
             if (stakedAmount > 0) {
                 ApeCoinStaking.SingleNft[]
                     memory nfts = new ApeCoinStaking.SingleNft[](1);
-                nfts[0].tokenId = tokenId;
+                nfts[0].tokenId = params.tokenId;
                 nfts[0].amount = stakedAmount;
-                if (poolId == BAYC_POOL_ID) {
-                    _apeCoinStaking.withdrawBAYC(nfts, address(this));
+                if (params.poolId == BAYC_POOL_ID) {
+                    params._apeCoinStaking.withdrawBAYC(nfts, address(this));
                 } else {
-                    _apeCoinStaking.withdrawMAYC(nfts, address(this));
+                    params._apeCoinStaking.withdrawMAYC(nfts, address(this));
                 }
             }
             //1.2 unstake bakc pool position
-            (uint256 bakcTokenId, bool isPaired) = _apeCoinStaking.mainToBakc(
-                poolId,
-                tokenId
-            );
+            (uint256 bakcTokenId, bool isPaired) = params
+                ._apeCoinStaking
+                .mainToBakc(params.poolId, params.tokenId);
             if (isPaired) {
-                (stakedAmount, ) = _apeCoinStaking.nftPosition(
+                (stakedAmount, ) = params._apeCoinStaking.nftPosition(
                     BAKC_POOL_ID,
                     bakcTokenId
                 );
@@ -106,7 +112,7 @@ library ApeStakingLogic {
                         memory _nftPairs = new ApeCoinStaking.PairNftWithAmount[](
                             1
                         );
-                    _nftPairs[0].mainTokenId = tokenId;
+                    _nftPairs[0].mainTokenId = params.tokenId;
                     _nftPairs[0].bakcTokenId = bakcTokenId;
                     _nftPairs[0].amount = stakedAmount;
                     ApeCoinStaking.PairNftWithAmount[]
@@ -114,48 +120,59 @@ library ApeStakingLogic {
                             0
                         );
 
-                    if (poolId == BAYC_POOL_ID) {
-                        _apeCoinStaking.withdrawBAKC(_nftPairs, _otherPairs);
+                    if (params.poolId == BAYC_POOL_ID) {
+                        params._apeCoinStaking.withdrawBAKC(
+                            _nftPairs,
+                            _otherPairs
+                        );
                     } else {
-                        _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
+                        params._apeCoinStaking.withdrawBAKC(
+                            _otherPairs,
+                            _nftPairs
+                        );
                     }
                 }
             }
         }
 
-        IERC20 _apeCoin = _apeCoinStaking.apeCoin();
-        uint256 apeBalance = _apeCoin.balanceOf(address(this));
-        if (apeBalance == 0) {
+        uint256 unstakedAmount = _apeCoin.balanceOf(address(this)) -
+            balanceBefore;
+        if (unstakedAmount == 0) {
             return;
         }
         //2 send incentive to caller
-        if (incentiveReceiver != address(0)) {
+        if (params.incentiveReceiver != address(0)) {
             uint256 unstakeIncentive = stakingParameter.unstakeIncentive;
             if (unstakeIncentive > 0) {
-                uint256 incentiveAmount = apeBalance.percentMul(
+                uint256 incentiveAmount = unstakedAmount.percentMul(
                     unstakeIncentive
                 );
-                _apeCoin.safeTransfer(incentiveReceiver, incentiveAmount);
-                apeBalance = apeBalance - incentiveAmount;
+                _apeCoin.safeTransfer(
+                    params.incentiveReceiver,
+                    incentiveAmount
+                );
+                unstakedAmount = unstakedAmount - incentiveAmount;
             }
         }
 
-        //3 repay ape coin debt if user have
-        DataTypes.ReserveData memory apeCoinData = POOL.getReserveData(
+        //3 repay and supply
+        DataTypes.ReserveData memory apeCoinData = params.POOL.getReserveData(
             address(_apeCoin)
         );
-        uint256 userDebt = IERC20(apeCoinData.variableDebtTokenAddress)
+        uint256 repayAmount = IERC20(apeCoinData.variableDebtTokenAddress)
             .balanceOf(positionOwner);
-        if (userDebt > 0) {
-            uint256 repayDebt = Math.min(userDebt, apeBalance);
-            POOL.repay(address(_apeCoin), repayDebt, positionOwner);
-            apeBalance = apeBalance - repayDebt;
+        if (repayAmount > 0) {
+            repayAmount = Math.min(repayAmount, unstakedAmount);
         }
+        uint256 supplyAmount = unstakedAmount - repayAmount;
 
-        //4 supply remaining ape coin
-        if (apeBalance > 0) {
-            POOL.supply(address(_apeCoin), apeBalance, positionOwner, 0);
-        }
+        params.POOL.repayAndSupply(
+            params._underlyingAsset,
+            address(_apeCoin),
+            positionOwner,
+            repayAmount,
+            supplyAmount
+        );
     }
 
     function getUserTotalStakingAmount(

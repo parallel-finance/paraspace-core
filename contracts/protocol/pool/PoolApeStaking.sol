@@ -18,6 +18,7 @@ import {GenericLogic} from "../libraries/logic/GenericLogic.sol";
 import {UserConfiguration} from "../libraries/configuration/UserConfiguration.sol";
 import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
+import "../libraries/logic/SupplyLogic.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -345,6 +346,7 @@ contract PoolApeStaking is
 
     function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
         external
+        nonReentrant
     {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
@@ -364,6 +366,48 @@ contract PoolApeStaking is
             tokenId,
             incentiveReceiver
         );
+    }
+
+    function repayAndSupply(
+        address underlyingAsset,
+        address repayAsset,
+        address onBehalfOf,
+        uint256 repayAmount,
+        uint256 supplyAmount
+    ) external {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        require(
+            msg.sender == ps._reserves[underlyingAsset].xTokenAddress,
+            Errors.CALLER_NOT_XTOKEN
+        );
+
+        if (repayAmount > 0) {
+            BorrowLogic.executeRepay(
+                ps._reserves,
+                ps._usersConfig[onBehalfOf],
+                DataTypes.ExecuteRepayParams({
+            asset: repayAsset,
+            amount: repayAmount,
+            onBehalfOf: onBehalfOf,
+            usePTokens: false
+            })
+            );
+        }
+
+        if (supplyAmount > 0) {
+            SupplyLogic.executeSupply(
+                ps._reserves,
+                ps._usersConfig[onBehalfOf],
+                DataTypes.ExecuteSupplyParams({
+                    asset: repayAsset,
+                    amount: supplyAmount,
+                    onBehalfOf: onBehalfOf,
+                    payer: msg.sender,
+                    referralCode: 0
+                })
+            );
+        }
     }
 
     function setSApeUseAsCollateral(address user) internal {

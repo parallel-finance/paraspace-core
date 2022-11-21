@@ -55,8 +55,6 @@ contract PTokenSApe is PToken {
         require(address(nBAYC) != address(0) && address(nMAYC) != address(0));
         uint256 totalStakedAPE = nBAYC.getUserApeStakingAmount(user) +
             nMAYC.getUserApeStakingAmount(user);
-        //incase apeStakingContract got a problem
-        require(totalStakedAPE < 1000 * 10000 * 1e18);
         return totalStakedAPE;
     }
 

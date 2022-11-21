@@ -74,12 +74,18 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         address to,
         uint256 tokenId
     ) external override onlyPool nonReentrant {
-        uint256 positionAmount = ApeStakingLogic.getTokenIdStakingAmount(
-            POOL_ID(),
-            _apeCoinStaking,
-            tokenId
+        ApeStakingLogic.executeUnstakePositionAndRepay(
+            _ERC721Data.owners,
+            apeStakingDataStorage(),
+            ApeStakingLogic.UnstakeAndRepayParams({
+                POOL: POOL,
+                _apeCoinStaking: _apeCoinStaking,
+                _underlyingAsset: _underlyingAsset,
+                poolId: POOL_ID(),
+                tokenId: tokenId,
+                incentiveReceiver: address(0)
+            })
         );
-        require(positionAmount == 0, Errors.APE_STAKING_POSITION_EXISTED);
 
         _transfer(from, to, tokenId, false);
     }
@@ -93,12 +99,18 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         uint256[] calldata tokenIds
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         for (uint256 index = 0; index < tokenIds.length; index++) {
-            uint256 positionAmount = ApeStakingLogic.getTokenIdStakingAmount(
-                POOL_ID(),
-                _apeCoinStaking,
-                tokenIds[index]
+            ApeStakingLogic.executeUnstakePositionAndRepay(
+                _ERC721Data.owners,
+                apeStakingDataStorage(),
+                ApeStakingLogic.UnstakeAndRepayParams({
+                    POOL: POOL,
+                    _apeCoinStaking: _apeCoinStaking,
+                    _underlyingAsset: _underlyingAsset,
+                    poolId: POOL_ID(),
+                    tokenId: tokenIds[index],
+                    incentiveReceiver: address(0)
+                })
             );
-            require(positionAmount == 0, Errors.APE_STAKING_POSITION_EXISTED);
         }
 
         return _burn(from, receiverOfUnderlying, tokenIds);
@@ -141,11 +153,14 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         ApeStakingLogic.executeUnstakePositionAndRepay(
             _ERC721Data.owners,
             apeStakingDataStorage(),
-            POOL,
-            _apeCoinStaking,
-            POOL_ID(),
-            tokenId,
-            incentiveReceiver
+            ApeStakingLogic.UnstakeAndRepayParams({
+                POOL: POOL,
+                _apeCoinStaking: _apeCoinStaking,
+                _underlyingAsset: _underlyingAsset,
+                poolId: POOL_ID(),
+                tokenId: tokenId,
+                incentiveReceiver: incentiveReceiver
+            })
         );
     }
 

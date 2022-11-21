@@ -40,4 +40,12 @@ interface IPoolApeStaking {
 
     function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
         external;
+
+    function repayAndSupply(
+        address underlyingAsset,
+        address repayAsset,
+        address onBehalfOf,
+        uint256 repayAmount,
+        uint256 supplyAmount
+    ) external;
 }

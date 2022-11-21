@@ -40,33 +40,27 @@ describe("APE Coin Unstaking", () => {
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
-      poolAdmin,
       ape,
       mayc,
       bayc,
       users: [user1, depositor],
       protocolDataProvider,
       pool,
-      nBAYC,
-      nMAYC,
     } = testEnv;
     const {
       xTokenAddress: pApeCoinAddress,
       variableDebtTokenAddress: variableDebtApeCoinAddress,
     } = await protocolDataProvider.getReserveTokensAddresses(ape.address);
     const {xTokenAddress: pSApeCoinAddress} =
-      await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
+      await protocolDataProvider.getReserveTokensAddresses(
+        "0x0000000000000000000000000000000000000001"
+      );
 
     variableDebtApeCoin = await getVariableDebtToken(
       variableDebtApeCoinAddress
     );
     pApeCoin = await getPToken(pApeCoinAddress);
     pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
-    await waitForTx(
-      await pSApeCoin
-        .connect(poolAdmin.signer)
-        .setNToken(nBAYC.address, nMAYC.address)
-    );
 
     await supplyAndValidate(ape, "20000", depositor, true);
     await changePriceAndValidate(ape, "0.001");
