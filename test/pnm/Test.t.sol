@@ -52,6 +52,7 @@ contract SupplyTest is Test {
 
         //Step5: set up acl admin
         ACLManager manager = new ACLManager(provider);
+        provider.setACLManager(address(manager));
         manager.addPoolAdmin(address(this));
         manager.addAssetListingAdmin(address(this));
         manager.addEmergencyAdmin(address(1));
@@ -62,8 +63,6 @@ contract SupplyTest is Test {
 
         setupPoolConfigurator(provider);
         // setupOracle();
-
-        emit log_address(provider.getAddress("POOL"));
     }
 
     function setupPool(IPoolAddressesProvider provider) public {
@@ -186,8 +185,8 @@ contract SupplyTest is Test {
     }
 
     function setupOracle(
-        address[] memory erc20Tokens,
-        address[] memory erc721Tokens
+        address[] calldata erc20Tokens,
+        address[] calldata erc721Tokens
     ) public {
         PriceOracle oracle = new PriceOracle();
         oracle.setEthUsdPrice(5848466240000000);
