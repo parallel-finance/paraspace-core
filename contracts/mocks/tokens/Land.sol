@@ -1107,6 +1107,8 @@ contract Land is ERC721Enumerable, Ownable {
     uint256 public immutable MAX_FUTURE_LANDS;
     uint256 public constant MAX_MINT_PER_BLOCK = 150;
 
+    uint256 public collectionSize;
+
     // structs
     struct LandAmount {
         uint256 alpha;
@@ -1196,6 +1198,7 @@ contract Land is ERC721Enumerable, Ownable {
         fee = _vrfFee;
 
         operator = _operator;
+        collectionSize = 100000;
     }
 
     function _baseURI() internal view override returns (string memory) {
@@ -1207,13 +1210,26 @@ contract Land is ERC721Enumerable, Ownable {
     }
 
     function mint(address _to) public {
+        require(
+            totalSupply() + 1 <= collectionSize,
+            "exceed collectionSize"
+        );
         _safeMint(_to, mintIndexPublicSaleAndContributors++);
     }
 
     function mint(uint256 count, address to) public virtual {
+        require(
+            totalSupply() + count <= collectionSize,
+            "exceed collectionSize"
+        );
         for (uint256 i = 0; i < count; i++) {
             mintIndexPublicSaleAndContributors++;
             _safeMint(to, mintIndexPublicSaleAndContributors);
         }
+    }
+
+    function setCollectionSize(uint256 _newSize) public onlyOwner {
+        require(_newSize >= collectionSize, "don't decrease collectionSize");
+        collectionSize = _newSize;
     }
 }

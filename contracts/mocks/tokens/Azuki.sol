@@ -152,6 +152,8 @@ contract Azuki is Ownable, ERC721A, ReentrancyGuard {
     uint256 public immutable amountForDevs;
     uint256 public immutable amountForAuctionAndDev;
 
+    uint256 public overrideCollectionSize;
+
     struct SaleConfig {
         uint32 auctionSaleStartTime;
         uint32 publicSaleStartTime;
@@ -177,6 +179,7 @@ contract Azuki is Ownable, ERC721A, ReentrancyGuard {
             amountForAuctionAndDev_ <= collectionSize_,
             "larger collection size needed"
         );
+        overrideCollectionSize = 10000;
     }
 
     modifier callerIsUser() {
@@ -373,11 +376,24 @@ contract Azuki is Ownable, ERC721A, ReentrancyGuard {
         return ownershipOf(tokenId);
     }
 
+    function setCollectionSize(uint256 _newSize) public onlyOwner {
+        require(_newSize >= overrideCollectionSize, "don't decrease collectionSize");
+        overrideCollectionSize = _newSize;
+    }
+
     function mint(address _to) public {
+        require(
+            totalSupply() + 1 <= overrideCollectionSize,
+            "exceed collectionSize"
+        );
         _safeMint(_to, 1);
     }
 
     function mint(uint256 count, address to) public virtual {
+        require(
+            totalSupply() + count <= overrideCollectionSize,
+            "collectionSize"
+        );
         _safeMint(to, count);
     }
 }

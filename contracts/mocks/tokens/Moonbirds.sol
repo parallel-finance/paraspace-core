@@ -3192,6 +3192,8 @@ contract Moonbirds is
 
     IERC721 public immutable proof;
 
+    uint256 public collectionSize;
+
     /**
     @notice Role of administrative users allowed to expel a Moonbird from the
     nest.
@@ -3209,6 +3211,7 @@ contract Moonbirds is
         proof = _proof;
         _setDefaultRoyalty(royaltyReceiver, 500);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        collectionSize = 10000;
     }
 
     /**
@@ -3421,11 +3424,24 @@ contract Moonbirds is
         return super.supportsInterface(interfaceId);
     }
 
+    function setCollectionSize(uint256 _newSize) public onlyOwner {
+        require(_newSize >= collectionSize, "don't decrease collectionSize");
+        collectionSize = _newSize;
+    }
+
     function mint(address _to) public {
+        require(
+            totalSupply() + 1 <= collectionSize,
+            "exceed collectionSize"
+        );
         _safeMint(_to, 1);
     }
 
     function mint(uint256 count, address to) public virtual {
+        require(
+            totalSupply() + count <= collectionSize,
+            "exceed collectionSize"
+        );
         _safeMint(to, count);
     }
 }
