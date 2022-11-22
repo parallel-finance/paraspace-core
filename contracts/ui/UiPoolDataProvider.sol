@@ -426,7 +426,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return string(bytesArray);
     }
 
-    function getUserInLiquidationData(
+    function getUserInLiquidationNFTData(
         IPoolAddressesProvider provider,
         address user,
         address[] memory assets,

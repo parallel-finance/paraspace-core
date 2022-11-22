@@ -138,7 +138,7 @@ interface IUiPoolDataProvider {
         uint256 tokenId
     ) external view returns (UniswapV3LpTokenInfo memory);
 
-    function getUserInLiquidationData(
+    function getUserInLiquidationNFTData(
         IPoolAddressesProvider provider,
         address user,
         address[] memory asset,
