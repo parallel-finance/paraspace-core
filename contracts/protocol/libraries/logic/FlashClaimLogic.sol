@@ -20,6 +20,11 @@ library FlashClaimLogic {
         uint256 tokenId
     );
 
+    /**
+     * @notice Implements the executeFlashClaim feature.
+     * @param ps The state of pool storage
+     * @param params The additional parameters needed to execute the flash claim
+     */
     function executeFlashClaim(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteFlashClaimParams memory params

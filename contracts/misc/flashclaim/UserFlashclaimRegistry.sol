@@ -12,6 +12,9 @@ contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
         pool = pool_;
     }
 
+    /**
+     * @notice create a default receiver contract for the user
+     */
     function createReceiver() public virtual override {
         address caller = msg.sender;
         AirdropFlashClaimReceiver receiver = new AirdropFlashClaimReceiver(
@@ -21,6 +24,10 @@ contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
         userReceivers[caller] = address(receiver);
     }
 
+    /**
+     * @notice get receiver contract address for the user
+     * @param user The user address
+     */
     function getUserReceivers(address user)
         external
         view
