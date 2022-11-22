@@ -9,6 +9,14 @@ import {WPunk} from "../../../contracts/mocks/tokens/WrappedPunk/WPunk.sol";
 import {BoredApeYachtClub} from "../../../contracts/mocks/tokens/BAYC.sol";
 import {MutantApeYachtClub} from "../../../contracts/mocks/tokens/MAYC.sol";
 import {MintableERC721} from "../../../contracts/mocks/tokens/MintableERC721.sol";
+import {Doodles} from "../../../contracts/mocks/tokens/DOODLES.sol";
+import {Azuki} from "../../../contracts/mocks/tokens/Azuki.sol";
+import {CloneX} from "../../../contracts/mocks/tokens/CloneX.sol";
+import {Meebits} from "../../../contracts/mocks/tokens/Meebits.sol";
+import {Land} from "../../../contracts/mocks/tokens/Land.sol";
+import {Moonbirds} from "../../../contracts/mocks/tokens/Moonbirds.sol";
+import {IERC721} from "../../../contracts/mocks/tokens/dependencies/ERC721A.sol";
+
 import {StringUtils} from "./StringUtils.sol";
 
 library DataTypes {
@@ -37,6 +45,7 @@ contract ParaspaceConfig {
     mapping(bytes32 => address) public erc20Contracts;
     mapping(bytes32 => DataTypes.IReserveParams) public erc721TokensConfig;
     mapping(bytes32 => address) public erc721Contracts;
+    address payable public constant root = payable(address(31415926));
 
     constructor() {
         //TODO(alan): update full table
@@ -131,25 +140,72 @@ contract ERC721Deployer is Deployer {
                 CryptoPunksMarket punks = new CryptoPunksMarket();
                 bytes32 punksSymbol = "PUNKS";
                 config.updateErc721TokenAddress(punksSymbol, address(punks));
-                WPunk wpunks = new WPunk(address(punks));
-                config.updateErc721TokenAddress(tokenSymbol, address(wpunks));
+
+                WPunk token = new WPunk(address(punks));
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
             } else if (symbol.equal("BAYC")) {
-                BoredApeYachtClub bayc = new BoredApeYachtClub(
+                BoredApeYachtClub token = new BoredApeYachtClub(
                     symbol,
                     symbol,
                     8000,
                     0
                 );
-                config.updateErc721TokenAddress(tokenSymbol, address(bayc));
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
             } else if (symbol.equal("MAYC")) {
-                MutantApeYachtClub mayc = new MutantApeYachtClub(
+                MutantApeYachtClub token = new MutantApeYachtClub(
                     symbol,
                     symbol,
                     address(0),
                     address(0)
                 );
-                config.updateErc721TokenAddress(tokenSymbol, address(mayc));
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
                 //FIXME(alan): Why deploy mayc && apeCoin?
+            } else if (symbol.equal("DOODLE")) {
+                Doodles token = new Doodles();
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
+            } else if (symbol.equal("AZUKI")) {
+                Azuki token = new Azuki(5, 10000, 8900, 200);
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
+            } else if (symbol.equal("CLONEX")) {
+                CloneX token = new CloneX();
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
+            } else if (symbol.equal("MEEBITS")) {
+                address punks = config.erc721Contracts("PUNKS");
+                Meebits token = new Meebits(punks, address(0), config.root());
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
+            } else if (symbol.equal("OTHR")) {
+                Land.ContributorAmount[]
+                    memory amount = new Land.ContributorAmount[](1);
+                amount[0] = Land.ContributorAmount(config.root(), 100);
+                Land token = new Land(
+                    symbol,
+                    symbol,
+                    Land.ContractAddresses(address(0), address(0), address(0)),
+                    Land.LandAmount(10, 100, 1000, 10000),
+                    amount,
+                    config.root(),
+                    config.root(),
+                    bytes32(
+                        0x63616e6469646174653100000000000000000000000000000000000000000000
+                    ),
+                    5,
+                    config.root()
+                );
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
+            } else if (symbol.equal("MOONBIRD")) {
+                Moonbirds token = new Moonbirds(
+                    "MOON",
+                    "MOON",
+                    IERC721(address(0)),
+                    config.root(),
+                    config.root()
+                );
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
+            } else if (symbol.equal("UniswapV3")) {
+                //TODO(alan)
+            } else {
+                MintableERC721 token = new MintableERC721(symbol, symbol, "");
+                config.updateErc721TokenAddress(tokenSymbol, address(token));
             }
         }
     }
