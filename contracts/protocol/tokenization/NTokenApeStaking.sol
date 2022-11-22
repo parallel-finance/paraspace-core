@@ -58,10 +58,16 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         initializeStakingData();
     }
 
+    /**
+     * @notice Returns the address of BAKC contract address.
+     **/
     function getBAKC() public view returns (IERC721) {
         return _apeCoinStaking.nftContracts(ApeStakingLogic.BAKC_POOL_ID);
     }
 
+    /**
+     * @notice Returns the address of ApeCoinStaking contract address.
+     **/
     function getApeStaking() external view returns (ApeCoinStaking) {
         return _apeCoinStaking;
     }
@@ -145,6 +151,11 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         }
     }
 
+    /**
+     * @notice Unstake Ape coin staking position and repay user debt
+     * @param tokenId Token id of the ape staking position on
+     * @param incentiveReceiver address to receive incentive
+     */
     function unstakePositionAndRepay(uint256 tokenId, address incentiveReceiver)
         external
         onlyPool
@@ -164,6 +175,10 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         );
     }
 
+    /**
+     * @notice get user total ape staking position
+     * @param user user address
+     */
     function getUserApeStakingAmount(address user)
         external
         view

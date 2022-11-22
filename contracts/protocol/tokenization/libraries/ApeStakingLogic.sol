@@ -28,6 +28,13 @@ library ApeStakingLogic {
     }
     event UnstakeApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
+    /**
+     * @notice withdraw Ape coin staking position from ApeCoinStaking
+     * @param _apeCoinStaking ApeCoinStaking contract address
+     * @param poolId identify whether BAYC or MAYC paired with BAKC
+     * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
+     * @param _apeRecipient the receiver of ape coin
+     */
     function withdrawBAKC(
         ApeCoinStaking _apeCoinStaking,
         uint256 poolId,
@@ -48,6 +55,11 @@ library ApeStakingLogic {
         _apeCoinStaking.apeCoin().safeTransfer(_apeRecipient, balance);
     }
 
+    /**
+     * @notice undate incentive percentage for unstakePositionAndRepay
+     * @param stakingParameter storage for Ape staking
+     * @param incentive new incentive percentage
+     */
     function executeSetUnstakeApeIncentive(
         APEStakingParameter storage stakingParameter,
         uint256 incentive
@@ -71,6 +83,12 @@ library ApeStakingLogic {
         address incentiveReceiver;
     }
 
+    /**
+     * @notice Unstake Ape coin staking position and repay user debt
+     * @param _owners The state of ownership for nToken
+     * @param stakingParameter storage for Ape staking
+     * @param params The additional parameters needed to execute this function
+     */
     function executeUnstakePositionAndRepay(
         mapping(uint256 => address) storage _owners,
         APEStakingParameter storage stakingParameter,
@@ -175,6 +193,14 @@ library ApeStakingLogic {
         );
     }
 
+    /**
+     * @notice get user total ape staking position
+     * @param userState The user state of nToken
+     * @param ownedTokens The ownership mapping state of nNtoken
+     * @param user User address
+     * @param poolId identify whether BAYC pool or MAYC pool
+     * @param _apeCoinStaking ApeCoinStaking contract address
+     */
     function getUserTotalStakingAmount(
         mapping(address => UserState) storage userState,
         mapping(address => mapping(uint256 => uint256)) storage ownedTokens,
@@ -196,6 +222,12 @@ library ApeStakingLogic {
         return totalAmount;
     }
 
+    /**
+     * @notice get ape staking position for a tokenId
+     * @param poolId identify whether BAYC pool or MAYC pool
+     * @param _apeCoinStaking ApeCoinStaking contract address
+     * @param tokenId specified the tokenId for the position
+     */
     function getTokenIdStakingAmount(
         uint256 poolId,
         ApeCoinStaking _apeCoinStaking,

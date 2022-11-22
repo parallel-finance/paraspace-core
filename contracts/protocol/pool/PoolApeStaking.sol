@@ -56,6 +56,7 @@ contract PoolApeStaking is
         return POOL_REVISION;
     }
 
+    /// @inheritdoc IPoolApeStaking
     function withdrawApeCoin(
         address nftAsset,
         ApeCoinStaking.SingleNft[] calldata _nfts
@@ -88,6 +89,7 @@ contract PoolApeStaking is
         );
     }
 
+    /// @inheritdoc IPoolApeStaking
     function claimApeCoin(address nftAsset, uint256[] calldata _nfts)
         external
         nonReentrant
@@ -114,6 +116,7 @@ contract PoolApeStaking is
         );
     }
 
+    /// @inheritdoc IPoolApeStaking
     function withdrawBAKC(
         address nftAsset,
         ApeCoinStaking.PairNftWithAmount[] memory _nftPairs
@@ -181,6 +184,7 @@ contract PoolApeStaking is
         );
     }
 
+    /// @inheritdoc IPoolApeStaking
     function claimBAKC(
         address nftAsset,
         ApeCoinStaking.PairNft[] calldata _nftPairs
@@ -238,6 +242,7 @@ contract PoolApeStaking is
         DataTypes.ReserveCache apeReserveCache;
     }
 
+    /// @inheritdoc IPoolApeStaking
     function borrowApeAndStake(
         StakingInfo calldata stakingInfo,
         ApeCoinStaking.SingleNft[] calldata _nfts,
@@ -354,6 +359,7 @@ contract PoolApeStaking is
         );
     }
 
+    /// @inheritdoc IPoolApeStaking
     function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
         external
         nonReentrant
@@ -378,6 +384,7 @@ contract PoolApeStaking is
         );
     }
 
+    /// @inheritdoc IPoolApeStaking
     function repayAndSupply(
         address underlyingAsset,
         address repayAsset,
