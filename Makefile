@@ -365,6 +365,17 @@ upgrade:
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: remove-pool-funcs
+remove-pool-funcs:
+# e.g: emergency disable liquidation
+	FUNCS_TO_REMOVE=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:remove-pool-funcs run-task
+
+.PHONY: add-pool-funcs
+add-pool-funcs:
+# e.g: add liquidation back
+	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
+
+
 .PHONY: upgrade-ptoken
 upgrade-ptoken:
 	make TASK_NAME=upgrade:ptoken run-task
