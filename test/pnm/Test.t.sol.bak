@@ -15,6 +15,8 @@ import {PoolConfigurator} from "../../contracts/protocol/pool/PoolConfigurator.s
 import {ReservesSetupHelper} from "../../contracts/deployments/ReservesSetupHelper.sol";
 import {PriceOracle} from "../../contracts/mocks/oracle/PriceOracle.sol";
 import {IPoolConfigurator} from "../../contracts/interfaces/IPoolConfigurator.sol";
+import {NFTFloorOracle} from "../../contracts/misc/NFTFloorOracle.sol";
+import {MockIncentivesController} from "../../contracts/mocks/helpers/MockIncentivesController.sol";
 
 contract SupplyTest is Test {
     MockTokenFaucet.Token[] _ERC20;
@@ -62,7 +64,7 @@ contract SupplyTest is Test {
         setupPool(provider);
 
         setupPoolConfigurator(provider);
-        // setupOracle();
+        setupOracle();
     }
 
     function setupPool(IPoolAddressesProvider provider) public {
@@ -184,27 +186,40 @@ contract SupplyTest is Test {
         ReservesSetupHelper reserversSetupHealper = new ReservesSetupHelper();
     }
 
-    function setupOracle(
-        address[] calldata erc20Tokens,
-        address[] calldata erc721Tokens
-    ) public {
+    function setupOracle() public {
         PriceOracle oracle = new PriceOracle();
         oracle.setEthUsdPrice(5848466240000000);
-        for (uint256 index = 0; index < erc20Tokens.length; index++) {
+        for (uint256 index = 0; index < _ERC20.length; index++) {
             oracle.setAssetPrice(
-                erc20Tokens[index],
+                _ERC20[index].addr,
                 0.000908578801039414 ether
             );
         }
-        for (uint256 index = 0; index < erc721Tokens.length; index++) {
-            oracle.setAssetPrice(erc721Tokens[index], 101 ether);
+        for (uint256 index = 0; index < _ERC721.length; index++) {
+            oracle.setAssetPrice(_ERC721[index].addr, 101 ether);
         }
     }
 
+    function setupNftOracle() public returns (address) {
+        NFTFloorOracle nftOracle = new NFTFloorOracle();
+        address[] memory feeders = new address[](1);
+        feeders[0] = address(11);
+
+        address[] memory nfts = new address[](_ERC721.length);
+        for (uint256 i = 0; i < _ERC721.length; i++) {
+            nfts[i] = _ERC721[i].addr;
+        }
+        nftOracle.initialize(address(this), feeders, nfts);
+        return address(nftOracle);
+    }
+
+    function setupReserves() {
+        MockIncentivesController incentivesController = new MockIncentivesController();
+    }
+
     function testSupply() public {
-        // MockTokenFaucet.Token[] memory tokens = _ERC20;
-        // pool.supply(tokens[0].addr, 1000, address(this), 0);
-        emit log_address(address(this));
+        MockTokenFaucet.Token[] memory tokens = _ERC20;
+        pool.supply(tokens[0].addr, 1000, address(this), 0);
         assertEq(true, true);
     }
 }
