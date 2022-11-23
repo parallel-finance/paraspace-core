@@ -45,6 +45,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         uint160 sqrtPriceX96;
     }
 
+    /**
+     * @notice get onchain position data from uniswap for the specified tokenId.
+     */
     function getOnchainPositionData(uint256 tokenId)
         public
         view
@@ -87,6 +90,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
             });
     }
 
+    /**
+     * @notice get onchain liquidity amount for the specified tokenId.
+     */
     function getLiquidityAmount(uint256 tokenId)
         external
         view
@@ -100,6 +106,10 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         );
     }
 
+    /**
+     * @notice calculate liquidity amount for the position data.
+     * @param positionData The specified position data
+     */
     function getLiquidityAmountFromPositionData(
         UinswapV3PositionData memory positionData
     ) public pure returns (uint256 token0Amount, uint256 token1Amount) {
@@ -111,6 +121,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         );
     }
 
+    /**
+     * @notice get liquidity provider fee amount for the specified tokenId.
+     */
     function getLpFeeAmount(uint256 tokenId)
         external
         view
@@ -124,6 +137,10 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         );
     }
 
+    /**
+     * @notice calculate liquidity provider fee amount for the position data.
+     * @param positionData The specified position data
+     */
     function getLpFeeAmountFromPositionData(
         UinswapV3PositionData memory positionData
     ) public view returns (uint256 token0Amount, uint256 token1Amount) {
@@ -133,7 +150,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         token1Amount += positionData.tokensOwed1;
     }
 
-    // get token price
+    /**
+     * @notice Returns the price for the specified tokenId.
+     */
     function getTokenPrice(uint256 tokenId) public view returns (uint256) {
         UinswapV3PositionData memory positionData = getOnchainPositionData(
             tokenId
@@ -161,7 +180,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
                 10**oracleData.token1Decimal);
     }
 
-    // get list of tokens prices
+    /**
+     * @notice Returns the price for the specified tokenId array.
+     */
     function getTokensPrices(uint256[] calldata tokenIds)
         external
         view
@@ -176,6 +197,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         return prices;
     }
 
+    /**
+     * @notice Returns the total price for the specified tokenId array.
+     */
     function getTokensPricesSum(uint256[] calldata tokenIds)
         external
         view
