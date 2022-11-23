@@ -21,7 +21,7 @@ contract ERC721Deployer is Deployer {
 
     constructor(ParaspaceConfig _config) Deployer(_config) {}
 
-    function deploy() public override {
+    function deploy() public override FromDeployer {
         uint256 t = config.erc721TokensLength();
         for (uint256 i = 0; i < t; i++) {
             bytes32 tokenSymbol = config.erc721Tokens(i);
@@ -64,25 +64,29 @@ contract ERC721Deployer is Deployer {
                 config.updateAddress(tokenSymbol, address(token));
             } else if (symbol.equal("MEEBITS")) {
                 address punks = config.contractAddresses("PUNKS");
-                Meebits token = new Meebits(punks, address(0), config.root());
+                Meebits token = new Meebits(
+                    punks,
+                    address(0),
+                    config.deployer()
+                );
                 config.updateAddress(tokenSymbol, address(token));
             } else if (symbol.equal("OTHR")) {
                 Land.ContributorAmount[]
                     memory amount = new Land.ContributorAmount[](1);
-                amount[0] = Land.ContributorAmount(config.root(), 100);
+                amount[0] = Land.ContributorAmount(config.deployer(), 100);
                 Land token = new Land(
                     symbol,
                     symbol,
                     Land.ContractAddresses(address(0), address(0), address(0)),
                     Land.LandAmount(10, 100, 1000, 10000),
                     amount,
-                    config.root(),
-                    config.root(),
+                    config.deployer(),
+                    config.deployer(),
                     bytes32(
                         0x63616e6469646174653100000000000000000000000000000000000000000000
                     ),
                     5,
-                    config.root()
+                    config.deployer()
                 );
                 config.updateAddress(tokenSymbol, address(token));
             } else if (symbol.equal("MOONBIRD")) {
@@ -90,8 +94,8 @@ contract ERC721Deployer is Deployer {
                     "MOON",
                     "MOON",
                     IERC721(address(0)),
-                    config.root(),
-                    config.root()
+                    config.deployer(),
+                    config.deployer()
                 );
                 config.updateAddress(tokenSymbol, address(token));
             } else if (symbol.equal("UniswapV3")) {

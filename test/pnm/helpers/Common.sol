@@ -1,5 +1,7 @@
 pragma solidity ^0.8.10;
 
+import "forge-std/Test.sol";
+
 import {MintableERC20} from "../../../contracts/mocks/tokens/MintableERC20.sol";
 import {WETH9Mocked} from "../../../contracts/mocks/tokens/WETH9Mocked.sol";
 import {stETH} from "../../../contracts/mocks/tokens/stETH.sol";
@@ -31,11 +33,14 @@ contract ParaspaceConfig {
     bytes32[] public erc721Tokens;
 
     mapping(bytes32 => DataTypes.IReserveParams) internal tokenConfigs;
-    address payable public constant root = payable(address(31415926));
+
+    address payable public deployer;
+    bytes32 public constant marketId = "ParaSpaceMM";
 
     mapping(bytes32 => address) public contractAddresses;
 
     constructor() {
+        deployer = payable(msg.sender);
         //TODO(alan): update full table
         erc20Tokens.push("DAI");
         tokenConfigs["DAI"] = DataTypes.IReserveParams({
@@ -110,11 +115,17 @@ contract ParaspaceConfig {
     }
 }
 
-abstract contract Deployer {
+abstract contract Deployer is Test {
     ParaspaceConfig config;
 
     constructor(ParaspaceConfig _config) {
         config = _config;
+    }
+
+    modifier FromDeployer() {
+        vm.startPrank(config.deployer());
+        _;
+        vm.stopPrank();
     }
 
     function deploy() public virtual;

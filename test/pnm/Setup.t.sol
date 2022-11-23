@@ -5,16 +5,14 @@ import {ParaspaceConfig} from "./helpers/Common.sol";
 import {ERC20Deployer} from "./deployers/01_ERC20Deployer.sol";
 import {ERC721Deployer} from "./deployers/02_ERC721Deployer.sol";
 import {FaucetDeployer} from "./deployers/03_FaucetDeployer.sol";
+import {AddressesProviderDeployer} from "./deployers/04_AddressProviderDeployer.sol";
 
 contract Setup is Test {
-    function setUp() public {
+    function testSetUp() public {
         ParaspaceConfig config = new ParaspaceConfig();
         new ERC20Deployer(config).deploy();
         new ERC721Deployer(config).deploy();
         new FaucetDeployer(config).deploy();
-    }
-
-    function testTruthy() public {
-        assertEq(true, true);
+        new AddressesProviderDeployer(config).deploy();
     }
 }

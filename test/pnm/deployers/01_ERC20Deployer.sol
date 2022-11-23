@@ -25,7 +25,7 @@ contract ERC20Deployer is Deployer {
 
     constructor(ParaspaceConfig _config) Deployer(_config) {}
 
-    function deploy() public override {
+    function deploy() public override FromDeployer {
         uint256 t = config.erc20TokensLength();
         for (uint256 i = 0; i < t; i++) {
             bytes32 tokenSymbol = config.erc20Tokens(i);

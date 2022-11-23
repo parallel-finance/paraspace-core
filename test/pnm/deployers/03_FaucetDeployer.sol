@@ -9,7 +9,7 @@ contract FaucetDeployer is Deployer {
 
     constructor(ParaspaceConfig _config) Deployer(_config) {}
 
-    function deploy() public override {
+    function deploy() public override FromDeployer {
         uint256 t = config.erc20TokensLength();
         MockTokenFaucet.Token[] memory erc20 = new MockTokenFaucet.Token[](t);
         for (uint256 i = 0; i < t; i++) {
