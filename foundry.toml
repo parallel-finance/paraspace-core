@@ -1,4 +1,4 @@
 [profile.default]
 src = "contracts/"
-out = "artifacts/foundry/"
+out = "out/"
 lib = ["lib/"]

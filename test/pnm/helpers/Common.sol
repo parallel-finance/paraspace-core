@@ -30,7 +30,7 @@ contract ParaspaceConfig {
     bytes32[] public erc20Tokens;
     bytes32[] public erc721Tokens;
 
-    mapping(bytes32 => DataTypes.IReserveParams) public tokenConfigs;
+    mapping(bytes32 => DataTypes.IReserveParams) internal tokenConfigs;
     address payable public constant root = payable(address(31415926));
 
     mapping(bytes32 => address) public contractAddresses;
