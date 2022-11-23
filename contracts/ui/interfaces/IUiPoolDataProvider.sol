@@ -86,6 +86,26 @@ interface IUiPoolDataProvider {
         uint256 reserveLiquidationThreshold;
     }
 
+    struct UserGlobalData {
+        uint256 totalCollateralBase;
+        uint256 totalDebtBase;
+        uint256 availableBorrowsBase;
+        uint256 currentLiquidationThreshold;
+        uint256 ltv;
+        uint256 healthFactor;
+        uint256 erc721HealthFactor;
+        uint256 auctionValidityTime;
+    }
+
+    struct TokenInLiquidationData {
+        address asset;
+        uint256 tokenId;
+        bool isCollateralized;
+        uint256 tokenPrice;
+        bool isAuctioned;
+        DataTypes.AuctionData auctionData;
+    }
+
     function getReservesList(IPoolAddressesProvider provider)
         external
         view
@@ -117,4 +137,14 @@ interface IUiPoolDataProvider {
         address lpTokenAddress,
         uint256 tokenId
     ) external view returns (UniswapV3LpTokenInfo memory);
+
+    function getUserInLiquidationNFTData(
+        IPoolAddressesProvider provider,
+        address user,
+        address[] memory asset,
+        uint256[][] memory tokenIds
+    )
+        external
+        view
+        returns (UserGlobalData memory, TokenInLiquidationData[][] memory);
 }
