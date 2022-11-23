@@ -455,12 +455,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             userData.erc721HealthFactor
         ) = pool.getUserAccountData(user);
 
-        userData.auctionValidityTime = pool
-            .getUserConfiguration(user)
-            .auctionValidityTime;
-
         DataTypes.UserConfigurationMap memory userConfig = pool
             .getUserConfiguration(user);
+        userData.auctionValidityTime = userConfig.auctionValidityTime;
 
         for (uint256 i = 0; i < assets.length; i++) {
             uint256 tokenLength = tokenIds[i].length;
