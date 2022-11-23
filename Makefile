@@ -14,12 +14,13 @@ RUST_TOOLCHAIN           := nightly-2022-09-19
 init: submodules
 	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
+	command -v forge > /dev/null 2>&1 || bash -c "curl -L https://foundry.paradigm.xyz | bash"
 	forge install --no-commit --no-git https://github.com/dapphub/ds-test
 	forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
 
-.PHONY: foundy-test
-foundy-test:
+.PHONY: foundry-test
+foundry-test:
 	forge test -vvvv
 
 .PHONY: test
@@ -364,6 +365,17 @@ upgrade:
 .PHONY: upgrade-pool
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
+
+.PHONY: remove-pool-funcs
+remove-pool-funcs:
+# e.g: emergency disable liquidation
+	FUNCS_TO_REMOVE=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:remove-pool-funcs run-task
+
+.PHONY: add-pool-funcs
+add-pool-funcs:
+# e.g: add liquidation back
+	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
+
 
 .PHONY: upgrade-ptoken
 upgrade-ptoken:

@@ -47,7 +47,4 @@ We would like to thank the following projects.
 - [Aave](https://github.com/aave/aave-v3-core)
 - [Uniswap](https://github.com/Uniswap/v3-core)
 - [Seaport](https://github.com/ProjectOpenSea/seaport)
-
-## Similar Projects
-
-- [BendDAO](https://github.com/BendDAO/bend-downpayment)
+- [BendDAO](https://github.com/BendDAO)
