@@ -42,6 +42,51 @@ contract ParaspaceConfig {
             decimal: uint8(18),
             faucetMintValue: uint256(10000)
         });
+        erc20Tokens.push("WETH");
+        tokenConfigs["WETH"] = DataTypes.IReserveParams({
+            decimal: uint8(18),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("USDC");
+        tokenConfigs["USDC"] = DataTypes.IReserveParams({
+            decimal: uint8(6),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("USDT");
+        tokenConfigs["USDT"] = DataTypes.IReserveParams({
+            decimal: uint8(6),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("WBTC");
+        tokenConfigs["WBTC"] = DataTypes.IReserveParams({
+            decimal: uint8(8),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("stETH");
+        tokenConfigs["stETH"] = DataTypes.IReserveParams({
+            decimal: uint8(18),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("APE");
+        tokenConfigs["APE"] = DataTypes.IReserveParams({
+            decimal: uint8(18),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("aWETH");
+        tokenConfigs["aWETH"] = DataTypes.IReserveParams({
+            decimal: uint8(18),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("cETH");
+        tokenConfigs["cETH"] = DataTypes.IReserveParams({
+            decimal: uint8(8),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("PUNK");
+        tokenConfigs["PUNK"] = DataTypes.IReserveParams({
+            decimal: uint8(18),
+            faucetMintValue: uint256(10000)
+        });
     }
 
     function erc20TokensLength() external view returns (uint256) {
