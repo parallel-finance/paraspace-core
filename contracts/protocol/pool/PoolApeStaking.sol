@@ -253,7 +253,7 @@ contract PoolApeStaking is
         localVar.apeCoin = INTokenApeStaking(localVar.nTokenAddress)
             .getApeStaking()
             .apeCoin();
-        localVar.beforeBalance = localVar.apeCoin.balanceOf(address(this));
+        localVar.beforeBalance = localVar.apeCoin.balanceOf(localVar.nTokenAddress);
         localVar.bakcContract = INTokenApeStaking(localVar.nTokenAddress)
             .getBAKC();
 
@@ -342,7 +342,7 @@ contract PoolApeStaking is
 
         //7 checkout ape balance
         require(
-            localVar.apeCoin.balanceOf(address(this)) == localVar.beforeBalance,
+            localVar.apeCoin.balanceOf(localVar.nTokenAddress) == localVar.beforeBalance,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
         );
 
