@@ -95,15 +95,15 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "16000");
     await expect(
-        pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: 0,
-              cashAmount: amount,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     ).to.be.reverted;
   });
 
@@ -122,15 +122,15 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "16000");
     await expect(
-         pool.connect(user1.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: 0,
-              cashAmount: amount,
-            },
-            [{tokenId: 0, amount: amount1}],
-            [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
-        )
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     ).to.be.revertedWith(ProtocolErrors.TOTAL_STAKING_AMOUNT_WRONG);
   });
 
@@ -1054,12 +1054,9 @@ describe("APE Coin Staking Test", () => {
 
     const borrowAmount = await convertToCurrencyDecimals(ape.address, "8000");
     expect(
-        await pool.connect(user1.signer).borrow(
-            ape.address,
-            borrowAmount,
-            0,
-            user1.address
-        )
+      await pool
+        .connect(user1.signer)
+        .borrow(ape.address, borrowAmount, 0, user1.address)
     );
 
     await supplyAndValidate(weth, "91", liquidator, true, "200000");
