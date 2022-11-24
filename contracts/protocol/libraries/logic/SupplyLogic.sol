@@ -7,6 +7,7 @@ import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC2
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
+import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {Errors} from "../helpers/Errors.sol";
@@ -177,8 +178,9 @@ library SupplyLogic {
             DataTypes.AssetType.ERC721
         );
 
-        INToken nToken = INToken(reserveCache.xTokenAddress);
-        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+        XTokenType tokenType = INToken(reserveCache.xTokenAddress)
+            .getXTokenType();
+        if (tokenType == XTokenType.NTokenUniswapV3) {
             for (uint256 index = 0; index < params.tokenData.length; index++) {
                 ValidationLogic.validateForUniswapV3(
                     reservesData,

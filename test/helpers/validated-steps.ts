@@ -1424,6 +1424,21 @@ export const changePriceAndValidate = async (
   expect(parseEther(newPrice)).to.eq(actualPrice);
 };
 
+export const changeSApePriceAndValidate = async (
+  tokenAddress: string,
+  newPrice: string
+) => {
+  const [deployer] = await getEthersSigners();
+  const agg = await getAggregator(undefined, "sAPE");
+  await agg.updateLatestAnswer(parseEther(newPrice));
+
+  const actualPrice = await (await getParaSpaceOracle())
+    .connect(deployer)
+    .getAssetPrice(tokenAddress);
+
+  expect(parseEther(newPrice)).to.eq(actualPrice);
+};
+
 export const switchCollateralAndValidate = async (
   user: SignerWithAddress,
   token: SupportedAsset,

@@ -5,9 +5,9 @@ task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
     "../../deploy/tasks/deployments/upgrade/upgrade"
   );
   await DRE.run("set-DRE");
-  console.time("upgrade");
+  console.time("upgrade all");
   await upgradeAll();
-  console.time("upgrade");
+  console.timeEnd("upgrade all");
 });
 
 task("upgrade:pool", "upgrade pool components").setAction(async (_, DRE) => {
@@ -15,10 +15,34 @@ task("upgrade:pool", "upgrade pool components").setAction(async (_, DRE) => {
     "../../deploy/tasks/deployments/upgrade/upgrade"
   );
   await DRE.run("set-DRE");
-  console.time("upgrade");
+  console.time("upgrade pool");
   await upgradePool();
-  console.time("upgrade");
+  console.timeEnd("upgrade pool");
 });
+
+task("upgrade:remove-pool-funcs", "clean pool components").setAction(
+  async (_, DRE) => {
+    const {removePoolFuncs} = await import(
+      "../../deploy/tasks/deployments/upgrade/upgrade"
+    );
+    await DRE.run("set-DRE");
+    console.time("remove pool funcs");
+    await removePoolFuncs();
+    console.timeEnd("remove pool funcs");
+  }
+);
+
+task("upgrade:add-pool-funcs", "add pool components").setAction(
+  async (_, DRE) => {
+    const {addPoolFuncs} = await import(
+      "../../deploy/tasks/deployments/upgrade/upgrade"
+    );
+    await DRE.run("set-DRE");
+    console.time("add pool funcs");
+    await addPoolFuncs();
+    console.timeEnd("add pool funcs");
+  }
+);
 
 task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   const {upgradePToken} = await import(
@@ -27,7 +51,7 @@ task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   console.time("upgrade ptoken");
   await upgradePToken();
-  console.time("upgrade ptoken done.");
+  console.timeEnd("upgrade ptoken");
 });
 
 task("upgrade:ntoken", "upgrade ntoken").setAction(async (_, DRE) => {
@@ -37,7 +61,7 @@ task("upgrade:ntoken", "upgrade ntoken").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   console.time("upgrade ntoken");
   await upgradeNToken();
-  console.time("upgrade ntoken done.");
+  console.timeEnd("upgrade ntoken");
 });
 
 task("upgrade:ntoken_moonbirds", "upgrade ntoken moonbirds").setAction(
@@ -48,7 +72,7 @@ task("upgrade:ntoken_moonbirds", "upgrade ntoken moonbirds").setAction(
     await DRE.run("set-DRE");
     console.time("upgrade ntoken moonbirds");
     await upgradeNTokenMoonBirds();
-    console.time("upgrade ntoken moonbirds done.");
+    console.timeEnd("upgrade ntoken moonbirds");
   }
 );
 
@@ -60,6 +84,6 @@ task("upgrade:ntoken_uniswapv3", "upgrade ntoken uniswapv3").setAction(
     await DRE.run("set-DRE");
     console.time("upgrade ntoken uniswapV3");
     await upgradeNTokenUniswapV3();
-    console.time("upgrade ntoken uniswapV3 done.");
+    console.timeEnd("upgrade ntoken uniswapV3");
   }
 );

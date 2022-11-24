@@ -37,6 +37,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     uint256 public constant ETH_CURRENCY_UNIT = 1 ether;
     address public constant MKR_ADDRESS =
         0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
+    address public constant SAPE_ADDRESS = address(0x1);
 
     constructor(
         IEACAggregatorProxy _networkBaseTokenPriceInUsdProxyAggregator,
@@ -150,6 +151,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         reserveData.underlyingAsset
                     ).name();
                     reserveData.name = bytes32ToString(name);
+                } else if (reserveData.underlyingAsset == SAPE_ADDRESS) {
+                    reserveData.symbol = "SApe";
+                    reserveData.name = "SApe";
                 } else {
                     reserveData.symbol = IERC20Detailed(
                         reserveData.underlyingAsset
@@ -160,9 +164,11 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 }
 
                 reserveData.isAtomicPricing = false;
-                reserveData.availableLiquidity = IERC20Detailed(
-                    reserveData.underlyingAsset
-                ).balanceOf(reserveData.xTokenAddress);
+                if (reserveData.underlyingAsset != SAPE_ADDRESS) {
+                    reserveData.availableLiquidity = IERC20Detailed(
+                        reserveData.underlyingAsset
+                    ).balanceOf(reserveData.xTokenAddress);
+                }
             } else {
                 reserveData.symbol = IERC721Metadata(
                     reserveData.underlyingAsset
@@ -418,5 +424,94 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             bytesArray[i] = _bytes32[i];
         }
         return string(bytesArray);
+    }
+
+    function getUserInLiquidationNFTData(
+        IPoolAddressesProvider provider,
+        address user,
+        address[] memory assets,
+        uint256[][] memory tokenIds
+    )
+        external
+        view
+        returns (UserGlobalData memory, TokenInLiquidationData[][] memory)
+    {
+        // make sure that these tokens all belong to the user supplied
+        IParaSpaceOracle oracle = IParaSpaceOracle(provider.getPriceOracle());
+        IPool pool = IPool(provider.getPool());
+
+        TokenInLiquidationData[][]
+            memory tokensData = new TokenInLiquidationData[][](assets.length);
+        UserGlobalData memory userData;
+
+        // getUserAccountData
+        (
+            userData.totalCollateralBase,
+            userData.totalDebtBase,
+            userData.availableBorrowsBase,
+            userData.currentLiquidationThreshold,
+            userData.ltv,
+            userData.healthFactor,
+            userData.erc721HealthFactor
+        ) = pool.getUserAccountData(user);
+
+        DataTypes.UserConfigurationMap memory userConfig = pool
+            .getUserConfiguration(user);
+        userData.auctionValidityTime = userConfig.auctionValidityTime;
+
+        for (uint256 i = 0; i < assets.length; i++) {
+            uint256 tokenLength = tokenIds[i].length;
+            tokensData[i] = new TokenInLiquidationData[](tokenLength);
+            // reserve current state
+            DataTypes.ReserveData memory baseData = pool.getReserveData(
+                assets[i]
+            );
+
+            uint256 reserveBaseLTVasCollateral;
+            (reserveBaseLTVasCollateral, , , , ) = baseData
+                .configuration
+                .getParams();
+
+            uint256 collectionPrice;
+            try oracle.getAssetPrice(assets[i]) returns (uint256 price) {
+                collectionPrice = price;
+            } catch {}
+
+            for (uint256 j = 0; j < tokenLength; j++) {
+                TokenInLiquidationData memory tokenData;
+                tokenData.asset = assets[i];
+                tokenData.tokenId = tokenIds[i][j];
+
+                tokenData.isCollateralized =
+                    reserveBaseLTVasCollateral != 0 && // reserve collateral
+                    userConfig.isUsingAsCollateral(baseData.id) && // user collection collateral
+                    ICollateralizableERC721(baseData.xTokenAddress)
+                        .isUsedAsCollateral(tokenData.tokenId); // token collateral
+
+                tokenData.isAuctioned =
+                    baseData.auctionStrategyAddress != address(0) &&
+                    IAuctionableERC721(baseData.xTokenAddress).isAuctioned(
+                        tokenData.tokenId
+                    );
+                // token price
+                if (INToken(baseData.xTokenAddress).getAtomicPricingConfig()) {
+                    try
+                        oracle.getTokenPrice(tokenData.asset, tokenData.tokenId)
+                    returns (uint256 price) {
+                        tokenData.tokenPrice = price;
+                    } catch {}
+                } else {
+                    tokenData.tokenPrice = collectionPrice;
+                }
+                // token auction data
+                tokenData.auctionData = pool.getAuctionData(
+                    baseData.xTokenAddress,
+                    tokenData.tokenId
+                );
+
+                tokensData[i][j] = tokenData;
+            }
+        }
+        return (userData, tokensData);
     }
 }

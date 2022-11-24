@@ -52,6 +52,12 @@ contract AirdropFlashClaimReceiver is
         bytes32 airdropKeyHash;
     }
 
+    /**
+     * @notice execute flash claim airdrop
+     * @param nftAsset The NFT contract address for the airdrop
+     * @param nftTokenIds The tokenids for the airdrop
+     * @param params The params for the flash claim
+     **/
     function executeOperation(
         address nftAsset,
         uint256[] calldata nftTokenIds,
@@ -175,6 +181,12 @@ contract AirdropFlashClaimReceiver is
         return true;
     }
 
+    /**
+     * @notice transfer ERC20 Token.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param amount The amount being transfer
+     **/
     function transferERC20(
         address token,
         address to,
@@ -183,6 +195,12 @@ contract AirdropFlashClaimReceiver is
         IERC20(token).safeTransfer(to, amount);
     }
 
+    /**
+     * @notice transfer ERC721 Token.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param id The tokenId being transfer
+     **/
     function transferERC721(
         address token,
         address to,
@@ -191,6 +209,13 @@ contract AirdropFlashClaimReceiver is
         IERC721(token).safeTransferFrom(address(this), to, id);
     }
 
+    /**
+     * @notice transfer ERC1155 Token.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param id The tokenId being transfer
+     * @param amount The amount being transfer
+     **/
     function transferERC1155(
         address token,
         address to,
@@ -206,6 +231,11 @@ contract AirdropFlashClaimReceiver is
         );
     }
 
+    /**
+     * @notice transfer ETH
+     * @param to The address of the recipient
+     * @param amount The amount being transfer
+     **/
     function transferEther(address to, uint256 amount)
         external
         nonReentrant
@@ -215,6 +245,13 @@ contract AirdropFlashClaimReceiver is
         require(success, "ETH_TRANSFER_FAILED");
     }
 
+    /**
+     * @notice get claim status for a flash claim
+     * @param initiator the address initiated the flash claim
+     * @param nftAsset The NFT contract address for the airdrop
+     * @param nftTokenIds The tokenids for the airdrop
+     * @param params The params of the initiated flash claim
+     **/
     function getAirdropClaimRecord(
         address initiator,
         address nftAsset,
@@ -230,6 +267,14 @@ contract AirdropFlashClaimReceiver is
         return airdropClaimRecords[airdropKeyHash];
     }
 
+    /**
+     * @notice encode flash claim param
+     * @param airdropTokenTypes the airdrop reward token type
+     * @param airdropTokenAddresses the airdrop reward token contract address
+     * @param airdropTokenIds the airdrop reward token ids
+     * @param airdropContract The address of third party airdrop contract
+     * @param airdropParams The params of the flash claim
+     **/
     function encodeFlashLoanParams(
         uint256[] calldata airdropTokenTypes,
         address[] calldata airdropTokenAddresses,
@@ -247,6 +292,13 @@ contract AirdropFlashClaimReceiver is
             );
     }
 
+    /**
+     * @notice calculate hash for a flash claim
+     * @param initiator the address initiated the flash claim
+     * @param nftAsset The NFT contract address for the airdrop
+     * @param nftTokenIds The tokenids for the airdrop
+     * @param params The params of the initiated flash claim
+     **/
     function getClaimKeyHash(
         address initiator,
         address nftAsset,

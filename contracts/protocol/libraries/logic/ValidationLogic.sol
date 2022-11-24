@@ -24,9 +24,10 @@ import {ReserveLogic} from "./ReserveLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IToken} from "../../../interfaces/IToken.sol";
-import {XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
+import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
  * @title ReserveLogic library
@@ -65,6 +66,12 @@ library ValidationLogic {
         DataTypes.AssetType assetType
     ) internal view {
         require(amount != 0, Errors.INVALID_AMOUNT);
+
+        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
+        );
 
         (
             bool isActive,
@@ -155,6 +162,12 @@ library ValidationLogic {
         require(
             amount <= userBalance,
             Errors.NOT_ENOUGH_AVAILABLE_USER_BALANCE
+        );
+
+        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
         );
 
         (
@@ -404,6 +417,12 @@ library ValidationLogic {
     ) internal pure {
         require(userBalance != 0, Errors.UNDERLYING_BALANCE_ZERO);
 
+        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
+        );
+
         (
             bool isActive,
             ,
@@ -506,6 +525,14 @@ library ValidationLogic {
         require(
             msg.value == 0 || msg.value >= params.actualLiquidationAmount,
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
+        );
+
+        IXTokenType xToken = IXTokenType(
+            params.liquidationAssetReserveCache.xTokenAddress
+        );
+        require(
+            xToken.getXTokenType() != XTokenType.PTokenSApe,
+            Errors.SAPE_NOT_ALLOWED
         );
 
         (
@@ -963,13 +990,14 @@ library ValidationLogic {
 
     /**
      * @notice Validates a flash claim.
-     * @param reserve The reserve object
+     * @param ps The pool storage
      * @param params The flash claim params
      */
     function validateFlashClaim(
-        DataTypes.ReserveData storage reserve,
+        DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteFlashClaimParams memory params
     ) internal view {
+        DataTypes.ReserveData storage reserve = ps._reserves[params.nftAsset];
         require(
             reserve.configuration.getAssetType() == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
@@ -980,10 +1008,28 @@ library ValidationLogic {
         );
 
         INToken nToken = INToken(reserve.xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() != XTokenType.NTokenUniswapV3,
+            tokenType != XTokenType.NTokenUniswapV3,
             Errors.UNIV3_NOT_ALLOWED
         );
+
+        // need check sApe status when flash claim for bayc or mayc
+        if (
+            tokenType == XTokenType.NTokenBAYC ||
+            tokenType == XTokenType.NTokenMAYC
+        ) {
+            DataTypes.ReserveData storage sApeReserve = ps._reserves[
+                DataTypes.SApeAddress
+            ];
+
+            (bool isActive, , , bool isPaused, ) = sApeReserve
+                .configuration
+                .getFlags();
+
+            require(isActive, Errors.RESERVE_INACTIVE);
+            require(!isPaused, Errors.RESERVE_PAUSED);
+        }
 
         // only token owner can do flash claim
         for (uint256 i = 0; i < params.nftTokenIds.length; i++) {
