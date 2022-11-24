@@ -6,6 +6,7 @@ import {ERC20Deployer} from "./deployers/01_ERC20Deployer.sol";
 import {ERC721Deployer} from "./deployers/02_ERC721Deployer.sol";
 import {FaucetDeployer} from "./deployers/03_FaucetDeployer.sol";
 import {AddressesProviderDeployer} from "./deployers/04_AddressProviderDeployer.sol";
+import {ACLManagerDeployer} from "./deployers/05_ACLManagerDeployer.sol";
 
 contract Setup is Test {
     function testSetUp() public {
@@ -14,5 +15,6 @@ contract Setup is Test {
         new ERC721Deployer(config).deploy();
         new FaucetDeployer(config).deploy();
         new AddressesProviderDeployer(config).deploy();
+        new ACLManagerDeployer(config).deploy();
     }
 }
