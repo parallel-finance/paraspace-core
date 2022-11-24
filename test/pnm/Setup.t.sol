@@ -8,6 +8,7 @@ import {FaucetDeployer} from "./deployers/03_FaucetDeployer.sol";
 import {AddressesProviderDeployer} from "./deployers/04_AddressProviderDeployer.sol";
 import {ACLManagerDeployer} from "./deployers/05_ACLManagerDeployer.sol";
 import {PoolDeployer} from "./deployers/06_PoolDeployer.sol";
+import {PoolConfiguratorDeployer} from "./deployers/07_PoolConfiguratorDeployer.sol";
 
 contract Setup is Test {
     function testSetUp() public {
@@ -18,6 +19,6 @@ contract Setup is Test {
         new AddressesProviderDeployer(config).deploy();
         new ACLManagerDeployer(config).deploy();
         new PoolDeployer(config).deploy();
-
+        new PoolConfiguratorDeployer(config).deploy();
     }
 }

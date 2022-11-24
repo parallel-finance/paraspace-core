@@ -36,6 +36,7 @@ contract ParaspaceConfig {
 
     address payable public deployer;
     bytes32 public constant marketId = "ParaSpaceMM";
+    uint64 public constant auctionRecoveryHealthFactor = 1500000000000000000;
 
     mapping(bytes32 => address) public contractAddresses;
 
