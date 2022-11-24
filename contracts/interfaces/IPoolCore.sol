@@ -439,7 +439,8 @@ interface IPoolCore {
         address collateralAsset,
         address user,
         uint256 collateralTokenId,
-        uint256 liquidationAmount,
+        uint256 maxLiquidationAmount,
+        uint256 creditAmount,
         bool receiveNToken
     ) external payable;
 

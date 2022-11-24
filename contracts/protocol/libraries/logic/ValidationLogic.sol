@@ -671,7 +671,9 @@ library ValidationLogic {
 
         require(
             params.maxLiquidationAmount >= params.actualLiquidationAmount &&
-                (msg.value == 0 || msg.value >= params.maxLiquidationAmount),
+                (msg.value == 0 ||
+                    msg.value >=
+                    params.maxLiquidationAmount - params.creditAmount),
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 
@@ -919,8 +921,7 @@ library ValidationLogic {
                 }
             } else {
                 require(
-                    !hasZeroLtvCollateral ||
-                        reserve.configuration.getLtv() == 0,
+                    reserve.configuration.getLtv() == 0,
                     Errors.LTV_VALIDATION_FAILED
                 );
             }

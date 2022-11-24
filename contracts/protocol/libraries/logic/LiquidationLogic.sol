@@ -10,6 +10,7 @@ import {Helpers} from "../../libraries/helpers/Helpers.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
+import {BorrowLogic} from "./BorrowLogic.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {UserConfiguration} from "../../libraries/configuration/UserConfiguration.sol";
@@ -297,8 +298,11 @@ library LiquidationLogic {
         DataTypes.ReserveData storage liquidationAssetReserve = reservesData[
             params.liquidationAsset
         ];
-        DataTypes.UserConfigurationMap storage userConfig = usersConfig[
+        DataTypes.UserConfigurationMap storage borrowerConfig = usersConfig[
             params.borrower
+        ];
+        DataTypes.UserConfigurationMap storage liquidatorConfig = usersConfig[
+            params.liquidator
         ];
 
         vars.liquidationAssetReserveId = liquidationAssetReserve.id;
@@ -323,7 +327,7 @@ library LiquidationLogic {
             reservesData,
             reservesList,
             DataTypes.CalculateUserAccountDataParams({
-                userConfig: userConfig,
+                userConfig: borrowerConfig,
                 reservesCount: params.reservesCount,
                 user: params.borrower,
                 oracle: params.priceOracle
@@ -350,7 +354,7 @@ library LiquidationLogic {
 
         ValidationLogic.validateLiquidateERC721(
             reservesData,
-            userConfig,
+            borrowerConfig,
             collateralReserve,
             DataTypes.ValidateLiquidateERC721Params({
                 liquidationAssetReserveCache: vars.liquidationAssetReserveCache,
@@ -358,6 +362,7 @@ library LiquidationLogic {
                 borrower: params.borrower,
                 globalDebt: vars.userGlobalDebt,
                 actualLiquidationAmount: vars.actualLiquidationAmount,
+                creditAmount: params.creditAmount,
                 maxLiquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
                 priceOracleSentinel: params.priceOracleSentinel,
@@ -380,25 +385,13 @@ library LiquidationLogic {
             );
         }
 
-        _supplyNewCollateral(reservesData, userConfig, params, vars);
-
         // If the collateral being liquidated is equal to the user balance,
         // we set the currency as not being used as collateral anymore
         if (vars.userCollateral == 1) {
-            userConfig.setUsingAsCollateral(collateralReserve.id, false);
+            borrowerConfig.setUsingAsCollateral(collateralReserve.id, false);
             emit ReserveUsedAsCollateralDisabled(
                 params.collateralAsset,
                 params.borrower
-            );
-        }
-
-        // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFee != 0) {
-            IERC20(params.liquidationAsset).safeTransferFrom(
-                vars.payer,
-                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
-                    .RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFee
             );
         }
 
@@ -410,6 +403,25 @@ library LiquidationLogic {
             );
         } else {
             _burnCollateralNTokens(params, vars);
+        }
+
+        _supplyNewCollateral(
+            reservesData,
+            reservesList,
+            borrowerConfig,
+            liquidatorConfig,
+            params,
+            vars
+        );
+
+        // Transfer fee to treasury if it is non-zero
+        if (vars.liquidationProtocolFee != 0) {
+            IERC20(params.liquidationAsset).safeTransferFrom(
+                vars.payer,
+                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
+                    .RESERVE_TREASURY_ADDRESS(),
+                vars.liquidationProtocolFee
+            );
         }
 
         emit LiquidateERC721(
@@ -557,21 +569,45 @@ library LiquidationLogic {
 
     /**
      * @notice Supply new collateral for taking out of borrower's another collateral
-     * @param userConfig The user configuration that track the supplied/borrowed assets
+     * @param reservesData The state of all the reserves
+     * @param reservesList The addresses of all the active reserves
+     * @param borrowerConfig The borrower configuration that track the supplied/borrowed assets
+     * @param liquidatorConfig The liquidator configuration that track the supplied/borrowed assets
      * @param params The additional parameters needed to execute the liquidation function
      * @param vars the executeLiquidateERC20() function local vars
      */
     function _supplyNewCollateral(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        DataTypes.UserConfigurationMap storage userConfig,
+        mapping(uint256 => address) storage reservesList,
+        DataTypes.UserConfigurationMap storage borrowerConfig,
+        DataTypes.UserConfigurationMap storage liquidatorConfig,
         DataTypes.ExecuteLiquidateParams memory params,
         ExecuteLiquidateLocalVars memory vars
     ) internal {
         _depositETH(params, vars);
 
+        if (params.creditAmount != 0) {
+            BorrowLogic.executeBorrow(
+                reservesData,
+                reservesList,
+                liquidatorConfig,
+                DataTypes.ExecuteBorrowParams({
+                    asset: params.liquidationAsset,
+                    user: vars.payer,
+                    onBehalfOf: params.liquidator,
+                    amount: params.creditAmount,
+                    referralCode: 0,
+                    releaseUnderlying: true,
+                    reservesCount: params.reservesCount,
+                    oracle: params.priceOracle,
+                    priceOracleSentinel: params.priceOracleSentinel
+                })
+            );
+        }
+
         SupplyLogic.executeSupply(
             reservesData,
-            userConfig,
+            borrowerConfig,
             DataTypes.ExecuteSupplyParams({
                 asset: params.liquidationAsset,
                 amount: vars.actualLiquidationAmount -
@@ -582,8 +618,10 @@ library LiquidationLogic {
             })
         );
 
-        if (!userConfig.isUsingAsCollateral(vars.liquidationAssetReserveId)) {
-            userConfig.setUsingAsCollateral(
+        if (
+            !borrowerConfig.isUsingAsCollateral(vars.liquidationAssetReserveId)
+        ) {
+            borrowerConfig.setUsingAsCollateral(
                 vars.liquidationAssetReserveId,
                 true
             );
@@ -870,12 +908,11 @@ library LiquidationLogic {
             vars.payer = msg.sender;
         } else {
             vars.payer = address(this);
-            IWETH(params.weth).deposit{value: vars.actualLiquidationAmount}();
-            if (msg.value > vars.actualLiquidationAmount) {
-                Address.sendValue(
-                    payable(msg.sender),
-                    msg.value - vars.actualLiquidationAmount
-                );
+            uint256 downpayment = vars.actualLiquidationAmount -
+                params.creditAmount;
+            IWETH(params.weth).deposit{value: downpayment}();
+            if (msg.value > downpayment) {
+                Address.sendValue(payable(msg.sender), msg.value - downpayment);
             }
         }
     }

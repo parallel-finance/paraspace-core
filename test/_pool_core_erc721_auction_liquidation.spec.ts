@@ -190,6 +190,7 @@ describe("Liquidation Auction", () => {
             borrower.address,
             0,
             parseEther("15").toString(),
+            0,
             false,
             {gasLimit: 5000000}
           )
@@ -218,6 +219,7 @@ describe("Liquidation Auction", () => {
             borrower.address,
             0,
             parseEther("24").toString(),
+            0,
             false,
             {gasLimit: 5000000}
           )
@@ -254,6 +256,7 @@ describe("Liquidation Auction", () => {
           borrower.address,
           0,
           parseEther("8").toString(),
+          0,
           false,
           {gasLimit: 5000000}
         );
@@ -300,6 +303,7 @@ describe("Liquidation Auction", () => {
           borrower.address,
           0,
           parseEther("24").toString(),
+          0,
           false,
           {gasLimit: 5000000}
         );
@@ -345,6 +349,7 @@ describe("Liquidation Auction", () => {
             borrower.address,
             0,
             parseEther("24").toString(),
+            0,
             false,
             {gasLimit: 5000000}
           )
@@ -481,6 +486,7 @@ describe("Liquidation Auction", () => {
           borrower.address,
           0,
           parseEther("12").toString(),
+          0,
           false,
           {gasLimit: 5000000}
         );
@@ -604,6 +610,7 @@ describe("Liquidation Auction", () => {
           borrower.address,
           0,
           parseEther("24").toString(),
+          0,
           false,
           {gasLimit: 5000000}
         );
@@ -650,6 +657,7 @@ describe("Liquidation Auction", () => {
             borrower.address,
             0,
             parseEther("24").toString(),
+            0,
             false,
             {gasLimit: 5000000}
           )
@@ -702,6 +710,7 @@ describe("Liquidation Auction", () => {
           borrower.address,
           0,
           parseEther("24").toString(),
+          0,
           false,
           {gasLimit: 5000000}
         );
@@ -746,6 +755,7 @@ describe("Liquidation Auction", () => {
             borrower.address,
             0,
             parseEther("24").toString(),
+            0,
             false,
             {gasLimit: 5000000}
           )
@@ -794,6 +804,7 @@ describe("Liquidation Auction", () => {
           borrower.address,
           0,
           parseEther("24").toString(),
+          0,
           false,
           {gasLimit: 5000000}
         );
@@ -849,6 +860,7 @@ describe("Liquidation Auction", () => {
             borrower.address,
             0,
             parseEther("4").toString(),
+            0,
             false,
             {gasLimit: 5000000}
           )

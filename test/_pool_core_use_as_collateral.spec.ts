@@ -266,7 +266,14 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collatera
     await expect(
       pool
         .connect(user1.signer)
-        .liquidateERC721(bayc.address, user1.address, 0, parseEther("20"), true)
+        .liquidateERC721(
+          bayc.address,
+          user1.address,
+          0,
+          parseEther("20"),
+          0,
+          true
+        )
     ).to.be.revertedWith(ProtocolErrors.LIQUIDATOR_CAN_NOT_BE_SELF);
 
     //4 liquidator liquidate user1
@@ -287,6 +294,7 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collatera
           user1.address,
           0,
           parseEther("20"),
+          0,
           true,
           {gasLimit: 5000000}
         )
