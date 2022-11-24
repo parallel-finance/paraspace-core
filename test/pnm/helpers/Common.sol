@@ -7,6 +7,7 @@ import {WETH9Mocked} from "../../../contracts/mocks/tokens/WETH9Mocked.sol";
 import {stETH} from "../../../contracts/mocks/tokens/stETH.sol";
 import {MockAToken} from "../../../contracts/mocks/tokens/MockAToken.sol";
 import {StringUtils} from "./StringUtils.sol";
+import {IPoolAddressesProvider} from "../../../contracts/interfaces/IPoolAddressesProvider.sol";
 
 library DataTypes {
     struct IInterestRateStrategyParams {
@@ -20,11 +21,30 @@ library DataTypes {
         bytes32 name;
         uint32 maxPriceMultiplier;
         uint32 minExpPriceMultiplier;
+        uint32 minPriceMultiplier;
+        uint32 stepLinear;
     }
+
     struct IReserveParams {
-        // IInterestRateStrategyParams strategy;
         uint8 decimal;
         uint256 faucetMintValue;
+    }
+
+    //todo: merge to IReserveParams
+    struct IReserveParamsFull {
+        IInterestRateStrategyParams interestStrategy;
+        IAuctionStrategyParams auctionStrategy;
+        uint32 baseLTVAsCollateral;
+        uint32 liquidationThreshold;
+        uint32 liquidationProtocolFeePercentage;
+        uint32 liquidationBonus;
+        bool borrowingEnabled;
+        uint8 reserveDecimals;
+        uint32 reserveFactor;
+        uint256 borrowCap;
+        uint256 supplyCap;
+        string xTokenImpl;
+        uint8 reserveDecimal;
     }
 }
 
@@ -36,6 +56,8 @@ contract ParaspaceConfig {
 
     address payable public deployer;
     bytes32 public constant marketId = "ParaSpaceMM";
+
+    IPoolAddressesProvider public addressProvider;
 
     mapping(bytes32 => address) public contractAddresses;
 
@@ -62,6 +84,11 @@ contract ParaspaceConfig {
             decimal: uint8(6),
             faucetMintValue: uint256(10000)
         });
+        erc20Tokens.push("APE");
+        tokenConfigs["APE"] = DataTypes.IReserveParams({
+            decimal: uint8(18),
+            faucetMintValue: uint256(10000)
+        });
         erc20Tokens.push("WBTC");
         tokenConfigs["WBTC"] = DataTypes.IReserveParams({
             decimal: uint8(8),
@@ -69,11 +96,6 @@ contract ParaspaceConfig {
         });
         erc20Tokens.push("stETH");
         tokenConfigs["stETH"] = DataTypes.IReserveParams({
-            decimal: uint8(18),
-            faucetMintValue: uint256(10000)
-        });
-        erc20Tokens.push("APE");
-        tokenConfigs["APE"] = DataTypes.IReserveParams({
             decimal: uint8(18),
             faucetMintValue: uint256(10000)
         });
@@ -112,6 +134,12 @@ contract ParaspaceConfig {
 
     function updateAddress(bytes32 key, address addr) external {
         contractAddresses[key] = addr;
+    }
+
+    function setAddressProvider(IPoolAddressesProvider _addressProvider)
+        public
+    {
+        addressProvider = _addressProvider;
     }
 }
 

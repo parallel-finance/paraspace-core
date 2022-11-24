@@ -31,3 +31,5 @@ logs
 *data
 *.swp
 out/
+lib/
+foundry_test/
