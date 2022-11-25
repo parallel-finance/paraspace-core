@@ -255,12 +255,6 @@ library ApeStakingLogic {
                 bakcTokenId
             );
             apeStakedAmount += bakcStakedAmount;
-
-            apeReward += _apeCoinStaking.pendingRewards(
-                BAKC_POOL_ID,
-                address(this),
-                bakcTokenId
-            );
         }
 
         return apeStakedAmount + apeReward;

@@ -226,12 +226,6 @@ contract PoolApeStaking is
                 _nftPairs[index].bakcTokenId
             );
         }
-
-        require(
-            getUserHf(msg.sender) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-        );
     }
 
     struct BorrowAndStakeLocalVar {
