@@ -7,6 +7,7 @@ import {IParaProxy} from "../../../contracts/interfaces/IParaProxy.sol";
 import {IPool} from "../../../contracts/interfaces/IPool.sol";
 import {IPoolConfigurator} from "../../../contracts/interfaces/IPoolConfigurator.sol";
 import {IPoolAddressesProvider} from "../../../contracts/interfaces/IPoolAddressesProvider.sol";
+import {IACLManager} from "../../../contracts/interfaces/IACLManager.sol";
 import {ReservesSetupHelper} from "../../../contracts/deployments/ReservesSetupHelper.sol";
 import {VariableDebtToken} from "../../../contracts/protocol/tokenization/VariableDebtToken.sol";
 import {PToken} from "../../../contracts/protocol/tokenization/PToken.sol";
@@ -15,6 +16,7 @@ import {DefaultReserveInterestRateStrategy} from "../../../contracts/protocol/po
 import {DefaultReserveAuctionStrategy} from "../../../contracts/protocol/pool/DefaultReserveAuctionStrategy.sol";
 import {ConfiguratorInputTypes} from "../../../contracts/protocol/libraries/types/ConfiguratorInputTypes.sol";
 import {DataTypes as ParaSpaceDataTypes} from "../../../contracts/protocol/libraries/types/DataTypes.sol";
+import {PoolConfigurator} from "../../../contracts/protocol/pool/PoolConfigurator.sol";
 
 contract ReservesDeployer is Deployer {
     constructor(ParaspaceConfig _config) Deployer(_config) {}
@@ -24,13 +26,15 @@ contract ReservesDeployer is Deployer {
             config.contractAddresses(Contracts.PoolAddressesProvider)
         );
         IPool pool = IPool(provider.getPool());
-        IPoolConfigurator configurator = IPoolConfigurator(
+        PoolConfigurator configurator = PoolConfigurator(
             provider.getPoolConfigurator()
         );
         VariableDebtToken debtTokenImpl = new VariableDebtToken(pool);
         PToken pTokenImpl = new PToken(pool);
         NToken nTokenImpl = new NToken(pool, false);
-        ReservesSetupHelper reserversSetupHelper = new ReservesSetupHelper();
+        ReservesSetupHelper reserversSetupHelperImpl = new ReservesSetupHelper();
+        IACLManager aclManager = IACLManager(provider.getACLManager());
+        aclManager.addPoolAdmin(address(reserversSetupHelperImpl));
 
         //TODO(ron): use dai only for demonstrate and need refactor to load from token dict
         DefaultReserveInterestRateStrategy daiInterestRateStrategy = new DefaultReserveInterestRateStrategy(
@@ -72,8 +76,8 @@ contract ReservesDeployer is Deployer {
                 1
             );
         initInputs[0] = initInput;
-        //todo: initReserves
-        // configurator.initReserves(input);
+        //initReserves
+        configurator.initReserves(initInputs);
 
         ReservesSetupHelper.ConfigureReserveInput memory configInput = ReservesSetupHelper
             .ConfigureReserveInput(
@@ -92,7 +96,9 @@ contract ReservesDeployer is Deployer {
                 1
             );
         reserveInputs[0] = configInput;
-        //todo: configureReserves
-        // reserversSetupHelper.configureReserves(configurator, reserveInput);
+        //configureReserves
+        reserversSetupHelperImpl.configureReserves(configurator, reserveInputs);
+
+        aclManager.removePoolAdmin(address(reserversSetupHelperImpl));
     }
 }
