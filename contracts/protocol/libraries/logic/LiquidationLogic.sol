@@ -402,7 +402,7 @@ library LiquidationLogic {
             _burnCollateralNTokens(params, vars);
         }
 
-        _supplyCollateralTokens(
+        _supplyLiquidateTokens(
             reservesData,
             reservesList,
             liquidationAssetReserve,
@@ -597,7 +597,7 @@ library LiquidationLogic {
     }
 
     /**
-     * @notice Supply new collateral tokens for taking out of borrower's another collateral
+     * @notice Supply liquidation tokens for taking out of borrower's another collateral
      * @param reservesData The state of all the reserves
      * @param reservesList The addresses of all the active reserves
      * @param liquidationAssetReserve The data of the liquidation asset reserve
@@ -606,7 +606,7 @@ library LiquidationLogic {
      * @param params The additional parameters needed to execute the liquidation function
      * @param vars the executeLiquidateERC20() function local vars
      */
-    function _supplyCollateralTokens(
+    function _supplyLiquidateTokens(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.ReserveData storage liquidationAssetReserve,
@@ -617,11 +617,11 @@ library LiquidationLogic {
     ) internal {
         _depositETH(params, vars);
 
+        // Borrow creditAmount out using liquidated NToken's credit
         if (params.creditAmount != 0) {
             ValidationLogic.validateFlashloanSimple(liquidationAssetReserve);
             IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
                 .transferUnderlyingTo(vars.payer, params.creditAmount);
-
             BorrowLogic.executeBorrow(
                 reservesData,
                 reservesList,
@@ -640,6 +640,7 @@ library LiquidationLogic {
             );
         }
 
+        // Supply liquidationAsset on behalf of the borrower
         SupplyLogic.executeSupply(
             reservesData,
             borrowerConfig,
@@ -653,6 +654,7 @@ library LiquidationLogic {
             })
         );
 
+        // Set liquidationAsset as collateral
         if (
             !borrowerConfig.isUsingAsCollateral(vars.liquidationAssetReserveId)
         ) {
