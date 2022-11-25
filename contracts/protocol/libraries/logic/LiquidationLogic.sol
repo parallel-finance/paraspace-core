@@ -619,10 +619,8 @@ library LiquidationLogic {
 
         if (params.creditAmount != 0) {
             ValidationLogic.validateFlashloanSimple(liquidationAssetReserve);
-            IPToken(liquidationAssetReserve.xTokenAddress).transferUnderlyingTo(
-                    vars.payer,
-                    params.creditAmount
-                );
+            IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
+                .transferUnderlyingTo(vars.payer, params.creditAmount);
 
             BorrowLogic.executeBorrow(
                 reservesData,
