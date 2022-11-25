@@ -73,7 +73,6 @@ contract ParaspaceConfig {
 
     constructor() {
         deployer = payable(msg.sender);
-        //TODO(alan): update full table
         erc20Tokens.push("DAI");
         tokenConfigs["DAI"] = DataTypes.IReserveParams({
             decimal: uint8(18),
@@ -96,6 +95,11 @@ contract ParaspaceConfig {
         });
         erc20Tokens.push("APE");
         tokenConfigs["APE"] = DataTypes.IReserveParams({
+            decimal: uint8(18),
+            faucetMintValue: uint256(10000)
+        });
+        erc20Tokens.push("sAPE");
+        tokenConfigs["sAPE"] = DataTypes.IReserveParams({
             decimal: uint8(18),
             faucetMintValue: uint256(10000)
         });
@@ -123,6 +127,62 @@ contract ParaspaceConfig {
         tokenConfigs["PUNK"] = DataTypes.IReserveParams({
             decimal: uint8(18),
             faucetMintValue: uint256(10000)
+        });
+
+        erc721Tokens.push("DOODLE");
+        tokenConfigs["DOODLE"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("WPUNKS");
+        tokenConfigs["WPUNKS"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("BAYC");
+        tokenConfigs["BAYC"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("MAYC");
+        tokenConfigs["MAYC"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("AZUKI");
+        tokenConfigs["AZUKI"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("CLONEX");
+        tokenConfigs["CLONEX"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("MOONBIRD");
+        tokenConfigs["MOONBIRD"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("MEEBITS");
+        tokenConfigs["MEEBITS"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("OTHR");
+        tokenConfigs["OTHR"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("UniswapV3");
+        tokenConfigs["UniswapV3"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
+        });
+        erc721Tokens.push("BAKC");
+        tokenConfigs["BAKC"] = DataTypes.IReserveParams({
+            decimal: uint8(0),
+            faucetMintValue: uint256(20)
         });
     }
 
