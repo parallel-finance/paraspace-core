@@ -6,9 +6,11 @@ import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {getAggregator} from "../deploy/helpers/contracts-getters";
 import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
+import {strategyBAYC} from "../deploy/market-config/reservesConfigs";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
+  assertAlmostEqual,
   borrowAndValidate,
   changePriceAndValidate,
   repayAndValidate,
@@ -956,6 +958,64 @@ describe("Liquidation Auction", () => {
       );
 
       expect(await nBAYC.isAuctioned(0)).to.be.false;
+    });
+
+    it("TC-auction-liquidation-33 liquidator can use future credit to liquidate NFT", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+        nBAYC,
+        weth,
+        paraspaceOracle,
+      } = testEnv;
+      // decrease BAYC price to liquidation levels
+      await changePriceAndValidate(bayc, "8");
+      const baycPrice = await paraspaceOracle.getAssetPrice(bayc.address);
+
+      // start auction
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+      const {startTime, tickLength} = await pool.getAuctionData(
+        nBAYC.address,
+        0
+      );
+      await advanceBlock(
+        startTime.add(tickLength.mul(BigNumber.from(40))).toNumber()
+      );
+
+      const actualLiquidationAmount = parseEther("8");
+      const creditAmount = baycPrice.percentMul(
+        strategyBAYC.baseLTVAsCollateral
+      );
+      const cashAmount = actualLiquidationAmount.sub(creditAmount);
+
+      const wethBalanceBefore = await weth.balanceOf(liquidator.address);
+
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .liquidateERC721(
+            bayc.address,
+            borrower.address,
+            0,
+            actualLiquidationAmount,
+            creditAmount,
+            true,
+            {gasLimit: 5000000}
+          )
+      );
+
+      const wethBalanceAfter = await weth.balanceOf(liquidator.address);
+      const totalDebtBase = (await pool.getUserAccountData(liquidator.address))
+        .totalDebtBase;
+
+      expect(await nBAYC.ownerOf(0)).to.be.eq(liquidator.address);
+      expect(wethBalanceBefore.sub(wethBalanceAfter)).to.be.eq(cashAmount);
+      assertAlmostEqual(totalDebtBase, creditAmount);
     });
   });
 });
