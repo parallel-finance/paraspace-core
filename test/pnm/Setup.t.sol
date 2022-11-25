@@ -10,6 +10,7 @@ import {ACLManagerDeployer} from "./deployers/05_ACLManagerDeployer.sol";
 import {PoolDeployer} from "./deployers/06_PoolDeployer.sol";
 import {PoolConfiguratorDeployer} from "./deployers/07_PoolConfiguratorDeployer.sol";
 import {ReservesDeployer} from "./deployers/08_ReservesDeployer.sol";
+import {UiIncentiveDataProviderDeployer} from "./deployers/12_UiIncentiveDataProviderDeployer.sol";
 
 contract Setup is Test {
     function testSetUp() public {
@@ -22,5 +23,6 @@ contract Setup is Test {
         new PoolDeployer(config).deploy();
         new PoolConfiguratorDeployer(config).deploy();
         new ReservesDeployer(config).deploy();
+        new UiIncentiveDataProviderDeployer(config).deploy();
     }
 }

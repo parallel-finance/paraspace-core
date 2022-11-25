@@ -32,7 +32,7 @@ contract ReservesDeployer is Deployer {
         NToken nTokenImpl = new NToken(pool, false);
         ReservesSetupHelper reserversSetupHelper = new ReservesSetupHelper();
 
-        // todo: use dai only for demonstrate and need refactor to load from token dict
+        //TODO(ron): use dai only for demonstrate and need refactor to load from token dict
         DefaultReserveInterestRateStrategy daiInterestRateStrategy = new DefaultReserveInterestRateStrategy(
             provider,
             8e26, //optimalUsageRatio
