@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import "../../contracts/misc/NFTFloorOracle.sol";
-import "../../lib/ds-test/src/test.sol";
+import "ds-test/test.sol";
 
 interface CheatCodes {
     function prank(address) external;

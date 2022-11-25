@@ -24,6 +24,6 @@ contract AddressesProviderDeployer is Deployer {
 
         registry.registerAddressesProvider(address(provider), 1);
         provider.setACLAdmin(owner);
-        config.setAddressProvider(IPoolAddressesProvider(provider));
+        config.updateAddress("PoolAddressesProvider", address(provider));
     }
 }

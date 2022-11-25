@@ -16,11 +16,13 @@ import {DefaultReserveAuctionStrategy} from "../../../contracts/protocol/pool/De
 import {ConfiguratorInputTypes} from "../../../contracts/protocol/libraries/types/ConfiguratorInputTypes.sol";
 import {DataTypes as ParaSpaceDataTypes} from "../../../contracts/protocol/libraries/types/DataTypes.sol";
 
-contract AddressesProviderDeployer is Deployer {
+contract ReservesDeployer is Deployer {
     constructor(ParaspaceConfig _config) Deployer(_config) {}
 
     function deploy() public override FromDeployer {
-        IPoolAddressesProvider provider = config.addressProvider();
+        IPoolAddressesProvider provider = IPoolAddressesProvider(
+            config.contractAddresses("PoolAddressesProvider")
+        );
         IPool pool = IPool(provider.getPool());
         IPoolConfigurator configurator = IPoolConfigurator(
             provider.getPoolConfigurator()

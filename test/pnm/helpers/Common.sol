@@ -30,22 +30,22 @@ library DataTypes {
         uint256 faucetMintValue;
     }
 
-    //todo: merge to IReserveParams
-    struct IReserveParamsFull {
-        IInterestRateStrategyParams interestStrategy;
-        IAuctionStrategyParams auctionStrategy;
-        uint32 baseLTVAsCollateral;
-        uint32 liquidationThreshold;
-        uint32 liquidationProtocolFeePercentage;
-        uint32 liquidationBonus;
-        bool borrowingEnabled;
-        uint8 reserveDecimals;
-        uint32 reserveFactor;
-        uint256 borrowCap;
-        uint256 supplyCap;
-        string xTokenImpl;
-        uint8 reserveDecimal;
-    }
+    // //todo: merge to IReserveParams
+    // struct IReserveParamsFull {
+    //     IInterestRateStrategyParams interestStrategy;
+    //     IAuctionStrategyParams auctionStrategy;
+    //     uint32 baseLTVAsCollateral;
+    //     uint32 liquidationThreshold;
+    //     uint32 liquidationProtocolFeePercentage;
+    //     uint32 liquidationBonus;
+    //     bool borrowingEnabled;
+    //     uint8 reserveDecimals;
+    //     uint32 reserveFactor;
+    //     uint256 borrowCap;
+    //     uint256 supplyCap;
+    //     string xTokenImpl;
+    //     uint8 reserveDecimal;
+    // }
 }
 
 contract ParaspaceConfig {
@@ -56,8 +56,7 @@ contract ParaspaceConfig {
 
     address payable public deployer;
     bytes32 public constant marketId = "ParaSpaceMM";
-
-    IPoolAddressesProvider public addressProvider;
+    uint64 public constant auctionRecoveryHealthFactor = 1500000000000000000;
 
     mapping(bytes32 => address) public contractAddresses;
 
@@ -134,12 +133,6 @@ contract ParaspaceConfig {
 
     function updateAddress(bytes32 key, address addr) external {
         contractAddresses[key] = addr;
-    }
-
-    function setAddressProvider(IPoolAddressesProvider _addressProvider)
-        public
-    {
-        addressProvider = _addressProvider;
     }
 }
 
