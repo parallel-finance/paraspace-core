@@ -11,11 +11,13 @@ import {IPoolAddressesProvider} from "../../../contracts/interfaces/IPoolAddress
 import {IParaProxy} from "../../../contracts/interfaces/IParaProxy.sol";
 
 contract PoolDeployer is Deployer {
-    constructor (ParaspaceConfig _config) Deployer(_config) {}
+    constructor(ParaspaceConfig _config) Deployer(_config) {}
 
     function deploy() public override FromDeployer {
-        IPoolAddressesProvider provider = IPoolAddressesProvider(config.contractAddresses("PoolAddressesProvider"));
-        PoolCore poolCore = new PoolCore(provider); 
+        IPoolAddressesProvider provider = IPoolAddressesProvider(
+            config.contractAddresses(Contracts.PoolAddressesProvider)
+        );
+        PoolCore poolCore = new PoolCore(provider);
         PoolParameters poolParameters = new PoolParameters(provider);
         PoolMarketplace poolMarketplace = new PoolMarketplace(provider);
         PoolApeStaking poolApeStaking = new PoolApeStaking(provider);
@@ -24,17 +26,28 @@ contract PoolDeployer is Deployer {
         inputs[0] = "test/pnm/helpers/sig-list.js";
 
         inputs[1] = "out/PoolCore.sol/PoolCore.json";
-        bytes4[] memory poolCoreSignatures = abi.decode(vm.ffi(inputs), (bytes4[]));
+        bytes4[] memory poolCoreSignatures = abi.decode(
+            vm.ffi(inputs),
+            (bytes4[])
+        );
 
         inputs[1] = "out/PoolParameters.sol/PoolParameters.json";
-        bytes4[] memory poolParametersSignatures = abi.decode(vm.ffi(inputs), (bytes4[]));
+        bytes4[] memory poolParametersSignatures = abi.decode(
+            vm.ffi(inputs),
+            (bytes4[])
+        );
 
         inputs[1] = "out/PoolMarketplace.sol/PoolMarketplace.json";
-        bytes4[] memory poolMarketplaceSignatures = abi.decode(vm.ffi(inputs), (bytes4[]));
+        bytes4[] memory poolMarketplaceSignatures = abi.decode(
+            vm.ffi(inputs),
+            (bytes4[])
+        );
 
         inputs[1] = "out/PoolApeStaking.sol/PoolApeStaking.json";
-        bytes4[] memory poolApeStakingSignatures = abi.decode(vm.ffi(inputs), (bytes4[]));
-
+        bytes4[] memory poolApeStakingSignatures = abi.decode(
+            vm.ffi(inputs),
+            (bytes4[])
+        );
 
         IParaProxy.ProxyImplementation[]
             memory implementationParams0 = new IParaProxy.ProxyImplementation[](
@@ -76,10 +89,6 @@ contract PoolDeployer is Deployer {
             address(provider)
         );
         address poolAddress = provider.getPool();
-        provider.updatePoolImpl(
-            implementationParams0,
-            poolAddress,
-            _calldata
-        );
+        provider.updatePoolImpl(implementationParams0, poolAddress, _calldata);
     }
 }

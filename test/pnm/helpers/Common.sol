@@ -9,6 +9,14 @@ import {MockAToken} from "../../../contracts/mocks/tokens/MockAToken.sol";
 import {StringUtils} from "./StringUtils.sol";
 import {IPoolAddressesProvider} from "../../../contracts/interfaces/IPoolAddressesProvider.sol";
 
+library Contracts {
+    bytes32 public constant PoolAddressesProvider =
+        keccak256(abi.encodePacked("PoolAddressesProvider"));
+
+    bytes32 public constant MockTokenFaucet =
+        keccak256(abi.encodePacked("MockTokenFaucet"));
+}
+
 library DataTypes {
     struct IInterestRateStrategyParams {
         bytes32 name;

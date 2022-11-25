@@ -37,6 +37,6 @@ contract FaucetDeployer is Deployer {
         );
 
         MockTokenFaucet faucet = new MockTokenFaucet(erc20, erc721, punks);
-        config.updateAddress("MockTokenFaucet", address(faucet));
+        config.updateAddress(Contracts.MockTokenFaucet, address(faucet));
     }
 }

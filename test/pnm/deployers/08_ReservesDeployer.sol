@@ -21,7 +21,7 @@ contract ReservesDeployer is Deployer {
 
     function deploy() public override FromDeployer {
         IPoolAddressesProvider provider = IPoolAddressesProvider(
-            config.contractAddresses("PoolAddressesProvider")
+            config.contractAddresses(Contracts.PoolAddressesProvider)
         );
         IPool pool = IPool(provider.getPool());
         IPoolConfigurator configurator = IPoolConfigurator(

@@ -8,12 +8,14 @@ import {IPoolAddressesProvider} from "../../../contracts/interfaces/IPoolAddress
 
 contract ACLManagerDeployer is Deployer {
     constructor(ParaspaceConfig _config) Deployer(_config) {}
-    
+
     function deploy() public override FromDeployer {
-        address providerAddr = config.contractAddresses("PoolAddressesProvider");
+        address providerAddr = config.contractAddresses(
+            Contracts.PoolAddressesProvider
+        );
         IPoolAddressesProvider provider = IPoolAddressesProvider(providerAddr);
 
-        ACLManager manager = new ACLManager(provider); 
+        ACLManager manager = new ACLManager(provider);
         provider.setACLManager(address(manager));
 
         address owner = config.deployer();
