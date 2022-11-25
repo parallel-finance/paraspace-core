@@ -1,6 +1,11 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {DRE, evmRevert, evmSnapshot} from "../deploy/helpers/misc-utils";
+import {
+  DRE,
+  evmRevert,
+  evmSnapshot,
+  waitForTx,
+} from "../deploy/helpers/misc-utils";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
@@ -16,6 +21,7 @@ import {
   mintNewPosition,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
+import {ONE_ADDRESS} from "../deploy/helpers/constants";
 
 describe("Flash Claim Test", () => {
   const tokenId = 0;
@@ -133,7 +139,7 @@ describe("Flash Claim Test", () => {
     );
 
     // expect flashClaim will be reverted
-    expect(
+    await expect(
       pool
         .connect(user1.signer)
         .flashClaim(
@@ -280,5 +286,48 @@ describe("Flash Claim Test", () => {
           {gasLimit: 12_450_000}
         )
     ).to.be.revertedWith(ProtocolErrors.UNIV3_NOT_ALLOWED);
+  });
+
+  it("TC-flash-claim-05:user can not flash claim with BAYC or MAYC when sApe is not active or paused[ @skip-on-coverage ]", async function () {
+    const {
+      users: [user1],
+      bayc,
+      pool,
+      configurator,
+    } = testEnv;
+
+    const sApeAddress = ONE_ADDRESS;
+
+    const user_registry = await getUserFlashClaimRegistry();
+    await user_registry.connect(user1.signer).createReceiver();
+    const flashClaimReceiverAddr = await user_registry.userReceivers(
+      user1.address
+    );
+
+    await waitForTx(await configurator.setReservePause(sApeAddress, true));
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          bayc.address,
+          [0],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
+
+    await waitForTx(await configurator.setReserveActive(sApeAddress, false));
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          bayc.address,
+          [0],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
   });
 });
