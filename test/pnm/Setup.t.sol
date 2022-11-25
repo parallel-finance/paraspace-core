@@ -12,6 +12,7 @@ import {PoolConfiguratorDeployer} from "./deployers/07_PoolConfiguratorDeployer.
 import {ReservesDeployer} from "./deployers/08_ReservesDeployer.sol";
 import {UiIncentiveDataProviderDeployer} from "./deployers/12_UiIncentiveDataProviderDeployer.sol";
 import {WETHGatewayDeployer} from "./deployers/13_WETHGatewayDeployer.sol";
+import {PunkGatewayDeployer} from "./deployers/14_PunkGatewayDeployer.sol";
 
 contract Setup is Test {
     function testSetUp() public {
@@ -26,5 +27,6 @@ contract Setup is Test {
         new ReservesDeployer(config).deploy();
         new UiIncentiveDataProviderDeployer(config).deploy();
         new WETHGatewayDeployer(config).deploy();
+        new PunkGatewayDeployer(config).deploy();
     }
 }
