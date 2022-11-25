@@ -194,19 +194,12 @@ contract PoolApeStaking is
 
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
-        INToken nToken = INToken(xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        require(
-            tokenType == XTokenType.NTokenBAYC ||
-                tokenType == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
-        );
-
         INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
-                nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
+                INToken(xTokenAddress).ownerOf(_nftPairs[index].mainTokenId) ==
+                    msg.sender,
                 Errors.NOT_THE_OWNER
             );
             bakcContract.safeTransferFrom(
