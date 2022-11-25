@@ -15,23 +15,26 @@ library Contracts {
 
     bytes32 public constant MockTokenFaucet =
         keccak256(abi.encodePacked("MockTokenFaucet"));
+
+    bytes32 public constant WETHGatewayProxy =
+        keccak256(abi.encodePacked("WETHGatewayProxy"));
 }
 
 library DataTypes {
-    struct IInterestRateStrategyParams {
-        bytes32 name;
-        uint32 baseVariableBorrowRate;
-        uint32 variableRateSlope1;
-        uint32 variableRateSlope2;
-    }
-
-    struct IAuctionStrategyParams {
-        bytes32 name;
-        uint32 maxPriceMultiplier;
-        uint32 minExpPriceMultiplier;
-        uint32 minPriceMultiplier;
-        uint32 stepLinear;
-    }
+    // struct IInterestRateStrategyParams {
+    //     bytes32 name;
+    //     uint32 baseVariableBorrowRate;
+    //     uint32 variableRateSlope1;
+    //     uint32 variableRateSlope2;
+    // }
+    //
+    // struct IAuctionStrategyParams {
+    //     bytes32 name;
+    //     uint32 maxPriceMultiplier;
+    //     uint32 minExpPriceMultiplier;
+    //     uint32 minPriceMultiplier;
+    //     uint32 stepLinear;
+    // }
 
     struct IReserveParams {
         uint8 decimal;
