@@ -402,6 +402,15 @@ library LiquidationLogic {
                 params.liquidator,
                 params.collateralTokenId
             );
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = params.collateralTokenId;
+            SupplyLogic.executeCollateralizeERC721(
+                reservesData,
+                liquidatorConfig,
+                params.collateralAsset,
+                tokenIds,
+                params.liquidator
+            );
         } else {
             _burnCollateralNTokens(params, vars);
         }
@@ -409,6 +418,7 @@ library LiquidationLogic {
         _supplyCollateralTokens(
             reservesData,
             reservesList,
+            liquidationAssetReserve,
             borrowerConfig,
             liquidatorConfig,
             params,
@@ -573,6 +583,7 @@ library LiquidationLogic {
      * @notice Supply new collateral tokens for taking out of borrower's another collateral
      * @param reservesData The state of all the reserves
      * @param reservesList The addresses of all the active reserves
+     * @param liquidationAssetReserve The data of the liquidation asset reserve
      * @param borrowerConfig The borrower configuration that track the supplied/borrowed assets
      * @param liquidatorConfig The liquidator configuration that track the supplied/borrowed assets
      * @param params The additional parameters needed to execute the liquidation function
@@ -581,6 +592,7 @@ library LiquidationLogic {
     function _supplyCollateralTokens(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
+        DataTypes.ReserveData storage liquidationAssetReserve,
         DataTypes.UserConfigurationMap storage borrowerConfig,
         DataTypes.UserConfigurationMap storage liquidatorConfig,
         DataTypes.ExecuteLiquidateParams memory params,
@@ -589,13 +601,19 @@ library LiquidationLogic {
         _depositETH(params, vars);
 
         if (params.creditAmount != 0) {
+            ValidationLogic.validateFlashloanSimple(liquidationAssetReserve);
+            IPToken(liquidationAssetReserve.xTokenAddress).transferUnderlyingTo(
+                    vars.payer,
+                    params.creditAmount
+                );
+
             BorrowLogic.executeBorrow(
                 reservesData,
                 reservesList,
                 liquidatorConfig,
                 DataTypes.ExecuteBorrowParams({
                     asset: params.liquidationAsset,
-                    user: vars.payer,
+                    user: params.liquidator,
                     onBehalfOf: params.liquidator,
                     amount: params.creditAmount,
                     referralCode: 0,
