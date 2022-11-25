@@ -397,20 +397,7 @@ library LiquidationLogic {
         }
 
         if (params.receiveXToken) {
-            INToken(vars.collateralXToken).transferOnLiquidation(
-                params.borrower,
-                params.liquidator,
-                params.collateralTokenId
-            );
-            uint256[] memory tokenIds = new uint256[](1);
-            tokenIds[0] = params.collateralTokenId;
-            SupplyLogic.executeCollateralizeERC721(
-                reservesData,
-                liquidatorConfig,
-                params.collateralAsset,
-                tokenIds,
-                params.liquidator
-            );
+            _liquidateNTokens(reservesData, liquidatorConfig, params, vars);
         } else {
             _burnCollateralNTokens(params, vars);
         }
@@ -503,7 +490,6 @@ library LiquidationLogic {
     /**
      * @notice Liquidates the user xTokens by transferring them to the liquidator.
      * @dev   The function also checks the state of the liquidator and activates the xToken as collateral
-     *        as in standard transfers if the isolation mode constraints are respected.
      * @param usersConfig The users configuration mapping that track the supplied/borrowed assets
      * @param collateralReserve The data of the collateral reserve
      * @param params The additional parameters needed to execute the liquidation function
@@ -535,6 +521,37 @@ library LiquidationLogic {
                 params.liquidator
             );
         }
+    }
+
+    /**
+     * @notice Liquidates the user xTokens by transferring them to the liquidator.
+     * @dev   The function also checks the state of the liquidator and activates the xToken as collateral
+     * @param liquidatorConfig The liquidator configuration that track the supplied/borrowed assets
+     * @param params The additional parameters needed to execute the liquidation function
+     * @param vars The executeLiquidateERC20() function local vars
+     */
+    function _liquidateNTokens(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.UserConfigurationMap storage liquidatorConfig,
+        DataTypes.ExecuteLiquidateParams memory params,
+        ExecuteLiquidateLocalVars memory vars
+    ) internal {
+        INToken nToken = INToken(vars.collateralXToken);
+        nToken.transferOnLiquidation(
+            params.borrower,
+            params.liquidator,
+            params.collateralTokenId
+        );
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = params.collateralTokenId;
+        SupplyLogic.executeCollateralizeERC721(
+            reservesData,
+            liquidatorConfig,
+            params.collateralAsset,
+            tokenIds,
+            params.liquidator
+        );
     }
 
     /**
@@ -617,7 +634,7 @@ library LiquidationLogic {
                     onBehalfOf: params.liquidator,
                     amount: params.creditAmount,
                     referralCode: 0,
-                    releaseUnderlying: true,
+                    releaseUnderlying: false,
                     reservesCount: params.reservesCount,
                     oracle: params.priceOracle,
                     priceOracleSentinel: params.priceOracleSentinel
