@@ -347,13 +347,6 @@ contract PoolApeStaking is
                 localVar.beforeBalance,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
         );
-
-        // 8 check user hf
-        require(
-            getUserHf(msg.sender) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-        );
     }
 
     /// @inheritdoc IPoolApeStaking
