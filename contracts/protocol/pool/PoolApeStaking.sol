@@ -194,19 +194,12 @@ contract PoolApeStaking is
 
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
-        INToken nToken = INToken(xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        require(
-            tokenType == XTokenType.NTokenBAYC ||
-                tokenType == XTokenType.NTokenMAYC,
-            Errors.INVALID_ASSET_TYPE
-        );
-
         INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
-                nToken.ownerOf(_nftPairs[index].mainTokenId) == msg.sender,
+                INToken(xTokenAddress).ownerOf(_nftPairs[index].mainTokenId) ==
+                    msg.sender,
                 Errors.NOT_THE_OWNER
             );
             bakcContract.safeTransferFrom(
@@ -226,12 +219,6 @@ contract PoolApeStaking is
                 _nftPairs[index].bakcTokenId
             );
         }
-
-        require(
-            getUserHf(msg.sender) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-        );
     }
 
     struct BorrowAndStakeLocalVar {
@@ -352,13 +339,6 @@ contract PoolApeStaking is
             localVar.apeCoin.balanceOf(localVar.nTokenAddress) ==
                 localVar.beforeBalance,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
-        );
-
-        // 8 check user hf
-        require(
-            getUserHf(msg.sender) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
     }
 
