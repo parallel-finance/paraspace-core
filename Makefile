@@ -23,6 +23,14 @@ init: submodules
 foundry-test:
 	forge test -vvvv
 
+.PHONY: foundry-test-nft-oracle
+foundry-test-nft-oracle:
+	forge test --match-contract "NFTFloorOracleTest" -vvvv
+
+.PHONY: foundry-test-setup
+foundry-test-setup:
+	forge test --match-test "testSetUp" -vvvv
+
 .PHONY: test
 test:
 	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
