@@ -87,6 +87,7 @@ library LiquidationLogic {
         address indexed liquidationAsset,
         address indexed borrower,
         uint256 liquidationAmount,
+        uint256 creditAmount,
         uint256 liquidatedCollateralTokenId,
         address liquidator,
         bool receiveNToken
@@ -405,7 +406,7 @@ library LiquidationLogic {
             _burnCollateralNTokens(params, vars);
         }
 
-        _supplyNewCollateral(
+        _supplyCollateralTokens(
             reservesData,
             reservesList,
             borrowerConfig,
@@ -429,6 +430,7 @@ library LiquidationLogic {
             params.liquidationAsset,
             params.borrower,
             vars.actualLiquidationAmount,
+            params.creditAmount,
             params.collateralTokenId,
             params.liquidator,
             params.receiveXToken
@@ -568,7 +570,7 @@ library LiquidationLogic {
     }
 
     /**
-     * @notice Supply new collateral for taking out of borrower's another collateral
+     * @notice Supply new collateral tokens for taking out of borrower's another collateral
      * @param reservesData The state of all the reserves
      * @param reservesList The addresses of all the active reserves
      * @param borrowerConfig The borrower configuration that track the supplied/borrowed assets
@@ -576,7 +578,7 @@ library LiquidationLogic {
      * @param params The additional parameters needed to execute the liquidation function
      * @param vars the executeLiquidateERC20() function local vars
      */
-    function _supplyNewCollateral(
+    function _supplyCollateralTokens(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage borrowerConfig,

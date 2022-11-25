@@ -670,7 +670,8 @@ library ValidationLogic {
         }
 
         require(
-            params.maxLiquidationAmount >= params.actualLiquidationAmount &&
+            params.creditAmount <= params.actualLiquidationAmount &&
+                params.maxLiquidationAmount >= params.actualLiquidationAmount &&
                 (msg.value == 0 ||
                     msg.value >=
                     params.maxLiquidationAmount - params.creditAmount),
