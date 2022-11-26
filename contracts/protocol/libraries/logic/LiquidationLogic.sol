@@ -543,15 +543,17 @@ library LiquidationLogic {
             params.collateralTokenId
         );
 
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = params.collateralTokenId;
-        SupplyLogic.executeCollateralizeERC721(
-            reservesData,
-            liquidatorConfig,
-            params.collateralAsset,
-            tokenIds,
-            params.liquidator
-        );
+        if (params.creditAmount != 0) {
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = params.collateralTokenId;
+            SupplyLogic.executeCollateralizeERC721(
+                reservesData,
+                liquidatorConfig,
+                params.collateralAsset,
+                tokenIds,
+                params.liquidator
+            );
+        }
     }
 
     /**
