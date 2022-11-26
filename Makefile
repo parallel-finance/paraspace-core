@@ -248,7 +248,7 @@ test-data-providers:
 
 .PHONY: test-ape-staking
 test-ape-staking:
-	make TEST_TARGET=_xtoken_ntoken_ape_staking.spec.ts test
+	make TEST_TARGET=_pool_ape_staking.spec.ts test
 
 .PHONY: test-acl-manager
 test-acl-manager:
