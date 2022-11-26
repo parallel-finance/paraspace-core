@@ -1155,6 +1155,7 @@ describe("APE Coin Staking Test", () => {
           user1.address,
           0,
           await convertToCurrencyDecimals(weth.address, "13"),
+          0,
           false,
           {gasLimit: 5000000}
         )
