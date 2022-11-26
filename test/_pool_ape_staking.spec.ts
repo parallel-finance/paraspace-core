@@ -32,6 +32,10 @@ import {
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {parseEther} from "ethers/lib/utils";
+import {
+  executeAcceptBidWithCredit,
+  executeSeaportBuyWithCredit,
+} from "./helpers/marketplace-helper";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -1202,5 +1206,194 @@ describe("APE Coin Staking Test", () => {
         [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
       )
     ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
+  });
+
+  it("TC-pool-ape-staking-20 test can transfer NFT with existing staking positions", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await mintAndValidate(ape, "15000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    expect(await nMAYC.balanceOf(user1.address)).to.be.equal(1);
+    expect(await nMAYC.balanceOf(user2.address)).to.be.equal(0);
+    expect(await pSApeCoin.balanceOf(user1.address)).equal(amount);
+    expect(await pSApeCoin.balanceOf(user2.address)).equal(0);
+
+    expect(
+      await nMAYC
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user2.address,
+          0,
+          {gasLimit: 5000000}
+        )
+    );
+
+    expect(await nMAYC.balanceOf(user1.address)).to.be.equal(0);
+    expect(await nMAYC.balanceOf(user2.address)).to.be.equal(1);
+    expect(await pSApeCoin.balanceOf(user1.address)).equal(0);
+    expect(await pSApeCoin.balanceOf(user2.address)).equal(0);
+  });
+
+  it("TC-pool-ape-staking-21 test market accept bid offer should success", async () => {
+    const {
+      bayc,
+      nBAYC,
+      usdc,
+      pool,
+      ape,
+      users: [taker, maker, middleman],
+    } = await loadFixture(fixture);
+    const makerInitialBalance = "800";
+    const middlemanInitialBalance = "200";
+    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
+    const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
+
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount; // fixed price but offerer cannot afford this
+    const nftId = 0;
+
+    // 1, mint USDC to maker
+    await mintAndValidate(usdc, makerInitialBalance, maker);
+
+    // 2, middleman supplies USDC to pool to be borrowed by maker later
+    await supplyAndValidate(usdc, middlemanInitialBalance, middleman, true);
+
+    // 3, mint ntoken for taker
+    await mintAndValidate(ape, "15000", taker);
+    await supplyAndValidate(bayc, "1", taker, true);
+
+    // 4, ape staking for ntoken
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+    expect(
+      await pool.connect(taker.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    expect(await nBAYC.balanceOf(taker.address)).to.be.equal(1);
+    expect(await nBAYC.balanceOf(maker.address)).to.be.equal(0);
+    expect(await pSApeCoin.balanceOf(taker.address)).equal(amount);
+    expect(await pSApeCoin.balanceOf(maker.address)).equal(0);
+
+    // 5, accept  order
+    await executeAcceptBidWithCredit(
+      nBAYC,
+      usdc,
+      startAmount,
+      endAmount,
+      creditAmount,
+      nftId,
+      maker,
+      taker
+    );
+
+    // taker bayc should reduce
+    expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
+    expect(await nBAYC.balanceOf(maker.address)).to.be.equal(1);
+    expect(await pSApeCoin.balanceOf(taker.address)).equal(0);
+    expect(await pSApeCoin.balanceOf(maker.address)).equal(0);
+  });
+
+  it("TC-pool-ape-staking-22 test market buy with credit should success", async () => {
+    const {
+      bayc,
+      nBAYC,
+      usdc,
+      pool,
+      ape,
+      users: [maker, taker, middleman],
+    } = await loadFixture(fixture);
+    const makerInitialBalance = "800";
+    const middlemanInitialBalance = "200";
+    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
+    const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
+
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount; // fixed price but offerer cannot afford this
+    const nftId = 0;
+
+    // 1, mint USDC to taker
+    await mintAndValidate(usdc, makerInitialBalance, taker);
+
+    // 2, middleman supplies USDC to pool to be borrowed by taker later
+    await supplyAndValidate(usdc, middlemanInitialBalance, middleman, true);
+
+    // 3, mint ntoken for maker
+    await mintAndValidate(ape, "15000", maker);
+    await supplyAndValidate(bayc, "1", maker, true);
+
+    // 4, ape staking for ntoken
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+    expect(
+      await pool.connect(maker.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    expect(await nBAYC.balanceOf(maker.address)).to.be.equal(1);
+    expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
+    expect(await pSApeCoin.balanceOf(maker.address)).equal(amount);
+    expect(await pSApeCoin.balanceOf(taker.address)).equal(0);
+
+    // 5, buy with credit
+    await waitForTx(
+      await usdc.connect(taker.signer).approve(pool.address, startAmount)
+    );
+    await executeSeaportBuyWithCredit(
+      nBAYC,
+      usdc,
+      startAmount,
+      endAmount,
+      creditAmount,
+      nftId,
+      maker,
+      taker
+    );
+
+    // taker bayc should reduce
+    expect(await nBAYC.balanceOf(maker.address)).to.be.equal(0);
+    expect(await nBAYC.balanceOf(taker.address)).to.be.equal(1);
+    expect(await pSApeCoin.balanceOf(maker.address)).equal(0);
+    expect(await pSApeCoin.balanceOf(taker.address)).equal(0);
   });
 });

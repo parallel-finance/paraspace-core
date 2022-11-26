@@ -120,7 +120,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address to,
         uint256 value
-    ) external virtual override onlyPool nonReentrant {
+    ) external onlyPool nonReentrant {
         _transfer(from, to, value, false);
     }
 
@@ -234,7 +234,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address to,
         uint256 tokenId,
         bool validate
-    ) internal {
+    ) internal virtual {
         address underlyingAsset = _underlyingAsset;
 
         uint256 fromBalanceBefore = collateralizedBalanceOf(from);
