@@ -73,13 +73,14 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     }
 
     /**
-     * @notice Overrides the transferOnLiquidation from NToken to withdraw all staked and pending rewards before transfer the asset on liquidation
+     * @notice Overrides the _transfer from NToken to withdraw all staked and pending rewards before transfer the asset
      */
-    function transferOnLiquidation(
+    function _transfer(
         address from,
         address to,
-        uint256 tokenId
-    ) external override onlyPool nonReentrant {
+        uint256 tokenId,
+        bool validate
+    ) internal override {
         ApeStakingLogic.executeUnstakePositionAndRepay(
             _ERC721Data.owners,
             apeStakingDataStorage(),
@@ -92,8 +93,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 incentiveReceiver: address(0)
             })
         );
-
-        _transfer(from, to, tokenId, false);
+        super._transfer(from, to, tokenId, validate);
     }
 
     /**
