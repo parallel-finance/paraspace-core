@@ -456,14 +456,19 @@ export const withdrawAndValidate = async (
         .withdrawERC721(
           token.address,
           [nftId != null ? nftId : 0],
-          user.address
+          user.address,
+          {
+            gasLimit: 5000000,
+          }
         )
     );
   } else {
     await waitForTx(
       await pool
         .connect(user.signer)
-        .withdraw(token.address, amountInCurrencyUnits, user.address)
+        .withdraw(token.address, amountInCurrencyUnits, user.address, {
+          gasLimit: 5000000,
+        })
     );
   }
 
@@ -1186,6 +1191,7 @@ const liquidateAndValidateERC721 = async (
         borrower.address,
         nftId != null ? nftId : 0,
         parseEther(amount).toString(),
+        0,
         receiveNToken,
         {
           gasLimit: 5000000,
@@ -1462,7 +1468,9 @@ export const switchCollateralAndValidate = async (
     await waitForTx(
       await (await getPoolProxy())
         .connect(user.signer)
-        .setUserUseERC20AsCollateral(token.address, useAsCollateral)
+        .setUserUseERC20AsCollateral(token.address, useAsCollateral, {
+          gasLimit: 5000000,
+        })
     );
   }
 
@@ -1493,6 +1501,7 @@ export const liquidateAndValidateReverted = async (
           borrower.address,
           nftId != null ? nftId : 0,
           parseEther(amount).toString(),
+          0,
           receiveXToken,
           {
             gasLimit: 5000000,
