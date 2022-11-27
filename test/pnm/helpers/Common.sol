@@ -21,6 +21,16 @@ library Contracts {
 
     bytes32 public constant ReservesSetupHelper =
         keccak256(abi.encodePacked("ReservesSetupHelper"));
+
+    bytes32 public constant NonfungibleTokenPositionDescriptor =
+        keccak256(abi.encodePacked("NonfungibleTokenPositionDescriptor"));
+
+    bytes32 public constant UniswapV3Factory =
+        keccak256(abi.encodePacked("UniswapV3Factory"));
+
+    bytes32 public constant PriceOracle =
+        keccak256(abi.encodePacked("PriceOracle"));
+
 }
 
 library DataTypes {

@@ -9,6 +9,7 @@ contract FallbackOracleDeployer is Deployer {
     function deploy() public override FromDeployer {
         uint256 USDPriceInWEI = 5848466240000000;
         PriceOracle oracle = new PriceOracle();
+        config.updateAddress(Contracts.PriceOracle, address(oracle));
         oracle.setEthUsdPrice(USDPriceInWEI);
 
         uint256 t = config.erc20TokensLength();

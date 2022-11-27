@@ -4,4 +4,4 @@ out = 'out'
 libs = ["lib"]
 test = 'test'
 ffi = true
-ignored_error_codes = [2072, 2059, 5574, 2519]
+ignored_error_codes = [2072, 2059, 5574, 2519, 1878]
