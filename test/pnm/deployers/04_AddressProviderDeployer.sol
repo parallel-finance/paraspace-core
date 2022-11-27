@@ -3,7 +3,6 @@ pragma solidity ^0.8.10;
 import "../helpers/Common.sol";
 import "forge-std/Test.sol";
 
-import {StringUtils} from "../helpers/StringUtils.sol";
 import {PoolAddressesProviderRegistry} from "../../../contracts/protocol/configuration/PoolAddressesProviderRegistry.sol";
 import {PoolAddressesProvider} from "../../../contracts/protocol/configuration/PoolAddressesProvider.sol";
 import {IPoolAddressesProvider} from "../../../contracts/interfaces/IPoolAddressesProvider.sol";

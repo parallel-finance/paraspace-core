@@ -18,6 +18,9 @@ library Contracts {
 
     bytes32 public constant WETHGatewayProxy =
         keccak256(abi.encodePacked("WETHGatewayProxy"));
+
+    bytes32 public constant ReservesSetupHelper =
+        keccak256(abi.encodePacked("ReservesSetupHelper"));
 }
 
 library DataTypes {
@@ -39,6 +42,7 @@ library DataTypes {
     struct IReserveParams {
         uint8 decimal;
         uint256 faucetMintValue;
+        uint256 mockPrice;
     }
 
     // //todo: merge to IReserveParams
@@ -76,113 +80,135 @@ contract ParaspaceConfig {
         erc20Tokens.push("DAI");
         tokenConfigs["DAI"] = DataTypes.IReserveParams({
             decimal: uint8(18),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10000),
+            mockPrice: uint256(0.000908578801039414 ether)
         });
         erc20Tokens.push("WETH");
         tokenConfigs["WETH"] = DataTypes.IReserveParams({
             decimal: uint8(18),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10000),
+            mockPrice: uint256(1 ether)
         });
         erc20Tokens.push("USDC");
         tokenConfigs["USDC"] = DataTypes.IReserveParams({
             decimal: uint8(6),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10000),
+            mockPrice: uint256(0.000915952223931999 ether)
         });
         erc20Tokens.push("USDT");
         tokenConfigs["USDT"] = DataTypes.IReserveParams({
             decimal: uint8(6),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10000),
+            mockPrice: uint256(0.000915952223931999 ether)
         });
         erc20Tokens.push("APE");
         tokenConfigs["APE"] = DataTypes.IReserveParams({
             decimal: uint8(18),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10000),
+            mockPrice: uint256(0.0036906841286 ether)
         });
         erc20Tokens.push("sAPE");
         tokenConfigs["sAPE"] = DataTypes.IReserveParams({
             decimal: uint8(18),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10000),
+            mockPrice: uint256(0.0036906841286 ether)
         });
         erc20Tokens.push("WBTC");
         tokenConfigs["WBTC"] = DataTypes.IReserveParams({
             decimal: uint8(8),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10),
+            mockPrice: uint256(18.356369399062118 ether)
         });
         erc20Tokens.push("stETH");
         tokenConfigs["stETH"] = DataTypes.IReserveParams({
             decimal: uint8(18),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10),
+            mockPrice: uint256(1 ether)
         });
         erc20Tokens.push("aWETH");
         tokenConfigs["aWETH"] = DataTypes.IReserveParams({
             decimal: uint8(18),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10),
+            mockPrice: uint256(1 ether)
         });
         erc20Tokens.push("cETH");
         tokenConfigs["cETH"] = DataTypes.IReserveParams({
             decimal: uint8(8),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(10),
+            mockPrice: uint256(1 ether)
         });
         erc20Tokens.push("PUNK");
         tokenConfigs["PUNK"] = DataTypes.IReserveParams({
             decimal: uint8(18),
-            faucetMintValue: uint256(10000)
+            faucetMintValue: uint256(1000),
+            mockPrice: uint256(140 ether)
         });
 
         erc721Tokens.push("DOODLE");
         tokenConfigs["DOODLE"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(75 ether)
         });
         erc721Tokens.push("WPUNKS");
         tokenConfigs["WPUNKS"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(140 ether)
         });
         erc721Tokens.push("BAYC");
         tokenConfigs["BAYC"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(101 ether)
         });
         erc721Tokens.push("MAYC");
         tokenConfigs["MAYC"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(51 ether)
         });
         erc721Tokens.push("AZUKI");
         tokenConfigs["AZUKI"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(21 ether)
         });
         erc721Tokens.push("CLONEX");
         tokenConfigs["CLONEX"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(27 ether)
         });
         erc721Tokens.push("MOONBIRD");
         tokenConfigs["MOONBIRD"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(0.02 ether)
         });
         erc721Tokens.push("MEEBITS");
         tokenConfigs["MEEBITS"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(22 ether)
         });
         erc721Tokens.push("OTHR");
         tokenConfigs["OTHR"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(25 ether)
         });
         erc721Tokens.push("UniswapV3");
         tokenConfigs["UniswapV3"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(25 ether)
         });
         erc721Tokens.push("BAKC");
         tokenConfigs["BAKC"] = DataTypes.IReserveParams({
             decimal: uint8(0),
-            faucetMintValue: uint256(20)
+            faucetMintValue: uint256(1),
+            mockPrice: uint256(25 ether)
         });
     }
 

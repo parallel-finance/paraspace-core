@@ -9,7 +9,8 @@ import {AddressesProviderDeployer} from "./deployers/04_AddressProviderDeployer.
 import {ACLManagerDeployer} from "./deployers/05_ACLManagerDeployer.sol";
 import {PoolDeployer} from "./deployers/06_PoolDeployer.sol";
 import {PoolConfiguratorDeployer} from "./deployers/07_PoolConfiguratorDeployer.sol";
-import {ReservesDeployer} from "./deployers/08_ReservesDeployer.sol";
+import {ReservesSetupHelperDeployer} from "./deployers/08_ReservesSetupHelperDeployer.sol";
+import {FallbackOracleDeployer} from "./deployers/09_FallbackOracleDeployer.sol";
 import {UiIncentiveDataProviderDeployer} from "./deployers/12_UiIncentiveDataProviderDeployer.sol";
 import {WETHGatewayDeployer} from "./deployers/13_WETHGatewayDeployer.sol";
 import {PunkGatewayDeployer} from "./deployers/14_PunkGatewayDeployer.sol";
@@ -24,7 +25,9 @@ contract Setup is Test {
         new ACLManagerDeployer(config).deploy();
         new PoolDeployer(config).deploy();
         new PoolConfiguratorDeployer(config).deploy();
-        new ReservesDeployer(config).deploy();
+        new ReservesSetupHelperDeployer(config).deploy();
+        new FallbackOracleDeployer(config).deploy();
+
         new UiIncentiveDataProviderDeployer(config).deploy();
         new WETHGatewayDeployer(config).deploy();
         new PunkGatewayDeployer(config).deploy();
