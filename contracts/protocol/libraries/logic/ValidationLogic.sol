@@ -919,8 +919,7 @@ library ValidationLogic {
                 }
             } else {
                 require(
-                    !hasZeroLtvCollateral ||
-                        reserve.configuration.getLtv() == 0,
+                    reserve.configuration.getLtv() == 0,
                     Errors.LTV_VALIDATION_FAILED
                 );
             }
