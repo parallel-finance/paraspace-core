@@ -12,6 +12,7 @@ import {PoolConfiguratorDeployer} from "./deployers/07_PoolConfiguratorDeployer.
 import {ReservesSetupHelperDeployer} from "./deployers/08_ReservesSetupHelperDeployer.sol";
 import {FallbackOracleDeployer} from "./deployers/09_FallbackOracleDeployer.sol";
 import {AllAggregatorDeployer} from "./deployers/10_AllAggregatorDeployer.sol";
+import {AllReservesDeployer} from "./deployers/11_AllReservesDeployer.sol";
 import {UiIncentiveDataProviderDeployer} from "./deployers/12_UiIncentiveDataProviderDeployer.sol";
 import {WETHGatewayDeployer} from "./deployers/13_WETHGatewayDeployer.sol";
 import {PunkGatewayDeployer} from "./deployers/14_PunkGatewayDeployer.sol";
@@ -29,7 +30,7 @@ contract Setup is Test {
         new ReservesSetupHelperDeployer(config).deploy();
         new FallbackOracleDeployer(config).deploy();
         new AllAggregatorDeployer(config).deploy();
-
+        new AllReservesDeployer(config).deploy();
         new UiIncentiveDataProviderDeployer(config).deploy();
         new WETHGatewayDeployer(config).deploy();
         new PunkGatewayDeployer(config).deploy();

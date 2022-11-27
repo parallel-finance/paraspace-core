@@ -12,93 +12,88 @@ import {ReservesSetupHelper} from "../../../contracts/deployments/ReservesSetupH
 import {VariableDebtToken} from "../../../contracts/protocol/tokenization/VariableDebtToken.sol";
 import {PToken} from "../../../contracts/protocol/tokenization/PToken.sol";
 import {NToken} from "../../../contracts/protocol/tokenization/NToken.sol";
+import {NTokenMoonBirds} from "../../../contracts/protocol/tokenization/NTokenMoonBirds.sol";
+
 import {DefaultReserveInterestRateStrategy} from "../../../contracts/protocol/pool/DefaultReserveInterestRateStrategy.sol";
 import {DefaultReserveAuctionStrategy} from "../../../contracts/protocol/pool/DefaultReserveAuctionStrategy.sol";
 import {ConfiguratorInputTypes} from "../../../contracts/protocol/libraries/types/ConfiguratorInputTypes.sol";
 import {DataTypes as ParaSpaceDataTypes} from "../../../contracts/protocol/libraries/types/DataTypes.sol";
 import {PoolConfigurator} from "../../../contracts/protocol/pool/PoolConfigurator.sol";
 
-contract ReservesDeployer is Deployer {
+import {MockIncentivesController} from "../../../contracts/mocks/helpers/MockIncentivesController.sol";
+import {MockReserveAuctionStrategy} from "../../../contracts/mocks/tests/MockReserveAuctionStrategy.sol";
+
+contract AllReservesDeployer is Deployer {
     constructor(ParaspaceConfig _config) Deployer(_config) {}
 
     function deploy() public override FromDeployer {
-        IPoolAddressesProvider provider = IPoolAddressesProvider(
-            config.contractAddresses(Contracts.PoolAddressesProvider)
+        MockIncentivesController incentivesController = new MockIncentivesController();
+        MockReserveAuctionStrategy reserveAuctionStrategy = new MockReserveAuctionStrategy(
+                3 ether,
+                1 ether,
+                0.5 ether,
+                0.05 ether,
+                0.1 ether,
+                uint256(60)
+            );
+
+        address providerAddr = config.contractAddresses(
+            Contracts.PoolAddressesProvider
         );
+        IPoolAddressesProvider provider = IPoolAddressesProvider(providerAddr);
         IPool pool = IPool(provider.getPool());
-        PoolConfigurator configurator = PoolConfigurator(
-            provider.getPoolConfigurator()
-        );
-        VariableDebtToken debtTokenImpl = new VariableDebtToken(pool);
-        PToken pTokenImpl = new PToken(pool);
-        NToken nTokenImpl = new NToken(pool, false);
-        ReservesSetupHelper reserversSetupHelperImpl = new ReservesSetupHelper();
-        IACLManager aclManager = IACLManager(provider.getACLManager());
-        aclManager.addPoolAdmin(address(reserversSetupHelperImpl));
 
-        //TODO(ron): use dai only for demonstrate and need refactor to load from token dict
-        DefaultReserveInterestRateStrategy daiInterestRateStrategy = new DefaultReserveInterestRateStrategy(
-            provider,
-            8e26, //optimalUsageRatio
-            0, //baseVariableRate
-            4e25, //variableRateSlope1
-            75e25 //variableRateSlope2
-        );
-        DefaultReserveAuctionStrategy daiAuctionStrategy = new DefaultReserveAuctionStrategy(
-            3e18, //max
-            1e18, //minExp
-            5e17, //min
-            5e16, //stepLinear
-            1e17, //stepExp
-            60 //tickLength
-        );
+        VariableDebtToken variableDebtToken = new VariableDebtToken(pool);
+        PToken pToken = new PToken(pool);
+        NToken nToken = new NToken(pool, false);
+        NTokenMoonBirds nTokenMoonBirds = new NTokenMoonBirds(pool);
 
-        ConfiguratorInputTypes.InitReserveInput memory initInput = ConfiguratorInputTypes
-            .InitReserveInput(
-                address(pTokenImpl),
-                address(debtTokenImpl),
-                18,
-                address(daiInterestRateStrategy),
-                address(daiAuctionStrategy),
-                config.contractAddresses("DAI"),
-                ParaSpaceDataTypes.AssetType.ERC20,
-                address(0), //treasury
-                address(0), //incentivesController
-                "ParaSpace Derivative Token DAI",
-                "pDAI",
-                "ParaSpace Variable Debt Token DAI",
-                "vDebtDAI",
-                "0x10"
+        uint256 t0 = config.erc20TokensLength();
+        uint256 t1 = config.erc721TokensLength();
+        for (uint256 i = 0; i < t0 + t1; i++) {
+            bytes32 token;
+            if (i < t0) {
+                token = config.erc20Tokens(i);
+            } else {
+                token = config.erc721Tokens(i - t0);
+            }
+            if (token == "UniswapV3") {
+                continue;
+            }
+
+            DataTypes.IReserveParams memory params = config.getTokenConfig(
+                token
             );
 
-        ConfiguratorInputTypes.InitReserveInput[]
-            memory initInputs = new ConfiguratorInputTypes.InitReserveInput[](
-                1
-            );
-        initInputs[0] = initInput;
-        //initReserves
-        configurator.initReserves(initInputs);
+            if (config.contractAddresses(params.strategy.name) == address(0)) {
+                DefaultReserveInterestRateStrategy rateStrategy = new DefaultReserveInterestRateStrategy(
+                        provider,
+                        params.strategy.optimalUsageRatio,
+                        params.strategy.baseVariableBorrowRate,
+                        params.strategy.variableRateSlope1,
+                        params.strategy.variableRateSlope2
+                    );
+                config.updateAddress(
+                    params.strategy.name,
+                    address(rateStrategy)
+                );
+            }
 
-        ReservesSetupHelper.ConfigureReserveInput memory configInput = ReservesSetupHelper
-            .ConfigureReserveInput(
-                config.contractAddresses("DAI"),
-                7700, //ltv
-                0, //protocolFee
-                9000, //lt
-                10400, //liqBonus
-                1000, //RF
-                0, //borrowCap
-                0, //supplyCap
-                true //borrowEnable
-            );
-        ReservesSetupHelper.ConfigureReserveInput[]
-            memory reserveInputs = new ReservesSetupHelper.ConfigureReserveInput[](
-                1
-            );
-        reserveInputs[0] = configInput;
-        //configureReserves
-        reserversSetupHelperImpl.configureReserves(configurator, reserveInputs);
-
-        aclManager.removePoolAdmin(address(reserversSetupHelperImpl));
+            if (
+                config.contractAddresses(params.auctionStrategy.name) == address(0) &&
+                params.auctionStrategy.name != "auctionStrategyZero"
+            ) {
+                DefaultReserveAuctionStrategy auctionStrategy = new DefaultReserveAuctionStrategy(
+                    params.auctionStrategy.maxPriceMultiplier,
+                    params.auctionStrategy.minExpPriceMultiplier,
+                    params.auctionStrategy.minPriceMultiplier,
+                    params.auctionStrategy.stepLinear,
+                    params.auctionStrategy.stepExp,
+                    params.auctionStrategy.tickLength
+                );
+                config.updateAddress(params.auctionStrategy.name, address(auctionStrategy));
+            }
+        }
+        //TODO
     }
 }
