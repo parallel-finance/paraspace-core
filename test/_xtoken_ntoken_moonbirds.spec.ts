@@ -305,7 +305,6 @@ describe("MoonBirds nToken and supply while nesting", () => {
         borrower.address,
         0,
         wethAmount,
-        0,
         true
       );
 
@@ -355,7 +354,6 @@ describe("MoonBirds nToken and supply while nesting", () => {
         borrower.address,
         0,
         wethAmount,
-        0,
         false
       );
 

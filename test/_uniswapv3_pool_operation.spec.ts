@@ -780,7 +780,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           user1.address,
           1,
           liquidationValue,
-          0,
           true,
           {
             gasLimit: 12_450_000,
@@ -816,7 +815,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           user1.address,
           1,
           liquidationValue,
-          0,
           true,
           {
             gasLimit: 12_450_000,
@@ -851,7 +849,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           user1.address,
           1,
           liquidationValue,
-          0,
           true,
           {
             gasLimit: 12_450_000,
@@ -886,7 +883,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           user1.address,
           1,
           liquidationValue,
-          0,
           true,
           {
             gasLimit: 12_450_000,
