@@ -104,7 +104,6 @@ library DataTypes {
     struct ExecuteLiquidateParams {
         uint256 reservesCount;
         uint256 liquidationAmount;
-        uint256 creditAmount;
         uint256 collateralTokenId;
         uint256 auctionRecoveryHealthFactor;
         address weth;
@@ -251,7 +250,6 @@ library DataTypes {
         address collateralAsset;
         uint256 tokenId;
         uint256 actualLiquidationAmount;
-        uint256 creditAmount;
         uint256 maxLiquidationAmount;
         uint256 auctionRecoveryHealthFactor;
         address priceOracleSentinel;
