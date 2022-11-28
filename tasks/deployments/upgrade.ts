@@ -63,27 +63,3 @@ task("upgrade:ntoken", "upgrade ntoken").setAction(async (_, DRE) => {
   await upgradeNToken();
   console.timeEnd("upgrade ntoken");
 });
-
-task("upgrade:ntoken_moonbirds", "upgrade ntoken moonbirds").setAction(
-  async (_, DRE) => {
-    const {upgradeNTokenMoonBirds} = await import(
-      "../../deploy/tasks/deployments/upgrade/upgrade_ntoken_moonbirds"
-    );
-    await DRE.run("set-DRE");
-    console.time("upgrade ntoken moonbirds");
-    await upgradeNTokenMoonBirds();
-    console.timeEnd("upgrade ntoken moonbirds");
-  }
-);
-
-task("upgrade:ntoken_uniswapv3", "upgrade ntoken uniswapv3").setAction(
-  async (_, DRE) => {
-    const {upgradeNTokenUniswapV3} = await import(
-      "../../deploy/tasks/deployments/upgrade/upgrade_ntoken_uniswapv3"
-    );
-    await DRE.run("set-DRE");
-    console.time("upgrade ntoken uniswapV3");
-    await upgradeNTokenUniswapV3();
-    console.timeEnd("upgrade ntoken uniswapV3");
-  }
-);

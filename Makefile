@@ -359,39 +359,31 @@ transfer-tokens:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
 
 .PHONY: upgrade
-upgrade:
+upgrade: build
 	make TASK_NAME=upgrade:all run-task
 
 .PHONY: upgrade-pool
-upgrade-pool:
+upgrade-pool: build
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: upgrade-ntoken
+upgrade-ntoken: build
+	make TASK_NAME=upgrade:ntoken run-task
+
+.PHONY: upgrade-ptoken
+upgrade-ptoken: build
+	make TASK_NAME=upgrade:ptoken run-task
+
 .PHONY: remove-pool-funcs
-remove-pool-funcs:
+remove-pool-funcs: build
 # e.g: emergency disable liquidation
 	FUNCS_TO_REMOVE=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:remove-pool-funcs run-task
 
 .PHONY: add-pool-funcs
-add-pool-funcs:
+add-pool-funcs: build
 # e.g: add liquidation back
 	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
 
-
-.PHONY: upgrade-ptoken
-upgrade-ptoken:
-	make TASK_NAME=upgrade:ptoken run-task
-
-.PHONY: upgrade-ntoken
-upgrade-ntoken:
-	make TASK_NAME=upgrade:ntoken run-task
-
-.PHONY: upgrade-ntoken-uniswapv3
-upgrade-ntoken-uniswapv3:
-	make TASK_NAME=upgrade:ntoken_uniswapv3 run-task
-
-.PHONY: upgrade-ntoken-moonbirds
-upgrade-ntoken-moonbirds:
-	make TASK_NAME=upgrade:ntoken_moonbirds run-task
 
 .PHONY: node
 node:
@@ -419,6 +411,10 @@ shutdown:
 	docker volume prune -f
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
+
+.PHONY: copy
+copy:
+	docker cp paraspace-core_hardhat_1:/paraspace/deployed-contracts.json .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
