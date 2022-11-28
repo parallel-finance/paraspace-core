@@ -24,15 +24,57 @@ make build
 make test
 ```
 
+### Fork
+
+```
+
+NETWORK=localhost
+ALCHEMY_KEY=
+MOCHA_JOBS=1
+DB_PATH=deployed-contracts.json
+FORK=goerli
+FORK_BLOCK_NUMBER=8035792
+
+make launch
+
+```
+
+### Upgrade Fork
+
+```
+
+NETWORK=localhost
+ALCHEMY_KEY=
+MOCHA_JOBS=1
+DB_PATH=deployed-contracts.json
+RPC_URL=http://localhost:8545
+FORK=goerli
+
+```
+
+### Upgrade Live
+
+```
+
+NETWORK=goerli
+ALCHEMY_KEY=
+MOCHA_JOBS=1
+DB_PATH=deployed-contracts.json
+
+```
+
 ### Available commands
 
 ```
+
 make help
+
 ```
 
 ### Tests Instructure
 
 ## Structure
+
 Use flatten layout
 
 ## Coding

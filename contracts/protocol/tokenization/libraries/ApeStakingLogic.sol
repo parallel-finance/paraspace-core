@@ -69,9 +69,10 @@ library ApeStakingLogic {
             "Value Too High"
         );
         uint256 oldValue = stakingParameter.unstakeIncentive;
-        require(oldValue != incentive, "Same Value");
-        stakingParameter.unstakeIncentive = incentive;
-        emit UnstakeApeIncentiveUpdated(oldValue, incentive);
+        if (oldValue != incentive) {
+            stakingParameter.unstakeIncentive = incentive;
+            emit UnstakeApeIncentiveUpdated(oldValue, incentive);
+        }
     }
 
     struct UnstakeAndRepayParams {

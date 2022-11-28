@@ -76,9 +76,6 @@ jobs:
 
       - name: Verification
         run: |
-          echo RPC_URL=${{ secrets.RPC_URL }} >> .env
-          echo ETHERSCAN_VERIFICATION_CONTRACT=${{ env.ETHERSCAN_VERIFICATION_CONTRACTS }} >> .env
-
           echo NETWORK=${{ env.NETWORK }} >> .env
           echo INFURA_KEY=${{ env.INFURA_KEY }} >> .env
           echo DEPLOYER_MNEMONIC=${{ env.DEPLOYER_MNEMONIC }} >> .env
