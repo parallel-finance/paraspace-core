@@ -60,7 +60,6 @@ NETWORK=goerli
 ALCHEMY_KEY=
 MOCHA_JOBS=1
 DB_PATH=deployed-contracts.json
-RPC_URL=
 
 ```
 
