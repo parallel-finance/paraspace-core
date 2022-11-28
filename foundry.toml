@@ -1,15 +1,11 @@
 [profile.default]
-via_ir = false
-src = 'contracts'
-out = 'foundry_out'
-libs = ["foundry_libs"]
-test = 'foundry_test'
+src = 'contracts/'
+out = 'out'
+libs = ["lib"]
+test = 'test'
+ffi = true
 remappings = [
-    'ds-test=foundry_libs/ds-test/src/',
-    'forge-std=foundry_libs/forge-std/src/',
+  "contracts/=contracts/"
 ]
-optimizer = true
-optimizer_runs = 19_066
-optimizerSteps = ''
-
-
+ignored_error_codes = [2072, 2059, 5574, 2519, 1878, 5667, 2018, 3445]
+fs_permissions = [{ access = "read", path = "./"}]

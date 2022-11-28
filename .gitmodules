@@ -1,3 +1,14 @@
 [submodule "deploy"]
 	path = deploy
 	url = git@github.com:para-space/paraspace-deploy.git
+[submodule "lib/ds-test"]
+	path = lib/ds-test
+	url = https://github.com/dapphub/ds-test
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+	branch = v1.1.0
+[submodule "lib/pnm-contracts"]
+	path = lib/pnm-contracts
+	url = https://github.com/PwnedNoMore/pnm-contracts
+	branch = v0.2.13
