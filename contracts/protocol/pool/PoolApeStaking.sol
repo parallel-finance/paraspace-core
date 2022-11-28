@@ -32,7 +32,7 @@ contract PoolApeStaking is
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 1;
+    uint256 internal constant POOL_REVISION = 2;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
