@@ -111,7 +111,9 @@ const hardhatConfig: HardhatUserConfig = {
     localhost: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
       chainId: CHAINS_ID[eEthereumNetwork.hardhat],
-      accounts: accounts.map(({privateKey}) => privateKey),
+      accounts: {
+        mnemonic: DEPLOYER_MNEMONIC,
+      },
       gasPrice: "auto",
       gas: "auto",
       allowUnlimitedContractSize: true,
