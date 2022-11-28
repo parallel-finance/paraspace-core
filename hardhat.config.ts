@@ -109,6 +109,7 @@ const hardhatConfig: HardhatUserConfig = {
   },
   networks: {
     localhost: {
+      url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
       chainId: CHAINS_ID[eEthereumNetwork.hardhat],
       accounts: accounts.map(({privateKey}) => privateKey),
       gasPrice: "auto",
