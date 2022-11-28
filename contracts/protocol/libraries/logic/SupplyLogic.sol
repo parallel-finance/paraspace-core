@@ -612,17 +612,15 @@ library SupplyLogic {
             emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
         } else {
             userConfig.setUsingAsCollateral(reserve.id, false);
-            if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtvERC20(
-                    reservesData,
-                    reservesList,
-                    userConfig,
-                    asset,
-                    msg.sender,
-                    reservesCount,
-                    priceOracle
-                );
-            }
+            ValidationLogic.validateHFAndLtvERC20(
+                reservesData,
+                reservesList,
+                userConfig,
+                asset,
+                msg.sender,
+                reservesCount,
+                priceOracle
+            );
 
             emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
         }
@@ -715,17 +713,15 @@ library SupplyLogic {
             userConfig.setUsingAsCollateral(reserve.id, false);
             emit ReserveUsedAsCollateralDisabled(asset, sender);
         }
-        if (userConfig.isBorrowingAny()) {
-            ValidationLogic.validateHFAndLtvERC721(
-                reservesData,
-                reservesList,
-                userConfig,
-                asset,
-                tokenIds,
-                sender,
-                reservesCount,
-                priceOracle
-            );
-        }
+        ValidationLogic.validateHFAndLtvERC721(
+            reservesData,
+            reservesList,
+            userConfig,
+            asset,
+            tokenIds,
+            sender,
+            reservesCount,
+            priceOracle
+        );
     }
 }
