@@ -20,16 +20,13 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {impersonateAccountsHardhat} from "../deploy/helpers/misc-utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {BigNumberish, utils} from "ethers";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
-
-declare let hre: HardhatRuntimeEnvironment;
+import {impersonateAddress} from "../deploy/helpers/contracts-helpers";
 
 describe("ReserveConfiguration", async () => {
   const fixture = async () => {
@@ -424,8 +421,8 @@ describe("ReserveConfiguration", async () => {
       [configurator.address],
       utils.parseEther("1")
     );
-    await impersonateAccountsHardhat([configurator.address]);
-    const configSigner = await hre.ethers.getSigner(configurator.address);
+    const configSigner = (await impersonateAddress(configurator.address))
+      .signer;
 
     const config = await pool.getReserveData(dai.address);
 
@@ -456,8 +453,8 @@ describe("ReserveConfiguration", async () => {
       [configurator.address],
       utils.parseEther("1")
     );
-    await impersonateAccountsHardhat([configurator.address]);
-    const configSigner = await hre.ethers.getSigner(configurator.address);
+    const configSigner = (await impersonateAddress(configurator.address))
+      .signer;
 
     const config = await pool.getReserveData(dai.address);
 

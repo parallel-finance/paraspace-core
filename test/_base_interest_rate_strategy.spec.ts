@@ -33,13 +33,12 @@ import {
 } from "../deploy/helpers/contracts-getters";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
-  impersonateAccountsHardhat,
-  increaseTime,
-} from "../deploy/helpers/misc-utils";
+  convertToCurrencyDecimals,
+  impersonateAddress,
+} from "../deploy/helpers/contracts-helpers";
+import {increaseTime} from "../deploy/helpers/misc-utils";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
 
 type CalculateInterestRatesParams = {
@@ -51,7 +50,6 @@ type CalculateInterestRatesParams = {
   xToken: string;
 };
 
-declare let hre: HardhatRuntimeEnvironment;
 const SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits";
 
 describe("Interest Rate Tests", () => {
@@ -258,8 +256,8 @@ describe("Interest Rate Tests", () => {
         [configurator.address],
         utils.parseEther("1")
       );
-      await impersonateAccountsHardhat([configurator.address]);
-      const configSigner = await hre.ethers.getSigner(configurator.address);
+      const configSigner = (await impersonateAddress(configurator.address))
+        .signer;
 
       expect(
         await pool

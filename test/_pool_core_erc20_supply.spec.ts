@@ -6,11 +6,11 @@ import {
   ONE_YEAR,
   MAX_SUPPLY_CAP,
 } from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
 import {
-  advanceTimeAndBlock,
-  impersonateAccountsHardhat,
-} from "../deploy/helpers/misc-utils";
+  convertToCurrencyDecimals,
+  impersonateAddress,
+} from "../deploy/helpers/contracts-helpers";
+import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
   assertHealthFactorCalculation,
@@ -22,9 +22,6 @@ import {ProtocolErrors} from "../deploy/helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {utils} from "ethers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
-
-declare let hre: HardhatRuntimeEnvironment;
 
 describe("pToken Supply Event Accounting", () => {
   const {RESERVE_FROZEN, RESERVE_INACTIVE, UNDERLYING_BALANCE_ZERO} =
@@ -267,8 +264,7 @@ describe("pToken Supply Event Accounting", () => {
     expect(configAfter.isActive).to.be.eq(false);
     expect(configAfter.isFrozen).to.be.eq(false);
 
-    await impersonateAccountsHardhat([pool.address]);
-    const poolSigner = await hre.ethers.getSigner(pool.address);
+    const poolSigner = (await impersonateAddress(pool.address)).signer;
     await topUpNonPayableWithEther(
       user.signer,
       [pool.address],

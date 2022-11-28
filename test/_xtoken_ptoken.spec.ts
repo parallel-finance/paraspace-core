@@ -8,10 +8,7 @@ import {
   deployDelegationAwarePToken,
   deployMintableDelegationERC20,
 } from "../deploy/helpers/contracts-deployments";
-import {
-  impersonateAccountsHardhat,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {waitForTx} from "../deploy/helpers/misc-utils";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getTestWallets} from "./helpers/utils/wallets";
@@ -23,6 +20,7 @@ import {
   buildPermitParams,
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
+  impersonateAddress,
 } from "../deploy/helpers/contracts-helpers";
 import {assertAlmostEqual, supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
@@ -903,8 +901,7 @@ describe("Ptoken edge cases", () => {
 
   it("TC-ptoken-edge-10: `mint` shouldn't work if amount is zero", async () => {
     const {pool, pDai, users} = await loadFixture(testEnvFixture);
-    await impersonateAccountsHardhat([pool.address]);
-    const poolSigner = await hre.ethers.getSigner(pool.address);
+    const poolSigner = (await impersonateAddress(pool.address)).signer;
 
     await expect(
       pDai
@@ -920,8 +917,7 @@ describe("Ptoken edge cases", () => {
       to: pool.address,
       value: hre.ethers.utils.parseEther("1"),
     });
-    await impersonateAccountsHardhat([pool.address]);
-    const poolSigner = await hre.ethers.getSigner(pool.address);
+    const poolSigner = (await impersonateAddress(pool.address)).signer;
     const mintingAmount = await convertToCurrencyDecimals(pDai.address, "100");
 
     expect(
@@ -941,8 +937,7 @@ describe("Ptoken edge cases", () => {
   it("TC-ptoken-edge-12: `burn` shouldn't work when amount is zero", async () => {
     const {pool, pDai, users} = await loadFixture(testEnvFixture);
 
-    await impersonateAccountsHardhat([pool.address]);
-    const poolSigner = await hre.ethers.getSigner(pool.address);
+    const poolSigner = (await impersonateAddress(pool.address)).signer;
 
     await expect(
       pDai
@@ -957,8 +952,7 @@ describe("Ptoken edge cases", () => {
       to: pool.address,
       value: hre.ethers.utils.parseEther("1"),
     });
-    await impersonateAccountsHardhat([pool.address]);
-    const poolSigner = await hre.ethers.getSigner(pool.address);
+    const poolSigner = (await impersonateAddress(pool.address)).signer;
 
     const amount = await convertToCurrencyDecimals(pDai.address, "100");
     await pDai
@@ -990,8 +984,7 @@ describe("Ptoken edge cases", () => {
       [pool.address],
       utils.parseEther("1")
     );
-    await impersonateAccountsHardhat([pool.address]);
-    const poolSigner = await hre.ethers.getSigner(pool.address);
+    const poolSigner = (await impersonateAddress(pool.address)).signer;
 
     expect(
       await pDai

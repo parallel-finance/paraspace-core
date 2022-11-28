@@ -1,17 +1,14 @@
 import {expect} from "chai";
 import {utils} from "ethers";
-import {impersonateAccountsHardhat} from "../deploy/helpers/misc-utils";
 import {ZERO_ADDRESS} from "../deploy/helpers/constants";
 import {deployPoolCoreLibraries} from "../deploy/helpers/contracts-deployments";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {PoolCore__factory} from "../types";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-
-declare let hre: HardhatRuntimeEnvironment;
+import {impersonateAddress} from "../deploy/helpers/contracts-helpers";
 
 describe("Pool: Initialization", () => {
   const {
@@ -77,8 +74,8 @@ describe("Pool: Initialization", () => {
       [configurator.address],
       utils.parseEther("1")
     );
-    await impersonateAccountsHardhat([configurator.address]);
-    const configSigner = await hre.ethers.getSigner(configurator.address);
+    const configSigner = (await impersonateAddress(configurator.address))
+      .signer;
 
     await expect(
       pool
