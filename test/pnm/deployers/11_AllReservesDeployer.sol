@@ -11,6 +11,11 @@ import {IACLManager} from "../../../contracts/interfaces/IACLManager.sol";
 import {ReservesSetupHelper} from "../../../contracts/deployments/ReservesSetupHelper.sol";
 import {VariableDebtToken} from "../../../contracts/protocol/tokenization/VariableDebtToken.sol";
 import {PToken} from "../../../contracts/protocol/tokenization/PToken.sol";
+import {PTokenStETH} from "../../../contracts/protocol/tokenization/PTokenStETH.sol";
+import {StETHDebtToken} from "../../../contracts/protocol/tokenization/StETHDebtToken.sol";
+import {PTokenAToken} from "../../../contracts/protocol/tokenization/PTokenAToken.sol";
+import {ATokenDebtToken} from "../../../contracts/protocol/tokenization/ATokenDebtToken.sol";
+import {PTokenSApe} from "../../../contracts/protocol/tokenization/PTokenSApe.sol";
 import {NToken} from "../../../contracts/protocol/tokenization/NToken.sol";
 import {NTokenMoonBirds} from "../../../contracts/protocol/tokenization/NTokenMoonBirds.sol";
 
@@ -24,9 +29,12 @@ import {MockIncentivesController} from "../../../contracts/mocks/helpers/MockInc
 import {MockReserveAuctionStrategy} from "../../../contracts/mocks/tests/MockReserveAuctionStrategy.sol";
 
 contract AllReservesDeployer is Deployer {
+    ConfiguratorInputTypes.InitReserveInput[] inputs;
+
     constructor(ParaspaceConfig _config) Deployer(_config) {}
 
     function deploy() public override FromDeployer {
+        uint256 idx = 0;
         MockIncentivesController incentivesController = new MockIncentivesController();
         MockReserveAuctionStrategy reserveAuctionStrategy = new MockReserveAuctionStrategy(
                 3 ether,
@@ -94,6 +102,35 @@ contract AllReservesDeployer is Deployer {
                 config.updateAddress(params.auctionStrategy.name, address(auctionStrategy));
             }
         }
+
+        for(uint256 i = 0; i < t0; i ++) {
+            bytes32 token = config.erc20Tokens(i);
+            if(token == "stETH") {
+                PTokenStETH pTokenStETH = new PTokenStETH(pool);
+                StETHDebtToken stETHDebtTOken = new StETHDebtToken(pool);
+            } else if(token == "aWETH") {
+                PTokenAToken pTokenAToken = new PTokenAToken(pool);
+                ATokenDebtToken aTokenDebtToken = new ATokenDebtToken(pool);
+            } else if(token == "sAPE") {
+                PTokenSApe pTokenSApe = new PTokenSApe(pool);
+            } else {
+            }
+        }
+
+        for(uint256 i = 0; i < t1; i++) {
+            bytes32 token = config.erc721Tokens(i);
+            if(token == "MOONBIRD") {
+                NTokenMoonBirds nTokenMoonBirds = new NTokenMoonBirds(pool); 
+            } else if(token == "UniSwapV3") {
+                continue;
+            } else if(token == "BAYC") {
+                // NTokenMAYC nTokenMAYC = new NTokenMAYC();
+            }
+        }
         //TODO
+        // IPoolConfigurator configurator = IPoolConfigurator(provider.getPoolConfigurator());
+        // for(uint256 i = 0; i < reserved; i++) {
+        //     configurator.initReserves();
+        // }
     }
 }

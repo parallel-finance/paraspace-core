@@ -53,7 +53,6 @@ contract ERC721Deployer is Deployer {
                     address(0)
                 );
                 config.updateAddress(tokenSymbol, address(token));
-                //FIXME(alan): Why deploy mayc && apeCoin?
             } else if (symbol.equal("DOODLE")) {
                 Doodles token = new Doodles();
                 config.updateAddress(tokenSymbol, address(token));
@@ -106,5 +105,7 @@ contract ERC721Deployer is Deployer {
                 config.updateAddress(tokenSymbol, address(token));
             }
         }
+        
+
     }
 }
