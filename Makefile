@@ -342,6 +342,10 @@ deploy-looksrare:
 deploy-x2y2:
 	make TASK_NAME=deploy:x2y2 run-task
 
+.PHONY: deploy-blur-exchange
+deploy-blur-exchange:
+	make TASK_NAME=deploy:blur-exchange run-task
+
 .PHONY: deploy-flashClaimRegistry
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task

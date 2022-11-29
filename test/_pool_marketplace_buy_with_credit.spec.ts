@@ -37,6 +37,7 @@ import {MintableERC20} from "../types";
 import {getMintableERC721} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
+  executeBlurBuyWithCredit,
   executeLooksrareBuyWithCredit,
   executeSeaportBuyWithCredit,
   executeX2Y2BuyWithCredit,
@@ -1387,6 +1388,48 @@ describe("Leveraged Buy - Positive tests", () => {
     await executeLooksrareBuyWithCredit(
       doodles,
       dai,
+      startAmount,
+      payLaterAmount,
+      nftId,
+      maker,
+      taker
+    );
+  });
+
+  it("TC-erc721-buy-23: ERC721 <=> ERC20 via Blur - no loan", async () => {
+    const {
+      doodles,
+      weth,
+      executionDelegate,
+      pool,
+      users: [maker, taker],
+    } = await loadFixture(testEnvFixture);
+    const takerInitialBalance = "1000";
+    const payNowAmount = await convertToCurrencyDecimals(
+      weth.address,
+      takerInitialBalance
+    );
+    const payLaterAmount = 0; // no loan!
+    const startAmount = payNowAmount.add(payLaterAmount);
+    const nftId = 0;
+
+    // mint WETH to taker
+    await mintAndValidate(weth, takerInitialBalance, taker);
+    // mint DOODLE to maker
+    await mintAndValidate(doodles, "1", maker);
+    // approve
+    await waitForTx(
+      await doodles
+        .connect(maker.signer)
+        .approve(executionDelegate.address, nftId)
+    );
+    await waitForTx(
+      await weth.connect(taker.signer).approve(pool.address, payNowAmount)
+    );
+
+    await executeBlurBuyWithCredit(
+      doodles,
+      weth,
       startAmount,
       payLaterAmount,
       nftId,
