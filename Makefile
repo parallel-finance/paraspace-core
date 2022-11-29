@@ -19,6 +19,10 @@ init: submodules
 	forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
 
+.PHONY: foundry-setup
+foundry-setup:
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat deploy:all --network anvil # --verbose
+
 .PHONY: foundry-test
 foundry-test:
 	forge test -vvvv
