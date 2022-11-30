@@ -52,6 +52,7 @@ import {
 import {
   Order as BlurOrder,
   Side,
+  SignatureVersion,
 } from "../../deploy/helpers/blur-helpers/types";
 import {InputStruct} from "../../types/dependencies/blur-exchange/IBlurExchange";
 
@@ -161,6 +162,7 @@ export async function executeBlurBuyWithCredit(
   maker: SignerWithAddress,
   taker: SignerWithAddress
 ) {
+  const pool = await getPoolProxy();
   const now = Math.floor(Date.now() / 1000);
   const makerOrder: BlurOrder = {
     trader: maker.address,
@@ -178,7 +180,7 @@ export async function executeBlurBuyWithCredit(
     extraParams: "0x",
   };
   const takerOrder: BlurOrder = {
-    trader: taker.address,
+    trader: pool.address,
     side: Side.Buy,
     matchingPolicy: (await getStandardPolicyERC721()).address,
     collection: tokenToBuy.address,
@@ -196,9 +198,15 @@ export async function executeBlurBuyWithCredit(
   const blurExchange = await getBlurExchangeProxy();
 
   const makerInput = await createBlurOrder(blurExchange, maker, makerOrder);
-  const takerInput = await createBlurOrder(blurExchange, taker, takerOrder);
-
-  const pool = await getPoolProxy();
+  const takerInput = {
+    order: takerOrder,
+    v: 0,
+    r: constants.HashZero,
+    s: constants.HashZero,
+    extraSignature: "0x",
+    signatureVersion: SignatureVersion.Single,
+    blockNumber: 0,
+  };
 
   const encodedData = blurExchange.interface.encodeFunctionData("execute", [
     makerInput as InputStruct,
