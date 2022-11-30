@@ -20,7 +20,7 @@ init: submodules
 	yarn
 
 .PHONY: foundry-setup
-foundry-setup:
+foundry-setup: anvil
 	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat deploy:all --network anvil # --verbose
 
 .PHONY: foundry-test
@@ -393,6 +393,12 @@ add-pool-funcs: build
 node:
 	npx hardhat node --hostname 0.0.0.0
 
+.PHONY: anvil
+anvil:
+	pkill anvil
+	anvil &
+	sleep 30
+
 .PHONY: image
 image:
 	DOCKER_BUILDKIT=1 docker build \
@@ -406,6 +412,7 @@ launch: shutdown
 		up \
 		-d --build
 	docker-compose logs -f hardhat
+	pkill anvil
 
 .PHONY: shutdown
 shutdown:
