@@ -254,6 +254,10 @@ test-data-providers:
 test-ape-staking:
 	make TEST_TARGET=_pool_ape_staking.spec.ts test
 
+.PHONY: test-sape-operation
+test-sape-operation:
+	make TEST_TARGET=_sape_pool_operation.spec.ts test
+
 .PHONY: test-acl-manager
 test-acl-manager:
 	make TEST_TARGET=acl-manager.spec.ts test
@@ -345,6 +349,10 @@ deploy-looksrare:
 .PHONY: deploy-x2y2
 deploy-x2y2:
 	make TASK_NAME=deploy:x2y2 run-task
+
+.PHONY: deploy-blur-exchange
+deploy-blur-exchange:
+	make TASK_NAME=deploy:blur-exchange run-task
 
 .PHONY: deploy-flashClaimRegistry
 deploy-flashClaimRegistry:
