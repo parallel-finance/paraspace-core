@@ -64,7 +64,7 @@ describe("SApe Pool Operation Test", () => {
     await supplyAndValidate(mayc, "1", user1, true);
     await mintAndValidate(ape, "10000", user1);
 
-    const amount = await convertToCurrencyDecimals(ape.address, "10000");
+    const amount = await convertToCurrencyDecimals(ape.address, "5000");
     expect(
       await pool.connect(user1.signer).borrowApeAndStake(
         {
@@ -78,6 +78,8 @@ describe("SApe Pool Operation Test", () => {
     );
 
     const balance = await pSApeCoin.balanceOf(user1.address);
+
+    // HF = (51 * 0.7 + 5000 * 0.0036906841286 * 0.7) / (5000 * 0.0036906841286 ) = 2.6346006732655392383
 
     await expect(
       pool.connect(user1.signer).withdraw(sApeAddress, balance, user1.address, {
@@ -108,11 +110,12 @@ describe("SApe Pool Operation Test", () => {
       weth,
     } = testEnv;
 
-    const stakedAmount = await convertToCurrencyDecimals(ape.address, "10000");
+    const stakedAmount = await convertToCurrencyDecimals(ape.address, "5000");
 
     await supplyAndValidate(weth, "100", liquidator, true, "200000");
 
-    const borrowAmount = await convertToCurrencyDecimals(weth.address, "5");
+    // BorrowLimit: (51 * 0.325 + 5000 *  0.0036906841286 * 0.2 - 5000 * 0.0036906841286) = 1.8122634856
+    const borrowAmount = await convertToCurrencyDecimals(weth.address, "1");
     expect(
       await pool
         .connect(user1.signer)
