@@ -122,7 +122,7 @@ const hardhatConfig: HardhatUserConfig = {
         "0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356",
         "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97",
         "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6",
-      ] as any,
+      ],
       gasPrice: 1000000000,
       gas: 30000000,
       allowUnlimitedContractSize: true,
