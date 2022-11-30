@@ -22,6 +22,7 @@ make build
 
 ```
 make test
+make fast-test
 ```
 
 ### Fork
@@ -30,37 +31,47 @@ make test
 
 NETWORK=localhost
 ALCHEMY_KEY=
+DEPLOYER_MNEMONIC=
+ETHERSCAN_VERIFICATION=false
 MOCHA_JOBS=1
 DB_PATH=deployed-contracts.json
-FORK=goerli
-FORK_BLOCK_NUMBER=8035792
+FORK=goerli|mainnet
+FORK_BLOCK_NUMBER=8035792|15909885
 
 make launch
 
 ```
 
-### Upgrade Fork
+### Upgrade Existing Fork
+
+Before upgrading, you need to update REVISIONs of Pools, NTokens, PTokens
 
 ```
-
 NETWORK=localhost
 ALCHEMY_KEY=
+DEPLOYER_MNEMONIC=
+ETHERSCAN_VERIFICATION=false
 MOCHA_JOBS=1
-DB_PATH=deployed-contracts.json
-RPC_URL=http://localhost:8545
-FORK=goerli
+DB_PATH=deployed-contracts.json # must be the live fork's deploed-contracts.json
+RPC_URL=http://localhost:8545 # impersonate to paraspace admin for upgrading
+FORK=goerli|mainnet
 
+make upgrade
 ```
 
-### Upgrade Live
+### Upgrade Live Network
+
+Before upgrading, you need to update REVISIONs of Pools, NTokens, PTokens
 
 ```
-
-NETWORK=goerli
+NETWORK=goerli|mainnet
+DEPLOYER_MNEMONIC=
 ALCHEMY_KEY=
+ETHERSCAN_VERIFICATION=false
 MOCHA_JOBS=1
 DB_PATH=deployed-contracts.json
 
+make upgrade
 ```
 
 ### Available commands
