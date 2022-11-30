@@ -366,6 +366,10 @@ deploy-renounceOwnership:
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
 
+.PHONY: info
+info:
+	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
