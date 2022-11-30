@@ -1357,6 +1357,7 @@ describe("Leveraged Buy - Positive tests", () => {
   it("TC-erc721-buy-15: ERC721 <=> ERC20 via Looksrare - no loan", async () => {
     const {
       doodles,
+      nDOODLE,
       dai,
       transferManagerERC721,
       pool,
@@ -1394,11 +1395,20 @@ describe("Leveraged Buy - Positive tests", () => {
       maker,
       taker
     );
+
+    expect(await doodles.balanceOf(maker.address)).to.be.eq(0);
+    expect(await doodles.ownerOf(nftId)).to.be.eq(
+      (await pool.getReserveData(doodles.address)).xTokenAddress
+    );
+    expect(await nDOODLE.balanceOf(taker.address)).to.be.eq(1);
+    expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
+    expect(await dai.balanceOf(maker.address)).to.be.eq(startAmount);
   });
 
   it("TC-erc721-buy-23: ERC721 <=> ERC20 via Blur - no loan", async () => {
     const {
       doodles,
+      nDOODLE,
       weth,
       executionDelegate,
       pool,
@@ -1436,6 +1446,14 @@ describe("Leveraged Buy - Positive tests", () => {
       maker,
       taker
     );
+
+    expect(await doodles.balanceOf(maker.address)).to.be.eq(0);
+    expect(await doodles.ownerOf(nftId)).to.be.eq(
+      (await pool.getReserveData(doodles.address)).xTokenAddress
+    );
+    expect(await nDOODLE.balanceOf(taker.address)).to.be.eq(1);
+    expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
+    expect(await weth.balanceOf(maker.address)).to.be.eq(startAmount);
   });
 });
 

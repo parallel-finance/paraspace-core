@@ -160,7 +160,7 @@ export interface TestEnv {
   ape: MintableERC20;
   nMAYC: NTokenMAYC;
   mayc: MintableERC721;
-  nDOODLES: NToken;
+  nDOODLE: NToken;
   doodles: MintableERC721;
   mockTokenFaucet: MockTokenFaucet;
   wPunkGateway: WPunkGateway;
@@ -337,8 +337,8 @@ export async function initializeMakeSuite() {
     (xToken) => xToken.symbol === NTokenContractId.nMAYC
   )?.tokenAddress;
 
-  const nDOODLESAddress = allTokens.find(
-    (xToken) => xToken.symbol === NTokenContractId.nDOODLES
+  const nDOODLEAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nDOODLE
   )?.tokenAddress;
 
   const nWPunkAddress = allTokens.find(
@@ -449,7 +449,7 @@ export async function initializeMakeSuite() {
 
   testEnv.nBAYC = await getNTokenBAYC(nBAYCAddress);
   testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
-  testEnv.nDOODLES = await getNToken(nDOODLESAddress);
+  testEnv.nDOODLE = await getNToken(nDOODLEAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);
 
