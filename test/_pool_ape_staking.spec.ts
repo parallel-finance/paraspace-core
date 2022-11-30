@@ -30,7 +30,7 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {parseEther} from "ethers/lib/utils";
 import {
   executeAcceptBidWithCredit,
@@ -77,7 +77,9 @@ describe("APE Coin Staking Test", () => {
     await changePriceAndValidate(bayc, "50");
 
     const db = getDb();
-    const address = db.get(`BAKC.${DRE.network.name}`).value()?.address;
+    const address = db
+      .get(`${eContractid.BAKC}.${DRE.network.name}`)
+      .value()?.address;
     bakc = await getMintableERC721(address);
     await waitForTx(await bakc["mint(uint256,address)"]("2", user1.address));
 
@@ -201,10 +203,10 @@ describe("APE Coin Staking Test", () => {
       await convertToCurrencyDecimals(weth.address, "65")
     );
     expect(userAccount.totalDebtBase).equal(0);
-    //50 * 0.325 + 15 * 0.7 = 26.75
+    //50 * 0.325 + 15 * 0.2 = 19.25
     almostEqual(
       userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "26.75")
+      await convertToCurrencyDecimals(weth.address, "19.25")
     );
   });
 
@@ -222,6 +224,8 @@ describe("APE Coin Staking Test", () => {
     await mintAndValidate(ape, "7000", user1);
 
     const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    // 50 * 0.3250 + 7000 * 0.001 * 0.2 = 17.65
+    // 17.65 / 0.001 = 17650
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     expect(
@@ -257,10 +261,10 @@ describe("APE Coin Staking Test", () => {
     expect(userAccount.totalDebtBase).equal(
       await convertToCurrencyDecimals(weth.address, "8")
     );
-    //50 * 0.325 + 15 * 0.7 - 8= 18.75
+    //50 * 0.325 + 15 * 0.2 - 8=11.25
     almostEqual(
       userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "18.75")
+      await convertToCurrencyDecimals(weth.address, "11.25")
     );
   });
 
@@ -312,10 +316,10 @@ describe("APE Coin Staking Test", () => {
     expect(userAccount.totalDebtBase).equal(
       await convertToCurrencyDecimals(weth.address, "15")
     );
-    //50 * 0.325 + 15 * 0.7 - 15= 11.75
+    //50 * 0.325 + 15 * 0.2 - 15=4.25
     almostEqual(
       userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "11.75")
+      await convertToCurrencyDecimals(weth.address, "4.25")
     );
   });
 
@@ -359,11 +363,8 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "30")
     );
-    //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(
-      userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "4")
-    );
+    //40 * 0.325 + 30 * 0.2 - 30=-11
+    almostEqual(userAccount.availableBorrowsBase, 0);
 
     let withdrawAmount = await convertToCurrencyDecimals(ape.address, "3000");
     expect(
@@ -432,11 +433,8 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "30")
     );
-    //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(
-      userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "4")
-    );
+    //40 * 0.325 + 30 * 0.2 - 30=-11
+    almostEqual(userAccount.availableBorrowsBase, 0);
 
     const withdrawAmount = await convertToCurrencyDecimals(ape.address, "4000");
     expect(
@@ -510,11 +508,8 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "30")
     );
-    //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(
-      userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "4")
-    );
+    //40 * 0.325 + 30 * 0.2 - 30=-11
+    almostEqual(userAccount.availableBorrowsBase, 0);
 
     // advance in time
     await advanceTimeAndBlock(parseInt("86400"));
@@ -590,11 +585,8 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "30")
     );
-    //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(
-      userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "4")
-    );
+    //40 * 0.325 + 30 * 0.2 - 30=-11
+    almostEqual(userAccount.availableBorrowsBase, 0);
     // advance in time
     await advanceTimeAndBlock(parseInt("86400"));
 
@@ -672,11 +664,8 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "30")
     );
-    //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(
-      userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "4")
-    );
+    //40 * 0.325 + 30 * 0.2 - 30=-11
+    almostEqual(userAccount.availableBorrowsBase, 0);
 
     // advance in time
     await advanceTimeAndBlock(parseInt("86400"));
@@ -738,11 +727,8 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "30")
     );
-    //40 * 0.325 + 30 * 0.7 - 30= 4
-    almostEqual(
-      userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "4")
-    );
+    //40 * 0.325 + 30 * 0.2 - 30=-11
+    almostEqual(userAccount.availableBorrowsBase, 0);
 
     // drop HF to liquidation levels
     await changePriceAndValidate(mayc, "3");
@@ -1050,10 +1036,10 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "18")
     );
-    //50 * 2 * 0.4 + 50 * 2 * 0.325 + 18 * 0.7 - 18 = 67.1
+    //50 * 2 * 0.4 + 50 * 2 * 0.325 + 18 * 0.2 - 18 = 58.1
     almostEqual(
       userAccount.availableBorrowsBase,
-      await convertToCurrencyDecimals(weth.address, "67.1")
+      await convertToCurrencyDecimals(weth.address, "58.1")
     );
 
     await changePriceAndValidate(mayc, "10");
