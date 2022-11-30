@@ -388,6 +388,7 @@ contract PoolCore is
             ps._reservesList,
             ps._usersConfig[msg.sender],
             asset,
+            msg.sender,
             useAsCollateral,
             ps._reservesCount,
             ADDRESSES_PROVIDER.getPriceOracle()

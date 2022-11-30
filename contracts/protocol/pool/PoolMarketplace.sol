@@ -146,4 +146,9 @@ contract PoolMarketplace is
             referralCode
         );
     }
+
+    function getConduit() external view returns (address) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return ps._conduit;
+    }
 }

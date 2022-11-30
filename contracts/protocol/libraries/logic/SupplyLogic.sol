@@ -588,6 +588,7 @@ library SupplyLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         address asset,
+        address onBehalfOf,
         bool useAsCollateral,
         uint256 reservesCount,
         address priceOracle
@@ -596,7 +597,7 @@ library SupplyLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         uint256 userBalance = IERC20(reserveCache.xTokenAddress).balanceOf(
-            msg.sender
+            onBehalfOf
         );
 
         ValidationLogic.validateSetUseERC20AsCollateral(
@@ -609,7 +610,7 @@ library SupplyLogic {
 
         if (useAsCollateral) {
             userConfig.setUsingAsCollateral(reserve.id, true);
-            emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
+            emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
         } else {
             userConfig.setUsingAsCollateral(reserve.id, false);
             ValidationLogic.validateHFAndLtvERC20(
@@ -617,12 +618,12 @@ library SupplyLogic {
                 reservesList,
                 userConfig,
                 asset,
-                msg.sender,
+                onBehalfOf,
                 reservesCount,
                 priceOracle
             );
 
-            emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
+            emit ReserveUsedAsCollateralDisabled(asset, onBehalfOf);
         }
     }
 

@@ -166,6 +166,9 @@ describe("MoonBirds nToken and supply while nesting", () => {
       await usdc.connect(buyer.signer).approve(pool.address, creditAmount)
     );
     await waitForTx(
+      await usdc.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
       await moonbirds.connect(user1.signer)["mint(address)"](user1.address)
     );
     await moonbirds.setNestingOpen(true);

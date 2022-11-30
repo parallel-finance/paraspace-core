@@ -365,6 +365,8 @@ library DataTypes {
         uint16 _reservesCount;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
+        // Conduit contract address during exchange
+        address _conduit;
     }
 
     struct ReserveConfigData {

@@ -34,7 +34,10 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 import {MintableERC20} from "../types";
-import {getMintableERC721} from "../deploy/helpers/contracts-getters";
+import {
+  getConduit,
+  getMintableERC721,
+} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
   executeLooksrareBuyWithCredit,
@@ -976,6 +979,7 @@ describe("Leveraged Buy - Positive tests", () => {
       bayc,
       nBAYC,
       usdc,
+      pUsdc,
       pool,
       users: [maker, taker, middleman],
     } = await loadFixture(testEnvFixture);
@@ -1002,6 +1006,9 @@ describe("Leveraged Buy - Positive tests", () => {
     await waitForTx(
       await usdc.connect(taker.signer).approve(pool.address, startAmount)
     );
+    await waitForTx(
+      await usdc.connect(maker.signer).approve(pool.address, startAmount)
+    );
     await executeSeaportBuyWithCredit(
       nBAYC,
       usdc,
@@ -1015,7 +1022,8 @@ describe("Leveraged Buy - Positive tests", () => {
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
     expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
-    expect(await usdc.balanceOf(maker.address)).to.be.equal(startAmount);
+    expect(await usdc.balanceOf(maker.address)).to.be.equal(0);
+    expect(await pUsdc.balanceOf(maker.address)).to.be.equal(startAmount);
   });
 
   it("TC-erc721-buy-11: NToken(uncollateralized) <=> ERC20 via paraspace", async () => {
@@ -1394,6 +1402,65 @@ describe("Leveraged Buy - Positive tests", () => {
       taker
     );
   });
+
+  it("TC-erc721-buy-16: NToken(collateralized) <=> ERC20 via paraspace - seller need collateralise received cash erc20", async () => {
+    const {
+      bayc,
+      nBAYC,
+      usdc,
+      pUsdc,
+      pool,
+      users: [maker, taker, middleman],
+    } = await loadFixture(testEnvFixture);
+    const payNowNumber = "800";
+    const creditNumber = "200";
+    const middleSupplyNumber = "2000";
+    const sellerBorrorNumber = "100";
+    const payNowAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      creditNumber
+    );
+    const sellerBorrowAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      sellerBorrorNumber
+    );
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount; // fixed price but offer cannot afford this
+    const nftId = 0;
+
+    // mint USDC to taker and middleman
+    await mintAndValidate(usdc, payNowNumber, taker);
+    // middleman supplies USDC to pool to be borrowed by offer and maker
+    await supplyAndValidate(usdc, middleSupplyNumber, middleman, true);
+    await supplyAndValidate(bayc, "1", maker, true);
+    await borrowAndValidate(usdc, sellerBorrorNumber, maker);
+
+    await waitForTx(
+      await usdc.connect(taker.signer).approve(pool.address, startAmount)
+    );
+    await waitForTx(
+      await usdc.connect(maker.signer).approve(pool.address, startAmount)
+    );
+    await executeSeaportBuyWithCredit(
+      nBAYC,
+      usdc,
+      startAmount,
+      endAmount,
+      creditAmount,
+      nftId,
+      maker,
+      taker
+    );
+
+    expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
+    expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
+    expect(await usdc.balanceOf(maker.address)).to.be.equal(sellerBorrowAmount);
+    expect(await pUsdc.balanceOf(maker.address)).to.be.equal(startAmount);
+  });
 });
 
 describe("Leveraged Buy - Negative tests", () => {
@@ -1444,12 +1511,13 @@ describe("Leveraged Buy - Negative tests", () => {
     return testEnv;
   };
 
-  it("TC-erc721-buy-16: Cannot purchase nToken in collateral covering an ongoing borrow position", async () => {
+  it("TC-erc721-buy-16: Cannot purchase nToken if seller HF < 1 after the exchange", async () => {
     const {
       bayc,
       nBAYC,
       dai,
       conduit,
+      pool,
       users: [maker, taker],
     } = await loadFixture(fixture);
 
@@ -1460,9 +1528,12 @@ describe("Leveraged Buy - Negative tests", () => {
     await waitForTx(
       await nBAYC.connect(maker.signer).approve(conduit.address, nftId)
     );
+    await waitForTx(
+      await dai.connect(maker.signer).approve(pool.address, startAmount)
+    );
 
     // maker borrows DAI
-    await borrowAndValidate(dai, "800", maker);
+    await borrowAndValidate(dai, "970", maker);
 
     await expect(
       executeSeaportBuyWithCredit(

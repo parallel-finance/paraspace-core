@@ -91,4 +91,9 @@ interface IPoolMarketplace {
         address onBehalfOf,
         uint16 referralCode
     ) external;
+
+    /**
+     * @notice Return the conduit contract address during the exchange
+     */
+    function getConduit() external returns (address);
 }

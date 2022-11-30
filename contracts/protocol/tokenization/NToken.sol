@@ -265,7 +265,8 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address to,
         uint256 tokenId
     ) internal override {
-        _transfer(from, to, tokenId, true);
+        address conduit = POOL.getConduit();
+        _transfer(from, to, tokenId, !(msg.sender == conduit));
     }
 
     function onERC721Received(

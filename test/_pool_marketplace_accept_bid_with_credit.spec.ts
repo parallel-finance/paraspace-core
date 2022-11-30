@@ -23,7 +23,10 @@ import {
   toBN,
   toFulfillment,
 } from "../deploy/helpers/seaport-helpers/encoding";
-import {PARASPACE_SEAPORT_ID} from "../deploy/helpers/constants";
+import {
+  MAX_UINT_AMOUNT,
+  PARASPACE_SEAPORT_ID,
+} from "../deploy/helpers/constants";
 import {arrayify, splitSignature} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {
@@ -293,6 +296,7 @@ describe("Leveraged Bid - unit tests", () => {
       usdc,
       pool,
       oracle,
+      pUsdc,
       users: [maker, taker, middleman],
     } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
@@ -338,6 +342,10 @@ describe("Leveraged Bid - unit tests", () => {
       .totalDebtBase;
     expect(totalDebtBefore).to.be.equal(0);
 
+    await waitForTx(
+      await usdc.connect(taker.signer).approve(pool.address, startAmount)
+    );
+
     await executeAcceptBidWithCredit(
       nBAYC,
       usdc,
@@ -351,7 +359,7 @@ describe("Leveraged Bid - unit tests", () => {
     // taker bayc should reduce
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(startAmount);
+    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(startAmount);
 
     // after the swap offer's totalCollateralBase should be same as taker's before
     const totalCollateralBaseAfter = (
@@ -371,6 +379,7 @@ describe("Leveraged Bid - unit tests", () => {
       nBAYC,
       bayc,
       usdc,
+      pUsdc,
       pool,
       oracle,
       seaport,
@@ -416,6 +425,9 @@ describe("Leveraged Bid - unit tests", () => {
     await mintAndValidate(bayc, "2", taker);
     // supply BAYC
     await supplyAndValidate(bayc, "1", taker);
+    await waitForTx(
+      await usdc.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
 
     // there is no debt for maker
     const totalDebtBefore = (await pool.getUserAccountData(maker.address))
@@ -634,9 +646,7 @@ describe("Leveraged Bid - unit tests", () => {
     expect(await nBAYC.ownerOf(nftId2)).to.be.equal(maker.address);
 
     // taker usdc should increase
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.add(startAmount2)
-    );
+    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(startAmount);
 
     // taker bayc should reduce
     expect(await bayc.balanceOf(taker.address)).to.be.equal(0);
@@ -1316,7 +1326,7 @@ describe("Leveraged Bid - Negative tests", () => {
     await evmRevert(snapShot);
   });
 
-  it("TC-erc721-bid-09 collateral unable overwrite loand after accept offer (should fail)", async () => {
+  it("TC-erc721-bid-09 Cannot accept if seller HF < 1 after the exchange", async () => {
     const {
       nBAYC,
       dai,
@@ -1337,7 +1347,7 @@ describe("Leveraged Bid - Negative tests", () => {
     );
 
     // taker borrows DAI
-    await borrowAndValidate(dai, "800", taker);
+    await borrowAndValidate(dai, "970", taker);
 
     await expect(
       executeAcceptBidWithCredit(

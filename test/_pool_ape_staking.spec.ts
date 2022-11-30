@@ -1307,6 +1307,9 @@ describe("APE Coin Staking Test", () => {
     expect(await pSApeCoin.balanceOf(maker.address)).equal(0);
 
     // 5, accept  order
+    await waitForTx(
+      await usdc.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
     await executeAcceptBidWithCredit(
       nBAYC,
       usdc,
@@ -1352,6 +1355,9 @@ describe("APE Coin Staking Test", () => {
     // 3, mint ntoken for maker
     await mintAndValidate(ape, "15000", maker);
     await supplyAndValidate(bayc, "1", maker, true);
+    await waitForTx(
+      await usdc.connect(maker.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
 
     // 4, ape staking for ntoken
     const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
