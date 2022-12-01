@@ -19,6 +19,10 @@ init: submodules
 	forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
 
+.PHONY: foundry-setup
+foundry-setup: anvil
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat deploy:all --network anvil # --verbose
+
 .PHONY: foundry-test
 foundry-test:
 	forge test -vvvv
@@ -250,6 +254,10 @@ test-data-providers:
 test-ape-staking:
 	make TEST_TARGET=_pool_ape_staking.spec.ts test
 
+.PHONY: test-sape-operation
+test-sape-operation:
+	make TEST_TARGET=_sape_pool_operation.spec.ts test
+
 .PHONY: test-acl-manager
 test-acl-manager:
 	make TEST_TARGET=acl-manager.spec.ts test
@@ -342,6 +350,10 @@ deploy-looksrare:
 deploy-x2y2:
 	make TASK_NAME=deploy:x2y2 run-task
 
+.PHONY: deploy-blur-exchange
+deploy-blur-exchange:
+	make TASK_NAME=deploy:blur-exchange run-task
+
 .PHONY: deploy-flashClaimRegistry
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
@@ -354,48 +366,50 @@ deploy-renounceOwnership:
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
 
+.PHONY: info
+info:
+	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
 
 .PHONY: upgrade
-upgrade:
+upgrade: build
 	make TASK_NAME=upgrade:all run-task
 
 .PHONY: upgrade-pool
-upgrade-pool:
+upgrade-pool: build
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: upgrade-ntoken
+upgrade-ntoken: build
+	make TASK_NAME=upgrade:ntoken run-task
+
+.PHONY: upgrade-ptoken
+upgrade-ptoken: build
+	make TASK_NAME=upgrade:ptoken run-task
+
 .PHONY: remove-pool-funcs
-remove-pool-funcs:
+remove-pool-funcs: build
 # e.g: emergency disable liquidation
 	FUNCS_TO_REMOVE=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:remove-pool-funcs run-task
 
 .PHONY: add-pool-funcs
-add-pool-funcs:
+add-pool-funcs: build
 # e.g: add liquidation back
 	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
 
 
-.PHONY: upgrade-ptoken
-upgrade-ptoken:
-	make TASK_NAME=upgrade:ptoken run-task
-
-.PHONY: upgrade-ntoken
-upgrade-ntoken:
-	make TASK_NAME=upgrade:ntoken run-task
-
-.PHONY: upgrade-ntoken-uniswapv3
-upgrade-ntoken-uniswapv3:
-	make TASK_NAME=upgrade:ntoken_uniswapv3 run-task
-
-.PHONY: upgrade-ntoken-moonbirds
-upgrade-ntoken-moonbirds:
-	make TASK_NAME=upgrade:ntoken_moonbirds run-task
-
 .PHONY: node
 node:
 	npx hardhat node --hostname 0.0.0.0
+
+.PHONY: anvil
+anvil:
+	pkill anvil
+	anvil &
+	sleep 30
 
 .PHONY: image
 image:
@@ -410,6 +424,7 @@ launch: shutdown
 		up \
 		-d --build
 	docker-compose logs -f hardhat
+	pkill anvil
 
 .PHONY: shutdown
 shutdown:
@@ -419,6 +434,10 @@ shutdown:
 	docker volume prune -f
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
+
+.PHONY: copy
+copy:
+	docker cp paraspace-core_hardhat_1:/paraspace/deployed-contracts.json .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

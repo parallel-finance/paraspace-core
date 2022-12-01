@@ -1,4 +1,5 @@
 deploy/helpers/seaport-helpers
 deploy/helpers/x2y2-helpers.ts
+deploy/helpers/blur-helpers
 deploy/helpers/types.ts
 deploy/helpers/db-adapter.ts

@@ -1,7 +1,6 @@
 import {expect} from "chai";
 import {utils} from "ethers";
 import {
-  impersonateAccountsHardhat,
   increaseTime,
   timeLatest,
   waitForTx,
@@ -14,6 +13,7 @@ import {
   buildDelegationWithSigParams,
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
+  impersonateAddress,
 } from "../deploy/helpers/contracts-helpers";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {VariableDebtToken__factory} from "../types";
@@ -157,8 +157,7 @@ describe("VariableDebtToken", () => {
         [pool.address],
         utils.parseEther("1")
       );
-      await impersonateAccountsHardhat([pool.address]);
-      const poolSigner = await hre.ethers.getSigner(pool.address);
+      const poolSigner = (await impersonateAddress(pool.address)).signer;
 
       const daiVariableDebtTokenAddress = (
         await protocolDataProvider.getReserveTokensAddresses(dai.address)
@@ -190,8 +189,7 @@ describe("VariableDebtToken", () => {
         [pool.address],
         utils.parseEther("1")
       );
-      await impersonateAccountsHardhat([pool.address]);
-      const poolSigner = await hre.ethers.getSigner(pool.address);
+      const poolSigner = (await impersonateAddress(pool.address)).signer;
 
       const daiVariableDebtTokenAddress = (
         await protocolDataProvider.getReserveTokensAddresses(dai.address)

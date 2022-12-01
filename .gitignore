@@ -32,6 +32,4 @@ logs
 *data
 *.swp
 
-# foundry ignore
-foundry_libs
-foundry_out
+out/

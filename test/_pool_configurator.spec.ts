@@ -16,7 +16,10 @@ import {getFirstSigner} from "../deploy/helpers/contracts-getters";
 import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
 import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
 import {strategyWETH} from "../deploy/market-config/reservesConfigs";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {
+  convertToCurrencyDecimals,
+  impersonateAddress,
+} from "../deploy/helpers/contracts-helpers";
 import {
   ERC20,
   ERC20__factory,
@@ -29,18 +32,12 @@ import {
 } from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {
-  impersonateAccountsHardhat,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {waitForTx} from "../deploy/helpers/misc-utils";
 import {BigNumberish} from "ethers";
 import "./helpers/utils/wadraymath";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
-
-declare let hre: HardhatRuntimeEnvironment;
 
 describe("PoolConfigurator: Common", () => {
   type ReserveConfigurationValues = {
@@ -745,8 +742,8 @@ describe("PoolConfigurator: Common", () => {
       [configurator.address],
       utils.parseEther("1")
     );
-    await impersonateAccountsHardhat([configurator.address]);
-    const configSigner = await hre.ethers.getSigner(configurator.address);
+    const configSigner = (await impersonateAddress(configurator.address))
+      .signer;
 
     await expect(
       pool
@@ -766,8 +763,8 @@ describe("PoolConfigurator: Common", () => {
       [configurator.address],
       utils.parseEther("1")
     );
-    await impersonateAccountsHardhat([configurator.address]);
-    const configSigner = await hre.ethers.getSigner(configurator.address);
+    const configSigner = (await impersonateAddress(configurator.address))
+      .signer;
 
     await expect(
       pool

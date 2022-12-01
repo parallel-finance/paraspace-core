@@ -560,7 +560,9 @@ describe("Upgradeability", () => {
         implementation: newPTokenAddress,
         params: "0x10",
       };
-      await configurator.updatePToken(updatePTokenInputParams);
+      await configurator.updatePToken(updatePTokenInputParams, {
+        gasLimit: 5000000,
+      });
 
       const tokenName = await pDai.name();
 

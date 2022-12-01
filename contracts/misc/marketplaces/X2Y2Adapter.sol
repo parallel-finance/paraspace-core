@@ -3,17 +3,11 @@ pragma solidity 0.8.10;
 
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
-import {OrderTypes} from "../../dependencies/looksrare/contracts/libraries/OrderTypes.sol";
-import {SeaportInterface} from "../../dependencies/seaport/contracts/interfaces/SeaportInterface.sol";
 import {ILooksRareExchange} from "../../dependencies/looksrare/contracts/interfaces/ILooksRareExchange.sol";
 import {IX2Y2} from "../../interfaces/IX2Y2.sol";
-import {SignatureChecker} from "../../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
-import {ConsiderationItem} from "../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
-import {AdvancedOrder, CriteriaResolver, Fulfillment, OfferItem, ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
+import {ConsiderationItem, OfferItem, ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
-import {IERC1271} from "../../dependencies/openzeppelin/contracts/IERC1271.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
-import {PoolStorage} from "../../protocol/pool/PoolStorage.sol";
 
 /**
  * @title X2Y2 Adapter

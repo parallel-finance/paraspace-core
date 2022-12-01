@@ -48,3 +48,4 @@ We would like to thank the following projects.
 - [Uniswap](https://github.com/Uniswap/v3-core)
 - [Seaport](https://github.com/ProjectOpenSea/seaport)
 - [BendDAO](https://github.com/BendDAO)
+- [Blur.io](https://blur.io)

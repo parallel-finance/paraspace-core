@@ -44,6 +44,8 @@ import {
   getNTokenMAYC,
   getApeCoinStaking,
   getPTokenSApe,
+  getBlurExchangeProxy,
+  getExecutionDelegate,
 } from "../../deploy/helpers/contracts-getters";
 import {
   eContractid,
@@ -55,8 +57,10 @@ import {
 } from "../../deploy/helpers/types";
 import {
   ApeCoinStaking,
+  BlurExchange,
   Conduit,
   ERC721Delegate,
+  ExecutionDelegate,
   IPool,
   NFTFloorOracle,
   NTokenBAYC,
@@ -156,7 +160,7 @@ export interface TestEnv {
   ape: MintableERC20;
   nMAYC: NTokenMAYC;
   mayc: MintableERC721;
-  nDOODLES: NToken;
+  nDOODLE: NToken;
   doodles: MintableERC721;
   mockTokenFaucet: MockTokenFaucet;
   wPunkGateway: WPunkGateway;
@@ -179,6 +183,8 @@ export interface TestEnv {
   nUniswapV3: NTokenUniswapV3;
   nftFloorOracle: NFTFloorOracle;
   apeCoinStaking: ApeCoinStaking;
+  executionDelegate: ExecutionDelegate;
+  blurExchange: BlurExchange;
 }
 
 export async function initializeMakeSuite() {
@@ -238,6 +244,8 @@ export async function initializeMakeSuite() {
     erc721Delegate: {} as ERC721Delegate,
     moonbirds: {} as Moonbirds,
     nftFloorOracle: {} as NFTFloorOracle,
+    executionDelegate: {} as ExecutionDelegate,
+    blurExchange: {} as BlurExchange,
   } as TestEnv;
   const paraSpaceConfig = getParaSpaceConfig();
   const signers = await Promise.all(
@@ -329,8 +337,8 @@ export async function initializeMakeSuite() {
     (xToken) => xToken.symbol === NTokenContractId.nMAYC
   )?.tokenAddress;
 
-  const nDOODLESAddress = allTokens.find(
-    (xToken) => xToken.symbol === NTokenContractId.nDOODLES
+  const nDOODLEAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nDOODLE
   )?.tokenAddress;
 
   const nWPunkAddress = allTokens.find(
@@ -441,7 +449,7 @@ export async function initializeMakeSuite() {
 
   testEnv.nBAYC = await getNTokenBAYC(nBAYCAddress);
   testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
-  testEnv.nDOODLES = await getNToken(nDOODLESAddress);
+  testEnv.nDOODLE = await getNToken(nDOODLEAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);
 
@@ -474,6 +482,8 @@ export async function initializeMakeSuite() {
   testEnv.nftFloorOracle = (await getNFTFloorOracle()).connect(
     testEnv.poolAdmin.signer
   );
+  testEnv.executionDelegate = await getExecutionDelegate();
+  testEnv.blurExchange = await getBlurExchangeProxy();
 
   const {xTokenAddress: pSApeCoinAddress} =
     await testEnv.protocolDataProvider.getReserveTokensAddresses(

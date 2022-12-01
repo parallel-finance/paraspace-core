@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "../contracts/misc/NFTFloorOracle.sol";
-import "../foundry_libs/ds-test/src/test.sol";
+import "../../contracts/misc/NFTFloorOracle.sol";
+import "ds-test/test.sol";
 
 interface CheatCodes {
     function prank(address) external;

@@ -1,11 +1,15 @@
 import {DRE, waitForTx} from "../../deploy/helpers/misc-utils";
-import {createSeaportOrder} from "../../deploy/helpers/contracts-helpers";
+import {
+  createBlurOrder,
+  createSeaportOrder,
+} from "../../deploy/helpers/contracts-helpers";
 import {SignerWithAddress} from "./../helpers/make-suite";
 import creditType from "../../deploy/helpers/eip-712-types/credit";
 import {AdvancedOrder} from "../../deploy/helpers/seaport-helpers/types";
 import {
   convertSignatureToEIP2098,
   getOfferOrConsiderationItem,
+  randomHex,
   toBN,
   toFulfillment,
 } from "../../deploy/helpers/seaport-helpers/encoding";
@@ -18,13 +22,21 @@ import {
   TakerOrder,
 } from "@looksrare/sdk";
 import {
+  BLUR_ID,
   LOOKSRARE_ID,
   PARASPACE_SEAPORT_ID,
   X2Y2_ID,
 } from "../../deploy/helpers/constants";
 import {BigNumber, BigNumberish, constants} from "ethers";
-import {MintableERC20, MintableERC721, NToken} from "../../types";
 import {
+  MintableERC20,
+  MintableERC721,
+  NToken,
+  WETH9,
+  WETH9Mocked,
+} from "../../types";
+import {
+  getBlurExchangeProxy,
   getConduit,
   getConduitKey,
   getERC721Delegate,
@@ -32,10 +44,17 @@ import {
   getPausableZone,
   getPoolProxy,
   getSeaport,
+  getStandardPolicyERC721,
   getStrategyStandardSaleForFixedPrice,
   getTransferManagerERC721,
   getX2Y2R1,
 } from "../../deploy/helpers/contracts-getters";
+import {
+  Order as BlurOrder,
+  Side,
+  SignatureVersion,
+} from "../../deploy/helpers/blur-helpers/types";
+import {InputStruct} from "../../types/dependencies/blur-exchange/IBlurExchange";
 
 export async function executeLooksrareBuyWithCredit(
   tokenToBuy: MintableERC721 | NToken,
@@ -116,6 +135,85 @@ export async function executeLooksrareBuyWithCredit(
 
   const tx = pool.connect(taker.signer).buyWithCredit(
     LOOKSRARE_ID,
+    `0x${encodedData.slice(10)}`,
+    {
+      token: tokenToPayWith.address,
+      amount: payLaterAmount,
+      orderId: constants.HashZero,
+      v: 0,
+      r: constants.HashZero,
+      s: constants.HashZero,
+    },
+    0,
+    {
+      gasLimit: 5000000,
+    }
+  );
+
+  await (await tx).wait();
+}
+
+export async function executeBlurBuyWithCredit(
+  tokenToBuy: MintableERC721 | NToken,
+  tokenToPayWith: MintableERC20 | WETH9 | WETH9Mocked,
+  startAmount: BigNumber,
+  payLaterAmount: BigNumberish,
+  nftId: number,
+  maker: SignerWithAddress,
+  taker: SignerWithAddress
+) {
+  const pool = await getPoolProxy();
+  const now = Math.floor(Date.now() / 1000);
+  const makerOrder: BlurOrder = {
+    trader: maker.address,
+    side: Side.Sell,
+    matchingPolicy: (await getStandardPolicyERC721()).address,
+    collection: tokenToBuy.address,
+    tokenId: nftId,
+    amount: "1",
+    paymentToken: tokenToPayWith.address,
+    price: startAmount,
+    listingTime: now - 86400,
+    expirationTime: now + 86400,
+    fees: [],
+    salt: randomHex(),
+    extraParams: "0x",
+  };
+  const takerOrder: BlurOrder = {
+    trader: pool.address,
+    side: Side.Buy,
+    matchingPolicy: (await getStandardPolicyERC721()).address,
+    collection: tokenToBuy.address,
+    tokenId: nftId,
+    amount: "1",
+    paymentToken: tokenToPayWith.address,
+    price: startAmount,
+    listingTime: now - 86400,
+    expirationTime: now + 86400,
+    fees: [],
+    salt: randomHex(),
+    extraParams: "0x",
+  };
+
+  const blurExchange = await getBlurExchangeProxy();
+
+  const makerInput = await createBlurOrder(blurExchange, maker, makerOrder);
+  const takerInput = {
+    order: takerOrder,
+    v: 0,
+    r: constants.HashZero,
+    s: constants.HashZero,
+    extraSignature: "0x",
+    signatureVersion: SignatureVersion.Single,
+    blockNumber: 0,
+  };
+
+  const encodedData = blurExchange.interface.encodeFunctionData("execute", [
+    makerInput as InputStruct,
+    takerInput as InputStruct,
+  ]);
+  const tx = pool.connect(taker.signer).buyWithCredit(
+    BLUR_ID,
     `0x${encodedData.slice(10)}`,
     {
       token: tokenToPayWith.address,
