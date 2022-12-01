@@ -34,10 +34,7 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 import {MintableERC20} from "../types";
-import {
-  getConduit,
-  getMintableERC721,
-} from "../deploy/helpers/contracts-getters";
+import {getMintableERC721} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
   executeBlurBuyWithCredit,
