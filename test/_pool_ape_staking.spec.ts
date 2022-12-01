@@ -44,6 +44,7 @@ describe("APE Coin Staking Test", () => {
   let pApeCoin: PToken;
   let pSApeCoin: PTokenSApe;
   const sApeAddress = ONE_ADDRESS;
+  const InitialNTokenApeBalance = parseEther("100");
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -55,6 +56,8 @@ describe("APE Coin Staking Test", () => {
       protocolDataProvider,
       pool,
       apeCoinStaking,
+      nMAYC,
+      nBAYC,
     } = testEnv;
     const {
       xTokenAddress: pApeCoinAddress,
@@ -98,6 +101,18 @@ describe("APE Coin Staking Test", () => {
           apeCoinStaking.address,
           parseEther("100000000000")
         )
+    );
+
+    // send extra tokens to the nToken contract for testing ape balance check
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        ["mint(address,uint256)"](nMAYC.address, InitialNTokenApeBalance)
+    );
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        ["mint(address,uint256)"](nBAYC.address, InitialNTokenApeBalance)
     );
 
     return testEnv;
@@ -465,6 +480,9 @@ describe("APE Coin Staking Test", () => {
     ).to.be.revertedWith(
       ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
+
+    const apeBalanceForNToken = await ape.balanceOf(nMAYC.address);
+    expect(apeBalanceForNToken).equal(InitialNTokenApeBalance);
   });
 
   it("TC-pool-ape-staking-08 test claimBAKC success when hf > 1", async () => {
@@ -542,6 +560,9 @@ describe("APE Coin Staking Test", () => {
     expect(await ape.balanceOf(user1.address)).to.be.eq(
       userBalance.add(pendingRewardsPool3)
     );
+
+    const apeBalanceForNToken = await ape.balanceOf(nMAYC.address);
+    expect(apeBalanceForNToken).equal(InitialNTokenApeBalance);
   });
 
   it("TC-pool-ape-staking-09 test claimBAKC success when hf < 1 (ape reward for bakc pool is not used as collateral)", async () => {
@@ -1084,8 +1105,11 @@ describe("APE Coin Staking Test", () => {
       userAccount.totalDebtBase,
       await convertToCurrencyDecimals(weth.address, "120.18")
     );
-    //10 * 2 * 0.4 + 10 * 2 * 0.325 + 18 * 0.7 - 18 = 67.1
-    // almostEqual(userAccount.availableBorrowsBase, await convertToCurrencyDecimals(weth.address, "67.1"));
+
+    let apeBalanceForNToken = await ape.balanceOf(nMAYC.address);
+    expect(apeBalanceForNToken).equal(InitialNTokenApeBalance);
+    apeBalanceForNToken = await ape.balanceOf(nBAYC.address);
+    expect(apeBalanceForNToken).equal(InitialNTokenApeBalance);
   });
 
   it("TC-pool-ape-staking-18 test can liquidate NFT with existing staking positions", async () => {

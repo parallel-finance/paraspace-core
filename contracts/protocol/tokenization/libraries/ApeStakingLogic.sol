@@ -44,15 +44,22 @@ library ApeStakingLogic {
         ApeCoinStaking.PairNftWithAmount[]
             memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
 
+        uint256 beforeBalance = _apeCoinStaking.apeCoin().balanceOf(
+            address(this)
+        );
         if (poolId == BAYC_POOL_ID) {
             _apeCoinStaking.withdrawBAKC(_nftPairs, _otherPairs);
         } else {
             _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
         }
+        uint256 afterBalance = _apeCoinStaking.apeCoin().balanceOf(
+            address(this)
+        );
 
-        uint256 balance = _apeCoinStaking.apeCoin().balanceOf(address(this));
-
-        _apeCoinStaking.apeCoin().safeTransfer(_apeRecipient, balance);
+        _apeCoinStaking.apeCoin().safeTransfer(
+            _apeRecipient,
+            afterBalance - beforeBalance
+        );
     }
 
     /**
