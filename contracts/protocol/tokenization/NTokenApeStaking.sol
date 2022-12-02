@@ -160,9 +160,13 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
      */
     function unstakePositionAndRepay(uint256 tokenId, address incentiveReceiver)
         external
-        onlyPool
         nonReentrant
     {
+        address bakcNToken = getBAKCNTokenAddress();
+        require(
+            msg.sender == address(POOL) || msg.sender == bakcNToken,
+            "Invalid Caller"
+        );
         ApeStakingLogic.executeUnstakePositionAndRepay(
             _ERC721Data.owners,
             apeStakingDataStorage(),
@@ -173,7 +177,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 poolId: POOL_ID(),
                 tokenId: tokenId,
                 incentiveReceiver: incentiveReceiver,
-                bakcNToken: getBAKCNTokenAddress()
+                bakcNToken: bakcNToken
             })
         );
     }
