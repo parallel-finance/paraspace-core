@@ -122,5 +122,5 @@ library Errors {
     string public constant APE_STAKING_POSITION_EXISTED = "127"; //ape staking position is existed.
     string public constant SAPE_NOT_ALLOWED = "128"; //operation is not allow for sApe.
     string public constant TOTAL_STAKING_AMOUNT_WRONG = "129"; //cash plus borrow amount not equal to total staking amount.
-    string public constant APE_STAKING_AMOUNT_NON_ZERO = "130"; //ape staking amount should be zero when supply bayc/mayc.
+    string public constant NOT_THE_BAKC_OWNER = "130"; //user is not the bakc owner.
 }
