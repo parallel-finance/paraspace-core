@@ -370,6 +370,10 @@ ad-hoc:
 info:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
 
+.PHONY: wallet
+wallet:
+	make SCRIPT_PATH=./deploy/tasks/deployments/dev/4.wallet.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
