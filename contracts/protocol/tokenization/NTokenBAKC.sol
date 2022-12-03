@@ -55,19 +55,16 @@ abstract contract NTokenBAKC is NToken {
             tokenId
         );
         if (bakcStakedAmount > 0) {
-            (uint256 baycTokenId, bool pairedWithBayc) = _apeCoinStaking.bakcToMain(
-                tokenId,
-                ApeStakingLogic.BAYC_POOL_ID
-            );
+            (uint256 baycTokenId, bool pairedWithBayc) = _apeCoinStaking
+                .bakcToMain(tokenId, ApeStakingLogic.BAYC_POOL_ID);
             if (pairedWithBayc) {
                 nBAYC.unstakePositionAndRepay(baycTokenId, address(0));
-            }
-            (uint256 maycTokenId, bool pairedWithMayc) = _apeCoinStaking.bakcToMain(
-                tokenId,
-                ApeStakingLogic.MAYC_POOL_ID
-            );
-            if (pairedWithMayc) {
-                nMAYC.unstakePositionAndRepay(maycTokenId, address(0));
+            } else {
+                (uint256 maycTokenId, bool pairedWithMayc) = _apeCoinStaking
+                    .bakcToMain(tokenId, ApeStakingLogic.MAYC_POOL_ID);
+                if (pairedWithMayc) {
+                    nMAYC.unstakePositionAndRepay(maycTokenId, address(0));
+                }
             }
         }
 
