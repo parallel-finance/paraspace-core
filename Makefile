@@ -428,10 +428,10 @@ launch: shutdown
 		up \
 		-d --build
 	docker-compose logs -f hardhat
-	pkill anvil
 
 .PHONY: shutdown
 shutdown:
+	sudo pkill anvil || true
 	docker-compose \
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
