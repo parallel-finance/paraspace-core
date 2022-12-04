@@ -11,6 +11,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 import {INTokenApeStaking} from "../../interfaces/INTokenApeStaking.sol";
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
+import {INToken} from "../../interfaces/INToken.sol";
 
 /**
  * @title NTokenBAKC
@@ -21,8 +22,8 @@ abstract contract NTokenBAKC is NToken {
     using SafeERC20 for IERC20;
 
     ApeCoinStaking immutable _apeCoinStaking;
-    INTokenApeStaking public nBAYC;
-    INTokenApeStaking public nMAYC;
+    address public nBAYC;
+    address public nMAYC;
 
     /**
      * @dev Constructor.
@@ -33,13 +34,13 @@ abstract contract NTokenBAKC is NToken {
     }
 
     function setNToken(address _nBAYC, address _nMAYC) external onlyPoolAdmin {
-        nBAYC = INTokenApeStaking(_nBAYC);
-        nMAYC = INTokenApeStaking(_nMAYC);
+        nBAYC = _nBAYC;
+        nMAYC = _nMAYC;
     }
 
     function setApprove(address ape) external onlyPoolAdmin {
-        IERC20(ape).safeApprove(address(nBAYC), type(uint256).max);
-        IERC20(ape).safeApprove(address(nMAYC), type(uint256).max);
+        IERC20(ape).safeApprove(nBAYC, type(uint256).max);
+        IERC20(ape).safeApprove(nMAYC, type(uint256).max);
         IERC721(_underlyingAsset).setApprovalForAll(address(POOL), true);
     }
 
@@ -55,20 +56,41 @@ abstract contract NTokenBAKC is NToken {
             tokenId
         );
         if (bakcStakedAmount > 0) {
-            (uint256 baycTokenId, bool pairedWithBayc) = _apeCoinStaking
-                .bakcToMain(tokenId, ApeStakingLogic.BAYC_POOL_ID);
-            if (pairedWithBayc) {
-                nBAYC.unstakePositionAndRepay(baycTokenId, address(0));
-            } else {
-                (uint256 maycTokenId, bool pairedWithMayc) = _apeCoinStaking
-                    .bakcToMain(tokenId, ApeStakingLogic.MAYC_POOL_ID);
-                if (pairedWithMayc) {
-                    nMAYC.unstakePositionAndRepay(maycTokenId, address(0));
-                }
+            bool positionExisted = _tryUnstakeMainTokenPosition(
+                ApeStakingLogic.BAYC_POOL_ID,
+                nBAYC,
+                tokenId
+            );
+            if (!positionExisted) {
+                _tryUnstakeMainTokenPosition(
+                    ApeStakingLogic.MAYC_POOL_ID,
+                    nMAYC,
+                    tokenId
+                );
             }
         }
 
         _transfer(from, to, tokenId, validate);
+    }
+
+    function _tryUnstakeMainTokenPosition(
+        uint256 poolId,
+        address nToken,
+        uint256 tokenId
+    ) internal returns (bool) {
+        (uint256 mainTokenId, bool positionExisted) = _apeCoinStaking
+            .bakcToMain(tokenId, poolId);
+        if (positionExisted) {
+            bool sameOwner = INToken(nToken).ownerOf(mainTokenId) ==
+                ownerOf(tokenId);
+            if (sameOwner) {
+                INTokenApeStaking(nToken).unstakePositionAndRepay(
+                    mainTokenId,
+                    address(0)
+                );
+            }
+        }
+        return positionExisted;
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
