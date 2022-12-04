@@ -9,6 +9,7 @@ import "../../interfaces/IPToken.sol";
 import "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../../interfaces/IXTokenType.sol";
 import "../../interfaces/INTokenApeStaking.sol";
+import "../../interfaces/IPTokenAPE.sol";
 import {ValidationLogic} from "../libraries/logic/ValidationLogic.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -54,6 +55,37 @@ contract PoolApeStaking is
 
     function getRevision() internal pure virtual override returns (uint256) {
         return POOL_REVISION;
+    }
+
+    /// @inheritdoc IPoolApeStaking
+    function supplyApeCoin(
+        address asset,
+        uint256 amount,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage reserve = ps._reserves[nftAsset];
+        address xTokenAddress = reserve.xTokenAddress;
+
+        require(
+            IPToken(xTokenAddress).getXTokenType() == XTokenType.PTokenApe,
+            Errors.INVALID_ASSET_TYPE
+        );
+
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteSupplyParams({
+                asset: asset,
+                amount: amount,
+                onBehalfOf: onBehalfOf,
+                payer: msg.sender,
+                referralCode: referralCode
+            })
+        );
+
+        IPTokenAPE(xTokenAddress).getApeStaking().depositApeCoin(amount, address(this));
     }
 
     /// @inheritdoc IPoolApeStaking
