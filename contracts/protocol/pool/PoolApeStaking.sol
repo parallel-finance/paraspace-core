@@ -63,9 +63,9 @@ contract PoolApeStaking is
         uint256 amount,
         address onBehalfOf,
         uint16 referralCode
-    ) external virtual override nonReentrant {
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        DataTypes.ReserveData storage reserve = ps._reserves[nftAsset];
+        DataTypes.ReserveData storage reserve = ps._reserves[asset];
         address xTokenAddress = reserve.xTokenAddress;
 
         require(
@@ -85,7 +85,10 @@ contract PoolApeStaking is
             })
         );
 
-        IPTokenAPE(xTokenAddress).getApeStaking().depositApeCoin(amount, address(this));
+        IPTokenAPE(xTokenAddress).getApeStaking().depositApeCoin(
+            amount,
+            address(this)
+        );
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -122,10 +125,10 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function claimApeCoin(address nftAsset, uint256[] calldata _nfts)
-        external
-        nonReentrant
-    {
+    function claimApeCoin(
+        address nftAsset,
+        uint256[] calldata _nfts
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
@@ -375,10 +378,10 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
-        external
-        nonReentrant
-    {
+    function unstakeApePositionAndRepay(
+        address nftAsset,
+        uint256 tokenId
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
@@ -472,10 +475,9 @@ contract PoolApeStaking is
         return healthFactor;
     }
 
-    function checkSApeIsNotPaused(DataTypes.PoolStorage storage ps)
-        internal
-        view
-    {
+    function checkSApeIsNotPaused(
+        DataTypes.PoolStorage storage ps
+    ) internal view {
         DataTypes.ReserveData storage reserve = ps._reserves[
             DataTypes.SApeAddress
         ];

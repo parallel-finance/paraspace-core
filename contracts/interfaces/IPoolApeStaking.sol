@@ -78,8 +78,10 @@ interface IPoolApeStaking {
      * @param tokenId Token id of the ape staking position on
      * @dev Need check User health factor > 1.
      */
-    function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
-        external;
+    function unstakeApePositionAndRepay(
+        address nftAsset,
+        uint256 tokenId
+    ) external;
 
     /**
      * @notice repay asset and supply asset for user
@@ -94,5 +96,19 @@ interface IPoolApeStaking {
         address onBehalfOf,
         uint256 repayAmount,
         uint256 supplyAmount
+    ) external;
+
+    /**
+     * @notice supply apecoin and stake it automatically
+     * @param asset the apecoin asset address. needed fetching the reserve easily
+     * @param amount amount of tokens
+     * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+     *   0 if the action is executed directly by the user, without any middle-man
+     */
+    function supplyApeCoin(
+        address asset,
+        uint256 amount,
+        address onBehalfOf,
+        uint16 referralCode
     ) external;
 }

@@ -1,8 +1,5 @@
-
-
-import "./IPToken.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 
-interface IPTokenAPE is IPToken {
+interface IPTokenAPE {
     function getApeStaking() external view returns (ApeCoinStaking);
 }
