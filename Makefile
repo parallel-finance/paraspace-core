@@ -15,8 +15,8 @@ init: submodules
 	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	command -v forge > /dev/null 2>&1 || bash -c "curl -L https://foundry.paradigm.xyz | bash"
-	forge install --no-commit --no-git https://github.com/dapphub/ds-test
-	forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
+	[ -d lib/ds-test ] || forge install --no-commit --no-git https://github.com/dapphub/ds-test
+	[ -d lib/forge-std ] || forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
 
 .PHONY: foundry-setup
@@ -33,7 +33,7 @@ test:
 
 .PHONY: local-test
 local-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
+	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
@@ -80,7 +80,8 @@ ci: clean build lint doc fast-test
 .PHONY: submodules
 submodules:
 	git submodule update --init --recursive
-	git submodule foreach git pull origin main
+	[ -d deploy ] && cd deploy && git pull origin main
+	[ -d lib/ds-test ] && cd lib/ds-test && git pull origin master
 
 .PHONY: test-pool-upgrade
 test-pool-upgrade:
@@ -407,7 +408,7 @@ node:
 
 .PHONY: anvil
 anvil:
-	pkill anvil
+	sudo pkill anvil || true
 	anvil &
 	sleep 30
 
@@ -424,10 +425,10 @@ launch: shutdown
 		up \
 		-d --build
 	docker-compose logs -f hardhat
-	pkill anvil
 
 .PHONY: shutdown
 shutdown:
+	sudo pkill anvil || true
 	docker-compose \
 		down \
 		--remove-orphans > /dev/null 2>&1 || true

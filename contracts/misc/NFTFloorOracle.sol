@@ -78,7 +78,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @dev feeder map
     // feeder address -> index in feeder list
-    mapping(address => FeederPosition) private feederPositionMap;
+    mapping(address => FeederPosition) public feederPositionMap;
 
     /// @dev All asset list
     address[] public assets;
@@ -162,11 +162,22 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         _addFeeders(_feeders);
     }
 
+    /// @notice Allows owner to remove feeders.
+    /// @param _feeders feeders to remove
+    function removeFeeders(address[] calldata _feeders)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        for (uint256 i = 0; i < _feeders.length; i++) {
+            _removeFeeder(_feeders[i]);
+        }
+    }
+
     /// @notice Allows owner to remove feeder.
     /// @param _feeder feeder to remove
     function removeFeeder(address _feeder)
         external
-        onlyWhenFeederExisted(_feeder)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _removeFeeder(_feeder);
     }
@@ -239,12 +250,15 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         override
         returns (uint256 price)
     {
-        uint256 updatedAt = assetPriceMap[_asset].updatedAt;
+        PriceInformation storage priceInfo = assetPriceMap[_asset];
+        uint256 twap = priceInfo.twap;
         require(
-            (block.number - updatedAt) <= config.expirationPeriod,
+            (block.number - priceInfo.updatedAt) <= config.expirationPeriod,
             "NFTOracle: asset price expired"
         );
-        return assetPriceMap[_asset].twap;
+        require(twap > 0, "NFTOracle: invalid zero asset price");
+
+        return twap;
     }
 
     /// @param _asset The nft contract
@@ -328,10 +342,17 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         onlyWhenFeederExisted(_feeder)
     {
         uint8 feederIndex = feederPositionMap[_feeder].index;
-        if (feederIndex >= 0 && feeders[feederIndex] == _feeder) {
-            feeders[feederIndex] = feeders[feeders.length - 1];
-            feeders.pop();
+        require(
+            feeders[feederIndex] == _feeder,
+            "NFTOracle: feeder mismatched"
+        );
+
+        address lastFeeder = feeders[feeders.length - 1];
+        if (_feeder != lastFeeder) {
+            feeders[feederIndex] = lastFeeder;
+            feederPositionMap[lastFeeder].index = feederIndex;
         }
+        feeders.pop();
         delete feederPositionMap[_feeder];
         revokeRole(UPDATER_ROLE, _feeder);
         emit FeederRemoved(_feeder);
@@ -401,8 +422,9 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     {
         FeederRegistrar storage feederRegistrar = assetFeederMap[_asset];
         uint256 currentBlock = block.number;
+        uint256 currentTwap = assetPriceMap[_asset].twap;
         //first time just use the feeding value
-        if (assetPriceMap[_asset].twap == 0) {
+        if (currentTwap == 0) {
             return (true, _twap);
         }
         //use memory here so allocate with maximum length
@@ -423,7 +445,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
             }
         }
         if (validNum < MIN_ORACLES_NUM) {
-            return (false, assetPriceMap[_asset].twap);
+            return (false, currentTwap);
         }
         _quickSort(validPriceList, 0, int256(validNum - 1));
         return (true, validPriceList[validNum / 2]);
