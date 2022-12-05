@@ -219,6 +219,16 @@ describe("NFT Oracle Tests", () => {
       );
     }
 
+    for (let i = 0; i < feeders.length; i++) {
+      expect(
+        await nftFloorOracle.hasRole(
+          await nftFloorOracle.UPDATER_ROLE(),
+          feeders[i]
+        )
+      ).to.be.false;
+      expect((await nftFloorOracle.feederPositionMap(feeders[i])).registered).to
+        .be.false;
+    }
     expect(await nftFloorOracle.getFeederSize()).to.be.eq(0);
   });
 
@@ -244,6 +254,17 @@ describe("NFT Oracle Tests", () => {
     await expect(nftFloorOracle.removeFeeders(feeders)).to.be.revertedWith(
       "NFTOracle: feeder not existed"
     );
+
+    for (let i = 0; i < feeders.length; i++) {
+      expect(
+        await nftFloorOracle.hasRole(
+          await nftFloorOracle.UPDATER_ROLE(),
+          feeders[i]
+        )
+      ).to.be.false;
+      expect((await nftFloorOracle.feederPositionMap(feeders[i])).registered).to
+        .be.false;
+    }
 
     expect(await nftFloorOracle.getFeederSize()).to.be.eq(0);
   });

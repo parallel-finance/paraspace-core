@@ -78,7 +78,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @dev feeder map
     // feeder address -> index in feeder list
-    mapping(address => FeederPosition) private feederPositionMap;
+    mapping(address => FeederPosition) public feederPositionMap;
 
     /// @dev All asset list
     address[] public assets;
