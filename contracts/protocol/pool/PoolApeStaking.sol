@@ -310,10 +310,7 @@ contract PoolApeStaking is
             );
         }
 
-        // 5 set sape as collateral
-        setSApeUseAsCollateral(msg.sender);
-
-        // 6 mint debt token
+        // 5 mint debt token
         if (stakingInfo.borrowAmount > 0) {
             BorrowLogic.executeBorrow(
                 ps._reserves,
@@ -407,21 +404,6 @@ contract PoolApeStaking is
                     referralCode: 0
                 })
             );
-        }
-    }
-
-    function setSApeUseAsCollateral(address user) internal {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        DataTypes.ReserveData storage sApeReserve = ps._reserves[
-            DataTypes.SApeAddress
-        ];
-        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            user
-        ];
-        bool currentStatus = userConfig.isUsingAsCollateral(sApeReserve.id);
-        if (!currentStatus) {
-            userConfig.setUsingAsCollateral(sApeReserve.id, true);
-            emit ReserveUsedAsCollateralEnabled(DataTypes.SApeAddress, user);
         }
     }
 

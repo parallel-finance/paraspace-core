@@ -192,6 +192,20 @@ library SupplyLogic {
                 );
             }
         }
+        if (
+            tokenType == XTokenType.NTokenBAYC ||
+            tokenType == XTokenType.NTokenMAYC
+        ) {
+            uint16 sApeReserveId = reservesData[DataTypes.SApeAddress].id;
+            bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
+            if (!currentStatus) {
+                userConfig.setUsingAsCollateral(sApeReserveId, true);
+                emit ReserveUsedAsCollateralEnabled(
+                    DataTypes.SApeAddress,
+                    params.onBehalfOf
+                );
+            }
+        }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
                 params.payer,
