@@ -5,6 +5,7 @@ import {
   buildPermitParams,
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
+  impersonateAddress,
 } from "../deploy/helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
@@ -241,11 +242,7 @@ describe("WETH GateWay", () => {
       "50"
     );
 
-    await DRE.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [weth.address],
-    });
-    const wethSigner = await DRE.ethers.provider.getSigner(weth.address);
+    const wethSigner = (await impersonateAddress(weth.address)).signer;
 
     // user3 send eth to weth contract
     const [, , user3] = await DRE.ethers.getSigners();
