@@ -14,23 +14,34 @@ RUST_TOOLCHAIN           := nightly-2022-09-19
 init: submodules
 	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
+	command -v forge > /dev/null 2>&1 || bash -c "curl -L https://foundry.paradigm.xyz | bash"
+	[ -d lib/ds-test ] || forge install --no-commit --no-git https://github.com/dapphub/ds-test
+	[ -d lib/forge-std ] || forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
+
+.PHONY: foundry-setup
+foundry-setup: anvil
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat deploy:all --network anvil # --verbose
+
+.PHONY: foundry-test
+foundry-test:
+	forge test -vvvv
 
 .PHONY: test
 test:
-	npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
-.PHONY: dry-test
-dry-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
+.PHONY: local-test
+local-test:
+	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test-suites/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: size
 size:
@@ -69,15 +80,16 @@ ci: clean build lint doc fast-test
 .PHONY: submodules
 submodules:
 	git submodule update --init --recursive
-	git submodule foreach git pull origin main
+	[ -d deploy ] && cd deploy && git pull origin main
+	[ -d lib/ds-test ] && cd lib/ds-test && git pull origin master
 
 .PHONY: test-pool-upgrade
 test-pool-upgrade:
 	make TEST_TARGET=pool-upgrade.spec.ts test
 
-.PHONY: test-pool-edge
-test-pool-edge:
-	make TEST_TARGET=pool-edge.spec.ts test
+.PHONY: test-pool-initialization
+test-pool-initialization:
+	make TEST_TARGET=_pool_initialization.spec.ts test
 
 .PHONY: test-ntoken
 test-ntoken:
@@ -145,7 +157,7 @@ test-paraspace-oracle-aggregator:
 
 .PHONY: test-nft-floor-price-oracle-without-deploy
 test-nft-floor-price-oracle-without-deploy:
-	make TEST_TARGET=_oracle_nft_floor_price.spec.ts dry-test
+	make TEST_TARGET=_oracle_nft_floor_price.spec.ts local-test
 
 .PHONY: test-nft-floor-price-oracle
 test-nft-floor-price-oracle:
@@ -157,7 +169,7 @@ test-weth-gateway:
 
 .PHONY: test-mock-token-faucet
 test-mock-token-faucet:
-	make TEST_TARGET=mock-token-faucet.spec.ts test
+	make TEST_TARGET=_mock_token_faucet.spec.ts test
 
 .PHONY: test-moonbirds
 test-moonbirds:
@@ -199,6 +211,10 @@ test-variable-debt-token:
 test-atomic-tokens-limit:
 	make TEST_TARGET=_xtoken_ntoken_atomic-token-balance_limit.spec.ts test
 
+.PHONY: test-mint-to-treasury
+test-mint-to-treasury:
+	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test
+
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
 	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
@@ -211,9 +227,9 @@ test-addresses-provider:
 test-addresses-provider-registry:
 	make TEST_TARGET=_base_addresses_provider_registry.spec.ts test
 
-.PHONY: test-price-oracle-sentinel
-test-price-oracle-sentinel:
-	make TEST_TARGET=price-oracle-sentinel.spec.ts test
+.PHONY: test-oracle-sentinel
+test-oracle-sentinel:
+	make TEST_TARGET=_oracle_sentinel.spec.ts test
 
 .PHONY: test-user-configurator-used-as-collateral
 test-user-configurator-used-as-collateral:
@@ -237,7 +253,11 @@ test-data-providers:
 
 .PHONY: test-ape-staking
 test-ape-staking:
-	make TEST_TARGET=_xtoken_ntoken_ape_staking.spec.ts test
+	make TEST_TARGET=_pool_ape_staking.spec.ts test
+
+.PHONY: test-sape-operation
+test-sape-operation:
+	make TEST_TARGET=_sape_pool_operation.spec.ts test
 
 .PHONY: test-acl-manager
 test-acl-manager:
@@ -331,6 +351,10 @@ deploy-looksrare:
 deploy-x2y2:
 	make TASK_NAME=deploy:x2y2 run-task
 
+.PHONY: deploy-blur-exchange
+deploy-blur-exchange:
+	make TASK_NAME=deploy:blur-exchange run-task
+
 .PHONY: deploy-flashClaimRegistry
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
@@ -343,37 +367,50 @@ deploy-renounceOwnership:
 ad-hoc:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
 
+.PHONY: info
+info:
+	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
 
 .PHONY: upgrade
-upgrade:
+upgrade: build
 	make TASK_NAME=upgrade:all run-task
 
 .PHONY: upgrade-pool
-upgrade-pool:
+upgrade-pool: build
 	make TASK_NAME=upgrade:pool run-task
 
-.PHONY: upgrade-ptoken
-upgrade-ptoken:
-	make TASK_NAME=upgrade:ptoken run-task
-
 .PHONY: upgrade-ntoken
-upgrade-ntoken:
+upgrade-ntoken: build
 	make TASK_NAME=upgrade:ntoken run-task
 
-.PHONY: upgrade-ntoken-uniswapv3
-upgrade-ntoken-uniswapv3:
-	make TASK_NAME=upgrade:ntoken_uniswapv3 run-task
+.PHONY: upgrade-ptoken
+upgrade-ptoken: build
+	make TASK_NAME=upgrade:ptoken run-task
 
-.PHONY: upgrade-ntoken-moonbirds
-upgrade-ntoken-moonbirds:
-	make TASK_NAME=upgrade:ntoken_moonbirds run-task
+.PHONY: remove-pool-funcs
+remove-pool-funcs: build
+# e.g: emergency disable liquidation
+	FUNCS_TO_REMOVE=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:remove-pool-funcs run-task
+
+.PHONY: add-pool-funcs
+add-pool-funcs: build
+# e.g: add liquidation back
+	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
+
 
 .PHONY: node
 node:
 	npx hardhat node --hostname 0.0.0.0
+
+.PHONY: anvil
+anvil:
+	sudo pkill anvil || true
+	anvil &
+	sleep 30
 
 .PHONY: image
 image:
@@ -391,12 +428,17 @@ launch: shutdown
 
 .PHONY: shutdown
 shutdown:
+	sudo pkill anvil || true
 	docker-compose \
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
 	docker volume prune -f
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
+
+.PHONY: copy
+copy:
+	docker cp paraspace-core_hardhat_1:/paraspace/deployed-contracts.json .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

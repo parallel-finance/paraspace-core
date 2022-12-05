@@ -925,9 +925,11 @@ contract CloneX is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdCounter;
+    uint256 public collectionSize;
 
     constructor() ERC721("CloneX", "CloneX") {
         _tokenIdCounter.increment(); // Making sure we start at token ID 1
+        collectionSize = 10000;
     }
 
     event CloneXRevealed(uint256 tokenId, string fileId); // Sending the event for offchain script to transform the right file
@@ -1034,12 +1036,25 @@ contract CloneX is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         return super.supportsInterface(interfaceId);
     }
 
+    function setCollectionSize(uint256 _newSize) public onlyOwner {
+        require(_newSize >= collectionSize, "don't decrease collectionSize");
+        collectionSize = _newSize;
+    }
+
     function mint(address _to) public {
+        require(
+            totalSupply() + 1 <= collectionSize,
+            "exceed collectionSize"
+        );
         _safeMint(_to, _tokenIdCounter.current());
         _tokenIdCounter.increment();
     }
 
     function mint(uint256 count, address to) public virtual {
+        require(
+            totalSupply() + count <= collectionSize,
+            "exceed collectionSize"
+        );
         for (uint256 i = 0; i < count; i++) {
             _safeMint(to, _tokenIdCounter.current());
             _tokenIdCounter.increment();

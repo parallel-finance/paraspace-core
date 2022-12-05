@@ -1470,6 +1470,8 @@ contract MutantApeYachtClub is ERC721Enumerable, Ownable, ReentrancyGuard {
     Bayc private immutable bayc;
     Bacc private immutable bacc;
 
+    uint256 public collectionSize;
+
     event MutantPublicSaleStart(
         uint256 indexed _saleDuration,
         uint256 indexed _saleStartTime
@@ -1508,6 +1510,7 @@ contract MutantApeYachtClub is ERC721Enumerable, Ownable, ReentrancyGuard {
     ) ERC721(name, symbol) {
         bayc = Bayc(baycAddress);
         bacc = Bacc(baccAddress);
+        collectionSize = 10000;
     }
 
     function startPublicSale(uint256 saleDuration, uint256 saleStartPrice)
@@ -1562,6 +1565,10 @@ contract MutantApeYachtClub is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function mint(uint256 numMutants, address _to) external nonReentrant {
+        require(
+            totalSupply() + numMutants <= collectionSize,
+            "exceed collectionSize"
+        );
         for (uint256 i = 0; i < numMutants; i++) {
             uint256 mintIndex = numMutantsMinted;
             numMutantsMinted++;
@@ -1570,6 +1577,10 @@ contract MutantApeYachtClub is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function mint(address to) external nonReentrant {
+        require(
+            totalSupply() + 1 <= collectionSize,
+            "exceed collectionSize"
+        );
         uint256 mintIndex = numMutantsMinted;
         numMutantsMinted++;
         _safeMint(to, mintIndex);
@@ -1739,5 +1750,10 @@ contract MutantApeYachtClub is ERC721Enumerable, Ownable, ReentrancyGuard {
             mintedMutantsStartingIndex,
             megaMutantsStartingIndex
         );
+    }
+
+    function setCollectionSize(uint256 _newSize) public onlyOwner {
+        require(_newSize >= collectionSize, "don't decrease collectionSize");
+        collectionSize = _newSize;
     }
 }

@@ -25,13 +25,10 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
         external
+        onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeDepositBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nfts
-        );
+        _apeCoinStaking.depositBAYC(_nfts);
     }
 
     /**
@@ -41,14 +38,10 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function claimApeCoin(uint256[] calldata _nfts, address _recipient)
         external
+        onlyPool
         nonReentrant
     {
-        ApeStakingLogic.executeClaimBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nfts,
-            _recipient
-        );
+        _apeCoinStaking.claimBAYC(_nfts, _recipient);
     }
 
     /**
@@ -59,13 +52,8 @@ contract NTokenBAYC is NTokenApeStaking {
     function withdrawApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts,
         address _recipient
-    ) external nonReentrant {
-        ApeStakingLogic.executeWithdrawBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nfts,
-            _recipient
-        );
+    ) external onlyPool nonReentrant {
+        _apeCoinStaking.withdrawBAYC(_nfts, _recipient);
     }
 
     /**
@@ -75,15 +63,15 @@ contract NTokenBAYC is NTokenApeStaking {
      * Each BAKC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the Pair pool cap amount.\
      * Example: BAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"]]\
      */
-    function depositBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
-        external
-        nonReentrant
-    {
-        ApeStakingLogic.executeDepositBAKCWithBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nftPairs
-        );
+    function depositBAKC(
+        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
+    ) external onlyPool nonReentrant {
+        ApeCoinStaking.PairNftDepositWithAmount[]
+            memory _otherPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
+                0
+            );
+
+        _apeCoinStaking.depositBAKC(_nftPairs, _otherPairs);
     }
 
     /**
@@ -94,13 +82,11 @@ contract NTokenBAYC is NTokenApeStaking {
     function claimBAKC(
         ApeCoinStaking.PairNft[] calldata _nftPairs,
         address _recipient
-    ) external nonReentrant {
-        ApeStakingLogic.executeClaimBAKCWithBAYC(
-            _ERC721Data.owners,
-            _apeCoinStaking,
-            _nftPairs,
-            _recipient
-        );
+    ) external onlyPool nonReentrant {
+        ApeCoinStaking.PairNft[]
+            memory _otherPairs = new ApeCoinStaking.PairNft[](0);
+
+        _apeCoinStaking.claimBAKC(_nftPairs, _otherPairs, _recipient);
     }
 
     /**
@@ -109,21 +95,19 @@ contract NTokenBAYC is NTokenApeStaking {
      * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
      */
     function withdrawBAKC(
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
-        address _apeRecipient,
-        address _bakcRecipient
-    ) external nonReentrant {
-        ApeStakingLogic.executeWithdrawBAKCWithBAYC(
-            _ERC721Data.owners,
+        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs,
+        address _apeRecipient
+    ) external onlyPool nonReentrant {
+        ApeStakingLogic.withdrawBAKC(
             _apeCoinStaking,
+            POOL_ID(),
             _nftPairs,
-            _apeRecipient,
-            _bakcRecipient
+            _apeRecipient
         );
     }
 
-    function POOL_ID() internal virtual override returns (uint256) {
-        return BAYC_POOL_ID;
+    function POOL_ID() internal pure virtual override returns (uint256) {
+        return ApeStakingLogic.BAYC_POOL_ID;
     }
 
     function getXTokenType() external pure override returns (XTokenType) {

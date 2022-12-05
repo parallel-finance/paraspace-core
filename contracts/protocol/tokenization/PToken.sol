@@ -132,7 +132,7 @@ contract PToken is
         address from,
         address to,
         uint256 value
-    ) external override onlyPool {
+    ) external virtual override onlyPool {
         _transfer(from, to, value, false);
     }
 
@@ -291,7 +291,7 @@ contract PToken is
         address from,
         address to,
         uint128 amount
-    ) internal override {
+    ) internal virtual override {
         _transfer(from, to, amount, true);
     }
 
