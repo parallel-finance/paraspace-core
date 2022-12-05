@@ -175,7 +175,10 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @notice Allows owner to remove feeder.
     /// @param _feeder feeder to remove
-    function removeFeeder(address _feeder) external {
+    function removeFeeder(address _feeder)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         _removeFeeder(_feeder);
     }
 
