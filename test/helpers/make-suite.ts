@@ -43,7 +43,6 @@ import {
   getNTokenBAYC,
   getNTokenMAYC,
   getApeCoinStaking,
-  getPTokenSApe,
   getBlurExchangeProxy,
   getExecutionDelegate,
 } from "../../deploy/helpers/contracts-getters";
@@ -110,7 +109,7 @@ import {
 } from "../../types";
 import {MintableERC721} from "../../types";
 import {Signer} from "ethers";
-import {getParaSpaceConfig, waitForTx} from "../../deploy/helpers/misc-utils";
+import {getParaSpaceConfig} from "../../deploy/helpers/misc-utils";
 
 chai.use(bignumberChai());
 chai.use(solidity);
@@ -484,17 +483,6 @@ export async function initializeMakeSuite() {
   );
   testEnv.executionDelegate = await getExecutionDelegate();
   testEnv.blurExchange = await getBlurExchangeProxy();
-
-  const {xTokenAddress: pSApeCoinAddress} =
-    await testEnv.protocolDataProvider.getReserveTokensAddresses(
-      "0x0000000000000000000000000000000000000001"
-    );
-  const pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
-  await waitForTx(
-    await pSApeCoin
-      .connect(testEnv.poolAdmin.signer)
-      .setNToken(testEnv.nBAYC.address, testEnv.nMAYC.address)
-  );
 
   return testEnv;
 }
