@@ -14,27 +14,25 @@ import "../openzeppelin/contracts/ERC721Enumerable.sol";
  * @author HorizenLabs
  */
 contract ApeCoinStaking is Ownable {
-
-    using SafeERC20 for IERC20;
     using SafeCast for uint256;
     using SafeCast for int256;
 
     /// @notice State for ApeCoin, BAYC, MAYC, and Pair Pools
     struct Pool {
-        uint256 lastRewardedTimestampHour;
-        uint256 lastRewardsRangeIndex;
-        uint256 stakedAmount;
-        uint256 accumulatedRewardsPerShare;
+        uint48 lastRewardedTimestampHour;
+        uint16 lastRewardsRangeIndex;
+        uint96 stakedAmount;
+        uint96 accumulatedRewardsPerShare;
         TimeRange[] timeRanges;
     }
 
     /// @notice Pool rules valid for a given duration of time.
     /// @dev All TimeRange timestamp values must represent whole hours
     struct TimeRange {
-        uint256 startTimestampHour;
-        uint256 endTimestampHour;
-        uint256 rewardsPerHour;
-        uint256 capPerPosition;
+        uint48 startTimestampHour;
+        uint48 endTimestampHour;
+        uint96 rewardsPerHour;
+        uint96 capPerPosition;
     }
 
     /// @dev Convenience struct for front-end applications
@@ -53,23 +51,30 @@ contract ApeCoinStaking is Ownable {
 
     /// @dev Struct for depositing and withdrawing from the BAYC and MAYC NFT pools
     struct SingleNft {
-        uint256 tokenId;
-        uint256 amount;
+        uint32 tokenId;
+        uint224 amount;
     }
-    /// @dev Struct for depositing and withdrawing from the BAKC (Pair) pool
-    struct PairNftWithAmount {
-        uint256 mainTokenId;
-        uint256 bakcTokenId;
-        uint256 amount;
+    /// @dev Struct for depositing from the BAKC (Pair) pool
+    struct PairNftDepositWithAmount {
+        uint32 mainTokenId;
+        uint32 bakcTokenId;
+        uint184 amount;
+    }
+    /// @dev Struct for withdrawing from the BAKC (Pair) pool
+    struct PairNftWithdrawWithAmount {
+        uint32 mainTokenId;
+        uint32 bakcTokenId;
+        uint184 amount;
+        bool isUncommit;
     }
     /// @dev Struct for claiming from an NFT pool
     struct PairNft {
-        uint256 mainTokenId;
-        uint256 bakcTokenId;
+        uint128 mainTokenId;
+        uint128 bakcTokenId;
     }
     /// @dev NFT paired status.  Can be used bi-directionally (BAYC/MAYC -> BAKC) or (BAKC -> BAYC/MAYC)
     struct PairingStatus {
-        uint256 tokenId;
+        uint248 tokenId;
         bool isPaired;
     }
 
@@ -175,6 +180,25 @@ contract ApeCoinStaking is Ownable {
         uint256 bakcTokenId
     );
 
+    error DepositMoreThanOneAPE();
+    error InvalidPoolId();
+    error StartMustBeGreaterThanEnd();
+    error StartNotWholeHour();
+    error EndNotWholeHour();
+    error StartMustEqualLastEnd();
+    error CallerNotOwner();
+    error MainTokenNotOwnedOrPaired();
+    error BAKCNotOwnedOrPaired();
+    error BAKCAlreadyPaired();
+    error ExceededCapAmount();
+    error NotOwnerOfMain();
+    error NotOwnerOfBAKC();
+    error ProvidedTokensNotPaired();
+    error ExceededStakedAmount();
+    error NeitherTokenInPairOwnedByCaller();
+    error SplitPairCantPartiallyWithdraw();
+    error UncommitWrongParameters();
+
     /**
      * @notice Construct a new ApeCoinStaking instance
      * @param _apeCoinContractAddress The ApeCoin ERC20 contract address
@@ -203,11 +227,13 @@ contract ApeCoinStaking is Ownable {
      * @dev ApeCoin deposit must be >= 1 ApeCoin
      */
     function depositApeCoin(uint256 _amount, address _recipient) public {
-        require(_amount >= MIN_DEPOSIT, "Can't deposit less than 1 $APE");
+        if (_amount < MIN_DEPOSIT) revert DepositMoreThanOneAPE();
         updatePool(APECOIN_POOL_ID);
 
         Position storage position = addressPosition[_recipient];
         _deposit(APECOIN_POOL_ID, position, _amount);
+
+        apeCoin.transferFrom(msg.sender, address(this), _amount);
 
         emit Deposit(msg.sender, _amount, _recipient);
     }
@@ -243,15 +269,15 @@ contract ApeCoinStaking is Ownable {
 
     /**
      * @notice Deposit ApeCoin to the Pair Pool, where Pair = (BAYC + BAKC) or (MAYC + BAKC)
-     * @param _baycPairs Array of PairNftWithAmount structs
-     * @param _maycPairs Array of PairNftWithAmount structs
+     * @param _baycPairs Array of PairNftDepositWithAmount structs
+     * @param _maycPairs Array of PairNftDepositWithAmount structs
      * @dev Commits 1 or more Pairs, each with an ApeCoin amount to the Pair pool.\
      * Each BAKC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the Pair pool cap amount.\
      * Example 1: BAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"],[]]\
      * Example 2: MAYC + BAKC + 1 ApeCoin:  [[], [0, 0, "1000000000000000000"]]\
      * Example 3: (BAYC + BAKC + 1 ApeCoin) and (MAYC + BAKC + 1 ApeCoin): [[0, 0, "1000000000000000000"], [0, 1, "1000000000000000000"]]
      */
-    function depositBAKC(PairNftWithAmount[] calldata _baycPairs, PairNftWithAmount[] calldata _maycPairs) external {
+    function depositBAKC(PairNftDepositWithAmount[] calldata _baycPairs, PairNftDepositWithAmount[] calldata _maycPairs) external {
         updatePool(BAKC_POOL_ID);
         _depositPairNft(BAYC_POOL_ID, _baycPairs);
         _depositPairNft(MAYC_POOL_ID, _maycPairs);
@@ -347,7 +373,10 @@ contract ApeCoinStaking is Ownable {
             uint256 rewardsToBeClaimed = _claim(APECOIN_POOL_ID, position, _recipient);
             emit ClaimRewards(msg.sender, rewardsToBeClaimed, _recipient);
         }
-        _withdraw(APECOIN_POOL_ID, position, _amount, _recipient);
+        _withdraw(APECOIN_POOL_ID, position, _amount);
+
+        apeCoin.transfer(_recipient, _amount);
+
         emit Withdraw(msg.sender, _amount, _recipient);
     }
 
@@ -395,11 +424,11 @@ contract ApeCoinStaking is Ownable {
 
     /**
      * @notice Withdraw staked ApeCoin from the Pair pool.  If withdraw is total staked amount, performs an automatic claim.
-     * @param _baycPairs Array of Paired BAYC NFT's with staked amounts
-     * @param _maycPairs Array of Paired MAYC NFT's with staked amounts
+     * @param _baycPairs Array of Paired BAYC NFT's with staked amounts and isUncommit boolean
+     * @param _maycPairs Array of Paired MAYC NFT's with staked amounts and isUncommit boolean
      * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
      */
-    function withdrawBAKC(PairNftWithAmount[] calldata _baycPairs, PairNftWithAmount[] calldata _maycPairs) external {
+    function withdrawBAKC(PairNftWithdrawWithAmount[] calldata _baycPairs, PairNftWithdrawWithAmount[] calldata _maycPairs) external {
         updatePool(BAKC_POOL_ID);
         _withdrawPairNft(BAYC_POOL_ID, _baycPairs);
         _withdrawPairNft(MAYC_POOL_ID, _maycPairs);
@@ -424,19 +453,22 @@ contract ApeCoinStaking is Ownable {
         uint256 _endTimeStamp,
         uint256 _capPerPosition) external onlyOwner
     {
-        require (_poolId < 4, "Invalid poolId");
-        require (_startTimestamp < _endTimeStamp, "_startTimestamp should be less than _endTimeStamp");
-        require(getMinute(_startTimestamp) == 0 && getSecond(_startTimestamp) == 0, "_startTimestamp is not a whole hour");
-        require(getMinute(_endTimeStamp) == 0 && getSecond(_endTimeStamp) == 0, "_endTimeStamp is not a whole hour");
+        if (_poolId > BAKC_POOL_ID) revert InvalidPoolId();
+        if (_startTimestamp >= _endTimeStamp) revert StartMustBeGreaterThanEnd();
+        if (getMinute(_startTimestamp) > 0 || getSecond(_startTimestamp) > 0) revert StartNotWholeHour();
+        if (getMinute(_endTimeStamp) > 0 || getSecond(_endTimeStamp) > 0) revert EndNotWholeHour();
 
         Pool storage pool = pools[_poolId];
-        require(pool.timeRanges.length == 0 || _startTimestamp == pool.timeRanges[pool.timeRanges.length-1].endTimestampHour
-            ,"_startTimestamp should be equal to the last endTimestampHour");
+        uint256 length = pool.timeRanges.length;
+        if (length > 0) {
+            if (_startTimestamp != pool.timeRanges[length - 1].endTimestampHour) revert StartMustEqualLastEnd();
+        }
 
         uint256 hoursInSeconds = _endTimeStamp - _startTimestamp;
         uint256 rewardsPerHour = _amount * SECONDS_PER_HOUR / hoursInSeconds;
 
-        TimeRange memory next = TimeRange(_startTimestamp, _endTimeStamp, rewardsPerHour, _capPerPosition);
+        TimeRange memory next = TimeRange(_startTimestamp.toUint48(), _endTimeStamp.toUint48(),
+            rewardsPerHour.toUint96(), _capPerPosition.toUint96());
         pool.timeRanges.push(next);
     }
 
@@ -445,55 +477,66 @@ contract ApeCoinStaking is Ownable {
      * @param _poolId Available pool values 0-3
      */
     function removeLastTimeRange(uint256 _poolId) external onlyOwner {
-        Pool storage pool = pools[_poolId];
-        pool.timeRanges.pop();
+        pools[_poolId].timeRanges.pop();
     }
 
     /**
-     * @return A Pool's timeRanges TimeRange struct by index.
+     * @notice Lookup method for a TimeRange struct
+     * @return TimeRange A Pool's timeRanges struct by index.
      * @param _poolId Available pool values 0-3
      * @param _index Target index in a Pool's timeRanges array
      */
     function getTimeRangeBy(uint256 _poolId, uint256 _index) public view returns (TimeRange memory) {
-        Pool memory pool = pools[_poolId];
-        return pool.timeRanges[_index];
+        return pools[_poolId].timeRanges[_index];
     }
 
     // Pool Methods
 
     /**
-     * @return The amount of ApeCoin rewards to be distributed by pool for a given time range
+     * @notice Lookup available rewards for a pool over a given time range
+     * @return uint256 The amount of ApeCoin rewards to be distributed by pool for a given time range
+     * @return uint256 The amount of time ranges
      * @param _poolId Available pool values 0-3
      * @param _from Whole hour timestamp representation
      * @param _to Whole hour timestamp representation
      */
     function rewardsBy(uint256 _poolId, uint256 _from, uint256 _to) public view returns (uint256, uint256) {
         Pool memory pool = pools[_poolId];
-        if(_to < pool.timeRanges[0].startTimestampHour) return (0, pool.lastRewardsRangeIndex);
 
         uint256 currentIndex = pool.lastRewardsRangeIndex;
+        if(_to < pool.timeRanges[0].startTimestampHour) return (0, currentIndex);
+
         while(_from > pool.timeRanges[currentIndex].endTimestampHour && _to > pool.timeRanges[currentIndex].endTimestampHour) {
+        unchecked {
             ++currentIndex;
+        }
         }
 
         uint256 rewards;
-        for(uint256 i = currentIndex; i < pool.timeRanges.length; ++i) {
-            TimeRange memory current = pool.timeRanges[i];
+        TimeRange memory current;
+        uint256 startTimestampHour;
+        uint256 endTimestampHour;
+        uint256 length = pool.timeRanges.length;
+        for(uint256 i = currentIndex; i < length;) {
+            current = pool.timeRanges[i];
+            startTimestampHour = _from <= current.startTimestampHour ? current.startTimestampHour : _from;
+            endTimestampHour = _to <= current.endTimestampHour ? _to : current.endTimestampHour;
 
-            uint256 startTimestampHour = _from <= current.startTimestampHour ? current.startTimestampHour : _from;
-            uint256 endTimestampHour = _to <= current.endTimestampHour ? _to : current.endTimestampHour;
             rewards = rewards + (endTimestampHour - startTimestampHour) * current.rewardsPerHour / SECONDS_PER_HOUR;
 
             if(_to <= endTimestampHour) {
                 return (rewards, i);
             }
+        unchecked {
+            ++i;
+        }
         }
 
-        return (rewards, pool.timeRanges.length - 1);
+        return (rewards, length - 1);
     }
 
     /**
-     * @dev Updates reward variables `lastRewardedTimestampHour`, `accumulatedRewardsPerShare` and `lastRewardsRangeIndex`
+     * @notice Updates reward variables `lastRewardedTimestampHour`, `accumulatedRewardsPerShare` and `lastRewardsRangeIndex`
      * for a given pool.
      * @param _poolId Available pool values 0-3
      */
@@ -503,8 +546,8 @@ contract ApeCoinStaking is Ownable {
         if (block.timestamp < pool.timeRanges[0].startTimestampHour) return;
         if (block.timestamp <= pool.lastRewardedTimestampHour + SECONDS_PER_HOUR) return;
 
-        uint256 lastTimestampHour = pool.timeRanges[pool.timeRanges.length-1].endTimestampHour;
-        uint256 previousTimestampHour = getPreviousTimestampHour(block.timestamp);
+        uint48 lastTimestampHour = pool.timeRanges[pool.timeRanges.length-1].endTimestampHour;
+        uint48 previousTimestampHour = getPreviousTimestampHour().toUint48();
 
         if (pool.stakedAmount == 0) {
             pool.lastRewardedTimestampHour = previousTimestampHour > lastTimestampHour ? lastTimestampHour : previousTimestampHour;
@@ -513,9 +556,9 @@ contract ApeCoinStaking is Ownable {
 
         (uint256 rewards, uint256 index) = rewardsBy(_poolId, pool.lastRewardedTimestampHour, previousTimestampHour);
         if (pool.lastRewardsRangeIndex != index) {
-            pool.lastRewardsRangeIndex = index;
+            pool.lastRewardsRangeIndex = index.toUint16();
         }
-        pool.accumulatedRewardsPerShare = pool.accumulatedRewardsPerShare + (rewards * APE_COIN_PRECISION) / pool.stakedAmount;
+        pool.accumulatedRewardsPerShare = (pool.accumulatedRewardsPerShare + (rewards * APE_COIN_PRECISION) / pool.stakedAmount).toUint96();
         pool.lastRewardedTimestampHour = previousTimestampHour > lastTimestampHour ? lastTimestampHour : previousTimestampHour;
 
         emit UpdatePool(_poolId, pool.lastRewardedTimestampHour, pool.stakedAmount, pool.accumulatedRewardsPerShare);
@@ -523,10 +566,6 @@ contract ApeCoinStaking is Ownable {
 
     // Read Methods
 
-    /**
-     * @return The current timeRange index for a pool.
-     * @param pool A Pool struct
-     */
     function getCurrentTimeRangeIndex(Pool memory pool) private view returns (uint256) {
         uint256 current = pool.lastRewardsRangeIndex;
 
@@ -539,7 +578,11 @@ contract ApeCoinStaking is Ownable {
     }
 
     /**
-     * @return Relevant values for all the Pools for UI purposes.
+     * @notice Fetches a PoolUI struct (poolId, stakedAmount, currentTimeRange) for each reward pool
+     * @return PoolUI for ApeCoin.
+     * @return PoolUI for BAYC.
+     * @return PoolUI for MAYC.
+     * @return PoolUI for BAKC.
      */
     function getPoolsUI() public view returns (PoolUI memory, PoolUI memory, PoolUI memory, PoolUI memory) {
         Pool memory apeCoinPool = pools[0];
@@ -548,20 +591,22 @@ contract ApeCoinStaking is Ownable {
         Pool memory bakcPool = pools[3];
         uint256 current = getCurrentTimeRangeIndex(apeCoinPool);
         return (PoolUI(0,apeCoinPool.stakedAmount, apeCoinPool.timeRanges[current]),
-                PoolUI(1,baycPool.stakedAmount, baycPool.timeRanges[current]),
-                PoolUI(2,maycPool.stakedAmount, maycPool.timeRanges[current]),
-                PoolUI(3,bakcPool.stakedAmount, bakcPool.timeRanges[current]));
+        PoolUI(1,baycPool.stakedAmount, baycPool.timeRanges[current]),
+        PoolUI(2,maycPool.stakedAmount, maycPool.timeRanges[current]),
+        PoolUI(3,bakcPool.stakedAmount, bakcPool.timeRanges[current]));
     }
 
     /**
-     * @return staked amount for addressPosition [APECOIN] and nftPositions [BAYC, MAYC, and Pair(BAKC)] for voting.
+     * @notice Fetches an address total staked amount, used by voting contract
+     * @return amount uint256 staked amount for all pools.
+     * @param _address An Ethereum address
      */
-    function stakedTotal(address _addr) external view returns (uint256) {
-        uint256 total = addressPosition[_addr].stakedAmount;
+    function stakedTotal(address _address) external view returns (uint256) {
+        uint256 total = addressPosition[_address].stakedAmount;
 
-        total += _stakedTotal(BAYC_POOL_ID, _addr);
-        total += _stakedTotal(MAYC_POOL_ID, _addr);
-        total += _stakedTotalPair(_addr);
+        total += _stakedTotal(BAYC_POOL_ID, _address);
+        total += _stakedTotal(MAYC_POOL_ID, _address);
+        total += _stakedTotalPair(_address);
 
         return total;
     }
@@ -602,8 +647,10 @@ contract ApeCoinStaking is Ownable {
     }
 
     /**
-     * @return staked amount, pending rewards, and estimated rewards over the last 24 hours
-     *      for addressPosition [APECOIN, BAYC, MAYC, BAKC].
+     * @notice Fetches a DashboardStake = [poolId, tokenId, deposited, unclaimed, rewards24Hrs, paired] \
+     * for each pool, for an Ethereum address
+     * @return dashboardStakes An array of DashboardStake structs
+     * @param _address An Ethereum address
      */
     function getAllStakes(address _address) public view returns (DashboardStake[] memory) {
 
@@ -644,8 +691,9 @@ contract ApeCoinStaking is Ownable {
     }
 
     /**
-     * @return staked amount, pending rewards, and estimated rewards over the last 24 hours
-     *      for addressPosition [APECOIN].
+     * @notice Fetches a DashboardStake for the ApeCoin pool
+     * @return dashboardStake A dashboardStake struct
+     * @param _address An Ethereum address
      */
     function getApeCoinStake(address _address) public view returns (DashboardStake memory) {
         uint256 tokenId = 0;
@@ -657,33 +705,34 @@ contract ApeCoinStaking is Ownable {
     }
 
     /**
-     * @return staked amount, pending rewards, and estimated rewards over the last 24 hours
-     *      for addressPosition [BAYC].
+     * @notice Fetches an array of DashboardStakes for the BAYC pool
+     * @return dashboardStakes An array of DashboardStake structs
      */
     function getBaycStakes(address _address) public view returns (DashboardStake[] memory) {
         return _getStakes(_address, BAYC_POOL_ID);
     }
 
     /**
-     * @return staked amount, pending rewards, and estimated rewards over the last 24 hours
-     *      for addressPosition [MAYC].
+     * @notice Fetches an array of DashboardStakes for the MAYC pool
+     * @return dashboardStakes An array of DashboardStake structs
      */
     function getMaycStakes(address _address) public view returns (DashboardStake[] memory) {
         return _getStakes(_address, MAYC_POOL_ID);
     }
 
     /**
-     * @return staked amount, pending rewards, and estimated rewards over the last 24 hours
-     *      for addressPosition [BAKC].
+     * @notice Fetches an array of DashboardStakes for the BAKC pool
+     * @return dashboardStakes An array of DashboardStake structs
      */
     function getBakcStakes(address _address) public view returns (DashboardStake[] memory) {
         return _getStakes(_address, BAKC_POOL_ID);
     }
 
     /**
-     * @return staked amount, pending rewards, and estimated rewards over the last 24 hours
-     *      for addressPosition when BAKC Pool Pair is split.
-     *      ie (BAYC/MAYC) and BAKC in pair pool have different owners.
+     * @notice Fetches an array of DashboardStakes for the Pair Pool when ownership is split \
+     * ie (BAYC/MAYC) and BAKC in pair pool have different owners.
+     * @return dashboardStakes An array of DashboardStake structs
+     * @param _address An Ethereum address
      */
     function getSplitStakes(address _address) public view returns (DashboardStake[] memory) {
         uint256 baycSplits = _getSplitStakeCount(nftContracts[BAYC_POOL_ID].balanceOf(_address), _address, BAYC_POOL_ID);
@@ -795,11 +844,12 @@ contract ApeCoinStaking is Ownable {
         Position memory position = _poolId == 0 ? addressPosition[_address]: nftPosition[_poolId][_tokenId];
 
         TimeRange memory rewards = getTimeRangeBy(_poolId, pool.lastRewardsRangeIndex);
-        return (position.stakedAmount * rewards.rewardsPerHour * 24) / pool.stakedAmount;
+        return (position.stakedAmount * uint256(rewards.rewardsPerHour) * 24) / uint256(pool.stakedAmount);
     }
 
     /**
-     * @return current amount of claimable $APE rewards for a given position from a given pool.
+     * @notice Fetches the current amount of claimable ApeCoin rewards for a given position from a given pool.
+     * @return uint256 value of pending rewards
      * @param _poolId Available pool values 0-3
      * @param _address Address to lookup Position for
      * @param _tokenId An NFT id
@@ -808,7 +858,7 @@ contract ApeCoinStaking is Ownable {
         Pool memory pool = pools[_poolId];
         Position memory position = _poolId == 0 ? addressPosition[_address]: nftPosition[_poolId][_tokenId];
 
-        (uint256 rewardsSinceLastCalculated,) = rewardsBy(_poolId, pool.lastRewardedTimestampHour, getPreviousTimestampHour(block.timestamp));
+        (uint256 rewardsSinceLastCalculated,) = rewardsBy(_poolId, pool.lastRewardedTimestampHour, getPreviousTimestampHour());
         uint256 accumulatedRewardsPerShare = pool.accumulatedRewardsPerShare;
 
         if (block.timestamp > pool.lastRewardedTimestampHour + SECONDS_PER_HOUR && pool.stakedAmount != 0) {
@@ -819,20 +869,20 @@ contract ApeCoinStaking is Ownable {
 
     // Convenience methods for timestamp calculation
 
-    /// @dev the minutes (0 to 59) of a timestamp
+    /// @notice the minutes (0 to 59) of a timestamp
     function getMinute(uint256 timestamp) internal pure returns (uint256 minute) {
         uint256 secs = timestamp % SECONDS_PER_HOUR;
         minute = secs / SECONDS_PER_MINUTE;
     }
 
-    /// @dev the seconds (0 to 59) of a timestamp
+    /// @notice the seconds (0 to 59) of a timestamp
     function getSecond(uint256 timestamp) internal pure returns (uint256 second) {
         second = timestamp % SECONDS_PER_MINUTE;
     }
 
-    /// @dev the previous whole hour of a timestamp
-    function getPreviousTimestampHour(uint256 timestamp) internal pure returns (uint256) {
-        return timestamp - (getMinute(timestamp) * 60 + getSecond(timestamp));
+    /// @notice the previous whole hour of a timestamp
+    function getPreviousTimestampHour() internal view returns (uint256) {
+        return block.timestamp - (getMinute(block.timestamp) * 60 + getSecond(block.timestamp));
     }
 
     // Private Methods - shared logic
@@ -840,154 +890,213 @@ contract ApeCoinStaking is Ownable {
         Pool storage pool = pools[_poolId];
 
         _position.stakedAmount += _amount;
-        pool.stakedAmount += _amount;
+        pool.stakedAmount += _amount.toUint96();
         _position.rewardsDebt += (_amount * pool.accumulatedRewardsPerShare).toInt256();
-
-        apeCoin.safeTransferFrom(msg.sender, address(this), _amount);
     }
 
     function _depositNft(uint256 _poolId, SingleNft[] calldata _nfts) private {
         updatePool(_poolId);
-        for(uint256 i; i < _nfts.length; ++i) {
-            uint256 tokenId = _nfts[i].tokenId;
-            uint256 amount = _nfts[i].amount;
-            Position storage position = nftPosition[_poolId][tokenId];
-            require(position.stakedAmount > 0 || nftContracts[_poolId].ownerOf(tokenId) == msg.sender, "Token not owned by caller");
+        uint256 tokenId;
+        uint256 amount;
+        Position storage position;
+        uint256 length = _nfts.length;
+        uint256 totalDeposit;
+        for(uint256 i; i < length;) {
+            tokenId = _nfts[i].tokenId;
+            position = nftPosition[_poolId][tokenId];
+            if (position.stakedAmount == 0) {
+                if (nftContracts[_poolId].ownerOf(tokenId) != msg.sender) revert CallerNotOwner();
+            }
+            amount = _nfts[i].amount;
             _depositNftGuard(_poolId, position, amount);
+            totalDeposit += amount;
             emit DepositNft(msg.sender, _poolId, amount, tokenId);
+            unchecked {
+                ++i;
+            }
         }
+        if (totalDeposit > 0) apeCoin.transferFrom(msg.sender, address(this), totalDeposit);
     }
 
-    function _depositPairNft(uint256 mainTypePoolId, PairNftWithAmount[] calldata _nfts) private {
-        for(uint256 i; i < _nfts.length; ++i) {
-            uint256 mainTokenId = _nfts[i].mainTokenId;
-            uint256 bakcTokenId = _nfts[i].bakcTokenId;
-            uint256 amount = _nfts[i].amount;
-            Position storage position = nftPosition[BAKC_POOL_ID][bakcTokenId];
+    function _depositPairNft(uint256 mainTypePoolId, PairNftDepositWithAmount[] calldata _nfts) private {
+        uint256 length = _nfts.length;
+        uint256 totalDeposit;
+        PairNftDepositWithAmount memory pair;
+        Position storage position;
+        for(uint256 i; i < length;) {
+            pair = _nfts[i];
+            position = nftPosition[BAKC_POOL_ID][pair.bakcTokenId];
 
             if(position.stakedAmount == 0) {
-                require(nftContracts[mainTypePoolId].ownerOf(mainTokenId) == msg.sender && !mainToBakc[mainTypePoolId][mainTokenId].isPaired
-                , "Main Token not owned by caller or already paired");
-                require(nftContracts[BAKC_POOL_ID].ownerOf(bakcTokenId) == msg.sender && !bakcToMain[bakcTokenId][mainTypePoolId].isPaired
-                ,"BAKC Token not owned by caller or already paired");
-                mainToBakc[mainTypePoolId][mainTokenId] = PairingStatus(bakcTokenId, true);
-                bakcToMain[bakcTokenId][mainTypePoolId] = PairingStatus(mainTokenId, true);
-            } else {
-                require(mainTokenId == bakcToMain[bakcTokenId][mainTypePoolId].tokenId
-                    && bakcTokenId == mainToBakc[mainTypePoolId][mainTokenId].tokenId, "BAKC Token already paired");
-            }
+                if (nftContracts[mainTypePoolId].ownerOf(pair.mainTokenId) != msg.sender
+                    || mainToBakc[mainTypePoolId][pair.mainTokenId].isPaired) revert MainTokenNotOwnedOrPaired();
+                if (nftContracts[BAKC_POOL_ID].ownerOf(pair.bakcTokenId) != msg.sender
+                    || bakcToMain[pair.bakcTokenId][mainTypePoolId].isPaired) revert BAKCNotOwnedOrPaired();
 
-            _depositNftGuard(BAKC_POOL_ID, position, amount);
-            emit DepositPairNft(msg.sender, amount, mainTypePoolId, mainTokenId, bakcTokenId);
+                mainToBakc[mainTypePoolId][pair.mainTokenId] = PairingStatus(pair.bakcTokenId, true);
+                bakcToMain[pair.bakcTokenId][mainTypePoolId] = PairingStatus(pair.mainTokenId, true);
+            } else if (pair.mainTokenId != bakcToMain[pair.bakcTokenId][mainTypePoolId].tokenId
+                || pair.bakcTokenId != mainToBakc[mainTypePoolId][pair.mainTokenId].tokenId)
+                revert BAKCAlreadyPaired();
+
+            _depositNftGuard(BAKC_POOL_ID, position, pair.amount);
+            totalDeposit += pair.amount;
+            emit DepositPairNft(msg.sender, pair.amount, mainTypePoolId, pair.mainTokenId, pair.bakcTokenId);
+            unchecked {
+                ++i;
+            }
         }
+        if (totalDeposit > 0) apeCoin.transferFrom(msg.sender, address(this), totalDeposit);
     }
 
     function _depositNftGuard(uint256 _poolId, Position storage _position, uint256 _amount) private {
-        require(_amount >= MIN_DEPOSIT, "Can't deposit less than 1 $APE");
-        require(_amount + _position.stakedAmount
-            <= pools[_poolId].timeRanges[pools[_poolId].lastRewardsRangeIndex].capPerPosition, "Can't stake more than cap amount");
+        if (_amount < MIN_DEPOSIT) revert DepositMoreThanOneAPE();
+        if (_amount + _position.stakedAmount > pools[_poolId].timeRanges[pools[_poolId].lastRewardsRangeIndex].capPerPosition)
+            revert ExceededCapAmount();
 
         _deposit(_poolId, _position, _amount);
     }
 
-    function _claim(uint256 _poolId, Position storage _position, address _recipient) private returns (uint256) {
+    function _claim(uint256 _poolId, Position storage _position, address _recipient) private returns (uint256 rewardsToBeClaimed) {
         Pool storage pool = pools[_poolId];
 
-        int256 accumulatedApeCoins = (_position.stakedAmount * pool.accumulatedRewardsPerShare).toInt256();
-        uint256 rewardsToBeClaimed = (accumulatedApeCoins - _position.rewardsDebt).toUint256() / APE_COIN_PRECISION;
+        int256 accumulatedApeCoins = (_position.stakedAmount * uint256(pool.accumulatedRewardsPerShare)).toInt256();
+        rewardsToBeClaimed = (accumulatedApeCoins - _position.rewardsDebt).toUint256() / APE_COIN_PRECISION;
 
         _position.rewardsDebt = accumulatedApeCoins;
 
         if (rewardsToBeClaimed != 0) {
-            apeCoin.safeTransfer(_recipient, rewardsToBeClaimed);
+            apeCoin.transfer(_recipient, rewardsToBeClaimed);
         }
-        return rewardsToBeClaimed;
     }
 
     function _claimNft(uint256 _poolId, uint256[] calldata _nfts, address _recipient) private {
         updatePool(_poolId);
-        for(uint256 i; i < _nfts.length; ++i) {
-            uint256 tokenId = _nfts[i];
+        uint256 tokenId;
+        uint256 rewardsToBeClaimed;
+        uint256 length = _nfts.length;
+        for(uint256 i; i < length;) {
+            tokenId = _nfts[i];
+            if (nftContracts[_poolId].ownerOf(tokenId) != msg.sender) revert CallerNotOwner();
             Position storage position = nftPosition[_poolId][tokenId];
-            require(nftContracts[_poolId].ownerOf(tokenId) == msg.sender, "Token not owned by caller");
-            uint256 rewardsToBeClaimed = _claim(_poolId, position, _recipient);
+            rewardsToBeClaimed = _claim(_poolId, position, _recipient);
             emit ClaimRewardsNft(msg.sender, _poolId, rewardsToBeClaimed, tokenId);
+            unchecked {
+                ++i;
+            }
         }
     }
 
     function _claimPairNft(uint256 mainTypePoolId, PairNft[] calldata _pairs, address _recipient) private {
-        for(uint256 i; i < _pairs.length; ++i) {
-            uint256 mainTokenId = _pairs[i].mainTokenId;
-            uint256 bakcTokenId = _pairs[i].bakcTokenId;
+        uint256 length = _pairs.length;
+        uint256 mainTokenId;
+        uint256 bakcTokenId;
+        Position storage position;
+        PairingStatus storage mainToSecond;
+        PairingStatus storage secondToMain;
+        for(uint256 i; i < length;) {
+            mainTokenId = _pairs[i].mainTokenId;
+            if (nftContracts[mainTypePoolId].ownerOf(mainTokenId) != msg.sender) revert NotOwnerOfMain();
 
-            Position storage position = nftPosition[BAKC_POOL_ID][bakcTokenId];
-            PairingStatus memory mainToSecond = mainToBakc[mainTypePoolId][mainTokenId];
-            PairingStatus memory secondToMain = bakcToMain[bakcTokenId][mainTypePoolId];
+            bakcTokenId = _pairs[i].bakcTokenId;
+            if (nftContracts[BAKC_POOL_ID].ownerOf(bakcTokenId) != msg.sender) revert NotOwnerOfBAKC();
 
-            require(nftContracts[mainTypePoolId].ownerOf(mainTokenId) == msg.sender, "Main Token not owned by caller");
-            require(nftContracts[BAKC_POOL_ID].ownerOf(bakcTokenId) == msg.sender, "BAKC Token not owned by caller");
-            require(mainToSecond.tokenId == bakcTokenId && mainToSecond.isPaired
-                && secondToMain.tokenId == mainTokenId && secondToMain.isPaired, "The provided Token IDs are not paired");
+            mainToSecond = mainToBakc[mainTypePoolId][mainTokenId];
+            secondToMain = bakcToMain[bakcTokenId][mainTypePoolId];
 
+            if (mainToSecond.tokenId != bakcTokenId || !mainToSecond.isPaired
+            || secondToMain.tokenId != mainTokenId || !secondToMain.isPaired) revert ProvidedTokensNotPaired();
+
+            position = nftPosition[BAKC_POOL_ID][bakcTokenId];
             uint256 rewardsToBeClaimed = _claim(BAKC_POOL_ID, position, _recipient);
             emit ClaimRewardsPairNft(msg.sender, rewardsToBeClaimed, mainTypePoolId, mainTokenId, bakcTokenId);
+            unchecked {
+                ++i;
+            }
         }
     }
 
-    function _withdraw(uint256 _poolId, Position storage _position, uint256 _amount, address _recipient) private {
-        require(_amount <= _position.stakedAmount, "Can't withdraw more than staked amount");
+    function _withdraw(uint256 _poolId, Position storage _position, uint256 _amount) private {
+        if (_amount > _position.stakedAmount) revert ExceededStakedAmount();
 
         Pool storage pool = pools[_poolId];
 
         _position.stakedAmount -= _amount;
-        pool.stakedAmount -= _amount;
+        pool.stakedAmount -= _amount.toUint96();
         _position.rewardsDebt -= (_amount * pool.accumulatedRewardsPerShare).toInt256();
-
-        apeCoin.safeTransfer(_recipient, _amount);
     }
 
     function _withdrawNft(uint256 _poolId, SingleNft[] calldata _nfts, address _recipient) private {
         updatePool(_poolId);
-        for(uint256 i; i < _nfts.length; ++i) {
-            uint256 tokenId = _nfts[i].tokenId;
-            uint256 amount = _nfts[i].amount;
-            require(nftContracts[_poolId].ownerOf(tokenId) == msg.sender, "Token not owned by caller");
+        uint256 tokenId;
+        uint256 amount;
+        uint256 length = _nfts.length;
+        uint256 totalWithdraw;
+        Position storage position;
+        for(uint256 i; i < length;) {
+            tokenId = _nfts[i].tokenId;
+            if (nftContracts[_poolId].ownerOf(tokenId) != msg.sender) revert CallerNotOwner();
 
-            Position storage position = nftPosition[_poolId][tokenId];
+            amount = _nfts[i].amount;
+            position = nftPosition[_poolId][tokenId];
             if (amount == position.stakedAmount) {
                 uint256 rewardsToBeClaimed = _claim(_poolId, position, _recipient);
                 emit ClaimRewardsNft(msg.sender, _poolId, rewardsToBeClaimed, tokenId);
             }
-            _withdraw(_poolId, position, amount, _recipient);
+            _withdraw(_poolId, position, amount);
+            totalWithdraw += amount;
             emit WithdrawNft(msg.sender, _poolId, amount, _recipient, tokenId);
+            unchecked {
+                ++i;
+            }
         }
+        if (totalWithdraw > 0) apeCoin.transfer(_recipient, totalWithdraw);
     }
 
-    function _withdrawPairNft(uint256 mainTypePoolId, PairNftWithAmount[] calldata _nfts) private {
-        for(uint256 i; i < _nfts.length; ++i) {
-            uint256 mainTokenId = _nfts[i].mainTokenId;
-            uint256 bakcTokenId = _nfts[i].bakcTokenId;
-            uint256 amount = _nfts[i].amount;
-            address mainTokenOwner = nftContracts[mainTypePoolId].ownerOf(mainTokenId);
-            address bakcOwner = nftContracts[BAKC_POOL_ID].ownerOf(bakcTokenId);
-            PairingStatus memory mainToSecond = mainToBakc[mainTypePoolId][mainTokenId];
-            PairingStatus memory secondToMain = bakcToMain[bakcTokenId][mainTypePoolId];
+    function _withdrawPairNft(uint256 mainTypePoolId, PairNftWithdrawWithAmount[] calldata _nfts) private {
+        address mainTokenOwner;
+        address bakcOwner;
+        PairNftWithdrawWithAmount memory pair;
+        PairingStatus storage mainToSecond;
+        PairingStatus storage secondToMain;
+        Position storage position;
+        uint256 length = _nfts.length;
+        for(uint256 i; i < length;) {
+            pair = _nfts[i];
+            mainTokenOwner = nftContracts[mainTypePoolId].ownerOf(pair.mainTokenId);
+            bakcOwner = nftContracts[BAKC_POOL_ID].ownerOf(pair.bakcTokenId);
 
-            require(mainTokenOwner == msg.sender || bakcOwner == msg.sender, "At least one token in pair must be owned by caller");
-            require(mainToSecond.tokenId == bakcTokenId && mainToSecond.isPaired
-                && secondToMain.tokenId == mainTokenId && secondToMain.isPaired, "The provided Token IDs are not paired");
-
-            Position storage position = nftPosition[BAKC_POOL_ID][bakcTokenId];
-            require(mainTokenOwner == bakcOwner || amount == position.stakedAmount, "Split pair can't partially withdraw");
-
-            if (amount == position.stakedAmount) {
-                uint256 rewardsToBeClaimed = _claim(BAKC_POOL_ID, position, bakcOwner);
-                mainToBakc[mainTypePoolId][mainTokenId] = PairingStatus(0, false);
-                bakcToMain[bakcTokenId][mainTypePoolId] = PairingStatus(0, false);
-                emit ClaimRewardsPairNft(msg.sender, rewardsToBeClaimed, mainTypePoolId, mainTokenId, bakcTokenId);
+            if (mainTokenOwner != msg.sender) {
+                if (bakcOwner != msg.sender) revert NeitherTokenInPairOwnedByCaller();
             }
-            _withdraw(BAKC_POOL_ID, position, amount, mainTokenOwner);
-            emit WithdrawPairNft(msg.sender, amount, mainTypePoolId, mainTokenId, bakcTokenId);
+
+            mainToSecond = mainToBakc[mainTypePoolId][pair.mainTokenId];
+            secondToMain = bakcToMain[pair.bakcTokenId][mainTypePoolId];
+
+            if (mainToSecond.tokenId != pair.bakcTokenId || !mainToSecond.isPaired
+            || secondToMain.tokenId != pair.mainTokenId || !secondToMain.isPaired) revert ProvidedTokensNotPaired();
+
+            position = nftPosition[BAKC_POOL_ID][pair.bakcTokenId];
+            if(!pair.isUncommit) {
+                if(pair.amount == position.stakedAmount) revert UncommitWrongParameters();
+            }
+            if (mainTokenOwner != bakcOwner) {
+                if (!pair.isUncommit) revert SplitPairCantPartiallyWithdraw();
+            }
+
+            if (pair.isUncommit) {
+                uint256 rewardsToBeClaimed = _claim(BAKC_POOL_ID, position, bakcOwner);
+                mainToBakc[mainTypePoolId][pair.mainTokenId] = PairingStatus(0, false);
+                bakcToMain[pair.bakcTokenId][mainTypePoolId] = PairingStatus(0, false);
+                emit ClaimRewardsPairNft(msg.sender, rewardsToBeClaimed, mainTypePoolId, pair.mainTokenId, pair.bakcTokenId);
+            }
+            uint256 finalAmountToWithdraw = pair.isUncommit ? position.stakedAmount: pair.amount;
+            _withdraw(BAKC_POOL_ID, position, finalAmountToWithdraw);
+            apeCoin.transfer(mainTokenOwner, finalAmountToWithdraw);
+            emit WithdrawPairNft(msg.sender, finalAmountToWithdraw, mainTypePoolId, pair.mainTokenId, pair.bakcTokenId);
+            unchecked {
+                ++i;
+            }
         }
     }
 

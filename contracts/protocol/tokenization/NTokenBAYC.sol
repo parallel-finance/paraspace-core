@@ -63,13 +63,13 @@ contract NTokenBAYC is NTokenApeStaking {
      * Each BAKC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the Pair pool cap amount.\
      * Example: BAYC + BAKC + 1 ApeCoin:  [[0, 0, "1000000000000000000"]]\
      */
-    function depositBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
-        external
-        onlyPool
-        nonReentrant
-    {
-        ApeCoinStaking.PairNftWithAmount[]
-            memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
+    function depositBAKC(
+        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
+    ) external onlyPool nonReentrant {
+        ApeCoinStaking.PairNftDepositWithAmount[]
+            memory _otherPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
+                0
+            );
 
         _apeCoinStaking.depositBAKC(_nftPairs, _otherPairs);
     }
@@ -95,7 +95,7 @@ contract NTokenBAYC is NTokenApeStaking {
      * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
      */
     function withdrawBAKC(
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
+        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs,
         address _apeRecipient
     ) external onlyPool nonReentrant {
         ApeStakingLogic.withdrawBAKC(

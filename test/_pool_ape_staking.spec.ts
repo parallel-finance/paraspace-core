@@ -401,7 +401,7 @@ describe("APE Coin Staking Test", () => {
       pool
         .connect(user1.signer)
         .withdrawBAKC(mayc.address, [
-          {mainTokenId: 0, bakcTokenId: 0, amount: amount2},
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
         ])
     ).to.be.revertedWith(
       ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
@@ -453,18 +453,24 @@ describe("APE Coin Staking Test", () => {
 
     const withdrawAmount = await convertToCurrencyDecimals(ape.address, "4000");
     expect(
-      await pool
-        .connect(user1.signer)
-        .withdrawBAKC(mayc.address, [
-          {mainTokenId: 0, bakcTokenId: 0, amount: withdrawAmount},
-        ])
+      await pool.connect(user1.signer).withdrawBAKC(mayc.address, [
+        {
+          mainTokenId: 0,
+          bakcTokenId: 0,
+          amount: withdrawAmount,
+          isUncommit: false,
+        },
+      ])
     );
     expect(
-      await pool
-        .connect(user1.signer)
-        .withdrawBAKC(mayc.address, [
-          {mainTokenId: 0, bakcTokenId: 0, amount: withdrawAmount},
-        ])
+      await pool.connect(user1.signer).withdrawBAKC(mayc.address, [
+        {
+          mainTokenId: 0,
+          bakcTokenId: 0,
+          amount: withdrawAmount,
+          isUncommit: true,
+        },
+      ])
     );
 
     const bakcBalance = await bakc.balanceOf(user1.address);
