@@ -12,6 +12,7 @@ import {getDb, DRE} from "../../../deploy/helpers/misc-utils";
 import {ProtocolDataProvider} from "../../../types";
 import {BigNumber, ethers} from "ethers";
 import {PToken} from "../../../types";
+import {ONE_ADDRESS} from "../../../deploy/helpers/constants";
 
 export const getReserveData = async (
   helper: ProtocolDataProvider,
@@ -145,8 +146,11 @@ export const convertFromCurrencyDecimals = async (
   tokenAddress: tEthereumAddress,
   amount: string
 ) => {
-  const token = await getIErc20Detailed(tokenAddress);
-  const decimals = (await token.decimals()).toString();
+  let decimals = "18";
+  if (tokenAddress !== ONE_ADDRESS) {
+    const token = await getIErc20Detailed(tokenAddress);
+    decimals = (await token.decimals()).toString();
+  }
 
   return ethers.utils.formatUnits(amount, decimals);
 };
