@@ -19,6 +19,7 @@ import {UserConfiguration} from "../libraries/configuration/UserConfiguration.so
 import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
+import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -30,16 +31,12 @@ contract PoolApeStaking is
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using SafeERC20 for IERC20;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using SafeCast for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 1;
 
     event ReserveUsedAsCollateralEnabled(
-        address indexed reserve,
-        address indexed user
-    );
-
-    event ReserveUsedAsCollateralDisabled(
         address indexed reserve,
         address indexed user
     );
@@ -119,7 +116,7 @@ contract PoolApeStaking is
     /// @inheritdoc IPoolApeStaking
     function withdrawBAKC(
         address nftAsset,
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs
+        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
@@ -132,7 +129,6 @@ contract PoolApeStaking is
 
         INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
         IERC721 bakcContract = nTokenApeStaking.getBAKC();
-        uint256 amountToWithdraw = 0;
         uint256[] memory transferredTokenIds = new uint256[](_nftPairs.length);
         uint256 actualTransferAmount = 0;
         for (uint256 index = 0; index < _nftPairs.length; index++) {
@@ -149,9 +145,6 @@ contract PoolApeStaking is
                     _nftPairs[index].bakcTokenId
                 );
 
-            if (_nftPairs[index].amount == 0) {
-                _nftPairs[index].amount = stakedAmount;
-            }
             //only partially withdraw need user's BAKC
             if (_nftPairs[index].amount != stakedAmount) {
                 bakcContract.safeTransferFrom(
@@ -163,7 +156,6 @@ contract PoolApeStaking is
                     .bakcTokenId;
                 actualTransferAmount++;
             }
-            amountToWithdraw += _nftPairs[index].amount;
         }
 
         nTokenApeStaking.withdrawBAKC(_nftPairs, msg.sender);
@@ -233,7 +225,7 @@ contract PoolApeStaking is
     function borrowApeAndStake(
         StakingInfo calldata stakingInfo,
         ApeCoinStaking.SingleNft[] calldata _nfts,
-        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
+        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);

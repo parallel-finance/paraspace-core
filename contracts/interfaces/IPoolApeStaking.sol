@@ -28,7 +28,7 @@ interface IPoolApeStaking {
     function borrowApeAndStake(
         StakingInfo calldata stakingInfo,
         ApeCoinStaking.SingleNft[] calldata _nfts,
-        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
+        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
     ) external;
 
     /**
@@ -58,7 +58,7 @@ interface IPoolApeStaking {
      */
     function withdrawBAKC(
         address nftAsset,
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs
+        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs
     ) external;
 
     /**
