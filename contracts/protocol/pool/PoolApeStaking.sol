@@ -58,7 +58,7 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function supplyApeCoin(
+    function supplyAPE(
         address asset,
         uint256 amount,
         address onBehalfOf,
@@ -85,6 +85,118 @@ contract PoolApeStaking is
             })
         );
 
+        IPTokenAPE(xTokenAddress).getApeStaking().depositApeCoin(
+            amount,
+            address(this)
+        );
+    }
+
+    /// @inheritdoc IPoolApeStaking
+    function borrowAPE(
+        address asset,
+        uint256 amount,
+        uint16 referralCode,
+        address onBehalfOf
+    ) external nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        DataTypes.ReserveData storage reserve = ps._reserves[asset];
+        address xTokenAddress = reserve.xTokenAddress;
+
+        require(
+            IPToken(xTokenAddress).getXTokenType() == XTokenType.PTokenApe,
+            Errors.INVALID_ASSET_TYPE
+        );
+
+        if (IERC20(IPToken(xTokenAddress).UNDERLYING_ASSET_ADDRESS()).balanceOf(xTokenAddress) < amount) {
+            IPTokenAPE(xTokenAddress).getApeStaking().withdrawApeCoin(
+                amount,
+                xTokenAddress
+            );
+        }
+
+        BorrowLogic.executeBorrow(
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteBorrowParams({
+                asset: asset,
+                user: msg.sender,
+                onBehalfOf: onBehalfOf,
+                amount: amount,
+                referralCode: referralCode,
+                releaseUnderlying: true,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolApeStaking
+    function withdrawAPE(
+        address asset,
+        uint256 amount,
+        address to
+    ) external virtual override nonReentrant returns (uint256) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage reserve = ps._reserves[asset];
+        address xTokenAddress = reserve.xTokenAddress;
+
+        require(
+            IPToken(xTokenAddress).getXTokenType() == XTokenType.PTokenApe,
+            Errors.INVALID_ASSET_TYPE
+        );
+
+        if (IERC20(IPToken(xTokenAddress).UNDERLYING_ASSET_ADDRESS()).balanceOf(xTokenAddress) < amount) {
+            IPTokenAPE(xTokenAddress).getApeStaking().withdrawApeCoin(
+                amount,
+                xTokenAddress
+            );
+        }
+
+        return
+            SupplyLogic.executeWithdraw(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
+                DataTypes.ExecuteWithdrawParams({
+                    asset: asset,
+                    amount: amount,
+                    to: to,
+                    reservesCount: ps._reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                })
+            );
+    }
+
+    /// @inheritdoc IPoolApeStaking
+    function repayAPE(
+        address asset,
+        uint256 amount,
+        address onBehalfOf
+    ) external virtual override nonReentrant returns (uint256) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage reserve = ps._reserves[asset];
+        address xTokenAddress = reserve.xTokenAddress;
+
+        require(
+            IPToken(xTokenAddress).getXTokenType() == XTokenType.PTokenApe,
+            Errors.INVALID_ASSET_TYPE
+        );
+
+        return
+            BorrowLogic.executeRepay(
+                ps._reserves,
+                ps._usersConfig[onBehalfOf],
+                DataTypes.ExecuteRepayParams({
+                    asset: asset,
+                    amount: amount,
+                    onBehalfOf: onBehalfOf,
+                    usePTokens: false
+                })
+            );
+    
         IPTokenAPE(xTokenAddress).getApeStaking().depositApeCoin(
             amount,
             address(this)
