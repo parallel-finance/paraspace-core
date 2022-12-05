@@ -21,14 +21,15 @@ import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 contract PTokenSApe is PToken {
     using WadRayMath for uint256;
 
-    INTokenApeStaking public nBAYC;
-    INTokenApeStaking public nMAYC;
+    INTokenApeStaking immutable nBAYC;
+    INTokenApeStaking immutable nMAYC;
 
-    constructor(IPool pool) PToken(pool) {
-        //intentionally empty
-    }
-
-    function setNToken(address _nBAYC, address _nMAYC) external onlyPoolAdmin {
+    constructor(
+        IPool pool,
+        address _nBAYC,
+        address _nMAYC
+    ) PToken(pool) {
+        require(_nBAYC != address(0) && _nMAYC != address(0));
         nBAYC = INTokenApeStaking(_nBAYC);
         nMAYC = INTokenApeStaking(_nMAYC);
     }
@@ -52,7 +53,6 @@ contract PTokenSApe is PToken {
     }
 
     function balanceOf(address user) public view override returns (uint256) {
-        require(address(nBAYC) != address(0) && address(nMAYC) != address(0));
         uint256 totalStakedAPE = nBAYC.getUserApeStakingAmount(user) +
             nMAYC.getUserApeStakingAmount(user);
         return totalStakedAPE;
