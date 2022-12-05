@@ -11,7 +11,6 @@ import {
 } from "../deploy/helpers/contracts-deployments";
 import {loadFixture, mine} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {ProtocolErrors} from "../deploy/helpers/types";
 import {MintableERC721} from "../types";
 
 describe("NFT Oracle Tests", () => {
@@ -154,13 +153,15 @@ describe("NFT Oracle Tests", () => {
     // remove nft from assets
     await nftFloorOracle.removeAsset(mockToken.address);
 
-    // get price for an unknown asset from nftOracle will return 0
-    expect(await nftFloorOracle.getPrice(mockToken.address)).to.equal(0);
+    // get price for an unknown asset from nftOracle will revert
+    await expect(nftFloorOracle.getPrice(mockToken.address)).to.be.revertedWith(
+      "NFTOracle: invalid zero asset price"
+    );
 
     // get price for an unknown asset from paraspaceOracle should be reverted
     await expect(
       paraspaceOracle.getAssetPrice(mockToken.address)
-    ).to.be.revertedWith(ProtocolErrors.ORACLE_PRICE_NOT_READY);
+    ).to.be.revertedWith("NFTOracle: invalid zero asset price");
   });
 
   it("TC-oracle-nft-floor-price-09:Oracle feeders list can be updated from owner and rejected from other", async () => {
@@ -190,29 +191,82 @@ describe("NFT Oracle Tests", () => {
   });
 
   it("TC-oracle-nft-floor-price-09.1:Feeder can be removed by admin and remove feeder not exist will be reverted", async () => {
-    const {nftFloorOracle, users} = testEnv;
-    const feederSizeBefore = await nftFloorOracle.getFeederSize();
-    const feeder1 = await nftFloorOracle.feeders(1);
-    expect(feeder1).to.equal(users[1].address);
+    const {nftFloorOracle} = testEnv;
+    const feeders: string[] = [];
+
+    for (
+      let i = 0;
+      i < (await nftFloorOracle.getFeederSize()).toNumber();
+      i++
+    ) {
+      feeders.push(await nftFloorOracle.feeders(i));
+    }
+
+    for (let i = 0; i < feeders.length; i += 1) {
+      const feederSizeBefore = await nftFloorOracle.getFeederSize();
+      // admin can remove exist feeder
+      const feeder = feeders[i];
+      await nftFloorOracle.removeFeeder(feeder, {
+        gasLimit: 12_450_000,
+      });
+      // but can not remove not exist one
+      await expect(nftFloorOracle.removeFeeder(feeder)).to.be.revertedWith(
+        "NFTOracle: feeder not existed"
+      );
+      const feederSizeAfter = await nftFloorOracle.getFeederSize();
+      expect(feederSizeAfter.toNumber()).to.equal(
+        feederSizeBefore.toNumber() - 1
+      );
+    }
+
+    for (let i = 0; i < feeders.length; i++) {
+      expect(
+        await nftFloorOracle.hasRole(
+          await nftFloorOracle.UPDATER_ROLE(),
+          feeders[i]
+        )
+      ).to.be.false;
+      expect((await nftFloorOracle.feederPositionMap(feeders[i])).registered).to
+        .be.false;
+    }
+    expect(await nftFloorOracle.getFeederSize()).to.be.eq(0);
+  });
+
+  it("TC-oracle-nft-floor-price-09.2:All feeders can be removed by admin in one tx", async () => {
+    const {nftFloorOracle} = testEnv;
+    const feeders: string[] = [];
+
+    for (
+      let i = 0;
+      i < (await nftFloorOracle.getFeederSize()).toNumber();
+      i++
+    ) {
+      feeders.push(await nftFloorOracle.feeders(i));
+    }
+
+    expect(await nftFloorOracle.getFeederSize()).to.be.gt(0);
+
     // admin can remove exist feeder
-    await nftFloorOracle.removeFeeder(users[1].address);
+    await nftFloorOracle.removeFeeders(feeders, {
+      gasLimit: 12_450_000,
+    });
     // but can not remove not exist one
-    await expect(
-      nftFloorOracle.removeFeeder(users[1].address)
-    ).to.be.revertedWith("NFTOracle: feeder not existed");
-    const feederSizeAfter = await nftFloorOracle.getFeederSize();
-    expect(feederSizeAfter.toNumber()).to.equal(
-      feederSizeBefore.toNumber() - 1
+    await expect(nftFloorOracle.removeFeeders(feeders)).to.be.revertedWith(
+      "NFTOracle: feeder not existed"
     );
-    //assert the previous last feeder is swapped into
-    const feeder6 = await nftFloorOracle.feeders(1);
-    expect(feeder6).to.equal(users[6].address);
-    //now remove from 0 position should still be fine
-    const feeder0 = await nftFloorOracle.feeders(0);
-    expect(feeder0).to.equal(users[0].address);
-    await nftFloorOracle.removeFeeder(feeder0);
-    const feederSizeAgain = await nftFloorOracle.getFeederSize();
-    expect(feederSizeAgain.toNumber()).to.equal(feederSizeAfter.toNumber() - 1);
+
+    for (let i = 0; i < feeders.length; i++) {
+      expect(
+        await nftFloorOracle.hasRole(
+          await nftFloorOracle.UPDATER_ROLE(),
+          feeders[i]
+        )
+      ).to.be.false;
+      expect((await nftFloorOracle.feederPositionMap(feeders[i])).registered).to
+        .be.false;
+    }
+
+    expect(await nftFloorOracle.getFeederSize()).to.be.eq(0);
   });
 
   it("TC-oracle-nft-floor-price-10:Feeders, updater and admin can feed a price", async () => {
