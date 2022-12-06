@@ -1337,7 +1337,7 @@ __metadata:
     hardhat: ^2.12.0
     hardhat-contract-sizer: ^2.0.3
     hardhat-deploy: ^0.11.4
-    hardhat-gas-reporter: ^1.0.0
+    hardhat-gas-reporter: ^1.0.9
     hardhat-typechain: ^0.3.3
     husky: ^8.0.1
     lodash: ^4.17.21
@@ -7871,7 +7871,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat-gas-reporter@npm:^1.0.0":
+"hardhat-gas-reporter@npm:^1.0.9":
   version: 1.0.9
   resolution: "hardhat-gas-reporter@npm:1.0.9"
   dependencies:
