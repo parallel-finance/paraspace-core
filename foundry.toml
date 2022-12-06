@@ -7,6 +7,3 @@ out                 = 'out'
 remappings          = ["contracts/=contracts/"]
 src                 = 'contracts/'
 test                = 'test'
-# solc
-optimizer = true
-optimizer_runs = 8000
