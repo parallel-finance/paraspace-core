@@ -1,2 +1,4 @@
 @pwnednomore/contracts/=lib/pnm-contracts/
+forge-std=lib/pnm-contracts/forge-std
+ds-test=lib/pnm-contracts/forge-std/lib/ds-test
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
