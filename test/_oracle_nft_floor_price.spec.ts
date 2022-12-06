@@ -12,6 +12,7 @@ import {
 import {loadFixture, mine} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {MintableERC721} from "../types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
@@ -154,14 +155,12 @@ describe("NFT Oracle Tests", () => {
     await nftFloorOracle.removeAsset(mockToken.address);
 
     // get price for an unknown asset from nftOracle will revert
-    await expect(nftFloorOracle.getPrice(mockToken.address)).to.be.revertedWith(
-      "NFTOracle: invalid zero asset price"
-    );
+    expect(await nftFloorOracle.getPrice(mockToken.address)).to.be.eq(0);
 
     // get price for an unknown asset from paraspaceOracle should be reverted
     await expect(
       paraspaceOracle.getAssetPrice(mockToken.address)
-    ).to.be.revertedWith("NFTOracle: invalid zero asset price");
+    ).to.be.revertedWith(ProtocolErrors.ORACLE_PRICE_NOT_READY);
   });
 
   it("TC-oracle-nft-floor-price-09:Oracle feeders list can be updated from owner and rejected from other", async () => {

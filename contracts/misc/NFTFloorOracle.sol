@@ -10,8 +10,8 @@ uint8 constant MIN_ORACLES_NUM = 3;
 //expirationPeriod at least the interval of client to feed data(currently 6h=21600s/12=1800 in mainnet)
 //we do not accept price lags behind to much
 uint128 constant EXPIRATION_PERIOD = 1800;
-//reject when price increase/decrease 1.5 times more than original value
-uint128 constant MAX_DEVIATION_RATE = 150;
+//reject when price increase/decrease 3 times more than original value
+uint128 constant MAX_DEVIATION_RATE = 300;
 
 struct OracleConfig {
     // Expiration Period for each feed price
