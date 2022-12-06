@@ -85,10 +85,7 @@ contract PoolApeStaking is
             })
         );
 
-        IPTokenAPE(xTokenAddress).getApeStaking().depositApeCoin(
-            amount,
-            address(this)
-        );
+        IPTokenAPE(xTokenAddress).depositApeCoin(amount);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -109,9 +106,8 @@ contract PoolApeStaking is
         );
 
         if (IERC20(IPToken(xTokenAddress).UNDERLYING_ASSET_ADDRESS()).balanceOf(xTokenAddress) < amount) {
-            IPTokenAPE(xTokenAddress).getApeStaking().withdrawApeCoin(
-                amount,
-                xTokenAddress
+            IPTokenAPE(xTokenAddress).withdrawApeCoin(
+                amount
             );
         }
 
@@ -149,9 +145,8 @@ contract PoolApeStaking is
         );
 
         if (IERC20(IPToken(xTokenAddress).UNDERLYING_ASSET_ADDRESS()).balanceOf(xTokenAddress) < amount) {
-            IPTokenAPE(xTokenAddress).getApeStaking().withdrawApeCoin(
-                amount,
-                xTokenAddress
+            IPTokenAPE(xTokenAddress).withdrawApeCoin(
+                amount
             );
         }
 
@@ -197,9 +192,8 @@ contract PoolApeStaking is
                 })
             );
     
-        IPTokenAPE(xTokenAddress).getApeStaking().depositApeCoin(
-            amount,
-            address(this)
+        IPTokenAPE(xTokenAddress).depositApeCoin(
+            amount
         );
     }
 

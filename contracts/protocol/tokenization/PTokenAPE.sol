@@ -8,13 +8,14 @@ import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IPToken} from "../../interfaces/IPToken.sol";
 import {IPTokenAPE} from "../../interfaces/IPTokenAPE.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 
 /**
  * @title sApe PToken
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract PTokenSApe is PToken, IPTokenAPE {
+contract PTokenSApe is PToken, ReentrancyGuard, IPTokenAPE {
     ApeCoinStaking immutable _apeCoinStaking;
 
     /**
@@ -30,6 +31,28 @@ contract PTokenSApe is PToken, IPTokenAPE {
      **/
     function getApeStaking() external view returns (ApeCoinStaking) {
         return _apeCoinStaking;
+    }
+
+    function depositApeCoin(uint256 amount)
+        external
+        onlyPool
+        nonReentrant
+    {
+        _apeCoinStaking.depositApeCoin(amount, address(this));
+    }
+
+    function claimApeCoin(address _treasury)
+        external
+        onlyPool
+        nonReentrant
+    {
+        _apeCoinStaking.claimApeCoin(_treasury);
+    }
+
+    function withdrawApeCoin(
+        uint256 amount
+    ) external onlyPool nonReentrant {
+        _apeCoinStaking.withdrawApeCoin(amount, address(this));
     }
 
     function getXTokenType()
