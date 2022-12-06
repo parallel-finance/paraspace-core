@@ -251,14 +251,11 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         returns (uint256 price)
     {
         PriceInformation storage priceInfo = assetPriceMap[_asset];
-        uint256 twap = priceInfo.twap;
         require(
             (block.number - priceInfo.updatedAt) <= config.expirationPeriod,
             "NFTOracle: asset price expired"
         );
-        require(twap > 0, "NFTOracle: invalid zero asset price");
-
-        return twap;
+        return priceInfo.twap;
     }
 
     /// @param _asset The nft contract
