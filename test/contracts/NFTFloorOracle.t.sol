@@ -188,7 +188,7 @@ contract NFTFloorOracleTest is DSTest {
         //while admin still can feed the deviated price 60
         cheats.warp(12_000);
         cheats.prank(admin);
-        _contract.setMultiplePrices(_tokens, twaps);
+        _contract.setEmergencyPrice(_tokens[0], twaps[0]);
         assertEq(_contract.getPrice(tokens[0]), 60);
         //decrease by 12 times cause derivation check failed,60/12=5
         twaps[0] = 5;
@@ -271,7 +271,7 @@ contract NFTFloorOracleTest is DSTest {
         assertEq(_contract.assets(2), unknown);
         //admin remove asset
         cheats.prank(admin);
-        _contract.removeAsset(unknown);
+        _contract.removeAssets(_tokens);
         assertEq(
             _contract.assets(2),
             0x0000000000000000000000000000000000000000
