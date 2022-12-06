@@ -578,7 +578,8 @@ abstract contract MintableIncentivizedERC721 is
     {
         return
             interfaceId == type(IERC721Enumerable).interfaceId ||
-            interfaceId == type(IERC721Metadata).interfaceId;
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     /**
