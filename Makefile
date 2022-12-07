@@ -409,7 +409,7 @@ node:
 .PHONY: anvil
 anvil:
 	sudo pkill anvil || true
-	anvil &
+	anvil --code-size-limit 350000 --gas-limit 30000000 &
 	sleep 30
 
 .PHONY: image
