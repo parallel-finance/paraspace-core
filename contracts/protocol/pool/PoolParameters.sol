@@ -279,7 +279,7 @@ contract PoolParameters is
                 ADDRESSES_PROVIDER.getPriceOracle()
             );
         require(
-            erc721HealthFactor > ps._auctionRecoveryHealthFactor,
+            erc721HealthFactor >= ps._auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
         userConfig.auctionValidityTime = block.timestamp;
