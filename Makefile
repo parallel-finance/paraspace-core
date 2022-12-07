@@ -379,10 +379,6 @@ wallet:
 release-v1.2:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/5.release-v1.2.ts run
 
-.PHONY: deploy-apestaking
-deploy-apestaking:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/6.deploy-ape-staking.ts run
-
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
