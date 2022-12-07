@@ -12,6 +12,7 @@ import {
 import {loadFixture, mine} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {MintableERC721} from "../types";
+import {ProtocolErrors} from "../deploy/helpers/types";
 
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
@@ -79,7 +80,7 @@ describe("NFT Oracle Tests", () => {
   it("TC-oracle-nft-floor-price-03:Update NFT price in NFTOracle then can get the new price from ParaSpaceOracle", async () => {
     const {paraspaceOracle, nftFloorOracle} = testEnv;
 
-    await nftFloorOracle.setPrice(mockToken.address, "5");
+    await nftFloorOracle.setMultiplePrices([mockToken.address], ["5"]);
 
     const twapFromNftOracle = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapFromNftOracle).to.equal("5");
@@ -102,7 +103,7 @@ describe("NFT Oracle Tests", () => {
     await expect(
       nftFloorOracle
         .connect(updater.signer)
-        .setPrice(mockToken.address, parseEther("8").toString())
+        .setMultiplePrices([mockToken.address], [parseEther("8").toString()])
     ).to.be.revertedWith("NFTOracle: nft price feed paused");
 
     // unpause the oracle
@@ -110,12 +111,15 @@ describe("NFT Oracle Tests", () => {
 
     // admin can feed a new price
     const newPrice = parseEther("8");
-    await nftFloorOracle.setPrice(mockToken.address, newPrice.toString());
+    await nftFloorOracle.setMultiplePrices(
+      [mockToken.address],
+      [newPrice.toString()]
+    );
 
     // updater also can feed price
     await nftFloorOracle
       .connect(updater.signer)
-      .setPrice(mockToken.address, newPrice.toString());
+      .setMultiplePrices([mockToken.address], [newPrice.toString()]);
 
     // price should've been updated
     const postPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -141,7 +145,7 @@ describe("NFT Oracle Tests", () => {
     const price = parseEther("5");
     await nftFloorOracle
       .connect(updater.signer)
-      .setPrice(dai.address, price.toString());
+      .setMultiplePrices([dai.address], [price.toString()]);
 
     // price set should be fetch successfully
     expect(await nftFloorOracle.getPrice(dai.address)).to.equal(price);
@@ -151,17 +155,15 @@ describe("NFT Oracle Tests", () => {
     const {paraspaceOracle, nftFloorOracle} = testEnv;
 
     // remove nft from assets
-    await nftFloorOracle.removeAsset(mockToken.address);
+    await nftFloorOracle.removeAssets([mockToken.address]);
 
     // get price for an unknown asset from nftOracle will revert
-    await expect(nftFloorOracle.getPrice(mockToken.address)).to.be.revertedWith(
-      "NFTOracle: invalid zero asset price"
-    );
+    expect(await nftFloorOracle.getPrice(mockToken.address)).to.be.eq(0);
 
     // get price for an unknown asset from paraspaceOracle should be reverted
     await expect(
       paraspaceOracle.getAssetPrice(mockToken.address)
-    ).to.be.revertedWith("NFTOracle: invalid zero asset price");
+    ).to.be.revertedWith(ProtocolErrors.ORACLE_PRICE_NOT_READY);
   });
 
   it("TC-oracle-nft-floor-price-09:Oracle feeders list can be updated from owner and rejected from other", async () => {
@@ -174,7 +176,7 @@ describe("NFT Oracle Tests", () => {
     const price = parseEther("2");
     await nftFloorOracle
       .connect(user7.signer)
-      .setPrice(mockToken.address, price.toString());
+      .setMultiplePrices([mockToken.address], [price.toString()]);
 
     // verify new price was successfully set
     expect(await nftFloorOracle.getPrice(mockToken.address)).to.equal(price);
@@ -206,11 +208,11 @@ describe("NFT Oracle Tests", () => {
       const feederSizeBefore = await nftFloorOracle.getFeederSize();
       // admin can remove exist feeder
       const feeder = feeders[i];
-      await nftFloorOracle.removeFeeder(feeder, {
+      await nftFloorOracle.removeFeeders([feeder], {
         gasLimit: 12_450_000,
       });
       // but can not remove not exist one
-      await expect(nftFloorOracle.removeFeeder(feeder)).to.be.revertedWith(
+      await expect(nftFloorOracle.removeFeeders([feeder])).to.be.revertedWith(
         "NFTOracle: feeder not existed"
       );
       const feederSizeAfter = await nftFloorOracle.getFeederSize();
@@ -277,14 +279,19 @@ describe("NFT Oracle Tests", () => {
 
     // feed with admin
     const price = parseEther("1");
-    expect(await nftFloorOracle.setPrice(mockToken.address, price.toString()));
+    expect(
+      await nftFloorOracle.setMultiplePrices(
+        [mockToken.address],
+        [price.toString()]
+      )
+    );
 
     // feed with updater
     const price2 = parseEther("1.2");
     expect(
       await nftFloorOracle
         .connect(updater.signer)
-        .setPrice(mockToken.address, price2.toString())
+        .setMultiplePrices([mockToken.address], [price2.toString()])
     );
   });
 
@@ -342,7 +349,7 @@ describe("NFT Oracle Tests", () => {
     await expect(
       nftFloorOracle
         .connect(user3.signer)
-        .setPrice(mockToken.address, price.toString())
+        .setMultiplePrices([mockToken.address], [price.toString()])
     ).to.be.reverted;
   });
 
@@ -359,7 +366,7 @@ describe("NFT Oracle Tests", () => {
     // set initial price to 10 ETH
     const initialPrice = parseEther("10");
     await waitForTx(
-      await nftFloorOracle.setPrice(mockToken.address, initialPrice)
+      await nftFloorOracle.setEmergencyPrice(mockToken.address, initialPrice)
     );
 
     let twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -376,7 +383,7 @@ describe("NFT Oracle Tests", () => {
     await waitForTx(
       await nftFloorOracle
         .connect(user1.signer)
-        .setPrice(mockToken.address, price1.toString())
+        .setMultiplePrices([mockToken.address], [price1.toString()])
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -386,7 +393,7 @@ describe("NFT Oracle Tests", () => {
     await waitForTx(
       await nftFloorOracle
         .connect(user2.signer)
-        .setPrice(mockToken.address, price2.toString())
+        .setMultiplePrices([mockToken.address], [price2.toString()])
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -396,7 +403,7 @@ describe("NFT Oracle Tests", () => {
     await waitForTx(
       await nftFloorOracle
         .connect(user3.signer)
-        .setPrice(mockToken.address, price3.toString())
+        .setMultiplePrices([mockToken.address], [price3.toString()])
     );
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapPrice).to.equal(price2);
@@ -405,7 +412,7 @@ describe("NFT Oracle Tests", () => {
     await waitForTx(
       await nftFloorOracle
         .connect(user4.signer)
-        .setPrice(mockToken.address, price4.toString())
+        .setMultiplePrices([mockToken.address], [price4.toString()])
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -415,7 +422,7 @@ describe("NFT Oracle Tests", () => {
     await waitForTx(
       await nftFloorOracle
         .connect(user5.signer)
-        .setPrice(mockToken.address, price5.toString())
+        .setMultiplePrices([mockToken.address], [price5.toString()])
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -434,7 +441,7 @@ describe("NFT Oracle Tests", () => {
     expect(
       await nftFloorOracle
         .connect(user1.signer)
-        .setPrice(mockToken.address, parseEther("1").toString())
+        .setMultiplePrices([mockToken.address], [parseEther("1").toString()])
     );
 
     const twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -444,7 +451,7 @@ describe("NFT Oracle Tests", () => {
     expect(
       await nftFloorOracle
         .connect(user2.signer)
-        .setPrice(mockToken.address, parseEther("2").toString())
+        .setMultiplePrices([mockToken.address], [parseEther("2").toString()])
     );
 
     // prices user1:1 and user2:2 not enough so still use previous
@@ -457,7 +464,7 @@ describe("NFT Oracle Tests", () => {
     expect(
       await nftFloorOracle
         .connect(user3.signer)
-        .setPrice(mockToken.address, parseEther("3").toString())
+        .setMultiplePrices([mockToken.address], [parseEther("3").toString()])
     );
     expect(await nftFloorOracle.getPrice(mockToken.address)).to.equal(
       parseEther("2")
@@ -468,7 +475,7 @@ describe("NFT Oracle Tests", () => {
     expect(
       await nftFloorOracle
         .connect(user4.signer)
-        .setPrice(mockToken.address, parseEther("4").toString())
+        .setMultiplePrices([mockToken.address], [parseEther("4").toString()])
     );
     expect(await nftFloorOracle.getPrice(mockToken.address)).to.equal(
       parseEther("3")
@@ -483,7 +490,7 @@ describe("NFT Oracle Tests", () => {
     expect(
       await nftFloorOracle
         .connect(user4.signer)
-        .setPrice(mockToken.address, parseEther("2").toString())
+        .setMultiplePrices([mockToken.address], [parseEther("2").toString()])
     );
     //so now price are: user2:2,user3:3,user4:2
     //which aggregated to [2,3,2] and 2 will be finalized
@@ -509,7 +516,10 @@ describe("NFT Oracle Tests", () => {
     await nftFloorOracle.setConfig(60, 200);
 
     // set initial price to 1 ETH
-    await nftFloorOracle.setPrice(mockToken.address, parseEther("1"));
+    await nftFloorOracle.setMultiplePrices(
+      [mockToken.address],
+      [parseEther("1")]
+    );
 
     const twapFromNftOracle = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapFromNftOracle).to.equal(parseEther("1"));
@@ -518,14 +528,14 @@ describe("NFT Oracle Tests", () => {
     await expect(
       nftFloorOracle
         .connect(user1.signer)
-        .setPrice(mockToken.address, parseEther("1").div(4))
+        .setMultiplePrices([mockToken.address], [parseEther("1").div(4)])
     ).to.be.revertedWith("NFTOracle: invalid price data");
 
     // try to set price to 3 ETH (should be reverted)
     await expect(
       nftFloorOracle
         .connect(user2.signer)
-        .setPrice(mockToken.address, parseEther("3"))
+        .setMultiplePrices([mockToken.address], [parseEther("3")])
     ).to.be.revertedWith("NFTOracle: invalid price data");
   });
 });
