@@ -9,6 +9,6 @@ contract MockPToken is PToken {
     constructor(IPool pool) PToken(pool) {}
 
     function getRevision() internal pure override returns (uint256) {
-        return 0x2;
+        return 999;
     }
 }
