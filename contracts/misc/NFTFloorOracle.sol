@@ -99,6 +99,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         address[] memory _feeders,
         address[] memory _assets
     ) public initializer {
+        require(_admin != address(0), "Address cannot be zero"); // Add this line
         _addAssets(_assets);
         _addFeeders(_feeders);
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);

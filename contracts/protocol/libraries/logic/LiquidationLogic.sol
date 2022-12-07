@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {IERC20} from "../../../dependencies/openzeppelin/contracts//IERC20.sol";
+import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
