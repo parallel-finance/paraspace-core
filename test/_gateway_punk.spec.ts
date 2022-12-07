@@ -524,10 +524,10 @@ describe("gateway Punk unit tests", () => {
       wPunkGateway
         .connect(user1.signer)
         .supplyPunk([{tokenId: 0, useAsCollateral: true}], user1.address, "0")
-    ).to.be.revertedWith("CryptoPunksMarket: punk not actually for sale");
+    ).to.be.revertedWith("WPunkGateway: Not owner of Punk");
   });
 
-  it("TC-punks-gateway-17 User tries to  Supply not minted token (should fail)", async () => {
+  it("TC-punks-gateway-17 User tries to Supply not minted token (should fail)", async () => {
     const {
       users: [user1],
       wPunkGateway,
@@ -537,7 +537,7 @@ describe("gateway Punk unit tests", () => {
       wPunkGateway
         .connect(user1.signer)
         .supplyPunk([{tokenId: 2, useAsCollateral: true}], user1.address, "0")
-    ).to.be.revertedWith("CryptoPunksMarket: punk not actually for sale");
+    ).to.be.revertedWith("WPunkGateway: Not owner of Punk");
   });
 
   it("TC-punks-gateway-18 User tries to punks repeat get Punk (should fail)", async () => {
@@ -578,7 +578,7 @@ describe("gateway Punk unit tests", () => {
 
     // User 2 deposit
     await wPunkGateway
-      .connect(user2.signer)
+      .connect(user1.signer)
       .supplyPunk([{tokenId: 0, useAsCollateral: true}], user2.address, "0");
 
     // User 1 tries to withdraw
