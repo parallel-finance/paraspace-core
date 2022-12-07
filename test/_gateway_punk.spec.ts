@@ -73,7 +73,7 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
       .totalCollateralBase;
     expect(totalCollateral).to.be.equal(0);
 
-    expect(await wPunkGateway
+    await expect(wPunkGateway
       .connect(user1.signer)
       .supplyPunk([{tokenId: 0, useAsCollateral: true}], user3.address, "0"))
       .to.be.revertedWith("WPunkGateway: Not owner of Punk");
