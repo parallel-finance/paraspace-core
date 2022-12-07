@@ -56,6 +56,28 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
 
     await waitForTx(await punks.connect(user3.signer).offerPunkForSale(1, 0));
   });
+  
+  it("TC-punks-gateway-02 User1 can't supply User3 WPUNK", async () => {
+    const {
+      wPunk,
+      nWPunk,
+      users: [user1, , user3],
+      pool,
+      wPunkGateway,
+    } = testEnv;
+
+    const availableToBorrow = (await pool.getUserAccountData(user3.address))
+      .availableBorrowsBase;
+    expect(availableToBorrow).to.be.equal(0);
+    const totalCollateral = (await pool.getUserAccountData(user3.address))
+      .totalCollateralBase;
+    expect(totalCollateral).to.be.equal(0);
+
+    expect(await wPunkGateway
+      .connect(user1.signer)
+      .supplyPunk([{tokenId: 0, useAsCollateral: true}], user3.address, "0"))
+      .to.be.revertedWith("WPunkGateway: Not owner of Punk");
+  });
 
   it("TC-punks-gateway-02 User can supply WPUNK", async () => {
     const {
