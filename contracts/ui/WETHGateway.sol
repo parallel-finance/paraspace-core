@@ -110,7 +110,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
             "msg.value is less than repayment amount"
         );
         WETH.deposit{value: paybackAmount}();
-        IPool(pool).repay(address(WETH), msg.value, onBehalfOf);
+        IPool(pool).repay(address(WETH), paybackAmount, onBehalfOf);
 
         // refund remaining dust eth
         if (msg.value > paybackAmount)
