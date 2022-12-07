@@ -269,7 +269,7 @@ run:
 
 .PHONY: run-task
 run-task:
-	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) --network $(NETWORK)
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARGS) --network $(NETWORK)
 
 .PHONY: print
 print:
