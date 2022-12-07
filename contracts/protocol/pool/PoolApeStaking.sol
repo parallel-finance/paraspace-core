@@ -385,9 +385,12 @@ contract PoolApeStaking is
         }
 
         if (supplyAmount > 0) {
+            DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+                onBehalfOf
+            ];
             SupplyLogic.executeSupply(
                 ps._reserves,
-                ps._usersConfig[onBehalfOf],
+                userConfig,
                 DataTypes.ExecuteSupplyParams({
                     asset: repayAsset,
                     amount: supplyAmount,
@@ -396,6 +399,16 @@ contract PoolApeStaking is
                     referralCode: 0
                 })
             );
+            DataTypes.ReserveData storage repayReserve = ps._reserves[
+                repayAsset
+            ];
+            bool currentStatus = userConfig.isUsingAsCollateral(
+                repayReserve.id
+            );
+            if (!currentStatus) {
+                userConfig.setUsingAsCollateral(repayReserve.id, true);
+                emit ReserveUsedAsCollateralEnabled(repayAsset, onBehalfOf);
+            }
         }
     }
 
