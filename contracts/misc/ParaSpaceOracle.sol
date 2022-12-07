@@ -128,7 +128,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             price = source.latestAnswer();
         }
         if (price <= 0 && address(_fallbackOracle) != address(0)) {
-            price = _fallbackOracle.getAssetPrice(asset);
+            price = int256(_fallbackOracle.getAssetPrice(asset));
         }
 
         require(price > 0, Errors.ORACLE_PRICE_NOT_READY);
