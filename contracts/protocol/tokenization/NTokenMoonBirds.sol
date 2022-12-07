@@ -72,7 +72,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
             return this.onERC721Received.selector;
         }
 
-        if(msg.sender == _underlyingAsset) {
+        if (msg.sender == _underlyingAsset) {
             // supply the received token to the pool and set it as collateral
             DataTypes.ERC721SupplyParams[]
                 memory tokenData = new DataTypes.ERC721SupplyParams[](1);
