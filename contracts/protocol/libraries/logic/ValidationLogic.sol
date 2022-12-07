@@ -831,7 +831,7 @@ library ValidationLogic {
         );
 
         require(
-            params.erc721HealthFactor > params.auctionRecoveryHealthFactor,
+            params.erc721HealthFactor >= params.auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
     }
