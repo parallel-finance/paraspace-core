@@ -526,13 +526,6 @@ library LiquidationLogic {
         ExecuteLiquidateLocalVars memory vars
     ) internal {
         _depositETH(params, vars);
-
-        // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
-        IERC20(params.liquidationAsset).safeTransferFrom(
-            vars.payer,
-            vars.liquidationAssetReserveCache.xTokenAddress,
-            vars.actualLiquidationAmount
-        );
         // Handle payment
         IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
             .handleRepayment(params.liquidator, vars.actualLiquidationAmount);
@@ -552,6 +545,12 @@ library LiquidationLogic {
             params.liquidationAsset,
             vars.actualLiquidationAmount,
             0
+        );
+        // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
+        IERC20(params.liquidationAsset).safeTransferFrom(
+            vars.payer,
+            vars.liquidationAssetReserveCache.xTokenAddress,
+            vars.actualLiquidationAmount
         );
     }
 

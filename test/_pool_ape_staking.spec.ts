@@ -491,7 +491,73 @@ describe("APE Coin Staking Test", () => {
     expect(apeBalanceForNToken).equal(InitialNTokenApeBalance);
   });
 
-  it("TC-pool-ape-staking-08 test claimBAKC success when hf > 1", async () => {
+  it("TC-pool-ape-staking-08 test withdrawBAKC fails when hf < 1 (revert expected)", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
+        ])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
+
+  it("TC-pool-ape-staking-09 test withdrawApeCoin fails when user is not the owner (revert expected)", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount1}])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
+
+  it("TC-pool-ape-staking-10 test claimBAKC success when hf > 1", async () => {
     const {
       users: [user1],
       ape,
@@ -571,7 +637,7 @@ describe("APE Coin Staking Test", () => {
     expect(apeBalanceForNToken).equal(InitialNTokenApeBalance);
   });
 
-  it("TC-pool-ape-staking-09 test claimBAKC success when hf < 1 (ape reward for bakc pool is not used as collateral)", async () => {
+  it("TC-pool-ape-staking-11 test claimBAKC success when hf < 1 (ape reward for bakc pool is not used as collateral)", async () => {
     const {
       users: [user1],
       ape,
@@ -650,7 +716,7 @@ describe("APE Coin Staking Test", () => {
     );
   });
 
-  it("TC-pool-ape-staking-10 test claimApeCoin succeeds when hf > 1", async () => {
+  it("TC-pool-ape-staking-12 test claimApeCoin succeeds when hf > 1", async () => {
     const {
       users: [user1],
       ape,
@@ -715,7 +781,7 @@ describe("APE Coin Staking Test", () => {
     );
   });
 
-  it("TC-pool-ape-staking-11 test claimApeCoin fails when hf < 1 (revert expected)", async () => {
+  it("TC-pool-ape-staking-13 test claimApeCoin fails when hf < 1 (revert expected)", async () => {
     const {
       users: [user1],
       ape,
@@ -767,7 +833,7 @@ describe("APE Coin Staking Test", () => {
     );
   });
 
-  it("TC-pool-ape-staking-12 test unstakeApePositionAndRepay repays debt - no excess", async () => {
+  it("TC-pool-ape-staking-14 test unstakeApePositionAndRepay repays debt - no excess", async () => {
     const {
       users: [user1],
       ape,
@@ -813,7 +879,7 @@ describe("APE Coin Staking Test", () => {
     expect(apeDebt.lt(limit)).equal(true);
   });
 
-  it("TC-pool-ape-staking-13 test unstakeApePositionAndRepay repays debt and supplies excess", async () => {
+  it("TC-pool-ape-staking-15 test unstakeApePositionAndRepay repays debt and supplies excess", async () => {
     const {
       users: [user1],
       ape,
@@ -858,7 +924,7 @@ describe("APE Coin Staking Test", () => {
     expect(apeDebt).equal("0");
   });
 
-  it("TC-pool-ape-staking-14 test unstakeApePositionAndRepay bakc reward should transfer to user wallet", async () => {
+  it("TC-pool-ape-staking-16 test unstakeApePositionAndRepay bakc reward should transfer to user wallet", async () => {
     const {
       users: [user1],
       ape,
@@ -911,7 +977,7 @@ describe("APE Coin Staking Test", () => {
     expect(userBalance).to.be.eq(pendingRewardsBakcPool);
   });
 
-  it("TC-pool-ape-staking-15 test unstakeApePositionAndRepay by others fails when hf > 1(revert expected)", async () => {
+  it("TC-pool-ape-staking-17 test unstakeApePositionAndRepay by others fails when hf > 1(revert expected)", async () => {
     const {
       users: [user1, unstaker],
       ape,
@@ -941,7 +1007,7 @@ describe("APE Coin Staking Test", () => {
     ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
   });
 
-  it("TC-pool-ape-staking-16 test unstakeApePositionAndRepay by others succeeds when hf < 1", async () => {
+  it("TC-pool-ape-staking-18 test unstakeApePositionAndRepay by others succeeds when hf < 1", async () => {
     const {
       users: [user1, unstaker],
       ape,
@@ -990,7 +1056,7 @@ describe("APE Coin Staking Test", () => {
     almostEqual(apeDebt, target);
   });
 
-  it("TC-pool-ape-staking-17 test can stake multiple times and partially unstake afterwards", async () => {
+  it("TC-pool-ape-staking-19 test can stake multiple times and partially unstake afterwards", async () => {
     const {
       users: [user1, unstaker],
       ape,
@@ -1118,7 +1184,7 @@ describe("APE Coin Staking Test", () => {
     expect(apeBalanceForNToken).equal(InitialNTokenApeBalance);
   });
 
-  it("TC-pool-ape-staking-18 test can liquidate NFT with existing staking positions", async () => {
+  it("TC-pool-ape-staking-20 test can liquidate NFT with existing staking positions", async () => {
     const {
       users: [user1, liquidator],
       ape,
@@ -1192,7 +1258,7 @@ describe("APE Coin Staking Test", () => {
     expect(await mayc.ownerOf("0")).to.be.eq(liquidator.address);
   });
 
-  it("TC-pool-ape-staking-19 test cannot borrow and stake an amount over user's available to borrow (revert expected)", async () => {
+  it("TC-pool-ape-staking-21 test cannot borrow and stake an amount over user's available to borrow (revert expected)", async () => {
     const {
       users: [user1, depositor],
       ape,
@@ -1223,7 +1289,7 @@ describe("APE Coin Staking Test", () => {
     ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
   });
 
-  it("TC-pool-ape-staking-20 test can transfer NFT with existing staking positions", async () => {
+  it("TC-pool-ape-staking-22 test can transfer NFT with existing staking positions", async () => {
     const {
       users: [user1, user2],
       ape,
@@ -1273,7 +1339,7 @@ describe("APE Coin Staking Test", () => {
     expect(await pSApeCoin.balanceOf(user2.address)).equal(0);
   });
 
-  it("TC-pool-ape-staking-21 test market accept bid offer should success", async () => {
+  it("TC-pool-ape-staking-23 test market accept bid offer should success", async () => {
     const {
       bayc,
       nBAYC,
@@ -1341,7 +1407,7 @@ describe("APE Coin Staking Test", () => {
     expect(await pSApeCoin.balanceOf(maker.address)).equal(0);
   });
 
-  it("TC-pool-ape-staking-22 test market buy with credit should success", async () => {
+  it("TC-pool-ape-staking-24 test market buy with credit should success", async () => {
     const {
       bayc,
       nBAYC,
