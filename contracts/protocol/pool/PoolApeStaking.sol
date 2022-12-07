@@ -34,7 +34,7 @@ contract PoolApeStaking is
     using SafeCast for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 1;
+    uint256 internal constant POOL_REVISION = 120;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,

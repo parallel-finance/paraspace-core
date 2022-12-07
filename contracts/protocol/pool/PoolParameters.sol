@@ -46,7 +46,7 @@ contract PoolParameters is
     using ReserveLogic for DataTypes.ReserveData;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 1;
+    uint256 internal constant POOL_REVISION = 120;
     uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 2e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
 

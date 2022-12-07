@@ -1337,7 +1337,7 @@ __metadata:
     hardhat: ^2.12.0
     hardhat-contract-sizer: ^2.0.3
     hardhat-deploy: ^0.11.4
-    hardhat-gas-reporter: ^1.0.0
+    hardhat-gas-reporter: ^1.0.9
     hardhat-typechain: ^0.3.3
     husky: ^8.0.1
     lodash: ^4.17.21
@@ -1347,6 +1347,7 @@ __metadata:
     prettier: ^2.4.1
     prettier-plugin-solidity: ^1.0.0-alpha.53
     pretty-quick: ^3.1.1
+    prompt-sync: ^4.2.0
     solhint: ^3.3.6
     solidity-coverage: ^0.8.2
     solidity-docgen-forked: ^0.6.0-beta.29
@@ -7870,7 +7871,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat-gas-reporter@npm:^1.0.0":
+"hardhat-gas-reporter@npm:^1.0.9":
   version: 1.0.9
   resolution: "hardhat-gas-reporter@npm:1.0.9"
   dependencies:
@@ -11702,6 +11703,15 @@ __metadata:
   dependencies:
     asap: ~2.0.6
   checksum: 45d65ffe4fbd9172ef848f790ac1366822e63f063a5ef42a14e75b577ffa3c37870a9d8472729d9d429d7c8a770428f9d13650b52aafaa361dcc69cf84873b20
+  languageName: node
+  linkType: hard
+
+"prompt-sync@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "prompt-sync@npm:4.2.0"
+  dependencies:
+    strip-ansi: ^5.0.0
+  checksum: b14dfb7d2520f384324b49a64c033e92cf2889e34a148037d66b0b89e43f530a93344aebf57c4abe3ae4e351080e22388f7141ea0fbc56b1b9a7f152d5d4a423
   languageName: node
   linkType: hard
 

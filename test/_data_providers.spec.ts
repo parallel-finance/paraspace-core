@@ -39,14 +39,12 @@ describe("UI Contracts Tests", () => {
     const fixture = async () => {
       const testEnv = await loadFixture(testEnvFixture);
 
-      walletBalanceProvider = await withSaveAndVerify(
-        await new WalletBalanceProvider__factory(
-          await getFirstSigner()
-        ).deploy(),
+      walletBalanceProvider = (await withSaveAndVerify(
+        new WalletBalanceProvider__factory(await getFirstSigner()),
         "WalletBalanceProvider",
         [],
         false
-      );
+      )) as WalletBalanceProvider;
       return testEnv;
     };
 

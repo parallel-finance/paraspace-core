@@ -269,7 +269,7 @@ run:
 
 .PHONY: run-task
 run-task:
-	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) --network $(NETWORK)
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARGS) --network $(NETWORK)
 
 .PHONY: print
 print:
@@ -371,6 +371,14 @@ ad-hoc:
 info:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
 
+.PHONY: wallet
+wallet:
+	make SCRIPT_PATH=./deploy/tasks/deployments/dev/4.wallet.ts run
+
+.PHONY: release-v1.2
+release-v1.2:
+	make SCRIPT_PATH=./deploy/tasks/deployments/dev/5.release-v1.2.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
@@ -402,8 +410,8 @@ add-pool-funcs: build
 	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
 
 
-.PHONY: node
-node:
+.PHONY: hardhat
+hardhat:
 	npx hardhat node --hostname 0.0.0.0
 
 .PHONY: anvil
