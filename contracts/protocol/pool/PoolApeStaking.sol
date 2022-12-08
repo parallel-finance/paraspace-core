@@ -65,20 +65,13 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
-
-        uint256 amountToWithdraw = 0;
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 nToken.ownerOf(_nfts[index].tokenId) == msg.sender,
                 Errors.NOT_THE_OWNER
             );
-            amountToWithdraw += _nfts[index].amount;
         }
-
-        INTokenApeStaking(nftReserve.xTokenAddress).withdrawApeCoin(
-            _nfts,
-            msg.sender
-        );
+        INTokenApeStaking(xTokenAddress).withdrawApeCoin(_nfts, msg.sender);
 
         require(
             getUserHf(ps, msg.sender) >
@@ -104,7 +97,6 @@ contract PoolApeStaking is
                 Errors.NOT_THE_OWNER
             );
         }
-
         INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, msg.sender);
 
         require(
@@ -361,7 +353,6 @@ contract PoolApeStaking is
         uint256 totalAmount
     ) external {
         DataTypes.PoolStorage storage ps = poolStorage();
-
         require(
             msg.sender == ps._reserves[underlyingAsset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
@@ -373,7 +364,6 @@ contract PoolApeStaking is
         if (repayAmount > 0) {
             repayAmount = Math.min(repayAmount, totalAmount);
         }
-
         if (repayAmount > 0) {
             BorrowLogic.executeRepay(
                 ps._reserves,
