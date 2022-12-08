@@ -43,8 +43,6 @@ import {
   getNTokenBAYC,
   getNTokenMAYC,
   getApeCoinStaking,
-  getBlurExchangeProxy,
-  getExecutionDelegate,
 } from "../../deploy/helpers/contracts-getters";
 import {
   eContractid,
@@ -56,10 +54,8 @@ import {
 } from "../../deploy/helpers/types";
 import {
   ApeCoinStaking,
-  BlurExchange,
   Conduit,
   ERC721Delegate,
-  ExecutionDelegate,
   IPool,
   NFTFloorOracle,
   NTokenBAYC,
@@ -182,8 +178,6 @@ export interface TestEnv {
   nUniswapV3: NTokenUniswapV3;
   nftFloorOracle: NFTFloorOracle;
   apeCoinStaking: ApeCoinStaking;
-  executionDelegate: ExecutionDelegate;
-  blurExchange: BlurExchange;
 }
 
 export async function initializeMakeSuite() {
@@ -243,8 +237,6 @@ export async function initializeMakeSuite() {
     erc721Delegate: {} as ERC721Delegate,
     moonbirds: {} as Moonbirds,
     nftFloorOracle: {} as NFTFloorOracle,
-    executionDelegate: {} as ExecutionDelegate,
-    blurExchange: {} as BlurExchange,
   } as TestEnv;
   const paraSpaceConfig = getParaSpaceConfig();
   const signers = await Promise.all(
@@ -481,8 +473,6 @@ export async function initializeMakeSuite() {
   testEnv.nftFloorOracle = (await getNFTFloorOracle()).connect(
     testEnv.poolAdmin.signer
   );
-  testEnv.executionDelegate = await getExecutionDelegate();
-  testEnv.blurExchange = await getBlurExchangeProxy();
 
   return testEnv;
 }

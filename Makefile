@@ -33,7 +33,7 @@ test:
 
 .PHONY: local-test
 local-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
+	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
@@ -350,10 +350,6 @@ deploy-looksrare:
 .PHONY: deploy-x2y2
 deploy-x2y2:
 	make TASK_NAME=deploy:x2y2 run-task
-
-.PHONY: deploy-blur-exchange
-deploy-blur-exchange:
-	make TASK_NAME=deploy:blur-exchange run-task
 
 .PHONY: deploy-flashClaimRegistry
 deploy-flashClaimRegistry:
