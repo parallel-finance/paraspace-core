@@ -403,6 +403,10 @@ upgrade-ntoken: build
 upgrade-ptoken: build
 	make TASK_NAME=upgrade:ptoken run-task
 
+.PHONY: upgrade-debt-token
+upgrade-debt-token: build
+	make TASK_NAME=upgrade:debt-token run-task
+
 .PHONY: remove-pool-funcs
 remove-pool-funcs: build
 # e.g: emergency disable liquidation
