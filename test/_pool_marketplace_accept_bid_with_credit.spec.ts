@@ -1733,6 +1733,6 @@ describe("Leveraged Bid - Negative tests", () => {
           gasLimit: 5000000,
         }
       )
-    ).to.be.revertedWith("CryptoPunksMarket: punk not actually for sale");
+    ).to.be.revertedWith("WPunkGateway: Not owner of Punk");
   });
 });
