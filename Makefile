@@ -395,6 +395,10 @@ upgrade: build
 upgrade-pool: build
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: upgrade-configurator
+upgrade-configurator: build
+	make TASK_NAME=upgrade:configurator run-task
+
 .PHONY: upgrade-ntoken
 upgrade-ntoken: build
 	make TASK_NAME=upgrade:ntoken run-task

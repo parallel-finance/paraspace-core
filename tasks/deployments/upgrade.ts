@@ -21,6 +21,18 @@ task("upgrade:pool", "upgrade pool components").setAction(async (_, DRE) => {
   console.timeEnd("upgrade pool");
 });
 
+task("upgrade:configurator", "upgrade pool configurator").setAction(
+  async (_, DRE) => {
+    const {upgradeConfigurator} = await import(
+      "../../deploy/tasks/deployments/upgrade/upgrade_configurator"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade configurator");
+    await upgradeConfigurator(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade configurator");
+  }
+);
+
 task("upgrade:remove-pool-funcs", "clean pool components").setAction(
   async (_, DRE) => {
     const {removePoolFuncs} = await import(
