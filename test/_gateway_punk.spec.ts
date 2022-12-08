@@ -57,6 +57,27 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
     await waitForTx(await punks.connect(user3.signer).offerPunkForSale(1, 0));
   });
 
+  it("TC-punks-gateway-02 User1 can't supply User3 WPUNK", async () => {
+    const {
+      users: [user1, , user3],
+      pool,
+      wPunkGateway,
+    } = testEnv;
+
+    const availableToBorrow = (await pool.getUserAccountData(user3.address))
+      .availableBorrowsBase;
+    expect(availableToBorrow).to.be.equal(0);
+    const totalCollateral = (await pool.getUserAccountData(user3.address))
+      .totalCollateralBase;
+    expect(totalCollateral).to.be.equal(0);
+
+    await expect(
+      wPunkGateway
+        .connect(user1.signer)
+        .supplyPunk([{tokenId: 0, useAsCollateral: true}], user3.address, "0")
+    ).to.be.revertedWith("WPunkGateway: Not owner of Punk");
+  });
+
   it("TC-punks-gateway-02 User can supply WPUNK", async () => {
     const {
       wPunk,
@@ -502,10 +523,10 @@ describe("gateway Punk unit tests", () => {
       wPunkGateway
         .connect(user1.signer)
         .supplyPunk([{tokenId: 0, useAsCollateral: true}], user1.address, "0")
-    ).to.be.revertedWith("CryptoPunksMarket: punk not actually for sale");
+    ).to.be.revertedWith("WPunkGateway: Not owner of Punk");
   });
 
-  it("TC-punks-gateway-17 User tries to  Supply not minted token (should fail)", async () => {
+  it("TC-punks-gateway-17 User tries to Supply not minted token (should fail)", async () => {
     const {
       users: [user1],
       wPunkGateway,
@@ -515,7 +536,7 @@ describe("gateway Punk unit tests", () => {
       wPunkGateway
         .connect(user1.signer)
         .supplyPunk([{tokenId: 2, useAsCollateral: true}], user1.address, "0")
-    ).to.be.revertedWith("CryptoPunksMarket: punk not actually for sale");
+    ).to.be.revertedWith("WPunkGateway: Not owner of Punk");
   });
 
   it("TC-punks-gateway-18 User tries to punks repeat get Punk (should fail)", async () => {
@@ -556,7 +577,7 @@ describe("gateway Punk unit tests", () => {
 
     // User 2 deposit
     await wPunkGateway
-      .connect(user2.signer)
+      .connect(user1.signer)
       .supplyPunk([{tokenId: 0, useAsCollateral: true}], user2.address, "0");
 
     // User 1 tries to withdraw
