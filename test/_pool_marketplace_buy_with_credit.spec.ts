@@ -37,7 +37,6 @@ import {MintableERC20} from "../types";
 import {getMintableERC721} from "../deploy/helpers/contracts-getters";
 import {ProtocolErrors} from "../deploy/helpers/types";
 import {
-  executeBlurBuyWithCredit,
   executeLooksrareBuyWithCredit,
   executeSeaportBuyWithCredit,
   executeX2Y2BuyWithCredit,
@@ -1403,57 +1402,6 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await nDOODLE.balanceOf(taker.address)).to.be.eq(1);
     expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
     expect(await dai.balanceOf(maker.address)).to.be.eq(startAmount);
-  });
-
-  it("TC-erc721-buy-23: ERC721 <=> ERC20 via Blur - no loan", async () => {
-    const {
-      doodles,
-      nDOODLE,
-      weth,
-      executionDelegate,
-      pool,
-      users: [maker, taker],
-    } = await loadFixture(testEnvFixture);
-    const takerInitialBalance = "1000";
-    const payNowAmount = await convertToCurrencyDecimals(
-      weth.address,
-      takerInitialBalance
-    );
-    const payLaterAmount = 0; // no loan!
-    const startAmount = payNowAmount.add(payLaterAmount);
-    const nftId = 0;
-
-    // mint WETH to taker
-    await mintAndValidate(weth, takerInitialBalance, taker);
-    // mint DOODLE to maker
-    await mintAndValidate(doodles, "1", maker);
-    // approve
-    await waitForTx(
-      await doodles
-        .connect(maker.signer)
-        .approve(executionDelegate.address, nftId)
-    );
-    await waitForTx(
-      await weth.connect(taker.signer).approve(pool.address, payNowAmount)
-    );
-
-    await executeBlurBuyWithCredit(
-      doodles,
-      weth,
-      startAmount,
-      payLaterAmount,
-      nftId,
-      maker,
-      taker
-    );
-
-    expect(await doodles.balanceOf(maker.address)).to.be.eq(0);
-    expect(await doodles.ownerOf(nftId)).to.be.eq(
-      (await pool.getReserveData(doodles.address)).xTokenAddress
-    );
-    expect(await nDOODLE.balanceOf(taker.address)).to.be.eq(1);
-    expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
-    expect(await weth.balanceOf(maker.address)).to.be.eq(startAmount);
   });
 });
 
