@@ -219,7 +219,6 @@ contract PoolApeStaking is
         IERC20 apeCoin;
         uint256 beforeBalance;
         IERC721 bakcContract;
-        DataTypes.ReserveCache apeReserveCache;
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -244,19 +243,16 @@ contract PoolApeStaking is
         localVar.bakcContract = INTokenApeStaking(localVar.nTokenAddress)
             .getBAKC();
 
+        // 1, send borrow part to xTokenAddress
         DataTypes.ReserveData storage apeReserve = ps._reserves[
             address(localVar.apeCoin)
         ];
-        localVar.apeReserveCache = apeReserve.cache();
-
-        // 1, send borrow part to xTokenAddress
         if (stakingInfo.borrowAmount > 0) {
             ValidationLogic.validateFlashloanSimple(apeReserve);
-            IPToken(localVar.apeReserveCache.xTokenAddress)
-                .transferUnderlyingTo(
-                    localVar.nTokenAddress,
-                    stakingInfo.borrowAmount
-                );
+            IPToken(apeReserve.xTokenAddress).transferUnderlyingTo(
+                localVar.nTokenAddress,
+                stakingInfo.borrowAmount
+            );
         }
 
         // 2, send cash part to xTokenAddress
@@ -324,7 +320,7 @@ contract PoolApeStaking is
             );
         }
 
-        //7 checkout ape balance
+        //6 checkout ape balance
         require(
             localVar.apeCoin.balanceOf(localVar.nTokenAddress) ==
                 localVar.beforeBalance,
