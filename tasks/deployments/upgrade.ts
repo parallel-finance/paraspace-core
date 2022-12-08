@@ -64,3 +64,13 @@ task("upgrade:ntoken", "upgrade ntoken").setAction(async (_, DRE) => {
   await upgradeNToken(ETHERSCAN_VERIFICATION);
   console.timeEnd("upgrade ntoken");
 });
+
+task("upgrade:debt-token", "upgrade debt token").setAction(async (_, DRE) => {
+  const {upgradeDebtToken} = await import(
+    "../../deploy/tasks/deployments/upgrade/update_debtToken"
+  );
+  await DRE.run("set-DRE");
+  console.time("upgrade debt token");
+  await upgradeDebtToken(ETHERSCAN_VERIFICATION);
+  console.timeEnd("upgrade debt token");
+});
