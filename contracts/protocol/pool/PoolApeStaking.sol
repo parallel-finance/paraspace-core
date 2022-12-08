@@ -81,7 +81,7 @@ contract PoolApeStaking is
         );
 
         require(
-            getUserHf(msg.sender) >
+            getUserHf(ps, msg.sender) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
@@ -108,7 +108,7 @@ contract PoolApeStaking is
         INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, msg.sender);
 
         require(
-            getUserHf(msg.sender) >
+            getUserHf(ps, msg.sender) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
@@ -171,7 +171,7 @@ contract PoolApeStaking is
         }
 
         require(
-            getUserHf(msg.sender) >
+            getUserHf(ps, msg.sender) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
@@ -340,7 +340,7 @@ contract PoolApeStaking is
         address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
         if (msg.sender != positionOwner) {
             require(
-                getUserHf(positionOwner) <
+                getUserHf(ps, positionOwner) <
                     DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
                 Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
             );
@@ -416,8 +416,11 @@ contract PoolApeStaking is
         }
     }
 
-    function getUserHf(address user) internal view returns (uint256) {
-        DataTypes.PoolStorage storage ps = poolStorage();
+    function getUserHf(DataTypes.PoolStorage storage ps, address user)
+        internal
+        view
+        returns (uint256)
+    {
         DataTypes.CalculateUserAccountDataParams memory params = DataTypes
             .CalculateUserAccountDataParams({
                 userConfig: ps._usersConfig[user],
