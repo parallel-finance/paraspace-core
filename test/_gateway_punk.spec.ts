@@ -59,8 +59,6 @@ describe("Punk nToken Mint and Burn Event Accounting", () => {
 
   it("TC-punks-gateway-02 User1 can't supply User3 WPUNK", async () => {
     const {
-      wPunk,
-      nWPunk,
       users: [user1, , user3],
       pool,
       wPunkGateway,
