@@ -11,7 +11,10 @@ import {
   getPTokenSApe,
   getVariableDebtToken,
 } from "../deploy/helpers/contracts-getters";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {
+  convertToCurrencyDecimals,
+  isUsingAsCollateral,
+} from "../deploy/helpers/contracts-helpers";
 import {
   advanceTimeAndBlock,
   DRE,
@@ -36,6 +39,7 @@ import {
   executeAcceptBidWithCredit,
   executeSeaportBuyWithCredit,
 } from "./helpers/marketplace-helper";
+import {BigNumber} from "ethers";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -1476,5 +1480,52 @@ describe("APE Coin Staking Test", () => {
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(1);
     expect(await pSApeCoin.balanceOf(maker.address)).equal(0);
     expect(await pSApeCoin.balanceOf(taker.address)).equal(0);
+  });
+
+  it("TC-pool-ape-staking-25 unstakeApePositionAndRepay should set ape as collateral", async () => {
+    const {
+      users: [user1],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    const apeData = await pool.getReserveData(ape.address);
+    await supplyAndValidate(ape, "1", user1, true);
+    await pool
+      .connect(user1.signer)
+      .setUserUseERC20AsCollateral(ape.address, false);
+    let userConfig = BigNumber.from(
+      (await pool.getUserConfiguration(user1.address)).data
+    );
+    expect(isUsingAsCollateral(userConfig, apeData.id)).to.be.false;
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await mintAndValidate(ape, "7000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    expect(
+      await pool
+        .connect(user1.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
+    );
+
+    userConfig = BigNumber.from(
+      (await pool.getUserConfiguration(user1.address)).data
+    );
+    expect(isUsingAsCollateral(userConfig, apeData.id)).to.be.true;
   });
 });

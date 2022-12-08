@@ -122,17 +122,17 @@ contract ParaSpaceOracle is IParaSpaceOracle {
             return BASE_CURRENCY_UNIT;
         }
 
-        uint256 price = 0;
+        int256 price = 0;
         IEACAggregatorProxy source = IEACAggregatorProxy(assetsSources[asset]);
         if (address(source) != address(0)) {
-            price = uint256(source.latestAnswer());
+            price = source.latestAnswer();
         }
-        if (price == 0 && address(_fallbackOracle) != address(0)) {
-            price = _fallbackOracle.getAssetPrice(asset);
+        if (price <= 0 && address(_fallbackOracle) != address(0)) {
+            price = int256(_fallbackOracle.getAssetPrice(asset));
         }
 
-        require(price != 0, Errors.ORACLE_PRICE_NOT_READY);
-        return price;
+        require(price > 0, Errors.ORACLE_PRICE_NOT_READY);
+        return uint256(price);
     }
 
     function getTokenPrice(address asset, uint256 tokenId)
