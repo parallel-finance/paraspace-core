@@ -20,6 +20,7 @@ import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -361,8 +362,7 @@ contract PoolApeStaking is
         address underlyingAsset,
         address repayAsset,
         address onBehalfOf,
-        uint256 repayAmount,
-        uint256 supplyAmount
+        uint256 totalAmount
     ) external {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -370,6 +370,13 @@ contract PoolApeStaking is
             msg.sender == ps._reserves[underlyingAsset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
+
+        DataTypes.ReserveData storage apeCoinData = ps._reserves[repayAsset];
+        uint256 repayAmount = IERC20(apeCoinData.variableDebtTokenAddress)
+            .balanceOf(onBehalfOf);
+        if (repayAmount > 0) {
+            repayAmount = Math.min(repayAmount, totalAmount);
+        }
 
         if (repayAmount > 0) {
             BorrowLogic.executeRepay(
@@ -384,6 +391,7 @@ contract PoolApeStaking is
             );
         }
 
+        uint256 supplyAmount = totalAmount - repayAmount;
         if (supplyAmount > 0) {
             DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
                 onBehalfOf

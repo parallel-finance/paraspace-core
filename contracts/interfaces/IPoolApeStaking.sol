@@ -92,7 +92,6 @@ interface IPoolApeStaking {
         address underlyingAsset,
         address repayAsset,
         address onBehalfOf,
-        uint256 repayAmount,
-        uint256 supplyAmount
+        uint256 totalAmount
     ) external;
 }
