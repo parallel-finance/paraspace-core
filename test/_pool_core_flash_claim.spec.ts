@@ -371,4 +371,29 @@ describe("Flash Claim Test", () => {
       ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
   });
+
+  it("TC-flash-claim-06:user can not flash claim use others receiver", async function () {
+    const {
+      users: [user1, user2],
+      bayc,
+      pool,
+    } = testEnv;
+
+    const user_registry = await getUserFlashClaimRegistry();
+    await user_registry.connect(user2.signer).createReceiver();
+    const flashClaimReceiverAddr = await user_registry.userReceivers(
+      user2.address
+    );
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          bayc.address,
+          [0],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith("not owner");
+  });
 });
