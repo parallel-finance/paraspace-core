@@ -383,8 +383,8 @@ release-v1.2:
 verify-v1.2:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/6.verify-v1.2.ts run
 
-.PHONY: deploy:rate-strategy
-deploy:rate-strategy:
+.PHONY: deploy-rate-strategy
+deploy-rate-strategy:
 	make SCRIPT_PATH=./deploy/tasks/deployments/dev/7.rate-strategy.ts run
 
 .PHONY: transfer-tokens
