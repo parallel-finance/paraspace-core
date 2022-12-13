@@ -1488,6 +1488,7 @@ describe("APE Coin Staking Test", () => {
     expect(userAccount.totalDebtBase).equal(
       await convertToCurrencyDecimals(weth.address, "8")
     );
+
     //50 * 0.4 + 8 * 0.2 - 8=13.6
     almostEqual(
       userAccount.availableBorrowsBase,
@@ -1720,10 +1721,6 @@ describe("APE Coin Staking Test", () => {
     // User 1 - pSape should increased in Stake amount
     const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
     expect(pSApeBalance).equal(amount);
-
-    // User 1 - Debt should remain the same
-    const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
-    expect(apeDebt).equal(0);
 
     const bakcBalance = await bakc.balanceOf(user1.address);
     expect(bakcBalance).equal(2);
