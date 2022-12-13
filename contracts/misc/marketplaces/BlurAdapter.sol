@@ -8,6 +8,7 @@ import {Input} from "../../dependencies/blur-exchange/OrderStructs.sol";
 import {IBlurExchange} from "../../dependencies/blur-exchange/IBlurExchange.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
+import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 
 /**
  * @title Blur Adapter
@@ -15,9 +16,13 @@ import {IMarketplace} from "../../interfaces/IMarketplace.sol";
  * @notice Implements the NFT <=> ERC20 exchange logic via Blur Exchange
  */
 contract BlurAdapter is IMarketplace {
-    constructor() {}
+    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
-    function getAskOrderInfo(bytes memory params, address)
+    constructor(IPoolAddressesProvider provider) {
+        ADDRESSES_PROVIDER = provider;
+    }
+
+    function getAskOrderInfo(bytes memory params)
         external
         pure
         override

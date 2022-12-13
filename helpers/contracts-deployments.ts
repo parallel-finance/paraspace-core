@@ -1280,18 +1280,24 @@ export const deployPunkGatewayProxy = async (
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
 };
 
-export const deploySeaportAdapter = async (verify?: boolean) => {
+export const deploySeaportAdapter = async (
+  provider: tEthereumAddress,
+  verify?: boolean
+) => {
   const seaportAdapter = new SeaportAdapter__factory(await getFirstSigner());
 
   return withSaveAndVerify(
     seaportAdapter,
     eContractid.SeaportAdapter,
-    [],
+    [provider],
     verify
   ) as Promise<SeaportAdapter>;
 };
 
-export const deployLooksRareAdapter = async (verify?: boolean) => {
+export const deployLooksRareAdapter = async (
+  provider: tEthereumAddress,
+  verify?: boolean
+) => {
   const looksRareAdapter = new LooksRareAdapter__factory(
     await getFirstSigner()
   );
@@ -1299,18 +1305,21 @@ export const deployLooksRareAdapter = async (verify?: boolean) => {
   return withSaveAndVerify(
     looksRareAdapter,
     eContractid.LooksRareAdapter,
-    [],
+    [provider],
     verify
   ) as Promise<LooksRareAdapter>;
 };
 
-export const deployX2Y2Adapter = async (verify?: boolean) => {
+export const deployX2Y2Adapter = async (
+  provider: tEthereumAddress,
+  verify?: boolean
+) => {
   const x2y2Adapter = new X2Y2Adapter__factory(await getFirstSigner());
 
   return withSaveAndVerify(
     x2y2Adapter,
     eContractid.X2Y2Adapter,
-    [],
+    [provider],
     verify
   ) as Promise<X2Y2Adapter>;
 };
@@ -1884,11 +1893,14 @@ export const deployBlurExchangeProxy = async (
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
 };
 
-export const deployBlurAdapter = async (verify?: boolean) => {
+export const deployBlurAdapter = async (
+  provider: tEthereumAddress,
+  verify?: boolean
+) => {
   return withSaveAndVerify(
     new BlurAdapter__factory(await getFirstSigner()),
     eContractid.BlurAdapter,
-    [],
+    [provider],
     verify
   ) as Promise<BlurAdapter>;
 };
