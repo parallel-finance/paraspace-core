@@ -17,9 +17,11 @@ import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.so
  */
 contract BlurAdapter is IMarketplace {
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    address public immutable POLICY_ALLOWED;
 
-    constructor(IPoolAddressesProvider provider) {
+    constructor(IPoolAddressesProvider provider, address policyAllowed) {
         ADDRESSES_PROVIDER = provider;
+        POLICY_ALLOWED = policyAllowed;
     }
 
     function getAskOrderInfo(bytes memory params)
@@ -36,7 +38,7 @@ contract BlurAdapter is IMarketplace {
         orderInfo.taker = buy.order.trader;
 
         require(
-            sell.order.price == buy.order.price, // must be StandardSaleForFixedPrice matching policy
+            sell.order.matchingPolicy == POLICY_ALLOWED, // must be StandardSaleForFixedPrice matching policy
             Errors.INVALID_MARKETPLACE_ORDER
         );
         require(

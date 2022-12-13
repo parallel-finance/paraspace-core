@@ -17,9 +17,11 @@ import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.so
  */
 contract LooksRareAdapter is IMarketplace {
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    address public immutable STRATEGY_ALLOWED;
 
-    constructor(IPoolAddressesProvider provider) {
+    constructor(IPoolAddressesProvider provider, address strategyAllowed) {
         ADDRESSES_PROVIDER = provider;
+        STRATEGY_ALLOWED = strategyAllowed;
     }
 
     function getAskOrderInfo(bytes memory params)
@@ -40,7 +42,7 @@ contract LooksRareAdapter is IMarketplace {
             Errors.INVALID_ORDER_TAKER
         );
         require(
-            takerBid.price == makerAsk.price, // must be StandardSaleForFixedPrice strategy
+            makerAsk.strategy == STRATEGY_ALLOWED, // must be StandardSaleForFixedPrice strategy
             Errors.INVALID_MARKETPLACE_ORDER
         );
 

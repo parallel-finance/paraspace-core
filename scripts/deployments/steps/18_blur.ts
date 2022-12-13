@@ -67,6 +67,7 @@ export const step_18 = async (verify = false) => {
 
     const blurAdapter = await deployBlurAdapter(
       addressesProvider.address,
+      standardPolicyERC721.address,
       verify
     );
 

@@ -1296,6 +1296,7 @@ export const deploySeaportAdapter = async (
 
 export const deployLooksRareAdapter = async (
   provider: tEthereumAddress,
+  strategy: tEthereumAddress,
   verify?: boolean
 ) => {
   const looksRareAdapter = new LooksRareAdapter__factory(
@@ -1305,7 +1306,7 @@ export const deployLooksRareAdapter = async (
   return withSaveAndVerify(
     looksRareAdapter,
     eContractid.LooksRareAdapter,
-    [provider],
+    [provider, strategy],
     verify
   ) as Promise<LooksRareAdapter>;
 };
@@ -1895,12 +1896,13 @@ export const deployBlurExchangeProxy = async (
 
 export const deployBlurAdapter = async (
   provider: tEthereumAddress,
+  policy: tEthereumAddress,
   verify?: boolean
 ) => {
   return withSaveAndVerify(
     new BlurAdapter__factory(await getFirstSigner()),
     eContractid.BlurAdapter,
-    [provider],
+    [provider, policy],
     verify
   ) as Promise<BlurAdapter>;
 };
