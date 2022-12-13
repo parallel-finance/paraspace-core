@@ -12,11 +12,16 @@ const info = async () => {
   await DRE.run("set-DRE");
   console.time("info");
 
+  const signer = await getFirstSigner();
+  const signerAddress = await signer.getAddress();
+
   console.log(await DRE.ethers.provider.getNetwork());
+  console.log(await DRE.ethers.provider.getFeeData());
   console.log(envs);
   console.log(await getParaSpaceAdmins());
   console.log(accounts);
-  console.log(await (await getFirstSigner()).getAddress());
+  console.log(signerAddress);
+  console.log(await signer.getTransactionCount());
   console.log(
     await Promise.all((await getEthersSigners()).map((x) => x.getAddress()))
   );
