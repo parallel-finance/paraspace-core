@@ -109,7 +109,7 @@ jobs:
           files: ./coverage/lcov.info
 
   fork:
-    name: Fork check
+    name: Fork Check
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -147,6 +147,6 @@ jobs:
           echo ETHERSCAN_VERIFICATION=false >> .env
           echo FORK=${{ matrix.network }} >> .env
           make hardhat &
-          sleep 30
+          sleep 60
           make deploy
           pkill node || true
