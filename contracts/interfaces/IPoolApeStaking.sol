@@ -83,13 +83,11 @@ interface IPoolApeStaking {
 
     /**
      * @notice repay asset and supply asset for user
-     * @param underlyingAsset Contract address of BAYC/MAYC
      * @param repayAsset Asset address to repay and supply
      * @param onBehalfOf The beneficiary of the repay and supply
      * @dev Convenient callback function for unstakeApePositionAndRepay. Only NToken of BAYC/MAYC can call this.
      */
     function repayAndSupply(
-        address underlyingAsset,
         address repayAsset,
         address onBehalfOf,
         uint256 repayAmount,

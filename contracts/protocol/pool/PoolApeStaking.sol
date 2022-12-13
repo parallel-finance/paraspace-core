@@ -20,6 +20,7 @@ import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {IApeYield} from "../../interfaces/IApeYield.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -34,6 +35,10 @@ contract PoolApeStaking is
     using SafeCast for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
+    IApeYield internal immutable APE_YIELD;
+    IERC20 internal immutable APE_COIN;
+    address internal immutable nBayc;
+    address internal immutable nMayc;
     uint256 internal constant POOL_REVISION = 120;
 
     event ReserveUsedAsCollateralEnabled(
@@ -45,8 +50,18 @@ contract PoolApeStaking is
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
-    constructor(IPoolAddressesProvider provider) {
+    constructor(
+        IPoolAddressesProvider provider,
+        IApeYield apeYield,
+        IERC20 apeCoin,
+        address _nBayc,
+        address _nMayc
+    ) {
         ADDRESSES_PROVIDER = provider;
+        APE_YIELD = apeYield;
+        APE_COIN = apeCoin;
+        nBayc = _nBayc;
+        nMayc = _nMayc;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -358,7 +373,6 @@ contract PoolApeStaking is
 
     /// @inheritdoc IPoolApeStaking
     function repayAndSupply(
-        address underlyingAsset,
         address repayAsset,
         address onBehalfOf,
         uint256 repayAmount,
@@ -367,8 +381,10 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         require(
-            msg.sender == ps._reserves[underlyingAsset].xTokenAddress,
-            Errors.CALLER_NOT_XTOKEN
+            msg.sender == nBayc ||
+                msg.sender == nMayc ||
+                msg.sender == address(APE_YIELD),
+            "Invalid caller"
         );
 
         if (repayAmount > 0) {
@@ -409,6 +425,84 @@ contract PoolApeStaking is
                 userConfig.setUsingAsCollateral(repayReserve.id, true);
                 emit ReserveUsedAsCollateralEnabled(repayAsset, onBehalfOf);
             }
+        }
+    }
+
+    function withdrawYearnPositionAndRepay(address user) external nonReentrant {
+        if (msg.sender != user) {
+            require(
+                getUserHf(user) < DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+        }
+
+        APE_YIELD.withdraw(
+            user,
+            msg.sender,
+            IERC20(address(APE_YIELD)).balanceOf(user)
+        );
+    }
+
+    function claimApeAndYearn(address nftAsset, uint256 tokenId)
+        external
+        nonReentrant
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
+        address xTokenAddress = nftReserve.xTokenAddress;
+        address incentiveReceiver = address(0);
+        address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
+        if (msg.sender != positionOwner) {
+            incentiveReceiver = msg.sender;
+        }
+
+        uint256 rewardAmount = INTokenApeStaking(xTokenAddress).claimAndYield(
+            tokenId,
+            incentiveReceiver
+        );
+
+        _depositApeYearn(positionOwner, xTokenAddress, rewardAmount);
+
+        if (msg.sender != positionOwner) {
+            require(
+                getUserHf(positionOwner) >
+                    DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+            );
+        }
+    }
+
+    function depositApeYearn(uint256 amount) external nonReentrant {
+        _depositApeYearn(msg.sender, msg.sender, amount);
+    }
+
+    function withdrawApeYearn(uint256 amount) external nonReentrant {
+        APE_YIELD.withdraw(msg.sender, msg.sender, amount);
+
+        require(
+            getUserHf(msg.sender) >
+                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+        );
+    }
+
+    function _depositApeYearn(
+        address user,
+        address payer,
+        uint256 amount
+    ) internal {
+        APE_YIELD.deposit(user, payer, amount);
+
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        uint16 sApeReserveId = ps._reserves[DataTypes.SApeAddress].id;
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            user
+        ];
+        bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
+        if (!currentStatus) {
+            userConfig.setUsingAsCollateral(sApeReserveId, true);
+            emit ReserveUsedAsCollateralEnabled(DataTypes.SApeAddress, user);
         }
     }
 

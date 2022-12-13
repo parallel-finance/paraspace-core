@@ -27,8 +27,10 @@ library ApeStakingLogic {
 
     struct APEStakingParameter {
         uint256 unstakeIncentive;
+        uint256 claimRewardIncentive;
     }
     event UnstakeApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
+    event ClaimApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
      * @notice withdraw Ape coin staking position from ApeCoinStaking
@@ -86,10 +88,29 @@ library ApeStakingLogic {
         }
     }
 
+    /**
+     * @notice update incentive percentage for claimAndYield
+     * @param stakingParameter storage for Ape staking
+     * @param incentive new incentive percentage
+     */
+    function executeSetClaimAndYearnIncentive(
+        APEStakingParameter storage stakingParameter,
+        uint256 incentive
+    ) external {
+        require(
+            incentive < PercentageMath.HALF_PERCENTAGE_FACTOR,
+            "Value Too High"
+        );
+        uint256 oldValue = stakingParameter.claimRewardIncentive;
+        if (oldValue != incentive) {
+            stakingParameter.claimRewardIncentive = incentive;
+            emit ClaimApeIncentiveUpdated(oldValue, incentive);
+        }
+    }
+
     struct UnstakeAndRepayParams {
         IPool POOL;
         ApeCoinStaking _apeCoinStaking;
-        address _underlyingAsset;
         uint256 poolId;
         uint256 tokenId;
         address incentiveReceiver;
@@ -198,12 +219,44 @@ library ApeStakingLogic {
         uint256 supplyAmount = unstakedAmount - repayAmount;
 
         params.POOL.repayAndSupply(
-            params._underlyingAsset,
             address(_apeCoin),
             positionOwner,
             repayAmount,
             supplyAmount
         );
+    }
+
+    function executeClaimAndYield(
+        APEStakingParameter storage stakingParameter,
+        UnstakeAndRepayParams memory params
+    ) external returns (uint256) {
+        IERC20 _apeCoin = params._apeCoinStaking.apeCoin();
+        uint256 balanceBefore = _apeCoin.balanceOf(address(this));
+        uint256[] memory _nfts = new uint256[](1);
+        if (params.poolId == BAYC_POOL_ID) {
+            params._apeCoinStaking.claimSelfBAYC(_nfts);
+        } else {
+            params._apeCoinStaking.claimSelfMAYC(_nfts);
+        }
+        uint256 balanceAfter = _apeCoin.balanceOf(address(this));
+
+        uint256 rewardAmount = balanceAfter - balanceBefore;
+
+        if (params.incentiveReceiver != address(0)) {
+            uint256 claimIncentive = stakingParameter.claimRewardIncentive;
+            if (claimIncentive > 0) {
+                uint256 incentiveAmount = rewardAmount.percentMul(
+                    claimIncentive
+                );
+                _apeCoin.safeTransfer(
+                    params.incentiveReceiver,
+                    incentiveAmount
+                );
+                rewardAmount = rewardAmount - incentiveAmount;
+            }
+        }
+
+        return rewardAmount;
     }
 
     /**

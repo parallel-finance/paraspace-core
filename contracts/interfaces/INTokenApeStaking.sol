@@ -36,6 +36,10 @@ interface INTokenApeStaking {
     function unstakePositionAndRepay(uint256 tokenId, address unstaker)
         external;
 
+    function claimAndYield(uint256 tokenId, address incentiveReceiver)
+        external
+        returns (uint256);
+
     function getUserApeStakingAmount(address user)
         external
         view

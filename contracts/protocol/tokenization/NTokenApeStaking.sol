@@ -19,6 +19,7 @@ import {Errors} from "../libraries/helpers/Errors.sol";
  */
 abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     ApeCoinStaking immutable _apeCoinStaking;
+    address immutable _apeYield;
 
     bytes32 constant APE_STAKING_DATA_STORAGE_POSITION =
         bytes32(
@@ -33,11 +34,23 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     uint256 internal constant DEFAULT_UNSTAKE_INCENTIVE_PERCENTAGE = 30;
 
     /**
+     * @dev Default percentage of borrower's ape position to be repaid as incentive.
+     * @dev Percentage applied when the users ape reward got claim by others.
+     * Expressed in bps, a value of 30 results in 0.3%
+     */
+    uint256 internal constant DEFAULT_CLAIM_INCENTIVE_PERCENTAGE = 30;
+
+    /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address apeCoinStaking) NToken(pool, false) {
+    constructor(
+        IPool pool,
+        address apeCoinStaking,
+        address apeYield
+    ) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
+        _apeYield = apeYield;
     }
 
     function initialize(
@@ -51,6 +64,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         IERC20 _apeCoin = _apeCoinStaking.apeCoin();
         _apeCoin.approve(address(_apeCoinStaking), type(uint256).max);
         _apeCoin.approve(address(POOL), type(uint256).max);
+        _apeCoin.approve(address(_apeYield), type(uint256).max);
         getBAKC().setApprovalForAll(address(POOL), true);
 
         super.initialize(
@@ -94,7 +108,6 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.UnstakeAndRepayParams({
                 POOL: POOL,
                 _apeCoinStaking: _apeCoinStaking,
-                _underlyingAsset: _underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
                 incentiveReceiver: address(0)
@@ -118,7 +131,6 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 ApeStakingLogic.UnstakeAndRepayParams({
                     POOL: POOL,
                     _apeCoinStaking: _apeCoinStaking,
-                    _underlyingAsset: _underlyingAsset,
                     poolId: POOL_ID(),
                     tokenId: tokenIds[index],
                     incentiveReceiver: address(0)
@@ -140,6 +152,10 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         ApeStakingLogic.executeSetUnstakeApeIncentive(
             dataStorage,
             DEFAULT_UNSTAKE_INCENTIVE_PERCENTAGE
+        );
+        ApeStakingLogic.executeSetClaimAndYearnIncentive(
+            dataStorage,
+            DEFAULT_CLAIM_INCENTIVE_PERCENTAGE
         );
     }
 
@@ -177,12 +193,30 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.UnstakeAndRepayParams({
                 POOL: POOL,
                 _apeCoinStaking: _apeCoinStaking,
-                _underlyingAsset: _underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
                 incentiveReceiver: incentiveReceiver
             })
         );
+    }
+
+    function claimAndYield(uint256 tokenId, address incentiveReceiver)
+        external
+        onlyPool
+        nonReentrant
+        returns (uint256)
+    {
+        return
+            ApeStakingLogic.executeClaimAndYield(
+                apeStakingDataStorage(),
+                ApeStakingLogic.UnstakeAndRepayParams({
+                    POOL: POOL,
+                    _apeCoinStaking: _apeCoinStaking,
+                    poolId: POOL_ID(),
+                    tokenId: tokenId,
+                    incentiveReceiver: incentiveReceiver
+                })
+            );
     }
 
     /**

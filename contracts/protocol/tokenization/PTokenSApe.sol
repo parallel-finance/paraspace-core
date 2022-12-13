@@ -12,6 +12,7 @@ import {IPToken} from "../../interfaces/IPToken.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
+import {IApeYield} from "../../interfaces/IApeYield.sol";
 
 /**
  * @title sApe PToken
@@ -23,15 +24,18 @@ contract PTokenSApe is PToken {
 
     INTokenApeStaking immutable nBAYC;
     INTokenApeStaking immutable nMAYC;
+    IApeYield immutable apeYield;
 
     constructor(
         IPool pool,
         address _nBAYC,
-        address _nMAYC
+        address _nMAYC,
+        address _apeYield
     ) PToken(pool) {
         require(_nBAYC != address(0) && _nMAYC != address(0));
         nBAYC = INTokenApeStaking(_nBAYC);
         nMAYC = INTokenApeStaking(_nMAYC);
+        apeYield = IApeYield(_apeYield);
     }
 
     function mint(
@@ -54,7 +58,8 @@ contract PTokenSApe is PToken {
 
     function balanceOf(address user) public view override returns (uint256) {
         uint256 totalStakedAPE = nBAYC.getUserApeStakingAmount(user) +
-            nMAYC.getUserApeStakingAmount(user);
+            nMAYC.getUserApeStakingAmount(user) +
+            apeYield.getApeBalanceForUser(user);
         return totalStakedAPE;
     }
 
