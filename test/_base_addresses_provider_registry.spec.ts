@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import {ONE_ADDRESS} from "../deploy/helpers/constants";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ONE_ADDRESS} from "../helpers/constants";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 

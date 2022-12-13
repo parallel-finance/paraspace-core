@@ -10,16 +10,16 @@ import {
   ZERO_ADDRESS,
   MAX_BORROW_CAP,
   MAX_SUPPLY_CAP,
-} from "../deploy/helpers/constants";
-import {deployReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
-import {getFirstSigner} from "../deploy/helpers/contracts-getters";
-import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
-import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
-import {strategyWETH} from "../deploy/market-config/reservesConfigs";
+} from "../helpers/constants";
+import {deployReserveAuctionStrategy} from "../helpers/contracts-deployments";
+import {getFirstSigner} from "../helpers/contracts-getters";
+import {eContractid, ProtocolErrors} from "../helpers/types";
+import {auctionStrategyExp} from "../market-config/auctionStrategies";
+import {strategyWETH} from "../market-config/reservesConfigs";
 import {
   convertToCurrencyDecimals,
   impersonateAddress,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {
   ERC20,
   ERC20__factory,
@@ -32,12 +32,12 @@ import {
 } from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {waitForTx} from "../helpers/misc-utils";
 import {BigNumberish} from "ethers";
 import "./helpers/utils/wadraymath";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 describe("PoolConfigurator: Common", () => {
   type ReserveConfigurationValues = {

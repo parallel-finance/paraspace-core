@@ -1,14 +1,14 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {ONE_YEAR} from "../deploy/helpers/constants";
+import {ONE_YEAR} from "../helpers/constants";
 import {
   getParaSpaceConfig,
   waitForTx,
   advanceTimeAndBlock,
-} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
-import {strategyWPunks} from "../deploy/market-config/reservesConfigs";
+} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
+import {strategyWPunks} from "../market-config/reservesConfigs";
 import {testEnvFixture} from "./helpers/setup-env";
 
 import {borrowAndValidate, supplyAndValidate} from "./helpers/validated-steps";

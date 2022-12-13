@@ -1,9 +1,7 @@
 import {task} from "hardhat/config";
 
 task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
-  const {upgradeAll} = await import(
-    "../../deploy/tasks/deployments/upgrade/upgrade"
-  );
+  const {upgradeAll} = await import("../../scripts/upgrade/upgrade/upgrade");
   await DRE.run("set-DRE");
   console.time("upgrade all");
   await upgradeAll();
@@ -11,9 +9,7 @@ task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
 });
 
 task("upgrade:pool", "upgrade pool components").setAction(async (_, DRE) => {
-  const {upgradePool} = await import(
-    "../../deploy/tasks/deployments/upgrade/upgrade"
-  );
+  const {upgradePool} = await import("../../scripts/upgrade/upgrade/upgrade");
   await DRE.run("set-DRE");
   console.time("upgrade pool");
   await upgradePool();
@@ -23,7 +19,7 @@ task("upgrade:pool", "upgrade pool components").setAction(async (_, DRE) => {
 task("upgrade:remove-pool-funcs", "clean pool components").setAction(
   async (_, DRE) => {
     const {removePoolFuncs} = await import(
-      "../../deploy/tasks/deployments/upgrade/upgrade"
+      "../../scripts/upgrade/upgrade/upgrade"
     );
     await DRE.run("set-DRE");
     console.time("remove pool funcs");
@@ -35,7 +31,7 @@ task("upgrade:remove-pool-funcs", "clean pool components").setAction(
 task("upgrade:add-pool-funcs", "add pool components").setAction(
   async (_, DRE) => {
     const {addPoolFuncs} = await import(
-      "../../deploy/tasks/deployments/upgrade/upgrade"
+      "../../scripts/upgrade/upgrade/upgrade"
     );
     await DRE.run("set-DRE");
     console.time("add pool funcs");
@@ -46,7 +42,7 @@ task("upgrade:add-pool-funcs", "add pool components").setAction(
 
 task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   const {upgradePToken} = await import(
-    "../../deploy/tasks/deployments/upgrade/upgrade_ptoken"
+    "../../scripts/upgrade/upgrade/upgrade_ptoken"
   );
   await DRE.run("set-DRE");
   console.time("upgrade ptoken");
@@ -56,7 +52,7 @@ task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
 
 task("upgrade:ntoken", "upgrade ntoken").setAction(async (_, DRE) => {
   const {upgradeNToken} = await import(
-    "../../deploy/tasks/deployments/upgrade/upgrade_ntoken"
+    "../../scripts/upgrade/upgrade/upgrade_ntoken"
   );
   await DRE.run("set-DRE");
   console.time("upgrade ntoken");

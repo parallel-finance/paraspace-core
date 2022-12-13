@@ -17,29 +17,27 @@ import {
 import {
   buildPermitParams,
   getSignatureFromTypedData,
-} from "../../deploy/helpers/contracts-helpers";
-
-import {convertToCurrencyDecimals} from "../../deploy/helpers/contracts-helpers";
+} from "../../helpers/contracts-helpers";
+import {convertToCurrencyDecimals} from "../../helpers/contracts-helpers";
 import {
   getPToken,
   getMintableERC20,
   getVariableDebtToken,
   getChainId,
-} from "../../deploy/helpers/contracts-getters";
-import {MAX_UINT_AMOUNT, ONE_YEAR} from "../../deploy/helpers/constants";
+} from "../../helpers/contracts-getters";
+import {MAX_UINT_AMOUNT, ONE_YEAR} from "../../helpers/constants";
 import {SignerWithAddress, TestEnv} from "./make-suite";
 import {
   advanceTimeAndBlock,
   DRE,
   timeLatest,
   waitForTx,
-} from "../../deploy/helpers/misc-utils";
-
+} from "../../helpers/misc-utils";
 import chai from "chai";
 import {ReserveData, UserReserveData} from "./utils/interfaces";
 import {BigNumber, ContractReceipt} from "ethers";
 import {PToken} from "../../types";
-import {tEthereumAddress} from "../../deploy/helpers/types";
+import {tEthereumAddress} from "../../helpers/types";
 import {MintableERC20__factory} from "../../types";
 
 const {expect} = chai;

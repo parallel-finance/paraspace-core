@@ -1,19 +1,14 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {
-  DRE,
-  evmRevert,
-  evmSnapshot,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {DRE, evmRevert, evmSnapshot, waitForTx} from "../helpers/misc-utils";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
-} from "../deploy/helpers/contracts-getters";
-import {ProtocolErrors} from "../deploy/helpers/types";
+} from "../helpers/contracts-getters";
+import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   approveTo,
   createNewPool,
@@ -21,7 +16,7 @@ import {
   mintNewPosition,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {ONE_ADDRESS} from "../deploy/helpers/constants";
+import {ONE_ADDRESS} from "../helpers/constants";
 import {
   borrowAndValidate,
   changePriceAndValidate,

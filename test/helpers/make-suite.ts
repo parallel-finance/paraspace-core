@@ -45,7 +45,7 @@ import {
   getApeCoinStaking,
   getBlurExchangeProxy,
   getExecutionDelegate,
-} from "../../deploy/helpers/contracts-getters";
+} from "../../helpers/contracts-getters";
 import {
   eContractid,
   ERC20TokenContractId,
@@ -53,7 +53,7 @@ import {
   NTokenContractId,
   PTokenContractId,
   tEthereumAddress,
-} from "../../deploy/helpers/types";
+} from "../../helpers/types";
 import {
   ApeCoinStaking,
   BlurExchange,
@@ -82,7 +82,7 @@ import bignumberChai from "chai-bignumber";
 import {PriceOracle} from "../../types";
 import {PoolAddressesProvider} from "../../types";
 import {PoolAddressesProviderRegistry} from "../../types";
-import {getEthersSigners} from "../../deploy/helpers/contracts-helpers";
+import {getEthersSigners} from "../../helpers/contracts-helpers";
 import {WETH9Mocked} from "../../types";
 import {solidity} from "ethereum-waffle";
 import {
@@ -109,7 +109,7 @@ import {
 } from "../../types";
 import {MintableERC721} from "../../types";
 import {Signer} from "ethers";
-import {getParaSpaceConfig} from "../../deploy/helpers/misc-utils";
+import {getParaSpaceConfig} from "../../helpers/misc-utils";
 
 chai.use(bignumberChai());
 chai.use(solidity);
