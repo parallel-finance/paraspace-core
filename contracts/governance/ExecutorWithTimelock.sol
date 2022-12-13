@@ -30,7 +30,7 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
      * @param delay minimum time between queueing and execution of proposal
      * @param gracePeriod time after `delay` while a proposal can be executed
      * @param minimumDelay lower threshold of `delay`, in seconds
-     * @param maximumDelay upper threhold of `delay`, in seconds
+     * @param maximumDelay upper threshold of `delay`, in seconds
      **/
     constructor(
         address admin,
