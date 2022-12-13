@@ -79,20 +79,30 @@ export const step_20 = async (
 
     if (!(await aclManager.isAssetListingAdmin(paraSpaceAdminAddress))) {
       await waitForTx(
-        await aclManager.addAssetListingAdmin(paraSpaceAdminAddress)
+        await aclManager.addAssetListingAdmin(
+          paraSpaceAdminAddress,
+          GLOBAL_OVERRIDES
+        )
       );
     }
     if (await aclManager.isAssetListingAdmin(deployerAddress)) {
       await waitForTx(
-        await aclManager.removeAssetListingAdmin(deployerAddress)
+        await aclManager.removeAssetListingAdmin(
+          deployerAddress,
+          GLOBAL_OVERRIDES
+        )
       );
     }
 
     if (!(await aclManager.isRiskAdmin(riskAdminAddress))) {
-      await waitForTx(await aclManager.addRiskAdmin(riskAdminAddress));
+      await waitForTx(
+        await aclManager.addRiskAdmin(riskAdminAddress, GLOBAL_OVERRIDES)
+      );
     }
     if (await aclManager.isRiskAdmin(deployerAddress)) {
-      await waitForTx(await aclManager.removeRiskAdmin(deployerAddress));
+      await waitForTx(
+        await aclManager.removeRiskAdmin(deployerAddress, GLOBAL_OVERRIDES)
+      );
     }
 
     await waitForTx(
