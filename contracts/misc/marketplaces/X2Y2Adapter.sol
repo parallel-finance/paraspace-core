@@ -42,6 +42,10 @@ contract X2Y2Adapter is IMarketplace {
         IX2Y2.OrderItem memory item = order.items[detail.itemIdx];
 
         require(
+            shared.amountToWeth == 0 && shared.amountToEth == 0, // dont rely on x2y2 for ETH/WETH convention
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
+        require(
             !shared.canFail && IX2Y2.Op.COMPLETE_SELL_OFFER == detail.op,
             Errors.INVALID_MARKETPLACE_ORDER
         );
