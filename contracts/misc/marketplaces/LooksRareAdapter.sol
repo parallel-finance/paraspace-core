@@ -59,6 +59,7 @@ contract LooksRareAdapter is IMarketplace {
         ItemType itemType = ItemType.ERC20;
         address token = makerAsk.currency;
         if (token == ADDRESSES_PROVIDER.getWETH()) {
+            // TODO: support pure WETH purchase
             itemType = ItemType.NATIVE;
             token = address(0);
         }
