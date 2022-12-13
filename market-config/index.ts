@@ -170,7 +170,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
-  ParaSpaceAdmin: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  ParaSpaceAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   IncentivesController: ZERO_ADDRESS,
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
@@ -180,11 +180,12 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     "0x3A6c796edffc057d789F7d4ffAd438B1D48f3075",
     "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
     "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
+    "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   ],
-  RiskAdmin: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
-  GatewayAdmin: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
-  ParaSpaceTeam: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
-  Treasury: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  RiskAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  GatewayAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  ParaSpaceTeam: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  Treasury: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   Tokens: {
     WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
