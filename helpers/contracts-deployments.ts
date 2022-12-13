@@ -8,7 +8,6 @@ import {
 } from "./types";
 import {
   ACLManager,
-  ApeCoinStaking,
   ApeStakingLogic,
   ApeStakingLogic__factory,
   ATokenDebtToken,
@@ -119,12 +118,12 @@ import {
 import {StETH, MockAToken} from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
-  getAllERC20Tokens,
   getApeStakingLogic,
   getPunks,
   getFirstSigner,
   getWETH,
   getMintableERC721Logic,
+  getAllTokens,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
@@ -799,9 +798,30 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       console.log("contract address is already in db ", tokenSymbol);
       await insertContractAddressInDb(
         tokenSymbol,
-        getParaSpaceConfig().Tokens[tokenSymbol],
+        tokensConfig[tokenSymbol],
         false
       );
+
+      if (
+        tokenSymbol === ERC20TokenContractId.sAPE &&
+        paraSpaceConfig.YogaLabs.ApeCoinStaking
+      ) {
+        await insertContractAddressInDb(
+          eContractid.ApeCoinStaking,
+          paraSpaceConfig.YogaLabs.ApeCoinStaking,
+          false
+        );
+      }
+      if (
+        tokenSymbol === ERC20TokenContractId.sAPE &&
+        paraSpaceConfig.YogaLabs.BAKC
+      ) {
+        await insertContractAddressInDb(
+          eContractid.BAKC,
+          paraSpaceConfig.YogaLabs.BAKC,
+          false
+        );
+      }
       continue;
     } else {
       console.log("deploying now ", tokenSymbol);
@@ -837,7 +857,6 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
 };
 
 export const deployAllERC721Tokens = async (verify?: boolean) => {
-  const erc20Tokens = await getAllERC20Tokens();
   const tokens: {
     [symbol: string]:
       | MockContract
@@ -923,54 +942,6 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         tokens[tokenSymbol] = await deployMAYC(
           [tokenSymbol, tokenSymbol, ZERO_ADDRESS, ZERO_ADDRESS],
           verify
-        );
-        const bakc = await deployMintableERC721(["BAKC", "BAKC", ""], verify);
-
-        const apeCoinStaking = await deployApeCoinStaking(
-          [
-            erc20Tokens.APE.address,
-            tokens.BAYC.address,
-            tokens.MAYC.address,
-            bakc.address,
-          ],
-          verify
-        );
-        const amount = await convertToCurrencyDecimals(
-          erc20Tokens.APE.address,
-          "94694400"
-        );
-
-        await apeCoinStaking.addTimeRange(
-          0,
-          amount,
-          "1666771200",
-          "1761465600",
-          amount,
-          GLOBAL_OVERRIDES
-        );
-        await apeCoinStaking.addTimeRange(
-          1,
-          amount,
-          "1666771200",
-          "1761465600",
-          amount,
-          GLOBAL_OVERRIDES
-        );
-        await apeCoinStaking.addTimeRange(
-          2,
-          amount,
-          "1666771200",
-          "1761465600",
-          amount,
-          GLOBAL_OVERRIDES
-        );
-        await apeCoinStaking.addTimeRange(
-          3,
-          amount,
-          "1666771200",
-          "1761465600",
-          amount,
-          GLOBAL_OVERRIDES
         );
         continue;
       }
@@ -1685,16 +1656,61 @@ export const deployMockAirdropProject = async (
     verify
   ) as Promise<MockAirdropProject>;
 
-export const deployApeCoinStaking = async (
-  args: [string, string, string, string],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
+export const deployApeCoinStaking = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const bakc = await deployMintableERC721(["BAKC", "BAKC", ""], verify);
+  const args = [
+    allTokens.APE.address,
+    allTokens.BAYC.address,
+    allTokens.MAYC.address,
+    bakc.address,
+  ];
+
+  const apeCoinStaking = await withSaveAndVerify(
     new ApeCoinStaking__factory(await getFirstSigner()),
     eContractid.ApeCoinStaking,
     [...args],
     verify
-  ) as Promise<ApeCoinStaking>;
+  );
+  const amount = await convertToCurrencyDecimals(
+    allTokens.APE.address,
+    "94694400"
+  );
+
+  await apeCoinStaking.addTimeRange(
+    0,
+    amount,
+    "1666771200",
+    "1761465600",
+    amount,
+    GLOBAL_OVERRIDES
+  );
+  await apeCoinStaking.addTimeRange(
+    1,
+    amount,
+    "1666771200",
+    "1761465600",
+    amount,
+    GLOBAL_OVERRIDES
+  );
+  await apeCoinStaking.addTimeRange(
+    2,
+    amount,
+    "1666771200",
+    "1761465600",
+    amount,
+    GLOBAL_OVERRIDES
+  );
+  await apeCoinStaking.addTimeRange(
+    3,
+    amount,
+    "1666771200",
+    "1761465600",
+    amount,
+    GLOBAL_OVERRIDES
+  );
+  return apeCoinStaking;
+};
 
 export const deployApeStakingLogic = async (verify?: boolean) => {
   return withSaveAndVerify(

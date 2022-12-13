@@ -143,7 +143,7 @@ export const strategyBAYC: IReserveParams = {
   xTokenImpl: eContractid.NTokenBAYCImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "200",
+  supplyCap: "1000",
 };
 
 export const strategyMAYC: IReserveParams = {
@@ -158,7 +158,7 @@ export const strategyMAYC: IReserveParams = {
   xTokenImpl: eContractid.NTokenMAYCImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "200",
+  supplyCap: "2000",
 };
 
 export const strategyDoodles: IReserveParams = {

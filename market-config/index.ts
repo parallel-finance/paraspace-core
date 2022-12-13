@@ -75,7 +75,6 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   Tokens: {
     sAPE: "0x0000000000000000000000000000000000000001",
   },
-  BendDAO: {},
   YogaLabs: {},
   Uniswap: {},
   Marketplace: {},
@@ -117,12 +116,17 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Tokens: {
+    APE: "0x328507DC29C95c170B56a1b3A758eB7a9E73455c",
+    BAYC: "0xF40299b626ef6E197F5d9DE9315076CAB788B6Ef",
+    MAYC: "0x3f228cBceC3aD130c45D21664f2C7f5b23130d23",
     sAPE: "0x0000000000000000000000000000000000000001",
     WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
-  BendDAO: {},
-  YogaLabs: {},
+  YogaLabs: {
+    ApeCoinStaking: "0xeF37717B1807a253c6D140Aca0141404D23c26D4",
+    BAKC: "0xd60d682764Ee04e54707Bee7B564DC65b31884D0",
+  },
   Uniswap: {
     V2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     V2Router: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
@@ -205,9 +209,6 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: "0x49cf6f5d44e70224e2e23fdcdd2c053f30ada28b",
     sAPE: "0x0000000000000000000000000000000000000001",
     // UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
-  },
-  BendDAO: {
-    Oracle: "0x7c2a19e54e48718f6c60908a9cff3396e4ea1eba",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",

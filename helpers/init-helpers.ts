@@ -7,23 +7,18 @@ import {
   tEthereumAddress,
 } from "./types";
 import {ProtocolDataProvider} from "../types";
-import {
-  chunk,
-  getParaSpaceConfig,
-  isLocalTestnet,
-  isMainnet,
-  isPublicTestnet,
-  waitForTx,
-} from "./misc-utils";
+import {chunk, waitForTx} from "./misc-utils";
 import {
   getACLManager,
   getReservesSetupHelper,
   getPoolAddressesProvider,
   getPoolConfiguratorProxy,
   getPoolProxy,
-  getApeCoinStaking,
 } from "./contracts-getters";
-import {insertContractAddressInDb} from "./contracts-helpers";
+import {
+  getContractAddressInDb,
+  insertContractAddressInDb,
+} from "./contracts-helpers";
 import {BigNumber, BigNumberish} from "ethers";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {
@@ -42,6 +37,7 @@ import {
   deployATokenDebtToken,
   deployStETHDebtToken,
   deployPTokenSApe,
+  deployApeCoinStaking,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -70,7 +66,6 @@ export const initReservesByHelper = async (
   const addressProvider = await getPoolAddressesProvider(
     poolAddressesProviderProxy
   );
-  const paraSpaceConfig = getParaSpaceConfig();
   const pool = await getPoolProxy(poolProxy);
   // CHUNK CONFIGURATION
   const initChunks = 4;
@@ -396,12 +391,9 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = nTokenUniSwapV3ImplementationAddress;
         } else if (reserveSymbol === ERC721TokenContractId.BAYC) {
-          let apeCoinStaking;
-          if (isLocalTestnet() || isPublicTestnet()) {
-            apeCoinStaking = (await getApeCoinStaking()).address;
-          } else if (isMainnet()) {
-            apeCoinStaking = paraSpaceConfig.YogaLabs.ApeCoinStaking!;
-          }
+          const apeCoinStaking =
+            (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+            (await deployApeCoinStaking(verify)).address;
 
           if (!nTokenBAYCImplementationAddress) {
             nTokenBAYCImplementationAddress = (
@@ -410,12 +402,9 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = nTokenBAYCImplementationAddress;
         } else if (reserveSymbol === ERC721TokenContractId.MAYC) {
-          let apeCoinStaking;
-          if (isLocalTestnet() || isPublicTestnet()) {
-            apeCoinStaking = (await getApeCoinStaking()).address;
-          } else if (isMainnet()) {
-            apeCoinStaking = paraSpaceConfig.YogaLabs.ApeCoinStaking;
-          }
+          const apeCoinStaking =
+            (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+            (await deployApeCoinStaking(verify)).address;
 
           if (!nTokenMAYCImplementationAddress) {
             nTokenMAYCImplementationAddress = (

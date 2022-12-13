@@ -75,10 +75,10 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.mainnet]: 16119797,
   [eEthereumNetwork.kovan]: undefined,
   [eEthereumNetwork.ropsten]: undefined,
-  [eEthereumNetwork.goerli]: 7901881,
+  [eEthereumNetwork.goerli]: 8127721,
   [eEthereumNetwork.hardhat]: undefined,
   [eEthereumNetwork.anvil]: undefined,
   [eEthereumNetwork.ganache]: undefined,
   [eEthereumNetwork.parallel]: undefined,
-  [eEthereumNetwork.tenderlyMain]: 15909885,
+  [eEthereumNetwork.tenderlyMain]: 16119797,
 };
