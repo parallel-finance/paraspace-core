@@ -24,7 +24,7 @@ contract BlurAdapter is IMarketplace {
 
     function getAskOrderInfo(bytes memory params)
         external
-        pure
+        view
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -33,6 +33,16 @@ contract BlurAdapter is IMarketplace {
             (Input, Input)
         );
         orderInfo.maker = sell.order.trader;
+        orderInfo.taker = buy.order.trader;
+
+        require(
+            sell.order.price == buy.order.price, // must be StandardSaleForFixedPrice matching policy
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
+        require(
+            orderInfo.taker == ADDRESSES_PROVIDER.getPool(),
+            Errors.INVALID_ORDER_TAKER
+        );
 
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem(

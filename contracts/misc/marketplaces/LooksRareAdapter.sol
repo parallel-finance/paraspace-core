@@ -33,6 +33,16 @@ contract LooksRareAdapter is IMarketplace {
             OrderTypes.MakerOrder memory makerAsk
         ) = abi.decode(params, (OrderTypes.TakerOrder, OrderTypes.MakerOrder));
         orderInfo.maker = makerAsk.signer;
+        orderInfo.taker = takerBid.taker;
+
+        require(
+            orderInfo.taker == ADDRESSES_PROVIDER.getPool(),
+            Errors.INVALID_ORDER_TAKER
+        );
+        require(
+            takerBid.price == makerAsk.price, // must be StandardSaleForFixedPrice strategy
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
 
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem(

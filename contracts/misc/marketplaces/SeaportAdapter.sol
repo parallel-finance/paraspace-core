@@ -24,7 +24,7 @@ contract SeaportAdapter is IMarketplace {
 
     function getAskOrderInfo(bytes memory params)
         external
-        pure
+        view
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -32,7 +32,7 @@ contract SeaportAdapter is IMarketplace {
             AdvancedOrder memory advancedOrder,
             CriteriaResolver[] memory resolvers,
             ,
-
+            address recipient
         ) = abi.decode(
                 params,
                 (AdvancedOrder, CriteriaResolver[], bytes32, address)
@@ -45,6 +45,11 @@ contract SeaportAdapter is IMarketplace {
         );
         // the person who listed NFT to sell
         orderInfo.maker = advancedOrder.parameters.offerer;
+        require(
+            recipient == ADDRESSES_PROVIDER.getPool(),
+            Errors.INVALID_ORDER_TAKER
+        );
+
         orderInfo.id = advancedOrder.signature;
         // NFT, items will be checked inside MarketplaceLogic
         orderInfo.offer = advancedOrder.parameters.offer;
@@ -77,8 +82,13 @@ contract SeaportAdapter is IMarketplace {
         );
         // the person who sends bid to buy NFT
         orderInfo.maker = advancedOrders[0].parameters.offerer;
+        // the person who accepts bid to sell NFT
         orderInfo.taker = advancedOrders[1].parameters.offerer;
+        // maker & taker must be different addresses
+        require(orderInfo.maker != orderInfo.taker, Errors.MAKER_SAME_AS_TAKER);
+
         orderInfo.id = advancedOrders[0].signature;
+
         // NFT, items will be checked inside MarketplaceLogic
         orderInfo.offer = advancedOrders[1].parameters.offer;
         require(orderInfo.offer.length > 0, Errors.INVALID_MARKETPLACE_ORDER);
