@@ -9,5 +9,5 @@
     "resolveJsonModule": true
   },
   "include": ["./test", "./tasks", "./helpers", "./scripts"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./hardhat.config.ts", "./helper-hardhat-config.ts"]
 }
