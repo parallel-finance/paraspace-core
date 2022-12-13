@@ -374,9 +374,9 @@ info:
 wallet:
 	make SCRIPT_PATH=./scripts/dev/4.wallet.ts run
 
-.PHONY: release-v1.2
-release-v1.2:
-	make SCRIPT_PATH=./scripts/dev/5.release-v1.2.ts run
+.PHONY: rate-strategy
+rate-strategy:
+	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
@@ -397,6 +397,14 @@ upgrade-ntoken: build
 .PHONY: upgrade-ptoken
 upgrade-ptoken: build
 	make TASK_NAME=upgrade:ptoken run-task
+
+.PHONY: upgrade-debt-token
+upgrade-debt-token: build
+	make TASK_NAME=upgrade:debt-token run-task
+
+.PHONY: upgrade-configurator
+upgrade-configurator: build
+	make TASK_NAME=upgrade:configurator run-task
 
 .PHONY: remove-pool-funcs
 remove-pool-funcs: build

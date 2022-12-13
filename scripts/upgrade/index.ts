@@ -4,23 +4,22 @@ import {
   getFirstSigner,
   getPoolAddressesProvider,
 } from "../../helpers/contracts-getters";
-
 import dotenv from "dotenv";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {upgradePToken} from "./ptoken";
 import {upgradeNToken} from "./ntoken";
-import {ETHERSCAN_VERIFICATION} from "../../helpers/hardhat-constants";
+import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 
 dotenv.config();
 
-export const upgradeAll = async () => {
-  await upgradePool();
-  await upgradePToken();
-  await upgradeNToken();
+export const upgradeAll = async (verify = false) => {
+  await upgradePool(verify);
+  await upgradePToken(verify);
+  await upgradeNToken(verify);
   console.log("upgrade all finished!");
 };
 
-export const upgradePool = async () => {
+export const upgradePool = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
   console.time("deploy PoolComponent");
   const {
@@ -32,10 +31,7 @@ export const upgradePool = async () => {
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
-  } = await deployPoolComponents(
-    addressesProvider.address,
-    ETHERSCAN_VERIFICATION
-  );
+  } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
   console.time("upgrade PoolCore");
@@ -49,7 +45,8 @@ export const upgradePool = async () => {
         },
       ],
       ZERO_ADDRESS,
-      "0x"
+      "0x",
+      GLOBAL_OVERRIDES
     )
   );
   console.timeEnd("upgrade PoolCore");
@@ -65,7 +62,8 @@ export const upgradePool = async () => {
         },
       ],
       ZERO_ADDRESS,
-      "0x"
+      "0x",
+      GLOBAL_OVERRIDES
     )
   );
   console.timeEnd("upgrade PoolParameters");
@@ -81,7 +79,8 @@ export const upgradePool = async () => {
         },
       ],
       ZERO_ADDRESS,
-      "0x"
+      "0x",
+      GLOBAL_OVERRIDES
     )
   );
   console.timeEnd("upgrade PoolMarketplace");
@@ -97,7 +96,8 @@ export const upgradePool = async () => {
         },
       ],
       ZERO_ADDRESS,
-      "0x"
+      "0x",
+      GLOBAL_OVERRIDES
     )
   );
   console.timeEnd("upgrade PoolApeStaking");
@@ -125,13 +125,14 @@ export const removePoolFuncs = async () => {
           },
         ],
         ZERO_ADDRESS,
-        "0x"
+        "0x",
+        GLOBAL_OVERRIDES
       )
     );
   }
 };
 
-export const addPoolFuncs = async () => {
+export const addPoolFuncs = async (verify = false) => {
   const poolAdmin = await getFirstSigner();
   const addressesProvider = (await getPoolAddressesProvider()).connect(
     poolAdmin
@@ -147,10 +148,7 @@ export const addPoolFuncs = async () => {
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
-  } = await deployPoolComponents(
-    addressesProvider.address,
-    ETHERSCAN_VERIFICATION
-  );
+  } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
   const FUNCS_TO_ADD = process.env.FUNCS_TO_ADD?.replace(/\[|\]|'/g, "").split(
@@ -173,7 +171,8 @@ export const addPoolFuncs = async () => {
             },
           ],
           ZERO_ADDRESS,
-          "0x"
+          "0x",
+          GLOBAL_OVERRIDES
         )
       );
     }
@@ -192,7 +191,8 @@ export const addPoolFuncs = async () => {
             },
           ],
           ZERO_ADDRESS,
-          "0x"
+          "0x",
+          GLOBAL_OVERRIDES
         )
       );
     }
@@ -211,7 +211,8 @@ export const addPoolFuncs = async () => {
             },
           ],
           ZERO_ADDRESS,
-          "0x"
+          "0x",
+          GLOBAL_OVERRIDES
         )
       );
     }
@@ -231,7 +232,8 @@ export const addPoolFuncs = async () => {
             },
           ],
           ZERO_ADDRESS,
-          "0x"
+          "0x",
+          GLOBAL_OVERRIDES
         )
       );
     }
