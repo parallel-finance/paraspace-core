@@ -37,11 +37,12 @@ contract X2Y2Adapter is IMarketplace {
         require(runInput.details.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
 
         IX2Y2.SettleDetail memory detail = runInput.details[0];
+        IX2Y2.SettleShared memory shared = runInput.shared;
         IX2Y2.Order memory order = runInput.orders[detail.orderIdx];
         IX2Y2.OrderItem memory item = order.items[detail.itemIdx];
 
         require(
-            IX2Y2.Op.COMPLETE_SELL_OFFER == detail.op,
+            !shared.canFail && IX2Y2.Op.COMPLETE_SELL_OFFER == detail.op,
             Errors.INVALID_MARKETPLACE_ORDER
         );
 
