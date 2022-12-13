@@ -1,11 +1,11 @@
-import {waitForTx} from "../../../helpers/misc-utils";
+import {waitForTx} from "../../helpers/misc-utils";
 import {
   deployDelegationAwarePTokenImpl,
   deployGenericPTokenImpl,
   deployPTokenAToken,
   deployPTokenSApe,
   deployPTokenStETH,
-} from "../../../helpers/contracts-deployments";
+} from "../../helpers/contracts-deployments";
 import {
   getAllERC721Tokens,
   getPoolAddressesProvider,
@@ -13,14 +13,14 @@ import {
   getPoolProxy,
   getProtocolDataProvider,
   getPToken,
-} from "../../../helpers/contracts-getters";
-import {ERC721TokenContractId, XTokenType} from "../../../helpers/types";
+} from "../../helpers/contracts-getters";
+import {ERC721TokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {
   ETHERSCAN_VERIFICATION,
   GLOBAL_OVERRIDES,
-} from "../../../helpers/hardhat-constants";
+} from "../../helpers/hardhat-constants";
 
 dotenv.config();
 

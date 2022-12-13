@@ -1,15 +1,15 @@
-import {waitForTx} from "../../../helpers/misc-utils";
-import {deployPoolComponents} from "../../../helpers/contracts-deployments";
+import {waitForTx} from "../../helpers/misc-utils";
+import {deployPoolComponents} from "../../helpers/contracts-deployments";
 import {
   getFirstSigner,
   getPoolAddressesProvider,
-} from "../../../helpers/contracts-getters";
+} from "../../helpers/contracts-getters";
 
 import dotenv from "dotenv";
-import {ZERO_ADDRESS} from "../../../helpers/constants";
-import {upgradePToken} from "./upgrade_ptoken";
-import {upgradeNToken} from "./upgrade_ntoken";
-import {ETHERSCAN_VERIFICATION} from "../../../helpers/hardhat-constants";
+import {ZERO_ADDRESS} from "../../helpers/constants";
+import {upgradePToken} from "./ptoken";
+import {upgradeNToken} from "./ntoken";
+import {ETHERSCAN_VERIFICATION} from "../../helpers/hardhat-constants";
 
 dotenv.config();
 

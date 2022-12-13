@@ -1,25 +1,25 @@
-import {waitForTx} from "../../../helpers/misc-utils";
+import {waitForTx} from "../../helpers/misc-utils";
 import {
   deployGenericMoonbirdNTokenImpl,
   deployGenericNTokenImpl,
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
   deployUniswapV3NTokenImpl,
-} from "../../../helpers/contracts-deployments";
+} from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
   getPoolConfiguratorProxy,
   getProtocolDataProvider,
   getNToken,
   getApeCoinStaking,
-} from "../../../helpers/contracts-getters";
-import {XTokenType} from "../../../helpers/types";
+} from "../../helpers/contracts-getters";
+import {XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {
   ETHERSCAN_VERIFICATION,
   GLOBAL_OVERRIDES,
-} from "../../../helpers/hardhat-constants";
+} from "../../helpers/hardhat-constants";
 
 dotenv.config();
 

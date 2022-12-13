@@ -36,7 +36,7 @@ import {eEthereumNetwork} from "./helpers/types";
 
 require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
 
-["deployments"].forEach((folder) => {
+["deployments", "upgrade", "dev"].forEach((folder) => {
   const tasksPath = path.join(__dirname, "tasks", folder);
   fs.readdirSync(tasksPath)
     .filter((pth) => pth.includes(".ts"))
