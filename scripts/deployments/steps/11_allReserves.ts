@@ -1,4 +1,3 @@
-import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployMockIncentivesController,
   deployMockReserveAuctionStrategy,
@@ -37,7 +36,7 @@ export const step_11 = async (verify = false) => {
     const treasuryAddress = config.Treasury;
 
     // Add an IncentivesController
-    let incentivesController = ZERO_ADDRESS;
+    let incentivesController = config.IncentivesController;
     let auctionStrategy: tEthereumAddress | undefined = undefined;
 
     if (isLocalTestnet()) {

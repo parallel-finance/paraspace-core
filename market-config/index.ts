@@ -1,3 +1,4 @@
+import {ZERO_ADDRESS} from "../helpers/constants";
 import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
 import {MocksConfig} from "./mocks";
 import {MainnetOracleConfig, TestnetOracleConfig} from "./oracle";
@@ -70,6 +71,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   ...CommonConfig,
   ParaSpaceTeam: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
   Treasury: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
+  IncentivesController: ZERO_ADDRESS,
   Tokens: {
     sAPE: "0x0000000000000000000000000000000000000001",
   },
@@ -109,6 +111,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   ...CommonConfig,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  IncentivesController: ZERO_ADDRESS,
   ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -168,6 +171,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceAdmin: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  IncentivesController: ZERO_ADDRESS,
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",

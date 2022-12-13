@@ -600,6 +600,7 @@ export interface ICommonConfiguration {
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
   Treasury: tEthereumAddress;
+  IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
 }
 
