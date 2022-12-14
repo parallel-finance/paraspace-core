@@ -1329,7 +1329,7 @@ describe("APE Coin Staking Test", () => {
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
     const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
     const userBalance = await ape.balanceOf(user1.address);
-    const user3Balance = await ape.balanceOf(user2.address);
+    const user2Balance = await ape.balanceOf(user2.address);
 
     expect(
       await nMAYC
@@ -1360,8 +1360,8 @@ describe("APE Coin Staking Test", () => {
     expect(userBalanceAfter).equal(userBalance);
 
     // User 2 - Ape Balance should remain the same
-    const user3BalanceAfter = await ape.balanceOf(user2.address);
-    expect(user3BalanceAfter).equal(user3Balance);
+    const user2BalanceAfter = await ape.balanceOf(user2.address);
+    expect(user2BalanceAfter).equal(user2Balance);
   });
 
   it("TC-pool-ape-staking-23 test market accept bid offer should success", async () => {
