@@ -95,4 +95,12 @@ interface IPoolApeStaking {
         uint256 repayAmount,
         uint256 supplyAmount
     ) external;
+
+    /**
+     * @notice Claim user Ape coin reward and deposit to ape yield
+     * @param nftAsset Contract address of BAYC/MAYC
+     * @param tokenId Token id of the ape staking position on
+     * @dev Need check User health factor > 1.
+     */
+    function claimApeAndYield(address nftAsset, uint256 tokenId) external;
 }

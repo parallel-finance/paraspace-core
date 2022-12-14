@@ -20,6 +20,7 @@ import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {IApeYield} from "../../interfaces/IApeYield.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -34,6 +35,8 @@ contract PoolApeStaking is
     using SafeCast for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
+    IApeYield internal immutable APE_YIELD;
+    IERC20 internal immutable APE_COIN;
     uint256 internal constant POOL_REVISION = 120;
 
     event ReserveUsedAsCollateralEnabled(
@@ -45,8 +48,14 @@ contract PoolApeStaking is
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
-    constructor(IPoolAddressesProvider provider) {
+    constructor(
+        IPoolAddressesProvider provider,
+        IApeYield apeYield,
+        IERC20 apeCoin
+    ) {
         ADDRESSES_PROVIDER = provider;
+        APE_YIELD = apeYield;
+        APE_COIN = apeCoin;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -412,6 +421,34 @@ contract PoolApeStaking is
         }
     }
 
+    function claimApeAndYield(address nftAsset, uint256 tokenId)
+        external
+        nonReentrant
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
+
+        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
+        address xTokenAddress = nftReserve.xTokenAddress;
+
+        _checkApeAllowance();
+
+        uint256 balanceBefore = APE_COIN.balanceOf(address(this));
+        uint256[] memory _nfts = new uint256[](1);
+        _nfts[0] = tokenId;
+        INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, address(this));
+        uint256 balanceAfter = APE_COIN.balanceOf(address(this));
+
+        address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
+        APE_YIELD.deposit(positionOwner, balanceAfter - balanceBefore);
+
+        require(
+            getUserHf(msg.sender) >
+                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+        );
+    }
+
     function getUserHf(address user) internal view returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.CalculateUserAccountDataParams memory params = DataTypes
@@ -439,5 +476,15 @@ contract PoolApeStaking is
 
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
+    }
+
+    function _checkApeAllowance() internal {
+        uint256 allowance = APE_COIN.allowance(
+            address(this),
+            address(APE_YIELD)
+        );
+        if (allowance == 0) {
+            APE_COIN.approve(address(APE_YIELD), type(uint256).max);
+        }
     }
 }
