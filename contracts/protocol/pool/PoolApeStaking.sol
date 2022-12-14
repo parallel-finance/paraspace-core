@@ -449,6 +449,51 @@ contract PoolApeStaking is
         );
     }
 
+    function batchClaimApeAndYield(address nftAsset, uint256[] memory tokenIds)
+        external
+        nonReentrant
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
+
+        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
+        address xTokenAddress = nftReserve.xTokenAddress;
+
+        _checkApeAllowance();
+
+        uint256 balanceBefore = APE_COIN.balanceOf(address(this));
+
+        uint256[] memory amounts = new uint256[](tokenIds.length);
+
+        address[] memory users = new address[](tokenIds.length);
+        uint256 totalBalance;
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            uint256[] memory _nfts = new uint256[](1);
+            _nfts[0] = tokenIds[index];
+            INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, address(this));
+            uint256 balanceAfter = APE_COIN.balanceOf(address(this));
+
+            address positionOwner = INToken(xTokenAddress).ownerOf(tokenIds[index]);
+
+            users[index] = positionOwner;
+            amounts[index] = balanceAfter - balanceBefore;
+            totalBalance += amounts[index];
+
+            balanceBefore = balanceAfter;
+        }
+
+        APE_YIELD.batchDeposit(users, amounts);
+
+        
+
+        // require(
+        //     getUserHf(msg.sender) >
+        //         DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+        //     Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+        // );
+    }
+
     function getUserHf(address user) internal view returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.CalculateUserAccountDataParams memory params = DataTypes

@@ -8,6 +8,7 @@ import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IApeYield} from "../interfaces/IApeYield.sol";
 import {PsAPE} from "./PsAPE.sol";
+import "hardhat/console.sol";
 
 contract ApeYield is Ownable, PsAPE, IApeYield {
     using SafeMath for uint256;
@@ -27,7 +28,11 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
     }
 
     function deposit(address onBehalf, uint256 amount) external override {
-        require(amount > 0, "zero amount");
+        console.log("amount", amount);
+        if (amount == 0)
+            return;
+
+        // require(amount > 0, "zero amount");
         uint256 amountShare = getShareByPooledApe(amount);
         if (amountShare == 0) {
             amountShare = amount;
@@ -39,6 +44,44 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
         _yield();
 
         emit Deposit(msg.sender, onBehalf, amount, amountShare);
+    }
+
+    function batchDeposit(address[] calldata onBehalf, uint256[] calldata amount) external override {
+        
+        uint256 totalAmount;
+
+        uint256 totalPooledApeBalance = getTotalPooledApeBalance();
+        uint256 totalShares =  getTotalShares();
+
+        uint256 amountShare;
+        
+        // require(amount > 0, "zero amount");
+        for (uint256 index = 0; index < onBehalf.length; index++) {
+            if (amount[index] == 0)
+            return;
+
+            if (totalPooledApeBalance == 0) {
+                amountShare = amount[index];
+            } else {
+                amountShare =  (amount[index] * totalShares) / totalPooledApeBalance;
+            }
+
+            _mint(onBehalf[index], amountShare);
+
+            totalShares = amountShare;
+
+            totalAmount += amountShare;
+            totalPooledApeBalance += amountShare;
+
+            emit Deposit(msg.sender, onBehalf[index], amount[index], amountShare);
+        }
+
+        _transferTokenIn(msg.sender, totalAmount);
+        
+        _harvest();
+        _yield();
+
+        
     }
 
     function withdraw(uint256 amountShare) external override {

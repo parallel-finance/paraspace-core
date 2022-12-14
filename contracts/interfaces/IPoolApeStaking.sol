@@ -103,4 +103,6 @@ interface IPoolApeStaking {
      * @dev Need check User health factor > 1.
      */
     function claimApeAndYield(address nftAsset, uint256 tokenId) external;
+
+    function batchClaimApeAndYield(address nftAsset, uint256[] memory tokenIds) external;
 }
