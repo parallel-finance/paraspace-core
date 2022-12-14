@@ -27,7 +27,7 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
     }
 
     function deposit(address onBehalf, uint256 amount) external override {
-        require(amount > 0, "Amount Too Small");
+        require(amount > 0, "zero amount");
         uint256 amountShare = getShareByPooledApe(amount);
         if (amountShare == 0) {
             amountShare = amount;
@@ -42,7 +42,7 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
     }
 
     function withdraw(uint256 amountShare) external override {
-        require(amountShare > 0, "Amount Too Small");
+        require(amountShare > 0, "zero amount");
 
         uint256 amountWithdraw = getPooledApeByShares(amountShare);
         _burn(msg.sender, amountShare);
@@ -124,7 +124,7 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
     ) external onlyOwner {
         IERC20(token).safeTransfer(to, amount);
         if (token == address(apeCoin)) {
-            require(backedBalance >= apeCoin.balanceOf(address(this)));
+            require(backedBalance <= apeCoin.balanceOf(address(this)), "balance below backed balance");
         }
         emit RescueERC20(token, to, amount);
     }
