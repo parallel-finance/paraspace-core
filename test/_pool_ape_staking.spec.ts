@@ -1326,6 +1326,11 @@ describe("APE Coin Staking Test", () => {
     expect(await pSApeCoin.balanceOf(user1.address)).equal(amount);
     expect(await pSApeCoin.balanceOf(user2.address)).equal(0);
 
+    const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    const userBalance = await ape.balanceOf(user1.address);
+    const user3Balance = await ape.balanceOf(user2.address);
+
     expect(
       await nMAYC
         .connect(user1.signer)
@@ -1341,6 +1346,22 @@ describe("APE Coin Staking Test", () => {
     expect(await nMAYC.balanceOf(user2.address)).to.be.equal(1);
     expect(await pSApeCoin.balanceOf(user1.address)).equal(0);
     expect(await pSApeCoin.balanceOf(user2.address)).equal(0);
+
+    // User 1 - totalStake should have decreased in BAKC amount
+    const totalStakeAfter = await nMAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStakeAfter).equal(totalStake.sub(amount));
+
+    // User 1 - totalStake should have increased in BAKC amount
+    const pSApeBalanceAfter = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalanceAfter).equal(pSApeBalance.sub(amount));
+
+    // User 1 - Ape Balance should remain the same, because UnstakeAndRepay will supply redundant apes
+    const userBalanceAfter = await ape.balanceOf(user1.address);
+    expect(userBalanceAfter).equal(userBalance);
+
+    // User 2 - Ape Balance should remain the same
+    const user3BalanceAfter = await ape.balanceOf(user2.address);
+    expect(user3BalanceAfter).equal(user3Balance);
   });
 
   it("TC-pool-ape-staking-23 test market accept bid offer should success", async () => {
@@ -1527,5 +1548,629 @@ describe("APE Coin Staking Test", () => {
       (await pool.getUserConfiguration(user1.address)).data
     );
     expect(isUsingAsCollateral(userConfig, apeData.id)).to.be.true;
+  });
+
+  it("TC-pool-ape-staking-26 test borrowApeAndStake: User tries to staking on not Supplying (revert expected)", async () => {
+    const {
+      users: [user1],
+      ape,
+      bayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(bayc, "1", user1);
+    await mintAndValidate(ape, "15000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+    await expect(
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
+
+  it("TC-pool-ape-staking-27 test borrowApeAndStake: User tries to staking 0 ape icon for BAYC (revert expected)", async () => {
+    const {
+      users: [user1],
+      ape,
+      bayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "1", user1, true);
+    await mintAndValidate(ape, "15000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "0");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = amount1.add(amount2);
+    await expect(
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    ).to.be.revertedWith("DepositMoreThanOneAPE()");
+  });
+
+  it("TC-pool-ape-staking-28 test borrowApeAndStake: only staking BAKC", async () => {
+    const {
+      users: [user1],
+      ape,
+      bayc,
+      nBAYC,
+      pool,
+      weth,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "1", user1, true);
+
+    await mintAndValidate(ape, "15000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "0");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = amount1.add(amount2);
+    await pool.connect(user1.signer).borrowApeAndStake(
+      {
+        nftAsset: bayc.address,
+        borrowAmount: amount2,
+        cashAmount: amount1,
+      },
+      [],
+      [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+    );
+
+    // User 1 - totalStake should increased in Stake amount
+    const totalStake = await nBAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStake).equal(amount);
+
+    // User 1 - pSape should increased in Stake amount
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalance).equal(amount);
+
+    // User 1 - Debt should increased in borrowAmount
+    const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
+    expect(apeDebt).equal(amount2);
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(2);
+
+    const userAccount = await pool.getUserAccountData(user1.address);
+    //50 + 8000*0.001 = 58
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "58")
+    );
+    //8000*0.001 = 8
+    expect(userAccount.totalDebtBase).equal(
+      await convertToCurrencyDecimals(weth.address, "8")
+    );
+
+    //50 * 0.4 + 8 * 0.2 - 8=13.6
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "13.6")
+    );
+  });
+
+  it("TC-pool-ape-staking-29 test borrowApeAndStake: BAYC staked Add BAKC after first Pairing", async () => {
+    const {
+      users: [user1],
+      bayc,
+      ape,
+      pool,
+      weth,
+      nBAYC,
+    } = await loadFixture(fixture);
+    await supplyAndValidate(bayc, "1", user1, true);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = amount1.add(amount2);
+
+    await ape
+      .connect(user1.signer)
+      ["mint(address,uint256)"](user1.address, amount);
+
+    await pool.connect(user1.signer).borrowApeAndStake(
+      {
+        nftAsset: bayc.address,
+        borrowAmount: 0,
+        cashAmount: amount1,
+      },
+      [{tokenId: 0, amount: amount1}],
+      []
+    );
+
+    await pool.connect(user1.signer).borrowApeAndStake(
+      {
+        nftAsset: bayc.address,
+        borrowAmount: amount2,
+        cashAmount: 0,
+      },
+      [],
+      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    );
+
+    // User 1 - totalStake should increased in Stake amount
+    const totalStake = await nBAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStake).equal(amount);
+
+    // User 1 - pSape should increased in Stake amount
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalance).equal(amount);
+
+    // User 1 - Debt should increased in borrowAmount
+    const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
+    expect(apeDebt).equal(amount2);
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(2);
+
+    const userAccount = await pool.getUserAccountData(user1.address);
+    //50 + 15000*0.001 = 65
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "65")
+    );
+    //8000*0.001 = 8
+    expect(userAccount.totalDebtBase).equal(
+      await convertToCurrencyDecimals(weth.address, "8")
+    );
+    //50 * 0.4 + 15 * 0.2 - 8=15
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "15")
+    );
+  });
+
+  it("TC-pool-ape-staking-30 test borrowApeAndStake: MAYC staked Add BAKC after first Pairing", async () => {
+    const {
+      users: [user1],
+      mayc,
+      weth,
+      nMAYC,
+      ape,
+      pool,
+    } = await loadFixture(fixture);
+    await supplyAndValidate(mayc, "1", user1, true);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = amount1.add(amount2);
+
+    await ape
+      .connect(user1.signer)
+      ["mint(address,uint256)"](user1.address, amount);
+
+    await pool.connect(user1.signer).borrowApeAndStake(
+      {
+        nftAsset: mayc.address,
+        borrowAmount: 0,
+        cashAmount: amount1,
+      },
+      [{tokenId: 0, amount: amount1}],
+      []
+    );
+
+    await pool.connect(user1.signer).borrowApeAndStake(
+      {
+        nftAsset: mayc.address,
+        borrowAmount: amount2,
+        cashAmount: 0,
+      },
+      [],
+      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    );
+    // User 1 - totalStake should increased in Stake amount
+    const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStake).equal(amount);
+
+    // User 1 - pSape should increased in Stake amount
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalance).equal(amount);
+
+    // User 1 - Debt should increased in borrowAmount
+    const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
+    expect(apeDebt).equal(amount2);
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(2);
+
+    const userAccount = await pool.getUserAccountData(user1.address);
+    //50 + 15000*0.001 = 65
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "65")
+    );
+    //8000*0.001 = 8
+    expect(userAccount.totalDebtBase).equal(
+      await convertToCurrencyDecimals(weth.address, "8")
+    );
+    //50 * 0.325 + 15 * 0.2 - 8=11.25
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "11.25")
+    );
+  });
+
+  it("TC-pool-ape-staking-31 test borrowApeAndStake: Insufficient liquidity of borrow ape (revert expected)", async () => {
+    const {
+      users: [user1],
+      bayc,
+      ape,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "1", user1, true);
+
+    // reduce pool liquidity
+    await borrowAndValidate(ape, "13000", user1);
+    const amount1 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount = amount1.add(amount2);
+
+    await ape
+      .connect(user1.signer)
+      ["mint(address,uint256)"](user1.address, amount);
+
+    await expect(
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAmount: amount1,
+          cashAmount: amount2,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+  });
+
+  it("TC-pool-ape-staking-32 test borrowApeAndStake: success use 100% cash when hf < 1", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      mayc,
+      pool,
+      usdt,
+      nMAYC,
+      weth,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await supplyAndValidate(usdt, "1000", user2, true);
+    await borrowAndValidate(ape, "5000", user1);
+    await borrowAndValidate(usdt, "800", user1);
+    await mintAndValidate(ape, "7000", user1);
+
+    const amount = await convertToCurrencyDecimals(ape.address, "7000");
+
+    await changePriceAndValidate(mayc, "20");
+    await changePriceAndValidate(usdt, "0.0009");
+    await changePriceAndValidate(ape, "0.005");
+    await changeSApePriceAndValidate(sApeAddress, "0.005");
+
+    const healthFactor = (await pool.getUserAccountData(user1.address))
+      .healthFactor;
+
+    expect(healthFactor).to.be.lt(parseEther("1"));
+
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+      )
+    );
+    const healthFactorAfter = (await pool.getUserAccountData(user1.address))
+      .healthFactor;
+
+    // health factor should improve greater than 1
+    expect(healthFactorAfter).to.be.gt(parseEther("1"));
+
+    // User 1 - totalStake should increased in Stake amount
+    const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStake).equal(amount);
+
+    // User 1 - pSape should increased in Stake amount
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalance).equal(amount);
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(2);
+
+    const userAccount = await pool.getUserAccountData(user1.address);
+
+    //20 + 7000*0.005 = 55
+    expect(userAccount.totalCollateralBase).equal(
+      await convertToCurrencyDecimals(weth.address, "55")
+    );
+
+    //5000*0.005 + 800 * 0.0009 = 25.72
+    almostEqual(
+      userAccount.totalDebtBase,
+      await convertToCurrencyDecimals(weth.address, "25.72")
+    );
+
+    //availableBorrowsInBaseCurrency < totalDebtInBaseCurrency = 0
+    almostEqual(
+      userAccount.availableBorrowsBase,
+      await convertToCurrencyDecimals(weth.address, "0")
+    );
+  });
+
+  it("TC-pool-ape-staking-33 test safeTransferFrom BAKC: original owner withdraws all", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await mintAndValidate(ape, "7000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    const userBalance = await ape.balanceOf(user1.address);
+    const user3Balance = await ape.balanceOf(user3.address);
+
+    await bakc
+      .connect(user1.signer)
+      ["safeTransferFrom(address,address,uint256)"](
+        user1.address,
+        user3.address,
+        "0"
+      );
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(1);
+
+    const bakcBalanceUser3 = await bakc.balanceOf(user3.address);
+    expect(bakcBalanceUser3).equal(1);
+
+    await pool
+      .connect(user1.signer)
+      .withdrawBAKC(mayc.address, [
+        {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
+      ]);
+
+    // User 1 - totalStake should have decreased in BAKC amount
+    const totalStakeAfter = await nMAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStakeAfter).equal(totalStake.sub(amount2));
+
+    // User 1 - totalStake should have increased in BAKC amount
+    const pSApeBalanceAfter = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalanceAfter).equal(pSApeBalance.sub(amount2));
+
+    // User 1 - Ape Balance should have increased in BAKC amount
+    const userBalanceAfter = await ape.balanceOf(user1.address);
+    expect(userBalanceAfter).equal(userBalance.add(amount2));
+
+    // User 3 - Ape Balance should remain the same
+    const user3BalanceAfter = await ape.balanceOf(user3.address);
+    expect(user3BalanceAfter).equal(user3Balance);
+  });
+
+  it("TC-pool-ape-staking-34 test safeTransferFrom BAKC: original owner withdraws part ape (revert expected)", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await mintAndValidate(ape, "7000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+    await bakc
+      .connect(user1.signer)
+      ["safeTransferFrom(address,address,uint256)"](
+        user1.address,
+        user3.address,
+        "0"
+      );
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(1);
+
+    const bakcBalanceUser3 = await bakc.balanceOf(user3.address);
+    expect(bakcBalanceUser3).equal(1);
+
+    // Only withdraw all
+    await expect(
+      pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount1, isUncommit: true},
+        ])
+    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
+  });
+
+  it("TC-pool-ape-staking-35 test safeTransferFrom BAKC: original owner claim bakc reward (revert expected)", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await mintAndValidate(ape, "7000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+    await bakc
+      .connect(user1.signer)
+      ["safeTransferFrom(address,address,uint256)"](
+        user1.address,
+        user3.address,
+        "0"
+      );
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(1);
+
+    const bakcBalanceUser3 = await bakc.balanceOf(user3.address);
+    expect(bakcBalanceUser3).equal(1);
+
+    // advance in time
+    await advanceTimeAndBlock(parseInt("86400"));
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .claimBAKC(mayc.address, [{mainTokenId: 0, bakcTokenId: 0}])
+    ).to.be.revertedWith("transfer caller is not owner nor approved");
+  });
+
+  it("TC-pool-ape-staking-36 test safeTransferFrom BAKC: new owner withdraw all (revert expected)", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await mintAndValidate(ape, "7000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    await bakc
+      .connect(user1.signer)
+      ["safeTransferFrom(address,address,uint256)"](
+        user1.address,
+        user3.address,
+        "0"
+      );
+
+    const bakcBalance = await bakc.balanceOf(user1.address);
+    expect(bakcBalance).equal(1);
+
+    const bakcBalanceUser3 = await bakc.balanceOf(user3.address);
+    expect(bakcBalanceUser3).equal(1);
+
+    // New owner
+    await expect(
+      pool
+        .connect(user3.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
+        ])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
+
+  it("TC-pool-ape-staking-37 test safeTransferFrom: transfer fails when hf < 1 (revert expected)", async () => {
+    const {
+      users: [user1, user2, user3],
+      ape,
+      mayc,
+      nMAYC,
+      pool,
+      usdt,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await supplyAndValidate(usdt, "1000", user2, true);
+    await borrowAndValidate(ape, "5000", user1);
+    await borrowAndValidate(usdt, "800", user1);
+    await mintAndValidate(ape, "7000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "100");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    await changePriceAndValidate(mayc, "0.001");
+    await changePriceAndValidate(ape, "0.1");
+    await changeSApePriceAndValidate(sApeAddress, "0.002");
+
+    await expect(
+      nMAYC
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user3.address,
+          0,
+          {gasLimit: 5000000}
+        )
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 });
