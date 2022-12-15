@@ -5,7 +5,7 @@ import {executeStory} from "./helpers/scenario-engine";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {getParaSpaceConfig} from "../deploy/helpers/misc-utils";
+import {getParaSpaceConfig} from "../helpers/misc-utils";
 
 const scenarioFolder = "./test/helpers/scenarios/";
 

@@ -1,16 +1,16 @@
 import {expect} from "chai";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
+import {waitForTx} from "../helpers/misc-utils";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {
   buildPermitParams,
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
   impersonateAddress,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
-import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
-import {DRE} from "../deploy/helpers/misc-utils";
+import {HARDHAT_CHAINID} from "../helpers/hardhat-constants";
+import {DRE} from "../helpers/misc-utils";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";

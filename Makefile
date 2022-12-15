@@ -5,7 +5,7 @@ NETWORK                  := hardhat
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
 
-SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
+SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
 RUST_TOOLCHAIN           := nightly-2022-09-19
@@ -80,7 +80,6 @@ ci: clean build lint doc fast-test
 .PHONY: submodules
 submodules:
 	git submodule update --init --recursive
-	[ -d deploy ] && cd deploy && git pull origin main
 	[ -d lib/ds-test ] && cd lib/ds-test && git pull origin master
 
 .PHONY: test-pool-upgrade
@@ -263,6 +262,10 @@ test-sape-operation:
 test-acl-manager:
 	make TEST_TARGET=acl-manager.spec.ts test
 
+.PHONY: test-time-lock
+test-time-lock:
+	make TEST_TARGET=time_lock_executor.spec.ts test
+
 .PHONY: run
 run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
@@ -365,23 +368,23 @@ deploy-renounceOwnership:
 
 .PHONY: ad-hoc
 ad-hoc:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
+	make SCRIPT_PATH=./scripts/dev/1.ad-hoc.ts run
 
 .PHONY: info
 info:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
+	make SCRIPT_PATH=./scripts/dev/3.info.ts run
 
 .PHONY: wallet
 wallet:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/4.wallet.ts run
+	make SCRIPT_PATH=./scripts/dev/4.wallet.ts run
 
-.PHONY: release-v1.2
-release-v1.2:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/5.release-v1.2.ts run
+.PHONY: rate-strategy
+rate-strategy:
+	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
+	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
 
 .PHONY: upgrade
 upgrade: build
@@ -398,6 +401,14 @@ upgrade-ntoken: build
 .PHONY: upgrade-ptoken
 upgrade-ptoken: build
 	make TASK_NAME=upgrade:ptoken run-task
+
+.PHONY: upgrade-debt-token
+upgrade-debt-token: build
+	make TASK_NAME=upgrade:debt-token run-task
+
+.PHONY: upgrade-configurator
+upgrade-configurator: build
+	make TASK_NAME=upgrade:configurator run-task
 
 .PHONY: remove-pool-funcs
 remove-pool-funcs: build

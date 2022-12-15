@@ -1,15 +1,15 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {MAX_UINT_AMOUNT, ONE_YEAR} from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {MAX_UINT_AMOUNT, ONE_YEAR} from "../helpers/constants";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   advanceTimeAndBlock,
   setAutomine,
   setAutomineEvm,
   waitForTx,
-} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
@@ -20,7 +20,7 @@ import {
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {utils} from "ethers";
-import {getVariableDebtToken} from "../deploy/helpers/contracts-getters";
+import {getVariableDebtToken} from "../helpers/contracts-getters";
 
 const {RESERVE_INACTIVE, SAME_BLOCK_BORROW_REPAY} = ProtocolErrors;
 

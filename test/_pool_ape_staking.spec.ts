@@ -1,26 +1,22 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {
-  MAX_UINT_AMOUNT,
-  ZERO_ADDRESS,
-  ONE_ADDRESS,
-} from "../deploy/helpers/constants";
+import {MAX_UINT_AMOUNT, ZERO_ADDRESS, ONE_ADDRESS} from "../helpers/constants";
 import {
   getMintableERC721,
   getPToken,
   getPTokenSApe,
   getVariableDebtToken,
-} from "../deploy/helpers/contracts-getters";
+} from "../helpers/contracts-getters";
 import {
   convertToCurrencyDecimals,
   isUsingAsCollateral,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {
   advanceTimeAndBlock,
   DRE,
   getDb,
   waitForTx,
-} from "../deploy/helpers/misc-utils";
+} from "../helpers/misc-utils";
 import {MintableERC721, VariableDebtToken, PTokenSApe, PToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -33,7 +29,7 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
-import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
+import {eContractid, ProtocolErrors} from "../helpers/types";
 import {parseEther} from "ethers/lib/utils";
 import {
   executeAcceptBidWithCredit,

@@ -4,12 +4,12 @@ import {
   advanceTimeAndBlock,
   timeLatest,
   waitForTx,
-} from "../deploy/helpers/misc-utils";
+} from "../helpers/misc-utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {ethers} from "hardhat";
-import {getACLManager} from "../deploy/helpers/contracts-getters";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {getACLManager} from "../helpers/contracts-getters";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {deployTimeLockExecutor} from "../helpers/contracts-deployments";
 
 describe("ExecutorWithTimelock Test", () => {
   let testEnv: TestEnv;
@@ -21,16 +21,13 @@ describe("ExecutorWithTimelock Test", () => {
 
     const {users, weth, configurator} = testEnv;
 
-    const ExecutorWithTimelock = await ethers.getContractFactory(
-      "ExecutorWithTimelock"
-    );
-    timeLock = await ExecutorWithTimelock.deploy(
+    timeLock = await deployTimeLockExecutor([
       users[0].address,
       "100",
       "100",
       "10",
-      "1000"
-    );
+      "1000",
+    ]);
 
     const aclManager = await getACLManager();
 

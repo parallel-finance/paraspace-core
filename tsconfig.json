@@ -8,6 +8,6 @@
     "noImplicitAny": false,
     "resolveJsonModule": true
   },
-  "include": ["./test", "./deploy/tasks"],
-  "files": ["./hardhat.config.ts"]
+  "include": ["./test", "./tasks", "./helpers", "./scripts"],
+  "files": ["./hardhat.config.ts", "./helper-hardhat-config.ts"]
 }

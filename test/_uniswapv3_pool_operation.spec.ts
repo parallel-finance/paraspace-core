@@ -1,8 +1,8 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {waitForTx} from "../helpers/misc-utils";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   almostEqual,
   createNewPool,
@@ -11,8 +11,8 @@ import {
   approveTo,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {getUniswapV3OracleWrapper} from "../deploy/helpers/contracts-getters";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {getUniswapV3OracleWrapper} from "../helpers/contracts-getters";
+import {ProtocolErrors} from "../helpers/types";
 import {snapshot} from "./helpers/snapshot-manager";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";

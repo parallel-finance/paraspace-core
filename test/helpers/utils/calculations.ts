@@ -3,8 +3,8 @@ import {
   RAY,
   MAX_UINT_AMOUNT,
   PERCENTAGE_FACTOR,
-} from "../../../deploy/helpers/constants";
-import {IReserveParams, iMultiPoolsAssets} from "../../../deploy/helpers/types";
+} from "../../../helpers/constants";
+import {IReserveParams, iMultiPoolsAssets} from "../../../helpers/types";
 import "./wadraymath";
 import {ReserveData, UserReserveData} from "./interfaces";
 import {BigNumber} from "ethers";
