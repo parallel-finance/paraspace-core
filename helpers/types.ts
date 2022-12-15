@@ -191,6 +191,7 @@ export enum eContractid {
   BlurExchangeImpl = "BlurExchangeImpl",
   BlurExchangeProxy = "BlurExchangeProxy",
   BAKC = "BAKC",
+  TimeLockExecutor = "TimeLockExecutor",
 }
 
 /*
