@@ -5,6 +5,10 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
+import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 
 /**
  * @title Rebasing PToken
@@ -13,6 +17,8 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
  */
 contract RebasingPToken is PToken {
     using WadRayMath for uint256;
+    using SafeCast for uint256;
+    using GPv2SafeERC20 for IERC20;
 
     constructor(IPool pool) PToken(pool) {
         //intentionally empty
@@ -102,7 +108,7 @@ contract RebasingPToken is PToken {
         view
         returns (uint256)
     {
-        return ((super.scaledBalanceOf(user) * rebasingIndex) / WadRayMath.RAY);
+        return super.scaledBalanceOf(user).rayMul(rebasingIndex);
     }
 
     function _scaledTotalSupply(uint256 rebasingIndex)
@@ -110,11 +116,11 @@ contract RebasingPToken is PToken {
         view
         returns (uint256)
     {
-        return ((super.scaledTotalSupply() * rebasingIndex) / WadRayMath.RAY);
+        return super.scaledTotalSupply().rayMul(rebasingIndex);
     }
 
     /**
-     * @return Current rebasing index of stETH in RAY
+     * @return Current rebasing index in RAY
      **/
     function lastRebasingIndex() internal view virtual returns (uint256) {
         // returns 1 RAY by default which makes it identical to PToken in behaviour
@@ -129,5 +135,76 @@ contract RebasingPToken is PToken {
         returns (XTokenType)
     {
         return XTokenType.RebasingPToken;
+    }
+
+    function mint(
+        address caller,
+        address onBehalfOf,
+        uint256 amount,
+        uint256 index
+    ) external virtual override onlyPool returns (bool) {
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        return _mintScaled(caller, onBehalfOf, amountRebased, index);
+    }
+
+    function burn(
+        address from,
+        address receiverOfUnderlying,
+        uint256 amount,
+        uint256 index
+    ) external virtual override onlyPool {
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        _burnScaled(from, receiverOfUnderlying, amountRebased, index);
+        if (receiverOfUnderlying != address(this)) {
+            IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+        }
+    }
+
+    function mintToTreasury(uint256 amount, uint256 index)
+        external
+        virtual
+        override
+        onlyPool
+    {
+        if (amount == 0) {
+            return;
+        }
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        _mintScaled(address(POOL), _treasury, amountRebased, index);
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount,
+        bool validate
+    ) internal override {
+        address underlyingAsset = _underlyingAsset;
+
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 index = POOL.getReserveNormalizedIncome(underlyingAsset);
+
+        uint256 fromBalanceBefore = _scaledBalanceOf(from, rebasingIndex)
+            .rayMul(index);
+        uint256 toBalanceBefore = _scaledBalanceOf(to, rebasingIndex).rayMul(
+            index
+        );
+
+        _transferScaled(from, to, amount.rayDiv(rebasingIndex), index);
+
+        if (validate) {
+            POOL.finalizeTransfer(
+                underlyingAsset,
+                from,
+                to,
+                false,
+                amount,
+                fromBalanceBefore,
+                toBalanceBefore
+            );
+        }
     }
 }

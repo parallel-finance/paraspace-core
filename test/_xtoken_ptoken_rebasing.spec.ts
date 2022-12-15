@@ -1,6 +1,5 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {BigNumber} from "ethers";
 import {MAX_UINT_AMOUNT, ONE_YEAR} from "../helpers/constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
@@ -10,7 +9,6 @@ import {testEnvFixture} from "./helpers/setup-env";
 describe("Rebasing tokens", async () => {
   let testEnv: TestEnv;
   const rebasingIndex = "1080000000000000000000000000";
-  const oneRAY = "1000000000000000000000000000";
 
   let supplyAmountBaseUnits;
   let userStETHAmount;
@@ -65,7 +63,7 @@ describe("Rebasing tokens", async () => {
     } = testEnv;
 
     expect(await pstETH.scaledBalanceOf(user1.address)).to.be.eq(
-      BigNumber.from(rebasingIndex).mul(userStETHAmount).div(oneRAY)
+      userStETHAmount
     );
   });
 
@@ -103,22 +101,18 @@ describe("Rebasing tokens", async () => {
         })
     );
 
-    expect(await pstETH.balanceOf(user1.address)).to.be.eq(
-      BigNumber.from(rebasingIndex).mul(userStETHAmount).div(oneRAY)
-    );
+    expect(await pstETH.balanceOf(user1.address)).to.be.eq(userStETHAmount);
 
     expect(await variableDebtStETH.balanceOf(user2.address)).to.be.eq(
-      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
+      borrowAmountBaseUnits
     );
 
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 
-    expect(await pstETH.balanceOf(user1.address)).to.be.gt(
-      BigNumber.from(rebasingIndex).mul(userStETHAmount).div(oneRAY)
-    );
+    expect(await pstETH.balanceOf(user1.address)).to.be.gt(userStETHAmount);
 
     expect(await variableDebtStETH.balanceOf(user2.address)).to.be.gt(
-      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
+      borrowAmountBaseUnits
     );
   });
 
@@ -154,7 +148,7 @@ describe("Rebasing tokens", async () => {
     );
 
     expect(await paWETH.scaledBalanceOf(user1.address)).to.be.eq(
-      BigNumber.from(rebasingIndex).mul(userAETHAmount).div(oneRAY)
+      userAETHAmount
     );
   });
 
@@ -175,13 +169,13 @@ describe("Rebasing tokens", async () => {
     );
 
     expect(await variableDebtAWeth.balanceOf(user2.address)).to.be.eq(
-      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
+      borrowAmountBaseUnits
     );
 
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 
     expect(await variableDebtAWeth.balanceOf(user2.address)).to.be.gt(
-      BigNumber.from(rebasingIndex).mul(borrowAmountBaseUnits).div(oneRAY)
+      borrowAmountBaseUnits
     );
   });
 });

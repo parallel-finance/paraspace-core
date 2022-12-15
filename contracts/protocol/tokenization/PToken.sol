@@ -118,6 +118,7 @@ contract PToken is
     /// @inheritdoc IPToken
     function mintToTreasury(uint256 amount, uint256 index)
         external
+        virtual
         override
         onlyPool
     {
@@ -258,7 +259,7 @@ contract PToken is
         address to,
         uint256 amount,
         bool validate
-    ) internal {
+    ) internal virtual {
         address underlyingAsset = _underlyingAsset;
 
         uint256 index = POOL.getReserveNormalizedIncome(underlyingAsset);

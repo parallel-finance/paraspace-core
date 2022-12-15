@@ -113,7 +113,7 @@ contract RebasingDebtToken is VariableDebtToken {
             return 0;
         }
 
-        return ((scaledBalance * rebasingIndex) / WadRayMath.RAY);
+        return scaledBalance.rayMul(rebasingIndex);
     }
 
     function _scaledTotalSupply(uint256 rebasingIndex)
@@ -123,7 +123,7 @@ contract RebasingDebtToken is VariableDebtToken {
     {
         uint256 scaledTotalSupply_ = super.scaledTotalSupply();
 
-        return ((scaledTotalSupply_ * rebasingIndex) / WadRayMath.RAY);
+        return scaledTotalSupply_.rayMul(rebasingIndex);
     }
 
     /**
@@ -132,5 +132,32 @@ contract RebasingDebtToken is VariableDebtToken {
     function lastRebasingIndex() internal view virtual returns (uint256) {
         // returns 1 RAY by default which makes it identical to VariableDebtToken in behaviour
         return WadRayMath.RAY;
+    }
+
+    function mint(
+        address user,
+        address onBehalfOf,
+        uint256 amount,
+        uint256 index
+    ) external virtual override onlyPool returns (bool, uint256) {
+        if (user != onBehalfOf) {
+            _decreaseBorrowAllowance(onBehalfOf, user, amount);
+        }
+        uint256 amountRebased = amount.rayDiv(lastRebasingIndex());
+        return (
+            _mintScaled(user, onBehalfOf, amountRebased, index),
+            scaledTotalSupply()
+        );
+    }
+
+    function burn(
+        address from,
+        uint256 amount,
+        uint256 index
+    ) external virtual override onlyPool returns (uint256) {
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        _burnScaled(from, address(0), amountRebased, index);
+        return scaledTotalSupply();
     }
 }
