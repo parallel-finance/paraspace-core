@@ -90,7 +90,7 @@ contract RebasingPToken is PToken {
     }
 
     /**
-     * @dev Returns the scaled total supply of the variable debt token. Represents sum(debt/index)
+     * @dev Returns the scaled total supply of the ptoken. Represents sum(debt/index)
      * @return the scaled total supply
      **/
     function scaledTotalSupply()
@@ -171,6 +171,7 @@ contract RebasingPToken is PToken {
         if (amount == 0) {
             return;
         }
+
         uint256 rebasingIndex = lastRebasingIndex();
         uint256 amountRebased = amount.rayDiv(rebasingIndex);
         _mintScaled(address(POOL), _treasury, amountRebased, index);

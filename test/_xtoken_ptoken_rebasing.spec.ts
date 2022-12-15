@@ -27,6 +27,9 @@ describe("Rebasing tokens", async () => {
   const stETHBorrowAmount = utils.parseEther("50");
   const aWETHBorrowAmount = utils.parseEther("25");
 
+  const transferAmount = utils.parseEther("1");
+  const withdrawAmount = utils.parseEther("1");
+
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
@@ -222,5 +225,104 @@ describe("Rebasing tokens", async () => {
 
     expect(stETHTotalDebtAfter).to.be.gt(stETHTotalDebtBefore);
     expect(aWETHTotalDebtAfter).to.be.gt(aWETHTotalDebtBefore);
+  });
+
+  it("TC-ptoken-rebasing-04: transfer rebasing token to other users will decrease, increase balance correctly", async () => {
+    const {
+      users: [user1, user2],
+      pstETH,
+      paWETH,
+    } = await loadFixture(fixture);
+
+    const user1PstETHBalanceBefore = await pstETH.balanceOf(user1.address);
+    const user1PaWETHBalanceBefore = await paWETH.balanceOf(user1.address);
+
+    const user2PstETHBalanceBefore = await pstETH.balanceOf(user2.address);
+    const user2PaWETHBalanceBefore = await paWETH.balanceOf(user2.address);
+
+    await waitForTx(
+      await pstETH.connect(user1.signer).transfer(user2.address, transferAmount)
+    );
+
+    await waitForTx(
+      await paWETH.connect(user1.signer).transfer(user2.address, transferAmount)
+    );
+
+    const user1PstETHBalanceAfter = await pstETH.balanceOf(user1.address);
+    const user1PaWETHBalanceAfter = await paWETH.balanceOf(user1.address);
+
+    const user2PstETHBalanceAfter = await pstETH.balanceOf(user2.address);
+    const user2PaWETHBalanceAfter = await paWETH.balanceOf(user2.address);
+
+    assertAlmostEqual(
+      user1PaWETHBalanceBefore.sub(user1PaWETHBalanceAfter),
+      transferAmount
+    );
+    assertAlmostEqual(
+      user2PaWETHBalanceAfter.sub(user2PaWETHBalanceBefore),
+      transferAmount
+    );
+
+    assertAlmostEqual(
+      user1PstETHBalanceBefore.sub(user1PstETHBalanceAfter),
+      transferAmount
+    );
+    assertAlmostEqual(
+      user2PstETHBalanceAfter.sub(user2PstETHBalanceBefore),
+      transferAmount
+    );
+  });
+
+  it("TC-ptoken-rebasing-05: withdraw rebasing tokens will transfer underlying assets correctly", async () => {
+    const {
+      users: [user1],
+      stETH,
+      aWETH,
+      pstETH,
+      paWETH,
+      pool,
+    } = await loadFixture(fixture);
+
+    const user1PstETHBalanceBefore = await pstETH.balanceOf(user1.address);
+    const user1PaWETHBalanceBefore = await paWETH.balanceOf(user1.address);
+
+    const user1stETHBalanceBefore = await stETH.balanceOf(user1.address);
+    const user1aWETHBalanceBefore = await aWETH.balanceOf(user1.address);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdraw(stETH.address, withdrawAmount, user1.address)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdraw(aWETH.address, withdrawAmount, user1.address)
+    );
+
+    const user1PstETHBalanceAfter = await pstETH.balanceOf(user1.address);
+    const user1PaWETHBalanceAfter = await paWETH.balanceOf(user1.address);
+
+    const user1stETHBalanceAfter = await stETH.balanceOf(user1.address);
+    const user1aWETHBalanceAfter = await aWETH.balanceOf(user1.address);
+
+    assertAlmostEqual(
+      user1PaWETHBalanceBefore.sub(user1PaWETHBalanceAfter),
+      withdrawAmount
+    );
+    assertAlmostEqual(
+      user1PstETHBalanceBefore.sub(user1PstETHBalanceAfter),
+      withdrawAmount
+    );
+
+    assertAlmostEqual(
+      user1aWETHBalanceAfter.sub(user1aWETHBalanceBefore),
+      withdrawAmount
+    );
+    assertAlmostEqual(
+      user1stETHBalanceAfter.sub(user1stETHBalanceBefore),
+      withdrawAmount
+    );
   });
 });
