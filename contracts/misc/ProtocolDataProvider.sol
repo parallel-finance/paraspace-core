@@ -15,6 +15,7 @@ import {INToken} from "../interfaces/INToken.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IProtocolDataProvider} from "../interfaces/IProtocolDataProvider.sol";
+import "hardhat/console.sol";
 
 /**
  * @title ProtocolDataProvider
@@ -34,6 +35,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
 
     constructor(IPoolAddressesProvider addressesProvider) {
         ADDRESSES_PROVIDER = addressesProvider;
+        console.log("ProtocolDataProvider construct");
     }
 
     /// @inheritdoc IProtocolDataProvider
@@ -48,6 +50,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             reserves.length
         );
         for (uint256 i = 0; i < reserves.length; i++) {
+            console.log(reserves[i]);
             if (reserves[i] == MKR) {
                 reservesTokens[i] = DataTypes.TokenData({
                     symbol: "MKR",

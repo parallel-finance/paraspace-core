@@ -7,12 +7,13 @@ import "../dependencies/openzeppelin/contracts//IERC20.sol";
 import "../dependencies/openzeppelin/contracts//SafeMath.sol";
 import "../dependencies/openzeppelin/contracts//Address.sol";
 import "../dependencies/openzeppelin/contracts//Pausable.sol";
+import {IPsAPE} from "../interfaces/IPsAPE.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
  *
  */
-abstract contract PsAPE is Context, IERC20, Pausable {
+abstract contract PsAPE is Context, IPsAPE, Pausable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -139,14 +140,16 @@ abstract contract PsAPE is Context, IERC20, Pausable {
         uint256 amount
     ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(
-            sender,
-            _msgSender(),
-            _allowances[sender][_msgSender()].sub(
-                amount,
-                "TRANSFER_AMOUNT_EXCEEDS_ALLOWANCE"
-            )
-        );
+        if (sender != _msgSender()) {
+            _approve(
+                sender,
+                _msgSender(),
+                _allowances[sender][_msgSender()].sub(
+                    amount,
+                    "TRANSFER_AMOUNT_EXCEEDS_ALLOWANCE"
+                )
+            );
+        }
         return true;
     }
 
@@ -237,7 +240,7 @@ abstract contract PsAPE is Context, IERC20, Pausable {
     /**
      * @return the amount of Ether that corresponds to `_sharesAmount` token shares.
      */
-    function getPooledApeByShares(uint256 _sharesAmount)
+    function getPooledApeByShares(uint256 sharesAmount)
         public
         view
         returns (uint256)
@@ -247,7 +250,7 @@ abstract contract PsAPE is Context, IERC20, Pausable {
             return 0;
         } else {
             return
-                _sharesAmount.mul(_getTotalPooledApeBalance()).div(totalShares);
+                sharesAmount.mul(_getTotalPooledApeBalance()).div(totalShares);
         }
     }
 

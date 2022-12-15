@@ -1,19 +1,24 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {getApeYield} from "../deploy/helpers/contracts-getters";
-import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
-import {ApeYield} from "../types";
+import {ApeYield, PToken, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-
-import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {mintAndValidate} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
+import {
+  getApeYield,
+  getPToken,
+  getVariableDebtToken,
+} from "../helpers/contracts-getters";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
   let apeYield: ApeYield;
+  let pPsApe: PToken;
+  let variableDebtPsAPE: VariableDebtToken;
   let user1Amount;
   let user2Amount;
   let user3Amount;
@@ -25,9 +30,18 @@ describe("APE Coin Staking Test", () => {
       users: [user1, user2, user3],
       apeCoinStaking,
       pool,
+      protocolDataProvider,
     } = testEnv;
 
     apeYield = await getApeYield();
+
+    const {
+      xTokenAddress: pPsApeAddress,
+      variableDebtTokenAddress: variableDebtPsApeAddress,
+    } = await protocolDataProvider.getReserveTokensAddresses(apeYield.address);
+    pPsApe = await getPToken(pPsApeAddress);
+    variableDebtPsAPE = await getVariableDebtToken(variableDebtPsApeAddress);
+    console.log(variableDebtPsAPE.address);
 
     await mintAndValidate(ape, "1000", user1);
     await mintAndValidate(ape, "2000", user2);
@@ -46,10 +60,10 @@ describe("APE Coin Staking Test", () => {
       await ape.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
-        await ape.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
+      await ape.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
-        await ape.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT)
+      await ape.connect(user3.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
     await waitForTx(
@@ -272,52 +286,52 @@ describe("APE Coin Staking Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-        await mayc.connect(user1.signer)["mint(address)"](user1.address)
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
     );
     await waitForTx(
-        await mayc.connect(user2.signer)["mint(address)"](user2.address)
+      await mayc.connect(user2.signer)["mint(address)"](user2.address)
     );
     await waitForTx(
-        await mayc.connect(user3.signer)["mint(address)"](user3.address)
+      await mayc.connect(user3.signer)["mint(address)"](user3.address)
     );
     await waitForTx(
-        await mayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+      await mayc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
     await waitForTx(
-        await mayc.connect(user2.signer).setApprovalForAll(pool.address, true)
+      await mayc.connect(user2.signer).setApprovalForAll(pool.address, true)
     );
     await waitForTx(
-        await mayc.connect(user3.signer).setApprovalForAll(pool.address, true)
+      await mayc.connect(user3.signer).setApprovalForAll(pool.address, true)
     );
     await waitForTx(
-        await pool
-            .connect(user1.signer)
-            .supplyERC721(
-                mayc.address,
-                [{tokenId: 0, useAsCollateral: true}],
-                user1.address,
-                "0"
-            )
+      await pool
+        .connect(user1.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: 0, useAsCollateral: true}],
+          user1.address,
+          "0"
+        )
     );
     await waitForTx(
-        await pool
-            .connect(user2.signer)
-            .supplyERC721(
-                mayc.address,
-                [{tokenId: 1, useAsCollateral: true}],
-                user2.address,
-                "0"
-            )
+      await pool
+        .connect(user2.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user2.address,
+          "0"
+        )
     );
     await waitForTx(
-        await pool
-            .connect(user3.signer)
-            .supplyERC721(
-                mayc.address,
-                [{tokenId: 2, useAsCollateral: true}],
-                user3.address,
-                "0"
-            )
+      await pool
+        .connect(user3.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: 2, useAsCollateral: true}],
+          user3.address,
+          "0"
+        )
     );
 
     await waitForTx(
@@ -333,27 +347,27 @@ describe("APE Coin Staking Test", () => {
     );
 
     await waitForTx(
-        await pool.connect(user2.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: 0,
-              cashAmount: user2Amount,
-            },
-            [{tokenId: 1, amount: user2Amount}],
-            []
-        )
+      await pool.connect(user2.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: user2Amount,
+        },
+        [{tokenId: 1, amount: user2Amount}],
+        []
+      )
     );
 
     await waitForTx(
-        await pool.connect(user3.signer).borrowApeAndStake(
-            {
-              nftAsset: mayc.address,
-              borrowAmount: 0,
-              cashAmount: user3Amount,
-            },
-            [{tokenId: 2, amount: user3Amount}],
-            []
-        )
+      await pool.connect(user3.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: user3Amount,
+        },
+        [{tokenId: 2, amount: user3Amount}],
+        []
+      )
     );
 
     await advanceTimeAndBlock(3600);
@@ -363,22 +377,16 @@ describe("APE Coin Staking Test", () => {
     );
 
     // 3600 / 7 = 514.28
-    const user1Balance = await apeYield.balanceOf(user1.address);
+    const user1Balance = await pPsApe.balanceOf(user1.address);
     almostEqual(user1Balance, parseEther("514.28"));
-    const user1Share = await apeYield.sharesOf(user1.address);
-    almostEqual(user1Share, parseEther("514.28"));
 
     // 3600 * 2 / 7 = 1028.57
-    const user2Balance = await apeYield.balanceOf(user2.address);
+    const user2Balance = await pPsApe.balanceOf(user2.address);
     almostEqual(user2Balance, parseEther("1028.57"));
-    const user2Share = await apeYield.sharesOf(user2.address);
-    almostEqual(user2Share, parseEther("1028.57"));
 
     // 3600 * 4 / 7 = 2057.14
-    const user3Balance = await apeYield.balanceOf(user3.address);
+    const user3Balance = await pPsApe.balanceOf(user3.address);
     almostEqual(user3Balance, parseEther("2057.14"));
-    const user3Share = await apeYield.sharesOf(user3.address);
-    almostEqual(user3Share, parseEther("2057.14"));
 
     await advanceTimeAndBlock(3600);
 
@@ -394,10 +402,10 @@ describe("APE Coin Staking Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-        await apeYield.connect(user1.signer).deposit(user1.address, user1Amount)
+      await apeYield.connect(user1.signer).deposit(user1.address, user1Amount)
     );
     await waitForTx(
-        await ape.connect(user2.signer).transfer(apeYield.address, user2Amount)
+      await ape.connect(user2.signer).transfer(apeYield.address, user2Amount)
     );
     let user1Balance = await apeYield.balanceOf(user1.address);
     almostEqual(user1Balance, parseEther("1000"));
@@ -420,36 +428,48 @@ describe("APE Coin Staking Test", () => {
     const {
       users: [user1, user2],
       ape,
-        weth,
+      weth,
       poolAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(weth, "1", user2);
 
     await waitForTx(
-        await weth.connect(user2.signer).transfer(apeYield.address, parseEther("1"))
+      await weth
+        .connect(user2.signer)
+        .transfer(apeYield.address, parseEther("1"))
     );
 
     await expect(
-        apeYield.connect(user2.signer).rescueERC20(weth.address, user2.address, parseEther("1"))
+      apeYield
+        .connect(user2.signer)
+        .rescueERC20(weth.address, user2.address, parseEther("1"))
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await waitForTx(
-        await ape.connect(user2.signer).transfer(apeYield.address, parseEther("100"))
+      await ape
+        .connect(user2.signer)
+        .transfer(apeYield.address, parseEther("100"))
     );
 
     await waitForTx(
-        await apeYield.connect(user1.signer).deposit(user1.address, parseEther("50"))
+      await apeYield
+        .connect(user1.signer)
+        .deposit(user1.address, parseEther("50"))
     );
 
     almostEqual(await ape.balanceOf(apeYield.address), parseEther("150"));
 
     await expect(
-        apeYield.connect(poolAdmin.signer).rescueERC20(ape.address, user1.address, parseEther("150"))
+      apeYield
+        .connect(poolAdmin.signer)
+        .rescueERC20(ape.address, user1.address, parseEther("150"))
     ).to.be.revertedWith("balance below backed balance");
 
     await waitForTx(
-        await apeYield.connect(poolAdmin.signer).rescueERC20(ape.address, user2.address, parseEther("100"))
+      await apeYield
+        .connect(poolAdmin.signer)
+        .rescueERC20(ape.address, user2.address, parseEther("100"))
     );
 
     almostEqual(await ape.balanceOf(user2.address), user2Amount);

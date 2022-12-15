@@ -90,6 +90,7 @@ export enum eContractid {
   PTokenSApeImpl = "PTokenSApeImpl",
   PTokenATokenImpl = "PTokenATokenImpl",
   PTokenStETHImpl = "PTokenStETHImpl",
+  PTokenPSApeImpl = "PTokenPSApeImpl",
   NTokenImpl = "NTokenImpl",
   NTokenMoonBirdsImpl = "NTokenMoonBirdsImpl",
   NTokenUniswapV3Impl = "NTokenUniswapV3Impl",
@@ -97,6 +98,7 @@ export enum eContractid {
   NTokenMAYCImpl = "NTokenMAYCImpl",
   DelegationAwarePTokenImpl = "DelegationAwarePTokenImpl",
   VariableDebtTokenImpl = "VariableDebtTokenImpl",
+  PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
   ProtocolDataProvider = "ProtocolDataProvider",
@@ -182,6 +184,7 @@ export enum eContractid {
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
+  PsApeDebtToken = "PsApeDebtToken",
   ApeStakingLogic = "ApeStakingLogic",
   MintableERC721Logic = "MintableERC721Logic",
   MerkleVerifier = "MerkleVerifier",
@@ -192,6 +195,7 @@ export enum eContractid {
   BlurExchangeProxy = "BlurExchangeProxy",
   BAKC = "BAKC",
   TimeLockExecutor = "TimeLockExecutor",
+  PsAPE = "PsAPE",
 }
 
 /*
@@ -354,6 +358,7 @@ export interface iAssetBase<T> {
   stETH: T;
   APE: T;
   sAPE: T;
+  PsAPE: T;
   MAYC: T;
   DOODLE: T;
   MOONBIRD: T;
@@ -402,6 +407,7 @@ export enum ERC20TokenContractId {
   stETH = "stETH",
   APE = "APE",
   sAPE = "sAPE",
+  PsAPE = "PsAPE",
   aWETH = "aWETH",
   cETH = "cETH",
   PUNK = "PUNK",
@@ -530,6 +536,7 @@ export interface IChainlinkConfig {
   APE?: tEthereumAddress;
   PUNK?: tEthereumAddress;
   sAPE?: tEthereumAddress;
+  PsAPE?: tEthereumAddress;
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
   MAYC?: tEthereumAddress;

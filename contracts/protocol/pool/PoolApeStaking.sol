@@ -425,6 +425,7 @@ contract PoolApeStaking is
         external
         nonReentrant
     {
+        require(tokenIds.length <= 30, "length limit");
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
@@ -437,24 +438,28 @@ contract PoolApeStaking is
         uint256[] memory amounts = new uint256[](tokenIds.length);
         address[] memory users = new address[](tokenIds.length);
         uint256[] memory _nfts = new uint256[](1);
+        uint256 totalAmount;
         for (uint256 index = 0; index < tokenIds.length; index++) {
             _nfts[0] = tokenIds[index];
             INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, address(this));
 
             uint256 balanceAfter = APE_COIN.balanceOf(address(this));
-            address positionOwner = INToken(xTokenAddress).ownerOf(tokenIds[index]);
+            address positionOwner = INToken(xTokenAddress).ownerOf(
+                tokenIds[index]
+            );
 
             users[index] = positionOwner;
             amounts[index] = balanceAfter - balanceBefore;
+            totalAmount += amounts[index];
             balanceBefore = balanceAfter;
-
-            require(
-                getUserHf(positionOwner) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-                Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-            );
         }
-        APE_YIELD.batchDeposit(users, amounts);
+
+        APE_YIELD.deposit(address(this), totalAmount);
+        for (uint256 index = 0; index < users.length; index++) {
+            if (amounts[index] != 0) {
+                _supplyPsApeForUser(ps, users[index], amounts[index]);
+            }
+        }
     }
 
     function getUserHf(address user) internal view returns (uint256) {
@@ -493,6 +498,35 @@ contract PoolApeStaking is
         );
         if (allowance == 0) {
             APE_COIN.approve(address(APE_YIELD), type(uint256).max);
+        }
+    }
+
+    function _supplyPsApeForUser(
+        DataTypes.PoolStorage storage ps,
+        address user,
+        uint256 amount
+    ) internal {
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            user
+        ];
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            userConfig,
+            DataTypes.ExecuteSupplyParams({
+                asset: address(APE_YIELD),
+                amount: amount,
+                onBehalfOf: user,
+                payer: address(this),
+                referralCode: 0
+            })
+        );
+        DataTypes.ReserveData storage assetReserve = ps._reserves[
+            address(APE_YIELD)
+        ];
+        bool currentStatus = userConfig.isUsingAsCollateral(assetReserve.id);
+        if (!currentStatus) {
+            userConfig.setUsingAsCollateral(assetReserve.id, true);
+            emit ReserveUsedAsCollateralEnabled(address(APE_YIELD), user);
         }
     }
 }
