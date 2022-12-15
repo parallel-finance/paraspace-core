@@ -1,181 +1,226 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {MAX_UINT_AMOUNT, ONE_YEAR} from "../helpers/constants";
-import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
-import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
+import {
+  assertAlmostEqual,
+  borrowAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
+import {BigNumber, utils} from "ethers";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {ONE_YEAR} from "../helpers/constants";
 
 describe("Rebasing tokens", async () => {
   let testEnv: TestEnv;
-  const rebasingIndex = "1080000000000000000000000000";
+  const firstYearRebasingIndex = BigNumber.from("1080000000000000000000000000");
+  const rebasingIndexAnnualMultiplier = BigNumber.from(
+    "110000000000000000000000000"
+  );
+  const secondYearRebasingIndex = firstYearRebasingIndex.rayMul(
+    rebasingIndexAnnualMultiplier
+  );
 
-  let supplyAmountBaseUnits;
-  let userStETHAmount;
-  let borrowAmountBaseUnits;
+  const stETHSupplyAmount = utils.parseEther("100");
+  const aWETHSupplyAmount = utils.parseEther("50");
 
-  before(async () => {
+  const stETHBorrowAmount = utils.parseEther("50");
+  const aWETHBorrowAmount = utils.parseEther("25");
+
+  const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {stETH, weth} = testEnv;
-
-    supplyAmountBaseUnits = await convertToCurrencyDecimals(
-      weth.address,
-      "80000"
-    );
-    userStETHAmount = await convertToCurrencyDecimals(stETH.address, "1");
-    borrowAmountBaseUnits = await convertToCurrencyDecimals(stETH.address, "1");
-  });
-
-  it("TC-ptoken-rebasing-01 Should be able to supply stETH and mint rebasing PToken", async () => {
     const {
-      users: [user1],
-      pool,
       stETH,
-      pstETH,
+      aWETH,
+      users: [user1],
     } = testEnv;
+    await stETH.setPooledEthBaseShares(firstYearRebasingIndex);
+    await aWETH.setIncomeIndex(firstYearRebasingIndex);
+    await supplyAndValidate(stETH, "100", user1, true);
+    await supplyAndValidate(aWETH, "50", user1, true);
+    await borrowAndValidate(stETH, "50", user1);
+    await borrowAndValidate(aWETH, "25", user1);
+    return testEnv;
+  };
 
-    await waitForTx(
-      await stETH.connect(user1.signer)["mint(uint256)"](userStETHAmount)
-    );
-
-    await stETH.setPooledEthBaseShares(rebasingIndex);
-
-    await waitForTx(
-      await stETH.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .supply(stETH.address, userStETHAmount, user1.address, "0", {
-          gasLimit: 12_450_000,
-        })
-    );
-
-    expect(await stETH.balanceOf(user1.address)).to.eq(0);
-    expect(await pstETH.balanceOf(user1.address)).to.be.gte(userStETHAmount);
-  });
-
-  it("TC-ptoken-rebasing-02 Expect the scaled balance to be the principal balance multiplied by Lido pool shares divided by RAY (2^27)", async () => {
+  it("TC-ptoken-rebasing-01: balance and totalSupply corresponding to supply amount", async () => {
     const {
       users: [user1],
       pstETH,
-    } = testEnv;
+      paWETH,
+    } = await loadFixture(fixture);
+
+    assertAlmostEqual(await pstETH.balanceOf(user1.address), stETHSupplyAmount);
+    assertAlmostEqual(await paWETH.balanceOf(user1.address), aWETHSupplyAmount);
 
     expect(await pstETH.scaledBalanceOf(user1.address)).to.be.eq(
-      userStETHAmount
+      stETHSupplyAmount
     );
+    expect(await paWETH.scaledBalanceOf(user1.address)).to.be.eq(
+      aWETHSupplyAmount
+    );
+
+    assertAlmostEqual(await pstETH.totalSupply(), stETHSupplyAmount);
+    assertAlmostEqual(await paWETH.totalSupply(), aWETHSupplyAmount);
+
+    expect(await pstETH.scaledTotalSupply()).to.be.eq(stETHSupplyAmount);
+    expect(await paWETH.scaledTotalSupply()).to.be.eq(aWETHSupplyAmount);
   });
 
-  it("TC-ptoken-rebasing-03 Expect the balance of supplier to accrue both stETH and pstETH interest", async () => {
-    const {
-      users: [user1, user2],
-      pool,
-      stETH,
-      pstETH,
-      weth,
-      variableDebtStETH,
-    } = testEnv;
-
-    await waitForTx(
-      await weth.connect(user2.signer)["mint(uint256)"](supplyAmountBaseUnits)
-    );
-
-    await waitForTx(
-      await weth.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .supply(weth.address, supplyAmountBaseUnits, user2.address, "0", {
-          gasLimit: 12_450_000,
-        })
-    );
-
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .borrow(stETH.address, borrowAmountBaseUnits, "0", user2.address, {
-          gasLimit: 12_450_000,
-        })
-    );
-
-    expect(await pstETH.balanceOf(user1.address)).to.be.eq(userStETHAmount);
-
-    expect(await variableDebtStETH.balanceOf(user2.address)).to.be.eq(
-      borrowAmountBaseUnits
-    );
-
-    await advanceTimeAndBlock(parseInt(ONE_YEAR));
-
-    expect(await pstETH.balanceOf(user1.address)).to.be.gt(userStETHAmount);
-
-    expect(await variableDebtStETH.balanceOf(user2.address)).to.be.gt(
-      borrowAmountBaseUnits
-    );
-  });
-
-  it("TC-ptoken-rebasing-04 Deposited aWETH should have balance multiplied by rebasing index", async () => {
+  it("TC-ptoken-rebasing-02: debt and totalDebt corresponding to borrowAmount", async () => {
     const {
       users: [user1],
-      pool,
-      aWETH,
-      paWETH,
-    } = testEnv;
+      variableDebtStETH,
+      variableDebtAWeth,
+    } = await loadFixture(fixture);
 
-    const userAETHAmount = await convertToCurrencyDecimals(
-      aWETH.address,
-      "10000"
+    assertAlmostEqual(
+      await variableDebtStETH.balanceOf(user1.address),
+      stETHBorrowAmount
+    );
+    assertAlmostEqual(
+      await variableDebtAWeth.balanceOf(user1.address),
+      aWETHBorrowAmount
     );
 
-    await waitForTx(
-      await aWETH.connect(user1.signer)["mint(uint256)"](userAETHAmount)
+    expect(await variableDebtStETH.scaledBalanceOf(user1.address)).to.be.eq(
+      stETHBorrowAmount
+    );
+    expect(await variableDebtAWeth.scaledBalanceOf(user1.address)).to.be.eq(
+      aWETHBorrowAmount
     );
 
-    await aWETH.setIncomeIndex(rebasingIndex);
+    assertAlmostEqual(await variableDebtStETH.totalSupply(), stETHBorrowAmount);
+    assertAlmostEqual(await variableDebtAWeth.totalSupply(), aWETHBorrowAmount);
 
-    await waitForTx(
-      await aWETH.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    expect(await variableDebtStETH.scaledTotalSupply()).to.be.eq(
+      stETHBorrowAmount
     );
-
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .supply(aWETH.address, userAETHAmount, user1.address, "0", {
-          gasLimit: 12_450_000,
-        })
-    );
-
-    expect(await paWETH.scaledBalanceOf(user1.address)).to.be.eq(
-      userAETHAmount
+    expect(await variableDebtAWeth.scaledTotalSupply()).to.be.eq(
+      aWETHBorrowAmount
     );
   });
 
-  it("TC-ptoken-rebasing-05 aWETH borrower should have debt balance multiplied by rebasing index", async () => {
+  it("TC-ptoken-rebasing-03: scaledBalance and scaledTotalSupply will change only if rebasing index changes, growing liquidity index will not influence them", async () => {
     const {
-      users: [user2],
-      pool,
+      users: [user1],
+      stETH,
       aWETH,
+      pstETH,
+      paWETH,
+      variableDebtStETH,
       variableDebtAWeth,
-    } = testEnv;
+    } = await loadFixture(fixture);
+    await advanceTimeAndBlock(parseInt(ONE_YEAR));
 
+    expect(await pstETH.scaledBalanceOf(user1.address)).to.be.eq(
+      stETHSupplyAmount
+    );
+    expect(await paWETH.scaledBalanceOf(user1.address)).to.be.eq(
+      aWETHSupplyAmount
+    );
+
+    expect(await pstETH.scaledTotalSupply()).to.be.eq(stETHSupplyAmount);
+    expect(await paWETH.scaledTotalSupply()).to.be.eq(aWETHSupplyAmount);
+
+    expect(await variableDebtStETH.scaledBalanceOf(user1.address)).to.be.eq(
+      stETHBorrowAmount
+    );
+    expect(await variableDebtAWeth.scaledBalanceOf(user1.address)).to.be.eq(
+      aWETHBorrowAmount
+    );
+
+    expect(await variableDebtStETH.scaledTotalSupply()).to.be.eq(
+      stETHBorrowAmount
+    );
+    expect(await variableDebtAWeth.scaledTotalSupply()).to.be.eq(
+      aWETHBorrowAmount
+    );
+
+    // change rebasingIndex
     await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .borrow(aWETH.address, borrowAmountBaseUnits, "0", user2.address, {
-          gasLimit: 12_450_000,
-        })
+      await stETH.setPooledEthBaseShares(secondYearRebasingIndex)
     );
+    await waitForTx(await aWETH.setIncomeIndex(secondYearRebasingIndex));
 
-    expect(await variableDebtAWeth.balanceOf(user2.address)).to.be.eq(
-      borrowAmountBaseUnits
-    );
+    expect(
+      (await pstETH.scaledBalanceOf(user1.address)).rayDiv(stETHSupplyAmount)
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    expect(
+      (await paWETH.scaledBalanceOf(user1.address)).rayDiv(aWETHSupplyAmount)
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+
+    expect(
+      (await pstETH.scaledTotalSupply()).rayDiv(stETHSupplyAmount)
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    expect(
+      (await paWETH.scaledTotalSupply()).rayDiv(aWETHSupplyAmount)
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+
+    expect(
+      (await variableDebtStETH.scaledBalanceOf(user1.address)).rayDiv(
+        stETHBorrowAmount
+      )
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    expect(
+      (await variableDebtAWeth.scaledBalanceOf(user1.address)).rayDiv(
+        aWETHBorrowAmount
+      )
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+
+    expect(
+      (await variableDebtStETH.scaledTotalSupply()).rayDiv(stETHBorrowAmount)
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    expect(
+      (await variableDebtAWeth.scaledTotalSupply()).rayDiv(aWETHBorrowAmount)
+    ).to.be.eq(rebasingIndexAnnualMultiplier);
+  });
+
+  it("TC-ptoken-rebasing-03: balance, debt, totalSupply and totalDebt will change over time even if rebasingIndex stays the same", async () => {
+    const {
+      users: [user1],
+      pstETH,
+      paWETH,
+      variableDebtStETH,
+      variableDebtAWeth,
+    } = await loadFixture(fixture);
+
+    const pstETHBalanceBefore = await pstETH.balanceOf(user1.address);
+    const paWETHBalanceBefore = await paWETH.balanceOf(user1.address);
+
+    const pstETHTotalSupplyBefore = await pstETH.totalSupply();
+    const paWETHTotalSupplyBefore = await paWETH.totalSupply();
+
+    const stETHDebtBefore = await variableDebtStETH.balanceOf(user1.address);
+    const aWETHDebtBefore = await variableDebtAWeth.balanceOf(user1.address);
+
+    const stETHTotalDebtBefore = await variableDebtStETH.totalSupply();
+    const aWETHTotalDebtBefore = await variableDebtAWeth.totalSupply();
 
     await advanceTimeAndBlock(parseInt(ONE_YEAR));
 
-    expect(await variableDebtAWeth.balanceOf(user2.address)).to.be.gt(
-      borrowAmountBaseUnits
-    );
+    const pstETHBalanceAfter = await pstETH.balanceOf(user1.address);
+    const paWETHBalanceAfter = await paWETH.balanceOf(user1.address);
+
+    const pstETHTotalSupplyAfter = await pstETH.totalSupply();
+    const paWETHTotalSupplyAfter = await paWETH.totalSupply();
+
+    const stETHDebtAfter = await variableDebtStETH.balanceOf(user1.address);
+    const aWETHDebtAfter = await variableDebtAWeth.balanceOf(user1.address);
+
+    const stETHTotalDebtAfter = await variableDebtStETH.totalSupply();
+    const aWETHTotalDebtAfter = await variableDebtAWeth.totalSupply();
+
+    expect(pstETHBalanceAfter).to.be.gt(pstETHBalanceBefore);
+    expect(paWETHBalanceAfter).to.be.gt(paWETHBalanceBefore);
+
+    expect(pstETHTotalSupplyAfter).to.be.gt(pstETHTotalSupplyBefore);
+    expect(paWETHTotalSupplyAfter).to.be.gt(paWETHTotalSupplyBefore);
+
+    expect(stETHDebtAfter).to.be.gt(stETHDebtBefore);
+    expect(aWETHDebtAfter).to.be.gt(aWETHDebtBefore);
+
+    expect(stETHTotalDebtAfter).to.be.gt(stETHTotalDebtBefore);
+    expect(aWETHTotalDebtAfter).to.be.gt(aWETHTotalDebtBefore);
   });
 });
