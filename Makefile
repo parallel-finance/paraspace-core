@@ -262,6 +262,10 @@ test-sape-operation:
 test-acl-manager:
 	make TEST_TARGET=acl-manager.spec.ts test
 
+.PHONY: test-time-lock
+test-time-lock:
+	make TEST_TARGET=time_lock_executor.spec.ts test
+
 .PHONY: run
 run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)

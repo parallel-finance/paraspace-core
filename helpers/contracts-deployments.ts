@@ -31,6 +31,8 @@ import {
   ExecutionDelegate,
   ExecutionDelegate__factory,
   ExecutionManager,
+  ExecutorWithTimelock,
+  ExecutorWithTimelock__factory,
   FlashClaimLogic,
   FlashClaimLogic__factory,
   InitializableImmutableAdminUpgradeabilityProxy,
@@ -1891,6 +1893,18 @@ export const deployBlurAdapter = async (verify?: boolean) => {
     [],
     verify
   ) as Promise<BlurAdapter>;
+};
+
+export const deployTimeLockExecutor = async (
+  args: string[],
+  verify?: boolean
+) => {
+  return withSaveAndVerify(
+    new ExecutorWithTimelock__factory(await getFirstSigner()),
+    eContractid.TimeLockExecutor,
+    [...args],
+    verify
+  ) as Promise<ExecutorWithTimelock>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
