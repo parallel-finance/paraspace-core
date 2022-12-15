@@ -41,6 +41,31 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
         emit Deposit(msg.sender, onBehalf, amount, amountShare);
     }
 
+    function batchDeposit(address[] calldata onBehalf, uint256[] calldata amount) external override {
+        uint256 totalPooledApeBalance = getTotalPooledApeBalance();
+        uint256 totalShares =  getTotalShares();
+        uint256 totalAmount;
+        for (uint256 index = 0; index < onBehalf.length; index++) {
+            if (amount[index] == 0)
+                continue;
+
+            uint256 amountShare;
+            if (totalPooledApeBalance == 0) {
+                amountShare = amount[index];
+            } else {
+                amountShare =  (amount[index] * totalShares) / totalPooledApeBalance;
+            }
+
+            _mint(onBehalf[index], amountShare);
+            totalAmount += amount[index];
+            emit Deposit(msg.sender, onBehalf[index], amount[index], amountShare);
+        }
+
+        _transferTokenIn(msg.sender, totalAmount);
+        _harvest();
+        _yield();
+    }
+
     function withdraw(uint256 amountShare) external override {
         require(amountShare > 0, "zero amount");
 

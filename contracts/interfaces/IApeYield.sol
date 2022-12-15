@@ -31,5 +31,7 @@ interface IApeYield is IERC20 {
 
     function deposit(address onBehalf, uint256 amount) external;
 
+    function batchDeposit(address[] calldata onBehalf, uint256[] calldata amount) external;
+
     function withdraw(uint256 amountShare) external;
 }

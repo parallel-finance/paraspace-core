@@ -421,7 +421,7 @@ contract PoolApeStaking is
         }
     }
 
-    function claimApeAndYield(address nftAsset, uint256 tokenId)
+    function claimApeAndYield(address nftAsset, uint256[] memory tokenIds)
         external
         nonReentrant
     {
@@ -434,19 +434,27 @@ contract PoolApeStaking is
         _checkApeAllowance();
 
         uint256 balanceBefore = APE_COIN.balanceOf(address(this));
+        uint256[] memory amounts = new uint256[](tokenIds.length);
+        address[] memory users = new address[](tokenIds.length);
         uint256[] memory _nfts = new uint256[](1);
-        _nfts[0] = tokenId;
-        INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, address(this));
-        uint256 balanceAfter = APE_COIN.balanceOf(address(this));
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            _nfts[0] = tokenIds[index];
+            INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, address(this));
 
-        address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
-        APE_YIELD.deposit(positionOwner, balanceAfter - balanceBefore);
+            uint256 balanceAfter = APE_COIN.balanceOf(address(this));
+            address positionOwner = INToken(xTokenAddress).ownerOf(tokenIds[index]);
 
-        require(
-            getUserHf(msg.sender) >
+            users[index] = positionOwner;
+            amounts[index] = balanceAfter - balanceBefore;
+            balanceBefore = balanceAfter;
+
+            require(
+                getUserHf(positionOwner) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-        );
+                Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+            );
+        }
+        APE_YIELD.batchDeposit(users, amounts);
     }
 
     function getUserHf(address user) internal view returns (uint256) {
