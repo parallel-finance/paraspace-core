@@ -335,7 +335,7 @@ export const initReservesByHelper = async (
               await deployStETHDebtToken(pool.address, verify)
             ).address;
           }
-          variableDebtTokenToUse = pTokenStETHImplementationAddress;
+          variableDebtTokenToUse = stETHVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.aWETH) {
           if (!pTokenATokenImplementationAddress) {
             pTokenATokenImplementationAddress = (
