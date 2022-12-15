@@ -1,16 +1,12 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
-import {
-  MAX_UINT_AMOUNT,
-  ONE_YEAR,
-  MAX_SUPPLY_CAP,
-} from "../deploy/helpers/constants";
+import {MAX_UINT_AMOUNT, ONE_YEAR, MAX_SUPPLY_CAP} from "../helpers/constants";
 import {
   convertToCurrencyDecimals,
   impersonateAddress,
-} from "../deploy/helpers/contracts-helpers";
-import {advanceTimeAndBlock} from "../deploy/helpers/misc-utils";
+} from "../helpers/contracts-helpers";
+import {advanceTimeAndBlock} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
   assertHealthFactorCalculation,
@@ -18,7 +14,7 @@ import {
   supplyAndValidate,
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {utils} from "ethers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";

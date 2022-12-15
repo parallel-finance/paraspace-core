@@ -1,4 +1,4 @@
-import {DRE} from "../../deploy/helpers/misc-utils";
+import {DRE} from "../../helpers/misc-utils";
 
 class SnapshotManager {
   snapshots: {[id: string]: string} = {};

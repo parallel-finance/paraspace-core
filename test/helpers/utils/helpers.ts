@@ -6,13 +6,13 @@ import {
   getMintableERC20,
   getPToken,
   getVariableDebtToken,
-} from "../../../deploy/helpers/contracts-getters";
-import {tEthereumAddress} from "../../../deploy/helpers/types";
-import {getDb, DRE} from "../../../deploy/helpers/misc-utils";
+} from "../../../helpers/contracts-getters";
+import {tEthereumAddress} from "../../../helpers/types";
+import {getDb, DRE} from "../../../helpers/misc-utils";
 import {ProtocolDataProvider} from "../../../types";
 import {BigNumber, ethers} from "ethers";
 import {PToken} from "../../../types";
-import {ONE_ADDRESS} from "../../../deploy/helpers/constants";
+import {ONE_ADDRESS} from "../../../helpers/constants";
 
 export const getReserveData = async (
   helper: ProtocolDataProvider,

@@ -3,25 +3,25 @@ import type {HardhatRuntimeEnvironment} from "hardhat/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber, utils} from "ethers";
-import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../helpers/constants";
 import {
   deployDelegationAwarePToken,
   deployMintableDelegationERC20,
-} from "../deploy/helpers/contracts-deployments";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+} from "../helpers/contracts-deployments";
+import {waitForTx} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {
   ETHERSCAN_VERIFICATION,
   HARDHAT_CHAINID,
-} from "../deploy/helpers/hardhat-constants";
+} from "../helpers/hardhat-constants";
 import {
   buildPermitParams,
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
   impersonateAddress,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {assertAlmostEqual, supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {TestEnv} from "./helpers/make-suite";

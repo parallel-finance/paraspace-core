@@ -3,9 +3,9 @@ import {
   DEPLOY_END,
   DEPLOY_START,
   ETHERSCAN_VERIFICATION,
-} from "../../deploy/helpers/hardhat-constants";
-import {beforeAll} from "../../deploy/tasks/deployments/full-deployment/steps/before-all";
-import {afterAll} from "../../deploy/tasks/deployments/full-deployment/steps/after-all";
+} from "../../helpers/hardhat-constants";
+import {beforeAll} from "../../scripts/deployments/steps/before-all";
+import {afterAll} from "../../scripts/deployments/steps/after-all";
 
 task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
@@ -14,10 +14,8 @@ task("deploy:all", "Deploy all contracts").setAction(async (_, DRE) => {
     return;
   }
 
-  const {printContracts} = await import("../../deploy/helpers/misc-utils");
-  const {getAllSteps} = await import(
-    "../../deploy/tasks/deployments/full-deployment/steps"
-  );
+  const {printContracts} = await import("../../helpers/misc-utils");
+  const {getAllSteps} = await import("../../scripts/deployments/steps");
   const steps = await getAllSteps();
 
   console.time("setup");

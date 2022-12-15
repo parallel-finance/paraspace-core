@@ -1,9 +1,9 @@
 import {expect} from "chai";
 import "./helpers/utils/wadraymath";
 import {utils} from "ethers";
-import {ProtocolErrors} from "../deploy/helpers/types";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {ProtocolErrors} from "../helpers/types";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 

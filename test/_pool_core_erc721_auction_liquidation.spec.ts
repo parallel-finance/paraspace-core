@@ -2,10 +2,10 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {getAggregator} from "../deploy/helpers/contracts-getters";
-import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {getAggregator} from "../helpers/contracts-getters";
+import {advanceBlock, waitForTx} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {

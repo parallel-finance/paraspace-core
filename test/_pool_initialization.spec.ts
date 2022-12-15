@@ -1,14 +1,14 @@
 import {expect} from "chai";
 import {utils} from "ethers";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {deployPoolCoreLibraries} from "../deploy/helpers/contracts-deployments";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {deployPoolCoreLibraries} from "../helpers/contracts-deployments";
+import {ProtocolErrors} from "../helpers/types";
 import {PoolCore__factory} from "../types";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {getFirstSigner} from "../deploy/helpers/contracts-getters";
+import {getFirstSigner} from "../helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {impersonateAddress} from "../deploy/helpers/contracts-helpers";
+import {impersonateAddress} from "../helpers/contracts-helpers";
 
 describe("Pool: Initialization", () => {
   const {

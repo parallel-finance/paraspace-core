@@ -1,19 +1,19 @@
-import {DRE, waitForTx} from "../../deploy/helpers/misc-utils";
+import {DRE, waitForTx} from "../../helpers/misc-utils";
 import {
   createBlurOrder,
   createSeaportOrder,
-} from "../../deploy/helpers/contracts-helpers";
+} from "../../helpers/contracts-helpers";
 import {SignerWithAddress} from "./../helpers/make-suite";
-import creditType from "../../deploy/helpers/eip-712-types/credit";
-import {AdvancedOrder} from "../../deploy/helpers/seaport-helpers/types";
+import creditType from "../../helpers/eip-712-types/credit";
+import {AdvancedOrder} from "../../helpers/seaport-helpers/types";
 import {
   convertSignatureToEIP2098,
   getOfferOrConsiderationItem,
   randomHex,
   toBN,
   toFulfillment,
-} from "../../deploy/helpers/seaport-helpers/encoding";
-import {createOrder, createRunput} from "../../deploy/helpers/x2y2-helpers";
+} from "../../helpers/seaport-helpers/encoding";
+import {createOrder, createRunput} from "../../helpers/x2y2-helpers";
 import {
   generateMakerOrderTypedData,
   MakerOrder,
@@ -26,7 +26,7 @@ import {
   LOOKSRARE_ID,
   PARASPACE_SEAPORT_ID,
   X2Y2_ID,
-} from "../../deploy/helpers/constants";
+} from "../../helpers/constants";
 import {BigNumber, BigNumberish, constants} from "ethers";
 import {
   MintableERC20,
@@ -48,12 +48,12 @@ import {
   getStrategyStandardSaleForFixedPrice,
   getTransferManagerERC721,
   getX2Y2R1,
-} from "../../deploy/helpers/contracts-getters";
+} from "../../helpers/contracts-getters";
 import {
   Order as BlurOrder,
   Side,
   SignatureVersion,
-} from "../../deploy/helpers/blur-helpers/types";
+} from "../../helpers/blur-helpers/types";
 import {InputStruct} from "../../types/dependencies/blur-exchange/IBlurExchange";
 
 export async function executeLooksrareBuyWithCredit(

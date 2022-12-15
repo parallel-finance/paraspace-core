@@ -1,17 +1,17 @@
 import {expect} from "chai";
-import {DRE, waitForTx} from "../deploy/helpers/misc-utils";
+import {DRE, waitForTx} from "../helpers/misc-utils";
 import {
   convertToCurrencyDecimals,
   createSeaportOrder,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
-import {AdvancedOrder} from "../deploy/helpers/seaport-helpers/types";
+import {AdvancedOrder} from "../helpers/seaport-helpers/types";
 import {
   getItemETH,
   getOfferOrConsiderationItem,
   toBN,
-} from "../deploy/helpers/seaport-helpers/encoding";
-import {createOrder, createRunput} from "../deploy/helpers/x2y2-helpers";
+} from "../helpers/seaport-helpers/encoding";
+import {createOrder, createRunput} from "../helpers/x2y2-helpers";
 import {
   generateMakerOrderTypedData,
   MakerOrder,
@@ -23,7 +23,7 @@ import {
   LOOKSRARE_ID,
   PARASPACE_SEAPORT_ID,
   X2Y2_ID,
-} from "../deploy/helpers/constants";
+} from "../helpers/constants";
 import {parseEther, splitSignature} from "ethers/lib/utils";
 import {BigNumber, BigNumberish, constants} from "ethers";
 import {
@@ -34,8 +34,8 @@ import {
   switchCollateralAndValidate,
 } from "./helpers/validated-steps";
 import {MintableERC20} from "../types";
-import {getMintableERC721} from "../deploy/helpers/contracts-getters";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {getMintableERC721} from "../helpers/contracts-getters";
+import {ProtocolErrors} from "../helpers/types";
 import {
   executeBlurBuyWithCredit,
   executeLooksrareBuyWithCredit,
