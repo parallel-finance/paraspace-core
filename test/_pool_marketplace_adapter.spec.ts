@@ -6,7 +6,7 @@ import {
   TakerOrder,
 } from "@looksrare/sdk";
 import {expect} from "chai";
-import {loadFixture} from "ethereum-waffle";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {BigNumber, constants} from "ethers";
 import {parseEther} from "ethers/lib/utils";
 import {
