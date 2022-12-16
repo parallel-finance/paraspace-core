@@ -12,6 +12,8 @@ interface IPoolApeStaking {
     struct StakingInfo {
         // Contract address of BAYC/MAYC
         address nftAsset;
+        // address of borrowing asset, can be Ape or cApe
+        address borrowAsset;
         // Borrow amount of Ape from lending pool
         uint256 borrowAmount;
         // Cash amount of Ape from user wallet

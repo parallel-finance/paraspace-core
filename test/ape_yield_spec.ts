@@ -1,6 +1,6 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {ApeYield, PToken, VariableDebtToken} from "../types";
+import {ApeYield, PToken, PTokenSApe, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
@@ -9,16 +9,19 @@ import {almostEqual} from "./helpers/uniswapv3-helper";
 import {
   getApeYield,
   getPToken,
+  getPTokenSApe,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
-import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
   let apeYield: ApeYield;
-  let pPsApe: PToken;
+  let pCApe: PToken;
   let variableDebtCAPE: VariableDebtToken;
+  let pSApeCoin: PTokenSApe;
+  const sApeAddress = ONE_ADDRESS;
   let user1Amount;
   let user2Amount;
   let user3Amount;
@@ -37,12 +40,14 @@ describe("APE Coin Staking Test", () => {
     apeYield = await getApeYield();
 
     const {
-      xTokenAddress: pPsApeAddress,
+      xTokenAddress: pCApeAddress,
       variableDebtTokenAddress: variableDebtPsApeAddress,
     } = await protocolDataProvider.getReserveTokensAddresses(apeYield.address);
-    pPsApe = await getPToken(pPsApeAddress);
+    pCApe = await getPToken(pCApeAddress);
     variableDebtCAPE = await getVariableDebtToken(variableDebtPsApeAddress);
-    console.log(variableDebtCAPE.address);
+    const {xTokenAddress: pSApeCoinAddress} =
+      await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
+    pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
 
     await mintAndValidate(ape, "1000", user1);
     await mintAndValidate(ape, "2000", user2);
@@ -301,6 +306,7 @@ describe("APE Coin Staking Test", () => {
       users: [user1, user2, user3],
       mayc,
       pool,
+      ape,
     } = await loadFixture(fixture);
 
     await waitForTx(
@@ -356,6 +362,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: user1Amount,
         },
@@ -368,6 +375,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user2.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: user2Amount,
         },
@@ -380,6 +388,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user3.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: user3Amount,
         },
@@ -401,15 +410,15 @@ describe("APE Coin Staking Test", () => {
     );
 
     // 3600 / 7 = 514.28
-    const user1Balance = await pPsApe.balanceOf(user1.address);
+    const user1Balance = await pCApe.balanceOf(user1.address);
     almostEqual(user1Balance, parseEther("514.28"));
 
     // 3600 * 2 / 7 = 1028.57
-    const user2Balance = await pPsApe.balanceOf(user2.address);
+    const user2Balance = await pCApe.balanceOf(user2.address);
     almostEqual(user2Balance, parseEther("1028.57"));
 
     // 3600 * 4 / 7 = 2057.14
-    const user3Balance = await pPsApe.balanceOf(user3.address);
+    const user3Balance = await pCApe.balanceOf(user3.address);
     almostEqual(user3Balance, parseEther("2057.14"));
 
     await advanceTimeAndBlock(3600);
@@ -430,6 +439,7 @@ describe("APE Coin Staking Test", () => {
       users: [user1, user2],
       mayc,
       pool,
+      ape,
     } = await loadFixture(fixture);
 
     await waitForTx(
@@ -463,6 +473,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: totalAmount,
         },
@@ -483,7 +494,7 @@ describe("APE Coin Staking Test", () => {
         .claimApeAndYield(mayc.address, [user1.address], [[0, 1, 2]])
     );
 
-    const user1Balance = await pPsApe.balanceOf(user1.address);
+    const user1Balance = await pCApe.balanceOf(user1.address);
     almostEqual(user1Balance, parseEther("3600"));
 
     await advanceTimeAndBlock(3600);
@@ -576,5 +587,66 @@ describe("APE Coin Staking Test", () => {
     );
 
     almostEqual(await ape.balanceOf(user2.address), user2Amount);
+  });
+
+  it("borrow cape and stake function work as expected: use 100% debt", async () => {
+    const {
+      users: [user1, user2],
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await apeYield.connect(user2.signer).deposit(user2.address, user2Amount)
+    );
+
+    await waitForTx(
+      await apeYield.connect(user2.signer).approve(pool.address, user2Amount)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .supply(apeYield.address, user2Amount, user2.address, 0)
+    );
+
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+
+    await waitForTx(
+      await mayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: 0, useAsCollateral: true}],
+          user1.address,
+          "0"
+        )
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: apeYield.address,
+          borrowAmount: user1Amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: user1Amount}],
+        []
+      )
+    );
+
+    const user2pCApeBalance = await pCApe.balanceOf(user2.address);
+    almostEqual(user2pCApeBalance, user2Amount);
+    const user1CApeDebtBalance = await variableDebtCAPE.balanceOf(
+      user1.address
+    );
+    almostEqual(user1CApeDebtBalance, user1Amount);
+    almostEqual(await pSApeCoin.balanceOf(user1.address), user1Amount);
   });
 });

@@ -136,6 +136,7 @@ describe("APE Coin Staking Test", () => {
       pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: amount,
         },
@@ -163,6 +164,7 @@ describe("APE Coin Staking Test", () => {
       pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: amount,
         },
@@ -192,6 +194,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: amount,
         },
@@ -247,6 +250,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount2,
           cashAmount: amount1,
         },
@@ -302,6 +306,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -357,6 +362,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -427,6 +433,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -508,6 +515,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -542,6 +550,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -577,6 +586,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -657,6 +667,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -736,6 +747,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -799,6 +811,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -851,6 +864,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -897,6 +911,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount2,
           cashAmount: amount1,
         },
@@ -942,6 +957,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount2,
           cashAmount: amount1,
         },
@@ -994,6 +1010,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -1025,6 +1042,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -1078,6 +1096,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: halfAmount,
           cashAmount: 0,
         },
@@ -1093,6 +1112,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: bayc.address,
+          borrowAsset: ape.address,
           borrowAmount: halfAmount,
           cashAmount: 0,
         },
@@ -1203,6 +1223,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -1280,6 +1301,7 @@ describe("APE Coin Staking Test", () => {
       pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -1309,6 +1331,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: amount,
         },
@@ -1375,6 +1398,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(taker.signer).borrowApeAndStake(
         {
           nftAsset: bayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: amount,
         },
@@ -1443,6 +1467,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(maker.signer).borrowApeAndStake(
         {
           nftAsset: bayc.address,
+          borrowAsset: ape.address,
           borrowAmount: 0,
           cashAmount: amount,
         },
@@ -1505,6 +1530,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount2,
           cashAmount: amount1,
         },

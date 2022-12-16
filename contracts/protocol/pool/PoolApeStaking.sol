@@ -237,6 +237,12 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
+        require(
+            stakingInfo.borrowAsset == address(APE_COIN) ||
+                stakingInfo.borrowAsset == address(APE_YIELD),
+            "invalid borrow asset"
+        );
+
         BorrowAndStakeLocalVar memory localVar;
         localVar.nTokenAddress = ps
             ._reserves[stakingInfo.nftAsset]
@@ -245,29 +251,52 @@ contract PoolApeStaking is
         localVar.bakcContract = INTokenApeStaking(localVar.nTokenAddress)
             .getBAKC();
 
-        DataTypes.ReserveData storage apeReserve = ps._reserves[
-            address(APE_COIN)
+        DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
+            stakingInfo.borrowAsset
         ];
 
-        // 1, send borrow part to xTokenAddress
+        // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
-            ValidationLogic.validateFlashloanSimple(apeReserve);
-            IPToken(apeReserve.xTokenAddress).transferUnderlyingTo(
-                localVar.nTokenAddress,
-                stakingInfo.borrowAmount
-            );
+            ValidationLogic.validateFlashloanSimple(borrowAssetReserve);
+            if (stakingInfo.borrowAsset == address(APE_COIN)) {
+                IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
+                    localVar.nTokenAddress,
+                    stakingInfo.borrowAmount
+                );
+            } else {
+                IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
+                    address(this),
+                    stakingInfo.borrowAmount
+                );
+            }
         }
 
-        // 2, send cash part to xTokenAddress
+        // 2, handle cash part
         if (stakingInfo.cashAmount > 0) {
-            APE_COIN.safeTransferFrom(
-                msg.sender,
-                localVar.nTokenAddress,
-                stakingInfo.cashAmount
-            );
+            if (stakingInfo.borrowAsset == address(APE_COIN)) {
+                APE_COIN.safeTransferFrom(
+                    msg.sender,
+                    localVar.nTokenAddress,
+                    stakingInfo.cashAmount
+                );
+            } else {
+                IERC20(address(APE_YIELD)).safeTransferFrom(
+                    msg.sender,
+                    address(this),
+                    stakingInfo.cashAmount
+                );
+            }
         }
 
-        // 3, deposit bayc or mayc pool
+        // 3, withdraw cApe to get ape, and send ape to xTokenAddress
+        if (stakingInfo.borrowAsset == address(APE_YIELD)) {
+            uint256 totalAmount = stakingInfo.cashAmount +
+                stakingInfo.borrowAmount;
+            APE_YIELD.withdraw(totalAmount);
+            APE_COIN.safeTransfer(localVar.nTokenAddress, totalAmount);
+        }
+
+        // 4, deposit bayc or mayc pool
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 INToken(localVar.nTokenAddress).ownerOf(_nfts[index].tokenId) ==
@@ -277,7 +306,7 @@ contract PoolApeStaking is
         }
         INTokenApeStaking(localVar.nTokenAddress).depositApeCoin(_nfts);
 
-        // 4, deposit bakc pool
+        // 5, deposit bakc pool
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 INToken(localVar.nTokenAddress).ownerOf(
@@ -302,14 +331,14 @@ contract PoolApeStaking is
             );
         }
 
-        // 5 mint debt token
+        // 6 mint debt token
         if (stakingInfo.borrowAmount > 0) {
             BorrowLogic.executeBorrow(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
                 DataTypes.ExecuteBorrowParams({
-                    asset: address(APE_COIN),
+                    asset: stakingInfo.borrowAsset,
                     user: msg.sender,
                     onBehalfOf: msg.sender,
                     amount: stakingInfo.borrowAmount,
