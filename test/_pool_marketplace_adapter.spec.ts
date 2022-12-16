@@ -36,7 +36,7 @@ import {
   ConsiderationItem,
 } from "../helpers/seaport-helpers/types";
 import {ProtocolErrors} from "../helpers/types";
-import {createOrder, createRunput} from "../helpers/x2y2-helpers";
+import {createX2Y2Order, createRunput} from "../helpers/x2y2-helpers";
 import {InputStruct} from "../types/dependencies/blur-exchange/BlurExchange";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -331,7 +331,7 @@ describe("Marketplace Adapters - Negative Tests", () => {
       dai,
     } = await loadFixture(testEnvFixture);
     const now = Math.floor(Date.now() / 1000);
-    const order = await createOrder({
+    const order = await createX2Y2Order({
       chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       signer: maker.signer,
       tokenAddress: bayc.address,
@@ -374,7 +374,7 @@ describe("Marketplace Adapters - Negative Tests", () => {
       dai,
     } = await loadFixture(testEnvFixture);
     const now = Math.floor(Date.now() / 1000);
-    const order = await createOrder({
+    const order = await createX2Y2Order({
       chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       signer: maker.signer,
       tokenAddress: bayc.address,
