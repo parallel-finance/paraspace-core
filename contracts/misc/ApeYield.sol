@@ -13,9 +13,11 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    /// @notice Ape coin single pool POOL_ID for ApeCoinStaking
     uint256 public constant APE_COIN_POOL_ID = 0;
-    uint256 public constant APE_COIN_PRECISION = 1e18;
-    uint256 public constant MIN_OPERATION_AMOUNT = 100 * APE_COIN_PRECISION;
+    /// @notice Minimal ApeCoin amount to deposit ape to ApeCoinStaking
+    uint256 public constant MIN_OPERATION_AMOUNT = 100 * 1e18;
+
     ApeCoinStaking public immutable apeStaking;
     IERC20 public immutable apeCoin;
     uint256 public backedBalance;
@@ -26,6 +28,7 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
         apeCoin.safeApprove(_apeStaking, type(uint256).max);
     }
 
+    /// @inheritdoc IApeYield
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
         uint256 amountShare = getShareByPooledApe(amount);
@@ -41,6 +44,7 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
         emit Deposit(msg.sender, onBehalf, amount, amountShare);
     }
 
+    /// @inheritdoc IApeYield
     function withdraw(uint256 amount) external override {
         require(amount > 0, "zero amount");
 
@@ -59,6 +63,7 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
         emit Redeem(msg.sender, amount, amountShare);
     }
 
+    /// @inheritdoc IApeYield
     function harvestAndYield() external {
         _harvest();
         _yield();

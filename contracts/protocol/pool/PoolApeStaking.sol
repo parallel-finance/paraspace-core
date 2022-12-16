@@ -421,6 +421,7 @@ contract PoolApeStaking is
         }
     }
 
+    /// @inheritdoc IPoolApeStaking
     function claimApeAndYield(address nftAsset, uint256[] memory tokenIds)
         external
         nonReentrant
