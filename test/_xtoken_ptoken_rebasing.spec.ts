@@ -240,13 +240,17 @@ describe("Rebasing tokens", async () => {
     const user2PstETHBalanceBefore = await pstETH.balanceOf(user2.address);
     const user2PaWETHBalanceBefore = await paWETH.balanceOf(user2.address);
 
-    await waitForTx(
-      await pstETH.connect(user1.signer).transfer(user2.address, transferAmount)
-    );
+    await expect(
+      pstETH.connect(user1.signer).transfer(user2.address, transferAmount)
+    )
+      .to.emit(pstETH, "Transfer")
+      .withArgs(user1.address, user2.address, transferAmount);
 
-    await waitForTx(
-      await paWETH.connect(user1.signer).transfer(user2.address, transferAmount)
-    );
+    await expect(
+      paWETH.connect(user1.signer).transfer(user2.address, transferAmount)
+    )
+      .to.emit(paWETH, "Transfer")
+      .withArgs(user1.address, user2.address, transferAmount);
 
     const user1PstETHBalanceAfter = await pstETH.balanceOf(user1.address);
     const user1PaWETHBalanceAfter = await paWETH.balanceOf(user1.address);
@@ -283,14 +287,14 @@ describe("Rebasing tokens", async () => {
       pool,
     } = await loadFixture(fixture);
 
-    const user1PstETHBalanceBefore = await pstETH.balanceOf(user1.address);
-    const user1PaWETHBalanceBefore = await paWETH.balanceOf(user1.address);
+    const pstETHBalanceBefore = await pstETH.balanceOf(user1.address);
+    const paWETHBalanceBefore = await paWETH.balanceOf(user1.address);
 
-    const user1stETHBalanceBefore = await stETH.balanceOf(user1.address);
-    const user1aWETHBalanceBefore = await aWETH.balanceOf(user1.address);
+    const stETHBalanceBefore = await stETH.balanceOf(user1.address);
+    const aWETHBalanceBefore = await aWETH.balanceOf(user1.address);
 
-    await waitForTx(
-      await pool
+    await expect(
+      pool
         .connect(user1.signer)
         .withdraw(stETH.address, withdrawAmount, user1.address)
     );
@@ -301,27 +305,27 @@ describe("Rebasing tokens", async () => {
         .withdraw(aWETH.address, withdrawAmount, user1.address)
     );
 
-    const user1PstETHBalanceAfter = await pstETH.balanceOf(user1.address);
-    const user1PaWETHBalanceAfter = await paWETH.balanceOf(user1.address);
+    const pstETHBalanceAfter = await pstETH.balanceOf(user1.address);
+    const paWETHBalanceAfter = await paWETH.balanceOf(user1.address);
 
-    const user1stETHBalanceAfter = await stETH.balanceOf(user1.address);
-    const user1aWETHBalanceAfter = await aWETH.balanceOf(user1.address);
+    const stETHBalanceAfter = await stETH.balanceOf(user1.address);
+    const aWETHBalanceAfter = await aWETH.balanceOf(user1.address);
 
     assertAlmostEqual(
-      user1PaWETHBalanceBefore.sub(user1PaWETHBalanceAfter),
+      paWETHBalanceBefore.sub(paWETHBalanceAfter),
       withdrawAmount
     );
     assertAlmostEqual(
-      user1PstETHBalanceBefore.sub(user1PstETHBalanceAfter),
+      pstETHBalanceBefore.sub(pstETHBalanceAfter),
       withdrawAmount
     );
 
     assertAlmostEqual(
-      user1aWETHBalanceAfter.sub(user1aWETHBalanceBefore),
+      aWETHBalanceAfter.sub(aWETHBalanceBefore),
       withdrawAmount
     );
     assertAlmostEqual(
-      user1stETHBalanceAfter.sub(user1stETHBalanceBefore),
+      stETHBalanceAfter.sub(stETHBalanceBefore),
       withdrawAmount
     );
   });
