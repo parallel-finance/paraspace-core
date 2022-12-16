@@ -415,7 +415,7 @@ describe("APE Coin Staking Test", () => {
 
     // 3600 / 7 * 99.7% = 512.74
     const user1Balance = await pCApe.balanceOf(user1.address);
-    almostEqual(user1Balance, parseEther("521.7428"));
+    almostEqual(user1Balance, parseEther("512.7428"));
 
     // 3600 * 2 / 7 * 99.7% = 1025.48
     const user2Balance = await pCApe.balanceOf(user2.address);
@@ -519,7 +519,7 @@ describe("APE Coin Staking Test", () => {
     );
   });
 
-  it("backedBalance work as expected", async () => {
+  it("bufferBalance work as expected", async () => {
     const {
       users: [user1, user2],
       ape,

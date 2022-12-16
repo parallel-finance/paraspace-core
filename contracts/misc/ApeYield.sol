@@ -20,7 +20,7 @@ contract ApeYield is Ownable, cAPE, IApeYield {
 
     ApeCoinStaking public immutable apeStaking;
     IERC20 public immutable apeCoin;
-    uint256 public backedBalance;
+    uint256 public bufferBalance;
 
     constructor(address _apeCoin, address _apeStaking) {
         apeStaking = ApeCoinStaking(_apeStaking);
@@ -52,9 +52,9 @@ contract ApeYield is Ownable, cAPE, IApeYield {
         _burn(msg.sender, amountShare);
 
         _harvest();
-        uint256 _backedBalance = backedBalance;
-        if (amount > _backedBalance) {
-            _withdrawFromApeCoinStaking(amount - _backedBalance);
+        uint256 _bufferBalance = bufferBalance;
+        if (amount > _bufferBalance) {
+            _withdrawFromApeCoinStaking(amount - _bufferBalance);
         }
         _transferTokenOut(msg.sender, amount);
 
@@ -81,7 +81,7 @@ contract ApeYield is Ownable, cAPE, IApeYield {
             address(this),
             0
         );
-        return stakedAmount + rewardAmount + backedBalance;
+        return stakedAmount + rewardAmount + bufferBalance;
     }
 
     function _withdrawFromApeCoinStaking(uint256 amount) internal {
@@ -89,24 +89,24 @@ contract ApeYield is Ownable, cAPE, IApeYield {
         apeStaking.withdrawSelfApeCoin(amount);
         uint256 balanceAfter = apeCoin.balanceOf(address(this));
         uint256 realWithdraw = balanceAfter - balanceBefore;
-        backedBalance += realWithdraw;
+        bufferBalance += realWithdraw;
     }
 
     function _transferTokenIn(address from, uint256 amount) internal {
         apeCoin.safeTransferFrom(from, address(this), amount);
-        backedBalance += amount;
+        bufferBalance += amount;
     }
 
     function _transferTokenOut(address to, uint256 amount) internal {
         apeCoin.safeTransfer(to, amount);
-        backedBalance -= amount;
+        bufferBalance -= amount;
     }
 
     function _yield() internal {
-        uint256 _backedBalance = backedBalance;
-        if (_backedBalance >= MIN_OPERATION_AMOUNT) {
-            apeStaking.depositSelfApeCoin(_backedBalance);
-            backedBalance = 0;
+        uint256 _bufferBalance = bufferBalance;
+        if (_bufferBalance >= MIN_OPERATION_AMOUNT) {
+            apeStaking.depositSelfApeCoin(_bufferBalance);
+            bufferBalance = 0;
         }
     }
 
@@ -118,7 +118,7 @@ contract ApeYield is Ownable, cAPE, IApeYield {
         );
         if (rewardAmount > 0) {
             apeStaking.claimSelfApeCoin();
-            backedBalance += rewardAmount;
+            bufferBalance += rewardAmount;
         }
     }
 
@@ -130,7 +130,7 @@ contract ApeYield is Ownable, cAPE, IApeYield {
         IERC20(token).safeTransfer(to, amount);
         if (token == address(apeCoin)) {
             require(
-                backedBalance <= apeCoin.balanceOf(address(this)),
+                bufferBalance <= apeCoin.balanceOf(address(this)),
                 "balance below backed balance"
             );
         }

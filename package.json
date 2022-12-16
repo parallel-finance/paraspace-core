@@ -18,7 +18,7 @@
     "coverage": "hardhat coverage --testfiles 'test/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'scripts/**/*.ts' 'tasks/**/*.ts' 'test/**/*.ts'",
     "doc": "hardhat docgen",
-    "test": "hardhat test ./test/*.ts",
+    "test": "hardhat test ./test/ape_yield_spec.ts",
     "clean": "hardhat clean"
   },
   "devDependencies": {
