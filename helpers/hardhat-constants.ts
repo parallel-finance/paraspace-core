@@ -70,9 +70,10 @@ export const KEYSTORE_PATH = "keystore";
 export const DEPLOYER_PRIVATE_KEY = getPrivateKeyfromEncryptedJson(
   process.env.DEPLOYER_KEYSTORE_PATH
 );
-export const DEPLOYER_MNEMONIC =
+export const DEPLOYER_MNEMONIC = (
   process.env.DEPLOYER_MNEMONIC ||
-  "test test test test test test test test test test test junk";
+  "test test test test test test test test test test test junk"
+).trim();
 export const DEPLOYER: HttpNetworkAccountsUserConfig = DEPLOYER_PRIVATE_KEY
   ? [DEPLOYER_PRIVATE_KEY]
   : {
