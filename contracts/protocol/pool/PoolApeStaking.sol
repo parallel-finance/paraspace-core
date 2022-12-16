@@ -224,10 +224,8 @@ contract PoolApeStaking is
 
     struct BorrowAndStakeLocalVar {
         address nTokenAddress;
-        IERC20 apeCoin;
         uint256 beforeBalance;
         IERC721 bakcContract;
-        DataTypes.ReserveCache apeReserveCache;
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -243,33 +241,26 @@ contract PoolApeStaking is
         localVar.nTokenAddress = ps
             ._reserves[stakingInfo.nftAsset]
             .xTokenAddress;
-        localVar.apeCoin = INTokenApeStaking(localVar.nTokenAddress)
-            .getApeStaking()
-            .apeCoin();
-        localVar.beforeBalance = localVar.apeCoin.balanceOf(
-            localVar.nTokenAddress
-        );
+        localVar.beforeBalance = APE_COIN.balanceOf(localVar.nTokenAddress);
         localVar.bakcContract = INTokenApeStaking(localVar.nTokenAddress)
             .getBAKC();
 
         DataTypes.ReserveData storage apeReserve = ps._reserves[
-            address(localVar.apeCoin)
+            address(APE_COIN)
         ];
-        localVar.apeReserveCache = apeReserve.cache();
 
         // 1, send borrow part to xTokenAddress
         if (stakingInfo.borrowAmount > 0) {
             ValidationLogic.validateFlashloanSimple(apeReserve);
-            IPToken(localVar.apeReserveCache.xTokenAddress)
-                .transferUnderlyingTo(
-                    localVar.nTokenAddress,
-                    stakingInfo.borrowAmount
-                );
+            IPToken(apeReserve.xTokenAddress).transferUnderlyingTo(
+                localVar.nTokenAddress,
+                stakingInfo.borrowAmount
+            );
         }
 
         // 2, send cash part to xTokenAddress
         if (stakingInfo.cashAmount > 0) {
-            localVar.apeCoin.safeTransferFrom(
+            APE_COIN.safeTransferFrom(
                 msg.sender,
                 localVar.nTokenAddress,
                 stakingInfo.cashAmount
@@ -318,7 +309,7 @@ contract PoolApeStaking is
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
                 DataTypes.ExecuteBorrowParams({
-                    asset: address(localVar.apeCoin),
+                    asset: address(APE_COIN),
                     user: msg.sender,
                     onBehalfOf: msg.sender,
                     amount: stakingInfo.borrowAmount,
@@ -334,7 +325,7 @@ contract PoolApeStaking is
 
         //7 checkout ape balance
         require(
-            localVar.apeCoin.balanceOf(localVar.nTokenAddress) ==
+            APE_COIN.balanceOf(localVar.nTokenAddress) ==
                 localVar.beforeBalance,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
         );
