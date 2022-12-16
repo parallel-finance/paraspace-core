@@ -433,8 +433,6 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
 
-        _checkApeAllowance();
-
         uint256 balanceBefore = APE_COIN.balanceOf(address(this));
         uint256[] memory amounts = new uint256[](tokenIds.length);
         address[] memory users = new address[](tokenIds.length);
@@ -490,16 +488,6 @@ contract PoolApeStaking is
 
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
-    }
-
-    function _checkApeAllowance() internal {
-        uint256 allowance = APE_COIN.allowance(
-            address(this),
-            address(APE_YIELD)
-        );
-        if (allowance == 0) {
-            APE_COIN.approve(address(APE_YIELD), type(uint256).max);
-        }
     }
 
     function _supplyPsApeForUser(

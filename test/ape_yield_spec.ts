@@ -31,6 +31,7 @@ describe("APE Coin Staking Test", () => {
       apeCoinStaking,
       pool,
       protocolDataProvider,
+      poolAdmin,
     } = testEnv;
 
     apeYield = await getApeYield();
@@ -74,6 +75,12 @@ describe("APE Coin Staking Test", () => {
     );
     await waitForTx(
       await ape.connect(user3.signer).approve(apeYield.address, MAX_UINT_AMOUNT)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .unlimitedApproveTo(ape.address, apeYield.address)
     );
 
     // send extra tokens to the apestaking contract for rewards

@@ -104,6 +104,13 @@ interface IPoolParameters {
     ) external;
 
     /**
+     * @notice grant token's an unlimited allowance value to the 'to' address
+     * @param token The ERC20 token address
+     * @param to The address receive the grant
+     */
+    function unlimitedApproveTo(address token, address to) external;
+
+    /**
      * @notice Set the auction recovery health factor
      * @param value The new auction health factor
      */
