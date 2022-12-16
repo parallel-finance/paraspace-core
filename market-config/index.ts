@@ -24,7 +24,7 @@ import {
   strategyClonex,
   strategyMeebits,
   strategySAPE,
-  strategyPsAPE,
+  strategyCAPE,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -103,7 +103,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: strategyClonex,
     UniswapV3: strategyUniswapV3,
     sAPE: strategySAPE,
-    PsAPE: strategyPsAPE,
+    cAPE: strategyCAPE,
   },
 };
 
@@ -170,7 +170,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: strategyClonex,
     UniswapV3: strategyUniswapV3,
     sAPE: strategySAPE,
-    PsAPE: strategyPsAPE,
+    cAPE: strategyCAPE,
   },
 };
 
@@ -233,7 +233,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     WBTC: "0xdeb288F737066589598e9214E782fa5A8eD689e8",
     APE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
     sAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
-    PsAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
+    cAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
     AZUKI: "0xA8B9A447C73191744D5B79BcE864F343455E1150",
     BAYC: "0x352f2Bc3039429fC2fe62004a1575aE74001CfcE",
     CLONEX: "0x021264d59DAbD26E7506Ee7278407891Bb8CDCCc",
@@ -258,7 +258,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     // OTHR: strategyOthr,
     CLONEX: strategyClonex,
     sAPE: strategySAPE,
-    PsAPE: strategyPsAPE,
+    cAPE: strategyCAPE,
     // UniswapV3: strategyUniswapV3,
   },
   Mocks: undefined,

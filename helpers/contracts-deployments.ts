@@ -27,7 +27,7 @@ import {
   BoredApeYachtClub,
   BoredApeYachtClub__factory,
   BorrowLogic,
-  BorrowLogic__factory,
+  BorrowLogic__factory, CApeDebtToken, CApeDebtToken__factory,
   CloneX,
   CloneX__factory,
   ConduitController,
@@ -151,11 +151,11 @@ import {
   PriceOracle,
   PriceOracle__factory,
   ProtocolDataProvider,
-  ProtocolDataProvider__factory, PsApeDebtToken, PsApeDebtToken__factory,
+  ProtocolDataProvider__factory,
   PToken,
   PToken__factory,
   PTokenAToken,
-  PTokenAToken__factory, PTokenPsApe__factory,
+  PTokenAToken__factory, PTokenCApe, PTokenCApe__factory,
   PTokenSApe,
   PTokenSApe__factory,
   PTokenStETH,
@@ -854,8 +854,8 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
         continue;
       }
 
-      if (tokenSymbol === ERC20TokenContractId.PsAPE) {
-        console.log("PsAPE deploy later....");
+      if (tokenSymbol === ERC20TokenContractId.cAPE) {
+        console.log("cAPE deploy later....");
         continue;
       }
 
@@ -2183,30 +2183,30 @@ export const deployApeYield = async (
 
   return await withSaveAndVerify(
       new ApeYield__factory(await getFirstSigner()),
-      eContractid.PsAPE,
+      eContractid.cAPE,
       [...args],
       verify
   ) as ApeYield;
 }
 
-export const deployPTokenPsApe = async (
+export const deployPTokenCApe = async (
     poolAddress: tEthereumAddress,
     verify?: boolean
 ) =>
     withSaveAndVerify(
-        new PTokenPsApe__factory(await getFirstSigner()),
-        eContractid.PTokenPSApeImpl,
+        new PTokenCApe__factory(await getFirstSigner()),
+        eContractid.PTokenCApeImpl,
         [poolAddress],
         verify
-    ) as Promise<PTokenSApe>;
+    ) as Promise<PTokenCApe>;
 
-export const deployPsApeDebtToken = async (
+export const deployCApeDebtToken = async (
     poolAddress: tEthereumAddress,
     verify?: boolean
 ) =>
     withSaveAndVerify(
-        new PsApeDebtToken__factory(await getFirstSigner()),
-        eContractid.PsApeDebtToken,
+        new CApeDebtToken__factory(await getFirstSigner()),
+        eContractid.CApeDebtToken,
         [poolAddress],
         verify
-    ) as Promise<PsApeDebtToken>;
+    ) as Promise<CApeDebtToken>;

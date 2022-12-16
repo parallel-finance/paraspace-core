@@ -7,13 +7,13 @@ import "../dependencies/openzeppelin/contracts//IERC20.sol";
 import "../dependencies/openzeppelin/contracts//SafeMath.sol";
 import "../dependencies/openzeppelin/contracts//Address.sol";
 import "../dependencies/openzeppelin/contracts//Pausable.sol";
-import {IPsAPE} from "../interfaces/IPsAPE.sol";
+import {IcAPE} from "../interfaces/IcAPE.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
  *
  */
-abstract contract PsAPE is Context, IPsAPE, Pausable {
+abstract contract cAPE is Context, IcAPE, Pausable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -27,7 +27,7 @@ abstract contract PsAPE is Context, IPsAPE, Pausable {
      * @dev Returns the name of the token.
      */
     function name() public pure returns (string memory) {
-        return "Paraspece staked APE";
+        return "Paraspece Compound APE";
     }
 
     /**
@@ -35,7 +35,7 @@ abstract contract PsAPE is Context, IPsAPE, Pausable {
      * name.
      */
     function symbol() public pure returns (string memory) {
-        return "PsAPE";
+        return "cAPE";
     }
 
     /**

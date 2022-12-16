@@ -367,7 +367,7 @@ export const getAllERC20Tokens = async () => {
         accumulator[tokenSymbol] = await getMintableERC20(address);
         return Promise.resolve(accumulator);
       } else {
-          if (tokenSymbol === "PsAPE") {
+          if (tokenSymbol === "cAPE") {
               return Promise.resolve(accumulator);
           }
         return Promise.reject(`${tokenSymbol} is not in db`);
@@ -1031,7 +1031,7 @@ export const getApeYield = async (address?: tEthereumAddress) =>
     await ApeYield__factory.connect(
         address ||
         (
-            await getDb().get(`${eContractid.PsAPE}.${DRE.network.name}`).value()
+            await getDb().get(`${eContractid.cAPE}.${DRE.network.name}`).value()
         ).address,
         await getFirstSigner()
     );

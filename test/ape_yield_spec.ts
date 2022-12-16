@@ -18,7 +18,7 @@ describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
   let apeYield: ApeYield;
   let pPsApe: PToken;
-  let variableDebtPsAPE: VariableDebtToken;
+  let variableDebtCAPE: VariableDebtToken;
   let user1Amount;
   let user2Amount;
   let user3Amount;
@@ -41,8 +41,8 @@ describe("APE Coin Staking Test", () => {
       variableDebtTokenAddress: variableDebtPsApeAddress,
     } = await protocolDataProvider.getReserveTokensAddresses(apeYield.address);
     pPsApe = await getPToken(pPsApeAddress);
-    variableDebtPsAPE = await getVariableDebtToken(variableDebtPsApeAddress);
-    console.log(variableDebtPsAPE.address);
+    variableDebtCAPE = await getVariableDebtToken(variableDebtPsApeAddress);
+    console.log(variableDebtCAPE.address);
 
     await mintAndValidate(ape, "1000", user1);
     await mintAndValidate(ape, "2000", user2);

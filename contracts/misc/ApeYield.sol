@@ -7,9 +7,9 @@ import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IApeYield} from "../interfaces/IApeYield.sol";
-import {PsAPE} from "./PsAPE.sol";
+import {cAPE} from "./cAPE.sol";
 
-contract ApeYield is Ownable, PsAPE, IApeYield {
+contract ApeYield is Ownable, cAPE, IApeYield {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 

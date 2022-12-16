@@ -4,7 +4,7 @@ pragma solidity 0.8.10;
 import {IPool} from "../../interfaces/IPool.sol";
 import {RebasingPToken} from "./RebasingPToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
-import {IPsAPE} from "../../interfaces/IPsAPE.sol";
+import {IcAPE} from "../../interfaces/IcAPE.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
@@ -12,7 +12,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract PTokenPsApe is RebasingPToken {
+contract PTokenCApe is RebasingPToken {
     constructor(IPool pool) RebasingPToken(pool) {
         //intentionally empty
     }
@@ -21,7 +21,7 @@ contract PTokenPsApe is RebasingPToken {
      * @return Current rebasing index of PsAPE in RAY
      **/
     function lastRebasingIndex() internal view override returns (uint256) {
-        return IPsAPE(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
+        return IcAPE(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
     }
 
     function getXTokenType() external pure override returns (XTokenType) {

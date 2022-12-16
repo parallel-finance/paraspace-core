@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IPool} from "../../interfaces/IPool.sol";
-import {IPsAPE} from "../../interfaces/IPsAPE.sol";
+import {IcAPE} from "../../interfaces/IcAPE.sol";
 import {RebasingDebtToken} from "./RebasingDebtToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 
@@ -11,7 +11,7 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract PsApeDebtToken is RebasingDebtToken {
+contract CApeDebtToken is RebasingDebtToken {
     constructor(IPool pool) RebasingDebtToken(pool) {
         //intentionally empty
     }
@@ -20,6 +20,6 @@ contract PsApeDebtToken is RebasingDebtToken {
      * @return Current rebasing index of PsAPE in RAY
      **/
     function lastRebasingIndex() internal view override returns (uint256) {
-        return IPsAPE(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
+        return IcAPE(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
     }
 }
