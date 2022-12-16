@@ -296,7 +296,7 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user1ApeBalance, parseEther("5923.8"));
   });
 
-  it("claimApeAndYield function work as expected", async () => {
+  it("claimApeAndYield function work as expected 1", async () => {
     const {
       users: [user1, user2, user3],
       mayc,
@@ -391,7 +391,13 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(3600);
 
     await waitForTx(
-      await pool.connect(user2.signer).claimApeAndYield(mayc.address, [0, 1, 2])
+      await pool
+        .connect(user2.signer)
+        .claimApeAndYield(
+          mayc.address,
+          [user1.address, user2.address, user3.address],
+          [[0], [1], [2]]
+        )
     );
 
     // 3600 / 7 = 514.28
@@ -409,7 +415,83 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(3600);
 
     await waitForTx(
-      await pool.connect(user2.signer).claimApeAndYield(mayc.address, [0, 1, 2])
+      await pool
+        .connect(user2.signer)
+        .claimApeAndYield(
+          mayc.address,
+          [user1.address, user2.address, user3.address],
+          [[0], [1], [2]]
+        )
+    );
+  });
+
+  it("claimApeAndYield function work as expected 2", async () => {
+    const {
+      users: [user1, user2],
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await mayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        mayc.address,
+        [
+          {tokenId: 0, useAsCollateral: true},
+          {tokenId: 1, useAsCollateral: true},
+          {tokenId: 2, useAsCollateral: true},
+        ],
+        user1.address,
+        "0"
+      )
+    );
+
+    const totalAmount = parseEther("900");
+    const userAmount = parseEther("300");
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAmount: 0,
+          cashAmount: totalAmount,
+        },
+        [
+          {tokenId: 0, amount: userAmount},
+          {tokenId: 1, amount: userAmount},
+          {tokenId: 2, amount: userAmount},
+        ],
+        []
+      )
+    );
+
+    await advanceTimeAndBlock(3600);
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .claimApeAndYield(mayc.address, [user1.address], [[0, 1, 2]])
+    );
+
+    const user1Balance = await pPsApe.balanceOf(user1.address);
+    almostEqual(user1Balance, parseEther("3600"));
+
+    await advanceTimeAndBlock(3600);
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .claimApeAndYield(mayc.address, [user1.address], [[0, 1, 2]])
     );
   });
 

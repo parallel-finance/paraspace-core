@@ -422,38 +422,42 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function claimApeAndYield(address nftAsset, uint256[] memory tokenIds)
-        external
-        nonReentrant
-    {
-        require(tokenIds.length <= 30, "length limit");
+    function claimApeAndYield(
+        address nftAsset,
+        address[] calldata users,
+        uint256[][] calldata tokenIds
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
-        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        address xTokenAddress = nftReserve.xTokenAddress;
+        address xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
 
         uint256 balanceBefore = APE_COIN.balanceOf(address(this));
         uint256[] memory amounts = new uint256[](tokenIds.length);
-        address[] memory users = new address[](tokenIds.length);
-        uint256[] memory _nfts = new uint256[](1);
-        uint256 totalAmount;
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            _nfts[0] = tokenIds[index];
-            INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, address(this));
 
-            uint256 balanceAfter = APE_COIN.balanceOf(address(this));
-            address positionOwner = INToken(xTokenAddress).ownerOf(
-                tokenIds[index]
+        uint256 totalAmount;
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256[] calldata userTokenIds = tokenIds[i];
+            for (uint256 j = 0; j < userTokenIds.length; j++) {
+                address positionOwner = INToken(xTokenAddress).ownerOf(
+                    userTokenIds[j]
+                );
+                require(users[i] == positionOwner, "user is not owner");
+            }
+
+            INTokenApeStaking(xTokenAddress).claimApeCoin(
+                userTokenIds,
+                address(this)
             );
 
-            users[index] = positionOwner;
-            amounts[index] = balanceAfter - balanceBefore;
-            totalAmount += amounts[index];
+            uint256 balanceAfter = APE_COIN.balanceOf(address(this));
+            amounts[i] = balanceAfter - balanceBefore;
             balanceBefore = balanceAfter;
+            totalAmount += amounts[i];
         }
 
         APE_YIELD.deposit(address(this), totalAmount);
+
         for (uint256 index = 0; index < users.length; index++) {
             if (amounts[index] != 0) {
                 _supplyPsApeForUser(ps, users[index], amounts[index]);
