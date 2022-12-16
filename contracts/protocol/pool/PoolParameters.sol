@@ -47,7 +47,7 @@ contract PoolParameters is
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 120;
-    uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 2e18;
+    uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 3e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
 
     /**
@@ -266,6 +266,7 @@ contract PoolParameters is
         override
         nonReentrant
     {
+        require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         DataTypes.PoolStorage storage ps = poolStorage();
 
         require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
