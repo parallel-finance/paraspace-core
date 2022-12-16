@@ -365,16 +365,16 @@ abstract contract PsAPE is Context, IPsAPE, Pausable {
      *
      * - `to` cannot be the zero address.
      */
-    function _mint(address account, uint256 amount)
+    function _mint(address account, uint256 sharesAmount)
         internal
         virtual
         whenNotPaused
     {
         require(account != address(0), "mint to the zero address");
 
-        _totalShare = _totalShare.add(amount);
-        shares[account] = shares[account].add(amount);
-        emit Transfer(address(0), account, amount);
+        _totalShare = _totalShare.add(sharesAmount);
+        shares[account] = shares[account].add(sharesAmount);
+        emit Transfer(address(0), account, getPooledApeByShares(sharesAmount));
     }
 
     /**
@@ -388,7 +388,7 @@ abstract contract PsAPE is Context, IPsAPE, Pausable {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 amount)
+    function _burn(address account, uint256 sharesAmount)
         internal
         virtual
         whenNotPaused
@@ -396,10 +396,10 @@ abstract contract PsAPE is Context, IPsAPE, Pausable {
         require(account != address(0), "burn from the zero address");
 
         shares[account] = shares[account].sub(
-            amount,
+            sharesAmount,
             "burn amount exceeds balance"
         );
-        _totalShare = _totalShare.sub(amount);
-        emit Transfer(account, address(0), amount);
+        _totalShare = _totalShare.sub(sharesAmount);
+        emit Transfer(account, address(0), getPooledApeByShares(sharesAmount));
     }
 }

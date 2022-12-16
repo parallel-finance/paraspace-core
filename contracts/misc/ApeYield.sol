@@ -41,22 +41,22 @@ contract ApeYield is Ownable, PsAPE, IApeYield {
         emit Deposit(msg.sender, onBehalf, amount, amountShare);
     }
 
-    function withdraw(uint256 amountShare) external override {
-        require(amountShare > 0, "zero amount");
+    function withdraw(uint256 amount) external override {
+        require(amount > 0, "zero amount");
 
-        uint256 amountWithdraw = getPooledApeByShares(amountShare);
+        uint256 amountShare = getShareByPooledApe(amount);
         _burn(msg.sender, amountShare);
 
         _harvest();
         uint256 _backedBalance = backedBalance;
-        if (amountWithdraw > _backedBalance) {
-            _withdrawFromApeCoinStaking(amountWithdraw - _backedBalance);
+        if (amount > _backedBalance) {
+            _withdrawFromApeCoinStaking(amount - _backedBalance);
         }
-        _transferTokenOut(msg.sender, amountWithdraw);
+        _transferTokenOut(msg.sender, amount);
 
         _yield();
 
-        emit Redeem(msg.sender, amountShare, amountWithdraw);
+        emit Redeem(msg.sender, amount, amountShare);
     }
 
     function harvestAndYield() external {

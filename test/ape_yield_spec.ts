@@ -118,7 +118,7 @@ describe("APE Coin Staking Test", () => {
     user1Share = await apeYield.sharesOf(user1.address);
     almostEqual(user1Share, parseEther("1000"));
 
-    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Share));
+    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Balance));
     user1Share = await apeYield.sharesOf(user1.address);
     expect(user1Share).to.be.equal(0);
     user1Balance = await apeYield.balanceOf(user1.address);
@@ -156,18 +156,15 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user2Balance, user1Balance.mul(2));
     almostEqual(user3Balance, user2Balance.mul(2));
 
-    const user1Share = await apeYield.sharesOf(user1.address);
-    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Share));
+    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Balance));
     const user1ApeBalance = await ape.balanceOf(user1.address);
     almostEqual(user1ApeBalance, user1Balance);
 
-    const user2Share = await apeYield.sharesOf(user2.address);
-    await waitForTx(await apeYield.connect(user2.signer).withdraw(user2Share));
+    await waitForTx(await apeYield.connect(user2.signer).withdraw(user2Balance));
     const user2ApeBalance = await ape.balanceOf(user2.address);
     almostEqual(user2ApeBalance, user2Balance);
 
-    const user3Share = await apeYield.sharesOf(user3.address);
-    await waitForTx(await apeYield.connect(user3.signer).withdraw(user3Share));
+    await waitForTx(await apeYield.connect(user3.signer).withdraw(user3Balance));
     const user3ApeBalance = await ape.balanceOf(user3.address);
     almostEqual(user3ApeBalance, user3Balance);
 
@@ -207,14 +204,15 @@ describe("APE Coin Staking Test", () => {
     //1000 + 3600 + 1800
     almostEqual(user1Balance, parseEther("6400"));
 
-    await waitForTx(await apeYield.connect(user2.signer).withdraw(user2Share));
+    const user2Balance = await apeYield.balanceOf(user2.address);
+    await waitForTx(await apeYield.connect(user2.signer).withdraw(user2Balance));
     almostEqual(await ape.balanceOf(user2.address), user1Balance);
 
     await advanceTimeAndBlock(3600);
     user1Balance = await apeYield.balanceOf(user1.address);
     //1000 + 3600 + 1800 + 3600
     almostEqual(user1Balance, parseEther("10000"));
-    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Share));
+    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Balance));
     almostEqual(await ape.balanceOf(user1.address), user1Balance);
 
     // pool is empty
@@ -262,8 +260,7 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user2Balance, parseEther("8876"));
 
     //use2 exit pool
-    const user2Share = await apeYield.sharesOf(user2.address);
-    await waitForTx(await apeYield.connect(user2.signer).withdraw(user2Share));
+    await waitForTx(await apeYield.connect(user2.signer).withdraw(user2Balance));
     const user2ApeBalance = await ape.balanceOf(user2.address);
     almostEqual(user2ApeBalance, parseEther("8876"));
 
@@ -414,7 +411,8 @@ describe("APE Coin Staking Test", () => {
 
     await advanceTimeAndBlock(600);
 
-    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Share));
+    user1Balance = await apeYield.balanceOf(user1.address);
+    await waitForTx(await apeYield.connect(user1.signer).withdraw(user1Balance));
     user1Share = await apeYield.sharesOf(user1.address);
     expect(user1Share).to.be.equal(0);
     user1Balance = await apeYield.balanceOf(user1.address);

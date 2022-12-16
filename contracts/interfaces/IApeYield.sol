@@ -13,8 +13,8 @@ interface IApeYield is IERC20 {
 
     event Redeem(
         address indexed user,
-        uint256 amountShare,
-        uint256 amountWithdraw
+        uint256 amountWithdraw,
+        uint256 amountShare
     );
 
     /**
