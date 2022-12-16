@@ -21,6 +21,7 @@ import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IApeYield} from "../../interfaces/IApeYield.sol";
+import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -33,6 +34,7 @@ contract PoolApeStaking is
     using SafeERC20 for IERC20;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using SafeCast for uint256;
+    using PercentageMath for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IApeYield internal immutable APE_YIELD;
@@ -476,11 +478,23 @@ contract PoolApeStaking is
             totalAmount += amounts[i];
         }
 
+        uint256 incentiveRate = ps._apeClaimForYieldIncentiveRate;
+        uint256 totalFee = totalAmount.percentMul(incentiveRate);
         APE_YIELD.deposit(address(this), totalAmount);
+
+        if (totalFee > 0) {
+            IERC20(address(APE_YIELD)).safeTransfer(msg.sender, totalFee);
+        }
 
         for (uint256 index = 0; index < users.length; index++) {
             if (amounts[index] != 0) {
-                _supplyPsApeForUser(ps, users[index], amounts[index]);
+                _supplyCApeForUser(
+                    ps,
+                    users[index],
+                    amounts[index].percentMul(
+                        PercentageMath.PERCENTAGE_FACTOR - incentiveRate
+                    )
+                );
             }
         }
     }
@@ -514,7 +528,7 @@ contract PoolApeStaking is
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
-    function _supplyPsApeForUser(
+    function _supplyCApeForUser(
         DataTypes.PoolStorage storage ps,
         address user,
         uint256 amount

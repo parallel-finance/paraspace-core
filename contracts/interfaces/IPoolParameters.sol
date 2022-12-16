@@ -27,6 +27,11 @@ interface IPoolParameters {
     );
 
     /**
+     * @dev Emitted when the value of claim for yield incentive rate update
+     **/
+    event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
+
+    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
@@ -109,6 +114,12 @@ interface IPoolParameters {
      * @param to The address receive the grant
      */
     function unlimitedApproveTo(address token, address to) external;
+
+    /**
+     * @notice undate incentive percentage for claim ape for yield
+     * @param incentive new incentive percentage
+     */
+    function setClaimApeForYieldIncentive(uint256 incentive) external;
 
     /**
      * @notice Set the auction recovery health factor

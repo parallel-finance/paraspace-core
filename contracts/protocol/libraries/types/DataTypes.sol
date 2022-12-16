@@ -365,6 +365,8 @@ library DataTypes {
         uint16 _reservesCount;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
+        // incentive rate for claim ape reward
+        uint16 _apeClaimForYieldIncentiveRate;
     }
 
     struct ReserveConfigData {

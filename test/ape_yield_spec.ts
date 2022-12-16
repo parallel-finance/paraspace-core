@@ -88,6 +88,10 @@ describe("APE Coin Staking Test", () => {
         .unlimitedApproveTo(ape.address, apeYield.address)
     );
 
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setClaimApeForYieldIncentive(30)
+    );
+
     // send extra tokens to the apestaking contract for rewards
     await waitForTx(
       await ape
@@ -409,17 +413,21 @@ describe("APE Coin Staking Test", () => {
         )
     );
 
-    // 3600 / 7 = 514.28
+    // 3600 / 7 * 99.7% = 512.74
     const user1Balance = await pCApe.balanceOf(user1.address);
-    almostEqual(user1Balance, parseEther("514.28"));
+    almostEqual(user1Balance, parseEther("521.7428"));
 
-    // 3600 * 2 / 7 = 1028.57
+    // 3600 * 2 / 7 * 99.7% = 1025.48
     const user2Balance = await pCApe.balanceOf(user2.address);
-    almostEqual(user2Balance, parseEther("1028.57"));
+    almostEqual(user2Balance, parseEther("1025.48"));
 
-    // 3600 * 4 / 7 = 2057.14
+    // 3600 * 4 / 7 * 99.7% = 2050.97
     const user3Balance = await pCApe.balanceOf(user3.address);
-    almostEqual(user3Balance, parseEther("2057.14"));
+    almostEqual(user3Balance, parseEther("2050.97"));
+
+    // 3600 * 0.003
+    const incentiveBalance = await apeYield.balanceOf(user2.address);
+    almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
 
@@ -494,8 +502,13 @@ describe("APE Coin Staking Test", () => {
         .claimApeAndYield(mayc.address, [user1.address], [[0, 1, 2]])
     );
 
+    //3600 * 0.997 = 3589.2
     const user1Balance = await pCApe.balanceOf(user1.address);
-    almostEqual(user1Balance, parseEther("3600"));
+    almostEqual(user1Balance, parseEther("3589.2"));
+
+    // 3600 * 0.003
+    const incentiveBalance = await apeYield.balanceOf(user2.address);
+    almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
 
