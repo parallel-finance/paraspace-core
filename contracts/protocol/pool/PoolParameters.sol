@@ -216,19 +216,13 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function setClaimApeForYieldIncentive(uint256 incentive)
-        external
-        onlyPoolAdmin
-    {
-        require(
-            incentive < PercentageMath.HALF_PERCENTAGE_FACTOR,
-            "Value Too High"
-        );
+    function setClaimApeForCompoundFee(uint256 fee) external onlyPoolAdmin {
+        require(fee < PercentageMath.HALF_PERCENTAGE_FACTOR, "Value Too High");
         DataTypes.PoolStorage storage ps = poolStorage();
-        uint256 oldValue = ps._apeClaimForYieldIncentiveRate;
-        if (oldValue != incentive) {
-            ps._apeClaimForYieldIncentiveRate = uint16(incentive);
-            emit ClaimApeForYieldIncentiveUpdated(oldValue, incentive);
+        uint256 oldValue = ps._apeCompoundFee;
+        if (oldValue != fee) {
+            ps._apeCompoundFee = uint16(fee);
+            emit ClaimApeForYieldIncentiveUpdated(oldValue, fee);
         }
     }
 

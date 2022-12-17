@@ -20,7 +20,7 @@ import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
-import {IApeYield} from "../../interfaces/IApeYield.sol";
+import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 
 contract PoolApeStaking is
@@ -37,7 +37,7 @@ contract PoolApeStaking is
     using PercentageMath for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    IApeYield internal immutable APE_YIELD;
+    IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
     uint256 internal constant POOL_REVISION = 120;
 
@@ -52,11 +52,11 @@ contract PoolApeStaking is
      */
     constructor(
         IPoolAddressesProvider provider,
-        IApeYield apeYield,
+        IAutoCompoundApe apeCompound,
         IERC20 apeCoin
     ) {
         ADDRESSES_PROVIDER = provider;
-        APE_YIELD = apeYield;
+        APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
     }
 
@@ -241,7 +241,7 @@ contract PoolApeStaking is
 
         require(
             stakingInfo.borrowAsset == address(APE_COIN) ||
-                stakingInfo.borrowAsset == address(APE_YIELD),
+                stakingInfo.borrowAsset == address(APE_COMPOUND),
             "invalid borrow asset"
         );
 
@@ -270,7 +270,7 @@ contract PoolApeStaking is
                     address(this),
                     stakingInfo.borrowAmount
                 );
-                APE_YIELD.withdraw(stakingInfo.borrowAmount);
+                APE_COMPOUND.withdraw(stakingInfo.borrowAmount);
                 APE_COIN.safeTransfer(
                     localVar.nTokenAddress,
                     stakingInfo.borrowAmount
@@ -433,7 +433,7 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function claimApeAndYield(
+    function claimApeAndCompound(
         address nftAsset,
         address[] calldata users,
         uint256[][] calldata tokenIds
@@ -467,12 +467,12 @@ contract PoolApeStaking is
             totalAmount += amounts[i];
         }
 
-        uint256 incentiveRate = ps._apeClaimForYieldIncentiveRate;
-        uint256 totalFee = totalAmount.percentMul(incentiveRate);
-        APE_YIELD.deposit(address(this), totalAmount);
+        uint256 compoundFee = ps._apeCompoundFee;
+        uint256 totalFee = totalAmount.percentMul(compoundFee);
+        APE_COMPOUND.deposit(address(this), totalAmount);
 
         if (totalFee > 0) {
-            IERC20(address(APE_YIELD)).safeTransfer(msg.sender, totalFee);
+            IERC20(address(APE_COMPOUND)).safeTransfer(msg.sender, totalFee);
         }
 
         for (uint256 index = 0; index < users.length; index++) {
@@ -481,7 +481,7 @@ contract PoolApeStaking is
                     ps,
                     users[index],
                     amounts[index].percentMul(
-                        PercentageMath.PERCENTAGE_FACTOR - incentiveRate
+                        PercentageMath.PERCENTAGE_FACTOR - compoundFee
                     )
                 );
             }
@@ -529,7 +529,7 @@ contract PoolApeStaking is
             ps._reserves,
             userConfig,
             DataTypes.ExecuteSupplyParams({
-                asset: address(APE_YIELD),
+                asset: address(APE_COMPOUND),
                 amount: amount,
                 onBehalfOf: user,
                 payer: address(this),
@@ -537,12 +537,12 @@ contract PoolApeStaking is
             })
         );
         DataTypes.ReserveData storage assetReserve = ps._reserves[
-            address(APE_YIELD)
+            address(APE_COMPOUND)
         ];
         bool currentStatus = userConfig.isUsingAsCollateral(assetReserve.id);
         if (!currentStatus) {
             userConfig.setUsingAsCollateral(assetReserve.id, true);
-            emit ReserveUsedAsCollateralEnabled(address(APE_YIELD), user);
+            emit ReserveUsedAsCollateralEnabled(address(APE_COMPOUND), user);
         }
     }
 }

@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
 
-interface IApeYield is IERC20 {
+interface IAutoCompoundApe is IERC20 {
     /**
      * @dev Emitted during deposit()
      * @param user The address of the user deposit for
@@ -57,5 +57,5 @@ interface IApeYield is IERC20 {
     /**
      * @notice collect ape reward in ApeCoinStaking and deposit to earn compound interest.
      **/
-    function harvestAndYield() external;
+    function harvestAndCompound() external;
 }

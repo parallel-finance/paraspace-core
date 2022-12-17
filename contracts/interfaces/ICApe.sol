@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
 
-interface IcAPE is IERC20 {
+interface ICApe is IERC20 {
     /**
      * @return the amount of shares that corresponds to `amount` protocol-controlled Ape.
      */

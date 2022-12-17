@@ -67,7 +67,7 @@ import {
     ExecutionDelegate__factory,
     MarketplaceLogic__factory,
     FlashClaimLogic__factory,
-    PoolLogic__factory, ApeYield__factory,
+    PoolLogic__factory, AutoCompoundApe__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1027,8 +1027,8 @@ export const getBlurExchangeProxy = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getApeYield = async (address?: tEthereumAddress) =>
-    await ApeYield__factory.connect(
+export const getAutoCompoundApe = async (address?: tEthereumAddress) =>
+    await AutoCompoundApe__factory.connect(
         address ||
         (
             await getDb().get(`${eContractid.cAPE}.${DRE.network.name}`).value()

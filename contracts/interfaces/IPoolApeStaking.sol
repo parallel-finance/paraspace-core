@@ -99,12 +99,12 @@ interface IPoolApeStaking {
     ) external;
 
     /**
-     * @notice Claim user Ape coin reward and deposit to ape yield to get cApe, then deposit cApe to Lending pool for user
+     * @notice Claim user Ape coin reward and deposit to ape compound to get cApe, then deposit cApe to Lending pool for user
      * @param nftAsset Contract address of BAYC/MAYC
      * @param users array of user address
      * @param tokenIds array of user tokenId array
      */
-    function claimApeAndYield(
+    function claimApeAndCompound(
         address nftAsset,
         address[] calldata users,
         uint256[][] calldata tokenIds

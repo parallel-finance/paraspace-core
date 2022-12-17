@@ -6,10 +6,10 @@ import {SafeMath} from "../dependencies/openzeppelin/contracts/SafeMath.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
-import {IApeYield} from "../interfaces/IApeYield.sol";
-import {cAPE} from "./cAPE.sol";
+import {IAutoCompoundApe} from "../interfaces/IAutoCompoundApe.sol";
+import {CApe} from "./CApe.sol";
 
-contract ApeYield is Ownable, cAPE, IApeYield {
+contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -28,7 +28,7 @@ contract ApeYield is Ownable, cAPE, IApeYield {
         apeCoin.safeApprove(_apeStaking, type(uint256).max);
     }
 
-    /// @inheritdoc IApeYield
+    /// @inheritdoc IAutoCompoundApe
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
         uint256 amountShare = getShareByPooledApe(amount);
@@ -39,12 +39,12 @@ contract ApeYield is Ownable, cAPE, IApeYield {
 
         _transferTokenIn(msg.sender, amount);
         _harvest();
-        _yield();
+        _compound();
 
         emit Deposit(msg.sender, onBehalf, amount, amountShare);
     }
 
-    /// @inheritdoc IApeYield
+    /// @inheritdoc IAutoCompoundApe
     function withdraw(uint256 amount) external override {
         require(amount > 0, "zero amount");
 
@@ -58,15 +58,15 @@ contract ApeYield is Ownable, cAPE, IApeYield {
         }
         _transferTokenOut(msg.sender, amount);
 
-        _yield();
+        _compound();
 
         emit Redeem(msg.sender, amount, amountShare);
     }
 
-    /// @inheritdoc IApeYield
-    function harvestAndYield() external {
+    /// @inheritdoc IAutoCompoundApe
+    function harvestAndCompound() external {
         _harvest();
-        _yield();
+        _compound();
     }
 
     function _getTotalPooledApeBalance()
@@ -102,7 +102,7 @@ contract ApeYield is Ownable, cAPE, IApeYield {
         bufferBalance -= amount;
     }
 
-    function _yield() internal {
+    function _compound() internal {
         uint256 _bufferBalance = bufferBalance;
         if (_bufferBalance >= MIN_OPERATION_AMOUNT) {
             apeStaking.depositSelfApeCoin(_bufferBalance);

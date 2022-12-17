@@ -12,12 +12,11 @@ import {
   ApeCoinStaking__factory,
   ApeStakingLogic,
   ApeStakingLogic__factory,
-  ApeYield,
-  ApeYield__factory,
   ATokenDebtToken,
   ATokenDebtToken__factory,
   AuctionLogic,
   AuctionLogic__factory,
+  AutoCompoundApe__factory,
   Azuki,
   Azuki__factory,
   BlurAdapter,
@@ -212,12 +211,13 @@ import {
   X2Y2Adapter__factory,
   X2Y2R1,
   X2Y2R1__factory,
+  AutoCompoundApe,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
   getApeStakingLogic,
-  getApeYield,
+  getAutoCompoundApe,
   getFirstSigner,
   getMintableERC721Logic,
   getPunks,
@@ -495,7 +495,7 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
-  const apeYield = await getApeYield();
+  const cApe = await getAutoCompoundApe();
 
   const {
     poolCoreSelectors,
@@ -535,7 +535,7 @@ export const deployPoolComponents = async (
     poolApeStaking: (await withSaveAndVerify(
       poolApeStaking,
       eContractid.PoolApeStakingImpl,
-        [provider, apeYield.address, allTokens.APE.address],
+        [provider, cApe.address, allTokens.APE.address],
       verify,
       false,
       apeStakingLibraries,
@@ -781,7 +781,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | WETH9Mocked
       | StETH
       | MockAToken
-      | ApeYield;
+      | AutoCompoundApe;
   } = {};
 
   const paraSpaceConfig = getParaSpaceConfig();
@@ -2171,7 +2171,7 @@ export const deployMockTokenFaucet = async (
     verify
   );
 
-export const deployApeYield = async (
+export const deployAutoCompoundApe = async (
     verify?: boolean
 ) => {
   const allTokens = await getAllTokens();
@@ -2182,11 +2182,11 @@ export const deployApeYield = async (
   ];
 
   return await withSaveAndVerify(
-      new ApeYield__factory(await getFirstSigner()),
+      new AutoCompoundApe__factory(await getFirstSigner()),
       eContractid.cAPE,
       [...args],
       verify
-  ) as ApeYield;
+  ) as AutoCompoundApe;
 }
 
 export const deployPTokenCApe = async (
