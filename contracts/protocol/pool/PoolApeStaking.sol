@@ -438,6 +438,7 @@ contract PoolApeStaking is
         address[] calldata users,
         uint256[][] calldata tokenIds
     ) external nonReentrant {
+        require(users.length == tokenIds.length, "invalid parameter");
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
