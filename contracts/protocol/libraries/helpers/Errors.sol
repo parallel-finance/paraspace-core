@@ -124,4 +124,5 @@ library Errors {
     string public constant TOTAL_STAKING_AMOUNT_WRONG = "129"; //cash plus borrow amount not equal to total staking amount.
     string public constant APE_STAKING_AMOUNT_NON_ZERO = "130"; //ape staking amount should be zero when supply bayc/mayc.
     string public constant MAKER_SAME_AS_TAKER = "131"; //maker and taker shouldn't be the same address
+    string public constant CALLER_NOT_EOA = "132"; //The caller of the function is not an EOA account
 }
