@@ -228,7 +228,7 @@ export declare type CreateOrderInput = {
   expirationTime: BigNumber;
 };
 
-export const createOrder = async ({
+export const createX2Y2Order = async ({
   chainId,
   signer,
   tokenAddress,

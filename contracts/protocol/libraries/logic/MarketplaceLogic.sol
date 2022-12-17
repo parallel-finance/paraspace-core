@@ -74,7 +74,7 @@ library MarketplaceLogic {
         DataTypes.Marketplace memory marketplace = poolAddressProvider
             .getMarketplace(marketplaceId);
         DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(payload, vars.weth);
+            .getAskOrderInfo(payload);
         orderInfo.taker = msg.sender;
         vars.ethLeft = msg.value;
 
@@ -183,7 +183,7 @@ library MarketplaceLogic {
                 .getMarketplace(vars.marketplaceId);
             DataTypes.OrderInfo memory orderInfo = IMarketplace(
                 marketplace.adapter
-            ).getAskOrderInfo(vars.payload, vars.weth);
+            ).getAskOrderInfo(vars.payload);
             orderInfo.taker = msg.sender;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH

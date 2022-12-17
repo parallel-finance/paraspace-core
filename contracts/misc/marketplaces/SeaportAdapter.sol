@@ -8,6 +8,7 @@ import {ConsiderationItem} from "../../dependencies/seaport/contracts/lib/Consid
 import {AdvancedOrder, ConsiderationItem, CriteriaResolver, Fulfillment, OfferItem, ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
+import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 
 /**
  * @title Seaport Adapter
@@ -15,11 +16,15 @@ import {IMarketplace} from "../../interfaces/IMarketplace.sol";
  * @notice Implements the NFT <=> ERC20 exchange logic via OpenSea Seaport marketplace
  */
 contract SeaportAdapter is IMarketplace {
-    constructor() {}
+    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
-    function getAskOrderInfo(bytes memory params, address)
+    constructor(IPoolAddressesProvider provider) {
+        ADDRESSES_PROVIDER = provider;
+    }
+
+    function getAskOrderInfo(bytes memory params)
         external
-        pure
+        view
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -27,7 +32,7 @@ contract SeaportAdapter is IMarketplace {
             AdvancedOrder memory advancedOrder,
             CriteriaResolver[] memory resolvers,
             ,
-
+            address recipient
         ) = abi.decode(
                 params,
                 (AdvancedOrder, CriteriaResolver[], bytes32, address)
@@ -40,6 +45,11 @@ contract SeaportAdapter is IMarketplace {
         );
         // the person who listed NFT to sell
         orderInfo.maker = advancedOrder.parameters.offerer;
+        require(
+            recipient == ADDRESSES_PROVIDER.getPool(),
+            Errors.INVALID_ORDER_TAKER
+        );
+
         orderInfo.id = advancedOrder.signature;
         // NFT, items will be checked inside MarketplaceLogic
         orderInfo.offer = advancedOrder.parameters.offer;
@@ -72,8 +82,13 @@ contract SeaportAdapter is IMarketplace {
         );
         // the person who sends bid to buy NFT
         orderInfo.maker = advancedOrders[0].parameters.offerer;
+        // the person who accepts bid to sell NFT
         orderInfo.taker = advancedOrders[1].parameters.offerer;
+        // maker & taker must be different addresses
+        require(orderInfo.maker != orderInfo.taker, Errors.MAKER_SAME_AS_TAKER);
+
         orderInfo.id = advancedOrders[0].signature;
+
         // NFT, items will be checked inside MarketplaceLogic
         orderInfo.offer = advancedOrders[1].parameters.offer;
         require(orderInfo.offer.length > 0, Errors.INVALID_MARKETPLACE_ORDER);

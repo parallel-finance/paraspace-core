@@ -39,12 +39,15 @@ export const step_17 = async (verify = false) => {
       await erc721Delegate
         .connect(deployer)
         .grantRole(
-          "0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331",
+          await erc721Delegate.DELEGATION_CALLER(),
           x2y2R1.address,
           GLOBAL_OVERRIDES
         )
     );
-    const x2y2Adapter = await deployX2Y2Adapter(verify);
+    const x2y2Adapter = await deployX2Y2Adapter(
+      addressesProvider.address,
+      verify
+    );
 
     await waitForTx(
       await addressesProvider.setMarketplace(

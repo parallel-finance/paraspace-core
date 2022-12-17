@@ -68,6 +68,10 @@ import {
   MarketplaceLogic__factory,
   FlashClaimLogic__factory,
   PoolLogic__factory,
+  SeaportAdapter__factory,
+  LooksRareAdapter__factory,
+  BlurAdapter__factory,
+  X2Y2Adapter__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1019,6 +1023,50 @@ export const getBlurExchangeProxy = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.BlurExchangeProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getSeaportAdapter = async (address?: tEthereumAddress) =>
+  await SeaportAdapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.SeaportAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getLooksRareAdapter = async (address?: tEthereumAddress) =>
+  await LooksRareAdapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.LooksRareAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getX2Y2Adapter = async (address?: tEthereumAddress) =>
+  await X2Y2Adapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.X2Y2Adapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getBlurAdapter = async (address?: tEthereumAddress) =>
+  await BlurAdapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.BlurAdapter}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
