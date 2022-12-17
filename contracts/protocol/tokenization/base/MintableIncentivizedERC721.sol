@@ -6,6 +6,7 @@ import {Strings} from "../../../dependencies/openzeppelin/contracts/Strings.sol"
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC165} from "../../../dependencies/openzeppelin/contracts/IERC165.sol";
 import {IERC721Metadata} from "../../../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
+import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC721Receiver} from "../../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
@@ -577,6 +578,7 @@ abstract contract MintableIncentivizedERC721 is
         returns (bool)
     {
         return
+            interfaceId == type(IERC721).interfaceId ||
             interfaceId == type(IERC721Enumerable).interfaceId ||
             interfaceId == type(IERC721Metadata).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
