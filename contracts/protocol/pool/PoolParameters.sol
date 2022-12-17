@@ -25,6 +25,8 @@ import {Errors} from "../libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
+import {PercentageMath} from "../libraries/math/PercentageMath.sol";
+import "../../dependencies/openzeppelin/contracts/IERC20.sol";
 
 /**
  * @title Pool Parameters contract
@@ -200,6 +202,34 @@ contract PoolParameters is
         uint256 amountOrTokenId
     ) external virtual override onlyPoolAdmin {
         PoolLogic.executeRescueTokens(assetType, token, to, amountOrTokenId);
+    }
+
+    /// @inheritdoc IPoolParameters
+    function unlimitedApproveTo(address token, address to)
+        external
+        virtual
+        override
+        onlyPoolAdmin
+    {
+        IERC20(token).approve(to, 0);
+        IERC20(token).approve(to, type(uint256).max);
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setClaimApeForYieldIncentive(uint256 incentive)
+        external
+        onlyPoolAdmin
+    {
+        require(
+            incentive < PercentageMath.HALF_PERCENTAGE_FACTOR,
+            "Value Too High"
+        );
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint256 oldValue = ps._apeClaimForYieldIncentiveRate;
+        if (oldValue != incentive) {
+            ps._apeClaimForYieldIncentiveRate = uint16(incentive);
+            emit ClaimApeForYieldIncentiveUpdated(oldValue, incentive);
+        }
     }
 
     /// @inheritdoc IPoolParameters

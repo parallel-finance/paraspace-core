@@ -72,6 +72,7 @@ import {
   LooksRareAdapter__factory,
   BlurAdapter__factory,
   X2Y2Adapter__factory,
+  ApeYield__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -371,6 +372,9 @@ export const getAllERC20Tokens = async () => {
         accumulator[tokenSymbol] = await getMintableERC20(address);
         return Promise.resolve(accumulator);
       } else {
+        if (tokenSymbol === "cAPE") {
+          return Promise.resolve(accumulator);
+        }
         return Promise.reject(`${tokenSymbol} is not in db`);
       }
     }, Promise.resolve({}));
@@ -1068,6 +1072,15 @@ export const getBlurAdapter = async (address?: tEthereumAddress) =>
         await getDb()
           .get(`${eContractid.BlurAdapter}.${DRE.network.name}`)
           .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getApeYield = async (address?: tEthereumAddress) =>
+  await ApeYield__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.cAPE}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );
