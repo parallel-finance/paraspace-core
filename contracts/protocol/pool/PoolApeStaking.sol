@@ -270,35 +270,24 @@ contract PoolApeStaking is
                     address(this),
                     stakingInfo.borrowAmount
                 );
-            }
-        }
-
-        // 2, handle cash part
-        if (stakingInfo.cashAmount > 0) {
-            if (stakingInfo.borrowAsset == address(APE_COIN)) {
-                APE_COIN.safeTransferFrom(
-                    msg.sender,
+                APE_YIELD.withdraw(stakingInfo.borrowAmount);
+                APE_COIN.safeTransfer(
                     localVar.nTokenAddress,
-                    stakingInfo.cashAmount
-                );
-            } else {
-                IERC20(address(APE_YIELD)).safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    stakingInfo.cashAmount
+                    stakingInfo.borrowAmount
                 );
             }
         }
 
-        // 3, withdraw cApe to get ape, and send ape to xTokenAddress
-        if (stakingInfo.borrowAsset == address(APE_YIELD)) {
-            uint256 totalAmount = stakingInfo.cashAmount +
-                stakingInfo.borrowAmount;
-            APE_YIELD.withdraw(totalAmount);
-            APE_COIN.safeTransfer(localVar.nTokenAddress, totalAmount);
+        // 2, send cash part to xTokenAddress
+        if (stakingInfo.cashAmount > 0) {
+            APE_COIN.safeTransferFrom(
+                msg.sender,
+                localVar.nTokenAddress,
+                stakingInfo.cashAmount
+            );
         }
 
-        // 4, deposit bayc or mayc pool
+        // 3, deposit bayc or mayc pool
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 INToken(localVar.nTokenAddress).ownerOf(_nfts[index].tokenId) ==
@@ -308,7 +297,7 @@ contract PoolApeStaking is
         }
         INTokenApeStaking(localVar.nTokenAddress).depositApeCoin(_nfts);
 
-        // 5, deposit bakc pool
+        // 4, deposit bakc pool
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 INToken(localVar.nTokenAddress).ownerOf(
@@ -333,7 +322,7 @@ contract PoolApeStaking is
             );
         }
 
-        // 6 mint debt token
+        // 5 mint debt token
         if (stakingInfo.borrowAmount > 0) {
             BorrowLogic.executeBorrow(
                 ps._reserves,
@@ -354,7 +343,7 @@ contract PoolApeStaking is
             );
         }
 
-        //7 checkout ape balance
+        //6 checkout ape balance
         require(
             APE_COIN.balanceOf(localVar.nTokenAddress) ==
                 localVar.beforeBalance,
