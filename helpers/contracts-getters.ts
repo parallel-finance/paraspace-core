@@ -1,73 +1,78 @@
 import {utils} from "ethers";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {
-    ProtocolDataProvider__factory,
-    PToken__factory,
-    NToken__factory,
-    ReservesSetupHelper__factory,
-    PoolAddressesProvider__factory,
-    PoolAddressesProviderRegistry__factory,
-    PoolConfigurator__factory,
-    MintableERC20__factory,
-    MintableERC721__factory,
-    MockVariableDebtToken__factory,
-    PriceOracle__factory,
-    VariableDebtToken__factory,
-    WETH9Mocked__factory,
-    ParaSpaceOracle__factory,
-    MockInitializableImple__factory,
-    MockInitializableImpleV2__factory,
-    SupplyLogic__factory,
-    BorrowLogic__factory,
-    LiquidationLogic__factory,
-    ACLManager__factory,
-    DefaultReserveInterestRateStrategy__factory,
-    UiPoolDataProvider__factory,
-    UiIncentiveDataProvider__factory,
-    WETHGateway__factory,
-    WPunk__factory,
-    CryptoPunksMarket__factory,
-    WPunkGateway__factory,
-    MockAggregator__factory,
-    ERC20__factory,
-    MockTokenFaucet__factory,
-    IERC20Detailed__factory,
-    MockIncentivesController__factory,
-    ERC721__factory,
-    Moonbirds__factory,
-    ConduitController__factory,
-    Seaport__factory,
-    LooksRareExchange__factory,
-    StrategyStandardSaleForFixedPrice__factory,
-    TransferManagerERC721__factory,
-    X2Y2R1__factory,
-    ERC721Delegate__factory,
-    PausableZoneController__factory,
-    PausableZone__factory,
-    Conduit__factory,
-    NTokenMoonBirds__factory,
-    UniswapV3Factory__factory,
-    UniswapV3OracleWrapper__factory,
-    NTokenUniswapV3__factory,
-    StETH__factory,
-    PTokenStETH__factory,
-    MockAToken__factory,
-    PTokenAToken__factory,
-    NFTFloorOracle__factory,
-    UserFlashclaimRegistry__factory,
-    MockAirdropProject__factory,
-    IPool__factory,
-    MockReserveAuctionStrategy__factory,
-    NTokenBAYC__factory,
-    NTokenMAYC__factory,
-    ApeCoinStaking__factory,
-    PTokenSApe__factory,
-    StandardPolicyERC721__factory,
-    BlurExchange__factory,
-    ExecutionDelegate__factory,
-    MarketplaceLogic__factory,
-    FlashClaimLogic__factory,
-    PoolLogic__factory, AutoCompoundApe__factory,
+  ProtocolDataProvider__factory,
+  PToken__factory,
+  NToken__factory,
+  ReservesSetupHelper__factory,
+  PoolAddressesProvider__factory,
+  PoolAddressesProviderRegistry__factory,
+  PoolConfigurator__factory,
+  MintableERC20__factory,
+  MintableERC721__factory,
+  MockVariableDebtToken__factory,
+  PriceOracle__factory,
+  VariableDebtToken__factory,
+  WETH9Mocked__factory,
+  ParaSpaceOracle__factory,
+  MockInitializableImple__factory,
+  MockInitializableImpleV2__factory,
+  SupplyLogic__factory,
+  BorrowLogic__factory,
+  LiquidationLogic__factory,
+  ACLManager__factory,
+  DefaultReserveInterestRateStrategy__factory,
+  UiPoolDataProvider__factory,
+  UiIncentiveDataProvider__factory,
+  WETHGateway__factory,
+  WPunk__factory,
+  CryptoPunksMarket__factory,
+  WPunkGateway__factory,
+  MockAggregator__factory,
+  ERC20__factory,
+  MockTokenFaucet__factory,
+  IERC20Detailed__factory,
+  MockIncentivesController__factory,
+  ERC721__factory,
+  Moonbirds__factory,
+  ConduitController__factory,
+  Seaport__factory,
+  LooksRareExchange__factory,
+  StrategyStandardSaleForFixedPrice__factory,
+  TransferManagerERC721__factory,
+  X2Y2R1__factory,
+  ERC721Delegate__factory,
+  PausableZoneController__factory,
+  PausableZone__factory,
+  Conduit__factory,
+  NTokenMoonBirds__factory,
+  UniswapV3Factory__factory,
+  UniswapV3OracleWrapper__factory,
+  NTokenUniswapV3__factory,
+  StETH__factory,
+  PTokenStETH__factory,
+  MockAToken__factory,
+  PTokenAToken__factory,
+  NFTFloorOracle__factory,
+  UserFlashclaimRegistry__factory,
+  MockAirdropProject__factory,
+  IPool__factory,
+  MockReserveAuctionStrategy__factory,
+  NTokenBAYC__factory,
+  NTokenMAYC__factory,
+  ApeCoinStaking__factory,
+  PTokenSApe__factory,
+  StandardPolicyERC721__factory,
+  BlurExchange__factory,
+  ExecutionDelegate__factory,
+  MarketplaceLogic__factory,
+  FlashClaimLogic__factory,
+  PoolLogic__factory,
+  SeaportAdapter__factory,
+  LooksRareAdapter__factory,
+  BlurAdapter__factory,
+  X2Y2Adapter__factory,
+  AutoCompoundApe__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -367,9 +372,9 @@ export const getAllERC20Tokens = async () => {
         accumulator[tokenSymbol] = await getMintableERC20(address);
         return Promise.resolve(accumulator);
       } else {
-          if (tokenSymbol === "cAPE") {
-              return Promise.resolve(accumulator);
-          }
+        if (tokenSymbol === "cAPE") {
+          return Promise.resolve(accumulator);
+        }
         return Promise.reject(`${tokenSymbol} is not in db`);
       }
     }, Promise.resolve({}));
@@ -1028,10 +1033,53 @@ export const getBlurExchangeProxy = async (address?: tEthereumAddress) =>
   );
 
 export const getAutoCompoundApe = async (address?: tEthereumAddress) =>
-    await AutoCompoundApe__factory.connect(
-        address ||
-        (
-            await getDb().get(`${eContractid.cAPE}.${DRE.network.name}`).value()
-        ).address,
-        await getFirstSigner()
-    );
+  await AutoCompoundApe__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.cAPE}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+export const getSeaportAdapter = async (address?: tEthereumAddress) =>
+  await SeaportAdapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.SeaportAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getLooksRareAdapter = async (address?: tEthereumAddress) =>
+  await LooksRareAdapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.LooksRareAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getX2Y2Adapter = async (address?: tEthereumAddress) =>
+  await X2Y2Adapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.X2Y2Adapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getBlurAdapter = async (address?: tEthereumAddress) =>
+  await BlurAdapter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.BlurAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );

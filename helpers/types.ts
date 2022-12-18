@@ -327,6 +327,8 @@ export enum ProtocolErrors {
   INVALID_HF = "Invalid health factor",
   //disable calls
   EMEGENCY_DISABLE_CALL = "emergency disable call",
+
+  MAKER_SAME_AS_TAKER = "131",
 }
 
 export type tEthereumAddress = string;

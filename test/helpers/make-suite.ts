@@ -45,6 +45,10 @@ import {
   getApeCoinStaking,
   getBlurExchangeProxy,
   getExecutionDelegate,
+  getSeaportAdapter,
+  getLooksRareAdapter,
+  getX2Y2Adapter,
+  getBlurAdapter,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -56,11 +60,13 @@ import {
 } from "../../helpers/types";
 import {
   ApeCoinStaking,
+  BlurAdapter,
   BlurExchange,
   Conduit,
   ERC721Delegate,
   ExecutionDelegate,
   IPool,
+  LooksRareAdapter,
   NFTFloorOracle,
   NTokenBAYC,
   NTokenMAYC,
@@ -68,7 +74,9 @@ import {
   NTokenUniswapV3,
   PausableZone,
   PausableZoneController,
+  SeaportAdapter,
   UiPoolDataProvider,
+  X2Y2Adapter,
   X2Y2R1,
 } from "../../types";
 import {ProtocolDataProvider} from "../../types";
@@ -170,10 +178,13 @@ export interface TestEnv {
   conduit: Conduit;
   pausableZone: PausableZone;
   seaport: Seaport;
+  seaportAdapter: SeaportAdapter;
   looksRareExchange: LooksRareExchange;
+  looksRareAdapter: LooksRareAdapter;
   strategyStandardSaleForFixedPrice: StrategyStandardSaleForFixedPrice;
   transferManagerERC721: TransferManagerERC721;
   x2y2r1: X2Y2R1;
+  x2y2Adapter: X2Y2Adapter;
   erc721Delegate: ERC721Delegate;
   moonbirds: Moonbirds;
   nMOONBIRD: NTokenMoonBirds;
@@ -184,6 +195,7 @@ export interface TestEnv {
   apeCoinStaking: ApeCoinStaking;
   executionDelegate: ExecutionDelegate;
   blurExchange: BlurExchange;
+  blurAdapter: BlurAdapter;
 }
 
 export async function initializeMakeSuite() {
@@ -236,15 +248,19 @@ export async function initializeMakeSuite() {
     conduit: {} as Conduit,
     pausableZone: {} as PausableZone,
     seaport: {} as Seaport,
+    seaportAdapter: {} as SeaportAdapter,
     looksRareExchange: {} as LooksRareExchange,
+    looksRareAdapter: {} as LooksRareAdapter,
     strategyStandardSaleForFixedPrice: {} as StrategyStandardSaleForFixedPrice,
     transferManagerERC721: {} as TransferManagerERC721,
     x2y2r1: {} as X2Y2R1,
+    x2y2Adapter: {} as X2Y2Adapter,
     erc721Delegate: {} as ERC721Delegate,
     moonbirds: {} as Moonbirds,
     nftFloorOracle: {} as NFTFloorOracle,
     executionDelegate: {} as ExecutionDelegate,
     blurExchange: {} as BlurExchange,
+    blurAdapter: {} as BlurAdapter,
   } as TestEnv;
   const paraSpaceConfig = getParaSpaceConfig();
   const signers = await Promise.all(
@@ -296,13 +312,16 @@ export async function initializeMakeSuite() {
   testEnv.pausableZoneController = await getPausableZoneController();
   testEnv.pausableZone = await getPausableZone();
   testEnv.seaport = await getSeaport();
+  testEnv.seaportAdapter = await getSeaportAdapter();
 
   testEnv.looksRareExchange = await getLooksRareExchange();
+  testEnv.looksRareAdapter = await getLooksRareAdapter();
   testEnv.strategyStandardSaleForFixedPrice =
     await getStrategyStandardSaleForFixedPrice();
   testEnv.transferManagerERC721 = await getTransferManagerERC721();
 
   testEnv.x2y2r1 = await getX2Y2R1();
+  testEnv.x2y2Adapter = await getX2Y2Adapter();
   testEnv.erc721Delegate = await getERC721Delegate();
 
   testEnv.apeCoinStaking = await getApeCoinStaking();
@@ -483,6 +502,7 @@ export async function initializeMakeSuite() {
   );
   testEnv.executionDelegate = await getExecutionDelegate();
   testEnv.blurExchange = await getBlurExchangeProxy();
+  testEnv.blurAdapter = await getBlurAdapter();
 
   return testEnv;
 }

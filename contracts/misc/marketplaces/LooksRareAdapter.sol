@@ -8,6 +8,7 @@ import {ILooksRareExchange} from "../../dependencies/looksrare/contracts/interfa
 import {ConsiderationItem, OfferItem, ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
+import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 
 /**
  * @title LooksRare Adapter
@@ -15,11 +16,17 @@ import {IMarketplace} from "../../interfaces/IMarketplace.sol";
  * @notice Implements the NFT <=> ERC20 exchange logic via LooksRare marketplace
  */
 contract LooksRareAdapter is IMarketplace {
-    constructor() {}
+    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    address public immutable STRATEGY_ALLOWED;
 
-    function getAskOrderInfo(bytes memory params, address weth)
+    constructor(IPoolAddressesProvider provider, address strategyAllowed) {
+        ADDRESSES_PROVIDER = provider;
+        STRATEGY_ALLOWED = strategyAllowed;
+    }
+
+    function getAskOrderInfo(bytes memory params)
         external
-        pure
+        view
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -28,6 +35,16 @@ contract LooksRareAdapter is IMarketplace {
             OrderTypes.MakerOrder memory makerAsk
         ) = abi.decode(params, (OrderTypes.TakerOrder, OrderTypes.MakerOrder));
         orderInfo.maker = makerAsk.signer;
+        orderInfo.taker = takerBid.taker;
+
+        require(
+            orderInfo.taker == ADDRESSES_PROVIDER.getPool(),
+            Errors.INVALID_ORDER_TAKER
+        );
+        require(
+            makerAsk.strategy == STRATEGY_ALLOWED, // must be StandardSaleForFixedPrice strategy
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
 
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem(
@@ -43,7 +60,8 @@ contract LooksRareAdapter is IMarketplace {
 
         ItemType itemType = ItemType.ERC20;
         address token = makerAsk.currency;
-        if (token == weth) {
+        if (token == ADDRESSES_PROVIDER.getWETH()) {
+            // TODO: support pure WETH purchase
             itemType = ItemType.NATIVE;
             token = address(0);
         }

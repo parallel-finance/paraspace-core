@@ -52,7 +52,10 @@ export const step_15 = async (verify = false) => {
     );
     const zone = await createZone(pausableZoneController, deployer);
     const seaport = await deploySeaport(conduitController.address, verify);
-    const seaportAdapter = await deploySeaportAdapter(verify);
+    const seaportAdapter = await deploySeaportAdapter(
+      addressesProvider.address,
+      verify
+    );
     await waitForTx(
       await conduitController.updateChannel(
         conduit,
