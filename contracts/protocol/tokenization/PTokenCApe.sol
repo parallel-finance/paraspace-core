@@ -4,7 +4,7 @@ pragma solidity 0.8.10;
 import {IPool} from "../../interfaces/IPool.sol";
 import {RebasingPToken} from "./RebasingPToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
-import {IcAPE} from "../../interfaces/IcAPE.sol";
+import {ICApe} from "../../interfaces/ICApe.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
@@ -21,7 +21,7 @@ contract PTokenCApe is RebasingPToken {
      * @return Current rebasing index of PsAPE in RAY
      **/
     function lastRebasingIndex() internal view override returns (uint256) {
-        return IcAPE(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
+        return ICApe(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
     }
 
     function getXTokenType() external pure override returns (XTokenType) {

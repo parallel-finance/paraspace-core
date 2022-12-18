@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IPool} from "../../interfaces/IPool.sol";
-import {IcAPE} from "../../interfaces/IcAPE.sol";
+import {ICApe} from "../../interfaces/ICApe.sol";
 import {RebasingDebtToken} from "./RebasingDebtToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 
@@ -20,6 +20,6 @@ contract CApeDebtToken is RebasingDebtToken {
      * @return Current rebasing index of PsAPE in RAY
      **/
     function lastRebasingIndex() internal view override returns (uint256) {
-        return IcAPE(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
+        return ICApe(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
     }
 }

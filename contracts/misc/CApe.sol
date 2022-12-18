@@ -7,13 +7,13 @@ import "../dependencies/openzeppelin/contracts//IERC20.sol";
 import "../dependencies/openzeppelin/contracts//SafeMath.sol";
 import "../dependencies/openzeppelin/contracts//Address.sol";
 import "../dependencies/openzeppelin/contracts//Pausable.sol";
-import {IcAPE} from "../interfaces/IcAPE.sol";
+import {ICApe} from "../interfaces/ICApe.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
  *
  */
-abstract contract cAPE is Context, IcAPE, Pausable {
+abstract contract CApe is Context, ICApe, Pausable {
     using SafeMath for uint256;
     using Address for address;
 

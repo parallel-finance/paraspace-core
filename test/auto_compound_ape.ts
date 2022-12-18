@@ -1,13 +1,13 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {ApeYield, PToken, PTokenSApe, VariableDebtToken} from "../types";
+import {AutoCompoundApe, PToken, PTokenSApe, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {
-  getApeYield,
+  getAutoCompoundApe,
   getPToken,
   getPTokenSApe,
   getVariableDebtToken,
@@ -17,7 +17,7 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
-  let apeYield: ApeYield;
+  let cApe: AutoCompoundApe;
   let pCApe: PToken;
   let variableDebtCAPE: VariableDebtToken;
   let pSApeCoin: PTokenSApe;
@@ -37,12 +37,12 @@ describe("APE Coin Staking Test", () => {
       poolAdmin,
     } = testEnv;
 
-    apeYield = await getApeYield();
+    cApe = await getAutoCompoundApe();
 
     const {
       xTokenAddress: pCApeAddress,
       variableDebtTokenAddress: variableDebtPsApeAddress,
-    } = await protocolDataProvider.getReserveTokensAddresses(apeYield.address);
+    } = await protocolDataProvider.getReserveTokensAddresses(cApe.address);
     pCApe = await getPToken(pCApeAddress);
     variableDebtCAPE = await getVariableDebtToken(variableDebtPsApeAddress);
     const {xTokenAddress: pSApeCoinAddress} =
@@ -73,23 +73,23 @@ describe("APE Coin Staking Test", () => {
     );
 
     await waitForTx(
-      await ape.connect(user1.signer).approve(apeYield.address, MAX_UINT_AMOUNT)
+      await ape.connect(user1.signer).approve(cApe.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
-      await ape.connect(user2.signer).approve(apeYield.address, MAX_UINT_AMOUNT)
+      await ape.connect(user2.signer).approve(cApe.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
-      await ape.connect(user3.signer).approve(apeYield.address, MAX_UINT_AMOUNT)
+      await ape.connect(user3.signer).approve(cApe.address, MAX_UINT_AMOUNT)
     );
 
     await waitForTx(
       await pool
         .connect(poolAdmin.signer)
-        .unlimitedApproveTo(ape.address, apeYield.address)
+        .unlimitedApproveTo(ape.address, cApe.address)
     );
 
     await waitForTx(
-      await pool.connect(poolAdmin.signer).setClaimApeForYieldIncentive(30)
+      await pool.connect(poolAdmin.signer).setClaimApeForCompoundFee(30)
     );
 
     // send extra tokens to the apestaking contract for rewards
@@ -114,40 +114,38 @@ describe("APE Coin Staking Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await apeYield.connect(user1.signer).deposit(user1.address, user1Amount)
+      await cApe.connect(user1.signer).deposit(user1.address, user1Amount)
     );
-    let user1Balance = await apeYield.balanceOf(user1.address);
+    let user1Balance = await cApe.balanceOf(user1.address);
     almostEqual(user1Balance, parseEther("1000"));
-    let user1Share = await apeYield.sharesOf(user1.address);
+    let user1Share = await cApe.sharesOf(user1.address);
     almostEqual(user1Share, parseEther("1000"));
 
     await advanceTimeAndBlock(600);
 
-    user1Balance = await apeYield.balanceOf(user1.address);
+    user1Balance = await cApe.balanceOf(user1.address);
     almostEqual(user1Balance, parseEther("1000"));
 
     await advanceTimeAndBlock(3000);
-    user1Balance = await apeYield.balanceOf(user1.address);
+    user1Balance = await cApe.balanceOf(user1.address);
     // 1000 + 3600
     almostEqual(user1Balance, parseEther("4600"));
 
-    user1Share = await apeYield.sharesOf(user1.address);
+    user1Share = await cApe.sharesOf(user1.address);
     almostEqual(user1Share, parseEther("1000"));
 
-    await waitForTx(
-      await apeYield.connect(user1.signer).withdraw(user1Balance)
-    );
-    user1Share = await apeYield.sharesOf(user1.address);
+    await waitForTx(await cApe.connect(user1.signer).withdraw(user1Balance));
+    user1Share = await cApe.sharesOf(user1.address);
     expect(user1Share).to.be.equal(0);
-    user1Balance = await apeYield.balanceOf(user1.address);
+    user1Balance = await cApe.balanceOf(user1.address);
     expect(user1Balance).to.be.equal(0);
 
     const apeBalance = await ape.balanceOf(user1.address);
     almostEqual(apeBalance, parseEther("4600"));
 
     // pool is empty
-    expect(await apeYield.totalSupply()).to.be.equal(0);
-    expect(await apeYield.getTotalPooledApeBalance()).to.be.equal(0);
+    expect(await cApe.totalSupply()).to.be.equal(0);
+    expect(await cApe.getTotalPooledApeBalance()).to.be.equal(0);
   });
 
   it("user receive reward as deposit portion 1", async () => {
@@ -157,38 +155,32 @@ describe("APE Coin Staking Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await apeYield.connect(user1.signer).deposit(user1.address, user1Amount)
+      await cApe.connect(user1.signer).deposit(user1.address, user1Amount)
     );
     await waitForTx(
-      await apeYield.connect(user2.signer).deposit(user2.address, user2Amount)
+      await cApe.connect(user2.signer).deposit(user2.address, user2Amount)
     );
     await waitForTx(
-      await apeYield.connect(user3.signer).deposit(user3.address, user3Amount)
+      await cApe.connect(user3.signer).deposit(user3.address, user3Amount)
     );
 
     await advanceTimeAndBlock(86400);
 
-    const user1Balance = await apeYield.balanceOf(user1.address);
-    const user2Balance = await apeYield.balanceOf(user2.address);
-    const user3Balance = await apeYield.balanceOf(user3.address);
+    const user1Balance = await cApe.balanceOf(user1.address);
+    const user2Balance = await cApe.balanceOf(user2.address);
+    const user3Balance = await cApe.balanceOf(user3.address);
     almostEqual(user2Balance, user1Balance.mul(2));
     almostEqual(user3Balance, user2Balance.mul(2));
 
-    await waitForTx(
-      await apeYield.connect(user1.signer).withdraw(user1Balance)
-    );
+    await waitForTx(await cApe.connect(user1.signer).withdraw(user1Balance));
     const user1ApeBalance = await ape.balanceOf(user1.address);
     almostEqual(user1ApeBalance, user1Balance);
 
-    await waitForTx(
-      await apeYield.connect(user2.signer).withdraw(user2Balance)
-    );
+    await waitForTx(await cApe.connect(user2.signer).withdraw(user2Balance));
     const user2ApeBalance = await ape.balanceOf(user2.address);
     almostEqual(user2ApeBalance, user2Balance);
 
-    await waitForTx(
-      await apeYield.connect(user3.signer).withdraw(user3Balance)
-    );
+    await waitForTx(await cApe.connect(user3.signer).withdraw(user3Balance));
     const user3ApeBalance = await ape.balanceOf(user3.address);
     almostEqual(user3ApeBalance, user3Balance);
 
@@ -196,8 +188,8 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user3Balance, parseEther("53371"));
 
     // pool is empty
-    expect(await apeYield.totalSupply()).to.be.equal(0);
-    expect(await apeYield.getTotalPooledApeBalance()).to.be.equal(0);
+    expect(await cApe.totalSupply()).to.be.equal(0);
+    expect(await cApe.getTotalPooledApeBalance()).to.be.equal(0);
   });
 
   it("user receive reward as deposit portion 2", async () => {
@@ -207,45 +199,41 @@ describe("APE Coin Staking Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await apeYield.connect(user1.signer).deposit(user1.address, user1Amount)
+      await cApe.connect(user1.signer).deposit(user1.address, user1Amount)
     );
     await advanceTimeAndBlock(3600);
-    const user1Share = await apeYield.sharesOf(user1.address);
-    let user1Balance = await apeYield.balanceOf(user1.address);
+    const user1Share = await cApe.sharesOf(user1.address);
+    let user1Balance = await cApe.balanceOf(user1.address);
     //1000 + 3600 = 4600
     almostEqual(user1Balance, parseEther("4600"));
 
     //user2 balance is 4600 now
     await mintAndValidate(ape, "2600", user2);
     await waitForTx(
-      await apeYield.connect(user2.signer).deposit(user2.address, user1Balance)
+      await cApe.connect(user2.signer).deposit(user2.address, user1Balance)
     );
-    const user2Share = await apeYield.sharesOf(user2.address);
+    const user2Share = await cApe.sharesOf(user2.address);
     almostEqual(user1Share, user2Share);
 
     await advanceTimeAndBlock(3600);
-    user1Balance = await apeYield.balanceOf(user1.address);
+    user1Balance = await cApe.balanceOf(user1.address);
     //1000 + 3600 + 1800
     almostEqual(user1Balance, parseEther("6400"));
 
-    const user2Balance = await apeYield.balanceOf(user2.address);
-    await waitForTx(
-      await apeYield.connect(user2.signer).withdraw(user2Balance)
-    );
+    const user2Balance = await cApe.balanceOf(user2.address);
+    await waitForTx(await cApe.connect(user2.signer).withdraw(user2Balance));
     almostEqual(await ape.balanceOf(user2.address), user1Balance);
 
     await advanceTimeAndBlock(3600);
-    user1Balance = await apeYield.balanceOf(user1.address);
+    user1Balance = await cApe.balanceOf(user1.address);
     //1000 + 3600 + 1800 + 3600
     almostEqual(user1Balance, parseEther("10000"));
-    await waitForTx(
-      await apeYield.connect(user1.signer).withdraw(user1Balance)
-    );
+    await waitForTx(await cApe.connect(user1.signer).withdraw(user1Balance));
     almostEqual(await ape.balanceOf(user1.address), user1Balance);
 
     // pool is empty
-    expect(await apeYield.totalSupply()).to.be.equal(0);
-    expect(await apeYield.getTotalPooledApeBalance()).to.be.equal(0);
+    expect(await cApe.totalSupply()).to.be.equal(0);
+    expect(await cApe.getTotalPooledApeBalance()).to.be.equal(0);
   });
 
   it("compound function work as expected", async () => {
@@ -264,33 +252,31 @@ describe("APE Coin Staking Test", () => {
     );
 
     await waitForTx(
-      await apeYield.connect(user2.signer).deposit(user2.address, user2Amount)
+      await cApe.connect(user2.signer).deposit(user2.address, user2Amount)
     );
 
     await advanceTimeAndBlock(3600);
 
-    let user2Balance = await apeYield.balanceOf(user2.address);
+    let user2Balance = await cApe.balanceOf(user2.address);
     //2000 + 1800 = 3800
     almostEqual(user2Balance, parseEther("3800"));
 
-    await waitForTx(await apeYield.connect(user2.signer).harvestAndYield());
+    await waitForTx(await cApe.connect(user2.signer).harvestAndCompound());
 
     await advanceTimeAndBlock(3600);
-    user2Balance = await apeYield.balanceOf(user2.address);
+    user2Balance = await cApe.balanceOf(user2.address);
     //3800 + 3600 * 3800 / (3800 + 2000) = 6158.6
     almostEqual(user2Balance, parseEther("6158.6"));
 
-    await waitForTx(await apeYield.connect(user2.signer).harvestAndYield());
+    await waitForTx(await cApe.connect(user2.signer).harvestAndCompound());
 
     await advanceTimeAndBlock(3600);
-    user2Balance = await apeYield.balanceOf(user2.address);
+    user2Balance = await cApe.balanceOf(user2.address);
     //6158.6 + 3600 * 6158.6 / (6158.6 + 2000) = 8876
     almostEqual(user2Balance, parseEther("8876"));
 
     //use2 exit pool
-    await waitForTx(
-      await apeYield.connect(user2.signer).withdraw(user2Balance)
-    );
+    await waitForTx(await cApe.connect(user2.signer).withdraw(user2Balance));
     const user2ApeBalance = await ape.balanceOf(user2.address);
     almostEqual(user2ApeBalance, parseEther("8876"));
 
@@ -305,7 +291,7 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user1ApeBalance, parseEther("5923.8"));
   });
 
-  it("claimApeAndYield function work as expected 1", async () => {
+  it("claimApeAndCompound function work as expected 1", async () => {
     const {
       users: [user1, user2, user3],
       mayc,
@@ -406,7 +392,7 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndYield(
+        .claimApeAndCompound(
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]]
@@ -426,7 +412,7 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user3Balance, parseEther("2050.97"));
 
     // 3600 * 0.003
-    const incentiveBalance = await apeYield.balanceOf(user2.address);
+    const incentiveBalance = await cApe.balanceOf(user2.address);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -434,7 +420,7 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndYield(
+        .claimApeAndCompound(
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]]
@@ -442,7 +428,7 @@ describe("APE Coin Staking Test", () => {
     );
   });
 
-  it("claimApeAndYield function work as expected 2", async () => {
+  it("claimApeAndCompound function work as expected 2", async () => {
     const {
       users: [user1, user2],
       mayc,
@@ -499,7 +485,7 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndYield(mayc.address, [user1.address], [[0, 1, 2]])
+        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]])
     );
 
     //3600 * 0.997 = 3589.2
@@ -507,7 +493,7 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const incentiveBalance = await apeYield.balanceOf(user2.address);
+    const incentiveBalance = await cApe.balanceOf(user2.address);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -515,7 +501,7 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndYield(mayc.address, [user1.address], [[0, 1, 2]])
+        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]])
     );
   });
 
@@ -526,29 +512,27 @@ describe("APE Coin Staking Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await apeYield.connect(user1.signer).deposit(user1.address, user1Amount)
+      await cApe.connect(user1.signer).deposit(user1.address, user1Amount)
     );
     await waitForTx(
-      await ape.connect(user2.signer).transfer(apeYield.address, user2Amount)
+      await ape.connect(user2.signer).transfer(cApe.address, user2Amount)
     );
-    let user1Balance = await apeYield.balanceOf(user1.address);
+    let user1Balance = await cApe.balanceOf(user1.address);
     almostEqual(user1Balance, parseEther("1000"));
-    let user1Share = await apeYield.sharesOf(user1.address);
+    let user1Share = await cApe.sharesOf(user1.address);
     almostEqual(user1Share, parseEther("1000"));
 
     await advanceTimeAndBlock(600);
 
-    user1Balance = await apeYield.balanceOf(user1.address);
-    await waitForTx(
-      await apeYield.connect(user1.signer).withdraw(user1Balance)
-    );
-    user1Share = await apeYield.sharesOf(user1.address);
+    user1Balance = await cApe.balanceOf(user1.address);
+    await waitForTx(await cApe.connect(user1.signer).withdraw(user1Balance));
+    user1Share = await cApe.sharesOf(user1.address);
     expect(user1Share).to.be.equal(0);
-    user1Balance = await apeYield.balanceOf(user1.address);
+    user1Balance = await cApe.balanceOf(user1.address);
     expect(user1Balance).to.be.equal(0);
 
     almostEqual(await ape.balanceOf(user1.address), user1Amount);
-    almostEqual(await ape.balanceOf(apeYield.address), user2Amount);
+    almostEqual(await ape.balanceOf(cApe.address), user2Amount);
   });
 
   it("check rescueERC20", async () => {
@@ -562,39 +546,33 @@ describe("APE Coin Staking Test", () => {
     await mintAndValidate(weth, "1", user2);
 
     await waitForTx(
-      await weth
-        .connect(user2.signer)
-        .transfer(apeYield.address, parseEther("1"))
+      await weth.connect(user2.signer).transfer(cApe.address, parseEther("1"))
     );
 
     await expect(
-      apeYield
+      cApe
         .connect(user2.signer)
         .rescueERC20(weth.address, user2.address, parseEther("1"))
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await waitForTx(
-      await ape
-        .connect(user2.signer)
-        .transfer(apeYield.address, parseEther("100"))
+      await ape.connect(user2.signer).transfer(cApe.address, parseEther("100"))
     );
 
     await waitForTx(
-      await apeYield
-        .connect(user1.signer)
-        .deposit(user1.address, parseEther("50"))
+      await cApe.connect(user1.signer).deposit(user1.address, parseEther("50"))
     );
 
-    almostEqual(await ape.balanceOf(apeYield.address), parseEther("150"));
+    almostEqual(await ape.balanceOf(cApe.address), parseEther("150"));
 
     await expect(
-      apeYield
+      cApe
         .connect(poolAdmin.signer)
         .rescueERC20(ape.address, user1.address, parseEther("150"))
     ).to.be.revertedWith("balance below backed balance");
 
     await waitForTx(
-      await apeYield
+      await cApe
         .connect(poolAdmin.signer)
         .rescueERC20(ape.address, user2.address, parseEther("100"))
     );
@@ -610,17 +588,17 @@ describe("APE Coin Staking Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await apeYield.connect(user2.signer).deposit(user2.address, user2Amount)
+      await cApe.connect(user2.signer).deposit(user2.address, user2Amount)
     );
 
     await waitForTx(
-      await apeYield.connect(user2.signer).approve(pool.address, user2Amount)
+      await cApe.connect(user2.signer).approve(pool.address, user2Amount)
     );
 
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .supply(apeYield.address, user2Amount, user2.address, 0)
+        .supply(cApe.address, user2Amount, user2.address, 0)
     );
 
     await waitForTx(
@@ -645,7 +623,7 @@ describe("APE Coin Staking Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
-          borrowAsset: apeYield.address,
+          borrowAsset: cApe.address,
           borrowAmount: user1Amount,
           cashAmount: 0,
         },

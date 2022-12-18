@@ -116,10 +116,10 @@ interface IPoolParameters {
     function unlimitedApproveTo(address token, address to) external;
 
     /**
-     * @notice undate incentive percentage for claim ape for yield
-     * @param incentive new incentive percentage
+     * @notice undate fee percentage for claim ape for compound
+     * @param fee new fee percentage
      */
-    function setClaimApeForYieldIncentive(uint256 incentive) external;
+    function setClaimApeForCompoundFee(uint256 fee) external;
 
     /**
      * @notice Set the auction recovery health factor

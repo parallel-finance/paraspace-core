@@ -328,7 +328,7 @@ export enum ProtocolErrors {
   //disable calls
   EMEGENCY_DISABLE_CALL = "emergency disable call",
 
-  MAKER_SAME_AS_TAKER = "131",
+  MAKER_SAME_AS_TAKER = "132",
 }
 
 export type tEthereumAddress = string;

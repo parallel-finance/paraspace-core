@@ -20,7 +20,7 @@ import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
-import {IApeYield} from "../../interfaces/IApeYield.sol";
+import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 
 contract PoolApeStaking is
@@ -37,7 +37,7 @@ contract PoolApeStaking is
     using PercentageMath for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    IApeYield internal immutable APE_YIELD;
+    IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
     uint256 internal constant POOL_REVISION = 130;
 
@@ -52,11 +52,11 @@ contract PoolApeStaking is
      */
     constructor(
         IPoolAddressesProvider provider,
-        IApeYield apeYield,
+        IAutoCompoundApe apeCompound,
         IERC20 apeCoin
     ) {
         ADDRESSES_PROVIDER = provider;
-        APE_YIELD = apeYield;
+        APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
     }
 
@@ -241,7 +241,7 @@ contract PoolApeStaking is
 
         require(
             stakingInfo.borrowAsset == address(APE_COIN) ||
-                stakingInfo.borrowAsset == address(APE_YIELD),
+                stakingInfo.borrowAsset == address(APE_COMPOUND),
             "invalid borrow asset"
         );
 
@@ -270,35 +270,24 @@ contract PoolApeStaking is
                     address(this),
                     stakingInfo.borrowAmount
                 );
-            }
-        }
-
-        // 2, handle cash part
-        if (stakingInfo.cashAmount > 0) {
-            if (stakingInfo.borrowAsset == address(APE_COIN)) {
-                APE_COIN.safeTransferFrom(
-                    msg.sender,
+                APE_COMPOUND.withdraw(stakingInfo.borrowAmount);
+                APE_COIN.safeTransfer(
                     localVar.nTokenAddress,
-                    stakingInfo.cashAmount
-                );
-            } else {
-                IERC20(address(APE_YIELD)).safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    stakingInfo.cashAmount
+                    stakingInfo.borrowAmount
                 );
             }
         }
 
-        // 3, withdraw cApe to get ape, and send ape to xTokenAddress
-        if (stakingInfo.borrowAsset == address(APE_YIELD)) {
-            uint256 totalAmount = stakingInfo.cashAmount +
-                stakingInfo.borrowAmount;
-            APE_YIELD.withdraw(totalAmount);
-            APE_COIN.safeTransfer(localVar.nTokenAddress, totalAmount);
+        // 2, send cash part to xTokenAddress
+        if (stakingInfo.cashAmount > 0) {
+            APE_COIN.safeTransferFrom(
+                msg.sender,
+                localVar.nTokenAddress,
+                stakingInfo.cashAmount
+            );
         }
 
-        // 4, deposit bayc or mayc pool
+        // 3, deposit bayc or mayc pool
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 INToken(localVar.nTokenAddress).ownerOf(_nfts[index].tokenId) ==
@@ -308,7 +297,7 @@ contract PoolApeStaking is
         }
         INTokenApeStaking(localVar.nTokenAddress).depositApeCoin(_nfts);
 
-        // 5, deposit bakc pool
+        // 4, deposit bakc pool
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 INToken(localVar.nTokenAddress).ownerOf(
@@ -333,7 +322,7 @@ contract PoolApeStaking is
             );
         }
 
-        // 6 mint debt token
+        // 5 mint debt token
         if (stakingInfo.borrowAmount > 0) {
             BorrowLogic.executeBorrow(
                 ps._reserves,
@@ -354,7 +343,7 @@ contract PoolApeStaking is
             );
         }
 
-        //7 checkout ape balance
+        //6 checkout ape balance
         require(
             APE_COIN.balanceOf(localVar.nTokenAddress) ==
                 localVar.beforeBalance,
@@ -444,11 +433,12 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function claimApeAndYield(
+    function claimApeAndCompound(
         address nftAsset,
         address[] calldata users,
         uint256[][] calldata tokenIds
     ) external nonReentrant {
+        require(users.length == tokenIds.length, "invalid parameter");
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
@@ -478,12 +468,12 @@ contract PoolApeStaking is
             totalAmount += amounts[i];
         }
 
-        uint256 incentiveRate = ps._apeClaimForYieldIncentiveRate;
-        uint256 totalFee = totalAmount.percentMul(incentiveRate);
-        APE_YIELD.deposit(address(this), totalAmount);
+        uint256 compoundFee = ps._apeCompoundFee;
+        uint256 totalFee = totalAmount.percentMul(compoundFee);
+        APE_COMPOUND.deposit(address(this), totalAmount);
 
         if (totalFee > 0) {
-            IERC20(address(APE_YIELD)).safeTransfer(msg.sender, totalFee);
+            IERC20(address(APE_COMPOUND)).safeTransfer(msg.sender, totalFee);
         }
 
         for (uint256 index = 0; index < users.length; index++) {
@@ -492,7 +482,7 @@ contract PoolApeStaking is
                     ps,
                     users[index],
                     amounts[index].percentMul(
-                        PercentageMath.PERCENTAGE_FACTOR - incentiveRate
+                        PercentageMath.PERCENTAGE_FACTOR - compoundFee
                     )
                 );
             }
@@ -540,7 +530,7 @@ contract PoolApeStaking is
             ps._reserves,
             userConfig,
             DataTypes.ExecuteSupplyParams({
-                asset: address(APE_YIELD),
+                asset: address(APE_COMPOUND),
                 amount: amount,
                 onBehalfOf: user,
                 payer: address(this),
@@ -548,12 +538,12 @@ contract PoolApeStaking is
             })
         );
         DataTypes.ReserveData storage assetReserve = ps._reserves[
-            address(APE_YIELD)
+            address(APE_COMPOUND)
         ];
         bool currentStatus = userConfig.isUsingAsCollateral(assetReserve.id);
         if (!currentStatus) {
             userConfig.setUsingAsCollateral(assetReserve.id, true);
-            emit ReserveUsedAsCollateralEnabled(address(APE_YIELD), user);
+            emit ReserveUsedAsCollateralEnabled(address(APE_COMPOUND), user);
         }
     }
 }

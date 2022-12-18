@@ -1,6 +1,6 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
-  deployApeYield,
+  deployAutoCompoundApe,
   deployPoolComponents,
 } from "../../../helpers/contracts-deployments";
 import {
@@ -16,7 +16,7 @@ export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
 
   try {
-    await deployApeYield(verify);
+    await deployAutoCompoundApe(verify);
 
     const {
       poolCore,
