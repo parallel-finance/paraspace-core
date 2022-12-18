@@ -49,6 +49,7 @@ export const step_09 = async (verify = false) => {
           stETH: erc20Tokens.stETH.address,
           APE: erc20Tokens.APE.address,
           sAPE: erc20Tokens.sAPE.address,
+          cAPE: erc20Tokens.cAPE.address,
           PUNK: erc20Tokens.PUNK.address,
           WBTC: erc20Tokens.WBTC.address,
           // ERC721
