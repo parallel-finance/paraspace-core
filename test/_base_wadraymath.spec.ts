@@ -6,9 +6,9 @@ import {
   WAD,
   HALF_RAY,
   HALF_WAD,
-} from "../deploy/helpers/constants";
+} from "../helpers/constants";
 import {WadRayMathWrapper, WadRayMathWrapper__factory} from "../types";
-import {getFirstSigner} from "../deploy/helpers/contracts-getters";
+import {getFirstSigner} from "../helpers/contracts-getters";
 import "./helpers/utils/wadraymath";
 
 describe("WadRayMath", () => {

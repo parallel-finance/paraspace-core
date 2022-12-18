@@ -2,14 +2,10 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
 import {utils} from "ethers";
-import {
-  MAX_UINT_AMOUNT,
-  ONE_YEAR,
-  MAX_BORROW_CAP,
-} from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {advanceTimeAndBlock, waitForTx} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {MAX_UINT_AMOUNT, ONE_YEAR, MAX_BORROW_CAP} from "../helpers/constants";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {

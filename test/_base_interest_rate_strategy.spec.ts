@@ -3,12 +3,12 @@ import {BigNumber, BigNumberish, utils} from "ethers";
 import {
   deployReserveAuctionStrategy,
   deployReserveInterestRateStrategy,
-} from "../deploy/helpers/contracts-deployments";
+} from "../helpers/contracts-deployments";
 import {
   MAX_UINT_AMOUNT,
   PERCENTAGE_FACTOR,
   ZERO_ADDRESS,
-} from "../deploy/helpers/constants";
+} from "../helpers/constants";
 import {
   PToken,
   DefaultReserveInterestRateStrategy,
@@ -20,26 +20,23 @@ import {
   MockReserveInterestRateStrategy__factory,
   PToken__factory,
 } from "../types";
-import {strategyDAI} from "../deploy/market-config/reservesConfigs";
-import {rateStrategyStableTwo} from "../deploy/market-config/rateStrategies";
+import {strategyDAI} from "../market-config/reservesConfigs";
+import {rateStrategyStableTwo} from "../market-config/rateStrategies";
 import {TestEnv} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
-import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
+import {eContractid, ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {
-  getFirstSigner,
-  getAggregator,
-} from "../deploy/helpers/contracts-getters";
-import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
+import {getFirstSigner, getAggregator} from "../helpers/contracts-getters";
+import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {
   convertToCurrencyDecimals,
   impersonateAddress,
-} from "../deploy/helpers/contracts-helpers";
-import {increaseTime} from "../deploy/helpers/misc-utils";
+} from "../helpers/contracts-helpers";
+import {increaseTime} from "../helpers/misc-utils";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 type CalculateInterestRatesParams = {
   liquidityAdded: BigNumberish;

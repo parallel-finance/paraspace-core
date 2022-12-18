@@ -1,11 +1,11 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {waitForTx, evmSnapshot, evmRevert} from "../deploy/helpers/misc-utils";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {waitForTx, evmSnapshot, evmRevert} from "../helpers/misc-utils";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   getUniswapV3OracleWrapper,
   getUniswapV3SwapRouter,
-} from "../deploy/helpers/contracts-getters";
+} from "../helpers/contracts-getters";
 import {
   almostEqual,
   createNewPool,

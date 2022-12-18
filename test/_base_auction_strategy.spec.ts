@@ -2,7 +2,7 @@ import {expect} from "chai";
 import {
   deployReserveAuctionStrategy,
   deployMockReserveAuctionStrategy,
-} from "../deploy/helpers/contracts-deployments";
+} from "../helpers/contracts-deployments";
 import {
   DefaultReserveAuctionStrategy,
   MockReserveAuctionStrategy,
@@ -10,13 +10,13 @@ import {
 import {
   auctionStrategyExp,
   auctionStrategyLinear,
-} from "../deploy/market-config/auctionStrategies";
+} from "../market-config/auctionStrategies";
 import "./helpers/utils/wadraymath";
 import {utils} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {eContractid} from "../deploy/helpers/types";
-import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+import {eContractid} from "../helpers/types";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 describe("AuctionStrategy", () => {
   let strategyInstanceExp: DefaultReserveAuctionStrategy;

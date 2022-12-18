@@ -1,0 +1,3 @@
+*                   @para-space/paraspace-core-owners
+CODEOWNERS          @para-space/sre-team
+/.github/workflows/ @para-space/sre-team

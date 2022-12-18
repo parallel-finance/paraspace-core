@@ -1,4 +1,4 @@
-import {accounts} from "../../../deploy/wallets";
+import {accounts} from "../../../wallets";
 
 export const getTestWallets = (): {privateKey: string; balance: string}[] => {
   if (!accounts.every((element) => element.privateKey) || accounts.length === 0)

@@ -9,6 +9,7 @@ interface IFlashClaimReceiver {
     function executeOperation(
         address asset,
         uint256[] calldata tokenIds,
+        address initiator,
         bytes calldata params
     ) external returns (bool);
 }

@@ -1,28 +1,24 @@
 import hre from "hardhat";
 import {expect} from "chai";
 import {BigNumber, utils} from "ethers";
-import {
-  increaseTime,
-  timeLatest,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {increaseTime, timeLatest, waitForTx} from "../helpers/misc-utils";
+import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../helpers/constants";
+import {ProtocolErrors} from "../helpers/types";
 import {
   PriceOracleSentinel,
   PriceOracleSentinel__factory,
   SequencerOracle,
   SequencerOracle__factory,
 } from "../types";
-import {getFirstSigner} from "../deploy/helpers/contracts-getters";
+import {getFirstSigner} from "../helpers/contracts-getters";
 import {TestEnv} from "./helpers/make-suite";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import "./helpers/utils/wadraymath";
 import {getReserveData, getUserData} from "./helpers/utils/helpers";
 import {calcExpectedVariableDebtTokenBalance} from "./helpers/utils/calculations";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {strategyWETH} from "../deploy/market-config/reservesConfigs";
+import {strategyWETH} from "../market-config/reservesConfigs";
 
 describe("PriceOracleSentinel", () => {
   let testEnv: TestEnv;

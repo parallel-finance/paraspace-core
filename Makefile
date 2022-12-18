@@ -5,7 +5,7 @@ NETWORK                  := hardhat
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
 
-SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
+SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
 RUST_TOOLCHAIN           := nightly-2022-09-19
@@ -80,7 +80,6 @@ ci: clean build lint doc fast-test
 .PHONY: submodules
 submodules:
 	git submodule update --init --recursive
-	[ -d deploy ] && cd deploy && git pull origin main
 	[ -d lib/ds-test ] && cd lib/ds-test && git pull origin master
 
 .PHONY: test-pool-upgrade
@@ -183,6 +182,10 @@ test-marketplace-buy:
 test-marketplace-accept-bid:
 	make TEST_TARGET=_pool_marketplace_accept_bid_with_credit.spec.ts test
 
+.PHONY: test-marketplace-adapter
+test-marketplace-adapter:
+	make TEST_TARGET=_pool_marketplace_adapter.spec.ts test
+
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
 	make TEST_TARGET=_uniswap-v3-oracle.spec.ts test
@@ -262,6 +265,10 @@ test-sape-operation:
 .PHONY: test-acl-manager
 test-acl-manager:
 	make TEST_TARGET=acl-manager.spec.ts test
+
+.PHONY: test-time-lock
+test-time-lock:
+	make TEST_TARGET=time_lock_executor.spec.ts test
 
 .PHONY: run
 run:
@@ -365,19 +372,19 @@ deploy-renounceOwnership:
 
 .PHONY: ad-hoc
 ad-hoc:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
+	make SCRIPT_PATH=./scripts/dev/1.ad-hoc.ts run
 
 .PHONY: info
 info:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
+	make SCRIPT_PATH=./scripts/dev/3.info.ts run
 
 .PHONY: wallet
 wallet:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/4.wallet.ts run
+	make SCRIPT_PATH=./scripts/dev/4.wallet.ts run
 
-.PHONY: release-v1.2
-release-v1.2:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/5.release-v1.2.ts run
+.PHONY: rate-strategy
+rate-strategy:
+	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
 .PHONY: verify-v1.2
 verify-v1.2:
@@ -389,7 +396,7 @@ deploy-rate-strategy:
 
 .PHONY: transfer-tokens
 transfer-tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
+	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
 
 .PHONY: upgrade
 upgrade: build

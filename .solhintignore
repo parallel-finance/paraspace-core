@@ -5,5 +5,5 @@ contracts/dependencies
 contracts/deployments
 contracts/mocks
 contracts/test
-foundry_libs
-foundry_out
+lib
+out

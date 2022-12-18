@@ -1,13 +1,13 @@
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {TestEnv} from "./helpers/make-suite";
-import {advanceBlock, waitForTx} from "../deploy/helpers/misc-utils";
+import {advanceBlock, waitForTx} from "../helpers/misc-utils";
 import {parseEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {isUsingAsCollateral} from "../deploy/helpers/contracts-helpers";
+import {isUsingAsCollateral} from "../helpers/contracts-helpers";
 import {
   changePriceAndValidate,
   supplyAndValidate,

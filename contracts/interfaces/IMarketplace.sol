@@ -13,7 +13,7 @@ import {Address} from "../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC1271} from "../dependencies/openzeppelin/contracts/IERC1271.sol";
 
 interface IMarketplace {
-    function getAskOrderInfo(bytes memory data, address WETH)
+    function getAskOrderInfo(bytes memory data)
         external
         view
         returns (DataTypes.OrderInfo memory orderInfo);

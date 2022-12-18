@@ -1,9 +1,9 @@
 import {expect} from "chai";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {waitForTx} from "../helpers/misc-utils";
+import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../helpers/constants";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
-import {getAggregator, getMoonBirds} from "../deploy/helpers/contracts-getters";
+import {getAggregator, getMoonBirds} from "../helpers/contracts-getters";
 import {parseEther} from "ethers/lib/utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
