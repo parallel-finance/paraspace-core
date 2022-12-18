@@ -182,6 +182,10 @@ test-marketplace-buy:
 test-marketplace-accept-bid:
 	make TEST_TARGET=_pool_marketplace_accept_bid_with_credit.spec.ts test
 
+.PHONY: test-marketplace-adapter
+test-marketplace-adapter:
+	make TEST_TARGET=_pool_marketplace_adapter.spec.ts test
+
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
 	make TEST_TARGET=_uniswap-v3-oracle.spec.ts test
