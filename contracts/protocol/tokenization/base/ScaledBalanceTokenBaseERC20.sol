@@ -93,7 +93,7 @@ abstract contract ScaledBalanceTokenBaseERC20 is
         address onBehalfOf,
         uint256 amount,
         uint256 index
-    ) internal returns (bool) {
+    ) internal virtual returns (bool) {
         uint256 amountScaled = amount.rayDiv(index);
         require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
@@ -126,7 +126,7 @@ abstract contract ScaledBalanceTokenBaseERC20 is
         address target,
         uint256 amount,
         uint256 index
-    ) internal {
+    ) internal virtual {
         uint256 amountScaled = amount.rayDiv(index);
         require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
 
@@ -147,5 +147,14 @@ abstract contract ScaledBalanceTokenBaseERC20 is
             emit Transfer(user, address(0), amountToBurn);
             emit Burn(user, target, amountToBurn, balanceIncrease, index);
         }
+    }
+
+    function _transferScaled(
+        address from,
+        address to,
+        uint256 amount,
+        uint256 index
+    ) internal virtual {
+        super._transfer(from, to, amount.rayDiv(index).toUint128());
     }
 }
