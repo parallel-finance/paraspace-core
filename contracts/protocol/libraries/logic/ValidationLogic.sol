@@ -802,6 +802,7 @@ library ValidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ValidateAuctionParams memory params
     ) internal view {
+        require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         ValidateAuctionLocalVars memory vars;
 
         (
