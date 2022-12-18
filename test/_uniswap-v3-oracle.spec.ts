@@ -537,7 +537,7 @@ describe("Uniswap V3 Oracle", () => {
 
   it("test with dai and weth:(token0 decimal equals token1 decimal) with large price difference [ @skip-on-coverage ]", async () => {
     const {
-      users: [user1, trader],
+      users: [user1],
       dai,
       weth,
       nftPositionManager,
@@ -591,11 +591,11 @@ describe("Uniswap V3 Oracle", () => {
     almostEqual(liquidityAmount.token0Amount, liquidityDaiAmount);
     almostEqual(liquidityAmount.token1Amount, liquidityWethAmount);
 
-    let lpFee = await uniV3Oracle.getLpFeeAmount(tokenId);
+    const lpFee = await uniV3Oracle.getLpFeeAmount(tokenId);
     expect(lpFee.token0Amount).to.eq(0);
     expect(lpFee.token1Amount).to.eq(0);
 
-    let tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
+    const tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
 
     almostEqual(
       tokenPrice,
