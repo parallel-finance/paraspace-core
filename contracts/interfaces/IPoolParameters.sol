@@ -27,6 +27,11 @@ interface IPoolParameters {
     );
 
     /**
+     * @dev Emitted when the value of claim for yield incentive rate update
+     **/
+    event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
+
+    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
@@ -102,6 +107,19 @@ interface IPoolParameters {
         address to,
         uint256 amountOrTokenId
     ) external;
+
+    /**
+     * @notice grant token's an unlimited allowance value to the 'to' address
+     * @param token The ERC20 token address
+     * @param to The address receive the grant
+     */
+    function unlimitedApproveTo(address token, address to) external;
+
+    /**
+     * @notice undate fee percentage for claim ape for compound
+     * @param fee new fee percentage
+     */
+    function setClaimApeForCompoundFee(uint256 fee) external;
 
     /**
      * @notice Set the auction recovery health factor

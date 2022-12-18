@@ -20,6 +20,8 @@ import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
+import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -32,8 +34,11 @@ contract PoolApeStaking is
     using SafeERC20 for IERC20;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using SafeCast for uint256;
+    using PercentageMath for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
+    IAutoCompoundApe internal immutable APE_COMPOUND;
+    IERC20 internal immutable APE_COIN;
     uint256 internal constant POOL_REVISION = 120;
 
     event ReserveUsedAsCollateralEnabled(
@@ -45,8 +50,14 @@ contract PoolApeStaking is
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
-    constructor(IPoolAddressesProvider provider) {
+    constructor(
+        IPoolAddressesProvider provider,
+        IAutoCompoundApe apeCompound,
+        IERC20 apeCoin
+    ) {
         ADDRESSES_PROVIDER = provider;
+        APE_COMPOUND = apeCompound;
+        APE_COIN = apeCoin;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -215,10 +226,8 @@ contract PoolApeStaking is
 
     struct BorrowAndStakeLocalVar {
         address nTokenAddress;
-        IERC20 apeCoin;
         uint256 beforeBalance;
         IERC721 bakcContract;
-        DataTypes.ReserveCache apeReserveCache;
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -230,37 +239,48 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
+        require(
+            stakingInfo.borrowAsset == address(APE_COIN) ||
+                stakingInfo.borrowAsset == address(APE_COMPOUND),
+            "invalid borrow asset"
+        );
+
         BorrowAndStakeLocalVar memory localVar;
         localVar.nTokenAddress = ps
             ._reserves[stakingInfo.nftAsset]
             .xTokenAddress;
-        localVar.apeCoin = INTokenApeStaking(localVar.nTokenAddress)
-            .getApeStaking()
-            .apeCoin();
-        localVar.beforeBalance = localVar.apeCoin.balanceOf(
-            localVar.nTokenAddress
-        );
+        localVar.beforeBalance = APE_COIN.balanceOf(localVar.nTokenAddress);
         localVar.bakcContract = INTokenApeStaking(localVar.nTokenAddress)
             .getBAKC();
 
-        DataTypes.ReserveData storage apeReserve = ps._reserves[
-            address(localVar.apeCoin)
+        DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
+            stakingInfo.borrowAsset
         ];
-        localVar.apeReserveCache = apeReserve.cache();
 
-        // 1, send borrow part to xTokenAddress
+        // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
-            ValidationLogic.validateFlashloanSimple(apeReserve);
-            IPToken(localVar.apeReserveCache.xTokenAddress)
-                .transferUnderlyingTo(
+            ValidationLogic.validateFlashloanSimple(borrowAssetReserve);
+            if (stakingInfo.borrowAsset == address(APE_COIN)) {
+                IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     localVar.nTokenAddress,
                     stakingInfo.borrowAmount
                 );
+            } else {
+                IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
+                    address(this),
+                    stakingInfo.borrowAmount
+                );
+                APE_COMPOUND.withdraw(stakingInfo.borrowAmount);
+                APE_COIN.safeTransfer(
+                    localVar.nTokenAddress,
+                    stakingInfo.borrowAmount
+                );
+            }
         }
 
         // 2, send cash part to xTokenAddress
         if (stakingInfo.cashAmount > 0) {
-            localVar.apeCoin.safeTransferFrom(
+            APE_COIN.safeTransferFrom(
                 msg.sender,
                 localVar.nTokenAddress,
                 stakingInfo.cashAmount
@@ -309,7 +329,7 @@ contract PoolApeStaking is
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
                 DataTypes.ExecuteBorrowParams({
-                    asset: address(localVar.apeCoin),
+                    asset: stakingInfo.borrowAsset,
                     user: msg.sender,
                     onBehalfOf: msg.sender,
                     amount: stakingInfo.borrowAmount,
@@ -323,9 +343,9 @@ contract PoolApeStaking is
             );
         }
 
-        //7 checkout ape balance
+        //6 checkout ape balance
         require(
-            localVar.apeCoin.balanceOf(localVar.nTokenAddress) ==
+            APE_COIN.balanceOf(localVar.nTokenAddress) ==
                 localVar.beforeBalance,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
         );
@@ -412,6 +432,63 @@ contract PoolApeStaking is
         }
     }
 
+    /// @inheritdoc IPoolApeStaking
+    function claimApeAndCompound(
+        address nftAsset,
+        address[] calldata users,
+        uint256[][] calldata tokenIds
+    ) external nonReentrant {
+        require(users.length == tokenIds.length, "invalid parameter");
+        DataTypes.PoolStorage storage ps = poolStorage();
+        checkSApeIsNotPaused(ps);
+
+        address xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
+
+        uint256 balanceBefore = APE_COIN.balanceOf(address(this));
+        uint256[] memory amounts = new uint256[](tokenIds.length);
+
+        uint256 totalAmount;
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256[] calldata userTokenIds = tokenIds[i];
+            for (uint256 j = 0; j < userTokenIds.length; j++) {
+                address positionOwner = INToken(xTokenAddress).ownerOf(
+                    userTokenIds[j]
+                );
+                require(users[i] == positionOwner, "user is not owner");
+            }
+
+            INTokenApeStaking(xTokenAddress).claimApeCoin(
+                userTokenIds,
+                address(this)
+            );
+
+            uint256 balanceAfter = APE_COIN.balanceOf(address(this));
+            amounts[i] = balanceAfter - balanceBefore;
+            balanceBefore = balanceAfter;
+            totalAmount += amounts[i];
+        }
+
+        uint256 compoundFee = ps._apeCompoundFee;
+        uint256 totalFee = totalAmount.percentMul(compoundFee);
+        APE_COMPOUND.deposit(address(this), totalAmount);
+
+        if (totalFee > 0) {
+            IERC20(address(APE_COMPOUND)).safeTransfer(msg.sender, totalFee);
+        }
+
+        for (uint256 index = 0; index < users.length; index++) {
+            if (amounts[index] != 0) {
+                _supplyCApeForUser(
+                    ps,
+                    users[index],
+                    amounts[index].percentMul(
+                        PercentageMath.PERCENTAGE_FACTOR - compoundFee
+                    )
+                );
+            }
+        }
+    }
+
     function getUserHf(address user) internal view returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.CalculateUserAccountDataParams memory params = DataTypes
@@ -439,5 +516,34 @@ contract PoolApeStaking is
 
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
+    }
+
+    function _supplyCApeForUser(
+        DataTypes.PoolStorage storage ps,
+        address user,
+        uint256 amount
+    ) internal {
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            user
+        ];
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            userConfig,
+            DataTypes.ExecuteSupplyParams({
+                asset: address(APE_COMPOUND),
+                amount: amount,
+                onBehalfOf: user,
+                payer: address(this),
+                referralCode: 0
+            })
+        );
+        DataTypes.ReserveData storage assetReserve = ps._reserves[
+            address(APE_COMPOUND)
+        ];
+        bool currentStatus = userConfig.isUsingAsCollateral(assetReserve.id);
+        if (!currentStatus) {
+            userConfig.setUsingAsCollateral(assetReserve.id, true);
+            emit ReserveUsedAsCollateralEnabled(address(APE_COMPOUND), user);
+        }
     }
 }

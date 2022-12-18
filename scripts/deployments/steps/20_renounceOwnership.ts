@@ -1,5 +1,6 @@
 import {
   getACLManager,
+  getAutoCompoundApe,
   getConduit,
   getConduitController,
   getFirstSigner,
@@ -159,6 +160,11 @@ export const step_20 = async (
         )
       );
     }
+
+    const cApe = await getAutoCompoundApe();
+    await waitForTx(
+      await cApe.transferOwnership(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
+    );
 
     await waitForTx(
       await nftFloorOracle.grantRole(

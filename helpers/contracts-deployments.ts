@@ -1,240 +1,242 @@
 import {DRE, getDb, getParaSpaceConfig} from "./misc-utils";
 import {
-  tEthereumAddress,
   eContractid,
-  tStringTokenSmallUnits,
   ERC20TokenContractId,
   ERC721TokenContractId,
+  tEthereumAddress,
+  tStringTokenSmallUnits,
 } from "./types";
 import {
   ACLManager,
+  ACLManager__factory,
+  ApeCoinStaking__factory,
   ApeStakingLogic,
   ApeStakingLogic__factory,
   ATokenDebtToken,
   ATokenDebtToken__factory,
   AuctionLogic,
   AuctionLogic__factory,
+  AutoCompoundApe__factory,
+  Azuki,
+  Azuki__factory,
   BlurAdapter,
   BlurAdapter__factory,
   BlurExchange,
   BlurExchange__factory,
+  BoredApeYachtClub,
+  BoredApeYachtClub__factory,
   BorrowLogic,
-  BorrowLogic__factory,
+  BorrowLogic__factory, CApeDebtToken, CApeDebtToken__factory,
+  CloneX,
+  CloneX__factory,
   ConduitController,
+  ConduitController__factory,
   ConfiguratorLogic,
+  ConfiguratorLogic__factory,
+  CryptoPunksMarket,
+  CryptoPunksMarket__factory,
   CurrencyManager,
+  CurrencyManager__factory,
   DefaultReserveAuctionStrategy,
+  DefaultReserveAuctionStrategy__factory,
   DefaultReserveInterestRateStrategy,
+  DefaultReserveInterestRateStrategy__factory,
   DelegationAwarePToken,
+  DelegationAwarePToken__factory,
+  Doodles,
+  Doodles__factory,
   ERC721Delegate,
+  ERC721Delegate__factory,
   ERC721OracleWrapper,
+  ERC721OracleWrapper__factory,
   ExecutionDelegate,
   ExecutionDelegate__factory,
   ExecutionManager,
+  ExecutionManager__factory,
   ExecutorWithTimelock,
   ExecutorWithTimelock__factory,
   FlashClaimLogic,
   FlashClaimLogic__factory,
   InitializableImmutableAdminUpgradeabilityProxy,
+  InitializableImmutableAdminUpgradeabilityProxy__factory,
+  Land,
+  Land__factory,
   LiquidationLogic,
+  LiquidationLogic__factory,
   LooksRareAdapter,
+  LooksRareAdapter__factory,
   LooksRareExchange,
+  LooksRareExchange__factory,
   MarketplaceLogic,
+  MarketplaceLogic__factory,
+  Meebits,
+  Meebits__factory,
   MerkleVerifier,
   MerkleVerifier__factory,
+  MintableDelegationERC20,
+  MintableDelegationERC20__factory,
   MintableERC20,
+  MintableERC20__factory,
   MintableERC721,
+  MintableERC721__factory,
   MintableERC721Logic,
   MintableERC721Logic__factory,
   MockAggregator,
+  MockAggregator__factory,
   MockAirdropProject,
+  MockAirdropProject__factory,
+  MockAToken,
+  MockAToken__factory,
   MockIncentivesController,
+  MockIncentivesController__factory,
   MockInitializableFromConstructorImple,
+  MockInitializableFromConstructorImple__factory,
   MockInitializableImple,
+  MockInitializableImple__factory,
   MockInitializableImpleV2,
+  MockInitializableImpleV2__factory,
   MockNToken,
   MockNToken__factory,
   MockPToken,
+  MockPToken__factory,
   MockReentrantInitializableImple,
+  MockReentrantInitializableImple__factory,
   MockReserveAuctionStrategy,
   MockReserveAuctionStrategy__factory,
   MockReserveConfiguration,
+  MockReserveConfiguration__factory,
+  MockTokenFaucet__factory,
   MockVariableDebtToken,
+  MockVariableDebtToken__factory,
+  Moonbirds,
+  Moonbirds__factory,
+  MutantApeYachtClub,
+  MutantApeYachtClub__factory,
   NFTFloorOracle,
   NFTFloorOracle__factory,
   NToken,
+  NToken__factory,
   NTokenBAYC,
+  NTokenBAYC__factory,
   NTokenMAYC,
+  NTokenMAYC__factory,
   NTokenMoonBirds,
+  NTokenMoonBirds__factory,
   NTokenUniswapV3,
+  NTokenUniswapV3__factory,
   ParaProxy__factory,
   ParaSpaceOracle,
+  ParaSpaceOracle__factory,
   PausableZoneController,
+  PausableZoneController__factory,
   PolicyManager,
   PolicyManager__factory,
   PoolAddressesProvider,
+  PoolAddressesProvider__factory,
   PoolAddressesProviderRegistry,
+  PoolAddressesProviderRegistry__factory,
   PoolApeStaking,
   PoolApeStaking__factory,
   PoolConfigurator,
+  PoolConfigurator__factory,
   PoolCore,
+  PoolCore__factory,
   PoolLogic,
   PoolLogic__factory,
   PoolMarketplace,
+  PoolMarketplace__factory,
   PoolParameters,
+  PoolParameters__factory,
   PriceOracle,
+  PriceOracle__factory,
   ProtocolDataProvider,
+  ProtocolDataProvider__factory,
   PToken,
+  PToken__factory,
   PTokenAToken,
+  PTokenAToken__factory, PTokenCApe, PTokenCApe__factory,
   PTokenSApe,
   PTokenSApe__factory,
   PTokenStETH,
+  PTokenStETH__factory,
   ReservesSetupHelper,
+  ReservesSetupHelper__factory,
   RoyaltyFeeManager,
+  RoyaltyFeeManager__factory,
   RoyaltyFeeRegistry,
+  RoyaltyFeeRegistry__factory,
   Seaport,
+  Seaport__factory,
   SeaportAdapter,
+  SeaportAdapter__factory,
   StandardPolicyERC721,
   StandardPolicyERC721__factory,
+  StETH,
+  StETH__factory,
   StETHDebtToken,
   StETHDebtToken__factory,
   StrategyStandardSaleForFixedPrice,
+  StrategyStandardSaleForFixedPrice__factory,
   SupplyLogic,
   SupplyLogic__factory,
   TransferManagerERC1155,
+  TransferManagerERC1155__factory,
   TransferManagerERC721,
+  TransferManagerERC721__factory,
   TransferSelectorNFT,
+  TransferSelectorNFT__factory,
   UiIncentiveDataProvider,
+  UiIncentiveDataProvider__factory,
   UiPoolDataProvider,
+  UiPoolDataProvider__factory,
   UniswapV3Factory,
+  UniswapV3Factory__factory,
   UniswapV3OracleWrapper,
+  UniswapV3OracleWrapper__factory,
   UserFlashclaimRegistry,
+  UserFlashclaimRegistry__factory,
   VariableDebtToken,
+  VariableDebtToken__factory,
   WalletBalanceProvider,
+  WalletBalanceProvider__factory,
+  WETH9Mocked,
+  WETH9Mocked__factory,
   WETHGateway,
+  WETHGateway__factory,
+  WPunk,
+  WPunk__factory,
   WPunkGateway,
+  WPunkGateway__factory,
   X2Y2Adapter,
   X2Y2Adapter__factory,
   X2Y2R1,
+  X2Y2R1__factory,
+  AutoCompoundApe,
 } from "../types";
-import {StETH, MockAToken} from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
-  getApeStakingLogic,
-  getPunks,
-  getFirstSigner,
-  getWETH,
-  getMintableERC721Logic,
   getAllTokens,
+  getApeStakingLogic,
+  getAutoCompoundApe,
+  getFirstSigner,
+  getMintableERC721Logic,
+  getPunks,
+  getWETH,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
   getFunctionSignatures,
-} from "./contracts-helpers";
-import {
-  ProtocolDataProvider__factory,
-  PToken__factory,
-  NToken__factory,
-  ReservesSetupHelper__factory,
-  ParaSpaceOracle__factory,
-  DefaultReserveInterestRateStrategy__factory,
-  DefaultReserveAuctionStrategy__factory,
-  DelegationAwarePToken__factory,
-  PoolAddressesProvider__factory,
-  PoolAddressesProviderRegistry__factory,
-  PoolConfigurator__factory,
-  MintableDelegationERC20__factory,
-  MintableERC20__factory,
-  MintableERC721__factory,
-  MockAggregator__factory,
-  MockPToken__factory,
-  MockVariableDebtToken__factory,
-  PriceOracle__factory,
-  VariableDebtToken__factory,
-  WETH9Mocked__factory,
-  ConfiguratorLogic__factory,
-  MockIncentivesController__factory,
-  MockInitializableFromConstructorImple__factory,
-  MockInitializableImple__factory,
-  MockInitializableImpleV2__factory,
-  InitializableImmutableAdminUpgradeabilityProxy__factory,
-  WETH9Mocked,
-  ACLManager__factory,
-  MockReserveConfiguration__factory,
-  MockReentrantInitializableImple__factory,
-  UiPoolDataProvider__factory,
-  UiIncentiveDataProvider__factory,
-  WalletBalanceProvider__factory,
-  WETHGateway__factory,
-  ERC721OracleWrapper__factory,
-  CryptoPunksMarket__factory,
-  WPunk__factory,
-  WPunkGateway__factory,
-  WPunk,
-  CryptoPunksMarket,
-  LiquidationLogic__factory,
-  BoredApeYachtClub__factory,
-  MutantApeYachtClub__factory,
-  Doodles__factory,
-  Doodles,
-  BoredApeYachtClub,
-  MutantApeYachtClub,
-  MockTokenFaucet__factory,
-  Azuki,
-  CloneX,
-  Land,
-  Meebits,
-  Moonbirds,
-  Azuki__factory,
-  CloneX__factory,
-  Moonbirds__factory,
-  Meebits__factory,
-  Land__factory,
-  ConduitController__factory,
-  Seaport__factory,
-  PausableZoneController__factory,
-  CurrencyManager__factory,
-  ExecutionManager__factory,
-  LooksRareExchange__factory,
-  RoyaltyFeeManager__factory,
-  RoyaltyFeeRegistry__factory,
-  TransferSelectorNFT__factory,
-  TransferManagerERC721__factory,
-  TransferManagerERC1155__factory,
-  StrategyStandardSaleForFixedPrice__factory,
-  X2Y2R1__factory,
-  ERC721Delegate__factory,
-  NTokenMoonBirds__factory,
-  UniswapV3OracleWrapper__factory,
-  NTokenUniswapV3__factory,
-  MarketplaceLogic__factory,
-  SeaportAdapter__factory,
-  LooksRareAdapter__factory,
-  UniswapV3Factory__factory,
-  StETH__factory,
-  MockAToken__factory,
-  PTokenAToken__factory,
-  PTokenStETH__factory,
-  UserFlashclaimRegistry__factory,
-  MockAirdropProject__factory,
-  PoolCore__factory,
-  PoolParameters__factory,
-  PoolMarketplace__factory,
-  ApeCoinStaking__factory,
-  NTokenBAYC__factory,
-  NTokenMAYC__factory,
-} from "../types";
-
-import * as nonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
-import * as uniSwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
-import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json";
-import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
-
-import {
-  withSaveAndVerify,
   insertContractAddressInDb,
+  withSaveAndVerify,
 } from "./contracts-helpers";
-import {MintableDelegationERC20} from "../types";
+
+import * as nonfungiblePositionManager
+  from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
+import * as uniSwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
+import * as nFTDescriptor
+  from "@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json";
+import * as nonfungibleTokenPositionDescriptor
+  from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Address} from "hardhat-deploy/dist/types";
 import {Contract} from "ethers";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
@@ -492,6 +494,9 @@ export const deployPoolComponents = async (
     await getFirstSigner()
   );
 
+  const allTokens = await getAllTokens();
+  const cApe = await getAutoCompoundApe();
+
   const {
     poolCoreSelectors,
     poolParametersSelectors,
@@ -530,7 +535,7 @@ export const deployPoolComponents = async (
     poolApeStaking: (await withSaveAndVerify(
       poolApeStaking,
       eContractid.PoolApeStakingImpl,
-      [provider],
+        [provider, cApe.address, allTokens.APE.address],
       verify,
       false,
       apeStakingLibraries,
@@ -775,7 +780,8 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | MintableERC20
       | WETH9Mocked
       | StETH
-      | MockAToken;
+      | MockAToken
+      | AutoCompoundApe;
   } = {};
 
   const paraSpaceConfig = getParaSpaceConfig();
@@ -845,6 +851,11 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
           [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
           verify
         );
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.cAPE) {
+        console.log("cAPE deploy later....");
         continue;
       }
 
@@ -2173,3 +2184,43 @@ export const deployMockTokenFaucet = async (
     [erc20configs, erc721configs, punkConfig],
     verify
   );
+
+export const deployAutoCompoundApe = async (
+    verify?: boolean
+) => {
+  const allTokens = await getAllTokens();
+  const ApeCoinStaking = await deployApeCoinStaking();
+  const args = [
+    allTokens.APE.address,
+    ApeCoinStaking.address,
+  ];
+
+  return await withSaveAndVerify(
+      new AutoCompoundApe__factory(await getFirstSigner()),
+      eContractid.cAPE,
+      [...args],
+      verify
+  ) as AutoCompoundApe;
+}
+
+export const deployPTokenCApe = async (
+    poolAddress: tEthereumAddress,
+    verify?: boolean
+) =>
+    withSaveAndVerify(
+        new PTokenCApe__factory(await getFirstSigner()),
+        eContractid.PTokenCApeImpl,
+        [poolAddress],
+        verify
+    ) as Promise<PTokenCApe>;
+
+export const deployCApeDebtToken = async (
+    poolAddress: tEthereumAddress,
+    verify?: boolean
+) =>
+    withSaveAndVerify(
+        new CApeDebtToken__factory(await getFirstSigner()),
+        eContractid.CApeDebtToken,
+        [poolAddress],
+        verify
+    ) as Promise<CApeDebtToken>;

@@ -72,6 +72,7 @@ describe("SApe Pool Operation Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -121,6 +122,7 @@ describe("SApe Pool Operation Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -172,6 +174,7 @@ describe("SApe Pool Operation Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
