@@ -60,7 +60,13 @@ export const step_16 = async (verify = false) => {
       protocolFeeRecipient,
       verify
     );
-    const looksRareAdapter = await deployLooksRareAdapter(verify);
+    const standardSaleForFixedPrice =
+      await deployStrategyStandardSaleForFixedPrice("0", verify);
+    const looksRareAdapter = await deployLooksRareAdapter(
+      addressesProvider.address,
+      standardSaleForFixedPrice.address,
+      verify
+    );
     await waitForTx(
       await addressesProvider.setMarketplace(
         LOOKSRARE_ID,
@@ -91,8 +97,6 @@ export const step_16 = async (verify = false) => {
         GLOBAL_OVERRIDES
       )
     );
-    const standardSaleForFixedPrice =
-      await deployStrategyStandardSaleForFixedPrice("0", verify);
     await waitForTx(
       await executionManager.addStrategy(
         standardSaleForFixedPrice.address,

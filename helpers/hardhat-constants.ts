@@ -67,9 +67,10 @@ export const DEPLOY_INCREMENTAL =
   process.env.DEPLOY_INCREMENTAL == "true" ? true : false;
 
 export const KEYSTORE_PATH = "keystore";
-export const DEPLOYER_PRIVATE_KEY = getPrivateKeyfromEncryptedJson(
-  process.env.DEPLOYER_KEYSTORE_PATH
-);
+export const DEPLOYER_PRIVATE_KEY = (
+  process.env.DEPLOYER_PRIVATE_KEY ||
+  getPrivateKeyfromEncryptedJson(process.env.DEPLOYER_KEYSTORE_PATH)
+).trim();
 export const DEPLOYER_MNEMONIC = (
   process.env.DEPLOYER_MNEMONIC ||
   "test test test test test test test test test test test junk"
