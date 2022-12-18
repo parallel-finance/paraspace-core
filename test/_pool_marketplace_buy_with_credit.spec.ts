@@ -11,7 +11,7 @@ import {
   getOfferOrConsiderationItem,
   toBN,
 } from "../helpers/seaport-helpers/encoding";
-import {createOrder, createRunput} from "../helpers/x2y2-helpers";
+import {createX2Y2Order, createRunput} from "../helpers/x2y2-helpers";
 import {
   generateMakerOrderTypedData,
   MakerOrder,
@@ -1136,7 +1136,7 @@ describe("Leveraged Buy - Positive tests", () => {
     );
     const now = Math.floor(Date.now() / 1000);
 
-    const order = await createOrder({
+    const order = await createX2Y2Order({
       chainId: (await DRE.ethers.provider.getNetwork()).chainId,
       signer: maker.signer,
       tokenAddress: doodles.address,

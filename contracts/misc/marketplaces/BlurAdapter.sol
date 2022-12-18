@@ -8,6 +8,7 @@ import {Input} from "../../dependencies/blur-exchange/OrderStructs.sol";
 import {IBlurExchange} from "../../dependencies/blur-exchange/IBlurExchange.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
+import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 
 /**
  * @title Blur Adapter
@@ -15,11 +16,17 @@ import {IMarketplace} from "../../interfaces/IMarketplace.sol";
  * @notice Implements the NFT <=> ERC20 exchange logic via Blur Exchange
  */
 contract BlurAdapter is IMarketplace {
-    constructor() {}
+    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    address public immutable POLICY_ALLOWED;
 
-    function getAskOrderInfo(bytes memory params, address)
+    constructor(IPoolAddressesProvider provider, address policyAllowed) {
+        ADDRESSES_PROVIDER = provider;
+        POLICY_ALLOWED = policyAllowed;
+    }
+
+    function getAskOrderInfo(bytes memory params)
         external
-        pure
+        view
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
@@ -28,6 +35,16 @@ contract BlurAdapter is IMarketplace {
             (Input, Input)
         );
         orderInfo.maker = sell.order.trader;
+        orderInfo.taker = buy.order.trader;
+
+        require(
+            sell.order.matchingPolicy == POLICY_ALLOWED, // must be StandardSaleForFixedPrice matching policy
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
+        require(
+            orderInfo.taker == ADDRESSES_PROVIDER.getPool(),
+            Errors.INVALID_ORDER_TAKER
+        );
 
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem(

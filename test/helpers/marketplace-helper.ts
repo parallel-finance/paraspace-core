@@ -13,7 +13,7 @@ import {
   toBN,
   toFulfillment,
 } from "../../helpers/seaport-helpers/encoding";
-import {createOrder, createRunput} from "../../helpers/x2y2-helpers";
+import {createX2Y2Order, createRunput} from "../../helpers/x2y2-helpers";
 import {
   generateMakerOrderTypedData,
   MakerOrder,
@@ -257,7 +257,7 @@ export async function executeX2Y2BuyWithCredit(
   const now = Math.floor(Date.now() / 1000);
   const pool = await getPoolProxy();
 
-  const order = await createOrder({
+  const order = await createX2Y2Order({
     chainId: (await DRE.ethers.provider.getNetwork()).chainId,
     signer: maker.signer,
     tokenAddress: tokenToBuy.address,
