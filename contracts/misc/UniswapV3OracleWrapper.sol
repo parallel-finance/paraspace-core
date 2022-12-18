@@ -240,34 +240,34 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         if (oracleData.token1Decimal == oracleData.token0Decimal) {
             // multiply by 10^18 and 10^18 scaling factor then divide by 10^9 to preserve price in wei
             oracleData.sqrtPriceX96 = uint160(
-                SqrtLib.sqrt(
+                (SqrtLib.sqrt(
                     ((oracleData.token0Price * (1E36)) /
                         (oracleData.token1Price))
-                ) * 2**96 / 1E18
+                ) * 2**96) / 1E18
             );
         } else if (oracleData.token1Decimal > oracleData.token0Decimal) {
             // multiple by 10^(decimalB - decimalA) and 10^18 scaling factor to preserve price in wei
             oracleData.sqrtPriceX96 = uint160(
-                SqrtLib.sqrt(
+                (SqrtLib.sqrt(
                     (oracleData.token0Price *
                         (10 **
                             (36 +
                                 oracleData.token1Decimal -
                                 oracleData.token0Decimal))) /
                         (oracleData.token1Price)
-                ) * 2**96 / 1E18
+                ) * 2**96) / 1E18
             );
         } else {
             // multiple by 10^(decimalA - decimalB) and 10^18 scaling factor  to preserve price in wei then divide by the same number
             oracleData.sqrtPriceX96 = uint160(
-                SqrtLib.sqrt(
+                (SqrtLib.sqrt(
                     (oracleData.token0Price *
                         (10 **
                             (36 +
                                 oracleData.token0Decimal -
                                 oracleData.token1Decimal))) /
                         (oracleData.token1Price)
-                ) * 2**96 /
+                ) * 2**96) /
                     10 **
                         (18 +
                             oracleData.token0Decimal -

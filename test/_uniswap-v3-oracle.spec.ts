@@ -93,8 +93,8 @@ describe("Uniswap V3 Oracle", () => {
 
     const uniV3Oracle = await getUniswapV3OracleWrapper();
     const liquidityAmount = await uniV3Oracle.getLiquidityAmount(tokenId);
-    console.log('userDaiAmount', liquidityAmount.token0Amount);
-    console.log('userWethAmount', liquidityAmount.token1Amount);
+    console.log("userDaiAmount", liquidityAmount.token0Amount);
+    console.log("userWethAmount", liquidityAmount.token1Amount);
     almostEqual(liquidityAmount.token0Amount, liquidityDaiAmount);
     almostEqual(liquidityAmount.token1Amount, liquidityWethAmount);
 
@@ -535,7 +535,6 @@ describe("Uniswap V3 Oracle", () => {
     expect(tokenPrice).to.gt(lastTokenPrice);
   });
 
-
   it("test with dai and weth:(token0 decimal equals token1 decimal) with large price difference [ @skip-on-coverage ]", async () => {
     const {
       users: [user1, trader],
@@ -553,12 +552,12 @@ describe("Uniswap V3 Oracle", () => {
     await approveTo({token: weth, user: user1, target: nft.address});
     await oracle.setAssetPrice(dai.address, "1"); //ETH = 1^18 dai
     await oracle.setAssetPrice(weth.address, "10000000000000000000"); //weth = 10 ETH
-    
+
     const fee = 3000;
     const tickSpacing = fee / 50;
     const initialPrice = encodeSqrtRatioX96(1, "10000000000000000000");
     const lowerPrice = encodeSqrtRatioX96(1, "100000000000000000000");
-    const upperPrice =  encodeSqrtRatioX96(1, "1000000000000000000");
+    const upperPrice = encodeSqrtRatioX96(1, "1000000000000000000");
     await createNewPool({
       positionManager: nft,
       token0: dai,
@@ -591,7 +590,7 @@ describe("Uniswap V3 Oracle", () => {
 
     almostEqual(liquidityAmount.token0Amount, liquidityDaiAmount);
     almostEqual(liquidityAmount.token1Amount, liquidityWethAmount);
-    
+
     let lpFee = await uniV3Oracle.getLpFeeAmount(tokenId);
     expect(lpFee.token0Amount).to.eq(0);
     expect(lpFee.token1Amount).to.eq(0);
@@ -600,7 +599,9 @@ describe("Uniswap V3 Oracle", () => {
 
     almostEqual(
       tokenPrice,
-      liquidityWethAmount.mul("10").add(liquidityDaiAmount.div("1000000000000000000"))
+      liquidityWethAmount
+        .mul("10")
+        .add(liquidityDaiAmount.div("1000000000000000000"))
     );
   });
 });
