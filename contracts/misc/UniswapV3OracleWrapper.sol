@@ -13,11 +13,15 @@ import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
 import {FullMath} from "../dependencies/uniswap/libraries/FullMath.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {SafeCast} from "../dependencies/univ3/libraries/SafeCast.sol";
+import {FixedPoint96} from "../dependencies/univ3/libraries/FixedPoint96.sol";
+import {console} from "hardhat/console.sol";
 
 contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     IUniswapV3Factory immutable UNISWAP_V3_FACTORY;
     INonfungiblePositionManager immutable UNISWAP_V3_POSITION_MANAGER;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    using SafeCast for uint256;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     constructor(
@@ -159,6 +163,17 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         );
 
         PairOracleData memory oracleData = _getOracleData(positionData);
+        console.log("liquidity:", positionData.liquidity);
+        console.log("sqrtPriceX96:", oracleData.sqrtPriceX96);
+        console.log(
+            "priceLower:",
+            TickMath.getSqrtRatioAtTick(positionData.tickLower)
+        );
+        console.log(
+            "priceUpper:",
+            TickMath.getSqrtRatioAtTick(positionData.tickUpper)
+        );
+        console.log("price:", positionData.currentPrice);
 
         (uint256 liquidityAmount0, uint256 liquidityAmount1) = LiquidityAmounts
             .getAmountsForLiquidity(
@@ -172,6 +187,17 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
             uint256 feeAmount0,
             uint256 feeAmount1
         ) = getLpFeeAmountFromPositionData(positionData);
+
+        console.log("===============================");
+
+        console.log("liquidityAmount0: ", liquidityAmount0);
+        console.log("liquidityAmount1: ", liquidityAmount1);
+
+        console.log("feeAmount0: ", feeAmount0);
+        console.log("feeAmount1: ", feeAmount1);
+
+        console.log("token0Price: ", oracleData.token0Price);
+        console.log("token1Price: ", oracleData.token1Price);
 
         return
             (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
@@ -235,45 +261,53 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         oracleData.token1Decimal = IERC20Detailed(positionData.token1)
             .decimals();
 
-        // TODO using bit shifting for the 2^96
-        // positionData.sqrtPriceX96;
-        if (oracleData.token1Decimal == oracleData.token0Decimal) {
-            // multiply by 10^18 and 10^18 scaling factor then divide by 10^9 to preserve price in wei
-            oracleData.sqrtPriceX96 = uint160(
-                (SqrtLib.sqrt(
-                    ((oracleData.token0Price * (1E36)) /
-                        (oracleData.token1Price))
-                ) * 2**96) / 1E18
-            );
-        } else if (oracleData.token1Decimal > oracleData.token0Decimal) {
-            // multiple by 10^(decimalB - decimalA) and 10^18 scaling factor to preserve price in wei
-            oracleData.sqrtPriceX96 = uint160(
-                (SqrtLib.sqrt(
-                    (oracleData.token0Price *
-                        (10 **
-                            (36 +
-                                oracleData.token1Decimal -
-                                oracleData.token0Decimal))) /
-                        (oracleData.token1Price)
-                ) * 2**96) / 1E18
-            );
-        } else {
-            // multiple by 10^(decimalA - decimalB) and 10^18 scaling factor  to preserve price in wei then divide by the same number
-            oracleData.sqrtPriceX96 = uint160(
-                (SqrtLib.sqrt(
-                    (oracleData.token0Price *
-                        (10 **
-                            (36 +
-                                oracleData.token0Decimal -
-                                oracleData.token1Decimal))) /
-                        (oracleData.token1Price)
-                ) * 2**96) /
-                    10 **
-                        (18 +
-                            oracleData.token0Decimal -
-                            oracleData.token1Decimal)
-            );
-        }
+        // method 1
+        // | 41 for price => max price: 1E23 ETH
+        // | 12 for decimal
+        // | 24 for keeping precision
+        console.log("token0Price: ", oracleData.token0Price);
+        console.log("token1Price: ", oracleData.token1Price);
+        console.log("token0Decimal: ", oracleData.token0Decimal);
+        console.log("token1Decimal: ", oracleData.token1Decimal);
+        // sqrt(1e30 * 10 ** (24 + 18 - 6) / 1e12)  << 96 / 1e18 = 9.6e-17
+        oracleData.sqrtPriceX96 = ((SqrtLib.sqrt(
+            ((oracleData.token0Price *
+                10 **
+                    (24 +
+                        oracleData.token1Decimal -
+                        oracleData.token0Decimal)) / (oracleData.token1Price))
+        ) << FixedPoint96.RESOLUTION) / 1E12).toUint160();
+
+        // method 2
+        // // positionData.sqrtPriceX96;
+        // if (oracleData.token1Decimal == oracleData.token0Decimal) {
+        //     // multiply by 10^18 and 10^18 scaling factor then divide by 10^9 to preserve price in wei
+        //     oracleData.sqrtPriceX96 = ((SqrtLib.sqrt(
+        //         ((oracleData.token0Price * (1E36)) / (oracleData.token1Price))
+        //     ) << FixedPoint96.RESOLUTION) / 1E18).toUint160();
+        // } else if (oracleData.token1Decimal > oracleData.token0Decimal) {
+        //     // multiple by 10^(decimalB - decimalA) and 10^18 scaling factor to preserve price in wei
+        //     oracleData.sqrtPriceX96 = ((SqrtLib.sqrt(
+        //         (oracleData.token0Price *
+        //             (10 **
+        //                 (36 +
+        //                     oracleData.token1Decimal -
+        //                     oracleData.token0Decimal))) /
+        //             (oracleData.token1Price)
+        //     ) << FixedPoint96.RESOLUTION) / 1E18).toUint160();
+        // } else {
+        //     // multiple by 10^(decimalA - decimalB) and 10^18 scaling factor  to preserve price in wei then divide by the same number
+        //     oracleData.sqrtPriceX96 = ((SqrtLib.sqrt(
+        //         (oracleData.token0Price *
+        //             (10 **
+        //                 (36 +
+        //                     oracleData.token0Decimal -
+        //                     oracleData.token1Decimal))) /
+        //             (oracleData.token1Price)
+        //     ) << FixedPoint96.RESOLUTION) /
+        //         10**(18 + oracleData.token0Decimal - oracleData.token1Decimal))
+        //         .toUint160();
+        // }
 
         return oracleData;
     }
