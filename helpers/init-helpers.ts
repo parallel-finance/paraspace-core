@@ -263,6 +263,7 @@ export const initReservesByHelper = async (
         eContractid.NTokenUniswapV3Impl,
         eContractid.NTokenBAYCImpl,
         eContractid.NTokenMAYCImpl,
+        eContractid.NTokenBAKCImpl,
       ].includes(xTokenImpl)
     ) {
       xTokenType[symbol] = "nft";
@@ -444,7 +445,7 @@ export const initReservesByHelper = async (
                 )
             ).xTokenAddress;
             nTokenBAKCImplementationAddress = (
-                await deployNTokenBAKCImpl(apeCoinStaking, pool.address, nBAYC, nMAYC, verify)
+                await deployNTokenBAKCImpl(pool.address, apeCoinStaking, nBAYC, nMAYC, verify)
             ).address;
           }
           xTokenToUse = nTokenBAKCImplementationAddress;

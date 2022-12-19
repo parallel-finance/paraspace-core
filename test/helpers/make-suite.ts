@@ -49,6 +49,7 @@ import {
   getLooksRareAdapter,
   getX2Y2Adapter,
   getBlurAdapter,
+  getNTokenBAKC,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -68,6 +69,7 @@ import {
   IPool,
   LooksRareAdapter,
   NFTFloorOracle,
+  NTokenBAKC,
   NTokenBAYC,
   NTokenMAYC,
   NTokenMoonBirds,
@@ -169,6 +171,8 @@ export interface TestEnv {
   mayc: MintableERC721;
   nDOODLE: NToken;
   doodles: MintableERC721;
+  bakc: MintableERC721;
+  nBAKC: NTokenBAKC;
   mockTokenFaucet: MockTokenFaucet;
   wPunkGateway: WPunkGateway;
   wETHGateway: WETHGateway;
@@ -226,6 +230,7 @@ export async function initializeMakeSuite() {
     usdt: {} as MintableERC20,
     nBAYC: {} as NTokenBAYC,
     nMOONBIRD: {} as NTokenMoonBirds,
+    nBAKC: {} as NTokenBAKC,
     bayc: {} as MintableERC721,
     addressesProvider: {} as PoolAddressesProvider,
     registry: {} as PoolAddressesProviderRegistry,
@@ -239,6 +244,7 @@ export async function initializeMakeSuite() {
     ape: {} as MintableERC20,
     mayc: {} as MintableERC721,
     doodles: {} as MintableERC721,
+    bakc: {} as MintableERC721,
     mockTokenFaucet: {} as MockTokenFaucet,
     wPunkGateway: {} as WPunkGateway,
     wETHGateway: {} as WETHGateway,
@@ -359,6 +365,10 @@ export async function initializeMakeSuite() {
     (xToken) => xToken.symbol === NTokenContractId.nDOODLE
   )?.tokenAddress;
 
+  const nBAKCAddress = allTokens.find(
+      (xToken) => xToken.symbol === NTokenContractId.nBAKC
+  )?.tokenAddress;
+
   const nWPunkAddress = allTokens.find(
     (xToken) => xToken.symbol === NTokenContractId.nWPUNKS
   )?.tokenAddress;
@@ -436,6 +446,9 @@ export async function initializeMakeSuite() {
   const doodlesAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.DOODLE
   )?.tokenAddress;
+  const bakcAddress = reservesTokens.find(
+    (token) => token.symbol === ERC721TokenContractId.BAKC
+  )?.tokenAddress;
   const moonbirdsAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.MOONBIRD
   )?.tokenAddress;
@@ -468,6 +481,7 @@ export async function initializeMakeSuite() {
   testEnv.nBAYC = await getNTokenBAYC(nBAYCAddress);
   testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
   testEnv.nDOODLE = await getNToken(nDOODLEAddress);
+  testEnv.nBAKC = await getNTokenBAKC(nBAKCAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);
 
@@ -491,6 +505,7 @@ export async function initializeMakeSuite() {
   testEnv.ape = await getMintableERC20(apeAddress);
   testEnv.mayc = await getMintableERC721(maycAddress);
   testEnv.doodles = await getMintableERC721(doodlesAddress);
+  testEnv.bakc = await getMintableERC721(bakcAddress);
   testEnv.moonbirds = await getMoonBirds(moonbirdsAddress);
   testEnv.uniswapV3Factory = await getUniswapV3Factory();
   testEnv.nftPositionManager = await getNonfungiblePositionManager();

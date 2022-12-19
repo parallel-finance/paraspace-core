@@ -18,7 +18,7 @@ import {INToken} from "../../interfaces/INToken.sol";
  *
  * @notice Implementation of the NTokenBAKC for the ParaSpace protocol
  */
-abstract contract NTokenBAKC is NToken {
+contract NTokenBAKC is NToken {
     using SafeERC20 for IERC20;
 
     ApeCoinStaking immutable _apeCoinStaking;
@@ -29,7 +29,12 @@ abstract contract NTokenBAKC is NToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address apeCoinStaking, address _nBAYC, address _nMAYC) NToken(pool, false) {
+    constructor(
+        IPool pool,
+        address apeCoinStaking,
+        address _nBAYC,
+        address _nMAYC
+    ) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
         nBAYC = _nBAYC;
         nMAYC = _nMAYC;
