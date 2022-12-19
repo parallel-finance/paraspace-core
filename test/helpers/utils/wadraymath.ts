@@ -9,7 +9,7 @@ import {
   WAD_RAY_RATIO,
   HALF_PERCENTAGE,
   PERCENTAGE_FACTOR,
-} from "../../../deploy/helpers/constants";
+} from "../../../helpers/constants";
 
 declare module "@ethersproject/bignumber" {
   interface BigNumber {

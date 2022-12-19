@@ -1,29 +1,24 @@
 import {expect} from "chai";
-import {
-  DRE,
-  evmRevert,
-  evmSnapshot,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {DRE, evmRevert, evmSnapshot, waitForTx} from "../helpers/misc-utils";
 import {
   convertToCurrencyDecimals,
   createSeaportOrder,
   getEthersSigners,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
-import creditType from "../deploy/helpers/eip-712-types/credit";
+import creditType from "../helpers/eip-712-types/credit";
 import {
   AdvancedOrder,
   ConsiderationItem,
-} from "../deploy/helpers/seaport-helpers/types";
+} from "../helpers/seaport-helpers/types";
 import {
   buildResolver,
   convertSignatureToEIP2098,
   getOfferOrConsiderationItem,
   toBN,
   toFulfillment,
-} from "../deploy/helpers/seaport-helpers/encoding";
-import {PARASPACE_SEAPORT_ID} from "../deploy/helpers/constants";
+} from "../helpers/seaport-helpers/encoding";
+import {PARASPACE_SEAPORT_ID} from "../helpers/constants";
 import {arrayify, splitSignature} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {
@@ -36,9 +31,9 @@ import {MintableERC20} from "../types";
 import {
   getMintableERC20,
   getParaSpaceOracle,
-} from "../deploy/helpers/contracts-getters";
-import {ProtocolErrors} from "../deploy/helpers/types";
-import {merkleTree} from "../deploy/helpers/seaport-helpers/criteria";
+} from "../helpers/contracts-getters";
+import {ProtocolErrors} from "../helpers/types";
+import {merkleTree} from "../helpers/seaport-helpers/criteria";
 import {executeAcceptBidWithCredit} from "./helpers/marketplace-helper";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -1733,6 +1728,6 @@ describe("Leveraged Bid - Negative tests", () => {
           gasLimit: 5000000,
         }
       )
-    ).to.be.revertedWith("CryptoPunksMarket: punk not actually for sale");
+    ).to.be.revertedWith("WPunkGateway: Not owner of Punk");
   });
 });

@@ -36,7 +36,7 @@ contract PToken is
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
 
-    uint256 public constant PTOKEN_REVISION = 0x1;
+    uint256 public constant PTOKEN_REVISION = 120;
 
     address internal _treasury;
     address internal _underlyingAsset;
@@ -118,6 +118,7 @@ contract PToken is
     /// @inheritdoc IPToken
     function mintToTreasury(uint256 amount, uint256 index)
         external
+        virtual
         override
         onlyPool
     {
@@ -258,7 +259,7 @@ contract PToken is
         address to,
         uint256 amount,
         bool validate
-    ) internal {
+    ) internal virtual {
         address underlyingAsset = _underlyingAsset;
 
         uint256 index = POOL.getReserveNormalizedIncome(underlyingAsset);
@@ -266,7 +267,7 @@ contract PToken is
         uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
         uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
 
-        super._transfer(from, to, amount.rayDiv(index).toUint128());
+        super._transferScaled(from, to, amount, index);
 
         if (validate) {
             POOL.finalizeTransfer(
@@ -279,6 +280,8 @@ contract PToken is
                 toBalanceBefore
             );
         }
+
+        emit Transfer(from, to, amount);
     }
 
     /**

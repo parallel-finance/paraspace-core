@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {waitForTx} from "../helpers/misc-utils";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   almostEqual,
   createNewPool,
@@ -12,7 +12,7 @@ import {
   approveTo,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {DRE} from "../deploy/helpers/misc-utils";
+import {DRE} from "../helpers/misc-utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 

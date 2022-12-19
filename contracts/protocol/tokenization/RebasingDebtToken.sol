@@ -4,6 +4,8 @@ pragma solidity 0.8.10;
 import {IPool} from "../../interfaces/IPool.sol";
 import {VariableDebtToken} from "./VariableDebtToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
+import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
 /**
  * @title Rebasing Debt Token
@@ -12,6 +14,7 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
  */
 contract RebasingDebtToken is VariableDebtToken {
     using WadRayMath for uint256;
+    using SafeCast for uint256;
 
     constructor(IPool pool) VariableDebtToken(pool) {
         //intentionally empty
@@ -113,7 +116,7 @@ contract RebasingDebtToken is VariableDebtToken {
             return 0;
         }
 
-        return ((scaledBalance * rebasingIndex) / WadRayMath.RAY);
+        return scaledBalance.rayMul(rebasingIndex);
     }
 
     function _scaledTotalSupply(uint256 rebasingIndex)
@@ -123,7 +126,7 @@ contract RebasingDebtToken is VariableDebtToken {
     {
         uint256 scaledTotalSupply_ = super.scaledTotalSupply();
 
-        return ((scaledTotalSupply_ * rebasingIndex) / WadRayMath.RAY);
+        return scaledTotalSupply_.rayMul(rebasingIndex);
     }
 
     /**
@@ -132,5 +135,78 @@ contract RebasingDebtToken is VariableDebtToken {
     function lastRebasingIndex() internal view virtual returns (uint256) {
         // returns 1 RAY by default which makes it identical to VariableDebtToken in behaviour
         return WadRayMath.RAY;
+    }
+
+    /**
+     * @notice Implements the basic logic to mint a scaled balance token.
+     * @param caller The address performing the mint
+     * @param onBehalfOf The address of the user that will receive the scaled tokens
+     * @param amount The amount of tokens getting minted
+     * @param index The next liquidity index of the reserve
+     * @return `true` if the the previous balance of the user was 0
+     **/
+    function _mintScaled(
+        address caller,
+        address onBehalfOf,
+        uint256 amount,
+        uint256 index
+    ) internal virtual override returns (bool) {
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        uint256 amountScaled = amountRebased.rayDiv(index);
+        require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
+
+        uint256 scaledBalance = _scaledBalanceOf(onBehalfOf, rebasingIndex);
+        uint256 balanceIncrease = scaledBalance.rayMul(index) -
+            scaledBalance.rayMul(_userState[onBehalfOf].additionalData);
+
+        _userState[onBehalfOf].additionalData = index.toUint128();
+
+        _mint(onBehalfOf, amountScaled.toUint128());
+
+        uint256 amountToMint = amount + balanceIncrease;
+        emit Transfer(address(0), onBehalfOf, amountToMint);
+        emit Mint(caller, onBehalfOf, amountToMint, balanceIncrease, index);
+
+        return (scaledBalance == 0);
+    }
+
+    /**
+     * @notice Implements the basic logic to burn a scaled & rebased balance token.
+     * @dev In some instances, a burn transaction will emit a mint event
+     * if the amount to burn is less than the interest that the user accrued
+     * @param user The user which debt is burnt
+     * @param target The address that will receive the underlying, if any
+     * @param amount The amount getting burned
+     * @param index The variable debt index of the reserve
+     **/
+    function _burnScaled(
+        address user,
+        address target,
+        uint256 amount,
+        uint256 index
+    ) internal virtual override {
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        uint256 amountScaled = amountRebased.rayDiv(index);
+        require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
+
+        uint256 scaledBalance = _scaledBalanceOf(user, rebasingIndex);
+        uint256 balanceIncrease = scaledBalance.rayMul(index) -
+            scaledBalance.rayMul(_userState[user].additionalData);
+
+        _userState[user].additionalData = index.toUint128();
+
+        _burn(user, amountScaled.toUint128());
+
+        if (balanceIncrease > amount) {
+            uint256 amountToMint = balanceIncrease - amount;
+            emit Transfer(address(0), user, amountToMint);
+            emit Mint(user, user, amountToMint, balanceIncrease, index);
+        } else {
+            uint256 amountToBurn = amount - balanceIncrease;
+            emit Transfer(user, address(0), amountToBurn);
+            emit Burn(user, target, amountToBurn, balanceIncrease, index);
+        }
     }
 }

@@ -1,15 +1,16 @@
 import {expect} from "chai";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
+import {waitForTx} from "../helpers/misc-utils";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {
   buildPermitParams,
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
-} from "../deploy/helpers/contracts-helpers";
+  impersonateAddress,
+} from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
-import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
-import {DRE} from "../deploy/helpers/misc-utils";
+import {HARDHAT_CHAINID} from "../helpers/hardhat-constants";
+import {DRE} from "../helpers/misc-utils";
 import {getTestWallets} from "./helpers/utils/wallets";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -241,11 +242,7 @@ describe("WETH GateWay", () => {
       "50"
     );
 
-    await DRE.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [weth.address],
-    });
-    const wethSigner = await DRE.ethers.provider.getSigner(weth.address);
+    const wethSigner = (await impersonateAddress(weth.address)).signer;
 
     // user3 send eth to weth contract
     const [, , user3] = await DRE.ethers.getSigners();

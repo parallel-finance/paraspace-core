@@ -1,7 +1,7 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {waitForTx} from "../helpers/misc-utils";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   createNewPool,
   mintNewPosition,
@@ -11,7 +11,7 @@ import {
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 
 describe("Atomic tokens balance limit test", () => {
   let testEnv: TestEnv;

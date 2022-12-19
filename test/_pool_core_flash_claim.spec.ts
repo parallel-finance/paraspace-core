@@ -1,19 +1,14 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {
-  DRE,
-  evmRevert,
-  evmSnapshot,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
+import {DRE, evmRevert, evmSnapshot, waitForTx} from "../helpers/misc-utils";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
-} from "../deploy/helpers/contracts-getters";
-import {ProtocolErrors} from "../deploy/helpers/types";
+} from "../helpers/contracts-getters";
+import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   approveTo,
   createNewPool,
@@ -21,7 +16,12 @@ import {
   mintNewPosition,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {ONE_ADDRESS} from "../deploy/helpers/constants";
+import {ONE_ADDRESS} from "../helpers/constants";
+import {
+  borrowAndValidate,
+  changePriceAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
 
 describe("Flash Claim Test", () => {
   const tokenId = 0;
@@ -329,5 +329,66 @@ describe("Flash Claim Test", () => {
           receiverEncodedData
         )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
+  });
+
+  it("TC-flash-claim-06:user can not flash claim when HF < 1", async function () {
+    const {
+      users: [user1, depositor],
+      bayc,
+      pool,
+      weth,
+    } = testEnv;
+
+    await changePriceAndValidate(bayc, "40");
+
+    await supplyAndValidate(weth, "1000", depositor, true);
+
+    await borrowAndValidate(weth, "10", user1);
+
+    await changePriceAndValidate(bayc, "10");
+
+    const user_registry = await getUserFlashClaimRegistry();
+    await user_registry.connect(user1.signer).createReceiver();
+    const flashClaimReceiverAddr = await user_registry.userReceivers(
+      user1.address
+    );
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          bayc.address,
+          [0],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
+  });
+
+  it("TC-flash-claim-06:user can not flash claim use others receiver", async function () {
+    const {
+      users: [user1, user2],
+      bayc,
+      pool,
+    } = testEnv;
+
+    const user_registry = await getUserFlashClaimRegistry();
+    await user_registry.connect(user2.signer).createReceiver();
+    const flashClaimReceiverAddr = await user_registry.userReceivers(
+      user2.address
+    );
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          bayc.address,
+          [0],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith("not owner");
   });
 });

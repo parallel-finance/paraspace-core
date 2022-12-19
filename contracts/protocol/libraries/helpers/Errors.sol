@@ -123,4 +123,6 @@ library Errors {
     string public constant SAPE_NOT_ALLOWED = "128"; //operation is not allow for sApe.
     string public constant TOTAL_STAKING_AMOUNT_WRONG = "129"; //cash plus borrow amount not equal to total staking amount.
     string public constant NOT_THE_BAKC_OWNER = "130"; //user is not the bakc owner.
+    string public constant CALLER_NOT_EOA = "131"; //The caller of the function is not an EOA account
+    string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
 }

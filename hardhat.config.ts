@@ -11,15 +11,15 @@ import {
   REPORT_GAS,
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
-  DEPLOYER_MNEMONIC,
-} from "./deploy/helpers/hardhat-constants";
-import {accounts} from "./deploy/wallets";
-import {accounts as evmAccounts} from "./deploy/evm-wallets";
+  DEPLOYER,
+} from "./helpers/hardhat-constants";
+import {accounts} from "./wallets";
+import {accounts as evmAccounts} from "./evm-wallets";
 import {
   buildForkConfig,
   CHAINS_ID,
   NETWORKS_RPC_URL,
-} from "./deploy/helper-hardhat-config";
+} from "./helper-hardhat-config";
 import fs from "fs";
 
 dotenv.config();
@@ -32,11 +32,11 @@ import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
-import {eEthereumNetwork} from "./deploy/helpers/types";
+import {eEthereumNetwork} from "./helpers/types";
 
-require(`${path.join(__dirname, "deploy/tasks/misc")}/set-bre.ts`);
+require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
 
-["deployments"].forEach((folder) => {
+["deployments", "upgrade", "dev"].forEach((folder) => {
   const tasksPath = path.join(__dirname, "tasks", folder);
   fs.readdirSync(tasksPath)
     .filter((pth) => pth.includes(".ts"))
@@ -130,9 +130,7 @@ const hardhatConfig: HardhatUserConfig = {
     localhost: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.hardhat],
       chainId: CHAINS_ID[eEthereumNetwork.hardhat],
-      accounts: {
-        mnemonic: DEPLOYER_MNEMONIC,
-      },
+      accounts: DEPLOYER,
       gasPrice: "auto",
       gas: "auto",
       allowUnlimitedContractSize: true,
@@ -161,16 +159,12 @@ const hardhatConfig: HardhatUserConfig = {
     goerli: {
       chainId: GOERLI_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
-      accounts: {
-        mnemonic: DEPLOYER_MNEMONIC,
-      },
+      accounts: DEPLOYER,
     },
     mainnet: {
       chainId: MAINNET_CHAINID,
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
-      accounts: {
-        mnemonic: DEPLOYER_MNEMONIC,
-      },
+      accounts: DEPLOYER,
     },
   },
   etherscan: {

@@ -5,7 +5,7 @@ NETWORK                  := hardhat
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
 
-SCRIPT_PATH              := ./deploy/tasks/deployments/dev/1.ad-hoc.ts
+SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
 RUST_TOOLCHAIN           := nightly-2022-09-19
@@ -15,8 +15,8 @@ init: submodules
 	command -v rustup > /dev/null 2>&1 || bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_TOOLCHAIN}"
 	command -v typos > /dev/null 2>&1 || bash -c "cargo install typos-cli"
 	command -v forge > /dev/null 2>&1 || bash -c "curl -L https://foundry.paradigm.xyz | bash"
-	forge install --no-commit --no-git https://github.com/dapphub/ds-test
-	forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
+	[ -d lib/ds-test ] || forge install --no-commit --no-git https://github.com/dapphub/ds-test
+	[ -d lib/forge-std ] || forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
 
 .PHONY: foundry-setup
@@ -33,7 +33,7 @@ test:
 
 .PHONY: local-test
 local-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=20 NETWORK=localhost test
+	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
@@ -80,7 +80,7 @@ ci: clean build lint doc fast-test
 .PHONY: submodules
 submodules:
 	git submodule update --init --recursive
-	git submodule foreach git pull origin main
+	[ -d lib/ds-test ] && cd lib/ds-test && git pull origin master
 
 .PHONY: test-pool-upgrade
 test-pool-upgrade:
@@ -182,6 +182,10 @@ test-marketplace-buy:
 test-marketplace-accept-bid:
 	make TEST_TARGET=_pool_marketplace_accept_bid_with_credit.spec.ts test
 
+.PHONY: test-marketplace-adapter
+test-marketplace-adapter:
+	make TEST_TARGET=_pool_marketplace_adapter.spec.ts test
+
 .PHONY: test-uniswap-v3-oracle
 test-uniswap-v3-oracle:
 	make TEST_TARGET=_uniswap-v3-oracle.spec.ts test
@@ -262,13 +266,17 @@ test-sape-operation:
 test-acl-manager:
 	make TEST_TARGET=acl-manager.spec.ts test
 
+.PHONY: test-time-lock
+test-time-lock:
+	make TEST_TARGET=time_lock_executor.spec.ts test
+
 .PHONY: run
 run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
 
 .PHONY: run-task
 run-task:
-	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) --network $(NETWORK)
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARGS) --network $(NETWORK)
 
 .PHONY: print
 print:
@@ -364,15 +372,23 @@ deploy-renounceOwnership:
 
 .PHONY: ad-hoc
 ad-hoc:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/1.ad-hoc.ts run
+	make SCRIPT_PATH=./scripts/dev/1.ad-hoc.ts run
 
 .PHONY: info
 info:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/3.info.ts run
+	make SCRIPT_PATH=./scripts/dev/3.info.ts run
+
+.PHONY: wallet
+wallet:
+	make SCRIPT_PATH=./scripts/dev/4.wallet.ts run
+
+.PHONY: rate-strategy
+rate-strategy:
+	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
-	make SCRIPT_PATH=./deploy/tasks/deployments/dev/2.transfer-tokens.ts run
+	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
 
 .PHONY: upgrade
 upgrade: build
@@ -382,6 +398,10 @@ upgrade: build
 upgrade-pool: build
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: upgrade-configurator
+upgrade-configurator: build
+	make TASK_NAME=upgrade:configurator run-task
+
 .PHONY: upgrade-ntoken
 upgrade-ntoken: build
 	make TASK_NAME=upgrade:ntoken run-task
@@ -389,6 +409,10 @@ upgrade-ntoken: build
 .PHONY: upgrade-ptoken
 upgrade-ptoken: build
 	make TASK_NAME=upgrade:ptoken run-task
+
+.PHONY: upgrade-debt-token
+upgrade-debt-token: build
+	make TASK_NAME=upgrade:debt-token run-task
 
 .PHONY: remove-pool-funcs
 remove-pool-funcs: build
@@ -401,13 +425,13 @@ add-pool-funcs: build
 	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
 
 
-.PHONY: node
-node:
+.PHONY: hardhat
+hardhat:
 	npx hardhat node --hostname 0.0.0.0
 
 .PHONY: anvil
 anvil:
-	pkill anvil
+	sudo pkill anvil || true
 	anvil &
 	sleep 30
 
@@ -424,10 +448,10 @@ launch: shutdown
 		up \
 		-d --build
 	docker-compose logs -f hardhat
-	pkill anvil
 
 .PHONY: shutdown
 shutdown:
+	sudo pkill anvil || true
 	docker-compose \
 		down \
 		--remove-orphans > /dev/null 2>&1 || true

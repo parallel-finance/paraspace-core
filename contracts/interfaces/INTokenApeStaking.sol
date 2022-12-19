@@ -19,8 +19,9 @@ interface INTokenApeStaking {
         address _recipient
     ) external;
 
-    function depositBAKC(ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs)
-        external;
+    function depositBAKC(
+        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
+    ) external;
 
     function claimBAKC(
         ApeCoinStaking.PairNft[] calldata _nftPairs,
@@ -28,7 +29,7 @@ interface INTokenApeStaking {
     ) external;
 
     function withdrawBAKC(
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
+        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs,
         address _apeRecipient
     ) external;
 

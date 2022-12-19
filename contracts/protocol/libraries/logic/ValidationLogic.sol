@@ -802,6 +802,7 @@ library ValidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ValidateAuctionParams memory params
     ) internal view {
+        require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         ValidateAuctionLocalVars memory vars;
 
         (
@@ -831,7 +832,7 @@ library ValidationLogic {
         );
 
         require(
-            params.erc721HealthFactor > params.auctionRecoveryHealthFactor,
+            params.erc721HealthFactor >= params.auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
     }

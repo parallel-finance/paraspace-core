@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {ONE_ADDRESS, ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {ONE_ADDRESS, ZERO_ADDRESS} from "../helpers/constants";
 import {
   getFirstSigner,
   getMockInitializableImple,
@@ -8,7 +8,7 @@ import {
   getMockVariableDebtToken,
   getPToken,
   getVariableDebtToken,
-} from "../deploy/helpers/contracts-getters";
+} from "../helpers/contracts-getters";
 import {
   deployInitializableImmutableAdminUpgradeabilityProxy,
   deployMockInitializableFromConstructorImple,
@@ -18,23 +18,23 @@ import {
   deployMockReentrantInitializableImple,
   deployMockVariableDebtToken,
   deployPoolCoreLibraries,
-} from "../deploy/helpers/contracts-deployments";
+} from "../helpers/contracts-deployments";
 import {
   getEthersSigners,
   getFunctionSignatures,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {
   InitializableImmutableAdminUpgradeabilityProxy,
   InitializableImmutableAdminUpgradeabilityProxy__factory,
   PoolCoreV2__factory,
   PoolCore__factory,
 } from "../types";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {liquidateAndValidateReverted} from "./helpers/validated-steps";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+import {waitForTx} from "../helpers/misc-utils";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 describe("Upgradeability", () => {
   let testEnv: TestEnv;

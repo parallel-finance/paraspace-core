@@ -10,8 +10,8 @@ uint8 constant MIN_ORACLES_NUM = 3;
 //expirationPeriod at least the interval of client to feed data(currently 6h=21600s/12=1800 in mainnet)
 //we do not accept price lags behind to much
 uint128 constant EXPIRATION_PERIOD = 1800;
-//reject when price increase/decrease 1.5 times more than original value
-uint128 constant MAX_DEVIATION_RATE = 150;
+//reject when price increase/decrease 3 times more than original value
+uint128 constant MAX_DEVIATION_RATE = 300;
 
 struct OracleConfig {
     // Expiration Period for each feed price
@@ -78,7 +78,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @dev feeder map
     // feeder address -> index in feeder list
-    mapping(address => FeederPosition) private feederPositionMap;
+    mapping(address => FeederPosition) public feederPositionMap;
 
     /// @dev All asset list
     address[] public assets;
@@ -99,39 +99,13 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         address[] memory _feeders,
         address[] memory _assets
     ) public initializer {
+        require(_admin != address(0), "Address cannot be zero"); // Add this line
         _addAssets(_assets);
         _addFeeders(_feeders);
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);
         //still need to grant update_role to admin for emergency call
         _setupRole(UPDATER_ROLE, _admin);
         _setConfig(EXPIRATION_PERIOD, MAX_DEVIATION_RATE);
-    }
-
-    modifier whenNotPaused(address _asset) {
-        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
-            _whenNotPaused(_asset);
-        }
-        _;
-    }
-
-    modifier onlyWhenAssetExisted(address _asset) {
-        require(_isAssetExisted(_asset), "NFTOracle: asset not existed");
-        _;
-    }
-
-    modifier onlyWhenAssetNotExisted(address _asset) {
-        require(!_isAssetExisted(_asset), "NFTOracle: asset existed");
-        _;
-    }
-
-    modifier onlyWhenFeederExisted(address _feeder) {
-        require(_isFeederExisted(_feeder), "NFTOracle: feeder not existed");
-        _;
-    }
-
-    modifier onlyWhenFeederNotExisted(address _feeder) {
-        require(!_isFeederExisted(_feeder), "NFTOracle: feeder existed");
-        _;
     }
 
     /// @notice Allows owner to add assets.
@@ -143,14 +117,15 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         _addAssets(_assets);
     }
 
-    /// @notice Allows owner to remove asset.
-    /// @param _asset asset to remove
-    function removeAsset(address _asset)
+    /// @notice Allows owner to remove assets.
+    /// @param _assets asset to remove
+    function removeAssets(address[] calldata _assets)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
-        onlyWhenAssetExisted(_asset)
     {
-        _removeAsset(_asset);
+        for (uint256 i = 0; i < _assets.length; i++) {
+            _removeAsset(_assets[i]);
+        }
     }
 
     /// @notice Allows owner to add feeders.
@@ -162,13 +137,15 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         _addFeeders(_feeders);
     }
 
-    /// @notice Allows owner to remove feeder.
-    /// @param _feeder feeder to remove
-    function removeFeeder(address _feeder)
+    /// @notice Allows owner to remove feeders.
+    /// @param _feeders feeders to remove
+    function removeFeeders(address[] calldata _feeders)
         external
-        onlyWhenFeederExisted(_feeder)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        _removeFeeder(_feeder);
+        for (uint256 i = 0; i < _feeders.length; i++) {
+            _removeFeeder(_feeders[i]);
+        }
     }
 
     /// @notice Allows owner to update oracle configs
@@ -183,51 +160,39 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     function setPause(address _asset, bool _flag)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyWhenAssetExisted(_asset)
     {
         assetFeederMap[_asset].paused = _flag;
         emit AssetPaused(_asset, _flag);
     }
 
-    /// @notice Allows updater to set new price on PriceInformation and updates the
+    /// @notice Allows admin to set emergency price on PriceInformation and updates the
     /// internal Median cumulativePrice.
     /// @param _asset The nft contract to set a floor price for
     /// @param _twap The last floor twap
-    function setPrice(address _asset, uint256 _twap)
-        public
-        onlyRole(UPDATER_ROLE)
+    function setEmergencyPrice(address _asset, uint256 _twap)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
         onlyWhenAssetExisted(_asset)
-        whenNotPaused(_asset)
     {
-        bool dataValidity = false;
-        if (hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) {
-            _finalizePrice(_asset, _twap);
-            return;
-        }
-        dataValidity = _checkValidity(_asset, _twap);
-        require(dataValidity, "NFTOracle: invalid price data");
-        // add price to raw feeder storage
-        _addRawValue(_asset, _twap);
-        uint256 medianPrice;
-        // set twap price only when median value is valid
-        (dataValidity, medianPrice) = _combine(_asset, _twap);
-        if (dataValidity) {
-            _finalizePrice(_asset, medianPrice);
-        }
+        _finalizePrice(_asset, _twap);
     }
 
     /// @notice Allows owner to set new price on PriceInformation and updates the
     /// internal Median cumulativePrice.
     /// @param _assets The nft contract to set a floor price for
+    /// @param _twaps The nft floor twaps
     function setMultiplePrices(
         address[] calldata _assets,
         uint256[] calldata _twaps
-    ) external onlyRole(UPDATER_ROLE) {
+    ) external onlyRole(UPDATER_ROLE) onlyWhenFeederExisted(msg.sender) {
         require(
             _assets.length == _twaps.length,
             "NFTOracle: Tokens and price length differ"
         );
+        OracleConfig memory _config = config;
         for (uint256 i = 0; i < _assets.length; i++) {
-            setPrice(_assets[i], _twaps[i]);
+            _setPrice(_config, _assets[i], _twaps[i]);
         }
     }
 
@@ -239,12 +204,13 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         override
         returns (uint256 price)
     {
-        uint256 updatedAt = assetPriceMap[_asset].updatedAt;
+        PriceInformation storage priceInfo = assetPriceMap[_asset];
+        require(priceInfo.updatedAt != 0, "NFTOracle: asset price not ready");
         require(
-            (block.number - updatedAt) <= config.expirationPeriod,
+            (block.number - priceInfo.updatedAt) <= config.expirationPeriod,
             "NFTOracle: asset price expired"
         );
-        return assetPriceMap[_asset].twap;
+        return priceInfo.twap;
     }
 
     /// @param _asset The nft contract
@@ -262,17 +228,27 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         return feeders.length;
     }
 
-    function _whenNotPaused(address _asset) internal view {
-        bool _paused = assetFeederMap[_asset].paused;
-        require(!_paused, "NFTOracle: nft price feed paused");
-    }
-
-    function _isAssetExisted(address _asset) internal view returns (bool) {
-        return assetFeederMap[_asset].registered;
-    }
-
-    function _isFeederExisted(address _feeder) internal view returns (bool) {
-        return feederPositionMap[_feeder].registered;
+    function _setPrice(
+        OracleConfig memory _config,
+        address _asset,
+        uint256 _twap
+    ) internal {
+        PriceInformation memory _priceInfo = assetPriceMap[_asset];
+        FeederRegistrar storage _feederRegistrar = assetFeederMap[_asset];
+        require(_feederRegistrar.registered, "NFTOracle: asset not existed");
+        require(!_feederRegistrar.paused, "NFTOracle: nft price feed paused");
+        require(
+            _checkValidity(_priceInfo, _config, _twap),
+            "NFTOracle: invalid price data"
+        );
+        // set twap price only when median value is valid
+        (bool aggregate, uint256 medianPrice) = _addValue(
+            _config,
+            _feederRegistrar,
+            _priceInfo,
+            _twap
+        );
+        if (aggregate) _finalizePrice(_asset, medianPrice);
     }
 
     function _addAsset(address _asset)
@@ -283,14 +259,6 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         assets.push(_asset);
         assetFeederMap[_asset].index = uint8(assets.length - 1);
         emit AssetAdded(_asset);
-    }
-
-    /// @notice add nft assets.
-    /// @param _assets assets to add
-    function _addAssets(address[] memory _assets) internal {
-        for (uint256 i = 0; i < _assets.length; i++) {
-            _addAsset(_assets[i]);
-        }
     }
 
     function _removeAsset(address _asset)
@@ -304,6 +272,14 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         emit AssetRemoved(_asset);
     }
 
+    /// @notice add nft assets.
+    /// @param _assets assets to add
+    function _addAssets(address[] memory _assets) internal {
+        for (uint256 i = 0; i < _assets.length; i++) {
+            _addAsset(_assets[i]);
+        }
+    }
+
     function _addFeeder(address _feeder)
         internal
         onlyWhenFeederNotExisted(_feeder)
@@ -315,26 +291,33 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         emit FeederAdded(_feeder);
     }
 
+    function _removeFeeder(address _feeder)
+        internal
+        onlyWhenFeederExisted(_feeder)
+    {
+        uint8 feederIndex = feederPositionMap[_feeder].index;
+        require(
+            feeders[feederIndex] == _feeder,
+            "NFTOracle: feeder mismatched"
+        );
+
+        address lastFeeder = feeders[feeders.length - 1];
+        if (_feeder != lastFeeder) {
+            feeders[feederIndex] = lastFeeder;
+            feederPositionMap[lastFeeder].index = feederIndex;
+        }
+        feeders.pop();
+        delete feederPositionMap[_feeder];
+        revokeRole(UPDATER_ROLE, _feeder);
+        emit FeederRemoved(_feeder);
+    }
+
     /// @notice set feeders.
     /// @param _feeders feeders to set
     function _addFeeders(address[] memory _feeders) internal {
         for (uint256 i = 0; i < _feeders.length; i++) {
             _addFeeder(_feeders[i]);
         }
-    }
-
-    function _removeFeeder(address _feeder)
-        internal
-        onlyWhenFeederExisted(_feeder)
-    {
-        uint8 feederIndex = feederPositionMap[_feeder].index;
-        if (feederIndex >= 0 && feeders[feederIndex] == _feeder) {
-            feeders[feederIndex] = feeders[feeders.length - 1];
-            feeders.pop();
-        }
-        delete feederPositionMap[_feeder];
-        revokeRole(UPDATER_ROLE, _feeder);
-        emit FeederRemoved(_feeder);
     }
 
     /// @notice set oracle configs
@@ -348,15 +331,15 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         emit OracleConfigSet(_expirationPeriod, _maxPriceDeviation);
     }
 
-    function _checkValidity(address _asset, uint256 _twap)
-        internal
-        view
-        returns (bool)
-    {
+    function _checkValidity(
+        PriceInformation memory _priceInfo,
+        OracleConfig memory _config,
+        uint256 _twap
+    ) internal pure returns (bool) {
         require(_twap > 0, "NFTOracle: price should be more than 0");
-        PriceInformation memory assetPriceMapEntry = assetPriceMap[_asset];
-        uint256 _priorTwap = assetPriceMapEntry.twap;
-        uint256 _updatedAt = assetPriceMapEntry.updatedAt;
+
+        uint256 _priorTwap = _priceInfo.twap;
+        uint256 _updatedAt = _priceInfo.updatedAt;
         uint256 priceDeviation;
         //first price is always valid
         if (_priorTwap == 0 || _updatedAt == 0) {
@@ -367,63 +350,55 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
             : (_priorTwap * 100) / _twap;
 
         // config maxPriceDeviation as multiple directly(not percent) for simplicity
-        if (priceDeviation >= config.maxPriceDeviation) {
+        if (priceDeviation >= _config.maxPriceDeviation) {
             return false;
         }
         return true;
     }
 
     function _finalizePrice(address _asset, uint256 _twap) internal {
-        PriceInformation storage assetPriceMapEntry = assetPriceMap[_asset];
-        assetPriceMapEntry.twap = _twap;
-        assetPriceMapEntry.updatedAt = block.number;
-        assetPriceMapEntry.updatedTimestamp = block.timestamp;
-        emit AssetDataSet(
-            _asset,
-            assetPriceMapEntry.twap,
-            assetPriceMapEntry.updatedAt
-        );
-    }
-
-    function _addRawValue(address _asset, uint256 _twap) internal {
-        FeederRegistrar storage feederRegistrar = assetFeederMap[_asset];
-        PriceInformation storage priceInfo = feederRegistrar.feederPrice[
-            msg.sender
-        ];
+        PriceInformation storage priceInfo = assetPriceMap[_asset];
         priceInfo.twap = _twap;
         priceInfo.updatedAt = block.number;
+        priceInfo.updatedTimestamp = block.timestamp;
+        emit AssetDataSet(_asset, priceInfo.twap, priceInfo.updatedAt);
     }
 
-    function _combine(address _asset, uint256 _twap)
-        internal
-        view
-        returns (bool, uint256)
-    {
-        FeederRegistrar storage feederRegistrar = assetFeederMap[_asset];
+    function _addValue(
+        OracleConfig memory _config,
+        FeederRegistrar storage _feederRegistrar,
+        PriceInformation memory _priceInfo,
+        uint256 _twap
+    ) internal returns (bool, uint256) {
         uint256 currentBlock = block.number;
+        uint256 currentTwap = _priceInfo.twap;
+
+        _feederRegistrar.feederPrice[msg.sender].twap = _twap;
+        _feederRegistrar.feederPrice[msg.sender].updatedAt = currentBlock;
+
         //first time just use the feeding value
-        if (assetPriceMap[_asset].twap == 0) {
+        if (currentTwap == 0) {
             return (true, _twap);
         }
         //use memory here so allocate with maximum length
-        uint256 feederSize = feeders.length;
-        uint256[] memory validPriceList = new uint256[](feederSize);
+        address[] memory _feeders = feeders;
+        uint256[] memory validPriceList = new uint256[](_feeders.length);
         uint256 validNum = 0;
         //aggeregate with price from all feeders
-        for (uint256 i = 0; i < feederSize; i++) {
-            PriceInformation memory priceInfo = feederRegistrar.feederPrice[
-                feeders[i]
+        for (uint256 i = 0; i < _feeders.length; i++) {
+            PriceInformation memory priceInfo = _feederRegistrar.feederPrice[
+                _feeders[i]
             ];
-            if (priceInfo.updatedAt > 0) {
-                uint256 diffBlock = currentBlock - priceInfo.updatedAt;
-                if (diffBlock <= config.expirationPeriod) {
-                    validPriceList[validNum] = priceInfo.twap;
-                    validNum++;
-                }
+            uint256 diffBlock = currentBlock - priceInfo.updatedAt;
+            if (
+                priceInfo.updatedAt > 0 && diffBlock <= _config.expirationPeriod
+            ) {
+                validPriceList[validNum] = priceInfo.twap;
+                validNum++;
             }
         }
         if (validNum < MIN_ORACLES_NUM) {
-            return (false, assetPriceMap[_asset].twap);
+            return (false, currentTwap);
         }
         _quickSort(validPriceList, 0, int256(validNum - 1));
         return (true, validPriceList[validNum / 2]);
@@ -452,5 +427,42 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         }
         if (left < j) _quickSort(arr, left, j);
         if (i < right) _quickSort(arr, i, right);
+    }
+
+    modifier whenNotPaused(address _asset) {
+        require(
+            !assetFeederMap[_asset].paused,
+            "NFTOracle: nft price feed paused"
+        );
+        _;
+    }
+
+    modifier onlyWhenAssetExisted(address _asset) {
+        require(
+            assetFeederMap[_asset].registered,
+            "NFTOracle: asset not existed"
+        );
+        _;
+    }
+
+    modifier onlyWhenAssetNotExisted(address _asset) {
+        require(!assetFeederMap[_asset].registered, "NFTOracle: asset existed");
+        _;
+    }
+
+    modifier onlyWhenFeederExisted(address _feeder) {
+        require(
+            feederPositionMap[_feeder].registered,
+            "NFTOracle: feeder not existed"
+        );
+        _;
+    }
+
+    modifier onlyWhenFeederNotExisted(address _feeder) {
+        require(
+            !feederPositionMap[_feeder].registered,
+            "NFTOracle: feeder existed"
+        );
+        _;
     }
 }

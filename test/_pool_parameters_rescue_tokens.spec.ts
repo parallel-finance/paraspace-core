@@ -1,8 +1,8 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {DRE} from "../deploy/helpers/misc-utils";
-import {toBN} from "../deploy/helpers/seaport-helpers/encoding";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {DRE} from "../helpers/misc-utils";
+import {toBN} from "../helpers/seaport-helpers/encoding";
+import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
