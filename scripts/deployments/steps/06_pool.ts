@@ -24,10 +24,14 @@ export const step_06 = async (verify = false) => {
       poolMarketplace,
       poolApeStaking,
       poolCoreSelectors,
+      poolParaProxyInterfaces,
       poolParametersSelectors,
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
+      poolParaProxyInterfacesSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
+
+    console.log("after deploying paraselector");
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -89,6 +93,24 @@ export const step_06 = async (verify = false) => {
         poolCore.interface.encodeFunctionData("initialize", [
           addressesProvider.address,
         ]),
+        GLOBAL_OVERRIDES
+      )
+    );
+
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        [
+          {
+            implAddress: poolParaProxyInterfaces.address,
+            action: 0,
+            functionSelectors: poolParaProxyInterfacesSelectors,
+          },
+        ],
+        poolAddress,
+        poolParaProxyInterfaces.interface.encodeFunctionData(
+          "initializeSupportInterfaces",
+          undefined
+        ),
         GLOBAL_OVERRIDES
       )
     );

@@ -81,7 +81,7 @@ contract ParaProxyInterfaces is IParaProxyInterfaces, IERC165 {
     }
 
     // initialize the contracts. it's okay for it to be called by anyone
-    function initialize() external {
+    function initializeSupportInterfaces() external {
         ParaProxyLib.ProxyStorage storage ds = ParaProxyLib.diamondStorage();
 
         ds.supportedInterfaces[type(IParaProxyInterfaces).interfaceId] = true;
