@@ -18,6 +18,7 @@ import {
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import { BigNumber } from "ethers";
 
 describe("Uniswap V3 Oracle", () => {
   let snap: string;
@@ -604,4 +605,86 @@ describe("Uniswap V3 Oracle", () => {
         .add(liquidityDaiAmount.div("1000000000000000000"))
     );
   });
+
+
+  it("test with usdc and weth:(token0 decimal less than token1 decimal) with large price difference [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1, trader],
+      usdc,
+      weth,
+      nftPositionManager,
+      oracle,
+    } = testEnv;
+    const userUsdcAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      "10000"
+    );
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: usdc, user: user1, amount: userUsdcAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    const nft = nftPositionManager.connect(user1.signer);
+    await approveTo({token: usdc, user: user1, target: nft.address});
+    await approveTo({token: weth, user: user1, target: nft.address});
+
+
+    const fee = 3000;
+    const tickSpacing = fee / 50;
+    const initialPrice = encodeSqrtRatioX96("1000000000000000000000000", 1);
+    const lowerPrice = encodeSqrtRatioX96("100000000000000000000000", 1);
+    const upperPrice = encodeSqrtRatioX96("10000000000000000000000000", 1);
+    await createNewPool({
+      positionManager: nft,
+      token0: usdc,
+      token1: weth,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: usdc,
+      token1: weth,
+      fee: fee,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userUsdcAmount,
+      token1Amount: userWethAmount,
+    });
+    const usdcBalance = await usdc.balanceOf(user1.address);
+    const wethBalance = await weth.balanceOf(user1.address);
+    const liquidityUsdcAmount = userUsdcAmount.sub(usdcBalance);
+    const liquidityWethAmount = userWethAmount.sub(wethBalance);
+
+    expect(await nft.balanceOf(user1.address)).to.eq(1);
+    const tokenId = await nft.tokenOfOwnerByIndex(user1.address, 0);
+
+    const uniV3Oracle = await getUniswapV3OracleWrapper();
+    const liquidityAmount = await uniV3Oracle.getLiquidityAmount(tokenId);
+    console.log("liquidityAmount.token0Amount", liquidityAmount.token0Amount);
+    console.log("liquidityAmount.token1Amount", liquidityAmount.token1Amount);
+
+  
+
+    let onchaindata = await uniV3Oracle.getOnchainPositionData(tokenId);
+
+    console.log("onchain data", onchaindata)
+    console.log(await uniV3Oracle.getLiquidityAmountFromPositionData(onchaindata))
+
+    console.log(await uniV3Oracle.getLiquidityAmountFromPositionData(onchaindata))
+
+    await oracle.setAssetPrice(usdc.address, "1"); //ETH = 10^18 usdc
+    await oracle.setAssetPrice(weth.address, "1000000000000000000"); //weth = 10 ETH 
+
+    let tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
+    console.log("tokenPrice", tokenPrice);
+
+
+    // almostEqual(
+    //   tokenPrice,
+    //   liquidityWethAmount.mul(10).add(liquidityUsdcAmount.mul("10000000000000000000000000"))
+    // );
+
+  });
+
 });
