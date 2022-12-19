@@ -24,7 +24,7 @@ import {
   strategyClonex,
   strategyMeebits,
   strategySAPE,
-  strategyCAPE,
+  strategyCAPE, strategyBAKC,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -104,6 +104,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
+    BAKC: strategyBAKC,
   },
 };
 
@@ -171,6 +172,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
+    BAKC: strategyBAKC,
   },
 };
 
@@ -260,6 +262,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
     // UniswapV3: strategyUniswapV3,
+    BAKC: strategyBAKC,
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,

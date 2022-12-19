@@ -211,7 +211,7 @@ import {
   X2Y2Adapter__factory,
   X2Y2R1,
   X2Y2R1__factory,
-  AutoCompoundApe,
+  AutoCompoundApe, NTokenBAKC, NTokenBAKC__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1681,12 +1681,11 @@ export const deployMockAirdropProject = async (
 
 export const deployApeCoinStaking = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
-  const bakc = await deployMintableERC721(["BAKC", "BAKC", ""], verify);
   const args = [
     allTokens.APE.address,
     allTokens.BAYC.address,
     allTokens.MAYC.address,
-    bakc.address,
+    allTokens.BAKC.address,
   ];
 
   const apeCoinStaking = await withSaveAndVerify(
@@ -1804,6 +1803,32 @@ export const deployNTokenMAYCImpl = async (
     verify
   ) as Promise<NTokenMAYC>;
 };
+
+export const deployNTokenBAKCImpl = async (
+    poolAddress: tEthereumAddress,
+    apeCoinStaking: tEthereumAddress,
+    nBAYC: tEthereumAddress,
+    nMAYC: tEthereumAddress,
+    verify?: boolean
+) => {
+  let mintableERC721Logic;
+  mintableERC721Logic = await getMintableERC721Logic();
+  if (!mintableERC721Logic) {
+    mintableERC721Logic = await deployMintableERC721Logic(verify);
+  }
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+    mintableERC721Logic.address,
+  };
+  return withSaveAndVerify(
+      new NTokenBAKC__factory(libraries, await getFirstSigner()),
+      eContractid.NTokenBAKCImpl,
+      [poolAddress, apeCoinStaking, nBAYC, nMAYC],
+      verify
+  ) as Promise<NTokenBAKC>;
+};
+
 export const deployATokenDebtToken = async (
   poolAddress: tEthereumAddress,
   verify?: boolean

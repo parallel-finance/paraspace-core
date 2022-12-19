@@ -96,6 +96,7 @@ export enum eContractid {
   NTokenUniswapV3Impl = "NTokenUniswapV3Impl",
   NTokenBAYCImpl = "NTokenBAYCImpl",
   NTokenMAYCImpl = "NTokenMAYCImpl",
+  NTokenBAKCImpl = "NTokenBAKCImpl",
   DelegationAwarePTokenImpl = "DelegationAwarePTokenImpl",
   VariableDebtTokenImpl = "VariableDebtTokenImpl",
   PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
@@ -368,6 +369,7 @@ export interface iAssetBase<T> {
   AZUKI: T;
   OTHR: T;
   CLONEX: T;
+  BAKC: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -394,6 +396,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MOONBIRD"
   | "MEEBITS"
   | "OTHR"
+    | "BAKC"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -436,6 +439,7 @@ export enum NTokenContractId {
   nWPUNKS = "nWPUNKS",
   nMOONBIRD = "nMOONBIRD",
   nUniswapV3 = "nUniswapV3",
+  nBAKC = "nBAKC",
 }
 
 export enum PTokenContractId {

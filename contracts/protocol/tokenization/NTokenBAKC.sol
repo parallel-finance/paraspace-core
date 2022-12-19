@@ -22,18 +22,15 @@ abstract contract NTokenBAKC is NToken {
     using SafeERC20 for IERC20;
 
     ApeCoinStaking immutable _apeCoinStaking;
-    address public nBAYC;
-    address public nMAYC;
+    address public immutable nBAYC;
+    address public immutable nMAYC;
 
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address apeCoinStaking) NToken(pool, false) {
+    constructor(IPool pool, address apeCoinStaking, address _nBAYC, address _nMAYC) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
-    }
-
-    function setNToken(address _nBAYC, address _nMAYC) external onlyPoolAdmin {
         nBAYC = _nBAYC;
         nMAYC = _nMAYC;
     }
