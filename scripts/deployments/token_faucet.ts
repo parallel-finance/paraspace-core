@@ -94,6 +94,14 @@ export const deployFaucet = async (mockTokens, verify?: boolean) => {
     },
   ];
 
+  if (mockTokens.BAKC) {
+    erc721configs.push({
+      name: "BAKC",
+      addr: mockTokens.BAKC,
+      mintValue: tokenFaucetMintValue.BAKC,
+    });
+  }
+
   const punkConfig = {
     name: "PUNKS",
     addr: mockTokens.PUNKS,
