@@ -37,7 +37,9 @@ import {
   deployATokenDebtToken,
   deployStETHDebtToken,
   deployPTokenSApe,
-  deployApeCoinStaking, deployPTokenCApe, deployCApeDebtToken,
+  deployApeCoinStaking,
+  deployPTokenCApe,
+  deployCApeDebtToken,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -369,13 +371,13 @@ export const initReservesByHelper = async (
         } else if (reserveSymbol === ERC20TokenContractId.cAPE) {
           if (!pTokenPsApeImplementationAddress) {
             pTokenPsApeImplementationAddress = (
-                await deployPTokenCApe(pool.address, verify)
+              await deployPTokenCApe(pool.address, verify)
             ).address;
           }
           xTokenToUse = pTokenPsApeImplementationAddress;
           if (!PsApeVariableDebtTokenImplementationAddress) {
             PsApeVariableDebtTokenImplementationAddress = (
-                await deployCApeDebtToken(pool.address, verify)
+              await deployCApeDebtToken(pool.address, verify)
             ).address;
           }
           variableDebtTokenToUse = PsApeVariableDebtTokenImplementationAddress;
