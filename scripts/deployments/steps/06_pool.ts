@@ -9,14 +9,17 @@ import {
 } from "../../../helpers/contracts-getters";
 import {registerContractInDb} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
-import {waitForTx} from "../../../helpers/misc-utils";
-import {eContractid} from "../../../helpers/types";
+import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
+import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
+  const paraSpaceConfig = getParaSpaceConfig();
 
   try {
-    await deployAutoCompoundApe(verify);
+    if (paraSpaceConfig.ReservesConfig[ERC20TokenContractId.cAPE]) {
+      await deployAutoCompoundApe(verify);
+    }
 
     const {
       poolCore,

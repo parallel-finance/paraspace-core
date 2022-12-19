@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 import "../../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import "../../dependencies/openzeppelin/contracts/Ownable.sol";
 import "../../dependencies/openzeppelin/contracts/IMintableERC20.sol";
+import "../../dependencies/openzeppelin/contracts/Address.sol";
 
 interface ICryptoPunksMarket {
     // Transfer ownership of a punk to another user without requiring payment
@@ -19,6 +20,19 @@ interface ICryptoPunksMarket {
 
 interface IMintERC721 {
     function mint(uint256 _count, address _to) external;
+
+    function mint(uint256 _count) external;
+
+    function tokenOfOwnerByIndex(
+        address owner,
+        uint256 index
+    ) external view returns (uint256 tokenId);
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 }
 
 contract MockTokenFaucet is Ownable {
@@ -113,23 +127,32 @@ contract MockTokenFaucet is Ownable {
         }
     }
 
-    function mintERC20(
-        address token,
-        address to,
-        uint256 mintValue
-    ) public {
+    function mintERC20(address token, address to, uint256 mintValue) public {
         IMintableERC20 mintToken = IMintableERC20(token);
         uint256 decimals = mintToken.decimals();
-        mintToken.mint(to, mintValue * 10**decimals);
+        Address.functionCall(
+            token,
+            abi.encodeWithSignature(
+                "mint(address,uint256)",
+                to,
+                mintValue * 10 ** decimals
+            )
+        );
     }
 
-    function mintERC721(
-        address token,
-        address to,
-        uint256 mintValue
-    ) public {
+    function mintERC721(address token, address to, uint256 mintValue) public {
         IMintERC721 mintToken = IMintERC721(token);
-        try mintToken.mint(mintValue, to) {} catch {}
+        try mintToken.mint(mintValue, to) {
+            return;
+        } catch {}
+
+        try mintToken.mint(mintValue) {
+            for (uint256 index; index < mintValue; index++) {
+                uint256 id = mintToken.tokenOfOwnerByIndex(address(this), 0);
+                mintToken.safeTransferFrom(address(this), to, id);
+            }
+            return;
+        } catch {}
     }
 
     function mintERC20s(address to) internal {
@@ -181,5 +204,14 @@ contract MockTokenFaucet is Ownable {
         mintERC20s(to);
         mintERC721s(to);
         mintPunks(to);
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external virtual returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

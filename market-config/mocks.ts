@@ -36,7 +36,7 @@ export const MOCK_TOKEN_MINT_VALUE = {
   USDT: 10000,
   WBTC: 10,
   stETH: 10,
-  APE: 10000,
+  APE: 12992,
   aWETH: 10,
   cWETH: 10,
   PUNK: 1000,
@@ -50,6 +50,7 @@ export const MOCK_TOKEN_MINT_VALUE = {
   AZUKI: 1,
   OTHR: 1,
   CLONEX: 1,
+  BAKC: 1,
 };
 
 export const MocksConfig: IMocksConfig = {
