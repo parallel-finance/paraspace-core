@@ -93,6 +93,8 @@ describe("Uniswap V3 Oracle", () => {
 
     const uniV3Oracle = await getUniswapV3OracleWrapper();
     const liquidityAmount = await uniV3Oracle.getLiquidityAmount(tokenId);
+    console.log("userDaiAmount", liquidityAmount.token0Amount);
+    console.log("userWethAmount", liquidityAmount.token1Amount);
     almostEqual(liquidityAmount.token0Amount, liquidityDaiAmount);
     almostEqual(liquidityAmount.token1Amount, liquidityWethAmount);
 
@@ -531,5 +533,75 @@ describe("Uniswap V3 Oracle", () => {
     tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
     expect(tokenPrice).to.lt(lastTokenPrice.add(addEthFeeCap));
     expect(tokenPrice).to.gt(lastTokenPrice);
+  });
+
+  it("test with dai and weth:(token0 decimal equals token1 decimal) with large price difference [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1],
+      dai,
+      weth,
+      nftPositionManager,
+      oracle,
+    } = testEnv;
+    const userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    const nft = nftPositionManager.connect(user1.signer);
+    await approveTo({token: dai, user: user1, target: nft.address});
+    await approveTo({token: weth, user: user1, target: nft.address});
+    await oracle.setAssetPrice(dai.address, "1"); //ETH = 1^18 dai
+    await oracle.setAssetPrice(weth.address, "10000000000000000000"); //weth = 10 ETH
+
+    const fee = 3000;
+    const tickSpacing = fee / 50;
+    const initialPrice = encodeSqrtRatioX96(1, "10000000000000000000");
+    const lowerPrice = encodeSqrtRatioX96(1, "100000000000000000000");
+    const upperPrice = encodeSqrtRatioX96(1, "1000000000000000000");
+    await createNewPool({
+      positionManager: nft,
+      token0: dai,
+      token1: weth,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: dai,
+      token1: weth,
+      fee: fee,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userDaiAmount,
+      token1Amount: userWethAmount,
+    });
+    const daiBalance = await dai.balanceOf(user1.address);
+    const wethBalance = await weth.balanceOf(user1.address);
+    const liquidityDaiAmount = userDaiAmount.sub(daiBalance);
+    const liquidityWethAmount = userWethAmount.sub(wethBalance);
+
+    expect(await nft.balanceOf(user1.address)).to.eq(1);
+    const tokenId = await nft.tokenOfOwnerByIndex(user1.address, 0);
+
+    const uniV3Oracle = await getUniswapV3OracleWrapper();
+    const liquidityAmount = await uniV3Oracle.getLiquidityAmount(tokenId);
+
+    almostEqual(liquidityAmount.token0Amount, liquidityDaiAmount);
+    almostEqual(liquidityAmount.token1Amount, liquidityWethAmount);
+
+    const lpFee = await uniV3Oracle.getLpFeeAmount(tokenId);
+    expect(lpFee.token0Amount).to.eq(0);
+    expect(lpFee.token1Amount).to.eq(0);
+
+    const tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
+
+    almostEqual(
+      tokenPrice,
+      liquidityWethAmount
+        .mul("10")
+        .add(liquidityDaiAmount.div("1000000000000000000"))
+    );
   });
 });

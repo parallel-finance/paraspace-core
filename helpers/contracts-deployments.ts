@@ -229,6 +229,7 @@ import {
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
+  getContractAddressInDb,
   getFunctionSignatures,
   insertContractAddressInDb,
   withSaveAndVerify,
@@ -1935,8 +1936,10 @@ export const deployTimeLockExecutor = async (
 
 export const deployAutoCompoundApe = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
-  const ApeCoinStaking = await deployApeCoinStaking();
-  const args = [allTokens.APE.address, ApeCoinStaking.address];
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const args = [allTokens.APE.address, apeCoinStaking];
 
   return (await withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),

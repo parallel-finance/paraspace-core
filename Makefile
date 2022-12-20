@@ -398,6 +398,10 @@ upgrade: build
 upgrade-pool: build
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: upgrade-configurator
+upgrade-configurator: build
+	make TASK_NAME=upgrade:configurator run-task
+
 .PHONY: upgrade-ntoken
 upgrade-ntoken: build
 	make TASK_NAME=upgrade:ntoken run-task
@@ -409,10 +413,6 @@ upgrade-ptoken: build
 .PHONY: upgrade-debt-token
 upgrade-debt-token: build
 	make TASK_NAME=upgrade:debt-token run-task
-
-.PHONY: upgrade-configurator
-upgrade-configurator: build
-	make TASK_NAME=upgrade:configurator run-task
 
 .PHONY: remove-pool-funcs
 remove-pool-funcs: build
