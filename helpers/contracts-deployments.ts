@@ -26,7 +26,9 @@ import {
   BoredApeYachtClub,
   BoredApeYachtClub__factory,
   BorrowLogic,
-  BorrowLogic__factory, CApeDebtToken, CApeDebtToken__factory,
+  BorrowLogic__factory,
+  CApeDebtToken,
+  CApeDebtToken__factory,
   CloneX,
   CloneX__factory,
   ConduitController,
@@ -154,7 +156,9 @@ import {
   PToken,
   PToken__factory,
   PTokenAToken,
-  PTokenAToken__factory, PTokenCApe, PTokenCApe__factory,
+  PTokenAToken__factory,
+  PTokenCApe,
+  PTokenCApe__factory,
   PTokenSApe,
   PTokenSApe__factory,
   PTokenStETH,
@@ -211,7 +215,9 @@ import {
   X2Y2Adapter__factory,
   X2Y2R1,
   X2Y2R1__factory,
-  AutoCompoundApe, NTokenBAKC, NTokenBAKC__factory,
+  AutoCompoundApe,
+  NTokenBAKC,
+  NTokenBAKC__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -225,18 +231,16 @@ import {
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
+  getContractAddressInDb,
   getFunctionSignatures,
   insertContractAddressInDb,
   withSaveAndVerify,
 } from "./contracts-helpers";
 
-import * as nonfungiblePositionManager
-  from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
+import * as nonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import * as uniSwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
-import * as nFTDescriptor
-  from "@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json";
-import * as nonfungibleTokenPositionDescriptor
-  from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
+import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json";
+import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Address} from "hardhat-deploy/dist/types";
 import {Contract} from "ethers";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
@@ -535,7 +539,7 @@ export const deployPoolComponents = async (
     poolApeStaking: (await withSaveAndVerify(
       poolApeStaking,
       eContractid.PoolApeStakingImpl,
-        [provider, cApe.address, allTokens.APE.address],
+      [provider, cApe.address, allTokens.APE.address],
       verify,
       false,
       apeStakingLibraries,
@@ -1805,11 +1809,11 @@ export const deployNTokenMAYCImpl = async (
 };
 
 export const deployNTokenBAKCImpl = async (
-    poolAddress: tEthereumAddress,
-    apeCoinStaking: tEthereumAddress,
-    nBAYC: tEthereumAddress,
-    nMAYC: tEthereumAddress,
-    verify?: boolean
+  poolAddress: tEthereumAddress,
+  apeCoinStaking: tEthereumAddress,
+  nBAYC: tEthereumAddress,
+  nMAYC: tEthereumAddress,
+  verify?: boolean
 ) => {
   let mintableERC721Logic;
   mintableERC721Logic = await getMintableERC721Logic();
@@ -1819,13 +1823,13 @@ export const deployNTokenBAKCImpl = async (
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-    mintableERC721Logic.address,
+      mintableERC721Logic.address,
   };
   return withSaveAndVerify(
-      new NTokenBAKC__factory(libraries, await getFirstSigner()),
-      eContractid.NTokenBAKCImpl,
-      [poolAddress, apeCoinStaking, nBAYC, nMAYC],
-      verify
+    new NTokenBAKC__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenBAKCImpl,
+    [poolAddress, apeCoinStaking, nBAYC, nMAYC],
+    verify
   ) as Promise<NTokenBAKC>;
 };
 
@@ -1956,6 +1960,43 @@ export const deployTimeLockExecutor = async (
     verify
   ) as Promise<ExecutorWithTimelock>;
 };
+
+export const deployAutoCompoundApe = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const args = [allTokens.APE.address, apeCoinStaking];
+
+  return (await withSaveAndVerify(
+    new AutoCompoundApe__factory(await getFirstSigner()),
+    eContractid.cAPE,
+    [...args],
+    verify
+  )) as AutoCompoundApe;
+};
+
+export const deployPTokenCApe = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new PTokenCApe__factory(await getFirstSigner()),
+    eContractid.PTokenCApeImpl,
+    [poolAddress],
+    verify
+  ) as Promise<PTokenCApe>;
+
+export const deployCApeDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CApeDebtToken__factory(await getFirstSigner()),
+    eContractid.CApeDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<CApeDebtToken>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
@@ -2209,43 +2250,3 @@ export const deployMockTokenFaucet = async (
     [erc20configs, erc721configs, punkConfig],
     verify
   );
-
-export const deployAutoCompoundApe = async (
-    verify?: boolean
-) => {
-  const allTokens = await getAllTokens();
-  const ApeCoinStaking = await deployApeCoinStaking();
-  const args = [
-    allTokens.APE.address,
-    ApeCoinStaking.address,
-  ];
-
-  return await withSaveAndVerify(
-      new AutoCompoundApe__factory(await getFirstSigner()),
-      eContractid.cAPE,
-      [...args],
-      verify
-  ) as AutoCompoundApe;
-}
-
-export const deployPTokenCApe = async (
-    poolAddress: tEthereumAddress,
-    verify?: boolean
-) =>
-    withSaveAndVerify(
-        new PTokenCApe__factory(await getFirstSigner()),
-        eContractid.PTokenCApeImpl,
-        [poolAddress],
-        verify
-    ) as Promise<PTokenCApe>;
-
-export const deployCApeDebtToken = async (
-    poolAddress: tEthereumAddress,
-    verify?: boolean
-) =>
-    withSaveAndVerify(
-        new CApeDebtToken__factory(await getFirstSigner()),
-        eContractid.CApeDebtToken,
-        [poolAddress],
-        verify
-    ) as Promise<CApeDebtToken>;

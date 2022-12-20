@@ -109,21 +109,27 @@ describe("APE Coin Staking Test", () => {
     expect(apeBalance).to.be.equal(parseEther("7200"));
 
     await waitForTx(
-        await pool
-            .connect(user1.signer)
-            .withdrawBAKC(mayc.address, [
-              {mainTokenId: 0, bakcTokenId: 0, amount: halfAmount, isUncommit: false},
-            ])
+      await pool.connect(user1.signer).withdrawBAKC(mayc.address, [
+        {
+          mainTokenId: 0,
+          bakcTokenId: 0,
+          amount: halfAmount,
+          isUncommit: false,
+        },
+      ])
     );
 
     apeBalance = await ape.balanceOf(user1.address);
     expect(apeBalance).to.be.equal(parseEther("12200"));
 
     await waitForTx(
-    await pool
-      .connect(user1.signer)
-      .withdrawBAKC(mayc.address, [
-        {mainTokenId: 0, bakcTokenId: 0, amount: halfAmount, isUncommit: true},
+      await pool.connect(user1.signer).withdrawBAKC(mayc.address, [
+        {
+          mainTokenId: 0,
+          bakcTokenId: 0,
+          amount: halfAmount,
+          isUncommit: true,
+        },
       ])
     );
 

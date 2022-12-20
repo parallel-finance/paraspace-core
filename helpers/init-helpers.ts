@@ -37,7 +37,10 @@ import {
   deployATokenDebtToken,
   deployStETHDebtToken,
   deployPTokenSApe,
-  deployApeCoinStaking, deployPTokenCApe, deployCApeDebtToken, deployNTokenBAKCImpl,
+  deployApeCoinStaking,
+  deployPTokenCApe,
+  deployCApeDebtToken,
+  deployNTokenBAKCImpl,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -159,7 +162,7 @@ export const initReservesByHelper = async (
       xTokenImpl === eContractid.PTokenATokenImpl ||
       xTokenImpl === eContractid.PTokenSApeImpl ||
       xTokenImpl === eContractid.PTokenCApeImpl ||
-        xTokenImpl === eContractid.NTokenBAKCImpl
+      xTokenImpl === eContractid.NTokenBAKCImpl
   ) as [string, IReserveParams][];
 
   for (const [symbol, params] of reserves) {
@@ -372,13 +375,13 @@ export const initReservesByHelper = async (
         } else if (reserveSymbol === ERC20TokenContractId.cAPE) {
           if (!pTokenPsApeImplementationAddress) {
             pTokenPsApeImplementationAddress = (
-                await deployPTokenCApe(pool.address, verify)
+              await deployPTokenCApe(pool.address, verify)
             ).address;
           }
           xTokenToUse = pTokenPsApeImplementationAddress;
           if (!PsApeVariableDebtTokenImplementationAddress) {
             PsApeVariableDebtTokenImplementationAddress = (
-                await deployCApeDebtToken(pool.address, verify)
+              await deployCApeDebtToken(pool.address, verify)
             ).address;
           }
           variableDebtTokenToUse = PsApeVariableDebtTokenImplementationAddress;
@@ -432,20 +435,26 @@ export const initReservesByHelper = async (
         } else if (reserveSymbol === ERC721TokenContractId.BAKC) {
           if (!nTokenBAKCImplementationAddress) {
             const apeCoinStaking =
-                (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
-                (await deployApeCoinStaking(verify)).address;
+              (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+              (await deployApeCoinStaking(verify)).address;
             const nBAYC = (
-                await pool.getReserveData(
-                    tokenAddresses[ERC721TokenContractId.BAYC]
-                )
+              await pool.getReserveData(
+                tokenAddresses[ERC721TokenContractId.BAYC]
+              )
             ).xTokenAddress;
             const nMAYC = (
-                await pool.getReserveData(
-                    tokenAddresses[ERC721TokenContractId.MAYC]
-                )
+              await pool.getReserveData(
+                tokenAddresses[ERC721TokenContractId.MAYC]
+              )
             ).xTokenAddress;
             nTokenBAKCImplementationAddress = (
-                await deployNTokenBAKCImpl(pool.address, apeCoinStaking, nBAYC, nMAYC, verify)
+              await deployNTokenBAKCImpl(
+                pool.address,
+                apeCoinStaking,
+                nBAYC,
+                nMAYC,
+                verify
+              )
             ).address;
           }
           xTokenToUse = nTokenBAKCImplementationAddress;

@@ -396,7 +396,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MOONBIRD"
   | "MEEBITS"
   | "OTHR"
-    | "BAKC"
+  | "BAKC"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
