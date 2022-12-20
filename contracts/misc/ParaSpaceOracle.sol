@@ -183,7 +183,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         try IAToken(asset).UNDERLYING_ASSET_ADDRESS() returns (
             address _underlying
         ) {
-            underlying = _underlying;
+            if (underlying == BASE_CURRENCY) underlying = _underlying;
         } catch {}
 
         return (isCToken, underlying);
