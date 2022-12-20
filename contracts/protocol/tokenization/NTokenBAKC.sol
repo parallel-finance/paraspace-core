@@ -12,6 +12,7 @@ import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 import {INTokenApeStaking} from "../../interfaces/INTokenApeStaking.sol";
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {INToken} from "../../interfaces/INToken.sol";
+import {IRewardController} from "../../interfaces/IRewardController.sol";
 
 /**
  * @title NTokenBAKC
@@ -40,10 +41,27 @@ contract NTokenBAKC is NToken {
         nMAYC = _nMAYC;
     }
 
-    function setApprove(address ape) external onlyPoolAdmin {
-        IERC20(ape).safeApprove(nBAYC, type(uint256).max);
-        IERC20(ape).safeApprove(nMAYC, type(uint256).max);
-        IERC721(_underlyingAsset).setApprovalForAll(address(POOL), true);
+    function initialize(
+        IPool initializingPool,
+        address underlyingAsset,
+        IRewardController incentivesController,
+        string calldata nTokenName,
+        string calldata nTokenSymbol,
+        bytes calldata params
+    ) public virtual override initializer {
+        super.initialize(
+            initializingPool,
+            underlyingAsset,
+            incentivesController,
+            nTokenName,
+            nTokenSymbol,
+            params
+        );
+
+        IERC20 ape = _apeCoinStaking.apeCoin();
+        ape.safeApprove(nBAYC, type(uint256).max);
+        ape.safeApprove(nMAYC, type(uint256).max);
+        IERC721(underlyingAsset).setApprovalForAll(address(POOL), true);
     }
 
     function _transfer(
@@ -52,6 +70,25 @@ contract NTokenBAKC is NToken {
         uint256 tokenId,
         bool validate
     ) internal override {
+        _unStakePairedApePosition(tokenId);
+        super._transfer(from, to, tokenId, validate);
+    }
+
+    /**
+     * @notice Overrides the burn from NToken to withdraw all staked and pending rewards before burning the NToken on liquidation/withdraw
+     */
+    function burn(
+        address from,
+        address receiverOfUnderlying,
+        uint256[] calldata tokenIds
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            _unStakePairedApePosition(tokenIds[index]);
+        }
+        return _burn(from, receiverOfUnderlying, tokenIds);
+    }
+
+    function _unStakePairedApePosition(uint256 tokenId) internal {
         //check if have ape pair position
         (uint256 bakcStakedAmount, ) = _apeCoinStaking.nftPosition(
             ApeStakingLogic.BAKC_POOL_ID,
@@ -71,8 +108,6 @@ contract NTokenBAKC is NToken {
                 );
             }
         }
-
-        _transfer(from, to, tokenId, validate);
     }
 
     function _tryUnstakeMainTokenPosition(

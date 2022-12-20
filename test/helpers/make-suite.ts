@@ -366,7 +366,7 @@ export async function initializeMakeSuite() {
   )?.tokenAddress;
 
   const nBAKCAddress = allTokens.find(
-      (xToken) => xToken.symbol === NTokenContractId.nBAKC
+    (xToken) => xToken.symbol === NTokenContractId.nBAKC
   )?.tokenAddress;
 
   const nWPunkAddress = allTokens.find(
