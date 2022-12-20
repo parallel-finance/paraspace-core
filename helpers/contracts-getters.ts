@@ -73,6 +73,7 @@ import {
   BlurAdapter__factory,
   X2Y2Adapter__factory,
   AutoCompoundApe__factory,
+  MockCToken__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -868,6 +869,17 @@ export const getMockAToken = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.MockAToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockCToken = async (address?: tEthereumAddress) =>
+  await MockCToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockCToken}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

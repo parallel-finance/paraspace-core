@@ -176,6 +176,7 @@ export enum eContractid {
   NonfungiblePositionManager = "NonfungiblePositionManager",
   StETH = "StETH",
   MockAToken = "MockAToken",
+  MockCToken = "MockCToken",
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
@@ -443,6 +444,7 @@ export enum PTokenContractId {
   pUSDC = "pUSDC",
   pWETH = "pWETH",
   paWETH = "paWETH",
+  pcETH = "pcETH",
   pstETH = "pstETH",
 }
 

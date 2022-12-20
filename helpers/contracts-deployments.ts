@@ -216,6 +216,10 @@ import {
   X2Y2R1,
   X2Y2R1__factory,
   AutoCompoundApe,
+  MockCToken,
+  MockCToken__factory,
+  CTokenOracleWrapper__factory,
+  CTokenOracleWrapper,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -856,6 +860,14 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
         continue;
       }
 
+      if (tokenSymbol === ERC20TokenContractId.cETH) {
+        tokens[tokenSymbol] = await deployMockCToken(
+          [tokenSymbol, tokenSymbol, ZERO_ADDRESS],
+          verify
+        );
+        continue;
+      }
+
       if (tokenSymbol === ERC20TokenContractId.cAPE) {
         console.log("cAPE deploy later....");
         continue;
@@ -1238,6 +1250,20 @@ export const deployERC721OracleWrapper = async (
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721OracleWrapper>;
+
+export const deployCTokenOracleWrapper = async (
+  addressesProvider: string,
+  oracleAddress: string,
+  asset: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CTokenOracleWrapper__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(`.${symbol}`),
+    [addressesProvider, oracleAddress, asset],
+    verify
+  ) as Promise<CTokenOracleWrapper>;
 
 export const deployPunks = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
@@ -1623,6 +1649,17 @@ export const deployMockAToken = async (
     [...args],
     verify
   ) as Promise<MockAToken>;
+
+export const deployMockCToken = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MockCToken> =>
+  withSaveAndVerify(
+    new MockCToken__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MockCToken>;
 
 export const deployPTokenAToken = async (
   poolAddress: tEthereumAddress,

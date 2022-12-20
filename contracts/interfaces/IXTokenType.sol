@@ -18,7 +18,8 @@ enum XTokenType {
     RebasingPToken,
     PTokenAToken,
     PTokenStETH,
-    PTokenSApe
+    PTokenSApe,
+    PTokenCApe
 }
 
 interface IXTokenType {

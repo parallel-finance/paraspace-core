@@ -99,6 +99,6 @@ contract PTokenSApe is PToken {
         override
         returns (XTokenType)
     {
-        return XTokenType.PTokenSApe;
+        return XTokenType.PTokenCApe;
     }
 }

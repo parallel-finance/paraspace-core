@@ -49,6 +49,7 @@ import {
   getLooksRareAdapter,
   getX2Y2Adapter,
   getBlurAdapter,
+  getMockCToken,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -67,6 +68,7 @@ import {
   ExecutionDelegate,
   IPool,
   LooksRareAdapter,
+  MockCToken,
   NFTFloorOracle,
   NTokenBAYC,
   NTokenMAYC,
@@ -144,6 +146,8 @@ export interface TestEnv {
   pWETH: PToken;
   aWETH: MockAToken;
   paWETH: PTokenAToken;
+  cETH: MockCToken;
+  pcETH: PToken;
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
@@ -217,6 +221,8 @@ export async function initializeMakeSuite() {
     pWETH: {} as PToken,
     aWETH: {} as MockAToken,
     paWETH: {} as PTokenAToken,
+    cETH: {} as MockCToken,
+    pcETH: {} as PToken,
     dai: {} as MintableERC20,
     pDai: {} as PToken,
     variableDebtDai: {} as VariableDebtToken,
@@ -343,6 +349,10 @@ export async function initializeMakeSuite() {
     (xToken) => xToken.symbol === PTokenContractId.paWETH
   )?.tokenAddress;
 
+  const pcEthAddress = allTokens.find(
+    (xToken) => xToken.symbol === PTokenContractId.pcETH
+  )?.tokenAddress;
+
   const pstEthAddress = allTokens.find(
     (xToken) => xToken.symbol === PTokenContractId.pstETH
   )?.tokenAddress;
@@ -401,6 +411,9 @@ export async function initializeMakeSuite() {
   const aWETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.aWETH
   )?.tokenAddress;
+  const cETHAddress = reservesTokens.find(
+    (token) => token.symbol === ERC20TokenContractId.cETH
+  )?.tokenAddress;
   const {variableDebtTokenAddress: variableDebtAWethAddress} =
     await testEnv.protocolDataProvider.getReserveTokensAddresses(
       aWETHAddress || ""
@@ -457,6 +470,7 @@ export async function initializeMakeSuite() {
   testEnv.pUsdc = await getPToken(pUsdcAddress);
   testEnv.pWETH = await getPToken(pWEthAddress);
   testEnv.paWETH = await getPTokenAToken(paWEthAddress);
+  testEnv.pcETH = await getPToken(pcEthAddress);
   testEnv.pstETH = await getPTokenStETH(pstEthAddress);
   testEnv.variableDebtStETH = await getVariableDebtToken(
     variableDebtStETHAddress
@@ -488,6 +502,7 @@ export async function initializeMakeSuite() {
   testEnv.wBTC = await getMintableERC20(wBTCAddress);
   testEnv.stETH = await getStETH(stETHAddress);
   testEnv.aWETH = await getMockAToken(aWETHAddress);
+  testEnv.cETH = await getMockCToken(cETHAddress);
   testEnv.ape = await getMintableERC20(apeAddress);
   testEnv.mayc = await getMintableERC721(maycAddress);
   testEnv.doodles = await getMintableERC721(doodlesAddress);

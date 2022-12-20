@@ -190,6 +190,10 @@ test-marketplace-adapter:
 test-uniswap-v3-oracle:
 	make TEST_TARGET=_uniswap-v3-oracle.spec.ts test
 
+.PHONY: test-ctoken-oracle
+test-ctoken-oracle:
+	make TEST_TARGET=_ctoken-oracle.spec.ts test
+
 .PHONY: test-uniswap-v3-ltv-validation
 test-uniswap-v3-ltv-validation:
 	make TEST_TARGET=_uniswap_ltv_validation.spec.ts test
@@ -220,7 +224,7 @@ test-mint-to-treasury:
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
-	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
+	make TEST_TARGET=_xtoken_rebasing.spec.ts test
 
 .PHONY: test-addresses-provider
 test-addresses-provider:
