@@ -306,6 +306,7 @@ contract PoolCore is
                     asset: asset,
                     amount: amount,
                     onBehalfOf: onBehalfOf,
+                    payer: msg.sender,
                     usePTokens: false
                 })
             );
@@ -329,6 +330,7 @@ contract PoolCore is
                     asset: asset,
                     amount: amount,
                     onBehalfOf: msg.sender,
+                    payer: msg.sender,
                     usePTokens: true
                 })
             );
@@ -363,6 +365,7 @@ contract PoolCore is
                     asset: asset,
                     amount: amount,
                     onBehalfOf: onBehalfOf,
+                    payer: msg.sender,
                     usePTokens: false
                 });
             return

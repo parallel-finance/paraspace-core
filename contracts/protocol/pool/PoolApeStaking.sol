@@ -370,9 +370,8 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function repayAndSupply(
+    function repayAndSupplyApe(
         address underlyingAsset,
-        address repayAsset,
         address onBehalfOf,
         uint256 totalAmount
     ) external {
@@ -382,52 +381,37 @@ contract PoolApeStaking is
             Errors.CALLER_NOT_XTOKEN
         );
 
-        DataTypes.ReserveData storage apeCoinData = ps._reserves[repayAsset];
-        uint256 repayAmount = IERC20(apeCoinData.variableDebtTokenAddress)
-            .balanceOf(onBehalfOf);
-        if (repayAmount > 0) {
-            repayAmount = Math.min(repayAmount, totalAmount);
-        }
-        if (repayAmount > 0) {
-            BorrowLogic.executeRepay(
-                ps._reserves,
-                ps._usersConfig[onBehalfOf],
-                DataTypes.ExecuteRepayParams({
-                    asset: repayAsset,
-                    amount: repayAmount,
-                    onBehalfOf: onBehalfOf,
-                    usePTokens: false
-                })
-            );
+        // 1, repay APE
+        uint256 leftAmount = totalAmount;
+        leftAmount -= _repayUserDebt(
+            ps,
+            address(APE_COIN),
+            onBehalfOf,
+            msg.sender,
+            leftAmount
+        );
+        if (leftAmount == 0) {
+            return;
         }
 
-        uint256 supplyAmount = totalAmount - repayAmount;
-        if (supplyAmount > 0) {
-            DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-                onBehalfOf
-            ];
-            SupplyLogic.executeSupply(
-                ps._reserves,
-                userConfig,
-                DataTypes.ExecuteSupplyParams({
-                    asset: repayAsset,
-                    amount: supplyAmount,
-                    onBehalfOf: onBehalfOf,
-                    payer: msg.sender,
-                    referralCode: 0
-                })
-            );
-            DataTypes.ReserveData storage repayReserve = ps._reserves[
-                repayAsset
-            ];
-            bool currentStatus = userConfig.isUsingAsCollateral(
-                repayReserve.id
-            );
-            if (!currentStatus) {
-                userConfig.setUsingAsCollateral(repayReserve.id, true);
-                emit ReserveUsedAsCollateralEnabled(repayAsset, onBehalfOf);
-            }
+        // 2, deposit APE as cAPE
+        APE_COIN.safeTransferFrom(msg.sender, address(this), leftAmount);
+        APE_COMPOUND.deposit(address(this), leftAmount);
+
+        // 3, repay cAPE
+        leftAmount -= _repayUserDebt(
+            ps,
+            address(APE_COMPOUND),
+            onBehalfOf,
+            address(this),
+            leftAmount
+        );
+        if (leftAmount == 0) {
+            return;
         }
+
+        // 4, supply cApe for user
+        _supplyCApeForUser(ps, onBehalfOf, leftAmount);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -546,5 +530,34 @@ contract PoolApeStaking is
             userConfig.setUsingAsCollateral(assetReserve.id, true);
             emit ReserveUsedAsCollateralEnabled(address(APE_COMPOUND), user);
         }
+    }
+
+    function _repayUserDebt(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address onBehalfOf,
+        address payer,
+        uint256 maxAmount
+    ) internal returns (uint256) {
+        uint256 repayAmount = IERC20(
+            ps._reserves[asset].variableDebtTokenAddress
+        ).balanceOf(onBehalfOf);
+        if (repayAmount == 0 || maxAmount == 0) {
+            return 0;
+        }
+
+        repayAmount = Math.min(repayAmount, maxAmount);
+        BorrowLogic.executeRepay(
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteRepayParams({
+                asset: asset,
+                amount: repayAmount,
+                onBehalfOf: onBehalfOf,
+                payer: payer,
+                usePTokens: false
+            })
+        );
+        return repayAmount;
     }
 }

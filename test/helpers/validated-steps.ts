@@ -23,6 +23,7 @@ import {
 } from "../../helpers/contracts-helpers";
 import {waitForTx} from "../../helpers/misc-utils";
 import {
+  AutoCompoundApe,
   ERC20,
   ERC721,
   INonfungiblePositionManager,
@@ -44,6 +45,7 @@ type SupportedAsset =
   | MintableERC20
   | MintableERC721
   | WETH9Mocked
+  | AutoCompoundApe
   | INonfungiblePositionManager;
 
 function isERC20(token: SupportedAsset): token is MintableERC20 | WETH9Mocked {
