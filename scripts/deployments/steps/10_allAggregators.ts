@@ -65,6 +65,8 @@ export const step_10 = async (verify = false) => {
     const [allTokenAddresses, allAggregatorsAddresses] =
       await deployAllAggregators(
         nftFloorOracle.address,
+        allTokens.WETH.address,
+        constants.WeiPerEther.toString(),
         getParaSpaceConfig().Mocks?.AllAssetsInitialPrices,
         verify
       );

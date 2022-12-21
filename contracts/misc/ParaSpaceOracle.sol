@@ -9,9 +9,6 @@ import {IAtomicPriceAggregator} from "../interfaces/IAtomicPriceAggregator.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IPriceOracleGetter} from "../interfaces/IPriceOracleGetter.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
-import {ICToken} from "../interfaces/ICToken.sol";
-import {IAToken} from "../interfaces/IAToken.sol";
-import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 
 /**
  * @title ParaSpaceOracle
@@ -121,72 +118,21 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         override
         returns (uint256)
     {
-        (bool isCToken, address underlying) = _getTokenInfo(asset);
-
-        int256 price = 0;
-        if (underlying == BASE_CURRENCY) {
-            price = int256(BASE_CURRENCY_UNIT);
+        if (asset == BASE_CURRENCY) {
+            return BASE_CURRENCY_UNIT;
         }
 
-        IEACAggregatorProxy source = IEACAggregatorProxy(
-            assetsSources[underlying]
-        );
-        if (price <= 0 && address(source) != address(0)) {
+        int256 price = 0;
+        IEACAggregatorProxy source = IEACAggregatorProxy(assetsSources[asset]);
+        if (address(source) != address(0)) {
             price = source.latestAnswer();
         }
         if (price <= 0 && address(_fallbackOracle) != address(0)) {
-            price = int256(_fallbackOracle.getAssetPrice(underlying));
-        }
-
-        if (price > 0 && isCToken) {
-            price = _getCTokenPrice(asset, underlying, price);
+            price = int256(_fallbackOracle.getAssetPrice(asset));
         }
 
         require(price > 0, Errors.ORACLE_PRICE_NOT_READY);
         return uint256(price);
-    }
-
-    function _getCTokenPrice(
-        address asset,
-        address underlying,
-        int256 answer
-    ) internal view returns (int256) {
-        int256 underlyingUnit = 1e18; // cETH
-        underlyingUnit = int256(10**IERC20Detailed(underlying).decimals()); // cErc20
-
-        // cToken price = underlyingAssetPrice * exchangeRate / (underlyingUnit * expScale / cTokenUnit)
-        int256 exchangeRate = int256(ICToken(asset).exchangeRateStored());
-
-        return (answer * exchangeRate) / (underlyingUnit * 1e10);
-    }
-
-    function _getTokenInfo(address asset)
-        internal
-        view
-        returns (bool, address)
-    {
-        bool isCToken = false;
-        address underlying = asset;
-
-        try ICToken(asset).isCToken() returns (bool _isCToken) {
-            isCToken = _isCToken;
-        } catch {}
-
-        if (isCToken) {
-            try ICToken(asset).underlying() returns (address _underlying) {
-                underlying = _underlying;
-            } catch {
-                underlying = BASE_CURRENCY;
-            }
-        }
-
-        try IAToken(asset).UNDERLYING_ASSET_ADDRESS() returns (
-            address _underlying
-        ) {
-            if (underlying == BASE_CURRENCY) underlying = _underlying;
-        } catch {}
-
-        return (isCToken, underlying);
     }
 
     function getTokenPrice(address asset, uint256 tokenId)

@@ -7,6 +7,8 @@ import {
   eContractid,
 } from "./types";
 import {
+  BaseCurrencyOracleWrapper,
+  CTokenOracleWrapper,
   ERC721OracleWrapper,
   MockAggregator,
   PriceOracle,
@@ -16,6 +18,8 @@ import {
   deployERC721OracleWrapper,
   deployAggregator,
   deployUniswapV3OracleWrapper,
+  deployBaseCurrencyOracleWrapper,
+  deployCTokenOracleWrapper,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
@@ -48,6 +52,8 @@ export const setInitialAssetPricesInOracle = async (
 
 export const deployAllAggregators = async (
   nftFloorOracle: tEthereumAddress,
+  baseCurrency: tEthereumAddress,
+  baseCurrencyUnit: string,
   initialPrices?: iAssetAggregatorBase<string>,
   verify?: boolean
 ) => {
@@ -56,12 +62,34 @@ export const deployAllAggregators = async (
     [tokenSymbol: string]:
       | MockAggregator
       | UniswapV3OracleWrapper
+      | BaseCurrencyOracleWrapper
+      | CTokenOracleWrapper
       | ERC721OracleWrapper;
   } = {};
   const addressesProvider = await getPoolAddressesProvider();
   const chainlinkConfig = getParaSpaceConfig().Chainlink;
   for (const tokenSymbol of Object.keys(tokens)) {
     if (tokenSymbol === ERC20TokenContractId.WETH) {
+      aggregators[tokenSymbol] = await deployBaseCurrencyOracleWrapper(
+        baseCurrency,
+        baseCurrencyUnit,
+        tokenSymbol,
+        verify
+      );
+      continue;
+    }
+    if (tokenSymbol === ERC20TokenContractId.aWETH) {
+      aggregators[tokenSymbol] = aggregators[ERC20TokenContractId.WETH];
+      continue;
+    }
+    if (tokenSymbol === ERC20TokenContractId.cETH) {
+      aggregators[tokenSymbol] = await deployCTokenOracleWrapper(
+        addressesProvider.address,
+        aggregators[ERC20TokenContractId.WETH].address,
+        tokens[tokenSymbol].address,
+        tokenSymbol,
+        verify
+      );
       continue;
     }
     if (tokenSymbol === ERC721TokenContractId.UniswapV3) {

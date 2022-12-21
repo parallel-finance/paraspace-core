@@ -220,6 +220,8 @@ import {
   MockCToken__factory,
   CTokenOracleWrapper__factory,
   CTokenOracleWrapper,
+  BaseCurrencyOracleWrapper__factory,
+  BaseCurrencyOracleWrapper,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1264,6 +1266,19 @@ export const deployCTokenOracleWrapper = async (
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<CTokenOracleWrapper>;
+
+export const deployBaseCurrencyOracleWrapper = async (
+  baseCurrency: string,
+  baseCurrencyUnit: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new BaseCurrencyOracleWrapper__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(`.${symbol}`),
+    [baseCurrency, baseCurrencyUnit],
+    verify
+  ) as Promise<BaseCurrencyOracleWrapper>;
 
 export const deployPunks = async (args: [], verify?: boolean) =>
   withSaveAndVerify(

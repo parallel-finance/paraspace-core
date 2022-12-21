@@ -92,6 +92,7 @@ contract CTokenOracleWrapper is IEACAggregatorProxy {
             );
         } catch {}
 
+        // TODO: validate exchangeRate to prevent exchangeRate manipulation
         // cToken price = underlyingAssetPrice * exchangeRate / (underlyingUnit * expScale / cTokenUnit)
         int256 exchangeRate = int256(ICToken(asset).exchangeRateStored());
 
