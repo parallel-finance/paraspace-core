@@ -2057,7 +2057,7 @@ describe("APE Coin Staking Test", () => {
       pool
         .connect(user1.signer)
         .withdrawBAKC(mayc.address, [
-          {mainTokenId: 0, bakcTokenId: 0, amount: amount1, isUncommit: true},
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount1, isUncommit: false},
         ])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_BAKC_OWNER);
   });
