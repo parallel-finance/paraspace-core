@@ -41,6 +41,7 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
         _harvest();
         _compound();
 
+        emit Transfer(address(0), onBehalf, amount);
         emit Deposit(msg.sender, onBehalf, amount, amountShare);
     }
 
@@ -60,6 +61,7 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
 
         _compound();
 
+        emit Transfer(msg.sender, address(0), amount);
         emit Redeem(msg.sender, amount, amountShare);
     }
 
