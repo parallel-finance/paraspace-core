@@ -1,9 +1,9 @@
 import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../deploy/helpers/constants";
+import {waitForTx} from "../helpers/misc-utils";
+import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
@@ -11,9 +11,9 @@ import {
   mintAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {PTokenSApe} from "../types";
-import {getPTokenSApe} from "../deploy/helpers/contracts-getters";
+import {getPTokenSApe} from "../helpers/contracts-getters";
 
 describe("SApe Pool Operation Test", () => {
   let testEnv: TestEnv;
@@ -72,6 +72,7 @@ describe("SApe Pool Operation Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -121,6 +122,7 @@ describe("SApe Pool Operation Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },
@@ -172,6 +174,7 @@ describe("SApe Pool Operation Test", () => {
       await pool.connect(user1.signer).borrowApeAndStake(
         {
           nftAsset: mayc.address,
+          borrowAsset: ape.address,
           borrowAmount: amount,
           cashAmount: 0,
         },

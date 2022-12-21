@@ -1,12 +1,8 @@
 import {expect} from "chai";
 import {utils} from "ethers";
-import {
-  increaseTime,
-  timeLatest,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {increaseTime, timeLatest, waitForTx} from "../helpers/misc-utils";
+import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../helpers/constants";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {
@@ -14,13 +10,13 @@ import {
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
   impersonateAddress,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {VariableDebtToken__factory} from "../types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getTestWallets} from "./helpers/utils/wallets";
-import {HARDHAT_CHAINID} from "../deploy/helpers/hardhat-constants";
+import {HARDHAT_CHAINID} from "../helpers/hardhat-constants";
 
 declare let hre: HardhatRuntimeEnvironment;
 

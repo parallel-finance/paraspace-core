@@ -1,10 +1,9 @@
 import {expect} from "chai";
-import {createRandomAddress} from "../deploy/helpers/misc-utils";
+import {createRandomAddress} from "../helpers/misc-utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-
 import {constants, utils, Wallet} from "ethers";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {ProtocolErrors} from "../helpers/types";
 import {ACLManager__factory} from "../types";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -92,7 +91,7 @@ describe("Access Control List Manager", () => {
   // check tasks/deployments/05_aclManager.ts for detail deploy script
   it("TC-ACLManager-01 Check default admin role after deployed", async () => {
     const {deployer, aclManager, users} = await loadFixture(fixture);
-    // check ParaSpaceAdminIndex in deploy/helpers/contracts-helpers.ts has been set to DEFAULT_ADMIN_ROLE by Line 43 in deploy/tasks/deployments/full-deployment/steps/19_renounceOwnership.ts
+    // check ParaSpaceAdminIndex in helpers/contracts-helpers.ts has been set to DEFAULT_ADMIN_ROLE by Line 43 in scripts/deployments/steps/20_renounceOwnership.ts
     const DEFAULT_ADMIN_ROLE = await aclManager.DEFAULT_ADMIN_ROLE();
     expect(
       await aclManager.hasRole(DEFAULT_ADMIN_ROLE, users[3].address)

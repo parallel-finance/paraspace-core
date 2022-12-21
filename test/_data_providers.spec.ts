@@ -1,9 +1,9 @@
 import {expect} from "chai";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {ZERO_ADDRESS} from "../helpers/constants";
 import {
   convertToCurrencyDecimals,
   withSaveAndVerify,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {WalletBalanceProvider, WalletBalanceProvider__factory} from "../types";
 import {
   borrowAndValidate,
@@ -18,9 +18,9 @@ import {
   getMockIncentivesController,
   getUiIncentiveDataProviderV3,
   getUniswapV3OracleWrapper,
-} from "../deploy/helpers/contracts-getters";
+} from "../helpers/contracts-getters";
 import {ethers} from "ethers";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {waitForTx} from "../helpers/misc-utils";
 import {
   approveTo,
   createNewPool,
@@ -28,7 +28,7 @@ import {
   mintNewPosition,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {ERC20TokenContractId} from "../deploy/helpers/types";
+import {ERC20TokenContractId} from "../helpers/types";
 
 const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 

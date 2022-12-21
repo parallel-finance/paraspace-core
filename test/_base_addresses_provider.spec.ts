@@ -5,21 +5,18 @@ import {
   createRandomAddress,
   evmRevert,
   evmSnapshot,
-} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {getProxyImplementation} from "../deploy/helpers/contracts-helpers";
-import {deployPoolComponents} from "../deploy/helpers/contracts-deployments";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {getProxyImplementation} from "../helpers/contracts-helpers";
+import {deployPoolComponents} from "../helpers/contracts-deployments";
 import {
   InitializableAdminUpgradeabilityProxy__factory,
   MockPeripheryContractV1__factory,
   MockPeripheryContractV2__factory,
 } from "../types";
-import {
-  getFirstSigner,
-  getProxyAdmin,
-} from "../deploy/helpers/contracts-getters";
+import {getFirstSigner, getProxyAdmin} from "../helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 

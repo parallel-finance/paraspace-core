@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {getParaSpaceConfig, waitForTx} from "../deploy/helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
@@ -8,7 +8,7 @@ import {
   deployAggregator,
   deployERC721OracleWrapper,
   deployMintableERC721,
-} from "../deploy/helpers/contracts-deployments";
+} from "../helpers/contracts-deployments";
 import {loadFixture, mine} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {MintableERC721} from "../types";

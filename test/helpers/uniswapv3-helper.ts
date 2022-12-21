@@ -1,12 +1,12 @@
 import {
   getUniswapV3SwapRouter,
   getUniswapV3Factory,
-} from "../../deploy/helpers/contracts-getters";
+} from "../../helpers/contracts-getters";
 import {TickMath} from "@uniswap/v3-sdk";
 import {BigNumber, BigNumberish} from "ethers";
 import {expect} from "chai";
-import {waitForTx} from "../../deploy/helpers/misc-utils";
-import {MAX_UINT_AMOUNT} from "../../deploy/helpers/constants";
+import {waitForTx} from "../../helpers/misc-utils";
+import {MAX_UINT_AMOUNT} from "../../helpers/constants";
 import {IUniswapV3Pool__factory} from "../../types";
 
 export function almostEqual(value0: BigNumberish, value1: BigNumberish) {

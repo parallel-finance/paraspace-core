@@ -25,6 +25,8 @@ import {Errors} from "../libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
+import {PercentageMath} from "../libraries/math/PercentageMath.sol";
+import "../../dependencies/openzeppelin/contracts/IERC20.sol";
 
 /**
  * @title Pool Parameters contract
@@ -47,7 +49,7 @@ contract PoolParameters is
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 120;
-    uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 2e18;
+    uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 3e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
 
     /**
@@ -203,6 +205,28 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function unlimitedApproveTo(address token, address to)
+        external
+        virtual
+        override
+        onlyPoolAdmin
+    {
+        IERC20(token).approve(to, 0);
+        IERC20(token).approve(to, type(uint256).max);
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setClaimApeForCompoundFee(uint256 fee) external onlyPoolAdmin {
+        require(fee < PercentageMath.HALF_PERCENTAGE_FACTOR, "Value Too High");
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint256 oldValue = ps._apeCompoundFee;
+        if (oldValue != fee) {
+            ps._apeCompoundFee = uint16(fee);
+            emit ClaimApeForYieldIncentiveUpdated(oldValue, fee);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
     function setAuctionRecoveryHealthFactor(uint64 value)
         external
         virtual
@@ -266,6 +290,7 @@ contract PoolParameters is
         override
         nonReentrant
     {
+        require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         DataTypes.PoolStorage storage ps = poolStorage();
 
         require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);

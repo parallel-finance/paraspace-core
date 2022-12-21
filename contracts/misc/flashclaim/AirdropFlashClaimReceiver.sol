@@ -61,11 +61,12 @@ contract AirdropFlashClaimReceiver is
     function executeOperation(
         address nftAsset,
         uint256[] calldata nftTokenIds,
+        address initiator,
         bytes calldata params
     ) external override onlyPool returns (bool) {
         require(nftTokenIds.length > 0, "empty token list");
+        require(initiator == owner(), "not owner");
 
-        address initiator = owner();
         ExecuteOperationLocalVars memory vars;
         // decode parameters
         (

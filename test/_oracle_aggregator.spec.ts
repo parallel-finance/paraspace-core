@@ -1,20 +1,20 @@
 import {expect} from "chai";
-import {oneEther, ONE_ADDRESS, ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {oneEther, ONE_ADDRESS, ZERO_ADDRESS} from "../helpers/constants";
 import {
   evmRevert,
   evmSnapshot,
   getParaSpaceConfig,
-} from "../deploy/helpers/misc-utils";
+} from "../helpers/misc-utils";
 import {
   deployMintableERC20,
   deployAggregator,
-} from "../deploy/helpers/contracts-deployments";
+} from "../helpers/contracts-deployments";
 import {MintableERC20, MockAggregator} from "../types";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 describe("ParaSpaceOracle", () => {
   let snap: string;

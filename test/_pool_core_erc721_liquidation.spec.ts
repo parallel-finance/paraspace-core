@@ -1,17 +1,10 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
-import {
-  getAggregator,
-  getParaSpaceOracle,
-} from "../deploy/helpers/contracts-getters";
-import {
-  advanceTimeAndBlock,
-  DRE,
-  waitForTx,
-} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {getAggregator, getParaSpaceOracle} from "../helpers/contracts-getters";
+import {advanceTimeAndBlock, DRE, waitForTx} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getUserData} from "./helpers/utils/helpers";
 import {

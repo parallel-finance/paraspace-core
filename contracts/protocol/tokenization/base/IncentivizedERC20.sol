@@ -262,7 +262,6 @@ abstract contract IncentivizedERC20 is Context, IERC20Detailed {
                 );
             }
         }
-        emit Transfer(sender, recipient, amount);
     }
 
     /**

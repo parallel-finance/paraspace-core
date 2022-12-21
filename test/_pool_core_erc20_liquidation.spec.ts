@@ -8,20 +8,20 @@ import {
   mintAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {waitForTx} from "../helpers/misc-utils";
 import {
   convertToCurrencyDecimals,
   isBorrowing,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {parseEther} from "ethers/lib/utils";
 import {TestEnv} from "./helpers/make-suite";
 import {VariableDebtToken__factory} from "../types";
 import {almostEqual} from "./helpers/uniswapv3-helper";
-import {getAggregator} from "../deploy/helpers/contracts-getters";
+import {getAggregator} from "../helpers/contracts-getters";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);

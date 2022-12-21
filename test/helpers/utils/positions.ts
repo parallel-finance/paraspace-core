@@ -2,7 +2,7 @@ import {BigNumber} from "ethers";
 import {
   getPoolAddressesProvider,
   getUiPoolDataProvider,
-} from "../../../deploy/helpers/contracts-getters";
+} from "../../../helpers/contracts-getters";
 import {SignerWithAddress} from "../make-suite";
 
 type TokenPositionInfo = {

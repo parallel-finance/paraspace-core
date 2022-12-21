@@ -1,6 +1,6 @@
 import {expect} from "chai";
-import {getParaSpaceConfig, waitForTx} from "../deploy/helpers/misc-utils";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {getParaSpaceConfig, waitForTx} from "../helpers/misc-utils";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";

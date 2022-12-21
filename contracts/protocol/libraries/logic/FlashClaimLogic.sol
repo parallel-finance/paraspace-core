@@ -47,6 +47,7 @@ library FlashClaimLogic {
             IFlashClaimReceiver(params.receiverAddress).executeOperation(
                 params.nftAsset,
                 params.nftTokenIds,
+                msg.sender,
                 params.params
             ),
             Errors.INVALID_FLASH_CLAIM_RECEIVER

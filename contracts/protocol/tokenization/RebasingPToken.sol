@@ -5,6 +5,10 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
+import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 
 /**
  * @title Rebasing PToken
@@ -13,6 +17,8 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
  */
 contract RebasingPToken is PToken {
     using WadRayMath for uint256;
+    using SafeCast for uint256;
+    using GPv2SafeERC20 for IERC20;
 
     constructor(IPool pool) PToken(pool) {
         //intentionally empty
@@ -84,7 +90,7 @@ contract RebasingPToken is PToken {
     }
 
     /**
-     * @dev Returns the scaled total supply of the variable debt token. Represents sum(debt/index)
+     * @dev Returns the scaled total supply of the ptoken. Represents sum(debt/index)
      * @return the scaled total supply
      **/
     function scaledTotalSupply()
@@ -102,7 +108,7 @@ contract RebasingPToken is PToken {
         view
         returns (uint256)
     {
-        return ((super.scaledBalanceOf(user) * rebasingIndex) / WadRayMath.RAY);
+        return super.scaledBalanceOf(user).rayMul(rebasingIndex);
     }
 
     function _scaledTotalSupply(uint256 rebasingIndex)
@@ -110,11 +116,11 @@ contract RebasingPToken is PToken {
         view
         returns (uint256)
     {
-        return ((super.scaledTotalSupply() * rebasingIndex) / WadRayMath.RAY);
+        return super.scaledTotalSupply().rayMul(rebasingIndex);
     }
 
     /**
-     * @return Current rebasing index of stETH in RAY
+     * @return Current rebasing index in RAY
      **/
     function lastRebasingIndex() internal view virtual returns (uint256) {
         // returns 1 RAY by default which makes it identical to PToken in behaviour
@@ -129,5 +135,112 @@ contract RebasingPToken is PToken {
         returns (XTokenType)
     {
         return XTokenType.RebasingPToken;
+    }
+
+    /**
+     * @notice Implements the basic logic to mint a scaled & rebased balance token.
+     * @param caller The address performing the mint
+     * @param onBehalfOf The address of the user that will receive the scaled tokens
+     * @param amount The amount of tokens getting minted
+     * @param index The next liquidity index of the reserve
+     * @return `true` if the the previous balance of the user was 0
+     **/
+    function _mintScaled(
+        address caller,
+        address onBehalfOf,
+        uint256 amount,
+        uint256 index
+    ) internal virtual override returns (bool) {
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        uint256 amountScaled = amountRebased.rayDiv(index);
+        require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
+
+        uint256 scaledBalance = _scaledBalanceOf(onBehalfOf, rebasingIndex);
+        uint256 balanceIncrease = scaledBalance.rayMul(index) -
+            scaledBalance.rayMul(_userState[onBehalfOf].additionalData);
+
+        _userState[onBehalfOf].additionalData = index.toUint128();
+
+        _mint(onBehalfOf, amountScaled.toUint128());
+
+        uint256 amountToMint = amount + balanceIncrease;
+        emit Transfer(address(0), onBehalfOf, amountToMint);
+        emit Mint(caller, onBehalfOf, amountToMint, balanceIncrease, index);
+
+        return (scaledBalance == 0);
+    }
+
+    /**
+     * @notice Implements the basic logic to burn a scaled & rebased balance token.
+     * @dev In some instances, a burn transaction will emit a mint event
+     * if the amount to burn is less than the interest that the user accrued
+     * @param user The user which debt is burnt
+     * @param target The address that will receive the underlying, if any
+     * @param amount The amount getting burned
+     * @param index The variable debt index of the reserve
+     **/
+    function _burnScaled(
+        address user,
+        address target,
+        uint256 amount,
+        uint256 index
+    ) internal virtual override {
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 amountRebased = amount.rayDiv(rebasingIndex);
+        uint256 amountScaled = amountRebased.rayDiv(index);
+        require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
+
+        uint256 scaledBalance = _scaledBalanceOf(user, rebasingIndex);
+        uint256 balanceIncrease = scaledBalance.rayMul(index) -
+            scaledBalance.rayMul(_userState[user].additionalData);
+
+        _userState[user].additionalData = index.toUint128();
+
+        _burn(user, amountScaled.toUint128());
+
+        if (balanceIncrease > amount) {
+            uint256 amountToMint = balanceIncrease - amount;
+            emit Transfer(address(0), user, amountToMint);
+            emit Mint(user, user, amountToMint, balanceIncrease, index);
+        } else {
+            uint256 amountToBurn = amount - balanceIncrease;
+            emit Transfer(user, address(0), amountToBurn);
+            emit Burn(user, target, amountToBurn, balanceIncrease, index);
+        }
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount,
+        bool validate
+    ) internal override {
+        address underlyingAsset = _underlyingAsset;
+
+        uint256 rebasingIndex = lastRebasingIndex();
+        uint256 index = POOL.getReserveNormalizedIncome(underlyingAsset);
+
+        uint256 fromBalanceBefore = _scaledBalanceOf(from, rebasingIndex)
+            .rayMul(index);
+        uint256 toBalanceBefore = _scaledBalanceOf(to, rebasingIndex).rayMul(
+            index
+        );
+
+        _transferScaled(from, to, amount.rayDiv(rebasingIndex), index);
+
+        if (validate) {
+            POOL.finalizeTransfer(
+                underlyingAsset,
+                from,
+                to,
+                false,
+                amount,
+                fromBalanceBefore,
+                toBalanceBefore
+            );
+        }
+
+        emit Transfer(from, to, amount);
     }
 }
