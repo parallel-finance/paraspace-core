@@ -2059,7 +2059,7 @@ describe("APE Coin Staking Test", () => {
         .withdrawBAKC(mayc.address, [
           {mainTokenId: 0, bakcTokenId: 0, amount: amount1, isUncommit: true},
         ])
-    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_BAKC_OWNER);
   });
 
   it("TC-pool-ape-staking-35 test safeTransferFrom BAKC: original owner claim bakc reward (revert expected)", async () => {
@@ -2109,7 +2109,7 @@ describe("APE Coin Staking Test", () => {
       pool
         .connect(user1.signer)
         .claimBAKC(mayc.address, [{mainTokenId: 0, bakcTokenId: 0}])
-    ).to.be.revertedWith("transfer caller is not owner nor approved");
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_BAKC_OWNER);
   });
 
   it("TC-pool-ape-staking-36 test safeTransferFrom BAKC: new owner withdraw all (revert expected)", async () => {
@@ -2473,7 +2473,7 @@ describe("APE Coin Staking Test", () => {
           isUncommit: false,
         },
       ])
-    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_BAKC_OWNER);
   });
 
   it("TC-pool-ape-staking-42 test withdrawBAKC success when withdraw amount == bakc staking amount, it will automatically claim and transfer the reward to the BACK owner", async () => {
