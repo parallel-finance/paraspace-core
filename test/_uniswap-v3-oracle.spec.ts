@@ -604,4 +604,170 @@ describe("Uniswap V3 Oracle", () => {
         .add(liquidityDaiAmount.div("1000000000000000000"))
     );
   });
+
+  it("test with usdc and weth:(token0 decimal less than token1 decimal) with large price difference [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1],
+      usdc,
+      weth,
+      oracle,
+      nftPositionManager,
+    } = testEnv;
+    const userUsdcAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      "10000"
+    );
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: usdc, user: user1, amount: userUsdcAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    const nft = nftPositionManager.connect(user1.signer);
+    await approveTo({token: usdc, user: user1, target: nft.address});
+    await approveTo({token: weth, user: user1, target: nft.address});
+    const fee = 3000;
+    const tickSpacing = fee / 50;
+    const initialPrice = encodeSqrtRatioX96("1000000000000000000", 1); // 1 USDC = 1e12 WETH
+    const lowerPrice = encodeSqrtRatioX96("100000000000000000", 1); // 1 USDC = 1e11 WETH
+    const upperPrice = encodeSqrtRatioX96("10000000000000000000", 1); // 1 USDC = 1e13 WETH
+
+    await oracle.setAssetPrice(usdc.address, "1000000000000000000000000");
+
+    await createNewPool({
+      positionManager: nft,
+      token0: usdc,
+      token1: weth,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: usdc,
+      token1: weth,
+      fee: fee,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userUsdcAmount,
+      token1Amount: userWethAmount,
+    });
+    console.log("minted position with weth amount", userWethAmount);
+    console.log("minted position with usdc amount", userUsdcAmount);
+
+    const usdcBalance = await usdc.balanceOf(user1.address);
+    const wethBalance = await weth.balanceOf(user1.address);
+    console.log("usdcBalance: ", usdcBalance);
+    console.log("wethBalance: ", wethBalance);
+
+    const liquidityUsdcAmount = userUsdcAmount.sub(usdcBalance);
+    const liquidityWethAmount = userWethAmount.sub(wethBalance);
+    console.log("liquidityUsdcAmount: ", liquidityUsdcAmount);
+    console.log("liquidityWethAmount: ", liquidityWethAmount);
+
+    expect(await nft.balanceOf(user1.address)).to.eq(1);
+    const tokenId = await nft.tokenOfOwnerByIndex(user1.address, 0);
+
+    const uniV3Oracle = await getUniswapV3OracleWrapper();
+    const liquidityAmount = await uniV3Oracle.getLiquidityAmount(tokenId);
+    console.log("liquidityAmount.token0Amount", liquidityAmount.token0Amount);
+    console.log("liquidityAmount.token1Amount", liquidityAmount.token1Amount);
+
+    const onchaindata = await uniV3Oracle.getOnchainPositionData(tokenId);
+
+    console.log("onchain data", onchaindata);
+    console.log(
+      await uniV3Oracle.getLiquidityAmountFromPositionData(onchaindata)
+    );
+
+    console.log(
+      await uniV3Oracle.getLiquidityAmountFromPositionData(onchaindata)
+    );
+
+    const tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
+    console.log("tokenPrice", tokenPrice);
+    console.log(
+      "actual price",
+      liquidityWethAmount
+        .sub(1)
+        .add(liquidityUsdcAmount.sub(1).mul("1000000000000000000000000"))
+    );
+  });
+
+  it("test with weth and usdt:(token0 decimal greater than token1 decimal) large price [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1, trader],
+      usdt,
+      weth,
+      nftPositionManager,
+      oracle,
+    } = testEnv;
+    const userUsdtAmount = await convertToCurrencyDecimals(
+      usdt.address,
+      "10000"
+    );
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: usdt, user: user1, amount: userUsdtAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    const nft = nftPositionManager.connect(user1.signer);
+    await approveTo({token: usdt, user: user1, target: nft.address});
+    await approveTo({token: weth, user: user1, target: nft.address});
+
+    const fee = 3000;
+    const tickSpacing = fee / 50;
+    const initialPrice = encodeSqrtRatioX96("1000000000", 1);
+    const lowerPrice = encodeSqrtRatioX96("100000000", 1);
+    const upperPrice = encodeSqrtRatioX96("10000000000", 1);
+    await createNewPool({
+      positionManager: nft,
+      token0: weth,
+      token1: usdt,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: weth,
+      token1: usdt,
+      fee: fee,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userWethAmount,
+      token1Amount: userUsdtAmount,
+    });
+    console.log("minted position with weth amount", userWethAmount);
+    console.log("minted position with usdt amount", userUsdtAmount);
+
+    const usdtBalance = await usdt.balanceOf(user1.address);
+    const wethBalance = await weth.balanceOf(user1.address);
+    // const liquidityUsdtAmount = userUsdtAmount.sub(usdtBalance);
+    // const liquidityWethAmount = userWethAmount.sub(wethBalance);
+
+    expect(await nft.balanceOf(user1.address)).to.eq(1);
+    const tokenId = await nft.tokenOfOwnerByIndex(user1.address, 0);
+
+    const uniV3Oracle = await getUniswapV3OracleWrapper();
+    const liquidityAmount = await uniV3Oracle.getLiquidityAmount(tokenId);
+    // almostEqual(liquidityAmount.token0Amount, liquidityWethAmount);
+    // almostEqual(liquidityAmount.token1Amount, liquidityUsdtAmount);
+
+    console.log("liquidityAmount.token0Amount", liquidityAmount.token0Amount);
+    console.log("liquidityAmount.token1Amount", liquidityAmount.token1Amount);
+
+    await oracle.setAssetPrice(usdt.address, "10"); //weth = 1000 usdt
+    await oracle.setAssetPrice(weth.address, "1000000000000000000000000");
+    const onchaindata = await uniV3Oracle.getOnchainPositionData(tokenId);
+
+    console.log("onchain data", onchaindata);
+    console.log(
+      await uniV3Oracle.getLiquidityAmountFromPositionData(onchaindata)
+    );
+
+    console.log(
+      await uniV3Oracle.getLiquidityAmountFromPositionData(onchaindata)
+    );
+
+    const tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
+    console.log("tokenPrice", tokenPrice);
+  });
 });
