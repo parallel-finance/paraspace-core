@@ -944,24 +944,38 @@ describe("PoolConfigurator: Drop Reserve", () => {
     const borrowedAmount = utils.parseEther("100");
     const depositedAmount = utils.parseEther("1000");
     // setting reserve factor to 0 to ease tests, no xToken accrued in reserve
-    await configurator.setReserveFactor(dai.address, 0);
-    await dai["mint(uint256)"](depositedAmount);
-    await dai.approve(pool.address, depositedAmount);
-    await dai.connect(user1.signer)["mint(uint256)"](depositedAmount);
-    await dai.connect(user1.signer).approve(pool.address, depositedAmount);
-    await weth.connect(user1.signer)["mint(uint256)"](depositedAmount);
-    await weth.connect(user1.signer).approve(pool.address, depositedAmount);
+    await waitForTx(await configurator.setReserveFactor(dai.address, 0));
+    await waitForTx(await dai["mint(uint256)"](depositedAmount));
+    await waitForTx(await dai.approve(pool.address, depositedAmount));
+    await waitForTx(
+      await dai.connect(user1.signer)["mint(uint256)"](depositedAmount)
+    );
+    await waitForTx(
+      await dai.connect(user1.signer).approve(pool.address, depositedAmount)
+    );
+    await waitForTx(
+      await weth.connect(user1.signer)["mint(uint256)"](depositedAmount)
+    );
+    await waitForTx(
+      await weth.connect(user1.signer).approve(pool.address, depositedAmount)
+    );
 
-    await pool.supply(dai.address, depositedAmount, deployer.address, 0);
+    await waitForTx(
+      await pool.supply(dai.address, depositedAmount, deployer.address, 0)
+    );
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO
     );
-    await pool
-      .connect(user1.signer)
-      .supply(weth.address, depositedAmount, user1.address, 0);
-    await pool
-      .connect(user1.signer)
-      .borrow(dai.address, borrowedAmount, 0, user1.address);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supply(weth.address, depositedAmount, user1.address, 0)
+    );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .borrow(dai.address, borrowedAmount, 0, user1.address)
+    );
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       VARIABLE_DEBT_SUPPLY_NOT_ZERO
     );
