@@ -17,6 +17,8 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
     uint256 public constant APE_COIN_POOL_ID = 0;
     /// @notice Minimal ApeCoin amount to deposit ape to ApeCoinStaking
     uint256 public constant MIN_OPERATION_AMOUNT = 100 * 1e18;
+    /// @notice Minimal liquidity the pool should have
+    uint public constant MINIMUM_LIQUIDITY = 10 ** 15;
 
     ApeCoinStaking public immutable apeStaking;
     IERC20 public immutable apeCoin;
@@ -34,6 +36,9 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
         uint256 amountShare = getShareByPooledApe(amount);
         if (amountShare == 0) {
             amountShare = amount;
+            // permanently lock the first MINIMUM_LIQUIDITY tokens to prevent getPooledApeByShares return 0
+            _mint(address(1), MINIMUM_LIQUIDITY);
+            amountShare = amountShare - MINIMUM_LIQUIDITY;
         }
         _mint(onBehalf, amountShare);
 
