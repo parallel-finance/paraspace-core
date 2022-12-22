@@ -27,7 +27,7 @@ abstract contract CApe is Context, ICApe, Pausable {
      * @dev Returns the name of the token.
      */
     function name() public pure returns (string memory) {
-        return "Paraspece Compound APE";
+        return "ParaSpace Compound APE";
     }
 
     /**
@@ -238,7 +238,7 @@ abstract contract CApe is Context, ICApe, Pausable {
     }
 
     /**
-     * @return the amount of Ether that corresponds to `_sharesAmount` token shares.
+     * @return the amount of ApeCoin that corresponds to `_sharesAmount` token shares.
      */
     function getPooledApeByShares(uint256 sharesAmount)
         public

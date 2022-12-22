@@ -13,7 +13,7 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    /// @notice Ape coin single pool POOL_ID for ApeCoinStaking
+    /// @notice ApeCoin single pool POOL_ID for ApeCoinStaking
     uint256 public constant APE_COIN_POOL_ID = 0;
     /// @notice Minimal ApeCoin amount to deposit ape to ApeCoinStaking
     uint256 public constant MIN_OPERATION_AMOUNT = 100 * 1e18;
