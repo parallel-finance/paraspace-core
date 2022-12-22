@@ -132,13 +132,13 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
         address to,
         uint256 amount
     ) external onlyOwner {
-        IERC20(token).safeTransfer(to, amount);
         if (token == address(apeCoin)) {
             require(
-                bufferBalance <= apeCoin.balanceOf(address(this)),
+                bufferBalance <= (apeCoin.balanceOf(address(this)) - amount),
                 "balance below backed balance"
             );
         }
+        IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
     }
 }
