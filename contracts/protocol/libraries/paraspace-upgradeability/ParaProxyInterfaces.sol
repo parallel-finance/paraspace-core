@@ -77,13 +77,8 @@ contract ParaProxyInterfaces is IParaProxyInterfaces, IERC165 {
         bytes4 _interfaceId
     ) external view override returns (bool) {
         ParaProxyLib.ProxyStorage storage ds = ParaProxyLib.diamondStorage();
-        return ds.supportedInterfaces[_interfaceId];
-    }
 
-    // initialize the contracts. it's okay for it to be called by anyone
-    function initializeSupportInterfaces() external {
-        ParaProxyLib.ProxyStorage storage ds = ParaProxyLib.diamondStorage();
-
-        ds.supportedInterfaces[type(IParaProxyInterfaces).interfaceId] = true;
+        return (type(IParaProxyInterfaces).interfaceId == _interfaceId ||
+            ds.supportedInterfaces[_interfaceId]);
     }
 }

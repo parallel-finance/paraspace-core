@@ -106,11 +106,8 @@ export const step_06 = async (verify = false) => {
             functionSelectors: poolParaProxyInterfacesSelectors,
           },
         ],
-        poolAddress,
-        poolParaProxyInterfaces.interface.encodeFunctionData(
-          "initializeSupportInterfaces",
-          undefined
-        ),
+        ZERO_ADDRESS,
+        "0x",
         GLOBAL_OVERRIDES
       )
     );
