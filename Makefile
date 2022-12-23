@@ -218,6 +218,10 @@ test-atomic-tokens-limit:
 test-mint-to-treasury:
 	make TEST_TARGET=_pool_parameters_mint_to_treasury.spec.ts test
 
+.PHONY: test-rebasing-tokens
+test-rebasing-tokens:
+	make TEST_TARGET=_xtoken_rebasing.spec.ts test
+
 .PHONY: test-steth
 test-steth:
 	make TEST_TARGET=_xtoken_steth.spec.ts test
