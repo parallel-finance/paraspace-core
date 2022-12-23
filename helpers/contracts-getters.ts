@@ -73,6 +73,8 @@ import {
   BlurAdapter__factory,
   X2Y2Adapter__factory,
   AutoCompoundApe__factory,
+  BaseAdminUpgradeabilityProxy__factory,
+  InitializableAdminUpgradeabilityProxy__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1040,6 +1042,15 @@ export const getAutoCompoundApe = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
+
+export const getInitializableAdminUpgradeabilityProxy = async (
+  address: tEthereumAddress
+) =>
+  await InitializableAdminUpgradeabilityProxy__factory.connect(
+    address,
+    await getFirstSigner()
+  );
+
 export const getSeaportAdapter = async (address?: tEthereumAddress) =>
   await SeaportAdapter__factory.connect(
     address ||

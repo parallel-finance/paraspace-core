@@ -29,14 +29,12 @@ describe("APE Coin Staking Test", () => {
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {
-      ape,
-      users: [user1, user2, user3, user4],
-      apeCoinStaking,
-      pool,
-      protocolDataProvider,
-      poolAdmin,
-    } = testEnv;
+    const {ape, users, apeCoinStaking, pool, protocolDataProvider, poolAdmin} =
+      testEnv;
+    const user1 = users[0];
+    const user2 = users[1];
+    const user3 = users[2];
+    const user4 = users[5];
 
     cApe = await getAutoCompoundApe();
     MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
@@ -557,7 +555,7 @@ describe("APE Coin Staking Test", () => {
       users: [user1, user2],
       ape,
       weth,
-      poolAdmin,
+      gatewayAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(weth, "1", user2);
@@ -584,13 +582,13 @@ describe("APE Coin Staking Test", () => {
 
     await expect(
       cApe
-        .connect(poolAdmin.signer)
+        .connect(gatewayAdmin.signer)
         .rescueERC20(ape.address, user1.address, parseEther("150"))
     ).to.be.revertedWith("balance below backed balance");
 
     await waitForTx(
       await cApe
-        .connect(poolAdmin.signer)
+        .connect(gatewayAdmin.signer)
         .rescueERC20(ape.address, user2.address, parseEther("100"))
     );
 

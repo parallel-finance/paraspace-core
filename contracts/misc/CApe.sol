@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.10;
 
+import "../dependencies/openzeppelin/upgradeability/ContextUpgradeable.sol";
+import "../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 import "../dependencies/openzeppelin/contracts//Context.sol";
 import "../dependencies/openzeppelin/contracts//IERC20.sol";
 import "../dependencies/openzeppelin/contracts//SafeMath.sol";
@@ -13,7 +15,7 @@ import {ICApe} from "../interfaces/ICApe.sol";
  * @dev Implementation of the {IERC20} interface.
  *
  */
-abstract contract CApe is Context, ICApe, Pausable {
+abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
     using SafeMath for uint256;
     using Address for address;
 
