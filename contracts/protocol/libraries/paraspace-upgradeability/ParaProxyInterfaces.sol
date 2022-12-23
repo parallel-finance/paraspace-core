@@ -78,7 +78,9 @@ contract ParaProxyInterfaces is IParaProxyInterfaces, IERC165 {
     ) external view override returns (bool) {
         ParaProxyLib.ProxyStorage storage ds = ParaProxyLib.diamondStorage();
 
-        return (type(IParaProxyInterfaces).interfaceId == _interfaceId ||
-            ds.supportedInterfaces[_interfaceId]);
+        return (
+            type(IParaProxyInterfaces).interfaceId == _interfaceId ||
+            ds.supportedInterfaces[_interfaceId]
+        );
     }
 }
