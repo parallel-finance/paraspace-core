@@ -227,7 +227,7 @@ contract RebasingPToken is PToken {
             index
         );
 
-        _transferScaled(from, to, amount.rayDiv(rebasingIndex), index);
+        _transferScaled(from, to, amount.rayDiv(index), rebasingIndex);
 
         if (validate) {
             POOL.finalizeTransfer(
