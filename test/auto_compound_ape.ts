@@ -25,12 +25,13 @@ describe("APE Coin Staking Test", () => {
   let user1Amount;
   let user2Amount;
   let user3Amount;
+  let MINIMUM_LIQUIDITY;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       ape,
-      users: [user1, user2, user3],
+      users: [user1, user2, user3, user4],
       apeCoinStaking,
       pool,
       protocolDataProvider,
@@ -38,6 +39,7 @@ describe("APE Coin Staking Test", () => {
     } = testEnv;
 
     cApe = await getAutoCompoundApe();
+    MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
 
     const {
       xTokenAddress: pCApeAddress,
@@ -52,6 +54,7 @@ describe("APE Coin Staking Test", () => {
     await mintAndValidate(ape, "1000", user1);
     await mintAndValidate(ape, "2000", user2);
     await mintAndValidate(ape, "4000", user3);
+    await mintAndValidate(ape, "1", user4);
 
     user1Amount = parseEther("1000");
     user2Amount = parseEther("2000");
@@ -81,6 +84,9 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await ape.connect(user3.signer).approve(cApe.address, MAX_UINT_AMOUNT)
     );
+    await waitForTx(
+      await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
 
     await waitForTx(
       await pool
@@ -103,6 +109,11 @@ describe("APE Coin Staking Test", () => {
     );
 
     await waitForTx(await apeCoinStaking.updatePool(0));
+
+    // user4 deposit MINIMUM_LIQUIDITY to make test case easy
+    await waitForTx(
+      await cApe.connect(user4.signer).deposit(user4.address, MINIMUM_LIQUIDITY)
+    );
 
     return testEnv;
   };
@@ -136,16 +147,18 @@ describe("APE Coin Staking Test", () => {
 
     await waitForTx(await cApe.connect(user1.signer).withdraw(user1Balance));
     user1Share = await cApe.sharesOf(user1.address);
-    expect(user1Share).to.be.equal(0);
+    expect(user1Share.lte(1)).to.be.true;
     user1Balance = await cApe.balanceOf(user1.address);
-    expect(user1Balance).to.be.equal(0);
+    expect(user1Balance.lte(4)).to.be.true;
 
     const apeBalance = await ape.balanceOf(user1.address);
     almostEqual(apeBalance, parseEther("4600"));
 
     // pool is empty
-    expect(await cApe.totalSupply()).to.be.equal(0);
-    expect(await cApe.getTotalPooledApeBalance()).to.be.equal(0);
+    almostEqual(
+      await cApe.totalSupply(),
+      await cApe.getPooledApeByShares(MINIMUM_LIQUIDITY)
+    );
   });
 
   it("user receive reward as deposit portion 1", async () => {
@@ -188,8 +201,10 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user3Balance, parseEther("53371"));
 
     // pool is empty
-    expect(await cApe.totalSupply()).to.be.equal(0);
-    expect(await cApe.getTotalPooledApeBalance()).to.be.equal(0);
+    almostEqual(
+      await cApe.totalSupply(),
+      await cApe.getPooledApeByShares(MINIMUM_LIQUIDITY)
+    );
   });
 
   it("user receive reward as deposit portion 2", async () => {
@@ -232,8 +247,10 @@ describe("APE Coin Staking Test", () => {
     almostEqual(await ape.balanceOf(user1.address), user1Balance);
 
     // pool is empty
-    expect(await cApe.totalSupply()).to.be.equal(0);
-    expect(await cApe.getTotalPooledApeBalance()).to.be.equal(0);
+    almostEqual(
+      await cApe.totalSupply(),
+      await cApe.getPooledApeByShares(MINIMUM_LIQUIDITY)
+    );
   });
 
   it("compound function work as expected", async () => {
