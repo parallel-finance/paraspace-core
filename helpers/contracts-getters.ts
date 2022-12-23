@@ -73,7 +73,6 @@ import {
   BlurAdapter__factory,
   X2Y2Adapter__factory,
   AutoCompoundApe__factory,
-  BaseAdminUpgradeabilityProxy__factory,
   InitializableAdminUpgradeabilityProxy__factory,
 } from "../types";
 import {
