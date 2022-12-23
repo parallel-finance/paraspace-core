@@ -49,6 +49,7 @@
     "@uniswap/v3-sdk": "^3.9.0",
     "@x2y2-io/sdk": "^0.1.4",
     "async": "^3.2.4",
+    "bignumber.js": "^9.1.1",
     "chai": "4.2.0",
     "chai-bignumber": "3.0.0",
     "defender-relay-client": "^1.7.0",
