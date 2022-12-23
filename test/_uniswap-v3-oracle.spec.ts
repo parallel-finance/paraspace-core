@@ -745,4 +745,92 @@ describe("Uniswap V3 Oracle", () => {
         .add(liquidityUsdtAmount.sub(1).mul("10").div("1000000"))
     );
   });
+
+  it("test with dai and weth:(token0 decimal equals token1 decimal) [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1, trader],
+      dai,
+      weth,
+      nftPositionManager,
+      oracle,
+    } = testEnv;
+    const userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    const nft = nftPositionManager.connect(user1.signer);
+    await approveTo({token: dai, user: user1, target: nft.address});
+    await approveTo({token: weth, user: user1, target: nft.address});
+
+    const fee = 3000;
+    const tickSpacing = fee / 50;
+    const initialPrice = encodeSqrtRatioX96(1, 1000);
+    const lowerPrice = encodeSqrtRatioX96(1, 1300);
+    const upperPrice = encodeSqrtRatioX96(1, 900);
+    await createNewPool({
+      positionManager: nft,
+      token0: dai,
+      token1: weth,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: dai,
+      token1: weth,
+      fee: fee,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userDaiAmount,
+      token1Amount: userWethAmount,
+    });
+    const daiBalance = await dai.balanceOf(user1.address);
+    const wethBalance = await weth.balanceOf(user1.address);
+    const liquidityDaiAmount = userDaiAmount.sub(daiBalance);
+    const liquidityWethAmount = userWethAmount.sub(wethBalance);
+
+    expect(await nft.balanceOf(user1.address)).to.eq(1);
+    const tokenId = await nft.tokenOfOwnerByIndex(user1.address, 0);
+
+    const uniV3Oracle = await getUniswapV3OracleWrapper();
+    let lpFee = await uniV3Oracle.getLpFeeAmount(tokenId);
+    expect(lpFee.token0Amount).to.eq(0);
+    expect(lpFee.token1Amount).to.eq(0);
+
+    await oracle.setAssetPrice(dai.address, "1000000000000000"); //weth = 1000 dai
+    let tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
+    almostEqual(
+      tokenPrice,
+      liquidityWethAmount.add(liquidityDaiAmount.div(1000))
+    );
+
+    let traderDaiAmount = await convertToCurrencyDecimals(dai.address, "15000");
+    let traderWethAmount = await convertToCurrencyDecimals(weth.address, "100");
+    await fund({token: dai, user: trader, amount: traderDaiAmount});
+    await fund({token: weth, user: trader, amount: traderWethAmount});
+    const swapRouter = await getUniswapV3SwapRouter();
+    await approveTo({token: dai, user: trader, target: swapRouter.address});
+    await approveTo({token: weth, user: trader, target: swapRouter.address});
+
+    await swapToken({
+      tokenIn: dai,
+      tokenOut: weth,
+      fee,
+      amountIn: traderDaiAmount,
+      trader,
+      zeroForOne: true,
+    });
+
+    tokenPrice = await uniV3Oracle.getTokenPrice(tokenId);
+
+    const targetEthFee = await convertToCurrencyDecimals(weth.address, "0.003");
+
+    const targetTokenPrice = liquidityWethAmount
+      .add(targetEthFee)
+      .add(liquidityDaiAmount.div(1000));
+
+    expect(tokenPrice.div(targetTokenPrice)).to.be.eq(1); // price is almost 100% equal
+  });
 });
