@@ -11,15 +11,15 @@ import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.so
 import {IWrappedPunks} from "../../misc/interfaces/IWrappedPunks.sol";
 
 /**
- * @title Punk Adapter
+ * @title Punks Adapter
  *
  * @notice Implements the NFT <=> ERC20 exchange logic via CryptoPunksMarket
  */
-contract PunkAdapter is IMarketplace {
+contract PunksAdapter is IMarketplace {
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
     ICryptoPunk public immutable CRYPTO_PUNKS_MARKET;
     IWrappedPunks public immutable WRAPPED_PUNKS;
-    address public immutable WPUNKS_PROXY;
+    address public WPUNKS_PROXY;
 
     constructor(
         IPoolAddressesProvider provider,
@@ -29,8 +29,7 @@ contract PunkAdapter is IMarketplace {
         ADDRESSES_PROVIDER = provider;
         CRYPTO_PUNKS_MARKET = cryptopunks;
         WRAPPED_PUNKS = wpunks;
-        WRAPPED_PUNKS.registerProxy();
-        WPUNKS_PROXY = WRAPPED_PUNKS.proxyInfo(address(this));
+        WPUNKS_PROXY = address(0);
     }
 
     function getAskOrderInfo(bytes memory params)
@@ -39,7 +38,10 @@ contract PunkAdapter is IMarketplace {
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
-        uint256 punkIndex = abi.decode(params, (uint256));
+        (uint256 punkIndex, uint256 price) = abi.decode(
+            params,
+            (uint256, uint256)
+        );
 
         ICryptoPunk.Offer memory punkOffer = CRYPTO_PUNKS_MARKET
             .punksOfferedForSale(punkIndex);
@@ -68,9 +70,9 @@ contract PunkAdapter is IMarketplace {
             itemType,
             token,
             0,
-            punkOffer.minValue,
-            punkOffer.minValue,
-            payable(ADDRESSES_PROVIDER.getPool())
+            price,
+            price,
+            payable(punkOffer.seller)
         );
         orderInfo.consideration = consideration;
     }
@@ -98,6 +100,10 @@ contract PunkAdapter is IMarketplace {
             value,
             Errors.CALL_MARKETPLACE_FAILED
         );
+        if (WPUNKS_PROXY == address(0)) {
+            WRAPPED_PUNKS.registerProxy();
+            WPUNKS_PROXY = WRAPPED_PUNKS.proxyInfo(address(this));
+        }
         CRYPTO_PUNKS_MARKET.transferPunk(WPUNKS_PROXY, punkIndex);
         WRAPPED_PUNKS.mint(punkIndex);
         return result;

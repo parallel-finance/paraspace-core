@@ -25,7 +25,9 @@ import {
   BLUR_ID,
   LOOKSRARE_ID,
   PARASPACE_SEAPORT_ID,
+  PUNKS_ID,
   X2Y2_ID,
+  ZERO_ADDRESS,
 } from "../../helpers/constants";
 import {BigNumber, BigNumberish, constants} from "ethers";
 import {
@@ -55,6 +57,7 @@ import {
   SignatureVersion,
 } from "../../helpers/blur-helpers/types";
 import {InputStruct} from "../../types/dependencies/blur-exchange/IBlurExchange";
+import {solidityPack} from "ethers/lib/utils";
 
 export async function executeLooksrareBuyWithCredit(
   tokenToBuy: MintableERC721 | NToken,
@@ -515,5 +518,35 @@ export async function executeAcceptBidWithCredit(
       gasLimit: 5000000,
     }
   );
+  await (await tx).wait();
+}
+
+export async function executePunksBuyWithCredit(
+  price: BigNumber,
+  payLaterAmount: BigNumber,
+  nftId: number,
+  maker: SignerWithAddress,
+  taker: SignerWithAddress
+) {
+  const encodedData = solidityPack(["uint256", "uint256"], [nftId, price]);
+
+  const tx = (await getPoolProxy()).connect(taker.signer).buyWithCredit(
+    PUNKS_ID,
+    `0x${encodedData.slice(10)}`,
+    {
+      token: ZERO_ADDRESS,
+      amount: payLaterAmount,
+      orderId: constants.HashZero,
+      v: 0,
+      r: constants.HashZero,
+      s: constants.HashZero,
+    },
+    0,
+    {
+      value: price.sub(payLaterAmount),
+      gasLimit: 5000000,
+    }
+  );
+
   await (await tx).wait();
 }

@@ -39,6 +39,7 @@ import {ProtocolErrors} from "../helpers/types";
 import {
   executeBlurBuyWithCredit,
   executeLooksrareBuyWithCredit,
+  executePunksBuyWithCredit,
   executeSeaportBuyWithCredit,
   executeX2Y2BuyWithCredit,
 } from "./helpers/marketplace-helper";
@@ -1454,6 +1455,43 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await nDOODLE.balanceOf(taker.address)).to.be.eq(1);
     expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
     expect(await weth.balanceOf(maker.address)).to.be.eq(startAmount);
+  });
+
+  it("TC-erc721-buy-24: Punks <=> ERC20 via CryptoPunksMarket - full borrow", async () => {
+    const {
+      punks,
+      wPunk,
+      nWPunk,
+      weth,
+      pool,
+      users: [maker, taker, middleman],
+    } = await loadFixture(testEnvFixture);
+    const middlemanInitialBalance = "1000";
+    const payLaterAmount = parseEther("96");
+    const price = parseEther("140");
+    const nftId = 0;
+
+    // mint WETH to middleman (liquidity provider) and supplies WETH to pool to be borrowed by taker later
+    await supplyAndValidate(weth, middlemanInitialBalance, middleman, true);
+    // mint Punk to maker
+    await waitForTx(
+      await punks.connect(maker.signer)["getPunk(uint256)"](nftId)
+    );
+    expect(await punks.connect(maker.signer).balanceOf(maker.address)).to.equal(
+      1
+    );
+    await waitForTx(
+      await punks.connect(maker.signer).offerPunkForSale(nftId, price)
+    );
+
+    await executePunksBuyWithCredit(price, payLaterAmount, nftId, maker, taker);
+
+    expect(await wPunk.balanceOf(taker.address)).to.be.equal(0);
+    expect(await nWPunk.balanceOf(taker.address)).to.be.equal(1);
+    expect(await wPunk.ownerOf(nftId)).to.be.equal(
+      (await pool.getReserveData(wPunk.address)).xTokenAddress
+    );
+    // expect(await usdc.balanceOf(maker.address)).to.be.equal(startAmount);
   });
 });
 

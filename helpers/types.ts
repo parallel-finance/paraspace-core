@@ -156,6 +156,7 @@ export enum eContractid {
   LooksRareAdapter = "LooksRareAdapter",
   X2Y2Adapter = "X2Y2Adapter",
   BlurAdapter = "BlurAdapter",
+  PunksAdapter = "PunksAdapter",
   CurrencyManager = "CurrencyManager",
   ExecutionManager = "ExecutionManager",
   LooksRareExchange = "LooksRareExchange",
