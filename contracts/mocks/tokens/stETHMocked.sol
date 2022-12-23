@@ -12,6 +12,7 @@ contract StETHMocked {
   using SafeCast for uint256;
   using SignedSafeMath for int256;
 
+  string public name = 'staked ETH';
   string public symbol = 'stETH';
   uint256 public decimals = 18;
 
@@ -20,11 +21,19 @@ contract StETHMocked {
   mapping(address => uint256) _shares;
 
   function _getPooledEthByShares(uint256 _sharesAmount) internal view returns (uint256) {
-    return _sharesAmount.mul(_totalSupply).div(_totalShares);
+    uint256 totalShares = _totalShares;
+    if (totalShares == 0) {
+      return 0;
+    }
+    return _sharesAmount.mul(_totalSupply).div(totalShares);
   }
 
   function _getSharesByPooledEth(uint256 _pooledEthAmount) internal view returns (uint256) {
-    return _pooledEthAmount.mul(_totalShares).div(_totalSupply);
+    uint256 totalSup = _totalSupply;
+    if (totalSup == 0) {
+      return 0;
+    }
+    return _pooledEthAmount.mul(_totalShares).div(totalSup);
   }
 
   function totalSupply() external view returns (uint256) {
