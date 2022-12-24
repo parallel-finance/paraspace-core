@@ -216,6 +216,8 @@ import {
   X2Y2R1,
   X2Y2R1__factory,
   AutoCompoundApe,
+  ParaProxyInterfaces__factory,
+  ParaProxyInterfaces,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -435,6 +437,10 @@ export const getPoolSignatures = () => {
 
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
+  const poolParaProxyInterfacesSelectors = getFunctionSignatures(
+    ParaProxyInterfaces__factory.abi
+  );
+
   const allSelectors = {};
   const poolSelectors = [
     ...poolCoreSelectors,
@@ -442,6 +448,7 @@ export const getPoolSignatures = () => {
     ...poolMarketplaceSelectors,
     ...poolApeStakingSelectors,
     ...poolProxySelectors,
+    ...poolParaProxyInterfacesSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {
@@ -460,6 +467,7 @@ export const getPoolSignatures = () => {
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolParaProxyInterfacesSelectors,
   };
 };
 
@@ -499,11 +507,16 @@ export const deployPoolComponents = async (
   const allTokens = await getAllTokens();
   const cApe = await getAutoCompoundApe();
 
+  const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
+    await getFirstSigner()
+  );
+
   const {
     poolCoreSelectors,
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolParaProxyInterfacesSelectors,
   } = getPoolSignatures();
 
   return {
@@ -543,10 +556,22 @@ export const deployPoolComponents = async (
       apeStakingLibraries,
       poolApeStakingSelectors
     )) as PoolApeStaking,
+    poolParaProxyInterfaces: (await withSaveAndVerify(
+      poolParaProxyInterfaces,
+      eContractid.ParaProxyInterfaces,
+      [],
+      verify,
+      false,
+      undefined,
+      poolParaProxyInterfacesSelectors
+    )) as ParaProxyInterfaces,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
+    poolParaProxyInterfacesSelectors: poolParaProxyInterfacesSelectors.map(
+      (s) => s.signature
+    ),
   };
 };
 
