@@ -348,9 +348,6 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
         address _recipient,
         uint256 _sharesAmount
     ) internal whenNotPaused {
-        require(_sender != address(0), "TRANSFER_FROM_THE_ZERO_ADDRESS");
-        require(_recipient != address(0), "TRANSFER_TO_THE_ZERO_ADDRESS");
-
         shares[_sender] = shares[_sender].sub(
             _sharesAmount,
             "transfer amount exceeds balance"
