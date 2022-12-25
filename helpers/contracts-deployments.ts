@@ -175,8 +175,8 @@ import {
   SeaportAdapter__factory,
   StandardPolicyERC721,
   StandardPolicyERC721__factory,
-  StETH,
-  StETH__factory,
+  StETHMocked,
+  StETHMocked__factory,
   StETHDebtToken,
   StETHDebtToken__factory,
   StrategyStandardSaleForFixedPrice,
@@ -781,7 +781,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | MockContract
       | MintableERC20
       | WETH9Mocked
-      | StETH
+      | StETHMocked
       | MockAToken
       | AutoCompoundApe;
   } = {};
@@ -841,10 +841,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       }
 
       if (tokenSymbol === ERC20TokenContractId.stETH) {
-        tokens[tokenSymbol] = await deployStETH(
-          [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
-          verify
-        );
+        tokens[tokenSymbol] = await deployStETH(verify);
         continue;
       }
 
@@ -1602,16 +1599,13 @@ export const deployUniswapSwapRouter = async (
   );
 };
 
-export const deployStETH = async (
-  args: [string, string, string],
-  verify?: boolean
-): Promise<StETH> =>
+export const deployStETH = async (verify?: boolean): Promise<StETHMocked> =>
   withSaveAndVerify(
-    new StETH__factory(await getFirstSigner()),
-    args[1],
-    [...args],
+    new StETHMocked__factory(await getFirstSigner()),
+    eContractid.StETH,
+    [],
     verify
-  ) as Promise<StETH>;
+  ) as Promise<StETHMocked>;
 
 export const deployMockAToken = async (
   args: [string, string, string],

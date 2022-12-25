@@ -49,7 +49,7 @@ import {
   UniswapV3Factory__factory,
   UniswapV3OracleWrapper__factory,
   NTokenUniswapV3__factory,
-  StETH__factory,
+  StETHMocked__factory,
   PTokenStETH__factory,
   MockAToken__factory,
   PTokenAToken__factory,
@@ -73,6 +73,7 @@ import {
   BlurAdapter__factory,
   X2Y2Adapter__factory,
   AutoCompoundApe__factory,
+  StETHDebtToken__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -285,6 +286,17 @@ export const getVariableDebtToken = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.VariableDebtTokenImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getStETHDebtToken = async (address?: tEthereumAddress) =>
+  await StETHDebtToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.StETHDebtToken}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
@@ -833,7 +845,7 @@ export const getMockIncentivesController = async (address?: tEthereumAddress) =>
   );
 
 export const getStETH = async (address?: tEthereumAddress) =>
-  await StETH__factory.connect(
+  await StETHMocked__factory.connect(
     address ||
       (
         await getDb().get(`${eContractid.StETH}.${DRE.network.name}`).value()

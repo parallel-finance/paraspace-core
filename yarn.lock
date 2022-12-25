@@ -1374,6 +1374,7 @@ __metadata:
     "@uniswap/v3-sdk": ^3.9.0
     "@x2y2-io/sdk": ^0.1.4
     async: ^3.2.4
+    bignumber.js: ^9.1.1
     chai: 4.2.0
     chai-bignumber: 3.0.0
     defender-relay-client: ^1.7.0
@@ -3750,6 +3751,13 @@ __metadata:
   version: 9.1.0
   resolution: "bignumber.js@npm:9.1.0"
   checksum: 52ec2bb5a3874d7dc1a1018f28f8f7aff4683515ffd09d6c2d93191343c76567ae0ee32cc45149d53afb2b904bc62ed471a307b35764beea7e9db78e56bef6c6
+  languageName: node
+  linkType: hard
+
+"bignumber.js@npm:^9.1.1":
+  version: 9.1.1
+  resolution: "bignumber.js@npm:9.1.1"
+  checksum: ad243b7e2f9120b112d670bb3d674128f0bd2ca1745b0a6c9df0433bd2c0252c43e6315d944c2ac07b4c639e7496b425e46842773cf89c6a2dcd4f31e5c4b11e
   languageName: node
   linkType: hard
 
