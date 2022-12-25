@@ -197,6 +197,7 @@ export enum eContractid {
   TimeLockExecutor = "TimeLockExecutor",
   cAPE = "cAPE",
   cAPEImplementation = "cAPEImplementation",
+  ParaProxyInterfaces = "ParaProxyInterfaces",
 }
 
 /*
