@@ -1,22 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.10;
 
-import {Ownable} from "../dependencies/openzeppelin/contracts/Ownable.sol";
-import {SafeMath} from "../dependencies/openzeppelin/contracts/SafeMath.sol";
+import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IAutoCompoundApe} from "../interfaces/IAutoCompoundApe.sol";
 import {CApe} from "./CApe.sol";
 
-contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
-    using SafeMath for uint256;
+contract AutoCompoundApe is
+    Initializable,
+    OwnableUpgradeable,
+    CApe,
+    IAutoCompoundApe
+{
     using SafeERC20 for IERC20;
 
-    /// @notice Ape coin single pool POOL_ID for ApeCoinStaking
+    /// @notice ApeCoin single pool POOL_ID for ApeCoinStaking
     uint256 public constant APE_COIN_POOL_ID = 0;
     /// @notice Minimal ApeCoin amount to deposit ape to ApeCoinStaking
     uint256 public constant MIN_OPERATION_AMOUNT = 100 * 1e18;
+    /// @notice Minimal liquidity the pool should have
+    uint256 public constant MINIMUM_LIQUIDITY = 10**15;
 
     ApeCoinStaking public immutable apeStaking;
     IERC20 public immutable apeCoin;
@@ -25,7 +31,12 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
     constructor(address _apeCoin, address _apeStaking) {
         apeStaking = ApeCoinStaking(_apeStaking);
         apeCoin = IERC20(_apeCoin);
-        apeCoin.safeApprove(_apeStaking, type(uint256).max);
+    }
+
+    function initialize() public initializer {
+        __Ownable_init();
+        __Pausable_init();
+        apeCoin.safeApprove(address(apeStaking), type(uint256).max);
     }
 
     /// @inheritdoc IAutoCompoundApe
@@ -34,6 +45,9 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
         uint256 amountShare = getShareByPooledApe(amount);
         if (amountShare == 0) {
             amountShare = amount;
+            // permanently lock the first MINIMUM_LIQUIDITY tokens to prevent getPooledApeByShares return 0
+            _mint(address(1), MINIMUM_LIQUIDITY);
+            amountShare = amountShare - MINIMUM_LIQUIDITY;
         }
         _mint(onBehalf, amountShare);
 
@@ -127,13 +141,13 @@ contract AutoCompoundApe is Ownable, CApe, IAutoCompoundApe {
         address to,
         uint256 amount
     ) external onlyOwner {
-        IERC20(token).safeTransfer(to, amount);
         if (token == address(apeCoin)) {
             require(
-                bufferBalance <= apeCoin.balanceOf(address(this)),
+                bufferBalance <= (apeCoin.balanceOf(address(this)) - amount),
                 "balance below backed balance"
             );
         }
+        IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
     }
 }

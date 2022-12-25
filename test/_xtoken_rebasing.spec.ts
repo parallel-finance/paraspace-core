@@ -10,22 +10,33 @@ import {
 import {BigNumber, utils} from "ethers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {ONE_YEAR} from "../helpers/constants";
+import {BigNumber as FloatBigNumber} from "bignumber.js";
+
+async function rebasestSTH(steth, perc) {
+  const currentSupply = new FloatBigNumber(
+    (await steth.totalSupply()).toString()
+  );
+  const supplyDelta = currentSupply.multipliedBy(perc);
+  await steth.rebase(supplyDelta.toString(10));
+}
+
+async function rebaseAWETH(aweth, perc) {
+  const currentIncomeIndex = new FloatBigNumber(
+    (await aweth.incomeIndex()).toString()
+  );
+  const supplyDelta = currentIncomeIndex.multipliedBy(perc);
+  await aweth.setIncomeIndex(currentIncomeIndex.plus(supplyDelta).toString(10));
+}
 
 describe("Rebasing tokens", async () => {
   let testEnv: TestEnv;
-  const firstYearRebasingIndex = BigNumber.from("1080000000000000000000000000");
-  const rebasingIndexAnnualMultiplier = BigNumber.from(
-    "110000000000000000000000000"
-  );
-  const secondYearRebasingIndex = firstYearRebasingIndex.rayMul(
-    rebasingIndexAnnualMultiplier
-  );
+  const multiplier = BigNumber.from("1100000000000000000000000000");
 
-  const stETHSupplyAmount = utils.parseEther("100");
-  const aWETHSupplyAmount = utils.parseEther("50");
+  const stETHSupplyAmount = utils.parseEther("110");
+  const aWETHSupplyAmount = utils.parseEther("55");
 
-  const stETHBorrowAmount = utils.parseEther("50");
-  const aWETHBorrowAmount = utils.parseEther("25");
+  const stETHBorrowAmount = utils.parseEther("55");
+  const aWETHBorrowAmount = utils.parseEther("27.5");
 
   const transferAmount = utils.parseEther("1");
   const withdrawAmount = utils.parseEther("1");
@@ -37,12 +48,12 @@ describe("Rebasing tokens", async () => {
       aWETH,
       users: [user1],
     } = testEnv;
-    await stETH.setPooledEthBaseShares(firstYearRebasingIndex);
-    await aWETH.setIncomeIndex(firstYearRebasingIndex);
     await supplyAndValidate(stETH, "100", user1, true);
     await supplyAndValidate(aWETH, "50", user1, true);
     await borrowAndValidate(stETH, "50", user1);
     await borrowAndValidate(aWETH, "25", user1);
+    await rebasestSTH(stETH, "0.1");
+    await rebaseAWETH(aWETH, "0.1");
     return testEnv;
   };
 
@@ -141,42 +152,40 @@ describe("Rebasing tokens", async () => {
     );
 
     // change rebasingIndex
-    await waitForTx(
-      await stETH.setPooledEthBaseShares(secondYearRebasingIndex)
-    );
-    await waitForTx(await aWETH.setIncomeIndex(secondYearRebasingIndex));
+    await rebasestSTH(stETH, "0.1");
+    await rebaseAWETH(aWETH, "0.1");
 
     expect(
       (await pstETH.scaledBalanceOf(user1.address)).rayDiv(stETHSupplyAmount)
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
     expect(
       (await paWETH.scaledBalanceOf(user1.address)).rayDiv(aWETHSupplyAmount)
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
 
     expect(
       (await pstETH.scaledTotalSupply()).rayDiv(stETHSupplyAmount)
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
     expect(
       (await paWETH.scaledTotalSupply()).rayDiv(aWETHSupplyAmount)
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
 
     expect(
       (await variableDebtStETH.scaledBalanceOf(user1.address)).rayDiv(
         stETHBorrowAmount
       )
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
     expect(
       (await variableDebtAWeth.scaledBalanceOf(user1.address)).rayDiv(
         aWETHBorrowAmount
       )
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
 
     expect(
       (await variableDebtStETH.scaledTotalSupply()).rayDiv(stETHBorrowAmount)
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
     expect(
       (await variableDebtAWeth.scaledTotalSupply()).rayDiv(aWETHBorrowAmount)
-    ).to.be.eq(rebasingIndexAnnualMultiplier);
+    ).to.be.eq(multiplier);
   });
 
   it("TC-ptoken-rebasing-03: balance, debt, totalSupply and totalDebt will change over time even if rebasingIndex stays the same", async () => {

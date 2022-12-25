@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.10;
 
+import "../dependencies/openzeppelin/upgradeability/ContextUpgradeable.sol";
+import "../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 import "../dependencies/openzeppelin/contracts//Context.sol";
 import "../dependencies/openzeppelin/contracts//IERC20.sol";
 import "../dependencies/openzeppelin/contracts//SafeMath.sol";
@@ -13,7 +15,7 @@ import {ICApe} from "../interfaces/ICApe.sol";
  * @dev Implementation of the {IERC20} interface.
  *
  */
-abstract contract CApe is Context, ICApe, Pausable {
+abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -27,7 +29,7 @@ abstract contract CApe is Context, ICApe, Pausable {
      * @dev Returns the name of the token.
      */
     function name() public pure returns (string memory) {
-        return "Paraspece Compound APE";
+        return "ParaSpace Compound APE";
     }
 
     /**
@@ -238,7 +240,7 @@ abstract contract CApe is Context, ICApe, Pausable {
     }
 
     /**
-     * @return the amount of Ether that corresponds to `_sharesAmount` token shares.
+     * @return the amount of ApeCoin that corresponds to `_sharesAmount` token shares.
      */
     function getPooledApeByShares(uint256 sharesAmount)
         public
@@ -346,9 +348,6 @@ abstract contract CApe is Context, ICApe, Pausable {
         address _recipient,
         uint256 _sharesAmount
     ) internal whenNotPaused {
-        require(_sender != address(0), "TRANSFER_FROM_THE_ZERO_ADDRESS");
-        require(_recipient != address(0), "TRANSFER_TO_THE_ZERO_ADDRESS");
-
         shares[_sender] = shares[_sender].sub(
             _sharesAmount,
             "transfer amount exceeds balance"
