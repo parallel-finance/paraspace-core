@@ -22,6 +22,7 @@ import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
+import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -75,23 +76,16 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
-
-        uint256 amountToWithdraw = 0;
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 nToken.ownerOf(_nfts[index].tokenId) == msg.sender,
                 Errors.NOT_THE_OWNER
             );
-            amountToWithdraw += _nfts[index].amount;
         }
-
-        INTokenApeStaking(nftReserve.xTokenAddress).withdrawApeCoin(
-            _nfts,
-            msg.sender
-        );
+        INTokenApeStaking(xTokenAddress).withdrawApeCoin(_nfts, msg.sender);
 
         require(
-            getUserHf(msg.sender) >
+            getUserHf(ps, msg.sender) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
@@ -114,11 +108,10 @@ contract PoolApeStaking is
                 Errors.NOT_THE_OWNER
             );
         }
-
         INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, msg.sender);
 
         require(
-            getUserHf(msg.sender) >
+            getUserHf(ps, msg.sender) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
@@ -181,7 +174,7 @@ contract PoolApeStaking is
         }
 
         require(
-            getUserHf(msg.sender) >
+            getUserHf(ps, msg.sender) >
                 DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
             Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
         );
@@ -363,7 +356,7 @@ contract PoolApeStaking is
         address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
         if (msg.sender != positionOwner) {
             require(
-                getUserHf(positionOwner) <
+                getUserHf(ps, positionOwner) <
                     DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
                 Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
             );
@@ -381,16 +374,20 @@ contract PoolApeStaking is
         address underlyingAsset,
         address repayAsset,
         address onBehalfOf,
-        uint256 repayAmount,
-        uint256 supplyAmount
+        uint256 totalAmount
     ) external {
         DataTypes.PoolStorage storage ps = poolStorage();
-
         require(
             msg.sender == ps._reserves[underlyingAsset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
 
+        DataTypes.ReserveData storage apeCoinData = ps._reserves[repayAsset];
+        uint256 repayAmount = IERC20(apeCoinData.variableDebtTokenAddress)
+            .balanceOf(onBehalfOf);
+        if (repayAmount > 0) {
+            repayAmount = Math.min(repayAmount, totalAmount);
+        }
         if (repayAmount > 0) {
             BorrowLogic.executeRepay(
                 ps._reserves,
@@ -404,6 +401,7 @@ contract PoolApeStaking is
             );
         }
 
+        uint256 supplyAmount = totalAmount - repayAmount;
         if (supplyAmount > 0) {
             DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
                 onBehalfOf
@@ -491,8 +489,11 @@ contract PoolApeStaking is
         }
     }
 
-    function getUserHf(address user) internal view returns (uint256) {
-        DataTypes.PoolStorage storage ps = poolStorage();
+    function getUserHf(DataTypes.PoolStorage storage ps, address user)
+        internal
+        view
+        returns (uint256)
+    {
         DataTypes.CalculateUserAccountDataParams memory params = DataTypes
             .CalculateUserAccountDataParams({
                 userConfig: ps._usersConfig[user],

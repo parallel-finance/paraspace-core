@@ -373,7 +373,6 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
 
         _totalShare = _totalShare.add(sharesAmount);
         shares[account] = shares[account].add(sharesAmount);
-        emit Transfer(address(0), account, getPooledApeByShares(sharesAmount));
     }
 
     /**
@@ -399,6 +398,5 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
             "burn amount exceeds balance"
         );
         _totalShare = _totalShare.sub(sharesAmount);
-        emit Transfer(account, address(0), getPooledApeByShares(sharesAmount));
     }
 }

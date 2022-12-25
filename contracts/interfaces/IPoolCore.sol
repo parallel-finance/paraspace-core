@@ -545,7 +545,6 @@ interface IPoolCore {
      * @param from The user from which the xTokens are transferred
      * @param to The user receiving the xTokens
      * @param balanceFromBefore The xToken balance of the `from` user before the transfer
-     * @param balanceToBefore The xToken balance of the `to` user before the transfer
      */
     function finalizeTransferERC721(
         address asset,
@@ -553,8 +552,7 @@ interface IPoolCore {
         address from,
         address to,
         bool usedAsCollateral,
-        uint256 balanceFromBefore,
-        uint256 balanceToBefore
+        uint256 balanceFromBefore
     ) external;
 
     /**
