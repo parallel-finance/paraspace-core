@@ -107,7 +107,7 @@ export const initReservesByHelper = async (
   let pTokenStETHImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
-  let pTokenPsApeImplementationAddress = "";
+  let pTokenCApeImplementationAddress = "";
   let nTokenImplementationAddress = genericNTokenImplAddress;
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
@@ -116,7 +116,7 @@ export const initReservesByHelper = async (
   let variableDebtTokenImplementationAddress = genericVariableDebtTokenAddress;
   let stETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
-  let PsApeVariableDebtTokenImplementationAddress = "";
+  let cApeVariableDebtTokenImplementationAddress = "";
 
   if (genericPTokenImplAddress) {
     await insertContractAddressInDb(
@@ -369,18 +369,18 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = pTokenSApeImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.cAPE) {
-          if (!pTokenPsApeImplementationAddress) {
-            pTokenPsApeImplementationAddress = (
+          if (!pTokenCApeImplementationAddress) {
+            pTokenCApeImplementationAddress = (
               await deployPTokenCApe(pool.address, verify)
             ).address;
           }
-          xTokenToUse = pTokenPsApeImplementationAddress;
-          if (!PsApeVariableDebtTokenImplementationAddress) {
-            PsApeVariableDebtTokenImplementationAddress = (
+          xTokenToUse = pTokenCApeImplementationAddress;
+          if (!cApeVariableDebtTokenImplementationAddress) {
+            cApeVariableDebtTokenImplementationAddress = (
               await deployCApeDebtToken(pool.address, verify)
             ).address;
           }
-          variableDebtTokenToUse = PsApeVariableDebtTokenImplementationAddress;
+          variableDebtTokenToUse = cApeVariableDebtTokenImplementationAddress;
         }
 
         if (!xTokenToUse) {

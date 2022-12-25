@@ -390,6 +390,14 @@ wallet:
 rate-strategy:
 	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
+.PHONY: release-v1.3
+release-v1.3:
+	make SCRIPT_PATH=./scripts/dev/6.release-v1.3.ts run
+
+.PHONY: verify-v1.3
+verify-v1.3:
+	make SCRIPT_PATH=./scripts/dev/7.verify-v1.3.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
