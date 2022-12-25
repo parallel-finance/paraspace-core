@@ -13,10 +13,14 @@ import {
   getWETHGatewayProxy,
   getWPunkGatewayProxy,
 } from "../../../helpers/contracts-getters";
-import {getParaSpaceAdmins} from "../../../helpers/contracts-helpers";
+import {
+  getContractAddressInDb,
+  getParaSpaceAdmins,
+} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 import {
+  eContractid,
   ERC20TokenContractId,
   ERC721TokenContractId,
 } from "../../../helpers/types";
@@ -173,6 +177,9 @@ export const step_20 = async (
       await cApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
     );
 
+    if (!(await getContractAddressInDb(eContractid.NFTFloorOracle))) {
+      return;
+    }
     await waitForTx(
       await nftFloorOracle.grantRole(
         await nftFloorOracle.UPDATER_ROLE(),

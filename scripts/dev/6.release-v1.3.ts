@@ -2,12 +2,10 @@ import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployAutoCompoundApe,
-  deployPoolComponents,
   deployTimeLockExecutor,
 } from "../../helpers/contracts-deployments";
 import {
   getParaSpaceOracle,
-  getPoolAddressesProvider,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
 import {getParaSpaceAdmins} from "../../helpers/contracts-helpers";
@@ -19,11 +17,11 @@ import {
 import {DRE, getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
 import {step_20} from "../deployments/steps/20_renounceOwnership";
+import {upgradePool} from "../upgrade";
 
 const releaseV13 = async (verify = false) => {
   await DRE.run("set-DRE");
   console.time("release-v1.3");
-  const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
   const paraspaceOracle = await getParaSpaceOracle();
   const protocolDataProvider = await getProtocolDataProvider();
@@ -33,105 +31,9 @@ const releaseV13 = async (verify = false) => {
     const cAPE = await deployAutoCompoundApe(false);
     console.timeEnd("deploy AutoCompoundApe");
 
-    console.time("deploy PoolComponent");
-    const {
-      poolCore,
-      poolParameters,
-      poolMarketplace,
-      poolApeStaking,
-      poolCoreSelectors,
-      poolParaProxyInterfaces,
-      poolParametersSelectors,
-      poolMarketplaceSelectors,
-      poolApeStakingSelectors,
-      poolParaProxyInterfacesSelectors,
-    } = await deployPoolComponents(addressesProvider.address, verify);
-    console.timeEnd("deploy PoolComponent");
-
-    console.time("upgrade PoolCore");
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolCore.address,
-            action: 1,
-            functionSelectors: poolCoreSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
-    console.timeEnd("upgrade PoolCore");
-
-    console.time("upgrade PoolParameters");
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolParameters.address,
-            action: 1,
-            functionSelectors: poolParametersSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
-    console.timeEnd("upgrade PoolParameters");
-
-    console.time("upgrade PoolMarketplace");
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolMarketplace.address,
-            action: 1,
-            functionSelectors: poolMarketplaceSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
-    console.timeEnd("upgrade PoolMarketplace");
-
-    console.time("upgrade PoolApeStaking");
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolApeStaking.address,
-            action: 1,
-            functionSelectors: poolApeStakingSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
-    console.timeEnd("upgrade PoolApeStaking");
-
-    console.time("register ParaProxyInterfaces function selectors");
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolParaProxyInterfaces.address,
-            action: 0,
-            functionSelectors: poolParaProxyInterfacesSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
-    console.timeEnd("register ParaProxyInterfaces function selectors");
+    console.time("upgrade pool");
+    await upgradePool(false);
+    console.timeEnd("upgrade pool");
 
     console.log("deploying cAPE aggregator...");
     const assets = [
