@@ -806,8 +806,14 @@ describe("Uniswap V3 Oracle", () => {
       liquidityWethAmount.add(liquidityDaiAmount.div(1000))
     );
 
-    const traderDaiAmount = await convertToCurrencyDecimals(dai.address, "15000");
-    const traderWethAmount = await convertToCurrencyDecimals(weth.address, "100");
+    const traderDaiAmount = await convertToCurrencyDecimals(
+      dai.address,
+      "15000"
+    );
+    const traderWethAmount = await convertToCurrencyDecimals(
+      weth.address,
+      "100"
+    );
     await fund({token: dai, user: trader, amount: traderDaiAmount});
     await fund({token: weth, user: trader, amount: traderWethAmount});
     const swapRouter = await getUniswapV3SwapRouter();
