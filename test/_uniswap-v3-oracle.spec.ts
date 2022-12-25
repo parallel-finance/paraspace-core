@@ -795,7 +795,7 @@ describe("Uniswap V3 Oracle", () => {
     const tokenId = await nft.tokenOfOwnerByIndex(user1.address, 0);
 
     const uniV3Oracle = await getUniswapV3OracleWrapper();
-    let lpFee = await uniV3Oracle.getLpFeeAmount(tokenId);
+    const lpFee = await uniV3Oracle.getLpFeeAmount(tokenId);
     expect(lpFee.token0Amount).to.eq(0);
     expect(lpFee.token1Amount).to.eq(0);
 
@@ -806,8 +806,8 @@ describe("Uniswap V3 Oracle", () => {
       liquidityWethAmount.add(liquidityDaiAmount.div(1000))
     );
 
-    let traderDaiAmount = await convertToCurrencyDecimals(dai.address, "15000");
-    let traderWethAmount = await convertToCurrencyDecimals(weth.address, "100");
+    const traderDaiAmount = await convertToCurrencyDecimals(dai.address, "15000");
+    const traderWethAmount = await convertToCurrencyDecimals(weth.address, "100");
     await fund({token: dai, user: trader, amount: traderDaiAmount});
     await fund({token: weth, user: trader, amount: traderWethAmount});
     const swapRouter = await getUniswapV3SwapRouter();
