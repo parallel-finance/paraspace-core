@@ -1345,11 +1345,6 @@ describe("APE Coin Staking Test", () => {
     expect(await pSApeCoin.balanceOf(user1.address)).equal(amount);
     expect(await pSApeCoin.balanceOf(user2.address)).equal(0);
 
-    const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
-    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
-    const userBalance = await ape.balanceOf(user1.address);
-    const user2Balance = await ape.balanceOf(user2.address);
-
     expect(
       await nMAYC
         .connect(user1.signer)
@@ -1365,22 +1360,6 @@ describe("APE Coin Staking Test", () => {
     expect(await nMAYC.balanceOf(user2.address)).to.be.equal(1);
     expect(await pSApeCoin.balanceOf(user1.address)).equal(0);
     expect(await pSApeCoin.balanceOf(user2.address)).equal(0);
-
-    // User 1 - totalStake should have decreased in BAKC amount
-    const totalStakeAfter = await nMAYC.getUserApeStakingAmount(user1.address);
-    expect(totalStakeAfter).equal(totalStake.sub(amount));
-
-    // User 1 - totalStake should have increased in BAKC amount
-    const pSApeBalanceAfter = await pSApeCoin.balanceOf(user1.address);
-    expect(pSApeBalanceAfter).equal(pSApeBalance.sub(amount));
-
-    // User 1 - Ape Balance should remain the same, because UnstakeAndRepay will supply redundant apes
-    const userBalanceAfter = await ape.balanceOf(user1.address);
-    expect(userBalanceAfter).equal(userBalance);
-
-    // User 2 - Ape Balance should remain the same
-    const user2BalanceAfter = await ape.balanceOf(user2.address);
-    expect(user2BalanceAfter).equal(user2Balance);
   });
 
   it("TC-pool-ape-staking-23 test market accept bid offer should success", async () => {
