@@ -220,7 +220,11 @@ test-mint-to-treasury:
 
 .PHONY: test-rebasing-tokens
 test-rebasing-tokens:
-	make TEST_TARGET=_xtoken_ptoken_rebasing.spec.ts test
+	make TEST_TARGET=_xtoken_rebasing.spec.ts test
+
+.PHONY: test-steth
+test-steth:
+	make TEST_TARGET=_xtoken_steth.spec.ts test
 
 .PHONY: test-addresses-provider
 test-addresses-provider:
