@@ -4,6 +4,7 @@ import {
   getConduit,
   getConduitController,
   getFirstSigner,
+  getInitializableAdminUpgradeabilityProxy,
   getNFTFloorOracle,
   getPausableZoneController,
   getPoolAddressesProvider,
@@ -162,8 +163,14 @@ export const step_20 = async (
     }
 
     const cApe = await getAutoCompoundApe();
+    const cApeProxy = await getInitializableAdminUpgradeabilityProxy(
+      cApe.address
+    );
     await waitForTx(
-      await cApe.transferOwnership(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
+      await cApeProxy.changeAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
+    );
+    await waitForTx(
+      await cApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
     );
 
     await waitForTx(

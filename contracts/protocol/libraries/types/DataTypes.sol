@@ -207,7 +207,6 @@ library DataTypes {
         bool usedAsCollateral;
         uint256 tokenId;
         uint256 balanceFromBefore;
-        uint256 balanceToBefore;
         uint256 reservesCount;
         address oracle;
     }

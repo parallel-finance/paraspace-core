@@ -152,9 +152,9 @@ contract RebasingPToken is PToken {
         uint256 index
     ) internal virtual override returns (bool) {
         uint256 rebasingIndex = lastRebasingIndex();
-        uint256 amountRebased = amount.rayDiv(rebasingIndex);
-        uint256 amountScaled = amountRebased.rayDiv(index);
-        require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
+        uint256 amountScaled = amount.rayDiv(index);
+        uint256 amountRebased = amountScaled.rayDiv(rebasingIndex);
+        require(amountRebased != 0, Errors.INVALID_MINT_AMOUNT);
 
         uint256 scaledBalance = _scaledBalanceOf(onBehalfOf, rebasingIndex);
         uint256 balanceIncrease = scaledBalance.rayMul(index) -
@@ -162,7 +162,7 @@ contract RebasingPToken is PToken {
 
         _userState[onBehalfOf].additionalData = index.toUint128();
 
-        _mint(onBehalfOf, amountScaled.toUint128());
+        _mint(onBehalfOf, amountRebased.toUint128());
 
         uint256 amountToMint = amount + balanceIncrease;
         emit Transfer(address(0), onBehalfOf, amountToMint);
@@ -187,9 +187,9 @@ contract RebasingPToken is PToken {
         uint256 index
     ) internal virtual override {
         uint256 rebasingIndex = lastRebasingIndex();
-        uint256 amountRebased = amount.rayDiv(rebasingIndex);
-        uint256 amountScaled = amountRebased.rayDiv(index);
-        require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
+        uint256 amountScaled = amount.rayDiv(index);
+        uint256 amountRebased = amountScaled.rayDiv(rebasingIndex);
+        require(amountRebased != 0, Errors.INVALID_BURN_AMOUNT);
 
         uint256 scaledBalance = _scaledBalanceOf(user, rebasingIndex);
         uint256 balanceIncrease = scaledBalance.rayMul(index) -
@@ -197,7 +197,7 @@ contract RebasingPToken is PToken {
 
         _userState[user].additionalData = index.toUint128();
 
-        _burn(user, amountScaled.toUint128());
+        _burn(user, amountRebased.toUint128());
 
         if (balanceIncrease > amount) {
             uint256 amountToMint = balanceIncrease - amount;
@@ -227,7 +227,7 @@ contract RebasingPToken is PToken {
             index
         );
 
-        _transferScaled(from, to, amount.rayDiv(rebasingIndex), index);
+        _transferScaled(from, to, amount.rayDiv(index), rebasingIndex);
 
         if (validate) {
             POOL.finalizeTransfer(

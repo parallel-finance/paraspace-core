@@ -7,7 +7,6 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../../interfaces/IPool.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
-import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import "./MintableERC721Logic.sol";
 import "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
@@ -187,22 +186,11 @@ library ApeStakingLogic {
         }
 
         //3 repay and supply
-        DataTypes.ReserveData memory apeCoinData = params.POOL.getReserveData(
-            address(_apeCoin)
-        );
-        uint256 repayAmount = IERC20(apeCoinData.variableDebtTokenAddress)
-            .balanceOf(positionOwner);
-        if (repayAmount > 0) {
-            repayAmount = Math.min(repayAmount, unstakedAmount);
-        }
-        uint256 supplyAmount = unstakedAmount - repayAmount;
-
         params.POOL.repayAndSupply(
             params._underlyingAsset,
             address(_apeCoin),
             positionOwner,
-            repayAmount,
-            supplyAmount
+            unstakedAmount
         );
     }
 

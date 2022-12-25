@@ -237,8 +237,10 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     ) internal virtual {
         address underlyingAsset = _underlyingAsset;
 
-        uint256 fromBalanceBefore = collateralizedBalanceOf(from);
-        uint256 toBalanceBefore = collateralizedBalanceOf(to);
+        uint256 fromBalanceBefore;
+        if (validate) {
+            fromBalanceBefore = collateralizedBalanceOf(from);
+        }
         bool isUsedAsCollateral = _transferCollateralizable(from, to, tokenId);
 
         if (validate) {
@@ -248,8 +250,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
                 from,
                 to,
                 isUsedAsCollateral,
-                fromBalanceBefore,
-                toBalanceBefore
+                fromBalanceBefore
             );
         }
     }
