@@ -196,6 +196,7 @@ export enum eContractid {
   BAKC = "BAKC",
   TimeLockExecutor = "TimeLockExecutor",
   cAPE = "cAPE",
+  cAPEImplementation = "cAPEImplementation",
 }
 
 /*

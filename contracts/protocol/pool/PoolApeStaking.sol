@@ -463,9 +463,11 @@ contract PoolApeStaking is
             );
 
             uint256 balanceAfter = APE_COIN.balanceOf(address(this));
-            amounts[i] = balanceAfter - balanceBefore;
-            balanceBefore = balanceAfter;
-            totalAmount += amounts[i];
+            unchecked {
+                amounts[i] = balanceAfter - balanceBefore;
+                balanceBefore = balanceAfter;
+                totalAmount += amounts[i];
+            }
         }
 
         uint256 compoundFee = ps._apeCompoundFee;

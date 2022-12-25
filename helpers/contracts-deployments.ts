@@ -1,4 +1,4 @@
-import {DRE, getDb, getParaSpaceConfig} from "./misc-utils";
+import {DRE, getDb, getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
   eContractid,
   ERC20TokenContractId,
@@ -216,6 +216,8 @@ import {
   X2Y2R1,
   X2Y2R1__factory,
   AutoCompoundApe,
+  InitializableAdminUpgradeabilityProxy__factory,
+  InitializableAdminUpgradeabilityProxy,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1935,12 +1937,35 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
     (await deployApeCoinStaking(verify)).address;
   const args = [allTokens.APE.address, apeCoinStaking];
 
-  return (await withSaveAndVerify(
+  const cApeImplementation = await withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),
-    eContractid.cAPE,
+    eContractid.cAPEImplementation,
     [...args],
     verify
-  )) as AutoCompoundApe;
+  );
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = cApeImplementation.interface.encodeFunctionData(
+    "initialize",
+    []
+  );
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.cAPE,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](cApeImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as AutoCompoundApe;
 };
 
 export const deployPTokenCApe = async (
