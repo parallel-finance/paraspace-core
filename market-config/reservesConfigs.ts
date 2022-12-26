@@ -105,31 +105,31 @@ export const strategyWBTC: IReserveParams = {
 export const strategyAPE: IReserveParams = {
   strategy: rateStrategyAPE,
   auctionStrategy: auctionStrategyZero,
-  baseLTVAsCollateral: "2000",
+  baseLTVAsCollateral: "5000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
   liquidationBonus: "10500",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
-  reserveFactor: "2500",
+  reserveFactor: "250",
   borrowCap: "0",
-  supplyCap: "6200000",
+  supplyCap: "18062500",
 };
 
 export const strategySAPE: IReserveParams = {
   strategy: rateStrategyAPE,
   auctionStrategy: auctionStrategyZero,
-  baseLTVAsCollateral: "2000",
+  baseLTVAsCollateral: "5000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
   liquidationBonus: "10500",
   borrowingEnabled: false,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenSApeImpl,
-  reserveFactor: "2500",
+  reserveFactor: "250",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "18062500",
 };
 
 export const strategyCAPE: IReserveParams = {
@@ -159,7 +159,7 @@ export const strategyBAYC: IReserveParams = {
   xTokenImpl: eContractid.NTokenBAYCImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "1000",
+  supplyCap: "0",
 };
 
 export const strategyMAYC: IReserveParams = {
@@ -174,7 +174,7 @@ export const strategyMAYC: IReserveParams = {
   xTokenImpl: eContractid.NTokenMAYCImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "2000",
+  supplyCap: "0",
 };
 
 export const strategyDoodles: IReserveParams = {
@@ -189,7 +189,7 @@ export const strategyDoodles: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "100",
+  supplyCap: "0",
 };
 
 export const strategyOthr: IReserveParams = {
@@ -204,7 +204,7 @@ export const strategyOthr: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "1000",
+  supplyCap: "0",
 };
 
 export const strategyClonex: IReserveParams = {
@@ -219,7 +219,7 @@ export const strategyClonex: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "100",
+  supplyCap: "0",
 };
 
 export const strategyMoonbird: IReserveParams = {
@@ -234,7 +234,7 @@ export const strategyMoonbird: IReserveParams = {
   xTokenImpl: eContractid.NTokenMoonBirdsImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "100",
+  supplyCap: "0",
 };
 
 export const strategyMeebits: IReserveParams = {
@@ -249,7 +249,7 @@ export const strategyMeebits: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "100",
+  supplyCap: "0",
 };
 
 export const strategyAzuki: IReserveParams = {
@@ -264,7 +264,7 @@ export const strategyAzuki: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "100",
+  supplyCap: "0",
 };
 
 export const strategyWPunks: IReserveParams = {
@@ -279,7 +279,7 @@ export const strategyWPunks: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "100",
+  supplyCap: "0",
 };
 
 export const strategyUniswapV3: IReserveParams = {
