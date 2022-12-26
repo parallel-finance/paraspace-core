@@ -8,6 +8,7 @@ import {
   rateStrategyUSDC,
   rateStrategyUSDT,
   rateStrategyWETH,
+  rateStrategycAPE,
 } from "./rateStrategies";
 import {
   auctionStrategyAzuki,
@@ -132,18 +133,18 @@ export const strategySAPE: IReserveParams = {
 };
 
 export const strategyCAPE: IReserveParams = {
-  strategy: rateStrategyAPE,
+  strategy: rateStrategycAPE,
   auctionStrategy: auctionStrategyZero,
-  baseLTVAsCollateral: "2000",
+  baseLTVAsCollateral: "5000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
   liquidationBonus: "10500",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenCApeImpl,
-  reserveFactor: "2500",
+  reserveFactor: "1000",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "18062500",
 };
 
 export const strategyBAYC: IReserveParams = {

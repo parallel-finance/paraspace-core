@@ -1,9 +1,6 @@
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
-import {
-  deployAutoCompoundApe,
-  deployTimeLockExecutor,
-} from "../../helpers/contracts-deployments";
+import {deployAutoCompoundApe} from "../../helpers/contracts-deployments";
 import {
   getParaSpaceOracle,
   getProtocolDataProvider,
@@ -86,22 +83,11 @@ const releaseV13 = async (verify = false) => {
       paraSpaceAdminAddress
     );
 
-    const timelock = await deployTimeLockExecutor(
-      [
-        "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-        "3600",
-        "86400",
-        "300",
-        "604800",
-      ],
-      false
-    );
-
     console.log("renouncing ownership to timelock...");
     await step_20(verify, {
-      paraSpaceAdminAddress: timelock.address,
-      gatewayAdminAddress: timelock.address,
-      riskAdminAddress: timelock.address,
+      paraSpaceAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
+      gatewayAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
+      riskAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
     });
 
     console.timeEnd("release-v1.3");
