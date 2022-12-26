@@ -40,7 +40,7 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
-    uint256 internal constant POOL_REVISION = 120;
+    uint256 internal constant POOL_REVISION = 130;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -445,9 +445,11 @@ contract PoolApeStaking is
             );
 
             uint256 balanceAfter = APE_COIN.balanceOf(address(this));
-            amounts[i] = balanceAfter - balanceBefore;
-            balanceBefore = balanceAfter;
-            totalAmount += amounts[i];
+            unchecked {
+                amounts[i] = balanceAfter - balanceBefore;
+                balanceBefore = balanceAfter;
+                totalAmount += amounts[i];
+            }
         }
 
         uint256 compoundFee = ps._apeCompoundFee;

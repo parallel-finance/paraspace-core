@@ -952,16 +952,22 @@ describe("PoolConfigurator: Drop Reserve", () => {
     await weth.connect(user1.signer)["mint(uint256)"](depositedAmount);
     await weth.connect(user1.signer).approve(pool.address, depositedAmount);
 
-    await pool.supply(dai.address, depositedAmount, deployer.address, 0);
+    await pool.supply(dai.address, depositedAmount, deployer.address, 0, {
+      gasLimit: 5000000,
+    });
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO
     );
     await pool
       .connect(user1.signer)
-      .supply(weth.address, depositedAmount, user1.address, 0);
+      .supply(weth.address, depositedAmount, user1.address, 0, {
+        gasLimit: 5000000,
+      });
     await pool
       .connect(user1.signer)
-      .borrow(dai.address, borrowedAmount, 0, user1.address);
+      .borrow(dai.address, borrowedAmount, 0, user1.address, {
+        gasLimit: 5000000,
+      });
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       VARIABLE_DEBT_SUPPLY_NOT_ZERO
     );
@@ -977,7 +983,7 @@ describe("PoolConfigurator: Drop Reserve", () => {
     expect(
       await pool
         .connect(user1.signer)
-        .repay(dai.address, MAX_UINT_AMOUNT, user1.address)
+        .repay(dai.address, MAX_UINT_AMOUNT, user1.address, {gasLimit: 5000000})
     );
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO
