@@ -307,7 +307,8 @@ contract PoolCore is
                     amount: amount,
                     onBehalfOf: onBehalfOf,
                     payer: msg.sender,
-                    usePTokens: false
+                    usePTokens: false,
+                    revertForZeroDebt: true
                 })
             );
     }
@@ -331,7 +332,8 @@ contract PoolCore is
                     amount: amount,
                     onBehalfOf: msg.sender,
                     payer: msg.sender,
-                    usePTokens: true
+                    usePTokens: true,
+                    revertForZeroDebt: true
                 })
             );
     }
@@ -366,7 +368,8 @@ contract PoolCore is
                     amount: amount,
                     onBehalfOf: onBehalfOf,
                     payer: msg.sender,
-                    usePTokens: false
+                    usePTokens: false,
+                    revertForZeroDebt: true
                 });
             return
                 BorrowLogic.executeRepay(
