@@ -478,9 +478,15 @@ contract PoolApeStaking is
         view
         returns (uint256)
     {
+        DataTypes.UserConfigurationMap memory userConfig = ps._usersConfig[
+            user
+        ];
+        if (!userConfig.isBorrowingAny()) {
+            return type(uint256).max;
+        }
         DataTypes.CalculateUserAccountDataParams memory params = DataTypes
             .CalculateUserAccountDataParams({
-                userConfig: ps._usersConfig[user],
+                userConfig: userConfig,
                 reservesCount: ps._reservesCount,
                 user: user,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle()
