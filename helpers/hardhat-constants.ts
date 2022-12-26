@@ -85,11 +85,12 @@ export const BLOCKSCOUT_DISABLE_INDEXER =
   process.env.BLOCKSCOUT_DISABLE_INDEXER == "false" ? false : true;
 
 export const GLOBAL_OVERRIDES: Overrides = {
-  maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
-  maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
+  maxFeePerGas: ethers.utils.parseUnits("19", "gwei"),
+  maxPriorityFeePerGas: ethers.utils.parseUnits("1", "gwei"),
   gasLimit: 12_450_000,
   type: 2,
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
 export const JSONRPC_VARIANT = process.env.JSONRPC_VARIANT || "hardhat";
+export const DRY_RUN = process.env.DRY_RUN == "true" ? true : false;

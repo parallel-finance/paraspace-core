@@ -1,6 +1,6 @@
 import {deployPoolConfigurator} from "../../helpers/contracts-deployments";
 import {getPoolAddressesProvider} from "../../helpers/contracts-getters";
-import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
 export const upgradeConfigurator = async (verify = false) => {
@@ -10,11 +10,19 @@ export const upgradeConfigurator = async (verify = false) => {
   console.timeEnd("deploy PoolConfigurator");
 
   console.time("upgrade PoolConfigurator");
-  await waitForTx(
-    await addressesProvider.setPoolConfiguratorImpl(
-      poolConfiguratorImpl.address,
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (DRY_RUN) {
+    const encodedData = addressesProvider.interface.encodeFunctionData(
+      "setPoolConfiguratorImpl",
+      [poolConfiguratorImpl.address]
+    );
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await addressesProvider.setPoolConfiguratorImpl(
+        poolConfiguratorImpl.address,
+        GLOBAL_OVERRIDES
+      )
+    );
+  }
   console.timeEnd("upgrade PoolConfigurator");
 };
