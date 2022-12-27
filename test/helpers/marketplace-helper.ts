@@ -57,7 +57,7 @@ import {
   SignatureVersion,
 } from "../../helpers/blur-helpers/types";
 import {InputStruct} from "../../types/dependencies/blur-exchange/IBlurExchange";
-import {solidityPack} from "ethers/lib/utils";
+import {defaultAbiCoder} from "ethers/lib/utils";
 
 export async function executeLooksrareBuyWithCredit(
   tokenToBuy: MintableERC721 | NToken,
@@ -528,11 +528,14 @@ export async function executePunksBuyWithCredit(
   maker: SignerWithAddress,
   taker: SignerWithAddress
 ) {
-  const encodedData = solidityPack(["uint256", "uint256"], [nftId, price]);
+  const encodedData: string = defaultAbiCoder.encode(
+    ["(uint256,uint256)"],
+    [[nftId.toString(), price.toString()]]
+  );
 
   const tx = (await getPoolProxy()).connect(taker.signer).buyWithCredit(
     PUNKS_ID,
-    `0x${encodedData.slice(10)}`,
+    encodedData,
     {
       token: ZERO_ADDRESS,
       amount: payLaterAmount,

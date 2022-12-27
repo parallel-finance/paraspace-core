@@ -1462,17 +1462,20 @@ describe("Leveraged Buy - Positive tests", () => {
       punks,
       wPunk,
       nWPunk,
-      weth,
       pool,
       users: [maker, taker, middleman],
+      wETHGateway,
     } = await loadFixture(testEnvFixture);
-    const middlemanInitialBalance = "1000";
-    const payLaterAmount = parseEther("96");
+    const middlemanInitialBalance = parseEther("1000");
+    const payLaterAmount = parseEther("48");
     const price = parseEther("140");
     const nftId = 0;
 
-    // mint WETH to middleman (liquidity provider) and supplies WETH to pool to be borrowed by taker later
-    await supplyAndValidate(weth, middlemanInitialBalance, middleman, true);
+    await waitForTx(
+      await wETHGateway
+        .connect(middleman.signer)
+        .depositETH(middleman.address, 0, {value: middlemanInitialBalance})
+    );
     // mint Punk to maker
     await waitForTx(
       await punks.connect(maker.signer)["getPunk(uint256)"](nftId)
