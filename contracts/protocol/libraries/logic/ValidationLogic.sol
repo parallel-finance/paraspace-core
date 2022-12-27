@@ -670,6 +670,11 @@ library ValidationLogic {
         }
 
         require(
+            msg.value == 0 || params.liquidationAsset == params.weth,
+            Errors.INVALID_LIQUIDATION_ASSET
+        );
+
+        require(
             params.maxLiquidationAmount >= params.actualLiquidationAmount &&
                 (msg.value == 0 || msg.value >= params.maxLiquidationAmount),
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
