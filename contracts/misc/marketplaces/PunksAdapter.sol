@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
-import {ICryptoPunk} from "../../mocks/tokens/WrappedPunk/ICryptoPunk.sol";
+import {ICryptoPunk} from "../../misc/interfaces/ICryptoPunk.sol";
 import {ConsiderationItem, OfferItem, ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";

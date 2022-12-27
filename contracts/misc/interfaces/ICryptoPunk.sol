@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 interface ICryptoPunk {
-
     struct Offer {
         bool isForSale;
         uint256 punkIndex;
@@ -11,7 +10,10 @@ interface ICryptoPunk {
         address onlySellTo;
     }
 
-    function punkIndexToAddress(uint256 punkIndex) external view returns (address);
+    function punkIndexToAddress(uint256 punkIndex)
+        external
+        view
+        returns (address);
 
     function punksOfferedForSale(uint256 punkIndex)
         external

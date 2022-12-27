@@ -6,7 +6,7 @@ import {ERC721} from "../../../../contracts/dependencies/openzeppelin/contracts/
 import {ERC721Enumerable} from "../../../../contracts/dependencies/openzeppelin/contracts/ERC721Enumerable.sol";
 import {Pausable} from "../../../../contracts/dependencies/openzeppelin/contracts/Pausable.sol";
 import {UserProxy} from "./UserProxy.sol";
-import {ICryptoPunk} from "./ICryptoPunk.sol";
+import {ICryptoPunk} from "../../../misc/interfaces/ICryptoPunk.sol";
 import {IWrappedPunks} from "../../../misc/interfaces/IWrappedPunks.sol";
 
 contract WPunk is IWrappedPunks, Ownable, ERC721Enumerable, Pausable {
