@@ -6,6 +6,7 @@ import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {Ownable} from "../../dependencies/openzeppelin/contracts/Ownable.sol";
 import {ReentrancyGuard} from "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {ICurve} from "./ICurve.sol";
 import {LSSVMRouter} from "./LSSVMRouter.sol";
 import {ILSSVMPairFactoryLike} from "./ILSSVMPairFactoryLike.sol";
@@ -81,8 +82,6 @@ abstract contract LSSVMPair is
         uint96 _fee,
         uint128 _spotPrice
     ) external payable {
-        require(owner() == address(0), "Initialized");
-
         ICurve _bondingCurve = bondingCurve();
         PoolType _poolType = poolType();
 

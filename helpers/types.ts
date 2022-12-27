@@ -156,6 +156,7 @@ export enum eContractid {
   LooksRareAdapter = "LooksRareAdapter",
   X2Y2Adapter = "X2Y2Adapter",
   BlurAdapter = "BlurAdapter",
+  SudoAdapter = "SudoAdapter",
   CurrencyManager = "CurrencyManager",
   ExecutionManager = "ExecutionManager",
   LooksRareExchange = "LooksRareExchange",
@@ -196,6 +197,13 @@ export enum eContractid {
   BAKC = "BAKC",
   TimeLockExecutor = "TimeLockExecutor",
   cAPE = "cAPE",
+  LSSVMPairEnumerableETH = "LSSVMPairEnumerableETH",
+  LSSVMPairMissingEnumerableETH = "LSSVMPairMissingEnumerableETH",
+  LSSVMPairEnumerableERC20 = "LSSVMPairEnumerableERC20",
+  LSSVMPairMissingEnumerableERC20 = "LSSVMPairMissingEnumerableERC20",
+  LSSVMPairFactory = "LSSVMPairFactory",
+  LSSVMPairRouter = "LSSVMPairRouter",
+  LinearCurve = "LinearCurve",
 }
 
 /*

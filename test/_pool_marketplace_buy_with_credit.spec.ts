@@ -40,11 +40,13 @@ import {
   executeBlurBuyWithCredit,
   executeLooksrareBuyWithCredit,
   executeSeaportBuyWithCredit,
+  executeSudoSwapBuyWithCredit,
   executeX2Y2BuyWithCredit,
 } from "./helpers/marketplace-helper";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {AdvancedOrderStruct} from "../types/dependencies/seaport/contracts/Seaport";
+import {decodeEvents} from "../helpers/seaport-helpers/events";
 
 describe("Leveraged Buy - Positive tests", () => {
   it("TC-erc721-buy-01: ERC721 <=> ERC20 via seaport - no loan", async () => {
@@ -1454,6 +1456,68 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await nDOODLE.balanceOf(taker.address)).to.be.eq(1);
     expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
     expect(await weth.balanceOf(maker.address)).to.be.eq(startAmount);
+  });
+
+  it("TC-erc721-buy-24: ERC721 <=> ERC20 via Sudoswap - no loan", async () => {
+    const {
+      doodles,
+      weth,
+      pool,
+      nDOODLE,
+      lssvmPairFactory,
+      linearCurve,
+      users: [maker, taker],
+    } = await loadFixture(testEnvFixture);
+    const takerInitialBalance = "1000";
+    const payNowAmount = await convertToCurrencyDecimals(
+      weth.address,
+      takerInitialBalance
+    );
+    const payLaterAmount = 0; // no loan!
+    const startAmount = payNowAmount.add(payLaterAmount);
+    const nftId = 0;
+
+    await mintAndValidate(doodles, "1", maker);
+
+    await waitForTx(
+      await doodles
+        .connect(maker.signer)
+        .approve(lssvmPairFactory.address, nftId)
+    );
+
+    const tx = await lssvmPairFactory.connect(maker.signer).createPairETH(
+      doodles.address,
+      linearCurve.address,
+      maker.address,
+      1, // NFT
+      "0",
+      "0",
+      startAmount,
+      [nftId]
+    );
+
+    const events = await decodeEvents(tx, [
+      {eventName: "NewPair", contract: lssvmPairFactory},
+    ]);
+
+    const pair = events[0].data.poolAddress as string;
+
+    await executeSudoSwapBuyWithCredit(
+      pair,
+      doodles,
+      startAmount,
+      payLaterAmount,
+      nftId,
+      maker,
+      taker
+    );
+
+    expect(await doodles.balanceOf(maker.address)).to.be.eq(0);
+    expect(await doodles.ownerOf(nftId)).to.be.eq(
+      (await pool.getReserveData(doodles.address)).xTokenAddress
+    );
+    expect(await nDOODLE.balanceOf(taker.address)).to.be.eq(1);
+    expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
   });
 });
 

@@ -25,7 +25,9 @@ import {
   BLUR_ID,
   LOOKSRARE_ID,
   PARASPACE_SEAPORT_ID,
+  SUDOSWAP_ID,
   X2Y2_ID,
+  ZERO_ADDRESS,
 } from "../../helpers/constants";
 import {BigNumber, BigNumberish, constants} from "ethers";
 import {
@@ -41,6 +43,7 @@ import {
   getConduitKey,
   getERC721Delegate,
   getLooksRareExchange,
+  getLssvmRouter,
   getPausableZone,
   getPoolProxy,
   getSeaport,
@@ -55,6 +58,7 @@ import {
   SignatureVersion,
 } from "../../helpers/blur-helpers/types";
 import {InputStruct} from "../../types/dependencies/blur-exchange/IBlurExchange";
+import {tEthereumAddress} from "../../helpers/types";
 
 export async function executeLooksrareBuyWithCredit(
   tokenToBuy: MintableERC721 | NToken,
@@ -512,6 +516,43 @@ export async function executeAcceptBidWithCredit(
     taker.address,
     0,
     {
+      gasLimit: 5000000,
+    }
+  );
+  await (await tx).wait();
+}
+
+export async function executeSudoSwapBuyWithCredit(
+  pair: tEthereumAddress,
+  tokenToBuy: MintableERC721 | NToken,
+  startAmount: BigNumber,
+  payLaterAmount: BigNumberish,
+  nftId: number,
+  maker: SignerWithAddress,
+  taker: SignerWithAddress
+) {
+  const router = await getLssvmRouter();
+  const pool = await getPoolProxy();
+
+  const now = Math.floor(Date.now() / 1000);
+  const encodedData = router.interface.encodeFunctionData(
+    "swapETHForSpecificNFTs",
+    [[{pair, nftIds: [nftId]}], taker.address, pool.address, now + 3600]
+  );
+  const tx = pool.connect(taker.signer).buyWithCredit(
+    SUDOSWAP_ID,
+    `0x${encodedData.slice(10)}`,
+    {
+      token: ZERO_ADDRESS,
+      amount: payLaterAmount,
+      orderId: constants.HashZero,
+      v: 0,
+      r: constants.HashZero,
+      s: constants.HashZero,
+    },
+    0,
+    {
+      value: startAmount.sub(payLaterAmount),
       gasLimit: 5000000,
     }
   );

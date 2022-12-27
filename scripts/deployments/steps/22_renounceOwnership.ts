@@ -20,7 +20,7 @@ import {
   ERC721TokenContractId,
 } from "../../../helpers/types";
 
-export const step_20 = async (
+export const step_22 = async (
   // eslint-disable-next-line
   verify = false,
   admins?: {

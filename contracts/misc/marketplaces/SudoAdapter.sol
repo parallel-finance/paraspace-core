@@ -12,6 +12,7 @@ import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.so
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {ISudo} from "../../interfaces/ISudo.sol";
 import {ILSSVMPair} from "../../interfaces/ILSSVMPair.sol";
+import {CurveErrorCodes} from "../../dependencies/sudoswap/CurveErrorCodes.sol";
 
 /**
  * @title Sudo Adapter
@@ -27,24 +28,28 @@ contract SudoAdapter is IMarketplace {
 
     function getAskOrderInfo(bytes memory params)
         external
-        pure
+        view
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
         (
             ISudo.PairSwapSpecific[] memory swapList,
-            uint256 inputAmount,
             ,
+            address nftRecipient,
 
         ) = abi.decode(
                 params,
-                (ISudo.PairSwapSpecific[], uint256, address, uint256)
+                (ISudo.PairSwapSpecific[], address, address, uint256)
             );
 
         require(swapList.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
         require(
             swapList[0].nftIds.length == 1,
             Errors.INVALID_MARKETPLACE_ORDER
+        );
+        require(
+            nftRecipient == ADDRESSES_PROVIDER.getPool(),
+            Errors.INVALID_ORDER_TAKER
         );
 
         OfferItem[] memory offer = new OfferItem[](1);
@@ -65,13 +70,19 @@ contract SudoAdapter is IMarketplace {
             token = address(_token);
             itemType = ItemType.ERC20;
         } catch {}
+
+        (CurveErrorCodes.Error err, , , uint256 pairCost, ) = ILSSVMPair(
+            swapList[0].pair
+        ).getBuyNFTQuote(1);
+        require(err == CurveErrorCodes.Error.OK);
+
         consideration[0] = ConsiderationItem(
             itemType,
             token,
             0,
-            inputAmount, // TODO: take minPercentageToAsk into account
-            inputAmount,
-            payable(address(0))
+            pairCost,
+            pairCost,
+            payable(ILSSVMPair(swapList[0].pair).getAssetRecipient())
         );
         orderInfo.consideration = consideration;
     }
