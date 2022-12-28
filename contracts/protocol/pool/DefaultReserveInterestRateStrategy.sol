@@ -118,8 +118,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
         uint256 totalDebt;
         uint256 currentVariableBorrowRate;
         uint256 currentLiquidityRate;
-        uint256 borrowUsageRatio;
-        uint256 supplyUsageRatio;
+        uint256 usageRatio;
         uint256 availableLiquidityPlusDebt;
     }
 
@@ -143,16 +142,13 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
             vars.availableLiquidityPlusDebt =
                 vars.availableLiquidity +
                 vars.totalDebt;
-            vars.borrowUsageRatio = vars.totalDebt.rayDiv(
-                vars.availableLiquidityPlusDebt
-            );
-            vars.supplyUsageRatio = vars.totalDebt.rayDiv(
+            vars.usageRatio = vars.totalDebt.rayDiv(
                 vars.availableLiquidityPlusDebt
             );
         }
 
-        if (vars.borrowUsageRatio > OPTIMAL_USAGE_RATIO) {
-            uint256 excessBorrowUsageRatio = (vars.borrowUsageRatio -
+        if (vars.usageRatio > OPTIMAL_USAGE_RATIO) {
+            uint256 excessBorrowUsageRatio = (vars.usageRatio -
                 OPTIMAL_USAGE_RATIO).rayDiv(MAX_EXCESS_USAGE_RATIO);
 
             vars.currentVariableBorrowRate +=
@@ -160,13 +156,13 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
                 _variableRateSlope2.rayMul(excessBorrowUsageRatio);
         } else {
             vars.currentVariableBorrowRate += _variableRateSlope1
-                .rayMul(vars.borrowUsageRatio)
+                .rayMul(vars.usageRatio)
                 .rayDiv(OPTIMAL_USAGE_RATIO);
         }
 
         vars.currentLiquidityRate = vars
             .currentVariableBorrowRate
-            .rayMul(vars.supplyUsageRatio)
+            .rayMul(vars.usageRatio)
             .percentMul(
                 PercentageMath.PERCENTAGE_FACTOR - params.reserveFactor
             );
