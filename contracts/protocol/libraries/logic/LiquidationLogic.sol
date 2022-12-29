@@ -397,22 +397,15 @@ library LiquidationLogic {
             );
         }
 
-        // Transfer fee to treasury if it is non-zero
-        if (vars.liquidationProtocolFee != 0) {
-            IERC20(params.liquidationAsset).safeTransferFrom(
-                vars.payer,
-                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
-                    .RESERVE_TREASURY_ADDRESS(),
-                vars.liquidationProtocolFee
-            );
-        }
-
+        // Transfer collateral assets from borrower to liquiditor
         if (params.receiveXToken) {
             _liquidateNTokens(reservesData, liquidatorConfig, params, vars);
         } else {
             _burnCollateralNTokens(params, vars);
         }
 
+        // Transfer liquidation assets from liquidator to borrower
+        // and supply on behalf of borrower
         _supplyLiquidateTokens(
             reservesData,
             reservesList,
@@ -422,6 +415,16 @@ library LiquidationLogic {
             params,
             vars
         );
+
+        // Transfer fee to treasury if it is non-zero
+        if (vars.liquidationProtocolFee != 0) {
+            IERC20(params.liquidationAsset).safeTransferFrom(
+                vars.payer,
+                IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
+                    .RESERVE_TREASURY_ADDRESS(),
+                vars.liquidationProtocolFee
+            );
+        }
 
         emit LiquidateERC721(
             params.collateralAsset,
