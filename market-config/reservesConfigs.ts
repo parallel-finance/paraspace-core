@@ -111,7 +111,7 @@ export const strategyAPE: IReserveParams = {
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
-  reserveFactor: "2500",
+  reserveFactor: "250",
   borrowCap: "0",
   supplyCap: "18062500",
 };
@@ -126,7 +126,7 @@ export const strategySAPE: IReserveParams = {
   borrowingEnabled: false,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenSApeImpl,
-  reserveFactor: "2500",
+  reserveFactor: "250",
   borrowCap: "0",
   supplyCap: "0",
 };
@@ -141,7 +141,7 @@ export const strategyCAPE: IReserveParams = {
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenCApeImpl,
-  reserveFactor: "2500",
+  reserveFactor: "1000",
   borrowCap: "0",
   supplyCap: "18062500",
 };
