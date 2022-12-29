@@ -235,6 +235,7 @@ import {
   convertToCurrencyDecimals,
   getContractAddressInDb,
   getFunctionSignatures,
+  getFunctionSignaturesFromDb,
   insertContractAddressInDb,
   withSaveAndVerify,
 } from "./contracts-helpers";
@@ -463,6 +464,36 @@ export const getPoolSignatures = () => {
       );
     }
   }
+
+  return {
+    poolCoreSelectors,
+    poolParametersSelectors,
+    poolMarketplaceSelectors,
+    poolApeStakingSelectors,
+    poolParaProxyInterfacesSelectors,
+  };
+};
+
+export const getPoolSignaturesFromDb = async () => {
+  const poolCoreSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolCoreImpl
+  );
+
+  const poolParametersSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolParametersImpl
+  );
+
+  const poolMarketplaceSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolMarketplaceImpl
+  );
+
+  const poolApeStakingSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolApeStakingImpl
+  );
+
+  const poolParaProxyInterfacesSelectors = await getFunctionSignaturesFromDb(
+    eContractid.ParaProxyInterfacesImpl
+  );
 
   return {
     poolCoreSelectors,

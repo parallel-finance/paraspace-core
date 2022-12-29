@@ -544,6 +544,14 @@ export const getFunctionSignatures = (
   });
 };
 
+export const getFunctionSignaturesFromDb = async (
+  id: eContractid
+): Promise<string[]> => {
+  const value = (await getDb().get(`${id}.${DRE.network.name}`).value()) || {};
+  const signatures = value.signatures || [];
+  return signatures.map(({signature}) => signature);
+};
+
 export const getContractAddresses = (contracts: {[name: string]: Contract}) => {
   return Object.entries(contracts).reduce(
     (accum: {[name: string]: tEthereumAddress}, [name, contract]) => ({
