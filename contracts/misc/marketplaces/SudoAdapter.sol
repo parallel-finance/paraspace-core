@@ -40,7 +40,7 @@ contract SudoAdapter is IMarketplace {
         ) = abi.decode(
                 params,
                 (ISudo.PairSwapSpecific[], address, address, uint256)
-            );
+            ); // TODO: support decoding swapERC20ForSpecificNFTs
 
         require(swapList.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
         require(
@@ -74,7 +74,10 @@ contract SudoAdapter is IMarketplace {
         (CurveErrorCodes.Error err, , , uint256 pairCost, ) = ILSSVMPair(
             swapList[0].pair
         ).getBuyNFTQuote(1);
-        require(err == CurveErrorCodes.Error.OK);
+        require(
+            err == CurveErrorCodes.Error.OK,
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
 
         consideration[0] = ConsiderationItem(
             itemType,
