@@ -675,8 +675,11 @@ library ValidationLogic {
         );
 
         require(
-            params.maxLiquidationAmount >= params.actualLiquidationAmount &&
-                (msg.value == 0 || msg.value >= params.maxLiquidationAmount),
+            params.creditAmount <= params.actualLiquidationAmount &&
+                params.maxLiquidationAmount >= params.actualLiquidationAmount &&
+                (msg.value == 0 ||
+                    msg.value >=
+                    params.maxLiquidationAmount - params.creditAmount),
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
         );
 

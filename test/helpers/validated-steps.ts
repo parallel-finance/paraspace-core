@@ -1184,6 +1184,7 @@ const liquidateAndValidateERC721 = async (
         borrower.address,
         nftId != null ? nftId : 0,
         parseEther(amount).toString(),
+        0,
         receiveNToken,
         {
           gasLimit: 5000000,
@@ -1491,6 +1492,7 @@ export const liquidateAndValidateReverted = async (
           borrower.address,
           nftId != null ? nftId : 0,
           parseEther(amount).toString(),
+          0,
           receiveXToken,
           {
             gasLimit: 5000000,

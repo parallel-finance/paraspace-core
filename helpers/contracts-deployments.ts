@@ -374,6 +374,8 @@ export const deployPoolCoreLibraries = async (
     {
       ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
         supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
     },
     verify
   );
