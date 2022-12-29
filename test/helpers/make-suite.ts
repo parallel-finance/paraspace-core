@@ -63,6 +63,7 @@ import {
 } from "../../helpers/types";
 import {
   ApeCoinStaking,
+  ATokenDebtToken,
   BlurAdapter,
   BlurExchange,
   Conduit,
@@ -81,6 +82,7 @@ import {
   PausableZone,
   PausableZoneController,
   SeaportAdapter,
+  StETHDebtToken,
   UiPoolDataProvider,
   X2Y2Adapter,
   X2Y2R1,
@@ -116,7 +118,7 @@ import {
   Moonbirds,
   UniswapV3Factory,
   INonfungiblePositionManager,
-  StETH,
+  StETHMocked,
   MockAToken,
   PTokenAToken,
   PTokenStETH,
@@ -153,8 +155,8 @@ export interface TestEnv {
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
-  variableDebtStETH: VariableDebtToken;
-  variableDebtAWeth: VariableDebtToken;
+  variableDebtStETH: StETHDebtToken;
+  variableDebtAWeth: ATokenDebtToken;
   variableDebtWeth: VariableDebtToken;
   pUsdc: PToken;
   usdc: MintableERC20;
@@ -168,7 +170,7 @@ export interface TestEnv {
   wPunk: WPunk;
   nWPunk: NToken;
   wBTC: MintableERC20;
-  stETH: StETH;
+  stETH: StETHMocked;
   pstETH: PTokenStETH;
   ape: MintableERC20;
   nMAYC: NTokenMAYC;
@@ -243,7 +245,7 @@ export async function initializeMakeSuite() {
     wPunk: {} as WPunk,
     nWPunk: {} as NToken,
     wBTC: {} as MintableERC20,
-    stETH: {} as StETH,
+    stETH: {} as StETHMocked,
     pstETH: {} as PTokenStETH,
     ape: {} as MintableERC20,
     mayc: {} as MintableERC721,

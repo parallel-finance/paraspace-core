@@ -175,7 +175,7 @@ export enum eContractid {
   NFTDescriptor = "NFTDescriptor",
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",
   NonfungiblePositionManager = "NonfungiblePositionManager",
-  StETH = "StETH",
+  StETH = "stETH",
   MockAToken = "MockAToken",
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
@@ -204,6 +204,7 @@ export enum eContractid {
   LSSVMPairFactory = "LSSVMPairFactory",
   LSSVMPairRouter = "LSSVMPairRouter",
   LinearCurve = "LinearCurve",
+  cAPEImplementation = "cAPEImplementation",
 }
 
 /*
