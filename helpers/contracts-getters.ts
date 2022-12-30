@@ -383,7 +383,7 @@ export const getAllERC20Tokens = async () => {
         accumulator[tokenSymbol] = await getMintableERC20(address);
         return Promise.resolve(accumulator);
       } else {
-        if (tokenSymbol === "cAPE") {
+        if (tokenSymbol === ERC20TokenContractId.cAPE) {
           return Promise.resolve(accumulator);
         }
         return Promise.reject(`${tokenSymbol} is not in db`);
