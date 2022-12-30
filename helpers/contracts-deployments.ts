@@ -1825,7 +1825,9 @@ export const deployNTokenBAYCImpl = async (
     new NTokenBAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenBAYCImpl,
     [poolAddress, apeCoinStaking],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NTokenBAYC>;
 };
 
@@ -1855,9 +1857,12 @@ export const deployNTokenMAYCImpl = async (
     new NTokenMAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenMAYCImpl,
     [poolAddress, apeCoinStaking],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NTokenMAYC>;
 };
+
 export const deployATokenDebtToken = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
