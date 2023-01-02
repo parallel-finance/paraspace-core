@@ -18,7 +18,7 @@ import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveC
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {DefaultReserveInterestRateStrategy} from "../protocol/pool/DefaultReserveInterestRateStrategy.sol";
-import {IEACAggregatorProxy} from "./interfaces/IEACAggregatorProxy.sol";
+import {IEACAggregatorProxy} from "../interfaces/IEACAggregatorProxy.sol";
 import {IERC20DetailedBytes} from "./interfaces/IERC20DetailedBytes.sol";
 import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
@@ -216,9 +216,13 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         }
 
         BaseCurrencyInfo memory baseCurrencyInfo;
-        baseCurrencyInfo
-            .networkBaseTokenPriceInUsd = networkBaseTokenPriceInUsdProxyAggregator
-            .latestAnswer();
+        (
+            ,
+            baseCurrencyInfo.networkBaseTokenPriceInUsd,
+            ,
+            ,
+
+        ) = networkBaseTokenPriceInUsdProxyAggregator.latestRoundData();
         baseCurrencyInfo
             .networkBaseTokenPriceDecimals = networkBaseTokenPriceInUsdProxyAggregator
             .decimals();
@@ -227,9 +231,14 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             if (ETH_CURRENCY_UNIT == baseCurrencyUnit) {
                 baseCurrencyInfo
                     .marketReferenceCurrencyUnit = ETH_CURRENCY_UNIT;
-                baseCurrencyInfo
-                    .marketReferenceCurrencyPriceInUsd = marketReferenceCurrencyPriceInUsdProxyAggregator
-                    .latestAnswer();
+                (
+                    ,
+                    baseCurrencyInfo.marketReferenceCurrencyPriceInUsd,
+                    ,
+                    ,
+
+                ) = marketReferenceCurrencyPriceInUsdProxyAggregator
+                    .latestRoundData();
             } else {
                 baseCurrencyInfo.marketReferenceCurrencyUnit = baseCurrencyUnit;
                 baseCurrencyInfo.marketReferenceCurrencyPriceInUsd = int256(
@@ -240,9 +249,14 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             bytes memory /*lowLevelData*/
         ) {
             baseCurrencyInfo.marketReferenceCurrencyUnit = ETH_CURRENCY_UNIT;
-            baseCurrencyInfo
-                .marketReferenceCurrencyPriceInUsd = marketReferenceCurrencyPriceInUsdProxyAggregator
-                .latestAnswer();
+            (
+                ,
+                baseCurrencyInfo.marketReferenceCurrencyPriceInUsd,
+                ,
+                ,
+
+            ) = marketReferenceCurrencyPriceInUsdProxyAggregator
+                .latestRoundData();
         }
 
         return (reservesData, baseCurrencyInfo);

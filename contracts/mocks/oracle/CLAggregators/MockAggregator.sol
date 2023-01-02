@@ -9,39 +9,47 @@ contract MockAggregator is IEACAggregatorProxy{
 
     constructor(int256 initialAnswer) {
         _latestAnswer = initialAnswer;
-        emit AnswerUpdated(initialAnswer, 0, block.timestamp);
     }
 
     function updateLatestAnswer(int256 answer) external {
         _latestAnswer = answer;
-        emit AnswerUpdated(answer, 0, block.timestamp);
-    }
-
-    function latestAnswer() external view returns (int256) {
-        return _latestAnswer;
-    }
-
-    function getTokenType() external pure returns (uint256) {
-        return 1;
     }
 
     function decimals() external pure returns (uint8) {
-        return 8;
+        return 18;
     }
 
-    function getTimestamp(uint256) external view override returns (uint256) {
-        return block.timestamp;
+    function description() external pure returns (string memory) {
+        return "";
     }
 
-    function latestRound() external pure override returns (uint256) {
+    function version() external pure returns (uint256) {
         return 0;
     }
 
-    function getAnswer(uint256) external view override returns (int256) {
-        return _latestAnswer;
-    }
+    function getRoundData(uint80)
+        external
+        view
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        ) {
+            answer = _latestAnswer;
+        }
 
-    function latestTimestamp() external view returns (uint256) {
-        return block.timestamp;
-    }
+    function latestRoundData()
+        external
+        view
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        ) {
+            answer = _latestAnswer;
+        }
 }
