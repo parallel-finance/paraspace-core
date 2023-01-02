@@ -218,14 +218,14 @@ import {
   AutoCompoundApe,
   InitializableAdminUpgradeabilityProxy__factory,
   InitializableAdminUpgradeabilityProxy,
+  ParaProxyInterfaces__factory,
+  ParaProxyInterfaces,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
-  getApeStakingLogic,
   getAutoCompoundApe,
   getFirstSigner,
-  getMintableERC721Logic,
   getPunks,
   getWETH,
 } from "./contracts-getters";
@@ -233,6 +233,7 @@ import {
   convertToCurrencyDecimals,
   getContractAddressInDb,
   getFunctionSignatures,
+  getFunctionSignaturesFromDb,
   insertContractAddressInDb,
   withSaveAndVerify,
 } from "./contracts-helpers";
@@ -437,6 +438,10 @@ export const getPoolSignatures = () => {
 
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
+  const poolParaProxyInterfacesSelectors = getFunctionSignatures(
+    ParaProxyInterfaces__factory.abi
+  );
+
   const allSelectors = {};
   const poolSelectors = [
     ...poolCoreSelectors,
@@ -444,6 +449,7 @@ export const getPoolSignatures = () => {
     ...poolMarketplaceSelectors,
     ...poolApeStakingSelectors,
     ...poolProxySelectors,
+    ...poolParaProxyInterfacesSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {
@@ -462,6 +468,37 @@ export const getPoolSignatures = () => {
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolParaProxyInterfacesSelectors,
+  };
+};
+
+export const getPoolSignaturesFromDb = async () => {
+  const poolCoreSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolCoreImpl
+  );
+
+  const poolParametersSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolParametersImpl
+  );
+
+  const poolMarketplaceSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolMarketplaceImpl
+  );
+
+  const poolApeStakingSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolApeStakingImpl
+  );
+
+  const poolParaProxyInterfacesSelectors = await getFunctionSignaturesFromDb(
+    eContractid.ParaProxyInterfacesImpl
+  );
+
+  return {
+    poolCoreSelectors,
+    poolParametersSelectors,
+    poolMarketplaceSelectors,
+    poolApeStakingSelectors,
+    poolParaProxyInterfacesSelectors,
   };
 };
 
@@ -501,11 +538,16 @@ export const deployPoolComponents = async (
   const allTokens = await getAllTokens();
   const cApe = await getAutoCompoundApe();
 
+  const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
+    await getFirstSigner()
+  );
+
   const {
     poolCoreSelectors,
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolParaProxyInterfacesSelectors,
   } = getPoolSignatures();
 
   return {
@@ -545,10 +587,22 @@ export const deployPoolComponents = async (
       apeStakingLibraries,
       poolApeStakingSelectors
     )) as PoolApeStaking,
+    poolParaProxyInterfaces: (await withSaveAndVerify(
+      poolParaProxyInterfaces,
+      eContractid.ParaProxyInterfacesImpl,
+      [],
+      verify,
+      false,
+      undefined,
+      poolParaProxyInterfacesSelectors
+    )) as ParaProxyInterfaces,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
+    poolParaProxyInterfacesSelectors: poolParaProxyInterfacesSelectors.map(
+      (s) => s.signature
+    ),
   };
 };
 
@@ -704,21 +758,21 @@ export const deployGenericNTokenImpl = async (
   atomicPricing: boolean,
   verify?: boolean
 ) => {
-  let mintableERC721Logic;
-  mintableERC721Logic = await getMintableERC721Logic();
-  if (!mintableERC721Logic) {
-    mintableERC721Logic = await deployMintableERC721Logic(verify);
-  }
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic.address,
+      mintableERC721Logic,
   };
   return withSaveAndVerify(
     new NToken__factory(libraries, await getFirstSigner()),
     eContractid.NTokenImpl,
     [poolAddress, atomicPricing],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NToken>;
 };
 
@@ -726,21 +780,21 @@ export const deployUniswapV3NTokenImpl = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
 ) => {
-  let mintableERC721Logic;
-  mintableERC721Logic = await getMintableERC721Logic();
-  if (!mintableERC721Logic) {
-    mintableERC721Logic = await deployMintableERC721Logic(verify);
-  }
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic.address,
+      mintableERC721Logic,
   };
   return withSaveAndVerify(
     new NTokenUniswapV3__factory(libraries, await getFirstSigner()),
     eContractid.NTokenUniswapV3Impl,
     [poolAddress],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NTokenUniswapV3>;
 };
 
@@ -748,21 +802,21 @@ export const deployGenericMoonbirdNTokenImpl = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
 ) => {
-  let mintableERC721Logic;
-  mintableERC721Logic = await getMintableERC721Logic();
-  if (!mintableERC721Logic) {
-    mintableERC721Logic = await deployMintableERC721Logic(verify);
-  }
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic.address,
+      mintableERC721Logic,
   };
   return withSaveAndVerify(
     new NTokenMoonBirds__factory(libraries, await getFirstSigner()),
     eContractid.NTokenMoonBirdsImpl,
     [poolAddress],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NTokenMoonBirds>;
 };
 
@@ -1747,29 +1801,27 @@ export const deployNTokenBAYCImpl = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
 ) => {
-  let apeStakingLogic;
-  apeStakingLogic = await getApeStakingLogic();
-  if (!apeStakingLogic) {
-    apeStakingLogic = await deployApeStakingLogic(verify);
-  }
-  let mintableERC721Logic;
-  mintableERC721Logic = await getMintableERC721Logic();
-  if (!mintableERC721Logic) {
-    mintableERC721Logic = await deployMintableERC721Logic(verify);
-  }
+  const apeStakingLogic =
+    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
+    (await deployApeStakingLogic(verify)).address;
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic.address,
+      apeStakingLogic,
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic.address,
+      mintableERC721Logic,
   };
 
   return withSaveAndVerify(
     new NTokenBAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenBAYCImpl,
     [poolAddress, apeCoinStaking],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NTokenBAYC>;
 };
 
@@ -1778,30 +1830,29 @@ export const deployNTokenMAYCImpl = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
 ) => {
-  let apeStakingLogic;
-  apeStakingLogic = await getApeStakingLogic();
-  if (!apeStakingLogic) {
-    apeStakingLogic = await deployApeStakingLogic();
-  }
-  let mintableERC721Logic;
-  mintableERC721Logic = await getMintableERC721Logic();
-  if (!mintableERC721Logic) {
-    mintableERC721Logic = await deployMintableERC721Logic(verify);
-  }
+  const apeStakingLogic =
+    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
+    (await deployApeStakingLogic(verify)).address;
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic.address,
+      apeStakingLogic,
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic.address,
+      mintableERC721Logic,
   };
   return withSaveAndVerify(
     new NTokenMAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenMAYCImpl,
     [poolAddress, apeCoinStaking],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NTokenMAYC>;
 };
+
 export const deployATokenDebtToken = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
@@ -1939,7 +1990,7 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
 
   const cApeImplementation = await withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),
-    eContractid.cAPEImplementation,
+    eContractid.cAPEImpl,
     [...args],
     verify
   );
@@ -2114,15 +2165,13 @@ export const deployMockNToken = async (
   ],
   verify?: boolean
 ) => {
-  let mintableERC721Logic;
-  mintableERC721Logic = await getMintableERC721Logic();
-  if (!mintableERC721Logic) {
-    mintableERC721Logic = await deployMintableERC721Logic(verify);
-  }
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic.address,
+      mintableERC721Logic,
   };
 
   const instance = (await withSaveAndVerify(
