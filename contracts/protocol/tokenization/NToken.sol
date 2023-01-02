@@ -29,7 +29,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 120;
+    uint256 public constant NTOKEN_REVISION = 130;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -237,8 +237,10 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     ) internal virtual {
         address underlyingAsset = _underlyingAsset;
 
-        uint256 fromBalanceBefore = collateralizedBalanceOf(from);
-        uint256 toBalanceBefore = collateralizedBalanceOf(to);
+        uint256 fromBalanceBefore;
+        if (validate) {
+            fromBalanceBefore = collateralizedBalanceOf(from);
+        }
         bool isUsedAsCollateral = _transferCollateralizable(from, to, tokenId);
 
         if (validate) {
@@ -248,8 +250,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
                 from,
                 to,
                 isUsedAsCollateral,
-                fromBalanceBefore,
-                toBalanceBefore
+                fromBalanceBefore
             );
         }
     }
