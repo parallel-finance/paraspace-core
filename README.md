@@ -12,11 +12,6 @@
 [![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://medium.com/@paraspace)
 [![Discourse](https://img.shields.io/badge/Forum-gray?logo=discourse)](https://discourse.para.space)
 
-[![Discord chat][discord-badge]][discord-url]
-
-[discord-badge]: https://img.shields.io/discord/830972820846018600.svg?logo=discord&style=flat-square
-[discord-url]: https://discord.com/invite/buKKx4dySW
-
 This repository contains the core smart contracts for the Para-Space v1 Protocol.  
 For higher level contracts, see the [ paraspace-periphery](https://github.com/para-space/paraspace-periphery)
 repository.

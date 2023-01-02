@@ -9,6 +9,6 @@ contract MockNToken is NToken {
     constructor(IPool pool) NToken(pool, false) {}
 
     function getRevision() internal pure override returns (uint256) {
-        return 0x2;
+        return 999;
     }
 }

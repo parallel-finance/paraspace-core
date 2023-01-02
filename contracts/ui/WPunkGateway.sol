@@ -80,6 +80,9 @@ contract WPunkGateway is
         uint16 referralCode
     ) external nonReentrant {
         for (uint256 i = 0; i < punkIndexes.length; i++) {
+            address punkOwner = Punk.punkIndexToAddress(punkIndexes[i].tokenId);
+            require(punkOwner == msg.sender, "WPunkGateway: Not owner of Punk");
+
             Punk.buyPunk(punkIndexes[i].tokenId);
             Punk.transferPunk(proxy, punkIndexes[i].tokenId);
             // gatewayProxy is the sender of this function, not the original gateway
@@ -134,6 +137,9 @@ contract WPunkGateway is
         uint16 referralCode
     ) external nonReentrant {
         for (uint256 i = 0; i < punkIndexes.length; i++) {
+            address punkOwner = Punk.punkIndexToAddress(punkIndexes[i]);
+            require(punkOwner == msg.sender, "WPunkGateway: Not owner of Punk");
+
             Punk.buyPunk(punkIndexes[i]);
             Punk.transferPunk(proxy, punkIndexes[i]);
             // gatewayProxy is the sender of this function, not the original gateway
@@ -172,6 +178,9 @@ contract WPunkGateway is
         uint16 referralCode
     ) external nonReentrant {
         for (uint256 i = 0; i < punkIndexes.length; i++) {
+            address punkOwner = Punk.punkIndexToAddress(punkIndexes[i]);
+            require(punkOwner == msg.sender, "WPunkGateway: Not owner of Punk");
+
             Punk.buyPunk(punkIndexes[i]);
             Punk.transferPunk(proxy, punkIndexes[i]);
             // gatewayProxy is the sender of this function, not the original gateway

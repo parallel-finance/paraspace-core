@@ -66,25 +66,24 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         uint256 id,
         bytes memory
     ) external virtual override returns (bytes4) {
-        // only accept MoonBird tokens
-        require(msg.sender == _underlyingAsset, Errors.OPERATION_NOT_SUPPORTED);
-
         // if the operator is the pool, this means that the pool is transferring the token to this contract
         // which can happen during a normal supplyERC721 pool tx
         if (operator == address(POOL)) {
             return this.onERC721Received.selector;
         }
 
-        // supply the received token to the pool and set it as collateral
-        DataTypes.ERC721SupplyParams[]
-            memory tokenData = new DataTypes.ERC721SupplyParams[](1);
+        if (msg.sender == _underlyingAsset) {
+            // supply the received token to the pool and set it as collateral
+            DataTypes.ERC721SupplyParams[]
+                memory tokenData = new DataTypes.ERC721SupplyParams[](1);
 
-        tokenData[0] = DataTypes.ERC721SupplyParams({
-            tokenId: id,
-            useAsCollateral: true
-        });
+            tokenData[0] = DataTypes.ERC721SupplyParams({
+                tokenId: id,
+                useAsCollateral: true
+            });
 
-        POOL.supplyERC721FromNToken(_underlyingAsset, tokenData, from);
+            POOL.supplyERC721FromNToken(_underlyingAsset, tokenData, from);
+        }
 
         return this.onERC721Received.selector;
     }

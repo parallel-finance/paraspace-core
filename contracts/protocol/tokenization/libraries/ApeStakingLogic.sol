@@ -7,8 +7,8 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../../interfaces/IPool.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
-import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import "./MintableERC721Logic.sol";
+import "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
 /**
  * @title ApeStakingLogic library
@@ -18,6 +18,7 @@ import "./MintableERC721Logic.sol";
 library ApeStakingLogic {
     using SafeERC20 for IERC20;
     using PercentageMath for uint256;
+    using SafeCast for uint256;
 
     uint256 constant BAYC_POOL_ID = 1;
     uint256 constant MAYC_POOL_ID = 2;
@@ -38,21 +39,30 @@ library ApeStakingLogic {
     function withdrawBAKC(
         ApeCoinStaking _apeCoinStaking,
         uint256 poolId,
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs,
+        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs,
         address _apeRecipient
     ) external {
-        ApeCoinStaking.PairNftWithAmount[]
-            memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](0);
+        ApeCoinStaking.PairNftWithdrawWithAmount[]
+            memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
+                0
+            );
 
+        uint256 beforeBalance = _apeCoinStaking.apeCoin().balanceOf(
+            address(this)
+        );
         if (poolId == BAYC_POOL_ID) {
             _apeCoinStaking.withdrawBAKC(_nftPairs, _otherPairs);
         } else {
             _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
         }
+        uint256 afterBalance = _apeCoinStaking.apeCoin().balanceOf(
+            address(this)
+        );
 
-        uint256 balance = _apeCoinStaking.apeCoin().balanceOf(address(this));
-
-        _apeCoinStaking.apeCoin().safeTransfer(_apeRecipient, balance);
+        _apeCoinStaking.apeCoin().safeTransfer(
+            _apeRecipient,
+            afterBalance - beforeBalance
+        );
     }
 
     /**
@@ -109,8 +119,8 @@ library ApeStakingLogic {
             if (stakedAmount > 0) {
                 ApeCoinStaking.SingleNft[]
                     memory nfts = new ApeCoinStaking.SingleNft[](1);
-                nfts[0].tokenId = params.tokenId;
-                nfts[0].amount = stakedAmount;
+                nfts[0].tokenId = params.tokenId.toUint32();
+                nfts[0].amount = stakedAmount.toUint224();
                 if (params.poolId == BAYC_POOL_ID) {
                     params._apeCoinStaking.withdrawBAYC(nfts, address(this));
                 } else {
@@ -127,15 +137,16 @@ library ApeStakingLogic {
                     bakcTokenId
                 );
                 if (stakedAmount > 0) {
-                    ApeCoinStaking.PairNftWithAmount[]
-                        memory _nftPairs = new ApeCoinStaking.PairNftWithAmount[](
+                    ApeCoinStaking.PairNftWithdrawWithAmount[]
+                        memory _nftPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                             1
                         );
-                    _nftPairs[0].mainTokenId = params.tokenId;
-                    _nftPairs[0].bakcTokenId = bakcTokenId;
-                    _nftPairs[0].amount = stakedAmount;
-                    ApeCoinStaking.PairNftWithAmount[]
-                        memory _otherPairs = new ApeCoinStaking.PairNftWithAmount[](
+                    _nftPairs[0].mainTokenId = params.tokenId.toUint32();
+                    _nftPairs[0].bakcTokenId = bakcTokenId.toUint32();
+                    _nftPairs[0].amount = stakedAmount.toUint184();
+                    _nftPairs[0].isUncommit = true;
+                    ApeCoinStaking.PairNftWithdrawWithAmount[]
+                        memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                             0
                         );
 
@@ -175,22 +186,11 @@ library ApeStakingLogic {
         }
 
         //3 repay and supply
-        DataTypes.ReserveData memory apeCoinData = params.POOL.getReserveData(
-            address(_apeCoin)
-        );
-        uint256 repayAmount = IERC20(apeCoinData.variableDebtTokenAddress)
-            .balanceOf(positionOwner);
-        if (repayAmount > 0) {
-            repayAmount = Math.min(repayAmount, unstakedAmount);
-        }
-        uint256 supplyAmount = unstakedAmount - repayAmount;
-
         params.POOL.repayAndSupply(
             params._underlyingAsset,
             address(_apeCoin),
             positionOwner,
-            repayAmount,
-            supplyAmount
+            unstakedAmount
         );
     }
 

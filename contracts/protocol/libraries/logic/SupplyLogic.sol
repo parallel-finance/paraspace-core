@@ -192,6 +192,20 @@ library SupplyLogic {
                 );
             }
         }
+        if (
+            tokenType == XTokenType.NTokenBAYC ||
+            tokenType == XTokenType.NTokenMAYC
+        ) {
+            uint16 sApeReserveId = reservesData[DataTypes.SApeAddress].id;
+            bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
+            if (!currentStatus) {
+                userConfig.setUsingAsCollateral(sApeReserveId, true);
+                emit ReserveUsedAsCollateralEnabled(
+                    DataTypes.SApeAddress,
+                    params.onBehalfOf
+                );
+            }
+        }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
                 params.payer,
@@ -613,15 +627,17 @@ library SupplyLogic {
             emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
         } else {
             userConfig.setUsingAsCollateral(reserve.id, false);
-            ValidationLogic.validateHFAndLtvERC20(
-                reservesData,
-                reservesList,
-                userConfig,
-                asset,
-                onBehalfOf,
-                reservesCount,
-                priceOracle
-            );
+            if (userConfig.isBorrowingAny()) {
+                ValidationLogic.validateHFAndLtvERC20(
+                    reservesData,
+                    reservesList,
+                    userConfig,
+                    asset,
+                    onBehalfOf,
+                    reservesCount,
+                    priceOracle
+                );
+            }
 
             emit ReserveUsedAsCollateralDisabled(asset, onBehalfOf);
         }
@@ -714,15 +730,17 @@ library SupplyLogic {
             userConfig.setUsingAsCollateral(reserve.id, false);
             emit ReserveUsedAsCollateralDisabled(asset, sender);
         }
-        ValidationLogic.validateHFAndLtvERC721(
-            reservesData,
-            reservesList,
-            userConfig,
-            asset,
-            tokenIds,
-            sender,
-            reservesCount,
-            priceOracle
-        );
+        if (userConfig.isBorrowingAny()) {
+            ValidationLogic.validateHFAndLtvERC721(
+                reservesData,
+                reservesList,
+                userConfig,
+                asset,
+                tokenIds,
+                sender,
+                reservesCount,
+                priceOracle
+            );
+        }
     }
 }

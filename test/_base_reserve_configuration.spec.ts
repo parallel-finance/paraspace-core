@@ -4,7 +4,7 @@ import {
   deployMockReserveConfiguration,
   deployPoolCoreLibraries,
   deployReserveAuctionStrategy,
-} from "../deploy/helpers/contracts-deployments";
+} from "../helpers/contracts-deployments";
 import {
   ERC20__factory,
   IPool,
@@ -16,17 +16,17 @@ import {
   PToken__factory,
   VariableDebtToken__factory,
 } from "../types";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {ZERO_ADDRESS} from "../deploy/helpers/constants";
+import {ZERO_ADDRESS} from "../helpers/constants";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
-import {getFirstSigner} from "../deploy/helpers/contracts-getters";
-import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
+import {getFirstSigner} from "../helpers/contracts-getters";
+import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {BigNumberish, utils} from "ethers";
-import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
-import {impersonateAddress} from "../deploy/helpers/contracts-helpers";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
+import {impersonateAddress} from "../helpers/contracts-helpers";
 
 describe("ReserveConfiguration", async () => {
   const fixture = async () => {

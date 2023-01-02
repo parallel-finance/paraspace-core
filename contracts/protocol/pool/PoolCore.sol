@@ -50,7 +50,7 @@ contract PoolCore is
 {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 1;
+    uint256 public constant POOL_REVISION = 130;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -719,8 +719,7 @@ contract PoolCore is
         address from,
         address to,
         bool usedAsCollateral,
-        uint256 balanceFromBefore,
-        uint256 balanceToBefore
+        uint256 balanceFromBefore
     ) external virtual override {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -739,7 +738,6 @@ contract PoolCore is
                 usedAsCollateral: usedAsCollateral,
                 tokenId: tokenId,
                 balanceFromBefore: balanceFromBefore,
-                balanceToBefore: balanceToBefore,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle()
             })

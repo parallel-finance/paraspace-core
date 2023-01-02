@@ -8,6 +8,7 @@ import {IX2Y2} from "../../interfaces/IX2Y2.sol";
 import {ConsiderationItem, OfferItem, ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
+import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 
 /**
  * @title X2Y2 Adapter
@@ -15,14 +16,18 @@ import {IMarketplace} from "../../interfaces/IMarketplace.sol";
  * @notice Implements the NFT <=> ERC20 exchange logic via X2Y2 marketplace
  */
 contract X2Y2Adapter is IMarketplace {
-    constructor() {}
+    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+
+    constructor(IPoolAddressesProvider provider) {
+        ADDRESSES_PROVIDER = provider;
+    }
 
     struct ERC721Pair {
         address token;
         uint256 tokenId;
     }
 
-    function getAskOrderInfo(bytes memory params, address)
+    function getAskOrderInfo(bytes memory params)
         external
         pure
         override
@@ -32,11 +37,16 @@ contract X2Y2Adapter is IMarketplace {
         require(runInput.details.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
 
         IX2Y2.SettleDetail memory detail = runInput.details[0];
+        IX2Y2.SettleShared memory shared = runInput.shared;
         IX2Y2.Order memory order = runInput.orders[detail.orderIdx];
         IX2Y2.OrderItem memory item = order.items[detail.itemIdx];
 
         require(
-            IX2Y2.Op.COMPLETE_SELL_OFFER == detail.op,
+            shared.amountToWeth == 0 && shared.amountToEth == 0, // dont rely on x2y2 for ETH/WETH convention
+            Errors.INVALID_MARKETPLACE_ORDER
+        );
+        require(
+            !shared.canFail && IX2Y2.Op.COMPLETE_SELL_OFFER == detail.op,
             Errors.INVALID_MARKETPLACE_ORDER
         );
 

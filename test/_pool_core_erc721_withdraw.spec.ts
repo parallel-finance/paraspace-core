@@ -1,7 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {waitForTx} from "../deploy/helpers/misc-utils";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {waitForTx} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {
@@ -9,7 +9,7 @@ import {
   borrowAndValidate,
   withdrawAndValidate,
 } from "./helpers/validated-steps";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 
 describe("Functionality tests of ERC721 withdraw in PoolCore contract", () => {
   it("TC-erc721-withdraw-01:User shouldn't withdraw a ERC721 token that hasn't been supplied by him", async () => {

@@ -207,7 +207,6 @@ library DataTypes {
         bool usedAsCollateral;
         uint256 tokenId;
         uint256 balanceFromBefore;
-        uint256 balanceToBefore;
         uint256 reservesCount;
         address oracle;
     }
@@ -243,12 +242,14 @@ library DataTypes {
 
     struct ValidateLiquidateERC721Params {
         ReserveCache liquidationAssetReserveCache;
+        address liquidationAsset;
         address liquidator;
         address borrower;
         uint256 globalDebt;
         uint256 healthFactor;
         address collateralAsset;
         uint256 tokenId;
+        address weth;
         uint256 actualLiquidationAmount;
         uint256 maxLiquidationAmount;
         uint256 auctionRecoveryHealthFactor;
@@ -365,6 +366,8 @@ library DataTypes {
         uint16 _reservesCount;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
+        // incentive fee for claim ape reward to compound
+        uint16 _apeCompoundFee;
         // Conduit contract address during exchange
         address _conduit;
     }

@@ -10,16 +10,16 @@ import {
   ZERO_ADDRESS,
   MAX_BORROW_CAP,
   MAX_SUPPLY_CAP,
-} from "../deploy/helpers/constants";
-import {deployReserveAuctionStrategy} from "../deploy/helpers/contracts-deployments";
-import {getFirstSigner} from "../deploy/helpers/contracts-getters";
-import {eContractid, ProtocolErrors} from "../deploy/helpers/types";
-import {auctionStrategyExp} from "../deploy/market-config/auctionStrategies";
-import {strategyWETH} from "../deploy/market-config/reservesConfigs";
+} from "../helpers/constants";
+import {deployReserveAuctionStrategy} from "../helpers/contracts-deployments";
+import {getFirstSigner} from "../helpers/contracts-getters";
+import {eContractid, ProtocolErrors} from "../helpers/types";
+import {auctionStrategyExp} from "../market-config/auctionStrategies";
+import {strategyWETH} from "../market-config/reservesConfigs";
 import {
   convertToCurrencyDecimals,
   impersonateAddress,
-} from "../deploy/helpers/contracts-helpers";
+} from "../helpers/contracts-helpers";
 import {
   ERC20,
   ERC20__factory,
@@ -32,12 +32,12 @@ import {
 } from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {waitForTx} from "../deploy/helpers/misc-utils";
+import {waitForTx} from "../helpers/misc-utils";
 import {BigNumberish} from "ethers";
 import "./helpers/utils/wadraymath";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {ETHERSCAN_VERIFICATION} from "../deploy/helpers/hardhat-constants";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 describe("PoolConfigurator: Common", () => {
   type ReserveConfigurationValues = {
@@ -906,16 +906,16 @@ describe("PoolConfigurator: Common", () => {
     const {configurator} = await loadFixture(testEnvFixture);
     const {INVALID_AMOUNT} = ProtocolErrors;
     const min_hf = "1";
-    const max_hf = "2000000000000000001";
-    expect(
+    const max_hf = "3000000000000000001";
+    await expect(
       configurator.setAuctionRecoveryHealthFactor(min_hf)
     ).to.be.revertedWith(INVALID_AMOUNT);
-    expect(
+    await expect(
       configurator.setAuctionRecoveryHealthFactor(max_hf)
     ).to.be.revertedWith(INVALID_AMOUNT);
-    expect(configurator.setAuctionRecoveryHealthFactor("0")).to.be.revertedWith(
-      INVALID_AMOUNT
-    );
+    await expect(
+      configurator.setAuctionRecoveryHealthFactor("0")
+    ).to.be.revertedWith(INVALID_AMOUNT);
   });
 });
 
@@ -952,16 +952,22 @@ describe("PoolConfigurator: Drop Reserve", () => {
     await weth.connect(user1.signer)["mint(uint256)"](depositedAmount);
     await weth.connect(user1.signer).approve(pool.address, depositedAmount);
 
-    await pool.supply(dai.address, depositedAmount, deployer.address, 0);
+    await pool.supply(dai.address, depositedAmount, deployer.address, 0, {
+      gasLimit: 5000000,
+    });
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO
     );
     await pool
       .connect(user1.signer)
-      .supply(weth.address, depositedAmount, user1.address, 0);
+      .supply(weth.address, depositedAmount, user1.address, 0, {
+        gasLimit: 5000000,
+      });
     await pool
       .connect(user1.signer)
-      .borrow(dai.address, borrowedAmount, 0, user1.address);
+      .borrow(dai.address, borrowedAmount, 0, user1.address, {
+        gasLimit: 5000000,
+      });
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       VARIABLE_DEBT_SUPPLY_NOT_ZERO
     );
@@ -977,7 +983,7 @@ describe("PoolConfigurator: Drop Reserve", () => {
     expect(
       await pool
         .connect(user1.signer)
-        .repay(dai.address, MAX_UINT_AMOUNT, user1.address)
+        .repay(dai.address, MAX_UINT_AMOUNT, user1.address, {gasLimit: 5000000})
     );
     await expect(configurator.dropReserve(dai.address)).to.be.revertedWith(
       XTOKEN_SUPPLY_NOT_ZERO
@@ -1136,13 +1142,13 @@ describe("PoolConfigurator: Liquidation Protocol Fee", () => {
     const {INVALID_LIQUIDATION_PROTOCOL_FEE} = ProtocolErrors;
     const liquidationProtocolFee = 10001;
 
-    expect(
+    await expect(
       configurator.setLiquidationProtocolFee(
         usdc.address,
         liquidationProtocolFee
       )
     ).to.be.revertedWith(INVALID_LIQUIDATION_PROTOCOL_FEE);
-    expect(
+    await expect(
       configurator.setLiquidationProtocolFee(
         dai.address,
         liquidationProtocolFee

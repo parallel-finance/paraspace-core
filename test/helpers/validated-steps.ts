@@ -1,11 +1,7 @@
 import chai from "chai";
 import {BigNumber, BigNumberish} from "ethers";
 import {formatEther, parseEther} from "ethers/lib/utils";
-import {
-  MAX_UINT_AMOUNT,
-  PERCENTAGE_FACTOR,
-  WAD,
-} from "../../deploy/helpers/constants";
+import {MAX_UINT_AMOUNT, PERCENTAGE_FACTOR, WAD} from "../../helpers/constants";
 import {
   getAggregator,
   getParaSpaceOracle,
@@ -18,14 +14,14 @@ import {
   getNonfungiblePositionManager,
   getUniswapV3OracleWrapper,
   getNToken,
-} from "../../deploy/helpers/contracts-getters";
+} from "../../helpers/contracts-getters";
 import {
   convertToCurrencyDecimals,
   getEthersSigners,
   isBorrowing,
   isUsingAsCollateral,
-} from "../../deploy/helpers/contracts-helpers";
-import {waitForTx} from "../../deploy/helpers/misc-utils";
+} from "../../helpers/contracts-helpers";
+import {waitForTx} from "../../helpers/misc-utils";
 import {
   ERC20,
   ERC721,
@@ -34,13 +30,14 @@ import {
   MintableERC20,
   MintableERC721,
   NToken,
+  StETHMocked,
   WETH9Mocked,
 } from "../../types";
 import {SignerWithAddress} from "./make-suite";
 import {getUserPositions} from "./utils/positions";
 import {convertFromCurrencyDecimals} from "./utils/helpers";
 import "../helpers/utils/wadraymath";
-import {XTokenType} from "../../deploy/helpers/types";
+import {XTokenType} from "../../helpers/types";
 import {almostEqual} from "../helpers/uniswapv3-helper";
 
 const {expect} = chai;
@@ -48,6 +45,7 @@ type SupportedAsset =
   | MintableERC20
   | MintableERC721
   | WETH9Mocked
+  | StETHMocked
   | INonfungiblePositionManager;
 
 function isERC20(token: SupportedAsset): token is MintableERC20 | WETH9Mocked {

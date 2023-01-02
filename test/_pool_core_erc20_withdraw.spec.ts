@@ -1,9 +1,9 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther, formatEther} from "ethers/lib/utils";
-import {MAX_UINT_AMOUNT} from "../deploy/helpers/constants";
-import {convertToCurrencyDecimals} from "../deploy/helpers/contracts-helpers";
-import {ProtocolErrors} from "../deploy/helpers/types";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {parseUnits} from "@ethersproject/units";

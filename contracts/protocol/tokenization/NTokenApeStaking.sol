@@ -26,6 +26,13 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         );
 
     /**
+     * @dev Default percentage of borrower's ape position to be repaid as incentive in a unstaking transaction.
+     * @dev Percentage applied when the users ape position got unstaked by others.
+     * Expressed in bps, a value of 30 results in 0.3%
+     */
+    uint256 internal constant DEFAULT_UNSTAKE_INCENTIVE_PERCENTAGE = 30;
+
+    /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
@@ -130,7 +137,10 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     function initializeStakingData() internal {
         ApeStakingLogic.APEStakingParameter
             storage dataStorage = apeStakingDataStorage();
-        ApeStakingLogic.executeSetUnstakeApeIncentive(dataStorage, 30);
+        ApeStakingLogic.executeSetUnstakeApeIncentive(
+            dataStorage,
+            DEFAULT_UNSTAKE_INCENTIVE_PERCENTAGE
+        );
     }
 
     function setUnstakeApeIncentive(uint256 incentive) external onlyPoolAdmin {

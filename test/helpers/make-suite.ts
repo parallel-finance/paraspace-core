@@ -43,10 +43,13 @@ import {
   getNTokenBAYC,
   getNTokenMAYC,
   getApeCoinStaking,
-  getPTokenSApe,
   getBlurExchangeProxy,
   getExecutionDelegate,
-} from "../../deploy/helpers/contracts-getters";
+  getSeaportAdapter,
+  getLooksRareAdapter,
+  getX2Y2Adapter,
+  getBlurAdapter,
+} from "../../helpers/contracts-getters";
 import {
   eContractid,
   ERC20TokenContractId,
@@ -54,14 +57,17 @@ import {
   NTokenContractId,
   PTokenContractId,
   tEthereumAddress,
-} from "../../deploy/helpers/types";
+} from "../../helpers/types";
 import {
   ApeCoinStaking,
+  ATokenDebtToken,
+  BlurAdapter,
   BlurExchange,
   Conduit,
   ERC721Delegate,
   ExecutionDelegate,
   IPool,
+  LooksRareAdapter,
   NFTFloorOracle,
   NTokenBAYC,
   NTokenMAYC,
@@ -69,7 +75,10 @@ import {
   NTokenUniswapV3,
   PausableZone,
   PausableZoneController,
+  SeaportAdapter,
+  StETHDebtToken,
   UiPoolDataProvider,
+  X2Y2Adapter,
   X2Y2R1,
 } from "../../types";
 import {ProtocolDataProvider} from "../../types";
@@ -83,7 +92,7 @@ import bignumberChai from "chai-bignumber";
 import {PriceOracle} from "../../types";
 import {PoolAddressesProvider} from "../../types";
 import {PoolAddressesProviderRegistry} from "../../types";
-import {getEthersSigners} from "../../deploy/helpers/contracts-helpers";
+import {getEthersSigners} from "../../helpers/contracts-helpers";
 import {WETH9Mocked} from "../../types";
 import {solidity} from "ethereum-waffle";
 import {
@@ -103,14 +112,14 @@ import {
   Moonbirds,
   UniswapV3Factory,
   INonfungiblePositionManager,
-  StETH,
+  StETHMocked,
   MockAToken,
   PTokenAToken,
   PTokenStETH,
 } from "../../types";
 import {MintableERC721} from "../../types";
 import {Signer} from "ethers";
-import {getParaSpaceConfig, waitForTx} from "../../deploy/helpers/misc-utils";
+import {getParaSpaceConfig} from "../../helpers/misc-utils";
 
 chai.use(bignumberChai());
 chai.use(solidity);
@@ -140,8 +149,8 @@ export interface TestEnv {
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
-  variableDebtStETH: VariableDebtToken;
-  variableDebtAWeth: VariableDebtToken;
+  variableDebtStETH: StETHDebtToken;
+  variableDebtAWeth: ATokenDebtToken;
   variableDebtWeth: VariableDebtToken;
   pUsdc: PToken;
   usdc: MintableERC20;
@@ -155,7 +164,7 @@ export interface TestEnv {
   wPunk: WPunk;
   nWPunk: NToken;
   wBTC: MintableERC20;
-  stETH: StETH;
+  stETH: StETHMocked;
   pstETH: PTokenStETH;
   ape: MintableERC20;
   nMAYC: NTokenMAYC;
@@ -171,10 +180,13 @@ export interface TestEnv {
   conduit: Conduit;
   pausableZone: PausableZone;
   seaport: Seaport;
+  seaportAdapter: SeaportAdapter;
   looksRareExchange: LooksRareExchange;
+  looksRareAdapter: LooksRareAdapter;
   strategyStandardSaleForFixedPrice: StrategyStandardSaleForFixedPrice;
   transferManagerERC721: TransferManagerERC721;
   x2y2r1: X2Y2R1;
+  x2y2Adapter: X2Y2Adapter;
   erc721Delegate: ERC721Delegate;
   moonbirds: Moonbirds;
   nMOONBIRD: NTokenMoonBirds;
@@ -185,6 +197,7 @@ export interface TestEnv {
   apeCoinStaking: ApeCoinStaking;
   executionDelegate: ExecutionDelegate;
   blurExchange: BlurExchange;
+  blurAdapter: BlurAdapter;
 }
 
 export async function initializeMakeSuite() {
@@ -223,7 +236,7 @@ export async function initializeMakeSuite() {
     wPunk: {} as WPunk,
     nWPunk: {} as NToken,
     wBTC: {} as MintableERC20,
-    stETH: {} as StETH,
+    stETH: {} as StETHMocked,
     pstETH: {} as PTokenStETH,
     ape: {} as MintableERC20,
     mayc: {} as MintableERC721,
@@ -237,15 +250,19 @@ export async function initializeMakeSuite() {
     conduit: {} as Conduit,
     pausableZone: {} as PausableZone,
     seaport: {} as Seaport,
+    seaportAdapter: {} as SeaportAdapter,
     looksRareExchange: {} as LooksRareExchange,
+    looksRareAdapter: {} as LooksRareAdapter,
     strategyStandardSaleForFixedPrice: {} as StrategyStandardSaleForFixedPrice,
     transferManagerERC721: {} as TransferManagerERC721,
     x2y2r1: {} as X2Y2R1,
+    x2y2Adapter: {} as X2Y2Adapter,
     erc721Delegate: {} as ERC721Delegate,
     moonbirds: {} as Moonbirds,
     nftFloorOracle: {} as NFTFloorOracle,
     executionDelegate: {} as ExecutionDelegate,
     blurExchange: {} as BlurExchange,
+    blurAdapter: {} as BlurAdapter,
   } as TestEnv;
   const paraSpaceConfig = getParaSpaceConfig();
   const signers = await Promise.all(
@@ -297,13 +314,16 @@ export async function initializeMakeSuite() {
   testEnv.pausableZoneController = await getPausableZoneController();
   testEnv.pausableZone = await getPausableZone();
   testEnv.seaport = await getSeaport();
+  testEnv.seaportAdapter = await getSeaportAdapter();
 
   testEnv.looksRareExchange = await getLooksRareExchange();
+  testEnv.looksRareAdapter = await getLooksRareAdapter();
   testEnv.strategyStandardSaleForFixedPrice =
     await getStrategyStandardSaleForFixedPrice();
   testEnv.transferManagerERC721 = await getTransferManagerERC721();
 
   testEnv.x2y2r1 = await getX2Y2R1();
+  testEnv.x2y2Adapter = await getX2Y2Adapter();
   testEnv.erc721Delegate = await getERC721Delegate();
 
   testEnv.apeCoinStaking = await getApeCoinStaking();
@@ -484,17 +504,7 @@ export async function initializeMakeSuite() {
   );
   testEnv.executionDelegate = await getExecutionDelegate();
   testEnv.blurExchange = await getBlurExchangeProxy();
-
-  const {xTokenAddress: pSApeCoinAddress} =
-    await testEnv.protocolDataProvider.getReserveTokensAddresses(
-      "0x0000000000000000000000000000000000000001"
-    );
-  const pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
-  await waitForTx(
-    await pSApeCoin
-      .connect(testEnv.poolAdmin.signer)
-      .setNToken(testEnv.nBAYC.address, testEnv.nMAYC.address)
-  );
+  testEnv.blurAdapter = await getBlurAdapter();
 
   return testEnv;
 }

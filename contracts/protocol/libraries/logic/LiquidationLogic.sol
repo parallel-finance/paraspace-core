@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {IERC20} from "../../../dependencies/openzeppelin/contracts//IERC20.sol";
+import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
@@ -354,12 +354,14 @@ library LiquidationLogic {
             collateralReserve,
             DataTypes.ValidateLiquidateERC721Params({
                 liquidationAssetReserveCache: vars.liquidationAssetReserveCache,
+                liquidationAsset: params.liquidationAsset,
                 liquidator: params.liquidator,
                 borrower: params.borrower,
                 globalDebt: vars.userGlobalDebt,
                 actualLiquidationAmount: vars.actualLiquidationAmount,
                 maxLiquidationAmount: params.liquidationAmount,
                 healthFactor: vars.healthFactor,
+                weth: params.weth,
                 priceOracleSentinel: params.priceOracleSentinel,
                 collateralAsset: params.collateralAsset,
                 tokenId: params.collateralTokenId,
@@ -526,13 +528,6 @@ library LiquidationLogic {
         ExecuteLiquidateLocalVars memory vars
     ) internal {
         _depositETH(params, vars);
-
-        // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
-        IERC20(params.liquidationAsset).safeTransferFrom(
-            vars.payer,
-            vars.liquidationAssetReserveCache.xTokenAddress,
-            vars.actualLiquidationAmount
-        );
         // Handle payment
         IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
             .handleRepayment(params.liquidator, vars.actualLiquidationAmount);
@@ -552,6 +547,12 @@ library LiquidationLogic {
             params.liquidationAsset,
             vars.actualLiquidationAmount,
             0
+        );
+        // Transfers the debt asset being repaid to the xToken, where the liquidity is kept
+        IERC20(params.liquidationAsset).safeTransferFrom(
+            vars.payer,
+            vars.liquidationAssetReserveCache.xTokenAddress,
+            vars.actualLiquidationAmount
         );
     }
 

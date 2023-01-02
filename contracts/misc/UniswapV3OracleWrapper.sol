@@ -13,8 +13,12 @@ import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
 import {FullMath} from "../dependencies/uniswap/libraries/FullMath.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {SafeCast} from "../dependencies/univ3/libraries/SafeCast.sol";
+import {FixedPoint96} from "../dependencies/univ3/libraries/FixedPoint96.sol";
 
 contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
+    using SafeCast for uint256;
+
     IUniswapV3Factory immutable UNISWAP_V3_FACTORY;
     INonfungiblePositionManager immutable UNISWAP_V3_POSITION_MANAGER;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
@@ -235,46 +239,13 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         oracleData.token1Decimal = IERC20Detailed(positionData.token1)
             .decimals();
 
-        // TODO using bit shifting for the 2^96
-        // positionData.sqrtPriceX96;
-
-        if (oracleData.token1Decimal == oracleData.token0Decimal) {
-            // multiply by 10^18 then divide by 10^9 to preserve price in wei
-            oracleData.sqrtPriceX96 = uint160(
-                (SqrtLib.sqrt(
-                    ((oracleData.token0Price * (10**18)) /
-                        (oracleData.token1Price))
-                ) * 2**96) / 1E9
-            );
-        } else if (oracleData.token1Decimal > oracleData.token0Decimal) {
-            // multiple by 10^(decimalB - decimalA) to preserve price in wei
-            oracleData.sqrtPriceX96 = uint160(
-                (SqrtLib.sqrt(
-                    (oracleData.token0Price *
-                        (10 **
-                            (18 +
-                                oracleData.token1Decimal -
-                                oracleData.token0Decimal))) /
-                        (oracleData.token1Price)
-                ) * 2**96) / 1E9
-            );
-        } else {
-            // multiple by 10^(decimalA - decimalB) to preserve price in wei then divide by the same number
-            oracleData.sqrtPriceX96 = uint160(
-                (SqrtLib.sqrt(
-                    (oracleData.token0Price *
-                        (10 **
-                            (18 +
-                                oracleData.token0Decimal -
-                                oracleData.token1Decimal))) /
-                        (oracleData.token1Price)
-                ) * 2**96) /
-                    10 **
-                        (9 +
-                            oracleData.token0Decimal -
-                            oracleData.token1Decimal)
-            );
-        }
+        oracleData.sqrtPriceX96 = ((SqrtLib.sqrt(
+            ((oracleData.token0Price *
+                10 **
+                    (36 +
+                        oracleData.token1Decimal -
+                        oracleData.token0Decimal)) / (oracleData.token1Price))
+        ) << FixedPoint96.RESOLUTION) / 1E18).toUint160();
 
         return oracleData;
     }

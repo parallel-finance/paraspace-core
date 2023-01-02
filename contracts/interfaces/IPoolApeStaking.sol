@@ -12,6 +12,8 @@ interface IPoolApeStaking {
     struct StakingInfo {
         // Contract address of BAYC/MAYC
         address nftAsset;
+        // address of borrowing asset, can be Ape or cApe
+        address borrowAsset;
         // Borrow amount of Ape from lending pool
         uint256 borrowAmount;
         // Cash amount of Ape from user wallet
@@ -28,7 +30,7 @@ interface IPoolApeStaking {
     function borrowApeAndStake(
         StakingInfo calldata stakingInfo,
         ApeCoinStaking.SingleNft[] calldata _nfts,
-        ApeCoinStaking.PairNftWithAmount[] calldata _nftPairs
+        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
     ) external;
 
     /**
@@ -58,7 +60,7 @@ interface IPoolApeStaking {
      */
     function withdrawBAKC(
         address nftAsset,
-        ApeCoinStaking.PairNftWithAmount[] memory _nftPairs
+        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs
     ) external;
 
     /**
@@ -92,7 +94,18 @@ interface IPoolApeStaking {
         address underlyingAsset,
         address repayAsset,
         address onBehalfOf,
-        uint256 repayAmount,
-        uint256 supplyAmount
+        uint256 totalAmount
+    ) external;
+
+    /**
+     * @notice Claim user Ape coin reward and deposit to ape compound to get cApe, then deposit cApe to Lending pool for user
+     * @param nftAsset Contract address of BAYC/MAYC
+     * @param users array of user address
+     * @param tokenIds array of user tokenId array
+     */
+    function claimApeAndCompound(
+        address nftAsset,
+        address[] calldata users,
+        uint256[][] calldata tokenIds
     ) external;
 }

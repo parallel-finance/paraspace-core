@@ -2,7 +2,7 @@
   "rules": {
     "no-unused-vars": "error",
     "const-name-snakecase": "error",
-    "contract-name-camelcase": "error",
+    "contract-name-camelcase": "off",
     "event-name-camelcase": "error",
     "func-name-mixedcase": "off",
     "func-param-name-mixedcase": "off",

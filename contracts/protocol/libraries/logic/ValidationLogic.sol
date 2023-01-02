@@ -670,6 +670,11 @@ library ValidationLogic {
         }
 
         require(
+            msg.value == 0 || params.liquidationAsset == params.weth,
+            Errors.INVALID_LIQUIDATION_ASSET
+        );
+
+        require(
             params.maxLiquidationAmount >= params.actualLiquidationAmount &&
                 (msg.value == 0 || msg.value >= params.maxLiquidationAmount),
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
@@ -802,6 +807,7 @@ library ValidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ValidateAuctionParams memory params
     ) internal view {
+        require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         ValidateAuctionLocalVars memory vars;
 
         (
@@ -831,7 +837,7 @@ library ValidationLogic {
         );
 
         require(
-            params.erc721HealthFactor > params.auctionRecoveryHealthFactor,
+            params.erc721HealthFactor >= params.auctionRecoveryHealthFactor,
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
     }
