@@ -1862,18 +1862,19 @@ export const deployNTokenBAKCImpl = async (
   verify?: boolean
 ) => {
   const mintableERC721Logic =
-      (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-      (await deployMintableERC721Logic(verify)).address;
-
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic.address,
+      mintableERC721Logic,
   };
   return withSaveAndVerify(
     new NTokenBAKC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenBAKCImpl,
     [poolAddress, apeCoinStaking, nBAYC, nMAYC],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<NTokenBAKC>;
 };
 
