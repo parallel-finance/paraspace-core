@@ -313,9 +313,9 @@ describe("UserConfigurator for ERC721: check user usedAsCollateral and collatera
       (await pool.getUserConfiguration(liquidator.address)).data
     );
     expect(await nBAYC.collateralizedBalanceOf(liquidator.address)).to.be.equal(
-      0
+      1
     );
-    expect(isUsingAsCollateral(liquidatorConfig, baycData.id)).to.be.false;
+    expect(isUsingAsCollateral(liquidatorConfig, baycData.id)).to.be.true;
   });
 
   it("TC-use-as-collateral-05:supply multiple nft with some as collateral and some are not,then transfer and check", async () => {
