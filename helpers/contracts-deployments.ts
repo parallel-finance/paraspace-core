@@ -216,6 +216,22 @@ import {
   X2Y2R1,
   X2Y2R1__factory,
   AutoCompoundApe,
+  LSSVMPairEnumerableETH__factory,
+  LSSVMPairEnumerableETH,
+  LSSVMPairMissingEnumerableETH,
+  LSSVMPairMissingEnumerableETH__factory,
+  LSSVMPairEnumerableERC20__factory,
+  LSSVMPairEnumerableERC20,
+  LSSVMPairMissingEnumerableERC20__factory,
+  LSSVMPairMissingEnumerableERC20,
+  LSSVMPairFactory__factory,
+  LSSVMPairFactory,
+  LSSVMRouter__factory,
+  LSSVMRouter,
+  SudoAdapter__factory,
+  SudoAdapter,
+  LinearCurve__factory,
+  LinearCurve,
   InitializableAdminUpgradeabilityProxy__factory,
   InitializableAdminUpgradeabilityProxy,
   ParaProxyInterfaces__factory,
@@ -1393,6 +1409,20 @@ export const deployX2Y2Adapter = async (
   ) as Promise<X2Y2Adapter>;
 };
 
+export const deploySudoAdapter = async (
+  provider: tEthereumAddress,
+  verify?: boolean
+) => {
+  const sudoAdapter = new SudoAdapter__factory(await getFirstSigner());
+
+  return withSaveAndVerify(
+    sudoAdapter,
+    eContractid.SudoAdapter,
+    [provider],
+    verify
+  ) as Promise<SudoAdapter>;
+};
+
 export const deployMarketplaceLogic = async (
   libraries: MarketplaceLogicLibraryAddresses,
   verify?: boolean
@@ -2040,6 +2070,80 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployLSSVMPairEnumerableETH = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new LSSVMPairEnumerableETH__factory(await getFirstSigner()),
+    eContractid.LSSVMPairEnumerableETH,
+    [],
+    verify
+  ) as Promise<LSSVMPairEnumerableETH>;
+
+export const deployLSSVMPairMissingEnumerableETH = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new LSSVMPairMissingEnumerableETH__factory(await getFirstSigner()),
+    eContractid.LSSVMPairMissingEnumerableETH,
+    [],
+    verify
+  ) as Promise<LSSVMPairMissingEnumerableETH>;
+
+export const deployLSSVMPairEnumerableERC20 = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new LSSVMPairEnumerableERC20__factory(await getFirstSigner()),
+    eContractid.LSSVMPairEnumerableERC20,
+    [],
+    verify
+  ) as Promise<LSSVMPairEnumerableERC20>;
+
+export const deployLSSVMPairMissingEnumerableERC20 = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new LSSVMPairMissingEnumerableERC20__factory(await getFirstSigner()),
+    eContractid.LSSVMPairMissingEnumerableERC20,
+    [],
+    verify
+  ) as Promise<LSSVMPairMissingEnumerableERC20>;
+
+export const deployLSSVMPairFactory = async (
+  enumerableETHTemplate: tEthereumAddress,
+  missingEnumerableETHTemplate: tEthereumAddress,
+  enumerableERC20Template: tEthereumAddress,
+  missingEnumerableERC20Template: tEthereumAddress,
+  protocolFeeRecipient: tEthereumAddress,
+  protocolFeeMultiplier: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new LSSVMPairFactory__factory(await getFirstSigner()),
+    eContractid.LSSVMPairFactory,
+    [
+      enumerableETHTemplate,
+      missingEnumerableETHTemplate,
+      enumerableERC20Template,
+      missingEnumerableERC20Template,
+      protocolFeeRecipient,
+      protocolFeeMultiplier,
+    ],
+    verify
+  ) as Promise<LSSVMPairFactory>;
+
+export const deployLSSVMRouter = async (
+  pairFactory: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new LSSVMRouter__factory(await getFirstSigner()),
+    eContractid.LSSVMPairRouter,
+    [pairFactory],
+    verify
+  ) as Promise<LSSVMRouter>;
+
+export const deployLinearCurve = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new LinearCurve__factory(await getFirstSigner()),
+    eContractid.LinearCurve,
+    [],
+    verify
+  ) as Promise<LinearCurve>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

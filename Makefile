@@ -33,7 +33,7 @@ test:
 
 .PHONY: local-test
 local-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
+	make DB_PATH=deployed-contracts.json DEPLOY_START=23 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:

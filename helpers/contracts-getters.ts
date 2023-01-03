@@ -72,6 +72,9 @@ import {
   BlurAdapter__factory,
   X2Y2Adapter__factory,
   AutoCompoundApe__factory,
+  LSSVMRouter__factory,
+  LSSVMPairFactory__factory,
+  LinearCurve__factory,
   InitializableAdminUpgradeabilityProxy__factory,
   StETHDebtToken__factory,
   ApeStakingLogic__factory,
@@ -1085,6 +1088,39 @@ export const getBlurAdapter = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.BlurAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getLssvmRouter = async (address?: tEthereumAddress) =>
+  await LSSVMRouter__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.LSSVMPairRouter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getLssvmPairFactory = async (address?: tEthereumAddress) =>
+  await LSSVMPairFactory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.LSSVMPairFactory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getLinearCurve = async (address?: tEthereumAddress) =>
+  await LinearCurve__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.LinearCurve}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

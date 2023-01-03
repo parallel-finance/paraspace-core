@@ -49,6 +49,9 @@ import {
   getLooksRareAdapter,
   getX2Y2Adapter,
   getBlurAdapter,
+  getLssvmRouter,
+  getLssvmPairFactory,
+  getLinearCurve,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -67,7 +70,10 @@ import {
   ERC721Delegate,
   ExecutionDelegate,
   IPool,
+  LinearCurve,
   LooksRareAdapter,
+  LSSVMPairFactory,
+  LSSVMRouter,
   NFTFloorOracle,
   NTokenBAYC,
   NTokenMAYC,
@@ -198,6 +204,9 @@ export interface TestEnv {
   executionDelegate: ExecutionDelegate;
   blurExchange: BlurExchange;
   blurAdapter: BlurAdapter;
+  lssvmRouter: LSSVMRouter;
+  lssvmPairFactory: LSSVMPairFactory;
+  linearCurve: LinearCurve;
 }
 
 export async function initializeMakeSuite() {
@@ -263,6 +272,9 @@ export async function initializeMakeSuite() {
     executionDelegate: {} as ExecutionDelegate,
     blurExchange: {} as BlurExchange,
     blurAdapter: {} as BlurAdapter,
+    lssvmRouter: {} as LSSVMRouter,
+    lssvmPairFactory: {} as LSSVMPairFactory,
+    linearCurve: {} as LinearCurve,
   } as TestEnv;
   const paraSpaceConfig = getParaSpaceConfig();
   const signers = await Promise.all(
@@ -505,6 +517,9 @@ export async function initializeMakeSuite() {
   testEnv.executionDelegate = await getExecutionDelegate();
   testEnv.blurExchange = await getBlurExchangeProxy();
   testEnv.blurAdapter = await getBlurAdapter();
+  testEnv.lssvmRouter = await getLssvmRouter();
+  testEnv.lssvmPairFactory = await getLssvmPairFactory();
+  testEnv.linearCurve = await getLinearCurve();
 
   return testEnv;
 }
