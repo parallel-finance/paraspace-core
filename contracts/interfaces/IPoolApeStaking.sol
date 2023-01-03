@@ -120,4 +120,9 @@ interface IPoolApeStaking {
         address[] calldata users,
         ApeCoinStaking.PairNft[][] calldata _nftPairs
     ) external;
+
+    /**
+     * @notice get current incentive fee rate for claiming ape position reward to compound
+     */
+    function getApeCompoundFeeRate() external returns (uint256);
 }

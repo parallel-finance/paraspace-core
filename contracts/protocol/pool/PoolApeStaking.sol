@@ -585,6 +585,12 @@ contract PoolApeStaking is
         }
     }
 
+    /// @inheritdoc IPoolApeStaking
+    function getApeCompoundFeeRate() external returns (uint256) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return uint256(ps._apeCompoundFee);
+    }
+
     function getUserHf(DataTypes.PoolStorage storage ps, address user)
         internal
         view

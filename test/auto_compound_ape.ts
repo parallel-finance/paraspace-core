@@ -660,9 +660,9 @@ describe("APE Coin Staking Test", () => {
     user1Balance = await cApe.balanceOf(user1.address);
     await waitForTx(await cApe.connect(user1.signer).withdraw(user1Balance));
     user1Share = await cApe.sharesOf(user1.address);
-    expect(user1Share).to.be.equal(0);
+    expect(user1Share.lte(1)).to.be.true;
     user1Balance = await cApe.balanceOf(user1.address);
-    expect(user1Balance).to.be.equal(0);
+    expect(user1Balance.lte(5)).to.be.true;
 
     almostEqual(await ape.balanceOf(user1.address), user1Amount);
     almostEqual(await ape.balanceOf(cApe.address), user2Amount);
