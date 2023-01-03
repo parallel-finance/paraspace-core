@@ -242,12 +242,14 @@ library DataTypes {
 
     struct ValidateLiquidateERC721Params {
         ReserveCache liquidationAssetReserveCache;
+        address liquidationAsset;
         address liquidator;
         address borrower;
         uint256 globalDebt;
         uint256 healthFactor;
         address collateralAsset;
         uint256 tokenId;
+        address weth;
         uint256 actualLiquidationAmount;
         uint256 maxLiquidationAmount;
         uint256 auctionRecoveryHealthFactor;

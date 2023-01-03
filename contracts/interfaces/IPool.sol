@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IPoolCore} from "./IPoolCore.sol";
 import {IPoolMarketplace} from "./IPoolMarketplace.sol";
 import {IPoolParameters} from "./IPoolParameters.sol";
+import {IParaProxyInterfaces} from "./IParaProxyInterfaces.sol";
 import "./IPoolApeStaking.sol";
 
 /**
@@ -15,7 +16,8 @@ interface IPool is
     IPoolCore,
     IPoolMarketplace,
     IPoolParameters,
-    IPoolApeStaking
+    IPoolApeStaking,
+    IParaProxyInterfaces
 {
 
 }
