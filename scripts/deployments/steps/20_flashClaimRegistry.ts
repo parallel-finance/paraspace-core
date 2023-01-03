@@ -9,7 +9,7 @@ import {
 import {isLocalTestnet, isPublicTestnet} from "../../../helpers/misc-utils";
 import {ERC721TokenContractId} from "../../../helpers/types";
 
-export const step_19 = async (verify = false) => {
+export const step_20 = async (verify = false) => {
   try {
     const addressesProvider = await getPoolAddressesProvider();
     const poolAddress = await addressesProvider.getPool();

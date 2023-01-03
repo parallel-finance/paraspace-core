@@ -216,6 +216,8 @@ import {
   X2Y2R1,
   X2Y2R1__factory,
   AutoCompoundApe,
+  PunksAdapter__factory,
+  PunksAdapter,
   InitializableAdminUpgradeabilityProxy__factory,
   InitializableAdminUpgradeabilityProxy,
   ParaProxyInterfaces__factory,
@@ -1391,6 +1393,20 @@ export const deployX2Y2Adapter = async (
     [provider],
     verify
   ) as Promise<X2Y2Adapter>;
+};
+
+export const deployPunksAdapter = async (
+  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) => {
+  const punksAdapter = new PunksAdapter__factory(await getFirstSigner());
+
+  return withSaveAndVerify(
+    punksAdapter,
+    eContractid.PunksAdapter,
+    [...args],
+    verify
+  ) as Promise<PunksAdapter>;
 };
 
 export const deployMarketplaceLogic = async (

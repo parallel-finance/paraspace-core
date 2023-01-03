@@ -550,6 +550,9 @@ library MarketplaceLogic {
     }
 
     function _checkAllowance(address token, address operator) internal {
+        if (operator == address(0)) {
+            return;
+        }
         uint256 allowance = IERC20(token).allowance(address(this), operator);
         if (allowance == 0) {
             IERC20(token).safeApprove(operator, type(uint256).max);
