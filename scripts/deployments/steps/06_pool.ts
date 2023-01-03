@@ -9,17 +9,14 @@ import {
 } from "../../../helpers/contracts-getters";
 import {registerContractInDb} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
-import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
-import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
+import {waitForTx} from "../../../helpers/misc-utils";
+import {eContractid} from "../../../helpers/types";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
-  const paraSpaceConfig = getParaSpaceConfig();
 
   try {
-    if (paraSpaceConfig.ReservesConfig[ERC20TokenContractId.cAPE]) {
-      await deployAutoCompoundApe(verify);
-    }
+    await deployAutoCompoundApe(verify);
 
     const {
       poolCore,
@@ -27,10 +24,14 @@ export const step_06 = async (verify = false) => {
       poolMarketplace,
       poolApeStaking,
       poolCoreSelectors,
+      poolParaProxyInterfaces,
       poolParametersSelectors,
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
+      poolParaProxyInterfacesSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
+
+    console.log("after deploying paraselector");
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -92,6 +93,21 @@ export const step_06 = async (verify = false) => {
         poolCore.interface.encodeFunctionData("initialize", [
           addressesProvider.address,
         ]),
+        GLOBAL_OVERRIDES
+      )
+    );
+
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        [
+          {
+            implAddress: poolParaProxyInterfaces.address,
+            action: 0,
+            functionSelectors: poolParaProxyInterfacesSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x",
         GLOBAL_OVERRIDES
       )
     );

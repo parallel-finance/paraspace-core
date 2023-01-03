@@ -226,6 +226,10 @@ test-mint-to-treasury:
 test-rebasing-tokens:
 	make TEST_TARGET=_xtoken_rebasing.spec.ts test
 
+.PHONY: test-steth
+test-steth:
+	make TEST_TARGET=_xtoken_steth.spec.ts test
+
 .PHONY: test-addresses-provider
 test-addresses-provider:
 	make TEST_TARGET=_base_addresses_provider.spec.ts test
@@ -417,17 +421,6 @@ upgrade-ptoken: build
 .PHONY: upgrade-debt-token
 upgrade-debt-token: build
 	make TASK_NAME=upgrade:debt-token run-task
-
-.PHONY: remove-pool-funcs
-remove-pool-funcs: build
-# e.g: emergency disable liquidation
-	FUNCS_TO_REMOVE=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:remove-pool-funcs run-task
-
-.PHONY: add-pool-funcs
-add-pool-funcs: build
-# e.g: add liquidation back
-	FUNCS_TO_ADD=[0x3d7b66bf,0xd134142e] make TASK_NAME=upgrade:add-pool-funcs run-task
-
 
 .PHONY: hardhat
 hardhat:

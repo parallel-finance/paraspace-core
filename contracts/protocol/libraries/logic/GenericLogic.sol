@@ -137,7 +137,7 @@ library GenericLogic {
                 vars.liquidationBonus,
                 vars.decimals,
 
-            ) = currentReserve.configuration.getParams();
+            ) = vars.reserveConfiguration.getParams();
 
             unchecked {
                 vars.assetUnit = 10**vars.decimals;

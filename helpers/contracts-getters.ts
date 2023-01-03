@@ -1,5 +1,4 @@
 import {utils} from "ethers";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {
   ProtocolDataProvider__factory,
   PToken__factory,
@@ -49,7 +48,7 @@ import {
   UniswapV3Factory__factory,
   UniswapV3OracleWrapper__factory,
   NTokenUniswapV3__factory,
-  StETH__factory,
+  StETHMocked__factory,
   PTokenStETH__factory,
   MockAToken__factory,
   PTokenAToken__factory,
@@ -74,6 +73,10 @@ import {
   X2Y2Adapter__factory,
   AutoCompoundApe__factory,
   MockCToken__factory,
+  InitializableAdminUpgradeabilityProxy__factory,
+  StETHDebtToken__factory,
+  ApeStakingLogic__factory,
+  MintableERC721Logic__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -96,10 +99,6 @@ import {
 } from "../types";
 import {RPC_URL} from "./hardhat-constants";
 
-const readArtifact = async (id: string) => {
-  return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
-};
-
 export const getFirstSigner = async () => {
   if (!RPC_URL) {
     return first(await getEthersSigners())!;
@@ -108,6 +107,7 @@ export const getFirstSigner = async () => {
   const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
   return (await impersonateAddress(paraSpaceAdminAddress)).signer;
 };
+
 export const getLastSigner = async () => last(await getEthersSigners())!;
 
 export const getPoolAddressesProvider = async (address?: tEthereumAddress) => {
@@ -291,6 +291,17 @@ export const getVariableDebtToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getStETHDebtToken = async (address?: tEthereumAddress) =>
+  await StETHDebtToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.StETHDebtToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getIRStrategy = async (address?: tEthereumAddress) =>
   await DefaultReserveInterestRateStrategy__factory.connect(
     address ||
@@ -373,7 +384,7 @@ export const getAllERC20Tokens = async () => {
         accumulator[tokenSymbol] = await getMintableERC20(address);
         return Promise.resolve(accumulator);
       } else {
-        if (tokenSymbol === "cAPE") {
+        if (tokenSymbol === ERC20TokenContractId.cAPE) {
           return Promise.resolve(accumulator);
         }
         return Promise.reject(`${tokenSymbol} is not in db`);
@@ -834,7 +845,7 @@ export const getMockIncentivesController = async (address?: tEthereumAddress) =>
   );
 
 export const getStETH = async (address?: tEthereumAddress) =>
-  await StETH__factory.connect(
+  await StETHMocked__factory.connect(
     address ||
       (
         await getDb().get(`${eContractid.StETH}.${DRE.network.name}`).value()
@@ -975,41 +986,27 @@ export const getApeCoinStaking = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getApeStakingLogic = async (address?: tEthereumAddress) => {
-  const apeStakingLogicArtifact = await readArtifact(
-    eContractid.ApeStakingLogic
+export const getApeStakingLogic = async (address?: tEthereumAddress) =>
+  await ApeStakingLogic__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ApeStakingLogic}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
   );
 
-  const apeStakingLogicFactory = await DRE.ethers.getContractFactory(
-    apeStakingLogicArtifact.abi,
-    apeStakingLogicArtifact.bytecode
+export const getMintableERC721Logic = async (address?: tEthereumAddress) =>
+  await MintableERC721Logic__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MintableERC721Logic}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
   );
-  const db = await getDb()
-    .get(`${eContractid.ApeStakingLogic}.${DRE.network.name}`)
-    .value();
-
-  return address || db
-    ? await apeStakingLogicFactory.attach(address || db.address)
-    : undefined;
-};
-
-export const getMintableERC721Logic = async (address?: tEthereumAddress) => {
-  const mintableERC721LogicArtifact = await readArtifact(
-    eContractid.MintableERC721Logic
-  );
-
-  const mintableERC721LogicFactory = await DRE.ethers.getContractFactory(
-    mintableERC721LogicArtifact.abi,
-    mintableERC721LogicArtifact.bytecode
-  );
-  const db = await getDb()
-    .get(`${eContractid.MintableERC721Logic}.${DRE.network.name}`)
-    .value();
-
-  return address || db
-    ? await mintableERC721LogicFactory.attach(address || db.address)
-    : undefined;
-};
 
 export const getExecutionDelegate = async (address?: tEthereumAddress) =>
   await ExecutionDelegate__factory.connect(
@@ -1052,6 +1049,15 @@ export const getAutoCompoundApe = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
+
+export const getInitializableAdminUpgradeabilityProxy = async (
+  address: tEthereumAddress
+) =>
+  await InitializableAdminUpgradeabilityProxy__factory.connect(
+    address,
+    await getFirstSigner()
+  );
+
 export const getSeaportAdapter = async (address?: tEthereumAddress) =>
   await SeaportAdapter__factory.connect(
     address ||
