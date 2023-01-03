@@ -906,16 +906,16 @@ describe("PoolConfigurator: Common", () => {
     const {configurator} = await loadFixture(testEnvFixture);
     const {INVALID_AMOUNT} = ProtocolErrors;
     const min_hf = "1";
-    const max_hf = "2000000000000000001";
-    expect(
+    const max_hf = "3000000000000000001";
+    await expect(
       configurator.setAuctionRecoveryHealthFactor(min_hf)
     ).to.be.revertedWith(INVALID_AMOUNT);
-    expect(
+    await expect(
       configurator.setAuctionRecoveryHealthFactor(max_hf)
     ).to.be.revertedWith(INVALID_AMOUNT);
-    expect(configurator.setAuctionRecoveryHealthFactor("0")).to.be.revertedWith(
-      INVALID_AMOUNT
-    );
+    await expect(
+      configurator.setAuctionRecoveryHealthFactor("0")
+    ).to.be.revertedWith(INVALID_AMOUNT);
   });
 });
 
@@ -1142,13 +1142,13 @@ describe("PoolConfigurator: Liquidation Protocol Fee", () => {
     const {INVALID_LIQUIDATION_PROTOCOL_FEE} = ProtocolErrors;
     const liquidationProtocolFee = 10001;
 
-    expect(
+    await expect(
       configurator.setLiquidationProtocolFee(
         usdc.address,
         liquidationProtocolFee
       )
     ).to.be.revertedWith(INVALID_LIQUIDATION_PROTOCOL_FEE);
-    expect(
+    await expect(
       configurator.setLiquidationProtocolFee(
         dai.address,
         liquidationProtocolFee

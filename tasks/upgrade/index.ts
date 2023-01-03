@@ -29,26 +29,6 @@ task("upgrade:configurator", "upgrade pool configurator").setAction(
   }
 );
 
-task("upgrade:remove-pool-funcs", "clean pool components").setAction(
-  async (_, DRE) => {
-    const {removePoolFuncs} = await import("../../scripts/upgrade");
-    await DRE.run("set-DRE");
-    console.time("remove pool funcs");
-    await removePoolFuncs();
-    console.timeEnd("remove pool funcs");
-  }
-);
-
-task("upgrade:add-pool-funcs", "add pool components").setAction(
-  async (_, DRE) => {
-    const {addPoolFuncs} = await import("../../scripts/upgrade");
-    await DRE.run("set-DRE");
-    console.time("add pool funcs");
-    await addPoolFuncs(ETHERSCAN_VERIFICATION);
-    console.timeEnd("add pool funcs");
-  }
-);
-
 task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   const {upgradePToken} = await import("../../scripts/upgrade/ptoken");
   await DRE.run("set-DRE");
