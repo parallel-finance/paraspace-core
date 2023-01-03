@@ -5,6 +5,11 @@ import {PoolConfiguratorLibraryAddresses} from "../types/factories/protocol/pool
 import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCore__factory";
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
+import {NTokenBAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenBAYC__factory";
+import {NTokenMAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMAYC__factory";
+import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMoonBirds__factory";
+import {NTokenUniswapV3LibraryAddresses} from "../types/factories/protocol/tokenization/NTokenUniswapV3__factory";
+import {NTokenLibraryAddresses} from "../types/factories/protocol/tokenization/NToken__factory";
 
 export enum AssetType {
   ERC20 = 0,
@@ -44,6 +49,11 @@ export type ParaSpaceLibraryAddresses =
   | PoolParametersLibraryAddresses
   | PoolConfiguratorLibraryAddresses
   | BlurExchangeLibraryAddresses
+  | NTokenBAYCLibraryAddresses
+  | NTokenMAYCLibraryAddresses
+  | NTokenLibraryAddresses
+  | NTokenUniswapV3LibraryAddresses
+  | NTokenMoonBirdsLibraryAddresses
   | {["NFTDescriptor"]: string};
 
 export enum eEthereumNetwork {
@@ -196,7 +206,8 @@ export enum eContractid {
   BAKC = "BAKC",
   TimeLockExecutor = "TimeLockExecutor",
   cAPE = "cAPE",
-  cAPEImplementation = "cAPEImplementation",
+  cAPEImpl = "cAPEImpl",
+  ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
 }
 
 /*
