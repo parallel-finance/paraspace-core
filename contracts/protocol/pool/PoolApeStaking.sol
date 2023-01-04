@@ -461,25 +461,7 @@ contract PoolApeStaking is
             }
         }
 
-        uint256 compoundFee = ps._apeCompoundFee;
-        uint256 totalFee = totalAmount.percentMul(compoundFee);
-        APE_COMPOUND.deposit(address(this), totalAmount);
-
-        if (totalFee > 0) {
-            IERC20(address(APE_COMPOUND)).safeTransfer(msg.sender, totalFee);
-        }
-
-        for (uint256 index = 0; index < users.length; index++) {
-            if (amounts[index] != 0) {
-                _supplyCApeForUser(
-                    ps,
-                    users[index],
-                    amounts[index].percentMul(
-                        PercentageMath.PERCENTAGE_FACTOR - compoundFee
-                    )
-                );
-            }
-        }
+        depositApeAndSupplyCApeForUser(ps, totalAmount, users, amounts);
     }
 
     struct CompoundPairedApeRewardLocalVar {
@@ -556,31 +538,45 @@ contract PoolApeStaking is
             localVar.totalAmount += localVar.amounts[i];
         }
 
-        uint256 compoundFee = ps._apeCompoundFee;
-        uint256 totalFee = localVar.totalAmount.percentMul(compoundFee);
-        APE_COMPOUND.deposit(address(this), localVar.totalAmount);
+        depositApeAndSupplyCApeForUser(
+            ps,
+            localVar.totalAmount,
+            users,
+            localVar.amounts
+        );
+    }
 
+    /// @inheritdoc IPoolApeStaking
+    function getApeCompoundFeeRate() external view returns (uint256) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return uint256(ps._apeCompoundFee);
+    }
+
+    function depositApeAndSupplyCApeForUser(
+        DataTypes.PoolStorage storage ps,
+        uint256 totalAmount,
+        address[] calldata users,
+        uint256[] memory amounts
+    ) internal {
+        APE_COMPOUND.deposit(address(this), totalAmount);
+
+        uint256 compoundFee = ps._apeCompoundFee;
+        uint256 totalFee = totalAmount.percentMul(compoundFee);
         if (totalFee > 0) {
             IERC20(address(APE_COMPOUND)).safeTransfer(msg.sender, totalFee);
         }
 
         for (uint256 index = 0; index < users.length; index++) {
-            if (localVar.amounts[index] != 0) {
-                _supplyCApeForUser(
+            if (amounts[index] != 0) {
+                supplyCApeForUser(
                     ps,
                     users[index],
-                    localVar.amounts[index].percentMul(
+                    amounts[index].percentMul(
                         PercentageMath.PERCENTAGE_FACTOR - compoundFee
                     )
                 );
             }
         }
-    }
-
-    /// @inheritdoc IPoolApeStaking
-    function getApeCompoundFeeRate() external returns (uint256) {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        return uint256(ps._apeCompoundFee);
     }
 
     function getUserHf(DataTypes.PoolStorage storage ps, address user)
@@ -621,7 +617,7 @@ contract PoolApeStaking is
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
-    function _supplyCApeForUser(
+    function supplyCApeForUser(
         DataTypes.PoolStorage storage ps,
         address user,
         uint256 amount
