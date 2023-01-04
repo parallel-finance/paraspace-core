@@ -83,7 +83,9 @@ contract NTokenBAKC is NToken {
         uint256[] calldata tokenIds
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         for (uint256 index = 0; index < tokenIds.length; index++) {
-            _unStakePairedApePosition(tokenIds[index]);
+            if (receiverOfUnderlying == ownerOf(tokenIds[index])) {
+                _unStakePairedApePosition(tokenIds[index]);
+            }
         }
         return _burn(from, receiverOfUnderlying, tokenIds);
     }
