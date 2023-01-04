@@ -346,4 +346,47 @@ describe("APE Coin Staking Test", () => {
     totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
     expect(totalStake).equal(0);
   });
+
+  it("withdraw bakc will not unstake user ape staking position", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      mayc,
+      pool,
+      weth,
+      bakc,
+      nMAYC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(ape, "20000", user2, true);
+    await supplyAndValidate(mayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user1, true);
+
+    const amount = parseEther("10000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+      )
+    );
+    let totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStake).equal(amount);
+
+    // start auction
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawERC721(bakc.address, [0], user1.address)
+    );
+
+    expect(await bakc.ownerOf("0")).to.be.eq(user1.address);
+    totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStake).equal(amount);
+  });
 });
