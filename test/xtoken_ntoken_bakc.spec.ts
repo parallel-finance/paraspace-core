@@ -353,7 +353,6 @@ describe("APE Coin Staking Test", () => {
       ape,
       mayc,
       pool,
-      weth,
       bakc,
       nMAYC,
     } = await loadFixture(fixture);
