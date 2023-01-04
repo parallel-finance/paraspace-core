@@ -115,7 +115,7 @@ interface IPoolApeStaking {
      * @param users array of user address
      * @param _nftPairs Array of Paired BAYC/MAYC NFT's
      */
-    function claimPairedApeRewardAndCompound(
+    function claimPairedApeAndCompound(
         address nftAsset,
         address[] calldata users,
         ApeCoinStaking.PairNft[][] calldata _nftPairs
