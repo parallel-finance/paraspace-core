@@ -224,7 +224,6 @@ import {
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
-  getAutoCompoundApe,
   getFirstSigner,
   getPunks,
   getWETH,
@@ -536,7 +535,6 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
-  const cApe = await getAutoCompoundApe();
 
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
@@ -578,15 +576,21 @@ export const deployPoolComponents = async (
       marketplaceLibraries,
       poolMarketplaceSelectors
     )) as PoolMarketplace,
-    poolApeStaking: (await withSaveAndVerify(
-      poolApeStaking,
-      eContractid.PoolApeStakingImpl,
-      [provider, cApe.address, allTokens.APE.address],
-      verify,
-      false,
-      apeStakingLibraries,
-      poolApeStakingSelectors
-    )) as PoolApeStaking,
+    poolApeStaking: allTokens.APE
+      ? ((await withSaveAndVerify(
+          poolApeStaking,
+          eContractid.PoolApeStakingImpl,
+          [
+            provider,
+            (await deployAutoCompoundApe(verify)).address,
+            allTokens.APE.address,
+          ],
+          verify,
+          false,
+          apeStakingLibraries,
+          poolApeStakingSelectors
+        )) as PoolApeStaking)
+      : undefined,
     poolParaProxyInterfaces: (await withSaveAndVerify(
       poolParaProxyInterfaces,
       eContractid.ParaProxyInterfacesImpl,

@@ -1,4 +1,4 @@
-import {constants} from "ethers";
+import {BigNumber, constants} from "ethers";
 import {
   deployNFTFloorPriceOracle,
   deployParaSpaceOracle,
@@ -14,7 +14,11 @@ import {
 } from "../../../helpers/contracts-getters";
 import {getEthersSignersAddresses} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
-import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
+import {
+  getParaSpaceConfig,
+  isMoonbeam,
+  waitForTx,
+} from "../../../helpers/misc-utils";
 import {
   deployAllAggregators,
   getPairsTokenAggregators,
@@ -80,8 +84,10 @@ export const step_10 = async (verify = false) => {
         tokens,
         aggregators,
         fallbackOracle.address,
-        allTokens.WETH.address,
-        constants.WeiPerEther.toString(),
+        isMoonbeam() ? allTokens.USDC.address : allTokens.WETH.address,
+        isMoonbeam()
+          ? BigNumber.from("100000000").toString()
+          : constants.WeiPerEther.toString(),
       ],
       verify
     );
@@ -101,13 +107,21 @@ export const step_10 = async (verify = false) => {
       GLOBAL_OVERRIDES
     );
 
-    await deployUiPoolDataProvider(
-      (chainlinkConfig.WETH ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
-      (chainlinkConfig.WETH ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
-      verify
-    );
+    if (!isMoonbeam()) {
+      await deployUiPoolDataProvider(
+        (chainlinkConfig.WETH ||
+          allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
+        (chainlinkConfig.WETH ||
+          allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
+        verify
+      );
+    } else {
+      await deployUiPoolDataProvider(
+        chainlinkConfig.USDC!,
+        chainlinkConfig.USDC!,
+        verify
+      );
+    }
     await deployWalletBalanceProvider(verify);
   } catch (error) {
     console.error(error);

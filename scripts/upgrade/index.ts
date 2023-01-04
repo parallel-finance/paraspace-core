@@ -45,37 +45,40 @@ export const upgradePool = async (verify = false) => {
   } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
+  const implementations = [
+    [poolCore.address, newPoolCoreSelectors, oldPoolCoreSelectors],
+    [
+      poolMarketplace.address,
+      newPoolMarketplaceSelectors,
+      oldPoolMarketplaceSelectors,
+    ],
+    [
+      poolParameters.address,
+      newPoolParametersSelectors,
+      oldPoolParametersSelectors,
+    ],
+    [
+      poolParaProxyInterfaces.address,
+      newPoolParaProxyInterfacesSelectors,
+      oldPoolParaProxyInterfacesSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  if (poolApeStaking) {
+    implementations.push([
+      poolApeStaking.address,
+      newPoolApeStakingSelectors,
+      oldPoolApeStakingSelectors,
+    ]);
+  }
+
   const [
     coreProxyImplementation,
     marketplaceProxyImplementation,
     parametersProxyImplementation,
     apeStakingProxyImplementation,
     interfacesProxyImplementation,
-  ] = (
-    [
-      [poolCore.address, newPoolCoreSelectors, oldPoolCoreSelectors],
-      [
-        poolMarketplace.address,
-        newPoolMarketplaceSelectors,
-        oldPoolMarketplaceSelectors,
-      ],
-      [
-        poolParameters.address,
-        newPoolParametersSelectors,
-        oldPoolParametersSelectors,
-      ],
-      [
-        poolApeStaking.address,
-        newPoolApeStakingSelectors,
-        oldPoolApeStakingSelectors,
-      ],
-      [
-        poolParaProxyInterfaces.address,
-        newPoolParaProxyInterfacesSelectors,
-        oldPoolParaProxyInterfacesSelectors,
-      ],
-    ] as [string, string[], string[]][]
-  ).map(([implAddress, newSelectors, oldSelectors]) => {
+  ] = implementations.map(([implAddress, newSelectors, oldSelectors]) => {
     const toAdd = newSelectors.filter((s) => !oldSelectors.includes(s));
     const toReplace = newSelectors.filter((s) => oldSelectors.includes(s));
     const toRemove = oldSelectors.filter((s) => !newSelectors.includes(s));

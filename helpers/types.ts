@@ -67,6 +67,7 @@ export enum eEthereumNetwork {
   parallel = "parallel",
   localhost = "localhost",
   anvil = "anvil",
+  moonbeam = "moonbeam",
 }
 
 export enum eContractid {
@@ -373,6 +374,8 @@ export interface iAssetBase<T> {
   APE: T;
   sAPE: T;
   cAPE: T;
+  xcDOT: T;
+  WGLMR: T;
   MAYC: T;
   DOODLE: T;
   MOONBIRD: T;
@@ -394,6 +397,8 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "WETH"
   | "WBTC"
   | "stETH"
+  | "xcDOT"
+  | "WGLMR"
   | "APE"
   | "sAPE"
   | "BAYC"
@@ -425,6 +430,8 @@ export enum ERC20TokenContractId {
   aWETH = "aWETH",
   cETH = "cETH",
   PUNK = "PUNK",
+  xcDOT = "xcDOT",
+  WGLMR = "WGLMR",
 }
 
 export enum ERC721TokenContractId {
@@ -518,6 +525,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.ganache]: T;
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
+  [eEthereumNetwork.moonbeam]: T;
 }
 
 export enum RateMode {
@@ -560,6 +568,8 @@ export interface IChainlinkConfig {
   AZUKI?: tEthereumAddress;
   OTHR?: tEthereumAddress;
   CLONEX?: tEthereumAddress;
+  xcDOT?: tEthereumAddress;
+  WGLMR?: tEthereumAddress;
 }
 
 export interface IYogaLabs {

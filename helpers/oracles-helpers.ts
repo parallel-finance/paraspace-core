@@ -17,7 +17,7 @@ import {
   deployAggregator,
   deployUniswapV3OracleWrapper,
 } from "./contracts-deployments";
-import {getParaSpaceConfig, waitForTx} from "./misc-utils";
+import {getParaSpaceConfig, isMoonbeam, waitForTx} from "./misc-utils";
 import {
   getAggregator,
   getAllTokens,
@@ -31,8 +31,8 @@ import {
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 
 export const setInitialAssetPricesInOracle = async (
-  prices: iAssetBase<tEthereumAddress>,
-  assetsAddresses: iAssetBase<tEthereumAddress>,
+  prices: Partial<iAssetBase<tEthereumAddress>>,
+  assetsAddresses: Partial<iAssetBase<tEthereumAddress>>,
   priceOracleInstance: PriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices)) {
@@ -61,7 +61,10 @@ export const deployAllAggregators = async (
   const addressesProvider = await getPoolAddressesProvider();
   const chainlinkConfig = getParaSpaceConfig().Chainlink;
   for (const tokenSymbol of Object.keys(tokens)) {
-    if (tokenSymbol === ERC20TokenContractId.WETH) {
+    if (
+      tokenSymbol === ERC20TokenContractId.WETH ||
+      (isMoonbeam() && tokenSymbol === ERC20TokenContractId.USDC)
+    ) {
       continue;
     }
     if (tokenSymbol === ERC721TokenContractId.UniswapV3) {
@@ -114,7 +117,13 @@ export const getPairsTokenAggregators = (
   aggregatorsAddresses: {[tokenSymbol: string]: tEthereumAddress}
 ): [string[], string[]] => {
   const pairs = Object.entries(allAssetsAddresses)
-    .filter(([tokenSymbol]) => tokenSymbol !== ERC20TokenContractId.WETH)
+    .filter(
+      ([tokenSymbol]) =>
+        !(
+          tokenSymbol === ERC20TokenContractId.WETH ||
+          (isMoonbeam() && tokenSymbol === ERC20TokenContractId.USDC)
+        )
+    )
     .map(([tokenSymbol, tokenAddress]) => {
       return [tokenAddress, aggregatorsAddresses[tokenSymbol]];
     }) as [string, string][];

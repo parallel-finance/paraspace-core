@@ -10,6 +10,7 @@ import {
   HARDHAT_CHAINID,
   INFURA_KEY,
   MAINNET_CHAINID,
+  MOONBEAM_CHAINID,
   PARALLEL_CHAINID,
   RPC_URL,
   TENDERLY_FORK_ID,
@@ -57,6 +58,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.tenderlyMain]:
     RPC_URL || `https://rpc.tenderly.co/fork/${TENDERLY_FORK_ID}`,
   [eEthereumNetwork.parallel]: RPC_URL || "http://localhost:29933",
+  [eEthereumNetwork.moonbeam]: "https://rpc.api.moonbeam.network"
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
@@ -69,6 +71,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.ganache]: undefined,
   [eEthereumNetwork.parallel]: PARALLEL_CHAINID,
   [eEthereumNetwork.tenderlyMain]: undefined,
+  [eEthereumNetwork.moonbeam]: MOONBEAM_CHAINID
 };
 
 export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
@@ -81,4 +84,5 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.ganache]: undefined,
   [eEthereumNetwork.parallel]: undefined,
   [eEthereumNetwork.tenderlyMain]: 16119797,
+  [eEthereumNetwork.moonbeam]:  2657391
 };

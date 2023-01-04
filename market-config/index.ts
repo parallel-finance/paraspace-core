@@ -25,6 +25,8 @@ import {
   strategyMeebits,
   strategySAPE,
   strategyCAPE,
+  strategyXCDOT,
+  strategyWGLMR,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -104,6 +106,37 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
+  },
+};
+
+export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  IncentivesController: ZERO_ADDRESS,
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {
+    WGLMR: "0xAcc15dC74880C9944775448304B263D191c6077F",
+    xcDOT: "0xFfFFfFff1FcaCBd218EDc0EbA20Fc2308C778080",
+    USDC: "0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b"
+  },
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  Chainlink: {
+    WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
+    xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
+    USDC: "0xA122591F60115D63421f66F752EF9f6e0bc73abC"
+  },
+  // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
+  ReservesConfig: {
+    xcDOT: strategyXCDOT,
+    WGLMR: strategyWGLMR,
+    USDC: strategyUSDC
   },
 };
 
@@ -271,6 +304,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.hardhat]: HardhatParaSpaceConfig,
   [eEthereumNetwork.anvil]: HardhatParaSpaceConfig,
   [eEthereumNetwork.localhost]: HardhatParaSpaceConfig,
+  [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
 };

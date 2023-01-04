@@ -411,6 +411,7 @@ export const getAllERC721Tokens = async () => {
     }, Promise.resolve({}));
   return tokens;
 };
+
 export const getAllTokens = async () => {
   return Object.assign(await getAllERC20Tokens(), await getAllERC721Tokens());
 };
