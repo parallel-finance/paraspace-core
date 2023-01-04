@@ -600,7 +600,7 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(3600);
 
     await waitForTx(
-      await pool.connect(user2.signer).claimPairedApeRewardAndCompound(
+      await pool.connect(user2.signer).claimPairedApeAndCompound(
         mayc.address,
         [user1.address],
         [
@@ -624,7 +624,7 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(3600);
 
     await waitForTx(
-      await pool.connect(user2.signer).claimPairedApeRewardAndCompound(
+      await pool.connect(user2.signer).claimPairedApeAndCompound(
         mayc.address,
         [user1.address],
         [
