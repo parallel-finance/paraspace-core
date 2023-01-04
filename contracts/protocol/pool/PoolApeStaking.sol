@@ -485,7 +485,6 @@ contract PoolApeStaking is
         uint256[] amounts;
         address[] originArray;
         uint256 totalAmount;
-        address tmpPositionOwner;
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -511,10 +510,11 @@ contract PoolApeStaking is
             ApeCoinStaking.PairNft[] calldata nftPair = _nftPairs[i];
             localVar.originArray = new address[](nftPair.length);
             for (uint256 j = 0; j < nftPair.length; j++) {
-                localVar.tmpPositionOwner = INToken(localVar.xTokenAddress)
-                    .ownerOf(nftPair[j].mainTokenId);
                 require(
-                    users[i] == localVar.tmpPositionOwner,
+                    users[i] ==
+                        INToken(localVar.xTokenAddress).ownerOf(
+                            nftPair[j].mainTokenId
+                        ),
                     "user is not owner"
                 );
 
