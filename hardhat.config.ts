@@ -11,6 +11,7 @@ import {
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
   DEPLOYER,
+  VERBOSE,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -156,7 +157,7 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts,
-      loggingEnabled: true,
+      loggingEnabled: VERBOSE,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
