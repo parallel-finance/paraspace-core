@@ -1316,13 +1316,16 @@ describe("Leveraged Bid - Negative tests", () => {
       nBAYC,
       dai,
       bayc,
+      usdc,
       conduit,
-      users: [maker, taker],
+      users: [maker, taker, middleman],
     } = testEnv;
     const creditAmount = await convertToCurrencyDecimals(
       dai.address,
       payLaterAmount
     );
+
+    await supplyAndValidate(usdc, "800", middleman, true);
     // taker supplies BAYC
     await supplyAndValidate(bayc, "1", taker);
 
@@ -1331,8 +1334,8 @@ describe("Leveraged Bid - Negative tests", () => {
       await nBAYC.connect(taker.signer).approve(conduit.address, nftId)
     );
 
-    // taker borrows DAI
-    await borrowAndValidate(dai, "800", taker);
+    // taker borrows USDC
+    await borrowAndValidate(usdc, "800", taker);
 
     await expect(
       executeAcceptBidWithCredit(
