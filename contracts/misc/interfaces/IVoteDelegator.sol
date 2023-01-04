@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 /**
-    @note: interface to implement voting delegation that interactes with deelgate contracts such as snapshot delegate registry
+    @note: interface to implement voting delegation that interacts with deelgate contracts such as snapshot delegate registry
  */
 interface IVoteDelegator {
     function setVotingDelegate(
