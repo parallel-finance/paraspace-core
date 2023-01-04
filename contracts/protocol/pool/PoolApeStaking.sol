@@ -236,7 +236,7 @@ contract PoolApeStaking is
         require(
             stakingInfo.borrowAsset == address(APE_COIN) ||
                 stakingInfo.borrowAsset == address(APE_COMPOUND),
-            "invalid borrow asset"
+            Errors.INVALID_ASSET_TYPE
         );
 
         BorrowAndStakeLocalVar memory localVar;
@@ -445,7 +445,10 @@ contract PoolApeStaking is
         address[] calldata users,
         uint256[][] calldata tokenIds
     ) external nonReentrant {
-        require(users.length == tokenIds.length, "invalid parameter");
+        require(
+            users.length == tokenIds.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
@@ -461,7 +464,7 @@ contract PoolApeStaking is
                 address positionOwner = INToken(xTokenAddress).ownerOf(
                     userTokenIds[j]
                 );
-                require(users[i] == positionOwner, "user is not owner");
+                require(users[i] == positionOwner, Errors.NOT_THE_OWNER);
             }
 
             INTokenApeStaking(xTokenAddress).claimApeCoin(
@@ -497,7 +500,10 @@ contract PoolApeStaking is
         address[] calldata users,
         ApeCoinStaking.PairNft[][] calldata _nftPairs
     ) external nonReentrant {
-        require(users.length == _nftPairs.length, "invalid parameter");
+        require(
+            users.length == _nftPairs.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
         DataTypes.PoolStorage storage ps = poolStorage();
 
         CompoundPairedApeRewardLocalVar memory localVar;
@@ -519,7 +525,7 @@ contract PoolApeStaking is
                         INToken(localVar.xTokenAddress).ownerOf(
                             nftPair[j].mainTokenId
                         ),
-                    "user is not owner"
+                    Errors.NOT_THE_OWNER
                 );
 
                 localVar.transferredTokenOwners[
