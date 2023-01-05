@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.10;
 
-/**
-    @note: interface to implement voting delegation that interacts with deelgate contracts such as snapshot delegate registry
- */
 interface IVoteDelegator {
     function setVotingDelegate(
         address delegateContract,
