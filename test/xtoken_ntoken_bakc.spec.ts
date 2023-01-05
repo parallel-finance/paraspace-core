@@ -24,7 +24,7 @@ describe("APE Coin Staking Test", () => {
       ape,
       mayc,
       bayc,
-      users: [user1, depositor],
+      users: [user1, depositor, , , , user4],
       pool,
       apeCoinStaking,
       bakc,
@@ -61,6 +61,16 @@ describe("APE Coin Staking Test", () => {
           apeCoinStaking.address,
           parseEther("100000000000")
         )
+    );
+
+    // user4 deposit MINIMUM_LIQUIDITY to make test case easy
+    await mintAndValidate(ape, "1", user4);
+    await waitForTx(
+        await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    const MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
+    await waitForTx(
+        await cApe.connect(user4.signer).deposit(user4.address, MINIMUM_LIQUIDITY)
     );
 
     return testEnv;
