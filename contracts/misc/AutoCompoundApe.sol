@@ -8,11 +8,14 @@ import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IAutoCompoundApe} from "../interfaces/IAutoCompoundApe.sol";
 import {CApe} from "./CApe.sol";
+import {IVoteDelegator} from "./interfaces/IVoteDelegator.sol";
+import {IDelegation} from "./interfaces/IDelegation.sol";
 
 contract AutoCompoundApe is
     Initializable,
     OwnableUpgradeable,
     CApe,
+    IVoteDelegator,
     IAutoCompoundApe
 {
     using SafeERC20 for IERC20;
@@ -151,5 +154,28 @@ contract AutoCompoundApe is
         }
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
+    }
+
+    function setVotingDelegate(
+        address delegateContract,
+        bytes32 spaceId,
+        address delegate
+    ) external onlyOwner {
+        IDelegation(delegateContract).setDelegate(spaceId, delegate);
+    }
+
+    function clearVotingDelegate(address delegateContract, bytes32 spaceId)
+        external
+        onlyOwner
+    {
+        IDelegation(delegateContract).clearDelegate(spaceId);
+    }
+
+    function getDelegate(address delegateContract, bytes32 spaceId)
+        external
+        view
+        returns (address)
+    {
+        return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 }
