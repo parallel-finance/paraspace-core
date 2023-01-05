@@ -106,6 +106,7 @@ export enum eContractid {
   NTokenUniswapV3Impl = "NTokenUniswapV3Impl",
   NTokenBAYCImpl = "NTokenBAYCImpl",
   NTokenMAYCImpl = "NTokenMAYCImpl",
+  NTokenBAKCImpl = "NTokenBAKCImpl",
   DelegationAwarePTokenImpl = "DelegationAwarePTokenImpl",
   VariableDebtTokenImpl = "VariableDebtTokenImpl",
   PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
@@ -325,6 +326,7 @@ export enum ProtocolErrors {
   RESERVE_NOT_ACTIVE_FOR_UNIV3 = "123", //reserve is not active for UniswapV3.
   SAPE_NOT_ALLOWED = "128", //operation is not allow for sApe.
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
+  NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 
@@ -381,6 +383,7 @@ export interface iAssetBase<T> {
   AZUKI: T;
   OTHR: T;
   CLONEX: T;
+  BAKC: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -407,6 +410,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MOONBIRD"
   | "MEEBITS"
   | "OTHR"
+  | "BAKC"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -449,6 +453,7 @@ export enum NTokenContractId {
   nWPUNKS = "nWPUNKS",
   nMOONBIRD = "nMOONBIRD",
   nUniswapV3 = "nUniswapV3",
+  nBAKC = "nBAKC",
 }
 
 export enum PTokenContractId {

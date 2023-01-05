@@ -9,6 +9,7 @@ import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
 import "./MintableERC721Logic.sol";
 import "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import "../../../interfaces/INToken.sol";
 
 /**
  * @title ApeStakingLogic library
@@ -92,6 +93,7 @@ library ApeStakingLogic {
         uint256 poolId;
         uint256 tokenId;
         address incentiveReceiver;
+        address bakcNToken;
     }
 
     /**
@@ -150,6 +152,9 @@ library ApeStakingLogic {
                             0
                         );
 
+                    uint256 bakcBeforeBalance = _apeCoin.balanceOf(
+                        params.bakcNToken
+                    );
                     if (params.poolId == BAYC_POOL_ID) {
                         params._apeCoinStaking.withdrawBAKC(
                             _nftPairs,
@@ -159,6 +164,20 @@ library ApeStakingLogic {
                         params._apeCoinStaking.withdrawBAKC(
                             _otherPairs,
                             _nftPairs
+                        );
+                    }
+                    uint256 bakcAfterBalance = _apeCoin.balanceOf(
+                        params.bakcNToken
+                    );
+                    uint256 balanceDiff = bakcAfterBalance - bakcBeforeBalance;
+                    if (balanceDiff > 0) {
+                        address bakcOwner = INToken(params.bakcNToken).ownerOf(
+                            bakcTokenId
+                        );
+                        _apeCoin.safeTransferFrom(
+                            params.bakcNToken,
+                            bakcOwner,
+                            balanceDiff
                         );
                     }
                 }
