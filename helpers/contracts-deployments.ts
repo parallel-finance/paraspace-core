@@ -222,6 +222,8 @@ import {
   ParaProxyInterfaces,
   NTokenBAKC,
   NTokenBAKC__factory,
+  MockedDelegateRegistry,
+  MockedDelegateRegistry__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2316,3 +2318,11 @@ export const deployMockTokenFaucet = async (
     [erc20configs, erc721configs, punkConfig],
     verify
   );
+
+export const deployMockedDelegateRegistry = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new MockedDelegateRegistry__factory(await getFirstSigner()),
+    eContractid.MockedDelegateRegistry,
+    [],
+    verify
+  ) as Promise<MockedDelegateRegistry>;
