@@ -76,6 +76,7 @@ import {
   StETHDebtToken__factory,
   ApeStakingLogic__factory,
   MintableERC721Logic__factory,
+  NTokenBAKC__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -958,6 +959,17 @@ export const getNTokenMAYC = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NTokenImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenBAKC = async (address?: tEthereumAddress) =>
+  await NTokenBAKC__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenBAKCImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

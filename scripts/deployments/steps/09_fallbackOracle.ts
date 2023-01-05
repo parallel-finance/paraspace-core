@@ -63,6 +63,7 @@ export const step_09 = async (verify = false) => {
           AZUKI: erc721Tokens.AZUKI.address,
           OTHR: erc721Tokens.OTHR.address,
           CLONEX: erc721Tokens.CLONEX.address,
+          BAKC: erc721Tokens.BAKC.address,
         },
         fallbackOracle
       );

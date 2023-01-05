@@ -27,6 +27,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   AZUKI: parseEther("21").toString(),
   OTHR: parseEther("25").toString(),
   CLONEX: parseEther("27").toString(),
+  BAKC: parseEther("6").toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {

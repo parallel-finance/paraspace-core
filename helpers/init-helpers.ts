@@ -40,6 +40,7 @@ import {
   deployApeCoinStaking,
   deployPTokenCApe,
   deployCApeDebtToken,
+  deployNTokenBAKCImpl,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -117,6 +118,7 @@ export const initReservesByHelper = async (
   let stETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
   let PsApeVariableDebtTokenImplementationAddress = "";
+  let nTokenBAKCImplementationAddress = "";
 
   if (genericPTokenImplAddress) {
     await insertContractAddressInDb(
@@ -159,7 +161,8 @@ export const initReservesByHelper = async (
       xTokenImpl === eContractid.PTokenStETHImpl ||
       xTokenImpl === eContractid.PTokenATokenImpl ||
       xTokenImpl === eContractid.PTokenSApeImpl ||
-      xTokenImpl === eContractid.PTokenCApeImpl
+      xTokenImpl === eContractid.PTokenCApeImpl ||
+      xTokenImpl === eContractid.NTokenBAKCImpl
   ) as [string, IReserveParams][];
 
   for (const [symbol, params] of reserves) {
@@ -263,6 +266,7 @@ export const initReservesByHelper = async (
         eContractid.NTokenUniswapV3Impl,
         eContractid.NTokenBAYCImpl,
         eContractid.NTokenMAYCImpl,
+        eContractid.NTokenBAKCImpl,
       ].includes(xTokenImpl)
     ) {
       xTokenType[symbol] = "nft";
@@ -428,6 +432,32 @@ export const initReservesByHelper = async (
             ).address;
           }
           xTokenToUse = nTokenMAYCImplementationAddress;
+        } else if (reserveSymbol === ERC721TokenContractId.BAKC) {
+          if (!nTokenBAKCImplementationAddress) {
+            const apeCoinStaking =
+              (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+              (await deployApeCoinStaking(verify)).address;
+            const nBAYC = (
+              await pool.getReserveData(
+                tokenAddresses[ERC721TokenContractId.BAYC]
+              )
+            ).xTokenAddress;
+            const nMAYC = (
+              await pool.getReserveData(
+                tokenAddresses[ERC721TokenContractId.MAYC]
+              )
+            ).xTokenAddress;
+            nTokenBAKCImplementationAddress = (
+              await deployNTokenBAKCImpl(
+                pool.address,
+                apeCoinStaking,
+                nBAYC,
+                nMAYC,
+                verify
+              )
+            ).address;
+          }
+          xTokenToUse = nTokenBAKCImplementationAddress;
         }
 
         if (!xTokenToUse) {
