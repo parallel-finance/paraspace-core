@@ -25,7 +25,7 @@ contract AutoCompoundApe is
     /// @notice Minimal ApeCoin amount to deposit ape to ApeCoinStaking
     uint256 public constant MIN_OPERATION_AMOUNT = 100 * 1e18;
     /// @notice Minimal liquidity the pool should have
-    uint256 public constant MINIMUM_LIQUIDITY = 10 ** 15;
+    uint256 public constant MINIMUM_LIQUIDITY = 10**15;
 
     ApeCoinStaking public immutable apeStaking;
     IERC20 public immutable apeCoin;
@@ -164,17 +164,18 @@ contract AutoCompoundApe is
         IDelegation(delegateContract).setDelegate(spaceId, delegate);
     }
 
-    function clearVotingDelegate(
-        address delegateContract,
-        bytes32 spaceId
-    ) external onlyOwner {
+    function clearVotingDelegate(address delegateContract, bytes32 spaceId)
+        external
+        onlyOwner
+    {
         IDelegation(delegateContract).clearDelegate(spaceId);
     }
 
-    function getDelegate(
-        address delegateContract,
-        bytes32 spaceId
-    ) external view returns (address) {
+    function getDelegate(address delegateContract, bytes32 spaceId)
+        external
+        view
+        returns (address)
+    {
         return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 }
