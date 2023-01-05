@@ -3,7 +3,6 @@ import {expect} from "chai";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS, ONE_ADDRESS} from "../helpers/constants";
 import {
   getAutoCompoundApe,
-  getMintableERC721,
   getPToken,
   getPTokenSApe,
   getVariableDebtToken,
@@ -12,19 +11,8 @@ import {
   convertToCurrencyDecimals,
   isUsingAsCollateral,
 } from "../helpers/contracts-helpers";
-import {
-  advanceTimeAndBlock,
-  DRE,
-  getDb,
-  waitForTx,
-} from "../helpers/misc-utils";
-import {
-  MintableERC721,
-  VariableDebtToken,
-  PTokenSApe,
-  PToken,
-  AutoCompoundApe,
-} from "../types";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {VariableDebtToken, PTokenSApe, PToken, AutoCompoundApe} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
