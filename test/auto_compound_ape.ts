@@ -14,6 +14,7 @@ import {
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -654,5 +655,22 @@ describe("APE Coin Staking Test", () => {
     );
     almostEqual(user1CApeDebtBalance, user1Amount);
     almostEqual(await pSApeCoin.balanceOf(user1.address), user1Amount);
+  });
+
+  it("test vote delegation", async () => {
+    const {
+      users: [user1],
+      gatewayAdmin,
+    } = await loadFixture(fixture);
+
+    const delegateRegistry = await deployMockedDelegateRegistry();
+
+    await cApe
+      .connect(gatewayAdmin.signer)
+      .setVotingDelegate(delegateRegistry.address, "test", user1.address);
+
+    expect(await cApe.getDelegate(delegateRegistry.address, "test")).to.be.eq(
+      user1.address
+    );
   });
 });
