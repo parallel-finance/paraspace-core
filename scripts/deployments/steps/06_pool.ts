@@ -1,6 +1,7 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployAutoCompoundApe,
+  deployMockedDelegateRegistry,
   deployPoolComponents,
 } from "../../../helpers/contracts-deployments";
 import {
@@ -16,6 +17,7 @@ export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
 
   try {
+    await deployMockedDelegateRegistry(verify);
     await deployAutoCompoundApe(verify);
 
     const {

@@ -390,6 +390,10 @@ wallet:
 rate-strategy:
 	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
+.PHONY: release-v1.4
+release-v1.4:
+	make SCRIPT_PATH=./scripts/dev/6.release-v1.4.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -405,6 +409,10 @@ upgrade-pool: build
 .PHONY: upgrade-configurator
 upgrade-configurator: build
 	make TASK_NAME=upgrade:configurator run-task
+
+.PHONY: upgrade-auto-compound-ape
+upgrade-auto-compound-ape: build
+	make TASK_NAME=upgrade:auto-compound-ape run-task
 
 .PHONY: upgrade-ntoken
 upgrade-ntoken: build

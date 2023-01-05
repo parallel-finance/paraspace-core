@@ -4,6 +4,7 @@ import {
   ERC721TokenContractId,
   iMultiPoolsAssets,
   IReserveParams,
+  NTokenContractId,
   tEthereumAddress,
 } from "./types";
 import {ProtocolDataProvider} from "../types";
@@ -14,6 +15,7 @@ import {
   getPoolAddressesProvider,
   getPoolConfiguratorProxy,
   getPoolProxy,
+  getProtocolDataProvider,
 } from "./contracts-getters";
 import {
   getContractAddressInDb,
@@ -437,16 +439,18 @@ export const initReservesByHelper = async (
             const apeCoinStaking =
               (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
               (await deployApeCoinStaking(verify)).address;
-            const nBAYC = (
-              await pool.getReserveData(
-                tokenAddresses[ERC721TokenContractId.BAYC]
-              )
-            ).xTokenAddress;
-            const nMAYC = (
-              await pool.getReserveData(
-                tokenAddresses[ERC721TokenContractId.MAYC]
-              )
-            ).xTokenAddress;
+            const protocolDataProvider = await getProtocolDataProvider();
+            const allTokens = await protocolDataProvider.getAllXTokens();
+            const nBAYC =
+              // eslint-disable-next-line
+              allTokens.find(
+                (x) => x.symbol == NTokenContractId.nBAYC
+              )!.tokenAddress;
+            const nMAYC =
+              // eslint-disable-next-line
+              allTokens.find(
+                (x) => x.symbol == NTokenContractId.nMAYC
+              )!.tokenAddress;
             nTokenBAKCImplementationAddress = (
               await deployNTokenBAKCImpl(
                 pool.address,
