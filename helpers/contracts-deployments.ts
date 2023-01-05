@@ -220,6 +220,8 @@ import {
   InitializableAdminUpgradeabilityProxy,
   ParaProxyInterfaces__factory,
   ParaProxyInterfaces,
+  NTokenBAKC,
+  NTokenBAKC__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1733,12 +1735,11 @@ export const deployMockAirdropProject = async (
 
 export const deployApeCoinStaking = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
-  const bakc = await deployMintableERC721(["BAKC", "BAKC", ""], verify);
   const args = [
     allTokens.APE.address,
     allTokens.BAYC.address,
     allTokens.MAYC.address,
-    bakc.address,
+    allTokens.BAKC.address,
   ];
 
   const apeCoinStaking = await withSaveAndVerify(
@@ -1851,6 +1852,30 @@ export const deployNTokenMAYCImpl = async (
     false,
     libraries
   ) as Promise<NTokenMAYC>;
+};
+
+export const deployNTokenBAKCImpl = async (
+  poolAddress: tEthereumAddress,
+  apeCoinStaking: tEthereumAddress,
+  nBAYC: tEthereumAddress,
+  nMAYC: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    new NTokenBAKC__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenBAKCImpl,
+    [poolAddress, apeCoinStaking, nBAYC, nMAYC],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenBAKC>;
 };
 
 export const deployATokenDebtToken = async (

@@ -10,7 +10,7 @@ import {
   rateStrategyWETH,
 } from "./rateStrategies";
 import {
-  auctionStrategyAzuki,
+  auctionStrategyAzuki, auctionStrategyBAKC,
   auctionStrategyBAYC,
   auctionStrategyCloneX,
   auctionStrategyDoodles,
@@ -174,6 +174,21 @@ export const strategyMAYC: IReserveParams = {
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "0",
+};
+
+export const strategyBAKC: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyBAKC,
+  baseLTVAsCollateral: "4000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8000",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenBAKCImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "1000",
 };
 
 export const strategyDoodles: IReserveParams = {

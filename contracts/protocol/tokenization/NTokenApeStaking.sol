@@ -97,7 +97,8 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 _underlyingAsset: _underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
-                incentiveReceiver: address(0)
+                incentiveReceiver: address(0),
+                bakcNToken: getBAKCNTokenAddress()
             })
         );
         super._transfer(from, to, tokenId, validate);
@@ -121,7 +122,8 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                     _underlyingAsset: _underlyingAsset,
                     poolId: POOL_ID(),
                     tokenId: tokenIds[index],
-                    incentiveReceiver: address(0)
+                    incentiveReceiver: address(0),
+                    bakcNToken: getBAKCNTokenAddress()
                 })
             );
         }
@@ -168,9 +170,13 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
      */
     function unstakePositionAndRepay(uint256 tokenId, address incentiveReceiver)
         external
-        onlyPool
         nonReentrant
     {
+        address bakcNToken = getBAKCNTokenAddress();
+        require(
+            msg.sender == address(POOL) || msg.sender == bakcNToken,
+            "Invalid Caller"
+        );
         ApeStakingLogic.executeUnstakePositionAndRepay(
             _ERC721Data.owners,
             apeStakingDataStorage(),
@@ -180,7 +186,8 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 _underlyingAsset: _underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
-                incentiveReceiver: incentiveReceiver
+                incentiveReceiver: incentiveReceiver,
+                bakcNToken: bakcNToken
             })
         );
     }
@@ -202,5 +209,10 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 POOL_ID(),
                 _apeCoinStaking
             );
+    }
+
+    function getBAKCNTokenAddress() internal view returns (address) {
+        IERC721 BAKC = getBAKC();
+        return POOL.getReserveData(address(BAKC)).xTokenAddress;
     }
 }
