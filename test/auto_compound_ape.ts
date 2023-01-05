@@ -674,8 +674,11 @@ describe("APE Coin Staking Test", () => {
         user1.address
       );
 
-    expect(await cApe.getDelegate(delegateRegistry.address, "test")).to.be.eq(
-      user1.address
-    );
+    expect(
+      await cApe.getDelegate(
+        delegateRegistry.address,
+        Web3.utils.fromAscii("test")
+      )
+    ).to.be.eq(user1.address);
   });
 });
