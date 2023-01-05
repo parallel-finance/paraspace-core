@@ -4,7 +4,7 @@ import {AutoCompoundApe, PToken, PTokenSApe, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
-import {parseEther} from "ethers/lib/utils";
+import {parseEther, solidityKeccak256} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {
   getAutoCompoundApe,
@@ -15,7 +15,6 @@ import {
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
-import Web3 from "web3";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -670,14 +669,14 @@ describe("APE Coin Staking Test", () => {
       .connect(gatewayAdmin.signer)
       .setVotingDelegate(
         delegateRegistry.address,
-        Web3.utils.fromAscii("test"),
+        solidityKeccak256(["string"], ["test"]),
         user1.address
       );
 
     expect(
       await cApe.getDelegate(
         delegateRegistry.address,
-        Web3.utils.fromAscii("test")
+        solidityKeccak256(["string"], ["test"])
       )
     ).to.be.eq(user1.address);
   });
