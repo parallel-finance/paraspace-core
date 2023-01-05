@@ -392,7 +392,7 @@ contract PoolApeStaking is
 
         // 1, repay APE
         uint256 leftAmount = totalAmount;
-        leftAmount -= _repayUserDebt(
+        leftAmount -= repayUserDebt(
             ps,
             address(APE_COIN),
             onBehalfOf,
@@ -409,7 +409,7 @@ contract PoolApeStaking is
         leftAmount = APE_COMPOUND.balanceOf(address(this));
 
         // 3, repay and supply cAPE for user
-        _repayAndSupplyCApeForUser(ps, onBehalfOf, leftAmount);
+        repayAndSupplyCApeForUser(ps, onBehalfOf, leftAmount);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -453,7 +453,7 @@ contract PoolApeStaking is
             }
         }
 
-        depositApeAndSupplyCApeForUser(ps, totalAmount, users, amounts);
+        repayAndSupplyCApeWithApeForUsers(ps, totalAmount, users, amounts);
     }
 
     struct CompoundPairedApeRewardLocalVar {
@@ -533,7 +533,7 @@ contract PoolApeStaking is
             localVar.totalAmount += localVar.amounts[i];
         }
 
-        depositApeAndSupplyCApeForUser(
+        repayAndSupplyCApeWithApeForUsers(
             ps,
             localVar.totalAmount,
             users,
@@ -547,7 +547,7 @@ contract PoolApeStaking is
         return uint256(ps._apeCompoundFee);
     }
 
-    function depositApeAndSupplyCApeForUser(
+    function repayAndSupplyCApeWithApeForUsers(
         DataTypes.PoolStorage storage ps,
         uint256 totalAmount,
         address[] calldata users,
@@ -564,7 +564,7 @@ contract PoolApeStaking is
 
         for (uint256 index = 0; index < users.length; index++) {
             if (amounts[index] != 0) {
-                _repayAndSupplyCApeForUser(
+                repayAndSupplyCApeForUser(
                     ps,
                     users[index],
                     amounts[index].percentMul(
@@ -613,13 +613,13 @@ contract PoolApeStaking is
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
-    function _repayAndSupplyCApeForUser(
+    function repayAndSupplyCApeForUser(
         DataTypes.PoolStorage storage ps,
         address user,
         uint256 amount
     ) internal {
         uint256 leftAmount = amount;
-        leftAmount -= _repayUserDebt(
+        leftAmount -= repayUserDebt(
             ps,
             address(APE_COMPOUND),
             user,
@@ -630,10 +630,10 @@ contract PoolApeStaking is
             return;
         }
 
-        _supplyCApeForUser(ps, user, leftAmount);
+        supplyCApeForUser(ps, user, leftAmount);
     }
 
-    function _supplyCApeForUser(
+    function supplyCApeForUser(
         DataTypes.PoolStorage storage ps,
         address user,
         uint256 amount
@@ -681,7 +681,7 @@ contract PoolApeStaking is
         bakcContract.safeTransferFrom(bakcOwner, apeStakingNToken, tokenId);
     }
 
-    function _repayUserDebt(
+    function repayUserDebt(
         DataTypes.PoolStorage storage ps,
         address asset,
         address onBehalfOf,
