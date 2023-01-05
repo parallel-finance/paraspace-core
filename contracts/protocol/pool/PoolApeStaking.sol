@@ -398,20 +398,8 @@ contract PoolApeStaking is
         APE_COIN.safeTransferFrom(msg.sender, address(this), leftAmount);
         APE_COMPOUND.deposit(address(this), leftAmount);
 
-        // 3, repay cAPE
-        leftAmount -= _repayUserDebt(
-            ps,
-            address(APE_COMPOUND),
-            onBehalfOf,
-            address(this),
-            leftAmount
-        );
-        if (leftAmount == 0) {
-            return;
-        }
-
-        // 4, supply cApe for user
-        _supplyCApeForUser(ps, onBehalfOf, leftAmount);
+        // 3, repay and supply cAPE for user
+        _repayAndSupplyCApeForUser(ps, onBehalfOf, leftAmount);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -462,7 +450,7 @@ contract PoolApeStaking is
 
         for (uint256 index = 0; index < users.length; index++) {
             if (amounts[index] != 0) {
-                _supplyCApeForUser(
+                _repayAndSupplyCApeForUser(
                     ps,
                     users[index],
                     amounts[index].percentMul(
@@ -509,6 +497,26 @@ contract PoolApeStaking is
 
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
+    }
+
+    function _repayAndSupplyCApeForUser(
+        DataTypes.PoolStorage storage ps,
+        address user,
+        uint256 amount
+    ) internal {
+        uint256 leftAmount = amount;
+        leftAmount -= _repayUserDebt(
+            ps,
+            address(APE_COMPOUND),
+            user,
+            address(this),
+            leftAmount
+        );
+        if (leftAmount == 0) {
+            return;
+        }
+
+        _supplyCApeForUser(ps, user, leftAmount);
     }
 
     function _supplyCApeForUser(
