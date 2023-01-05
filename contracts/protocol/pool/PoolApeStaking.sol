@@ -686,18 +686,25 @@ contract PoolApeStaking is
         address payer,
         uint256 maxAmount
     ) internal returns (uint256) {
-        return
-            BorrowLogic.executeRepay(
-                ps._reserves,
-                ps._usersConfig[onBehalfOf],
-                DataTypes.ExecuteRepayParams({
-                    asset: asset,
-                    amount: maxAmount,
-                    onBehalfOf: onBehalfOf,
-                    payer: payer,
-                    usePTokens: false,
-                    revertForZeroDebt: false
-                })
-            );
+        uint256 repayAmount = IERC20(
+            ps._reserves[asset].variableDebtTokenAddress
+        ).balanceOf(onBehalfOf);
+        if (repayAmount == 0 || maxAmount == 0) {
+            return 0;
+        }
+
+        repayAmount = Math.min(repayAmount, maxAmount);
+        BorrowLogic.executeRepay(
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteRepayParams({
+                asset: asset,
+                amount: repayAmount,
+                onBehalfOf: onBehalfOf,
+                payer: payer,
+                usePTokens: false
+            })
+        );
+        return repayAmount;
     }
 }

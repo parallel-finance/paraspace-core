@@ -372,8 +372,7 @@ library ValidationLogic {
         DataTypes.ReserveCache memory reserveCache,
         uint256 amountSent,
         address onBehalfOf,
-        uint256 variableDebt,
-        bool revertForZeroDebt
+        uint256 variableDebt
     ) internal view {
         require(amountSent != 0, Errors.INVALID_AMOUNT);
         require(
@@ -404,9 +403,7 @@ library ValidationLogic {
             Errors.SAME_BLOCK_BORROW_REPAY
         );
 
-        if (revertForZeroDebt) {
-            require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
-        }
+        require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
     }
 
     /**
