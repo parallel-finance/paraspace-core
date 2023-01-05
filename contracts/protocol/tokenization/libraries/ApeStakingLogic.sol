@@ -186,9 +186,8 @@ library ApeStakingLogic {
         }
 
         //3 repay and supply
-        params.POOL.repayAndSupply(
+        params.POOL.repayAndSupplyApe(
             params._underlyingAsset,
-            address(_apeCoin),
             positionOwner,
             unstakedAmount
         );

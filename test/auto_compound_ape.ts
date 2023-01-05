@@ -600,6 +600,7 @@ describe("APE Coin Staking Test", () => {
       users: [user1, user2],
       mayc,
       pool,
+      ape,
     } = await loadFixture(fixture);
 
     await waitForTx(
@@ -615,6 +616,8 @@ describe("APE Coin Staking Test", () => {
         .connect(user2.signer)
         .supply(cApe.address, user2Amount, user2.address, 0)
     );
+
+    almostEqual(await pCApe.balanceOf(user2.address), user2Amount);
 
     await waitForTx(
       await mayc.connect(user1.signer)["mint(address)"](user1.address)
@@ -649,10 +652,48 @@ describe("APE Coin Staking Test", () => {
 
     const user2pCApeBalance = await pCApe.balanceOf(user2.address);
     almostEqual(user2pCApeBalance, user2Amount);
-    const user1CApeDebtBalance = await variableDebtCAPE.balanceOf(
-      user1.address
-    );
+    let user1CApeDebtBalance = await variableDebtCAPE.balanceOf(user1.address);
     almostEqual(user1CApeDebtBalance, user1Amount);
     almostEqual(await pSApeCoin.balanceOf(user1.address), user1Amount);
+    almostEqual(await pCApe.balanceOf(user2.address), user2Amount);
+    almostEqual(await cApe.totalSupply(), user2Amount.sub(user1Amount));
+
+    const hourRewardAmount = parseEther("3600");
+    await advanceTimeAndBlock(3600);
+    await waitForTx(await cApe.connect(user2.signer).harvestAndCompound());
+    //this is a edge case here, because Ape single pool only got deposited by user2
+    almostEqual(
+      await pCApe.balanceOf(user2.address),
+      user2Amount.add(hourRewardAmount.mul(2))
+    );
+
+    user1CApeDebtBalance = await variableDebtCAPE.balanceOf(user1.address);
+    almostEqual(user1CApeDebtBalance, user1Amount.add(hourRewardAmount));
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: user1Amount}])
+    );
+    const apeBalance = await ape.balanceOf(user1.address);
+    //user1Amount + borrow user1Amount + hourRewardAmount
+    almostEqual(apeBalance, user1Amount.mul(2).add(hourRewardAmount));
+
+    await waitForTx(
+      await cApe.connect(user1.signer).deposit(user1.address, apeBalance)
+    );
+
+    await waitForTx(
+      await cApe.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .repay(cApe.address, apeBalance, user1.address)
+    );
+    user1CApeDebtBalance = await variableDebtCAPE.balanceOf(user1.address);
+    expect(user1CApeDebtBalance).to.be.equal(0);
+
+    almostEqual(await cApe.balanceOf(user1.address), user1Amount);
   });
 });

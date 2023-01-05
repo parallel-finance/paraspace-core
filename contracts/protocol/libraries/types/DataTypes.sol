@@ -157,7 +157,9 @@ library DataTypes {
         address asset;
         uint256 amount;
         address onBehalfOf;
+        address payer;
         bool usePTokens;
+        bool revertForZeroDebt;
     }
 
     struct ExecuteWithdrawParams {
