@@ -392,7 +392,7 @@ contract PoolApeStaking is
 
         // 1, repay APE
         uint256 leftAmount = totalAmount;
-        leftAmount -= _repayUserDebt(
+        leftAmount -= repayUserDebt(
             ps,
             address(APE_COIN),
             onBehalfOf,
@@ -406,21 +406,10 @@ contract PoolApeStaking is
         // 2, deposit APE as cAPE
         APE_COIN.safeTransferFrom(msg.sender, address(this), leftAmount);
         APE_COMPOUND.deposit(address(this), leftAmount);
+        leftAmount = APE_COMPOUND.balanceOf(address(this));
 
-        // 3, repay cAPE
-        leftAmount -= _repayUserDebt(
-            ps,
-            address(APE_COMPOUND),
-            onBehalfOf,
-            address(this),
-            leftAmount
-        );
-        if (leftAmount == 0) {
-            return;
-        }
-
-        // 4, supply cApe for user
-        supplyCApeForUser(ps, onBehalfOf, leftAmount);
+        // 3, repay and supply cAPE for user
+        repayAndSupplyCApeForUser(ps, onBehalfOf, leftAmount);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -464,7 +453,7 @@ contract PoolApeStaking is
             }
         }
 
-        depositApeAndSupplyCApeForUser(ps, totalAmount, users, amounts);
+        repayAndSupplyCApeWithApeForUsers(ps, totalAmount, users, amounts);
     }
 
     struct CompoundPairedApeRewardLocalVar {
@@ -544,7 +533,7 @@ contract PoolApeStaking is
             localVar.totalAmount += localVar.amounts[i];
         }
 
-        depositApeAndSupplyCApeForUser(
+        repayAndSupplyCApeWithApeForUsers(
             ps,
             localVar.totalAmount,
             users,
@@ -558,13 +547,14 @@ contract PoolApeStaking is
         return uint256(ps._apeCompoundFee);
     }
 
-    function depositApeAndSupplyCApeForUser(
+    function repayAndSupplyCApeWithApeForUsers(
         DataTypes.PoolStorage storage ps,
         uint256 totalAmount,
         address[] calldata users,
         uint256[] memory amounts
     ) internal {
         APE_COMPOUND.deposit(address(this), totalAmount);
+        totalAmount = APE_COMPOUND.balanceOf(address(this));
 
         uint256 compoundFee = ps._apeCompoundFee;
         uint256 totalFee = totalAmount.percentMul(compoundFee);
@@ -574,7 +564,7 @@ contract PoolApeStaking is
 
         for (uint256 index = 0; index < users.length; index++) {
             if (amounts[index] != 0) {
-                supplyCApeForUser(
+                repayAndSupplyCApeForUser(
                     ps,
                     users[index],
                     amounts[index].percentMul(
@@ -623,6 +613,26 @@ contract PoolApeStaking is
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
+    function repayAndSupplyCApeForUser(
+        DataTypes.PoolStorage storage ps,
+        address user,
+        uint256 amount
+    ) internal {
+        uint256 leftAmount = amount;
+        leftAmount -= repayUserDebt(
+            ps,
+            address(APE_COMPOUND),
+            user,
+            address(this),
+            leftAmount
+        );
+        if (leftAmount == 0) {
+            return;
+        }
+
+        supplyCApeForUser(ps, user, leftAmount);
+    }
+
     function supplyCApeForUser(
         DataTypes.PoolStorage storage ps,
         address user,
@@ -652,7 +662,26 @@ contract PoolApeStaking is
         }
     }
 
-    function _repayUserDebt(
+    function validateBAKCOwnerAndTransfer(
+        IERC721 bakcContract,
+        uint256 tokenId,
+        address bakcNToken,
+        address apeStakingNToken,
+        address userAddress
+    ) internal returns (address bakcOwner) {
+        bakcOwner = bakcContract.ownerOf(tokenId);
+        address nBAKCOwner;
+        if (bakcNToken != address(0)) {
+            nBAKCOwner = INToken(bakcNToken).ownerOf(tokenId);
+        }
+        require(
+            (userAddress == bakcOwner) || (userAddress == nBAKCOwner),
+            Errors.NOT_THE_BAKC_OWNER
+        );
+        bakcContract.safeTransferFrom(bakcOwner, apeStakingNToken, tokenId);
+    }
+
+    function repayUserDebt(
         DataTypes.PoolStorage storage ps,
         address asset,
         address onBehalfOf,
@@ -672,24 +701,5 @@ contract PoolApeStaking is
                     revertForZeroDebt: false
                 })
             );
-    }
-
-    function validateBAKCOwnerAndTransfer(
-        IERC721 bakcContract,
-        uint256 tokenId,
-        address bakcNToken,
-        address apeStakingNToken,
-        address userAddress
-    ) internal returns (address bakcOwner) {
-        bakcOwner = bakcContract.ownerOf(tokenId);
-        address nBAKCOwner;
-        if (bakcNToken != address(0)) {
-            nBAKCOwner = INToken(bakcNToken).ownerOf(tokenId);
-        }
-        require(
-            (userAddress == bakcOwner) || (userAddress == nBAKCOwner),
-            Errors.NOT_THE_BAKC_OWNER
-        );
-        bakcContract.safeTransferFrom(bakcOwner, apeStakingNToken, tokenId);
     }
 }

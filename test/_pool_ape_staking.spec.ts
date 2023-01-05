@@ -11,8 +11,8 @@ import {
   convertToCurrencyDecimals,
   isUsingAsCollateral,
 } from "../helpers/contracts-helpers";
-import {VariableDebtToken, PTokenSApe, PToken, AutoCompoundApe} from "../types";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {VariableDebtToken, PTokenSApe, PToken, AutoCompoundApe} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 

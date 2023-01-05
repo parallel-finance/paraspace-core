@@ -12,6 +12,7 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
+import {getAutoCompoundApe} from "../helpers/contracts-getters";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -27,7 +28,10 @@ describe("APE Coin Staking Test", () => {
       pool,
       apeCoinStaking,
       bakc,
+      poolAdmin,
     } = testEnv;
+
+    const cApe = await getAutoCompoundApe();
 
     await supplyAndValidate(ape, "20000", depositor, true);
     await changePriceAndValidate(ape, "0.001");
@@ -41,6 +45,12 @@ describe("APE Coin Staking Test", () => {
     );
     await waitForTx(
       await bakc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .unlimitedApproveTo(ape.address, cApe.address)
     );
 
     // send extra tokens to the apestaking contract for rewards
