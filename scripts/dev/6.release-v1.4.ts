@@ -1,3 +1,4 @@
+import {utils} from "ethers";
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
@@ -31,14 +32,14 @@ const releaseV14 = async (verify = false) => {
   console.log("deploying BAKC aggregator...");
   const bakcAggregator = await deployAggregator(
     "BAKC",
-    // eslint-disable-next-line
-    paraSpaceConfig.Mocks?.AllAssetsInitialPrices.BAKC!,
+    utils.parseEther("6").toString(),
     verify
   );
   const assets = [
     {
       symbol: "BAKC",
-      address: "0xd60d682764Ee04e54707Bee7B564DC65b31884D0",
+      address: "0xba30E5F9Bb24caa003E9f2f0497Ad287FDF95623",
+      // address: "0xd60d682764Ee04e54707Bee7B564DC65b31884D0",
       aggregator: bakcAggregator.address,
     },
   ];
