@@ -159,7 +159,6 @@ library DataTypes {
         address onBehalfOf;
         address payer;
         bool usePTokens;
-        bool revertForZeroDebt;
     }
 
     struct ExecuteWithdrawParams {

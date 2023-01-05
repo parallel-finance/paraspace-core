@@ -142,13 +142,8 @@ library BorrowLogic {
             reserveCache,
             params.amount,
             params.onBehalfOf,
-            variableDebt,
-            params.revertForZeroDebt
+            variableDebt
         );
-
-        if (variableDebt == 0) {
-            return 0;
-        }
 
         uint256 paybackAmount = variableDebt;
 
