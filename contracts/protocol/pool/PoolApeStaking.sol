@@ -420,7 +420,7 @@ contract PoolApeStaking is
         }
 
         // 4, supply cApe for user
-        _supplyCApeForUser(ps, onBehalfOf, leftAmount);
+        supplyCApeForUser(ps, onBehalfOf, leftAmount);
     }
 
     /// @inheritdoc IPoolApeStaking
