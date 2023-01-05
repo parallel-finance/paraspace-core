@@ -406,7 +406,6 @@ contract PoolApeStaking is
         // 2, deposit APE as cAPE
         APE_COIN.safeTransferFrom(msg.sender, address(this), leftAmount);
         APE_COMPOUND.deposit(address(this), leftAmount);
-        leftAmount = APE_COMPOUND.balanceOf(address(this));
 
         // 3, repay and supply cAPE for user
         repayAndSupplyCApeForUser(ps, onBehalfOf, leftAmount);
@@ -554,7 +553,6 @@ contract PoolApeStaking is
         uint256[] memory amounts
     ) internal {
         APE_COMPOUND.deposit(address(this), totalAmount);
-        totalAmount = APE_COMPOUND.balanceOf(address(this));
 
         uint256 compoundFee = ps._apeCompoundFee;
         uint256 totalFee = totalAmount.percentMul(compoundFee);
