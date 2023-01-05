@@ -220,10 +220,10 @@ import {
   InitializableAdminUpgradeabilityProxy,
   ParaProxyInterfaces__factory,
   ParaProxyInterfaces,
-  NTokenBAKC,
-  NTokenBAKC__factory,
   MockedDelegateRegistry,
   MockedDelegateRegistry__factory,
+  NTokenBAKC,
+  NTokenBAKC__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {

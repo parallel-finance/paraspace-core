@@ -4,7 +4,7 @@ import {AutoCompoundApe, PToken, PTokenSApe, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
-import {parseEther} from "ethers/lib/utils";
+import {parseEther, solidityKeccak256} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {
   getAutoCompoundApe,
@@ -602,7 +602,7 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(3600);
 
     await waitForTx(
-      await pool.connect(user2.signer).claimPairedApeRewardAndCompound(
+      await pool.connect(user2.signer).claimPairedApeAndCompound(
         mayc.address,
         [user1.address],
         [
@@ -626,7 +626,7 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(3600);
 
     await waitForTx(
-      await pool.connect(user2.signer).claimPairedApeRewardAndCompound(
+      await pool.connect(user2.signer).claimPairedApeAndCompound(
         mayc.address,
         [user1.address],
         [
@@ -829,10 +829,17 @@ describe("APE Coin Staking Test", () => {
 
     await cApe
       .connect(gatewayAdmin.signer)
-      .setVotingDelegate(delegateRegistry.address, "test", user1.address);
+      .setVotingDelegate(
+        delegateRegistry.address,
+        solidityKeccak256(["string"], ["test"]),
+        user1.address
+      );
 
-    expect(await cApe.getDelegate(delegateRegistry.address, "test")).to.be.eq(
-      user1.address
-    );
+    expect(
+      await cApe.getDelegate(
+        delegateRegistry.address,
+        solidityKeccak256(["string"], ["test"])
+      )
+    ).to.be.eq(user1.address);
   });
 });

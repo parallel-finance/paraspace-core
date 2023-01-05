@@ -19,6 +19,7 @@ export const step_06 = async (verify = false) => {
   try {
     await deployMockedDelegateRegistry(verify);
     await deployAutoCompoundApe(verify);
+    await deployMockedDelegateRegistry(verify);
 
     const {
       poolCore,

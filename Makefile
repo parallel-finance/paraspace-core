@@ -262,6 +262,10 @@ test-data-providers:
 test-ape-staking:
 	make TEST_TARGET=_pool_ape_staking.spec.ts test
 
+.PHONY: test-auto-compound-ape
+test-auto-compound-ape:
+	make TEST_TARGET=auto_compound_ape.spec.ts test
+
 .PHONY: test-sape-operation
 test-sape-operation:
 	make TEST_TARGET=_sape_pool_operation.spec.ts test
