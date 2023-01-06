@@ -13,10 +13,14 @@ import {
   getWETHGatewayProxy,
   getWPunkGatewayProxy,
 } from "../../../helpers/contracts-getters";
-import {getParaSpaceAdmins} from "../../../helpers/contracts-helpers";
+import {
+  getContractAddressInDb,
+  getParaSpaceAdmins,
+} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 import {
+  eContractid,
   ERC20TokenContractId,
   ERC721TokenContractId,
 } from "../../../helpers/types";
@@ -44,7 +48,6 @@ export const step_20 = async (
     const conduit = await getConduit();
     const zoneController = await getPausableZoneController();
     const aclManager = await getACLManager();
-    const nftFloorOracle = await getNFTFloorOracle();
 
     console.log("new paraSpaceAdmin: ", paraSpaceAdminAddress);
     console.log("new gatewayAdmin: ", gatewayAdminAddress);
@@ -169,9 +172,17 @@ export const step_20 = async (
     await waitForTx(
       await cApeProxy.changeAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
     );
-    await waitForTx(
-      await cApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
-    );
+    if (gatewayAdminAddress != paraSpaceAdminAddress) {
+      await waitForTx(
+        await cApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
+      );
+    }
+
+    if (!(await getContractAddressInDb(eContractid.NFTFloorOracle))) {
+      return;
+    }
+
+    const nftFloorOracle = await getNFTFloorOracle();
 
     await waitForTx(
       await nftFloorOracle.grantRole(
