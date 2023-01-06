@@ -42,7 +42,6 @@ export const upgradeNToken = async (verify = false) => {
   for (let i = 0; i < allXTokens.length; i++) {
     const token = allXTokens[i];
     const nToken = await getNToken(token.tokenAddress);
-    const apeCoinStaking = await getApeCoinStaking();
     const pool = await getPoolProxy();
     const asset = await nToken.UNDERLYING_ASSET_ADDRESS();
     const incentivesController = paraSpaceConfig.IncentivesController;
@@ -66,6 +65,7 @@ export const upgradeNToken = async (verify = false) => {
     if (xTokenType == XTokenType.NTokenBAYC) {
       if (!nTokenBAYCImplementationAddress) {
         console.log("deploy NTokenBAYC implementation");
+        const apeCoinStaking = await getApeCoinStaking();
         nTokenBAYCImplementationAddress = (
           await deployNTokenBAYCImpl(
             apeCoinStaking.address,
@@ -78,6 +78,7 @@ export const upgradeNToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.NTokenMAYC) {
       if (!nTokenMAYCImplementationAddress) {
         console.log("deploy NTokenMAYC implementation");
+        const apeCoinStaking = await getApeCoinStaking();
         nTokenMAYCImplementationAddress = (
           await deployNTokenMAYCImpl(
             apeCoinStaking.address,
@@ -90,6 +91,7 @@ export const upgradeNToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.NTokenBAKC) {
       if (!nTokenBAKCImplementationAddress) {
         console.log("deploy NTokenBAKC implementation");
+        const apeCoinStaking = await getApeCoinStaking();
         const nBAYC =
           // eslint-disable-next-line
           allXTokens.find(

@@ -398,28 +398,32 @@ rate-strategy:
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
 
+.PHONY: market-info
+market-info:
+	make TASK_NAME=market-info run-task
+
 .PHONY: upgrade
-upgrade: build
+upgrade:
 	make TASK_NAME=upgrade:all run-task
 
 .PHONY: upgrade-pool
-upgrade-pool: build
+upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
 .PHONY: upgrade-configurator
-upgrade-configurator: build
+upgrade-configurator:
 	make TASK_NAME=upgrade:configurator run-task
 
 .PHONY: upgrade-ntoken
-upgrade-ntoken: build
+upgrade-ntoken:
 	make TASK_NAME=upgrade:ntoken run-task
 
 .PHONY: upgrade-ptoken
-upgrade-ptoken: build
+upgrade-ptoken:
 	make TASK_NAME=upgrade:ptoken run-task
 
 .PHONY: upgrade-debt-token
-upgrade-debt-token: build
+upgrade-debt-token:
 	make TASK_NAME=upgrade:debt-token run-task
 
 .PHONY: hardhat
