@@ -240,7 +240,8 @@ contract PoolCore is
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool receiveEthAsWeth
+        bool receiveEthAsWeth,
+        uint256 deadline
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -258,6 +259,7 @@ contract PoolCore is
                     amount0Min: amount0Min,
                     amount1Min: amount1Min,
                     receiveEthAsWeth: receiveEthAsWeth,
+                    deadline: deadline,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle()
                 })
             );

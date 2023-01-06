@@ -14,7 +14,7 @@ import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {getUniswapV3OracleWrapper} from "../helpers/contracts-getters";
 import {ProtocolErrors} from "../helpers/types";
 import {snapshot} from "./helpers/snapshot-manager";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {loadFixture, time} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
 describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transfer test", () => {
@@ -442,7 +442,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await waitForTx(await configurator.setReserveActive(weth.address, false));
 
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
-
+    
     await expect(
       pool
         .connect(user1.signer)
@@ -453,6 +453,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }
@@ -485,6 +486,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }
@@ -517,6 +519,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }
@@ -549,6 +552,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }
@@ -573,6 +577,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }
@@ -694,6 +699,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }

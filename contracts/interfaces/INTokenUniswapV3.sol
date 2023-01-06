@@ -18,6 +18,7 @@ interface INTokenUniswapV3 {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool receiveEthAsWeth
+        bool receiveEthAsWeth,
+        uint256 deadline
     ) external;
 }

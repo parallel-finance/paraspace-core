@@ -185,6 +185,7 @@ library DataTypes {
         uint256 amount0Min;
         uint256 amount1Min;
         bool receiveEthAsWeth;
+        uint256 deadline;
         address oracle;
     }
 
