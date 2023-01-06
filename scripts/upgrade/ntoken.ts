@@ -2,6 +2,7 @@ import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {
   deployGenericMoonbirdNTokenImpl,
   deployGenericNTokenImpl,
+  deployNTokenBAKCImpl,
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
   deployUniswapV3NTokenImpl,
@@ -12,8 +13,9 @@ import {
   getProtocolDataProvider,
   getNToken,
   getApeCoinStaking,
+  getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {XTokenType} from "../../helpers/types";
+import {NTokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
@@ -28,18 +30,20 @@ export const upgradeNToken = async (verify = false) => {
     await addressesProvider.getPoolConfigurator()
   );
   const protocolDataProvider = await getProtocolDataProvider();
-  const allTokens = await protocolDataProvider.getAllXTokens();
+  const allXTokens = await protocolDataProvider.getAllXTokens();
   let nTokenImplementationAddress = "";
   let nTokenBAYCImplementationAddress = "";
   let nTokenMAYCImplementationAddress = "";
+  let nTokenBAKCImplementationAddress = "";
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
   let newImpl = "";
 
-  for (let i = 0; i < allTokens.length; i++) {
-    const token = allTokens[i];
+  for (let i = 0; i < allXTokens.length; i++) {
+    const token = allXTokens[i];
     const nToken = await getNToken(token.tokenAddress);
     const apeCoinStaking = await getApeCoinStaking();
+    const pool = await getPoolProxy();
     const asset = await nToken.UNDERLYING_ASSET_ADDRESS();
     const incentivesController = paraSpaceConfig.IncentivesController;
     const name = await nToken.name();
@@ -53,6 +57,7 @@ export const upgradeNToken = async (verify = false) => {
         XTokenType.NTokenUniswapV3,
         XTokenType.NTokenBAYC,
         XTokenType.NTokenMAYC,
+        XTokenType.NTokenBAKC,
       ].includes(xTokenType)
     ) {
       continue;
@@ -82,6 +87,30 @@ export const upgradeNToken = async (verify = false) => {
         ).address;
       }
       newImpl = nTokenMAYCImplementationAddress;
+    } else if (xTokenType == XTokenType.NTokenBAKC) {
+      if (!nTokenBAKCImplementationAddress) {
+        console.log("deploy NTokenBAKC implementation");
+        const nBAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nBAYC
+          )!.tokenAddress;
+        const nMAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nMAYC
+          )!.tokenAddress;
+        nTokenBAKCImplementationAddress = (
+          await deployNTokenBAKCImpl(
+            pool.address,
+            apeCoinStaking.address,
+            nBAYC,
+            nMAYC,
+            verify
+          )
+        ).address;
+      }
+      newImpl = nTokenBAKCImplementationAddress;
     } else if (xTokenType == XTokenType.NTokenUniswapV3) {
       if (!nTokenUniSwapV3ImplementationAddress) {
         console.log("deploy NTokenUniswapV3 implementation");

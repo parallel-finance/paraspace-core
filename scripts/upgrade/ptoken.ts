@@ -7,14 +7,12 @@ import {
   deployPTokenStETH,
 } from "../../helpers/contracts-deployments";
 import {
-  getAllERC721Tokens,
   getPoolAddressesProvider,
   getPoolConfiguratorProxy,
-  getPoolProxy,
   getProtocolDataProvider,
   getPToken,
 } from "../../helpers/contracts-getters";
-import {ERC721TokenContractId, XTokenType} from "../../helpers/types";
+import {NTokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
@@ -25,12 +23,11 @@ export const upgradePToken = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
   const poolAddress = await addressesProvider.getPool();
-  const pool = await getPoolProxy(poolAddress);
   const poolConfiguratorProxy = await getPoolConfiguratorProxy(
     await addressesProvider.getPoolConfigurator()
   );
   const protocolDataProvider = await getProtocolDataProvider();
-  const allTokens = await protocolDataProvider.getAllXTokens();
+  const allXTokens = await protocolDataProvider.getAllXTokens();
   let pTokenImplementationAddress = "";
   let pTokenDelegationAwareImplementationAddress = "";
   let pTokenStETHImplementationAddress = "";
@@ -38,8 +35,8 @@ export const upgradePToken = async (verify = false) => {
   let pTokenATokenImplementationAddress = "";
   let newImpl = "";
 
-  for (let i = 0; i < allTokens.length; i++) {
-    const token = allTokens[i];
+  for (let i = 0; i < allXTokens.length; i++) {
+    const token = allXTokens[i];
     const pToken = await getPToken(token.tokenAddress);
     const name = await pToken.name();
     const symbol = await pToken.symbol();
@@ -70,17 +67,16 @@ export const upgradePToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.PTokenSApe) {
       if (!pTokenSApeImplementationAddress) {
         console.log("deploy PTokenSApe implementation");
-        const allERC721Tokens = await getAllERC721Tokens();
-        const nBAYC = (
-          await pool.getReserveData(
-            allERC721Tokens[ERC721TokenContractId.BAYC].address
-          )
-        ).xTokenAddress;
-        const nMAYC = (
-          await pool.getReserveData(
-            allERC721Tokens[ERC721TokenContractId.MAYC].address
-          )
-        ).xTokenAddress;
+        const nBAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nBAYC
+          )!.tokenAddress;
+        const nMAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nMAYC
+          )!.tokenAddress;
         pTokenSApeImplementationAddress = (
           await deployPTokenSApe(poolAddress, nBAYC, nMAYC, verify)
         ).address;
