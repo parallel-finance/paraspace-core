@@ -394,6 +394,10 @@ wallet:
 rate-strategy:
 	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
+.PHONY: auction-strategy
+auction-strategy:
+	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
