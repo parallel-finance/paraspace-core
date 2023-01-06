@@ -33,7 +33,7 @@ test:
 
 .PHONY: local-test
 local-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
+	make MOCHA_JOBS=0 DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:

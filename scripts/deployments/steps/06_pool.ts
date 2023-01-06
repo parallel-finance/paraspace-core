@@ -26,8 +26,6 @@ export const step_06 = async (verify = false) => {
       poolParaProxyInterfacesSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
 
-    console.log("after deploying paraselector");
-
     await waitForTx(
       await addressesProvider.updatePoolImpl(
         [
