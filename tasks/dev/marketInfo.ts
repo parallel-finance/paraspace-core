@@ -1,14 +1,13 @@
 import {task} from "hardhat/config";
 import minimatch from "minimatch";
-import {
-  getPoolAddressesProvider,
-  getUiPoolDataProvider,
-} from "../../helpers/contracts-getters";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
   .setAction(async ({market}, DRE) => {
     await DRE.run("set-DRE");
+    const {getPoolAddressesProvider, getUiPoolDataProvider} = await import(
+      "../../helpers/contracts-getters"
+    );
     const ui = await getUiPoolDataProvider();
     const provider = await getPoolAddressesProvider();
     const reservesData = (await ui.getReservesData(provider.address))[0];
