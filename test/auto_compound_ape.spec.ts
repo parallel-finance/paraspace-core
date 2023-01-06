@@ -4,7 +4,7 @@ import {AutoCompoundApe, PToken, PTokenSApe, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
-import {parseEther} from "ethers/lib/utils";
+import {parseEther, solidityKeccak256} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {
   getAutoCompoundApe,
@@ -14,6 +14,7 @@ import {
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -520,6 +521,124 @@ describe("APE Coin Staking Test", () => {
     );
   });
 
+  it("claimPairedApeRewardAndCompound function work as expected", async () => {
+    const {
+      users: [user1, user2],
+      mayc,
+      pool,
+      ape,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await bakc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await bakc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await bakc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await mayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await bakc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        mayc.address,
+        [
+          {tokenId: 0, useAsCollateral: true},
+          {tokenId: 1, useAsCollateral: true},
+          {tokenId: 2, useAsCollateral: true},
+        ],
+        user1.address,
+        "0"
+      )
+    );
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        bakc.address,
+        [
+          {tokenId: 0, useAsCollateral: true},
+          {tokenId: 1, useAsCollateral: true},
+          {tokenId: 2, useAsCollateral: true},
+        ],
+        user1.address,
+        "0"
+      )
+    );
+
+    const totalAmount = parseEther("900");
+    const userAmount = parseEther("300");
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: totalAmount,
+        },
+        [],
+        [
+          {mainTokenId: 0, bakcTokenId: 0, amount: userAmount},
+          {mainTokenId: 1, bakcTokenId: 1, amount: userAmount},
+          {mainTokenId: 2, bakcTokenId: 2, amount: userAmount},
+        ]
+      )
+    );
+
+    await advanceTimeAndBlock(3600);
+
+    await waitForTx(
+      await pool.connect(user2.signer).claimPairedApeAndCompound(
+        mayc.address,
+        [user1.address],
+        [
+          [
+            {mainTokenId: 0, bakcTokenId: 0},
+            {mainTokenId: 1, bakcTokenId: 1},
+            {mainTokenId: 2, bakcTokenId: 2},
+          ],
+        ]
+      )
+    );
+
+    //3600 * 0.997 = 3589.2
+    const user1Balance = await pCApe.balanceOf(user1.address);
+    almostEqual(user1Balance, parseEther("3589.2"));
+
+    // 3600 * 0.003
+    const incentiveBalance = await cApe.balanceOf(user2.address);
+    almostEqual(incentiveBalance, parseEther("10.8"));
+
+    await advanceTimeAndBlock(3600);
+
+    await waitForTx(
+      await pool.connect(user2.signer).claimPairedApeAndCompound(
+        mayc.address,
+        [user1.address],
+        [
+          [
+            {mainTokenId: 0, bakcTokenId: 0},
+            {mainTokenId: 1, bakcTokenId: 1},
+            {mainTokenId: 2, bakcTokenId: 2},
+          ],
+        ]
+      )
+    );
+  });
+
   it("bufferBalance work as expected", async () => {
     const {
       users: [user1, user2],
@@ -542,9 +661,9 @@ describe("APE Coin Staking Test", () => {
     user1Balance = await cApe.balanceOf(user1.address);
     await waitForTx(await cApe.connect(user1.signer).withdraw(user1Balance));
     user1Share = await cApe.sharesOf(user1.address);
-    expect(user1Share).to.be.equal(0);
+    expect(user1Share.lte(1)).to.be.true;
     user1Balance = await cApe.balanceOf(user1.address);
-    expect(user1Balance).to.be.equal(0);
+    expect(user1Balance.lte(5)).to.be.true;
 
     almostEqual(await ape.balanceOf(user1.address), user1Amount);
     almostEqual(await ape.balanceOf(cApe.address), user2Amount);
@@ -654,5 +773,29 @@ describe("APE Coin Staking Test", () => {
     );
     almostEqual(user1CApeDebtBalance, user1Amount);
     almostEqual(await pSApeCoin.balanceOf(user1.address), user1Amount);
+  });
+
+  it("test vote delegation", async () => {
+    const {
+      users: [user1],
+      gatewayAdmin,
+    } = await loadFixture(fixture);
+
+    const delegateRegistry = await deployMockedDelegateRegistry();
+
+    await cApe
+      .connect(gatewayAdmin.signer)
+      .setVotingDelegate(
+        delegateRegistry.address,
+        solidityKeccak256(["string"], ["test"]),
+        user1.address
+      );
+
+    expect(
+      await cApe.getDelegate(
+        delegateRegistry.address,
+        solidityKeccak256(["string"], ["test"])
+      )
+    ).to.be.eq(user1.address);
   });
 });

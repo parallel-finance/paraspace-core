@@ -2,7 +2,6 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS, ONE_ADDRESS} from "../helpers/constants";
 import {
-  getMintableERC721,
   getPToken,
   getPTokenSApe,
   getVariableDebtToken,
@@ -11,13 +10,8 @@ import {
   convertToCurrencyDecimals,
   isUsingAsCollateral,
 } from "../helpers/contracts-helpers";
-import {
-  advanceTimeAndBlock,
-  DRE,
-  getDb,
-  waitForTx,
-} from "../helpers/misc-utils";
-import {MintableERC721, VariableDebtToken, PTokenSApe, PToken} from "../types";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {VariableDebtToken, PTokenSApe, PToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -29,7 +23,7 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
-import {eContractid, ProtocolErrors} from "../helpers/types";
+import {ProtocolErrors} from "../helpers/types";
 import {parseEther} from "ethers/lib/utils";
 import {
   executeAcceptBidWithCredit,
@@ -39,7 +33,6 @@ import {BigNumber} from "ethers";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
-  let bakc: MintableERC721;
   let variableDebtApeCoin: VariableDebtToken;
   let pApeCoin: PToken;
   let pSApeCoin: PTokenSApe;
@@ -52,6 +45,7 @@ describe("APE Coin Staking Test", () => {
       ape,
       mayc,
       bayc,
+      bakc,
       users: [user1, depositor],
       protocolDataProvider,
       pool,
@@ -79,11 +73,6 @@ describe("APE Coin Staking Test", () => {
     await changePriceAndValidate(mayc, "50");
     await changePriceAndValidate(bayc, "50");
 
-    const db = getDb();
-    const address = db
-      .get(`${eContractid.BAKC}.${DRE.network.name}`)
-      .value()?.address;
-    bakc = await getMintableERC721(address);
     await waitForTx(await bakc["mint(uint256,address)"]("2", user1.address));
 
     await waitForTx(
@@ -182,6 +171,7 @@ describe("APE Coin Staking Test", () => {
       pool,
       nMAYC,
       weth,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -236,6 +226,7 @@ describe("APE Coin Staking Test", () => {
       pool,
       nMAYC,
       weth,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -295,6 +286,7 @@ describe("APE Coin Staking Test", () => {
       pool,
       nMAYC,
       weth,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -422,6 +414,7 @@ describe("APE Coin Staking Test", () => {
       pool,
       weth,
       nMAYC,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -1084,6 +1077,7 @@ describe("APE Coin Staking Test", () => {
       nMAYC,
       nBAYC,
       weth,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "2", user1, true);
@@ -1211,6 +1205,7 @@ describe("APE Coin Staking Test", () => {
       mayc,
       pool,
       weth,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -1615,6 +1610,7 @@ describe("APE Coin Staking Test", () => {
       nBAYC,
       pool,
       weth,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -1675,6 +1671,7 @@ describe("APE Coin Staking Test", () => {
       pool,
       weth,
       nBAYC,
+      bakc,
     } = await loadFixture(fixture);
     await supplyAndValidate(bayc, "1", user1, true);
 
@@ -1747,6 +1744,7 @@ describe("APE Coin Staking Test", () => {
       nMAYC,
       ape,
       pool,
+      bakc,
     } = await loadFixture(fixture);
     await supplyAndValidate(mayc, "1", user1, true);
 
@@ -1853,6 +1851,7 @@ describe("APE Coin Staking Test", () => {
       usdt,
       nMAYC,
       weth,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -1929,6 +1928,7 @@ describe("APE Coin Staking Test", () => {
       mayc,
       pool,
       nMAYC,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -1997,6 +1997,7 @@ describe("APE Coin Staking Test", () => {
       ape,
       mayc,
       pool,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -2035,9 +2036,9 @@ describe("APE Coin Staking Test", () => {
       pool
         .connect(user1.signer)
         .withdrawBAKC(mayc.address, [
-          {mainTokenId: 0, bakcTokenId: 0, amount: amount1, isUncommit: true},
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount1, isUncommit: false},
         ])
-    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_BAKC_OWNER);
   });
 
   it("TC-pool-ape-staking-35 test safeTransferFrom BAKC: original owner claim bakc reward (revert expected)", async () => {
@@ -2046,6 +2047,7 @@ describe("APE Coin Staking Test", () => {
       ape,
       mayc,
       pool,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -2086,7 +2088,7 @@ describe("APE Coin Staking Test", () => {
       pool
         .connect(user1.signer)
         .claimBAKC(mayc.address, [{mainTokenId: 0, bakcTokenId: 0}])
-    ).to.be.revertedWith("transfer caller is not owner nor approved");
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_BAKC_OWNER);
   });
 
   it("TC-pool-ape-staking-36 test safeTransferFrom BAKC: new owner withdraw all (revert expected)", async () => {
@@ -2095,6 +2097,7 @@ describe("APE Coin Staking Test", () => {
       ape,
       mayc,
       pool,
+      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -2196,6 +2199,7 @@ describe("APE Coin Staking Test", () => {
       mayc,
       pool,
       nMAYC,
+      bakc,
     } = await loadFixture(fixture);
     // 1. supply 1 mayc
     await supplyAndValidate(mayc, "1", user1, true);
@@ -2388,6 +2392,7 @@ describe("APE Coin Staking Test", () => {
       mayc,
       pool,
       nMAYC,
+      bakc,
     } = await loadFixture(fixture);
     // 1. supply 1 mayc
     await supplyAndValidate(mayc, "1", user1, true);
@@ -2447,7 +2452,7 @@ describe("APE Coin Staking Test", () => {
           isUncommit: false,
         },
       ])
-    ).to.be.revertedWith("ERC721: transfer caller is not owner nor approved");
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_BAKC_OWNER);
   });
 
   it("TC-pool-ape-staking-42 test withdrawBAKC success when withdraw amount == bakc staking amount, it will automatically claim and transfer the reward to the BACK owner", async () => {
@@ -2458,6 +2463,7 @@ describe("APE Coin Staking Test", () => {
       pool,
       nMAYC,
       apeCoinStaking,
+      bakc,
     } = await loadFixture(fixture);
     // 1. supply 1 mayc
     await supplyAndValidate(mayc, "1", user1, true);
