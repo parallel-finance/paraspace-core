@@ -1,7 +1,15 @@
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {eEthereumNetwork, ERC20TokenContractId, IParaSpaceConfiguration} from "../helpers/types";
+import {
+  eEthereumNetwork,
+  ERC20TokenContractId,
+  IParaSpaceConfiguration,
+} from "../helpers/types";
 import {MocksConfig} from "./mocks";
-import {MainnetOracleConfig, MoonbeamOracleConfig, TestnetOracleConfig} from "./oracle";
+import {
+  MainnetOracleConfig,
+  MoonbeamOracleConfig,
+  TestnetOracleConfig,
+} from "./oracle";
 import {
   strategyDAI,
   strategyUSDC,
@@ -127,7 +135,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   Tokens: {
     WGLMR: "0xAcc15dC74880C9944775448304B263D191c6077F",
     xcDOT: "0xFfFFfFff1FcaCBd218EDc0EbA20Fc2308C778080",
-    USDC: "0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b"
+    USDC: "0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b",
   },
   YogaLabs: {},
   Uniswap: {},
@@ -135,15 +143,15 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   Chainlink: {
     WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
     xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
-    USDC: "0xA122591F60115D63421f66F752EF9f6e0bc73abC"
+    USDC: "0xA122591F60115D63421f66F752EF9f6e0bc73abC",
   },
   // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
   ReservesConfig: {
     xcDOT: strategyXCDOT,
     WGLMR: strategyWGLMR,
-    USDC: strategyUSDC
+    USDC: strategyUSDC,
   },
-  Oracle: MoonbeamOracleConfig
+  Oracle: MoonbeamOracleConfig,
 };
 
 export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {

@@ -12,7 +12,8 @@ import {
   rateStrategyWGLMR,
 } from "./rateStrategies";
 import {
-  auctionStrategyAzuki, auctionStrategyBAKC,
+  auctionStrategyAzuki,
+  auctionStrategyBAKC,
   auctionStrategyBAYC,
   auctionStrategyCloneX,
   auctionStrategyDoodles,
