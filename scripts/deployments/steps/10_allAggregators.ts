@@ -1,4 +1,3 @@
-import {BigNumber, constants} from "ethers";
 import {
   deployNFTFloorPriceOracle,
   deployParaSpaceOracle,
@@ -14,11 +13,7 @@ import {
 } from "../../../helpers/contracts-getters";
 import {getEthersSignersAddresses} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
-import {
-  getParaSpaceConfig,
-  isMoonbeam,
-  waitForTx,
-} from "../../../helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 import {
   deployAllAggregators,
   getPairsTokenAggregators,
@@ -54,6 +49,12 @@ export const deployNftOracle = async (verify = false) => {
       GLOBAL_OVERRIDES
     )
   );
+  await waitForTx(
+    await nftFloorOracle.setConfig(
+      oracleConfig.ExpirationPeriod,
+      oracleConfig.DeviationRate
+    )
+  );
   return nftFloorOracle;
 };
 
@@ -62,7 +63,9 @@ export const step_10 = async (verify = false) => {
     const allTokens = await getAllTokens();
     const addressesProvider = await getPoolAddressesProvider();
     const fallbackOracle = await getPriceOracle();
-    const chainlinkConfig = getParaSpaceConfig().Chainlink;
+    const paraSpaceConfig = getParaSpaceConfig();
+    const oracleConfig = paraSpaceConfig.Oracle;
+    const chainlinkConfig = paraSpaceConfig.Chainlink;
 
     const nftFloorOracle = await deployNftOracle(verify);
 
@@ -84,10 +87,8 @@ export const step_10 = async (verify = false) => {
         tokens,
         aggregators,
         fallbackOracle.address,
-        isMoonbeam() ? allTokens.USDC.address : allTokens.WETH.address,
-        isMoonbeam()
-          ? BigNumber.from("100000000").toString()
-          : constants.WeiPerEther.toString(),
+        allTokens[oracleConfig.BaseCurrency].address,
+        oracleConfig.BaseCurrencyUnit,
       ],
       verify
     );
@@ -107,21 +108,13 @@ export const step_10 = async (verify = false) => {
       GLOBAL_OVERRIDES
     );
 
-    if (!isMoonbeam()) {
-      await deployUiPoolDataProvider(
-        (chainlinkConfig.WETH ||
-          allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
-        (chainlinkConfig.WETH ||
-          allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
-        verify
-      );
-    } else {
-      await deployUiPoolDataProvider(
-        chainlinkConfig.USDC!,
-        chainlinkConfig.USDC!,
-        verify
-      );
-    }
+    await deployUiPoolDataProvider(
+      chainlinkConfig[oracleConfig.BaseCurrency] ||
+        allTokenAddresses[ERC20TokenContractId.USDC],
+      chainlinkConfig[oracleConfig.BaseCurrency] ||
+        allTokenAddresses[ERC20TokenContractId.USDC],
+      verify
+    );
     await deployWalletBalanceProvider(verify);
   } catch (error) {
     console.error(error);

@@ -23,11 +23,11 @@ export const step_09 = async (verify = false) => {
     const allTokens = await getAllTokens();
     const paraSpaceConfig = getParaSpaceConfig();
 
-    if (isMainnet()) {
+    if (isMainnet() || isMoonbeam()) {
       insertContractAddressInDb(eContractid.PriceOracle, ZERO_ADDRESS, false);
     }
 
-    if (isLocalTestnet() || isPublicTestnet() || isMoonbeam()) {
+    if (isLocalTestnet() || isPublicTestnet()) {
       const fallbackOracle = await deployPriceOracle(verify);
       await waitForTx(
         await fallbackOracle.setEthUsdPrice(

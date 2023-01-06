@@ -591,9 +591,11 @@ export interface IUniswapConfig {
 }
 
 export interface IOracleConfig {
-  //blocks
+  // ParaSpaceOracle
+  BaseCurrency: ERC20TokenContractId;
+  BaseCurrencyUnit: string;
+  // NFTFloorOracle
   ExpirationPeriod: number;
-  //percent
   DeviationRate: number;
   Nodes: tEthereumAddress[];
 }
@@ -609,6 +611,7 @@ export interface IRate {
 }
 
 export interface ICommonConfiguration {
+  WrappedNativeTokenId: ERC20TokenContractId;
   MarketId: string;
   ParaSpaceTeam: tEthereumAddress;
   PTokenNamePrefix: string;

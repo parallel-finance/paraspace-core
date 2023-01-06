@@ -8,16 +8,12 @@ import {
   getPoolProxy,
   getPoolAddressesProvider,
 } from "../../../helpers/contracts-getters";
-import {getParaSpaceConfig, isMoonbeam} from "../../../helpers/misc-utils";
-import {ERC20TokenContractId} from "../../../helpers/types";
+import {getParaSpaceConfig} from "../../../helpers/misc-utils";
 
 export const step_13 = async (verify = false) => {
   const paraSpaceConfig = getParaSpaceConfig();
-  const wrappedNativeTokenId = isMoonbeam()
-    ? ERC20TokenContractId.WGLMR
-    : ERC20TokenContractId.WETH;
   try {
-    if (!paraSpaceConfig.ReservesConfig[wrappedNativeTokenId]) {
+    if (!paraSpaceConfig.ReservesConfig[paraSpaceConfig.WrappedNativeTokenId]) {
       return;
     }
 
@@ -27,7 +23,7 @@ export const step_13 = async (verify = false) => {
     const poolProxy = await getPoolProxy(poolAddress);
 
     const wethGateway = await deployWETHGateway(
-      allTokens[wrappedNativeTokenId].address,
+      allTokens[paraSpaceConfig.WrappedNativeTokenId].address,
       poolProxy.address,
       verify
     );

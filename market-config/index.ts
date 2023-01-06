@@ -1,7 +1,7 @@
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
+import {eEthereumNetwork, ERC20TokenContractId, IParaSpaceConfiguration} from "../helpers/types";
 import {MocksConfig} from "./mocks";
-import {MainnetOracleConfig, TestnetOracleConfig} from "./oracle";
+import {MainnetOracleConfig, MoonbeamOracleConfig, TestnetOracleConfig} from "./oracle";
 import {
   strategyDAI,
   strategyUSDC,
@@ -32,6 +32,7 @@ import {
 
 export const CommonConfig: Pick<
   IParaSpaceConfiguration,
+  | "WrappedNativeTokenId"
   | "MarketId"
   | "PTokenNamePrefix"
   | "VariableDebtTokenNamePrefix"
@@ -49,6 +50,7 @@ export const CommonConfig: Pick<
   | "Mocks"
   | "Oracle"
 > = {
+  WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
   PTokenNamePrefix: "ParaSpace Derivative Token",
   VariableDebtTokenNamePrefix: "ParaSpace Variable Debt Token",
@@ -114,6 +116,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
 export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   IncentivesController: ZERO_ADDRESS,
@@ -140,6 +143,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
     WGLMR: strategyWGLMR,
     USDC: strategyUSDC
   },
+  Oracle: MoonbeamOracleConfig
 };
 
 export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {

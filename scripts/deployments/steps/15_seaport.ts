@@ -15,24 +15,17 @@ import {
   OPENSEA_SEAPORT_ID,
   PARASPACE_SEAPORT_ID,
 } from "../../../helpers/constants";
-import {
-  getParaSpaceConfig,
-  isMoonbeam,
-  waitForTx,
-} from "../../../helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 import {
   createZone,
   insertContractAddressInDb,
   createConduit,
 } from "../../../helpers/contracts-helpers";
-import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
+import {eContractid} from "../../../helpers/types";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 
 export const step_15 = async (verify = false) => {
   try {
-    const wrappedNativeTokenId = isMoonbeam()
-      ? ERC20TokenContractId.WGLMR
-      : ERC20TokenContractId.WETH;
     const deployer = await getFirstSigner();
     const deployerAddress = await deployer.getAddress();
     const paraSpaceConfig = getParaSpaceConfig();
@@ -97,7 +90,7 @@ export const step_15 = async (verify = false) => {
 
     await waitForTx(
       await addressesProvider.setWETH(
-        allTokens[wrappedNativeTokenId].address,
+        allTokens[paraSpaceConfig.WrappedNativeTokenId].address,
         GLOBAL_OVERRIDES
       )
     );
