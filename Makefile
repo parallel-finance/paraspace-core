@@ -414,6 +414,10 @@ upgrade-pool:
 upgrade-configurator:
 	make TASK_NAME=upgrade:configurator run-task
 
+.PHONY: upgrade-auto-compound-ape
+upgrade-auto-compound-ape:
+	make TASK_NAME=upgrade:auto-compound-ape run-task
+
 .PHONY: upgrade-ntoken
 upgrade-ntoken:
 	make TASK_NAME=upgrade:ntoken run-task
