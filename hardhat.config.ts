@@ -146,7 +146,7 @@ const hardhatConfig: HardhatUserConfig = {
     moonbeam: {
       chainId: CHAINS_ID[eEthereumNetwork.moonbeam],
       url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
-      accounts: DEPLOYER
+      accounts: DEPLOYER,
     },
     hardhat: {
       hardfork: HARDFORK,
