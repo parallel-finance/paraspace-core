@@ -8,7 +8,7 @@ import {
 } from "../../helpers/contracts-getters";
 
 import dotenv from "dotenv";
-import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 
 dotenv.config();
 
@@ -66,12 +66,20 @@ export const upgradeDebtToken = async (verify = false) => {
       implementation: newImpl,
       params: "0x10",
     };
-    await waitForTx(
-      await poolConfiguratorProxy.updateVariableDebtToken(
-        updateInput,
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (DRY_RUN) {
+      const encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
+        "updateVariableDebtToken",
+        [updateInput]
+      );
+      console.log(`hex: ${encodedData}`);
+    } else {
+      await waitForTx(
+        await poolConfiguratorProxy.updateVariableDebtToken(
+          updateInput,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
   }
 
   console.log("upgraded all debt token implementation.\n");

@@ -3,7 +3,7 @@ import {
   getAutoCompoundApe,
   getInitializableAdminUpgradeabilityProxy,
 } from "../../helpers/contracts-getters";
-import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
 export const upgradeAutoCompoundApe = async (verify = false) => {
@@ -16,8 +16,16 @@ export const upgradeAutoCompoundApe = async (verify = false) => {
   console.timeEnd("deploy AutocompoundApe");
 
   console.time("upgrade AutocompoundApe");
-  await waitForTx(
-    await cAPEProxy.upgradeTo(cAPEImpl.address, GLOBAL_OVERRIDES)
-  );
+  if (DRY_RUN) {
+    const encodedData = cAPEProxy.interface.encodeFunctionData("upgradeTo", [
+      cAPEImpl.address,
+    ]);
+
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await cAPEProxy.upgradeTo(cAPEImpl.address, GLOBAL_OVERRIDES)
+    );
+  }
   console.timeEnd("upgrade AutocompoundApe");
 };

@@ -22,7 +22,7 @@ import {
   insertContractAddressInDb,
 } from "./contracts-helpers";
 import {BigNumber, BigNumberish} from "ethers";
-import {GLOBAL_OVERRIDES} from "./hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {
   deployReserveInterestRateStrategy,
   deployDelegationAwarePTokenImpl,
@@ -496,14 +496,23 @@ export const initReservesByHelper = async (
       inputs[i].variableDebtTokenImpl = variableDebtTokenToUse;
     }
 
-    const tx = await waitForTx(
-      await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
-    );
-
     console.log(
       `  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(", ")}`
     );
-    console.log("    * gasUsed", tx.gasUsed.toString());
+
+    if (DRY_RUN) {
+      const encodedData = configurator.interface.encodeFunctionData(
+        "initReserves",
+        [inputs]
+      );
+      console.log(`hex: ${encodedData}`);
+    } else {
+      const tx = await waitForTx(
+        await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
+      );
+
+      console.log("    * gasUsed", tx.gasUsed.toString());
+    }
   }
 
   return gasUsage; // Deprecated

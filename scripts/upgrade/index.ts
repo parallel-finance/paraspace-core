@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {upgradePToken} from "./ptoken";
 import {upgradeNToken} from "./ntoken";
-import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {IParaProxy} from "../../types";
 
 dotenv.config();
@@ -76,8 +76,8 @@ export const upgradePool = async (verify = false) => {
     coreProxyImplementation,
     marketplaceProxyImplementation,
     parametersProxyImplementation,
-    apeStakingProxyImplementation,
     interfacesProxyImplementation,
+    apeStakingProxyImplementation,
   ] = implementations.map(([implAddress, newSelectors, oldSelectors]) => {
     const toAdd = newSelectors.filter((s) => !oldSelectors.includes(s));
     const toReplace = newSelectors.filter((s) => oldSelectors.includes(s));
@@ -103,59 +103,107 @@ export const upgradePool = async (verify = false) => {
       });
     return proxyImplementation;
   });
+  console.log("coreProxyImplementation:", coreProxyImplementation);
+  console.log("parametersProxyImplementation:", parametersProxyImplementation);
+  console.log(
+    "marketplaceProxyImplementation:",
+    marketplaceProxyImplementation
+  );
+  console.log("apeStakingProxyImplementation:", apeStakingProxyImplementation);
+  console.log("interfacesProxyImplementation:", interfacesProxyImplementation);
 
   console.time("upgrade PoolCore");
-  await waitForTx(
-    await addressesProvider.updatePoolImpl(
-      coreProxyImplementation,
-      ZERO_ADDRESS,
-      "0x",
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (DRY_RUN && coreProxyImplementation) {
+    const encodedData = addressesProvider.interface.encodeFunctionData(
+      "updatePoolImpl",
+      [coreProxyImplementation, ZERO_ADDRESS, "0x"]
+    );
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        coreProxyImplementation,
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
+  }
   console.timeEnd("upgrade PoolCore");
 
   console.time("upgrade PoolParameters");
-  await waitForTx(
-    await addressesProvider.updatePoolImpl(
-      parametersProxyImplementation,
-      ZERO_ADDRESS,
-      "0x",
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (DRY_RUN && parametersProxyImplementation) {
+    const encodedData = addressesProvider.interface.encodeFunctionData(
+      "updatePoolImpl",
+      [parametersProxyImplementation, ZERO_ADDRESS, "0x"]
+    );
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        parametersProxyImplementation,
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
+  }
   console.timeEnd("upgrade PoolParameters");
 
   console.time("upgrade PoolMarketplace");
-  await waitForTx(
-    await addressesProvider.updatePoolImpl(
-      marketplaceProxyImplementation,
-      ZERO_ADDRESS,
-      "0x",
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (DRY_RUN && marketplaceProxyImplementation) {
+    const encodedData = addressesProvider.interface.encodeFunctionData(
+      "updatePoolImpl",
+      [marketplaceProxyImplementation, ZERO_ADDRESS, "0x"]
+    );
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        marketplaceProxyImplementation,
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
+  }
   console.timeEnd("upgrade PoolMarketplace");
 
   console.time("upgrade PoolApeStaking");
-  await waitForTx(
-    await addressesProvider.updatePoolImpl(
-      apeStakingProxyImplementation,
-      ZERO_ADDRESS,
-      "0x",
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (DRY_RUN && apeStakingProxyImplementation) {
+    const encodedData = addressesProvider.interface.encodeFunctionData(
+      "updatePoolImpl",
+      [apeStakingProxyImplementation, ZERO_ADDRESS, "0x"]
+    );
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        apeStakingProxyImplementation,
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
+  }
   console.timeEnd("upgrade PoolApeStaking");
 
   console.time("upgrade PoolParaProxyInterfaces");
-  await waitForTx(
-    await addressesProvider.updatePoolImpl(
-      interfacesProxyImplementation,
-      ZERO_ADDRESS,
-      "0x",
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (DRY_RUN && interfacesProxyImplementation) {
+    const encodedData = addressesProvider.interface.encodeFunctionData(
+      "updatePoolImpl",
+      [interfacesProxyImplementation, ZERO_ADDRESS, "0x"]
+    );
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        interfacesProxyImplementation,
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
+  }
   console.timeEnd("upgrade PoolParaProxyInterfaces");
 };
