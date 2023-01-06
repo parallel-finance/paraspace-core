@@ -442,7 +442,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await waitForTx(await configurator.setReserveActive(weth.address, false));
 
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
-    
+
     await expect(
       pool
         .connect(user1.signer)
