@@ -7,7 +7,7 @@ import {
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
 import {getParaSpaceAdmins} from "../../helpers/contracts-helpers";
-import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {
   configureReservesByHelper,
   initReservesByHelper,
@@ -40,13 +40,21 @@ const releaseUniV3 = async (verify = false) => {
       aggregator: wrapper.address,
     },
   ];
-  await waitForTx(
-    await paraSpaceOracle.setAssetSources(
-      assets.map((x) => x.address),
-      assets.map((x) => x.aggregator),
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (DRY_RUN) {
+    const encodedData = paraSpaceOracle.interface.encodeFunctionData(
+      "setAssetSources",
+      [assets.map((x) => x.address), assets.map((x) => x.aggregator)]
+    );
+    console.log(`hex: ${encodedData}`);
+  } else {
+    await waitForTx(
+      await paraSpaceOracle.setAssetSources(
+        assets.map((x) => x.address),
+        assets.map((x) => x.aggregator),
+        GLOBAL_OVERRIDES
+      )
+    );
+  }
   console.timeEnd("registering aggregators...");
 
   const reservesParams = paraSpaceConfig.ReservesConfig;
