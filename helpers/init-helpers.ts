@@ -605,12 +605,20 @@ export const configureReservesByHelper = async (
   }
   if (tokens.length) {
     // Add reservesSetupHelper as temporal admin
-    await waitForTx(
-      await aclManager.addPoolAdmin(
-        reservesSetupHelper.address,
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (DRY_RUN) {
+      const encodedData = aclManager.interface.encodeFunctionData(
+        "addPoolAdmin",
+        [reservesSetupHelper.address]
+      );
+      console.log(`hex: ${encodedData}`);
+    } else {
+      await waitForTx(
+        await aclManager.addPoolAdmin(
+          reservesSetupHelper.address,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
 
     // Deploy init per chunks
     const enableChunks = 20;
@@ -624,21 +632,37 @@ export const configureReservesByHelper = async (
       chunkIndex < chunkedInputParams.length;
       chunkIndex++
     ) {
-      await waitForTx(
-        await reservesSetupHelper.configureReserves(
-          poolConfiguratorAddress,
-          chunkedInputParams[chunkIndex],
-          GLOBAL_OVERRIDES
-        )
-      );
+      if (DRY_RUN) {
+        const encodedData = reservesSetupHelper.interface.encodeFunctionData(
+          "configureReserves",
+          [poolConfiguratorAddress, chunkedInputParams[chunkIndex]]
+        );
+        console.log(`hex: ${encodedData}`);
+      } else {
+        await waitForTx(
+          await reservesSetupHelper.configureReserves(
+            poolConfiguratorAddress,
+            chunkedInputParams[chunkIndex],
+            GLOBAL_OVERRIDES
+          )
+        );
+      }
       console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(", ")}`);
     }
     // Remove reservesSetupHelper as admin
-    await waitForTx(
-      await aclManager.removePoolAdmin(
-        reservesSetupHelper.address,
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (DRY_RUN) {
+      const encodedData = aclManager.interface.encodeFunctionData(
+        "removePoolAdmin",
+        [reservesSetupHelper.address]
+      );
+      console.log(`hex: ${encodedData}`);
+    } else {
+      await waitForTx(
+        await aclManager.removePoolAdmin(
+          reservesSetupHelper.address,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
   }
 };
