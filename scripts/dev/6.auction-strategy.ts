@@ -4,7 +4,7 @@ import {deployReserveAuctionStrategy} from "../../helpers/contracts-deployments"
 import {exp, ln, div, mul} from "@prb/math";
 import {fromBn} from "evm-bn";
 
-const deployAuctionStrategy = async () => {
+const deployAuctionStrategy = async (verify = false) => {
   console.time("deploy:new-auction-strategy");
   const auctionStrategy = {
     name: "auctionStrategyUniswapV3",
@@ -58,7 +58,7 @@ const deployAuctionStrategy = async () => {
       auctionStrategy.stepExp.toString(),
       auctionStrategy.tickLength.toString(),
     ],
-    false
+    verify
   );
   console.log("strategy:", newStrategy.address);
   console.timeEnd("deploy:new-auction-strategy");
