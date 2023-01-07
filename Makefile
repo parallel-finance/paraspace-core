@@ -406,6 +406,10 @@ transfer-tokens:
 market-info:
 	make TASK_NAME=market-info run-task
 
+.PHONY: account-data
+account-data:
+	make TASK_NAME=account-data run-task
+
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
