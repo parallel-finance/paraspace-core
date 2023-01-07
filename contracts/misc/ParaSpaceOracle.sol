@@ -9,6 +9,7 @@ import {IAtomicPriceAggregator} from "../interfaces/IAtomicPriceAggregator.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IPriceOracleGetter} from "../interfaces/IPriceOracleGetter.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
+import {Helpers} from "./Helpers.sol";
 
 /**
  * @title ParaSpaceOracle
@@ -194,7 +195,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         returns (uint256[] memory)
     {
         uint256[] memory prices = new uint256[](assets.length);
-        for (uint256 i = 0; i < assets.length; i++) {
+        for (uint256 i; i < assets.length; Helpers.unchecked_inc(i)) {
             prices[i] = getAssetPrice(assets[i]);
         }
         return prices;

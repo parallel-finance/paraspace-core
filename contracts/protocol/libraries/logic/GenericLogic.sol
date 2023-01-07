@@ -16,6 +16,7 @@ import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {Helpers} from "../../../misc/Helpers.sol";
 
 /**
  * @title GenericLogic library
@@ -463,7 +464,7 @@ library GenericLogic {
         uint256 totalBalance = INToken(vars.xTokenAddress).balanceOf(
             params.user
         );
-        for (uint256 index = 0; index < totalBalance; index++) {
+        for (uint256 index = 0; index < totalBalance; Helpers.unchecked_inc(index)) {
             uint256 tokenId = IERC721Enumerable(vars.xTokenAddress)
                 .tokenOfOwnerByIndex(params.user, index);
             if (

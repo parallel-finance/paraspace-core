@@ -543,12 +543,15 @@ library ValidationLogic {
 
         ) = params.liquidationAssetReserveCache.reserveConfiguration.getFlags();
 
+        require(vars.collateralReserveActive, Errors.RESERVE_INACTIVE);
+        require(vars.principalReserveActive, Errors.RESERVE_INACTIVE);
+        
         require(
-            vars.collateralReserveActive && vars.principalReserveActive,
-            Errors.RESERVE_INACTIVE
+            !vars.collateralReservePaused,
+            Errors.RESERVE_PAUSED
         );
         require(
-            !vars.collateralReservePaused && !vars.principalReservePaused,
+            !vars.principalReservePaused,
             Errors.RESERVE_PAUSED
         );
 
