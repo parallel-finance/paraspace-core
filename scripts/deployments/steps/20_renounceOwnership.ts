@@ -47,6 +47,7 @@ export const step_20 = async (
     console.log("new paraSpaceAdmin: ", paraSpaceAdminAddress);
     console.log("new gatewayAdmin: ", gatewayAdminAddress);
     console.log("new riskAdmin: ", riskAdminAddress);
+    console.log();
     if (deployerAddress === paraSpaceAdminAddress) {
       return;
     }
@@ -61,17 +62,23 @@ export const step_20 = async (
           "transferOwnership",
           [paraSpaceAdminAddress]
         );
-      console.log(`hex: ${encodedData1}`);
+      console.log(
+        ` contract: ${addressesProviderRegistry.address}, hex: ${encodedData1}`
+      );
       const encodedData2 = addressesProvider.interface.encodeFunctionData(
         "setACLAdmin",
         [paraSpaceAdminAddress]
       );
-      console.log(`hex: ${encodedData2}`);
+      console.log(
+        ` contract: ${addressesProvider.address}, hex: ${encodedData2}`
+      );
       const encodedData3 = addressesProvider.interface.encodeFunctionData(
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      console.log(`hex: ${encodedData3}`);
+      console.log(
+        ` contract: ${addressesProvider.address}, hex: ${encodedData3}`
+      );
     } else {
       await waitForTx(
         await addressesProviderRegistry.transferOwnership(
@@ -93,6 +100,7 @@ export const step_20 = async (
       );
     }
     console.timeEnd("transferring addressesProvider ownership...");
+    console.log();
 
     ////////////////////////////////////////////////////////////////////////////////
     // ACLManager
@@ -103,50 +111,50 @@ export const step_20 = async (
         "addPoolAdmin",
         [paraSpaceAdminAddress]
       );
-      console.log(`hex: ${encodedData1}`);
+      console.log(` contract: ${aclManager.address}, hex: ${encodedData1}`);
       const encodedData2 = aclManager.interface.encodeFunctionData(
         "removePoolAdmin",
         [deployerAddress]
       );
-      console.log(`hex: ${encodedData2}`);
+      console.log(` contract: ${aclManager.address}, hex: ${encodedData2}`);
       if (!(await aclManager.isAssetListingAdmin(paraSpaceAdminAddress))) {
         const encodedData3 = aclManager.interface.encodeFunctionData(
           "addAssetListingAdmin",
           [paraSpaceAdminAddress]
         );
-        console.log(`hex: ${encodedData3}`);
+        console.log(` contract: ${aclManager.address}, hex: ${encodedData3}`);
       }
       if (await aclManager.isAssetListingAdmin(deployerAddress)) {
         const encodedData4 = aclManager.interface.encodeFunctionData(
           "removeAssetListingAdmin",
           [deployerAddress]
         );
-        console.log(`hex: ${encodedData4}`);
+        console.log(` contract: ${aclManager.address}, hex: ${encodedData4}`);
       }
       if (!(await aclManager.isRiskAdmin(riskAdminAddress))) {
         const encodedData5 = aclManager.interface.encodeFunctionData(
           "addRiskAdmin",
           [riskAdminAddress]
         );
-        console.log(`hex: ${encodedData5}`);
+        console.log(` contract: ${aclManager.address}, hex: ${encodedData5}`);
       }
       if (await aclManager.isRiskAdmin(deployerAddress)) {
         const encodedData6 = aclManager.interface.encodeFunctionData(
           "removeRiskAdmin",
           [deployerAddress]
         );
-        console.log(`hex: ${encodedData6}`);
+        console.log(` contract: ${aclManager.address}, hex: ${encodedData6}`);
       }
       const encodedData7 = aclManager.interface.encodeFunctionData(
         "grantRole",
         [await aclManager.DEFAULT_ADMIN_ROLE(), paraSpaceAdminAddress]
       );
-      console.log(`hex: ${encodedData7}`);
+      console.log(` contract: ${aclManager.address}, hex: ${encodedData7}`);
       const encodedData8 = aclManager.interface.encodeFunctionData(
         "revokeRole",
         [await aclManager.DEFAULT_ADMIN_ROLE(), deployerAddress]
       );
-      console.log(`hex: ${encodedData8}`);
+      console.log(` contract: ${aclManager.address}, hex: ${encodedData8}`);
     } else {
       await waitForTx(
         await aclManager.addPoolAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
@@ -196,6 +204,7 @@ export const step_20 = async (
       );
     }
     console.timeEnd("transferring aclManager ownership...");
+    console.log();
 
     ////////////////////////////////////////////////////////////////////////////////
     // ReservesSetupHelper
@@ -206,7 +215,9 @@ export const step_20 = async (
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      console.log(`hex: ${encodedData}`);
+      console.log(
+        ` contract: ${reservesSetupHelper.address}, hex: ${encodedData}`
+      );
     } else {
       await waitForTx(
         await reservesSetupHelper.transferOwnership(
@@ -216,6 +227,7 @@ export const step_20 = async (
       );
     }
     console.timeEnd("transferring reservesSetupHelper ownership...");
+    console.log();
 
     ////////////////////////////////////////////////////////////////////////////////
     // Conduit & Zone Controller
@@ -226,12 +238,14 @@ export const step_20 = async (
         "transferOwnership",
         [conduit.address, paraSpaceAdminAddress]
       );
-      console.log(`hex: ${encodedData1}`);
+      console.log(
+        ` contract: ${conduitController.address}, hex: ${encodedData1}`
+      );
       const encodedData2 = zoneController.interface.encodeFunctionData(
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      console.log(`hex: ${encodedData2}`);
+      console.log(` contract: ${zoneController.address}, hex: ${encodedData2}`);
     } else {
       await waitForTx(
         await conduitController.transferOwnership(
@@ -248,6 +262,7 @@ export const step_20 = async (
       );
     }
     console.timeEnd("transferring conduit & zone Controller ownership...");
+    console.log();
 
     ////////////////////////////////////////////////////////////////////////////////
     // WETHGateway
@@ -260,7 +275,9 @@ export const step_20 = async (
           "transferOwnership",
           [gatewayAdminAddress]
         );
-        console.log(`hex: ${encodedData}`);
+        console.log(
+          ` contract: ${wethGatewayProxy.address}, hex: ${encodedData}`
+        );
       } else {
         await waitForTx(
           await wethGatewayProxy.transferOwnership(
@@ -270,6 +287,7 @@ export const step_20 = async (
         );
       }
       console.timeEnd("transferring wethGateway ownership...");
+      console.log();
     }
     ////////////////////////////////////////////////////////////////////////////////
     // WPunksGateway
@@ -282,7 +300,9 @@ export const step_20 = async (
           "transferOwnership",
           [gatewayAdminAddress]
         );
-        console.log(`hex: ${encodedData}`);
+        console.log(
+          ` contract: ${punkGatewayProxy.address}, hex: ${encodedData}`
+        );
       } else {
         await waitForTx(
           await punkGatewayProxy.transferOwnership(
@@ -308,13 +328,13 @@ export const step_20 = async (
           "changeAdmin",
           [paraSpaceAdminAddress]
         );
-        console.log(`hex: ${encodedData1}`);
+        console.log(` contract: ${cApeProxy.address}, hex: ${encodedData1}`);
         if (gatewayAdminAddress !== paraSpaceAdminAddress) {
           const encodedData2 = cApe.interface.encodeFunctionData(
             "transferOwnership",
             [gatewayAdminAddress]
           );
-          console.log(`hex: ${encodedData2}`);
+          console.log(` contract: ${cApe.address}, hex: ${encodedData2}`);
         }
       } else {
         await waitForTx(
