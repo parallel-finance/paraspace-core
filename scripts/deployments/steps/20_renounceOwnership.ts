@@ -43,7 +43,6 @@ export const step_20 = async (
     const conduit = await getConduit();
     const zoneController = await getPausableZoneController();
     const aclManager = await getACLManager();
-    const nftFloorOracle = await getNFTFloorOracle();
 
     console.log("new paraSpaceAdmin: ", paraSpaceAdminAddress);
     console.log("new gatewayAdmin: ", gatewayAdminAddress);
@@ -335,6 +334,7 @@ export const step_20 = async (
     ////////////////////////////////////////////////////////////////////////////////
     if (await getContractAddressInDb(eContractid.NFTFloorOracle)) {
       console.time("transferring nftFloorOracle ownership...");
+      const nftFloorOracle = await getNFTFloorOracle();
       if (DRY_RUN) {
         const encodedData1 = nftFloorOracle.interface.encodeFunctionData(
           "grantRole",

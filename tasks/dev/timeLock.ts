@@ -16,6 +16,19 @@ type Action = [
   PromiseOrValue<boolean>
 ];
 
+task("next-execution-time", "Next valid execution time").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const timeLock = await getTimeLockExecutor();
+    const delay = await timeLock.getDelay();
+    const blockNumber = await DRE.ethers.provider.getBlockNumber();
+    const timestamp = (await DRE.ethers.provider.getBlock(blockNumber))
+      .timestamp;
+    // add 600s for building safe tx
+    console.log("executionTime:", delay.add(timestamp).add(600).toString());
+  }
+);
+
 task("queue-tx", "Queue transaction to be executed later")
   .addPositionalParam("target", "target contract address to interact with")
   .addPositionalParam("data", "hex encoded data")
@@ -33,7 +46,7 @@ task("queue-tx", "Queue transaction to be executed later")
     console.log("data:", data);
     console.log("executionTime:", executionTime);
     const action: Action = [target, 0, "", data, executionTime, false];
-    console.log("action:", action);
+    console.log("action:", action.toString());
     const actionHash = solidityKeccak256(
       ["string"],
       [
@@ -72,7 +85,7 @@ task("execute-tx", "Execute transaction which has been queued earlier")
     console.log("data:", data);
     console.log("executionTime:", executionTime);
     const action: Action = [target, 0, "", data, executionTime, false];
-    console.log("action:", action);
+    console.log("action:", action.toString());
     const actionHash = solidityKeccak256(
       ["string"],
       [
@@ -111,7 +124,7 @@ task("cancel-tx", "Cancel queued transaction")
     console.log("data:", data);
     console.log("executionTime:", executionTime);
     const action: Action = [target, 0, "", data, executionTime, false];
-    console.log("action:", action);
+    console.log("action:", action.toString());
     const actionHash = solidityKeccak256(
       ["string"],
       [
