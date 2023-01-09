@@ -3,7 +3,6 @@ import {
   getAutoCompoundApe,
   getConduit,
   getConduitController,
-  getFirstSigner,
   getInitializableAdminUpgradeabilityProxy,
   getNFTFloorOracle,
   getPausableZoneController,
@@ -32,23 +31,23 @@ export const step_20 = async (
 ) => {
   const {paraSpaceAdminAddress, gatewayAdminAddress, riskAdminAddress} =
     admins || (await getParaSpaceAdmins());
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
 
   try {
     const addressesProviderRegistry = await getPoolAddressesProviderRegistry();
     const addressesProvider = await getPoolAddressesProvider();
+    const oldParaSpaceAdminAddress = await addressesProvider.owner();
     const reservesSetupHelper = await getReservesSetupHelper();
     const conduitController = await getConduitController();
     const conduit = await getConduit();
     const zoneController = await getPausableZoneController();
     const aclManager = await getACLManager();
 
-    console.log("new paraSpaceAdmin: ", paraSpaceAdminAddress);
-    console.log("new gatewayAdmin: ", gatewayAdminAddress);
-    console.log("new riskAdmin: ", riskAdminAddress);
+    console.log("new paraSpaceAdmin:", paraSpaceAdminAddress);
+    console.log("old paraSpaceAdmin:", oldParaSpaceAdminAddress);
+    console.log("new gatewayAdmin:", gatewayAdminAddress);
+    console.log("new riskAdmin:", riskAdminAddress);
     console.log();
-    if (deployerAddress === paraSpaceAdminAddress) {
+    if (oldParaSpaceAdminAddress === paraSpaceAdminAddress) {
       return;
     }
 
@@ -114,7 +113,7 @@ export const step_20 = async (
       console.log(` contract: ${aclManager.address}, hex: ${encodedData1}`);
       const encodedData2 = aclManager.interface.encodeFunctionData(
         "removePoolAdmin",
-        [deployerAddress]
+        [oldParaSpaceAdminAddress]
       );
       console.log(` contract: ${aclManager.address}, hex: ${encodedData2}`);
       if (!(await aclManager.isAssetListingAdmin(paraSpaceAdminAddress))) {
@@ -124,10 +123,10 @@ export const step_20 = async (
         );
         console.log(` contract: ${aclManager.address}, hex: ${encodedData3}`);
       }
-      if (await aclManager.isAssetListingAdmin(deployerAddress)) {
+      if (await aclManager.isAssetListingAdmin(oldParaSpaceAdminAddress)) {
         const encodedData4 = aclManager.interface.encodeFunctionData(
           "removeAssetListingAdmin",
-          [deployerAddress]
+          [oldParaSpaceAdminAddress]
         );
         console.log(` contract: ${aclManager.address}, hex: ${encodedData4}`);
       }
@@ -138,10 +137,10 @@ export const step_20 = async (
         );
         console.log(` contract: ${aclManager.address}, hex: ${encodedData5}`);
       }
-      if (await aclManager.isRiskAdmin(deployerAddress)) {
+      if (await aclManager.isRiskAdmin(oldParaSpaceAdminAddress)) {
         const encodedData6 = aclManager.interface.encodeFunctionData(
           "removeRiskAdmin",
-          [deployerAddress]
+          [oldParaSpaceAdminAddress]
         );
         console.log(` contract: ${aclManager.address}, hex: ${encodedData6}`);
       }
@@ -152,7 +151,7 @@ export const step_20 = async (
       console.log(` contract: ${aclManager.address}, hex: ${encodedData7}`);
       const encodedData8 = aclManager.interface.encodeFunctionData(
         "revokeRole",
-        [await aclManager.DEFAULT_ADMIN_ROLE(), deployerAddress]
+        [await aclManager.DEFAULT_ADMIN_ROLE(), oldParaSpaceAdminAddress]
       );
       console.log(` contract: ${aclManager.address}, hex: ${encodedData8}`);
     } else {
@@ -160,7 +159,10 @@ export const step_20 = async (
         await aclManager.addPoolAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
       );
       await waitForTx(
-        await aclManager.removePoolAdmin(deployerAddress, GLOBAL_OVERRIDES)
+        await aclManager.removePoolAdmin(
+          oldParaSpaceAdminAddress,
+          GLOBAL_OVERRIDES
+        )
       );
       if (!(await aclManager.isAssetListingAdmin(paraSpaceAdminAddress))) {
         await waitForTx(
@@ -170,10 +172,10 @@ export const step_20 = async (
           )
         );
       }
-      if (await aclManager.isAssetListingAdmin(deployerAddress)) {
+      if (await aclManager.isAssetListingAdmin(oldParaSpaceAdminAddress)) {
         await waitForTx(
           await aclManager.removeAssetListingAdmin(
-            deployerAddress,
+            oldParaSpaceAdminAddress,
             GLOBAL_OVERRIDES
           )
         );
@@ -183,9 +185,12 @@ export const step_20 = async (
           await aclManager.addRiskAdmin(riskAdminAddress, GLOBAL_OVERRIDES)
         );
       }
-      if (await aclManager.isRiskAdmin(deployerAddress)) {
+      if (await aclManager.isRiskAdmin(oldParaSpaceAdminAddress)) {
         await waitForTx(
-          await aclManager.removeRiskAdmin(deployerAddress, GLOBAL_OVERRIDES)
+          await aclManager.removeRiskAdmin(
+            oldParaSpaceAdminAddress,
+            GLOBAL_OVERRIDES
+          )
         );
       }
       await waitForTx(
@@ -198,7 +203,7 @@ export const step_20 = async (
       await waitForTx(
         await aclManager.revokeRole(
           await aclManager.DEFAULT_ADMIN_ROLE(),
-          deployerAddress,
+          oldParaSpaceAdminAddress,
           GLOBAL_OVERRIDES
         )
       );
@@ -312,6 +317,7 @@ export const step_20 = async (
         );
       }
       console.timeEnd("transferring wpunkGateway ownership...");
+      console.log();
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +353,7 @@ export const step_20 = async (
         }
       }
       console.timeEnd("transferring cAPE ownership...");
+      console.log();
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +370,7 @@ export const step_20 = async (
         console.log(`hex: ${encodedData1}`);
         const encodedData2 = nftFloorOracle.interface.encodeFunctionData(
           "revokeRole",
-          [await nftFloorOracle.UPDATER_ROLE(), deployerAddress]
+          [await nftFloorOracle.UPDATER_ROLE(), oldParaSpaceAdminAddress]
         );
         console.log(`hex: ${encodedData2}`);
         const encodedData3 = nftFloorOracle.interface.encodeFunctionData(
@@ -373,7 +380,7 @@ export const step_20 = async (
         console.log(`hex: ${encodedData3}`);
         const encodedData4 = nftFloorOracle.interface.encodeFunctionData(
           "revokeRole",
-          [await nftFloorOracle.DEFAULT_ADMIN_ROLE(), deployerAddress]
+          [await nftFloorOracle.DEFAULT_ADMIN_ROLE(), oldParaSpaceAdminAddress]
         );
         console.log(`hex: ${encodedData4}`);
       } else {
@@ -387,7 +394,7 @@ export const step_20 = async (
         await waitForTx(
           await nftFloorOracle.revokeRole(
             await nftFloorOracle.UPDATER_ROLE(),
-            deployerAddress,
+            oldParaSpaceAdminAddress,
             GLOBAL_OVERRIDES
           )
         );
@@ -401,7 +408,7 @@ export const step_20 = async (
         await waitForTx(
           await nftFloorOracle.revokeRole(
             await nftFloorOracle.DEFAULT_ADMIN_ROLE(),
-            deployerAddress,
+            oldParaSpaceAdminAddress,
             GLOBAL_OVERRIDES
           )
         );
