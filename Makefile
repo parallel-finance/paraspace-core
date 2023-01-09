@@ -284,7 +284,7 @@ run:
 
 .PHONY: run-task
 run-task:
-	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARGS) --network $(NETWORK)
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARG1) ${ARG2} ${ARG3} ${ARG4} --network $(NETWORK)
 
 .PHONY: print
 print:
@@ -409,6 +409,14 @@ market-info:
 .PHONY: account-data
 account-data:
 	make TASK_NAME=account-data run-task
+
+.PHONY: queue-tx
+queue-tx:
+	make TASK_NAME=queue-tx run-task
+
+.PHONY: execute-tx
+execute-tx:
+	make TASK_NAME=execute-tx run-task
 
 .PHONY: upgrade
 upgrade:
