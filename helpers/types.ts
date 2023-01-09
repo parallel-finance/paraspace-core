@@ -208,6 +208,7 @@ export enum eContractid {
   BlurExchangeProxy = "BlurExchangeProxy",
   BAKC = "BAKC",
   TimeLockExecutor = "TimeLockExecutor",
+  MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
