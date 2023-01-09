@@ -14,7 +14,7 @@
     "size": "hardhat size-contracts",
     "build": "hardhat compile",
     "typechain": "hardhat typechain",
-    "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'scripts/**/*.ts' 'tasks/**/*.ts' 'helpers/**/*.ts' 'test/**/*.ts' && eslint . --ext .ts",
+    "lint": "tsc --noEmit -skipLibCheck && solhint 'contracts/**/*.sol' && prettier --check 'contracts/**/*.sol' 'scripts/**/*.ts' 'helpers/**/*.ts' 'tasks/**/*.ts' 'test/**/*.ts' 'hardhat.config.ts' 'helper-hardhat-config.ts' 'market-config/**/*.ts' && eslint . --ext .ts",
     "coverage": "hardhat coverage --testfiles 'test/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'scripts/**/*.ts' 'helpers/**/*.ts' 'tasks/**/*.ts' 'test/**/*.ts' 'hardhat.config.ts' 'helper-hardhat-config.ts' 'market-config/**/*.ts'",
     "doc": "hardhat docgen",

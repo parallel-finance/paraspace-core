@@ -243,6 +243,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   Treasury: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   Tokens: {
     WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
     USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     DAI: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
@@ -275,6 +276,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    stETH: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
     DAI: "0x773616E4d11A78F511299002da57A0a94577F1f4",
     USDC: "0x986b5E1e1755e3C2440e960477f25201B0a8bbD4",
     USDT: "0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46",
@@ -294,6 +296,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     USDC: strategyUSDC,
     USDT: strategyUSDT,
     WETH: strategyWETH,
+    stETH: strategySTETH,
     APE: strategyAPE,
     WBTC: strategyWBTC,
     DOODLE: strategyDoodles,
