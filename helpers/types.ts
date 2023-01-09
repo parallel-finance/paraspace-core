@@ -1,4 +1,5 @@
-import {BigNumber} from "ethers";
+import {BigNumber, BigNumberish, BytesLike} from "ethers";
+import {PromiseOrValue} from "../types/common";
 import {BlurExchangeLibraryAddresses} from "../types/factories/dependencies/blur-exchange/BlurExchange__factory";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
 import {PoolConfiguratorLibraryAddresses} from "../types/factories/protocol/pool/PoolConfigurator__factory";
@@ -649,3 +650,12 @@ export interface IParaSpaceConfiguration extends ICommonConfiguration {
 }
 
 export type PoolConfiguration = ICommonConfiguration | IParaSpaceConfiguration;
+
+export type Action = [
+  PromiseOrValue<string>,
+  PromiseOrValue<BigNumberish>,
+  PromiseOrValue<string>,
+  PromiseOrValue<BytesLike>,
+  PromiseOrValue<BigNumberish>,
+  PromiseOrValue<boolean>
+];
