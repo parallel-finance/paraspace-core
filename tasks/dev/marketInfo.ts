@@ -1,5 +1,6 @@
 import {task} from "hardhat/config";
 import minimatch from "minimatch";
+import {fromBn} from "evm-bn";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
@@ -10,7 +11,9 @@ task("market-info", "Print markets info")
     );
     const ui = await getUiPoolDataProvider();
     const provider = await getPoolAddressesProvider();
-    const reservesData = (await ui.getReservesData(provider.address))[0];
+    const [reservesData, baseCurrencyInfo] = await ui.getReservesData(
+      provider.address
+    );
     reservesData
       .filter(
         (r) =>
@@ -32,5 +35,14 @@ task("market-info", "Print markets info")
           x.interestRateStrategyAddress
         );
         console.log(" auctionStrategyAddress:", x.auctionStrategyAddress);
+        console.log(" price:", fromBn(x.priceInMarketReferenceCurrency));
+        console.log(
+          " price($):",
+          fromBn(
+            x.priceInMarketReferenceCurrency
+              .mul(baseCurrencyInfo.networkBaseTokenPriceInUsd)
+              .div(10 ** baseCurrencyInfo.networkBaseTokenPriceDecimals)
+          )
+        );
       });
   });
