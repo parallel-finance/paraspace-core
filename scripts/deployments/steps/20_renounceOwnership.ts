@@ -15,6 +15,7 @@ import {
 import {
   getContractAddressInDb,
   getParaSpaceAdmins,
+  printEncodedData,
 } from "../../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
@@ -61,23 +62,17 @@ export const step_20 = async (
           "transferOwnership",
           [paraSpaceAdminAddress]
         );
-      console.log(
-        ` contract: ${addressesProviderRegistry.address}, hex: ${encodedData1}`
-      );
+      await printEncodedData(addressesProviderRegistry.address, encodedData1);
       const encodedData2 = addressesProvider.interface.encodeFunctionData(
         "setACLAdmin",
         [paraSpaceAdminAddress]
       );
-      console.log(
-        ` contract: ${addressesProvider.address}, hex: ${encodedData2}`
-      );
+      await printEncodedData(addressesProvider.address, encodedData2);
       const encodedData3 = addressesProvider.interface.encodeFunctionData(
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      console.log(
-        ` contract: ${addressesProvider.address}, hex: ${encodedData3}`
-      );
+      await printEncodedData(addressesProvider.address, encodedData3);
     } else {
       await waitForTx(
         await addressesProviderRegistry.transferOwnership(
@@ -110,50 +105,50 @@ export const step_20 = async (
         "addPoolAdmin",
         [paraSpaceAdminAddress]
       );
-      console.log(` contract: ${aclManager.address}, hex: ${encodedData1}`);
+      await printEncodedData(aclManager.address, encodedData1);
       const encodedData2 = aclManager.interface.encodeFunctionData(
         "removePoolAdmin",
         [oldParaSpaceAdminAddress]
       );
-      console.log(` contract: ${aclManager.address}, hex: ${encodedData2}`);
+      await printEncodedData(aclManager.address, encodedData2);
       if (!(await aclManager.isAssetListingAdmin(paraSpaceAdminAddress))) {
         const encodedData3 = aclManager.interface.encodeFunctionData(
           "addAssetListingAdmin",
           [paraSpaceAdminAddress]
         );
-        console.log(` contract: ${aclManager.address}, hex: ${encodedData3}`);
+        await printEncodedData(aclManager.address, encodedData3);
       }
       if (await aclManager.isAssetListingAdmin(oldParaSpaceAdminAddress)) {
         const encodedData4 = aclManager.interface.encodeFunctionData(
           "removeAssetListingAdmin",
           [oldParaSpaceAdminAddress]
         );
-        console.log(` contract: ${aclManager.address}, hex: ${encodedData4}`);
+        await printEncodedData(aclManager.address, encodedData4);
       }
       if (!(await aclManager.isRiskAdmin(riskAdminAddress))) {
         const encodedData5 = aclManager.interface.encodeFunctionData(
           "addRiskAdmin",
           [riskAdminAddress]
         );
-        console.log(` contract: ${aclManager.address}, hex: ${encodedData5}`);
+        await printEncodedData(aclManager.address, encodedData5);
       }
       if (await aclManager.isRiskAdmin(oldParaSpaceAdminAddress)) {
         const encodedData6 = aclManager.interface.encodeFunctionData(
           "removeRiskAdmin",
           [oldParaSpaceAdminAddress]
         );
-        console.log(` contract: ${aclManager.address}, hex: ${encodedData6}`);
+        await printEncodedData(aclManager.address, encodedData6);
       }
       const encodedData7 = aclManager.interface.encodeFunctionData(
         "grantRole",
         [await aclManager.DEFAULT_ADMIN_ROLE(), paraSpaceAdminAddress]
       );
-      console.log(` contract: ${aclManager.address}, hex: ${encodedData7}`);
+      await printEncodedData(aclManager.address, encodedData7);
       const encodedData8 = aclManager.interface.encodeFunctionData(
         "revokeRole",
         [await aclManager.DEFAULT_ADMIN_ROLE(), oldParaSpaceAdminAddress]
       );
-      console.log(` contract: ${aclManager.address}, hex: ${encodedData8}`);
+      await printEncodedData(aclManager.address, encodedData8);
     } else {
       await waitForTx(
         await aclManager.addPoolAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
@@ -220,9 +215,7 @@ export const step_20 = async (
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      console.log(
-        ` contract: ${reservesSetupHelper.address}, hex: ${encodedData}`
-      );
+      await printEncodedData(reservesSetupHelper.address, encodedData);
     } else {
       await waitForTx(
         await reservesSetupHelper.transferOwnership(
@@ -243,14 +236,12 @@ export const step_20 = async (
         "transferOwnership",
         [conduit.address, paraSpaceAdminAddress]
       );
-      console.log(
-        ` contract: ${conduitController.address}, hex: ${encodedData1}`
-      );
+      await printEncodedData(conduitController.address, encodedData1);
       const encodedData2 = zoneController.interface.encodeFunctionData(
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      console.log(` contract: ${zoneController.address}, hex: ${encodedData2}`);
+      await printEncodedData(conduitController.address, encodedData2);
     } else {
       await waitForTx(
         await conduitController.transferOwnership(
@@ -280,9 +271,7 @@ export const step_20 = async (
           "transferOwnership",
           [gatewayAdminAddress]
         );
-        console.log(
-          ` contract: ${wethGatewayProxy.address}, hex: ${encodedData}`
-        );
+        await printEncodedData(wethGatewayProxy.address, encodedData);
       } else {
         await waitForTx(
           await wethGatewayProxy.transferOwnership(
@@ -305,9 +294,7 @@ export const step_20 = async (
           "transferOwnership",
           [gatewayAdminAddress]
         );
-        console.log(
-          ` contract: ${punkGatewayProxy.address}, hex: ${encodedData}`
-        );
+        await printEncodedData(punkGatewayProxy.address, encodedData);
       } else {
         await waitForTx(
           await punkGatewayProxy.transferOwnership(
@@ -334,13 +321,13 @@ export const step_20 = async (
           "changeAdmin",
           [paraSpaceAdminAddress]
         );
-        console.log(` contract: ${cApeProxy.address}, hex: ${encodedData1}`);
+        await printEncodedData(cApeProxy.address, encodedData1);
         if (gatewayAdminAddress !== paraSpaceAdminAddress) {
           const encodedData2 = cApe.interface.encodeFunctionData(
             "transferOwnership",
             [gatewayAdminAddress]
           );
-          console.log(` contract: ${cApe.address}, hex: ${encodedData2}`);
+          await printEncodedData(cApe.address, encodedData2);
         }
       } else {
         await waitForTx(
@@ -367,22 +354,22 @@ export const step_20 = async (
           "grantRole",
           [await nftFloorOracle.UPDATER_ROLE(), paraSpaceAdminAddress]
         );
-        console.log(`hex: ${encodedData1}`);
+        await printEncodedData(nftFloorOracle.address, encodedData1);
         const encodedData2 = nftFloorOracle.interface.encodeFunctionData(
           "revokeRole",
           [await nftFloorOracle.UPDATER_ROLE(), oldParaSpaceAdminAddress]
         );
-        console.log(`hex: ${encodedData2}`);
+        await printEncodedData(nftFloorOracle.address, encodedData2);
         const encodedData3 = nftFloorOracle.interface.encodeFunctionData(
           "grantRole",
           [await nftFloorOracle.DEFAULT_ADMIN_ROLE(), paraSpaceAdminAddress]
         );
-        console.log(`hex: ${encodedData3}`);
+        await printEncodedData(nftFloorOracle.address, encodedData3);
         const encodedData4 = nftFloorOracle.interface.encodeFunctionData(
           "revokeRole",
           [await nftFloorOracle.DEFAULT_ADMIN_ROLE(), oldParaSpaceAdminAddress]
         );
-        console.log(`hex: ${encodedData4}`);
+        await printEncodedData(nftFloorOracle.address, encodedData4);
       } else {
         await waitForTx(
           await nftFloorOracle.grantRole(
@@ -414,6 +401,7 @@ export const step_20 = async (
         );
       }
       console.timeEnd("transferring nftFloorOracle ownership...");
+      console.log();
     }
   } catch (error) {
     console.error(error);

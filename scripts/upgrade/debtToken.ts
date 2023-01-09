@@ -9,6 +9,7 @@ import {
 
 import dotenv from "dotenv";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {printEncodedData} from "../../helpers/contracts-helpers";
 
 dotenv.config();
 
@@ -71,7 +72,7 @@ export const upgradeDebtToken = async (verify = false) => {
         "updateVariableDebtToken",
         [updateInput]
       );
-      console.log(`hex: ${encodedData}`);
+      await printEncodedData(poolConfiguratorProxy.address, encodedData);
     } else {
       await waitForTx(
         await poolConfiguratorProxy.updateVariableDebtToken(

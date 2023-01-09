@@ -95,4 +95,4 @@ export const GLOBAL_OVERRIDES: Overrides = {
 export const RPC_URL = process.env.RPC_URL || "";
 export const JSONRPC_VARIANT = process.env.JSONRPC_VARIANT || "hardhat";
 export const VERBOSE = process.env.VERBOSE == "true" ? true : false;
-export const DRY_RUN = process.env.DRY_RUN == "true" ? true : false;
+export const DRY_RUN = process.env.DRY_RUN || "";

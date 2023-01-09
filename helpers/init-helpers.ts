@@ -20,6 +20,7 @@ import {
 import {
   getContractAddressInDb,
   insertContractAddressInDb,
+  printEncodedData,
 } from "./contracts-helpers";
 import {BigNumber, BigNumberish} from "ethers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "./hardhat-constants";
@@ -505,7 +506,7 @@ export const initReservesByHelper = async (
         "initReserves",
         [inputs]
       );
-      console.log(`hex: ${encodedData}`);
+      await printEncodedData(configurator.address, encodedData);
     } else {
       const tx = await waitForTx(
         await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
@@ -610,7 +611,7 @@ export const configureReservesByHelper = async (
         "addPoolAdmin",
         [reservesSetupHelper.address]
       );
-      console.log(`hex: ${encodedData}`);
+      await printEncodedData(aclManager.address, encodedData);
     } else {
       await waitForTx(
         await aclManager.addPoolAdmin(
@@ -637,7 +638,7 @@ export const configureReservesByHelper = async (
           "configureReserves",
           [poolConfiguratorAddress, chunkedInputParams[chunkIndex]]
         );
-        console.log(`hex: ${encodedData}`);
+        await printEncodedData(reservesSetupHelper.address, encodedData);
       } else {
         await waitForTx(
           await reservesSetupHelper.configureReserves(
@@ -655,7 +656,7 @@ export const configureReservesByHelper = async (
         "removePoolAdmin",
         [reservesSetupHelper.address]
       );
-      console.log(`hex: ${encodedData}`);
+      await printEncodedData(aclManager.address, encodedData);
     } else {
       await waitForTx(
         await aclManager.removePoolAdmin(
