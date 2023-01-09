@@ -6,7 +6,10 @@ import {
   getPoolAddressesProvider,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
-import {getParaSpaceAdmins} from "../../helpers/contracts-helpers";
+import {
+  getParaSpaceAdmins,
+  printEncodedData,
+} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {
   configureReservesByHelper,
@@ -50,7 +53,7 @@ const releaseUniV3 = async (verify = false) => {
       "setAssetSources",
       [assets.map((x) => x.address), assets.map((x) => x.aggregator)]
     );
-    console.log(`hex: ${encodedData}`);
+    await printEncodedData(paraSpaceOracle.address, encodedData);
   } else {
     await waitForTx(
       await paraSpaceOracle.setAssetSources(
