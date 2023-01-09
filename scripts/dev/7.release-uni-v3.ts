@@ -39,6 +39,11 @@ const releaseUniV3 = async (verify = false) => {
       address: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
       aggregator: wrapper.address,
     },
+    {
+      symbol: "stETH",
+      address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+      aggregator: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
+    },
   ];
   if (DRY_RUN) {
     const encodedData = paraSpaceOracle.interface.encodeFunctionData(
