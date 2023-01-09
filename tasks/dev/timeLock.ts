@@ -2,6 +2,7 @@ import {task} from "hardhat/config";
 import {
   getActionAndHash,
   getExecutionTime,
+  printEncodedData,
 } from "../../helpers/contracts-helpers";
 import {DRY_RUN} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
@@ -49,7 +50,7 @@ task("queue-tx", "Queue transaction to be executed later")
         "queueTransaction",
         action
       );
-      console.log(`hex: ${encodedData}`);
+      await printEncodedData(timeLock.address, encodedData);
     } else {
       await waitForTx(await timeLock.queueTransaction(...action));
     }
@@ -85,7 +86,7 @@ task("execute-tx", "Execute transaction which has been queued earlier")
         "executeTransaction",
         action
       );
-      console.log(`hex: ${encodedData}`);
+      await printEncodedData(timeLock.address, encodedData);
     } else {
       await waitForTx(await timeLock.executeTransaction(...action));
     }
@@ -121,7 +122,7 @@ task("cancel-tx", "Cancel queued transaction")
         "cancelTransaction",
         action
       );
-      console.log(`hex: ${encodedData}`);
+      await printEncodedData(timeLock.address, encodedData);
     } else {
       await waitForTx(await timeLock.cancelTransaction(...action));
     }

@@ -3,6 +3,7 @@ import {
   getAutoCompoundApe,
   getInitializableAdminUpgradeabilityProxy,
 } from "../../helpers/contracts-getters";
+import {printEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
@@ -20,8 +21,7 @@ export const upgradeAutoCompoundApe = async (verify = false) => {
     const encodedData = cAPEProxy.interface.encodeFunctionData("upgradeTo", [
       cAPEImpl.address,
     ]);
-
-    console.log(`hex: ${encodedData}`);
+    await printEncodedData(cAPEProxy.address, encodedData);
   } else {
     await waitForTx(
       await cAPEProxy.upgradeTo(cAPEImpl.address, GLOBAL_OVERRIDES)

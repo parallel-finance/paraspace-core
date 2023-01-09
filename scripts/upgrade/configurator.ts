@@ -1,5 +1,6 @@
 import {deployPoolConfigurator} from "../../helpers/contracts-deployments";
 import {getPoolAddressesProvider} from "../../helpers/contracts-getters";
+import {printEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
@@ -15,7 +16,7 @@ export const upgradeConfigurator = async (verify = false) => {
       "setPoolConfiguratorImpl",
       [poolConfiguratorImpl.address]
     );
-    console.log(`hex: ${encodedData}`);
+    await printEncodedData(addressesProvider.address, encodedData);
   } else {
     await waitForTx(
       await addressesProvider.setPoolConfiguratorImpl(
