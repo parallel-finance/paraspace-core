@@ -208,6 +208,8 @@ export enum eContractid {
   TimeLockExecutor = "TimeLockExecutor",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
+  P2PPairStaking = "P2PPairStaking",
+  P2PPairStakingImpl = "P2PPairStakingImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
 }

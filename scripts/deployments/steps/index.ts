@@ -18,7 +18,7 @@ export const getAllSteps = async () => {
   const {step_16} = await import("./16_looksrare");
   const {step_17} = await import("./17_x2y2");
   const {step_18} = await import("./18_blur");
-  const {step_19} = await import("./19_flashClaimRegistry");
+  const {step_19} = await import("./19_misc");
   const {step_20} = await import("./20_renounceOwnership");
 
   return [

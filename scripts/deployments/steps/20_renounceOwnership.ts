@@ -6,6 +6,7 @@ import {
   getFirstSigner,
   getInitializableAdminUpgradeabilityProxy,
   getNFTFloorOracle,
+  getP2PPairStaking,
   getPausableZoneController,
   getPoolAddressesProvider,
   getPoolAddressesProviderRegistry,
@@ -171,6 +172,23 @@ export const step_20 = async (
     );
     await waitForTx(
       await cApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
+    );
+
+    const p2pPairStaking = await getP2PPairStaking();
+    const p2pPairStakingProxy = await getInitializableAdminUpgradeabilityProxy(
+      p2pPairStaking.address
+    );
+    await waitForTx(
+      await p2pPairStakingProxy.changeAdmin(
+        paraSpaceAdminAddress,
+        GLOBAL_OVERRIDES
+      )
+    );
+    await waitForTx(
+      await p2pPairStaking.transferOwnership(
+        gatewayAdminAddress,
+        GLOBAL_OVERRIDES
+      )
     );
 
     await waitForTx(
