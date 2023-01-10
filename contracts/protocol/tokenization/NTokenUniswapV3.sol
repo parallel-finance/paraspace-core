@@ -76,13 +76,12 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             ? (token1, token0)
             : (token0, token1);
         receiveETH = receiveETH && token0 == weth;
-
-        uint256 balance0Before = receiveETH
-            ? IERC20(token0).balanceOf(address(this))
-            : 0;
-        uint256 balance1Before = receiveETH
-            ? IERC20(token1).balanceOf(address(this))
-            : 0;
+        (uint256 balance0Before, uint256 balance1Before) = receiveETH
+            ? (
+                IERC20(token0).balanceOf(address(this)),
+                IERC20(token1).balanceOf(address(this))
+            )
+            : (0, 0);
 
         if (liquidityDecrease > 0) {
             // amount0Min and amount1Min are price slippage checks
