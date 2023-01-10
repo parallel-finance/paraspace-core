@@ -458,6 +458,22 @@ set-supply-cap:
 set-borrow-cap:
 	make TASK_NAME=set-borrow-cap run-task
 
+.PHONY: list-facets
+list-facets:
+	make TASK_NAME=list-facets run-task
+
+.PHONY: list-facet-addresses
+list-facet-addresses:
+	make TASK_NAME=list-facet-addresses run-task
+
+.PHONY: facet-address
+facet-address:
+	make TASK_NAME=facet-address run-task
+
+.PHONY: facet-function-selectors
+facet-function-selectors:
+	make TASK_NAME=facet-function-selectors run-task
+
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
