@@ -1,22 +1,13 @@
 import {task} from "hardhat/config";
-import {
-  getActionAndHash,
-  getExecutionTime,
-  printEncodedData,
-} from "../../helpers/contracts-helpers";
-import {DRY_RUN} from "../../helpers/hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
 task("next-execution-time", "Next valid execution time").setAction(
   async (_, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockExecutor} = await import(
-      "../../helpers/contracts-getters"
-    );
-    const timeLock = await getTimeLockExecutor();
-    const executionTime = await getExecutionTime(timeLock);
-    // add 600s for building safe tx
-    console.log("executionTime:", executionTime.add(600).toString());
+    const {getExecutionTime} = await import("../../helpers/contracts-helpers");
+    const executionTime = await getExecutionTime();
+    console.log("executionTime:", executionTime);
   }
 );
 
@@ -29,30 +20,20 @@ task("queue-tx", "Queue transaction to be executed later")
   )
   .setAction(async ({target, data, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {isNotFalsyOrZeroAddress} = await import(
+    const {getActionAndData, printEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
-    if (!isNotFalsyOrZeroAddress(target)) {
-      return;
-    }
     const {getTimeLockExecutor} = await import(
       "../../helpers/contracts-getters"
     );
     const timeLock = await getTimeLockExecutor();
-    const [action, actionHash] = await getActionAndHash(
-      target,
-      data,
-      executionTime
-    );
-    console.log("isActionQueued:", await timeLock.isActionQueued(actionHash));
     if (DRY_RUN) {
-      const encodedData = timeLock.interface.encodeFunctionData(
-        "queueTransaction",
-        action
-      );
-      await printEncodedData(timeLock.address, encodedData);
+      await printEncodedData(target, data, executionTime);
     } else {
-      await waitForTx(await timeLock.queueTransaction(...action));
+      const {action} = await getActionAndData(target, data, executionTime);
+      await waitForTx(
+        await timeLock.queueTransaction(...action, GLOBAL_OVERRIDES)
+      );
     }
   });
 
@@ -65,30 +46,20 @@ task("execute-tx", "Execute transaction which has been queued earlier")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {isNotFalsyOrZeroAddress} = await import(
+    const {getActionAndData, printEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
-    if (!isNotFalsyOrZeroAddress(target)) {
-      return;
-    }
     const {getTimeLockExecutor} = await import(
       "../../helpers/contracts-getters"
     );
     const timeLock = await getTimeLockExecutor();
-    const [action, actionHash] = await getActionAndHash(
-      target,
-      data,
-      executionTime
-    );
-    console.log("isActionQueued:", await timeLock.isActionQueued(actionHash));
     if (DRY_RUN) {
-      const encodedData = timeLock.interface.encodeFunctionData(
-        "executeTransaction",
-        action
-      );
-      await printEncodedData(timeLock.address, encodedData);
+      await printEncodedData(target, data, executionTime);
     } else {
-      await waitForTx(await timeLock.executeTransaction(...action));
+      const {action} = await getActionAndData(target, data, executionTime);
+      await waitForTx(
+        await timeLock.executeTransaction(...action, GLOBAL_OVERRIDES)
+      );
     }
   });
 
@@ -101,29 +72,19 @@ task("cancel-tx", "Cancel queued transaction")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {isNotFalsyOrZeroAddress} = await import(
+    const {getActionAndData, printEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
-    if (!isNotFalsyOrZeroAddress(target)) {
-      return;
-    }
     const {getTimeLockExecutor} = await import(
       "../../helpers/contracts-getters"
     );
     const timeLock = await getTimeLockExecutor();
-    const [action, actionHash] = await getActionAndHash(
-      target,
-      data,
-      executionTime
-    );
-    console.log("isActionQueued:", await timeLock.isActionQueued(actionHash));
     if (DRY_RUN) {
-      const encodedData = timeLock.interface.encodeFunctionData(
-        "cancelTransaction",
-        action
-      );
-      await printEncodedData(timeLock.address, encodedData);
+      await printEncodedData(target, data, executionTime);
     } else {
-      await waitForTx(await timeLock.cancelTransaction(...action));
+      const {action} = await getActionAndData(target, data, executionTime);
+      await waitForTx(
+        await timeLock.cancelTransaction(...action, GLOBAL_OVERRIDES)
+      );
     }
   });

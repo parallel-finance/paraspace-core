@@ -17,6 +17,11 @@ export enum AssetType {
   ERC721 = 1,
 }
 
+export enum DryRunExecutor {
+  TimeLock = "TimeLock",
+  None = "",
+}
+
 export enum XTokenType {
   PhantomData = 0,
   NToken = 1,
