@@ -1,6 +1,10 @@
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
-import {deployUniswapV3OracleWrapper} from "../../helpers/contracts-deployments";
+import {
+  deployERC721OracleWrapper,
+  deployNFTFloorPriceOracle,
+  deployUniswapV3OracleWrapper,
+} from "../../helpers/contracts-deployments";
 import {
   getParaSpaceOracle,
   getPoolAddressesProvider,
@@ -17,7 +21,7 @@ import {
 } from "../../helpers/init-helpers";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
-import {step_20} from "../deployments/steps/20_renounceOwnership";
+// import {step_20} from "../deployments/steps/20_renounceOwnership";
 
 const releaseUniV3 = async (verify = false) => {
   console.time("release-uni-v3");
@@ -25,6 +29,50 @@ const releaseUniV3 = async (verify = false) => {
   const provider = await getPoolAddressesProvider();
   const protocolDataProvider = await getProtocolDataProvider();
   const paraSpaceOracle = await getParaSpaceOracle();
+
+  console.time("deploy NFTFloorOracle...");
+  const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
+  const projects = [
+    {
+      symbol: "MOONBIRD",
+      address: "0x23581767a106ae21c074b2276d25e5c3e136a68b",
+      aggregator: "",
+    },
+    {
+      symbol: "MEEBITS",
+      address: "0x7bd29408f11d2bfc23c34f18275bbf23bb716bc7",
+      aggregator: "",
+    },
+    {
+      symbol: "OTHR",
+      address: "0x34d85c9cdeb23fa97cb08333b511ac86e1c4e258",
+      aggregator: "",
+    },
+  ];
+  await waitForTx(
+    await nftFloorOracle.initialize(
+      "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+      [], // TODO: define feeders
+      projects.map((x) => x.address),
+      GLOBAL_OVERRIDES
+    )
+  );
+  console.timeEnd("deploy NFTFloorOracle...");
+
+  console.time("deploy MOONBIRD, MEEBITS, OTHR aggregators...");
+  for (const project of projects) {
+    if (!project.aggregator) {
+      project.aggregator = (
+        await deployERC721OracleWrapper(
+          provider.address,
+          nftFloorOracle.address,
+          project.address,
+          project.symbol
+        )
+      ).address;
+    }
+  }
+  console.timeEnd("deploy MOONBIRD, MEEBITS, OTHR aggregators...");
 
   console.time("deploy UniV3 aggregator...");
   const wrapper = await deployUniswapV3OracleWrapper(
@@ -47,6 +95,7 @@ const releaseUniV3 = async (verify = false) => {
       address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
       aggregator: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
     },
+    ...projects,
   ];
   if (DRY_RUN) {
     const encodedData = paraSpaceOracle.interface.encodeFunctionData(
@@ -101,13 +150,13 @@ const releaseUniV3 = async (verify = false) => {
   );
   console.timeEnd("configuring reserves...");
 
-  console.time("renouncing ownership to timelock...");
-  await step_20(verify, {
-    paraSpaceAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
-    gatewayAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
-    riskAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
-  });
-  console.timeEnd("renouncing ownership to timelock...");
+  // console.time("renouncing ownership to timelock...");
+  // await step_20(verify, {
+  //   paraSpaceAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
+  //   gatewayAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
+  //   riskAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
+  // });
+  // console.timeEnd("renouncing ownership to timelock...");
 
   console.timeEnd("release-uni-v3");
 };
