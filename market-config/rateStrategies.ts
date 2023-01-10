@@ -89,10 +89,10 @@ export const rateStrategyNFT: IInterestRateStrategyParams = {
 ////////////////////////////////////////////////////////////
 export const rateStrategySTETH: IInterestRateStrategyParams = {
   name: "rateStrategySTETH",
-  optimalUsageRatio: utils.parseUnits("0.85", 27).toString(),
-  baseVariableBorrowRate: utils.parseUnits("0.05", 27).toString(),
-  variableRateSlope1: utils.parseUnits("0.1", 27).toString(),
-  variableRateSlope2: utils.parseUnits("0.23", 27).toString(),
+  optimalUsageRatio: utils.parseUnits("0.88", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0.2", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.08", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.60", 27).toString(),
 };
 
 ////////////////////////////////////////////////////////////
