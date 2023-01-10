@@ -22,11 +22,13 @@ task("market-info", "Print markets info")
       .forEach((x) => {
         console.log();
         console.log(x.symbol);
+        console.log(" asset:", x.underlyingAsset);
         console.log(" ltv:", x.baseLTVasCollateral.toString());
         console.log(
           " liquidationThreshold:",
           x.reserveLiquidationThreshold.toString()
         );
+        console.log(" liquidationBonus", x.reserveLiquidationBonus.toString());
         console.log(" reserveFactor:", x.reserveFactor.toString());
         console.log(" xTokenAddress:", x.xTokenAddress);
         console.log(" variableDebtTokenAddress:", x.variableDebtTokenAddress);
