@@ -434,6 +434,50 @@ cancel-tx:
 list-queued-txs:
 	make TASK_NAME=list-queued-txs run-task
 
+.PHONY: set-ltv
+set-ltv:
+	make TASK_NAME=set-ltv run-task
+
+.PHONY: set-liquidation-threshold
+set-liquidation-threshold:
+	make TASK_NAME=set-liquidation-threshold run-task
+
+.PHONY: set-reserve-factor
+set-reserve-factor:
+	make TASK_NAME=set-reserve-factor run-task
+
+.PHONY: set-interest-rate-strategy
+set-interest-rate-strategy:
+	make TASK_NAME=set-interest-rate-strategy run-task
+
+.PHONY: set-auction-strategy
+set-auction-strategy:
+	make TASK_NAME=set-auction-strategy run-task
+
+.PHONY: set-supply-cap
+set-supply-cap:
+	make TASK_NAME=set-supply-cap run-task
+
+.PHONY: set-borrow-cap
+set-borrow-cap:
+	make TASK_NAME=set-borrow-cap run-task
+
+.PHONY: list-facets
+list-facets:
+	make TASK_NAME=list-facets run-task
+
+.PHONY: list-facet-addresses
+list-facet-addresses:
+	make TASK_NAME=list-facet-addresses run-task
+
+.PHONY: facet-address
+facet-address:
+	make TASK_NAME=facet-address run-task
+
+.PHONY: facet-function-selectors
+facet-function-selectors:
+	make TASK_NAME=facet-function-selectors run-task
+
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
