@@ -100,26 +100,30 @@ task("list-queued-txs", "List queued transactions").setAction(
     const time = await getCurrentTime();
     const gracePeriod = await timeLock.GRACE_PERIOD();
     const filter = timeLock.filters.QueuedAction();
-    const res = await timeLock.queryFilter(filter);
-    res.forEach((x) => {
-      console.log(x.transactionHash);
-      console.log(" actionHash:", x.args.actionHash);
-      console.log(" target:", x.args.target);
-      console.log(" data:", x.args.data);
-      console.log(" executionTime:", x.args.executionTime.toString());
+    const events = await timeLock.queryFilter(filter);
+    for (const e of events) {
+      if (!(await timeLock.isActionQueued(e.args.actionHash))) {
+        continue;
+      }
+
+      console.log(e.transactionHash);
+      console.log(" actionHash:", e.args.actionHash);
+      console.log(" target:", e.args.target);
+      console.log(" data:", e.args.data);
+      console.log(" executionTime:", e.args.executionTime.toString());
       console.log(
         " executionTime(mins):",
-        x.args.executionTime.lte(time)
+        e.args.executionTime.lte(time)
           ? 0
-          : x.args.executionTime.sub(time).div(60).toString()
+          : e.args.executionTime.sub(time).div(60).toString()
       );
-      const expireTime = x.args.executionTime.add(gracePeriod);
+      const expireTime = e.args.executionTime.add(gracePeriod);
       console.log(" expireTime:", expireTime.toString());
       console.log(
         " expireTime(mins):",
         expireTime.lte(time) ? 0 : expireTime.sub(time).div(60).toString()
       );
       console.log();
-    });
+    }
   }
 );
