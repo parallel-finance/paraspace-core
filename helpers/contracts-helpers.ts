@@ -32,6 +32,7 @@ import {
   LibraryAddresses,
   ParaSpaceLibraryAddresses,
   Action,
+  DryRunExecutor,
 } from "./types";
 import {
   ConsiderationItem,
@@ -51,7 +52,6 @@ import {
   ConduitController,
   ERC20,
   ERC721,
-  ExecutorWithTimelock,
   PausableZoneController,
   Seaport,
 } from "../types";
@@ -72,6 +72,8 @@ import {
   DEPLOY_INCREMENTAL,
   JSONRPC_VARIANT,
   DRY_RUN,
+  TIME_LOCK_BUFFERING_TIME,
+  VERBOSE,
 } from "./hardhat-constants";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
@@ -591,23 +593,34 @@ export const isUsingAsCollateral = (conf, id) =>
     .and(1)
     .gt(0);
 
-export const getExecutionTime = async (timeLock: ExecutorWithTimelock) => {
+export const getCurrentTime = async () => {
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return BigNumber.from(timestamp);
+};
+
+export const getExecutionTime = async () => {
+  const timeLock = await getTimeLockExecutor();
   const delay = await timeLock.getDelay();
   const blockNumber = await DRE.ethers.provider.getBlockNumber();
   const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
-  return delay.add(timestamp);
+  return delay.add(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
 };
 
-export const getActionAndHash = async (
+export const getActionAndData = async (
   target: string,
   data: string,
-  executionTime: string
-): Promise<[Action, string]> => {
-  console.log("target:", target);
-  console.log("data:", data);
-  console.log("executionTime:", executionTime);
-  const action: Action = [target, 0, "", data, executionTime, false];
-  console.log("action:", action.toString());
+  executionTime?: string
+) => {
+  const timeLock = await getTimeLockExecutor();
+  const action: Action = [
+    target,
+    0,
+    "",
+    data,
+    executionTime || (await getExecutionTime()),
+    false,
+  ];
   const actionHash = solidityKeccak256(
     ["bytes"],
     [
@@ -617,36 +630,44 @@ export const getActionAndHash = async (
       ),
     ]
   );
-  console.log("actionHash:", actionHash);
-  return [action, actionHash];
+  const isActionQueued = await timeLock.isActionQueued(actionHash);
+  const queueData = timeLock.interface.encodeFunctionData(
+    "queueTransaction",
+    action
+  );
+  const executeData = timeLock.interface.encodeFunctionData(
+    "executeTransaction",
+    action
+  );
+  const cancelData = timeLock.interface.encodeFunctionData(
+    "cancelTransaction",
+    action
+  );
+  if (VERBOSE) {
+    console.log("isActionQueued:", isActionQueued);
+    console.log("timeLock:", timeLock.address);
+    console.log("target:", target);
+    console.log("data:", data);
+    console.log("executionTime:", executionTime);
+    console.log("action:", action.toString());
+    console.log("actionHash:", actionHash);
+    console.log("queueData:", queueData);
+    console.log("executeData:", executeData);
+    console.log("cancelData:", cancelData);
+  }
+  return {action, actionHash, queueData, executeData, cancelData};
 };
 
 export const printEncodedData = async (
   target: tEthereumAddress,
-  data: string
+  data: string,
+  executionTime?: string
 ) => {
   if (
-    DRY_RUN == "timeLock" &&
+    DRY_RUN == DryRunExecutor.TimeLock &&
     (await getContractAddressInDb(eContractid.TimeLockExecutor))
   ) {
-    const timeLock = await getTimeLockExecutor();
-    // add 600s for building safe tx
-    const executionTime = (await getExecutionTime(timeLock))
-      .add(600)
-      .toString();
-    const [action] = await getActionAndHash(target, data, executionTime);
-    const queueData = timeLock.interface.encodeFunctionData(
-      "queueTransaction",
-      action
-    );
-    const executeData = timeLock.interface.encodeFunctionData(
-      "executeTransaction",
-      action
-    );
-    console.log(
-      `target: ${target}, queueData: ${queueData}, executeData: ${executeData}`
-    );
-  } else {
-    console.log(`target: ${target}, executeData: ${data}`);
+    await getActionAndData(target, data, executionTime);
   }
+  console.log(`target: ${target}, data: ${data}`);
 };
