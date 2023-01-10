@@ -48,6 +48,11 @@ const releaseUniV3 = async (verify = false) => {
       address: "0x34d85c9cdeb23fa97cb08333b511ac86e1c4e258",
       aggregator: "",
     },
+    {
+      symbol: "BAKC",
+      address: "0xba30E5F9Bb24caa003E9f2f0497Ad287FDF95623",
+      aggregator: "",
+    },
   ];
   await waitForTx(
     await nftFloorOracle.initialize(
