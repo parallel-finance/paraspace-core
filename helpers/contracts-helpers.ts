@@ -593,6 +593,12 @@ export const isUsingAsCollateral = (conf, id) =>
     .and(1)
     .gt(0);
 
+export const getCurrentTime = async () => {
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return BigNumber.from(timestamp);
+};
+
 export const getExecutionTime = async () => {
   const timeLock = await getTimeLockExecutor();
   const delay = await timeLock.getDelay();

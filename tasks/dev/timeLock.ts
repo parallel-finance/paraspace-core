@@ -88,3 +88,38 @@ task("cancel-tx", "Cancel queued transaction")
       );
     }
   });
+
+task("list-queued-txs", "List queued transactions").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getCurrentTime} = await import("../../helpers/contracts-helpers");
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const time = await getCurrentTime();
+    const gracePeriod = await timeLock.GRACE_PERIOD();
+    const filter = timeLock.filters.QueuedAction();
+    const res = await timeLock.queryFilter(filter);
+    res.forEach((x) => {
+      console.log(x.transactionHash);
+      console.log(" actionHash:", x.args.actionHash);
+      console.log(" target:", x.args.target);
+      console.log(" data:", x.args.data);
+      console.log(" executionTime:", x.args.executionTime.toString());
+      console.log(
+        " executionTime(mins):",
+        x.args.executionTime.lte(time)
+          ? 0
+          : x.args.executionTime.sub(time).div(60).toString()
+      );
+      const expireTime = x.args.executionTime.add(gracePeriod);
+      console.log(" expireTime:", expireTime.toString());
+      console.log(
+        " expireTime(mins):",
+        expireTime.lte(time) ? 0 : expireTime.sub(time).div(60).toString()
+      );
+      console.log();
+    });
+  }
+);

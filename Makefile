@@ -426,6 +426,10 @@ execute-tx:
 cancel-tx:
 	make TASK_NAME=cancel-tx run-task
 
+.PHONY: list-queued-txs
+list-queued-txs:
+	make TASK_NAME=list-queued-txs run-task
+
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
