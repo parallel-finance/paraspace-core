@@ -27,10 +27,16 @@ contract ERC721AtomicOracleWrapper is IAtomicPriceAggregator {
     uint256 internal constant MIN_PRICE_MULTIPLIER = 1e18;
 
     /**
-     * @notice price multipliers mapping
-     * tokenId <=> nWAD
+     * @notice NFT type multipliers
+     * nftType <-> priceMultiplier
      */
-    mapping(uint256 => uint256) private priceMultipliers;
+    mapping(bytes32 => uint256) public nftTypeMultipliers;
+
+    /**
+     * @notice NFT types
+     * tokenId <-> nftType
+     */
+    mapping(uint256 => bytes32) public nftTypes;
 
     /**
      * @dev Only asset listing or pool admin can call functions marked by this modifier.
@@ -79,21 +85,37 @@ contract ERC721AtomicOracleWrapper is IAtomicPriceAggregator {
     /**
      * @notice Set price multiplier for the specified tokenId;
      */
-    function setPriceMultiplier(uint256 tokenId, uint256 _priceMultiplier)
+    function setPriceMultiplier(bytes32 nftType, uint256 _priceMultiplier)
         external
         onlyAssetListingOrPoolAdmins
     {
         _validatePriceMultiplier(_priceMultiplier);
-        priceMultipliers[tokenId] = _priceMultiplier;
+        require(nftType != bytes32(0), "invalid nftType");
+        nftTypeMultipliers[nftType] = _priceMultiplier;
+    }
+
+    /**
+     * @notice Set NFT type for a group of tokens
+     */
+    function setNFTType(bytes32 nftType, uint256[] calldata tokenIds)
+        external
+        onlyAssetListingOrPoolAdmins
+    {
+        require(nftType != bytes32(0), "invalid nftType");
+
+        for (uint256 i; i < tokenIds.length; ++i) {
+            nftTypes[tokenIds[i]] = nftType;
+        }
     }
 
     /**
      * @notice Returns the multiplied price for the specified tokenId.
      */
     function getTokenPrice(uint256 tokenId) public view returns (uint256) {
-        uint256 multiplier = priceMultipliers[tokenId];
+        bytes32 nftType = nftTypes[tokenId];
+        uint256 multiplier = nftTypeMultipliers[nftType];
         uint256 price = uint256(aggregator.latestAnswer());
-        if (multiplier > 0) {
+        if (nftType != bytes32(0) && multiplier > 0) {
             price = price.wadMul(multiplier);
         }
 
