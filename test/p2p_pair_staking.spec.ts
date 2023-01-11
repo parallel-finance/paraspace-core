@@ -62,7 +62,7 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(ape, "100000", user2);
+    await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
       await bayc
@@ -134,7 +134,7 @@ describe("P2P Pair Staking Test", () => {
 
     expect(await bayc.balanceOf(user1.address)).to.be.equal(1);
     almostEqual(await ape.balanceOf(user1.address), parseEther("720"));
-    almostEqual(await ape.balanceOf(user2.address), parseEther("102880"));
+    almostEqual(await ape.balanceOf(user2.address), parseEther("1002880"));
   });
 
   it("test MAYC pair with ApeCoin Staking", async () => {
@@ -145,7 +145,7 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await mintAndValidate(mayc, "1", user1);
-    await mintAndValidate(ape, "100000", user2);
+    await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
       await mayc
@@ -217,7 +217,7 @@ describe("P2P Pair Staking Test", () => {
 
     expect(await mayc.balanceOf(user1.address)).to.be.equal(1);
     almostEqual(await ape.balanceOf(user1.address), parseEther("720"));
-    almostEqual(await ape.balanceOf(user2.address), parseEther("102880"));
+    almostEqual(await ape.balanceOf(user2.address), parseEther("1002880"));
   });
 
   it("test BAYC pair with BAKC and ApeCoin Staking", async () => {
@@ -230,7 +230,7 @@ describe("P2P Pair Staking Test", () => {
 
     await mintAndValidate(bayc, "1", user1);
     await mintAndValidate(bakc, "1", user2);
-    await mintAndValidate(ape, "100000", user3);
+    await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
       await bayc
@@ -330,7 +330,7 @@ describe("P2P Pair Staking Test", () => {
     expect(await bakc.balanceOf(user2.address)).to.be.equal(1);
     almostEqual(await ape.balanceOf(user1.address), parseEther("720"));
     almostEqual(await ape.balanceOf(user2.address), parseEther("720"));
-    almostEqual(await ape.balanceOf(user3.address), parseEther("102160"));
+    almostEqual(await ape.balanceOf(user3.address), parseEther("1002160"));
   });
 
   it("test MAYC pair with BAKC and ApeCoin Staking", async () => {
@@ -343,7 +343,7 @@ describe("P2P Pair Staking Test", () => {
 
     await mintAndValidate(mayc, "1", user1);
     await mintAndValidate(bakc, "1", user2);
-    await mintAndValidate(ape, "100000", user3);
+    await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
       await mayc
@@ -443,7 +443,7 @@ describe("P2P Pair Staking Test", () => {
     expect(await bakc.balanceOf(user2.address)).to.be.equal(1);
     almostEqual(await ape.balanceOf(user1.address), parseEther("720"));
     almostEqual(await ape.balanceOf(user2.address), parseEther("720"));
-    almostEqual(await ape.balanceOf(user3.address), parseEther("102160"));
+    almostEqual(await ape.balanceOf(user3.address), parseEther("1002160"));
   });
 
   it("match failed when order was canceled 0", async () => {
@@ -454,7 +454,7 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(ape, "100000", user2);
+    await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
       await bayc
@@ -505,7 +505,7 @@ describe("P2P Pair Staking Test", () => {
 
     await mintAndValidate(bayc, "1", user1);
     await mintAndValidate(bakc, "1", user2);
-    await mintAndValidate(ape, "100000", user3);
+    await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
       await bayc
@@ -571,7 +571,7 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(ape, "100000", user2);
+    await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
       await bayc
@@ -618,7 +618,7 @@ describe("P2P Pair Staking Test", () => {
 
     await mintAndValidate(bayc, "1", user1);
     await mintAndValidate(bakc, "1", user2);
-    await mintAndValidate(ape, "100000", user3);
+    await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
       await bayc
@@ -680,7 +680,7 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(ape, "100000", user2);
+    await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
       await bayc
@@ -727,7 +727,7 @@ describe("P2P Pair Staking Test", () => {
 
     await mintAndValidate(bayc, "1", user1);
     await mintAndValidate(bakc, "1", user2);
-    await mintAndValidate(ape, "100000", user3);
+    await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
       await bayc
@@ -824,7 +824,7 @@ describe("P2P Pair Staking Test", () => {
     );
 
     await mintAndValidate(bayc, "1", user2);
-    await mintAndValidate(ape, "100000", user3);
+    await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
       await bayc
@@ -874,6 +874,6 @@ describe("P2P Pair Staking Test", () => {
 
     expect(await bayc.balanceOf(user2.address)).to.be.equal(1);
     almostEqual(await ape.balanceOf(user2.address), parseEther("720"));
-    almostEqual(await ape.balanceOf(user3.address), parseEther("102880"));
+    almostEqual(await ape.balanceOf(user3.address), parseEther("1002880"));
   });
 });

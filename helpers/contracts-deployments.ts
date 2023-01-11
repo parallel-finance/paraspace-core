@@ -1771,7 +1771,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("20000"),
+    parseEther("200000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1779,7 +1779,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("10000"),
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1787,7 +1787,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("1000"),
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   return apeCoinStaking;

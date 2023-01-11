@@ -16,7 +16,7 @@ import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 
-describe("APE Coin Staking Test", () => {
+describe("Auto Compound Ape Test", () => {
   let testEnv: TestEnv;
   let cApe: AutoCompoundApe;
   let pCApe: PToken;
