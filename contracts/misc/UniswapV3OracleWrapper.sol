@@ -218,10 +218,6 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         return sum;
     }
 
-    function latestAnswer() external pure returns (int256) {
-        revert("unimplemented");
-    }
-
     function _getOracleData(UinswapV3PositionData memory positionData)
         internal
         view

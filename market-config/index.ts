@@ -24,7 +24,8 @@ import {
   strategyClonex,
   strategyMeebits,
   strategySAPE,
-  strategyCAPE, strategyBAKC,
+  strategyCAPE,
+  strategyBAKC,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<

@@ -278,6 +278,10 @@ test-acl-manager:
 test-time-lock:
 	make TEST_TARGET=time_lock_executor.spec.ts test
 
+.PHONY: test-erc721-oracle-multiplier
+test-erc721-oracle-multiplier:
+	make TEST_TARGET=_oracle_multiplier.spec.ts test
+
 .PHONY: run
 run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)

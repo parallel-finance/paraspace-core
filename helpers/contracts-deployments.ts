@@ -224,6 +224,8 @@ import {
   MockedDelegateRegistry__factory,
   NTokenBAKC,
   NTokenBAKC__factory,
+  ERC721AtomicOracleWrapper__factory,
+  ERC721AtomicOracleWrapper,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1295,6 +1297,20 @@ export const deployERC721OracleWrapper = async (
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721OracleWrapper>;
+
+export const deployERC721AtomicOracleWrapper = async (
+  addressesProvider: string,
+  oracleAddress: string,
+  asset: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ERC721AtomicOracleWrapper__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(`.${symbol}`),
+    [addressesProvider, oracleAddress, asset],
+    verify
+  ) as Promise<ERC721AtomicOracleWrapper>;
 
 export const deployPunks = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
