@@ -147,4 +147,10 @@ interface IP2PPairStaking {
     function getApeCoinStakingCap(StakingType stakingType)
         external
         returns (uint256);
+
+    /**
+     * @notice set a new matching operator, only owner can call this function
+     * @param _matchingOperator The address of the new matching operator
+     */
+    function setMatchingOperator(address _matchingOperator) external;
 }

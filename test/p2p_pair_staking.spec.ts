@@ -14,7 +14,7 @@ import {getSignedListingOrder} from "./helpers/p2ppairstaking-helper";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 
-describe("APE Coin Staking Test", () => {
+describe("P2P Pair Staking Test", () => {
   let testEnv: TestEnv;
   let p2pPairStaking: P2PPairStaking;
   let cApe: AutoCompoundApe;
@@ -803,5 +803,77 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await p2pPairStaking.connect(user1.signer).cancelListing(user1SignedOrder)
     );
+  });
+
+  it("matching operator function as expected", async () => {
+    const {
+      users: [user1, user2, user3, , user5],
+      gatewayAdmin,
+      bayc,
+      ape,
+    } = await loadFixture(fixture);
+
+    await expect(
+      p2pPairStaking.connect(user2.signer).setMatchingOperator(user5.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await waitForTx(
+      await p2pPairStaking
+        .connect(gatewayAdmin.signer)
+        .setMatchingOperator(user5.address)
+    );
+
+    await mintAndValidate(bayc, "1", user2);
+    await mintAndValidate(ape, "100000", user3);
+
+    await waitForTx(
+      await bayc
+        .connect(user2.signer)
+        .setApprovalForAll(p2pPairStaking.address, true)
+    );
+    await waitForTx(
+      await ape
+        .connect(user3.signer)
+        .approve(p2pPairStaking.address, MAX_UINT_AMOUNT)
+    );
+
+    const user1SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      0,
+      bayc,
+      0,
+      2000,
+      user2
+    );
+    const user2SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      0,
+      ape,
+      0,
+      8000,
+      user3
+    );
+
+    const txReceipt = await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder, user2SignedOrder)
+    );
+    const logLength = txReceipt.logs.length;
+    const orderHash = txReceipt.logs[logLength - 1].data;
+
+    await expect(
+      p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash)
+    ).to.be.revertedWith("no permission to break up");
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+      await p2pPairStaking.connect(user5.signer).breakUpMatchedOrder(orderHash)
+    );
+
+    expect(await bayc.balanceOf(user2.address)).to.be.equal(1);
+    almostEqual(await ape.balanceOf(user2.address), parseEther("720"));
+    almostEqual(await ape.balanceOf(user3.address), parseEther("102880"));
   });
 });

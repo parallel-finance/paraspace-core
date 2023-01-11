@@ -2,7 +2,7 @@ import {DRE} from "../../helpers/misc-utils";
 import {MintableERC20, MintableERC721, P2PPairStaking} from "../../types";
 import {SignerWithAddress} from "./make-suite";
 import {convertSignatureToEIP2098} from "../../helpers/seaport-helpers/encoding";
-import {BigNumber, BigNumberish, BytesLike} from "ethers";
+import {BigNumberish, BytesLike} from "ethers";
 
 export type ListingOrder = {
   stakingType: BigNumberish;

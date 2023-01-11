@@ -42,6 +42,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
     mapping(bytes32 => bool) public isListingOrderCanceled;
     mapping(bytes32 => MatchedOrder) public matchedOrders;
     mapping(address => uint256) public cApeShareBalance;
+    address public matchingOperator;
 
     constructor(
         address _bayc,
@@ -257,10 +258,11 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
 
         //1 check owner
         require(
-            msg.sender == order.apeOfferer ||
+            msg.sender == matchingOperator ||
+                msg.sender == order.apeOfferer ||
                 msg.sender == order.bakcOfferer ||
                 msg.sender == order.apeCoinOfferer,
-            "not participant of the order"
+            "no permission to break up"
         );
 
         //2 delete matched order
@@ -566,6 +568,11 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
         bytes memory
     ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+
+    function setMatchingOperator(address _matchingOperator) external onlyOwner {
+        require(_matchingOperator != address(0), "zero address");
+        matchingOperator = _matchingOperator;
     }
 
     function rescueERC20(

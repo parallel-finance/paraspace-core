@@ -232,7 +232,6 @@ import {
   getAllTokens,
   getAutoCompoundApe,
   getFirstSigner,
-  getP2PPairStaking,
   getPunks,
   getWETH,
 } from "./contracts-getters";
