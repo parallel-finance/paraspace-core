@@ -21,6 +21,7 @@ import {
   auctionStrategyMeebits,
   auctionStrategyMoonbird,
   auctionStrategyOthr,
+  auctionStrategyUniswapV3,
   auctionStrategyWPunks,
   auctionStrategyZero,
 } from "./auctionStrategies";
@@ -330,7 +331,7 @@ export const strategyWPunks: IReserveParams = {
 
 export const strategyUniswapV3: IReserveParams = {
   strategy: rateStrategyNFT,
-  auctionStrategy: auctionStrategyZero,
+  auctionStrategy: auctionStrategyUniswapV3,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
