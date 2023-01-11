@@ -10,7 +10,6 @@ import {
   rateStrategyWETH,
   rateStrategyXCDOT,
   rateStrategyWGLMR,
-  rateStrategySTETH,
 } from "./rateStrategies";
 import {
   auctionStrategyAzuki,
@@ -349,7 +348,7 @@ export const strategyUniswapV3: IReserveParams = {
 // V2
 ////////////////////////////////////////////////////////////
 export const strategySTETH: IReserveParams = {
-  strategy: rateStrategySTETH,
+  strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",
