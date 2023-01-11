@@ -6,11 +6,12 @@ import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../interfaces/IP2PPairStaking.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
+import "../interfaces/IAutoCompoundApe.sol";
+import "../interfaces/ICApe.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC20, SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {PercentageMath} from "../protocol/libraries/math/PercentageMath.sol";
 import {SignatureChecker} from "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
-import "hardhat/console.sol";
 
 contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
     using SafeERC20 for IERC20;
@@ -34,23 +35,27 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
     address public immutable mayc;
     address public immutable bakc;
     address public immutable apeCoin;
+    address public immutable cApe;
     ApeCoinStaking public immutable apeCoinStaking;
-    bytes32 public DOMAIN_SEPARATOR;
 
+    bytes32 public DOMAIN_SEPARATOR;
     mapping(bytes32 => bool) public isListingOrderCanceled;
     mapping(bytes32 => MatchedOrder) public matchedOrders;
+    mapping(address => uint256) public cApeShareBalance;
 
     constructor(
         address _bayc,
         address _mayc,
         address _bakc,
         address _apeCoin,
+        address _cApe,
         address _apeCoinStaking
     ) {
         bayc = _bayc;
         mayc = _mayc;
         bakc = _bakc;
         apeCoin = _apeCoin;
+        cApe = _cApe;
         apeCoinStaking = ApeCoinStaking(_apeCoinStaking);
     }
 
@@ -67,6 +72,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
             )
         );
 
+        //approve for apeCoinStaking
         uint256 allowance = IERC20(apeCoin).allowance(
             address(this),
             address(apeCoinStaking)
@@ -76,6 +82,12 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
                 address(apeCoinStaking),
                 type(uint256).max
             );
+        }
+
+        //approve for cApe
+        allowance = IERC20(apeCoin).allowance(address(this), cApe);
+        if (allowance == 0) {
+            IERC20(apeCoin).safeApprove(cApe, type(uint256).max);
         }
     }
 
@@ -323,13 +335,76 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
         emit PairStakingBreakUp(orderHash);
     }
 
-    function claimMatchedOrderAndCompound(bytes32[] calldata orderHashes)
-        external {
+    function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
+        external
+    {
+        for (uint256 index = 0; index < orderHashes.length; index++) {
+            bytes32 orderHash = orderHashes[index];
+            MatchedOrder memory order = matchedOrders[orderHash];
+            uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
+            if (order.stakingType < StakingType.BAYCPairStaking) {
+                uint256[] memory _nfts = new uint256[](1);
+                _nfts[0] = order.apeTokenId;
+                if (order.stakingType == StakingType.BAYCStaking) {
+                    apeCoinStaking.claimSelfBAYC(_nfts);
+                } else {
+                    apeCoinStaking.claimSelfMAYC(_nfts);
+                }
+            } else {
+                ApeCoinStaking.PairNft[]
+                    memory _nfts = new ApeCoinStaking.PairNft[](1);
+                _nfts[0].mainTokenId = order.apeTokenId;
+                _nfts[0].bakcTokenId = order.bakcTokenId;
+                ApeCoinStaking.PairNft[]
+                    memory _otherPairs = new ApeCoinStaking.PairNft[](0);
+                if (order.stakingType == StakingType.BAYCPairStaking) {
+                    apeCoinStaking.claimSelfBAKC(_nfts, _otherPairs);
+                } else {
+                    apeCoinStaking.claimSelfBAKC(_otherPairs, _nfts);
+                }
+            }
+            uint256 balanceAfter = IERC20(apeCoin).balanceOf(address(this));
+            uint256 rewardAmount = balanceAfter - balanceBefore;
 
+            uint256 shareBefore = ICApe(cApe).sharesOf(address(this));
+            IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
+            uint256 shareAfter = ICApe(cApe).sharesOf(address(this));
+            uint256 rewardShare = shareAfter - shareBefore;
+
+            _depositCApeShareForUser(
+                order.apeOfferer,
+                rewardShare.percentMul(order.apeShare)
+            );
+            _depositCApeShareForUser(
+                order.bakcOfferer,
+                rewardShare.percentMul(order.bakcShare)
+            );
+            _depositCApeShareForUser(
+                order.apeCoinOfferer,
+                rewardShare.percentMul(order.apeCoinShare)
+            );
+
+            emit OrderClaimedAndCompounded(orderHash, rewardAmount);
+        }
     }
 
     function claimCApeReward() external {
+        uint256 cApeAmount = pendingCApeReward(msg.sender);
+        if (cApeAmount > 0) {
+            IAutoCompoundApe(cApe).transfer(msg.sender, cApeAmount);
+            delete cApeShareBalance[msg.sender];
 
+            emit CApeClaimed(msg.sender, cApeAmount);
+        }
+    }
+
+    function pendingCApeReward(address user) public view returns (uint256) {
+        uint256 amount = 0;
+        uint256 shareBalance = cApeShareBalance[user];
+        if (shareBalance > 0) {
+            amount = ICApe(cApe).getPooledApeByShares(shareBalance);
+        }
+        return amount;
     }
 
     function getApeCoinStakingCap(StakingType stakingType)
@@ -395,6 +470,12 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
                     order.apePrincipleAmount
                 )
             );
+    }
+
+    function _depositCApeShareForUser(address user, uint256 amount) internal {
+        if (amount > 0) {
+            cApeShareBalance[user] += amount;
+        }
     }
 
     function _validateOrderBasicInfo(ListingOrder calldata listingOrder)

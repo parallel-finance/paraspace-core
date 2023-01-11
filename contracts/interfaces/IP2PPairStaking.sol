@@ -58,6 +58,19 @@ interface IP2PPairStaking {
     event PairStakingBreakUp(bytes32 orderHash);
 
     /**
+     * @dev Emitted when user claimed pending cApe reward.
+     * @param user The address of the user
+     * @param amount The amount of the cApe been claimed
+     **/
+    event CApeClaimed(address user, uint256 amount);
+
+    /**
+     * @dev Emitted when we claimed pending reward for matched order and compound.
+     * @param orderHash The hash of the break up order
+     **/
+    event OrderClaimedAndCompounded(bytes32 orderHash, uint256 totalReward);
+
+    /**
      * @dev Emitted during rescueERC20()
      * @param token The address of the token
      * @param to The address of the recipient
@@ -106,11 +119,20 @@ interface IP2PPairStaking {
     function breakUpMatchedOrder(bytes32 orderHash) external;
 
     /**
-     * @notice claim reward for matched pair staking orders and deposit as cApe for user to compound.
+     * @notice claim pending reward for matched pair staking orders and deposit as cApe for user to compound.
      * @param orderHashes the hash of the matched orders to be break up
      */
-    function claimMatchedOrderAndCompound(bytes32[] calldata orderHashes)
+    function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
         external;
+
+    /**
+     * @param user The address of the user
+     * @return amount Returns the amount of cApe owned by user
+     */
+    function pendingCApeReward(address user)
+        external
+        view
+        returns (uint256 amount);
 
     /**
      * @notice claim user compounded cApe

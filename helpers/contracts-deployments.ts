@@ -2060,6 +2060,7 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
     allTokens.MAYC.address,
     allTokens.BAKC.address,
     allTokens.APE.address,
+    allTokens.cAPE.address,
     apeCoinStaking,
   ];
 

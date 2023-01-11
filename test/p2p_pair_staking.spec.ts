@@ -1,43 +1,36 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {
-  AutoCompoundApe,
-  P2PPairStaking,
-  PToken,
-  PTokenSApe,
-  VariableDebtToken,
-} from "../types";
+import {AutoCompoundApe, P2PPairStaking} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
   getP2PPairStaking,
-  getPToken,
-  getPTokenSApe,
-  getVariableDebtToken,
 } from "../helpers/contracts-getters";
-import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
-import {ethers} from "hardhat";
 import {getSignedListingOrder} from "./helpers/p2ppairstaking-helper";
-import {ProtocolErrors} from "../helpers/types";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
   let p2pPairStaking: P2PPairStaking;
+  let cApe: AutoCompoundApe;
+  let MINIMUM_LIQUIDITY;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {
-      ape,
-      users: [user1],
-      apeCoinStaking,
-    } = testEnv;
+    const {ape, users, apeCoinStaking} = testEnv;
+
+    const user1 = users[0];
+    const user4 = users[5];
 
     p2pPairStaking = await getP2PPairStaking();
+
+    cApe = await getAutoCompoundApe();
+    MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
 
     // send extra tokens to the apestaking contract for rewards
     await waitForTx(
@@ -47,6 +40,15 @@ describe("APE Coin Staking Test", () => {
           apeCoinStaking.address,
           parseEther("100000000000")
         )
+    );
+
+    // user4 deposit MINIMUM_LIQUIDITY to make test case easy
+    await mintAndValidate(ape, "1", user4);
+    await waitForTx(
+      await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await cApe.connect(user4.signer).deposit(user4.address, MINIMUM_LIQUIDITY)
     );
 
     return testEnv;
@@ -97,6 +99,32 @@ describe("APE Coin Staking Test", () => {
     );
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .claimForMatchedOrderAndCompound([orderHash])
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user1.address),
+      parseEther("720")
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user2.address),
+      parseEther("2880")
+    );
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).claimCApeReward()
+    );
+    await waitForTx(
+      await p2pPairStaking.connect(user2.signer).claimCApeReward()
+    );
+
+    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await cApe.balanceOf(user2.address), parseEther("2880"));
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -154,6 +182,32 @@ describe("APE Coin Staking Test", () => {
     );
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .claimForMatchedOrderAndCompound([orderHash])
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user1.address),
+      parseEther("720")
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user2.address),
+      parseEther("2880")
+    );
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).claimCApeReward()
+    );
+    await waitForTx(
+      await p2pPairStaking.connect(user2.signer).claimCApeReward()
+    );
+
+    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await cApe.balanceOf(user2.address), parseEther("2880"));
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -235,6 +289,40 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(parseInt("3600"));
 
     await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .claimForMatchedOrderAndCompound([orderHash])
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user1.address),
+      parseEther("720")
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user2.address),
+      parseEther("720")
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user3.address),
+      parseEther("2160")
+    );
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).claimCApeReward()
+    );
+    await waitForTx(
+      await p2pPairStaking.connect(user2.signer).claimCApeReward()
+    );
+    await waitForTx(
+      await p2pPairStaking.connect(user3.signer).claimCApeReward()
+    );
+
+    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await cApe.balanceOf(user2.address), parseEther("720"));
+    almostEqual(await cApe.balanceOf(user3.address), parseEther("2160"));
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash)
     );
 
@@ -310,6 +398,40 @@ describe("APE Coin Staking Test", () => {
 
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .claimForMatchedOrderAndCompound([orderHash])
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user1.address),
+      parseEther("720")
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user2.address),
+      parseEther("720")
+    );
+    almostEqual(
+      await p2pPairStaking.pendingCApeReward(user3.address),
+      parseEther("2160")
+    );
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).claimCApeReward()
+    );
+    await waitForTx(
+      await p2pPairStaking.connect(user2.signer).claimCApeReward()
+    );
+    await waitForTx(
+      await p2pPairStaking.connect(user3.signer).claimCApeReward()
+    );
+
+    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await cApe.balanceOf(user2.address), parseEther("720"));
+    almostEqual(await cApe.balanceOf(user3.address), parseEther("2160"));
 
     await advanceTimeAndBlock(parseInt("3600"));
 
