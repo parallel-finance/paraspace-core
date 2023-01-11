@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../interfaces/IP2PPairStaking.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
@@ -13,7 +14,7 @@ import {IERC20, SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC2
 import {PercentageMath} from "../protocol/libraries/math/PercentageMath.sol";
 import {SignatureChecker} from "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 
-contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
+contract P2PPairStaking is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, IP2PPairStaking {
     using SafeERC20 for IERC20;
     using PercentageMath for uint256;
     using SafeCast for uint256;
@@ -62,6 +63,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
 
     function initialize() public initializer {
         __Ownable_init();
+        __ReentrancyGuard_init();
 
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
@@ -92,7 +94,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
         }
     }
 
-    function cancelListing(ListingOrder calldata listingOrder) external {
+    function cancelListing(ListingOrder calldata listingOrder) external nonReentrant {
         require(msg.sender == listingOrder.offerer, "not order offerer");
         bytes32 orderHash = getListingOrderHash(listingOrder);
         require(!isListingOrderCanceled[orderHash], "order already cancel");
@@ -104,7 +106,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
     function matchPairStakingList(
         ListingOrder calldata apeOrder,
         ListingOrder calldata apeCoinOrder
-    ) external returns (bytes32 orderHash) {
+    ) external nonReentrant returns (bytes32 orderHash) {
         //1 validate all order
         _validateApeOrder(apeOrder);
         _validateApeCoinOrder(apeCoinOrder);
@@ -172,7 +174,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
         ListingOrder calldata apeOrder,
         ListingOrder calldata bakcOrder,
         ListingOrder calldata apeCoinOrder
-    ) external returns (bytes32 orderHash) {
+    ) external nonReentrant returns (bytes32 orderHash) {
         //1 validate all order
         _validateApeOrder(apeOrder);
         _validateBakcOrder(bakcOrder);
@@ -253,7 +255,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
         return orderHash;
     }
 
-    function breakUpMatchedOrder(bytes32 orderHash) external {
+    function breakUpMatchedOrder(bytes32 orderHash) external nonReentrant {
         MatchedOrder memory order = matchedOrders[orderHash];
 
         //1 check owner
@@ -338,7 +340,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
     }
 
     function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
-        external
+        external nonReentrant
     {
         for (uint256 index = 0; index < orderHashes.length; index++) {
             bytes32 orderHash = orderHashes[index];
@@ -390,7 +392,7 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, IP2PPairStaking {
         }
     }
 
-    function claimCApeReward() external {
+    function claimCApeReward() external nonReentrant {
         uint256 cApeAmount = pendingCApeReward(msg.sender);
         if (cApeAmount > 0) {
             IAutoCompoundApe(cApe).transfer(msg.sender, cApeAmount);
