@@ -10,6 +10,7 @@ import {
   rateStrategyWETH,
   rateStrategyXCDOT,
   rateStrategyWGLMR,
+  rateStrategySTETH,
 } from "./rateStrategies";
 import {
   auctionStrategyAzuki,
@@ -21,7 +22,6 @@ import {
   auctionStrategyMeebits,
   auctionStrategyMoonbird,
   auctionStrategyOthr,
-  auctionStrategyUniswapV3,
   auctionStrategyWPunks,
   auctionStrategyZero,
 } from "./auctionStrategies";
@@ -331,7 +331,7 @@ export const strategyWPunks: IReserveParams = {
 
 export const strategyUniswapV3: IReserveParams = {
   strategy: rateStrategyNFT,
-  auctionStrategy: auctionStrategyUniswapV3,
+  auctionStrategy: auctionStrategyZero,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -348,7 +348,7 @@ export const strategyUniswapV3: IReserveParams = {
 // V2
 ////////////////////////////////////////////////////////////
 export const strategySTETH: IReserveParams = {
-  strategy: rateStrategyXETH,
+  strategy: rateStrategySTETH,
   auctionStrategy: auctionStrategyZero,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",

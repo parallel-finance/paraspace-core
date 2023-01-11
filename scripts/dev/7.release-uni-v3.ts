@@ -2,7 +2,6 @@ import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployERC721OracleWrapper,
-  deployNFTFloorPriceOracle,
   deployUniswapV3OracleWrapper,
 } from "../../helpers/contracts-deployments";
 import {
@@ -21,7 +20,6 @@ import {
 } from "../../helpers/init-helpers";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
-// import {step_20} from "../deployments/steps/20_renounceOwnership";
 
 const releaseUniV3 = async (verify = false) => {
   console.time("release-uni-v3");
@@ -31,7 +29,7 @@ const releaseUniV3 = async (verify = false) => {
   const paraSpaceOracle = await getParaSpaceOracle();
 
   console.time("deploy NFTFloorOracle...");
-  const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
+  const nftFloorOracle = "0xE7BD56364DedF1c5BeBEA9b77A748ab3C5F8c43E";
   const projects = [
     {
       symbol: "MOONBIRD",
@@ -54,14 +52,6 @@ const releaseUniV3 = async (verify = false) => {
       aggregator: "",
     },
   ];
-  await waitForTx(
-    await nftFloorOracle.initialize(
-      "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-      [], // TODO: define feeders
-      projects.map((x) => x.address),
-      GLOBAL_OVERRIDES
-    )
-  );
   console.timeEnd("deploy NFTFloorOracle...");
 
   console.time("deploy MOONBIRD, MEEBITS, OTHR aggregators...");
@@ -70,7 +60,7 @@ const releaseUniV3 = async (verify = false) => {
       project.aggregator = (
         await deployERC721OracleWrapper(
           provider.address,
-          nftFloorOracle.address,
+          nftFloorOracle,
           project.address,
           project.symbol
         )
@@ -154,14 +144,6 @@ const releaseUniV3 = async (verify = false) => {
     paraSpaceAdminAddress
   );
   console.timeEnd("configuring reserves...");
-
-  // console.time("renouncing ownership to timelock...");
-  // await step_20(verify, {
-  //   paraSpaceAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
-  //   gatewayAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
-  //   riskAdminAddress: "0xca8678d2d273b1913148402aed2E99b085ea3F02",
-  // });
-  // console.timeEnd("renouncing ownership to timelock...");
 
   console.timeEnd("release-uni-v3");
 };
