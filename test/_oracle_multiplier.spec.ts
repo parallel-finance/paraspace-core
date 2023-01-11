@@ -6,6 +6,7 @@ import {HALF_WAD, WAD} from "../helpers/constants";
 import {deployERC721AtomicOracleWrapper} from "../helpers/contracts-deployments";
 import {getAggregator} from "../helpers/contracts-getters";
 import {evmRevert, evmSnapshot, waitForTx} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {MocksConfig} from "../market-config/mocks";
 import {ERC721AtomicOracleWrapper} from "../types";
 import {TestEnv} from "./helpers/make-suite";
@@ -141,5 +142,27 @@ describe("ERC721 Atomic Oracle", () => {
     expect(await baycAtomicAggregator.getTokenPrice(tokenId2)).to.be.eq(
       BigNumber.from(MocksConfig.AllAssetsInitialPrices.BAYC)
     );
+  });
+
+  it("normal users cannot setNFTType (revert expected)", async () => {
+    const {
+      users: [, , user3],
+    } = testEnv;
+    await expect(
+      baycAtomicAggregator
+        .connect(user3.signer)
+        .setNFTType(nftType1, [tokenId0, tokenId1])
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
+  });
+
+  it("normal users cannot setPriceMultiplier (revert expected)", async () => {
+    const {
+      users: [, , user3],
+    } = testEnv;
+    await expect(
+      baycAtomicAggregator
+        .connect(user3.signer)
+        .setPriceMultiplier(nftType1, BigNumber.from(WAD).mul(2))
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
   });
 });
