@@ -89,7 +89,10 @@ export const step_15 = async (verify = false) => {
     }
 
     await waitForTx(
-      await addressesProvider.setWETH(allTokens.WETH.address, GLOBAL_OVERRIDES)
+      await addressesProvider.setWETH(
+        allTokens[paraSpaceConfig.WrappedNativeTokenId].address,
+        GLOBAL_OVERRIDES
+      )
     );
     await insertContractAddressInDb(eContractid.ConduitKey, conduitKey, false);
     await insertContractAddressInDb(eContractid.Conduit, conduit);

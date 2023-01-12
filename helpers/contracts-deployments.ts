@@ -228,7 +228,6 @@ import {
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
-  getAutoCompoundApe,
   getFirstSigner,
   getPunks,
   getWETH,
@@ -540,7 +539,6 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
-  const cApe = await getAutoCompoundApe();
 
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
@@ -582,15 +580,21 @@ export const deployPoolComponents = async (
       marketplaceLibraries,
       poolMarketplaceSelectors
     )) as PoolMarketplace,
-    poolApeStaking: (await withSaveAndVerify(
-      poolApeStaking,
-      eContractid.PoolApeStakingImpl,
-      [provider, cApe.address, allTokens.APE.address],
-      verify,
-      false,
-      apeStakingLibraries,
-      poolApeStakingSelectors
-    )) as PoolApeStaking,
+    poolApeStaking: allTokens.APE
+      ? ((await withSaveAndVerify(
+          poolApeStaking,
+          eContractid.PoolApeStakingImpl,
+          [
+            provider,
+            (await deployAutoCompoundApe(verify)).address,
+            allTokens.APE.address,
+          ],
+          verify,
+          false,
+          apeStakingLibraries,
+          poolApeStakingSelectors
+        )) as PoolApeStaking)
+      : undefined,
     poolParaProxyInterfaces: (await withSaveAndVerify(
       poolParaProxyInterfaces,
       eContractid.ParaProxyInterfacesImpl,
@@ -2008,27 +2012,29 @@ export const deployTimeLockExecutor = async (
   ) as Promise<ExecutorWithTimelock>;
 };
 
-export const deployAutoCompoundApe = async (verify?: boolean) => {
+export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
   const args = [allTokens.APE.address, apeCoinStaking];
 
-  const cApeImplementation = await withSaveAndVerify(
+  return withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),
     eContractid.cAPEImpl,
     [...args],
     verify
-  );
+  ) as Promise<AutoCompoundApe>;
+};
+
+export const deployAutoCompoundApe = async (verify?: boolean) => {
+  const cApeImplementation = await deployAutoCompoundApeImpl(verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
 
-  const initData = cApeImplementation.interface.encodeFunctionData(
-    "initialize",
-    []
-  );
+  const initData =
+    cApeImplementation.interface.encodeFunctionData("initialize");
 
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
