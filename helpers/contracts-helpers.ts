@@ -131,6 +131,36 @@ export const insertContractAddressInDb = async (
   await getDb().set(key, newValue).write();
 };
 
+export const insertTimeLockDataInDb = async (
+  action: Action,
+  actionHash: string,
+  queueData: string,
+  executeData: string,
+  cancelData: string,
+  executionTime: string,
+  queueExpireTime: string,
+  executeExpireTime: string
+) => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = oldValue.queue || [];
+  queue.push({
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executionTime: new Date(+executionTime * 1000).toLocaleString(),
+    queueExpireTime: new Date(+queueExpireTime * 1000).toLocaleString(),
+    executeExpireTime: new Date(+executeExpireTime * 1000).toLocaleString(),
+  });
+  const newValue = {
+    ...oldValue,
+    queue,
+  };
+  await getDb().set(key, newValue).write();
+};
+
 export const getContractAddressInDb = async (id: eContractid | string) => {
   return ((await getDb().get(`${id}.${DRE.network.name}`).value()) || {})
     .address;
@@ -625,6 +655,12 @@ export const getActionAndData = async (
     ]
   );
   const isActionQueued = await timeLock.isActionQueued(actionHash);
+  const gracePeriod = await timeLock.GRACE_PERIOD();
+  const delay = await timeLock.getDelay();
+  const queueExpireTime = BigNumber.from(executionTime).sub(delay).toString();
+  const executeExpireTime = BigNumber.from(executionTime)
+    .add(gracePeriod)
+    .toString();
   const queueData = timeLock.interface.encodeFunctionData(
     "queueTransaction",
     action
@@ -651,7 +687,16 @@ export const getActionAndData = async (
     console.log("cancelData:", cancelData);
     console.log();
   }
-  return {action, actionHash, queueData, executeData, cancelData};
+  return {
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executionTime,
+    queueExpireTime,
+    executeExpireTime,
+  };
 };
 
 export const printEncodedData = async (
@@ -663,7 +708,27 @@ export const printEncodedData = async (
     DRY_RUN == DryRunExecutor.TimeLock &&
     (await getContractAddressInDb(eContractid.TimeLockExecutor))
   ) {
-    await getActionAndData(target, data, executionTime);
+    const actionData = await getActionAndData(target, data, executionTime);
+    const {
+      action,
+      actionHash,
+      queueData,
+      executeData,
+      cancelData,
+      queueExpireTime,
+      executeExpireTime,
+    } = actionData;
+    await insertTimeLockDataInDb(
+      action,
+      actionHash,
+      queueData,
+      executeData,
+      cancelData,
+      actionData.executionTime,
+      queueExpireTime,
+      executeExpireTime
+    );
+  } else {
+    console.log(`target: ${target}, data: ${data}`);
   }
-  console.log(`target: ${target}, data: ${data}`);
 };
