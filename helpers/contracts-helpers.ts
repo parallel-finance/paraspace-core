@@ -166,12 +166,17 @@ export const getTimeLockDataInDb = async (): Promise<
   {
     action: Action;
     actionHash: string;
+    queueData: string;
+    executeData: string;
+    cancelData: string;
   }[]
 > => {
   const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
   const oldValue = (await getDb().get(key).value()) || {};
   const queue = oldValue.queue || [];
-  return queue.map((x) => pick(x, ["action", "actionHash"]));
+  return queue.map((x) =>
+    pick(x, ["action", "actionHash", "queueData", "executeData", "cancelData"])
+  );
 };
 
 export const getContractAddressInDb = async (id: eContractid | string) => {
