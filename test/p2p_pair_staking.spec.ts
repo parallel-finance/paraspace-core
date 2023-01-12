@@ -896,8 +896,10 @@ describe("P2P Pair Staking Test", () => {
     user2SignedOrder.v = 0;
 
     await expect(
-        p2pPairStaking.connect(user1.signer).matchPairStakingList(user1SignedOrder, user2SignedOrder)
-    ).to.be.reverted
+      p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder, user2SignedOrder)
+    ).to.be.reverted;
 
     const txReceipt = await waitForTx(
       await p2pPairStaking
