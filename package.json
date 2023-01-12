@@ -59,6 +59,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eth-sig-util": "2.5.3",
+    "ethereum-input-data-decoder": "^0.4.2",
     "ethereum-waffle": "3.2.0",
     "ethereumjs-util": "7.0.2",
     "ethers": "5.7.2",
