@@ -1,4 +1,3 @@
-import {utils} from "ethers";
 import {
   ProtocolDataProvider__factory,
   PToken__factory,
@@ -698,20 +697,6 @@ export const getNTokenUniswapV3 = async (address?: tEthereumAddress) =>
 
 export const getChainId = async () =>
   (await DRE.ethers.provider.getNetwork()).chainId;
-
-export const getProxyAdmin = async (proxyAddress: string) => {
-  const EIP1967_ADMIN_SLOT =
-    "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
-  const adminStorageSlot = await DRE.ethers.provider.getStorageAt(
-    proxyAddress,
-    EIP1967_ADMIN_SLOT,
-    "latest"
-  );
-  const adminAddress = utils.defaultAbiCoder
-    .decode(["address"], adminStorageSlot)
-    .toString();
-  return utils.getAddress(adminAddress);
-};
 
 export const getMockTokenFaucet = async (address?: tEthereumAddress) =>
   await MockTokenFaucet__factory.connect(

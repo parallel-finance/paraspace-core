@@ -9,14 +9,17 @@ import {
 import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {getProxyImplementation} from "../helpers/contracts-helpers";
+import {
+  getProxyAdmin,
+  getProxyImplementation,
+} from "../helpers/contracts-helpers";
 import {deployPoolComponents} from "../helpers/contracts-deployments";
 import {
   InitializableAdminUpgradeabilityProxy__factory,
   MockPeripheryContractV1__factory,
   MockPeripheryContractV2__factory,
 } from "../types";
-import {getFirstSigner, getProxyAdmin} from "../helpers/contracts-getters";
+import {getFirstSigner} from "../helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 

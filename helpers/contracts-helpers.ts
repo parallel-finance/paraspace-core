@@ -131,6 +131,36 @@ export const insertContractAddressInDb = async (
   await getDb().set(key, newValue).write();
 };
 
+export const insertTimeLockDataInDb = async (
+  action: Action,
+  actionHash: string,
+  queueData: string,
+  executeData: string,
+  cancelData: string,
+  executeTime: string,
+  queueExpireTime: string,
+  executeExpireTime: string
+) => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = oldValue.queue || [];
+  queue.push({
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executeTime: new Date(+executeTime * 1000).toLocaleString(),
+    queueExpireTime: new Date(+queueExpireTime * 1000).toLocaleString(),
+    executeExpireTime: new Date(+executeExpireTime * 1000).toLocaleString(),
+  });
+  const newValue = {
+    ...oldValue,
+    queue,
+  };
+  await getDb().set(key, newValue).write();
+};
+
 export const getContractAddressInDb = async (id: eContractid | string) => {
   return ((await getDb().get(`${id}.${DRE.network.name}`).value()) || {})
     .address;
@@ -340,6 +370,20 @@ export const getProxyImplementation = async (proxyAddress: string) => {
     .decode(["address"], implStorageSlot)
     .toString();
   return utils.getAddress(implAddress);
+};
+
+export const getProxyAdmin = async (proxyAddress: string) => {
+  const EIP1967_ADMIN_SLOT =
+    "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
+  const adminStorageSlot = await DRE.ethers.provider.getStorageAt(
+    proxyAddress,
+    EIP1967_ADMIN_SLOT,
+    "latest"
+  );
+  const adminAddress = utils.defaultAbiCoder
+    .decode(["address"], adminStorageSlot)
+    .toString();
+  return utils.getAddress(adminAddress);
 };
 
 export const impersonateAddress = async (
@@ -596,11 +640,9 @@ export const getCurrentTime = async () => {
 };
 
 export const getExecutionTime = async () => {
-  const timeLock = await getTimeLockExecutor();
-  const delay = await timeLock.getDelay();
   const blockNumber = await DRE.ethers.provider.getBlockNumber();
   const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
-  return delay.add(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
+  return BigNumber.from(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
 };
 
 export const getActionAndData = async (
@@ -609,14 +651,8 @@ export const getActionAndData = async (
   executionTime?: string
 ) => {
   const timeLock = await getTimeLockExecutor();
-  const action: Action = [
-    target,
-    0,
-    "",
-    data,
-    executionTime || (await getExecutionTime()),
-    false,
-  ];
+  executionTime = executionTime || (await getExecutionTime());
+  const action: Action = [target, 0, "", data, executionTime, false];
   const actionHash = solidityKeccak256(
     ["bytes"],
     [
@@ -627,6 +663,13 @@ export const getActionAndData = async (
     ]
   );
   const isActionQueued = await timeLock.isActionQueued(actionHash);
+  const gracePeriod = await timeLock.GRACE_PERIOD();
+  const delay = await timeLock.getDelay();
+  const executeTime = BigNumber.from(executionTime).add(delay).toString();
+  const queueExpireTime = BigNumber.from(executionTime).sub(delay).toString();
+  const executeExpireTime = BigNumber.from(executionTime)
+    .add(gracePeriod)
+    .toString();
   const queueData = timeLock.interface.encodeFunctionData(
     "queueTransaction",
     action
@@ -640,6 +683,7 @@ export const getActionAndData = async (
     action
   );
   if (VERBOSE) {
+    console.log();
     console.log("isActionQueued:", isActionQueued);
     console.log("timeLock:", timeLock.address);
     console.log("target:", target);
@@ -650,8 +694,18 @@ export const getActionAndData = async (
     console.log("queueData:", queueData);
     console.log("executeData:", executeData);
     console.log("cancelData:", cancelData);
+    console.log();
   }
-  return {action, actionHash, queueData, executeData, cancelData};
+  return {
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executeTime,
+    queueExpireTime,
+    executeExpireTime,
+  };
 };
 
 export const printEncodedData = async (
@@ -663,7 +717,27 @@ export const printEncodedData = async (
     DRY_RUN == DryRunExecutor.TimeLock &&
     (await getContractAddressInDb(eContractid.TimeLockExecutor))
   ) {
-    await getActionAndData(target, data, executionTime);
+    const {
+      action,
+      actionHash,
+      queueData,
+      executeData,
+      cancelData,
+      executeTime,
+      queueExpireTime,
+      executeExpireTime,
+    } = await getActionAndData(target, data, executionTime);
+    await insertTimeLockDataInDb(
+      action,
+      actionHash,
+      queueData,
+      executeData,
+      cancelData,
+      executeTime,
+      queueExpireTime,
+      executeExpireTime
+    );
+  } else {
+    console.log(`target: ${target}, data: ${data}`);
   }
-  console.log(`target: ${target}, data: ${data}`);
 };
