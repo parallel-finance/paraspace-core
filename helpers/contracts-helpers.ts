@@ -328,22 +328,18 @@ export const buildDelegationWithSigParams = (
   },
 });
 
-export const getProxyImplementation = async (
-  proxyAdminAddress: string,
-  proxyAddress: string
-) => {
-  // Impersonate proxy admin
-  const proxyAdminSigner = (await impersonateAddress(proxyAdminAddress)).signer;
-
-  // failing here
-  const proxy = (await DRE.ethers.getContractAt(
-    "InitializableImmutableAdminUpgradeabilityProxy",
+export const getProxyImplementation = async (proxyAddress: string) => {
+  const EIP1967_IMPL_SLOT =
+    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+  const implStorageSlot = await DRE.ethers.provider.getStorageAt(
     proxyAddress,
-    proxyAdminSigner
-  )) as InitializableImmutableAdminUpgradeabilityProxy;
-
-  const implementationAddress = await proxy.callStatic.implementation();
-  return implementationAddress;
+    EIP1967_IMPL_SLOT,
+    "latest"
+  );
+  const implAddress = utils.defaultAbiCoder
+    .decode(["address"], implStorageSlot)
+    .toString();
+  return utils.getAddress(implAddress);
 };
 
 export const impersonateAddress = async (

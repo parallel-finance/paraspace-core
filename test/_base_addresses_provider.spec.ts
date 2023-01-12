@@ -94,10 +94,7 @@ describe("PoolAddressesProvider", () => {
       .to.emit(addressesProvider, "ProxyCreated");
 
     const proxyAddress = await addressesProvider.getAddress(proxiedAddressId);
-    const implAddress = await getProxyImplementation(
-      addressesProvider.address,
-      proxyAddress
-    );
+    const implAddress = await getProxyImplementation(proxyAddress);
     expect(implAddress).to.be.eq(mockPool.address);
   });
 
@@ -170,9 +167,7 @@ describe("PoolAddressesProvider", () => {
       convertibleAddressId
     );
     expect(registeredAddress).to.be.eq(mockConvertibleAddress);
-    await expect(
-      getProxyImplementation(addressesProvider.address, registeredAddress)
-    ).to.be.reverted;
+    await expect(getProxyImplementation(registeredAddress)).to.be.reverted;
 
     // Unregister address as non proxy
     expect(
@@ -195,10 +190,7 @@ describe("PoolAddressesProvider", () => {
     const proxyAddress = await addressesProvider.getAddress(
       convertibleAddressId
     );
-    const implAddress = await getProxyImplementation(
-      addressesProvider.address,
-      proxyAddress
-    );
+    const implAddress = await getProxyImplementation(proxyAddress);
     expect(implAddress).to.be.eq(mockConvertibleAddress);
   });
 
@@ -264,10 +256,7 @@ describe("PoolAddressesProvider", () => {
     const proxyAddress = await addressesProvider.getAddress(
       convertibleAddressId
     );
-    const implAddress = await getProxyImplementation(
-      addressesProvider.address,
-      proxyAddress
-    );
+    const implAddress = await getProxyImplementation(proxyAddress);
     expect(implAddress).to.be.eq(mockConvertibleAddress);
 
     // Unregister address as proxy
@@ -293,9 +282,7 @@ describe("PoolAddressesProvider", () => {
     );
     expect(registeredAddressAfter).to.be.not.eq(proxyAddress);
     expect(registeredAddressAfter).to.be.eq(mockConvertibleAddress);
-    await expect(
-      getProxyImplementation(addressesProvider.address, registeredAddressAfter)
-    ).to.be.reverted;
+    await expect(getProxyImplementation(registeredAddressAfter)).to.be.reverted;
   });
 
   it("TC-addresses-provider-07 Unregister a no proxy address", async () => {
@@ -310,9 +297,7 @@ describe("PoolAddressesProvider", () => {
     const registeredAddress = await addressesProvider.getAddress(
       convertibleAddressId
     );
-    await expect(
-      getProxyImplementation(addressesProvider.address, registeredAddress)
-    ).to.be.reverted;
+    await expect(getProxyImplementation(registeredAddress)).to.be.reverted;
 
     expect(
       await addressesProvider
@@ -327,9 +312,7 @@ describe("PoolAddressesProvider", () => {
     );
     expect(registeredAddressAfter).to.be.eq(ZERO_ADDRESS);
     expect(registeredAddressAfter).to.be.not.eq(registeredAddress);
-    await expect(
-      getProxyImplementation(addressesProvider.address, registeredAddress)
-    ).to.be.reverted;
+    await expect(getProxyImplementation(registeredAddress)).to.be.reverted;
   });
 
   it("TC-addresses-provider-08 Owner registers an existing contract (with proxy) and upgrade it", async () => {
@@ -525,10 +508,7 @@ describe("PoolAddressesProvider", () => {
     const proxyAddress = await addressesProvider.getAddress(
       poolConfiguratorAddressId
     );
-    const implementationAddress = await getProxyImplementation(
-      addressesProvider.address,
-      proxyAddress
-    );
+    const implementationAddress = await getProxyImplementation(proxyAddress);
 
     expect(
       await addressesProvider
@@ -542,7 +522,6 @@ describe("PoolAddressesProvider", () => {
       configurator.address
     );
     const implementationAddressAfter = await getProxyImplementation(
-      addressesProvider.address,
       proxyAddress
     );
     expect(implementationAddressAfter).to.be.not.eq(implementationAddress);

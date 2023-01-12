@@ -1,6 +1,7 @@
 import {task} from "hardhat/config";
 import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
+import {getProxyImplementation} from "../../helpers/contracts-helpers";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
@@ -35,8 +36,16 @@ task("market-info", "Print markets info")
       console.log(" reserveFactor:", x.reserveFactor.toString());
       console.log(" supplyCap:", supplyCap.toString());
       console.log(" borrowCap:", borrowCap.toString());
-      console.log(" xTokenAddress:", x.xTokenAddress);
-      console.log(" variableDebtTokenAddress:", x.variableDebtTokenAddress);
+      console.log(" xTokenProxy:", x.xTokenAddress);
+      console.log(
+        " xTokenImpl:",
+        await getProxyImplementation(x.xTokenAddress)
+      );
+      console.log(" variableDebtTokenProxy:", x.variableDebtTokenAddress);
+      console.log(
+        " variableDebtTokenImpl:",
+        await getProxyImplementation(x.variableDebtTokenAddress)
+      );
       console.log(
         " interestRateStrategyAddress:",
         x.interestRateStrategyAddress
