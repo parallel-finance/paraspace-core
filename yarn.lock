@@ -1361,6 +1361,7 @@ __metadata:
     "@safe-global/safe-core-sdk": ^3.2.0
     "@safe-global/safe-core-sdk-types": ^1.7.0
     "@safe-global/safe-ethers-lib": ^1.7.0
+    "@safe-global/safe-service-client": ^1.5.0
     "@tenderly/hardhat-tenderly": 1.1.0-beta.5
     "@typechain/ethers-v5": ^10.1.0
     "@typechain/hardhat": ^6.1.2
@@ -1486,6 +1487,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@safe-global/safe-core-sdk-types@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "@safe-global/safe-core-sdk-types@npm:1.8.0"
+  dependencies:
+    "@ethersproject/bignumber": ^5.7.0
+    "@ethersproject/contracts": ^5.7.0
+    "@gnosis.pm/safe-deployments": 1.17.0
+    web3-core: ^1.8.1
+    web3-utils: ^1.8.1
+  checksum: bc76668e780db17b10608c3e9e95da6b0f3b892d199939376c1e3f056d107f6b1879e998ff4313d10d01666dccfcfbff68974dc6f96706ab27bf74653baf949e
+  languageName: node
+  linkType: hard
+
 "@safe-global/safe-core-sdk-utils@npm:^1.5.0":
   version: 1.5.0
   resolution: "@safe-global/safe-core-sdk-utils@npm:1.5.0"
@@ -1519,6 +1533,17 @@ __metadata:
     "@safe-global/safe-core-sdk-utils": ^1.5.0
     ethers: ^5.7.2
   checksum: efd90807f687229f1096d0f387b5217095d8358b1a6ce567830e4b9ae034d1492f7cb2a2893770322916dc7046872c79268a6c646acc5cccf5e78941635dc94f
+  languageName: node
+  linkType: hard
+
+"@safe-global/safe-service-client@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@safe-global/safe-service-client@npm:1.5.0"
+  dependencies:
+    "@ethersproject/abstract-signer": ^5.7.0
+    "@safe-global/safe-core-sdk-types": ^1.8.0
+    node-fetch: ^2.6.6
+  checksum: 892863f46c5e4f0e327a88dde6cc1c2a77e50a9f75e46a05a414e117dbced89bf6bc2521abadc4e68da5f28ec45c18f8a3d8789921c26d658f9c600901043565
   languageName: node
   linkType: hard
 
@@ -11060,7 +11085,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:2.6.7, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.7":
+"node-fetch@npm:2.6.7, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.6, node-fetch@npm:^2.6.7":
   version: 2.6.7
   resolution: "node-fetch@npm:2.6.7"
   dependencies:

@@ -446,6 +446,10 @@ execute-buffered-txs:
 cancel-buffered-txs:
 	make TASK_NAME=cancel-buffered-txs run-task
 
+.PHONY: list-pending-safe-txs
+list-pending-safe-txs:
+	make TASK_NAME=list-pending-safe-txs run-task
+
 .PHONY: set-ltv
 set-ltv:
 	make TASK_NAME=set-ltv run-task
