@@ -613,14 +613,8 @@ export const getActionAndData = async (
   executionTime?: string
 ) => {
   const timeLock = await getTimeLockExecutor();
-  const action: Action = [
-    target,
-    0,
-    "",
-    data,
-    executionTime || (await getExecutionTime()),
-    false,
-  ];
+  executionTime = executionTime || (await getExecutionTime());
+  const action: Action = [target, 0, "", data, executionTime, false];
   const actionHash = solidityKeccak256(
     ["bytes"],
     [
@@ -644,6 +638,7 @@ export const getActionAndData = async (
     action
   );
   if (VERBOSE) {
+    console.log();
     console.log("isActionQueued:", isActionQueued);
     console.log("timeLock:", timeLock.address);
     console.log("target:", target);
@@ -654,6 +649,7 @@ export const getActionAndData = async (
     console.log("queueData:", queueData);
     console.log("executeData:", executeData);
     console.log("cancelData:", cancelData);
+    console.log();
   }
   return {action, actionHash, queueData, executeData, cancelData};
 };
