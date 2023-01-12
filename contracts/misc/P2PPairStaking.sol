@@ -121,8 +121,7 @@ contract P2PPairStaking is
 
         //2 check if orders can match
         require(
-            apeOrder.stakingType == StakingType.BAYCStaking ||
-                apeOrder.stakingType == StakingType.MAYCStaking,
+            apeOrder.stakingType <= StakingType.MAYCStaking,
             "invalid stake type"
         );
         require(
@@ -149,15 +148,19 @@ contract P2PPairStaking is
         );
 
         //4 create match order
-        MatchedOrder memory matchedOrder;
-        matchedOrder.stakingType = apeOrder.stakingType;
-        matchedOrder.apeToken = apeOrder.token;
-        matchedOrder.apeOfferer = apeOrder.offerer;
-        matchedOrder.apeTokenId = apeOrder.tokenId;
-        matchedOrder.apeShare = apeOrder.share;
-        matchedOrder.apeCoinOfferer = apeCoinOrder.offerer;
-        matchedOrder.apeCoinShare = apeCoinOrder.share;
-        matchedOrder.apePrincipleAmount = apeAmount;
+        MatchedOrder memory matchedOrder = MatchedOrder({
+            stakingType: apeOrder.stakingType,
+            apeToken: apeOrder.token,
+            apeOfferer: apeOrder.offerer,
+            apeTokenId: apeOrder.tokenId,
+            apeShare: apeOrder.share,
+            bakcOfferer: address(0),
+            bakcTokenId: 0,
+            bakcShare: 0,
+            apeCoinOfferer: apeCoinOrder.offerer,
+            apeCoinShare: apeCoinOrder.share,
+            apePrincipleAmount: apeAmount
+        });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
 
@@ -190,8 +193,7 @@ contract P2PPairStaking is
 
         //2 check if orders can match
         require(
-            apeOrder.stakingType == StakingType.BAYCPairStaking ||
-                apeOrder.stakingType == StakingType.MAYCPairStaking,
+            apeOrder.stakingType >= StakingType.BAYCPairStaking,
             "invalid stake type"
         );
         require(
@@ -224,18 +226,19 @@ contract P2PPairStaking is
         );
 
         //4 create match order
-        MatchedOrder memory matchedOrder;
-        matchedOrder.stakingType = apeOrder.stakingType;
-        matchedOrder.apeToken = apeOrder.token;
-        matchedOrder.apeOfferer = apeOrder.offerer;
-        matchedOrder.apeTokenId = apeOrder.tokenId;
-        matchedOrder.apeShare = apeOrder.share;
-        matchedOrder.bakcOfferer = bakcOrder.offerer;
-        matchedOrder.bakcTokenId = bakcOrder.tokenId;
-        matchedOrder.bakcShare = bakcOrder.share;
-        matchedOrder.apeCoinOfferer = apeCoinOrder.offerer;
-        matchedOrder.apeCoinShare = apeCoinOrder.share;
-        matchedOrder.apePrincipleAmount = apeAmount;
+        MatchedOrder memory matchedOrder = MatchedOrder({
+            stakingType: apeOrder.stakingType,
+            apeToken: apeOrder.token,
+            apeOfferer: apeOrder.offerer,
+            apeTokenId: apeOrder.tokenId,
+            apeShare: apeOrder.share,
+            bakcOfferer: bakcOrder.offerer,
+            bakcTokenId: bakcOrder.tokenId,
+            bakcShare: bakcOrder.share,
+            apeCoinOfferer: apeCoinOrder.offerer,
+            apeCoinShare: apeCoinOrder.share,
+            apePrincipleAmount: apeAmount
+        });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
 

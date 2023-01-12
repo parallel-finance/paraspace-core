@@ -2055,7 +2055,7 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   return proxyInstance as AutoCompoundApe;
 };
 
-export const deployP2PPairStaking = async (verify?: boolean) => {
+export const deployP2PPairStakingImpl = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
@@ -2069,20 +2069,21 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
     apeCoinStaking,
   ];
 
-  const p2pImplementation = await withSaveAndVerify(
+  return withSaveAndVerify(
     new P2PPairStaking__factory(await getFirstSigner()),
     eContractid.P2PPairStakingImpl,
     [...args],
     verify
-  );
+  ) as Promise<P2PPairStaking>;
+};
+
+export const deployP2PPairStaking = async (verify?: boolean) => {
+  const p2pImplementation = await deployP2PPairStakingImpl(verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
 
-  const initData = p2pImplementation.interface.encodeFunctionData(
-    "initialize",
-    []
-  );
+  const initData = p2pImplementation.interface.encodeFunctionData("initialize");
 
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),

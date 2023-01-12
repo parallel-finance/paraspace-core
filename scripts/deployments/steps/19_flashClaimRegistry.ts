@@ -1,7 +1,6 @@
 import {
   deployUserFlashClaimRegistry,
   deployMockAirdropProject,
-  deployP2PPairStaking,
 } from "../../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
@@ -12,7 +11,6 @@ import {ERC721TokenContractId} from "../../../helpers/types";
 
 export const step_19 = async (verify = false) => {
   try {
-    // deploy FlashClaimRegistry
     const addressesProvider = await getPoolAddressesProvider();
     const poolAddress = await addressesProvider.getPool();
     await deployUserFlashClaimRegistry(poolAddress, verify);
@@ -26,12 +24,11 @@ export const step_19 = async (verify = false) => {
     const baycAddress = reservesTokens.find(
       (token) => token.symbol === ERC721TokenContractId.BAYC
     )?.tokenAddress;
-    if (baycAddress) {
-      await deployMockAirdropProject(baycAddress, verify);
+    if (!baycAddress) {
+      return;
     }
 
-    // deploy P2PPairStaking
-    await deployP2PPairStaking();
+    await deployMockAirdropProject(baycAddress, verify);
   } catch (error) {
     console.error(error);
     process.exit(1);
