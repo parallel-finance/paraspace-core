@@ -107,14 +107,22 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
             return _maxPriceMultiplier;
         }
 
-        uint256 ticksMinExp = (_maxPriceMultiplier.ln() -
-            _minExpPriceMultiplier.ln()).div(_stepExp);
+        uint256 ticksMinExp = PRBMathUD60x18.div(
+            (PRBMathUD60x18.ln(_maxPriceMultiplier) -
+                PRBMathUD60x18.ln(_minExpPriceMultiplier)),
+            _stepExp
+        );
         if (ticks <= ticksMinExp) {
-            return _maxPriceMultiplier.div(_stepExp.mul(ticks).exp());
+            return
+                PRBMathUD60x18.div(
+                    _maxPriceMultiplier,
+                    PRBMathUD60x18.exp(_stepExp.mul(ticks))
+                );
         }
 
-        uint256 priceMinExpEffective = _maxPriceMultiplier.div(
-            _stepExp.mul(ticksMinExp).exp()
+        uint256 priceMinExpEffective = PRBMathUD60x18.div(
+            _maxPriceMultiplier,
+            PRBMathUD60x18.exp(_stepExp.mul(ticksMinExp))
         );
         uint256 ticksMin = ticksMinExp +
             (priceMinExpEffective - _minPriceMultiplier).div(_stepLinear);
