@@ -1,7 +1,6 @@
 import {task} from "hardhat/config";
 import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
-import {getProxyImplementation} from "../../helpers/contracts-helpers";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
@@ -12,6 +11,9 @@ task("market-info", "Print markets info")
       getProtocolDataProvider,
       getUiPoolDataProvider,
     } = await import("../../helpers/contracts-getters");
+    const {getProxyImplementation} = await import(
+      "../../helpers/contracts-helpers"
+    );
     const ui = await getUiPoolDataProvider();
     const protocolDataProvider = await getProtocolDataProvider();
     const provider = await getPoolAddressesProvider();
