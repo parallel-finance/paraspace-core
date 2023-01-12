@@ -49,6 +49,7 @@ contract P2PPairStaking is
     mapping(bytes32 => MatchedOrder) public matchedOrders;
     mapping(address => uint256) public cApeShareBalance;
     address public matchingOperator;
+    uint256 public compoundFee;
 
     constructor(
         address _bayc,
@@ -278,11 +279,13 @@ contract P2PPairStaking is
             "no permission to break up"
         );
 
-        //2 delete matched order
+        //2 claim pending reward
+        _claimForMatchedOrderAndCompound(orderHash);
+
+        //3 delete matched order
         delete matchedOrders[orderHash];
 
-        //3 exit from ApeCoinStaking
-        uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
+        //4 exit from ApeCoinStaking
         if (order.stakingType < StakingType.BAYCPairStaking) {
             ApeCoinStaking.SingleNft[]
                 memory _nfts = new ApeCoinStaking.SingleNft[](1);
@@ -312,37 +315,21 @@ contract P2PPairStaking is
                 apeCoinStaking.withdrawBAKC(_otherPairs, _nfts);
             }
         }
-        uint256 balanceAfter = IERC20(apeCoin).balanceOf(address(this));
-        uint256 rewardAmount = balanceAfter -
-            balanceBefore -
-            order.apePrincipleAmount;
-
-        //4 transfer token
+        //5 transfer token
         IERC721(order.apeToken).safeTransferFrom(
             address(this),
             order.apeOfferer,
             order.apeTokenId
         );
         IERC20(apeCoin).safeTransfer(
-            order.apeOfferer,
-            rewardAmount.percentMul(order.apeShare)
-        );
-
-        IERC20(apeCoin).safeTransfer(
             order.apeCoinOfferer,
-            rewardAmount.percentMul(order.apeCoinShare) +
-                order.apePrincipleAmount
+            order.apePrincipleAmount
         );
-
         if (order.stakingType >= StakingType.BAYCPairStaking) {
             IERC721(bakc).safeTransferFrom(
                 address(this),
                 order.bakcOfferer,
                 order.bakcTokenId
-            );
-            IERC20(apeCoin).safeTransfer(
-                order.bakcOfferer,
-                rewardAmount.percentMul(order.bakcShare)
             );
         }
 
@@ -356,61 +343,17 @@ contract P2PPairStaking is
     {
         for (uint256 index = 0; index < orderHashes.length; index++) {
             bytes32 orderHash = orderHashes[index];
-            MatchedOrder memory order = matchedOrders[orderHash];
-            uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
-            if (order.stakingType < StakingType.BAYCPairStaking) {
-                uint256[] memory _nfts = new uint256[](1);
-                _nfts[0] = order.apeTokenId;
-                if (order.stakingType == StakingType.BAYCStaking) {
-                    apeCoinStaking.claimSelfBAYC(_nfts);
-                } else {
-                    apeCoinStaking.claimSelfMAYC(_nfts);
-                }
-            } else {
-                ApeCoinStaking.PairNft[]
-                    memory _nfts = new ApeCoinStaking.PairNft[](1);
-                _nfts[0].mainTokenId = order.apeTokenId;
-                _nfts[0].bakcTokenId = order.bakcTokenId;
-                ApeCoinStaking.PairNft[]
-                    memory _otherPairs = new ApeCoinStaking.PairNft[](0);
-                if (order.stakingType == StakingType.BAYCPairStaking) {
-                    apeCoinStaking.claimSelfBAKC(_nfts, _otherPairs);
-                } else {
-                    apeCoinStaking.claimSelfBAKC(_otherPairs, _nfts);
-                }
-            }
-            uint256 balanceAfter = IERC20(apeCoin).balanceOf(address(this));
-            uint256 rewardAmount = balanceAfter - balanceBefore;
-
-            uint256 shareBefore = ICApe(cApe).sharesOf(address(this));
-            IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
-            uint256 shareAfter = ICApe(cApe).sharesOf(address(this));
-            uint256 rewardShare = shareAfter - shareBefore;
-
-            _depositCApeShareForUser(
-                order.apeOfferer,
-                rewardShare.percentMul(order.apeShare)
-            );
-            _depositCApeShareForUser(
-                order.bakcOfferer,
-                rewardShare.percentMul(order.bakcShare)
-            );
-            _depositCApeShareForUser(
-                order.apeCoinOfferer,
-                rewardShare.percentMul(order.apeCoinShare)
-            );
-
-            emit OrderClaimedAndCompounded(orderHash, rewardAmount);
+            _claimForMatchedOrderAndCompound(orderHash);
         }
     }
 
-    function claimCApeReward() external nonReentrant {
+    function claimCApeReward(address receiver) external nonReentrant {
         uint256 cApeAmount = pendingCApeReward(msg.sender);
         if (cApeAmount > 0) {
-            IAutoCompoundApe(cApe).transfer(msg.sender, cApeAmount);
+            IAutoCompoundApe(cApe).transfer(receiver, cApeAmount);
             delete cApeShareBalance[msg.sender];
 
-            emit CApeClaimed(msg.sender, cApeAmount);
+            emit CApeClaimed(msg.sender, receiver, cApeAmount);
         }
     }
 
@@ -488,6 +431,59 @@ contract P2PPairStaking is
             );
     }
 
+    function _claimForMatchedOrderAndCompound(bytes32 orderHash) internal {
+        MatchedOrder memory order = matchedOrders[orderHash];
+        uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
+        if (order.stakingType < StakingType.BAYCPairStaking) {
+            uint256[] memory _nfts = new uint256[](1);
+            _nfts[0] = order.apeTokenId;
+            if (order.stakingType == StakingType.BAYCStaking) {
+                apeCoinStaking.claimSelfBAYC(_nfts);
+            } else {
+                apeCoinStaking.claimSelfMAYC(_nfts);
+            }
+        } else {
+            ApeCoinStaking.PairNft[]
+                memory _nfts = new ApeCoinStaking.PairNft[](1);
+            _nfts[0].mainTokenId = order.apeTokenId;
+            _nfts[0].bakcTokenId = order.bakcTokenId;
+            ApeCoinStaking.PairNft[]
+                memory _otherPairs = new ApeCoinStaking.PairNft[](0);
+            if (order.stakingType == StakingType.BAYCPairStaking) {
+                apeCoinStaking.claimSelfBAKC(_nfts, _otherPairs);
+            } else {
+                apeCoinStaking.claimSelfBAKC(_otherPairs, _nfts);
+            }
+        }
+        uint256 balanceAfter = IERC20(apeCoin).balanceOf(address(this));
+        uint256 rewardAmount = balanceAfter - balanceBefore;
+
+        uint256 shareBefore = ICApe(cApe).sharesOf(address(this));
+        IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
+        uint256 shareAfter = ICApe(cApe).sharesOf(address(this));
+        uint256 rewardShare = shareAfter - shareBefore;
+
+        //compound fee
+        uint256 _compoundFee = rewardShare.percentMul(compoundFee);
+        _depositCApeShareForUser(address(this), _compoundFee);
+        rewardShare -= _compoundFee;
+
+        _depositCApeShareForUser(
+            order.apeOfferer,
+            rewardShare.percentMul(order.apeShare)
+        );
+        _depositCApeShareForUser(
+            order.bakcOfferer,
+            rewardShare.percentMul(order.bakcShare)
+        );
+        _depositCApeShareForUser(
+            order.apeCoinOfferer,
+            rewardShare.percentMul(order.apeCoinShare)
+        );
+
+        emit OrderClaimedAndCompounded(orderHash, rewardAmount);
+    }
+
     function _depositCApeShareForUser(address user, uint256 amount) internal {
         if (amount > 0) {
             cApeShareBalance[user] += amount;
@@ -507,7 +503,9 @@ contract P2PPairStaking is
         bytes32 orderHash = getListingOrderHash(listingOrder);
         require(!isListingOrderCanceled[orderHash], "order already canceled");
 
-        if (msg.sender != listingOrder.offerer) {
+        if (
+            msg.sender != listingOrder.offerer && msg.sender != matchingOperator
+        ) {
             require(
                 _validateOrderSignature(
                     listingOrder.offerer,
@@ -586,7 +584,27 @@ contract P2PPairStaking is
 
     function setMatchingOperator(address _matchingOperator) external onlyOwner {
         require(_matchingOperator != address(0), "zero address");
-        matchingOperator = _matchingOperator;
+        address oldOperator = matchingOperator;
+        if (oldOperator != _matchingOperator) {
+            matchingOperator = _matchingOperator;
+            emit MatchingOperatorUpdated(oldOperator, _matchingOperator);
+        }
+    }
+
+    function setCompoundFee(uint256 _compoundFee) external onlyOwner {
+        require(
+            _compoundFee < PercentageMath.HALF_PERCENTAGE_FACTOR,
+            "Fee Too High"
+        );
+        uint256 oldValue = compoundFee;
+        if (oldValue != _compoundFee) {
+            compoundFee = _compoundFee;
+            emit CompoundFeeUpdated(oldValue, _compoundFee);
+        }
+    }
+
+    function claimCompoundFee(address receiver) external onlyOwner {
+        this.claimCApeReward(receiver);
     }
 
     function rescueERC20(
