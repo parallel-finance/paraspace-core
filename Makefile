@@ -434,6 +434,18 @@ list-queued-txs:
 list-buffered-txs:
 	make TASK_NAME=list-buffered-txs run-task
 
+.PHONY: queue-buffered-txs
+queue-buffered-txs:
+	make TASK_NAME=queue-buffered-txs run-task
+
+.PHONY: execute-buffered-txs
+execute-buffered-txs:
+	make TASK_NAME=execute-buffered-txs run-task
+
+.PHONY: cancel-buffered-txs
+cancel-buffered-txs:
+	make TASK_NAME=cancel-buffered-txs run-task
+
 .PHONY: set-ltv
 set-ltv:
 	make TASK_NAME=set-ltv run-task

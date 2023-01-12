@@ -166,3 +166,63 @@ task("list-buffered-txs", "List buffered transactions").setAction(
     }
   }
 );
+
+task("queue-buffered-txs", "Queue buffered transactions").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getTimeLockDataInDb} = await import(
+      "../../helpers/contracts-helpers"
+    );
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const actions = await getTimeLockDataInDb();
+
+    for (const a of actions) {
+      await waitForTx(
+        await timeLock.queueTransaction(...a.action, GLOBAL_OVERRIDES)
+      );
+    }
+  }
+);
+
+task("execute-buffered-txs", "Execute buffered transactions").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getTimeLockDataInDb} = await import(
+      "../../helpers/contracts-helpers"
+    );
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const actions = await getTimeLockDataInDb();
+
+    for (const a of actions) {
+      await waitForTx(
+        await timeLock.executeTransaction(...a.action, GLOBAL_OVERRIDES)
+      );
+    }
+  }
+);
+
+task("cancel-buffered-txs", "Cancel buffered transactions").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getTimeLockDataInDb} = await import(
+      "../../helpers/contracts-helpers"
+    );
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const actions = await getTimeLockDataInDb();
+
+    for (const a of actions) {
+      await waitForTx(
+        await timeLock.cancelTransaction(...a.action, GLOBAL_OVERRIDES)
+      );
+    }
+  }
+);
