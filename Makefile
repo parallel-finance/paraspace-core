@@ -430,6 +430,10 @@ cancel-tx:
 list-queued-txs:
 	make TASK_NAME=list-queued-txs run-task
 
+.PHONY: decode-queued-txs
+decode-queued-txs:
+	make TASK_NAME=decode-queued-txs run-task
+
 .PHONY: list-buffered-txs
 list-buffered-txs:
 	make TASK_NAME=list-buffered-txs run-task

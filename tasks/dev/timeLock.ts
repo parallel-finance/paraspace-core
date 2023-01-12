@@ -148,6 +148,31 @@ task("list-queued-txs", "List queued transactions").setAction(
   }
 );
 
+task("decode-queued-txs", "Decode queued transactions").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const decoder = new InputDataDecoder(ABI);
+    const filter = timeLock.filters.QueuedAction();
+    const events = await timeLock.queryFilter(filter);
+    for (const e of events) {
+      if (!(await timeLock.isActionQueued(e.args.actionHash))) {
+        continue;
+      }
+      const inputData = decoder.decodeData(e.args.data.toString());
+      const normalized = JSON.stringify(inputData, (k, v) => {
+        return v.type === "BigNumber" ? +v.hex.toString(10) : v;
+      });
+
+      console.log(JSON.stringify(JSON.parse(normalized), null, 4));
+      console.log();
+    }
+  }
+);
+
 task("decode-buffered-txs", "Decode buffered transactions").setAction(
   async (_, DRE) => {
     await DRE.run("set-DRE");
