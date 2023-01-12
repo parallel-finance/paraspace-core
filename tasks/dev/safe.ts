@@ -15,6 +15,7 @@ import InputDataDecoder from "ethereum-input-data-decoder";
 import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
+import {findLastIndex} from "lodash";
 
 const MULTI_SIG = "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 const MULTI_SEND = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D";
@@ -68,37 +69,42 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   ).results.sort((a, b) =>
     a.nonce > b.nonce
       ? 1
-      : new Date(a.submissionDate).valueOf() >
-        new Date(b.submissionDate).valueOf()
+      : a.nonce === b.nonce &&
+        new Date(a.submissionDate).valueOf() >
+          new Date(b.submissionDate).valueOf()
       ? 1
       : -1
   );
 
-  const txs = res.reduce((ite, cur) => {
-    if (!cur.data) {
+  const txs = res
+    .filter((x, i) => findLastIndex(res, (y) => y.nonce === x.nonce) === i)
+    .reduce((ite, cur) => {
+      if (!cur.data) {
+        return ite;
+      }
+
+      const toConcatenate = (
+        cur.to === MULTI_SEND
+          ? decodeMulti(cur.data).map((x) => ({to: x.to, data: x.data}))
+          : [{to: cur.to, data: cur.data}]
+      ).map(({to, data}) => {
+        if (to != timeLock.address) {
+          return {to, data};
+        }
+
+        const sig = TIME_LOCK_SIGS[data.slice(0, 10)];
+        if (!sig) {
+          return {to, data};
+        }
+
+        [to, , , data] = timeLock.interface.decodeFunctionData(sig, data);
+        return {to, data};
+      });
+
+      ite = ite.concat(toConcatenate);
+
       return ite;
-    }
-
-    const toConcatenate = (
-      cur.to === MULTI_SEND
-        ? decodeMulti(cur.data).map((x) => ({to: x.to, data: x.data}))
-        : [{to: cur.to, data: cur.data}]
-    ).map(({to, data}) => {
-      if (to != timeLock.address) {
-        return {to, data};
-      }
-      const sig = TIME_LOCK_SIGS[data.slice(0, 10)];
-      if (!sig) {
-        return {to, data};
-      }
-      [to, , , data] = timeLock.interface.decodeFunctionData(sig, data);
-      return {to, data};
-    });
-
-    ite = ite.concat(toConcatenate);
-
-    return ite;
-  }, [] as {to: string; data: string}[]);
+    }, [] as {to: string; data: string}[]);
 
   for (const tx of txs) {
     const {to, data} = tx;
