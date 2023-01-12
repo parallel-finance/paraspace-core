@@ -180,6 +180,7 @@ task("queue-buffered-txs", "Queue buffered transactions").setAction(
     const actions = await getTimeLockDataInDb();
 
     for (const a of actions) {
+      console.log(a.actionHash);
       await waitForTx(
         await timeLock.queueTransaction(...a.action, GLOBAL_OVERRIDES)
       );
@@ -200,6 +201,7 @@ task("execute-buffered-txs", "Execute buffered transactions").setAction(
     const actions = await getTimeLockDataInDb();
 
     for (const a of actions) {
+      console.log(a.actionHash);
       await waitForTx(
         await timeLock.executeTransaction(...a.action, GLOBAL_OVERRIDES)
       );
@@ -220,6 +222,7 @@ task("cancel-buffered-txs", "Cancel buffered transactions").setAction(
     const actions = await getTimeLockDataInDb();
 
     for (const a of actions) {
+      console.log(a.actionHash);
       await waitForTx(
         await timeLock.cancelTransaction(...a.action, GLOBAL_OVERRIDES)
       );
