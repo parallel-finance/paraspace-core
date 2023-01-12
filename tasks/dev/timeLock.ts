@@ -2,6 +2,24 @@ import {BigNumber} from "ethers";
 import {task} from "hardhat/config";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
+import InputDataDecoder from "ethereum-input-data-decoder";
+import {
+  ACLManager__factory,
+  ExecutorWithTimelock__factory,
+  ParaSpaceOracle__factory,
+  PoolAddressesProvider__factory,
+  PoolConfigurator__factory,
+  ReservesSetupHelper__factory,
+} from "../../types";
+
+const ABI = [
+  ...ReservesSetupHelper__factory.abi,
+  ...ExecutorWithTimelock__factory.abi,
+  ...PoolAddressesProvider__factory.abi,
+  ...PoolConfigurator__factory.abi,
+  ...ParaSpaceOracle__factory.abi,
+  ...ACLManager__factory.abi,
+];
 
 task("next-execution-time", "Next valid execution time").setAction(
   async (_, DRE) => {
@@ -125,6 +143,28 @@ task("list-queued-txs", "List queued transactions").setAction(
         " expireTime(mins):",
         expireTime.lte(time) ? 0 : expireTime.sub(time).div(60).toString()
       );
+      console.log();
+    }
+  }
+);
+
+task("decode-buffered-txs", "Decode buffered transactions").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getTimeLockDataInDb} = await import(
+      "../../helpers/contracts-helpers"
+    );
+    const decoder = new InputDataDecoder(ABI);
+    const actions = await getTimeLockDataInDb();
+
+    for (const a of actions) {
+      const [, , , data] = a.action;
+      const inputData = decoder.decodeData(data.toString());
+      const normalized = JSON.stringify(inputData, (k, v) => {
+        return v.type === "BigNumber" ? +v.hex.toString(10) : v;
+      });
+
+      console.log(JSON.stringify(JSON.parse(normalized), null, 4));
       console.log();
     }
   }
