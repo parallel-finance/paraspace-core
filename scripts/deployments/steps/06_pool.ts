@@ -1,9 +1,5 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
-import {
-  deployAutoCompoundApe,
-  deployMockedDelegateRegistry,
-  deployPoolComponents,
-} from "../../../helpers/contracts-deployments";
+import {deployPoolComponents} from "../../../helpers/contracts-deployments";
 import {
   getPoolProxy,
   getPoolAddressesProvider,
@@ -17,9 +13,6 @@ export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
 
   try {
-    await deployAutoCompoundApe(verify);
-    await deployMockedDelegateRegistry(verify);
-
     const {
       poolCore,
       poolParameters,
@@ -32,8 +25,6 @@ export const step_06 = async (verify = false) => {
       poolApeStakingSelectors,
       poolParaProxyInterfacesSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
-
-    console.log("after deploying paraselector");
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -65,20 +56,22 @@ export const step_06 = async (verify = false) => {
       )
     );
 
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolApeStaking.address,
-            action: 0,
-            functionSelectors: poolApeStakingSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (poolApeStaking) {
+      await waitForTx(
+        await addressesProvider.updatePoolImpl(
+          [
+            {
+              implAddress: poolApeStaking.address,
+              action: 0,
+              functionSelectors: poolApeStakingSelectors,
+            },
+          ],
+          ZERO_ADDRESS,
+          "0x",
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
 
     const poolAddress = await addressesProvider.getPool();
 

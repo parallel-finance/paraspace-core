@@ -1,7 +1,15 @@
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
+import {
+  eEthereumNetwork,
+  ERC20TokenContractId,
+  IParaSpaceConfiguration,
+} from "../helpers/types";
 import {MocksConfig} from "./mocks";
-import {MainnetOracleConfig, TestnetOracleConfig} from "./oracle";
+import {
+  MainnetOracleConfig,
+  MoonbeamOracleConfig,
+  TestnetOracleConfig,
+} from "./oracle";
 import {
   strategyDAI,
   strategyUSDC,
@@ -24,11 +32,15 @@ import {
   strategyClonex,
   strategyMeebits,
   strategySAPE,
-  strategyCAPE, strategyBAKC,
+  strategyCAPE,
+  strategyXCDOT,
+  strategyWGLMR,
+  strategyBAKC,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
   IParaSpaceConfiguration,
+  | "WrappedNativeTokenId"
   | "MarketId"
   | "PTokenNamePrefix"
   | "VariableDebtTokenNamePrefix"
@@ -46,6 +58,7 @@ export const CommonConfig: Pick<
   | "Mocks"
   | "Oracle"
 > = {
+  WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
   PTokenNamePrefix: "ParaSpace Derivative Token",
   VariableDebtTokenNamePrefix: "ParaSpace Variable Debt Token",
@@ -106,6 +119,39 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
   },
+};
+
+export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  IncentivesController: ZERO_ADDRESS,
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {
+    WGLMR: "0xAcc15dC74880C9944775448304B263D191c6077F",
+    xcDOT: "0xFfFFfFff1FcaCBd218EDc0EbA20Fc2308C778080",
+    USDC: "0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b",
+  },
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  Chainlink: {
+    WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
+    xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
+    USDC: "0xA122591F60115D63421f66F752EF9f6e0bc73abC",
+  },
+  // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
+  ReservesConfig: {
+    xcDOT: strategyXCDOT,
+    WGLMR: strategyWGLMR,
+    USDC: strategyUSDC,
+  },
+  Oracle: MoonbeamOracleConfig,
 };
 
 export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
@@ -197,6 +243,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   Treasury: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   Tokens: {
     WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
     USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     DAI: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
@@ -213,7 +260,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     OTHR: "0x34d85c9cdeb23fa97cb08333b511ac86e1c4e258",
     CLONEX: "0x49cf6f5d44e70224e2e23fdcdd2c053f30ada28b",
     sAPE: "0x0000000000000000000000000000000000000001",
-    // UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -229,6 +276,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    stETH: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
     DAI: "0x773616E4d11A78F511299002da57A0a94577F1f4",
     USDC: "0x986b5E1e1755e3C2440e960477f25201B0a8bbD4",
     USDT: "0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46",
@@ -248,20 +296,21 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     USDC: strategyUSDC,
     USDT: strategyUSDT,
     WETH: strategyWETH,
+    stETH: strategySTETH,
     APE: strategyAPE,
-    // WBTC: strategyWBTC,
+    WBTC: strategyWBTC,
     DOODLE: strategyDoodles,
     BAYC: strategyBAYC,
     MAYC: strategyMAYC,
     WPUNKS: strategyWPunks,
-    // MOONBIRD: strategyMoonbird,
-    // MEEBITS: strategyMeebits,
+    MOONBIRD: strategyMoonbird,
+    MEEBITS: strategyMeebits,
     AZUKI: strategyAzuki,
-    // OTHR: strategyOthr,
+    OTHR: strategyOthr,
     CLONEX: strategyClonex,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
-    // UniswapV3: strategyUniswapV3,
+    UniswapV3: strategyUniswapV3,
     BAKC: strategyBAKC,
   },
   Mocks: undefined,
@@ -274,6 +323,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.hardhat]: HardhatParaSpaceConfig,
   [eEthereumNetwork.anvil]: HardhatParaSpaceConfig,
   [eEthereumNetwork.localhost]: HardhatParaSpaceConfig,
+  [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
 };

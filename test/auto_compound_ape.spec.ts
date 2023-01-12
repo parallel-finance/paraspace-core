@@ -15,8 +15,9 @@ import {
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
-describe("APE Coin Staking Test", () => {
+describe("Auto Compound Ape Test", () => {
   let testEnv: TestEnv;
   let cApe: AutoCompoundApe;
   let pCApe: PToken;
@@ -822,7 +823,9 @@ describe("APE Coin Staking Test", () => {
       gatewayAdmin,
     } = await loadFixture(fixture);
 
-    const delegateRegistry = await deployMockedDelegateRegistry();
+    const delegateRegistry = await deployMockedDelegateRegistry(
+      ETHERSCAN_VERIFICATION
+    );
 
     await cApe
       .connect(gatewayAdmin.signer)

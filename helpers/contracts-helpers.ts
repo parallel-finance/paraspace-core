@@ -8,7 +8,12 @@ import {
 } from "ethers";
 import {signTypedData_v4} from "eth-sig-util";
 import {fromRpcSig, ECDSASignature} from "ethereumjs-util";
-import {Fragment, isAddress} from "ethers/lib/utils";
+import {
+  defaultAbiCoder,
+  Fragment,
+  isAddress,
+  solidityKeccak256,
+} from "ethers/lib/utils";
 import {isZeroAddress} from "ethereumjs-util";
 import {
   DRE,
@@ -26,6 +31,8 @@ import {
   ConstructorArgs,
   LibraryAddresses,
   ParaSpaceLibraryAddresses,
+  Action,
+  DryRunExecutor,
 } from "./types";
 import {
   ConsiderationItem,
@@ -49,7 +56,7 @@ import {
   Seaport,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {getIErc20Detailed} from "./contracts-getters";
+import {getIErc20Detailed, getTimeLockExecutor} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -64,6 +71,9 @@ import {
   GLOBAL_OVERRIDES,
   DEPLOY_INCREMENTAL,
   JSONRPC_VARIANT,
+  DRY_RUN,
+  TIME_LOCK_BUFFERING_TIME,
+  VERBOSE,
 } from "./hardhat-constants";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
@@ -582,3 +592,82 @@ export const isUsingAsCollateral = (conf, id) =>
     .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2).add(1)))
     .and(1)
     .gt(0);
+
+export const getCurrentTime = async () => {
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return BigNumber.from(timestamp);
+};
+
+export const getExecutionTime = async () => {
+  const timeLock = await getTimeLockExecutor();
+  const delay = await timeLock.getDelay();
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return delay.add(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
+};
+
+export const getActionAndData = async (
+  target: string,
+  data: string,
+  executionTime?: string
+) => {
+  const timeLock = await getTimeLockExecutor();
+  const action: Action = [
+    target,
+    0,
+    "",
+    data,
+    executionTime || (await getExecutionTime()),
+    false,
+  ];
+  const actionHash = solidityKeccak256(
+    ["bytes"],
+    [
+      defaultAbiCoder.encode(
+        ["address", "uint256", "string", "bytes", "uint256", "bool"],
+        action
+      ),
+    ]
+  );
+  const isActionQueued = await timeLock.isActionQueued(actionHash);
+  const queueData = timeLock.interface.encodeFunctionData(
+    "queueTransaction",
+    action
+  );
+  const executeData = timeLock.interface.encodeFunctionData(
+    "executeTransaction",
+    action
+  );
+  const cancelData = timeLock.interface.encodeFunctionData(
+    "cancelTransaction",
+    action
+  );
+  if (VERBOSE) {
+    console.log("isActionQueued:", isActionQueued);
+    console.log("timeLock:", timeLock.address);
+    console.log("target:", target);
+    console.log("data:", data);
+    console.log("executionTime:", executionTime);
+    console.log("action:", action.toString());
+    console.log("actionHash:", actionHash);
+    console.log("queueData:", queueData);
+    console.log("executeData:", executeData);
+    console.log("cancelData:", cancelData);
+  }
+  return {action, actionHash, queueData, executeData, cancelData};
+};
+
+export const printEncodedData = async (
+  target: tEthereumAddress,
+  data: string,
+  executionTime?: string
+) => {
+  if (
+    DRY_RUN == DryRunExecutor.TimeLock &&
+    (await getContractAddressInDb(eContractid.TimeLockExecutor))
+  ) {
+    await getActionAndData(target, data, executionTime);
+  }
+  console.log(`target: ${target}, data: ${data}`);
+};

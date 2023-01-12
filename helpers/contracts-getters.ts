@@ -77,6 +77,9 @@ import {
   ApeStakingLogic__factory,
   MintableERC721Logic__factory,
   NTokenBAKC__factory,
+  P2PPairStaking__factory,
+  ExecutorWithTimelock__factory,
+  MultiSendCallOnly__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1050,6 +1053,17 @@ export const getAutoCompoundApe = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getP2PPairStaking = async (address?: tEthereumAddress) =>
+  await P2PPairStaking__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getInitializableAdminUpgradeabilityProxy = async (
   address: tEthereumAddress
 ) =>
@@ -1097,6 +1111,28 @@ export const getBlurAdapter = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.BlurAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTimeLockExecutor = async (address?: tEthereumAddress) =>
+  await ExecutorWithTimelock__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TimeLockExecutor}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMultiSendCallOnly = async (address?: tEthereumAddress) =>
+  await MultiSendCallOnly__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MultiSendCallOnly}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
