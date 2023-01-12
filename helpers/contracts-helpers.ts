@@ -75,6 +75,7 @@ import {
   TIME_LOCK_BUFFERING_TIME,
   VERBOSE,
 } from "./hardhat-constants";
+import {pick} from "lodash";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -159,6 +160,18 @@ export const insertTimeLockDataInDb = async (
     queue,
   };
   await getDb().set(key, newValue).write();
+};
+
+export const getTimeLockDataInDb = async (): Promise<
+  {
+    action: Action;
+    actionHash: string;
+  }[]
+> => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = oldValue.queue || [];
+  return queue.map((x) => pick(x, ["action", "actionHash"]));
 };
 
 export const getContractAddressInDb = async (id: eContractid | string) => {

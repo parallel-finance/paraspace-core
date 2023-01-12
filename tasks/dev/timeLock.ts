@@ -1,3 +1,4 @@
+import {BigNumber} from "ethers";
 import {task} from "hardhat/config";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
@@ -99,6 +100,7 @@ task("list-queued-txs", "List queued transactions").setAction(
     const timeLock = await getTimeLockExecutor();
     const time = await getCurrentTime();
     const gracePeriod = await timeLock.GRACE_PERIOD();
+    const delay = await timeLock.getDelay();
     const filter = timeLock.filters.QueuedAction();
     const events = await timeLock.queryFilter(filter);
     for (const e of events) {
@@ -106,18 +108,55 @@ task("list-queued-txs", "List queued transactions").setAction(
         continue;
       }
 
+      const executeTime = e.args.executionTime.add(delay);
+      const expireTime = e.args.executionTime.add(gracePeriod);
       console.log(e.transactionHash);
       console.log(" actionHash:", e.args.actionHash);
       console.log(" target:", e.args.target);
       console.log(" data:", e.args.data);
       console.log(" executionTime:", e.args.executionTime.toString());
+      console.log(" executeTime:", executeTime.toString());
+      console.log(
+        " executeTime(mins):",
+        executeTime.lte(time) ? 0 : executeTime.sub(time).div(60).toString()
+      );
+      console.log(" expireTime:", expireTime.toString());
+      console.log(
+        " expireTime(mins):",
+        expireTime.lte(time) ? 0 : expireTime.sub(time).div(60).toString()
+      );
+      console.log();
+    }
+  }
+);
+
+task("list-buffered-txs", "List buffered transactions").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getCurrentTime, getTimeLockDataInDb} = await import(
+      "../../helpers/contracts-helpers"
+    );
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const time = await getCurrentTime();
+    const gracePeriod = await timeLock.GRACE_PERIOD();
+    const delay = await timeLock.getDelay();
+    const actions = await getTimeLockDataInDb();
+
+    for (const a of actions) {
+      const [target, , , data, executionTime] = a.action;
+      const executeTime = BigNumber.from(executionTime).add(delay);
+      const expireTime = BigNumber.from(executionTime).add(gracePeriod);
+      console.log(a.actionHash);
+      console.log(" target:", target);
+      console.log(" data:", data);
+      console.log(" executionTime:", executionTime);
       console.log(
         " executionTime(mins):",
-        e.args.executionTime.lte(time)
-          ? 0
-          : e.args.executionTime.sub(time).div(60).toString()
+        executeTime.lte(time) ? 0 : executeTime.sub(time).div(60).toString()
       );
-      const expireTime = e.args.executionTime.add(gracePeriod);
       console.log(" expireTime:", expireTime.toString());
       console.log(
         " expireTime(mins):",
