@@ -1,12 +1,10 @@
 import rawBRE from "hardhat";
-import {DRE} from "../../helpers/misc-utils";
 import {IInterestRateStrategyParams} from "../../helpers/types";
 import {utils} from "ethers";
 import {deployReserveInterestRateStrategy} from "../../helpers/contracts-deployments";
 import {getPoolAddressesProvider} from "../../helpers/contracts-getters";
 
 const deployRateStrategy = async () => {
-  await DRE.run("set-DRE");
   console.time("deploy:new-rate-strategy");
   const addressProvider = await getPoolAddressesProvider();
   const strategy: IInterestRateStrategyParams = {

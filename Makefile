@@ -33,7 +33,7 @@ test:
 
 .PHONY: local-test
 local-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
+	make MOCHA_JOBS=0 DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
@@ -284,7 +284,7 @@ run:
 
 .PHONY: run-task
 run-task:
-	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARGS) --network $(NETWORK)
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARG0) ${ARG1} ${ARG2} ${ARG3} --network $(NETWORK)
 
 .PHONY: print
 print:
@@ -394,32 +394,112 @@ wallet:
 rate-strategy:
 	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
+.PHONY: auction-strategy
+auction-strategy:
+	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
 
+.PHONY: market-info
+market-info:
+	make TASK_NAME=market-info run-task
+
+.PHONY: account-data
+account-data:
+	make TASK_NAME=account-data run-task
+
+.PHONY: next-execution-time
+next-execution-time:
+	make TASK_NAME=next-execution-time run-task
+
+.PHONY: queue-tx
+queue-tx:
+	make TASK_NAME=queue-tx run-task
+
+.PHONY: execute-tx
+execute-tx:
+	make TASK_NAME=execute-tx run-task
+
+.PHONY: cancel-tx
+cancel-tx:
+	make TASK_NAME=cancel-tx run-task
+
+.PHONY: list-queued-txs
+list-queued-txs:
+	make TASK_NAME=list-queued-txs run-task
+
+.PHONY: set-ltv
+set-ltv:
+	make TASK_NAME=set-ltv run-task
+
+.PHONY: set-liquidation-threshold
+set-liquidation-threshold:
+	make TASK_NAME=set-liquidation-threshold run-task
+
+.PHONY: set-reserve-factor
+set-reserve-factor:
+	make TASK_NAME=set-reserve-factor run-task
+
+.PHONY: set-interest-rate-strategy
+set-interest-rate-strategy:
+	make TASK_NAME=set-interest-rate-strategy run-task
+
+.PHONY: set-auction-strategy
+set-auction-strategy:
+	make TASK_NAME=set-auction-strategy run-task
+
+.PHONY: set-supply-cap
+set-supply-cap:
+	make TASK_NAME=set-supply-cap run-task
+
+.PHONY: set-borrow-cap
+set-borrow-cap:
+	make TASK_NAME=set-borrow-cap run-task
+
+.PHONY: list-facets
+list-facets:
+	make TASK_NAME=list-facets run-task
+
+.PHONY: list-facet-addresses
+list-facet-addresses:
+	make TASK_NAME=list-facet-addresses run-task
+
+.PHONY: facet-address
+facet-address:
+	make TASK_NAME=facet-address run-task
+
+.PHONY: facet-function-selectors
+facet-function-selectors:
+	make TASK_NAME=facet-function-selectors run-task
+
 .PHONY: upgrade
-upgrade: build
+upgrade:
 	make TASK_NAME=upgrade:all run-task
 
 .PHONY: upgrade-pool
-upgrade-pool: build
+upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
 .PHONY: upgrade-configurator
-upgrade-configurator: build
+upgrade-configurator:
 	make TASK_NAME=upgrade:configurator run-task
 
+.PHONY: upgrade-auto-compound-ape
+upgrade-auto-compound-ape:
+	make TASK_NAME=upgrade:auto-compound-ape run-task
+
 .PHONY: upgrade-ntoken
-upgrade-ntoken: build
+upgrade-ntoken:
 	make TASK_NAME=upgrade:ntoken run-task
 
 .PHONY: upgrade-ptoken
-upgrade-ptoken: build
+upgrade-ptoken:
 	make TASK_NAME=upgrade:ptoken run-task
 
 .PHONY: upgrade-debt-token
-upgrade-debt-token: build
+upgrade-debt-token:
 	make TASK_NAME=upgrade:debt-token run-task
 
 .PHONY: hardhat

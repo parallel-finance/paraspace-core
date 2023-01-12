@@ -78,6 +78,8 @@ import {
   MintableERC721Logic__factory,
   NTokenBAKC__factory,
   P2PPairStaking__factory,
+  ExecutorWithTimelock__factory,
+  MultiSendCallOnly__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1109,6 +1111,28 @@ export const getBlurAdapter = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.BlurAdapter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTimeLockExecutor = async (address?: tEthereumAddress) =>
+  await ExecutorWithTimelock__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TimeLockExecutor}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMultiSendCallOnly = async (address?: tEthereumAddress) =>
+  await MultiSendCallOnly__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MultiSendCallOnly}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

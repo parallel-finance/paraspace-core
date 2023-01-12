@@ -22,6 +22,7 @@ export const GOERLI_CHAINID = 5;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1592;
+export const MOONBEAM_CHAINID = 1284;
 
 export const INFURA_KEY = process.env.INFURA_KEY || "";
 export const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";
@@ -85,11 +86,16 @@ export const BLOCKSCOUT_DISABLE_INDEXER =
   process.env.BLOCKSCOUT_DISABLE_INDEXER == "false" ? false : true;
 
 export const GLOBAL_OVERRIDES: Overrides = {
-  maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
-  maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
+  // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
+  // maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
   gasLimit: 12_450_000,
-  type: 2,
+  // type: 2,
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
 export const JSONRPC_VARIANT = process.env.JSONRPC_VARIANT || "hardhat";
+export const VERBOSE = process.env.VERBOSE == "true" ? true : false;
+export const DRY_RUN = process.env.DRY_RUN || "";
+export const TIME_LOCK_BUFFERING_TIME = parseInt(
+  process.env.TIME_LOCK_BUFFERING_TIME || "3600"
+);

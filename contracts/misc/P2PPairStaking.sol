@@ -14,7 +14,12 @@ import {IERC20, SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC2
 import {PercentageMath} from "../protocol/libraries/math/PercentageMath.sol";
 import {SignatureChecker} from "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 
-contract P2PPairStaking is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, IP2PPairStaking {
+contract P2PPairStaking is
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    IP2PPairStaking
+{
     using SafeERC20 for IERC20;
     using PercentageMath for uint256;
     using SafeCast for uint256;
@@ -94,7 +99,10 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, ReentrancyGuardUpg
         }
     }
 
-    function cancelListing(ListingOrder calldata listingOrder) external nonReentrant {
+    function cancelListing(ListingOrder calldata listingOrder)
+        external
+        nonReentrant
+    {
         require(msg.sender == listingOrder.offerer, "not order offerer");
         bytes32 orderHash = getListingOrderHash(listingOrder);
         require(!isListingOrderCanceled[orderHash], "order already cancel");
@@ -340,7 +348,8 @@ contract P2PPairStaking is Initializable, OwnableUpgradeable, ReentrancyGuardUpg
     }
 
     function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
-        external nonReentrant
+        external
+        nonReentrant
     {
         for (uint256 index = 0; index < orderHashes.length; index++) {
             bytes32 orderHash = orderHashes[index];

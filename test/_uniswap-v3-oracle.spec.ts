@@ -93,8 +93,6 @@ describe("Uniswap V3 Oracle", () => {
 
     const uniV3Oracle = await getUniswapV3OracleWrapper();
     const liquidityAmount = await uniV3Oracle.getLiquidityAmount(tokenId);
-    console.log("userDaiAmount", liquidityAmount.token0Amount);
-    console.log("userWethAmount", liquidityAmount.token1Amount);
     almostEqual(liquidityAmount.token0Amount, liquidityDaiAmount);
     almostEqual(liquidityAmount.token1Amount, liquidityWethAmount);
 
