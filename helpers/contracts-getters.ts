@@ -93,7 +93,7 @@ import {
   tEthereumAddress,
   ERC20TokenContractId,
 } from "./types";
-import {first, last} from "lodash";
+import {first, last, upperFirst} from "lodash";
 import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
@@ -556,7 +556,11 @@ export const getAggregator = async (
     address ||
       (
         await getDb()
-          .get(`${eContractid.Aggregator}.${symbol}.${DRE.network.name}`)
+          .get(
+            `${eContractid.Aggregator.concat(upperFirst(symbol))}.${
+              DRE.network.name
+            }`
+          )
           .value()
       ).address,
     await getFirstSigner()
@@ -674,9 +678,9 @@ export const getUniswapV3OracleWrapper = async (address?: tEthereumAddress) => {
       (
         await getDb()
           .get(
-            `${eContractid.Aggregator.concat(`.${eContractid.UniswapV3}`)}.${
-              DRE.network.name
-            }`
+            `${eContractid.Aggregator.concat(
+              upperFirst(eContractid.UniswapV3)
+            )}.${DRE.network.name}`
           )
           .value()
       ).address,
