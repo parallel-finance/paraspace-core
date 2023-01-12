@@ -1,12 +1,7 @@
 import {task} from "hardhat/config";
 import {FORK} from "../../helpers/hardhat-constants";
 import {ethers} from "ethers";
-import EthersAdapter from "@safe-global/safe-ethers-lib";
-import SafeServiceClient, {
-  SafeMultisigTransactionListResponse,
-} from "@safe-global/safe-service-client";
 import {decodeMulti} from "ethers-multisend";
-import Safe from "@safe-global/safe-core-sdk";
 import {SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
 import {
   ACLManager__factory,
@@ -17,6 +12,9 @@ import {
   ReservesSetupHelper__factory,
 } from "../../types";
 import InputDataDecoder from "ethereum-input-data-decoder";
+import Safe from "@safe-global/safe-core-sdk";
+import EthersAdapter from "@safe-global/safe-ethers-lib";
+import SafeServiceClient from "@safe-global/safe-service-client";
 
 const MULTI_SIG = "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 const MULTI_SEND = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D";
@@ -65,10 +63,18 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
     }.safe.global`,
     ethAdapter,
   });
-  const res: SafeMultisigTransactionListResponse =
-    await safeService.getPendingTransactions(MULTI_SIG);
+  const res = (
+    await safeService.getPendingTransactions(MULTI_SIG)
+  ).results.sort((a, b) =>
+    a.nonce > b.nonce
+      ? 1
+      : new Date(a.submissionDate).valueOf() >
+        new Date(b.submissionDate).valueOf()
+      ? 1
+      : -1
+  );
 
-  const txs = res.results.reduce((ite, cur) => {
+  const txs = res.reduce((ite, cur) => {
     if (!cur.data) {
       return ite;
     }
@@ -99,7 +105,10 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
     console.log();
     console.log(to);
     const inputData = decoder.decodeData(data);
-    console.log(JSON.stringify(inputData, null, 4));
+    const normalized = JSON.stringify(inputData, (k, v) => {
+      return v.type === "BigNumber" ? +v.hex.toString(10) : v;
+    });
+    console.log(JSON.stringify(JSON.parse(normalized), null, 4));
   }
 });
 
