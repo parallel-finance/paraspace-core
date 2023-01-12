@@ -137,7 +137,7 @@ export const insertTimeLockDataInDb = async (
   queueData: string,
   executeData: string,
   cancelData: string,
-  executionTime: string,
+  executeTime: string,
   queueExpireTime: string,
   executeExpireTime: string
 ) => {
@@ -150,7 +150,7 @@ export const insertTimeLockDataInDb = async (
     queueData,
     executeData,
     cancelData,
-    executionTime: new Date(+executionTime * 1000).toLocaleString(),
+    executeTime: new Date(+executeTime * 1000).toLocaleString(),
     queueExpireTime: new Date(+queueExpireTime * 1000).toLocaleString(),
     executeExpireTime: new Date(+executeExpireTime * 1000).toLocaleString(),
   });
@@ -630,11 +630,9 @@ export const getCurrentTime = async () => {
 };
 
 export const getExecutionTime = async () => {
-  const timeLock = await getTimeLockExecutor();
-  const delay = await timeLock.getDelay();
   const blockNumber = await DRE.ethers.provider.getBlockNumber();
   const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
-  return delay.add(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
+  return BigNumber.from(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
 };
 
 export const getActionAndData = async (
@@ -657,6 +655,7 @@ export const getActionAndData = async (
   const isActionQueued = await timeLock.isActionQueued(actionHash);
   const gracePeriod = await timeLock.GRACE_PERIOD();
   const delay = await timeLock.getDelay();
+  const executeTime = BigNumber.from(executionTime).add(delay).toString();
   const queueExpireTime = BigNumber.from(executionTime).sub(delay).toString();
   const executeExpireTime = BigNumber.from(executionTime)
     .add(gracePeriod)
@@ -693,7 +692,7 @@ export const getActionAndData = async (
     queueData,
     executeData,
     cancelData,
-    executionTime,
+    executeTime,
     queueExpireTime,
     executeExpireTime,
   };
@@ -715,6 +714,7 @@ export const printEncodedData = async (
       queueData,
       executeData,
       cancelData,
+      executeTime,
       queueExpireTime,
       executeExpireTime,
     } = actionData;
@@ -724,7 +724,7 @@ export const printEncodedData = async (
       queueData,
       executeData,
       cancelData,
-      actionData.executionTime,
+      executeTime,
       queueExpireTime,
       executeExpireTime
     );
