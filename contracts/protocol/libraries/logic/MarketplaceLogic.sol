@@ -421,7 +421,6 @@ library MarketplaceLogic {
 
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         ValidationLogic.validateFlashloanSimple(reserve);
-        // TODO: support PToken
         IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
             to,
             vars.creditAmount
@@ -434,8 +433,8 @@ library MarketplaceLogic {
     }
 
     /**
-     * @notice Burn borrower's partial or total debt, repayment needs to be done
-     * after the marketplace exchange
+     * @notice Flash mint 90% of listingPrice as pToken so that seller's NFT can be traded in advance.
+     * Repayment needs to be done after the marketplace exchange by transferring funds to xTokenAddress
      * @dev
      * @param ps The pool storage pointer
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
@@ -457,6 +456,7 @@ library MarketplaceLogic {
             seller
         ];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
+        uint16 reserveId = reserve.id; // cache to reduce one storage read
 
         reserve.updateState(reserveCache);
 
@@ -488,8 +488,8 @@ library MarketplaceLogic {
             reserveCache.nextLiquidityIndex
         );
 
-        if (isFirstSupply || !sellerConfig.isUsingAsCollateral(reserve.id)) {
-            sellerConfig.setUsingAsCollateral(reserve.id, true);
+        if (isFirstSupply || !sellerConfig.isUsingAsCollateral(reserveId)) {
+            sellerConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(vars.creditToken, seller);
         }
 
@@ -596,7 +596,7 @@ library MarketplaceLogic {
     }
 
     /**
-     * @notice Repay burnt debt by transferring funds from the borrower to xTokenAddress
+     * @notice "Repay" minted pToken by transferring funds from the seller to xTokenAddress
      * @dev
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param seller The NFT seller
