@@ -108,4 +108,21 @@ interface IPoolApeStaking {
         address[] calldata users,
         uint256[][] calldata tokenIds
     ) external;
+
+    /**
+     * @notice Claim user BAKC paired Ape coin reward and deposit to ape compound to get cApe, then deposit cApe to Lending pool for user
+     * @param nftAsset Contract address of BAYC/MAYC
+     * @param users array of user address
+     * @param _nftPairs Array of Paired BAYC/MAYC NFT's
+     */
+    function claimPairedApeAndCompound(
+        address nftAsset,
+        address[] calldata users,
+        ApeCoinStaking.PairNft[][] calldata _nftPairs
+    ) external;
+
+    /**
+     * @notice get current incentive fee rate for claiming ape position reward to compound
+     */
+    function getApeCompoundFeeRate() external returns (uint256);
 }

@@ -1,4 +1,5 @@
-import {BigNumber} from "ethers";
+import {BigNumber, BigNumberish, BytesLike} from "ethers";
+import {PromiseOrValue} from "../types/common";
 import {BlurExchangeLibraryAddresses} from "../types/factories/dependencies/blur-exchange/BlurExchange__factory";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
 import {PoolConfiguratorLibraryAddresses} from "../types/factories/protocol/pool/PoolConfigurator__factory";
@@ -16,6 +17,11 @@ export enum AssetType {
   ERC721 = 1,
 }
 
+export enum DryRunExecutor {
+  TimeLock = "TimeLock",
+  None = "",
+}
+
 export enum XTokenType {
   PhantomData = 0,
   NToken = 1,
@@ -29,6 +35,7 @@ export enum XTokenType {
   PTokenAToken = 9,
   PTokenStETH = 10,
   PTokenSApe = 11,
+  NTokenBAKC = 12,
 }
 
 export type ConstructorArgs = (
@@ -67,6 +74,7 @@ export enum eEthereumNetwork {
   parallel = "parallel",
   localhost = "localhost",
   anvil = "anvil",
+  moonbeam = "moonbeam",
 }
 
 export enum eContractid {
@@ -106,6 +114,7 @@ export enum eContractid {
   NTokenUniswapV3Impl = "NTokenUniswapV3Impl",
   NTokenBAYCImpl = "NTokenBAYCImpl",
   NTokenMAYCImpl = "NTokenMAYCImpl",
+  NTokenBAKCImpl = "NTokenBAKCImpl",
   DelegationAwarePTokenImpl = "DelegationAwarePTokenImpl",
   VariableDebtTokenImpl = "VariableDebtTokenImpl",
   PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
@@ -205,9 +214,11 @@ export enum eContractid {
   BlurExchangeProxy = "BlurExchangeProxy",
   BAKC = "BAKC",
   TimeLockExecutor = "TimeLockExecutor",
+  MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
+  MockedDelegateRegistry = "MockedDelegateRegistry",
 }
 
 /*
@@ -324,6 +335,7 @@ export enum ProtocolErrors {
   RESERVE_NOT_ACTIVE_FOR_UNIV3 = "123", //reserve is not active for UniswapV3.
   SAPE_NOT_ALLOWED = "128", //operation is not allow for sApe.
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
+  NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 
@@ -373,6 +385,8 @@ export interface iAssetBase<T> {
   APE: T;
   sAPE: T;
   cAPE: T;
+  xcDOT: T;
+  WGLMR: T;
   MAYC: T;
   DOODLE: T;
   MOONBIRD: T;
@@ -380,6 +394,7 @@ export interface iAssetBase<T> {
   AZUKI: T;
   OTHR: T;
   CLONEX: T;
+  BAKC: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -394,6 +409,8 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "WETH"
   | "WBTC"
   | "stETH"
+  | "xcDOT"
+  | "WGLMR"
   | "APE"
   | "sAPE"
   | "BAYC"
@@ -406,6 +423,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MOONBIRD"
   | "MEEBITS"
   | "OTHR"
+  | "BAKC"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -425,6 +443,8 @@ export enum ERC20TokenContractId {
   aWETH = "aWETH",
   cETH = "cETH",
   PUNK = "PUNK",
+  xcDOT = "xcDOT",
+  WGLMR = "WGLMR",
 }
 
 export enum ERC721TokenContractId {
@@ -448,6 +468,7 @@ export enum NTokenContractId {
   nWPUNKS = "nWPUNKS",
   nMOONBIRD = "nMOONBIRD",
   nUniswapV3 = "nUniswapV3",
+  nBAKC = "nBAKC",
 }
 
 export enum PTokenContractId {
@@ -518,6 +539,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.ganache]: T;
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
+  [eEthereumNetwork.moonbeam]: T;
 }
 
 export enum RateMode {
@@ -542,6 +564,7 @@ export interface IMarketplaceConfig {
 
 export interface IChainlinkConfig {
   WETH?: tEthereumAddress;
+  stETH?: tEthereumAddress;
   DAI?: tEthereumAddress;
   USDC?: tEthereumAddress;
   USDT?: tEthereumAddress;
@@ -560,6 +583,8 @@ export interface IChainlinkConfig {
   AZUKI?: tEthereumAddress;
   OTHR?: tEthereumAddress;
   CLONEX?: tEthereumAddress;
+  xcDOT?: tEthereumAddress;
+  WGLMR?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
@@ -575,9 +600,11 @@ export interface IUniswapConfig {
 }
 
 export interface IOracleConfig {
-  //blocks
+  // ParaSpaceOracle
+  BaseCurrency: ERC20TokenContractId;
+  BaseCurrencyUnit: string;
+  // NFTFloorOracle
   ExpirationPeriod: number;
-  //percent
   DeviationRate: number;
   Nodes: tEthereumAddress[];
 }
@@ -593,6 +620,7 @@ export interface IRate {
 }
 
 export interface ICommonConfiguration {
+  WrappedNativeTokenId: ERC20TokenContractId;
   MarketId: string;
   ParaSpaceTeam: tEthereumAddress;
   PTokenNamePrefix: string;
@@ -627,3 +655,12 @@ export interface IParaSpaceConfiguration extends ICommonConfiguration {
 }
 
 export type PoolConfiguration = ICommonConfiguration | IParaSpaceConfiguration;
+
+export type Action = [
+  PromiseOrValue<string>,
+  PromiseOrValue<BigNumberish>,
+  PromiseOrValue<string>,
+  PromiseOrValue<BytesLike>,
+  PromiseOrValue<BigNumberish>,
+  PromiseOrValue<boolean>
+];

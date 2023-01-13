@@ -29,6 +29,18 @@ task("upgrade:configurator", "upgrade pool configurator").setAction(
   }
 );
 
+task("upgrade:auto-compound-ape", "upgrade auto compound ape").setAction(
+  async (_, DRE) => {
+    const {upgradeAutoCompoundApe} = await import(
+      "../../scripts/upgrade/autoCompoundApe"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade auto compound ape");
+    await upgradeAutoCompoundApe(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade auto compound ape");
+  }
+);
+
 task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   const {upgradePToken} = await import("../../scripts/upgrade/ptoken");
   await DRE.run("set-DRE");
