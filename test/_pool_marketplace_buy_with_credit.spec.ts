@@ -3,6 +3,7 @@ import {DRE, waitForTx} from "../helpers/misc-utils";
 import {
   convertToCurrencyDecimals,
   createSeaportOrder,
+  isUsingAsCollateral,
 } from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {AdvancedOrder} from "../helpers/seaport-helpers/types";
@@ -1458,7 +1459,7 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await weth.balanceOf(maker.address)).to.be.eq(startAmount);
   });
 
-  it("TC-erc721-buy-26: ERC20 <=> NToken via ParaSpace - partial borrow & debt repaid", async () => {
+  it("TC-erc721-buy-26: ERC20 <=> NToken via ParaSpace - partial borrow & pToken minted", async () => {
     const {
       bayc,
       nBAYC,
@@ -1488,6 +1489,12 @@ describe("Leveraged Buy - Positive tests", () => {
     await supplyAndValidate(usdc, creditNumber, middleman, true);
     await supplyAndValidate(usdc, borrowAmount, middleman, true);
     await supplyAndValidate(bayc, "1", maker, true);
+    await supplyAndValidate(usdc, "1", maker, true); // supply 1 USDC and turn off collateral
+    await waitForTx(
+      await pool
+        .connect(maker.signer)
+        .setUserUseERC20AsCollateral(usdc.address, false)
+    );
     await borrowAndValidate(usdc, borrowAmount, maker);
 
     await waitForTx(
@@ -1507,15 +1514,28 @@ describe("Leveraged Buy - Positive tests", () => {
       taker
     );
 
+    const usdcConfigData = BigNumber.from(
+      (await pool.getUserConfiguration(maker.address)).data
+    );
+    const usdcReserveData = await pool.getReserveData(usdc.address);
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
     expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
     assertAlmostEqual(
       await pUsdc.balanceOf(maker.address),
-      startAmount.percentMul("9000")
+      startAmount
+        .percentMul("9000")
+        .add(await convertToCurrencyDecimals(usdc.address, "1")) // default supply ratio
     );
+    assertAlmostEqual(
+      await usdc.balanceOf(maker.address),
+      startAmount
+        .percentMul("1000")
+        .add(await convertToCurrencyDecimals(usdc.address, borrowAmount))
+    );
+    expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
     expect(
       (await pool.getUserAccountData(maker.address)).totalDebtBase
-    ).to.be.gt(0);
+    ).to.be.gt(0); // no debt repaid
   });
 });
 
