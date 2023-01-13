@@ -60,9 +60,10 @@ interface IP2PPairStaking {
     /**
      * @dev Emitted when user claimed pending cApe reward.
      * @param user The address of the user
+     * @param receiver The address of the cApe receiver
      * @param amount The amount of the cApe been claimed
      **/
-    event CApeClaimed(address user, uint256 amount);
+    event CApeClaimed(address user, address receiver, uint256 amount);
 
     /**
      * @dev Emitted when we claimed pending reward for matched order and compound.
@@ -81,6 +82,20 @@ interface IP2PPairStaking {
         address indexed to,
         uint256 amount
     );
+
+    /**
+     * @dev Emitted during setMatchingOperator()
+     * @param oldOperator The address of the old matching operator
+     * @param newOperator The address of the new matching operator
+     **/
+    event MatchingOperatorUpdated(address oldOperator, address newOperator);
+
+    /**
+     * @dev Emitted during setCompoundFee()
+     * @param oldFee The value of the old compound fee
+     * @param newFee The value of the new compound fee
+     **/
+    event CompoundFeeUpdated(uint256 oldFee, uint256 newFee);
 
     /**
      * @notice Cancel a listing order, order canceled cannot be matched.
@@ -136,8 +151,9 @@ interface IP2PPairStaking {
 
     /**
      * @notice claim user compounded cApe
+     * @param receiver The address of the cApe receiver
      */
-    function claimCApeReward() external;
+    function claimCApeReward(address receiver) external;
 
     /**
      * @notice get Ape Coin Staking cap for every position.
