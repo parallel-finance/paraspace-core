@@ -55,10 +55,10 @@ library MarketplaceLogic {
     );
 
     /**
-     * @dev Max percentage of listing price to be repaid on behalf of the seller in a marketplace exchange.
+     * @dev Default percentage of listing price to be supplied on behalf of the seller in a marketplace exchange.
      * Expressed in bps, a value of 0.9e4 results in 90.00%
      */
-    uint256 internal constant MAX_SUPPLY_RATIO = 0.9e4;
+    uint256 internal constant DEFAULT_SUPPLY_RATIO = 0.9e4;
 
     event BuyWithCredit(
         bytes32 indexed marketplaceId,
@@ -89,10 +89,10 @@ library MarketplaceLogic {
     }
 
     function executeBuyWithCredit(
+        DataTypes.PoolStorage storage ps,
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
@@ -110,8 +110,6 @@ library MarketplaceLogic {
 
         vars.ethLeft -= _buyWithCredit(
             ps,
-            ps._usersConfig[orderInfo.maker],
-            ps._usersConfig[orderInfo.taker],
             DataTypes.ExecuteMarketplaceParams({
                 marketplaceId: marketplaceId,
                 payload: payload,
@@ -135,21 +133,17 @@ library MarketplaceLogic {
      * including OpenSea, LooksRare, X2Y2 etc. Users can use NFT's credit and will need to pay at most (1 - LTV) * $NFT
      * @dev  Emits the `BuyWithCredit()` event
      * @param ps The pool storage pointer
-     * @param sellerConfig The nft seller configuration mapping that tracks the supplied/borrowed assets
-     * @param buyerConfig The nft buyer configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the buyWithCredit function
      */
     function _buyWithCredit(
         DataTypes.PoolStorage storage ps,
-        DataTypes.UserConfigurationMap storage sellerConfig,
-        DataTypes.UserConfigurationMap storage buyerConfig,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal returns (uint256) {
         ValidationLogic.validateBuyWithCredit(params);
 
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
-        _flashSupplyFor(ps, sellerConfig, params, vars, params.orderInfo.maker);
+        _flashSupplyFor(ps, params, vars, params.orderInfo.maker);
         _flashLoanTo(ps, params, vars, address(this));
 
         (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
@@ -169,13 +163,7 @@ library MarketplaceLogic {
         );
 
         _handleFlashSupplyRepayment(vars, params.orderInfo.maker);
-        _handleFlashLoanRepayment(
-            ps,
-            buyerConfig,
-            params,
-            vars,
-            params.orderInfo.taker
-        );
+        _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
 
         emit BuyWithCredit(
             params.marketplaceId,
@@ -187,10 +175,10 @@ library MarketplaceLogic {
     }
 
     function executeBatchBuyWithCredit(
+        DataTypes.PoolStorage storage ps,
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
@@ -231,10 +219,9 @@ library MarketplaceLogic {
             //
             _depositETH(vars, orderInfo);
 
+            uint256 reservesCount = ps._reservesCount;
             vars.ethLeft -= _buyWithCredit(
                 ps,
-                ps._usersConfig[orderInfo.maker],
-                ps._usersConfig[orderInfo.taker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: vars.marketplaceId,
                     payload: vars.payload,
@@ -244,7 +231,7 @@ library MarketplaceLogic {
                     orderInfo: orderInfo,
                     weth: vars.weth,
                     referralCode: referralCode,
-                    reservesCount: ps._reservesCount,
+                    reservesCount: reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
                     priceOracleSentinel: poolAddressProvider
                         .getPriceOracleSentinel()
@@ -256,11 +243,11 @@ library MarketplaceLogic {
     }
 
     function executeAcceptBidWithCredit(
+        DataTypes.PoolStorage storage ps,
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
         address onBehalfOf,
-        DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
@@ -275,8 +262,6 @@ library MarketplaceLogic {
 
         _acceptBidWithCredit(
             ps,
-            ps._usersConfig[vars.orderInfo.taker],
-            ps._usersConfig[vars.orderInfo.maker],
             DataTypes.ExecuteMarketplaceParams({
                 marketplaceId: marketplaceId,
                 payload: payload,
@@ -294,11 +279,11 @@ library MarketplaceLogic {
     }
 
     function executeBatchAcceptBidWithCredit(
+        DataTypes.PoolStorage storage ps,
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         address onBehalfOf,
-        DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
@@ -325,10 +310,9 @@ library MarketplaceLogic {
                 Errors.INVALID_ORDER_TAKER
             );
 
+            uint256 reservesCount = ps._reservesCount;
             _acceptBidWithCredit(
                 ps,
-                ps._usersConfig[vars.orderInfo.taker],
-                ps._usersConfig[vars.orderInfo.maker],
                 DataTypes.ExecuteMarketplaceParams({
                     marketplaceId: vars.marketplaceId,
                     payload: vars.payload,
@@ -338,7 +322,7 @@ library MarketplaceLogic {
                     orderInfo: vars.orderInfo,
                     weth: vars.weth,
                     referralCode: referralCode,
-                    reservesCount: ps._reservesCount,
+                    reservesCount: reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
                     priceOracleSentinel: poolAddressProvider
                         .getPriceOracleSentinel()
@@ -353,21 +337,17 @@ library MarketplaceLogic {
      * at most (1 - LTV) * $NFT
      * @dev  Emits the `AcceptBidWithCredit()` event
      * @param ps The pool storage
-     * @param sellerConfig The nft seller configuration mapping that tracks the supplied/borrowed assets
-     * @param buyerConfig The nft buyer configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the acceptBidWithCredit function
      */
     function _acceptBidWithCredit(
         DataTypes.PoolStorage storage ps,
-        DataTypes.UserConfigurationMap storage sellerConfig,
-        DataTypes.UserConfigurationMap storage buyerConfig,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal {
         ValidationLogic.validateAcceptBidWithCredit(params);
 
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
-        _flashSupplyFor(ps, sellerConfig, params, vars, params.orderInfo.taker);
+        _flashSupplyFor(ps, params, vars, params.orderInfo.taker);
         _flashLoanTo(ps, params, vars, params.orderInfo.maker);
 
         // delegateCall to avoid extra token transfer
@@ -381,13 +361,7 @@ library MarketplaceLogic {
         );
 
         _handleFlashSupplyRepayment(vars, params.orderInfo.taker);
-        _handleFlashLoanRepayment(
-            ps,
-            buyerConfig,
-            params,
-            vars,
-            params.orderInfo.maker
-        );
+        _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.maker);
 
         emit AcceptBidWithCredit(
             params.marketplaceId,
@@ -464,14 +438,12 @@ library MarketplaceLogic {
      * after the marketplace exchange
      * @dev
      * @param ps The pool storage pointer
-     * @param sellerConfig The nft seller configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param seller The NFT seller
      */
     function _flashSupplyFor(
         DataTypes.PoolStorage storage ps,
-        DataTypes.UserConfigurationMap storage sellerConfig,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address seller
@@ -481,13 +453,16 @@ library MarketplaceLogic {
         }
 
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
+        DataTypes.UserConfigurationMap storage sellerConfig = ps._usersConfig[
+            seller
+        ];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         reserve.updateState(reserveCache);
 
         uint256 supplyAmount = Math.min(
             IERC20(vars.creditToken).allowance(seller, address(this)),
-            vars.price.percentMul(MAX_SUPPLY_RATIO)
+            vars.price.percentMul(DEFAULT_SUPPLY_RATIO)
         );
         if (supplyAmount == 0) {
             return;
@@ -535,14 +510,12 @@ library MarketplaceLogic {
      * will also need to be supplied to the pool to provide bigger borrow limit.
      * @dev
      * @param ps The pool storage pointer
-     * @param buyerConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param buyer The NFT buyer
      */
     function _handleFlashLoanRepayment(
         DataTypes.PoolStorage storage ps,
-        DataTypes.UserConfigurationMap storage buyerConfig,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address buyer
@@ -580,14 +553,7 @@ library MarketplaceLogic {
             // item.token == underlyingAsset but supplied after listing/offering
             // so NToken is transferred instead
             if (INToken(vars.xTokenAddress).ownerOf(tokenId) == address(this)) {
-                _transferAndCollateralize(
-                    ps,
-                    buyerConfig,
-                    vars,
-                    token,
-                    tokenId,
-                    buyer
-                );
+                _transferAndCollateralize(ps, vars, buyer, token, tokenId);
                 // item.token == underlyingAsset and underlyingAsset stays in wallet
             } else {
                 DataTypes.ERC721SupplyParams[]
@@ -595,7 +561,7 @@ library MarketplaceLogic {
                 tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
                 SupplyLogic.executeSupplyERC721(
                     ps._reserves,
-                    buyerConfig,
+                    ps._usersConfig[buyer],
                     DataTypes.ExecuteSupplyERC721Params({
                         asset: token,
                         tokenData: tokenData,
@@ -614,7 +580,7 @@ library MarketplaceLogic {
         BorrowLogic.executeBorrow(
             ps._reserves,
             ps._reservesList,
-            buyerConfig,
+            ps._usersConfig[buyer],
             DataTypes.ExecuteBorrowParams({
                 asset: vars.creditToken,
                 user: buyer,
@@ -701,11 +667,10 @@ library MarketplaceLogic {
 
     function _transferAndCollateralize(
         DataTypes.PoolStorage storage ps,
-        DataTypes.UserConfigurationMap storage buyerConfig,
         MarketplaceLocalVars memory vars,
+        address buyer,
         address token,
-        uint256 tokenId,
-        address buyer
+        uint256 tokenId
     ) internal {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
@@ -717,7 +682,7 @@ library MarketplaceLogic {
         );
         SupplyLogic.executeCollateralizeERC721(
             ps._reserves,
-            buyerConfig,
+            ps._usersConfig[buyer],
             token,
             tokenIds,
             buyer
