@@ -144,8 +144,8 @@ describe("Flash Claim Test", () => {
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          bayc.address,
-          [1],
+          [bayc.address],
+          [[1]],
           receiverEncodedData
         )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
@@ -169,8 +169,8 @@ describe("Flash Claim Test", () => {
         .connect(user2.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          bayc.address,
-          [tokenId],
+          [bayc.address],
+          [[tokenId]],
           receiverEncodedData
         )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
@@ -191,8 +191,8 @@ describe("Flash Claim Test", () => {
       .connect(user1.signer)
       .flashClaim(
         flashClaimReceiverAddr,
-        bayc.address,
-        [tokenId],
+        [bayc.address],
+        [[tokenId]],
         receiverEncodedData
       );
 
@@ -280,8 +280,8 @@ describe("Flash Claim Test", () => {
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          nftPositionManager.address,
-          [1],
+          [nftPositionManager.address],
+          [[1]],
           receiverEncodedData,
           {gasLimit: 12_450_000}
         )
@@ -311,8 +311,8 @@ describe("Flash Claim Test", () => {
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          bayc.address,
-          [0],
+          [bayc.address],
+          [[0]],
           receiverEncodedData
         )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
@@ -324,8 +324,8 @@ describe("Flash Claim Test", () => {
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          bayc.address,
-          [0],
+          [bayc.address],
+          [[0]],
           receiverEncodedData
         )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
@@ -358,8 +358,8 @@ describe("Flash Claim Test", () => {
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          bayc.address,
-          [0],
+          [bayc.address],
+          [[0]],
           receiverEncodedData
         )
     ).to.be.revertedWith(
@@ -385,8 +385,8 @@ describe("Flash Claim Test", () => {
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          bayc.address,
-          [0],
+          [bayc.address],
+          [[0]],
           receiverEncodedData
         )
     ).to.be.revertedWith("not owner");

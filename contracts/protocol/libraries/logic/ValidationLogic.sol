@@ -996,23 +996,19 @@ library ValidationLogic {
     /**
      * @notice Validates a flash claim.
      * @param ps The pool storage
-     * @param params The flash claim params
      */
     function validateFlashClaim(
         DataTypes.PoolStorage storage ps,
-        DataTypes.ExecuteFlashClaimParams memory params
+        address xTokenAddress,
+        DataTypes.AssetType assetType,
+        uint256[] memory nftTokenIds
     ) internal view {
-        DataTypes.ReserveData storage reserve = ps._reserves[params.nftAsset];
         require(
-            reserve.configuration.getAssetType() == DataTypes.AssetType.ERC721,
+            assetType == DataTypes.AssetType.ERC721,
             Errors.INVALID_ASSET_TYPE
         );
-        require(
-            params.receiverAddress != address(0),
-            Errors.ZERO_ADDRESS_NOT_VALID
-        );
 
-        INToken nToken = INToken(reserve.xTokenAddress);
+        INToken nToken = INToken(xTokenAddress);
         XTokenType tokenType = nToken.getXTokenType();
         require(
             tokenType != XTokenType.NTokenUniswapV3,
@@ -1037,9 +1033,9 @@ library ValidationLogic {
         }
 
         // only token owner can do flash claim
-        for (uint256 i = 0; i < params.nftTokenIds.length; i++) {
+        for (uint256 i = 0; i < nftTokenIds.length; i++) {
             require(
-                nToken.ownerOf(params.nftTokenIds[i]) == msg.sender,
+                nToken.ownerOf(nftTokenIds[i]) == msg.sender,
                 Errors.NOT_THE_OWNER
             );
         }

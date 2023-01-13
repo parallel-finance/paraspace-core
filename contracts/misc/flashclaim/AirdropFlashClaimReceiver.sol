@@ -54,18 +54,17 @@ contract AirdropFlashClaimReceiver is
 
     /**
      * @notice execute flash claim airdrop
-     * @param nftAsset The NFT contract address for the airdrop
+     * @param nftAssets The NFT contract addresses for the airdrop
      * @param nftTokenIds The tokenids for the airdrop
      * @param params The params for the flash claim
      **/
     function executeOperation(
-        address nftAsset,
-        uint256[] calldata nftTokenIds,
-        address initiator,
+        address[] calldata nftAssets,
+        uint256[][] calldata nftTokenIds,
+        address receiver,
         bytes calldata params
     ) external override onlyPool returns (bool) {
         require(nftTokenIds.length > 0, "empty token list");
-        require(initiator == owner(), "not owner");
 
         ExecuteOperationLocalVars memory vars;
         // decode parameters
@@ -99,8 +98,10 @@ contract AirdropFlashClaimReceiver is
         );
         require(vars.airdropParams.length >= 4, "invalid airdrop parameters");
 
-        // allow pool transfer borrowed nfts back
-        IERC721(nftAsset).setApprovalForAll(pool, true);
+        for (uint256 index = 0; index < nftAssets.length; index++) {
+            // allow pool transfer borrowed nfts back
+            IERC721(nftAssets[index]).setApprovalForAll(pool, true);
+        }
 
         // call project airdrop contract
         Address.functionCall(
@@ -110,8 +111,8 @@ contract AirdropFlashClaimReceiver is
         );
 
         vars.airdropKeyHash = getClaimKeyHash(
-            initiator,
-            nftAsset,
+            receiver,
+            nftAssets,
             nftTokenIds,
             params
         );
@@ -135,7 +136,7 @@ contract AirdropFlashClaimReceiver is
                 ).balanceOf(address(this));
                 if (vars.airdropBalance > 0) {
                     IERC20(vars.airdropTokenAddresses[typeIndex]).safeTransfer(
-                        initiator,
+                        receiver,
                         vars.airdropBalance
                     );
                 }
@@ -151,7 +152,7 @@ contract AirdropFlashClaimReceiver is
                     IERC721Enumerable(vars.airdropTokenAddresses[typeIndex])
                         .safeTransferFrom(
                             address(this),
-                            initiator,
+                            receiver,
                             vars.airdropTokenId
                         );
                 }
@@ -163,7 +164,7 @@ contract AirdropFlashClaimReceiver is
                 IERC1155(vars.airdropTokenAddresses[typeIndex])
                     .safeTransferFrom(
                         address(this),
-                        initiator,
+                        receiver,
                         vars.airdropTokenIds[typeIndex],
                         vars.airdropBalance,
                         new bytes(0)
@@ -173,7 +174,7 @@ contract AirdropFlashClaimReceiver is
                 IERC721Enumerable(vars.airdropTokenAddresses[typeIndex])
                     .safeTransferFrom(
                         address(this),
-                        initiator,
+                        receiver,
                         vars.airdropTokenIds[typeIndex]
                     );
             }
@@ -248,20 +249,20 @@ contract AirdropFlashClaimReceiver is
 
     /**
      * @notice get claim status for a flash claim
-     * @param initiator the address initiated the flash claim
-     * @param nftAsset The NFT contract address for the airdrop
+     * @param receiver the address initiated the flash claim
+     * @param nftAssets The NFT contract addresses for the airdrop
      * @param nftTokenIds The tokenids for the airdrop
      * @param params The params of the initiated flash claim
      **/
     function getAirdropClaimRecord(
-        address initiator,
-        address nftAsset,
-        uint256[] calldata nftTokenIds,
+        address receiver,
+        address[] calldata nftAssets,
+        uint256[][] calldata nftTokenIds,
         bytes calldata params
     ) public view returns (bool) {
         bytes32 airdropKeyHash = getClaimKeyHash(
-            initiator,
-            nftAsset,
+            receiver,
+            nftAssets,
             nftTokenIds,
             params
         );
@@ -295,17 +296,17 @@ contract AirdropFlashClaimReceiver is
 
     /**
      * @notice calculate hash for a flash claim
-     * @param initiator the address initiated the flash claim
-     * @param nftAsset The NFT contract address for the airdrop
+     * @param receiver the address initiated the flash claim
+     * @param nftAssets The NFT contract addresses for the airdrop
      * @param nftTokenIds The tokenids for the airdrop
      * @param params The params of the initiated flash claim
      **/
     function getClaimKeyHash(
-        address initiator,
-        address nftAsset,
-        uint256[] calldata nftTokenIds,
+        address receiver,
+        address[] calldata nftAssets,
+        uint256[][] calldata nftTokenIds,
         bytes calldata params
     ) public pure returns (bytes32) {
-        return keccak256(abi.encode(initiator, nftAsset, nftTokenIds, params));
+        return keccak256(abi.encode(receiver, nftAssets, nftTokenIds, params));
     }
 }
