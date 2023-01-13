@@ -3,23 +3,26 @@ import {task} from "hardhat/config";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 import InputDataDecoder from "ethereum-input-data-decoder";
-import {
-  ACLManager__factory,
-  ExecutorWithTimelock__factory,
-  ParaSpaceOracle__factory,
-  PoolAddressesProvider__factory,
-  PoolConfigurator__factory,
-  ReservesSetupHelper__factory,
-} from "../../types";
 
-const ABI = [
-  ...ReservesSetupHelper__factory.abi,
-  ...ExecutorWithTimelock__factory.abi,
-  ...PoolAddressesProvider__factory.abi,
-  ...PoolConfigurator__factory.abi,
-  ...ParaSpaceOracle__factory.abi,
-  ...ACLManager__factory.abi,
-];
+const getAbi = async () => {
+  const {
+    ACLManager__factory,
+    ExecutorWithTimelock__factory,
+    ParaSpaceOracle__factory,
+    PoolAddressesProvider__factory,
+    PoolConfigurator__factory,
+    ReservesSetupHelper__factory,
+  } = await import("../../types");
+
+  return [
+    ...ReservesSetupHelper__factory.abi,
+    ...ExecutorWithTimelock__factory.abi,
+    ...PoolAddressesProvider__factory.abi,
+    ...PoolConfigurator__factory.abi,
+    ...ParaSpaceOracle__factory.abi,
+    ...ACLManager__factory.abi,
+  ];
+};
 
 task("next-execution-time", "Next valid execution time").setAction(
   async (_, DRE) => {
@@ -155,7 +158,7 @@ task("decode-queued-txs", "Decode queued transactions").setAction(
       "../../helpers/contracts-getters"
     );
     const timeLock = await getTimeLockExecutor();
-    const decoder = new InputDataDecoder(ABI);
+    const decoder = new InputDataDecoder(await getAbi());
     const filter = timeLock.filters.QueuedAction();
     const events = await timeLock.queryFilter(filter);
     for (const e of events) {
@@ -179,7 +182,7 @@ task("decode-buffered-txs", "Decode buffered transactions").setAction(
     const {getTimeLockDataInDb} = await import(
       "../../helpers/contracts-helpers"
     );
-    const decoder = new InputDataDecoder(ABI);
+    const decoder = new InputDataDecoder(await getAbi());
     const actions = await getTimeLockDataInDb();
 
     for (const a of actions) {

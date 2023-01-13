@@ -3,14 +3,6 @@ import {FORK} from "../../helpers/hardhat-constants";
 import {ethers} from "ethers";
 import {decodeMulti} from "ethers-multisend";
 import {SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
-import {
-  ACLManager__factory,
-  ExecutorWithTimelock__factory,
-  ParaSpaceOracle__factory,
-  PoolAddressesProvider__factory,
-  PoolConfigurator__factory,
-  ReservesSetupHelper__factory,
-} from "../../types";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
@@ -36,14 +28,25 @@ const TIME_LOCK_SIGS = {
   "0x4dd18bf5": "setPendingAdmin(address)",
 };
 
-const ABI = [
-  ...ReservesSetupHelper__factory.abi,
-  ...ExecutorWithTimelock__factory.abi,
-  ...PoolAddressesProvider__factory.abi,
-  ...PoolConfigurator__factory.abi,
-  ...ParaSpaceOracle__factory.abi,
-  ...ACLManager__factory.abi,
-];
+const getAbi = async () => {
+  const {
+    ACLManager__factory,
+    ExecutorWithTimelock__factory,
+    ParaSpaceOracle__factory,
+    PoolAddressesProvider__factory,
+    PoolConfigurator__factory,
+    ReservesSetupHelper__factory,
+  } = await import("../../types");
+
+  return [
+    ...ReservesSetupHelper__factory.abi,
+    ...ExecutorWithTimelock__factory.abi,
+    ...PoolAddressesProvider__factory.abi,
+    ...PoolConfigurator__factory.abi,
+    ...ParaSpaceOracle__factory.abi,
+    ...ACLManager__factory.abi,
+  ];
+};
 
 task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
@@ -56,7 +59,7 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
     ethers,
     signerOrProvider: signer,
   });
-  const decoder = new InputDataDecoder(ABI);
+  const decoder = new InputDataDecoder(await getAbi());
 
   const safeService = new SafeServiceClient({
     txServiceUrl: `https://safe-transaction-${
