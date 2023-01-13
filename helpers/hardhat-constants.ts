@@ -96,6 +96,7 @@ export const RPC_URL = process.env.RPC_URL || "";
 export const JSONRPC_VARIANT = process.env.JSONRPC_VARIANT || "hardhat";
 export const VERBOSE = process.env.VERBOSE == "true" ? true : false;
 export const DRY_RUN = process.env.DRY_RUN || "";
+
 export const TIME_LOCK_BUFFERING_TIME = parseInt(
   process.env.TIME_LOCK_BUFFERING_TIME || "3600"
 );

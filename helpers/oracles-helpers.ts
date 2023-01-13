@@ -29,6 +29,7 @@ import {
   insertContractAddressInDb,
 } from "./contracts-helpers";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
+import {upperFirst} from "lodash";
 
 export const setInitialAssetPricesInOracle = async (
   prices: Partial<iAssetBase<tEthereumAddress>>,
@@ -80,7 +81,7 @@ export const deployAllAggregators = async (
     }
     if (chainlinkConfig[tokenSymbol]) {
       await insertContractAddressInDb(
-        eContractid.Aggregator.concat(`.${tokenSymbol}`),
+        eContractid.Aggregator.concat(upperFirst(tokenSymbol)),
         chainlinkConfig[tokenSymbol],
         false
       );

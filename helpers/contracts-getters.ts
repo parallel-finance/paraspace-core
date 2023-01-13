@@ -1,4 +1,3 @@
-import {utils} from "ethers";
 import {
   ProtocolDataProvider__factory,
   PToken__factory,
@@ -94,7 +93,7 @@ import {
   tEthereumAddress,
   ERC20TokenContractId,
 } from "./types";
-import {first, last} from "lodash";
+import {first, last, upperFirst} from "lodash";
 import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
@@ -557,7 +556,11 @@ export const getAggregator = async (
     address ||
       (
         await getDb()
-          .get(`${eContractid.Aggregator}.${symbol}.${DRE.network.name}`)
+          .get(
+            `${eContractid.Aggregator.concat(upperFirst(symbol))}.${
+              DRE.network.name
+            }`
+          )
           .value()
       ).address,
     await getFirstSigner()
@@ -675,9 +678,9 @@ export const getUniswapV3OracleWrapper = async (address?: tEthereumAddress) => {
       (
         await getDb()
           .get(
-            `${eContractid.Aggregator.concat(`.${eContractid.UniswapV3}`)}.${
-              DRE.network.name
-            }`
+            `${eContractid.Aggregator.concat(
+              upperFirst(eContractid.UniswapV3)
+            )}.${DRE.network.name}`
           )
           .value()
       ).address,
@@ -698,20 +701,6 @@ export const getNTokenUniswapV3 = async (address?: tEthereumAddress) =>
 
 export const getChainId = async () =>
   (await DRE.ethers.provider.getNetwork()).chainId;
-
-export const getProxyAdmin = async (proxyAddress: string) => {
-  const EIP1967_ADMIN_SLOT =
-    "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
-  const adminStorageSlot = await DRE.ethers.provider.getStorageAt(
-    proxyAddress,
-    EIP1967_ADMIN_SLOT,
-    "latest"
-  );
-  const adminAddress = utils.defaultAbiCoder
-    .decode(["address"], adminStorageSlot)
-    .toString();
-  return utils.getAddress(adminAddress);
-};
 
 export const getMockTokenFaucet = async (address?: tEthereumAddress) =>
   await MockTokenFaucet__factory.connect(

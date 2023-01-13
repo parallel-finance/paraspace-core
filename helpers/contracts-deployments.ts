@@ -253,7 +253,7 @@ import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCor
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
 
-import {pick} from "lodash";
+import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 
@@ -629,7 +629,7 @@ export const deployAggregator = async (
 ) =>
   withSaveAndVerify(
     new MockAggregator__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [price],
     verify
   ) as Promise<MockAggregator>;
@@ -1295,7 +1295,7 @@ export const deployERC721OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new ERC721OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721OracleWrapper>;
@@ -1626,7 +1626,7 @@ export const deployUniswapV3OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new UniswapV3OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${eContractid.UniswapV3}`),
+    eContractid.Aggregator.concat(upperFirst(eContractid.UniswapV3)),
     [factory, manager, addressProvider],
     verify
   ) as Promise<UniswapV3OracleWrapper>;
