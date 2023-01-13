@@ -1166,7 +1166,7 @@ describe("APE Coin Staking Test", () => {
 
     await expect(
       pool.connect(unstaker.signer).unstakeApePositionAndRepay(mayc.address, 0)
-    ).to.be.revertedWith(ProtocolErrors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
+    ).to.be.revertedWith(ProtocolErrors.UNSTAKE_CONDITION_NOT_MET);
   });
 
   it("TC-pool-ape-staking-18 test unstakeApePositionAndRepay by others succeeds when hf < 1", async () => {
@@ -2910,5 +2910,52 @@ describe("APE Coin Staking Test", () => {
     // User1 - total stake should increased amount2
     totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
     expect(totalStake).equal(amount2);
+  });
+
+  it("TC-pool-ape-staking-46 test unstakeApePositionAndRepay by others succeeds when ape usage ratio >= 95%", async () => {
+    const {
+      users: [user1, unstaker],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "10000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "9000");
+    const amount = await convertToCurrencyDecimals(ape.address, "19000");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    expect(
+      await pool
+        .connect(unstaker.signer)
+        .unstakeApePositionAndRepay(mayc.address, 0)
+    );
+
+    const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
+    expect(totalStake).equal(0);
+
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalance).equal(0);
+
+    const pApeBalance = await pApeCoin.balanceOf(user1.address);
+    expect(pApeBalance).equal(0);
+
+    const apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
+    const target = await convertToCurrencyDecimals(ape.address, "57");
+    almostEqual(apeDebt, target);
   });
 });

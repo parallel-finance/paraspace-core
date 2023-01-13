@@ -36,11 +36,13 @@ contract PoolApeStaking is
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using SafeCast for uint256;
     using PercentageMath for uint256;
+    using WadRayMath for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
     uint256 internal constant POOL_REVISION = 130;
+    uint256 internal constant FREE_UNSTAKE_USAGE_RATIO = 0.95e27;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -366,8 +368,9 @@ contract PoolApeStaking is
         if (msg.sender != positionOwner) {
             require(
                 getUserHf(ps, positionOwner) <
-                    DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-                Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+                    DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD ||
+                    isUserBorrowedApeAndUsageRatioTooHigh(ps, positionOwner),
+                Errors.UNSTAKE_CONDITION_NOT_MET
             );
             incentiveReceiver = msg.sender;
         }
@@ -571,6 +574,39 @@ contract PoolApeStaking is
                 );
             }
         }
+    }
+
+    function isUserBorrowedApeAndUsageRatioTooHigh(
+        DataTypes.PoolStorage storage ps,
+        address user
+    ) internal view returns (bool) {
+        DataTypes.ReserveData storage apeReserve = ps._reserves[
+            address(APE_COIN)
+        ];
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            user
+        ];
+        bool isUserBorrowedApe = userConfig.isBorrowing(apeReserve.id);
+        if (!isUserBorrowedApe) {
+            return false;
+        }
+
+        uint256 usageRatio = getApeUsageRatio(apeReserve);
+        return usageRatio >= FREE_UNSTAKE_USAGE_RATIO;
+    }
+
+    function getApeUsageRatio(DataTypes.ReserveData storage apeReserve)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 totalDebt = IERC20(apeReserve.variableDebtTokenAddress)
+            .totalSupply();
+        uint256 availableLiquidity = APE_COIN.balanceOf(
+            apeReserve.xTokenAddress
+        );
+        uint256 availableLiquidityPlusDebt = totalDebt + availableLiquidity;
+        return totalDebt.rayDiv(availableLiquidityPlusDebt);
     }
 
     function getUserHf(DataTypes.PoolStorage storage ps, address user)
