@@ -191,6 +191,7 @@ library MarketplaceLogic {
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         vars.ethLeft = msg.value;
+        uint256 reservesCount = ps._reservesCount;
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
             vars.marketplaceId = marketplaceIds[i];
             vars.payload = payloads[i];
@@ -219,7 +220,6 @@ library MarketplaceLogic {
             //
             _depositETH(vars, orderInfo);
 
-            uint256 reservesCount = ps._reservesCount;
             vars.ethLeft -= _buyWithCredit(
                 ps,
                 DataTypes.ExecuteMarketplaceParams({
@@ -295,6 +295,7 @@ library MarketplaceLogic {
                 payloads.length == credits.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
+        uint256 reservesCount = ps._reservesCount;
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
             vars.marketplaceId = marketplaceIds[i];
             vars.payload = payloads[i];
@@ -310,7 +311,6 @@ library MarketplaceLogic {
                 Errors.INVALID_ORDER_TAKER
             );
 
-            uint256 reservesCount = ps._reservesCount;
             _acceptBidWithCredit(
                 ps,
                 DataTypes.ExecuteMarketplaceParams({
