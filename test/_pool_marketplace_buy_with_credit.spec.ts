@@ -1463,6 +1463,7 @@ describe("Leveraged Buy - Positive tests", () => {
       bayc,
       nBAYC,
       usdc,
+      pUsdc,
       pool,
       users: [maker, taker, middleman],
     } = await loadFixture(testEnvFixture);
@@ -1478,7 +1479,7 @@ describe("Leveraged Buy - Positive tests", () => {
     );
     const startAmount = payNowAmount.add(creditAmount);
     const endAmount = startAmount;
-    const borrowAmount = "436";
+    const borrowAmount = "200";
     const nftId = 0;
 
     // mint USDC to taker and middleman
@@ -1487,7 +1488,6 @@ describe("Leveraged Buy - Positive tests", () => {
     await supplyAndValidate(usdc, creditNumber, middleman, true);
     await supplyAndValidate(usdc, borrowAmount, middleman, true);
     await supplyAndValidate(bayc, "1", maker, true);
-    // 1 / 0.000915952223931999 * 0.4 = 436.70400000000033704
     await borrowAndValidate(usdc, borrowAmount, maker);
 
     await waitForTx(
@@ -1509,10 +1509,13 @@ describe("Leveraged Buy - Positive tests", () => {
 
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
     expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
-    assertAlmostEqual(await usdc.balanceOf(maker.address), startAmount);
+    assertAlmostEqual(
+      await pUsdc.balanceOf(maker.address),
+      startAmount.percentMul("9000")
+    );
     expect(
       (await pool.getUserAccountData(maker.address)).totalDebtBase
-    ).to.be.eq(0);
+    ).to.be.gt(0);
   });
 });
 
