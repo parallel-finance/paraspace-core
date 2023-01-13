@@ -1,4 +1,3 @@
-import {constants} from "ethers";
 import {
   deployNFTFloorPriceOracle,
   deployParaSpaceOracle,
@@ -50,6 +49,12 @@ export const deployNftOracle = async (verify = false) => {
       GLOBAL_OVERRIDES
     )
   );
+  await waitForTx(
+    await nftFloorOracle.setConfig(
+      oracleConfig.ExpirationPeriod,
+      oracleConfig.DeviationRate
+    )
+  );
   return nftFloorOracle;
 };
 
@@ -58,7 +63,9 @@ export const step_10 = async (verify = false) => {
     const allTokens = await getAllTokens();
     const addressesProvider = await getPoolAddressesProvider();
     const fallbackOracle = await getPriceOracle();
-    const chainlinkConfig = getParaSpaceConfig().Chainlink;
+    const paraSpaceConfig = getParaSpaceConfig();
+    const oracleConfig = paraSpaceConfig.Oracle;
+    const chainlinkConfig = paraSpaceConfig.Chainlink;
 
     const nftFloorOracle = await deployNftOracle(verify);
 
@@ -80,8 +87,8 @@ export const step_10 = async (verify = false) => {
         tokens,
         aggregators,
         fallbackOracle.address,
-        allTokens.WETH.address,
-        constants.WeiPerEther.toString(),
+        allTokens[oracleConfig.BaseCurrency].address,
+        oracleConfig.BaseCurrencyUnit,
       ],
       verify
     );
@@ -102,9 +109,9 @@ export const step_10 = async (verify = false) => {
     );
 
     await deployUiPoolDataProvider(
-      (chainlinkConfig.WETH ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
-      (chainlinkConfig.WETH ||
+      (chainlinkConfig[oracleConfig.BaseCurrency] ||
+        allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
+      (chainlinkConfig[oracleConfig.BaseCurrency] ||
         allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
       verify
     );

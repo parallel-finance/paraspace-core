@@ -2,6 +2,7 @@ import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {
   deployGenericMoonbirdNTokenImpl,
   deployGenericNTokenImpl,
+  deployNTokenBAKCImpl,
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
   deployUniswapV3NTokenImpl,
@@ -12,11 +13,13 @@ import {
   getProtocolDataProvider,
   getNToken,
   getApeCoinStaking,
+  getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {XTokenType} from "../../helpers/types";
+import {NTokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
-import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {printEncodedData} from "../../helpers/contracts-helpers";
 
 dotenv.config();
 
@@ -28,18 +31,19 @@ export const upgradeNToken = async (verify = false) => {
     await addressesProvider.getPoolConfigurator()
   );
   const protocolDataProvider = await getProtocolDataProvider();
-  const allTokens = await protocolDataProvider.getAllXTokens();
+  const allXTokens = await protocolDataProvider.getAllXTokens();
   let nTokenImplementationAddress = "";
   let nTokenBAYCImplementationAddress = "";
   let nTokenMAYCImplementationAddress = "";
+  let nTokenBAKCImplementationAddress = "";
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
   let newImpl = "";
 
-  for (let i = 0; i < allTokens.length; i++) {
-    const token = allTokens[i];
+  for (let i = 0; i < allXTokens.length; i++) {
+    const token = allXTokens[i];
     const nToken = await getNToken(token.tokenAddress);
-    const apeCoinStaking = await getApeCoinStaking();
+    const pool = await getPoolProxy();
     const asset = await nToken.UNDERLYING_ASSET_ADDRESS();
     const incentivesController = paraSpaceConfig.IncentivesController;
     const name = await nToken.name();
@@ -53,6 +57,7 @@ export const upgradeNToken = async (verify = false) => {
         XTokenType.NTokenUniswapV3,
         XTokenType.NTokenBAYC,
         XTokenType.NTokenMAYC,
+        XTokenType.NTokenBAKC,
       ].includes(xTokenType)
     ) {
       continue;
@@ -61,6 +66,7 @@ export const upgradeNToken = async (verify = false) => {
     if (xTokenType == XTokenType.NTokenBAYC) {
       if (!nTokenBAYCImplementationAddress) {
         console.log("deploy NTokenBAYC implementation");
+        const apeCoinStaking = await getApeCoinStaking();
         nTokenBAYCImplementationAddress = (
           await deployNTokenBAYCImpl(
             apeCoinStaking.address,
@@ -73,6 +79,7 @@ export const upgradeNToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.NTokenMAYC) {
       if (!nTokenMAYCImplementationAddress) {
         console.log("deploy NTokenMAYC implementation");
+        const apeCoinStaking = await getApeCoinStaking();
         nTokenMAYCImplementationAddress = (
           await deployNTokenMAYCImpl(
             apeCoinStaking.address,
@@ -82,6 +89,31 @@ export const upgradeNToken = async (verify = false) => {
         ).address;
       }
       newImpl = nTokenMAYCImplementationAddress;
+    } else if (xTokenType == XTokenType.NTokenBAKC) {
+      if (!nTokenBAKCImplementationAddress) {
+        console.log("deploy NTokenBAKC implementation");
+        const apeCoinStaking = await getApeCoinStaking();
+        const nBAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nBAYC
+          )!.tokenAddress;
+        const nMAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nMAYC
+          )!.tokenAddress;
+        nTokenBAKCImplementationAddress = (
+          await deployNTokenBAKCImpl(
+            pool.address,
+            apeCoinStaking.address,
+            nBAYC,
+            nMAYC,
+            verify
+          )
+        ).address;
+      }
+      newImpl = nTokenBAKCImplementationAddress;
     } else if (xTokenType == XTokenType.NTokenUniswapV3) {
       if (!nTokenUniSwapV3ImplementationAddress) {
         console.log("deploy NTokenUniswapV3 implementation");
@@ -130,9 +162,17 @@ export const upgradeNToken = async (verify = false) => {
       implementation: newImpl,
       params: "0x10",
     };
-    await waitForTx(
-      await poolConfiguratorProxy.updateNToken(updateInput, GLOBAL_OVERRIDES)
-    );
+    if (DRY_RUN) {
+      const encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
+        "updateNToken",
+        [updateInput]
+      );
+      await printEncodedData(poolConfiguratorProxy.address, encodedData);
+    } else {
+      await waitForTx(
+        await poolConfiguratorProxy.updateNToken(updateInput, GLOBAL_OVERRIDES)
+      );
+    }
   }
 
   console.log("upgraded all ntoken implementation.\n");

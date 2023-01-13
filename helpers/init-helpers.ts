@@ -4,6 +4,7 @@ import {
   ERC721TokenContractId,
   iMultiPoolsAssets,
   IReserveParams,
+  NTokenContractId,
   tEthereumAddress,
 } from "./types";
 import {ProtocolDataProvider} from "../types";
@@ -14,13 +15,15 @@ import {
   getPoolAddressesProvider,
   getPoolConfiguratorProxy,
   getPoolProxy,
+  getProtocolDataProvider,
 } from "./contracts-getters";
 import {
   getContractAddressInDb,
   insertContractAddressInDb,
+  printEncodedData,
 } from "./contracts-helpers";
 import {BigNumber, BigNumberish} from "ethers";
-import {GLOBAL_OVERRIDES} from "./hardhat-constants";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {
   deployReserveInterestRateStrategy,
   deployDelegationAwarePTokenImpl,
@@ -357,16 +360,18 @@ export const initReservesByHelper = async (
           variableDebtTokenToUse = aTokenVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.sAPE) {
           if (!pTokenSApeImplementationAddress) {
-            const nBAYC = (
-              await pool.getReserveData(
-                tokenAddresses[ERC721TokenContractId.BAYC]
-              )
-            ).xTokenAddress;
-            const nMAYC = (
-              await pool.getReserveData(
-                tokenAddresses[ERC721TokenContractId.MAYC]
-              )
-            ).xTokenAddress;
+            const protocolDataProvider = await getProtocolDataProvider();
+            const allTokens = await protocolDataProvider.getAllXTokens();
+            const nBAYC =
+              // eslint-disable-next-line
+              allTokens.find(
+                (x) => x.symbol == NTokenContractId.nBAYC
+              )!.tokenAddress;
+            const nMAYC =
+              // eslint-disable-next-line
+              allTokens.find(
+                (x) => x.symbol == NTokenContractId.nMAYC
+              )!.tokenAddress;
             pTokenSApeImplementationAddress = (
               await deployPTokenSApe(pool.address, nBAYC, nMAYC, verify)
             ).address;
@@ -437,16 +442,18 @@ export const initReservesByHelper = async (
             const apeCoinStaking =
               (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
               (await deployApeCoinStaking(verify)).address;
-            const nBAYC = (
-              await pool.getReserveData(
-                tokenAddresses[ERC721TokenContractId.BAYC]
-              )
-            ).xTokenAddress;
-            const nMAYC = (
-              await pool.getReserveData(
-                tokenAddresses[ERC721TokenContractId.MAYC]
-              )
-            ).xTokenAddress;
+            const protocolDataProvider = await getProtocolDataProvider();
+            const allTokens = await protocolDataProvider.getAllXTokens();
+            const nBAYC =
+              // eslint-disable-next-line
+              allTokens.find(
+                (x) => x.symbol == NTokenContractId.nBAYC
+              )!.tokenAddress;
+            const nMAYC =
+              // eslint-disable-next-line
+              allTokens.find(
+                (x) => x.symbol == NTokenContractId.nMAYC
+              )!.tokenAddress;
             nTokenBAKCImplementationAddress = (
               await deployNTokenBAKCImpl(
                 pool.address,
@@ -490,14 +497,23 @@ export const initReservesByHelper = async (
       inputs[i].variableDebtTokenImpl = variableDebtTokenToUse;
     }
 
-    const tx = await waitForTx(
-      await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
-    );
-
     console.log(
       `  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(", ")}`
     );
-    console.log("    * gasUsed", tx.gasUsed.toString());
+
+    if (DRY_RUN) {
+      const encodedData = configurator.interface.encodeFunctionData(
+        "initReserves",
+        [inputs]
+      );
+      await printEncodedData(configurator.address, encodedData);
+    } else {
+      const tx = await waitForTx(
+        await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
+      );
+
+      console.log("    * gasUsed", tx.gasUsed.toString());
+    }
   }
 
   return gasUsage; // Deprecated
@@ -590,12 +606,20 @@ export const configureReservesByHelper = async (
   }
   if (tokens.length) {
     // Add reservesSetupHelper as temporal admin
-    await waitForTx(
-      await aclManager.addPoolAdmin(
-        reservesSetupHelper.address,
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (DRY_RUN) {
+      const encodedData = aclManager.interface.encodeFunctionData(
+        "addPoolAdmin",
+        [reservesSetupHelper.address]
+      );
+      await printEncodedData(aclManager.address, encodedData);
+    } else {
+      await waitForTx(
+        await aclManager.addPoolAdmin(
+          reservesSetupHelper.address,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
 
     // Deploy init per chunks
     const enableChunks = 20;
@@ -609,21 +633,37 @@ export const configureReservesByHelper = async (
       chunkIndex < chunkedInputParams.length;
       chunkIndex++
     ) {
-      await waitForTx(
-        await reservesSetupHelper.configureReserves(
-          poolConfiguratorAddress,
-          chunkedInputParams[chunkIndex],
-          GLOBAL_OVERRIDES
-        )
-      );
+      if (DRY_RUN) {
+        const encodedData = reservesSetupHelper.interface.encodeFunctionData(
+          "configureReserves",
+          [poolConfiguratorAddress, chunkedInputParams[chunkIndex]]
+        );
+        await printEncodedData(reservesSetupHelper.address, encodedData);
+      } else {
+        await waitForTx(
+          await reservesSetupHelper.configureReserves(
+            poolConfiguratorAddress,
+            chunkedInputParams[chunkIndex],
+            GLOBAL_OVERRIDES
+          )
+        );
+      }
       console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(", ")}`);
     }
     // Remove reservesSetupHelper as admin
-    await waitForTx(
-      await aclManager.removePoolAdmin(
-        reservesSetupHelper.address,
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (DRY_RUN) {
+      const encodedData = aclManager.interface.encodeFunctionData(
+        "removePoolAdmin",
+        [reservesSetupHelper.address]
+      );
+      await printEncodedData(aclManager.address, encodedData);
+    } else {
+      await waitForTx(
+        await aclManager.removePoolAdmin(
+          reservesSetupHelper.address,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
   }
 };

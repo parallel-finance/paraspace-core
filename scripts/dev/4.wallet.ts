@@ -1,12 +1,10 @@
 import rawBRE from "hardhat";
-import {DRE} from "../../helpers/misc-utils";
 import {input} from "../../helpers/wallet-helpers";
 import {ethers} from "ethers";
 import fs from "fs";
 import {KEYSTORE_PATH} from "../../helpers/hardhat-constants";
 
 const wallet = async () => {
-  await DRE.run("set-DRE");
   console.time("wallet");
   const wallet = await ethers.Wallet.fromMnemonic(input("secret: "));
   const keystore = await wallet.encrypt(input("password: "));

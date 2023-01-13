@@ -18,6 +18,7 @@ export const step_19 = async (verify = false) => {
     if (!isLocalTestnet() && !isPublicTestnet()) {
       return;
     }
+
     const dataProvider = await getProtocolDataProvider();
     const reservesTokens = await dataProvider.getAllReservesTokens();
     const baycAddress = reservesTokens.find(
