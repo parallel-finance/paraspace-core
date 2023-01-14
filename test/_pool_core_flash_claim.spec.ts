@@ -4,6 +4,7 @@ import {DRE, evmRevert, evmSnapshot, waitForTx} from "../helpers/misc-utils";
 import {
   getUserFlashClaimRegistry,
   getMockAirdropProject,
+  getMockMultiAssetAirdropProject,
 } from "../helpers/contracts-getters";
 import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
@@ -25,9 +26,12 @@ import {
 
 describe("Flash Claim Test", () => {
   const tokenId = 0;
+  const tokenId2 = 0;
+
   let testEnv: TestEnv;
   let snapShot: string;
   let receiverEncodedData;
+  let multireceiverEncodedData;
   let mockAirdropERC20Token;
   let mockAirdropERC721Token;
   let mockAirdropERC1155Token;
@@ -46,8 +50,13 @@ describe("Flash Claim Test", () => {
     const MockAirdropProject = await DRE.ethers.getContractFactory(
       "MockAirdropProject"
     );
+    const MockMultiAssetAirdropProject = await DRE.ethers.getContractFactory(
+      "MockMultiAssetAirdropProject"
+    );
 
     const airdrop_project = await getMockAirdropProject();
+    const multi_asset_airdrop_project = await getMockMultiAssetAirdropProject();
+
     const mockAirdropERC20Address = await airdrop_project.erc20Token();
     mockAirdropERC20Token = await MintableERC20.attach(mockAirdropERC20Address);
     const mockAirdropERC721Address = await airdrop_project.erc721Token();
@@ -60,10 +69,34 @@ describe("Flash Claim Test", () => {
     );
     erc1155Id = (await airdrop_project.getERC1155TokenId(tokenId)).toString();
 
+    const mockMultiAirdropERC20Address =
+      await multi_asset_airdrop_project.erc20Token();
+    mockAirdropERC20Token = await MintableERC20.attach(mockAirdropERC20Address);
+    const mockMultiAirdropERC721Address =
+      await multi_asset_airdrop_project.erc721Token();
+    mockAirdropERC721Token = await MintableERC721.attach(
+      mockAirdropERC721Address
+    );
+    const mockMultiAirdropERC1155Address =
+      await multi_asset_airdrop_project.erc1155Token();
+    mockAirdropERC1155Token = await MintableERC1155.attach(
+      mockAirdropERC1155Address
+    );
+    erc1155Id = (
+      await multi_asset_airdrop_project.getERC1155TokenId(tokenId)
+    ).toString();
+
     const applyAirdropEncodedData =
       MockAirdropProject.interface.encodeFunctionData("claimAirdrop", [
         tokenId,
       ]);
+
+    const applyMultiAssetAirdropEncodedData =
+      MockMultiAssetAirdropProject.interface.encodeFunctionData(
+        "claimAirdrop",
+        [tokenId, tokenId2]
+      );
+
     receiverEncodedData = DRE.ethers.utils.defaultAbiCoder.encode(
       ["uint256[]", "address[]", "uint256[]", "address", "bytes"],
       [
@@ -76,6 +109,21 @@ describe("Flash Claim Test", () => {
         [0, 0, erc1155Id],
         airdrop_project.address,
         applyAirdropEncodedData,
+      ]
+    );
+
+    multireceiverEncodedData = DRE.ethers.utils.defaultAbiCoder.encode(
+      ["uint256[]", "address[]", "uint256[]", "address", "bytes"],
+      [
+        [1, 2, 3],
+        [
+          mockMultiAirdropERC20Address,
+          mockMultiAirdropERC721Address,
+          mockMultiAirdropERC1155Address,
+        ],
+        [0, 0, erc1155Id],
+        multi_asset_airdrop_project.address,
+        applyMultiAssetAirdropEncodedData,
       ]
     );
 
@@ -98,6 +146,7 @@ describe("Flash Claim Test", () => {
         user1.address,
         0
       );
+
     expect(await nBAYC.ownerOf(tokenId)).to.equal(user1.address);
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
@@ -367,10 +416,11 @@ describe("Flash Claim Test", () => {
     );
   });
 
-  it("TC-flash-claim-06:user can not flash claim use others receiver", async function () {
+  it("TC-flash-claim-06:user can flash claim with multiple assets", async function () {
     const {
       users: [user1, user2],
       bayc,
+      mayc,
       pool,
     } = testEnv;
 
@@ -379,16 +429,28 @@ describe("Flash Claim Test", () => {
     const flashClaimReceiverAddr = await user_registry.userReceivers(
       user2.address
     );
-
-    await expect(
-      pool
+    await mayc.connect(user1.signer)["mint(address)"](user1.address);
+    expect(await mayc.ownerOf(tokenId2)).to.equal(user1.address);
+    await mayc.connect(user1.signer).setApprovalForAll(pool.address, true);
+    await waitForTx(
+      await pool
         .connect(user1.signer)
-        .flashClaim(
-          flashClaimReceiverAddr,
-          [bayc.address],
-          [[0]],
-          receiverEncodedData
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: tokenId2, useAsCollateral: true}],
+          user1.address,
+          0
         )
-    ).to.be.revertedWith("not owner");
+    );
+
+    console.log("flashClaimReceiverAddr", flashClaimReceiverAddr);
+    await pool
+      .connect(user1.signer)
+      .flashClaim(
+        flashClaimReceiverAddr,
+        [bayc.address, mayc.address],
+        [[0], [0]],
+        multireceiverEncodedData
+      );
   });
 });

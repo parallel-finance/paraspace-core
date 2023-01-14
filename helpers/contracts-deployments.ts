@@ -87,6 +87,8 @@ import {
   MockAggregator__factory,
   MockAirdropProject,
   MockAirdropProject__factory,
+  MockMultiAssetAirdropProject,
+  MockMultiAssetAirdropProject__factory,
   MockAToken,
   MockAToken__factory,
   MockIncentivesController,
@@ -1738,6 +1740,18 @@ export const deployMockAirdropProject = async (
     [underlyingAddress],
     verify
   ) as Promise<MockAirdropProject>;
+
+export const deployMockMultiAssetAirdropProject = async (
+  underlyingAddress1: tEthereumAddress,
+  underlyingAddress2: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new MockMultiAssetAirdropProject__factory(await getFirstSigner()),
+    eContractid.MockMultiAssetAirdropProject,
+    [underlyingAddress1, underlyingAddress2],
+    verify
+  ) as Promise<MockMultiAssetAirdropProject>;
 
 export const deployApeCoinStaking = async (verify?: boolean) => {
   const allTokens = await getAllTokens();

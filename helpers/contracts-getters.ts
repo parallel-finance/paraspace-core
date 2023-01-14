@@ -55,6 +55,7 @@ import {
   NFTFloorOracle__factory,
   UserFlashclaimRegistry__factory,
   MockAirdropProject__factory,
+  MockMultiAssetAirdropProject__factory,
   IPool__factory,
   MockReserveAuctionStrategy__factory,
   NTokenBAYC__factory,
@@ -927,6 +928,21 @@ export const getMockAirdropProject = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.MockAirdropProject}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockMultiAssetAirdropProject = async (
+  address?: tEthereumAddress
+) =>
+  await MockMultiAssetAirdropProject__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(
+            `${eContractid.MockMultiAssetAirdropProject}.${DRE.network.name}`
+          )
           .value()
       ).address,
     await getFirstSigner()

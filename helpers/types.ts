@@ -219,6 +219,7 @@ export enum eContractid {
   cAPEImpl = "cAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
+  MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
 }
 
 /*

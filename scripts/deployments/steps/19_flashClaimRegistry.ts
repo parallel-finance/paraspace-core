@@ -1,6 +1,7 @@
 import {
   deployUserFlashClaimRegistry,
   deployMockAirdropProject,
+  deployMockMultiAssetAirdropProject,
 } from "../../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
@@ -28,7 +29,15 @@ export const step_19 = async (verify = false) => {
       return;
     }
 
+    const maycAddress = reservesTokens.find(
+      (token) => token.symbol === ERC721TokenContractId.MAYC
+    )?.tokenAddress;
+    if (!maycAddress) {
+      return;
+    }
+
     await deployMockAirdropProject(baycAddress, verify);
+    await deployMockMultiAssetAirdropProject(baycAddress, maycAddress, verify);
   } catch (error) {
     console.error(error);
     process.exit(1);
