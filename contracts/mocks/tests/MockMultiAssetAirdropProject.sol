@@ -7,7 +7,6 @@ import "../tokens/MintableERC1155.sol";
 import "../../dependencies/openzeppelin/contracts/ERC721.sol";
 import "../../dependencies/openzeppelin/contracts/ERC721Holder.sol";
 import "../../dependencies/openzeppelin/contracts/ERC1155Holder.sol";
-import "hardhat/console.sol";
 
 contract MockMultiAssetAirdropProject is ERC721Holder, ERC1155Holder {
     MintableERC20 public erc20Token;
@@ -47,9 +46,6 @@ contract MockMultiAssetAirdropProject is ERC721Holder, ERC1155Holder {
     }
 
     function claimAirdrop(uint256 tokenId1, uint256 tokenId2) external {
-        console.log("tokens" , tokenId1, tokenId2);
-        console.log("owners", IERC721(underlyingERC721_2).ownerOf(tokenId2), IERC721(underlyingERC721_1).ownerOf(tokenId1));
-        
         require(false == airdrops[tokenId1][tokenId2], "nft has been airdroped");
         require(msg.sender == IERC721(underlyingERC721_1).ownerOf(tokenId1), "caller is not nft owner");
         require(msg.sender == IERC721(underlyingERC721_2).ownerOf(tokenId2), "caller is not nft owner");

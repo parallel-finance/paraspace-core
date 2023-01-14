@@ -36,46 +36,52 @@ library FlashClaimLogic {
             params.receiverAddress != address(0),
             Errors.ZERO_ADDRESS_NOT_VALID
         );
+        address[] memory nTokenAddresses = new address[](
+            params.nftAssets.length
+        );
 
         uint256 index;
+        uint256 i;
+
         for (index = 0; index < params.nftAssets.length; index++) {
             DataTypes.ReserveData storage reserve = ps._reserves[
                 params.nftAssets[index]
             ];
-            address nTokenAddress = reserve.xTokenAddress;
+            nTokenAddresses[index] = reserve.xTokenAddress;
 
             ValidationLogic.validateFlashClaim(
                 ps,
-                nTokenAddress,
+                nTokenAddresses[index],
                 reserve.configuration.getAssetType(),
                 params.nftTokenIds[index]
             );
 
-            uint256 i;
             // step 1: moving underlying asset forward to receiver contract
             for (i = 0; i < params.nftTokenIds[index].length; i++) {
-                INToken(nTokenAddress).transferUnderlyingTo(
+                INToken(nTokenAddresses[index]).transferUnderlyingTo(
                     params.receiverAddress,
                     params.nftTokenIds[index][i]
                 );
             }
+        }
 
-            // step 2: execute receiver contract, doing something like airdrop
-            require(
-                IFlashClaimReceiver(params.receiverAddress).executeOperation(
-                    params.nftAssets,
-                    params.nftTokenIds,
-                    msg.sender,
-                    params.params
-                ),
-                Errors.INVALID_FLASH_CLAIM_RECEIVER
-            );
+        // step 2: execute receiver contract, doing something like airdrop
+        require(
+            IFlashClaimReceiver(params.receiverAddress).executeOperation(
+                params.nftAssets,
+                params.nftTokenIds,
+                msg.sender,
+                params.params
+            ),
+            Errors.INVALID_FLASH_CLAIM_RECEIVER
+        );
 
+        for (index = 0; index < params.nftAssets.length; index++) {
             // step 3: moving underlying asset backward from receiver contract
             for (i = 0; i < params.nftTokenIds[index].length; i++) {
                 IERC721(params.nftAssets[index]).safeTransferFrom(
                     params.receiverAddress,
-                    nTokenAddress,
+                    nTokenAddresses[index],
                     params.nftTokenIds[index][i]
                 );
 

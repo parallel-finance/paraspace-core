@@ -443,7 +443,6 @@ describe("Flash Claim Test", () => {
         )
     );
 
-    console.log("flashClaimReceiverAddr", flashClaimReceiverAddr);
     await pool
       .connect(user1.signer)
       .flashClaim(
