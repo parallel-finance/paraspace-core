@@ -11,6 +11,9 @@ task("market-info", "Print markets info")
       getProtocolDataProvider,
       getUiPoolDataProvider,
     } = await import("../../helpers/contracts-getters");
+    const {getProxyImplementation} = await import(
+      "../../helpers/contracts-helpers"
+    );
     const ui = await getUiPoolDataProvider();
     const protocolDataProvider = await getProtocolDataProvider();
     const provider = await getPoolAddressesProvider();
@@ -35,8 +38,16 @@ task("market-info", "Print markets info")
       console.log(" reserveFactor:", x.reserveFactor.toString());
       console.log(" supplyCap:", supplyCap.toString());
       console.log(" borrowCap:", borrowCap.toString());
-      console.log(" xTokenAddress:", x.xTokenAddress);
-      console.log(" variableDebtTokenAddress:", x.variableDebtTokenAddress);
+      console.log(" xTokenProxy:", x.xTokenAddress);
+      console.log(
+        " xTokenImpl:",
+        await getProxyImplementation(x.xTokenAddress)
+      );
+      console.log(" variableDebtTokenProxy:", x.variableDebtTokenAddress);
+      console.log(
+        " variableDebtTokenImpl:",
+        await getProxyImplementation(x.variableDebtTokenAddress)
+      );
       console.log(
         " interestRateStrategyAddress:",
         x.interestRateStrategyAddress
