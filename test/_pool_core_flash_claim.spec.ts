@@ -35,6 +35,7 @@ describe("Flash Claim Test", () => {
   let mockAirdropERC20Token;
   let mockAirdropERC721Token;
   let mockAirdropERC1155Token;
+  let mockMultiAirdropERC721Token;
   let erc1155Id;
 
   before(async () => {
@@ -71,17 +72,13 @@ describe("Flash Claim Test", () => {
 
     const mockMultiAirdropERC20Address =
       await multi_asset_airdrop_project.erc20Token();
-    mockAirdropERC20Token = await MintableERC20.attach(mockAirdropERC20Address);
     const mockMultiAirdropERC721Address =
       await multi_asset_airdrop_project.erc721Token();
-    mockAirdropERC721Token = await MintableERC721.attach(
-      mockAirdropERC721Address
+    mockMultiAirdropERC721Token = await MintableERC721.attach(
+      mockMultiAirdropERC721Address
     );
     const mockMultiAirdropERC1155Address =
       await multi_asset_airdrop_project.erc1155Token();
-    mockAirdropERC1155Token = await MintableERC1155.attach(
-      mockAirdropERC1155Address
-    );
     erc1155Id = (
       await multi_asset_airdrop_project.getERC1155TokenId(tokenId)
     ).toString();
@@ -443,13 +440,20 @@ describe("Flash Claim Test", () => {
         )
     );
 
-    await pool
-      .connect(user1.signer)
-      .flashClaim(
-        flashClaimReceiverAddr,
-        [bayc.address, mayc.address],
-        [[0], [0]],
-        multireceiverEncodedData
-      );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          [bayc.address, mayc.address],
+          [[0], [0]],
+          multireceiverEncodedData
+        )
+    );
+    const multi_asset_airdrop_project = await getMockMultiAssetAirdropProject();
+
+    expect(
+      await mockMultiAirdropERC721Token.balanceOf(user1.address)
+    ).to.be.equal(await multi_asset_airdrop_project.erc721Bonus());
   });
 });
