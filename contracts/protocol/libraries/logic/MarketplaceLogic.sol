@@ -16,17 +16,12 @@ import {SeaportInterface} from "../../../dependencies/seaport/contracts/interfac
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {ReserveLogic} from "./ReserveLogic.sol";
 import {ConsiderationItem, OfferItem} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
-import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
-import {PercentageMath} from "../../../protocol/libraries/math/PercentageMath.sol";
 import {ItemType} from "../../../dependencies/seaport/contracts/lib/ConsiderationEnums.sol";
 import {AdvancedOrder, CriteriaResolver, Fulfillment} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {IWETH} from "../../../misc/interfaces/IWETH.sol";
-import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
-import {Helpers} from "../../libraries/helpers/Helpers.sol";
 import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 
@@ -38,16 +33,7 @@ import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol"
 library MarketplaceLogic {
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-    using ReserveLogic for DataTypes.ReserveData;
     using SafeERC20 for IERC20;
-    using Math for uint256;
-    using PercentageMath for uint256;
-
-    /**
-     * @dev Max percentage of listing price to be repaid on behalf of the seller in a marketplace exchange.
-     * Expressed in bps, a value of 0.9e4 results in 90.00%
-     */
-    uint256 internal constant MAX_REPAYMENT_RATIO = 0.9e4;
 
     event BuyWithCredit(
         bytes32 indexed marketplaceId,
@@ -64,11 +50,8 @@ library MarketplaceLogic {
     struct MarketplaceLocalVars {
         bool isETH;
         address xTokenAddress;
-        uint256 price;
         address creditToken;
-        address creditXTokenAddress;
         uint256 creditAmount;
-        uint256 paybackAmount;
         address weth;
         uint256 ethLeft;
         bytes32 marketplaceId;
@@ -136,10 +119,9 @@ library MarketplaceLogic {
     ) internal returns (uint256) {
         ValidationLogic.validateBuyWithCredit(params);
 
-        MarketplaceLocalVars memory vars = _cache(reservesData, params);
+        MarketplaceLocalVars memory vars = _cache(params);
 
-        _flashRepayFor(reservesData, vars, params.orderInfo.maker);
-        _flashLoanTo(reservesData, params, vars, address(this));
+        _borrowTo(reservesData, params, vars, address(this));
 
         (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
             params,
@@ -157,8 +139,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashRepayRepayment(vars, params.orderInfo.maker);
-        _handleFlashLoanRepayment(
+        _repay(
             reservesData,
             reservesList,
             userConfig,
@@ -355,10 +336,9 @@ library MarketplaceLogic {
     ) internal {
         ValidationLogic.validateAcceptBidWithCredit(params);
 
-        MarketplaceLocalVars memory vars = _cache(reservesData, params);
+        MarketplaceLocalVars memory vars = _cache(params);
 
-        _flashRepayFor(reservesData, vars, params.orderInfo.taker);
-        _flashLoanTo(reservesData, params, vars, params.orderInfo.maker);
+        _borrowTo(reservesData, params, vars, params.orderInfo.maker);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -370,8 +350,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashRepayRepayment(vars, params.orderInfo.taker);
-        _handleFlashLoanRepayment(
+        _repay(
             reservesData,
             reservesList,
             userConfig,
@@ -398,7 +377,26 @@ library MarketplaceLogic {
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
     ) internal returns (uint256, uint256) {
-        uint256 price = vars.price;
+        uint256 price = 0;
+
+        for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
+            ConsiderationItem memory item = params.orderInfo.consideration[i];
+            require(
+                item.startAmount == item.endAmount,
+                Errors.INVALID_MARKETPLACE_ORDER
+            );
+            require(
+                item.itemType == ItemType.ERC20 ||
+                    (vars.isETH && item.itemType == ItemType.NATIVE),
+                Errors.INVALID_ASSET_TYPE
+            );
+            require(
+                item.token == params.credit.token,
+                Errors.CREDIT_DOES_NOT_MATCH_ORDER
+            );
+            price += item.startAmount;
+        }
+
         uint256 downpayment = price - vars.creditAmount;
         if (!vars.isETH) {
             IERC20(vars.creditToken).safeTransferFrom(
@@ -426,7 +424,7 @@ library MarketplaceLogic {
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param to The receiver of borrowed tokens
      */
-    function _flashLoanTo(
+    function _borrowTo(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
@@ -437,73 +435,17 @@ library MarketplaceLogic {
         }
 
         DataTypes.ReserveData storage reserve = reservesData[vars.creditToken];
+        vars.xTokenAddress = reserve.xTokenAddress;
+
+        require(vars.xTokenAddress != address(0), Errors.ASSET_NOT_LISTED);
         ValidationLogic.validateFlashloanSimple(reserve);
         // TODO: support PToken
-        IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
-            to,
-            vars.creditAmount
-        );
+        IPToken(vars.xTokenAddress).transferUnderlyingTo(to, vars.creditAmount);
 
         if (vars.isETH) {
             // No re-entrancy because it sent to our contract address
             IWETH(params.weth).withdraw(vars.creditAmount);
         }
-    }
-
-    /**
-     * @notice Burn borrower's partial or total debt, repayment needs to be done
-     * after the marketplace exchange
-     * @dev
-     * @param reservesData The state of all the reserves
-     * @param vars The marketplace local vars for caching storage values for future reads
-     * @param borrower The owner of burnt debt
-     */
-    function _flashRepayFor(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        MarketplaceLocalVars memory vars,
-        address borrower
-    ) internal {
-        if (vars.isETH) {
-            return;
-        }
-
-        DataTypes.ReserveData storage reserve = reservesData[vars.creditToken];
-        DataTypes.ReserveCache memory reserveCache = reserve.cache();
-        reserve.updateState(reserveCache);
-
-        uint256 variableDebt = Helpers.getUserCurrentDebt(
-            borrower,
-            reserveCache.variableDebtTokenAddress
-        );
-        uint256 paybackAmount = Math.min(
-            variableDebt,
-            vars.price.percentMul(MAX_REPAYMENT_RATIO)
-        );
-        if (paybackAmount == 0) {
-            return;
-        }
-
-        ValidationLogic.validateRepay(
-            reserveCache,
-            paybackAmount,
-            borrower,
-            variableDebt
-        );
-
-        // Burn borrower's debt
-        reserveCache.nextScaledVariableDebt = IVariableDebtToken(
-            reserveCache.variableDebtTokenAddress
-        ).burn(borrower, paybackAmount, reserveCache.nextVariableBorrowIndex);
-        // Update borrow & supply rate
-        reserve.updateInterestRates(
-            reserveCache,
-            vars.creditToken,
-            paybackAmount,
-            0
-        );
-
-        // set paybackAmount for future repayment
-        vars.paybackAmount = paybackAmount;
     }
 
     /**
@@ -517,7 +459,7 @@ library MarketplaceLogic {
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param onBehalfOf The receiver of minted debt and NToken
      */
-    function _handleFlashLoanRepayment(
+    function _repay(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
@@ -607,27 +549,6 @@ library MarketplaceLogic {
         );
     }
 
-    /**
-     * @notice Repay burnt debt by transferring funds from the borrower to xTokenAddress
-     * @dev
-     * @param vars The marketplace local vars for caching storage values for future reads
-     * @param borrower The owner of burnt debt
-     */
-    function _handleFlashRepayRepayment(
-        MarketplaceLocalVars memory vars,
-        address borrower
-    ) internal {
-        if (vars.isETH || vars.paybackAmount == 0) {
-            return;
-        }
-
-        IERC20(vars.creditToken).safeTransferFrom(
-            borrower,
-            vars.creditXTokenAddress,
-            vars.paybackAmount
-        );
-    }
-
     function _checkAllowance(address token, address operator) internal {
         uint256 allowance = IERC20(token).allowance(address(this), operator);
         if (allowance == 0) {
@@ -635,20 +556,14 @@ library MarketplaceLogic {
         }
     }
 
-    function _cache(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        DataTypes.ExecuteMarketplaceParams memory params
-    ) internal view returns (MarketplaceLocalVars memory vars) {
+    function _cache(DataTypes.ExecuteMarketplaceParams memory params)
+        internal
+        pure
+        returns (MarketplaceLocalVars memory vars)
+    {
         vars.isETH = params.credit.token == address(0);
         vars.creditToken = vars.isETH ? params.weth : params.credit.token;
         vars.creditAmount = params.credit.amount;
-        vars.price = _validateAndGetPrice(params, vars);
-        DataTypes.ReserveData storage reserve = reservesData[vars.creditToken];
-        vars.creditXTokenAddress = reserve.xTokenAddress;
-        require(
-            vars.creditXTokenAddress != address(0),
-            Errors.ASSET_NOT_LISTED
-        );
     }
 
     function _refundETH(uint256 ethLeft) internal {
@@ -698,28 +613,5 @@ library MarketplaceLogic {
             tokenIds,
             onBehalfOf
         );
-    }
-
-    function _validateAndGetPrice(
-        DataTypes.ExecuteMarketplaceParams memory params,
-        MarketplaceLocalVars memory vars
-    ) internal pure returns (uint256 price) {
-        for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
-            ConsiderationItem memory item = params.orderInfo.consideration[i];
-            require(
-                item.startAmount == item.endAmount,
-                Errors.INVALID_MARKETPLACE_ORDER
-            );
-            require(
-                item.itemType == ItemType.ERC20 ||
-                    (vars.isETH && item.itemType == ItemType.NATIVE),
-                Errors.INVALID_ASSET_TYPE
-            );
-            require(
-                item.token == params.credit.token,
-                Errors.CREDIT_DOES_NOT_MATCH_ORDER
-            );
-            price += item.startAmount;
-        }
     }
 }
