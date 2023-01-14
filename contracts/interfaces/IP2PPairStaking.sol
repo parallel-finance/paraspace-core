@@ -38,6 +38,11 @@ interface IP2PPairStaking {
         uint256 apePrincipleAmount;
     }
 
+    struct ApeMatchedInfo {
+        address owner;
+        uint32 matchedCount;
+    }
+
     /**
      * @dev Emit an event whenever an listing order is successfully cancelled.
      * @param orderHash The hash of the cancelled order.

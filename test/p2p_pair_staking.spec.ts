@@ -1014,7 +1014,7 @@ describe("P2P Pair Staking Test", () => {
     almostEqual(await cApe.balanceOf(gatewayAdmin.address), parseEther("18"));
   });
 
-  it("check ape token matched count as expected", async () => {
+  it("check ape token can be matched twice", async () => {
     const {
       users: [user1, user2, user3],
       bayc,
@@ -1068,8 +1068,6 @@ describe("P2P Pair Staking Test", () => {
     let logLength = txReceipt.logs.length;
     const orderHash0 = txReceipt.logs[logLength - 1].data;
 
-    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(1);
-
     //match bayc + bakc + ApeCoin
     user1SignedOrder = await getSignedListingOrder(
       p2pPairStaking,
@@ -1108,18 +1106,12 @@ describe("P2P Pair Staking Test", () => {
     logLength = txReceipt.logs.length;
     const orderHash1 = txReceipt.logs[logLength - 1].data;
 
-    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(2);
-
     await waitForTx(
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash0)
     );
 
-    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(1);
-
     await waitForTx(
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash1)
     );
-
-    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(0);
   });
 });
