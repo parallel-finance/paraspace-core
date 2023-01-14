@@ -1013,4 +1013,113 @@ describe("P2P Pair Staking Test", () => {
 
     almostEqual(await cApe.balanceOf(gatewayAdmin.address), parseEther("18"));
   });
+
+  it("check ape token matched count as expected", async () => {
+    const {
+      users: [user1, user2, user3],
+      bayc,
+      ape,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(bayc, "1", user1);
+    await mintAndValidate(bakc, "1", user2);
+    await mintAndValidate(ape, "1000000", user3);
+
+    await waitForTx(
+      await bayc
+        .connect(user1.signer)
+        .setApprovalForAll(p2pPairStaking.address, true)
+    );
+    await waitForTx(
+      await bakc
+        .connect(user2.signer)
+        .setApprovalForAll(p2pPairStaking.address, true)
+    );
+    await waitForTx(
+      await ape
+        .connect(user3.signer)
+        .approve(p2pPairStaking.address, MAX_UINT_AMOUNT)
+    );
+
+    //match bayc + ApeCoin
+    let user1SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      0,
+      bayc,
+      0,
+      2000,
+      user1
+    );
+    let user3SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      0,
+      ape,
+      0,
+      8000,
+      user3
+    );
+
+    let txReceipt = await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder, user3SignedOrder)
+    );
+    let logLength = txReceipt.logs.length;
+    const orderHash0 = txReceipt.logs[logLength - 1].data;
+
+    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(1);
+
+    //match bayc + bakc + ApeCoin
+    user1SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      2,
+      bayc,
+      0,
+      2000,
+      user1
+    );
+    const user2SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      2,
+      bakc,
+      0,
+      2000,
+      user2
+    );
+    user3SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      2,
+      ape,
+      0,
+      6000,
+      user3
+    );
+
+    txReceipt = await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .matchBAKCPairStakingList(
+          user1SignedOrder,
+          user2SignedOrder,
+          user3SignedOrder
+        )
+    );
+    logLength = txReceipt.logs.length;
+    const orderHash1 = txReceipt.logs[logLength - 1].data;
+
+    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(2);
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash0)
+    );
+
+    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(1);
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash1)
+    );
+
+    expect(await p2pPairStaking.apeMatchedCount(0)).to.be.equal(0);
+  });
 });

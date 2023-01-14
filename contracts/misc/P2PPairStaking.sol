@@ -47,6 +47,7 @@ contract P2PPairStaking is
     bytes32 public DOMAIN_SEPARATOR;
     mapping(bytes32 => bool) public isListingOrderCanceled;
     mapping(bytes32 => MatchedOrder) public matchedOrders;
+    mapping(uint256 => uint256) public apeMatchedCount;
     mapping(address => uint256) public cApeShareBalance;
     address public matchingOperator;
     uint256 public compoundFee;
@@ -136,11 +137,14 @@ contract P2PPairStaking is
         );
 
         //3 transfer token
-        IERC721(apeOrder.token).safeTransferFrom(
-            apeOrder.offerer,
-            address(this),
-            apeOrder.tokenId
-        );
+        uint256 currentMatchedCount = apeMatchedCount[apeOrder.tokenId];
+        if (currentMatchedCount == 0) {
+            IERC721(apeOrder.token).safeTransferFrom(
+                apeOrder.offerer,
+                address(this),
+                apeOrder.tokenId
+            );
+        }
         uint256 apeAmount = getApeCoinStakingCap(apeOrder.stakingType);
         IERC20(apeCoin).safeTransferFrom(
             apeCoinOrder.offerer,
@@ -164,6 +168,7 @@ contract P2PPairStaking is
         });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
+        apeMatchedCount[apeOrder.tokenId] = currentMatchedCount + 1;
 
         //5 stake for ApeCoinStaking
         ApeCoinStaking.SingleNft[]
@@ -209,11 +214,14 @@ contract P2PPairStaking is
         );
 
         //3 transfer token
-        IERC721(apeOrder.token).safeTransferFrom(
-            apeOrder.offerer,
-            address(this),
-            apeOrder.tokenId
-        );
+        uint256 currentMatchedCount = apeMatchedCount[apeOrder.tokenId];
+        if (currentMatchedCount == 0) {
+            IERC721(apeOrder.token).safeTransferFrom(
+                apeOrder.offerer,
+                address(this),
+                apeOrder.tokenId
+            );
+        }
         IERC721(bakcOrder.token).safeTransferFrom(
             bakcOrder.offerer,
             address(this),
@@ -242,6 +250,7 @@ contract P2PPairStaking is
         });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
+        apeMatchedCount[apeOrder.tokenId] = currentMatchedCount + 1;
 
         //5 stake for ApeCoinStaking
         ApeCoinStaking.PairNftDepositWithAmount[]
@@ -316,11 +325,16 @@ contract P2PPairStaking is
             }
         }
         //5 transfer token
-        IERC721(order.apeToken).safeTransferFrom(
-            address(this),
-            order.apeOfferer,
-            order.apeTokenId
-        );
+        uint256 currentMatchedCount = apeMatchedCount[order.apeTokenId];
+        if (currentMatchedCount == 1) {
+            IERC721(order.apeToken).safeTransferFrom(
+                address(this),
+                order.apeOfferer,
+                order.apeTokenId
+            );
+        }
+        apeMatchedCount[order.apeTokenId] = currentMatchedCount - 1;
+
         IERC20(apeCoin).safeTransfer(
             order.apeCoinOfferer,
             order.apePrincipleAmount
@@ -457,6 +471,10 @@ contract P2PPairStaking is
         }
         uint256 balanceAfter = IERC20(apeCoin).balanceOf(address(this));
         uint256 rewardAmount = balanceAfter - balanceBefore;
+        if (rewardAmount == 0) {
+            emit OrderClaimedAndCompounded(orderHash, rewardAmount);
+            return;
+        }
 
         uint256 shareBefore = ICApe(cApe).sharesOf(address(this));
         IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
@@ -530,9 +548,9 @@ contract P2PPairStaking is
             expectedToken = mayc;
         }
         require(apeOrder.token == expectedToken, "ape order invalid token");
+        address owner = IERC721(expectedToken).ownerOf(apeOrder.tokenId);
         require(
-            IERC721(expectedToken).ownerOf(apeOrder.tokenId) ==
-                apeOrder.offerer,
+            owner == apeOrder.offerer || owner == address(this),
             "ape order invalid owner"
         );
     }
