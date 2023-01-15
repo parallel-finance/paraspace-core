@@ -1,10 +1,16 @@
 import {task} from "hardhat/config";
-import {FORK, MULTI_SEND, MULTI_SIG} from "../../helpers/hardhat-constants";
+import {
+  FORK,
+  MULTI_SEND,
+  MULTI_SIG,
+  TIME_LOCK_DEFAULT_OPERATION,
+} from "../../helpers/hardhat-constants";
 import {ethers} from "ethers";
 import {decodeMulti} from "ethers-multisend";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
+import {TimeLockOperation} from "../../helpers/types";
 
 const TIME_LOCK_SIGS = {
   "0xc1a287e2": "GRACE_PERIOD()",
@@ -105,7 +111,13 @@ task("propose-safe-txs", "Propose buffered timelock transactions").setAction(
 
     for (const a of actions) {
       console.log(a.actionHash);
-      await proposeSafeTransaction(timeLock.address, a.queueData);
+      if (TIME_LOCK_DEFAULT_OPERATION === TimeLockOperation.Cancel) {
+        await proposeSafeTransaction(timeLock.address, a.cancelData);
+      } else if (TIME_LOCK_DEFAULT_OPERATION === TimeLockOperation.Execute) {
+        await proposeSafeTransaction(timeLock.address, a.executeData);
+      } else {
+        await proposeSafeTransaction(timeLock.address, a.queueData);
+      }
     }
   }
 );
