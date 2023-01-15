@@ -48,11 +48,20 @@ import {orderType as seaportOrderType} from "./seaport-helpers/eip-712-types/ord
 import {splitSignature} from "ethers/lib/utils";
 import blurOrderType from "./blur-helpers/eip-712-types/order";
 import {
+  ACLManager__factory,
   BlurExchange,
   ConduitController,
   ERC20,
+  ERC20__factory,
   ERC721,
+  ERC721__factory,
+  ExecutorWithTimelock__factory,
+  MultiSendCallOnly__factory,
+  ParaSpaceOracle__factory,
   PausableZoneController,
+  PoolAddressesProvider__factory,
+  PoolConfigurator__factory,
+  ReservesSetupHelper__factory,
   Seaport,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
@@ -76,6 +85,7 @@ import {
   VERBOSE,
 } from "./hardhat-constants";
 import {pick} from "lodash";
+import InputDataDecoder from "ethereum-input-data-decoder";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -758,4 +768,26 @@ export const printEncodedData = async (
   } else {
     console.log(`target: ${target}, data: ${data}`);
   }
+};
+
+export const decodeInputData = (data: string) => {
+  const ABI = [
+    ...ReservesSetupHelper__factory.abi,
+    ...ExecutorWithTimelock__factory.abi,
+    ...PoolAddressesProvider__factory.abi,
+    ...PoolConfigurator__factory.abi,
+    ...ParaSpaceOracle__factory.abi,
+    ...ACLManager__factory.abi,
+    ...MultiSendCallOnly__factory.abi,
+    ...ERC20__factory.abi,
+    ...ERC721__factory.abi,
+  ];
+
+  const decoder = new InputDataDecoder(ABI);
+  const inputData = decoder.decodeData(data.toString());
+  const normalized = JSON.stringify(inputData, (k, v) => {
+    return v ? (v.type === "BigNumber" ? +v.hex.toString(10) : v) : v;
+  });
+
+  console.log(JSON.stringify(JSON.parse(normalized), null, 4));
 };
