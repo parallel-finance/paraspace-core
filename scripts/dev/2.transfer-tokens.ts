@@ -4,7 +4,7 @@ import {
   DRE,
   getParaSpaceConfig,
   isFork,
-  isMainnet,
+  isEthereum,
   sleep,
 } from "../../helpers/misc-utils";
 import {ERC20TokenContractId, ERC721TokenContractId} from "../../helpers/types";
@@ -29,7 +29,7 @@ enum AssetType {
 const transferTokens = async () => {
   if (
     !isFork() ||
-    !isMainnet() ||
+    !isEthereum() ||
     DRE.config.networks.hardhat.forking?.blockNumber !== 16119797
   ) {
     return;

@@ -19,7 +19,14 @@ export enum AssetType {
 
 export enum DryRunExecutor {
   TimeLock = "TimeLock",
+  Safe = "Safe",
   None = "",
+}
+
+export enum TimeLockOperation {
+  Queue = "queue",
+  Execute = "execute",
+  Cancel = "cancel",
 }
 
 export enum XTokenType {

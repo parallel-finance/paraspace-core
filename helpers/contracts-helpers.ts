@@ -65,7 +65,11 @@ import {
   Seaport,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {getIErc20Detailed, getTimeLockExecutor} from "./contracts-getters";
+import {
+  getFirstSigner,
+  getIErc20Detailed,
+  getTimeLockExecutor,
+} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -83,9 +87,15 @@ import {
   DRY_RUN,
   TIME_LOCK_BUFFERING_TIME,
   VERBOSE,
+  MULTI_SIG,
+  FORK,
 } from "./hardhat-constants";
 import {pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
+import {SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
+import Safe from "@safe-global/safe-core-sdk";
+import EthersAdapter from "@safe-global/safe-ethers-lib";
+import SafeServiceClient from "@safe-global/safe-service-client";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -765,6 +775,8 @@ export const printEncodedData = async (
       queueExpireTime,
       executeExpireTime
     );
+  } else if (DRY_RUN === DryRunExecutor.Safe) {
+    await proposeSafeTransaction(target, data);
   } else {
     console.log(`target: ${target}, data: ${data}`);
   }
@@ -790,4 +802,43 @@ export const decodeInputData = (data: string) => {
   });
 
   console.log(JSON.stringify(JSON.parse(normalized), null, 4));
+};
+
+export const proposeSafeTransaction = async (
+  target: tEthereumAddress,
+  data: string
+) => {
+  const signer = await getFirstSigner();
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: signer,
+  });
+
+  const safeSdk: Safe = await Safe.create({
+    ethAdapter,
+    safeAddress: MULTI_SIG,
+  });
+  const safeService = new SafeServiceClient({
+    txServiceUrl: `https://safe-transaction-${
+      FORK || DRE.network.name
+    }.safe.global`,
+    ethAdapter,
+  });
+  const safeTransactionData: SafeTransactionDataPartial = {
+    to: target,
+    value: "0",
+    data,
+  };
+  const safeTransaction = await safeSdk.createTransaction({
+    safeTransactionData,
+  });
+  const signature = await safeSdk.signTypedData(safeTransaction);
+  safeTransaction.addSignature(signature);
+  await safeService.proposeTransaction({
+    safeAddress: MULTI_SIG,
+    safeTransactionData: safeTransaction.data,
+    safeTxHash: await safeSdk.getTransactionHash(safeTransaction),
+    senderAddress: await signer.getAddress(),
+    senderSignature: signature.data,
+  });
 };
