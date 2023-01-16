@@ -60,7 +60,7 @@ export const isMoonbeam = (): boolean => {
   );
 };
 
-export const isMainnet = (): boolean => {
+export const isEthereum = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
     [MAINNET_CHAINID].includes(DRE.network.config.chainId!) ||

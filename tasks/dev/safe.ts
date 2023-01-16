@@ -1,16 +1,16 @@
 import {task} from "hardhat/config";
-import {FORK} from "../../helpers/hardhat-constants";
+import {
+  FORK,
+  MULTI_SEND,
+  MULTI_SIG,
+  TIME_LOCK_DEFAULT_OPERATION,
+} from "../../helpers/hardhat-constants";
 import {ethers} from "ethers";
 import {decodeMulti} from "ethers-multisend";
-import {SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
-import InputDataDecoder from "ethereum-input-data-decoder";
-import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
-
-const MULTI_SIG = "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
-const MULTI_SEND = "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D";
+import {TimeLockOperation} from "../../helpers/types";
 
 const TIME_LOCK_SIGS = {
   "0xc1a287e2": "GRACE_PERIOD()",
@@ -28,38 +28,18 @@ const TIME_LOCK_SIGS = {
   "0x4dd18bf5": "setPendingAdmin(address)",
 };
 
-const getAbi = async () => {
-  const {
-    ACLManager__factory,
-    ExecutorWithTimelock__factory,
-    ParaSpaceOracle__factory,
-    PoolAddressesProvider__factory,
-    PoolConfigurator__factory,
-    ReservesSetupHelper__factory,
-  } = await import("../../types");
-
-  return [
-    ...ReservesSetupHelper__factory.abi,
-    ...ExecutorWithTimelock__factory.abi,
-    ...PoolAddressesProvider__factory.abi,
-    ...PoolConfigurator__factory.abi,
-    ...ParaSpaceOracle__factory.abi,
-    ...ACLManager__factory.abi,
-  ];
-};
-
 task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   const {getFirstSigner, getTimeLockExecutor} = await import(
     "../../helpers/contracts-getters"
   );
+  const {decodeInputData} = await import("../../helpers/contracts-helpers");
   const timeLock = await getTimeLockExecutor();
   const signer = await getFirstSigner();
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
   });
-  const decoder = new InputDataDecoder(await getAbi());
 
   const safeService = new SafeServiceClient({
     txServiceUrl: `https://safe-transaction-${
@@ -113,66 +93,31 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
     const {to, data} = tx;
     console.log();
     console.log(to);
-    const inputData = decoder.decodeData(data);
-    const normalized = JSON.stringify(inputData, (k, v) => {
-      return v.type === "BigNumber" ? +v.hex.toString(10) : v;
-    });
-    console.log(JSON.stringify(JSON.parse(normalized), null, 4));
+    await decodeInputData(data);
   }
 });
 
-task("propose-safe-txs", "Propose buffered timelock transactions")
-  .addPositionalParam("type", "queue|execute|cancel", "queue")
-  .setAction(async ({type}, DRE) => {
+task("propose-safe-txs", "Propose buffered timelock transactions").setAction(
+  async (_, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockDataInDb} = await import(
+    const {getTimeLockDataInDb, proposeSafeTransaction} = await import(
       "../../helpers/contracts-helpers"
     );
-    const {getTimeLockExecutor, getFirstSigner} = await import(
+    const {getTimeLockExecutor} = await import(
       "../../helpers/contracts-getters"
     );
     const timeLock = await getTimeLockExecutor();
-    const signer = await getFirstSigner();
     const actions = await getTimeLockDataInDb();
-    const ethAdapter = new EthersAdapter({
-      ethers,
-      signerOrProvider: signer,
-    });
-
-    const safeSdk: Safe = await Safe.create({
-      ethAdapter,
-      safeAddress: MULTI_SIG,
-    });
-    const safeService = new SafeServiceClient({
-      txServiceUrl: `https://safe-transaction-${
-        FORK || DRE.network.name
-      }.safe.global`,
-      ethAdapter,
-    });
 
     for (const a of actions) {
-      const data =
-        type === "execute"
-          ? a.executeData
-          : type === "cancel"
-          ? a.cancelData
-          : a.queueData;
-      const safeTransactionData: SafeTransactionDataPartial = {
-        to: timeLock.address,
-        value: "0",
-        data,
-      };
-      const safeTransaction = await safeSdk.createTransaction({
-        safeTransactionData,
-      });
-      const signature = await safeSdk.signTypedData(safeTransaction);
-      safeTransaction.addSignature(signature);
-      await safeService.proposeTransaction({
-        safeAddress: MULTI_SIG,
-        safeTransactionData: safeTransaction.data,
-        safeTxHash: await safeSdk.getTransactionHash(safeTransaction),
-        senderAddress: await signer.getAddress(),
-        senderSignature: signature.data,
-      });
+      console.log(a.actionHash);
+      if (TIME_LOCK_DEFAULT_OPERATION === TimeLockOperation.Cancel) {
+        await proposeSafeTransaction(timeLock.address, a.cancelData);
+      } else if (TIME_LOCK_DEFAULT_OPERATION === TimeLockOperation.Execute) {
+        await proposeSafeTransaction(timeLock.address, a.executeData);
+      } else {
+        await proposeSafeTransaction(timeLock.address, a.queueData);
+      }
     }
-  });
+  }
+);

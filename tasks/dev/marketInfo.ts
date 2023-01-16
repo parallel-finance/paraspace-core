@@ -1,31 +1,31 @@
 import {task} from "hardhat/config";
 import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
+import {BigNumber} from "ethers";
+import {WAD} from "../../helpers/constants";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
   .setAction(async ({market}, DRE) => {
     await DRE.run("set-DRE");
-    const {
-      getPoolAddressesProvider,
-      getProtocolDataProvider,
-      getUiPoolDataProvider,
-    } = await import("../../helpers/contracts-getters");
+    const {getPoolAddressesProvider, getUiPoolDataProvider} = await import(
+      "../../helpers/contracts-getters"
+    );
     const {getProxyImplementation} = await import(
       "../../helpers/contracts-helpers"
     );
     const ui = await getUiPoolDataProvider();
-    const protocolDataProvider = await getProtocolDataProvider();
     const provider = await getPoolAddressesProvider();
     const [reservesData, baseCurrencyInfo] = await ui.getReservesData(
       provider.address
     );
     for (const x of reservesData.filter(
-      (r) => !market || minimatch(r.name, market) || minimatch(r.symbol, market)
+      (r) =>
+        !market ||
+        minimatch(r.name, market) ||
+        minimatch(r.symbol, market) ||
+        r.assetType == market
     )) {
-      const {supplyCap, borrowCap} = await protocolDataProvider.getReserveCaps(
-        x.underlyingAsset
-      );
       console.log();
       console.log(x.symbol);
       console.log(" asset:", x.underlyingAsset);
@@ -36,8 +36,8 @@ task("market-info", "Print markets info")
       );
       console.log(" liquidationBonus", x.reserveLiquidationBonus.toString());
       console.log(" reserveFactor:", x.reserveFactor.toString());
-      console.log(" supplyCap:", supplyCap.toString());
-      console.log(" borrowCap:", borrowCap.toString());
+      console.log(" supplyCap:", x.supplyCap.toString());
+      console.log(" borrowCap:", x.borrowCap.toString());
       console.log(" xTokenProxy:", x.xTokenAddress);
       console.log(
         " xTokenImpl:",
@@ -62,5 +62,13 @@ task("market-info", "Print markets info")
             .div(10 ** baseCurrencyInfo.networkBaseTokenPriceDecimals)
         )
       );
+      console.log(
+        " accruedToTreasury:",
+        fromBn(
+          x.accruedToTreasury.mul(WAD).div(BigNumber.from(10).pow(x.decimals))
+        )
+      );
+      console.log(" liquidityRate:", fromBn(x.liquidityRate, 27));
+      console.log(" variableBorrowRate:", fromBn(x.variableBorrowRate, 27));
     }
   });
