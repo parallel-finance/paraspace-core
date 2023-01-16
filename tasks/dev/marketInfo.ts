@@ -20,7 +20,11 @@ task("market-info", "Print markets info")
       provider.address
     );
     for (const x of reservesData.filter(
-      (r) => !market || minimatch(r.name, market) || minimatch(r.symbol, market)
+      (r) =>
+        !market ||
+        minimatch(r.name, market) ||
+        minimatch(r.symbol, market) ||
+        r.assetType == market
     )) {
       console.log();
       console.log(x.symbol);
@@ -64,5 +68,7 @@ task("market-info", "Print markets info")
           x.accruedToTreasury.mul(WAD).div(BigNumber.from(10).pow(x.decimals))
         )
       );
+      console.log(" liquidityRate:", fromBn(x.liquidityRate, 27));
+      console.log(" variableBorrowRate:", fromBn(x.variableBorrowRate, 27));
     }
   });
