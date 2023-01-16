@@ -806,7 +806,8 @@ export const decodeInputData = (data: string) => {
 
 export const proposeSafeTransaction = async (
   target: tEthereumAddress,
-  data: string
+  data: string,
+  nonce?: number
 ) => {
   const signer = await getFirstSigner();
   const ethAdapter = new EthersAdapter({
@@ -827,6 +828,7 @@ export const proposeSafeTransaction = async (
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
+    nonce,
     data,
   };
   const safeTransaction = await safeSdk.createTransaction({

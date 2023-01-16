@@ -410,6 +410,14 @@ market-info:
 account-data:
 	make TASK_NAME=account-data run-task
 
+.PHONY: decode
+decode:
+	make TASK_NAME=decode run-task
+
+.PHONY: decode-multi
+decode-multi:
+	make TASK_NAME=decode-multi run-task
+
 .PHONY: next-execution-time
 next-execution-time:
 	make TASK_NAME=next-execution-time run-task
