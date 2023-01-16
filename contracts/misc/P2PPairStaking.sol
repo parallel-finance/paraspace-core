@@ -280,7 +280,20 @@ contract P2PPairStaking is
         );
 
         //2 claim pending reward
-        _claimForMatchedOrderAndCompound(orderHash);
+        uint256 cApeExchangeRate = ICApe(cApe).getPooledApeByShares(1e18);
+        uint256 _compoundFee = compoundFee;
+        uint256 rewardAmount = _claimForMatchedOrderAndCompound(
+            orderHash,
+            cApeExchangeRate,
+            _compoundFee
+        );
+        if (rewardAmount > 0) {
+            IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
+            _depositCApeShareForUser(
+                address(this),
+                rewardAmount.percentMul(_compoundFee)
+            );
+        }
 
         //3 delete matched order
         delete matchedOrders[orderHash];
@@ -349,9 +362,24 @@ contract P2PPairStaking is
         external
         nonReentrant
     {
+        //ignore getShareByPooledApe return 0 case.
+        uint256 cApeExchangeRate = ICApe(cApe).getPooledApeByShares(1e18);
+        uint256 _compoundFee = compoundFee;
+        uint256 totalReward;
         for (uint256 index = 0; index < orderHashes.length; index++) {
             bytes32 orderHash = orderHashes[index];
-            _claimForMatchedOrderAndCompound(orderHash);
+            totalReward += _claimForMatchedOrderAndCompound(
+                orderHash,
+                cApeExchangeRate,
+                _compoundFee
+            );
+        }
+        if (totalReward > 0) {
+            IAutoCompoundApe(cApe).deposit(address(this), totalReward);
+            _depositCApeShareForUser(
+                address(this),
+                totalReward.percentMul(_compoundFee)
+            );
         }
     }
 
@@ -439,7 +467,11 @@ contract P2PPairStaking is
             );
     }
 
-    function _claimForMatchedOrderAndCompound(bytes32 orderHash) internal {
+    function _claimForMatchedOrderAndCompound(
+        bytes32 orderHash,
+        uint256 cApeExchangeRate,
+        uint256 _compoundFee
+    ) internal returns (uint256) {
         MatchedOrder memory order = matchedOrders[orderHash];
         uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
         if (order.stakingType < StakingType.BAYCPairStaking) {
@@ -467,18 +499,16 @@ contract P2PPairStaking is
         uint256 rewardAmount = balanceAfter - balanceBefore;
         if (rewardAmount == 0) {
             emit OrderClaimedAndCompounded(orderHash, rewardAmount);
-            return;
+            return 0;
         }
 
-        uint256 shareBefore = ICApe(cApe).sharesOf(address(this));
-        IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
-        uint256 shareAfter = ICApe(cApe).sharesOf(address(this));
-        uint256 rewardShare = shareAfter - shareBefore;
+        // exchange rate should be rounded up in case rewardShare is bigger than actual
+        uint256 rewardShare = (rewardAmount * 1e18) / (cApeExchangeRate + 1);
 
         //compound fee
-        uint256 _compoundFee = rewardShare.percentMul(compoundFee);
-        _depositCApeShareForUser(address(this), _compoundFee);
-        rewardShare -= _compoundFee;
+        //compound fee share should be rounded up
+        uint256 _compoundFeeShare = rewardShare.percentMul(_compoundFee) + 1;
+        rewardShare -= _compoundFeeShare;
 
         _depositCApeShareForUser(
             order.apeOfferer,
@@ -494,6 +524,8 @@ contract P2PPairStaking is
         );
 
         emit OrderClaimedAndCompounded(orderHash, rewardAmount);
+
+        return rewardAmount;
     }
 
     function _depositCApeShareForUser(address user, uint256 amount) internal {

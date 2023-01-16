@@ -485,6 +485,87 @@ describe("P2P Pair Staking Test", () => {
     );
   });
 
+  it("claimForMatchedOrderAndCompound for multi user work as expected", async () => {
+    const {
+      users: [user1, user2, user3],
+      ape,
+      bayc,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(bayc, "10", user1);
+    await mintAndValidate(bakc, "10", user2);
+    await mintAndValidate(ape, "10000000", user3);
+
+    await waitForTx(
+      await bayc
+        .connect(user1.signer)
+        .setApprovalForAll(p2pPairStaking.address, true)
+    );
+    await waitForTx(
+      await bakc
+        .connect(user2.signer)
+        .setApprovalForAll(p2pPairStaking.address, true)
+    );
+    await waitForTx(
+      await ape
+        .connect(user3.signer)
+        .approve(p2pPairStaking.address, MAX_UINT_AMOUNT)
+    );
+
+    const txArray: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const user1SignedOrder = await getSignedListingOrder(
+        p2pPairStaking,
+        2,
+        bayc,
+        i,
+        2000,
+        user1
+      );
+      const user2SignedOrder = await getSignedListingOrder(
+        p2pPairStaking,
+        2,
+        bakc,
+        i,
+        2000,
+        user2
+      );
+      const user3SignedOrder = await getSignedListingOrder(
+        p2pPairStaking,
+        2,
+        ape,
+        0,
+        6000,
+        user3
+      );
+
+      const txReceipt = await waitForTx(
+        await p2pPairStaking
+          .connect(user1.signer)
+          .matchBAKCPairStakingList(
+            user1SignedOrder,
+            user2SignedOrder,
+            user3SignedOrder
+          )
+      );
+      const logLength = txReceipt.logs.length;
+      const orderHash = txReceipt.logs[logLength - 1].data;
+
+      txArray.push(orderHash);
+    }
+
+    for (let i = 0; i < 2; i++) {
+      await advanceTimeAndBlock(parseInt("3600"));
+
+      await waitForTx(
+        await p2pPairStaking
+          .connect(user1.signer)
+          .claimForMatchedOrderAndCompound(txArray)
+      );
+    }
+  });
+
   it("match failed when order was canceled 0", async () => {
     const {
       users: [user1, user2],
