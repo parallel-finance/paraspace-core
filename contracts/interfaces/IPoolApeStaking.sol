@@ -29,7 +29,7 @@ interface IPoolApeStaking {
     struct CompoundOption {
         CompoundType ty;
         uint256 swapPercent;
-        bytes swapPath;
+        address swapTokenOut;
     }
 
     /**

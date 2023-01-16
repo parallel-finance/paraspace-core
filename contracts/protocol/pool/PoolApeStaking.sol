@@ -22,8 +22,10 @@ import "../libraries/logic/SupplyLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
+import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
+import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -37,12 +39,16 @@ contract PoolApeStaking is
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using SafeCast for uint256;
     using PercentageMath for uint256;
+    using WadRayMath for uint256;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
+    IERC20 internal immutable USDC;
     uint256 internal constant POOL_REVISION = 130;
     ISwapRouter internal immutable SWAP_ROUTER;
+
+    uint256 internal constant DEFAULT_MAX_SLIPPAGE = 50; // 0.5%
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -73,6 +79,7 @@ contract PoolApeStaking is
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
+        USDC = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
         SWAP_ROUTER = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
         uint256 allowance = APE_COIN.allowance(
             address(this),
@@ -623,6 +630,7 @@ contract PoolApeStaking is
         CompoundOption[] calldata options
     ) internal {
         uint256 compoundFee = _depositApeAndPayFees(ps, vars);
+        uint256 usdcApePrice = _getUsdcApePrice();
 
         for (uint256 index = 0; index < users.length; index++) {
             uint256 amount = vars.amounts[index].percentMul(
@@ -669,30 +677,54 @@ contract PoolApeStaking is
                     );
                 }
                 if (swapAmount > 0) {
-                    _swapApeForUser(
-                        options[index].swapPath,
+                    uint256 amountOut = _swapExactTokensForTokens(
+                        options[index].swapTokenOut,
+                        swapAmount,
+                        usdcApePrice
+                    );
+                    _supplyForUser(
+                        ps,
+                        address(USDC),
+                        address(this),
                         users[index],
-                        swapAmount
+                        amountOut,
+                        false
                     );
                 }
             }
         }
     }
 
-    function _swapApeForUser(
-        bytes calldata path,
-        address onBehalf,
-        uint256 amount
+    function _swapExactTokensForTokens(
+        address tokenOut,
+        uint256 amountIn,
+        uint256 price
     ) internal returns (uint256 amountOut) {
+        require(tokenOut == address(USDC), "Only USDC");
         return
-            SWAP_ROUTER.exactInput(
-                ISwapRouter.ExactInputParams({
-                    path: path,
-                    recipient: onBehalf,
+            SWAP_ROUTER.exactInputSingle(
+                ISwapRouter.ExactInputSingleParams({
+                    tokenIn: address(APE_COIN),
+                    tokenOut: address(USDC),
+                    fee: 3000,
+                    recipient: address(this), // GAS costly, shall we send directly to users
                     deadline: block.timestamp, // FIXME
-                    amountIn: amount,
-                    amountOutMinimum: 0 // FIXME
+                    amountIn: amountIn,
+                    amountOutMinimum: amountIn.wadMul(price),
+                    sqrtPriceLimitX96: 0
                 })
+            );
+    }
+
+    function _getUsdcApePrice() internal view returns (uint256) {
+        IPriceOracleGetter oracle = IPriceOracleGetter(
+            ADDRESSES_PROVIDER.getPriceOracle()
+        );
+        uint256 apePrice = oracle.getAssetPrice(address(APE_COIN));
+        uint256 usdcPrice = oracle.getAssetPrice(address(USDC));
+        return
+            (((apePrice * 1E6).wadDiv(usdcPrice * 1E18))).percentMul(
+                PercentageMath.PERCENTAGE_FACTOR - DEFAULT_MAX_SLIPPAGE
             );
     }
 

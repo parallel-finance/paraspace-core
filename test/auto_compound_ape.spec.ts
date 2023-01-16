@@ -20,7 +20,7 @@ import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 const DEFAULT_COMPOUND_OPTION = {
   ty: 1,
   swapPercent: 0,
-  swapPath: "0x",
+  swapTokenOut: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
 };
 
 describe("APE Coin Staking Test", () => {
