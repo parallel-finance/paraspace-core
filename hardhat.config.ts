@@ -3,7 +3,6 @@ import {HardhatUserConfig} from "hardhat/types";
 import dotenv from "dotenv";
 import {
   MAINNET_CHAINID,
-  GOERLI_CHAINID,
   MOCHA_JOBS,
   HARDFORK,
   DEFAULT_BLOCK_GAS_LIMIT,
@@ -12,6 +11,7 @@ import {
   TENDERLY_PROJECT,
   TENDERLY_USERNAME,
   DEPLOYER,
+  VERBOSE,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -143,6 +143,11 @@ const hardhatConfig: HardhatUserConfig = {
       gas: 4e6,
       allowUnlimitedContractSize: true,
     },
+    moonbeam: {
+      chainId: CHAINS_ID[eEthereumNetwork.moonbeam],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
+      accounts: DEPLOYER,
+    },
     hardhat: {
       hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
@@ -152,17 +157,17 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       accounts,
-      loggingEnabled: false,
+      loggingEnabled: VERBOSE,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
     goerli: {
-      chainId: GOERLI_CHAINID,
+      chainId: CHAINS_ID[eEthereumNetwork.goerli],
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
       accounts: DEPLOYER,
     },
     mainnet: {
-      chainId: MAINNET_CHAINID,
+      chainId: CHAINS_ID[eEthereumNetwork.mainnet],
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
       accounts: DEPLOYER,
     },

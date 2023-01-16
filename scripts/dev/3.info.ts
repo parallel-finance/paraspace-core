@@ -9,7 +9,6 @@ import * as envs from "../../helpers/hardhat-constants";
 import {accounts} from "../../wallets";
 
 const info = async () => {
-  await DRE.run("set-DRE");
   console.time("info");
 
   const signer = await getFirstSigner();
@@ -17,7 +16,7 @@ const info = async () => {
 
   console.log(await DRE.ethers.provider.getNetwork());
   console.log(await DRE.ethers.provider.getFeeData());
-  console.log(envs);
+  console.log(envs.GLOBAL_OVERRIDES);
   console.log(await getParaSpaceAdmins());
   console.log(accounts);
   console.log(signerAddress);

@@ -15,6 +15,7 @@ import {
   GOERLI_CHAINID,
   HARDHAT_CHAINID,
   MAINNET_CHAINID,
+  MOONBEAM_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -51,7 +52,15 @@ export const isFork = (): boolean => {
   return [FORK_CHAINID].includes(DRE.network.config.chainId!);
 };
 
-export const isMainnet = (): boolean => {
+export const isMoonbeam = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [MOONBEAM_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.moonbeam].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isEthereum = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
     [MAINNET_CHAINID].includes(DRE.network.config.chainId!) ||

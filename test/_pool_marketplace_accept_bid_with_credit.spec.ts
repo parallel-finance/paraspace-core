@@ -4,6 +4,7 @@ import {
   convertToCurrencyDecimals,
   createSeaportOrder,
   getEthersSigners,
+  isUsingAsCollateral,
 } from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import creditType from "../helpers/eip-712-types/credit";
@@ -18,7 +19,7 @@ import {
   toBN,
   toFulfillment,
 } from "../helpers/seaport-helpers/encoding";
-import {PARASPACE_SEAPORT_ID} from "../helpers/constants";
+import {MAX_UINT_AMOUNT, PARASPACE_SEAPORT_ID} from "../helpers/constants";
 import {arrayify, splitSignature} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {
@@ -28,10 +29,7 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {MintableERC20} from "../types";
-import {
-  getMintableERC20,
-  getParaSpaceOracle,
-} from "../helpers/contracts-getters";
+import {getMintableERC20} from "../helpers/contracts-getters";
 import {ProtocolErrors} from "../helpers/types";
 import {merkleTree} from "../helpers/seaport-helpers/criteria";
 import {executeAcceptBidWithCredit} from "./helpers/marketplace-helper";
@@ -44,6 +42,7 @@ describe("Leveraged Bid - unit tests", () => {
       doodles,
       usdc,
       pool,
+      paraspaceOracle,
       users: [maker, taker],
     } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "100";
@@ -66,9 +65,7 @@ describe("Leveraged Bid - unit tests", () => {
     const totalCollateralBaseBefore = (
       await pool.getUserAccountData(taker.address)
     ).totalCollateralBase;
-    const assetPrice = await (await getParaSpaceOracle())
-      .connect(taker.signer)
-      .getAssetPrice(doodles.address);
+    const assetPrice = await paraspaceOracle.getAssetPrice(doodles.address);
 
     expect(
       await executeAcceptBidWithCredit(
@@ -120,6 +117,7 @@ describe("Leveraged Bid - unit tests", () => {
       dai,
       pool,
       oracle,
+      paraspaceOracle,
       users: [maker, taker, middleman],
     } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
@@ -161,9 +159,7 @@ describe("Leveraged Bid - unit tests", () => {
     const totalCollateralBaseBefore = (
       await pool.getUserAccountData(taker.address)
     ).totalCollateralBase;
-    const assetPrice = await (await getParaSpaceOracle())
-      .connect(taker.signer)
-      .getAssetPrice(mayc.address);
+    const assetPrice = await paraspaceOracle.getAssetPrice(mayc.address);
 
     await executeAcceptBidWithCredit(
       mayc,
@@ -213,6 +209,7 @@ describe("Leveraged Bid - unit tests", () => {
       usdc,
       pool,
       oracle,
+      paraspaceOracle,
       users: [maker, taker, middleman],
     } = await loadFixture(testEnvFixture);
     const middlemanInitialBalance = "1000";
@@ -238,9 +235,7 @@ describe("Leveraged Bid - unit tests", () => {
     const totalCollateralBaseBefore = (
       await pool.getUserAccountData(taker.address)
     ).totalCollateralBase;
-    const assetPrice = await (await getParaSpaceOracle())
-      .connect(taker.signer)
-      .getAssetPrice(bayc.address);
+    const assetPrice = await paraspaceOracle.getAssetPrice(bayc.address);
 
     await executeAcceptBidWithCredit(
       bayc,
@@ -288,6 +283,7 @@ describe("Leveraged Bid - unit tests", () => {
       usdc,
       pool,
       oracle,
+      paraspaceOracle,
       users: [maker, taker, middleman],
     } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
@@ -324,9 +320,7 @@ describe("Leveraged Bid - unit tests", () => {
     const totalCollateralBaseBefore = (
       await pool.getUserAccountData(taker.address)
     ).totalCollateralBase;
-    const assetPrice = await (await getParaSpaceOracle())
-      .connect(taker.signer)
-      .getAssetPrice(bayc.address);
+    const assetPrice = await paraspaceOracle.getAssetPrice(bayc.address);
     expect(totalCollateralBaseBefore).to.be.eq(assetPrice);
     // and there is no debt for maker
     const totalDebtBefore = (await pool.getUserAccountData(maker.address))
@@ -839,6 +833,7 @@ describe("Leveraged Bid - unit tests", () => {
       conduit,
       pausableZone,
       seaport,
+      paraspaceOracle,
       users: [maker, taker, middleman],
     } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
@@ -861,7 +856,7 @@ describe("Leveraged Bid - unit tests", () => {
     const totalCollateralBaseBefore = (
       await pool.getUserAccountData(taker.address)
     ).totalCollateralBase;
-    const assetPrice = await (await getParaSpaceOracle())
+    const assetPrice = await paraspaceOracle
       .connect(taker.signer)
       .getAssetPrice(mayc.address);
 
@@ -1033,6 +1028,7 @@ describe("Leveraged Bid - unit tests", () => {
       conduit,
       pausableZone,
       seaport,
+      paraspaceOracle,
       users: [maker, taker, middleman, platform, platform1],
     } = await loadFixture(testEnvFixture);
     const makerInitialBalance = "800";
@@ -1050,9 +1046,7 @@ describe("Leveraged Bid - unit tests", () => {
     const totalCollateralBaseBefore = (
       await pool.getUserAccountData(taker.address)
     ).totalCollateralBase;
-    const assetPrice = await (await getParaSpaceOracle())
-      .connect(taker.signer)
-      .getAssetPrice(mayc.address);
+    const assetPrice = await paraspaceOracle.getAssetPrice(mayc.address);
 
     // mint USDC to maker
     await mintAndValidate(usdc, makerInitialBalance, maker);
@@ -1252,6 +1246,105 @@ describe("Leveraged Bid - unit tests", () => {
       totalCollateralBaseBefore.add(assetPrice)
     );
   });
+
+  it("TC-erc721-bid-09 ERC20 <=> NToken accept use credit borrow and cash offer. pToken minted so for NFT to be traded", async () => {
+    const {
+      bayc,
+      nBAYC,
+      usdc,
+      pUsdc,
+      pool,
+      oracle,
+      paraspaceOracle,
+      users: [maker, taker, middleman],
+    } = await loadFixture(testEnvFixture);
+    const makerInitialBalance = "800";
+    const makerInitialDebt = "200";
+    const middlemanInitialBalance = "200";
+    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "800");
+    const creditAmount = await convertToCurrencyDecimals(usdc.address, "200");
+    const borrowAmount = await convertToCurrencyDecimals(usdc.address, "200");
+    const usdcPrice = await oracle.getAssetPrice(usdc.address);
+    const accrualTotalDebtBase = creditAmount
+      .mul(usdcPrice)
+      .toString()
+      .substring(0, 18);
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount; // fixed price but offerer cannot afford this
+    const nftId = 0;
+
+    // mint USDC to maker
+    await mintAndValidate(usdc, makerInitialBalance, maker);
+
+    // middleman supplies USDC to pool to be borrowed by maker later
+    await supplyAndValidate(usdc, middlemanInitialBalance, middleman, true);
+    await supplyAndValidate(usdc, makerInitialDebt, middleman, true);
+
+    expect(
+      await usdc.balanceOf(
+        (
+          await pool.getReserveData(usdc.address)
+        ).xTokenAddress
+      )
+    ).to.be.equal(creditAmount.add(borrowAmount));
+
+    await supplyAndValidate(bayc, "1", taker, true);
+    await borrowAndValidate(usdc, makerInitialDebt, taker);
+
+    await waitForTx(
+      await usdc.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+
+    // before acceptBidWithCredit totalCollateralBase for the taker
+    // is just the bayc
+    const totalCollateralBaseBefore = (
+      await pool.getUserAccountData(taker.address)
+    ).totalCollateralBase;
+    const assetPrice = await paraspaceOracle.getAssetPrice(bayc.address);
+    expect(totalCollateralBaseBefore).to.be.eq(assetPrice);
+    // and there is no debt for maker
+    const totalDebtBefore = (await pool.getUserAccountData(maker.address))
+      .totalDebtBase;
+    expect(totalDebtBefore).to.be.equal(0);
+
+    await executeAcceptBidWithCredit(
+      nBAYC,
+      usdc,
+      startAmount,
+      endAmount,
+      creditAmount,
+      nftId,
+      maker,
+      taker
+    );
+    const usdcConfigData = BigNumber.from(
+      (await pool.getUserConfiguration(taker.address)).data
+    );
+    const usdcReserveData = await pool.getReserveData(usdc.address);
+
+    // taker bayc should reduce
+    expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
+    expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
+    expect(await usdc.balanceOf(taker.address)).to.be.equal(
+      startAmount.percentMul("1000").add(borrowAmount)
+    );
+    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(
+      startAmount.percentMul("9000")
+    );
+    expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
+
+    // after the swap offer's totalCollateralBase should be same as taker's before
+    const totalCollateralBaseAfter = (
+      await pool.getUserAccountData(maker.address)
+    ).totalCollateralBase;
+    expect(totalCollateralBaseAfter).to.be.eq(totalCollateralBaseBefore);
+    // maker debt should increase
+    const totalDebtAfter = (await pool.getUserAccountData(maker.address))
+      .totalDebtBase;
+    expect(totalDebtAfter).to.be.equal(
+      totalDebtBefore.add(accrualTotalDebtBase)
+    );
+  });
 });
 
 describe("Leveraged Bid - Negative tests", () => {
@@ -1316,13 +1409,16 @@ describe("Leveraged Bid - Negative tests", () => {
       nBAYC,
       dai,
       bayc,
+      usdc,
       conduit,
-      users: [maker, taker],
+      users: [maker, taker, middleman],
     } = testEnv;
     const creditAmount = await convertToCurrencyDecimals(
       dai.address,
       payLaterAmount
     );
+
+    await supplyAndValidate(usdc, "800", middleman, true);
     // taker supplies BAYC
     await supplyAndValidate(bayc, "1", taker);
 
@@ -1331,8 +1427,8 @@ describe("Leveraged Bid - Negative tests", () => {
       await nBAYC.connect(taker.signer).approve(conduit.address, nftId)
     );
 
-    // taker borrows DAI
-    await borrowAndValidate(dai, "800", taker);
+    // taker borrows USDC
+    await borrowAndValidate(usdc, "800", taker);
 
     await expect(
       executeAcceptBidWithCredit(

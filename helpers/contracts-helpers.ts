@@ -8,7 +8,12 @@ import {
 } from "ethers";
 import {signTypedData_v4} from "eth-sig-util";
 import {fromRpcSig, ECDSASignature} from "ethereumjs-util";
-import {Fragment, isAddress} from "ethers/lib/utils";
+import {
+  defaultAbiCoder,
+  Fragment,
+  isAddress,
+  solidityKeccak256,
+} from "ethers/lib/utils";
 import {isZeroAddress} from "ethereumjs-util";
 import {
   DRE,
@@ -26,6 +31,8 @@ import {
   ConstructorArgs,
   LibraryAddresses,
   ParaSpaceLibraryAddresses,
+  Action,
+  DryRunExecutor,
 } from "./types";
 import {
   ConsiderationItem,
@@ -41,15 +48,28 @@ import {orderType as seaportOrderType} from "./seaport-helpers/eip-712-types/ord
 import {splitSignature} from "ethers/lib/utils";
 import blurOrderType from "./blur-helpers/eip-712-types/order";
 import {
+  ACLManager__factory,
   BlurExchange,
   ConduitController,
   ERC20,
+  ERC20__factory,
   ERC721,
+  ERC721__factory,
+  ExecutorWithTimelock__factory,
+  MultiSendCallOnly__factory,
+  ParaSpaceOracle__factory,
   PausableZoneController,
+  PoolAddressesProvider__factory,
+  PoolConfigurator__factory,
+  ReservesSetupHelper__factory,
   Seaport,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {getIErc20Detailed} from "./contracts-getters";
+import {
+  getFirstSigner,
+  getIErc20Detailed,
+  getTimeLockExecutor,
+} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -64,7 +84,18 @@ import {
   GLOBAL_OVERRIDES,
   DEPLOY_INCREMENTAL,
   JSONRPC_VARIANT,
+  DRY_RUN,
+  TIME_LOCK_BUFFERING_TIME,
+  VERBOSE,
+  MULTI_SIG,
+  FORK,
 } from "./hardhat-constants";
+import {pick} from "lodash";
+import InputDataDecoder from "ethereum-input-data-decoder";
+import {SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
+import Safe from "@safe-global/safe-core-sdk";
+import EthersAdapter from "@safe-global/safe-ethers-lib";
+import SafeServiceClient from "@safe-global/safe-service-client";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -119,6 +150,53 @@ export const insertContractAddressInDb = async (
     newValue["constructorArgs"] = [];
   }
   await getDb().set(key, newValue).write();
+};
+
+export const insertTimeLockDataInDb = async (
+  action: Action,
+  actionHash: string,
+  queueData: string,
+  executeData: string,
+  cancelData: string,
+  executeTime: string,
+  queueExpireTime: string,
+  executeExpireTime: string
+) => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = oldValue.queue || [];
+  queue.push({
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executeTime: new Date(+executeTime * 1000).toLocaleString(),
+    queueExpireTime: new Date(+queueExpireTime * 1000).toLocaleString(),
+    executeExpireTime: new Date(+executeExpireTime * 1000).toLocaleString(),
+  });
+  const newValue = {
+    ...oldValue,
+    queue,
+  };
+  await getDb().set(key, newValue).write();
+};
+
+export const getTimeLockDataInDb = async (): Promise<
+  {
+    action: Action;
+    actionHash: string;
+    queueData: string;
+    executeData: string;
+    cancelData: string;
+  }[]
+> => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = oldValue.queue || [];
+  return queue.map((x) =>
+    pick(x, ["action", "actionHash", "queueData", "executeData", "cancelData"])
+  );
 };
 
 export const getContractAddressInDb = async (id: eContractid | string) => {
@@ -318,22 +396,32 @@ export const buildDelegationWithSigParams = (
   },
 });
 
-export const getProxyImplementation = async (
-  proxyAdminAddress: string,
-  proxyAddress: string
-) => {
-  // Impersonate proxy admin
-  const proxyAdminSigner = (await impersonateAddress(proxyAdminAddress)).signer;
-
-  // failing here
-  const proxy = (await DRE.ethers.getContractAt(
-    "InitializableImmutableAdminUpgradeabilityProxy",
+export const getProxyImplementation = async (proxyAddress: string) => {
+  const EIP1967_IMPL_SLOT =
+    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+  const implStorageSlot = await DRE.ethers.provider.getStorageAt(
     proxyAddress,
-    proxyAdminSigner
-  )) as InitializableImmutableAdminUpgradeabilityProxy;
+    EIP1967_IMPL_SLOT,
+    "latest"
+  );
+  const implAddress = utils.defaultAbiCoder
+    .decode(["address"], implStorageSlot)
+    .toString();
+  return utils.getAddress(implAddress);
+};
 
-  const implementationAddress = await proxy.callStatic.implementation();
-  return implementationAddress;
+export const getProxyAdmin = async (proxyAddress: string) => {
+  const EIP1967_ADMIN_SLOT =
+    "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
+  const adminStorageSlot = await DRE.ethers.provider.getStorageAt(
+    proxyAddress,
+    EIP1967_ADMIN_SLOT,
+    "latest"
+  );
+  const adminAddress = utils.defaultAbiCoder
+    .decode(["address"], adminStorageSlot)
+    .toString();
+  return utils.getAddress(adminAddress);
 };
 
 export const impersonateAddress = async (
@@ -582,3 +670,177 @@ export const isUsingAsCollateral = (conf, id) =>
     .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2).add(1)))
     .and(1)
     .gt(0);
+
+export const getCurrentTime = async () => {
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return BigNumber.from(timestamp);
+};
+
+export const getExecutionTime = async () => {
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return BigNumber.from(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
+};
+
+export const getActionAndData = async (
+  target: string,
+  data: string,
+  executionTime?: string
+) => {
+  const timeLock = await getTimeLockExecutor();
+  executionTime = executionTime || (await getExecutionTime());
+  const action: Action = [target, 0, "", data, executionTime, false];
+  const actionHash = solidityKeccak256(
+    ["bytes"],
+    [
+      defaultAbiCoder.encode(
+        ["address", "uint256", "string", "bytes", "uint256", "bool"],
+        action
+      ),
+    ]
+  );
+  const isActionQueued = await timeLock.isActionQueued(actionHash);
+  const gracePeriod = await timeLock.GRACE_PERIOD();
+  const delay = await timeLock.getDelay();
+  const executeTime = BigNumber.from(executionTime).add(delay).toString();
+  const queueExpireTime = BigNumber.from(executionTime).sub(delay).toString();
+  const executeExpireTime = BigNumber.from(executionTime)
+    .add(gracePeriod)
+    .toString();
+  const queueData = timeLock.interface.encodeFunctionData(
+    "queueTransaction",
+    action
+  );
+  const executeData = timeLock.interface.encodeFunctionData(
+    "executeTransaction",
+    action
+  );
+  const cancelData = timeLock.interface.encodeFunctionData(
+    "cancelTransaction",
+    action
+  );
+  if (VERBOSE) {
+    console.log();
+    console.log("isActionQueued:", isActionQueued);
+    console.log("timeLock:", timeLock.address);
+    console.log("target:", target);
+    console.log("data:", data);
+    console.log("executionTime:", executionTime);
+    console.log("action:", action.toString());
+    console.log("actionHash:", actionHash);
+    console.log("queueData:", queueData);
+    console.log("executeData:", executeData);
+    console.log("cancelData:", cancelData);
+    console.log();
+  }
+  return {
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executeTime,
+    queueExpireTime,
+    executeExpireTime,
+  };
+};
+
+export const printEncodedData = async (
+  target: tEthereumAddress,
+  data: string,
+  executionTime?: string
+) => {
+  if (
+    DRY_RUN == DryRunExecutor.TimeLock &&
+    (await getContractAddressInDb(eContractid.TimeLockExecutor))
+  ) {
+    const {
+      action,
+      actionHash,
+      queueData,
+      executeData,
+      cancelData,
+      executeTime,
+      queueExpireTime,
+      executeExpireTime,
+    } = await getActionAndData(target, data, executionTime);
+    await insertTimeLockDataInDb(
+      action,
+      actionHash,
+      queueData,
+      executeData,
+      cancelData,
+      executeTime,
+      queueExpireTime,
+      executeExpireTime
+    );
+  } else if (DRY_RUN === DryRunExecutor.Safe) {
+    await proposeSafeTransaction(target, data);
+  } else {
+    console.log(`target: ${target}, data: ${data}`);
+  }
+};
+
+export const decodeInputData = (data: string) => {
+  const ABI = [
+    ...ReservesSetupHelper__factory.abi,
+    ...ExecutorWithTimelock__factory.abi,
+    ...PoolAddressesProvider__factory.abi,
+    ...PoolConfigurator__factory.abi,
+    ...ParaSpaceOracle__factory.abi,
+    ...ACLManager__factory.abi,
+    ...MultiSendCallOnly__factory.abi,
+    ...ERC20__factory.abi,
+    ...ERC721__factory.abi,
+  ];
+
+  const decoder = new InputDataDecoder(ABI);
+  const inputData = decoder.decodeData(data.toString());
+  const normalized = JSON.stringify(inputData, (k, v) => {
+    return v ? (v.type === "BigNumber" ? +v.hex.toString(10) : v) : v;
+  });
+
+  console.log(JSON.stringify(JSON.parse(normalized), null, 4));
+};
+
+export const proposeSafeTransaction = async (
+  target: tEthereumAddress,
+  data: string,
+  nonce?: number
+) => {
+  const signer = await getFirstSigner();
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: signer,
+  });
+
+  const safeSdk: Safe = await Safe.create({
+    ethAdapter,
+    safeAddress: MULTI_SIG,
+  });
+  const safeService = new SafeServiceClient({
+    txServiceUrl: `https://safe-transaction-${
+      FORK || DRE.network.name
+    }.safe.global`,
+    ethAdapter,
+  });
+  const safeTransactionData: SafeTransactionDataPartial = {
+    to: target,
+    value: "0",
+    nonce,
+    data,
+  };
+  const safeTransaction = await safeSdk.createTransaction({
+    safeTransactionData,
+  });
+  const signature = await safeSdk.signTypedData(safeTransaction);
+  safeTransaction.addSignature(signature);
+  await safeService.proposeTransaction({
+    safeAddress: MULTI_SIG,
+    safeTransactionData: safeTransaction.data,
+    safeTxHash: await safeSdk.getTransactionHash(safeTransaction),
+    senderAddress: await signer.getAddress(),
+    senderSignature: signature.data,
+  });
+};
