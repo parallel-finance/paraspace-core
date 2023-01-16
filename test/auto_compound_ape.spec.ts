@@ -17,6 +17,12 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
+const DEFAULT_COMPOUND_OPTION = {
+  ty: 1,
+  swapPercent: 0,
+  swapPath: "0x",
+};
+
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
   let cApe: AutoCompoundApe;
@@ -412,7 +418,12 @@ describe("APE Coin Staking Test", () => {
         .claimApeAndCompound(
           mayc.address,
           [user1.address, user2.address, user3.address],
-          [[0], [1], [2]]
+          [[0], [1], [2]],
+          [
+            DEFAULT_COMPOUND_OPTION,
+            DEFAULT_COMPOUND_OPTION,
+            DEFAULT_COMPOUND_OPTION,
+          ]
         )
     );
 
@@ -440,7 +451,12 @@ describe("APE Coin Staking Test", () => {
         .claimApeAndCompound(
           mayc.address,
           [user1.address, user2.address, user3.address],
-          [[0], [1], [2]]
+          [[0], [1], [2]],
+          [
+            DEFAULT_COMPOUND_OPTION,
+            DEFAULT_COMPOUND_OPTION,
+            DEFAULT_COMPOUND_OPTION,
+          ]
         )
     );
   });
@@ -502,7 +518,12 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]])
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address],
+          [[0, 1, 2]],
+          [DEFAULT_COMPOUND_OPTION]
+        )
     );
 
     //3600 * 0.997 = 3589.2
@@ -518,7 +539,12 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]])
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address],
+          [[0, 1, 2]],
+          [DEFAULT_COMPOUND_OPTION]
+        )
     );
   });
 
@@ -611,7 +637,11 @@ describe("APE Coin Staking Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ]
+        ],
+        [DEFAULT_COMPOUND_OPTION],
+        {
+          gasLimit: 5000000,
+        }
       )
     );
 
@@ -635,7 +665,9 @@ describe("APE Coin Staking Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ]
+        ],
+        [DEFAULT_COMPOUND_OPTION],
+        {gasLimit: 5000000}
       )
     );
   });
