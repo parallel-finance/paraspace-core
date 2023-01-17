@@ -23,8 +23,8 @@ contract NTokenBAKC is NToken {
     using SafeERC20 for IERC20;
 
     ApeCoinStaking immutable _apeCoinStaking;
-    address public immutable nBAYC;
-    address public immutable nMAYC;
+    address private immutable nBAYC;
+    address private immutable nMAYC;
 
     /**
      * @dev Constructor.
