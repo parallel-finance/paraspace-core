@@ -1029,6 +1029,16 @@ describe("P2P Pair Staking Test", () => {
     await mintAndValidate(bayc, "1", user2);
     await mintAndValidate(ape, "1000000", user3);
 
+    //deposit cApe for user3 to let exchangeRate > 1
+    await waitForTx(
+      await ape.connect(user3.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await cApe
+        .connect(user3.signer)
+        .deposit(user3.address, parseEther("1000"))
+    );
+
     await waitForTx(
       await bayc
         .connect(user2.signer)

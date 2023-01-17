@@ -289,9 +289,10 @@ contract P2PPairStaking is
         );
         if (rewardAmount > 0) {
             IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
+            uint256 rewardShare = (rewardAmount * 1e18) / cApeExchangeRate;
             _depositCApeShareForUser(
                 address(this),
-                rewardAmount.percentMul(_compoundFee)
+                rewardShare.percentMul(_compoundFee)
             );
         }
 
@@ -376,9 +377,10 @@ contract P2PPairStaking is
         }
         if (totalReward > 0) {
             IAutoCompoundApe(cApe).deposit(address(this), totalReward);
+            uint256 totalShare = (totalReward * 1e18) / cApeExchangeRate;
             _depositCApeShareForUser(
                 address(this),
-                totalReward.percentMul(_compoundFee)
+                totalShare.percentMul(_compoundFee)
             );
         }
     }
