@@ -210,17 +210,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         );
     }
 
-    /// @inheritdoc INToken
-    function handleRepayment(address user, uint256 amount)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
-        // Intentionally left blank
-    }
-
     /**
      * @notice Transfers the nTokens between two users. Validates the transfer
      * (ie checks for valid HF after the transfer) if required
@@ -279,32 +268,22 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
     ) external pure override returns (bytes4) {
-        operator;
-        from;
-        id;
-        value;
-        data;
         return this.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external pure override returns (bytes4) {
-        operator;
-        from;
-        ids;
-        values;
-        data;
         return this.onERC1155BatchReceived.selector;
     }
 

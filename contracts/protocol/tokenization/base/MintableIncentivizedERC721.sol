@@ -40,10 +40,7 @@ abstract contract MintableIncentivizedERC721 is
 
     MintableERC721Data internal _ERC721Data;
 
-    /**
-     * @dev Only pool admin can call functions marked by this modifier.
-     **/
-    modifier onlyPoolAdmin() {
+    function _onlyPoolAdmin() private view {
         IACLManager aclManager = IACLManager(
             _addressesProvider.getACLManager()
         );
@@ -51,6 +48,17 @@ abstract contract MintableIncentivizedERC721 is
             aclManager.isPoolAdmin(msg.sender),
             Errors.CALLER_NOT_POOL_ADMIN
         );
+    }
+
+    function _onlyPool() private view {
+        require(_msgSender() == address(POOL), Errors.CALLER_MUST_BE_POOL);
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
         _;
     }
 
@@ -58,7 +66,7 @@ abstract contract MintableIncentivizedERC721 is
      * @dev Only pool can call functions marked by this modifier.
      **/
     modifier onlyPool() {
-        require(_msgSender() == address(POOL), Errors.CALLER_MUST_BE_POOL);
+        _onlyPool();
         _;
     }
 
@@ -432,9 +440,9 @@ abstract contract MintableIncentivizedERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual returns (bool isUsedAsCollateral_) {
-        isUsedAsCollateral_ = MintableERC721Logic
-            .executeTransferCollateralizable(
+    ) internal virtual returns (bool) {
+        return
+            MintableERC721Logic.executeTransferCollateralizable(
                 _ERC721Data,
                 POOL,
                 ATOMIC_PRICING,
@@ -560,9 +568,7 @@ abstract contract MintableIncentivizedERC721 is
             POOL,
             tokenId
         );
-        if (!_isAuctioned) {
-            auction = DataTypes.Auction({startTime: 0});
-        } else {
+        if (_isAuctioned) {
             auction = _ERC721Data.auctions[tokenId];
         }
     }

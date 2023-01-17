@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
-import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol";
-import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
-import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";
 import "../../../interfaces/IPool.sol";

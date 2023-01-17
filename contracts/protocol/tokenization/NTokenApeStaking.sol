@@ -212,7 +212,6 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     }
 
     function getBAKCNTokenAddress() internal view returns (address) {
-        IERC721 BAKC = getBAKC();
-        return POOL.getReserveData(address(BAKC)).xTokenAddress;
+        return POOL.getReserveData(address(getBAKC())).xTokenAddress;
     }
 }
