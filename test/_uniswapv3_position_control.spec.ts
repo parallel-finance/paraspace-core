@@ -13,7 +13,7 @@ import {
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {DRE} from "../helpers/misc-utils";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {loadFixture, time} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 
 describe("Uniswap V3 NFT position control", () => {
@@ -218,6 +218,7 @@ describe("Uniswap V3 NFT position control", () => {
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }
@@ -259,6 +260,7 @@ describe("Uniswap V3 NFT position control", () => {
           0,
           0,
           true,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }
@@ -314,6 +316,7 @@ describe("Uniswap V3 NFT position control", () => {
           0,
           0,
           false,
+          (await time.latest()) + 100,
           {
             gasLimit: 12_450_000,
           }

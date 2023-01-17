@@ -54,7 +54,8 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool receiveEthAsWeth
+        bool receiveEthAsWeth,
+        uint256 deadline
     ) internal returns (uint256 amount0, uint256 amount1) {
         if (liquidityDecrease > 0) {
             // amount0Min and amount1Min are price slippage checks
@@ -66,7 +67,7 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                         liquidity: liquidityDecrease,
                         amount0Min: amount0Min,
                         amount1Min: amount1Min,
-                        deadline: block.timestamp
+                        deadline: deadline
                     });
 
             INonfungiblePositionManager(_underlyingAsset).decreaseLiquidity(
@@ -105,14 +106,14 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             .collect(collectParams);
 
         if (receiveEthAsWeth) {
-            uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
-            if (balanceWeth > 0) {
-                IWETH(weth).withdraw(balanceWeth);
-                _safeTransferETH(user, balanceWeth);
+            uint256 balanceToken = IERC20(weth).balanceOf(address(this));
+            if (balanceToken > 0) {
+                IWETH(weth).withdraw(balanceToken);
+                _safeTransferETH(user, balanceToken);
             }
 
             address pairToken = (token0 == weth) ? token1 : token0;
-            uint256 balanceToken = IERC20(pairToken).balanceOf(address(this));
+            balanceToken = IERC20(pairToken).balanceOf(address(this));
             if (balanceToken > 0) {
                 IERC20(pairToken).safeTransfer(user, balanceToken);
             }
@@ -126,7 +127,8 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool receiveEthAsWeth
+        bool receiveEthAsWeth,
+        uint256 deadline
     ) external onlyPool nonReentrant {
         require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
@@ -137,7 +139,8 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             liquidityDecrease,
             amount0Min,
             amount1Min,
-            receiveEthAsWeth
+            receiveEthAsWeth,
+            deadline
         );
     }
 
