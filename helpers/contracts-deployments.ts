@@ -231,6 +231,7 @@ import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
   getFirstSigner,
+  getProtocolDataProvider,
   getPunks,
   getWETH,
 } from "./contracts-getters";
@@ -2057,6 +2058,16 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
 
 export const deployP2PPairStakingImpl = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const nBAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
+  ).xTokenAddress;
+  const nMAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
+  ).xTokenAddress;
+  const nBAKC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
+  ).xTokenAddress;
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
@@ -2064,6 +2075,9 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
     allTokens.BAYC.address,
     allTokens.MAYC.address,
     allTokens.BAKC.address,
+    nBAYC,
+    nMAYC,
+    nBAKC,
     allTokens.APE.address,
     allTokens.cAPE.address,
     apeCoinStaking,

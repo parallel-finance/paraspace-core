@@ -1,14 +1,15 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {AutoCompoundApe, P2PPairStaking} from "../types";
+import {AutoCompoundApe, P2PPairStaking, PTokenSApe} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {mintAndValidate} from "./helpers/validated-steps";
+import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
   getP2PPairStaking,
+  getPTokenSApe,
 } from "../helpers/contracts-getters";
-import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {getSignedListingOrder} from "./helpers/p2ppairstaking-helper";
 import {parseEther} from "ethers/lib/utils";
@@ -19,18 +20,52 @@ describe("P2P Pair Staking Test", () => {
   let p2pPairStaking: P2PPairStaking;
   let cApe: AutoCompoundApe;
   let MINIMUM_LIQUIDITY;
+  const sApeAddress = ONE_ADDRESS;
+  let pSApeCoin: PTokenSApe;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {ape, users, apeCoinStaking} = testEnv;
+    const {
+      ape,
+      users,
+      apeCoinStaking,
+      bayc,
+      mayc,
+      bakc,
+      nBAYC,
+      nMAYC,
+      nBAKC,
+      poolAdmin,
+      protocolDataProvider,
+    } = testEnv;
 
     const user1 = users[0];
     const user4 = users[5];
 
     p2pPairStaking = await getP2PPairStaking();
+    const {xTokenAddress: pSApeCoinAddress} =
+      await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
+    pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
 
     cApe = await getAutoCompoundApe();
     MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
+
+    // approve nBAYC, nMAYC and nBAKC to P2P
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setApprovalForAllTo(bayc.address, p2pPairStaking.address)
+    );
+    await waitForTx(
+      await nMAYC
+        .connect(poolAdmin.signer)
+        .setApprovalForAllTo(mayc.address, p2pPairStaking.address)
+    );
+    await waitForTx(
+      await nBAKC
+        .connect(poolAdmin.signer)
+        .setApprovalForAllTo(bakc.address, p2pPairStaking.address)
+    );
 
     // send extra tokens to the apestaking contract for rewards
     await waitForTx(
@@ -59,16 +94,12 @@ describe("P2P Pair Staking Test", () => {
       users: [user1, user2],
       ape,
       bayc,
+      nBAYC,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
+    await supplyAndValidate(bayc, "1", user1, true);
     await mintAndValidate(ape, "1000000", user2);
 
-    await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(p2pPairStaking.address, true)
-    );
     await waitForTx(
       await ape
         .connect(user2.signer)
@@ -99,6 +130,8 @@ describe("P2P Pair Staking Test", () => {
     );
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    expect(await pSApeCoin.balanceOf(user1.address)).to.be.equal(0);
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -132,7 +165,7 @@ describe("P2P Pair Staking Test", () => {
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash)
     );
 
-    expect(await bayc.balanceOf(user1.address)).to.be.equal(1);
+    expect(await bayc.balanceOf(nBAYC.address)).to.be.equal(1);
     almostEqual(
       await p2pPairStaking.pendingCApeReward(user1.address),
       parseEther("720")
@@ -148,9 +181,10 @@ describe("P2P Pair Staking Test", () => {
       users: [user1, user2],
       ape,
       mayc,
+      nMAYC,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(mayc, "1", user1);
+    await supplyAndValidate(mayc, "1", user1, true);
     await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
@@ -221,7 +255,7 @@ describe("P2P Pair Staking Test", () => {
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash)
     );
 
-    expect(await mayc.balanceOf(user1.address)).to.be.equal(1);
+    expect(await mayc.balanceOf(nMAYC.address)).to.be.equal(1);
     expect(await ape.balanceOf(user2.address)).to.be.equal(
       parseEther("1000000")
     );
@@ -241,10 +275,12 @@ describe("P2P Pair Staking Test", () => {
       ape,
       bayc,
       bakc,
+      nBAYC,
+      nBAKC,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(bakc, "1", user2);
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
@@ -341,8 +377,8 @@ describe("P2P Pair Staking Test", () => {
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash)
     );
 
-    expect(await bayc.balanceOf(user1.address)).to.be.equal(1);
-    expect(await bakc.balanceOf(user2.address)).to.be.equal(1);
+    expect(await bayc.balanceOf(nBAYC.address)).to.be.equal(1);
+    expect(await bakc.balanceOf(nBAKC.address)).to.be.equal(1);
     expect(await ape.balanceOf(user3.address)).to.be.equal(
       parseEther("1000000")
     );
@@ -366,10 +402,12 @@ describe("P2P Pair Staking Test", () => {
       ape,
       mayc,
       bakc,
+      nMAYC,
+      nBAKC,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(mayc, "1", user1);
-    await mintAndValidate(bakc, "1", user2);
+    await supplyAndValidate(mayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
@@ -466,8 +504,8 @@ describe("P2P Pair Staking Test", () => {
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash)
     );
 
-    expect(await mayc.balanceOf(user1.address)).to.be.equal(1);
-    expect(await bakc.balanceOf(user2.address)).to.be.equal(1);
+    expect(await mayc.balanceOf(nMAYC.address)).to.be.equal(1);
+    expect(await bakc.balanceOf(nBAKC.address)).to.be.equal(1);
     expect(await ape.balanceOf(user3.address)).to.be.equal(
       parseEther("1000000")
     );
@@ -493,8 +531,8 @@ describe("P2P Pair Staking Test", () => {
       bakc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "10", user1);
-    await mintAndValidate(bakc, "10", user2);
+    await supplyAndValidate(bayc, "10", user1, true);
+    await supplyAndValidate(bakc, "10", user2, true);
     await mintAndValidate(ape, "10000000", user3);
 
     await waitForTx(
@@ -573,7 +611,7 @@ describe("P2P Pair Staking Test", () => {
       bayc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
+    await supplyAndValidate(bayc, "1", user1, true);
     await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
@@ -623,8 +661,8 @@ describe("P2P Pair Staking Test", () => {
       bakc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(bakc, "1", user2);
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
@@ -690,7 +728,7 @@ describe("P2P Pair Staking Test", () => {
       bayc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
+    await supplyAndValidate(bayc, "1", user1, true);
     await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
@@ -736,8 +774,8 @@ describe("P2P Pair Staking Test", () => {
       bakc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(bakc, "1", user2);
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
@@ -799,7 +837,7 @@ describe("P2P Pair Staking Test", () => {
       bayc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
+    await supplyAndValidate(bayc, "1", user1, true);
     await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
@@ -845,8 +883,8 @@ describe("P2P Pair Staking Test", () => {
       bakc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(bakc, "1", user2);
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
@@ -930,6 +968,7 @@ describe("P2P Pair Staking Test", () => {
       users: [user1, user2, user3, , user5],
       gatewayAdmin,
       bayc,
+      nBAYC,
       ape,
     } = await loadFixture(fixture);
 
@@ -943,7 +982,7 @@ describe("P2P Pair Staking Test", () => {
         .setMatchingOperator(user5.address)
     );
 
-    await mintAndValidate(bayc, "1", user2);
+    await supplyAndValidate(bayc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(
@@ -1000,7 +1039,7 @@ describe("P2P Pair Staking Test", () => {
       await p2pPairStaking.connect(user5.signer).breakUpMatchedOrder(orderHash)
     );
 
-    expect(await bayc.balanceOf(user2.address)).to.be.equal(1);
+    expect(await bayc.balanceOf(nBAYC.address)).to.be.equal(1);
     expect(await ape.balanceOf(user3.address)).to.be.equal(
       parseEther("1000000")
     );
@@ -1026,7 +1065,7 @@ describe("P2P Pair Staking Test", () => {
       await p2pPairStaking.connect(gatewayAdmin.signer).setCompoundFee(50)
     );
 
-    await mintAndValidate(bayc, "1", user2);
+    await supplyAndValidate(bayc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     //deposit cApe for user3 to let exchangeRate > 1
@@ -1113,8 +1152,8 @@ describe("P2P Pair Staking Test", () => {
       bakc,
     } = await loadFixture(fixture);
 
-    await mintAndValidate(bayc, "1", user1);
-    await mintAndValidate(bakc, "1", user2);
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user2, true);
     await mintAndValidate(ape, "1000000", user3);
 
     await waitForTx(

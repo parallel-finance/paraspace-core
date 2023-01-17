@@ -30,7 +30,7 @@ contract P2PPairStaking is
         );
     bytes32 public constant MATCHED_ORDER_HASH =
         keccak256(
-            "MatchedOrder(uint8 stakingType,address apeToken,address apeOfferer,uint32 apeTokenId,uint32 apeShare,address bakcOfferer,uint32 bakcTokenId,uint32 bakcShare,address apeCoinOfferer,uint32 apeCoinShare,uint256 apePrincipleAmount)"
+            "MatchedOrder(uint8 stakingType,address apeToken,uint32 apeTokenId,uint32 apeShare,uint32 bakcTokenId,uint32 bakcShare,address apeCoinOfferer,uint32 apeCoinShare,uint256 apePrincipleAmount)"
         );
     bytes32 internal constant EIP712_DOMAIN =
         keccak256(
@@ -40,6 +40,9 @@ contract P2PPairStaking is
     address public immutable bayc;
     address public immutable mayc;
     address public immutable bakc;
+    address public immutable nBayc;
+    address public immutable nMayc;
+    address public immutable nBakc;
     address public immutable apeCoin;
     address public immutable cApe;
     ApeCoinStaking public immutable apeCoinStaking;
@@ -47,8 +50,7 @@ contract P2PPairStaking is
     bytes32 public DOMAIN_SEPARATOR;
     mapping(bytes32 => bool) public isListingOrderCanceled;
     mapping(bytes32 => MatchedOrder) public matchedOrders;
-    mapping(address => mapping(uint32 => ApeMatchedInfo))
-        public apeMatchedOrderInfo;
+    mapping(address => mapping(uint32 => uint256)) public apeMatchedCount;
     mapping(address => uint256) public cApeShareBalance;
     address public matchingOperator;
     uint256 public compoundFee;
@@ -57,6 +59,9 @@ contract P2PPairStaking is
         address _bayc,
         address _mayc,
         address _bakc,
+        address _nBayc,
+        address _nMayc,
+        address _nBakc,
         address _apeCoin,
         address _cApe,
         address _apeCoinStaking
@@ -64,6 +69,9 @@ contract P2PPairStaking is
         bayc = _bayc;
         mayc = _mayc;
         bakc = _bakc;
+        nBayc = _nBayc;
+        nMayc = _nMayc;
+        nBakc = _nBakc;
         apeCoin = _apeCoin;
         cApe = _cApe;
         apeCoinStaking = ApeCoinStaking(_apeCoinStaking);
@@ -138,7 +146,7 @@ contract P2PPairStaking is
         );
 
         //3 transfer token
-        ApeMatchedInfo memory matchedInfo = _handleApeTransfer(apeOrder);
+        _handleApeTransfer(apeOrder);
         uint256 apeAmount = getApeCoinStakingCap(apeOrder.stakingType);
         IERC20(apeCoin).safeTransferFrom(
             apeCoinOrder.offerer,
@@ -150,10 +158,8 @@ contract P2PPairStaking is
         MatchedOrder memory matchedOrder = MatchedOrder({
             stakingType: apeOrder.stakingType,
             apeToken: apeOrder.token,
-            apeOfferer: apeOrder.offerer,
             apeTokenId: apeOrder.tokenId,
             apeShare: apeOrder.share,
-            bakcOfferer: address(0),
             bakcTokenId: 0,
             bakcShare: 0,
             apeCoinOfferer: apeCoinOrder.offerer,
@@ -162,9 +168,7 @@ contract P2PPairStaking is
         });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
-        matchedInfo.owner = apeOrder.offerer;
-        matchedInfo.matchedCount += 1;
-        apeMatchedOrderInfo[apeOrder.token][apeOrder.tokenId] = matchedInfo;
+        apeMatchedCount[apeOrder.token][apeOrder.tokenId] += 1;
 
         //5 stake for ApeCoinStaking
         ApeCoinStaking.SingleNft[]
@@ -210,12 +214,8 @@ contract P2PPairStaking is
         );
 
         //3 transfer token
-        ApeMatchedInfo memory matchedInfo = _handleApeTransfer(apeOrder);
-        IERC721(bakcOrder.token).safeTransferFrom(
-            bakcOrder.offerer,
-            address(this),
-            bakcOrder.tokenId
-        );
+        _handleApeTransfer(apeOrder);
+        IERC721(bakc).safeTransferFrom(nBakc, address(this), bakcOrder.tokenId);
         uint256 apeAmount = getApeCoinStakingCap(apeOrder.stakingType);
         IERC20(apeCoin).safeTransferFrom(
             apeCoinOrder.offerer,
@@ -227,10 +227,8 @@ contract P2PPairStaking is
         MatchedOrder memory matchedOrder = MatchedOrder({
             stakingType: apeOrder.stakingType,
             apeToken: apeOrder.token,
-            apeOfferer: apeOrder.offerer,
             apeTokenId: apeOrder.tokenId,
             apeShare: apeOrder.share,
-            bakcOfferer: bakcOrder.offerer,
             bakcTokenId: bakcOrder.tokenId,
             bakcShare: bakcOrder.share,
             apeCoinOfferer: apeCoinOrder.offerer,
@@ -239,9 +237,7 @@ contract P2PPairStaking is
         });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
-        matchedInfo.owner = apeOrder.offerer;
-        matchedInfo.matchedCount += 1;
-        apeMatchedOrderInfo[apeOrder.token][apeOrder.tokenId] = matchedInfo;
+        apeMatchedCount[apeOrder.token][apeOrder.tokenId] += 1;
 
         //5 stake for ApeCoinStaking
         ApeCoinStaking.PairNftDepositWithAmount[]
@@ -270,11 +266,14 @@ contract P2PPairStaking is
     function breakUpMatchedOrder(bytes32 orderHash) external nonReentrant {
         MatchedOrder memory order = matchedOrders[orderHash];
 
-        //1 check owner
+        //1 check if have permission to break up
+        address apeNToken = _getApeNTokenAddress(order.apeToken);
+        address apeNTokenOwner = IERC721(apeNToken).ownerOf(order.apeTokenId);
+        address nBakcOwner = IERC721(nBakc).ownerOf(order.bakcTokenId);
         require(
             msg.sender == matchingOperator ||
-                msg.sender == order.apeOfferer ||
-                msg.sender == order.bakcOfferer ||
+                msg.sender == apeNTokenOwner ||
+                msg.sender == nBakcOwner ||
                 msg.sender == order.apeCoinOfferer,
             "no permission to break up"
         );
@@ -330,18 +329,17 @@ contract P2PPairStaking is
             }
         }
         //5 transfer token
-        ApeMatchedInfo memory orderInfo = apeMatchedOrderInfo[order.apeToken][
+        uint256 matchedCount = apeMatchedCount[order.apeToken][
             order.apeTokenId
         ];
-        if (orderInfo.matchedCount == 1) {
+        if (matchedCount == 1) {
             IERC721(order.apeToken).safeTransferFrom(
                 address(this),
-                order.apeOfferer,
+                _getApeNTokenAddress(order.apeToken),
                 order.apeTokenId
             );
         }
-        orderInfo.matchedCount -= 1;
-        apeMatchedOrderInfo[order.apeToken][order.apeTokenId] = orderInfo;
+        apeMatchedCount[order.apeToken][order.apeTokenId] = matchedCount - 1;
 
         IERC20(apeCoin).safeTransfer(
             order.apeCoinOfferer,
@@ -350,7 +348,7 @@ contract P2PPairStaking is
         if (order.stakingType >= StakingType.BAYCPairStaking) {
             IERC721(bakc).safeTransferFrom(
                 address(this),
-                order.bakcOfferer,
+                nBakc,
                 order.bakcTokenId
             );
         }
@@ -456,10 +454,8 @@ contract P2PPairStaking is
                     MATCHED_ORDER_HASH,
                     order.stakingType,
                     order.apeToken,
-                    order.apeOfferer,
                     order.apeTokenId,
                     order.apeShare,
-                    order.bakcOfferer,
                     order.bakcTokenId,
                     order.bakcShare,
                     order.apeCoinOfferer,
@@ -467,6 +463,20 @@ contract P2PPairStaking is
                     order.apePrincipleAmount
                 )
             );
+    }
+
+    function _getApeNTokenAddress(address apeToken)
+        internal
+        view
+        returns (address)
+    {
+        if (apeToken == bayc) {
+            return nBayc;
+        } else if (apeToken == mayc) {
+            return nMayc;
+        } else {
+            revert("unsupported ape token");
+        }
     }
 
     function _claimForMatchedOrderAndCompound(
@@ -513,11 +523,13 @@ contract P2PPairStaking is
         rewardShare -= _compoundFeeShare;
 
         _depositCApeShareForUser(
-            order.apeOfferer,
+            IERC721(_getApeNTokenAddress(order.apeToken)).ownerOf(
+                order.apeTokenId
+            ),
             rewardShare.percentMul(order.apeShare)
         );
         _depositCApeShareForUser(
-            order.bakcOfferer,
+            IERC721(nBakc).ownerOf(order.bakcTokenId),
             rewardShare.percentMul(order.bakcShare)
         );
         _depositCApeShareForUser(
@@ -536,23 +548,16 @@ contract P2PPairStaking is
         }
     }
 
-    function _handleApeTransfer(ListingOrder calldata apeOrder)
-        internal
-        returns (ApeMatchedInfo memory)
-    {
-        ApeMatchedInfo memory orderInfo = apeMatchedOrderInfo[apeOrder.token][
-            apeOrder.tokenId
-        ];
-        if (orderInfo.matchedCount == 0) {
-            IERC721(apeOrder.token).safeTransferFrom(
-                apeOrder.offerer,
+    function _handleApeTransfer(ListingOrder calldata order) internal {
+        address currentOwner = IERC721(order.token).ownerOf(order.tokenId);
+        if (currentOwner != address(this)) {
+            address nTokenAddress = _getApeNTokenAddress(order.token);
+            IERC721(order.token).safeTransferFrom(
+                nTokenAddress,
                 address(this),
-                apeOrder.tokenId
+                order.tokenId
             );
-        } else {
-            require(orderInfo.owner == apeOrder.offerer, "not ape owner");
         }
-        return orderInfo;
     }
 
     function _validateOrderBasicInfo(ListingOrder calldata listingOrder)
@@ -572,7 +577,7 @@ contract P2PPairStaking is
             msg.sender != listingOrder.offerer && msg.sender != matchingOperator
         ) {
             require(
-                _validateOrderSignature(
+                validateOrderSignature(
                     listingOrder.offerer,
                     orderHash,
                     listingOrder.v,
@@ -595,10 +600,10 @@ contract P2PPairStaking is
             expectedToken = mayc;
         }
         require(apeOrder.token == expectedToken, "ape order invalid token");
-        address owner = IERC721(expectedToken).ownerOf(apeOrder.tokenId);
+        address nToken = _getApeNTokenAddress(expectedToken);
         require(
-            owner == apeOrder.offerer || owner == address(this),
-            "ape order invalid owner"
+            IERC721(nToken).ownerOf(apeOrder.tokenId) == apeOrder.offerer,
+            "ape order invalid NToken owner"
         );
     }
 
@@ -607,8 +612,8 @@ contract P2PPairStaking is
 
         require(bakcOrder.token == bakc, "bakc order invalid token");
         require(
-            IERC721(bakc).ownerOf(bakcOrder.tokenId) == bakcOrder.offerer,
-            "bakc order invalid owner"
+            IERC721(nBakc).ownerOf(bakcOrder.tokenId) == bakcOrder.offerer,
+            "bakc order invalid NToken owner"
         );
     }
 
@@ -620,13 +625,13 @@ contract P2PPairStaking is
         require(apeCoinOrder.token == apeCoin, "ape coin order invalid token");
     }
 
-    function _validateOrderSignature(
+    function validateOrderSignature(
         address signer,
         bytes32 orderHash,
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) internal view returns (bool) {
+    ) public view returns (bool) {
         return
             SignatureChecker.verify(
                 orderHash,

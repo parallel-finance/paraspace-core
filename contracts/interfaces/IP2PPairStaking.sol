@@ -27,20 +27,13 @@ interface IP2PPairStaking {
     struct MatchedOrder {
         StakingType stakingType;
         address apeToken;
-        address apeOfferer;
         uint32 apeTokenId;
         uint32 apeShare;
-        address bakcOfferer;
         uint32 bakcTokenId;
         uint32 bakcShare;
         address apeCoinOfferer;
         uint32 apeCoinShare;
         uint256 apePrincipleAmount;
-    }
-
-    struct ApeMatchedInfo {
-        address owner;
-        uint32 matchedCount;
     }
 
     /**
