@@ -710,7 +710,7 @@ abstract contract MintableIncentivizedERC721 is
      * @param amounts The amount of NFTs being rescued for a specific id.
      * @param data The data of the tokens that is being rescued. Usually this is 0.
      **/
-    function executeRescueERC1155(
+    function rescueERC1155(
         address token,
         address to,
         uint256[] calldata ids,
@@ -725,10 +725,10 @@ abstract contract MintableIncentivizedERC721 is
      * @param airdropContract The address of the airdrop contract
      * @param airdropParams Third party airdrop abi data. You need to get this from the third party airdrop.
      **/
-    function executeAirdrop(
-        address airdropContract,
-        bytes calldata airdropParams
-    ) external onlyPoolAdmin {
+    function airdrop(address airdropContract, bytes calldata airdropParams)
+        external
+        onlyPoolAdmin
+    {
         MintableERC721Logic.executeAirdrop(airdropContract, airdropParams);
     }
 }
