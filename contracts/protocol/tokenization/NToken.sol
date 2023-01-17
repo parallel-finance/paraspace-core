@@ -124,77 +124,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         _transfer(from, to, value, false);
     }
 
-    function rescueERC20(
-        address token,
-        address to,
-        uint256 amount
-    ) external override onlyPoolAdmin {
-        IERC20(token).safeTransfer(to, amount);
-        emit RescueERC20(token, to, amount);
-    }
-
-    function rescueERC721(
-        address token,
-        address to,
-        uint256[] calldata ids
-    ) external override onlyPoolAdmin {
-        require(
-            token != _underlyingAsset,
-            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
-        );
-        for (uint256 i = 0; i < ids.length; i++) {
-            IERC721(token).safeTransferFrom(address(this), to, ids[i]);
-        }
-        emit RescueERC721(token, to, ids);
-    }
-
-    function rescueERC1155(
-        address token,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
-    ) external override onlyPoolAdmin {
-        IERC1155(token).safeBatchTransferFrom(
-            address(this),
-            to,
-            ids,
-            amounts,
-            data
-        );
-        emit RescueERC1155(token, to, ids, amounts, data);
-    }
-
-    function executeAirdrop(
-        address airdropContract,
-        bytes calldata airdropParams
-    ) external override onlyPoolAdmin {
-        require(
-            airdropContract != address(0),
-            Errors.INVALID_AIRDROP_CONTRACT_ADDRESS
-        );
-        require(airdropParams.length >= 4, Errors.INVALID_AIRDROP_PARAMETERS);
-
-        // call project airdrop contract
-        Address.functionCall(
-            airdropContract,
-            airdropParams,
-            Errors.CALL_AIRDROP_METHOD_FAILED
-        );
-
-        emit ExecuteAirdrop(airdropContract);
-    }
-
-    /// @inheritdoc INToken
-    function UNDERLYING_ASSET_ADDRESS()
-        external
-        view
-        override
-        returns (address)
-    {
-        return _underlyingAsset;
-    }
-
     /// @inheritdoc INToken
     function transferUnderlyingTo(address target, uint256 tokenId)
         external
@@ -287,17 +216,8 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         return this.onERC1155BatchReceived.selector;
     }
 
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
-        return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
+        return _underlyingAsset;
     }
 
     function getAtomicPricingConfig() external view returns (bool) {
