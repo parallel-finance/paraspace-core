@@ -8,9 +8,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
-import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import "../../interfaces/INTokenApeStaking.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
 
 /**
  * @title ApeCoinStaking NToken
