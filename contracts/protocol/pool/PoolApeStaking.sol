@@ -610,16 +610,17 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps,
         LocalVar memory vars
     ) internal returns (uint256 compoundFee) {
-        uint256 totalDepositAmount = vars.totalAmount - vars.totalSwapAmount;
-        APE_COMPOUND.deposit(address(this), totalDepositAmount);
         compoundFee = ps._apeCompoundFee;
-        uint256 cApeFee = totalDepositAmount.percentMul(compoundFee);
-        uint256 apeFee = vars.totalSwapAmount.percentMul(compoundFee);
-        if (cApeFee > 0) {
-            IERC20(address(APE_COMPOUND)).safeTransfer(msg.sender, cApeFee);
-        }
+        uint256 totalDepositAmount = vars.totalAmount - vars.totalSwapAmount;
+        APE_COMPOUND.deposit(
+            address(this),
+            totalDepositAmount.percentMul(
+                PercentageMath.PERCENTAGE_FACTOR - compoundFee
+            )
+        );
+        uint256 apeFee = vars.totalAmount.percentMul(compoundFee);
         if (apeFee > 0) {
-            IERC20(address(APE_COIN)).safeTransfer(msg.sender, apeFee);
+            APE_COMPOUND.deposit(msg.sender, apeFee);
         }
     }
 
