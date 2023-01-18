@@ -335,7 +335,7 @@ contract P2PPairStaking is
         if (matchedCount == 1) {
             IERC721(order.apeToken).safeTransferFrom(
                 address(this),
-                _getApeNTokenAddress(order.apeToken),
+                apeNToken,
                 order.apeTokenId
             );
         }

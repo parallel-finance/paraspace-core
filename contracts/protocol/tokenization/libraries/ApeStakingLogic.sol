@@ -107,6 +107,12 @@ library ApeStakingLogic {
         APEStakingParameter storage stakingParameter,
         UnstakeAndRepayParams memory params
     ) external {
+        if (
+            IERC721(params._underlyingAsset).ownerOf(params.tokenId) !=
+            address(this)
+        ) {
+            return;
+        }
         address positionOwner = _owners[params.tokenId];
         IERC20 _apeCoin = params._apeCoinStaking.apeCoin();
         uint256 balanceBefore = _apeCoin.balanceOf(address(this));
