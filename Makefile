@@ -398,6 +398,22 @@ rate-strategy:
 auction-strategy:
 	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
 
+.PHONY: release-bakc
+release-bakc:
+	make SCRIPT_PATH=./scripts/dev/7.release-bakc.ts run
+
+.PHONY: send-eth
+send-eth:
+	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
+
+.PHONY: set-interval-mining
+set-interval-mining:
+	make SCRIPT_PATH=./scripts/dev/8.set-interval-mining.ts run
+
+.PHONY: set-auto-mining
+set-auto-mining:
+	make SCRIPT_PATH=./scripts/dev/9.set-auto-mining.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -421,6 +437,10 @@ decode-multi:
 .PHONY: next-execution-time
 next-execution-time:
 	make TASK_NAME=next-execution-time run-task
+
+.PHONY: increase-to-execution-time
+increase-to-execution-time:
+	make TASK_NAME=increase-to-execution-time run-task
 
 .PHONY: queue-tx
 queue-tx:
