@@ -14,6 +14,7 @@ import {
   TENDERLY_FORK_ID,
   TENDERLY_HEAD_ID,
 } from "../../helpers/hardhat-constants";
+import {utils} from "ethers";
 
 task(
   `set-DRE`,
@@ -59,7 +60,7 @@ task(
       );
     }
   }
-  console.log("  - Network :", _DRE.network.name);
+  console.log("  - Network:", _DRE.network.name);
 
   setDRE(_DRE);
 
@@ -67,9 +68,17 @@ task(
     const feeData = await _DRE.ethers.provider.getFeeData();
     if (feeData.maxFeePerGas) {
       GLOBAL_OVERRIDES.maxFeePerGas = feeData.maxFeePerGas;
+      console.log(
+        "  - MaxFeePerGas:",
+        utils.formatUnits(feeData.maxFeePerGas, "gwei")
+      );
     }
     if (feeData.maxPriorityFeePerGas) {
       GLOBAL_OVERRIDES.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      console.log(
+        "  - MaxPriorityFeePerGas:",
+        utils.formatUnits(GLOBAL_OVERRIDES.maxPriorityFeePerGas, "gwei")
+      );
     }
 
     if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
