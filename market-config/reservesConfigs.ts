@@ -212,16 +212,16 @@ export const strategyMAYC: IReserveParams = {
 export const strategyBAKC: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyBAKC,
-  baseLTVAsCollateral: "4000",
+  baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "8000",
+  liquidationThreshold: "6500",
   liquidationBonus: "10500",
   borrowingEnabled: false,
   reserveDecimals: "0",
   xTokenImpl: eContractid.NTokenBAKCImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "1000",
+  supplyCap: "500",
 };
 
 export const strategyDoodles: IReserveParams = {
