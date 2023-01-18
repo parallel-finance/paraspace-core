@@ -230,6 +230,7 @@ import {
   getAllTokens,
   getFirstSigner,
   getPunks,
+  getUniswapV3SwapRouter,
   getWETH,
 } from "./contracts-getters";
 import {
@@ -588,6 +589,8 @@ export const deployPoolComponents = async (
             provider,
             (await deployAutoCompoundApe(verify)).address,
             allTokens.APE.address,
+            allTokens.USDC.address,
+            (await getUniswapV3SwapRouter()).address,
           ],
           verify,
           false,
@@ -981,6 +984,16 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         await insertContractAddressInDb(
           eContractid.UniswapV3Factory,
           paraSpaceConfig.Uniswap.V3Factory,
+          false
+        );
+      }
+      if (
+        tokenSymbol === ERC721TokenContractId.UniswapV3 &&
+        paraSpaceConfig.Uniswap.V3Router
+      ) {
+        await insertContractAddressInDb(
+          eContractid.UniswapV3SwapRouter,
+          paraSpaceConfig.Uniswap.V3Router,
           false
         );
       }

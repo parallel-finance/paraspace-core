@@ -355,6 +355,23 @@ library DataTypes {
         address tokenAddress;
     }
 
+    enum ApeCompoundType {
+        RepayAndSupply,
+        Supply,
+        SwapAndSupply
+    }
+
+    enum ApeCompoundTokenOut {
+        USDC,
+        WETH
+    }
+
+    struct ApeCompoundStrategy {
+        ApeCompoundType ty;
+        ApeCompoundTokenOut swapTokenOut;
+        uint256 swapPercent;
+    }
+
     struct PoolStorage {
         // Map of reserves and their data (underlyingAssetOfReserve => reserveData)
         mapping(address => ReserveData) _reserves;
@@ -367,8 +384,10 @@ library DataTypes {
         uint16 _reservesCount;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
-        // incentive fee for claim ape reward to compound
+        // Incentive fee for claim ape reward to compound
         uint16 _apeCompoundFee;
+        // Map of user's ape compound strategies
+        mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
     }
 
     struct ReserveConfigData {

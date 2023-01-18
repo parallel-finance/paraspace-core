@@ -20,18 +20,6 @@ interface IPoolApeStaking {
         uint256 cashAmount;
     }
 
-    enum CompoundType {
-        Supply,
-        RepayAndSupply,
-        SwapAndSupply
-    }
-
-    struct CompoundOption {
-        CompoundType ty;
-        uint256 swapPercent;
-        address swapTokenOut;
-    }
-
     /**
      * @notice Deposit ape coin to BAYC/MAYC pool or BAKC pool
      * @param stakingInfo Detail info of the staking
@@ -112,13 +100,11 @@ interface IPoolApeStaking {
      * @param nftAsset Contract address of BAYC/MAYC
      * @param users array of user address
      * @param tokenIds array of user tokenId array
-     * @param options array of compound strategies
      */
     function claimApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        uint256[][] calldata tokenIds,
-        CompoundOption[] calldata options
+        uint256[][] calldata tokenIds
     ) external;
 
     /**
@@ -126,13 +112,11 @@ interface IPoolApeStaking {
      * @param nftAsset Contract address of BAYC/MAYC
      * @param users array of user address
      * @param _nftPairs Array of Paired BAYC/MAYC NFT's
-     * @param options array of compound strategies
      */
     function claimPairedApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        ApeCoinStaking.PairNft[][] calldata _nftPairs,
-        CompoundOption[] calldata options
+        ApeCoinStaking.PairNft[][] calldata _nftPairs
     ) external;
 
     /**

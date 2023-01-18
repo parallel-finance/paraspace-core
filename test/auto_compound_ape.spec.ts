@@ -5,23 +5,27 @@ import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
 import {parseEther, solidityKeccak256} from "ethers/lib/utils";
-import {almostEqual} from "./helpers/uniswapv3-helper";
+import {
+  almostEqual,
+  approveTo,
+  createNewPool,
+  fund,
+  mintNewPosition,
+} from "./helpers/uniswapv3-helper";
 import {
   getAutoCompoundApe,
   getPToken,
   getPTokenSApe,
+  getUniswapV3OracleWrapper,
+  getUniswapV3SwapRouter,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
-
-const DEFAULT_COMPOUND_OPTION = {
-  ty: 1,
-  swapPercent: 0,
-  swapTokenOut: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-};
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -37,12 +41,21 @@ describe("APE Coin Staking Test", () => {
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {ape, users, apeCoinStaking, pool, protocolDataProvider, poolAdmin} =
-      testEnv;
+    const {
+      ape,
+      usdc,
+      users,
+      apeCoinStaking,
+      pool,
+      protocolDataProvider,
+      poolAdmin,
+      nftPositionManager,
+    } = testEnv;
     const user1 = users[0];
     const user2 = users[1];
     const user3 = users[2];
     const user4 = users[5];
+    const user5 = users[6];
 
     cApe = await getAutoCompoundApe();
     MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
@@ -56,6 +69,7 @@ describe("APE Coin Staking Test", () => {
     const {xTokenAddress: pSApeCoinAddress} =
       await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
     pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
+    const swapRouter = await getUniswapV3SwapRouter();
 
     await mintAndValidate(ape, "1000", user1);
     await mintAndValidate(ape, "2000", user2);
@@ -101,6 +115,12 @@ describe("APE Coin Staking Test", () => {
     );
 
     await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .unlimitedApproveTo(ape.address, swapRouter.address)
+    );
+
+    await waitForTx(
       await pool.connect(poolAdmin.signer).setClaimApeForCompoundFee(30)
     );
 
@@ -120,6 +140,61 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await cApe.connect(user4.signer).deposit(user4.address, MINIMUM_LIQUIDITY)
     );
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Uniswap
+    ////////////////////////////////////////////////////////////////////////////////
+    const userApeAmount = await convertToCurrencyDecimals(
+      ape.address,
+      "200000"
+    );
+    const userUsdcAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      "800000"
+    );
+    await fund({token: ape, user: user5, amount: userApeAmount});
+    await fund({token: usdc, user: user5, amount: userUsdcAmount});
+    const nft = nftPositionManager.connect(user5.signer);
+    await approveTo({
+      target: nftPositionManager.address,
+      token: ape,
+      user: user5,
+    });
+    await approveTo({
+      target: nftPositionManager.address,
+      token: usdc,
+      user: user5,
+    });
+    const fee = 3000;
+    const tickSpacing = fee / 50;
+    const initialPrice = encodeSqrtRatioX96(1000000000000000000, 4000000);
+    const lowerPrice = encodeSqrtRatioX96(100000000000000000, 4000000);
+    const upperPrice = encodeSqrtRatioX96(10000000000000000000, 4000000);
+    await createNewPool({
+      positionManager: nft,
+      token0: usdc,
+      token1: ape,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: usdc,
+      token1: ape,
+      fee: fee,
+      user: user5,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userUsdcAmount,
+      token1Amount: userApeAmount,
+    });
+    expect(await nftPositionManager.balanceOf(user5.address)).to.eq(1);
+    expect(await nftPositionManager.ownerOf("1")).to.be.eq(user5.address);
+    const uniV3Oracle = await getUniswapV3OracleWrapper();
+    const liquidityAmount = await uniV3Oracle.getLiquidityAmount("1");
+    almostEqual(liquidityAmount.token0Amount, userUsdcAmount);
+    almostEqual(liquidityAmount.token1Amount, userApeAmount);
 
     return testEnv;
   };
@@ -316,6 +391,7 @@ describe("APE Coin Staking Test", () => {
 
   it("claimApeAndCompound function work as expected 1", async () => {
     const {
+      usdc,
       users: [user1, user2, user3],
       mayc,
       pool,
@@ -412,6 +488,33 @@ describe("APE Coin Staking Test", () => {
 
     await advanceTimeAndBlock(3600);
 
+    // repay then supply
+    await waitForTx(
+      await pool.connect(user1.signer).setApeCompoundStrategy({
+        ty: 0,
+        swapTokenOut: 0,
+        swapPercent: 0,
+      })
+    );
+
+    // supply all
+    await waitForTx(
+      await pool.connect(user2.signer).setApeCompoundStrategy({
+        ty: 1,
+        swapTokenOut: 0,
+        swapPercent: 0,
+      })
+    );
+
+    // swap half then supply
+    await waitForTx(
+      await pool.connect(user3.signer).setApeCompoundStrategy({
+        ty: 2,
+        swapTokenOut: 0,
+        swapPercent: 5000,
+      })
+    );
+
     await waitForTx(
       await pool
         .connect(user2.signer)
@@ -419,11 +522,7 @@ describe("APE Coin Staking Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
-          [
-            DEFAULT_COMPOUND_OPTION,
-            DEFAULT_COMPOUND_OPTION,
-            DEFAULT_COMPOUND_OPTION,
-          ]
+          {gasLimit: 5000000}
         )
     );
 
@@ -435,9 +534,14 @@ describe("APE Coin Staking Test", () => {
     const user2Balance = await pCApe.balanceOf(user2.address);
     almostEqual(user2Balance, parseEther("1025.48"));
 
-    // 3600 * 4 / 7 * 99.7% = 2050.97
+    // 3600 * 4 / 7 * 99.7% * 50% = 1025.4857142857142858
     const user3Balance = await pCApe.balanceOf(user3.address);
-    almostEqual(user3Balance, parseEther("2050.97"));
+    almostEqual(user3Balance, parseEther("1025.48571"));
+
+    almostEqual(
+      await usdc.balanceOf(user3.address),
+      await convertToCurrencyDecimals(usdc.address, "4075.394024")
+    );
 
     // 3600 * 0.003
     const incentiveBalance = await cApe.balanceOf(user2.address);
@@ -451,12 +555,7 @@ describe("APE Coin Staking Test", () => {
         .claimApeAndCompound(
           mayc.address,
           [user1.address, user2.address, user3.address],
-          [[0], [1], [2]],
-          [
-            DEFAULT_COMPOUND_OPTION,
-            DEFAULT_COMPOUND_OPTION,
-            DEFAULT_COMPOUND_OPTION,
-          ]
+          [[0], [1], [2]]
         )
     );
   });
@@ -518,12 +617,7 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(
-          mayc.address,
-          [user1.address],
-          [[0, 1, 2]],
-          [DEFAULT_COMPOUND_OPTION]
-        )
+        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]])
     );
 
     //3600 * 0.997 = 3589.2
@@ -539,12 +633,7 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(
-          mayc.address,
-          [user1.address],
-          [[0, 1, 2]],
-          [DEFAULT_COMPOUND_OPTION]
-        )
+        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]])
     );
   });
 
@@ -637,11 +726,7 @@ describe("APE Coin Staking Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ],
-        [DEFAULT_COMPOUND_OPTION],
-        {
-          gasLimit: 5000000,
-        }
+        ]
       )
     );
 
@@ -665,9 +750,7 @@ describe("APE Coin Staking Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ],
-        [DEFAULT_COMPOUND_OPTION],
-        {gasLimit: 5000000}
+        ]
       )
     );
   });
