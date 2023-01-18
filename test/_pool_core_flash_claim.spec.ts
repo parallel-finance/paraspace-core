@@ -23,6 +23,8 @@ import {
   changePriceAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
+import {BAYCSewerPassClaim__factory, BAYCSewerPass__factory} from "../types";
+import {GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
 
 describe("Flash Claim Test", () => {
   const tokenId = 0;
@@ -423,12 +425,14 @@ describe("Flash Claim Test", () => {
 
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user2.signer).createReceiver();
+
     const flashClaimReceiverAddr = await user_registry.userReceivers(
       user2.address
     );
     await mayc.connect(user1.signer)["mint(address)"](user1.address);
     expect(await mayc.ownerOf(tokenId2)).to.equal(user1.address);
     await mayc.connect(user1.signer).setApprovalForAll(pool.address, true);
+
     await waitForTx(
       await pool
         .connect(user1.signer)
@@ -455,5 +459,138 @@ describe("Flash Claim Test", () => {
     expect(
       await mockMultiAirdropERC721Token.balanceOf(user1.address)
     ).to.be.equal(await multi_asset_airdrop_project.erc721Bonus());
+  });
+
+  it("TC-flash-claim-06:user can flash claim with multiple assets for BAYC Sewer Pass", async function () {
+    const {
+      users: [user1, user2],
+      bayc,
+      mayc,
+      doodles,
+      pool,
+    } = testEnv;
+
+    const user_registry = await getUserFlashClaimRegistry();
+    await user_registry.connect(user2.signer).createReceiver();
+
+    const passFactory = new BAYCSewerPass__factory(user1.signer);
+
+    const passContract = await passFactory.deploy(
+      "pass",
+      "pass",
+      user1.address,
+      GLOBAL_OVERRIDES
+    );
+
+    const passClaimFactory = new BAYCSewerPassClaim__factory(user1.signer);
+
+    const passClaimContract = await passClaimFactory.deploy(
+      bayc.address,
+      mayc.address,
+      doodles.address,
+      passContract.address,
+      user1.address,
+      GLOBAL_OVERRIDES
+    );
+    await passContract
+      .connect(user1.signer)
+      .setRegistryAddress(passClaimContract.address, GLOBAL_OVERRIDES);
+    await passContract
+      .connect(user1.signer)
+      .flipMintIsActiveState(GLOBAL_OVERRIDES);
+    await passClaimContract
+      .connect(user1.signer)
+      .flipClaimIsActiveState(GLOBAL_OVERRIDES);
+    await passContract
+      .connect(user1.signer)
+      .toggleMinterContract(passClaimContract.address, GLOBAL_OVERRIDES);
+
+    const flashClaimReceiverAddr = await user_registry.userReceivers(
+      user2.address
+    );
+    await mayc.connect(user1.signer)["mint(address)"](user1.address);
+    expect(await mayc.ownerOf(tokenId2)).to.equal(user1.address);
+    await mayc.connect(user1.signer).setApprovalForAll(pool.address, true);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: tokenId2, useAsCollateral: true}],
+          user1.address,
+          0
+        )
+    );
+
+    await doodles.connect(user1.signer)["mint(address)"](user1.address);
+    expect(await doodles.ownerOf(tokenId2)).to.equal(user1.address);
+    await doodles.connect(user1.signer).setApprovalForAll(pool.address, true);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supplyERC721(
+          doodles.address,
+          [{tokenId: tokenId2, useAsCollateral: true}],
+          user1.address,
+          0
+        )
+    );
+    let applyMultiAssetAirdropEncodedData =
+      passClaimFactory.interface.encodeFunctionData("claimBayc", [tokenId]);
+
+    receiverEncodedData = DRE.ethers.utils.defaultAbiCoder.encode(
+      ["uint256[]", "address[]", "uint256[]", "address", "bytes"],
+      [
+        [2],
+        [passContract.address],
+        [0],
+        passClaimContract.address,
+        applyMultiAssetAirdropEncodedData,
+      ]
+    );
+    passClaimContract.claimBaycBakc;
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          [bayc.address, mayc.address],
+          [[0], [0]],
+          receiverEncodedData
+        )
+    );
+
+    expect(await passContract.balanceOf(user1.address)).to.be.equal(1);
+
+    applyMultiAssetAirdropEncodedData =
+      passClaimFactory.interface.encodeFunctionData("claimMaycBakc", [
+        tokenId,
+        tokenId2,
+      ]);
+
+    receiverEncodedData = DRE.ethers.utils.defaultAbiCoder.encode(
+      ["uint256[]", "address[]", "uint256[]", "address", "bytes"],
+      [
+        [2],
+        [passContract.address],
+        [0],
+        passClaimContract.address,
+        applyMultiAssetAirdropEncodedData,
+      ]
+    );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          [mayc.address, doodles.address],
+          [[0], [0]],
+          receiverEncodedData
+        )
+    );
+
+    expect(await passContract.balanceOf(user1.address)).to.be.equal(2);
   });
 });
