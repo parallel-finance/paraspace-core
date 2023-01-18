@@ -38,18 +38,18 @@ contract P2PPairStaking is
         );
     uint256 internal constant WAD = 1e18;
 
-    address public immutable bayc;
-    address public immutable mayc;
-    address public immutable bakc;
-    address public immutable nBayc;
-    address public immutable nMayc;
-    address public immutable nBakc;
-    address public immutable apeCoin;
-    address public immutable cApe;
-    ApeCoinStaking public immutable apeCoinStaking;
+    address internal immutable bayc;
+    address internal immutable mayc;
+    address internal immutable bakc;
+    address internal immutable nBayc;
+    address internal immutable nMayc;
+    address internal immutable nBakc;
+    address internal immutable apeCoin;
+    address internal immutable cApe;
+    ApeCoinStaking internal immutable apeCoinStaking;
 
-    bytes32 public DOMAIN_SEPARATOR;
-    mapping(bytes32 => bool) public isListingOrderCanceled;
+    bytes32 internal DOMAIN_SEPARATOR;
+    mapping(bytes32 => bool) public isListingOrderCancelled;
     mapping(bytes32 => MatchedOrder) public matchedOrders;
     mapping(address => mapping(uint32 => uint256)) public apeMatchedCount;
     mapping(address => uint256) public cApeShareBalance;
@@ -117,8 +117,8 @@ contract P2PPairStaking is
     {
         require(msg.sender == listingOrder.offerer, "not order offerer");
         bytes32 orderHash = getListingOrderHash(listingOrder);
-        require(!isListingOrderCanceled[orderHash], "order already cancel");
-        isListingOrderCanceled[orderHash] = true;
+        require(!isListingOrderCancelled[orderHash], "order already cancel");
+        isListingOrderCancelled[orderHash] = true;
 
         emit OrderCancelled(orderHash, listingOrder.offerer);
     }
@@ -566,7 +566,7 @@ contract P2PPairStaking is
         require(listingOrder.endTime >= block.timestamp, "ape offer expired");
 
         bytes32 orderHash = getListingOrderHash(listingOrder);
-        require(!isListingOrderCanceled[orderHash], "order already canceled");
+        require(!isListingOrderCancelled[orderHash], "order already canceled");
 
         if (
             msg.sender != listingOrder.offerer && msg.sender != matchingOperator
