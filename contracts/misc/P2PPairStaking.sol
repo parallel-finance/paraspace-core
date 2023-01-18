@@ -36,6 +36,7 @@ contract P2PPairStaking is
         keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
+    uint256 internal constant WAD = 1e18;
 
     address public immutable bayc;
     address public immutable mayc;
@@ -273,27 +274,16 @@ contract P2PPairStaking is
         require(
             msg.sender == matchingOperator ||
                 msg.sender == apeNTokenOwner ||
-                msg.sender == nBakcOwner ||
-                msg.sender == order.apeCoinOfferer,
+                msg.sender == order.apeCoinOfferer ||
+                (msg.sender == nBakcOwner &&
+                    order.stakingType >= StakingType.BAYCPairStaking),
             "no permission to break up"
         );
 
-        //2 claim pending reward
-        uint256 cApeExchangeRate = ICApe(cApe).getPooledApeByShares(1e18);
-        uint256 _compoundFee = compoundFee;
-        uint256 rewardAmount = _claimForMatchedOrderAndCompound(
-            orderHash,
-            cApeExchangeRate,
-            _compoundFee
-        );
-        if (rewardAmount > 0) {
-            IAutoCompoundApe(cApe).deposit(address(this), rewardAmount);
-            uint256 rewardShare = (rewardAmount * 1e18) / cApeExchangeRate;
-            _depositCApeShareForUser(
-                address(this),
-                rewardShare.percentMul(_compoundFee)
-            );
-        }
+        //2 claim pending reward and compound
+        bytes32[] memory orderHashes = new bytes32[](1);
+        orderHashes[0] = orderHash;
+        _claimForMatchedOrdersAndCompound(orderHashes);
 
         //3 delete matched order
         delete matchedOrders[orderHash];
@@ -361,25 +351,33 @@ contract P2PPairStaking is
         external
         nonReentrant
     {
+        _claimForMatchedOrdersAndCompound(orderHashes);
+    }
+
+    function _claimForMatchedOrdersAndCompound(bytes32[] memory orderHashes)
+        internal
+    {
         //ignore getShareByPooledApe return 0 case.
-        uint256 cApeExchangeRate = ICApe(cApe).getPooledApeByShares(1e18);
+        uint256 cApeExchangeRate = ICApe(cApe).getPooledApeByShares(WAD);
         uint256 _compoundFee = compoundFee;
         uint256 totalReward;
+        uint256 totalFeeShare;
         for (uint256 index = 0; index < orderHashes.length; index++) {
             bytes32 orderHash = orderHashes[index];
-            totalReward += _claimForMatchedOrderAndCompound(
-                orderHash,
-                cApeExchangeRate,
-                _compoundFee
-            );
+            (
+                uint256 reward,
+                uint256 feeShare
+            ) = _claimForMatchedOrderAndCompound(
+                    orderHash,
+                    cApeExchangeRate,
+                    _compoundFee
+                );
+            totalReward += reward;
+            totalFeeShare += feeShare;
         }
         if (totalReward > 0) {
             IAutoCompoundApe(cApe).deposit(address(this), totalReward);
-            uint256 totalShare = (totalReward * 1e18) / cApeExchangeRate;
-            _depositCApeShareForUser(
-                address(this),
-                totalShare.percentMul(_compoundFee)
-            );
+            _depositCApeShareForUser(address(this), totalFeeShare);
         }
     }
 
@@ -483,7 +481,7 @@ contract P2PPairStaking is
         bytes32 orderHash,
         uint256 cApeExchangeRate,
         uint256 _compoundFee
-    ) internal returns (uint256) {
+    ) internal returns (uint256, uint256) {
         MatchedOrder memory order = matchedOrders[orderHash];
         uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
         if (order.stakingType < StakingType.BAYCPairStaking) {
@@ -511,15 +509,12 @@ contract P2PPairStaking is
         uint256 rewardAmount = balanceAfter - balanceBefore;
         if (rewardAmount == 0) {
             emit OrderClaimedAndCompounded(orderHash, rewardAmount);
-            return 0;
+            return (0, 0);
         }
 
-        // exchange rate should be rounded up in case rewardShare is bigger than actual
-        uint256 rewardShare = (rewardAmount * 1e18) / (cApeExchangeRate + 1);
-
+        uint256 rewardShare = (rewardAmount * WAD) / cApeExchangeRate;
         //compound fee
-        //compound fee share should be rounded up
-        uint256 _compoundFeeShare = rewardShare.percentMul(_compoundFee) + 1;
+        uint256 _compoundFeeShare = rewardShare.percentMul(_compoundFee);
         rewardShare -= _compoundFeeShare;
 
         _depositCApeShareForUser(
@@ -539,7 +534,7 @@ contract P2PPairStaking is
 
         emit OrderClaimedAndCompounded(orderHash, rewardAmount);
 
-        return rewardAmount;
+        return (rewardAmount, _compoundFeeShare);
     }
 
     function _depositCApeShareForUser(address user, uint256 amount) internal {
