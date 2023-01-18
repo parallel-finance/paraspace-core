@@ -59,7 +59,7 @@ task(
       );
     }
   }
-  console.log("  - Network :", _DRE.network.name);
+  console.log("  - Network:", _DRE.network.name);
 
   setDRE(_DRE);
 
@@ -74,6 +74,14 @@ task(
 
     if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
       GLOBAL_OVERRIDES.type = 2;
+    }
+
+    if (GLOBAL_OVERRIDES.type == 2) {
+      console.log(
+        "  - MaxPriorityFeePerGas:",
+        GLOBAL_OVERRIDES.maxPriorityFeePerGas
+      );
+      console.log("  - MaxFeePerGas:", GLOBAL_OVERRIDES.maxFeePerGas);
     }
   }
 
