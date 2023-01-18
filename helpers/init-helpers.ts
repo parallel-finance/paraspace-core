@@ -43,7 +43,6 @@ import {
   deployApeCoinStaking,
   deployPTokenCApe,
   deployCApeDebtToken,
-  deployNTokenBAKCImpl,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -121,7 +120,6 @@ export const initReservesByHelper = async (
   let stETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
   let PsApeVariableDebtTokenImplementationAddress = "";
-  let nTokenBAKCImplementationAddress = "";
 
   if (genericPTokenImplAddress) {
     await insertContractAddressInDb(
@@ -438,33 +436,12 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = nTokenMAYCImplementationAddress;
         } else if (reserveSymbol === ERC721TokenContractId.BAKC) {
-          if (!nTokenBAKCImplementationAddress) {
-            const apeCoinStaking =
-              (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
-              (await deployApeCoinStaking(verify)).address;
-            const protocolDataProvider = await getProtocolDataProvider();
-            const allTokens = await protocolDataProvider.getAllXTokens();
-            const nBAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nBAYC
-              )!.tokenAddress;
-            const nMAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nMAYC
-              )!.tokenAddress;
-            nTokenBAKCImplementationAddress = (
-              await deployNTokenBAKCImpl(
-                pool.address,
-                apeCoinStaking,
-                nBAYC,
-                nMAYC,
-                verify
-              )
+          if (!nTokenImplementationAddress) {
+            nTokenImplementationAddress = (
+              await deployGenericNTokenImpl(pool.address, false, verify)
             ).address;
           }
-          xTokenToUse = nTokenBAKCImplementationAddress;
+          xTokenToUse = nTokenImplementationAddress;
         }
 
         if (!xTokenToUse) {
