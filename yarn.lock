@@ -1361,6 +1361,7 @@ __metadata:
     "@safe-global/safe-core-sdk": ^3.2.0
     "@safe-global/safe-core-sdk-types": ^1.7.0
     "@safe-global/safe-ethers-lib": ^1.7.0
+    "@safe-global/safe-service-client": ^1.5.0
     "@tenderly/hardhat-tenderly": 1.1.0-beta.5
     "@typechain/ethers-v5": ^10.1.0
     "@typechain/hardhat": ^6.1.2
@@ -1383,6 +1384,7 @@ __metadata:
     eslint-config-prettier: ^8.5.0
     eslint-plugin-prettier: ^4.2.1
     eth-sig-util: 2.5.3
+    ethereum-input-data-decoder: ^0.4.2
     ethereum-waffle: 3.2.0
     ethereumjs-util: 7.0.2
     ethers: 5.7.2
@@ -1486,6 +1488,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@safe-global/safe-core-sdk-types@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "@safe-global/safe-core-sdk-types@npm:1.8.0"
+  dependencies:
+    "@ethersproject/bignumber": ^5.7.0
+    "@ethersproject/contracts": ^5.7.0
+    "@gnosis.pm/safe-deployments": 1.17.0
+    web3-core: ^1.8.1
+    web3-utils: ^1.8.1
+  checksum: bc76668e780db17b10608c3e9e95da6b0f3b892d199939376c1e3f056d107f6b1879e998ff4313d10d01666dccfcfbff68974dc6f96706ab27bf74653baf949e
+  languageName: node
+  linkType: hard
+
 "@safe-global/safe-core-sdk-utils@npm:^1.5.0":
   version: 1.5.0
   resolution: "@safe-global/safe-core-sdk-utils@npm:1.5.0"
@@ -1519,6 +1534,17 @@ __metadata:
     "@safe-global/safe-core-sdk-utils": ^1.5.0
     ethers: ^5.7.2
   checksum: efd90807f687229f1096d0f387b5217095d8358b1a6ce567830e4b9ae034d1492f7cb2a2893770322916dc7046872c79268a6c646acc5cccf5e78941635dc94f
+  languageName: node
+  linkType: hard
+
+"@safe-global/safe-service-client@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@safe-global/safe-service-client@npm:1.5.0"
+  dependencies:
+    "@ethersproject/abstract-signer": ^5.7.0
+    "@safe-global/safe-core-sdk-types": ^1.8.0
+    node-fetch: ^2.6.6
+  checksum: 892863f46c5e4f0e327a88dde6cc1c2a77e50a9f75e46a05a414e117dbced89bf6bc2521abadc4e68da5f28ec45c18f8a3d8789921c26d658f9c600901043565
   languageName: node
   linkType: hard
 
@@ -1958,6 +1984,13 @@ __metadata:
   version: 14.18.31
   resolution: "@types/node@npm:14.18.31"
   checksum: df33021d673a5e3c943cf96c9f3fbccf364d20f487b2ab7eb49db144974c2049f0a91e9358df09235f543c1f0b11388c5b0b636ae1f2ed55a27c75f63bc3d2c5
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^16.7.13":
+  version: 16.18.11
+  resolution: "@types/node@npm:16.18.11"
+  checksum: 2a3b1da13063debe6e26f732defb5f03ef4ef732c3e08daba838d8850433bd00e537ce1a97ce9bcfc4b15db5218d701d1265fae94e0d6926906bec157e6b46e0
   languageName: node
   linkType: hard
 
@@ -6419,6 +6452,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ethereum-input-data-decoder@npm:^0.4.2":
+  version: 0.4.2
+  resolution: "ethereum-input-data-decoder@npm:0.4.2"
+  dependencies:
+    "@types/node": ^16.7.13
+    bn.js: ^4.11.8
+    buffer: ^5.2.1
+    ethers: ^5.5.4
+    is-buffer: ^2.0.3
+    meow: 9.0.0
+  bin:
+    ethereum-input-data-decoder: bin/ethereum_input_data_decoder
+    ethereum_input_data_decoder: bin/ethereum_input_data_decoder
+  checksum: 7452cb8ee80a79f07c503b2451f29cc4dc921c5193155d75a044d2d2d24de714b25e373777d9a42ee43c9fe8514e2d27716a0024b83cb8d0310cab6e6496b31b
+  languageName: node
+  linkType: hard
+
 "ethereum-waffle@npm:3.2.0":
   version: 3.2.0
   resolution: "ethereum-waffle@npm:3.2.0"
@@ -6710,7 +6760,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:5.7.2, ethers@npm:^5.7.2":
+"ethers@npm:5.7.2, ethers@npm:^5.5.4, ethers@npm:^5.7.2":
   version: 5.7.2
   resolution: "ethers@npm:5.7.2"
   dependencies:
@@ -8859,7 +8909,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-buffer@npm:^2.0.5, is-buffer@npm:~2.0.3":
+"is-buffer@npm:^2.0.3, is-buffer@npm:^2.0.5, is-buffer@npm:~2.0.3":
   version: 2.0.5
   resolution: "is-buffer@npm:2.0.5"
   checksum: 764c9ad8b523a9f5a32af29bdf772b08eb48c04d2ad0a7240916ac2688c983bf5f8504bf25b35e66240edeb9d9085461f9b5dae1f3d2861c6b06a65fe983de42
@@ -10316,6 +10366,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"meow@npm:9.0.0":
+  version: 9.0.0
+  resolution: "meow@npm:9.0.0"
+  dependencies:
+    "@types/minimist": ^1.2.0
+    camelcase-keys: ^6.2.2
+    decamelize: ^1.2.0
+    decamelize-keys: ^1.1.0
+    hard-rejection: ^2.1.0
+    minimist-options: 4.1.0
+    normalize-package-data: ^3.0.0
+    read-pkg-up: ^7.0.1
+    redent: ^3.0.0
+    trim-newlines: ^3.0.0
+    type-fest: ^0.18.0
+    yargs-parser: ^20.2.3
+  checksum: 99799c47247f4daeee178e3124f6ef6f84bde2ba3f37652865d5d8f8b8adcf9eedfc551dd043e2455cd8206545fd848e269c0c5ab6b594680a0ad4d3617c9639
+  languageName: node
+  linkType: hard
+
 "meow@npm:^8.0.0":
   version: 8.1.2
   resolution: "meow@npm:8.1.2"
@@ -11060,7 +11130,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:2.6.7, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.7":
+"node-fetch@npm:2.6.7, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.6, node-fetch@npm:^2.6.7":
   version: 2.6.7
   resolution: "node-fetch@npm:2.6.7"
   dependencies:

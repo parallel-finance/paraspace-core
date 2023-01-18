@@ -23,8 +23,8 @@ contract NTokenBAKC is NToken {
     using SafeERC20 for IERC20;
 
     ApeCoinStaking immutable _apeCoinStaking;
-    address public immutable nBAYC;
-    address public immutable nMAYC;
+    address private immutable nBAYC;
+    address private immutable nMAYC;
 
     /**
      * @dev Constructor.
@@ -59,8 +59,8 @@ contract NTokenBAKC is NToken {
         );
 
         IERC20 ape = _apeCoinStaking.apeCoin();
-        ape.safeApprove(nBAYC, type(uint256).max);
-        ape.safeApprove(nMAYC, type(uint256).max);
+        ape.approve(nBAYC, type(uint256).max);
+        ape.approve(nMAYC, type(uint256).max);
         IERC721(underlyingAsset).setApprovalForAll(address(POOL), true);
     }
 

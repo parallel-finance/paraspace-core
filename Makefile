@@ -377,6 +377,7 @@ deploy-flashClaimRegistry:
 .PHONY: deploy-renounceOwnership
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
+
 .PHONY: deploy-p2p-pair-staking
 deploy-p2p-pair-staking:
 	make TASK_NAME=deploy:P2PPairStaking run-task
@@ -413,6 +414,14 @@ market-info:
 account-data:
 	make TASK_NAME=account-data run-task
 
+.PHONY: decode
+decode:
+	make TASK_NAME=decode run-task
+
+.PHONY: decode-multi
+decode-multi:
+	make TASK_NAME=decode-multi run-task
+
 .PHONY: next-execution-time
 next-execution-time:
 	make TASK_NAME=next-execution-time run-task
@@ -432,6 +441,38 @@ cancel-tx:
 .PHONY: list-queued-txs
 list-queued-txs:
 	make TASK_NAME=list-queued-txs run-task
+
+.PHONY: decode-queued-txs
+decode-queued-txs:
+	make TASK_NAME=decode-queued-txs run-task
+
+.PHONY: list-buffered-txs
+list-buffered-txs:
+	make TASK_NAME=list-buffered-txs run-task
+
+.PHONY: decode-buffered-txs
+decode-buffered-txs:
+	make TASK_NAME=decode-buffered-txs run-task
+
+.PHONY: queue-buffered-txs
+queue-buffered-txs:
+	make TASK_NAME=queue-buffered-txs run-task
+
+.PHONY: execute-buffered-txs
+execute-buffered-txs:
+	make TASK_NAME=execute-buffered-txs run-task
+
+.PHONY: cancel-buffered-txs
+cancel-buffered-txs:
+	make TASK_NAME=cancel-buffered-txs run-task
+
+.PHONY: decode-safe-txs
+decode-safe-txs:
+	make TASK_NAME=decode-safe-txs run-task
+
+.PHONY: propose-safe-txs
+propose-safe-txs:
+	make TASK_NAME=propose-safe-txs run-task
 
 .PHONY: set-ltv
 set-ltv:
