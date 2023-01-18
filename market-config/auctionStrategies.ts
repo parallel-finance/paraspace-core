@@ -106,11 +106,11 @@ export const auctionStrategyUniswapV3: IAuctionStrategyParams = {
 
 export const auctionStrategyBAKC: IAuctionStrategyParams = {
   name: "auctionStrategyBAKC",
-  maxPriceMultiplier: utils.parseUnits("2.5", 18).toString(),
-  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
+  maxPriceMultiplier: utils.parseUnits("2", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.1", 18).toString(),
   minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
-  stepLinear: utils.parseUnits("0.01102276665", 18).toString(),
-  stepExp: utils.parseUnits("0.02022592736", 18).toString(),
+  stepLinear: utils.parseUnits("0.011", 18).toString(),
+  stepExp: utils.parseUnits("0.023", 18).toString(),
   tickLength: "900",
 };
 
