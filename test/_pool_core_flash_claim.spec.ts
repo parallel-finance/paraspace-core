@@ -424,10 +424,10 @@ describe("Flash Claim Test", () => {
     } = testEnv;
 
     const user_registry = await getUserFlashClaimRegistry();
-    await user_registry.connect(user2.signer).createReceiver();
+    await user_registry.connect(user1.signer).createReceiver();
 
     const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user2.address
+      user1.address
     );
     await mayc.connect(user1.signer)["mint(address)"](user1.address);
     expect(await mayc.ownerOf(tokenId2)).to.equal(user1.address);
@@ -471,7 +471,7 @@ describe("Flash Claim Test", () => {
     } = testEnv;
 
     const user_registry = await getUserFlashClaimRegistry();
-    await user_registry.connect(user2.signer).createReceiver();
+    await user_registry.connect(user1.signer).createReceiver();
 
     const passFactory = new BAYCSewerPass__factory(user1.signer);
 
@@ -506,7 +506,7 @@ describe("Flash Claim Test", () => {
       .toggleMinterContract(passClaimContract.address, GLOBAL_OVERRIDES);
 
     const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user2.address
+      user1.address
     );
     await mayc.connect(user1.signer)["mint(address)"](user1.address);
     expect(await mayc.ownerOf(tokenId2)).to.equal(user1.address);
@@ -550,13 +550,12 @@ describe("Flash Claim Test", () => {
         applyMultiAssetAirdropEncodedData,
       ]
     );
-    passClaimContract.claimBaycBakc;
     await waitForTx(
       await pool
         .connect(user1.signer)
         .flashClaim(
           flashClaimReceiverAddr,
-          [bayc.address, mayc.address],
+          [bayc.address],
           [[0], [0]],
           receiverEncodedData
         )

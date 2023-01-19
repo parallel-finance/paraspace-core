@@ -226,6 +226,8 @@ import {
   MockedDelegateRegistry__factory,
   NTokenBAKC,
   NTokenBAKC__factory,
+  AirdropFlashClaimReceiver__factory,
+  AirdropFlashClaimReceiver,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1721,14 +1723,26 @@ export const deployPTokenSApe = async (
 
 export const deployUserFlashClaimRegistry = async (
   poolAddress: tEthereumAddress,
+  receiverImpl: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new UserFlashclaimRegistry__factory(await getFirstSigner()),
     eContractid.FlashClaimRegistry,
-    [poolAddress],
+    [poolAddress, receiverImpl],
     verify
   ) as Promise<UserFlashclaimRegistry>;
+
+export const deployAirdropFlashClaimReceiver = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AirdropFlashClaimReceiver__factory(await getFirstSigner()),
+    eContractid.AirdropFlashClaimReceiver,
+    [poolAddress],
+    verify
+  ) as Promise<AirdropFlashClaimReceiver>;
 
 export const deployMockAirdropProject = async (
   underlyingAddress: tEthereumAddress,

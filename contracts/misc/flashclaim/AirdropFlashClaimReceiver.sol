@@ -3,8 +3,8 @@ pragma solidity 0.8.10;
 
 import "../interfaces/IFlashClaimReceiver.sol";
 import "../../dependencies/openzeppelin/contracts/Address.sol";
-import "../../dependencies/openzeppelin/contracts/Ownable.sol";
-import "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
+import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import "../../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import "../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
@@ -15,8 +15,8 @@ import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol
 
 contract AirdropFlashClaimReceiver is
     IFlashClaimReceiver,
-    ReentrancyGuard,
-    Ownable,
+    ReentrancyGuardUpgradeable,
+    OwnableUpgradeable,
     ERC721Holder,
     ERC1155Holder
 {
@@ -25,12 +25,18 @@ contract AirdropFlashClaimReceiver is
     address public immutable pool;
     mapping(bytes32 => bool) public airdropClaimRecords;
 
-    constructor(address owner_, address pool_) {
-        require(owner_ != address(0), "zero owner address");
-        require(pool_ != address(0), "zero pool address");
-
+    constructor(address pool_) {
+        require(pool_ != address(0), "pool address is zero");
         pool = pool_;
-        transferOwnership(owner_);
+    }
+
+    function initialize(address owner_) public initializer {
+        require(owner_ != address(0), "owner address is zero");
+
+        __Ownable_init();
+        __ReentrancyGuard_init();
+
+        _transferOwnership(owner_);
     }
 
     /**
@@ -65,6 +71,7 @@ contract AirdropFlashClaimReceiver is
         bytes calldata params
     ) external override onlyPool returns (bool) {
         require(nftTokenIds.length > 0, "empty token list");
+        require(receiver == owner(), "not receiver owner");
 
         ExecuteOperationLocalVars memory vars;
         // decode parameters

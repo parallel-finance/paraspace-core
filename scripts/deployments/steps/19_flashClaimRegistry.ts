@@ -2,6 +2,7 @@ import {
   deployUserFlashClaimRegistry,
   deployMockAirdropProject,
   deployMockMultiAssetAirdropProject,
+  deployAirdropFlashClaimReceiver,
 } from "../../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
@@ -14,7 +15,16 @@ export const step_19 = async (verify = false) => {
   try {
     const addressesProvider = await getPoolAddressesProvider();
     const poolAddress = await addressesProvider.getPool();
-    await deployUserFlashClaimRegistry(poolAddress, verify);
+    const receiverImpl = await deployAirdropFlashClaimReceiver(
+      poolAddress,
+      verify
+    );
+
+    await deployUserFlashClaimRegistry(
+      poolAddress,
+      receiverImpl.address,
+      verify
+    );
 
     if (!isLocalTestnet() && !isPublicTestnet()) {
       return;
