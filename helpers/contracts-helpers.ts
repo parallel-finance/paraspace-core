@@ -94,8 +94,9 @@ import {
   VERBOSE,
   MULTI_SIG,
   FORK,
+  MULTI_SEND,
 } from "./hardhat-constants";
-import {pick} from "lodash";
+import {pick, zip} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import {
   OperationType,
@@ -104,6 +105,7 @@ import {
 import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
+import {encodeMulti} from "ethers-multisend";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -842,10 +844,72 @@ export const proposeSafeTransaction = async (
   safeTransaction.addSignature(signature);
   const safeHash = await safeSdk.getTransactionHash(safeTransaction);
   console.log(safeHash);
+  await safeService.estimateSafeTransaction(MULTI_SIG, {
+    ...safeTransactionData,
+    operation: safeTransactionData.operation as number,
+  });
   await safeService.proposeTransaction({
     safeAddress: MULTI_SIG,
     safeTransactionData: safeTransaction.data,
-    safeTxHash: await safeSdk.getTransactionHash(safeTransaction),
+    safeTxHash: safeHash,
+    senderAddress: await signer.getAddress(),
+    senderSignature: signature.data,
+  });
+};
+
+export const proposeMultiSafeTransactions = async (
+  target: tEthereumAddress[],
+  data: string[],
+  nonce?: number,
+  operation = OperationType.DelegateCall
+) => {
+  const signer = await getFirstSigner();
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: signer,
+  });
+
+  const safeSdk: Safe = await Safe.create({
+    ethAdapter,
+    safeAddress: MULTI_SIG,
+  });
+  const safeService = new SafeServiceClient({
+    txServiceUrl: `https://safe-transaction-${
+      FORK || DRE.network.name
+    }.safe.global`,
+    ethAdapter,
+  });
+  const newTarget = MULTI_SEND;
+  const {data: newData} = encodeMulti(
+    zip(target, data).map(([target, data]) => ({
+      to: target as tEthereumAddress,
+      value: "0",
+      data: data as string,
+    }))
+  );
+
+  const safeTransactionData: SafeTransactionDataPartial = {
+    to: newTarget,
+    value: "0",
+    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
+    operation,
+    data: newData,
+  };
+  const safeTransaction = await safeSdk.createTransaction({
+    safeTransactionData,
+  });
+  const signature = await safeSdk.signTypedData(safeTransaction);
+  safeTransaction.addSignature(signature);
+  const safeHash = await safeSdk.getTransactionHash(safeTransaction);
+  console.log(safeHash);
+  await safeService.estimateSafeTransaction(MULTI_SIG, {
+    ...safeTransactionData,
+    operation: safeTransactionData.operation as number,
+  });
+  await safeService.proposeTransaction({
+    safeAddress: MULTI_SIG,
+    safeTransactionData: safeTransaction.data,
+    safeTxHash: safeHash,
     senderAddress: await signer.getAddress(),
     senderSignature: signature.data,
   });
