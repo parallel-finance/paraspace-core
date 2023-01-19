@@ -180,14 +180,14 @@ interface IPoolCore {
      *  - `nftTokenIds` must exist.
      *
      * @param receiverAddress The address of the contract receiving the tokens, implementing the IFlashClaimReceiver interface
-     * @param nftAsset address of the underlying asset of NFT
+     * @param nftAssets addresses of the underlying asset of NFT
      * @param nftTokenIds token ids of the underlying asset
      * @param params Variadic packed params to pass to the receiver as extra information
      */
     function flashClaim(
         address receiverAddress,
-        address nftAsset,
-        uint256[] calldata nftTokenIds,
+        address[] calldata nftAssets,
+        uint256[][] calldata nftTokenIds,
         bytes calldata params
     ) external;
 

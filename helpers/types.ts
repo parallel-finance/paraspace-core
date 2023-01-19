@@ -127,6 +127,8 @@ export enum eContractid {
   PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
+  UserFlashClaimRegistryProxy = "UserFlashClaimRegistryProxy",
+  AirdropFlashClaimReceiver = "AirdropFlashClaimReceiver",
   ProtocolDataProvider = "ProtocolDataProvider",
   MockPToken = "MockPToken",
   MockNToken = "MockNToken",
@@ -226,6 +228,7 @@ export enum eContractid {
   cAPEImpl = "cAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
+  MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
 }
 
 /*
