@@ -679,10 +679,10 @@ export interface IParaSpaceConfiguration extends ICommonConfiguration {
 export type PoolConfiguration = ICommonConfiguration | IParaSpaceConfiguration;
 
 export type Action = [
-  PromiseOrValue<string>,
-  PromiseOrValue<BigNumberish>,
-  PromiseOrValue<string>,
-  PromiseOrValue<BytesLike>,
-  PromiseOrValue<BigNumberish>,
-  PromiseOrValue<boolean>
+  PromiseOrValue<string>, // target
+  PromiseOrValue<BigNumberish>, // value
+  PromiseOrValue<string>, // signature
+  PromiseOrValue<BytesLike>, // data
+  PromiseOrValue<BigNumberish>, // executeTime
+  PromiseOrValue<boolean> // withDelegatecall
 ];

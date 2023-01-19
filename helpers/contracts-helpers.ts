@@ -34,6 +34,7 @@ import {
   Action,
   DryRunExecutor,
   TimeLockData,
+  TimeLockOperation,
 } from "./types";
 import {
   ConsiderationItem,
@@ -95,8 +96,9 @@ import {
   MULTI_SIG,
   FORK,
   MULTI_SEND,
+  TIME_LOCK_DEFAULT_OPERATION,
 } from "./hardhat-constants";
-import {pick, zip} from "lodash";
+import {chunk, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import {
   OperationType,
@@ -105,7 +107,7 @@ import {
 import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
-import {encodeMulti} from "ethers-multisend";
+import {encodeMulti, MetaTransaction} from "ethers-multisend";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -744,6 +746,13 @@ export const getTimeLockData = async (
     console.log("cancelData:", cancelData);
     console.log();
   }
+  const newTarget = timeLock.address;
+  const newData =
+    TIME_LOCK_DEFAULT_OPERATION == TimeLockOperation.Execute
+      ? executeData
+      : TIME_LOCK_DEFAULT_OPERATION == TimeLockOperation.Cancel
+      ? cancelData
+      : queueData;
   return {
     timeLock,
     action,
@@ -754,6 +763,8 @@ export const getTimeLockData = async (
     executeTime,
     queueExpireTime,
     executeExpireTime,
+    newTarget,
+    newData,
   };
 };
 
@@ -769,12 +780,12 @@ export const dryRunEncodedData = async (
     const timeLockData = await getTimeLockData(target, data, executionTime);
     await insertTimeLockDataInDb(timeLockData);
   } else if (DRY_RUN === DryRunExecutor.SafeWithTimeLock) {
-    const {timeLock, queueData} = await getTimeLockData(
+    const {newTarget, newData} = await getTimeLockData(
       target,
       data,
       executionTime
     );
-    await proposeSafeTransaction(timeLock.address, queueData);
+    await proposeSafeTransaction(newTarget, newData);
   } else if (DRY_RUN === DryRunExecutor.Safe) {
     await proposeSafeTransaction(target, data);
   } else {
@@ -812,7 +823,8 @@ export const proposeSafeTransaction = async (
   target: tEthereumAddress,
   data: string,
   nonce?: number,
-  operation = OperationType.Call
+  operation = OperationType.Call,
+  withTimeLock = false
 ) => {
   const signer = await getFirstSigner();
   const ethAdapter = new EthersAdapter({
@@ -830,6 +842,13 @@ export const proposeSafeTransaction = async (
     }.safe.global`,
     ethAdapter,
   });
+
+  if (withTimeLock) {
+    const {newTarget, newData} = await getTimeLockData(target, data);
+    target = newTarget;
+    data = newData;
+  }
+
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
@@ -840,14 +859,18 @@ export const proposeSafeTransaction = async (
   const safeTransaction = await safeSdk.createTransaction({
     safeTransactionData,
   });
+
   const signature = await safeSdk.signTypedData(safeTransaction);
   safeTransaction.addSignature(signature);
+
   const safeHash = await safeSdk.getTransactionHash(safeTransaction);
   console.log(safeHash);
+
   await safeService.estimateSafeTransaction(MULTI_SIG, {
     ...safeTransactionData,
     operation: safeTransactionData.operation as number,
   });
+
   await safeService.proposeTransaction({
     safeAddress: MULTI_SIG,
     safeTransactionData: safeTransaction.data,
@@ -858,59 +881,14 @@ export const proposeSafeTransaction = async (
 };
 
 export const proposeMultiSafeTransactions = async (
-  target: tEthereumAddress[],
-  data: string[],
-  nonce?: number,
-  operation = OperationType.DelegateCall
+  transactions: MetaTransaction[],
+  operation = OperationType.DelegateCall,
+  chunkSize = 4
 ) => {
-  const signer = await getFirstSigner();
-  const ethAdapter = new EthersAdapter({
-    ethers,
-    signerOrProvider: signer,
-  });
-
-  const safeSdk: Safe = await Safe.create({
-    ethAdapter,
-    safeAddress: MULTI_SIG,
-  });
-  const safeService = new SafeServiceClient({
-    txServiceUrl: `https://safe-transaction-${
-      FORK || DRE.network.name
-    }.safe.global`,
-    ethAdapter,
-  });
   const newTarget = MULTI_SEND;
-  const {data: newData} = encodeMulti(
-    zip(target, data).map(([target, data]) => ({
-      to: target as tEthereumAddress,
-      value: "0",
-      data: data as string,
-    }))
-  );
-
-  const safeTransactionData: SafeTransactionDataPartial = {
-    to: newTarget,
-    value: "0",
-    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
-    operation,
-    data: newData,
-  };
-  const safeTransaction = await safeSdk.createTransaction({
-    safeTransactionData,
-  });
-  const signature = await safeSdk.signTypedData(safeTransaction);
-  safeTransaction.addSignature(signature);
-  const safeHash = await safeSdk.getTransactionHash(safeTransaction);
-  console.log(safeHash);
-  await safeService.estimateSafeTransaction(MULTI_SIG, {
-    ...safeTransactionData,
-    operation: safeTransactionData.operation as number,
-  });
-  await safeService.proposeTransaction({
-    safeAddress: MULTI_SIG,
-    safeTransactionData: safeTransaction.data,
-    safeTxHash: safeHash,
-    senderAddress: await signer.getAddress(),
-    senderSignature: signature.data,
-  });
+  const chunks = chunk(transactions, chunkSize);
+  for (let i = 0; i < chunks.length; i++) {
+    const {data: newData} = encodeMulti(chunks[i]);
+    await proposeSafeTransaction(newTarget, newData, undefined, operation);
+  }
 };

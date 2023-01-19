@@ -37,7 +37,7 @@ task("queue-tx", "Queue transaction to be executed later")
   )
   .setAction(async ({target, data, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockData: getActionAndData, dryRunEncodedData} = await import(
+    const {getTimeLockData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -47,7 +47,7 @@ task("queue-tx", "Queue transaction to be executed later")
     if (DRY_RUN) {
       await dryRunEncodedData(target, data, executionTime);
     } else {
-      const {action} = await getActionAndData(target, data, executionTime);
+      const {action} = await getTimeLockData(target, data, executionTime);
       await waitForTx(
         await timeLock.queueTransaction(...action, GLOBAL_OVERRIDES)
       );
@@ -63,7 +63,7 @@ task("execute-tx", "Execute transaction which has been queued earlier")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockData: getActionAndData, dryRunEncodedData} = await import(
+    const {getTimeLockData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -73,7 +73,7 @@ task("execute-tx", "Execute transaction which has been queued earlier")
     if (DRY_RUN) {
       await dryRunEncodedData(target, data, executionTime);
     } else {
-      const {action} = await getActionAndData(target, data, executionTime);
+      const {action} = await getTimeLockData(target, data, executionTime);
       await waitForTx(
         await timeLock.executeTransaction(...action, GLOBAL_OVERRIDES)
       );
@@ -89,7 +89,7 @@ task("cancel-tx", "Cancel queued transaction")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockData: getActionAndData, dryRunEncodedData} = await import(
+    const {getTimeLockData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -99,7 +99,7 @@ task("cancel-tx", "Cancel queued transaction")
     if (DRY_RUN) {
       await dryRunEncodedData(target, data, executionTime);
     } else {
-      const {action} = await getActionAndData(target, data, executionTime);
+      const {action} = await getTimeLockData(target, data, executionTime);
       await waitForTx(
         await timeLock.cancelTransaction(...action, GLOBAL_OVERRIDES)
       );
