@@ -129,7 +129,7 @@ describe("Flash Claim Test", () => {
     const {
       bayc,
       nBAYC,
-      users: [user1],
+      users: [user1, user2],
       pool,
     } = testEnv;
 
@@ -149,6 +149,8 @@ describe("Flash Claim Test", () => {
     expect(await nBAYC.ownerOf(tokenId)).to.equal(user1.address);
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
+    await user_registry.connect(user2.signer).createReceiver();
+
     const flashClaimReceiverAddr = await user_registry
       .connect(user1.signer)
       .userReceivers(user1.address);
@@ -254,6 +256,30 @@ describe("Flash Claim Test", () => {
     expect(
       await mockAirdropERC1155Token.balanceOf(user1.address, erc1155Id)
     ).to.be.equal(await airdrop_project.erc1155Bonus());
+  });
+
+  it("TC-flash-claim-03: non-owner can't flash claim airdrop", async function () {
+    const {
+      bayc,
+      users: [user1, user2],
+      pool,
+    } = testEnv;
+
+    const user_registry = await getUserFlashClaimRegistry();
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user2.address);
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .flashClaim(
+          flashClaimReceiverAddr,
+          [bayc.address],
+          [[tokenId]],
+          receiverEncodedData
+        )
+    ).to.be.revertedWith("not receiver owner");
   });
 
   it("TC-flash-claim-04:user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {
