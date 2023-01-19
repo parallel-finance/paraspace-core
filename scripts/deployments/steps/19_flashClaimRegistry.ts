@@ -3,8 +3,10 @@ import {
   deployMockAirdropProject,
   deployMockMultiAssetAirdropProject,
   deployAirdropFlashClaimReceiver,
+  deployUserFlashClaimRegistryProxy,
 } from "../../../helpers/contracts-deployments";
 import {
+  getFirstSigner,
   getPoolAddressesProvider,
   getProtocolDataProvider,
 } from "../../../helpers/contracts-getters";
@@ -12,6 +14,9 @@ import {isLocalTestnet, isPublicTestnet} from "../../../helpers/misc-utils";
 import {ERC721TokenContractId} from "../../../helpers/types";
 
 export const step_19 = async (verify = false) => {
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
   try {
     const addressesProvider = await getPoolAddressesProvider();
     const poolAddress = await addressesProvider.getPool();
@@ -20,10 +25,16 @@ export const step_19 = async (verify = false) => {
       verify
     );
 
-    await deployUserFlashClaimRegistry(
+    const registry = await deployUserFlashClaimRegistry(
       poolAddress,
       receiverImpl.address,
       verify
+    );
+
+    await deployUserFlashClaimRegistryProxy(
+      deployerAddress,
+      registry.address,
+      []
     );
 
     if (!isLocalTestnet() && !isPublicTestnet()) {

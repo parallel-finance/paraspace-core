@@ -1733,6 +1733,24 @@ export const deployUserFlashClaimRegistry = async (
     verify
   ) as Promise<UserFlashclaimRegistry>;
 
+export const deployUserFlashClaimRegistryProxy = async (
+  admin: string,
+  registryImpl: string,
+  initData: string,
+  verify?: boolean
+) => {
+  const proxy = new InitializableImmutableAdminUpgradeabilityProxy__factory(
+    await getFirstSigner()
+  );
+  return withSaveAndVerify(
+    proxy,
+    eContractid.UserFlashClaimRegistryProxy,
+    [admin, registryImpl, initData],
+    verify,
+    true
+  ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+};
+
 export const deployAirdropFlashClaimReceiver = async (
   poolAddress: tEthereumAddress,
   verify?: boolean

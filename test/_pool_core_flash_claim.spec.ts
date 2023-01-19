@@ -149,9 +149,9 @@ describe("Flash Claim Test", () => {
     expect(await nBAYC.ownerOf(tokenId)).to.equal(user1.address);
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
     const AirdropFlashClaimReceiver = await DRE.ethers.getContractFactory(
       "AirdropFlashClaimReceiver"
     );
@@ -182,9 +182,9 @@ describe("Flash Claim Test", () => {
 
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
 
     // expect flashClaim will be reverted
     await expect(
@@ -208,9 +208,9 @@ describe("Flash Claim Test", () => {
 
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user2.signer).createReceiver();
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user2.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user2.signer)
+      .userReceivers(user2.address);
 
     await expect(
       pool
@@ -232,9 +232,9 @@ describe("Flash Claim Test", () => {
     } = testEnv;
 
     const user_registry = await getUserFlashClaimRegistry();
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
     await pool
       .connect(user1.signer)
       .flashClaim(
@@ -320,9 +320,9 @@ describe("Flash Claim Test", () => {
       );
 
     const user_registry = await getUserFlashClaimRegistry();
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
     await expect(
       pool
         .connect(user1.signer)
@@ -348,9 +348,9 @@ describe("Flash Claim Test", () => {
 
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
 
     await waitForTx(await configurator.setReservePause(sApeAddress, true));
 
@@ -397,9 +397,9 @@ describe("Flash Claim Test", () => {
 
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
 
     await expect(
       pool
@@ -417,7 +417,7 @@ describe("Flash Claim Test", () => {
 
   it("TC-flash-claim-06:user can flash claim with multiple assets", async function () {
     const {
-      users: [user1, user2],
+      users: [user1],
       bayc,
       mayc,
       pool,
@@ -426,9 +426,9 @@ describe("Flash Claim Test", () => {
     const user_registry = await getUserFlashClaimRegistry();
     await user_registry.connect(user1.signer).createReceiver();
 
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
     await mayc.connect(user1.signer)["mint(address)"](user1.address);
     expect(await mayc.ownerOf(tokenId2)).to.equal(user1.address);
     await mayc.connect(user1.signer).setApprovalForAll(pool.address, true);
@@ -463,7 +463,7 @@ describe("Flash Claim Test", () => {
 
   it("TC-flash-claim-06:user can flash claim with multiple assets for BAYC Sewer Pass", async function () {
     const {
-      users: [user1, user2],
+      users: [user1],
       bayc,
       mayc,
       doodles,
@@ -505,9 +505,9 @@ describe("Flash Claim Test", () => {
       .connect(user1.signer)
       .toggleMinterContract(passClaimContract.address, GLOBAL_OVERRIDES);
 
-    const flashClaimReceiverAddr = await user_registry.userReceivers(
-      user1.address
-    );
+    const flashClaimReceiverAddr = await user_registry
+      .connect(user1.signer)
+      .userReceivers(user1.address);
     await mayc.connect(user1.signer)["mint(address)"](user1.address);
     expect(await mayc.ownerOf(tokenId2)).to.equal(user1.address);
     await mayc.connect(user1.signer).setApprovalForAll(pool.address, true);

@@ -916,7 +916,7 @@ export const getUserFlashClaimRegistry = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb()
-          .get(`${eContractid.FlashClaimRegistry}.${DRE.network.name}`)
+          .get(`${eContractid.UserFlashClaimRegistryProxy}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
