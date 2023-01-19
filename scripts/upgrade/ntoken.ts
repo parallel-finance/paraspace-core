@@ -19,7 +19,7 @@ import {NTokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {printEncodedData} from "../../helpers/contracts-helpers";
+import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 
 dotenv.config();
 
@@ -167,7 +167,7 @@ export const upgradeNToken = async (verify = false) => {
         "updateNToken",
         [updateInput]
       );
-      await printEncodedData(poolConfiguratorProxy.address, encodedData);
+      await dryRunEncodedData(poolConfiguratorProxy.address, encodedData);
     } else {
       await waitForTx(
         await poolConfiguratorProxy.updateNToken(updateInput, GLOBAL_OVERRIDES)

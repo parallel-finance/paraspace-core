@@ -33,6 +33,7 @@ import {
   ParaSpaceLibraryAddresses,
   Action,
   DryRunExecutor,
+  TimeLockData,
 } from "./types";
 import {
   ConsiderationItem,
@@ -96,7 +97,10 @@ import {
 } from "./hardhat-constants";
 import {pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
-import {SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
+import {
+  OperationType,
+  SafeTransactionDataPartial,
+} from "@safe-global/safe-core-sdk-types";
 import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
@@ -156,16 +160,16 @@ export const insertContractAddressInDb = async (
   await getDb().set(key, newValue).write();
 };
 
-export const insertTimeLockDataInDb = async (
-  action: Action,
-  actionHash: string,
-  queueData: string,
-  executeData: string,
-  cancelData: string,
-  executeTime: string,
-  queueExpireTime: string,
-  executeExpireTime: string
-) => {
+export const insertTimeLockDataInDb = async ({
+  action,
+  actionHash,
+  queueData,
+  executeData,
+  cancelData,
+  executeTime,
+  queueExpireTime,
+  executeExpireTime,
+}: TimeLockData) => {
   const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
   const oldValue = (await getDb().get(key).value()) || {};
   const queue = oldValue.queue || [];
@@ -687,7 +691,7 @@ export const getExecutionTime = async () => {
   return BigNumber.from(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
 };
 
-export const getActionAndData = async (
+export const getTimeLockData = async (
   target: string,
   data: string,
   executionTime?: string
@@ -739,6 +743,7 @@ export const getActionAndData = async (
     console.log();
   }
   return {
+    timeLock,
     action,
     actionHash,
     queueData,
@@ -750,7 +755,7 @@ export const getActionAndData = async (
   };
 };
 
-export const printEncodedData = async (
+export const dryRunEncodedData = async (
   target: tEthereumAddress,
   data: string,
   executionTime?: string
@@ -759,26 +764,15 @@ export const printEncodedData = async (
     DRY_RUN == DryRunExecutor.TimeLock &&
     (await getContractAddressInDb(eContractid.TimeLockExecutor))
   ) {
-    const {
-      action,
-      actionHash,
-      queueData,
-      executeData,
-      cancelData,
-      executeTime,
-      queueExpireTime,
-      executeExpireTime,
-    } = await getActionAndData(target, data, executionTime);
-    await insertTimeLockDataInDb(
-      action,
-      actionHash,
-      queueData,
-      executeData,
-      cancelData,
-      executeTime,
-      queueExpireTime,
-      executeExpireTime
+    const timeLockData = await getTimeLockData(target, data, executionTime);
+    await insertTimeLockDataInDb(timeLockData);
+  } else if (DRY_RUN === DryRunExecutor.SafeWithTimeLock) {
+    const {timeLock, queueData} = await getTimeLockData(
+      target,
+      data,
+      executionTime
     );
+    await proposeSafeTransaction(timeLock.address, queueData);
   } else if (DRY_RUN === DryRunExecutor.Safe) {
     await proposeSafeTransaction(target, data);
   } else {
@@ -815,7 +809,8 @@ export const decodeInputData = (data: string) => {
 export const proposeSafeTransaction = async (
   target: tEthereumAddress,
   data: string,
-  nonce?: number
+  nonce?: number,
+  operation = OperationType.Call
 ) => {
   const signer = await getFirstSigner();
   const ethAdapter = new EthersAdapter({
@@ -837,6 +832,7 @@ export const proposeSafeTransaction = async (
     to: target,
     value: "0",
     nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
+    operation,
     data,
   };
   const safeTransaction = await safeSdk.createTransaction({

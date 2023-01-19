@@ -10,7 +10,7 @@ import {upgradePToken} from "./ptoken";
 import {upgradeNToken} from "./ntoken";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {IParaProxy} from "../../types";
-import {printEncodedData} from "../../helpers/contracts-helpers";
+import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 
 dotenv.config();
 
@@ -120,7 +120,7 @@ export const upgradePool = async (verify = false) => {
         "updatePoolImpl",
         [coreProxyImplementation, ZERO_ADDRESS, "0x"]
       );
-      await printEncodedData(addressesProvider.address, encodedData);
+      await dryRunEncodedData(addressesProvider.address, encodedData);
     } else {
       await waitForTx(
         await addressesProvider.updatePoolImpl(
@@ -141,7 +141,7 @@ export const upgradePool = async (verify = false) => {
         "updatePoolImpl",
         [parametersProxyImplementation, ZERO_ADDRESS, "0x"]
       );
-      await printEncodedData(addressesProvider.address, encodedData);
+      await dryRunEncodedData(addressesProvider.address, encodedData);
     } else {
       await waitForTx(
         await addressesProvider.updatePoolImpl(
@@ -162,7 +162,7 @@ export const upgradePool = async (verify = false) => {
         "updatePoolImpl",
         [marketplaceProxyImplementation, ZERO_ADDRESS, "0x"]
       );
-      await printEncodedData(addressesProvider.address, encodedData);
+      await dryRunEncodedData(addressesProvider.address, encodedData);
     } else {
       await waitForTx(
         await addressesProvider.updatePoolImpl(
@@ -183,7 +183,7 @@ export const upgradePool = async (verify = false) => {
         "updatePoolImpl",
         [apeStakingProxyImplementation, ZERO_ADDRESS, "0x"]
       );
-      await printEncodedData(addressesProvider.address, encodedData);
+      await dryRunEncodedData(addressesProvider.address, encodedData);
     } else {
       await waitForTx(
         await addressesProvider.updatePoolImpl(
@@ -204,7 +204,7 @@ export const upgradePool = async (verify = false) => {
         "updatePoolImpl",
         [interfacesProxyImplementation, ZERO_ADDRESS, "0x"]
       );
-      await printEncodedData(addressesProvider.address, encodedData);
+      await dryRunEncodedData(addressesProvider.address, encodedData);
     } else {
       await waitForTx(
         await addressesProvider.updatePoolImpl(

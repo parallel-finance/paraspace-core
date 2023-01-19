@@ -37,7 +37,7 @@ task("queue-tx", "Queue transaction to be executed later")
   )
   .setAction(async ({target, data, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getActionAndData, printEncodedData} = await import(
+    const {getTimeLockData: getActionAndData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -45,7 +45,7 @@ task("queue-tx", "Queue transaction to be executed later")
     );
     const timeLock = await getTimeLockExecutor();
     if (DRY_RUN) {
-      await printEncodedData(target, data, executionTime);
+      await dryRunEncodedData(target, data, executionTime);
     } else {
       const {action} = await getActionAndData(target, data, executionTime);
       await waitForTx(
@@ -63,7 +63,7 @@ task("execute-tx", "Execute transaction which has been queued earlier")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getActionAndData, printEncodedData} = await import(
+    const {getTimeLockData: getActionAndData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -71,7 +71,7 @@ task("execute-tx", "Execute transaction which has been queued earlier")
     );
     const timeLock = await getTimeLockExecutor();
     if (DRY_RUN) {
-      await printEncodedData(target, data, executionTime);
+      await dryRunEncodedData(target, data, executionTime);
     } else {
       const {action} = await getActionAndData(target, data, executionTime);
       await waitForTx(
@@ -89,7 +89,7 @@ task("cancel-tx", "Cancel queued transaction")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getActionAndData, printEncodedData} = await import(
+    const {getTimeLockData: getActionAndData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -97,7 +97,7 @@ task("cancel-tx", "Cancel queued transaction")
     );
     const timeLock = await getTimeLockExecutor();
     if (DRY_RUN) {
-      await printEncodedData(target, data, executionTime);
+      await dryRunEncodedData(target, data, executionTime);
     } else {
       const {action} = await getActionAndData(target, data, executionTime);
       await waitForTx(
