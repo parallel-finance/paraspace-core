@@ -5,7 +5,6 @@ import {decodeMulti, MetaTransaction} from "ethers-multisend";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
-import {proposeMultiSafeTransactions} from "../../helpers/contracts-helpers";
 
 const TIME_LOCK_SIGS = {
   "0xc1a287e2": "GRACE_PERIOD()",
@@ -95,9 +94,8 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
 task("propose-safe-txs", "Propose buffered timelock transactions").setAction(
   async (_, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockDataInDb, getTimeLockData} = await import(
-      "../../helpers/contracts-helpers"
-    );
+    const {getTimeLockDataInDb, getTimeLockData, proposeMultiSafeTransactions} =
+      await import("../../helpers/contracts-helpers");
     const actions = await getTimeLockDataInDb();
     const transactions: MetaTransaction[] = [];
 
