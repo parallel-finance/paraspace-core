@@ -230,7 +230,6 @@ import {
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
-  getAutoCompoundApe,
   getFirstSigner,
   getPunks,
   getWETH,
@@ -256,7 +255,7 @@ import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCor
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
 
-import {pick} from "lodash";
+import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 
@@ -542,7 +541,6 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
-  const cApe = await getAutoCompoundApe();
 
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
@@ -584,15 +582,21 @@ export const deployPoolComponents = async (
       marketplaceLibraries,
       poolMarketplaceSelectors
     )) as PoolMarketplace,
-    poolApeStaking: (await withSaveAndVerify(
-      poolApeStaking,
-      eContractid.PoolApeStakingImpl,
-      [provider, cApe.address, allTokens.APE.address],
-      verify,
-      false,
-      apeStakingLibraries,
-      poolApeStakingSelectors
-    )) as PoolApeStaking,
+    poolApeStaking: allTokens.APE
+      ? ((await withSaveAndVerify(
+          poolApeStaking,
+          eContractid.PoolApeStakingImpl,
+          [
+            provider,
+            (await deployAutoCompoundApe(verify)).address,
+            allTokens.APE.address,
+          ],
+          verify,
+          false,
+          apeStakingLibraries,
+          poolApeStakingSelectors
+        )) as PoolApeStaking)
+      : undefined,
     poolParaProxyInterfaces: (await withSaveAndVerify(
       poolParaProxyInterfaces,
       eContractid.ParaProxyInterfacesImpl,
@@ -627,7 +631,7 @@ export const deployAggregator = async (
 ) =>
   withSaveAndVerify(
     new MockAggregator__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [price],
     verify
   ) as Promise<MockAggregator>;
@@ -1293,7 +1297,7 @@ export const deployERC721OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new ERC721OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721OracleWrapper>;
@@ -1638,7 +1642,7 @@ export const deployUniswapV3OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new UniswapV3OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${eContractid.UniswapV3}`),
+    eContractid.Aggregator.concat(upperFirst(eContractid.UniswapV3)),
     [factory, manager, addressProvider],
     verify
   ) as Promise<UniswapV3OracleWrapper>;
@@ -2024,27 +2028,29 @@ export const deployTimeLockExecutor = async (
   ) as Promise<ExecutorWithTimelock>;
 };
 
-export const deployAutoCompoundApe = async (verify?: boolean) => {
+export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
   const args = [allTokens.APE.address, apeCoinStaking];
 
-  const cApeImplementation = await withSaveAndVerify(
+  return withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),
     eContractid.cAPEImpl,
     [...args],
     verify
-  );
+  ) as Promise<AutoCompoundApe>;
+};
+
+export const deployAutoCompoundApe = async (verify?: boolean) => {
+  const cApeImplementation = await deployAutoCompoundApeImpl(verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
 
-  const initData = cApeImplementation.interface.encodeFunctionData(
-    "initialize",
-    []
-  );
+  const initData =
+    cApeImplementation.interface.encodeFunctionData("initialize");
 
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
