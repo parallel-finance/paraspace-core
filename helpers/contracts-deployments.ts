@@ -587,7 +587,10 @@ export const deployPoolComponents = async (
           eContractid.PoolApeStakingImpl,
           [
             provider,
-            (await deployAutoCompoundApe(verify)).address,
+            (await getContractAddressInDb(eContractid.cAPE)) ||
+              (
+                await deployAutoCompoundApe(verify)
+              ).address,
             allTokens.APE.address,
             allTokens.USDC.address,
             (await getUniswapV3SwapRouter()).address,
