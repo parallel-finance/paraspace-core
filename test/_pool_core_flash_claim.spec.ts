@@ -279,7 +279,7 @@ describe("Flash Claim Test", () => {
           [[tokenId]],
           receiverEncodedData
         )
-    ).to.be.revertedWith("not receiver owner");
+    ).to.be.revertedWith("not contract owner");
   });
 
   it("TC-flash-claim-04:user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {

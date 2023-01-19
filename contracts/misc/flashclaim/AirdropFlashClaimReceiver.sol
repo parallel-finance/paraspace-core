@@ -67,11 +67,11 @@ contract AirdropFlashClaimReceiver is
     function executeOperation(
         address[] calldata nftAssets,
         uint256[][] calldata nftTokenIds,
-        address receiver,
+        address initiator,
         bytes calldata params
     ) external override onlyPool returns (bool) {
         require(nftTokenIds.length > 0, "empty token list");
-        require(receiver == owner(), "not receiver owner");
+        require(initiator == owner(), "not contract owner");
 
         ExecuteOperationLocalVars memory vars;
         // decode parameters
@@ -118,7 +118,7 @@ contract AirdropFlashClaimReceiver is
         );
 
         vars.airdropKeyHash = getClaimKeyHash(
-            receiver,
+            initiator,
             nftAssets,
             nftTokenIds,
             params
@@ -143,7 +143,7 @@ contract AirdropFlashClaimReceiver is
                 ).balanceOf(address(this));
                 if (vars.airdropBalance > 0) {
                     IERC20(vars.airdropTokenAddresses[typeIndex]).safeTransfer(
-                        receiver,
+                        initiator,
                         vars.airdropBalance
                     );
                 }
@@ -159,7 +159,7 @@ contract AirdropFlashClaimReceiver is
                     IERC721Enumerable(vars.airdropTokenAddresses[typeIndex])
                         .safeTransferFrom(
                             address(this),
-                            receiver,
+                            initiator,
                             vars.airdropTokenId
                         );
                 }
@@ -171,7 +171,7 @@ contract AirdropFlashClaimReceiver is
                 IERC1155(vars.airdropTokenAddresses[typeIndex])
                     .safeTransferFrom(
                         address(this),
-                        receiver,
+                        initiator,
                         vars.airdropTokenIds[typeIndex],
                         vars.airdropBalance,
                         new bytes(0)
@@ -181,7 +181,7 @@ contract AirdropFlashClaimReceiver is
                 IERC721Enumerable(vars.airdropTokenAddresses[typeIndex])
                     .safeTransferFrom(
                         address(this),
-                        receiver,
+                        initiator,
                         vars.airdropTokenIds[typeIndex]
                     );
             }
@@ -256,19 +256,19 @@ contract AirdropFlashClaimReceiver is
 
     /**
      * @notice get claim status for a flash claim
-     * @param receiver the address initiated the flash claim
+     * @param initiator the address initiated the flash claim
      * @param nftAssets The NFT contract addresses for the airdrop
      * @param nftTokenIds The tokenids for the airdrop
      * @param params The params of the initiated flash claim
      **/
     function getAirdropClaimRecord(
-        address receiver,
+        address initiator,
         address[] calldata nftAssets,
         uint256[][] calldata nftTokenIds,
         bytes calldata params
     ) public view returns (bool) {
         bytes32 airdropKeyHash = getClaimKeyHash(
-            receiver,
+            initiator,
             nftAssets,
             nftTokenIds,
             params
@@ -303,17 +303,17 @@ contract AirdropFlashClaimReceiver is
 
     /**
      * @notice calculate hash for a flash claim
-     * @param receiver the address initiated the flash claim
+     * @param initiator the address initiated the flash claim
      * @param nftAssets The NFT contract addresses for the airdrop
      * @param nftTokenIds The tokenids for the airdrop
      * @param params The params of the initiated flash claim
      **/
     function getClaimKeyHash(
-        address receiver,
+        address initiator,
         address[] calldata nftAssets,
         uint256[][] calldata nftTokenIds,
         bytes calldata params
     ) public pure returns (bytes32) {
-        return keccak256(abi.encode(receiver, nftAssets, nftTokenIds, params));
+        return keccak256(abi.encode(initiator, nftAssets, nftTokenIds, params));
     }
 }
