@@ -828,7 +828,7 @@ export const proposeSafeTransaction = async (
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce,
+    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
     data,
   };
   const safeTransaction = await safeSdk.createTransaction({
@@ -836,6 +836,8 @@ export const proposeSafeTransaction = async (
   });
   const signature = await safeSdk.signTypedData(safeTransaction);
   safeTransaction.addSignature(signature);
+  const safeHash = await safeSdk.getTransactionHash(safeTransaction);
+  console.log(safeHash);
   await safeService.proposeTransaction({
     safeAddress: MULTI_SIG,
     safeTransactionData: safeTransaction.data,
