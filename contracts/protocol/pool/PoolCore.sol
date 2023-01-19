@@ -50,7 +50,7 @@ contract PoolCore is
 {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 190;
+    uint256 public constant POOL_REVISION = 200;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     function getRevision() internal pure virtual override returns (uint256) {
