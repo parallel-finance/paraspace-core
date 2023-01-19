@@ -10,8 +10,11 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import "../../../interfaces/INTokenApeStaking.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 
 library FlashClaimLogic {
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+
     // See `IPool` for descriptions
     event FlashClaim(
         address indexed target,
@@ -29,23 +32,43 @@ library FlashClaimLogic {
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteFlashClaimParams memory params
     ) external {
-        DataTypes.ReserveData storage reserve = ps._reserves[params.nftAsset];
-        address nTokenAddress = reserve.xTokenAddress;
-        ValidationLogic.validateFlashClaim(ps, params);
+        require(
+            params.receiverAddress != address(0),
+            Errors.ZERO_ADDRESS_NOT_VALID
+        );
+        address[] memory nTokenAddresses = new address[](
+            params.nftAssets.length
+        );
 
+        uint256 index;
         uint256 i;
-        // step 1: moving underlying asset forward to receiver contract
-        for (i = 0; i < params.nftTokenIds.length; i++) {
-            INToken(nTokenAddress).transferUnderlyingTo(
-                params.receiverAddress,
-                params.nftTokenIds[i]
+
+        for (index = 0; index < params.nftAssets.length; index++) {
+            DataTypes.ReserveData storage reserve = ps._reserves[
+                params.nftAssets[index]
+            ];
+            nTokenAddresses[index] = reserve.xTokenAddress;
+
+            ValidationLogic.validateFlashClaim(
+                ps,
+                nTokenAddresses[index],
+                reserve.configuration.getAssetType(),
+                params.nftTokenIds[index]
             );
+
+            // step 1: moving underlying asset forward to receiver contract
+            for (i = 0; i < params.nftTokenIds[index].length; i++) {
+                INToken(nTokenAddresses[index]).transferUnderlyingTo(
+                    params.receiverAddress,
+                    params.nftTokenIds[index][i]
+                );
+            }
         }
 
         // step 2: execute receiver contract, doing something like airdrop
         require(
             IFlashClaimReceiver(params.receiverAddress).executeOperation(
-                params.nftAsset,
+                params.nftAssets,
                 params.nftTokenIds,
                 msg.sender,
                 params.params
@@ -53,20 +76,22 @@ library FlashClaimLogic {
             Errors.INVALID_FLASH_CLAIM_RECEIVER
         );
 
-        // step 3: moving underlying asset backward from receiver contract
-        for (i = 0; i < params.nftTokenIds.length; i++) {
-            IERC721(params.nftAsset).safeTransferFrom(
-                params.receiverAddress,
-                nTokenAddress,
-                params.nftTokenIds[i]
-            );
+        for (index = 0; index < params.nftAssets.length; index++) {
+            // step 3: moving underlying asset backward from receiver contract
+            for (i = 0; i < params.nftTokenIds[index].length; i++) {
+                IERC721(params.nftAssets[index]).safeTransferFrom(
+                    params.receiverAddress,
+                    nTokenAddresses[index],
+                    params.nftTokenIds[index][i]
+                );
 
-            emit FlashClaim(
-                params.receiverAddress,
-                msg.sender,
-                params.nftAsset,
-                params.nftTokenIds[i]
-            );
+                emit FlashClaim(
+                    params.receiverAddress,
+                    msg.sender,
+                    params.nftAssets[index],
+                    params.nftTokenIds[index][i]
+                );
+            }
         }
 
         // step 4: check hf

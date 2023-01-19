@@ -49,6 +49,7 @@ import {splitSignature} from "ethers/lib/utils";
 import blurOrderType from "./blur-helpers/eip-712-types/order";
 import {
   ACLManager__factory,
+  AutoCompoundApe__factory,
   BlurExchange,
   ConduitController,
   ERC20,
@@ -57,10 +58,13 @@ import {
   ERC721__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
+  NToken__factory,
   ParaSpaceOracle__factory,
   PausableZoneController,
   PoolAddressesProvider__factory,
   PoolConfigurator__factory,
+  PoolParameters__factory,
+  PToken__factory,
   ReservesSetupHelper__factory,
   Seaport,
 } from "../types";
@@ -793,6 +797,10 @@ export const decodeInputData = (data: string) => {
     ...MultiSendCallOnly__factory.abi,
     ...ERC20__factory.abi,
     ...ERC721__factory.abi,
+    ...NToken__factory.abi,
+    ...PToken__factory.abi,
+    ...AutoCompoundApe__factory.abi,
+    ...PoolParameters__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
@@ -828,7 +836,7 @@ export const proposeSafeTransaction = async (
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce,
+    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
     data,
   };
   const safeTransaction = await safeSdk.createTransaction({
@@ -836,6 +844,8 @@ export const proposeSafeTransaction = async (
   });
   const signature = await safeSdk.signTypedData(safeTransaction);
   safeTransaction.addSignature(signature);
+  const safeHash = await safeSdk.getTransactionHash(safeTransaction);
+  console.log(safeHash);
   await safeService.proposeTransaction({
     safeAddress: MULTI_SIG,
     safeTransactionData: safeTransaction.data,
