@@ -3,13 +3,17 @@ pragma solidity 0.8.10;
 
 import "./AirdropFlashClaimReceiver.sol";
 import "../interfaces/IUserFlashclaimRegistry.sol";
+import "../../dependencies/openzeppelin/upgradeability/Clones.sol";
 
 contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
-    address public pool;
+    address public immutable pool;
     mapping(address => address) public userReceivers;
 
-    constructor(address pool_) {
+    address public immutable receiverImplementation;
+
+    constructor(address pool_, address receiverImplementation_) {
         pool = pool_;
+        receiverImplementation = receiverImplementation_;
     }
 
     /**
@@ -17,11 +21,11 @@ contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
      */
     function createReceiver() public virtual override {
         address caller = msg.sender;
-        AirdropFlashClaimReceiver receiver = new AirdropFlashClaimReceiver(
-            caller,
-            pool
-        );
-        userReceivers[caller] = address(receiver);
+        address receiverAddress = Clones.clone(receiverImplementation);
+
+        AirdropFlashClaimReceiver(receiverAddress).initialize(msg.sender);
+
+        userReceivers[caller] = receiverAddress;
     }
 
     /**
