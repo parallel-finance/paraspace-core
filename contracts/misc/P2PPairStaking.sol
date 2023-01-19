@@ -24,18 +24,18 @@ contract P2PPairStaking is
     using PercentageMath for uint256;
     using SafeCast for uint256;
 
-    bytes32 public constant LISTING_ORDER_HASH =
-        keccak256(
-            "ListingOrder(uint8 stakingType,address offerer,address token,uint256 tokenId,uint256 share,uint256 startTime,uint256 endTime)"
-        );
-    bytes32 public constant MATCHED_ORDER_HASH =
-        keccak256(
-            "MatchedOrder(uint8 stakingType,address apeToken,uint32 apeTokenId,uint32 apeShare,uint32 bakcTokenId,uint32 bakcShare,address apeCoinOfferer,uint32 apeCoinShare,uint256 apePrincipleAmount)"
-        );
+    //keccak256("ListingOrder(uint8 stakingType,address offerer,address token,uint256 tokenId,uint256 share,uint256 startTime,uint256 endTime)");
+    bytes32 internal constant LISTING_ORDER_HASH =
+        0x227f9dd14259caacdbcf45411b33cf1c018f31bd3da27e613a66edf8ae45814f;
+
+    //keccak256("MatchedOrder(uint8 stakingType,address apeToken,uint32 apeTokenId,uint32 apeShare,uint32 bakcTokenId,uint32 bakcShare,address apeCoinOfferer,uint32 apeCoinShare,uint256 apePrincipleAmount)");
+    bytes32 internal constant MATCHED_ORDER_HASH =
+        0x7db3dae7d89c86e6881a66a131841305c008b207e41ff86a804b4bb056652808;
+
+    //keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"1111111111111);
     bytes32 internal constant EIP712_DOMAIN =
-        keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        );
+        0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
+
     uint256 internal constant WAD = 1e18;
 
     address internal immutable bayc;
@@ -85,8 +85,10 @@ contract P2PPairStaking is
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 EIP712_DOMAIN,
-                keccak256("ParaSpace"),
-                keccak256(bytes("1")),
+                //keccak256("ParaSpace"),
+                0x88d989289235fb06c18e3c2f7ea914f41f773e86fb0073d632539f566f4df353,
+                //keccak256(bytes("1")),
+                0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6,
                 block.chainid,
                 address(this)
             )
@@ -362,7 +364,8 @@ contract P2PPairStaking is
         uint256 _compoundFee = compoundFee;
         uint256 totalReward;
         uint256 totalFeeShare;
-        for (uint256 index = 0; index < orderHashes.length; index++) {
+        uint256 orderCounts = orderHashes.length;
+        for (uint256 index = 0; index < orderCounts; index++) {
             bytes32 orderHash = orderHashes[index];
             (
                 uint256 reward,
