@@ -534,8 +534,8 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function flashClaim(
         address receiverAddress,
-        address nftAsset,
-        uint256[] calldata nftTokenIds,
+        address[] calldata nftAssets,
+        uint256[][] calldata nftTokenIds,
         bytes calldata params
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
@@ -544,7 +544,7 @@ contract PoolCore is
             ps,
             DataTypes.ExecuteFlashClaimParams({
                 receiverAddress: receiverAddress,
-                nftAsset: nftAsset,
+                nftAssets: nftAssets,
                 nftTokenIds: nftTokenIds,
                 params: params,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle()

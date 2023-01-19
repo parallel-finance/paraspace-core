@@ -87,6 +87,8 @@ import {
   MockAggregator__factory,
   MockAirdropProject,
   MockAirdropProject__factory,
+  MockMultiAssetAirdropProject,
+  MockMultiAssetAirdropProject__factory,
   MockAToken,
   MockAToken__factory,
   MockIncentivesController,
@@ -226,6 +228,8 @@ import {
   NTokenBAKC__factory,
   P2PPairStaking__factory,
   P2PPairStaking,
+  AirdropFlashClaimReceiver__factory,
+  AirdropFlashClaimReceiver,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -256,7 +260,7 @@ import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCor
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
 
-import {pick} from "lodash";
+import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {parseEther} from "ethers/lib/utils";
@@ -633,7 +637,7 @@ export const deployAggregator = async (
 ) =>
   withSaveAndVerify(
     new MockAggregator__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [price],
     verify
   ) as Promise<MockAggregator>;
@@ -1299,7 +1303,7 @@ export const deployERC721OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new ERC721OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721OracleWrapper>;
@@ -1630,7 +1634,7 @@ export const deployUniswapV3OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new UniswapV3OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${eContractid.UniswapV3}`),
+    eContractid.Aggregator.concat(upperFirst(eContractid.UniswapV3)),
     [factory, manager, addressProvider],
     verify
   ) as Promise<UniswapV3OracleWrapper>;
@@ -1723,14 +1727,44 @@ export const deployPTokenSApe = async (
 
 export const deployUserFlashClaimRegistry = async (
   poolAddress: tEthereumAddress,
+  receiverImpl: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new UserFlashclaimRegistry__factory(await getFirstSigner()),
     eContractid.FlashClaimRegistry,
-    [poolAddress],
+    [poolAddress, receiverImpl],
     verify
   ) as Promise<UserFlashclaimRegistry>;
+
+export const deployUserFlashClaimRegistryProxy = async (
+  admin: string,
+  registryImpl: string,
+  initData: any,
+  verify?: boolean
+) => {
+  const proxy = new InitializableImmutableAdminUpgradeabilityProxy__factory(
+    await getFirstSigner()
+  );
+  return withSaveAndVerify(
+    proxy,
+    eContractid.UserFlashClaimRegistryProxy,
+    [admin, registryImpl, initData],
+    verify,
+    true
+  ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+};
+
+export const deployAirdropFlashClaimReceiver = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AirdropFlashClaimReceiver__factory(await getFirstSigner()),
+    eContractid.AirdropFlashClaimReceiver,
+    [poolAddress],
+    verify
+  ) as Promise<AirdropFlashClaimReceiver>;
 
 export const deployMockAirdropProject = async (
   underlyingAddress: tEthereumAddress,
@@ -1742,6 +1776,18 @@ export const deployMockAirdropProject = async (
     [underlyingAddress],
     verify
   ) as Promise<MockAirdropProject>;
+
+export const deployMockMultiAssetAirdropProject = async (
+  underlyingAddress1: tEthereumAddress,
+  underlyingAddress2: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new MockMultiAssetAirdropProject__factory(await getFirstSigner()),
+    eContractid.MockMultiAssetAirdropProject,
+    [underlyingAddress1, underlyingAddress2],
+    verify
+  ) as Promise<MockMultiAssetAirdropProject>;
 
 export const deployApeCoinStaking = async (verify?: boolean) => {
   const allTokens = await getAllTokens();

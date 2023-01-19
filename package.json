@@ -1,6 +1,6 @@
 {
   "name": "@paraspace/core-v1",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "description": "ParaSpace Protocol V1 core smart contracts",
   "files": [
     "contracts",
@@ -36,6 +36,7 @@
     "@safe-global/safe-core-sdk": "^3.2.0",
     "@safe-global/safe-core-sdk-types": "^1.7.0",
     "@safe-global/safe-ethers-lib": "^1.7.0",
+    "@safe-global/safe-service-client": "^1.5.0",
     "@tenderly/hardhat-tenderly": "1.1.0-beta.5",
     "@typechain/ethers-v5": "^10.1.0",
     "@typechain/hardhat": "^6.1.2",
@@ -58,6 +59,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eth-sig-util": "2.5.3",
+    "ethereum-input-data-decoder": "^0.4.2",
     "ethereum-waffle": "3.2.0",
     "ethereumjs-util": "7.0.2",
     "ethers": "5.7.2",

@@ -19,7 +19,14 @@ export enum AssetType {
 
 export enum DryRunExecutor {
   TimeLock = "TimeLock",
+  Safe = "Safe",
   None = "",
+}
+
+export enum TimeLockOperation {
+  Queue = "queue",
+  Execute = "execute",
+  Cancel = "cancel",
 }
 
 export enum XTokenType {
@@ -120,6 +127,8 @@ export enum eContractid {
   PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
+  UserFlashClaimRegistryProxy = "UserFlashClaimRegistryProxy",
+  AirdropFlashClaimReceiver = "AirdropFlashClaimReceiver",
   ProtocolDataProvider = "ProtocolDataProvider",
   MockPToken = "MockPToken",
   MockNToken = "MockNToken",
@@ -221,6 +230,7 @@ export enum eContractid {
   P2PPairStakingImpl = "P2PPairStakingImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
+  MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
 }
 
 /*

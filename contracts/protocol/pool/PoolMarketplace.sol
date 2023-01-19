@@ -77,10 +77,10 @@ contract PoolMarketplace is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         MarketplaceLogic.executeBuyWithCredit(
+            ps,
             marketplaceId,
             payload,
             credit,
-            ps,
             ADDRESSES_PROVIDER,
             referralCode
         );
@@ -96,10 +96,10 @@ contract PoolMarketplace is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         MarketplaceLogic.executeBatchBuyWithCredit(
+            ps,
             marketplaceIds,
             payloads,
             credits,
-            ps,
             ADDRESSES_PROVIDER,
             referralCode
         );
@@ -116,11 +116,11 @@ contract PoolMarketplace is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         MarketplaceLogic.executeAcceptBidWithCredit(
+            ps,
             marketplaceId,
             payload,
             credit,
             onBehalfOf,
-            ps,
             ADDRESSES_PROVIDER,
             referralCode
         );
@@ -137,11 +137,11 @@ contract PoolMarketplace is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         MarketplaceLogic.executeBatchAcceptBidWithCredit(
+            ps,
             marketplaceIds,
             payloads,
             credits,
             onBehalfOf,
-            ps,
             ADDRESSES_PROVIDER,
             referralCode
         );
