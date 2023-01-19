@@ -1,7 +1,11 @@
 import {BigNumber} from "ethers";
 import {task} from "hardhat/config";
-import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {waitForTx} from "../../helpers/misc-utils";
+import {
+  DRY_RUN,
+  GLOBAL_OVERRIDES,
+  TIME_LOCK_BUFFERING_TIME,
+} from "../../helpers/hardhat-constants";
+import {increaseTime, waitForTx} from "../../helpers/misc-utils";
 
 task("next-execution-time", "Next valid execution time").setAction(
   async (_, DRE) => {
@@ -9,6 +13,18 @@ task("next-execution-time", "Next valid execution time").setAction(
     const {getExecutionTime} = await import("../../helpers/contracts-helpers");
     const executionTime = await getExecutionTime();
     console.log("executionTime:", executionTime);
+  }
+);
+
+task("increase-to-execution-time", "Increase time to execution time").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const delay = await timeLock.getDelay();
+    await increaseTime(delay.add(TIME_LOCK_BUFFERING_TIME).toNumber());
   }
 );
 
