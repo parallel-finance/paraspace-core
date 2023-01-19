@@ -1736,7 +1736,7 @@ export const deployUserFlashClaimRegistry = async (
 export const deployUserFlashClaimRegistryProxy = async (
   admin: string,
   registryImpl: string,
-  initData: string,
+  initData: any,
   verify?: boolean
 ) => {
   const proxy = new InitializableImmutableAdminUpgradeabilityProxy__factory(
