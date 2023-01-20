@@ -596,8 +596,8 @@ contract PoolApeStaking is
                 localVar.cApeRepayAmounts[i],
                 localVar.apeRepayAmounts[i]
             ) = _getCApeAndApeRepayAmounts(
-                localVar.apeVariableDebtAddress,
                 localVar.cApeVariableDebtAddress,
+                localVar.apeVariableDebtAddress,
                 user,
                 localVar.amounts[i] - localVar.swapAmounts[i]
             );
@@ -633,8 +633,8 @@ contract PoolApeStaking is
                 localVar.cApeRepayAmounts[i],
                 localVar.apeRepayAmounts[i]
             ) = _getCApeAndApeRepayAmounts(
-                localVar.apeVariableDebtAddress,
                 localVar.cApeVariableDebtAddress,
+                localVar.apeVariableDebtAddress,
                 user,
                 localVar.amounts[i]
             );
@@ -649,11 +649,11 @@ contract PoolApeStaking is
     }
 
     function _getCApeAndApeRepayAmounts(
-        address apeVariableDebtAddress,
         address cApeVariableDebtAddress,
+        address apeVariableDebtAddress,
         address user,
         uint256 amount
-    ) internal view returns (uint256 apeRepayAmount, uint256 cApeRepayAmount) {
+    ) internal view returns (uint256 cApeRepayAmount, uint256 apeRepayAmount) {
         cApeRepayAmount = Math.min(
             IERC20(cApeVariableDebtAddress).balanceOf(user),
             amount
