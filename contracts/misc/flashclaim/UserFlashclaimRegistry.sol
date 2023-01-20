@@ -4,21 +4,16 @@ pragma solidity 0.8.10;
 import "./AirdropFlashClaimReceiver.sol";
 import "../interfaces/IUserFlashclaimRegistry.sol";
 import "../../dependencies/openzeppelin/upgradeability/Clones.sol";
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 
-contract UserFlashclaimRegistry is Initializable, IUserFlashclaimRegistry {
+contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
     address public immutable pool;
-    address public immutable receiverImplementation;
-
     mapping(address => address) public userReceivers;
+
+    address public immutable receiverImplementation;
 
     constructor(address pool_, address receiverImplementation_) {
         pool = pool_;
         receiverImplementation = receiverImplementation_;
-    }
-
-    function initialize() public initializer {
-        //
     }
 
     /**
