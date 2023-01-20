@@ -922,7 +922,7 @@ describe("APE Coin Staking Test", () => {
     expect(apeDebt.lt(limit)).equal(true);
   });
 
-  it("TC-pool-ape-staking-15 test unstakeApePositionAndRepay repays ape debt and repay cApe debt", async () => {
+  it("TC-pool-ape-staking-15 test unstakeApePositionAndRepay repays cape debt and repay ape debt", async () => {
     const {
       users: [user1, user2],
       ape,
@@ -995,10 +995,10 @@ describe("APE Coin Staking Test", () => {
     const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
     expect(pSApeBalance).equal(0);
 
-    apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
-    expect(apeDebt).equal(0);
-
     capeDebt = await variableDebtCApeCoin.balanceOf(user1.address);
+    expect(capeDebt).equal(0);
+
+    apeDebt = await variableDebtApeCoin.balanceOf(user1.address);
     expect(capeDebt.lt(parseEther("1"))).to.be.true;
   });
 

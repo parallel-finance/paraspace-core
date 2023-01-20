@@ -471,7 +471,7 @@ contract PoolApeStaking is
                 address(this)
             );
 
-            _addCompoundUserToCache(ps, localVar, i, users[i]);
+            _addUserToCompoundCache(ps, localVar, i, users[i]);
         }
 
         _compoundForUsers(ps, localVar, users);
@@ -530,7 +530,7 @@ contract PoolApeStaking is
                 );
             }
 
-            _addCompoundUserToCache(ps, localVar, i, users[i]);
+            _addUserToCompoundCache(ps, localVar, i, users[i]);
         }
 
         _compoundForUsers(ps, localVar, users);
@@ -570,7 +570,7 @@ contract PoolApeStaking is
         localVar.tokenOuts = new address[](numUsers);
     }
 
-    function _addCompoundUserToCache(
+    function _addUserToCompoundCache(
         DataTypes.PoolStorage storage ps,
         ApeStakingLocalVars memory localVar,
         uint256 i,
