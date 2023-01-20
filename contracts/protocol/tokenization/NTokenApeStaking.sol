@@ -49,8 +49,22 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         bytes calldata params
     ) public virtual override initializer {
         IERC20 _apeCoin = _apeCoinStaking.apeCoin();
-        _apeCoin.approve(address(_apeCoinStaking), type(uint256).max);
-        _apeCoin.approve(address(POOL), type(uint256).max);
+        //approve for apeCoinStaking
+        uint256 allowance = IERC20(_apeCoin).allowance(
+            address(this),
+            address(_apeCoinStaking)
+        );
+        if (allowance == 0) {
+            IERC20(_apeCoin).approve(
+                address(_apeCoinStaking),
+                type(uint256).max
+            );
+        }
+        //approve for Pool contract
+        allowance = IERC20(_apeCoin).allowance(address(this), address(POOL));
+        if (allowance == 0) {
+            IERC20(_apeCoin).approve(address(POOL), type(uint256).max);
+        }
         getBAKC().setApprovalForAll(address(POOL), true);
 
         super.initialize(
