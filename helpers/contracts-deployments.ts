@@ -375,27 +375,27 @@ export const deployPoolLogic = async (verify?: boolean) =>
 export const deployPoolCoreLibraries = async (
   verify?: boolean
 ): Promise<PoolCoreLibraryAddresses> => {
-  const supplyLogic = await deploySupplyLogic(verify);
-  const borrowLogic = await deployBorrowLogic(verify);
-  const auctionLogic = await deployAuctionLogic(verify);
-  const liquidationLogic = await deployLiquidationLogic(
-    {
-      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
-        supplyLogic.address,
-    },
-    verify
-  );
+  // const supplyLogic = await deploySupplyLogic(verify);
+  // const borrowLogic = await deployBorrowLogic(verify);
+  // const auctionLogic = await deployAuctionLogic(verify);
+  // const liquidationLogic = await deployLiquidationLogic(
+  //   {
+  //     ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+  //       supplyLogic.address,
+  //   },
+  //   verify
+  // );
   const flashClaimLogic = await deployFlashClaimLogic(verify);
 
   return {
     ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]:
-      auctionLogic.address,
+      "0x94E3e8bBf8d2B7ef609aD937979307489ad4E38e",
     ["contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic"]:
-      liquidationLogic.address,
+      "0x042BEcf5F4E68255Ac00074742Bd669fcEb0b23F",
     ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
-      supplyLogic.address,
+      "0xeC2C5d6B97Bf930ea687E7B29D487cb7562660Be",
     ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
-      borrowLogic.address,
+      "0xf3Cc33c6133410Ebc08f832D85688dd1F834Dd75",
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
       flashClaimLogic.address,
   };
