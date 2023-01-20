@@ -853,6 +853,9 @@ contract PoolApeStaking is
         address onBehalfOf,
         uint256 amount
     ) internal {
+        if (amount == 0) {
+            return;
+        }
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
             onBehalfOf
         ];
@@ -880,19 +883,18 @@ contract PoolApeStaking is
         address asset,
         address payer,
         address onBehalfOf,
-        uint256 repayAmount
+        uint256 amount
     ) internal returns (uint256) {
-        if (repayAmount == 0) {
+        if (amount == 0) {
             return 0;
         }
-
         return
             BorrowLogic.executeRepay(
                 ps._reserves,
                 ps._usersConfig[onBehalfOf],
                 DataTypes.ExecuteRepayParams({
                     asset: asset,
-                    amount: repayAmount,
+                    amount: amount,
                     onBehalfOf: onBehalfOf,
                     payer: payer,
                     usePTokens: false
