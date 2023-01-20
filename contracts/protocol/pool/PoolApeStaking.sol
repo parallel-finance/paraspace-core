@@ -62,6 +62,7 @@ contract PoolApeStaking is
         uint256 balanceBefore;
         uint256 balanceAfter;
         uint256[] amounts;
+        uint256[] swapAmounts;
         uint256[] cApeRepayAmounts;
         uint256[] apeRepayAmounts;
         address[] transferredTokenOwners;
@@ -71,7 +72,9 @@ contract PoolApeStaking is
         address apeVariableDebtAddress;
         address cApeVariableDebtAddress;
         uint256 compoundFee;
-        bool hasSwap;
+        address[] tokenOuts;
+        uint256 usdcApePrice;
+        uint256 wethApePrice;
     }
 
     /**
@@ -554,6 +557,7 @@ contract PoolApeStaking is
         localVar = _generalCache(ps, nftAsset);
         localVar.balanceBefore = APE_COIN.balanceOf(address(this));
         localVar.amounts = new uint256[](numUsers);
+        localVar.swapAmounts = new uint256[](numUsers);
         localVar.apeRepayAmounts = new uint256[](numUsers);
         localVar.options = new DataTypes.ApeCompoundStrategy[](numUsers);
         localVar.apeVariableDebtAddress = ps
@@ -563,6 +567,7 @@ contract PoolApeStaking is
             ._reserves[address(APE_COMPOUND)]
             .variableDebtTokenAddress;
         localVar.compoundFee = ps._apeCompoundFee;
+        localVar.tokenOuts = new address[](numUsers);
     }
 
     function _addCompoundUserToCache(
@@ -583,10 +588,10 @@ contract PoolApeStaking is
         }
 
         if (localVar.options[i].ty == DataTypes.ApeCompoundType.SwapAndSupply) {
-            uint256 swapAmount = localVar.amounts[i].percentMul(
+            localVar.swapAmounts[i] = localVar.amounts[i].percentMul(
                 localVar.options[i].swapPercent
             );
-            localVar.totalNonDepositAmount += swapAmount;
+            localVar.totalNonDepositAmount += localVar.swapAmounts[i];
             (
                 localVar.cApeRepayAmounts[i],
                 localVar.apeRepayAmounts[i]
@@ -594,10 +599,33 @@ contract PoolApeStaking is
                 localVar.apeVariableDebtAddress,
                 localVar.cApeVariableDebtAddress,
                 user,
-                localVar.amounts[i] - swapAmount
+                localVar.amounts[i] - localVar.swapAmounts[i]
             );
             localVar.totalNonDepositAmount += localVar.apeRepayAmounts[i];
-            localVar.hasSwap = true;
+            if (
+                localVar.options[i].swapTokenOut ==
+                DataTypes.ApeCompoundTokenOut.USDC
+            ) {
+                localVar.tokenOuts[i] = address(USDC);
+                if (localVar.usdcApePrice == 0) {
+                    localVar.usdcApePrice = _getApeRelativePrice(
+                        localVar.tokenOuts[i],
+                        1E6
+                    );
+                }
+            }
+            if (
+                localVar.options[i].swapTokenOut ==
+                DataTypes.ApeCompoundTokenOut.WETH
+            ) {
+                localVar.tokenOuts[i] = ADDRESSES_PROVIDER.getWETH();
+                if (localVar.wethApePrice == 0) {
+                    localVar.wethApePrice = _getApeRelativePrice(
+                        localVar.tokenOuts[i],
+                        1E18
+                    );
+                }
+            }
         } else if (
             localVar.options[i].ty == DataTypes.ApeCompoundType.RepayAndSupply
         ) {
@@ -696,17 +724,8 @@ contract PoolApeStaking is
     ) internal {
         _depositApeAndPayFees(localVar);
 
-        address weth = ADDRESSES_PROVIDER.getWETH();
-        uint256 usdcApePrice = localVar.hasSwap
-            ? _getApeRelativePrice(address(USDC), 1E6)
-            : 0;
-        uint256 wethApePrice = localVar.hasSwap
-            ? _getApeRelativePrice(weth, 1E18)
-            : 0;
-
         for (uint256 index = 0; index < users.length; index++) {
-            uint256 amount = localVar.amounts[index];
-            if (amount == 0) {
+            if (localVar.amounts[index] == 0) {
                 continue;
             }
             if (
@@ -721,7 +740,7 @@ contract PoolApeStaking is
                     localVar.cApeRepayAmounts[index],
                     address(this),
                     users[index],
-                    amount
+                    localVar.amounts[index]
                 );
             } else if (
                 localVar.options[index].ty == DataTypes.ApeCompoundType.Supply
@@ -731,36 +750,27 @@ contract PoolApeStaking is
                     address(APE_COMPOUND),
                     address(this),
                     users[index],
-                    amount
+                    localVar.amounts[index]
                 );
             } else {
-                uint256 swapAmount = amount.percentMul(
-                    localVar.options[index].swapPercent
+                uint256 price = localVar.options[index].swapTokenOut ==
+                    DataTypes.ApeCompoundTokenOut.USDC
+                    ? localVar.usdcApePrice
+                    : localVar.wethApePrice;
+                uint256 amountOut = _swapExactTokensForTokens(
+                    localVar.tokenOuts[index],
+                    localVar.swapAmounts[index],
+                    address(this),
+                    price
                 );
-                {
-                    address tokenOut = localVar.options[index].swapTokenOut ==
-                        DataTypes.ApeCompoundTokenOut.USDC
-                        ? address(USDC)
-                        : weth;
-                    uint256 price = localVar.options[index].swapTokenOut ==
-                        DataTypes.ApeCompoundTokenOut.USDC
-                        ? usdcApePrice
-                        : wethApePrice;
-                    uint256 amountOut = _swapExactTokensForTokens(
-                        tokenOut,
-                        swapAmount,
-                        address(this),
-                        price
-                    );
-                    _supplyForUser(
-                        ps,
-                        tokenOut,
-                        address(this),
-                        users[index],
-                        amountOut
-                    );
-                }
-                if (swapAmount == amount) {
+                _supplyForUser(
+                    ps,
+                    localVar.tokenOuts[index],
+                    address(this),
+                    users[index],
+                    amountOut
+                );
+                if (localVar.amounts[index] == localVar.swapAmounts[index]) {
                     continue;
                 }
                 _repayTwoAndSupplyForUser(
@@ -771,7 +781,7 @@ contract PoolApeStaking is
                     localVar.cApeRepayAmounts[index],
                     address(this),
                     users[index],
-                    amount - swapAmount
+                    localVar.amounts[index] - localVar.swapAmounts[index]
                 );
             }
         }
