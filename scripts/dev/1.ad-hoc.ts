@@ -10,8 +10,7 @@ const adHoc = async () => {
   console.time("ad-hoc");
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
-  const userRegistry = await getUserFlashClaimRegistry();
-  await userRegistry.connect(deployer).createReceiver();
+  await getUserFlashClaimRegistry();
 
   const passFactory = new BAYCSewerPass__factory(deployer);
 
