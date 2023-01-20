@@ -8,16 +8,17 @@ import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 
 contract UserFlashclaimRegistry is Initializable, IUserFlashclaimRegistry {
     address public immutable pool;
+    address public immutable receiverImplementation;
 
     mapping(address => address) public userReceivers;
-    address public receiverImplementation;
 
-    constructor(address pool_) {
+    constructor(address pool_, address receiverImplementation_) {
         pool = pool_;
+        receiverImplementation = receiverImplementation_;
     }
 
-    function initialize(address receiverImplementation_) public initializer {
-        receiverImplementation = receiverImplementation_;
+    function initialize() public initializer {
+        //
     }
 
     /**
