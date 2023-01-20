@@ -410,6 +410,10 @@ set-auto-mining:
 send-eth:
 	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
 
+.PHONY: release-flashclaim
+release-flashclaim:
+	make SCRIPT_PATH=./scripts/dev/11.release-flashclaim.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run

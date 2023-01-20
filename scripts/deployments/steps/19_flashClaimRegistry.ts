@@ -1,5 +1,4 @@
 import {
-  deployUserFlashClaimRegistry,
   deployMockAirdropProject,
   deployMockMultiAssetAirdropProject,
   deployAirdropFlashClaimReceiver,
@@ -25,16 +24,10 @@ export const step_19 = async (verify = false) => {
       verify
     );
 
-    const registry = await deployUserFlashClaimRegistry(
-      poolAddress,
-      receiverImpl.address,
-      verify
-    );
-
     await deployUserFlashClaimRegistryProxy(
       deployerAddress,
-      registry.address,
-      []
+      receiverImpl.address,
+      verify
     );
 
     if (!isLocalTestnet() && !isPublicTestnet()) {

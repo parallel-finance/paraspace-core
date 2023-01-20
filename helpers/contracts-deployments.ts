@@ -1723,32 +1723,43 @@ export const deployPTokenSApe = async (
 
 export const deployUserFlashClaimRegistry = async (
   poolAddress: tEthereumAddress,
-  receiverImpl: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new UserFlashclaimRegistry__factory(await getFirstSigner()),
     eContractid.FlashClaimRegistry,
-    [poolAddress, receiverImpl],
+    [poolAddress],
     verify
   ) as Promise<UserFlashclaimRegistry>;
 
 export const deployUserFlashClaimRegistryProxy = async (
-  admin: string,
-  registryImpl: string,
-  initData: any,
+  poolAddress: string,
+  receiverImpl: string,
   verify?: boolean
 ) => {
-  const proxy = new InitializableImmutableAdminUpgradeabilityProxy__factory(
-    await getFirstSigner()
-  );
-  return withSaveAndVerify(
-    proxy,
+  const registryImpl = await deployUserFlashClaimRegistry(poolAddress, verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = registryImpl.interface.encodeFunctionData("initialize", [
+    receiverImpl,
+  ]);
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
     eContractid.UserFlashClaimRegistryProxy,
-    [admin, registryImpl, initData],
-    verify,
-    true
-  ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](registryImpl.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as UserFlashclaimRegistry;
 };
 
 export const deployAirdropFlashClaimReceiver = async (
