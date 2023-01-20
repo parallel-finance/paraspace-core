@@ -391,6 +391,7 @@ describe("APE Coin Staking Test", () => {
 
   it("claimApeAndCompound function work as expected 1", async () => {
     const {
+      pUsdc,
       usdc,
       users: [user1, user2, user3],
       mayc,
@@ -539,7 +540,7 @@ describe("APE Coin Staking Test", () => {
     almostEqual(user3Balance, parseEther("1025.48571"));
 
     almostEqual(
-      await usdc.balanceOf(user3.address),
+      await pUsdc.balanceOf(user3.address),
       await convertToCurrencyDecimals(usdc.address, "4075.394024")
     );
 

@@ -559,6 +559,7 @@ contract PoolApeStaking is
         localVar.amounts = new uint256[](numUsers);
         localVar.swapAmounts = new uint256[](numUsers);
         localVar.apeRepayAmounts = new uint256[](numUsers);
+        localVar.cApeRepayAmounts = new uint256[](numUsers);
         localVar.options = new DataTypes.ApeCompoundStrategy[](numUsers);
         localVar.apeVariableDebtAddress = ps
             ._reserves[address(APE_COIN)]
