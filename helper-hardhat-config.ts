@@ -75,7 +75,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
 };
 
 export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
-  [eEthereumNetwork.mainnet]: 16430924,
+  [eEthereumNetwork.mainnet]: 16446594,
   [eEthereumNetwork.kovan]: undefined,
   [eEthereumNetwork.ropsten]: undefined,
   [eEthereumNetwork.goerli]: 8336130,
