@@ -188,6 +188,15 @@ library DataTypes {
         address oracle;
     }
 
+    struct ExecuteCollectAndSupplyUniswapV3FeesParams {
+        address asset;
+        uint256 tokenId;
+        uint256 reservesCount;
+        uint256 amount0;
+        uint256 amount1;
+        address oracle;
+    }
+
     struct FinalizeTransferParams {
         address asset;
         address from;

@@ -9,6 +9,7 @@ import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
+import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {NToken} from "./NToken.sol";
@@ -17,6 +18,7 @@ import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungib
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
+import {IUniswapV3OracleWrapper} from "../../interfaces/IUniswapV3OracleWrapper.sol";
 
 /**
  * @title UniswapV3 NToken
@@ -25,6 +27,12 @@ import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
  */
 contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
     using SafeERC20 for IERC20;
+    using PercentageMath for uint256;
+
+    bytes32 constant UNISWAPV3_DATA_STORAGE_POSITION =
+        bytes32(
+            uint256(keccak256("paraspace.proxy.ntoken.uniswapv3.storage")) - 1
+        );
 
     /**
      * @dev Constructor.
@@ -32,6 +40,10 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      */
     constructor(IPool pool) NToken(pool, true) {
         _ERC721Data.balanceLimit = 30;
+    }
+
+    struct UniswapV3Storage {
+        uint256 compoundIncentive;
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
@@ -139,6 +151,134 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             amount1Min,
             receiveEthAsWeth
         );
+    }
+
+    function setCompoundIncentive(uint256 incentive) external onlyPoolAdmin {
+        UniswapV3Storage storage uniV3Storage = uinswapV3DataStorage();
+
+        uniV3Storage.compoundIncentive = incentive;
+    }
+
+    function uinswapV3DataStorage()
+        internal
+        pure
+        returns (UniswapV3Storage storage rgs)
+    {
+        bytes32 position = UNISWAPV3_DATA_STORAGE_POSITION;
+        assembly {
+            rgs.slot := position
+        }
+    }
+
+    function collectSupplyUniswapV3Fees(
+        address user,
+        uint256 tokenId,
+        address incentiveReceiver
+    ) external onlyPool nonReentrant {
+        require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+
+        (
+            ,
+            ,
+            address token0,
+            address token1,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+
+        ) = INonfungiblePositionManager(_underlyingAsset).positions(tokenId);
+
+        uint256 token0BalanceBefore = IERC20(token0).balanceOf(address(this));
+        uint256 token1BalanceBefore = IERC20(token1).balanceOf(address(this));
+
+        INonfungiblePositionManager.CollectParams
+            memory collectParams = INonfungiblePositionManager.CollectParams({
+                tokenId: tokenId,
+                recipient: address(this),
+                amount0Max: type(uint128).max,
+                amount1Max: type(uint128).max
+            });
+
+        (uint256 amount0, uint256 amount1) = INonfungiblePositionManager(
+            _underlyingAsset
+        ).collect(collectParams);
+
+        if (incentiveReceiver != address(0)) {
+            UniswapV3Storage storage uniV3Storage = uinswapV3DataStorage();
+
+            uint256 compoundIncentive = uniV3Storage.compoundIncentive;
+
+            if (compoundIncentive > 0) {
+                if (amount0 > 0) {
+                    uint256 incentiveAmount0 = amount0.percentMul(
+                        compoundIncentive
+                    );
+
+                    IERC20(token0).safeTransfer(
+                        incentiveReceiver,
+                        incentiveAmount0
+                    );
+                    amount0 = amount0 - incentiveAmount0;
+                }
+
+                if (amount1 > 0) {
+                    uint256 incentiveAmount1 = amount1.percentMul(
+                        compoundIncentive
+                    );
+
+                    IERC20(token1).safeTransfer(
+                        incentiveReceiver,
+                        incentiveAmount1
+                    );
+                    amount1 = amount1 - incentiveAmount1;
+                }
+            }
+        }
+
+        INonfungiblePositionManager.IncreaseLiquidityParams
+            memory params = INonfungiblePositionManager
+                .IncreaseLiquidityParams({
+                    tokenId: tokenId,
+                    amount0Desired: amount0,
+                    amount1Desired: amount1,
+                    amount0Min: 0,
+                    amount1Min: 0,
+                    deadline: block.timestamp
+                });
+
+        INonfungiblePositionManager(_underlyingAsset).increaseLiquidity(params);
+
+        if (amount0 > 0) {
+            uint256 token0BalanceAfter = IERC20(token0).balanceOf(
+                address(this)
+            );
+            if (token0BalanceAfter > token0BalanceBefore) {
+                POOL.supply(
+                    token0,
+                    token0BalanceAfter - token0BalanceBefore,
+                    user,
+                    0x0
+                );
+            }
+        }
+
+        if (amount1 > 0) {
+            uint256 token1BalanceAfter = IERC20(token1).balanceOf(
+                address(this)
+            );
+            if (token1BalanceAfter > token1BalanceBefore) {
+                POOL.supply(
+                    token1,
+                    token1BalanceAfter - token1BalanceBefore,
+                    user,
+                    0x0
+                );
+            }
+        }
     }
 
     function _safeTransferETH(address to, uint256 value) internal {

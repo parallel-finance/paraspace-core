@@ -234,6 +234,30 @@ contract PoolCore is
             );
     }
 
+    function collectSupplyUniswapV3Fees(
+        address asset,
+        uint256 tokenId,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) external virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        return
+            SupplyLogic.executeCollectSupplyUniswapV3Fees(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
+                DataTypes.ExecuteCollectAndSupplyUniswapV3FeesParams({
+                    asset: asset,
+                    tokenId: tokenId,
+                    reservesCount: ps._reservesCount,
+                    amount0: amount0Min,
+                    amount1: amount1Min,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                })
+            );
+    }
+
     function decreaseUniswapV3Liquidity(
         address asset,
         uint256 tokenId,

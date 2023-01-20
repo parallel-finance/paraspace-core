@@ -20,4 +20,10 @@ interface INTokenUniswapV3 {
         uint256 amount1Min,
         bool receiveEthAsWeth
     ) external;
+
+    function collectSupplyUniswapV3Fees(
+        address user,
+        uint256 tokenId,
+        address incentiveReceiver
+    ) external;
 }

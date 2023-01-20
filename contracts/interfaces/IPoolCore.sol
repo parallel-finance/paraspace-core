@@ -318,6 +318,13 @@ interface IPoolCore {
         bool receiveEthAsWeth
     ) external;
 
+    function collectSupplyUniswapV3Fees(
+        address asset,
+        uint256 tokenId,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) external;
+
     /**
      * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
      * already supplied enough collateral, or he was given enough allowance by a credit delegator on the
