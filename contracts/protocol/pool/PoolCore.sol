@@ -238,6 +238,7 @@ contract PoolCore is
         address asset,
         uint256 tokenId
     ) external virtual override {
+        // we need re-entrancy here. might need to create a special supplyERC20 from NToken as a workaround
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return

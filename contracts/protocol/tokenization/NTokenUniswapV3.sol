@@ -53,12 +53,24 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         string calldata nTokenSymbol,
         bytes calldata params
     ) public virtual override initializer {
-        super.initialize(initializingPool, underlyingAsset, incentivesController, nTokenName, nTokenSymbol, params);
+        super.initialize(
+            initializingPool,
+            underlyingAsset,
+            incentivesController,
+            nTokenName,
+            nTokenSymbol,
+            params
+        );
         address[] memory reserveList = POOL.getReservesList();
         for (uint256 index = 0; index < reserveList.length; index++) {
-            DataTypes.ReserveConfigurationMap memory poolConfiguration = POOL.getReserveData(reserveList[index]).configuration;
+            DataTypes.ReserveConfigurationMap memory poolConfiguration = POOL
+                .getReserveData(reserveList[index])
+                .configuration;
             if (poolConfiguration.getAssetType() == DataTypes.AssetType.ERC20) {
-                IERC20(reserveList[index]).approve(_underlyingAsset, type(uint128).max);
+                IERC20(reserveList[index]).approve(
+                    _underlyingAsset,
+                    type(uint128).max
+                );
             }
         }
     }
@@ -196,8 +208,6 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         uint256 tokenId,
         address incentiveReceiver
     ) external onlyPool nonReentrant {
-        require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
-
         (
             ,
             ,
