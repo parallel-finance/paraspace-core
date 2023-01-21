@@ -71,6 +71,10 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                     _underlyingAsset,
                     type(uint128).max
                 );
+                IERC20(reserveList[index]).approve(
+                    address(POOL),
+                    type(uint128).max
+                );
             }
         }
     }

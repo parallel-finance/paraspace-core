@@ -274,6 +274,61 @@ describe("Uniswap V3 NFT position control", () => {
     almostEqual(afterLiquidity, beforeLiquidity.div(2));
   });
 
+  it("collect fee and autocompound[ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1, trader],
+      dai,
+      weth,
+      nftPositionManager,
+      pool,
+    } = testEnv;
+
+    const traderDaiAmount = await convertToCurrencyDecimals(
+      dai.address,
+      "10000"
+    );
+    await fund({token: dai, user: trader, amount: traderDaiAmount});
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "1");
+
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    await approveSwapRouter({token: weth, user: trader});
+
+    await approveSwapRouter({token: dai, user: trader});
+
+    const fee = 3000;
+    await swapToken({
+      tokenIn: dai,
+      tokenOut: weth,
+      fee,
+      amountIn: traderDaiAmount,
+      trader,
+      zeroForOne: true,
+    });
+
+    await swapToken({
+      tokenIn: weth,
+      tokenOut: dai,
+      fee,
+      amountIn: userWethAmount.div(1000),
+      trader,
+      zeroForOne: false,
+    });
+
+    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .collectCompoundAndSupplyUniswapV3Fees(nftPositionManager.address, 1, {
+          gasLimit: 12_450_000,
+        })
+    );
+
+    const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
+
+    expect(afterLiquidity).to.be.gt(beforeLiquidity);
+  });
+
   it("collect fee by decreaseLiquidity by NTokenUniswapV3 [ @skip-on-coverage ]", async () => {
     const {
       users: [user1, trader],
