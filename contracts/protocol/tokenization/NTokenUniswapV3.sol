@@ -19,6 +19,8 @@ import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
 import {IUniswapV3OracleWrapper} from "../../interfaces/IUniswapV3OracleWrapper.sol";
+import {IRewardController} from "../../interfaces/IRewardController.sol";
+import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
 
 /**
  * @title UniswapV3 NToken
@@ -28,6 +30,7 @@ import {IUniswapV3OracleWrapper} from "../../interfaces/IUniswapV3OracleWrapper.
 contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
     using SafeERC20 for IERC20;
     using PercentageMath for uint256;
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
     bytes32 constant UNISWAPV3_DATA_STORAGE_POSITION =
         bytes32(
@@ -40,6 +43,24 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      */
     constructor(IPool pool) NToken(pool, true) {
         _ERC721Data.balanceLimit = 30;
+    }
+
+    function initialize(
+        IPool initializingPool,
+        address underlyingAsset,
+        IRewardController incentivesController,
+        string calldata nTokenName,
+        string calldata nTokenSymbol,
+        bytes calldata params
+    ) public virtual override initializer {
+        super.initialize(initializingPool, underlyingAsset, incentivesController, nTokenName, nTokenSymbol, params);
+        address[] memory reserveList = POOL.getReservesList();
+        for (uint256 index = 0; index < reserveList.length; index++) {
+            DataTypes.ReserveConfigurationMap memory poolConfiguration = POOL.getReserveData(reserveList[index]).configuration;
+            if (poolConfiguration.getAssetType() == DataTypes.AssetType.ERC20) {
+                IERC20(reserveList[index]).approve(_underlyingAsset, type(uint128).max);
+            }
+        }
     }
 
     struct UniswapV3Storage {
