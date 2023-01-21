@@ -234,11 +234,9 @@ contract PoolCore is
             );
     }
 
-    function collectSupplyUniswapV3Fees(
+    function collectCompoundAndSupplyUniswapV3Fees(
         address asset,
-        uint256 tokenId,
-        uint256 amount0Min,
-        uint256 amount1Min
+        uint256 tokenId
     ) external virtual override {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -251,8 +249,6 @@ contract PoolCore is
                     asset: asset,
                     tokenId: tokenId,
                     reservesCount: ps._reservesCount,
-                    amount0: amount0Min,
-                    amount1: amount1Min,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle()
                 })
             );

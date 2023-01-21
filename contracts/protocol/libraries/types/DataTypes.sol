@@ -192,8 +192,6 @@ library DataTypes {
         address asset;
         uint256 tokenId;
         uint256 reservesCount;
-        uint256 amount0;
-        uint256 amount1;
         address oracle;
     }
 

@@ -318,11 +318,9 @@ interface IPoolCore {
         bool receiveEthAsWeth
     ) external;
 
-    function collectSupplyUniswapV3Fees(
+    function collectCompoundAndSupplyUniswapV3Fees(
         address asset,
-        uint256 tokenId,
-        uint256 amount0Min,
-        uint256 amount1Min
+        uint256 tokenId
     ) external;
 
     /**
