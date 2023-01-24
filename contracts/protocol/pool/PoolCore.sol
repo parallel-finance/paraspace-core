@@ -111,6 +111,37 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
+    function supplyFromXToken(
+        address asset,
+        uint256 amount,
+        address onBehalfOf,
+        uint16 referralCode,
+        address xTokenUnderlyingAsset
+    ) external virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage xtokenReserve = ps._reserves[
+            xTokenUnderlyingAsset
+        ];
+
+        require(
+            msg.sender == xtokenReserve.xTokenAddress,
+            Errors.CALLER_NOT_XTOKEN
+        );
+
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteSupplyParams({
+                asset: asset,
+                amount: amount,
+                onBehalfOf: onBehalfOf,
+                payer: msg.sender,
+                referralCode: referralCode
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
     function supplyERC721(
         address asset,
         DataTypes.ERC721SupplyParams[] calldata tokenData,
@@ -238,8 +269,7 @@ contract PoolCore is
     function collectCompoundAndSupplyUniswapV3Fees(
         address asset,
         uint256 tokenId
-    ) external virtual override {
-        // we need re-entrancy here. might need to create a special supplyERC20 from NToken as a workaround
+    ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return

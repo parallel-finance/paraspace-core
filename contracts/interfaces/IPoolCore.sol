@@ -210,6 +210,19 @@ interface IPoolCore {
     ) external;
 
     /**
+     * @notice same as supply but caller can only be xToken.
+     * this function has no re-entrancy intentionally to be able to suppport multiple supply calls
+     **/
+
+    function supplyFromXToken(
+        address asset,
+        uint256 amount,
+        address onBehalfOf,
+        uint16 referralCode,
+        address xTokenUnderlyingAsset
+    ) external;
+
+    /**
      * @notice Supplies multiple `tokenIds` of underlying ERC721 asset into the reserve, receiving in return overlying nTokens.
      * - E.g. User supplies 2 BAYC and gets in return 2 nBAYC
      * @param asset The address of the underlying asset to supply

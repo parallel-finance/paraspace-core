@@ -292,11 +292,12 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                 address(this)
             );
             if (token0BalanceAfter > token0BalanceBefore) {
-                POOL.supply(
+                POOL.supplyFromXToken(
                     token0,
                     token0BalanceAfter - token0BalanceBefore,
                     user,
-                    0x0
+                    0x0,
+                    _underlyingAsset
                 );
             }
         }
@@ -306,11 +307,12 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                 address(this)
             );
             if (token1BalanceAfter > token1BalanceBefore) {
-                POOL.supply(
+                POOL.supplyFromXToken(
                     token1,
                     token1BalanceAfter - token1BalanceBefore,
                     user,
-                    0x0
+                    0x0,
+                    _underlyingAsset
                 );
             }
         }
