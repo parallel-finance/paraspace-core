@@ -66,8 +66,6 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmuta
         });
 
         pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
-        console.log("pool add is ", PoolAddress.computeAddress(factory, poolKey));
-        // pool.slot0();
 
         // compute the liquidity amount
         {
@@ -82,7 +80,6 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmuta
                 params.amount0Desired,
                 params.amount1Desired
             );
-            console.log("sqrt ", sqrtPriceX96, sqrtRatioAX96, sqrtRatioBX96);
         }
         
 
