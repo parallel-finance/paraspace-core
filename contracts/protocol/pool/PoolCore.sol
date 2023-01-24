@@ -8,6 +8,7 @@ import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
+import {UniswapV3Logic} from "../libraries/logic/UniswapV3Logic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
 import {AuctionLogic} from "../libraries/logic/AuctionLogic.sol";
@@ -242,7 +243,7 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
-            SupplyLogic.executeCollectSupplyUniswapV3Fees(
+            UniswapV3Logic.executeCollectSupplyUniswapV3Fees(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
@@ -266,7 +267,7 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
-            SupplyLogic.executeDecreaseUniswapV3Liquidity(
+            UniswapV3Logic.executeDecreaseUniswapV3Liquidity(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
