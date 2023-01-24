@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity =0.8.10;
 
 import {INToken} from "../../../interfaces/INToken.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
@@ -21,6 +21,7 @@ library UniswapV3Logic {
     using ReserveLogic for DataTypes.ReserveData;
     using UserConfiguration for DataTypes.UserConfigurationMap;
 
+    event CollectSupplyUniswapV3Fees(uint256 tokenId);
 
     function executeDecreaseUniswapV3Liquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
@@ -120,6 +121,8 @@ library UniswapV3Logic {
                 params.tokenId,
                 incentiveReceiver
             );
+        
+        emit CollectSupplyUniswapV3Fees(params.tokenId);
     }
 
 }
