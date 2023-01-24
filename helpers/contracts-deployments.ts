@@ -231,7 +231,7 @@ import {
   NonfungiblePositionManager__factory,
   SwapRouter__factory,
   UniswapV3Logic__factory,
-  UniswapV3Logic
+  UniswapV3Logic,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1666,8 +1666,6 @@ export const deployUniswapSwapRouter = async (
   args: [string, string],
   verify?: boolean
 ) => {
-  
-
   return withSaveAndVerify(
     new SwapRouter__factory(await getFirstSigner()),
     eContractid.UniswapV3SwapRouter,

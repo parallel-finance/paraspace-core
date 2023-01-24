@@ -121,8 +121,7 @@ library UniswapV3Logic {
                 params.tokenId,
                 incentiveReceiver
             );
-        
+
         emit CollectSupplyUniswapV3Fees(params.tokenId);
     }
-
 }
