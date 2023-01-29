@@ -172,16 +172,14 @@ contract ERC20 is Context, IERC20 {
         uint256 amount
     ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
-        if (sender != _msgSender()) {
-          _approve(
-              sender,
-              _msgSender(),
-              _allowances[sender][_msgSender()].sub(
-                  amount,
-                  "ERC20: transfer amount exceeds allowance"
-              )
-          );
-        }
+        _approve(
+            sender,
+            _msgSender(),
+            _allowances[sender][_msgSender()].sub(
+                amount,
+                "ERC20: transfer amount exceeds allowance"
+            )
+        );
         return true;
     }
 

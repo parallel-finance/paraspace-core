@@ -105,7 +105,7 @@ contract PoolApeStaking is
         ApeCoinStaking.SingleNft[] calldata _nfts
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        checkSApeIsNotPaused(ps);
+        _checkSApeIsNotPaused(ps);
 
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
@@ -118,11 +118,7 @@ contract PoolApeStaking is
         }
         INTokenApeStaking(xTokenAddress).withdrawApeCoin(_nfts, msg.sender);
 
-        require(
-            getUserHf(ps, msg.sender) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-        );
+        _checkUserHf(ps, msg.sender, true);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -131,7 +127,7 @@ contract PoolApeStaking is
         nonReentrant
     {
         DataTypes.PoolStorage storage ps = poolStorage();
-        checkSApeIsNotPaused(ps);
+        _checkSApeIsNotPaused(ps);
 
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
@@ -144,11 +140,7 @@ contract PoolApeStaking is
         }
         INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, msg.sender);
 
-        require(
-            getUserHf(ps, msg.sender) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-        );
+        _checkUserHf(ps, msg.sender, true);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -157,14 +149,14 @@ contract PoolApeStaking is
         ApeCoinStaking.PairNftWithdrawWithAmount[] calldata _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        checkSApeIsNotPaused(ps);
+        _checkSApeIsNotPaused(ps);
 
         ApeStakingLocalVars memory localVar = _generalCache(ps, nftAsset);
+        localVar.transferredTokenOwners = new address[](_nftPairs.length);
+
         uint256[] memory transferredTokenIds = new uint256[](_nftPairs.length);
-        address[] memory transferredTokenOwners = new address[](
-            _nftPairs.length
-        );
         uint256 actualTransferAmount = 0;
+
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 INToken(localVar.xTokenAddress).ownerOf(
@@ -175,9 +167,9 @@ contract PoolApeStaking is
 
             //only partially withdraw need user's BAKC
             if (!_nftPairs[index].isUncommit) {
-                transferredTokenOwners[
-                    actualTransferAmount
-                ] = _validateBAKCOwnerAndTransfer(
+                localVar.transferredTokenOwners[
+                        actualTransferAmount
+                    ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[index].bakcTokenId,
                     msg.sender
@@ -187,6 +179,7 @@ contract PoolApeStaking is
                 actualTransferAmount++;
             }
         }
+
         INTokenApeStaking(localVar.xTokenAddress).withdrawBAKC(
             _nftPairs,
             msg.sender
@@ -196,16 +189,12 @@ contract PoolApeStaking is
         for (uint256 index = 0; index < actualTransferAmount; index++) {
             localVar.bakcContract.safeTransferFrom(
                 localVar.xTokenAddress,
-                transferredTokenOwners[index],
+                localVar.transferredTokenOwners[index],
                 transferredTokenIds[index]
             );
         }
 
-        require(
-            getUserHf(ps, msg.sender) >
-                DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-            Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-        );
+        _checkUserHf(ps, msg.sender, true);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -214,12 +203,11 @@ contract PoolApeStaking is
         ApeCoinStaking.PairNft[] calldata _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        checkSApeIsNotPaused(ps);
+        _checkSApeIsNotPaused(ps);
 
         ApeStakingLocalVars memory localVar = _generalCache(ps, nftAsset);
-        address[] memory transferredTokenOwners = new address[](
-            _nftPairs.length
-        );
+        localVar.transferredTokenOwners = new address[](_nftPairs.length);
+
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 INToken(localVar.xTokenAddress).ownerOf(
@@ -228,7 +216,9 @@ contract PoolApeStaking is
                 Errors.NOT_THE_OWNER
             );
 
-            transferredTokenOwners[index] = _validateBAKCOwnerAndTransfer(
+            localVar.transferredTokenOwners[
+                index
+            ] = _validateBAKCOwnerAndTransfer(
                 localVar,
                 _nftPairs[index].bakcTokenId,
                 msg.sender
@@ -244,7 +234,7 @@ contract PoolApeStaking is
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             localVar.bakcContract.safeTransferFrom(
                 localVar.xTokenAddress,
-                transferredTokenOwners[index],
+                localVar.transferredTokenOwners[index],
                 _nftPairs[index].bakcTokenId
             );
         }
@@ -257,7 +247,7 @@ contract PoolApeStaking is
         ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        checkSApeIsNotPaused(ps);
+        _checkSApeIsNotPaused(ps);
 
         require(
             stakingInfo.borrowAsset == address(APE_COIN) ||
@@ -269,8 +259,8 @@ contract PoolApeStaking is
             ps,
             stakingInfo.nftAsset
         );
-        localVar.balanceBefore = APE_COIN.balanceOf(localVar.xTokenAddress);
         localVar.transferredTokenOwners = new address[](_nftPairs.length);
+        localVar.balanceBefore = APE_COIN.balanceOf(localVar.xTokenAddress);
 
         DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
             stakingInfo.borrowAsset
@@ -314,6 +304,7 @@ contract PoolApeStaking is
                 Errors.NOT_THE_OWNER
             );
         }
+
         INTokenApeStaking(localVar.xTokenAddress).depositApeCoin(_nfts);
 
         // 4, deposit bakc pool
@@ -333,6 +324,7 @@ contract PoolApeStaking is
                 msg.sender
             );
         }
+
         INTokenApeStaking(localVar.xTokenAddress).depositBAKC(_nftPairs);
         //transfer BAKC back for user
         for (uint256 index = 0; index < _nftPairs.length; index++) {
@@ -383,11 +375,7 @@ contract PoolApeStaking is
         address incentiveReceiver = address(0);
         address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
         if (msg.sender != positionOwner) {
-            require(
-                getUserHf(ps, positionOwner) <
-                    DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
-                Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-            );
+            _checkUserHf(ps, positionOwner, false);
             incentiveReceiver = msg.sender;
         }
 
@@ -450,7 +438,7 @@ contract PoolApeStaking is
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         DataTypes.PoolStorage storage ps = poolStorage();
-        checkSApeIsNotPaused(ps);
+        _checkSApeIsNotPaused(ps);
 
         ApeStakingLocalVars memory localVar = _compoundCache(
             ps,
@@ -460,10 +448,11 @@ contract PoolApeStaking is
 
         for (uint256 i = 0; i < users.length; i++) {
             for (uint256 j = 0; j < tokenIds[i].length; j++) {
-                address positionOwner = INToken(localVar.xTokenAddress).ownerOf(
-                    tokenIds[i][j]
+                require(
+                    users[i] ==
+                        INToken(localVar.xTokenAddress).ownerOf(tokenIds[i][j]),
+                    Errors.NOT_THE_OWNER
                 );
-                require(users[i] == positionOwner, Errors.NOT_THE_OWNER);
             }
 
             INTokenApeStaking(localVar.xTokenAddress).claimApeCoin(
@@ -588,21 +577,14 @@ contract PoolApeStaking is
             localVar.totalAmount += localVar.amounts[i];
         }
 
-        if (localVar.options[i].ty == DataTypes.ApeCompoundType.SwapAndSupply) {
+        if (localVar.options[i].ty == DataTypes.ApeCompoundType.Supply) {
+            return;
+        } else if (
+            localVar.options[i].ty == DataTypes.ApeCompoundType.SwapAndSupply
+        ) {
             localVar.swapAmounts[i] = localVar.amounts[i].percentMul(
                 localVar.options[i].swapPercent
             );
-            localVar.totalNonDepositAmount += localVar.swapAmounts[i];
-            (
-                localVar.cApeRepayAmounts[i],
-                localVar.apeRepayAmounts[i]
-            ) = _getCApeAndApeRepayAmounts(
-                localVar.cApeVariableDebtAddress,
-                localVar.apeVariableDebtAddress,
-                user,
-                localVar.amounts[i] - localVar.swapAmounts[i]
-            );
-            localVar.totalNonDepositAmount += localVar.apeRepayAmounts[i];
             if (
                 localVar.options[i].swapTokenOut ==
                 DataTypes.ApeCompoundTokenOut.USDC
@@ -627,20 +609,20 @@ contract PoolApeStaking is
                     );
                 }
             }
-        } else if (
-            localVar.options[i].ty == DataTypes.ApeCompoundType.RepayAndSupply
-        ) {
-            (
-                localVar.cApeRepayAmounts[i],
-                localVar.apeRepayAmounts[i]
-            ) = _getCApeAndApeRepayAmounts(
-                localVar.cApeVariableDebtAddress,
-                localVar.apeVariableDebtAddress,
-                user,
-                localVar.amounts[i]
-            );
-            localVar.totalNonDepositAmount += localVar.apeRepayAmounts[i];
         }
+
+        (
+            localVar.cApeRepayAmounts[i],
+            localVar.apeRepayAmounts[i]
+        ) = _getCApeAndApeRepayAmounts(
+            localVar.cApeVariableDebtAddress,
+            localVar.apeVariableDebtAddress,
+            user,
+            localVar.amounts[i] - localVar.swapAmounts[i]
+        );
+        localVar.totalNonDepositAmount +=
+            localVar.apeRepayAmounts[i] +
+            localVar.swapAmounts[i];
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -665,31 +647,46 @@ contract PoolApeStaking is
         );
     }
 
-    function getUserHf(DataTypes.PoolStorage storage ps, address user)
-        internal
-        view
-        returns (uint256)
-    {
+    function _checkUserHf(
+        DataTypes.PoolStorage storage ps,
+        address user,
+        bool checkAbove
+    ) private view {
         DataTypes.UserConfigurationMap memory userConfig = ps._usersConfig[
             user
         ];
-        if (!userConfig.isBorrowingAny()) {
-            return type(uint256).max;
-        }
-        DataTypes.CalculateUserAccountDataParams memory params = DataTypes
-            .CalculateUserAccountDataParams({
-                userConfig: userConfig,
-                reservesCount: ps._reservesCount,
-                user: user,
-                oracle: ADDRESSES_PROVIDER.getPriceOracle()
-            });
 
-        (, , , , , , , uint256 healthFactor, , ) = GenericLogic
-            .calculateUserAccountData(ps._reserves, ps._reservesList, params);
-        return healthFactor;
+        uint256 healthFactor;
+        if (!userConfig.isBorrowingAny()) {
+            healthFactor = type(uint256).max;
+        } else {
+            (, , , , , , , healthFactor, , ) = GenericLogic
+                .calculateUserAccountData(
+                    ps._reserves,
+                    ps._reservesList,
+                    DataTypes.CalculateUserAccountDataParams({
+                        userConfig: userConfig,
+                        reservesCount: ps._reservesCount,
+                        user: user,
+                        oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                    })
+                );
+        }
+
+        if (checkAbove) {
+            require(
+                healthFactor > DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+            );
+        } else {
+            require(
+                healthFactor < DataTypes.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+        }
     }
 
-    function checkSApeIsNotPaused(DataTypes.PoolStorage storage ps)
+    function _checkSApeIsNotPaused(DataTypes.PoolStorage storage ps)
         internal
         view
     {
@@ -706,9 +703,10 @@ contract PoolApeStaking is
     function _depositApeAndPayFees(ApeStakingLocalVars memory localVar)
         internal
     {
-        uint256 totalDepositAmount = localVar.totalAmount -
-            localVar.totalNonDepositAmount;
-        APE_COMPOUND.deposit(address(this), totalDepositAmount);
+        APE_COMPOUND.deposit(
+            address(this),
+            localVar.totalAmount - localVar.totalNonDepositAmount
+        );
         uint256 apeFee = localVar
             .totalAmount
             .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)
@@ -726,9 +724,6 @@ contract PoolApeStaking is
         _depositApeAndPayFees(localVar);
 
         for (uint256 index = 0; index < users.length; index++) {
-            if (localVar.amounts[index] == 0) {
-                continue;
-            }
             if (
                 localVar.options[index].ty ==
                 DataTypes.ApeCompoundType.RepayAndSupply
@@ -754,26 +749,16 @@ contract PoolApeStaking is
                     localVar.amounts[index]
                 );
             } else {
-                uint256 price = localVar.options[index].swapTokenOut ==
-                    DataTypes.ApeCompoundTokenOut.USDC
-                    ? localVar.usdcApePrice
-                    : localVar.wethApePrice;
-                uint256 amountOut = _swapExactTokensForTokens(
-                    localVar.tokenOuts[index],
-                    localVar.swapAmounts[index],
-                    address(this),
-                    price
-                );
-                _supplyForUser(
+                _swapAndSupplyForUser(
                     ps,
                     localVar.tokenOuts[index],
-                    address(this),
+                    localVar.swapAmounts[index],
                     users[index],
-                    amountOut
+                    localVar.options[index].swapTokenOut ==
+                        DataTypes.ApeCompoundTokenOut.USDC
+                        ? localVar.usdcApePrice
+                        : localVar.wethApePrice
                 );
-                if (localVar.amounts[index] == localVar.swapAmounts[index]) {
-                    continue;
-                }
                 _repayTwoAndSupplyForUser(
                     ps,
                     address(APE_COIN),
@@ -788,25 +773,29 @@ contract PoolApeStaking is
         }
     }
 
-    function _swapExactTokensForTokens(
+    function _swapAndSupplyForUser(
+        DataTypes.PoolStorage storage ps,
         address tokenOut,
         uint256 amountIn,
-        address recipient,
+        address user,
         uint256 price
-    ) internal returns (uint256 amountOut) {
-        return
-            SWAP_ROUTER.exactInputSingle(
-                ISwapRouter.ExactInputSingleParams({
-                    tokenIn: address(APE_COIN),
-                    tokenOut: tokenOut,
-                    fee: 3000,
-                    recipient: recipient,
-                    deadline: block.timestamp,
-                    amountIn: amountIn,
-                    amountOutMinimum: amountIn.wadMul(price),
-                    sqrtPriceLimitX96: 0
-                })
-            );
+    ) internal {
+        if (amountIn == 0) {
+            return;
+        }
+        uint256 amountOut = SWAP_ROUTER.exactInputSingle(
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: address(APE_COIN),
+                tokenOut: tokenOut,
+                fee: 3000,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amountIn,
+                amountOutMinimum: amountIn.wadMul(price),
+                sqrtPriceLimitX96: 0
+            })
+        );
+        _supplyForUser(ps, tokenOut, address(this), user, amountOut);
     }
 
     function _getApeRelativePrice(address tokenOut, uint256 tokenOutUnit)

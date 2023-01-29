@@ -187,11 +187,18 @@ library BorrowLogic {
             );
         } else {
             // send paybackAmount from user to reserve
-            IERC20(params.asset).safeTransferFrom(
-                params.payer,
-                reserveCache.xTokenAddress,
-                paybackAmount
-            );
+            if (params.payer == address(this)) {
+                IERC20(params.asset).safeTransfer(
+                    reserveCache.xTokenAddress,
+                    paybackAmount
+                );
+            } else {
+                IERC20(params.asset).safeTransferFrom(
+                    params.payer,
+                    reserveCache.xTokenAddress,
+                    paybackAmount
+                );
+            }
             IPToken(reserveCache.xTokenAddress).handleRepayment(
                 params.payer,
                 paybackAmount
