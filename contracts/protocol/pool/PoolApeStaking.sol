@@ -596,11 +596,7 @@ contract PoolApeStaking is
                         1E6
                     );
                 }
-            }
-            if (
-                localVar.options[i].swapTokenOut ==
-                DataTypes.ApeCompoundTokenOut.WETH
-            ) {
+            } else {
                 localVar.tokenOuts[i] = ADDRESSES_PROVIDER.getWETH();
                 if (localVar.wethApePrice == 0) {
                     localVar.wethApePrice = _getApeRelativePrice(
@@ -700,7 +696,7 @@ contract PoolApeStaking is
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
-    function _depositApeAndPayFees(ApeStakingLocalVars memory localVar)
+    function _beforeCompoundForUsers(ApeStakingLocalVars memory localVar)
         internal
     {
         APE_COMPOUND.deposit(
@@ -721,53 +717,32 @@ contract PoolApeStaking is
         ApeStakingLocalVars memory localVar,
         address[] calldata users
     ) internal {
-        _depositApeAndPayFees(localVar);
+        _beforeCompoundForUsers(localVar);
 
-        for (uint256 index = 0; index < users.length; index++) {
+        for (uint256 i = 0; i < users.length; i++) {
+            _repayTwoAndSupplyForUser(
+                ps,
+                address(APE_COIN),
+                address(APE_COMPOUND),
+                localVar.apeRepayAmounts[i],
+                localVar.cApeRepayAmounts[i],
+                address(this),
+                users[i],
+                localVar.amounts[i] - localVar.swapAmounts[i]
+            );
             if (
-                localVar.options[index].ty ==
-                DataTypes.ApeCompoundType.RepayAndSupply
+                localVar.options[i].ty ==
+                DataTypes.ApeCompoundType.SwapAndSupply
             ) {
-                _repayTwoAndSupplyForUser(
-                    ps,
-                    address(APE_COIN),
-                    address(APE_COMPOUND),
-                    localVar.apeRepayAmounts[index],
-                    localVar.cApeRepayAmounts[index],
-                    address(this),
-                    users[index],
-                    localVar.amounts[index]
-                );
-            } else if (
-                localVar.options[index].ty == DataTypes.ApeCompoundType.Supply
-            ) {
-                _supplyForUser(
-                    ps,
-                    address(APE_COMPOUND),
-                    address(this),
-                    users[index],
-                    localVar.amounts[index]
-                );
-            } else {
                 _swapAndSupplyForUser(
                     ps,
-                    localVar.tokenOuts[index],
-                    localVar.swapAmounts[index],
-                    users[index],
-                    localVar.options[index].swapTokenOut ==
+                    localVar.tokenOuts[i],
+                    localVar.swapAmounts[i],
+                    users[i],
+                    localVar.options[i].swapTokenOut ==
                         DataTypes.ApeCompoundTokenOut.USDC
                         ? localVar.usdcApePrice
                         : localVar.wethApePrice
-                );
-                _repayTwoAndSupplyForUser(
-                    ps,
-                    address(APE_COIN),
-                    address(APE_COMPOUND),
-                    localVar.apeRepayAmounts[index],
-                    localVar.cApeRepayAmounts[index],
-                    address(this),
-                    users[index],
-                    localVar.amounts[index] - localVar.swapAmounts[index]
                 );
             }
         }
@@ -898,12 +873,9 @@ contract PoolApeStaking is
         address userAddress
     ) internal returns (address bakcOwner) {
         bakcOwner = localVar.bakcContract.ownerOf(tokenId);
-        address nBAKCOwner;
-        if (localVar.bakcNToken != address(0)) {
-            nBAKCOwner = INToken(localVar.bakcNToken).ownerOf(tokenId);
-        }
         require(
-            (userAddress == bakcOwner) || (userAddress == nBAKCOwner),
+            (userAddress == bakcOwner) ||
+                (userAddress == INToken(localVar.bakcNToken).ownerOf(tokenId)),
             Errors.NOT_THE_BAKC_OWNER
         );
         localVar.bakcContract.safeTransferFrom(
