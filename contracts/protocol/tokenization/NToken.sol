@@ -20,13 +20,20 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {INTokenDelegation} from "../../interfaces/INTokenDelegation.sol";
+import {IDelegationRegistry} from "../../dependencies/delegation/IDelegationRegistry.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
  *
  * @notice Implementation of the NFT derivative token for the ParaSpace protocol
  */
-contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
+contract NToken is
+    VersionedInitializable,
+    MintableIncentivizedERC721,
+    INToken,
+    INTokenDelegation
+{
     using SafeERC20 for IERC20;
 
     uint256 public constant NTOKEN_REVISION = 130;
@@ -333,5 +340,22 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         returns (XTokenType)
     {
         return XTokenType.NToken;
+    }
+
+    // should we allowlist the delegationGateway addresses or is it okay to leave it as is?
+    function delegateForToken(
+        address delegationGateway,
+        address delegate,
+        uint256 tokenId,
+        bool value
+    ) external nonReentrant {
+        require(msg.sender == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+
+        IDelegationRegistry(delegationGateway).delegateForToken(
+            delegate,
+            _underlyingAsset,
+            tokenId,
+            value
+        );
     }
 }
