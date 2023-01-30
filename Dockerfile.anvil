@@ -1,0 +1,11 @@
+FROM ghcr.io/foundry-rs/foundry:nightly-31f945c09f464487d139833c668d856ef43d58cc
+
+WORKDIR /paraspace
+
+COPY . /paraspace
+
+# https://docs.docker.com/config/containers/multi-service_container/
+RUN echo '#!/bin/bash\nset -m\nmake anvil' > .entrypoint.sh
+RUN chmod u+x .entrypoint.sh
+
+ENTRYPOINT ["/paraspace/.entrypoint.sh"]

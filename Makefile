@@ -1,6 +1,7 @@
 #!make
 
 NETWORK                  := hardhat
+JSONRPC_VARIANT          := hardhat
 
 include .env
 export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
@@ -18,14 +19,6 @@ init: submodules
 	[ -d lib/ds-test ] || forge install --no-commit --no-git https://github.com/dapphub/ds-test
 	[ -d lib/forge-std ] || forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
-
-.PHONY: foundry-setup
-foundry-setup: anvil
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat deploy:all --network anvil # --verbose
-
-.PHONY: foundry-test
-foundry-test:
-	forge test -vvvv
 
 .PHONY: test
 test:
@@ -568,23 +561,28 @@ hardhat:
 
 .PHONY: anvil
 anvil:
-	sudo pkill anvil || true
-	anvil &
-	sleep 30
+	anvil \
+		--fork-url https://eth-${NETWORK}.alchemyapi.io/v2/${ALCHEMY_KEY} \
+		--chain-id 522 \
+		--tracing \
+		--host 0.0.0.0 \
+		--state-interval 60 \
+		--dump-state state.json \
+		--code-size-limit 100000 \
+		--no-rate-limit
 
 .PHONY: image
 image:
-	DOCKER_BUILDKIT=1 docker build \
+	docker build \
 		-c 512 \
 		-t parallelfinance/paraspace:latest \
-		-f Dockerfile .
+		-f Dockerfile.${JSONRPC_VARIANT} .
 
 .PHONY: launch
 launch: shutdown
 	docker-compose \
 		up \
 		-d --build
-	docker-compose logs -f hardhat
 
 .PHONY: shutdown
 shutdown:
@@ -595,6 +593,7 @@ shutdown:
 	docker volume prune -f
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
+	sudo rm -fr state.json || true
 
 .PHONY: copy
 copy:

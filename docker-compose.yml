@@ -1,9 +1,9 @@
 version: "3.7"
 services:
-  hardhat:
+  node:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.${JSONRPC_VARIANT:-hardhat}
     ports:
       - 8545:8545
 
