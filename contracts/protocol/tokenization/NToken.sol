@@ -37,6 +37,8 @@ contract NToken is
     using SafeERC20 for IERC20;
 
     uint256 public constant NTOKEN_REVISION = 130;
+    address constant DELEGATE_CASH_ADDRESS =
+        0x00000000000076A84feF008CDAbe6409d2FE638B;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -342,16 +344,14 @@ contract NToken is
         return XTokenType.NToken;
     }
 
-    // should we allowlist the delegationGateway addresses or is it okay to leave it as is?
     function delegateForToken(
-        address delegationGateway,
         address delegate,
         uint256 tokenId,
         bool value
     ) external nonReentrant {
         require(msg.sender == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
-        IDelegationRegistry(delegationGateway).delegateForToken(
+        IDelegationRegistry(DELEGATE_CASH_ADDRESS).delegateForToken(
             delegate,
             _underlyingAsset,
             tokenId,

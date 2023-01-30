@@ -9,7 +9,6 @@ interface INTokenDelegation {
      * @param value Whether to enable or disable delegation for this address, true for setting and false for revoking
      */
     function delegateForToken(
-        address delegationGateway,
         address delegate,
         uint256 tokenId,
         bool value
