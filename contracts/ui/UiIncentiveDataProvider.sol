@@ -9,7 +9,7 @@ import {IncentivizedERC20} from "../protocol/tokenization/base/IncentivizedERC20
 import {UserConfiguration} from "../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
-import {IEACAggregatorProxy} from "./interfaces/IEACAggregatorProxy.sol";
+import {IEACAggregatorProxy} from "../interfaces/IEACAggregatorProxy.sol";
 
 contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
     using UserConfiguration for DataTypes.UserConfigurationMap;
@@ -113,9 +113,15 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
                     rewardInformation.priceFeedDecimals = IEACAggregatorProxy(
                         rewardInformation.rewardOracleAddress
                     ).decimals();
-                    rewardInformation.rewardPriceFeed = IEACAggregatorProxy(
+                    (
+                        ,
+                        rewardInformation.rewardPriceFeed,
+                        ,
+                        ,
+
+                    ) = IEACAggregatorProxy(
                         rewardInformation.rewardOracleAddress
-                    ).latestAnswer();
+                    ).latestRoundData();
 
                     aRewardsInformation[j] = rewardInformation;
                 }
@@ -174,9 +180,15 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
                     rewardInformation.priceFeedDecimals = IEACAggregatorProxy(
                         rewardInformation.rewardOracleAddress
                     ).decimals();
-                    rewardInformation.rewardPriceFeed = IEACAggregatorProxy(
+                    (
+                        ,
+                        rewardInformation.rewardPriceFeed,
+                        ,
+                        ,
+
+                    ) = IEACAggregatorProxy(
                         rewardInformation.rewardOracleAddress
-                    ).latestAnswer();
+                    ).latestRoundData();
 
                     vRewardsInformation[j] = rewardInformation;
                 }
@@ -270,9 +282,15 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
                         .priceFeedDecimals = IEACAggregatorProxy(
                         userRewardInformation.rewardOracleAddress
                     ).decimals();
-                    userRewardInformation.rewardPriceFeed = IEACAggregatorProxy(
+                    (
+                        ,
+                        userRewardInformation.rewardPriceFeed,
+                        ,
+                        ,
+
+                    ) = IEACAggregatorProxy(
                         userRewardInformation.rewardOracleAddress
-                    ).latestAnswer();
+                    ).latestRoundData();
 
                     aUserRewardsInformation[j] = userRewardInformation;
                 }
@@ -337,9 +355,15 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
                         .priceFeedDecimals = IEACAggregatorProxy(
                         userRewardInformation.rewardOracleAddress
                     ).decimals();
-                    userRewardInformation.rewardPriceFeed = IEACAggregatorProxy(
+                    (
+                        ,
+                        userRewardInformation.rewardPriceFeed,
+                        ,
+                        ,
+
+                    ) = IEACAggregatorProxy(
                         userRewardInformation.rewardOracleAddress
-                    ).latestAnswer();
+                    ).latestRoundData();
 
                     vUserRewardsInformation[j] = userRewardInformation;
                 }

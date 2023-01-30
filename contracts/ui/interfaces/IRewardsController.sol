@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import {IRewardsDistributor} from "./IRewardsDistributor.sol";
 import {ITransferStrategyBase} from "./ITransferStrategyBase.sol";
-import {IEACAggregatorProxy} from "../../ui/interfaces/IEACAggregatorProxy.sol";
+import {IEACAggregatorProxy} from "../../interfaces/IEACAggregatorProxy.sol";
 import {RewardsDataTypes} from "../libraries/RewardsDataTypes.sol";
 
 /**

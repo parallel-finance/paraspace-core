@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import {ITransferStrategyBase} from "../interfaces/ITransferStrategyBase.sol";
-import {IEACAggregatorProxy} from "../../ui/interfaces/IEACAggregatorProxy.sol";
+import {IEACAggregatorProxy} from "../../interfaces/IEACAggregatorProxy.sol";
 
 library RewardsDataTypes {
     struct RewardsConfigInput {

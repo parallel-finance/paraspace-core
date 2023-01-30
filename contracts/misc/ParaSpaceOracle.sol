@@ -125,7 +125,7 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         int256 price = 0;
         IEACAggregatorProxy source = IEACAggregatorProxy(assetsSources[asset]);
         if (address(source) != address(0)) {
-            price = source.latestAnswer();
+            (, price, , , ) = source.latestRoundData();
         }
         if (price <= 0 && address(_fallbackOracle) != address(0)) {
             price = int256(_fallbackOracle.getAssetPrice(asset));
