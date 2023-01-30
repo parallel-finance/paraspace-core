@@ -20,7 +20,7 @@ const info = async () => {
   console.log(await getParaSpaceAdmins());
   console.log(accounts);
   console.log(signerAddress);
-  console.log(await signer.getTransactionCount());
+  // console.log(await signer.getTransactionCount());
   console.log(
     await Promise.all((await getEthersSigners()).map((x) => x.getAddress()))
   );

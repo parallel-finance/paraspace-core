@@ -134,7 +134,7 @@ export const upgradeNToken = async (verify = false) => {
       if (!nTokenImplementationAddress) {
         console.log("deploy NToken implementation");
         nTokenImplementationAddress = (
-          await deployGenericNTokenImpl(poolAddress, false, verify)
+          await deployGenericNTokenImpl(poolAddress, true, verify)
         ).address;
       }
       newImpl = nTokenImplementationAddress;

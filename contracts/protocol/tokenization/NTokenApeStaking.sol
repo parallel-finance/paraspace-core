@@ -36,7 +36,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address apeCoinStaking) NToken(pool, false) {
+    constructor(IPool pool, address apeCoinStaking) NToken(pool, true) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
     }
 

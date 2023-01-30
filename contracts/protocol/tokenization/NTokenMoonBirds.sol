@@ -29,7 +29,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool) NToken(pool, false) {
+    constructor(IPool pool) NToken(pool, true) {
         // Intentionally left blank
     }
 

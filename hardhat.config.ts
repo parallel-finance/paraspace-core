@@ -74,7 +74,7 @@ const hardhatConfig: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 2000,
+            runs: 1,
           },
           evmVersion: "london",
         },
@@ -134,6 +134,9 @@ const hardhatConfig: HardhatUserConfig = {
       gasPrice: "auto",
       gas: "auto",
       allowUnlimitedContractSize: true,
+      httpHeaders: {
+        "X-Forwarded-For": "124.34.43.22",
+      },
     },
     parallel: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],

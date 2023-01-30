@@ -59,8 +59,8 @@ contract NTokenBAKC is NToken {
         );
 
         IERC20 ape = _apeCoinStaking.apeCoin();
-        ape.safeApprove(nBAYC, type(uint256).max);
-        ape.safeApprove(nMAYC, type(uint256).max);
+        ape.approve(nBAYC, type(uint256).max);
+        ape.approve(nMAYC, type(uint256).max);
         IERC721(underlyingAsset).setApprovalForAll(address(POOL), true);
     }
 
