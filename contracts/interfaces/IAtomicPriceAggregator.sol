@@ -20,6 +20,4 @@ interface IAtomicPriceAggregator {
         external
         view
         returns (uint256);
-
-    function latestAnswer() external view returns (int256);
 }
