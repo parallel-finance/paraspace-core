@@ -7,6 +7,8 @@ import {
   getPoolAddressesProvider,
   getUiPoolDataProvider,
 } from "../../helpers/contracts-getters";
+import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {DRY_RUN} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
 const adHoc = async () => {
@@ -133,9 +135,17 @@ const adHoc = async () => {
         new BigNumber(WAD).multipliedBy(2).toString()
       );
     }
-    await waitForTx(
-      await oracle.setAssetSources([x.underlyingAsset], [newWrapper.address])
-    );
+    if (DRY_RUN) {
+      const encodedData = oracle.interface.encodeFunctionData(
+        "setAssetSources",
+        [[x.underlyingAsset], [newWrapper.address]]
+      );
+      await dryRunEncodedData(oracle.address, encodedData);
+    } else {
+      await waitForTx(
+        await oracle.setAssetSources([x.underlyingAsset], [newWrapper.address])
+      );
+    }
   }
   console.timeEnd("ad-hoc");
 };
