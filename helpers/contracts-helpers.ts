@@ -81,7 +81,7 @@ import {
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
-import {verifyEtherscanContract} from "./etherscan-verification";
+import {verifyEtherscanContract} from "./etherscan";
 import {InitializableImmutableAdminUpgradeabilityProxy} from "../types";
 import {decodeEvents} from "./seaport-helpers/events";
 import {Order, SignatureVersion} from "./blur-helpers/types";

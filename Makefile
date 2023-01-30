@@ -535,6 +535,10 @@ upgrade:
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: reset-pool
+reset-pool:
+	make TASK_NAME=reset:pool run-task
+
 .PHONY: upgrade-configurator
 upgrade-configurator:
 	make TASK_NAME=upgrade:configurator run-task
