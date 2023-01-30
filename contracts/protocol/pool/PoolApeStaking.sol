@@ -379,7 +379,7 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function repayAndSupplyApe(
+    function repayAndSupply(
         address underlyingAsset,
         address onBehalfOf,
         uint256 totalAmount
