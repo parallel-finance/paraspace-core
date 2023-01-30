@@ -59,6 +59,7 @@ import {
   ERC721,
   ERC721__factory,
   ExecutorWithTimelock__factory,
+  IPool__factory,
   MultiSendCallOnly__factory,
   NToken__factory,
   ParaSpaceOracle__factory,
@@ -69,6 +70,7 @@ import {
   PToken__factory,
   ReservesSetupHelper__factory,
   Seaport,
+  Seaport__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
 import {
@@ -795,6 +797,7 @@ export const dryRunEncodedData = async (
 
 export const decodeInputData = (data: string) => {
   const ABI = [
+    ...IPool__factory.abi,
     ...ReservesSetupHelper__factory.abi,
     ...ExecutorWithTimelock__factory.abi,
     ...PoolAddressesProvider__factory.abi,
@@ -808,6 +811,7 @@ export const decodeInputData = (data: string) => {
     ...PToken__factory.abi,
     ...AutoCompoundApe__factory.abi,
     ...PoolParameters__factory.abi,
+    ...Seaport__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
@@ -815,8 +819,7 @@ export const decodeInputData = (data: string) => {
   const normalized = JSON.stringify(inputData, (k, v) => {
     return v ? (v.type === "BigNumber" ? +v.hex.toString(10) : v) : v;
   });
-
-  console.log(JSON.stringify(JSON.parse(normalized), null, 4));
+  return JSON.parse(normalized);
 };
 
 export const proposeSafeTransaction = async (

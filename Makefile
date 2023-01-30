@@ -430,6 +430,10 @@ decode:
 decode-multi:
 	make TASK_NAME=decode-multi run-task
 
+.PHONY: decode-tx
+decode-tx:
+	make TASK_NAME=decode-tx run-task
+
 .PHONY: next-execution-time
 next-execution-time:
 	make TASK_NAME=next-execution-time run-task

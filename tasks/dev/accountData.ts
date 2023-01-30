@@ -3,11 +3,18 @@ import {task} from "hardhat/config";
 
 task("account-data", "Print account data")
   .addPositionalParam("user", "user address")
-  .setAction(async ({user}, DRE) => {
+  .addPositionalParam("blockHash", "block hash", undefined, undefined, true)
+  .setAction(async ({user, blockHash}, DRE) => {
     await DRE.run("set-DRE");
-    const {getPoolProxy} = await import("../../helpers/contracts-getters");
+    const {getPoolProxy, getUiPoolDataProvider, getPoolAddressesProvider} =
+      await import("../../helpers/contracts-getters");
     const pool = await getPoolProxy();
-    const accountData = await pool.getUserAccountData(user);
+    const ui = await getUiPoolDataProvider();
+    const provider = await getPoolAddressesProvider();
+    const reservesData = await ui.getUserReservesData(provider.address, user);
+    const accountData = await pool.getUserAccountData(user, {
+      blockTag: blockHash,
+    });
     console.log();
     console.log(user);
     console.log(" HF:", fromBn(accountData.healthFactor));
@@ -27,4 +34,23 @@ task("account-data", "Print account data")
       " totalDebtBase:",
       fromBn(accountData.totalDebtBase).toString()
     );
+    console.log();
+
+    for (const x of reservesData.filter(
+      (x) => x.currentXTokenBalance.gt(0) || x.scaledVariableDebt.gt(0)
+    )) {
+      console.log("", x.underlyingAsset);
+      console.log("  currentXTokenBalance:", x.currentXTokenBalance.toString());
+      console.log("  scaledXTokenBalance:", x.scaledXTokenBalance.toString());
+      console.log(
+        "  collateralizedBalance:",
+        x.collateralizedBalance.toString()
+      );
+      console.log(
+        "  usageAsCollateralEnabledOnUser:",
+        x.usageAsCollateralEnabledOnUser
+      );
+      console.log("  scaledVariableDebt:", x.scaledVariableDebt.toString());
+      console.log();
+    }
   });

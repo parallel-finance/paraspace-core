@@ -160,7 +160,9 @@ task("decode-queued-txs", "Decode queued transactions").setAction(
       if (!(await timeLock.isActionQueued(e.args.actionHash))) {
         continue;
       }
-      decodeInputData(e.args.data.toString());
+      console.log(
+        JSON.stringify(decodeInputData(e.args.data.toString()), null, 4)
+      );
       console.log();
     }
   }
@@ -177,7 +179,7 @@ task("decode-buffered-txs", "Decode buffered transactions").setAction(
 
     for (const a of actions) {
       const [, , , data] = a.action;
-      decodeInputData(data.toString());
+      console.log(JSON.stringify(decodeInputData(data.toString()), null, 4));
       console.log();
     }
   }
