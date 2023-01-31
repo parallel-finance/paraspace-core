@@ -40,13 +40,8 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, bool atomic_pricing)
-        MintableIncentivizedERC721(
-            pool,
-            "NTOKEN_IMPL",
-            "NTOKEN_IMPL",
-            atomic_pricing
-        )
+    constructor(IPool pool)
+        MintableIncentivizedERC721(pool, "NTOKEN_IMPL", "NTOKEN_IMPL")
     {}
 
     function initialize(
@@ -319,10 +314,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         returns (string memory)
     {
         return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
-    }
-
-    function getAtomicPricingConfig() external view returns (bool) {
-        return ATOMIC_PRICING;
     }
 
     function getXTokenType()

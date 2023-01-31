@@ -10,6 +10,7 @@ import {IPool} from "../interfaces/IPool.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
+import {IAtomicCollateralizableERC721} from "../interfaces/IAtomicCollateralizableERC721.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
@@ -163,7 +164,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     ).name();
                 }
 
-                reserveData.isAtomicPricing = false;
                 if (reserveData.underlyingAsset != SAPE_ADDRESS) {
                     reserveData.availableLiquidity = IERC20Detailed(
                         reserveData.underlyingAsset
@@ -179,8 +179,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.availableLiquidity = IERC721(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
-                reserveData.isAtomicPricing = INToken(reserveData.xTokenAddress)
-                    .getAtomicPricingConfig();
             }
 
             (
@@ -494,12 +492,25 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         tokenData.tokenId
                     );
                 // token price
-                if (INToken(baseData.xTokenAddress).getAtomicPricingConfig()) {
-                    try
-                        oracle.getTokenPrice(tokenData.asset, tokenData.tokenId)
-                    returns (uint256 price) {
-                        tokenData.tokenPrice = price;
-                    } catch {}
+                if (
+                    IAtomicCollateralizableERC721(baseData.xTokenAddress)
+                        .isAtomicToken(tokenData.tokenId)
+                ) {
+                    uint256 multiplier = IAtomicCollateralizableERC721(
+                        baseData.xTokenAddress
+                    ).getTraitMultiplier(tokenData.tokenId);
+                    if (multiplier == 0) {
+                        try
+                            oracle.getTokenPrice(
+                                tokenData.asset,
+                                tokenData.tokenId
+                            )
+                        returns (uint256 price) {
+                            tokenData.tokenPrice = price.wadMul(multiplier);
+                        } catch {}
+                    } else {
+                        tokenData.tokenPrice = collectionPrice;
+                    }
                 } else {
                     tokenData.tokenPrice = collectionPrice;
                 }

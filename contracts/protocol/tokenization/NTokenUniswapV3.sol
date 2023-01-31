@@ -30,7 +30,7 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool) NToken(pool, true) {
+    constructor(IPool pool) NToken(pool) {
         _ERC721Data.balanceLimit = 30;
     }
 
@@ -139,6 +139,19 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             amount1Min,
             receiveEthAsWeth
         );
+    }
+
+    function isAtomicToken(uint256) external pure override returns (bool) {
+        return true;
+    }
+
+    function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
+        external
+        override
+        onlyPoolAdmin
+        nonReentrant
+    {
+        revert();
     }
 
     function _safeTransferETH(address to, uint256 value) internal {
