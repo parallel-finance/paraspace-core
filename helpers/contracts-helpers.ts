@@ -33,6 +33,8 @@ import {
   ParaSpaceLibraryAddresses,
   Action,
   DryRunExecutor,
+  TimeLockData,
+  TimeLockOperation,
 } from "./types";
 import {
   ConsiderationItem,
@@ -49,6 +51,7 @@ import {splitSignature} from "ethers/lib/utils";
 import blurOrderType from "./blur-helpers/eip-712-types/order";
 import {
   ACLManager__factory,
+  AutoCompoundApe__factory,
   BlurExchange,
   ConduitController,
   ERC20,
@@ -56,13 +59,18 @@ import {
   ERC721,
   ERC721__factory,
   ExecutorWithTimelock__factory,
+  IPool__factory,
   MultiSendCallOnly__factory,
+  NToken__factory,
   ParaSpaceOracle__factory,
   PausableZoneController,
   PoolAddressesProvider__factory,
   PoolConfigurator__factory,
+  PoolParameters__factory,
+  PToken__factory,
   ReservesSetupHelper__factory,
   Seaport,
+  Seaport__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
 import {
@@ -73,7 +81,7 @@ import {
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
-import {verifyEtherscanContract} from "./etherscan-verification";
+import {verifyEtherscanContract} from "./etherscan";
 import {InitializableImmutableAdminUpgradeabilityProxy} from "../types";
 import {decodeEvents} from "./seaport-helpers/events";
 import {Order, SignatureVersion} from "./blur-helpers/types";
@@ -89,13 +97,19 @@ import {
   VERBOSE,
   MULTI_SIG,
   FORK,
+  MULTI_SEND,
+  TIME_LOCK_DEFAULT_OPERATION,
 } from "./hardhat-constants";
-import {pick} from "lodash";
+import {chunk, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
-import {SafeTransactionDataPartial} from "@safe-global/safe-core-sdk-types";
+import {
+  OperationType,
+  SafeTransactionDataPartial,
+} from "@safe-global/safe-core-sdk-types";
 import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
+import {encodeMulti, MetaTransaction} from "ethers-multisend";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -152,16 +166,16 @@ export const insertContractAddressInDb = async (
   await getDb().set(key, newValue).write();
 };
 
-export const insertTimeLockDataInDb = async (
-  action: Action,
-  actionHash: string,
-  queueData: string,
-  executeData: string,
-  cancelData: string,
-  executeTime: string,
-  queueExpireTime: string,
-  executeExpireTime: string
-) => {
+export const insertTimeLockDataInDb = async ({
+  action,
+  actionHash,
+  queueData,
+  executeData,
+  cancelData,
+  executeTime,
+  queueExpireTime,
+  executeExpireTime,
+}: TimeLockData) => {
   const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
   const oldValue = (await getDb().get(key).value()) || {};
   const queue = oldValue.queue || [];
@@ -683,7 +697,7 @@ export const getExecutionTime = async () => {
   return BigNumber.from(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
 };
 
-export const getActionAndData = async (
+export const getTimeLockData = async (
   target: string,
   data: string,
   executionTime?: string
@@ -734,7 +748,15 @@ export const getActionAndData = async (
     console.log("cancelData:", cancelData);
     console.log();
   }
+  const newTarget = timeLock.address;
+  const newData =
+    TIME_LOCK_DEFAULT_OPERATION == TimeLockOperation.Execute
+      ? executeData
+      : TIME_LOCK_DEFAULT_OPERATION == TimeLockOperation.Cancel
+      ? cancelData
+      : queueData;
   return {
+    timeLock,
     action,
     actionHash,
     queueData,
@@ -743,10 +765,12 @@ export const getActionAndData = async (
     executeTime,
     queueExpireTime,
     executeExpireTime,
+    newTarget,
+    newData,
   };
 };
 
-export const printEncodedData = async (
+export const dryRunEncodedData = async (
   target: tEthereumAddress,
   data: string,
   executionTime?: string
@@ -755,26 +779,15 @@ export const printEncodedData = async (
     DRY_RUN == DryRunExecutor.TimeLock &&
     (await getContractAddressInDb(eContractid.TimeLockExecutor))
   ) {
-    const {
-      action,
-      actionHash,
-      queueData,
-      executeData,
-      cancelData,
-      executeTime,
-      queueExpireTime,
-      executeExpireTime,
-    } = await getActionAndData(target, data, executionTime);
-    await insertTimeLockDataInDb(
-      action,
-      actionHash,
-      queueData,
-      executeData,
-      cancelData,
-      executeTime,
-      queueExpireTime,
-      executeExpireTime
+    const timeLockData = await getTimeLockData(target, data, executionTime);
+    await insertTimeLockDataInDb(timeLockData);
+  } else if (DRY_RUN === DryRunExecutor.SafeWithTimeLock) {
+    const {newTarget, newData} = await getTimeLockData(
+      target,
+      data,
+      executionTime
     );
+    await proposeSafeTransaction(newTarget, newData);
   } else if (DRY_RUN === DryRunExecutor.Safe) {
     await proposeSafeTransaction(target, data);
   } else {
@@ -784,6 +797,7 @@ export const printEncodedData = async (
 
 export const decodeInputData = (data: string) => {
   const ABI = [
+    ...IPool__factory.abi,
     ...ReservesSetupHelper__factory.abi,
     ...ExecutorWithTimelock__factory.abi,
     ...PoolAddressesProvider__factory.abi,
@@ -793,6 +807,11 @@ export const decodeInputData = (data: string) => {
     ...MultiSendCallOnly__factory.abi,
     ...ERC20__factory.abi,
     ...ERC721__factory.abi,
+    ...NToken__factory.abi,
+    ...PToken__factory.abi,
+    ...AutoCompoundApe__factory.abi,
+    ...PoolParameters__factory.abi,
+    ...Seaport__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
@@ -800,14 +819,15 @@ export const decodeInputData = (data: string) => {
   const normalized = JSON.stringify(inputData, (k, v) => {
     return v ? (v.type === "BigNumber" ? +v.hex.toString(10) : v) : v;
   });
-
-  console.log(JSON.stringify(JSON.parse(normalized), null, 4));
+  return JSON.parse(normalized);
 };
 
 export const proposeSafeTransaction = async (
   target: tEthereumAddress,
   data: string,
-  nonce?: number
+  nonce?: number,
+  operation = OperationType.Call,
+  withTimeLock = false
 ) => {
   const signer = await getFirstSigner();
   const ethAdapter = new EthersAdapter({
@@ -825,22 +845,53 @@ export const proposeSafeTransaction = async (
     }.safe.global`,
     ethAdapter,
   });
+
+  if (withTimeLock) {
+    const {newTarget, newData} = await getTimeLockData(target, data);
+    target = newTarget;
+    data = newData;
+  }
+
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce,
+    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
+    operation,
     data,
   };
   const safeTransaction = await safeSdk.createTransaction({
     safeTransactionData,
   });
+
   const signature = await safeSdk.signTypedData(safeTransaction);
   safeTransaction.addSignature(signature);
+
+  const safeHash = await safeSdk.getTransactionHash(safeTransaction);
+  console.log(safeHash);
+
+  await safeService.estimateSafeTransaction(MULTI_SIG, {
+    ...safeTransactionData,
+    operation: safeTransactionData.operation as number,
+  });
+
   await safeService.proposeTransaction({
     safeAddress: MULTI_SIG,
     safeTransactionData: safeTransaction.data,
-    safeTxHash: await safeSdk.getTransactionHash(safeTransaction),
+    safeTxHash: safeHash,
     senderAddress: await signer.getAddress(),
     senderSignature: signature.data,
   });
+};
+
+export const proposeMultiSafeTransactions = async (
+  transactions: MetaTransaction[],
+  operation = OperationType.DelegateCall,
+  chunkSize = 4
+) => {
+  const newTarget = MULTI_SEND;
+  const chunks = chunk(transactions, chunkSize);
+  for (let i = 0; i < chunks.length; i++) {
+    const {data: newData} = encodeMulti(chunks[i]);
+    await proposeSafeTransaction(newTarget, newData, undefined, operation);
+  }
 };

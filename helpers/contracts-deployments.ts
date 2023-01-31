@@ -590,7 +590,10 @@ export const deployPoolComponents = async (
           eContractid.PoolApeStakingImpl,
           [
             provider,
-            (await deployAutoCompoundApe(verify)).address,
+            (await getContractAddressInDb(eContractid.cAPE)) ||
+              (
+                await deployAutoCompoundApe(verify)
+              ).address,
             allTokens.APE.address,
           ],
           verify,
@@ -985,6 +988,16 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         await insertContractAddressInDb(
           eContractid.UniswapV3Factory,
           paraSpaceConfig.Uniswap.V3Factory,
+          false
+        );
+      }
+      if (
+        tokenSymbol === ERC721TokenContractId.UniswapV3 &&
+        paraSpaceConfig.Uniswap.V3Router
+      ) {
+        await insertContractAddressInDb(
+          eContractid.UniswapV3SwapRouter,
+          paraSpaceConfig.Uniswap.V3Router,
           false
         );
       }

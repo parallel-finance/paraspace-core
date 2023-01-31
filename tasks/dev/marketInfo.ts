@@ -6,7 +6,8 @@ import {WAD} from "../../helpers/constants";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
-  .setAction(async ({market}, DRE) => {
+  .addPositionalParam("blockHash", "block hash", undefined, undefined, true)
+  .setAction(async ({market, blockHash}, DRE) => {
     await DRE.run("set-DRE");
     const {getPoolAddressesProvider, getUiPoolDataProvider} = await import(
       "../../helpers/contracts-getters"
@@ -17,7 +18,8 @@ task("market-info", "Print markets info")
     const ui = await getUiPoolDataProvider();
     const provider = await getPoolAddressesProvider();
     const [reservesData, baseCurrencyInfo] = await ui.getReservesData(
-      provider.address
+      provider.address,
+      {blockTag: blockHash}
     );
     for (const x of reservesData.filter(
       (r) =>
@@ -68,7 +70,9 @@ task("market-info", "Print markets info")
           x.accruedToTreasury.mul(WAD).div(BigNumber.from(10).pow(x.decimals))
         )
       );
+      console.log(" liquidityIndex:", fromBn(x.liquidityIndex, 27));
       console.log(" liquidityRate:", fromBn(x.liquidityRate, 27));
       console.log(" variableBorrowRate:", fromBn(x.variableBorrowRate, 27));
+      console.log(" variableBorrowIndex:", fromBn(x.variableBorrowIndex, 27));
     }
   });

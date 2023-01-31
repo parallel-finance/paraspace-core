@@ -5,7 +5,7 @@ import {isAddress} from "ethers/lib/utils";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import low from "lowdb";
 import {getAdapter} from "./db-adapter";
-import {verifyEtherscanContract} from "./etherscan-verification";
+import {verifyEtherscanContract} from "./etherscan";
 import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
 import {ParaSpaceConfigs} from "../market-config";
 import {

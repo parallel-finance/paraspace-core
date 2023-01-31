@@ -1,9 +1,7 @@
 #!make
 
-NETWORK                  := hardhat
-
 include .env
-export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
+export $(shell sed 's/=.*//' .env)
 
 SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
@@ -18,14 +16,6 @@ init: submodules
 	[ -d lib/ds-test ] || forge install --no-commit --no-git https://github.com/dapphub/ds-test
 	[ -d lib/forge-std ] || forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
-
-.PHONY: foundry-setup
-foundry-setup: anvil
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat deploy:all --network anvil # --verbose
-
-.PHONY: foundry-test
-foundry-test:
-	forge test -vvvv
 
 .PHONY: test
 test:
@@ -398,6 +388,18 @@ rate-strategy:
 auction-strategy:
 	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
 
+.PHONY: set-interval-mining
+set-interval-mining:
+	make SCRIPT_PATH=./scripts/dev/8.set-interval-mining.ts run
+
+.PHONY: set-auto-mining
+set-auto-mining:
+	make SCRIPT_PATH=./scripts/dev/9.set-auto-mining.ts run
+
+.PHONY: send-eth
+send-eth:
+	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -418,9 +420,17 @@ decode:
 decode-multi:
 	make TASK_NAME=decode-multi run-task
 
+.PHONY: decode-tx
+decode-tx:
+	make TASK_NAME=decode-tx run-task
+
 .PHONY: next-execution-time
 next-execution-time:
 	make TASK_NAME=next-execution-time run-task
+
+.PHONY: increase-to-execution-time
+increase-to-execution-time:
+	make TASK_NAME=increase-to-execution-time run-task
 
 .PHONY: queue-tx
 queue-tx:
@@ -522,6 +532,10 @@ upgrade:
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: reset-pool
+reset-pool:
+	make TASK_NAME=reset:pool run-task
+
 .PHONY: upgrade-configurator
 upgrade-configurator:
 	make TASK_NAME=upgrade:configurator run-task
@@ -548,23 +562,29 @@ hardhat:
 
 .PHONY: anvil
 anvil:
-	sudo pkill anvil || true
-	anvil &
-	sleep 30
+	anvil \
+		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
+		--chain-id 522 \
+		--tracing \
+		--host 0.0.0.0 \
+		--state-interval 60 \
+		--dump-state state.json \
+		$(if $(wildcard state.json),--load-state state.json,) \
+		--code-size-limit 100000 \
 
 .PHONY: image
 image:
-	DOCKER_BUILDKIT=1 docker build \
+	docker build \
 		-c 512 \
 		-t parallelfinance/paraspace:latest \
-		-f Dockerfile .
+		-f Dockerfile.${JSONRPC_VARIANT} .
 
 .PHONY: launch
 launch: shutdown
 	docker-compose \
 		up \
 		-d --build
-	docker-compose logs -f hardhat
+	docker-compose logs -f node
 
 .PHONY: shutdown
 shutdown:
@@ -575,10 +595,11 @@ shutdown:
 	docker volume prune -f
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
+	sudo rm -fr state.json || true
 
 .PHONY: copy
 copy:
-	docker cp paraspace-core_hardhat_1:/paraspace/deployed-contracts.json .
+	docker cp paraspace-core_node_1:/paraspace/deployed-contracts.json .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

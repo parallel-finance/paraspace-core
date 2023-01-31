@@ -6,7 +6,6 @@ import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 
 import {Ownable} from "../../../contracts/dependencies/openzeppelin/contracts/Ownable.sol";
 
-import "hardhat/console.sol";
 //      |||||\          |||||\               |||||\           |||||\
 //      ||||| |         ||||| |              ||||| |          ||||| |
 //       \__|||||\  |||||\___\|               \__|||||\   |||||\___\|
