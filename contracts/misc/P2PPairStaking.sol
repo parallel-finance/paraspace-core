@@ -52,7 +52,7 @@ contract P2PPairStaking is
     ApeCoinStaking internal immutable apeCoinStaking;
 
     bytes32 internal DOMAIN_SEPARATOR;
-    mapping(bytes32 => bool) public isListingOrderCancelled;
+    mapping(bytes32 => ListingOrderStatus) public listingOrderStatus;
     mapping(bytes32 => MatchedOrder) public matchedOrders;
     mapping(address => mapping(uint32 => uint256)) public apeMatchedCount;
     mapping(address => uint256) public cApeShareBalance;
@@ -132,8 +132,11 @@ contract P2PPairStaking is
     {
         require(msg.sender == listingOrder.offerer, "not order offerer");
         bytes32 orderHash = getListingOrderHash(listingOrder);
-        require(!isListingOrderCancelled[orderHash], "order already cancel");
-        isListingOrderCancelled[orderHash] = true;
+        require(
+            listingOrderStatus[orderHash] != ListingOrderStatus.Cancelled,
+            "order already cancelled"
+        );
+        listingOrderStatus[orderHash] = ListingOrderStatus.Cancelled;
 
         emit OrderCancelled(orderHash, listingOrder.offerer);
     }
@@ -144,7 +147,7 @@ contract P2PPairStaking is
     ) external nonReentrant returns (bytes32 orderHash) {
         //1 validate all order
         _validateApeOrder(apeOrder);
-        _validateApeCoinOrder(apeCoinOrder);
+        bytes32 apeCoinListingOrderHash = _validateApeCoinOrder(apeCoinOrder);
 
         //2 check if orders can match
         require(
@@ -175,7 +178,8 @@ contract P2PPairStaking is
             bakcShare: 0,
             apeCoinOfferer: apeCoinOrder.offerer,
             apeCoinShare: apeCoinOrder.share,
-            apePrincipleAmount: apeAmount
+            apePrincipleAmount: apeAmount,
+            apeCoinListingOrderHash: apeCoinListingOrderHash
         });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
@@ -192,7 +196,11 @@ contract P2PPairStaking is
             apeCoinStaking.depositMAYC(singleNft);
         }
 
-        //5 emit event
+        //6 update ape coin listing order status
+        listingOrderStatus[apeCoinListingOrderHash] = ListingOrderStatus
+            .Matched;
+
+        //7 emit event
         emit PairStakingMatched(orderHash);
 
         return orderHash;
@@ -206,7 +214,7 @@ contract P2PPairStaking is
         //1 validate all order
         _validateApeOrder(apeOrder);
         _validateBakcOrder(bakcOrder);
-        _validateApeCoinOrder(apeCoinOrder);
+        bytes32 apeCoinListingOrderHash = _validateApeCoinOrder(apeCoinOrder);
 
         //2 check if orders can match
         require(
@@ -239,7 +247,8 @@ contract P2PPairStaking is
             bakcShare: bakcOrder.share,
             apeCoinOfferer: apeCoinOrder.offerer,
             apeCoinShare: apeCoinOrder.share,
-            apePrincipleAmount: apeAmount
+            apePrincipleAmount: apeAmount,
+            apeCoinListingOrderHash: apeCoinListingOrderHash
         });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
@@ -263,7 +272,11 @@ contract P2PPairStaking is
             apeCoinStaking.depositBAKC(_otherPairs, _stakingPairs);
         }
 
-        //5 emit event
+        //6 update ape coin listing order status
+        listingOrderStatus[apeCoinListingOrderHash] = ListingOrderStatus
+            .Matched;
+
+        //7 emit event
         emit PairStakingMatched(orderHash);
 
         return orderHash;
@@ -351,7 +364,17 @@ contract P2PPairStaking is
             );
         }
 
-        //5 emit event
+        //6 reset ape coin listing order status
+        if (
+            listingOrderStatus[order.apeCoinListingOrderHash] !=
+            ListingOrderStatus.Cancelled
+        ) {
+            listingOrderStatus[
+                order.apeCoinListingOrderHash
+            ] = ListingOrderStatus.Pending;
+        }
+
+        //7 emit event
         emit PairStakingBreakUp(orderHash);
     }
 
@@ -583,6 +606,7 @@ contract P2PPairStaking is
     function _validateOrderBasicInfo(ListingOrder calldata listingOrder)
         internal
         view
+        returns (bytes32 orderHash)
     {
         require(
             listingOrder.startTime <= block.timestamp,
@@ -590,8 +614,11 @@ contract P2PPairStaking is
         );
         require(listingOrder.endTime >= block.timestamp, "ape offer expired");
 
-        bytes32 orderHash = getListingOrderHash(listingOrder);
-        require(!isListingOrderCancelled[orderHash], "order already canceled");
+        orderHash = getListingOrderHash(listingOrder);
+        require(
+            listingOrderStatus[orderHash] != ListingOrderStatus.Cancelled,
+            "order already cancelled"
+        );
 
         if (
             msg.sender != listingOrder.offerer && msg.sender != matchingOperator
@@ -640,9 +667,14 @@ contract P2PPairStaking is
     function _validateApeCoinOrder(ListingOrder calldata apeCoinOrder)
         internal
         view
+        returns (bytes32 orderHash)
     {
-        _validateOrderBasicInfo(apeCoinOrder);
+        orderHash = _validateOrderBasicInfo(apeCoinOrder);
         require(apeCoinOrder.token == pcApe, "ape coin order invalid token");
+        require(
+            listingOrderStatus[orderHash] != ListingOrderStatus.Matched,
+            "ape coin order already matched"
+        );
     }
 
     function validateOrderSignature(

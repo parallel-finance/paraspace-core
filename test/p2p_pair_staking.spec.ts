@@ -698,7 +698,7 @@ describe("P2P Pair Staking Test", () => {
       p2pPairStaking
         .connect(user1.signer)
         .matchPairStakingList(user1SignedOrder, user2SignedOrder)
-    ).to.be.revertedWith("order already canceled");
+    ).to.be.revertedWith("order already cancelled");
   });
 
   it("match failed when order was canceled 1", async () => {
@@ -766,7 +766,7 @@ describe("P2P Pair Staking Test", () => {
           user2SignedOrder,
           user3SignedOrder
         )
-    ).to.be.revertedWith("order already canceled");
+    ).to.be.revertedWith("order already cancelled");
   });
 
   it("match failed when orders type match failed 0", async () => {
@@ -1332,6 +1332,83 @@ describe("P2P Pair Staking Test", () => {
 
     await waitForTx(
       await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash1)
+    );
+  });
+
+  it("check ape coin listing order can not be matched twice", async () => {
+    const {
+      users: [user1, user2],
+      bayc,
+      ape,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "2", user1, true);
+    await mintAndValidate(ape, "1000000", user2);
+
+    await waitForTx(
+      await bayc
+        .connect(user1.signer)
+        .setApprovalForAll(p2pPairStaking.address, true)
+    );
+    await waitForTx(
+      await cApe
+        .connect(user2.signer)
+        .deposit(user2.address, parseEther("500000"))
+    );
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .supply(cApe.address, parseEther("500000"), user2.address, 0)
+    );
+
+    const user1SignedOrder0 = await getSignedListingOrder(
+      p2pPairStaking,
+      0,
+      bayc,
+      0,
+      2000,
+      user1
+    );
+    const user1SignedOrder1 = await getSignedListingOrder(
+      p2pPairStaking,
+      0,
+      bayc,
+      1,
+      2000,
+      user1
+    );
+    const user2SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      0,
+      pCApe,
+      0,
+      8000,
+      user2
+    );
+
+    const txReceipt = await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder0, user2SignedOrder)
+    );
+    const logLength = txReceipt.logs.length;
+    const orderHash0 = txReceipt.logs[logLength - 1].data;
+
+    await expect(
+      p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder1, user2SignedOrder)
+    ).to.be.revertedWith("ape coin order already matched");
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).breakUpMatchedOrder(orderHash0)
+    );
+
+    await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder1, user2SignedOrder)
     );
   });
 });

@@ -11,6 +11,12 @@ interface IP2PPairStaking {
         MAYCPairStaking
     }
 
+    enum ListingOrderStatus {
+        Pending,
+        Matched,
+        Cancelled
+    }
+
     struct ListingOrder {
         StakingType stakingType;
         address offerer;
@@ -34,6 +40,7 @@ interface IP2PPairStaking {
         address apeCoinOfferer;
         uint32 apeCoinShare;
         uint256 apePrincipleAmount;
+        bytes32 apeCoinListingOrderHash;
     }
 
     /**
