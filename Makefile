@@ -563,14 +563,14 @@ hardhat:
 .PHONY: anvil
 anvil:
 	anvil \
-		--fork-url https://eth-${FORK}.alchemyapi.io/v2/${ALCHEMY_KEY} \
+		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
 		--chain-id 522 \
 		--tracing \
 		--host 0.0.0.0 \
 		--state-interval 60 \
 		--dump-state state.json \
+		$(if $(wildcard state.json),--load-state state.json,) \
 		--code-size-limit 100000 \
-		--no-rate-limit
 
 .PHONY: image
 image:
