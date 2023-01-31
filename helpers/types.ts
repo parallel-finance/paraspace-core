@@ -618,6 +618,7 @@ export interface IUniswapConfig {
   V2Factory?: tEthereumAddress;
   V2Router?: tEthereumAddress;
   V3Factory?: tEthereumAddress;
+  V3Router?: tEthereumAddress;
   V3NFTPositionManager?: tEthereumAddress;
 }
 

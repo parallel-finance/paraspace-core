@@ -992,6 +992,16 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         );
       }
       if (
+        tokenSymbol === ERC721TokenContractId.UniswapV3 &&
+        paraSpaceConfig.Uniswap.V3Router
+      ) {
+        await insertContractAddressInDb(
+          eContractid.UniswapV3SwapRouter,
+          paraSpaceConfig.Uniswap.V3Router,
+          false
+        );
+      }
+      if (
         tokenSymbol === ERC721TokenContractId.WPUNKS &&
         paraSpaceConfig.Tokens.PUNKS
       ) {
