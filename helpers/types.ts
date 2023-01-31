@@ -469,6 +469,7 @@ export enum ERC721TokenContractId {
   OTHR = "OTHR",
   UniswapV3 = "UniswapV3",
   BAKC = "BAKC",
+  SEWER = "SEWER",
 }
 
 export enum NTokenContractId {

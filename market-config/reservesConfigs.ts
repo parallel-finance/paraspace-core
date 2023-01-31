@@ -224,6 +224,21 @@ export const strategyBAKC: IReserveParams = {
   supplyCap: "1000",
 };
 
+export const strategySEWER: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyBAKC, // same as BAKC, it won't be used as collateral so it's okay
+  baseLTVAsCollateral: "0",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "0000",
+  liquidationBonus: "00000",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "1000",
+};
+
 export const strategyDoodles: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyDoodles,
