@@ -1,10 +1,7 @@
 #!make
 
-NETWORK                  := hardhat
-JSONRPC_VARIANT          := hardhat
-
 include .env
-export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
+export $(shell sed 's/=.*//' .env)
 
 SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
@@ -566,7 +563,7 @@ hardhat:
 .PHONY: anvil
 anvil:
 	anvil \
-		--fork-url https://eth-${NETWORK}.alchemyapi.io/v2/${ALCHEMY_KEY} \
+		--fork-url https://eth-${FORK}.alchemyapi.io/v2/${ALCHEMY_KEY} \
 		--chain-id 522 \
 		--tracing \
 		--host 0.0.0.0 \
