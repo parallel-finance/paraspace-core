@@ -9,6 +9,7 @@ import "../interfaces/IP2PPairStaking.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "../interfaces/IAutoCompoundApe.sol";
 import "../interfaces/ICApe.sol";
+import "../interfaces/IPoolCore.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC20, SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {PercentageMath} from "../protocol/libraries/math/PercentageMath.sol";
@@ -46,6 +47,8 @@ contract P2PPairStaking is
     address internal immutable nBakc;
     address internal immutable apeCoin;
     address internal immutable cApe;
+    address internal immutable pcApe;
+    address internal immutable lendingPool;
     ApeCoinStaking internal immutable apeCoinStaking;
 
     bytes32 internal DOMAIN_SEPARATOR;
@@ -65,7 +68,9 @@ contract P2PPairStaking is
         address _nBakc,
         address _apeCoin,
         address _cApe,
-        address _apeCoinStaking
+        address _pcApe,
+        address _apeCoinStaking,
+        address _lendingPool
     ) {
         bayc = _bayc;
         mayc = _mayc;
@@ -75,7 +80,9 @@ contract P2PPairStaking is
         nBakc = _nBakc;
         apeCoin = _apeCoin;
         cApe = _cApe;
+        pcApe = _pcApe;
         apeCoinStaking = ApeCoinStaking(_apeCoinStaking);
+        lendingPool = _lendingPool;
     }
 
     function initialize() public initializer {
@@ -94,7 +101,7 @@ contract P2PPairStaking is
             )
         );
 
-        //approve for apeCoinStaking
+        //approve ApeCoin for apeCoinStaking
         uint256 allowance = IERC20(apeCoin).allowance(
             address(this),
             address(apeCoinStaking)
@@ -106,10 +113,16 @@ contract P2PPairStaking is
             );
         }
 
-        //approve for cApe
+        //approve ApeCoin for cApe
         allowance = IERC20(apeCoin).allowance(address(this), cApe);
         if (allowance == 0) {
             IERC20(apeCoin).safeApprove(cApe, type(uint256).max);
+        }
+
+        //approve cApe for lendingPool
+        allowance = IERC20(cApe).allowance(address(this), lendingPool);
+        if (allowance == 0) {
+            IERC20(cApe).safeApprove(lendingPool, type(uint256).max);
         }
     }
 
@@ -150,12 +163,7 @@ contract P2PPairStaking is
 
         //3 transfer token
         _handleApeTransfer(apeOrder);
-        uint256 apeAmount = getApeCoinStakingCap(apeOrder.stakingType);
-        IERC20(apeCoin).safeTransferFrom(
-            apeCoinOrder.offerer,
-            address(this),
-            apeAmount
-        );
+        uint256 apeAmount = _handlePCApeTransferAndConvert(apeCoinOrder);
 
         //4 create match order
         MatchedOrder memory matchedOrder = MatchedOrder({
@@ -219,12 +227,7 @@ contract P2PPairStaking is
         //3 transfer token
         _handleApeTransfer(apeOrder);
         IERC721(bakc).safeTransferFrom(nBakc, address(this), bakcOrder.tokenId);
-        uint256 apeAmount = getApeCoinStakingCap(apeOrder.stakingType);
-        IERC20(apeCoin).safeTransferFrom(
-            apeCoinOrder.offerer,
-            address(this),
-            apeAmount
-        );
+        uint256 apeAmount = _handlePCApeTransferAndConvert(apeCoinOrder);
 
         //4 create match order
         MatchedOrder memory matchedOrder = MatchedOrder({
@@ -333,9 +336,12 @@ contract P2PPairStaking is
         }
         apeMatchedCount[order.apeToken][order.apeTokenId] = matchedCount - 1;
 
-        IERC20(apeCoin).safeTransfer(
+        IAutoCompoundApe(cApe).deposit(address(this), order.apePrincipleAmount);
+        IPoolCore(lendingPool).supply(
+            cApe,
+            order.apePrincipleAmount,
             order.apeCoinOfferer,
-            order.apePrincipleAmount
+            0
         );
         if (order.stakingType >= StakingType.BAYCPairStaking) {
             IERC721(bakc).safeTransferFrom(
@@ -558,6 +564,22 @@ contract P2PPairStaking is
         }
     }
 
+    function _handlePCApeTransferAndConvert(ListingOrder calldata apeCoinOrder)
+        internal
+        returns (uint256)
+    {
+        uint256 apeAmount = getApeCoinStakingCap(apeCoinOrder.stakingType);
+        IERC20(pcApe).safeTransferFrom(
+            apeCoinOrder.offerer,
+            address(this),
+            apeAmount
+        );
+
+        IPoolCore(lendingPool).withdraw(cApe, apeAmount, address(this));
+        IAutoCompoundApe(cApe).withdraw(apeAmount);
+        return apeAmount;
+    }
+
     function _validateOrderBasicInfo(ListingOrder calldata listingOrder)
         internal
         view
@@ -620,7 +642,7 @@ contract P2PPairStaking is
         view
     {
         _validateOrderBasicInfo(apeCoinOrder);
-        require(apeCoinOrder.token == apeCoin, "ape coin order invalid token");
+        require(apeCoinOrder.token == pcApe, "ape coin order invalid token");
     }
 
     function validateOrderSignature(
