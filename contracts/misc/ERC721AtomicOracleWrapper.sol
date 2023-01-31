@@ -79,12 +79,18 @@ contract ERC721AtomicOracleWrapper is IAtomicPriceAggregator {
     /**
      * @notice Set price multiplier for the specified tokenId;
      */
-    function setPriceMultiplier(uint256 tokenId, uint256 _priceMultiplier)
-        external
-        onlyAssetListingOrPoolAdmins
-    {
-        _validatePriceMultiplier(_priceMultiplier);
-        traitMultipliers[tokenId] = _priceMultiplier;
+    function setPriceMultipliers(
+        uint256[] calldata tokenIds,
+        uint256[] calldata priceMultipliers
+    ) external onlyAssetListingOrPoolAdmins {
+        require(
+            tokenIds.length == priceMultipliers.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            _validatePriceMultiplier(priceMultipliers[i]);
+            traitMultipliers[tokenIds[i]] = priceMultipliers[i];
+        }
     }
 
     /**

@@ -57,24 +57,24 @@ describe("ERC721 Atomic Oracle", () => {
 
   it("set priceMultiplier < 1x is not allowed (revert expected)", async () => {
     await expect(
-      baycAtomicAggregator.setPriceMultiplier(tokenId0, HALF_WAD)
+      baycAtomicAggregator.setPriceMultipliers([tokenId0], [HALF_WAD])
     ).to.be.revertedWith("invalid price multiplier");
   });
 
   it("set priceMultiplier > 10x is not allowed (revert expected)", async () => {
     await expect(
-      baycAtomicAggregator.setPriceMultiplier(
-        tokenId0,
-        BigNumber.from(WAD).mul(10).add(1)
+      baycAtomicAggregator.setPriceMultipliers(
+        [tokenId0],
+        [BigNumber.from(WAD).mul(10).add(1)]
       )
     ).to.be.revertedWith("invalid price multiplier");
   });
 
   it("price is equal to 2x of floor when multiplier is set to 2", async () => {
     await waitForTx(
-      await baycAtomicAggregator.setPriceMultiplier(
-        tokenId0,
-        BigNumber.from(WAD).mul(2)
+      await baycAtomicAggregator.setPriceMultipliers(
+        [tokenId0],
+        [BigNumber.from(WAD).mul(2)]
       )
     );
 
@@ -86,7 +86,7 @@ describe("ERC721 Atomic Oracle", () => {
   it("multiplier can be removed by setting to 1x", async () => {
     // resume price
     await waitForTx(
-      await baycAtomicAggregator.setPriceMultiplier(tokenId0, WAD)
+      await baycAtomicAggregator.setPriceMultipliers([tokenId0], [WAD])
     );
 
     expect(await baycAtomicAggregator.getTokenPrice(tokenId0)).to.be.eq(
@@ -96,15 +96,15 @@ describe("ERC721 Atomic Oracle", () => {
 
   it("prices are correct when there are multiple tokens", async () => {
     await waitForTx(
-      await baycAtomicAggregator.setPriceMultiplier(
-        tokenId0,
-        BigNumber.from(WAD).mul(2)
+      await baycAtomicAggregator.setPriceMultipliers(
+        [tokenId0],
+        [BigNumber.from(WAD).mul(2)]
       )
     );
     await waitForTx(
-      await baycAtomicAggregator.setPriceMultiplier(
-        tokenId1,
-        BigNumber.from(WAD).mul(3)
+      await baycAtomicAggregator.setPriceMultipliers(
+        [tokenId1],
+        [BigNumber.from(WAD).mul(3)]
       )
     );
 
@@ -119,14 +119,14 @@ describe("ERC721 Atomic Oracle", () => {
     );
   });
 
-  it("normal users cannot setPriceMultiplier (revert expected)", async () => {
+  it("normal users cannot setPriceMultipliers (revert expected)", async () => {
     const {
       users: [, , user3],
     } = testEnv;
     await expect(
       baycAtomicAggregator
         .connect(user3.signer)
-        .setPriceMultiplier(tokenId0, BigNumber.from(WAD).mul(2))
+        .setPriceMultipliers([tokenId0], [BigNumber.from(WAD).mul(2)])
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
   });
 });
