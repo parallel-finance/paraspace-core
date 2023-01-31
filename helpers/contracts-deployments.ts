@@ -1311,10 +1311,44 @@ export const deployERC721AtomicOracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new ERC721AtomicOracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721AtomicOracleWrapper>;
+
+export const deployERC721AtomicOracleWrapperProxy = async (
+  addressesProvider: string,
+  oracleAddress: string,
+  asset: string,
+  symbol: string,
+  verify?: boolean
+) => {
+  const wrapperImpl = await deployERC721AtomicOracleWrapper(
+    addressesProvider,
+    oracleAddress,
+    asset,
+    symbol,
+    verify
+  );
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(deployer),
+    eContractid.Aggregator.concat(`${upperFirst(symbol)}Proxy`),
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](wrapperImpl.address, deployerAddress, "0x", GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as ERC721AtomicOracleWrapper;
+};
 
 export const deployPunks = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
@@ -2053,7 +2087,7 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
     cApeImplementation.interface.encodeFunctionData("initialize");
 
   const proxyInstance = await withSaveAndVerify(
-    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    new InitializableAdminUpgradeabilityProxy__factory(deployer),
     eContractid.cAPE,
     [],
     verify
