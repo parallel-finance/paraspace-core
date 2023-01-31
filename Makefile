@@ -584,6 +584,7 @@ launch: shutdown
 	docker-compose \
 		up \
 		-d --build
+	docker-compose logs -f node
 
 .PHONY: shutdown
 shutdown:
@@ -598,7 +599,7 @@ shutdown:
 
 .PHONY: copy
 copy:
-	docker cp paraspace-core_hardhat_1:/paraspace/deployed-contracts.json .
+	docker cp paraspace-core_node_1:/paraspace/deployed-contracts.json .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort
