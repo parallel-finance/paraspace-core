@@ -141,10 +141,6 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         );
     }
 
-    function isAtomicToken(uint256) external pure override returns (bool) {
-        return true;
-    }
-
     function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
         external
         override

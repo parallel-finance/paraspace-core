@@ -11,6 +11,7 @@ import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IAtomicCollateralizableERC721} from "../interfaces/IAtomicCollateralizableERC721.sol";
+import {XTokenType, IXTokenType} from "../interfaces/IXTokenType.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
@@ -493,24 +494,22 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     );
                 // token price
                 if (
+                    IXTokenType(baseData.xTokenAddress).getXTokenType() ==
+                    XTokenType.NTokenUniswapV3
+                ) {
+                    try
+                        oracle.getTokenPrice(tokenData.asset, tokenData.tokenId)
+                    returns (uint256 price) {
+                        tokenData.tokenPrice = price;
+                    } catch {}
+                } else if (
                     IAtomicCollateralizableERC721(baseData.xTokenAddress)
                         .isAtomicToken(tokenData.tokenId)
                 ) {
                     uint256 multiplier = IAtomicCollateralizableERC721(
                         baseData.xTokenAddress
                     ).getTraitMultiplier(tokenData.tokenId);
-                    if (multiplier == 0) {
-                        try
-                            oracle.getTokenPrice(
-                                tokenData.asset,
-                                tokenData.tokenId
-                            )
-                        returns (uint256 price) {
-                            tokenData.tokenPrice = price.wadMul(multiplier);
-                        } catch {}
-                    } else {
-                        tokenData.tokenPrice = collectionPrice;
-                    }
+                    tokenData.tokenPrice = collectionPrice.wadMul(multiplier);
                 } else {
                     tokenData.tokenPrice = collectionPrice;
                 }

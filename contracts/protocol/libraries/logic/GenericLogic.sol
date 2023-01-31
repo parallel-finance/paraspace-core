@@ -16,7 +16,7 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
-import {XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 
 /**
  * @title GenericLogic library
@@ -390,11 +390,24 @@ library GenericLogic {
                     tokenId
                 )
             ) {
-                totalValue += _getTokenPrice(
-                    params.oracle,
-                    vars.currentReserveAddress,
-                    tokenId
-                );
+                if (
+                    IXTokenType(vars.xTokenAddress).getXTokenType() ==
+                    XTokenType.NTokenUniswapV3
+                ) {
+                    totalValue += _getTokenPrice(
+                        params.oracle,
+                        vars.currentReserveAddress,
+                        tokenId
+                    );
+                } else if (
+                    IAtomicCollateralizableERC721(vars.xTokenAddress)
+                        .isAtomicToken(tokenId)
+                ) {
+                    uint256 multiplier = IAtomicCollateralizableERC721(
+                        vars.xTokenAddress
+                    ).getTraitMultiplier(tokenId);
+                    totalValue += assetPrice.wadMul(multiplier);
+                }
             }
         }
     }

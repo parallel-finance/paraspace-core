@@ -20,6 +20,7 @@ import {IWETH} from "../../../misc/interfaces/IWETH.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
+import {IXTokenType, XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {PRBMath} from "../../../dependencies/math/PRBMath.sol";
 import {PRBMathUD60x18} from "../../../dependencies/math/PRBMathUD60x18.sol";
@@ -779,23 +780,24 @@ library LiquidationLogic {
 
         // price of the asset that is used as collateral
         if (
+            IXTokenType(superVars.collateralXToken).getXTokenType() ==
+            XTokenType.NTokenUniswapV3
+        ) {
+            vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
+                .getTokenPrice(
+                    params.collateralAsset,
+                    params.collateralTokenId
+                );
+        } else if (
             IAtomicCollateralizableERC721(superVars.collateralXToken)
                 .isAtomicToken(params.collateralTokenId)
         ) {
             uint256 multiplier = IAtomicCollateralizableERC721(
                 superVars.collateralXToken
             ).getTraitMultiplier(params.collateralTokenId);
-            if (multiplier == 0) {
-                vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
-                    .getTokenPrice(
-                        params.collateralAsset,
-                        params.collateralTokenId
-                    );
-            } else {
-                vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
-                    .getAssetPrice(params.collateralAsset)
-                    .wadMul(multiplier);
-            }
+            vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
+                .getAssetPrice(params.collateralAsset)
+                .wadMul(multiplier);
         } else {
             vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
                 .getAssetPrice(params.collateralAsset);
