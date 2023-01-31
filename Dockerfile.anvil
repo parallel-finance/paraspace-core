@@ -1,0 +1,13 @@
+FROM ghcr.io/foundry-rs/foundry:nightly-31f945c09f464487d139833c668d856ef43d58cc
+
+WORKDIR /paraspace
+
+COPY . /paraspace
+
+RUN apk add --no-cache make
+
+# https://docs.docker.com/config/containers/multi-service_container/
+RUN echo -e '#!/bin/sh\nmake anvil' > .entrypoint.sh
+RUN chmod +x .entrypoint.sh
+
+ENTRYPOINT ["/paraspace/.entrypoint.sh"]

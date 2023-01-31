@@ -7,7 +7,7 @@ task("set-ltv", "Set LTV")
   .addPositionalParam("ltv", "ltv")
   .setAction(async ({asset, ltv}, DRE) => {
     await DRE.run("set-DRE");
-    const {printEncodedData} = await import("../../helpers/contracts-helpers");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
       getPoolConfiguratorProxy,
       getPoolAddressesProvider,
@@ -33,7 +33,7 @@ task("set-ltv", "Set LTV")
       ]
     );
     if (DRY_RUN) {
-      await printEncodedData(configurator.address, encodedData);
+      await dryRunEncodedData(configurator.address, encodedData);
     } else {
       await waitForTx(
         await configurator.configureReserveAsCollateral(
@@ -51,7 +51,7 @@ task("set-liquidation-threshold", "Set liquidation threshold")
   .addPositionalParam("liquidationThreshold", "liquidation threshold")
   .setAction(async ({asset, liquidationThreshold}, DRE) => {
     await DRE.run("set-DRE");
-    const {printEncodedData} = await import("../../helpers/contracts-helpers");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
       getPoolConfiguratorProxy,
       getPoolAddressesProvider,
@@ -77,7 +77,7 @@ task("set-liquidation-threshold", "Set liquidation threshold")
       ]
     );
     if (DRY_RUN) {
-      await printEncodedData(configurator.address, encodedData);
+      await dryRunEncodedData(configurator.address, encodedData);
     } else {
       await waitForTx(
         await configurator.configureReserveAsCollateral(
@@ -95,7 +95,7 @@ task("set-reserve-factor", "Set reserve factor")
   .addPositionalParam("reserveFactor", "reserve factor")
   .setAction(async ({asset, reserveFactor}, DRE) => {
     await DRE.run("set-DRE");
-    const {printEncodedData} = await import("../../helpers/contracts-helpers");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
       getPoolConfiguratorProxy,
       getPoolAddressesProvider,
@@ -116,7 +116,7 @@ task("set-reserve-factor", "Set reserve factor")
       [reserveData.underlyingAsset, reserveFactor]
     );
     if (DRY_RUN) {
-      await printEncodedData(configurator.address, encodedData);
+      await dryRunEncodedData(configurator.address, encodedData);
     } else {
       await waitForTx(
         await configurator.setReserveFactor(
@@ -135,7 +135,7 @@ task("set-interest-rate-strategy", "Set interest rate strategy")
   )
   .setAction(async ({asset, interestRateStrategyAddress}, DRE) => {
     await DRE.run("set-DRE");
-    const {printEncodedData} = await import("../../helpers/contracts-helpers");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
       getPoolConfiguratorProxy,
       getPoolAddressesProvider,
@@ -156,7 +156,7 @@ task("set-interest-rate-strategy", "Set interest rate strategy")
       [reserveData.underlyingAsset, interestRateStrategyAddress]
     );
     if (DRY_RUN) {
-      await printEncodedData(configurator.address, encodedData);
+      await dryRunEncodedData(configurator.address, encodedData);
     } else {
       await waitForTx(
         await configurator.setReserveInterestRateStrategyAddress(
@@ -172,7 +172,7 @@ task("set-auction-strategy", "Set auction strategy")
   .addPositionalParam("auctionStrategyAddress", "auction strategy address")
   .setAction(async ({asset, auctionStrategyAddress}, DRE) => {
     await DRE.run("set-DRE");
-    const {printEncodedData} = await import("../../helpers/contracts-helpers");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
       getPoolConfiguratorProxy,
       getPoolAddressesProvider,
@@ -193,7 +193,7 @@ task("set-auction-strategy", "Set auction strategy")
       [reserveData.underlyingAsset, auctionStrategyAddress]
     );
     if (DRY_RUN) {
-      await printEncodedData(configurator.address, encodedData);
+      await dryRunEncodedData(configurator.address, encodedData);
     } else {
       await waitForTx(
         await configurator.setReserveAuctionStrategyAddress(
@@ -209,7 +209,7 @@ task("set-supply-cap", "Set supply cap")
   .addPositionalParam("supplyCap", "new supply cap")
   .setAction(async ({asset, supplyCap}, DRE) => {
     await DRE.run("set-DRE");
-    const {printEncodedData} = await import("../../helpers/contracts-helpers");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
       getPoolConfiguratorProxy,
       getPoolAddressesProvider,
@@ -230,7 +230,7 @@ task("set-supply-cap", "Set supply cap")
       [reserveData.underlyingAsset, supplyCap]
     );
     if (DRY_RUN) {
-      await printEncodedData(configurator.address, encodedData);
+      await dryRunEncodedData(configurator.address, encodedData);
     } else {
       await waitForTx(
         await configurator.setSupplyCap(reserveData.underlyingAsset, supplyCap)
@@ -243,7 +243,7 @@ task("set-borrow-cap", "Set borrow cap")
   .addPositionalParam("borrowCap", "new borrow cap")
   .setAction(async ({asset, borrowCap}, DRE) => {
     await DRE.run("set-DRE");
-    const {printEncodedData} = await import("../../helpers/contracts-helpers");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
       getPoolConfiguratorProxy,
       getPoolAddressesProvider,
@@ -264,7 +264,7 @@ task("set-borrow-cap", "Set borrow cap")
       [reserveData.underlyingAsset, borrowCap]
     );
     if (DRY_RUN) {
-      await printEncodedData(configurator.address, encodedData);
+      await dryRunEncodedData(configurator.address, encodedData);
     } else {
       await waitForTx(
         await configurator.setBorrowCap(reserveData.underlyingAsset, borrowCap)

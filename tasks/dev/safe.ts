@@ -1,16 +1,10 @@
 import {task} from "hardhat/config";
-import {
-  FORK,
-  MULTI_SEND,
-  MULTI_SIG,
-  TIME_LOCK_DEFAULT_OPERATION,
-} from "../../helpers/hardhat-constants";
+import {FORK, MULTI_SEND, MULTI_SIG} from "../../helpers/hardhat-constants";
 import {ethers} from "ethers";
-import {decodeMulti} from "ethers-multisend";
+import {decodeMulti, MetaTransaction} from "ethers-multisend";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
-import {TimeLockOperation} from "../../helpers/types";
 
 const TIME_LOCK_SIGS = {
   "0xc1a287e2": "GRACE_PERIOD()",
@@ -93,31 +87,33 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
     const {to, data} = tx;
     console.log();
     console.log(to);
-    await decodeInputData(data);
+    console.log(JSON.stringify(decodeInputData(data), null, 4));
   }
 });
 
 task("propose-safe-txs", "Propose buffered timelock transactions").setAction(
   async (_, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockDataInDb, proposeSafeTransaction} = await import(
-      "../../helpers/contracts-helpers"
-    );
-    const {getTimeLockExecutor} = await import(
-      "../../helpers/contracts-getters"
-    );
-    const timeLock = await getTimeLockExecutor();
+    const {getTimeLockDataInDb, getTimeLockData, proposeMultiSafeTransactions} =
+      await import("../../helpers/contracts-helpers");
     const actions = await getTimeLockDataInDb();
+    const transactions: MetaTransaction[] = [];
 
     for (const a of actions) {
       console.log(a.actionHash);
-      if (TIME_LOCK_DEFAULT_OPERATION === TimeLockOperation.Cancel) {
-        await proposeSafeTransaction(timeLock.address, a.cancelData);
-      } else if (TIME_LOCK_DEFAULT_OPERATION === TimeLockOperation.Execute) {
-        await proposeSafeTransaction(timeLock.address, a.executeData);
-      } else {
-        await proposeSafeTransaction(timeLock.address, a.queueData);
-      }
+      const [target, , , data, executionTime] = a.action;
+      const {newTarget, newData} = await getTimeLockData(
+        target.toString(),
+        data.toString(),
+        executionTime.toString()
+      );
+      transactions.push({
+        to: newTarget,
+        value: "0",
+        data: newData,
+      });
     }
+
+    await proposeMultiSafeTransactions(transactions);
   }
 );
