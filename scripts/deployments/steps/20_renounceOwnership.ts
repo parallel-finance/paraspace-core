@@ -15,7 +15,7 @@ import {
 import {
   getContractAddressInDb,
   getParaSpaceAdmins,
-  printEncodedData,
+  dryRunEncodedData,
 } from "../../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
@@ -62,17 +62,17 @@ export const step_20 = async (
           "transferOwnership",
           [paraSpaceAdminAddress]
         );
-      await printEncodedData(addressesProviderRegistry.address, encodedData1);
+      await dryRunEncodedData(addressesProviderRegistry.address, encodedData1);
       const encodedData2 = addressesProvider.interface.encodeFunctionData(
         "setACLAdmin",
         [paraSpaceAdminAddress]
       );
-      await printEncodedData(addressesProvider.address, encodedData2);
+      await dryRunEncodedData(addressesProvider.address, encodedData2);
       const encodedData3 = addressesProvider.interface.encodeFunctionData(
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      await printEncodedData(addressesProvider.address, encodedData3);
+      await dryRunEncodedData(addressesProvider.address, encodedData3);
     } else {
       await waitForTx(
         await addressesProviderRegistry.transferOwnership(
@@ -105,50 +105,50 @@ export const step_20 = async (
         "addPoolAdmin",
         [paraSpaceAdminAddress]
       );
-      await printEncodedData(aclManager.address, encodedData1);
+      await dryRunEncodedData(aclManager.address, encodedData1);
       const encodedData2 = aclManager.interface.encodeFunctionData(
         "removePoolAdmin",
         [oldParaSpaceAdminAddress]
       );
-      await printEncodedData(aclManager.address, encodedData2);
+      await dryRunEncodedData(aclManager.address, encodedData2);
       if (!(await aclManager.isAssetListingAdmin(paraSpaceAdminAddress))) {
         const encodedData3 = aclManager.interface.encodeFunctionData(
           "addAssetListingAdmin",
           [paraSpaceAdminAddress]
         );
-        await printEncodedData(aclManager.address, encodedData3);
+        await dryRunEncodedData(aclManager.address, encodedData3);
       }
       if (await aclManager.isAssetListingAdmin(oldParaSpaceAdminAddress)) {
         const encodedData4 = aclManager.interface.encodeFunctionData(
           "removeAssetListingAdmin",
           [oldParaSpaceAdminAddress]
         );
-        await printEncodedData(aclManager.address, encodedData4);
+        await dryRunEncodedData(aclManager.address, encodedData4);
       }
       if (!(await aclManager.isRiskAdmin(riskAdminAddress))) {
         const encodedData5 = aclManager.interface.encodeFunctionData(
           "addRiskAdmin",
           [riskAdminAddress]
         );
-        await printEncodedData(aclManager.address, encodedData5);
+        await dryRunEncodedData(aclManager.address, encodedData5);
       }
       if (await aclManager.isRiskAdmin(oldParaSpaceAdminAddress)) {
         const encodedData6 = aclManager.interface.encodeFunctionData(
           "removeRiskAdmin",
           [oldParaSpaceAdminAddress]
         );
-        await printEncodedData(aclManager.address, encodedData6);
+        await dryRunEncodedData(aclManager.address, encodedData6);
       }
       const encodedData7 = aclManager.interface.encodeFunctionData(
         "grantRole",
         [await aclManager.DEFAULT_ADMIN_ROLE(), paraSpaceAdminAddress]
       );
-      await printEncodedData(aclManager.address, encodedData7);
+      await dryRunEncodedData(aclManager.address, encodedData7);
       const encodedData8 = aclManager.interface.encodeFunctionData(
         "revokeRole",
         [await aclManager.DEFAULT_ADMIN_ROLE(), oldParaSpaceAdminAddress]
       );
-      await printEncodedData(aclManager.address, encodedData8);
+      await dryRunEncodedData(aclManager.address, encodedData8);
     } else {
       await waitForTx(
         await aclManager.addPoolAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
@@ -215,7 +215,7 @@ export const step_20 = async (
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      await printEncodedData(reservesSetupHelper.address, encodedData);
+      await dryRunEncodedData(reservesSetupHelper.address, encodedData);
     } else {
       await waitForTx(
         await reservesSetupHelper.transferOwnership(
@@ -236,12 +236,12 @@ export const step_20 = async (
         "transferOwnership",
         [conduit.address, paraSpaceAdminAddress]
       );
-      await printEncodedData(conduitController.address, encodedData1);
+      await dryRunEncodedData(conduitController.address, encodedData1);
       const encodedData2 = zoneController.interface.encodeFunctionData(
         "transferOwnership",
         [paraSpaceAdminAddress]
       );
-      await printEncodedData(conduitController.address, encodedData2);
+      await dryRunEncodedData(conduitController.address, encodedData2);
     } else {
       await waitForTx(
         await conduitController.transferOwnership(
@@ -271,7 +271,7 @@ export const step_20 = async (
           "transferOwnership",
           [gatewayAdminAddress]
         );
-        await printEncodedData(wethGatewayProxy.address, encodedData);
+        await dryRunEncodedData(wethGatewayProxy.address, encodedData);
       } else {
         await waitForTx(
           await wethGatewayProxy.transferOwnership(
@@ -294,7 +294,7 @@ export const step_20 = async (
           "transferOwnership",
           [gatewayAdminAddress]
         );
-        await printEncodedData(punkGatewayProxy.address, encodedData);
+        await dryRunEncodedData(punkGatewayProxy.address, encodedData);
       } else {
         await waitForTx(
           await punkGatewayProxy.transferOwnership(
@@ -321,13 +321,13 @@ export const step_20 = async (
           "changeAdmin",
           [paraSpaceAdminAddress]
         );
-        await printEncodedData(cApeProxy.address, encodedData1);
+        await dryRunEncodedData(cApeProxy.address, encodedData1);
         if (gatewayAdminAddress !== paraSpaceAdminAddress) {
           const encodedData2 = cApe.interface.encodeFunctionData(
             "transferOwnership",
             [gatewayAdminAddress]
           );
-          await printEncodedData(cApe.address, encodedData2);
+          await dryRunEncodedData(cApe.address, encodedData2);
         }
       } else {
         await waitForTx(
@@ -354,22 +354,22 @@ export const step_20 = async (
           "grantRole",
           [await nftFloorOracle.UPDATER_ROLE(), paraSpaceAdminAddress]
         );
-        await printEncodedData(nftFloorOracle.address, encodedData1);
+        await dryRunEncodedData(nftFloorOracle.address, encodedData1);
         const encodedData2 = nftFloorOracle.interface.encodeFunctionData(
           "revokeRole",
           [await nftFloorOracle.UPDATER_ROLE(), oldParaSpaceAdminAddress]
         );
-        await printEncodedData(nftFloorOracle.address, encodedData2);
+        await dryRunEncodedData(nftFloorOracle.address, encodedData2);
         const encodedData3 = nftFloorOracle.interface.encodeFunctionData(
           "grantRole",
           [await nftFloorOracle.DEFAULT_ADMIN_ROLE(), paraSpaceAdminAddress]
         );
-        await printEncodedData(nftFloorOracle.address, encodedData3);
+        await dryRunEncodedData(nftFloorOracle.address, encodedData3);
         const encodedData4 = nftFloorOracle.interface.encodeFunctionData(
           "revokeRole",
           [await nftFloorOracle.DEFAULT_ADMIN_ROLE(), oldParaSpaceAdminAddress]
         );
-        await printEncodedData(nftFloorOracle.address, encodedData4);
+        await dryRunEncodedData(nftFloorOracle.address, encodedData4);
       } else {
         await waitForTx(
           await nftFloorOracle.grantRole(

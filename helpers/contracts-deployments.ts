@@ -87,6 +87,8 @@ import {
   MockAggregator__factory,
   MockAirdropProject,
   MockAirdropProject__factory,
+  MockMultiAssetAirdropProject,
+  MockMultiAssetAirdropProject__factory,
   MockAToken,
   MockAToken__factory,
   MockIncentivesController,
@@ -224,6 +226,8 @@ import {
   MockedDelegateRegistry__factory,
   NTokenBAKC,
   NTokenBAKC__factory,
+  AirdropFlashClaimReceiver__factory,
+  AirdropFlashClaimReceiver,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -586,7 +590,10 @@ export const deployPoolComponents = async (
           eContractid.PoolApeStakingImpl,
           [
             provider,
-            (await deployAutoCompoundApe(verify)).address,
+            (await getContractAddressInDb(eContractid.cAPE)) ||
+              (
+                await deployAutoCompoundApe(verify)
+              ).address,
             allTokens.APE.address,
           ],
           verify,
@@ -981,6 +988,16 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         await insertContractAddressInDb(
           eContractid.UniswapV3Factory,
           paraSpaceConfig.Uniswap.V3Factory,
+          false
+        );
+      }
+      if (
+        tokenSymbol === ERC721TokenContractId.UniswapV3 &&
+        paraSpaceConfig.Uniswap.V3Router
+      ) {
+        await insertContractAddressInDb(
+          eContractid.UniswapV3SwapRouter,
+          paraSpaceConfig.Uniswap.V3Router,
           false
         );
       }
@@ -1719,14 +1736,44 @@ export const deployPTokenSApe = async (
 
 export const deployUserFlashClaimRegistry = async (
   poolAddress: tEthereumAddress,
+  receiverImpl: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new UserFlashclaimRegistry__factory(await getFirstSigner()),
     eContractid.FlashClaimRegistry,
-    [poolAddress],
+    [poolAddress, receiverImpl],
     verify
   ) as Promise<UserFlashclaimRegistry>;
+
+export const deployUserFlashClaimRegistryProxy = async (
+  admin: string,
+  registryImpl: string,
+  initData: any,
+  verify?: boolean
+) => {
+  const proxy = new InitializableImmutableAdminUpgradeabilityProxy__factory(
+    await getFirstSigner()
+  );
+  return withSaveAndVerify(
+    proxy,
+    eContractid.UserFlashClaimRegistryProxy,
+    [admin, registryImpl, initData],
+    verify,
+    true
+  ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+};
+
+export const deployAirdropFlashClaimReceiver = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AirdropFlashClaimReceiver__factory(await getFirstSigner()),
+    eContractid.AirdropFlashClaimReceiver,
+    [poolAddress],
+    verify
+  ) as Promise<AirdropFlashClaimReceiver>;
 
 export const deployMockAirdropProject = async (
   underlyingAddress: tEthereumAddress,
@@ -1738,6 +1785,18 @@ export const deployMockAirdropProject = async (
     [underlyingAddress],
     verify
   ) as Promise<MockAirdropProject>;
+
+export const deployMockMultiAssetAirdropProject = async (
+  underlyingAddress1: tEthereumAddress,
+  underlyingAddress2: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new MockMultiAssetAirdropProject__factory(await getFirstSigner()),
+    eContractid.MockMultiAssetAirdropProject,
+    [underlyingAddress1, underlyingAddress2],
+    verify
+  ) as Promise<MockMultiAssetAirdropProject>;
 
 export const deployApeCoinStaking = async (verify?: boolean) => {
   const allTokens = await getAllTokens();

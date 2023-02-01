@@ -16,7 +16,7 @@ const info = async () => {
 
   console.log(await DRE.ethers.provider.getNetwork());
   console.log(await DRE.ethers.provider.getFeeData());
-  console.log(envs.GLOBAL_OVERRIDES);
+  console.log(envs);
   console.log(await getParaSpaceAdmins());
   console.log(accounts);
   console.log(signerAddress);

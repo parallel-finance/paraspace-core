@@ -20,6 +20,7 @@ export enum AssetType {
 export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
+  SafeWithTimeLock = "SafeWithTimeLock",
   None = "",
 }
 
@@ -28,6 +29,17 @@ export enum TimeLockOperation {
   Execute = "execute",
   Cancel = "cancel",
 }
+
+export type TimeLockData = {
+  action: Action;
+  actionHash: string;
+  queueData: string;
+  executeData: string;
+  cancelData: string;
+  executeTime: string;
+  queueExpireTime: string;
+  executeExpireTime: string;
+};
 
 export enum XTokenType {
   PhantomData = 0,
@@ -127,6 +139,8 @@ export enum eContractid {
   PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
+  UserFlashClaimRegistryProxy = "UserFlashClaimRegistryProxy",
+  AirdropFlashClaimReceiver = "AirdropFlashClaimReceiver",
   ProtocolDataProvider = "ProtocolDataProvider",
   MockPToken = "MockPToken",
   MockNToken = "MockNToken",
@@ -226,6 +240,7 @@ export enum eContractid {
   cAPEImpl = "cAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
+  MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
 }
 
 /*
@@ -603,6 +618,7 @@ export interface IUniswapConfig {
   V2Factory?: tEthereumAddress;
   V2Router?: tEthereumAddress;
   V3Factory?: tEthereumAddress;
+  V3Router?: tEthereumAddress;
   V3NFTPositionManager?: tEthereumAddress;
 }
 
@@ -664,10 +680,10 @@ export interface IParaSpaceConfiguration extends ICommonConfiguration {
 export type PoolConfiguration = ICommonConfiguration | IParaSpaceConfiguration;
 
 export type Action = [
-  PromiseOrValue<string>,
-  PromiseOrValue<BigNumberish>,
-  PromiseOrValue<string>,
-  PromiseOrValue<BytesLike>,
-  PromiseOrValue<BigNumberish>,
-  PromiseOrValue<boolean>
+  PromiseOrValue<string>, // target
+  PromiseOrValue<BigNumberish>, // value
+  PromiseOrValue<string>, // signature
+  PromiseOrValue<BytesLike>, // data
+  PromiseOrValue<BigNumberish>, // executeTime
+  PromiseOrValue<boolean> // withDelegatecall
 ];

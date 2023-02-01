@@ -4,7 +4,12 @@ task("list-facets", "List facets").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   const {getPoolProxy} = await import("../../helpers/contracts-getters");
   const pool = await getPoolProxy();
-  console.log(await pool.facets());
+  console.log(
+    (await pool.facets()).map((x) => ({
+      implAddress: x.implAddress,
+      functionSelectors: x.functionSelectors,
+    }))
+  );
 });
 
 task("list-facet-addresses", "List facets addresses").setAction(

@@ -288,8 +288,8 @@ library DataTypes {
 
     struct ExecuteFlashClaimParams {
         address receiverAddress;
-        address nftAsset;
-        uint256[] nftTokenIds;
+        address[] nftAssets;
+        uint256[][] nftTokenIds;
         bytes params;
         address oracle;
     }
