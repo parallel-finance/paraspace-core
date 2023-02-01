@@ -23,7 +23,7 @@ interface IAtomicCollateralizableERC721 {
     /**
      * @dev get the token balance of a specific user
      */
-    function balancesOf(address user)
+    function underlyingBalancesOf(address user)
         external
         view
         returns (

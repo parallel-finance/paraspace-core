@@ -116,7 +116,7 @@ abstract contract MintableIncentivizedERC721 is
             _ERC721Data.userState[account].atomicBalance;
     }
 
-    function balancesOf(address account)
+    function underlyingBalancesOf(address account)
         public
         view
         virtual

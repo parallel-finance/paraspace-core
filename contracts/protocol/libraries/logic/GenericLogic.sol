@@ -375,7 +375,7 @@ library GenericLogic {
             uint256 atomicBalance,
             uint256 collateralizedBalance,
 
-        ) = IAtomicCollateralizableERC721(vars.xTokenAddress).balancesOf(
+        ) = IAtomicCollateralizableERC721(vars.xTokenAddress).underlyingBalancesOf(
                 params.user
             );
         totalValue = collateralizedBalance * assetPrice;

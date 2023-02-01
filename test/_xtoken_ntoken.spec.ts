@@ -3,7 +3,7 @@ import {expect} from "chai";
 import {HALF_WAD} from "../helpers/constants";
 import {waitForTx} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
-import {supplyAndValidate} from "./helpers/validated-steps";
+import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 
 describe("NToken general", async () => {
   it("TC-ntoken-01: NToken is ERC721 compatible", async () => {
@@ -124,5 +124,77 @@ describe("NToken general", async () => {
     expect(await nBAYC.atomicCollateralizedBalanceOf(user2.address)).to.be.eq(
       0
     );
+  });
+
+  it("TC-ntoken-06: NToken atomic balance is correct when burn", async () => {
+    const {
+      nBAYC,
+      bayc,
+      pool,
+      users: [user1],
+      poolAdmin,
+    } = await loadFixture(testEnvFixture);
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(["0"], [HALF_WAD])
+    );
+    expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
+    expect(await nBAYC.isAtomicToken("0")).to.true;
+
+    await supplyAndValidate(bayc, "1", user1, true);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawERC721(bayc.address, ["0"], user1.address)
+    );
+
+    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(0);
+    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
+      0
+    );
+  });
+
+  it("TC-ntoken-07: NToken atomic balance when mixed tokens mint", async () => {
+    const {
+      nBAYC,
+      bayc,
+      pool,
+      users: [user1],
+      poolAdmin,
+    } = await loadFixture(testEnvFixture);
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(["0"], [HALF_WAD])
+    );
+    expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
+    expect(await nBAYC.isAtomicToken("0")).to.true;
+
+    await mintAndValidate(bayc, "2", user1);
+
+    await waitForTx(
+      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        bayc.address,
+        [
+          {tokenId: 0, useAsCollateral: true},
+          {tokenId: 1, useAsCollateral: false},
+        ],
+        user1.address,
+        "0"
+      )
+    );
+
+    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(1);
+    expect(await nBAYC.balanceOf(user1.address)).to.be.eq(2);
+    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
+      1
+    );
+    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.eq(1);
   });
 });
