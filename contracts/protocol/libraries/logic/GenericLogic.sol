@@ -365,47 +365,58 @@ library GenericLogic {
         CalculateUserAccountDataVars memory vars
     ) private view returns (uint256 totalValue) {
         INToken nToken = INToken(vars.xTokenAddress);
-        uint256 collateralizedBalance = ICollateralizableERC721(
-            vars.xTokenAddress
-        ).collateralizedBalanceOf(params.user);
-        uint256 atomicCollateralizedBalance = IAtomicCollateralizableERC721(
-            vars.xTokenAddress
-        ).atomicCollateralizedBalanceOf(params.user);
         uint256 balance = INToken(vars.xTokenAddress).balanceOf(params.user);
-        uint256 atomicBalance = IAtomicCollateralizableERC721(
-            vars.xTokenAddress
-        ).atomicBalanceOf(params.user);
-        uint256 assetPrice = _getAssetPrice(
-            params.oracle,
-            vars.currentReserveAddress
-        );
-        totalValue =
-            (collateralizedBalance - atomicCollateralizedBalance) *
-            assetPrice;
 
-        for (
-            uint256 index = balance - atomicBalance;
-            index < balance;
-            index++
+        if (
+            IXTokenType(vars.xTokenAddress).getXTokenType() ==
+            XTokenType.NTokenUniswapV3
         ) {
-            uint256 tokenId = nToken.tokenOfOwnerByIndex(params.user, index);
-            if (
-                ICollateralizableERC721(vars.xTokenAddress).isUsedAsCollateral(
-                    tokenId
-                )
-            ) {
+            for (uint256 index = 0; index < balance; index++) {
+                uint256 tokenId = nToken.tokenOfOwnerByIndex(
+                    params.user,
+                    index
+                );
                 if (
-                    IXTokenType(vars.xTokenAddress).getXTokenType() ==
-                    XTokenType.NTokenUniswapV3
+                    ICollateralizableERC721(vars.xTokenAddress)
+                        .isUsedAsCollateral(tokenId)
                 ) {
                     totalValue += _getTokenPrice(
                         params.oracle,
                         vars.currentReserveAddress,
                         tokenId
                     );
-                } else if (
-                    IAtomicCollateralizableERC721(vars.xTokenAddress)
-                        .isAtomicToken(tokenId)
+                }
+            }
+        } else {
+            uint256 collateralizedBalance = ICollateralizableERC721(
+                vars.xTokenAddress
+            ).collateralizedBalanceOf(params.user);
+            uint256 atomicCollateralizedBalance = IAtomicCollateralizableERC721(
+                vars.xTokenAddress
+            ).atomicCollateralizedBalanceOf(params.user);
+            uint256 atomicBalance = IAtomicCollateralizableERC721(
+                vars.xTokenAddress
+            ).atomicBalanceOf(params.user);
+            uint256 assetPrice = _getAssetPrice(
+                params.oracle,
+                vars.currentReserveAddress
+            );
+            totalValue =
+                (collateralizedBalance - atomicCollateralizedBalance) *
+                assetPrice;
+
+            for (
+                uint256 index = balance - atomicBalance;
+                index < balance;
+                index++
+            ) {
+                uint256 tokenId = nToken.tokenOfOwnerByIndex(
+                    params.user,
+                    index
+                );
+                if (
+                    ICollateralizableERC721(vars.xTokenAddress)
+                        .isUsedAsCollateral(tokenId)
                 ) {
                     uint256 multiplier = IAtomicCollateralizableERC721(
                         vars.xTokenAddress
