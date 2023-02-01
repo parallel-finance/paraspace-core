@@ -158,17 +158,18 @@ export const supplyAndValidate = async (
   // asset is used as collateral, so total collateral increases in supplied amount
   const totalCollateral = (await pool.getUserAccountData(user.address))
     .totalCollateralBase;
-  let depositedAmountInBaseUnits;
+  let depositedAmountInBaseUnits = BigNumber.from("0");
   if (isNFT && nftIdsToUse) {
-    const multiplier = await (
-      await getNToken(xTokenAddress)
-    ).getTraitMultiplier(nftIdsToUse[0]);
-    if (!multiplier.eq(0) && !multiplier.eq(WAD)) {
-      depositedAmountInBaseUnits = BigNumber.from(amount)
-        .mul(assetPrice)
-        .wadMul(multiplier);
-    } else {
-      depositedAmountInBaseUnits = BigNumber.from(amount).mul(assetPrice);
+    const nToken = await getNToken(xTokenAddress);
+    for (const nftId of nftIdsToUse) {
+      const multiplier = await nToken.getTraitMultiplier(nftId);
+      if (!multiplier.eq(0) && !multiplier.eq(WAD)) {
+        depositedAmountInBaseUnits = depositedAmountInBaseUnits.add(
+          assetPrice.wadMul(multiplier)
+        );
+      } else {
+        depositedAmountInBaseUnits = depositedAmountInBaseUnits.add(assetPrice);
+      }
     }
   } else {
     depositedAmountInBaseUnits = BigNumber.from(amount).mul(assetPrice);
@@ -1041,11 +1042,20 @@ const fetchLiquidationData = async (
     if (isAuctioned) {
       currentPriceMultiplier = auctionData.currentPriceMultiplier;
     }
+    const traitMultiplier = await (
+      collateralXToken as NToken
+    ).getTraitMultiplier(nftId);
+    if (!traitMultiplier.eq(0) && !traitMultiplier.eq(WAD)) {
+      currentPriceMultiplier = currentPriceMultiplier.wadMul(traitMultiplier);
+    }
   }
   const collateralAssetPrice =
     nftId != undefined &&
     (await collateralXToken.getXTokenType()) == XTokenType.NTokenUniswapV3
-      ? await (await getUniswapV3OracleWrapper()).getTokenPrice(nftId as number)
+      ? await paraSpaceOracle.getTokenPrice(
+          collateralXTokenAddress,
+          nftId as number
+        )
       : await paraSpaceOracle.getAssetPrice(collateralToken.address);
 
   const collateralAssetAuctionPrice = collateralAssetPrice.wadMul(

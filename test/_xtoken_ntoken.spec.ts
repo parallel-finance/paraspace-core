@@ -409,4 +409,50 @@ describe("NToken general", async () => {
     expect(await nBAYC.atomicTokenOfOwnerByIndex(user1.address, 1)).eq(1);
     expect(await nBAYC.atomicTokenOfOwnerByIndex(user1.address, 2)).eq(0);
   });
+
+  it("TC-ntoken-14: tokenOfOwnerByIndex works as expected", async () => {
+    const {
+      nBAYC,
+      bayc,
+      poolAdmin,
+      pool,
+      users: [user1],
+    } = await loadFixture(testEnvFixture);
+    await mintAndValidate(bayc, "4", user1);
+
+    await waitForTx(
+      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(
+          ["0", "1", "2", "3"],
+          ["0", "0", HALF_WAD, HALF_WAD]
+        )
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        bayc.address,
+        [...Array(4).keys()]
+          .map((x) => ({
+            tokenId: x,
+            useAsCollateral: true,
+          }))
+          .reverse(),
+        user1.address,
+        "0"
+      )
+    );
+
+    // Tokens: [1, 0]
+    // AtomicTokens: [3, 2]
+
+    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 0)).eq(1);
+    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 1)).eq(0);
+    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 2)).eq(3);
+    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 3)).eq(2);
+  });
 });
