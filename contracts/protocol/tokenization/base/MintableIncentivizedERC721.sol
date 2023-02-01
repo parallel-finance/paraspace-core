@@ -120,7 +120,6 @@ abstract contract MintableIncentivizedERC721 is
         public
         view
         virtual
-        override
         returns (
             uint256,
             uint256,
