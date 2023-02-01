@@ -346,8 +346,8 @@ library MintableERC721Logic {
     )
         external
         returns (
-            uint64 oldCollateralizedBalance,
-            uint64 newCollateralizedBalance
+            uint64 oldTotalCollateralizedBalance,
+            uint64 newTotalCollateralizedBalance
         )
     {
         LocalVars memory vars = _cache(erc721Data, user);
@@ -422,7 +422,7 @@ library MintableERC721Logic {
             rewardControllerLocal.handleAction(
                 user,
                 oldTotalSupply,
-                vars.oldBalance + vars.oldAtomicBalance - tokenIds.length
+                vars.oldBalance + vars.oldAtomicBalance + tokenIds.length
             );
         }
 
