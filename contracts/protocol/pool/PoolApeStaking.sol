@@ -72,9 +72,7 @@ contract PoolApeStaking is
         address apeVariableDebtAddress;
         address cApeVariableDebtAddress;
         uint256 compoundFee;
-        address[] tokenOuts;
         uint256 usdcApePrice;
-        uint256 wethApePrice;
     }
 
     /**
@@ -557,7 +555,6 @@ contract PoolApeStaking is
             ._reserves[address(APE_COMPOUND)]
             .variableDebtTokenAddress;
         localVar.compoundFee = ps._apeCompoundFee;
-        localVar.tokenOuts = new address[](numUsers);
     }
 
     function _addUserToCompoundCache(
@@ -577,34 +574,10 @@ contract PoolApeStaking is
             localVar.totalAmount += localVar.amounts[i];
         }
 
-        if (localVar.options[i].ty == DataTypes.ApeCompoundType.Supply) {
-            return;
-        } else if (
-            localVar.options[i].ty == DataTypes.ApeCompoundType.SwapAndSupply
-        ) {
+        if (localVar.options[i].ty == DataTypes.ApeCompoundType.SwapAndSupply) {
             localVar.swapAmounts[i] = localVar.amounts[i].percentMul(
                 localVar.options[i].swapPercent
             );
-            if (
-                localVar.options[i].swapTokenOut ==
-                DataTypes.ApeCompoundTokenOut.USDC
-            ) {
-                localVar.tokenOuts[i] = address(USDC);
-                if (localVar.usdcApePrice == 0) {
-                    localVar.usdcApePrice = _getApeRelativePrice(
-                        localVar.tokenOuts[i],
-                        1E6
-                    );
-                }
-            } else {
-                localVar.tokenOuts[i] = ADDRESSES_PROVIDER.getWETH();
-                if (localVar.wethApePrice == 0) {
-                    localVar.wethApePrice = _getApeRelativePrice(
-                        localVar.tokenOuts[i],
-                        1E18
-                    );
-                }
-            }
         }
 
         (
@@ -736,13 +709,10 @@ contract PoolApeStaking is
             ) {
                 _swapAndSupplyForUser(
                     ps,
-                    localVar.tokenOuts[i],
+                    address(USDC),
                     localVar.swapAmounts[i],
                     users[i],
-                    localVar.options[i].swapTokenOut ==
-                        DataTypes.ApeCompoundTokenOut.USDC
-                        ? localVar.usdcApePrice
-                        : localVar.wethApePrice
+                    _getApeRelativePrice(address(USDC), 1E6)
                 );
             }
         }

@@ -357,13 +357,11 @@ library DataTypes {
 
     enum ApeCompoundType {
         RepayAndSupply,
-        Supply,
         SwapAndSupply
     }
 
     enum ApeCompoundTokenOut {
-        USDC,
-        WETH
+        USDC
     }
 
     struct ApeCompoundStrategy {

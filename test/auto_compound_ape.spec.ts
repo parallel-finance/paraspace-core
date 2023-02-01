@@ -498,10 +498,10 @@ describe("APE Coin Staking Test", () => {
       })
     );
 
-    // supply all
+    // repay then supply
     await waitForTx(
       await pool.connect(user2.signer).setApeCompoundStrategy({
-        ty: 1,
+        ty: 0,
         swapTokenOut: 0,
         swapPercent: 0,
       })
@@ -510,7 +510,7 @@ describe("APE Coin Staking Test", () => {
     // swap half then supply
     await waitForTx(
       await pool.connect(user3.signer).setApeCompoundStrategy({
-        ty: 2,
+        ty: 1,
         swapTokenOut: 0,
         swapPercent: 5000,
       })
