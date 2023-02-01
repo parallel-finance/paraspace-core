@@ -383,7 +383,11 @@ library GenericLogic {
             (collateralizedBalance - atomicCollateralizedBalance) *
             assetPrice;
 
-        for (uint256 index = atomicBalance; index < balance; index++) {
+        for (
+            uint256 index = balance - atomicBalance;
+            index < balance;
+            index++
+        ) {
             uint256 tokenId = nToken.tokenOfOwnerByIndex(params.user, index);
             if (
                 ICollateralizableERC721(vars.xTokenAddress).isUsedAsCollateral(
