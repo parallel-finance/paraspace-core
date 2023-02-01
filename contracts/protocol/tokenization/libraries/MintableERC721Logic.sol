@@ -282,14 +282,9 @@ library MintableERC721Logic {
                 erc721Data,
                 to,
                 tokenId,
-                isAtomic ? vars.atomicBalance : vars.balance,
+                isAtomic ? vars.atomicBalance++ : vars.balance++,
                 isAtomic
             );
-            if (isAtomic) {
-                vars.atomicBalance += 1;
-            } else {
-                vars.balance += 1;
-            }
 
             erc721Data.owners[tokenId] = to;
 
@@ -375,14 +370,9 @@ library MintableERC721Logic {
                 erc721Data,
                 user,
                 tokenId,
-                isAtomic ? vars.atomicBalance : vars.balance,
+                isAtomic ? vars.atomicBalance-- : vars.balance--,
                 isAtomic
             );
-            if (isAtomic) {
-                vars.atomicBalance -= 1;
-            } else {
-                vars.balance -= 1;
-            }
 
             // Clear approvals
             _approve(erc721Data, address(0), tokenId);
