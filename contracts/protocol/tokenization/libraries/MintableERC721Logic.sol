@@ -145,11 +145,14 @@ library MintableERC721Logic {
             .atomicBalance;
         if (isAtomic) {
             uint64 newRecipientAtomicBalance = oldRecipientAtomicBalance + 1;
-            _checkAtomicBalanceLimit(erc721Data, newRecipientAtomicBalance);
             erc721Data.userState[to].atomicBalance = newRecipientAtomicBalance;
         } else {
             erc721Data.userState[to].balance = oldRecipientBalance + 1;
         }
+        _checkBalanceLimit(
+            erc721Data,
+            oldRecipientAtomicBalance + oldRecipientBalance + 1
+        );
         erc721Data.owners[tokenId] = to;
 
         if (from != to && erc721Data.auctions[tokenId].startTime > 0) {
@@ -314,7 +317,7 @@ library MintableERC721Logic {
             .userState[to]
             .atomicCollateralizedBalance = newAtomicCollateralizedBalance;
 
-        _checkAtomicBalanceLimit(erc721Data, vars.oldAtomicBalance);
+        _checkBalanceLimit(erc721Data, vars.oldAtomicBalance + vars.oldBalance);
 
         erc721Data.userState[to].balance = vars.oldBalance;
         erc721Data.userState[to].atomicBalance = vars.oldAtomicBalance;
@@ -567,13 +570,13 @@ library MintableERC721Logic {
         }
     }
 
-    function _checkAtomicBalanceLimit(
+    function _checkBalanceLimit(
         MintableERC721Data storage erc721Data,
-        uint64 atomicBalance
+        uint64 balance
     ) private view {
         uint64 balanceLimit = erc721Data.balanceLimit;
         require(
-            balanceLimit == 0 || atomicBalance <= balanceLimit,
+            balanceLimit == 0 || balance <= balanceLimit,
             Errors.NTOKEN_BALANCE_EXCEEDED
         );
     }
