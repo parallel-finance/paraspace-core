@@ -97,7 +97,6 @@ export const supplyAndValidate = async (
   const pool = await getPoolProxy();
   const protocolDataProvider = await getProtocolDataProvider();
   const paraSpaceOracle = await getParaSpaceOracle();
-  const deployer = await getDeployer();
   const nftIdsToUse = isNFT ? [...Array(+amount).keys()] : null;
 
   if (mintTokens) {
@@ -108,16 +107,14 @@ export const supplyAndValidate = async (
   // approve protocol to access user wallet
   await approveTnx(token, isNFT, pool, user);
 
-  const pTokenAddress = (
+  const xTokenAddress = (
     await protocolDataProvider.getReserveTokensAddresses(token.address)
   ).xTokenAddress;
-  const pToken = await getPToken(pTokenAddress);
+  const xToken = await getPToken(xTokenAddress);
 
-  const assetPrice = await paraSpaceOracle
-    .connect(deployer.signer)
-    .getAssetPrice(token.address);
+  const assetPrice = await paraSpaceOracle.getAssetPrice(token.address);
   const tokenBalanceBefore = await token.balanceOf(user.address);
-  const pTokenBalanceBefore = await pToken.balanceOf(user.address);
+  const xTokenBalanceBefore = await xToken.balanceOf(user.address);
   const totalCollateralBefore = (await pool.getUserAccountData(user.address))
     .totalCollateralBase;
   const availableToBorrowBefore = (await pool.getUserAccountData(user.address))
@@ -155,13 +152,27 @@ export const supplyAndValidate = async (
   expect(tokenBalance).to.be.equal(tokenBalanceBefore.sub(amountInBaseUnits));
 
   // check pToken balance increased in the deposited amount
-  const pTokenBalance = await pToken.balanceOf(user.address);
-  expect(pTokenBalance).to.be.equal(pTokenBalanceBefore.add(amountInBaseUnits));
+  const xTokenBalance = await xToken.balanceOf(user.address);
+  expect(xTokenBalance).to.be.equal(xTokenBalanceBefore.add(amountInBaseUnits));
 
   // asset is used as collateral, so total collateral increases in supplied amount
   const totalCollateral = (await pool.getUserAccountData(user.address))
     .totalCollateralBase;
-  const depositedAmountInBaseUnits = BigNumber.from(amount).mul(assetPrice);
+  let depositedAmountInBaseUnits;
+  if (isNFT && nftIdsToUse) {
+    const multiplier = await (
+      await getNToken(xTokenAddress)
+    ).getTraitMultiplier(nftIdsToUse[0]);
+    if (!multiplier.eq(0) && !multiplier.eq(WAD)) {
+      depositedAmountInBaseUnits = BigNumber.from(amount)
+        .mul(assetPrice)
+        .wadMul(multiplier);
+    } else {
+      depositedAmountInBaseUnits = BigNumber.from(amount).mul(assetPrice);
+    }
+  } else {
+    depositedAmountInBaseUnits = BigNumber.from(amount).mul(assetPrice);
+  }
   almostEqual(
     totalCollateral,
     totalCollateralBefore.add(depositedAmountInBaseUnits)
