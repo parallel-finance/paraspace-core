@@ -3,7 +3,7 @@ import {
   getInitializableAdminUpgradeabilityProxy,
   getP2PPairStaking,
 } from "../../helpers/contracts-getters";
-import {printEncodedData} from "../../helpers/contracts-helpers";
+import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
@@ -22,7 +22,7 @@ export const upgradeP2PPairStaking = async (verify = false) => {
       "upgradeTo",
       [p2pPairStakingImpl.address]
     );
-    await printEncodedData(p2pPairStakingProxy.address, encodedData);
+    await dryRunEncodedData(p2pPairStakingProxy.address, encodedData);
   } else {
     await waitForTx(
       await p2pPairStakingProxy.upgradeTo(

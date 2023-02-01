@@ -357,13 +357,13 @@ export const step_21 = async (
           "changeAdmin",
           [paraSpaceAdminAddress]
         );
-        await printEncodedData(p2pPairStakingProxy.address, encodedData1);
+        await dryRunEncodedData(p2pPairStakingProxy.address, encodedData1);
         if (gatewayAdminAddress !== paraSpaceAdminAddress) {
           const encodedData2 = p2pPairStaking.interface.encodeFunctionData(
             "transferOwnership",
             [gatewayAdminAddress]
           );
-          await printEncodedData(p2pPairStaking.address, encodedData2);
+          await dryRunEncodedData(p2pPairStaking.address, encodedData2);
         }
       } else {
         await waitForTx(

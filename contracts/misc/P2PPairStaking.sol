@@ -378,6 +378,12 @@ contract P2PPairStaking is
         emit PairStakingBreakUp(orderHash);
     }
 
+    function convertApeCoinToPCApe(uint256 amount) external nonReentrant {
+        IERC20(apeCoin).safeTransferFrom(msg.sender, address(this), amount);
+        IAutoCompoundApe(cApe).deposit(address(this), amount);
+        IPoolCore(lendingPool).supply(cApe, amount, msg.sender, 0);
+    }
+
     function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
         external
         nonReentrant

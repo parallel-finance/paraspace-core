@@ -39,7 +39,6 @@ describe("P2P Pair Staking Test", () => {
       nBAKC,
       poolAdmin,
       protocolDataProvider,
-      pool,
     } = testEnv;
 
     const user1 = users[0];
@@ -95,10 +94,9 @@ describe("P2P Pair Staking Test", () => {
     );
 
     await waitForTx(
-      await ape.connect(user2.signer).approve(cApe.address, MAX_UINT_AMOUNT)
-    );
-    await waitForTx(
-      await cApe.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
+      await ape
+        .connect(user2.signer)
+        .approve(p2pPairStaking.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
       await pCApe
@@ -115,7 +113,6 @@ describe("P2P Pair Staking Test", () => {
       ape,
       bayc,
       nBAYC,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -124,12 +121,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(0);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -209,7 +203,6 @@ describe("P2P Pair Staking Test", () => {
       ape,
       mayc,
       nMAYC,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -224,12 +217,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(1);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -309,7 +299,6 @@ describe("P2P Pair Staking Test", () => {
       bakc,
       nBAYC,
       nBAKC,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -330,12 +319,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(2);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -442,7 +428,6 @@ describe("P2P Pair Staking Test", () => {
       bakc,
       nMAYC,
       nBAKC,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
@@ -462,12 +447,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(3);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -571,7 +553,6 @@ describe("P2P Pair Staking Test", () => {
       ape,
       bayc,
       bakc,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "10", user1, true);
@@ -589,14 +570,9 @@ describe("P2P Pair Staking Test", () => {
         .setApprovalForAll(p2pPairStaking.address, true)
     );
     await waitForTx(
-      await cApe
+      await p2pPairStaking
         .connect(user2.signer)
-        .deposit(user2.address, parseEther("1000000"))
-    );
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .supply(cApe.address, parseEther("1000000"), user2.address, 0)
+        .convertApeCoinToPCApe(parseEther("1000000"))
     );
 
     const txArray: string[] = [];
@@ -774,7 +750,6 @@ describe("P2P Pair Staking Test", () => {
       users: [user1, user2],
       ape,
       bayc,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -786,14 +761,10 @@ describe("P2P Pair Staking Test", () => {
         .setApprovalForAll(p2pPairStaking.address, true)
     );
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(0);
-
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -826,7 +797,6 @@ describe("P2P Pair Staking Test", () => {
       ape,
       bayc,
       bakc,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -847,12 +817,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(2);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -896,7 +863,6 @@ describe("P2P Pair Staking Test", () => {
       users: [user1, user2],
       ape,
       bayc,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -910,12 +876,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(0);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -948,7 +911,6 @@ describe("P2P Pair Staking Test", () => {
       ape,
       bayc,
       bakc,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -969,12 +931,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(2);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -1044,7 +1003,6 @@ describe("P2P Pair Staking Test", () => {
       bayc,
       nBAYC,
       ape,
-      pool,
     } = await loadFixture(fixture);
 
     await expect(
@@ -1068,12 +1026,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(0);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -1137,7 +1092,6 @@ describe("P2P Pair Staking Test", () => {
       gatewayAdmin,
       bayc,
       ape,
-      pool,
     } = await loadFixture(fixture);
 
     await waitForTx(
@@ -1165,12 +1119,9 @@ describe("P2P Pair Staking Test", () => {
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(0);
 
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
-    );
-    await waitForTx(
-      await pool
+      await p2pPairStaking
         .connect(user2.signer)
-        .supply(cApe.address, apeAmount, user2.address, 0)
+        .convertApeCoinToPCApe(apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
@@ -1234,7 +1185,6 @@ describe("P2P Pair Staking Test", () => {
       bayc,
       ape,
       bakc,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
@@ -1252,14 +1202,9 @@ describe("P2P Pair Staking Test", () => {
         .setApprovalForAll(p2pPairStaking.address, true)
     );
     await waitForTx(
-      await cApe
+      await p2pPairStaking
         .connect(user2.signer)
-        .deposit(user2.address, parseEther("500000"))
-    );
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .supply(cApe.address, parseEther("500000"), user2.address, 0)
+        .convertApeCoinToPCApe(parseEther("500000"))
     );
 
     //match bayc + ApeCoin
@@ -1340,7 +1285,6 @@ describe("P2P Pair Staking Test", () => {
       users: [user1, user2],
       bayc,
       ape,
-      pool,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "2", user1, true);
@@ -1352,14 +1296,9 @@ describe("P2P Pair Staking Test", () => {
         .setApprovalForAll(p2pPairStaking.address, true)
     );
     await waitForTx(
-      await cApe
+      await p2pPairStaking
         .connect(user2.signer)
-        .deposit(user2.address, parseEther("500000"))
-    );
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .supply(cApe.address, parseEther("500000"), user2.address, 0)
+        .convertApeCoinToPCApe(parseEther("500000"))
     );
 
     const user1SignedOrder0 = await getSignedListingOrder(
