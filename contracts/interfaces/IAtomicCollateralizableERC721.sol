@@ -4,7 +4,7 @@ pragma solidity 0.8.10;
 /**
  * @title IAtomicCollateralizableERC721
  * @author Parallel
- * @notice Defines the basic interface for an CollateralizableERC721.
+ * @notice Defines the basic interface for an AtomicCollateralizableERC721.
  **/
 interface IAtomicCollateralizableERC721 {
     /**
