@@ -73,6 +73,7 @@ abstract contract MintableIncentivizedERC721 is
 
     IPoolAddressesProvider internal immutable _addressesProvider;
     IPool public immutable POOL;
+    bool public immutable ATOMIC_PRICING;
 
     address internal _underlyingAsset;
 
@@ -85,12 +86,14 @@ abstract contract MintableIncentivizedERC721 is
     constructor(
         IPool pool,
         string memory name_,
-        string memory symbol_
+        string memory symbol_,
+        bool atomic_pricing
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
         _ERC721Data.name = name_;
         _ERC721Data.symbol = symbol_;
         POOL = pool;
+        ATOMIC_PRICING = atomic_pricing;
     }
 
     function name() public view override returns (string memory) {
@@ -111,6 +114,26 @@ abstract contract MintableIncentivizedERC721 is
         return
             _ERC721Data.userState[account].balance +
             _ERC721Data.userState[account].atomicBalance;
+    }
+
+    function balancesOf(address account)
+        public
+        view
+        virtual
+        override
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        return (
+            _ERC721Data.userState[account].balance,
+            _ERC721Data.userState[account].atomicBalance,
+            _ERC721Data.userState[account].collateralizedBalance,
+            _ERC721Data.userState[account].atomicCollateralizedBalance
+        );
     }
 
     /**
@@ -375,7 +398,12 @@ abstract contract MintableIncentivizedERC721 is
         )
     {
         return
-            MintableERC721Logic.executeMintMultiple(_ERC721Data, to, tokenData);
+            MintableERC721Logic.executeMintMultiple(
+                _ERC721Data,
+                ATOMIC_PRICING,
+                to,
+                tokenData
+            );
     }
 
     function _burnMultiple(address user, uint256[] calldata tokenIds)
@@ -390,6 +418,7 @@ abstract contract MintableIncentivizedERC721 is
             MintableERC721Logic.executeBurnMultiple(
                 _ERC721Data,
                 POOL,
+                ATOMIC_PRICING,
                 user,
                 tokenIds
             );
@@ -414,6 +443,7 @@ abstract contract MintableIncentivizedERC721 is
         MintableERC721Logic.executeTransfer(
             _ERC721Data,
             POOL,
+            ATOMIC_PRICING,
             from,
             to,
             tokenId
@@ -432,6 +462,7 @@ abstract contract MintableIncentivizedERC721 is
             .executeTransferCollateralizable(
                 _ERC721Data,
                 POOL,
+                ATOMIC_PRICING,
                 from,
                 to,
                 tokenId
@@ -483,6 +514,7 @@ abstract contract MintableIncentivizedERC721 is
             MintableERC721Logic.executeSetIsUsedAsCollateral(
                 _ERC721Data,
                 POOL,
+                ATOMIC_PRICING,
                 tokenId,
                 useAsCollateral,
                 sender
@@ -513,6 +545,7 @@ abstract contract MintableIncentivizedERC721 is
             MintableERC721Logic.executeSetIsUsedAsCollateral(
                 _ERC721Data,
                 POOL,
+                ATOMIC_PRICING,
                 tokenIds[index],
                 useAsCollateral,
                 sender
@@ -551,7 +584,17 @@ abstract contract MintableIncentivizedERC721 is
         virtual
         returns (bool)
     {
-        return MintableERC721Logic.isAtomicToken(_ERC721Data, tokenId);
+        return
+            MintableERC721Logic.isAtomicToken(
+                _ERC721Data,
+                ATOMIC_PRICING,
+                tokenId
+            );
+    }
+
+    /// @inheritdoc IAtomicCollateralizableERC721
+    function isAtomicPricing() external view virtual returns (bool) {
+        return ATOMIC_PRICING;
     }
 
     /// @inheritdoc IAtomicCollateralizableERC721
@@ -653,6 +696,21 @@ abstract contract MintableIncentivizedERC721 is
         } else {
             return _ERC721Data.ownedAtomicTokens[owner][index - balance];
         }
+    }
+
+    function atomicTokenOfOwnerByIndex(address owner, uint256 index)
+        external
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        uint256 atomicBalance = _ERC721Data.userState[owner].atomicBalance;
+        require(
+            index < atomicBalance,
+            "ERC721Enumerable: owner index out of bounds"
+        );
+        return _ERC721Data.ownedAtomicTokens[owner][index];
     }
 
     /**

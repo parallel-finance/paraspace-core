@@ -26,6 +26,7 @@ import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -180,6 +181,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.availableLiquidity = IERC721(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
+                reserveData.isAtomicPricing = IAtomicCollateralizableERC721(
+                    reserveData.xTokenAddress
+                ).isAtomicPricing();
             }
 
             (
@@ -494,24 +498,20 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     );
                 // token price
                 if (
-                    IXTokenType(baseData.xTokenAddress).getXTokenType() ==
-                    XTokenType.NTokenUniswapV3
+                    IAtomicCollateralizableERC721(baseData.xTokenAddress)
+                        .isAtomicPricing()
                 ) {
                     try
                         oracle.getTokenPrice(tokenData.asset, tokenData.tokenId)
                     returns (uint256 price) {
                         tokenData.tokenPrice = price;
                     } catch {}
-                } else if (
-                    IAtomicCollateralizableERC721(baseData.xTokenAddress)
-                        .isAtomicToken(tokenData.tokenId)
-                ) {
-                    uint256 multiplier = IAtomicCollateralizableERC721(
-                        baseData.xTokenAddress
-                    ).getTraitMultiplier(tokenData.tokenId);
-                    tokenData.tokenPrice = collectionPrice.wadMul(multiplier);
                 } else {
-                    tokenData.tokenPrice = collectionPrice;
+                    tokenData.tokenPrice = Helpers.getTraitBoostedTokenPrice(
+                        baseData.xTokenAddress,
+                        collectionPrice,
+                        tokenData.tokenId
+                    );
                 }
                 // token auction data
                 tokenData.auctionData = pool.getAuctionData(

@@ -27,6 +27,7 @@ interface IUiPoolDataProvider {
         bool isActive;
         bool isFrozen;
         bool isPaused;
+        bool isAtomicPricing;
         // base data
         uint128 liquidityIndex;
         uint128 variableBorrowIndex;

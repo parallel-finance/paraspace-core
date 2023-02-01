@@ -4,6 +4,7 @@ import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
+import {Helpers} from "../../libraries/helpers/Helpers.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";
@@ -77,7 +78,7 @@ library MintableERC721Logic {
      * @dev This constant represents the minimum trait multiplier that a single tokenId can have
      * A value of 1e18 results in no price multiplier
      */
-    uint256 internal constant MIN_TRAIT_MULTIPLIER = 0.5e18;
+    uint256 internal constant MIN_TRAIT_MULTIPLIER = 0e18;
 
     /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
@@ -109,6 +110,7 @@ library MintableERC721Logic {
     function executeTransfer(
         MintableERC721Data storage erc721Data,
         IPool POOL,
+        bool atomic_pricing,
         address from,
         address to,
         uint256 tokenId
@@ -122,7 +124,7 @@ library MintableERC721Logic {
             !isAuctioned(erc721Data, POOL, tokenId),
             Errors.TOKEN_IN_AUCTION
         );
-        bool isAtomic = isAtomicToken(erc721Data, tokenId);
+        bool isAtomic = isAtomicToken(erc721Data, atomic_pricing, tokenId);
         _beforeTokenTransfer(erc721Data, from, to, tokenId, isAtomic);
 
         // Clear approvals from the previous owner
@@ -145,14 +147,11 @@ library MintableERC721Logic {
             .atomicBalance;
         if (isAtomic) {
             uint64 newRecipientAtomicBalance = oldRecipientAtomicBalance + 1;
+            _checkAtomicBalanceLimit(erc721Data, newRecipientAtomicBalance);
             erc721Data.userState[to].atomicBalance = newRecipientAtomicBalance;
         } else {
             erc721Data.userState[to].balance = oldRecipientBalance + 1;
         }
-        _checkBalanceLimit(
-            erc721Data,
-            oldRecipientAtomicBalance + oldRecipientBalance + 1
-        );
         erc721Data.owners[tokenId] = to;
 
         if (from != to && erc721Data.auctions[tokenId].startTime > 0) {
@@ -182,6 +181,7 @@ library MintableERC721Logic {
     function executeTransferCollateralizable(
         MintableERC721Data storage erc721Data,
         IPool POOL,
+        bool atomic_pricing,
         address from,
         address to,
         uint256 tokenId
@@ -189,7 +189,7 @@ library MintableERC721Logic {
         isUsedAsCollateral_ = erc721Data.isUsedAsCollateral[tokenId];
 
         if (from != to && isUsedAsCollateral_) {
-            if (isAtomicToken(erc721Data, tokenId)) {
+            if (isAtomicToken(erc721Data, atomic_pricing, tokenId)) {
                 erc721Data.userState[from].atomicCollateralizedBalance -= 1;
             } else {
                 erc721Data.userState[from].collateralizedBalance -= 1;
@@ -197,12 +197,13 @@ library MintableERC721Logic {
             delete erc721Data.isUsedAsCollateral[tokenId];
         }
 
-        executeTransfer(erc721Data, POOL, from, to, tokenId);
+        executeTransfer(erc721Data, POOL, atomic_pricing, from, to, tokenId);
     }
 
     function executeSetIsUsedAsCollateral(
         MintableERC721Data storage erc721Data,
         IPool POOL,
+        bool atomic_pricing,
         uint256 tokenId,
         bool useAsCollateral,
         address sender
@@ -220,7 +221,7 @@ library MintableERC721Logic {
             );
         }
 
-        if (isAtomicToken(erc721Data, tokenId)) {
+        if (isAtomicToken(erc721Data, atomic_pricing, tokenId)) {
             uint64 collateralizedBalance = erc721Data
                 .userState[owner]
                 .atomicCollateralizedBalance;
@@ -249,6 +250,7 @@ library MintableERC721Logic {
 
     function executeMintMultiple(
         MintableERC721Data storage erc721Data,
+        bool atomic_pricing,
         address to,
         DataTypes.ERC721SupplyParams[] calldata tokenData
     )
@@ -275,7 +277,7 @@ library MintableERC721Logic {
                 tokenId,
                 oldTotalSupply + index
             );
-            bool isAtomic = isAtomicToken(erc721Data, tokenId);
+            bool isAtomic = isAtomicToken(erc721Data, atomic_pricing, tokenId);
             _addTokenToOwnerEnumeration(
                 erc721Data,
                 to,
@@ -317,7 +319,7 @@ library MintableERC721Logic {
             .userState[to]
             .atomicCollateralizedBalance = newAtomicCollateralizedBalance;
 
-        _checkBalanceLimit(erc721Data, vars.atomicBalance + vars.balance);
+        _checkAtomicBalanceLimit(erc721Data, vars.atomicBalance);
 
         erc721Data.userState[to].balance = vars.balance;
         erc721Data.userState[to].atomicBalance = vars.atomicBalance;
@@ -341,6 +343,7 @@ library MintableERC721Logic {
     function executeBurnMultiple(
         MintableERC721Data storage erc721Data,
         IPool POOL,
+        bool atomic_pricing,
         address user,
         uint256[] calldata tokenIds
     )
@@ -367,7 +370,7 @@ library MintableERC721Logic {
                 tokenId,
                 oldTotalSupply - index
             );
-            bool isAtomic = isAtomicToken(erc721Data, tokenId);
+            bool isAtomic = isAtomicToken(erc721Data, atomic_pricing, tokenId);
             _removeTokenFromOwnerEnumeration(
                 erc721Data,
                 user,
@@ -512,9 +515,12 @@ library MintableERC721Logic {
                 continue;
             }
 
-            bool isAtomicPrev = oldMultiplier != 0 &&
-                oldMultiplier != WadRayMath.WAD;
-            bool isAtomicNext = multipliers[i] != WadRayMath.WAD;
+            bool isAtomicPrev = Helpers.isTraitMultiplierEffective(
+                oldMultiplier
+            );
+            bool isAtomicNext = Helpers.isTraitMultiplierEffective(
+                multipliers[i]
+            );
 
             if (isAtomicPrev && !isAtomicNext) {
                 _removeTokenFromOwnerEnumeration(
@@ -570,20 +576,20 @@ library MintableERC721Logic {
         }
     }
 
-    function _checkBalanceLimit(
+    function _checkAtomicBalanceLimit(
         MintableERC721Data storage erc721Data,
-        uint64 balance
+        uint64 atomicBalance
     ) private view {
         uint64 balanceLimit = erc721Data.balanceLimit;
         require(
-            balanceLimit == 0 || balance <= balanceLimit,
+            balanceLimit == 0 || atomicBalance <= balanceLimit,
             Errors.NTOKEN_BALANCE_EXCEEDED
         );
     }
 
     function _checkTraitMultiplier(uint256 multiplier) private pure {
         require(
-            multiplier > MIN_TRAIT_MULTIPLIER &&
+            multiplier >= MIN_TRAIT_MULTIPLIER &&
                 multiplier < MAX_TRAIT_MULTIPLIER,
             Errors.INVALID_AMOUNT
         );
@@ -614,10 +620,11 @@ library MintableERC721Logic {
 
     function isAtomicToken(
         MintableERC721Data storage erc721Data,
+        bool atomic_pricing,
         uint256 tokenId
     ) public view returns (bool) {
         uint256 multiplier = erc721Data.traitsMultipliers[tokenId];
-        return multiplier != 0 && multiplier != WadRayMath.WAD;
+        return atomic_pricing || Helpers.isTraitMultiplierEffective(multiplier);
     }
 
     function isAuctioned(

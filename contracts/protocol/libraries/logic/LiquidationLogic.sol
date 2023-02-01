@@ -788,19 +788,15 @@ library LiquidationLogic {
                     params.collateralAsset,
                     params.collateralTokenId
                 );
-        } else if (
-            IAtomicCollateralizableERC721(superVars.collateralXToken)
-                .isAtomicToken(params.collateralTokenId)
-        ) {
-            uint256 multiplier = IAtomicCollateralizableERC721(
-                superVars.collateralXToken
-            ).getTraitMultiplier(params.collateralTokenId);
-            vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
-                .getAssetPrice(params.collateralAsset)
-                .wadMul(multiplier);
         } else {
-            vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
+            uint256 assetPrice = IPriceOracleGetter(params.priceOracle)
                 .getAssetPrice(params.collateralAsset);
+
+            vars.collateralPrice = Helpers.getTraitBoostedTokenPrice(
+                superVars.collateralXToken,
+                assetPrice,
+                params.collateralTokenId
+            );
         }
 
         if (
