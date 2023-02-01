@@ -45,17 +45,17 @@ struct MintableERC721Data {
     uint64 balanceLimit;
     mapping(uint256 => bool) isUsedAsCollateral;
     mapping(uint256 => DataTypes.Auction) auctions;
-    // Mapping from owner to list of owned token IDs
+    // Mapping from owner to list of owned atomic token IDs
     mapping(address => mapping(uint256 => uint256)) ownedAtomicTokens;
-    // Mapping from token ID to index of the owner tokens list
+    // Mapping from token ID to index of the owned atomic tokens list
     mapping(uint256 => uint256) ownedAtomicTokensIndex;
     // All atomic tokens' traits multipliers
     mapping(uint256 => uint256) traitsMultipliers;
 }
 
 struct LocalVars {
-    uint64 oldBalance;
-    uint64 oldAtomicBalance;
+    uint64 balance;
+    uint64 atomicBalance;
     uint64 oldCollateralizedBalance;
     uint64 oldAtomicCollateralizedBalance;
     uint64 collateralizedTokens;
@@ -280,13 +280,13 @@ library MintableERC721Logic {
                 erc721Data,
                 to,
                 tokenId,
-                isAtomic ? vars.oldAtomicBalance : vars.oldBalance,
+                isAtomic ? vars.atomicBalance : vars.balance,
                 isAtomic
             );
             if (isAtomic) {
-                vars.oldAtomicBalance += 1;
+                vars.atomicBalance += 1;
             } else {
-                vars.oldBalance += 1;
+                vars.balance += 1;
             }
 
             erc721Data.owners[tokenId] = to;
@@ -317,10 +317,10 @@ library MintableERC721Logic {
             .userState[to]
             .atomicCollateralizedBalance = newAtomicCollateralizedBalance;
 
-        _checkBalanceLimit(erc721Data, vars.oldAtomicBalance + vars.oldBalance);
+        _checkBalanceLimit(erc721Data, vars.atomicBalance + vars.balance);
 
-        erc721Data.userState[to].balance = vars.oldBalance;
-        erc721Data.userState[to].atomicBalance = vars.oldAtomicBalance;
+        erc721Data.userState[to].balance = vars.balance;
+        erc721Data.userState[to].atomicBalance = vars.atomicBalance;
 
         // calculate incentives
         IRewardController rewardControllerLocal = erc721Data.rewardController;
@@ -328,7 +328,7 @@ library MintableERC721Logic {
             rewardControllerLocal.handleAction(
                 to,
                 oldTotalSupply,
-                vars.oldBalance + vars.oldAtomicBalance - tokenData.length
+                vars.balance + vars.atomicBalance - tokenData.length
             );
         }
 
@@ -372,13 +372,13 @@ library MintableERC721Logic {
                 erc721Data,
                 user,
                 tokenId,
-                isAtomic ? vars.oldAtomicBalance : vars.oldBalance,
+                isAtomic ? vars.atomicBalance : vars.balance,
                 isAtomic
             );
             if (isAtomic) {
-                vars.oldAtomicBalance -= 1;
+                vars.atomicBalance -= 1;
             } else {
-                vars.oldBalance -= 1;
+                vars.balance -= 1;
             }
 
             // Clear approvals
@@ -401,8 +401,8 @@ library MintableERC721Logic {
             emit Transfer(owner, address(0), tokenId);
         }
 
-        erc721Data.userState[user].balance = vars.oldBalance;
-        erc721Data.userState[user].atomicBalance = vars.oldAtomicBalance;
+        erc721Data.userState[user].balance = vars.balance;
+        erc721Data.userState[user].atomicBalance = vars.atomicBalance;
 
         uint64 newCollateralizedBalance = vars.oldCollateralizedBalance -
             vars.collateralizedTokens;
@@ -422,7 +422,7 @@ library MintableERC721Logic {
             rewardControllerLocal.handleAction(
                 user,
                 oldTotalSupply,
-                vars.oldBalance + vars.oldAtomicBalance + tokenIds.length
+                vars.balance + vars.atomicBalance + tokenIds.length
             );
         }
 
@@ -602,8 +602,8 @@ library MintableERC721Logic {
         view
         returns (LocalVars memory vars)
     {
-        vars.oldBalance = erc721Data.userState[user].balance;
-        vars.oldAtomicBalance = erc721Data.userState[user].atomicBalance;
+        vars.balance = erc721Data.userState[user].balance;
+        vars.atomicBalance = erc721Data.userState[user].atomicBalance;
         vars.oldCollateralizedBalance = erc721Data
             .userState[user]
             .collateralizedBalance;
