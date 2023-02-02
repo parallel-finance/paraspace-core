@@ -134,8 +134,6 @@ abstract contract MintableIncentivizedERC721 is
     IPool internal immutable POOL;
     bool internal immutable ATOMIC_PRICING;
 
-    address internal _underlyingAsset;
-
     /**
      * @dev Constructor.
      * @param pool The reference to the main Pool contract
@@ -265,7 +263,7 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (string memory)
     {
-        return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
+        return IERC721Metadata(_ERC721Data.underlyingAsset).tokenURI(tokenId);
     }
 
     /**
@@ -836,7 +834,7 @@ abstract contract MintableIncentivizedERC721 is
         uint256[] calldata ids
     ) external onlyPoolAdmin {
         MintableERC721Logic.executeRescueERC721(
-            _underlyingAsset,
+            _ERC721Data.underlyingAsset,
             token,
             to,
             ids
