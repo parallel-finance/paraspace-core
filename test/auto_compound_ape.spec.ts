@@ -27,7 +27,7 @@ import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 
-describe("APE Coin Staking Test", () => {
+describe("Auto Compound Ape Test", () => {
   let testEnv: TestEnv;
   let cApe: AutoCompoundApe;
   let pCApe: PToken;

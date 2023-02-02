@@ -226,6 +226,8 @@ import {
   MockedDelegateRegistry__factory,
   NTokenBAKC,
   NTokenBAKC__factory,
+  P2PPairStaking__factory,
+  P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
 } from "../types";
@@ -233,6 +235,8 @@ import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
   getFirstSigner,
+  getPoolProxy,
+  getProtocolDataProvider,
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
@@ -261,6 +265,7 @@ import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/P
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
+import {parseEther} from "ethers/lib/utils";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -1828,7 +1833,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("10000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1836,7 +1841,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("200000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1844,7 +1849,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1852,7 +1857,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   return apeCoinStaking;
@@ -2114,6 +2119,71 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   );
 
   return proxyInstance as AutoCompoundApe;
+};
+
+export const deployP2PPairStakingImpl = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const nBAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
+  ).xTokenAddress;
+  const nMAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
+  ).xTokenAddress;
+  const nBAKC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
+  ).xTokenAddress;
+  const pCApe = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.cAPE.address)
+  ).xTokenAddress;
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const pool = await getPoolProxy();
+  const args = [
+    allTokens.BAYC.address,
+    allTokens.MAYC.address,
+    allTokens.BAKC.address,
+    nBAYC,
+    nMAYC,
+    nBAKC,
+    allTokens.APE.address,
+    allTokens.cAPE.address,
+    pCApe,
+    apeCoinStaking,
+    pool.address,
+  ];
+
+  return withSaveAndVerify(
+    new P2PPairStaking__factory(await getFirstSigner()),
+    eContractid.P2PPairStakingImpl,
+    [...args],
+    verify
+  ) as Promise<P2PPairStaking>;
+};
+
+export const deployP2PPairStaking = async (verify?: boolean) => {
+  const p2pImplementation = await deployP2PPairStakingImpl(verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = p2pImplementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.P2PPairStaking,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as P2PPairStaking;
 };
 
 export const deployPTokenCApe = async (

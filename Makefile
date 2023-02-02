@@ -367,6 +367,9 @@ deploy-flashClaimRegistry:
 .PHONY: deploy-renounceOwnership
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
+.PHONY: deploy-p2p-pair-staking
+deploy-p2p-pair-staking:
+	make TASK_NAME=deploy:P2PPairStaking run-task
 
 .PHONY: ad-hoc
 ad-hoc:
@@ -543,6 +546,10 @@ upgrade-configurator:
 .PHONY: upgrade-auto-compound-ape
 upgrade-auto-compound-ape:
 	make TASK_NAME=upgrade:auto-compound-ape run-task
+
+.PHONY: upgrade-p2p-pair-staking
+upgrade-p2p-pair-staking:
+	make TASK_NAME=upgrade:p2p-pair-staking run-task
 
 .PHONY: upgrade-ntoken
 upgrade-ntoken:
