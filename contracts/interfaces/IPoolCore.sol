@@ -211,7 +211,7 @@ interface IPoolCore {
 
     /**
      * @notice same as supply but caller can only be xToken.
-     * this function has no re-entrancy intentionally to be able to suppport multiple supply calls
+     * this function has no re-entrancy intentionally to be able to support multiple supply calls
      **/
 
     function supplyFromXToken(
