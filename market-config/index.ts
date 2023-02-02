@@ -121,6 +121,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
   },
 };
 
@@ -225,6 +226,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
   },
 };
