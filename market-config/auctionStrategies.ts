@@ -124,6 +124,16 @@ export const auctionStrategySEWER: IAuctionStrategyParams = {
   tickLength: "900",
 };
 
+export const auctionStrategyPudgyPenguins: IAuctionStrategyParams = {
+  name: "auctionStrategyPudgyPenguins",
+  maxPriceMultiplier: utils.parseUnits("2", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.1", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
+  stepLinear: utils.parseUnits("0.01136311018", 18).toString(),
+  stepExp: utils.parseUnits("0.02264429236", 18).toString(),
+  tickLength: "900",
+};
+
 ////////////////////////////////////////////////////////////
 // MOCK
 ////////////////////////////////////////////////////////////

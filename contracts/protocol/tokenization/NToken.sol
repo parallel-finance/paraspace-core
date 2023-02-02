@@ -20,6 +20,7 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {MintableERC721Logic} from "./libraries/MintableERC721Logic.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
@@ -64,6 +65,23 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         _ERC721Data.underlyingAsset = underlyingAsset;
         _ERC721Data.rewardController = incentivesController;
+
+        if (ATOMIC_PRICING) {
+            uint256 length = _ERC721Data.allTokens.length;
+            for (uint256 i = 0; i < length; i++) {
+                uint256 tokenId = _ERC721Data.allTokens[i];
+                address owner = _ERC721Data.owners[tokenId];
+                if (owner != address(0)) {
+                    MintableERC721Logic.executeTranslateToken(
+                        _ERC721Data,
+                        owner,
+                        tokenId,
+                        false,
+                        true
+                    );
+                }
+            }
+        }
 
         emit Initialized(
             underlyingAsset,

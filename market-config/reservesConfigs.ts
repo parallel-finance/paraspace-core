@@ -21,6 +21,7 @@ import {
   auctionStrategyMeebits,
   auctionStrategyMoonbird,
   auctionStrategyOthr,
+  auctionStrategyPudgyPenguins,
   auctionStrategySEWER,
   auctionStrategyUniswapV3,
   auctionStrategyWPunks,
@@ -358,6 +359,21 @@ export const strategySEWER: IReserveParams = {
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "1000",
+};
+
+export const strategyPudgyPenguins: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyPudgyPenguins,
+  baseLTVAsCollateral: "3000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "6500",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 ////////////////////////////////////////////////////////////

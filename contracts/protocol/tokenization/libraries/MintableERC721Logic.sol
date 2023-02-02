@@ -596,56 +596,68 @@ library MintableERC721Logic {
                 multipliers[i]
             );
 
-            if (isAtomicPrev && !isAtomicNext) {
-                _removeTokenFromOwnerEnumeration(
-                    erc721Data,
-                    owner,
-                    tokenIds[i],
-                    erc721Data.userState[owner].atomicBalance,
-                    isAtomicPrev
-                );
-                _addTokenToOwnerEnumeration(
-                    erc721Data,
-                    owner,
-                    tokenIds[i],
-                    erc721Data.userState[owner].balance,
-                    isAtomicNext
-                );
+            executeTranslateToken(
+                erc721Data,
+                owner,
+                tokenIds[i],
+                isAtomicPrev,
+                isAtomicNext
+            );
+        }
+    }
 
-                erc721Data.userState[owner].atomicBalance -= 1;
-                erc721Data.userState[owner].balance += 1;
+    function executeTranslateToken(
+        MintableERC721Data storage erc721Data,
+        address owner,
+        uint256 tokenId,
+        bool isAtomicPrev,
+        bool isAtomicNext
+    ) internal {
+        if (isAtomicPrev && !isAtomicNext) {
+            _removeTokenFromOwnerEnumeration(
+                erc721Data,
+                owner,
+                tokenId,
+                erc721Data.userState[owner].atomicBalance,
+                isAtomicPrev
+            );
+            _addTokenToOwnerEnumeration(
+                erc721Data,
+                owner,
+                tokenId,
+                erc721Data.userState[owner].balance,
+                isAtomicNext
+            );
 
-                if (erc721Data.isUsedAsCollateral[tokenIds[i]]) {
-                    erc721Data
-                        .userState[owner]
-                        .atomicCollateralizedBalance -= 1;
-                    erc721Data.userState[owner].collateralizedBalance += 1;
-                }
-            } else if (!isAtomicPrev && isAtomicNext) {
-                _removeTokenFromOwnerEnumeration(
-                    erc721Data,
-                    owner,
-                    tokenIds[i],
-                    erc721Data.userState[owner].balance,
-                    isAtomicPrev
-                );
-                _addTokenToOwnerEnumeration(
-                    erc721Data,
-                    owner,
-                    tokenIds[i],
-                    erc721Data.userState[owner].atomicBalance,
-                    isAtomicNext
-                );
+            erc721Data.userState[owner].atomicBalance -= 1;
+            erc721Data.userState[owner].balance += 1;
 
-                erc721Data.userState[owner].balance -= 1;
-                erc721Data.userState[owner].atomicBalance += 1;
+            if (erc721Data.isUsedAsCollateral[tokenId]) {
+                erc721Data.userState[owner].atomicCollateralizedBalance -= 1;
+                erc721Data.userState[owner].collateralizedBalance += 1;
+            }
+        } else if (!isAtomicPrev && isAtomicNext) {
+            _removeTokenFromOwnerEnumeration(
+                erc721Data,
+                owner,
+                tokenId,
+                erc721Data.userState[owner].balance,
+                isAtomicPrev
+            );
+            _addTokenToOwnerEnumeration(
+                erc721Data,
+                owner,
+                tokenId,
+                erc721Data.userState[owner].atomicBalance,
+                isAtomicNext
+            );
 
-                if (erc721Data.isUsedAsCollateral[tokenIds[i]]) {
-                    erc721Data.userState[owner].collateralizedBalance -= 1;
-                    erc721Data
-                        .userState[owner]
-                        .atomicCollateralizedBalance += 1;
-                }
+            erc721Data.userState[owner].balance -= 1;
+            erc721Data.userState[owner].atomicBalance += 1;
+
+            if (erc721Data.isUsedAsCollateral[tokenId]) {
+                erc721Data.userState[owner].collateralizedBalance -= 1;
+                erc721Data.userState[owner].atomicCollateralizedBalance += 1;
             }
         }
     }
