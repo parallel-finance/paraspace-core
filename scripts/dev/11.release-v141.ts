@@ -2,7 +2,7 @@ import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployERC721OracleWrapper,
-  deployUiPoolDataProvider,
+  // deployUiPoolDataProvider,
 } from "../../helpers/contracts-deployments";
 import {
   getParaSpaceOracle,
@@ -99,7 +99,12 @@ const releaseV141 = async () => {
     paraSpaceAdminAddress,
     treasuryAddress,
     ZERO_ADDRESS,
-    false
+    false,
+    undefined,
+    "0x6C0f7e54afdDdC106232B984adEbcd3cfcB7885D",
+    "0x986a94186c0F16Ce8D7e14456A3833C6Eb6Df4bE",
+    "0xE2FB283EF087F99441aa28ba69D1e641d2b4d026",
+    undefined
   );
   console.timeEnd("initializing reserves...");
 
@@ -112,11 +117,11 @@ const releaseV141 = async () => {
   );
   console.timeEnd("configuring reserves...");
 
-  await deployUiPoolDataProvider(
-    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-    false
-  );
+  // await deployUiPoolDataProvider(
+  //   "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+  //   "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+  //   false
+  // );
 
   // await deployMintableERC721(["PPG", "PPG", ""], false);
   console.timeEnd("release-v141");
