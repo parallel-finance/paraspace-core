@@ -1,9 +1,7 @@
 #!make
 
-NETWORK                  := hardhat
-
 include .env
-export $(shell sed 's/=.*//' .env)  #overwrite NETWORK
+export $(shell sed 's/=.*//' .env)
 
 SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
@@ -19,21 +17,13 @@ init: submodules
 	[ -d lib/forge-std ] || forge install --no-commit --no-git https://github.com/foundry-rs/forge-std
 	yarn
 
-.PHONY: foundry-setup
-foundry-setup: anvil
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat deploy:all --network anvil # --verbose
-
-.PHONY: foundry-test
-foundry-test:
-	forge test -vvvv
-
 .PHONY: test
 test:
 	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
 
 .PHONY: local-test
 local-test:
-	make DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
+	make MOCHA_JOBS=0 DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
@@ -284,7 +274,7 @@ run:
 
 .PHONY: run-task
 run-task:
-	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARGS) --network $(NETWORK)
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARG0) ${ARG1} ${ARG2} ${ARG3} --network $(NETWORK)
 
 .PHONY: print
 print:
@@ -394,32 +384,176 @@ wallet:
 rate-strategy:
 	make SCRIPT_PATH=./scripts/dev/5.rate-strategy.ts run
 
+.PHONY: auction-strategy
+auction-strategy:
+	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
+
+.PHONY: set-interval-mining
+set-interval-mining:
+	make SCRIPT_PATH=./scripts/dev/8.set-interval-mining.ts run
+
+.PHONY: set-auto-mining
+set-auto-mining:
+	make SCRIPT_PATH=./scripts/dev/9.set-auto-mining.ts run
+
+.PHONY: send-eth
+send-eth:
+	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
 
+.PHONY: market-info
+market-info:
+	make TASK_NAME=market-info run-task
+
+.PHONY: account-data
+account-data:
+	make TASK_NAME=account-data run-task
+
+.PHONY: decode
+decode:
+	make TASK_NAME=decode run-task
+
+.PHONY: decode-multi
+decode-multi:
+	make TASK_NAME=decode-multi run-task
+
+.PHONY: decode-tx
+decode-tx:
+	make TASK_NAME=decode-tx run-task
+
+.PHONY: next-execution-time
+next-execution-time:
+	make TASK_NAME=next-execution-time run-task
+
+.PHONY: increase-to-execution-time
+increase-to-execution-time:
+	make TASK_NAME=increase-to-execution-time run-task
+
+.PHONY: queue-tx
+queue-tx:
+	make TASK_NAME=queue-tx run-task
+
+.PHONY: execute-tx
+execute-tx:
+	make TASK_NAME=execute-tx run-task
+
+.PHONY: cancel-tx
+cancel-tx:
+	make TASK_NAME=cancel-tx run-task
+
+.PHONY: list-queued-txs
+list-queued-txs:
+	make TASK_NAME=list-queued-txs run-task
+
+.PHONY: decode-queued-txs
+decode-queued-txs:
+	make TASK_NAME=decode-queued-txs run-task
+
+.PHONY: list-buffered-txs
+list-buffered-txs:
+	make TASK_NAME=list-buffered-txs run-task
+
+.PHONY: decode-buffered-txs
+decode-buffered-txs:
+	make TASK_NAME=decode-buffered-txs run-task
+
+.PHONY: queue-buffered-txs
+queue-buffered-txs:
+	make TASK_NAME=queue-buffered-txs run-task
+
+.PHONY: execute-buffered-txs
+execute-buffered-txs:
+	make TASK_NAME=execute-buffered-txs run-task
+
+.PHONY: cancel-buffered-txs
+cancel-buffered-txs:
+	make TASK_NAME=cancel-buffered-txs run-task
+
+.PHONY: decode-safe-txs
+decode-safe-txs:
+	make TASK_NAME=decode-safe-txs run-task
+
+.PHONY: propose-safe-txs
+propose-safe-txs:
+	make TASK_NAME=propose-safe-txs run-task
+
+.PHONY: set-ltv
+set-ltv:
+	make TASK_NAME=set-ltv run-task
+
+.PHONY: set-liquidation-threshold
+set-liquidation-threshold:
+	make TASK_NAME=set-liquidation-threshold run-task
+
+.PHONY: set-reserve-factor
+set-reserve-factor:
+	make TASK_NAME=set-reserve-factor run-task
+
+.PHONY: set-interest-rate-strategy
+set-interest-rate-strategy:
+	make TASK_NAME=set-interest-rate-strategy run-task
+
+.PHONY: set-auction-strategy
+set-auction-strategy:
+	make TASK_NAME=set-auction-strategy run-task
+
+.PHONY: set-supply-cap
+set-supply-cap:
+	make TASK_NAME=set-supply-cap run-task
+
+.PHONY: set-borrow-cap
+set-borrow-cap:
+	make TASK_NAME=set-borrow-cap run-task
+
+.PHONY: list-facets
+list-facets:
+	make TASK_NAME=list-facets run-task
+
+.PHONY: list-facet-addresses
+list-facet-addresses:
+	make TASK_NAME=list-facet-addresses run-task
+
+.PHONY: facet-address
+facet-address:
+	make TASK_NAME=facet-address run-task
+
+.PHONY: facet-function-selectors
+facet-function-selectors:
+	make TASK_NAME=facet-function-selectors run-task
+
 .PHONY: upgrade
-upgrade: build
+upgrade:
 	make TASK_NAME=upgrade:all run-task
 
 .PHONY: upgrade-pool
-upgrade-pool: build
+upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: reset-pool
+reset-pool:
+	make TASK_NAME=reset:pool run-task
+
 .PHONY: upgrade-configurator
-upgrade-configurator: build
+upgrade-configurator:
 	make TASK_NAME=upgrade:configurator run-task
 
+.PHONY: upgrade-auto-compound-ape
+upgrade-auto-compound-ape:
+	make TASK_NAME=upgrade:auto-compound-ape run-task
+
 .PHONY: upgrade-ntoken
-upgrade-ntoken: build
+upgrade-ntoken:
 	make TASK_NAME=upgrade:ntoken run-task
 
 .PHONY: upgrade-ptoken
-upgrade-ptoken: build
+upgrade-ptoken:
 	make TASK_NAME=upgrade:ptoken run-task
 
 .PHONY: upgrade-debt-token
-upgrade-debt-token: build
+upgrade-debt-token:
 	make TASK_NAME=upgrade:debt-token run-task
 
 .PHONY: hardhat
@@ -428,23 +562,29 @@ hardhat:
 
 .PHONY: anvil
 anvil:
-	sudo pkill anvil || true
-	anvil &
-	sleep 30
+	anvil \
+		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
+		--chain-id 522 \
+		--tracing \
+		--host 0.0.0.0 \
+		--state-interval 60 \
+		--dump-state state.json \
+		$(if $(wildcard state.json),--load-state state.json,) \
+		--code-size-limit 100000 \
 
 .PHONY: image
 image:
-	DOCKER_BUILDKIT=1 docker build \
+	docker build \
 		-c 512 \
 		-t parallelfinance/paraspace:latest \
-		-f Dockerfile .
+		-f Dockerfile.${JSONRPC_VARIANT} .
 
 .PHONY: launch
 launch: shutdown
 	docker-compose \
 		up \
 		-d --build
-	docker-compose logs -f hardhat
+	docker-compose logs -f node
 
 .PHONY: shutdown
 shutdown:
@@ -455,10 +595,11 @@ shutdown:
 	docker volume prune -f
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
+	sudo rm -fr state.json || true
 
 .PHONY: copy
 copy:
-	docker cp paraspace-core_hardhat_1:/paraspace/deployed-contracts.json .
+	docker cp paraspace-core_node_1:/paraspace/deployed-contracts.json .
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

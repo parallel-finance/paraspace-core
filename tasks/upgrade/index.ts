@@ -9,6 +9,16 @@ task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
   console.timeEnd("upgrade all");
 });
 
+task("reset:pool", "reset pool function selectors").setAction(
+  async (_, DRE) => {
+    const {resetPool} = await import("../../scripts/upgrade");
+    await DRE.run("set-DRE");
+    console.time("reset pool");
+    await resetPool(ETHERSCAN_VERIFICATION);
+    console.timeEnd("reset pool");
+  }
+);
+
 task("upgrade:pool", "upgrade pool components").setAction(async (_, DRE) => {
   const {upgradePool} = await import("../../scripts/upgrade");
   await DRE.run("set-DRE");
@@ -26,6 +36,18 @@ task("upgrade:configurator", "upgrade pool configurator").setAction(
     console.time("upgrade configurator");
     await upgradeConfigurator(ETHERSCAN_VERIFICATION);
     console.timeEnd("upgrade configurator");
+  }
+);
+
+task("upgrade:auto-compound-ape", "upgrade auto compound ape").setAction(
+  async (_, DRE) => {
+    const {upgradeAutoCompoundApe} = await import(
+      "../../scripts/upgrade/autoCompoundApe"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade auto compound ape");
+    await upgradeAutoCompoundApe(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade auto compound ape");
   }
 );
 

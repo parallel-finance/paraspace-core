@@ -3,6 +3,7 @@ import {DRE, waitForTx} from "../helpers/misc-utils";
 import {
   convertToCurrencyDecimals,
   createSeaportOrder,
+  isUsingAsCollateral,
 } from "../helpers/contracts-helpers";
 import {TestEnv} from "./helpers/make-suite";
 import {AdvancedOrder} from "../helpers/seaport-helpers/types";
@@ -21,12 +22,14 @@ import {
 } from "@looksrare/sdk";
 import {
   LOOKSRARE_ID,
+  MAX_UINT_AMOUNT,
   PARASPACE_SEAPORT_ID,
   X2Y2_ID,
 } from "../helpers/constants";
 import {parseEther, splitSignature} from "ethers/lib/utils";
 import {BigNumber, BigNumberish, constants} from "ethers";
 import {
+  assertAlmostEqual,
   borrowAndValidate,
   changePriceAndValidate,
   mintAndValidate,
@@ -1455,6 +1458,85 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await nDOODLE.ownerOf(nftId)).to.be.eq(taker.address);
     expect(await weth.balanceOf(maker.address)).to.be.eq(startAmount);
   });
+
+  it("TC-erc721-buy-26: ERC20 <=> NToken via ParaSpace - partial borrow & pToken minted", async () => {
+    const {
+      bayc,
+      nBAYC,
+      usdc,
+      pUsdc,
+      pool,
+      users: [maker, taker, middleman],
+    } = await loadFixture(testEnvFixture);
+    const payNowNumber = "800";
+    const creditNumber = "200";
+    const payNowAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      usdc.address,
+      creditNumber
+    );
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount;
+    const borrowAmount = "200";
+    const nftId = 0;
+
+    // mint USDC to taker and middleman
+    await mintAndValidate(usdc, payNowNumber, taker);
+    // middleman supplies USDC to pool to be borrowed by offer later
+    await supplyAndValidate(usdc, creditNumber, middleman, true);
+    await supplyAndValidate(usdc, borrowAmount, middleman, true);
+    await supplyAndValidate(bayc, "1", maker, true);
+    await supplyAndValidate(usdc, "1", maker, true); // supply 1 USDC and turn off collateral
+    await waitForTx(
+      await pool
+        .connect(maker.signer)
+        .setUserUseERC20AsCollateral(usdc.address, false)
+    );
+    await borrowAndValidate(usdc, borrowAmount, maker);
+
+    await waitForTx(
+      await usdc.connect(maker.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await usdc.connect(taker.signer).approve(pool.address, startAmount)
+    );
+    await executeSeaportBuyWithCredit(
+      nBAYC,
+      usdc,
+      startAmount,
+      endAmount,
+      creditAmount,
+      nftId,
+      maker,
+      taker
+    );
+
+    const usdcConfigData = BigNumber.from(
+      (await pool.getUserConfiguration(maker.address)).data
+    );
+    const usdcReserveData = await pool.getReserveData(usdc.address);
+    expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
+    expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
+    assertAlmostEqual(
+      await pUsdc.balanceOf(maker.address),
+      startAmount
+        .percentMul("9000")
+        .add(await convertToCurrencyDecimals(usdc.address, "1")) // default supply ratio
+    );
+    assertAlmostEqual(
+      await usdc.balanceOf(maker.address),
+      startAmount
+        .percentMul("1000")
+        .add(await convertToCurrencyDecimals(usdc.address, borrowAmount))
+    );
+    expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
+    expect(
+      (await pool.getUserAccountData(maker.address)).totalDebtBase
+    ).to.be.gt(0); // no debt repaid
+  });
 });
 
 describe("Leveraged Buy - Negative tests", () => {
@@ -1505,15 +1587,17 @@ describe("Leveraged Buy - Negative tests", () => {
     return testEnv;
   };
 
-  it("TC-erc721-buy-16: Cannot purchase nToken in collateral covering an ongoing borrow position", async () => {
+  it("TC-erc721-buy-16: Cannot purchase nToken in collateral covering an ongoing borrow position different with paymentToken", async () => {
     const {
       bayc,
       nBAYC,
       dai,
+      usdc,
       conduit,
-      users: [maker, taker],
+      users: [maker, taker, middleman],
     } = await loadFixture(fixture);
 
+    await supplyAndValidate(usdc, "800", middleman, true);
     // maker supplies BAYC
     await supplyAndValidate(bayc, "1", maker);
 
@@ -1522,8 +1606,8 @@ describe("Leveraged Buy - Negative tests", () => {
       await nBAYC.connect(maker.signer).approve(conduit.address, nftId)
     );
 
-    // maker borrows DAI
-    await borrowAndValidate(dai, "800", maker);
+    // maker borrows USDC
+    await borrowAndValidate(usdc, "800", maker);
 
     await expect(
       executeSeaportBuyWithCredit(

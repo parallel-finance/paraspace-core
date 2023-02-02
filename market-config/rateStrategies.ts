@@ -52,12 +52,47 @@ export const rateStrategyAPE: IInterestRateStrategyParams = {
   variableRateSlope2: utils.parseUnits("0.55", 27).toString(),
 };
 
+export const rateStrategycAPE: IInterestRateStrategyParams = {
+  name: "rateStrategycAPE",
+  optimalUsageRatio: utils.parseUnits("0.85", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0.05", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.1", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.23", 27).toString(),
+};
+
+export const rateStrategyXCDOT: IInterestRateStrategyParams = {
+  name: "rateStrategyXCDOT",
+  optimalUsageRatio: utils.parseUnits("0.80", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0.02", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.25", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.2", 27).toString(),
+};
+
+export const rateStrategyWGLMR: IInterestRateStrategyParams = {
+  name: "rateStrategyWGLMR",
+  optimalUsageRatio: utils.parseUnits("0.80", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.25", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.25", 27).toString(),
+};
+
 export const rateStrategyNFT: IInterestRateStrategyParams = {
   name: "rateStrategyNFT",
   optimalUsageRatio: utils.parseUnits("0.45", 27).toString(),
   baseVariableBorrowRate: utils.parseUnits("0", 27).toString(),
   variableRateSlope1: utils.parseUnits("0.07", 27).toString(),
   variableRateSlope2: utils.parseUnits("3", 27).toString(),
+};
+
+////////////////////////////////////////////////////////////
+// V2
+////////////////////////////////////////////////////////////
+export const rateStrategySTETH: IInterestRateStrategyParams = {
+  name: "rateStrategySTETH",
+  optimalUsageRatio: utils.parseUnits("0.88", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0.2", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.08", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.60", 27).toString(),
 };
 
 ////////////////////////////////////////////////////////////
@@ -72,7 +107,7 @@ export const rateStrategyStableTwo: IInterestRateStrategyParams = {
   variableRateSlope2: utils.parseUnits("0.75", 27).toString(),
 };
 
-// WETH stETH, Punk
+// WETH, StETH, Punk
 export const rateStrategyXETH: IInterestRateStrategyParams = {
   name: "rateStrategyXETH",
   optimalUsageRatio: utils.parseUnits("0.65", 27).toString(),

@@ -16,6 +16,8 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   aWETH: parseEther("1").toString(),
   cETH: parseEther("1").toString(),
   PUNK: parseEther("140").toString(),
+  xcDOT: parseEther("0.0038333333333").toString(),
+  WGLMR: parseEther("0.00027291666666").toString(),
   // ERC721
   BAYC: parseEther("101").toString(),
   WPUNKS: parseEther("140").toString(),
@@ -27,6 +29,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   AZUKI: parseEther("21").toString(),
   OTHR: parseEther("25").toString(),
   CLONEX: parseEther("27").toString(),
+  BAKC: parseEther("6").toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {
@@ -40,6 +43,7 @@ export const MOCK_TOKEN_MINT_VALUE = {
   aWETH: 10,
   cWETH: 10,
   PUNK: 1000,
+  xcDOT: 1000,
   // ERC721
   BAYC: 1,
   PUNKS: 1,

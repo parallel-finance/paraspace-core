@@ -4,6 +4,7 @@
 node_modules
 cache
 artifacts
+state.json
 /types
 .env
 deployed-contracts.json

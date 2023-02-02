@@ -120,20 +120,18 @@ contract PoolApeStaking is
     /// @inheritdoc IPoolApeStaking
     function withdrawBAKC(
         address nftAsset,
-        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs
+        ApeCoinStaking.PairNftWithdrawWithAmount[] calldata _nftPairs
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
-        address xTokenAddress;
-        {
-            DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-            xTokenAddress = nftReserve.xTokenAddress;
-        }
-
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
-        IERC721 bakcContract = nTokenApeStaking.getBAKC();
+        address xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
+        IERC721 bakcContract = INTokenApeStaking(xTokenAddress).getBAKC();
+        address bakcNToken = ps._reserves[address(bakcContract)].xTokenAddress;
         uint256[] memory transferredTokenIds = new uint256[](_nftPairs.length);
+        address[] memory transferredTokenOwners = new address[](
+            _nftPairs.length
+        );
         uint256 actualTransferAmount = 0;
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
@@ -142,33 +140,29 @@ contract PoolApeStaking is
                 Errors.NOT_THE_OWNER
             );
 
-            (uint256 stakedAmount, ) = nTokenApeStaking
-                .getApeStaking()
-                .nftPosition(
-                    ApeStakingLogic.BAKC_POOL_ID,
-                    _nftPairs[index].bakcTokenId
-                );
-
             //only partially withdraw need user's BAKC
-            if (_nftPairs[index].amount != stakedAmount) {
-                bakcContract.safeTransferFrom(
-                    msg.sender,
+            if (!_nftPairs[index].isUncommit) {
+                transferredTokenOwners[
+                    actualTransferAmount
+                ] = validateBAKCOwnerAndTransfer(
+                    bakcContract,
+                    _nftPairs[index].bakcTokenId,
+                    bakcNToken,
                     xTokenAddress,
-                    _nftPairs[index].bakcTokenId
+                    msg.sender
                 );
                 transferredTokenIds[actualTransferAmount] = _nftPairs[index]
                     .bakcTokenId;
                 actualTransferAmount++;
             }
         }
-
-        nTokenApeStaking.withdrawBAKC(_nftPairs, msg.sender);
+        INTokenApeStaking(xTokenAddress).withdrawBAKC(_nftPairs, msg.sender);
 
         ////transfer BAKC back for user
         for (uint256 index = 0; index < actualTransferAmount; index++) {
             bakcContract.safeTransferFrom(
                 xTokenAddress,
-                msg.sender,
+                transferredTokenOwners[index],
                 transferredTokenIds[index]
             );
         }
@@ -188,30 +182,35 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
-        DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
-        address xTokenAddress = nftReserve.xTokenAddress;
-        INTokenApeStaking nTokenApeStaking = INTokenApeStaking(xTokenAddress);
-        IERC721 bakcContract = nTokenApeStaking.getBAKC();
+        address xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
+        IERC721 bakcContract = INTokenApeStaking(xTokenAddress).getBAKC();
+        address bakcNToken = ps._reserves[address(bakcContract)].xTokenAddress;
+        address[] memory transferredTokenOwners = new address[](
+            _nftPairs.length
+        );
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
                 INToken(xTokenAddress).ownerOf(_nftPairs[index].mainTokenId) ==
                     msg.sender,
                 Errors.NOT_THE_OWNER
             );
-            bakcContract.safeTransferFrom(
-                msg.sender,
+
+            transferredTokenOwners[index] = validateBAKCOwnerAndTransfer(
+                bakcContract,
+                _nftPairs[index].bakcTokenId,
+                bakcNToken,
                 xTokenAddress,
-                _nftPairs[index].bakcTokenId
+                msg.sender
             );
         }
 
-        nTokenApeStaking.claimBAKC(_nftPairs, msg.sender);
+        INTokenApeStaking(xTokenAddress).claimBAKC(_nftPairs, msg.sender);
 
         //transfer BAKC back for user
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             bakcContract.safeTransferFrom(
                 xTokenAddress,
-                msg.sender,
+                transferredTokenOwners[index],
                 _nftPairs[index].bakcTokenId
             );
         }
@@ -220,7 +219,9 @@ contract PoolApeStaking is
     struct BorrowAndStakeLocalVar {
         address nTokenAddress;
         uint256 beforeBalance;
+        address bakcNToken;
         IERC721 bakcContract;
+        address[] transferredTokenOwners;
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -235,7 +236,7 @@ contract PoolApeStaking is
         require(
             stakingInfo.borrowAsset == address(APE_COIN) ||
                 stakingInfo.borrowAsset == address(APE_COMPOUND),
-            "invalid borrow asset"
+            Errors.INVALID_ASSET_TYPE
         );
 
         BorrowAndStakeLocalVar memory localVar;
@@ -245,6 +246,10 @@ contract PoolApeStaking is
         localVar.beforeBalance = APE_COIN.balanceOf(localVar.nTokenAddress);
         localVar.bakcContract = INTokenApeStaking(localVar.nTokenAddress)
             .getBAKC();
+        localVar.bakcNToken = ps
+            ._reserves[address(localVar.bakcContract)]
+            .xTokenAddress;
+        localVar.transferredTokenOwners = new address[](_nftPairs.length);
 
         DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
             stakingInfo.borrowAsset
@@ -299,10 +304,14 @@ contract PoolApeStaking is
                 Errors.NOT_THE_OWNER
             );
 
-            localVar.bakcContract.safeTransferFrom(
-                msg.sender,
+            localVar.transferredTokenOwners[
+                index
+            ] = validateBAKCOwnerAndTransfer(
+                localVar.bakcContract,
+                _nftPairs[index].bakcTokenId,
+                localVar.bakcNToken,
                 localVar.nTokenAddress,
-                _nftPairs[index].bakcTokenId
+                msg.sender
             );
         }
         INTokenApeStaking(localVar.nTokenAddress).depositBAKC(_nftPairs);
@@ -310,7 +319,7 @@ contract PoolApeStaking is
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             localVar.bakcContract.safeTransferFrom(
                 localVar.nTokenAddress,
-                msg.sender,
+                localVar.transferredTokenOwners[index],
                 _nftPairs[index].bakcTokenId
             );
         }
@@ -436,7 +445,10 @@ contract PoolApeStaking is
         address[] calldata users,
         uint256[][] calldata tokenIds
     ) external nonReentrant {
-        require(users.length == tokenIds.length, "invalid parameter");
+        require(
+            users.length == tokenIds.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
         DataTypes.PoolStorage storage ps = poolStorage();
         checkSApeIsNotPaused(ps);
 
@@ -452,7 +464,7 @@ contract PoolApeStaking is
                 address positionOwner = INToken(xTokenAddress).ownerOf(
                     userTokenIds[j]
                 );
-                require(users[i] == positionOwner, "user is not owner");
+                require(users[i] == positionOwner, Errors.NOT_THE_OWNER);
             }
 
             INTokenApeStaking(xTokenAddress).claimApeCoin(
@@ -468,17 +480,117 @@ contract PoolApeStaking is
             }
         }
 
-        uint256 compoundFee = ps._apeCompoundFee;
-        uint256 totalFee = totalAmount.percentMul(compoundFee);
+        depositApeAndSupplyCApeForUser(ps, totalAmount, users, amounts);
+    }
+
+    struct CompoundPairedApeRewardLocalVar {
+        address xTokenAddress;
+        IERC721 bakcContract;
+        address bakcNToken;
+        uint256 balanceBefore;
+        uint256 balanceAfter;
+        uint256[] amounts;
+        address[] transferredTokenOwners;
+        uint256 totalAmount;
+    }
+
+    /// @inheritdoc IPoolApeStaking
+    function claimPairedApeAndCompound(
+        address nftAsset,
+        address[] calldata users,
+        ApeCoinStaking.PairNft[][] calldata _nftPairs
+    ) external nonReentrant {
+        require(
+            users.length == _nftPairs.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        CompoundPairedApeRewardLocalVar memory localVar;
+        localVar.xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
+        localVar.bakcContract = INTokenApeStaking(localVar.xTokenAddress)
+            .getBAKC();
+        localVar.bakcNToken = ps
+            ._reserves[address(localVar.bakcContract)]
+            .xTokenAddress;
+        localVar.balanceBefore = APE_COIN.balanceOf(address(this));
+        localVar.amounts = new uint256[](_nftPairs.length);
+
+        for (uint256 i = 0; i < _nftPairs.length; i++) {
+            ApeCoinStaking.PairNft[] calldata nftPair = _nftPairs[i];
+            localVar.transferredTokenOwners = new address[](nftPair.length);
+            for (uint256 j = 0; j < nftPair.length; j++) {
+                require(
+                    users[i] ==
+                        INToken(localVar.xTokenAddress).ownerOf(
+                            nftPair[j].mainTokenId
+                        ),
+                    Errors.NOT_THE_OWNER
+                );
+
+                localVar.transferredTokenOwners[
+                    j
+                ] = validateBAKCOwnerAndTransfer(
+                    localVar.bakcContract,
+                    nftPair[j].bakcTokenId,
+                    localVar.bakcNToken,
+                    localVar.xTokenAddress,
+                    users[i]
+                );
+            }
+
+            INTokenApeStaking(localVar.xTokenAddress).claimBAKC(
+                nftPair,
+                address(this)
+            );
+
+            for (uint256 index = 0; index < nftPair.length; index++) {
+                localVar.bakcContract.safeTransferFrom(
+                    localVar.xTokenAddress,
+                    localVar.transferredTokenOwners[index],
+                    nftPair[index].bakcTokenId
+                );
+            }
+
+            localVar.balanceAfter = APE_COIN.balanceOf(address(this));
+            localVar.amounts[i] =
+                localVar.balanceAfter -
+                localVar.balanceBefore;
+            localVar.balanceBefore = localVar.balanceAfter;
+            localVar.totalAmount += localVar.amounts[i];
+        }
+
+        depositApeAndSupplyCApeForUser(
+            ps,
+            localVar.totalAmount,
+            users,
+            localVar.amounts
+        );
+    }
+
+    /// @inheritdoc IPoolApeStaking
+    function getApeCompoundFeeRate() external view returns (uint256) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return uint256(ps._apeCompoundFee);
+    }
+
+    function depositApeAndSupplyCApeForUser(
+        DataTypes.PoolStorage storage ps,
+        uint256 totalAmount,
+        address[] calldata users,
+        uint256[] memory amounts
+    ) internal {
         APE_COMPOUND.deposit(address(this), totalAmount);
 
+        uint256 compoundFee = ps._apeCompoundFee;
+        uint256 totalFee = totalAmount.percentMul(compoundFee);
         if (totalFee > 0) {
             IERC20(address(APE_COMPOUND)).safeTransfer(msg.sender, totalFee);
         }
 
         for (uint256 index = 0; index < users.length; index++) {
             if (amounts[index] != 0) {
-                _supplyCApeForUser(
+                supplyCApeForUser(
                     ps,
                     users[index],
                     amounts[index].percentMul(
@@ -521,7 +633,7 @@ contract PoolApeStaking is
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
-    function _supplyCApeForUser(
+    function supplyCApeForUser(
         DataTypes.PoolStorage storage ps,
         address user,
         uint256 amount
@@ -548,5 +660,24 @@ contract PoolApeStaking is
             userConfig.setUsingAsCollateral(assetReserve.id, true);
             emit ReserveUsedAsCollateralEnabled(address(APE_COMPOUND), user);
         }
+    }
+
+    function validateBAKCOwnerAndTransfer(
+        IERC721 bakcContract,
+        uint256 tokenId,
+        address bakcNToken,
+        address apeStakingNToken,
+        address userAddress
+    ) internal returns (address bakcOwner) {
+        bakcOwner = bakcContract.ownerOf(tokenId);
+        address nBAKCOwner;
+        if (bakcNToken != address(0)) {
+            nBAKCOwner = INToken(bakcNToken).ownerOf(tokenId);
+        }
+        require(
+            (userAddress == bakcOwner) || (userAddress == nBAKCOwner),
+            Errors.NOT_THE_BAKC_OWNER
+        );
+        bakcContract.safeTransferFrom(bakcOwner, apeStakingNToken, tokenId);
     }
 }

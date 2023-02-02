@@ -8,7 +8,12 @@ import {
 } from "ethers";
 import {signTypedData_v4} from "eth-sig-util";
 import {fromRpcSig, ECDSASignature} from "ethereumjs-util";
-import {Fragment, isAddress} from "ethers/lib/utils";
+import {
+  defaultAbiCoder,
+  Fragment,
+  isAddress,
+  solidityKeccak256,
+} from "ethers/lib/utils";
 import {isZeroAddress} from "ethereumjs-util";
 import {
   DRE,
@@ -26,6 +31,10 @@ import {
   ConstructorArgs,
   LibraryAddresses,
   ParaSpaceLibraryAddresses,
+  Action,
+  DryRunExecutor,
+  TimeLockData,
+  TimeLockOperation,
 } from "./types";
 import {
   ConsiderationItem,
@@ -41,19 +50,38 @@ import {orderType as seaportOrderType} from "./seaport-helpers/eip-712-types/ord
 import {splitSignature} from "ethers/lib/utils";
 import blurOrderType from "./blur-helpers/eip-712-types/order";
 import {
+  ACLManager__factory,
+  AutoCompoundApe__factory,
   BlurExchange,
   ConduitController,
   ERC20,
+  ERC20__factory,
   ERC721,
+  ERC721__factory,
+  ExecutorWithTimelock__factory,
+  IPool__factory,
+  MultiSendCallOnly__factory,
+  NToken__factory,
+  ParaSpaceOracle__factory,
   PausableZoneController,
+  PoolAddressesProvider__factory,
+  PoolConfigurator__factory,
+  PoolParameters__factory,
+  PToken__factory,
+  ReservesSetupHelper__factory,
   Seaport,
+  Seaport__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {getIErc20Detailed} from "./contracts-getters";
+import {
+  getFirstSigner,
+  getIErc20Detailed,
+  getTimeLockExecutor,
+} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
-import {verifyEtherscanContract} from "./etherscan-verification";
+import {verifyEtherscanContract} from "./etherscan";
 import {InitializableImmutableAdminUpgradeabilityProxy} from "../types";
 import {decodeEvents} from "./seaport-helpers/events";
 import {Order, SignatureVersion} from "./blur-helpers/types";
@@ -64,7 +92,24 @@ import {
   GLOBAL_OVERRIDES,
   DEPLOY_INCREMENTAL,
   JSONRPC_VARIANT,
+  DRY_RUN,
+  TIME_LOCK_BUFFERING_TIME,
+  VERBOSE,
+  MULTI_SIG,
+  FORK,
+  MULTI_SEND,
+  TIME_LOCK_DEFAULT_OPERATION,
 } from "./hardhat-constants";
+import {chunk, pick} from "lodash";
+import InputDataDecoder from "ethereum-input-data-decoder";
+import {
+  OperationType,
+  SafeTransactionDataPartial,
+} from "@safe-global/safe-core-sdk-types";
+import Safe from "@safe-global/safe-core-sdk";
+import EthersAdapter from "@safe-global/safe-ethers-lib";
+import SafeServiceClient from "@safe-global/safe-service-client";
+import {encodeMulti, MetaTransaction} from "ethers-multisend";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -119,6 +164,53 @@ export const insertContractAddressInDb = async (
     newValue["constructorArgs"] = [];
   }
   await getDb().set(key, newValue).write();
+};
+
+export const insertTimeLockDataInDb = async ({
+  action,
+  actionHash,
+  queueData,
+  executeData,
+  cancelData,
+  executeTime,
+  queueExpireTime,
+  executeExpireTime,
+}: TimeLockData) => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = oldValue.queue || [];
+  queue.push({
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executeTime: new Date(+executeTime * 1000).toLocaleString(),
+    queueExpireTime: new Date(+queueExpireTime * 1000).toLocaleString(),
+    executeExpireTime: new Date(+executeExpireTime * 1000).toLocaleString(),
+  });
+  const newValue = {
+    ...oldValue,
+    queue,
+  };
+  await getDb().set(key, newValue).write();
+};
+
+export const getTimeLockDataInDb = async (): Promise<
+  {
+    action: Action;
+    actionHash: string;
+    queueData: string;
+    executeData: string;
+    cancelData: string;
+  }[]
+> => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = oldValue.queue || [];
+  return queue.map((x) =>
+    pick(x, ["action", "actionHash", "queueData", "executeData", "cancelData"])
+  );
 };
 
 export const getContractAddressInDb = async (id: eContractid | string) => {
@@ -318,22 +410,32 @@ export const buildDelegationWithSigParams = (
   },
 });
 
-export const getProxyImplementation = async (
-  proxyAdminAddress: string,
-  proxyAddress: string
-) => {
-  // Impersonate proxy admin
-  const proxyAdminSigner = (await impersonateAddress(proxyAdminAddress)).signer;
-
-  // failing here
-  const proxy = (await DRE.ethers.getContractAt(
-    "InitializableImmutableAdminUpgradeabilityProxy",
+export const getProxyImplementation = async (proxyAddress: string) => {
+  const EIP1967_IMPL_SLOT =
+    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+  const implStorageSlot = await DRE.ethers.provider.getStorageAt(
     proxyAddress,
-    proxyAdminSigner
-  )) as InitializableImmutableAdminUpgradeabilityProxy;
+    EIP1967_IMPL_SLOT,
+    "latest"
+  );
+  const implAddress = utils.defaultAbiCoder
+    .decode(["address"], implStorageSlot)
+    .toString();
+  return utils.getAddress(implAddress);
+};
 
-  const implementationAddress = await proxy.callStatic.implementation();
-  return implementationAddress;
+export const getProxyAdmin = async (proxyAddress: string) => {
+  const EIP1967_ADMIN_SLOT =
+    "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
+  const adminStorageSlot = await DRE.ethers.provider.getStorageAt(
+    proxyAddress,
+    EIP1967_ADMIN_SLOT,
+    "latest"
+  );
+  const adminAddress = utils.defaultAbiCoder
+    .decode(["address"], adminStorageSlot)
+    .toString();
+  return utils.getAddress(adminAddress);
 };
 
 export const impersonateAddress = async (
@@ -582,3 +684,214 @@ export const isUsingAsCollateral = (conf, id) =>
     .div(BigNumber.from(2).pow(BigNumber.from(id).mul(2).add(1)))
     .and(1)
     .gt(0);
+
+export const getCurrentTime = async () => {
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return BigNumber.from(timestamp);
+};
+
+export const getExecutionTime = async () => {
+  const blockNumber = await DRE.ethers.provider.getBlockNumber();
+  const timestamp = (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
+  return BigNumber.from(timestamp).add(TIME_LOCK_BUFFERING_TIME).toString();
+};
+
+export const getTimeLockData = async (
+  target: string,
+  data: string,
+  executionTime?: string
+) => {
+  const timeLock = await getTimeLockExecutor();
+  executionTime = executionTime || (await getExecutionTime());
+  const action: Action = [target, 0, "", data, executionTime, false];
+  const actionHash = solidityKeccak256(
+    ["bytes"],
+    [
+      defaultAbiCoder.encode(
+        ["address", "uint256", "string", "bytes", "uint256", "bool"],
+        action
+      ),
+    ]
+  );
+  const isActionQueued = await timeLock.isActionQueued(actionHash);
+  const gracePeriod = await timeLock.GRACE_PERIOD();
+  const delay = await timeLock.getDelay();
+  const executeTime = BigNumber.from(executionTime).add(delay).toString();
+  const queueExpireTime = BigNumber.from(executionTime).sub(delay).toString();
+  const executeExpireTime = BigNumber.from(executionTime)
+    .add(gracePeriod)
+    .toString();
+  const queueData = timeLock.interface.encodeFunctionData(
+    "queueTransaction",
+    action
+  );
+  const executeData = timeLock.interface.encodeFunctionData(
+    "executeTransaction",
+    action
+  );
+  const cancelData = timeLock.interface.encodeFunctionData(
+    "cancelTransaction",
+    action
+  );
+  if (VERBOSE) {
+    console.log();
+    console.log("isActionQueued:", isActionQueued);
+    console.log("timeLock:", timeLock.address);
+    console.log("target:", target);
+    console.log("data:", data);
+    console.log("executionTime:", executionTime);
+    console.log("action:", action.toString());
+    console.log("actionHash:", actionHash);
+    console.log("queueData:", queueData);
+    console.log("executeData:", executeData);
+    console.log("cancelData:", cancelData);
+    console.log();
+  }
+  const newTarget = timeLock.address;
+  const newData =
+    TIME_LOCK_DEFAULT_OPERATION == TimeLockOperation.Execute
+      ? executeData
+      : TIME_LOCK_DEFAULT_OPERATION == TimeLockOperation.Cancel
+      ? cancelData
+      : queueData;
+  return {
+    timeLock,
+    action,
+    actionHash,
+    queueData,
+    executeData,
+    cancelData,
+    executeTime,
+    queueExpireTime,
+    executeExpireTime,
+    newTarget,
+    newData,
+  };
+};
+
+export const dryRunEncodedData = async (
+  target: tEthereumAddress,
+  data: string,
+  executionTime?: string
+) => {
+  if (
+    DRY_RUN == DryRunExecutor.TimeLock &&
+    (await getContractAddressInDb(eContractid.TimeLockExecutor))
+  ) {
+    const timeLockData = await getTimeLockData(target, data, executionTime);
+    await insertTimeLockDataInDb(timeLockData);
+  } else if (DRY_RUN === DryRunExecutor.SafeWithTimeLock) {
+    const {newTarget, newData} = await getTimeLockData(
+      target,
+      data,
+      executionTime
+    );
+    await proposeSafeTransaction(newTarget, newData);
+  } else if (DRY_RUN === DryRunExecutor.Safe) {
+    await proposeSafeTransaction(target, data);
+  } else {
+    console.log(`target: ${target}, data: ${data}`);
+  }
+};
+
+export const decodeInputData = (data: string) => {
+  const ABI = [
+    ...IPool__factory.abi,
+    ...ReservesSetupHelper__factory.abi,
+    ...ExecutorWithTimelock__factory.abi,
+    ...PoolAddressesProvider__factory.abi,
+    ...PoolConfigurator__factory.abi,
+    ...ParaSpaceOracle__factory.abi,
+    ...ACLManager__factory.abi,
+    ...MultiSendCallOnly__factory.abi,
+    ...ERC20__factory.abi,
+    ...ERC721__factory.abi,
+    ...NToken__factory.abi,
+    ...PToken__factory.abi,
+    ...AutoCompoundApe__factory.abi,
+    ...PoolParameters__factory.abi,
+    ...Seaport__factory.abi,
+  ];
+
+  const decoder = new InputDataDecoder(ABI);
+  const inputData = decoder.decodeData(data.toString());
+  const normalized = JSON.stringify(inputData, (k, v) => {
+    return v ? (v.type === "BigNumber" ? +v.hex.toString(10) : v) : v;
+  });
+  return JSON.parse(normalized);
+};
+
+export const proposeSafeTransaction = async (
+  target: tEthereumAddress,
+  data: string,
+  nonce?: number,
+  operation = OperationType.Call,
+  withTimeLock = false
+) => {
+  const signer = await getFirstSigner();
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: signer,
+  });
+
+  const safeSdk: Safe = await Safe.create({
+    ethAdapter,
+    safeAddress: MULTI_SIG,
+  });
+  const safeService = new SafeServiceClient({
+    txServiceUrl: `https://safe-transaction-${
+      FORK || DRE.network.name
+    }.safe.global`,
+    ethAdapter,
+  });
+
+  if (withTimeLock) {
+    const {newTarget, newData} = await getTimeLockData(target, data);
+    target = newTarget;
+    data = newData;
+  }
+
+  const safeTransactionData: SafeTransactionDataPartial = {
+    to: target,
+    value: "0",
+    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
+    operation,
+    data,
+  };
+  const safeTransaction = await safeSdk.createTransaction({
+    safeTransactionData,
+  });
+
+  const signature = await safeSdk.signTypedData(safeTransaction);
+  safeTransaction.addSignature(signature);
+
+  const safeHash = await safeSdk.getTransactionHash(safeTransaction);
+  console.log(safeHash);
+
+  await safeService.estimateSafeTransaction(MULTI_SIG, {
+    ...safeTransactionData,
+    operation: safeTransactionData.operation as number,
+  });
+
+  await safeService.proposeTransaction({
+    safeAddress: MULTI_SIG,
+    safeTransactionData: safeTransaction.data,
+    safeTxHash: safeHash,
+    senderAddress: await signer.getAddress(),
+    senderSignature: signature.data,
+  });
+};
+
+export const proposeMultiSafeTransactions = async (
+  transactions: MetaTransaction[],
+  operation = OperationType.DelegateCall,
+  chunkSize = 4
+) => {
+  const newTarget = MULTI_SEND;
+  const chunks = chunk(transactions, chunkSize);
+  for (let i = 0; i < chunks.length; i++) {
+    const {data: newData} = encodeMulti(chunks[i]);
+    await proposeSafeTransaction(newTarget, newData, undefined, operation);
+  }
+};

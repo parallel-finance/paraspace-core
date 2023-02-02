@@ -87,6 +87,8 @@ import {
   MockAggregator__factory,
   MockAirdropProject,
   MockAirdropProject__factory,
+  MockMultiAssetAirdropProject,
+  MockMultiAssetAirdropProject__factory,
   MockAToken,
   MockAToken__factory,
   MockIncentivesController,
@@ -220,11 +222,16 @@ import {
   InitializableAdminUpgradeabilityProxy,
   ParaProxyInterfaces__factory,
   ParaProxyInterfaces,
+  MockedDelegateRegistry,
+  MockedDelegateRegistry__factory,
+  NTokenBAKC,
+  NTokenBAKC__factory,
+  AirdropFlashClaimReceiver__factory,
+  AirdropFlashClaimReceiver,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
-  getAutoCompoundApe,
   getFirstSigner,
   getPunks,
   getWETH,
@@ -250,7 +257,7 @@ import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCor
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
 
-import {pick} from "lodash";
+import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 
@@ -538,7 +545,6 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
-  const cApe = await getAutoCompoundApe();
 
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
@@ -580,15 +586,24 @@ export const deployPoolComponents = async (
       marketplaceLibraries,
       poolMarketplaceSelectors
     )) as PoolMarketplace,
-    poolApeStaking: (await withSaveAndVerify(
-      poolApeStaking,
-      eContractid.PoolApeStakingImpl,
-      [provider, cApe.address, allTokens.APE.address],
-      verify,
-      false,
-      apeStakingLibraries,
-      poolApeStakingSelectors
-    )) as PoolApeStaking,
+    poolApeStaking: allTokens.APE
+      ? ((await withSaveAndVerify(
+          poolApeStaking,
+          eContractid.PoolApeStakingImpl,
+          [
+            provider,
+            (await getContractAddressInDb(eContractid.cAPE)) ||
+              (
+                await deployAutoCompoundApe(verify)
+              ).address,
+            allTokens.APE.address,
+          ],
+          verify,
+          false,
+          apeStakingLibraries,
+          poolApeStakingSelectors
+        )) as PoolApeStaking)
+      : undefined,
     poolParaProxyInterfaces: (await withSaveAndVerify(
       poolParaProxyInterfaces,
       eContractid.ParaProxyInterfacesImpl,
@@ -623,7 +638,7 @@ export const deployAggregator = async (
 ) =>
   withSaveAndVerify(
     new MockAggregator__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [price],
     verify
   ) as Promise<MockAggregator>;
@@ -979,6 +994,16 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         );
       }
       if (
+        tokenSymbol === ERC721TokenContractId.UniswapV3 &&
+        paraSpaceConfig.Uniswap.V3Router
+      ) {
+        await insertContractAddressInDb(
+          eContractid.UniswapV3SwapRouter,
+          paraSpaceConfig.Uniswap.V3Router,
+          false
+        );
+      }
+      if (
         tokenSymbol === ERC721TokenContractId.WPUNKS &&
         paraSpaceConfig.Tokens.PUNKS
       ) {
@@ -1289,7 +1314,7 @@ export const deployERC721OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new ERC721OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${symbol}`),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721OracleWrapper>;
@@ -1620,7 +1645,7 @@ export const deployUniswapV3OracleWrapper = async (
 ) =>
   withSaveAndVerify(
     new UniswapV3OracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(`.${eContractid.UniswapV3}`),
+    eContractid.Aggregator.concat(upperFirst(eContractid.UniswapV3)),
     [factory, manager, addressProvider],
     verify
   ) as Promise<UniswapV3OracleWrapper>;
@@ -1713,14 +1738,44 @@ export const deployPTokenSApe = async (
 
 export const deployUserFlashClaimRegistry = async (
   poolAddress: tEthereumAddress,
+  receiverImpl: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new UserFlashclaimRegistry__factory(await getFirstSigner()),
     eContractid.FlashClaimRegistry,
-    [poolAddress],
+    [poolAddress, receiverImpl],
     verify
   ) as Promise<UserFlashclaimRegistry>;
+
+export const deployUserFlashClaimRegistryProxy = async (
+  admin: string,
+  registryImpl: string,
+  initData: any,
+  verify?: boolean
+) => {
+  const proxy = new InitializableImmutableAdminUpgradeabilityProxy__factory(
+    await getFirstSigner()
+  );
+  return withSaveAndVerify(
+    proxy,
+    eContractid.UserFlashClaimRegistryProxy,
+    [admin, registryImpl, initData],
+    verify,
+    true
+  ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+};
+
+export const deployAirdropFlashClaimReceiver = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AirdropFlashClaimReceiver__factory(await getFirstSigner()),
+    eContractid.AirdropFlashClaimReceiver,
+    [poolAddress],
+    verify
+  ) as Promise<AirdropFlashClaimReceiver>;
 
 export const deployMockAirdropProject = async (
   underlyingAddress: tEthereumAddress,
@@ -1733,14 +1788,25 @@ export const deployMockAirdropProject = async (
     verify
   ) as Promise<MockAirdropProject>;
 
+export const deployMockMultiAssetAirdropProject = async (
+  underlyingAddress1: tEthereumAddress,
+  underlyingAddress2: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new MockMultiAssetAirdropProject__factory(await getFirstSigner()),
+    eContractid.MockMultiAssetAirdropProject,
+    [underlyingAddress1, underlyingAddress2],
+    verify
+  ) as Promise<MockMultiAssetAirdropProject>;
+
 export const deployApeCoinStaking = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
-  const bakc = await deployMintableERC721(["BAKC", "BAKC", ""], verify);
   const args = [
     allTokens.APE.address,
     allTokens.BAYC.address,
     allTokens.MAYC.address,
-    bakc.address,
+    allTokens.BAKC.address,
   ];
 
   const apeCoinStaking = await withSaveAndVerify(
@@ -1853,6 +1919,30 @@ export const deployNTokenMAYCImpl = async (
     false,
     libraries
   ) as Promise<NTokenMAYC>;
+};
+
+export const deployNTokenBAKCImpl = async (
+  poolAddress: tEthereumAddress,
+  apeCoinStaking: tEthereumAddress,
+  nBAYC: tEthereumAddress,
+  nMAYC: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    new NTokenBAKC__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenBAKCImpl,
+    [poolAddress, apeCoinStaking, nBAYC, nMAYC],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenBAKC>;
 };
 
 export const deployATokenDebtToken = async (
@@ -1983,27 +2073,29 @@ export const deployTimeLockExecutor = async (
   ) as Promise<ExecutorWithTimelock>;
 };
 
-export const deployAutoCompoundApe = async (verify?: boolean) => {
+export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
   const args = [allTokens.APE.address, apeCoinStaking];
 
-  const cApeImplementation = await withSaveAndVerify(
+  return withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),
     eContractid.cAPEImpl,
     [...args],
     verify
-  );
+  ) as Promise<AutoCompoundApe>;
+};
+
+export const deployAutoCompoundApe = async (verify?: boolean) => {
+  const cApeImplementation = await deployAutoCompoundApeImpl(verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
 
-  const initData = cApeImplementation.interface.encodeFunctionData(
-    "initialize",
-    []
-  );
+  const initData =
+    cApeImplementation.interface.encodeFunctionData("initialize");
 
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
@@ -2293,3 +2385,11 @@ export const deployMockTokenFaucet = async (
     [erc20configs, erc721configs, punkConfig],
     verify
   );
+
+export const deployMockedDelegateRegistry = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new MockedDelegateRegistry__factory(await getFirstSigner()),
+    eContractid.MockedDelegateRegistry,
+    [],
+    verify
+  ) as Promise<MockedDelegateRegistry>;

@@ -9,7 +9,6 @@ import * as envs from "../../helpers/hardhat-constants";
 import {accounts} from "../../wallets";
 
 const info = async () => {
-  await DRE.run("set-DRE");
   console.time("info");
 
   const signer = await getFirstSigner();
