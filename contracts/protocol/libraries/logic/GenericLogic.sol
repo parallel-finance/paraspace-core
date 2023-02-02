@@ -370,13 +370,9 @@ library GenericLogic {
             vars.currentReserveAddress
         );
 
-        (
-            ,
-            uint256 atomicBalance,
-            uint256 collateralizedBalance,
-
-        ) = IAtomicCollateralizableERC721(vars.xTokenAddress)
-                .underlyingBalancesOf(params.user);
+        (, , uint256 collateralizedBalance, ) = IAtomicCollateralizableERC721(
+            vars.xTokenAddress
+        ).underlyingBalancesOf(params.user);
         totalValue = collateralizedBalance * assetPrice;
         totalValue += IAtomicCollateralizableERC721(vars.xTokenAddress)
             .getTraitMultiplierSumOfAllCollateralized(params.user)
