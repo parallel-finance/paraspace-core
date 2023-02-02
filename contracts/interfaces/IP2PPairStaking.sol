@@ -68,7 +68,7 @@ interface IP2PPairStaking {
      * @param receiver The address of the cApe receiver
      * @param amount The amount of the cApe been claimed
      **/
-    event CApeClaimed(address user, address receiver, uint256 amount);
+    event PCApeClaimed(address user, address receiver, uint256 amount);
 
     /**
      * @dev Emitted when we claimed pending reward for matched order and compound.
@@ -149,7 +149,7 @@ interface IP2PPairStaking {
      * @param user The address of the user
      * @return amount Returns the amount of cApe owned by user
      */
-    function pendingCApeReward(address user)
+    function pendingPCApeReward(address user)
         external
         view
         returns (uint256 amount);
@@ -158,7 +158,7 @@ interface IP2PPairStaking {
      * @notice claim user compounded cApe
      * @param receiver The address of the cApe receiver
      */
-    function claimCApeReward(address receiver) external;
+    function claimPCApeReward(address receiver) external;
 
     /**
      * @notice get Ape Coin Staking cap for every position.

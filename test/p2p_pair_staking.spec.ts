@@ -161,23 +161,28 @@ describe("P2P Pair Staking Test", () => {
         .claimForMatchedOrderAndCompound([orderHash])
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2880")
     );
 
     await waitForTx(
-      await p2pPairStaking.connect(user1.signer).claimCApeReward(user1.address)
+      await p2pPairStaking.connect(user1.signer).claimPCApeReward(user1.address)
     );
     await waitForTx(
-      await p2pPairStaking.connect(user2.signer).claimCApeReward(user2.address)
+      await p2pPairStaking.connect(user2.signer).claimPCApeReward(user2.address)
     );
 
-    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
-    almostEqual(await cApe.balanceOf(user2.address), parseEther("2880"));
+    almostEqual(await pCApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await pCApe.balanceOf(user2.address), parseEther("2880"));
+    await waitForTx(
+      await pCApe
+        .connect(user2.signer)
+        .transfer(user1.address, await pCApe.balanceOf(user2.address))
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -188,11 +193,11 @@ describe("P2P Pair Staking Test", () => {
     expect(await bayc.balanceOf(nBAYC.address)).to.be.equal(1);
     almostEqual(await pCApe.balanceOf(user2.address), apeAmount);
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2880")
     );
   });
@@ -255,23 +260,28 @@ describe("P2P Pair Staking Test", () => {
         .claimForMatchedOrderAndCompound([orderHash])
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2880")
     );
 
     await waitForTx(
-      await p2pPairStaking.connect(user1.signer).claimCApeReward(user1.address)
+      await p2pPairStaking.connect(user1.signer).claimPCApeReward(user1.address)
     );
     await waitForTx(
-      await p2pPairStaking.connect(user2.signer).claimCApeReward(user2.address)
+      await p2pPairStaking.connect(user2.signer).claimPCApeReward(user2.address)
     );
 
-    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
-    almostEqual(await cApe.balanceOf(user2.address), parseEther("2880"));
+    almostEqual(await pCApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await pCApe.balanceOf(user2.address), parseEther("2880"));
+    await waitForTx(
+      await pCApe
+        .connect(user2.signer)
+        .transfer(user1.address, await pCApe.balanceOf(user2.address))
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -282,11 +292,11 @@ describe("P2P Pair Staking Test", () => {
     expect(await mayc.balanceOf(nMAYC.address)).to.be.equal(1);
     almostEqual(await pCApe.balanceOf(user2.address), apeAmount);
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2880")
     );
   });
@@ -370,31 +380,36 @@ describe("P2P Pair Staking Test", () => {
         .claimForMatchedOrderAndCompound([orderHash])
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user3.address),
+      await p2pPairStaking.pendingPCApeReward(user3.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2160")
     );
 
     await waitForTx(
-      await p2pPairStaking.connect(user1.signer).claimCApeReward(user1.address)
+      await p2pPairStaking.connect(user1.signer).claimPCApeReward(user1.address)
     );
     await waitForTx(
-      await p2pPairStaking.connect(user2.signer).claimCApeReward(user2.address)
+      await p2pPairStaking.connect(user2.signer).claimPCApeReward(user2.address)
     );
     await waitForTx(
-      await p2pPairStaking.connect(user3.signer).claimCApeReward(user3.address)
+      await p2pPairStaking.connect(user3.signer).claimPCApeReward(user3.address)
     );
 
-    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
-    almostEqual(await cApe.balanceOf(user3.address), parseEther("720"));
-    almostEqual(await cApe.balanceOf(user2.address), parseEther("2160"));
+    almostEqual(await pCApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await pCApe.balanceOf(user3.address), parseEther("720"));
+    almostEqual(await pCApe.balanceOf(user2.address), parseEther("2160"));
+    await waitForTx(
+      await pCApe
+        .connect(user2.signer)
+        .transfer(user1.address, await pCApe.balanceOf(user2.address))
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -407,15 +422,15 @@ describe("P2P Pair Staking Test", () => {
     almostEqual(await pCApe.balanceOf(user2.address), apeAmount);
 
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user3.address),
+      await p2pPairStaking.pendingPCApeReward(user3.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2160")
     );
   });
@@ -498,31 +513,36 @@ describe("P2P Pair Staking Test", () => {
         .claimForMatchedOrderAndCompound([orderHash])
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user3.address),
+      await p2pPairStaking.pendingPCApeReward(user3.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2160")
     );
 
     await waitForTx(
-      await p2pPairStaking.connect(user1.signer).claimCApeReward(user1.address)
+      await p2pPairStaking.connect(user1.signer).claimPCApeReward(user1.address)
     );
     await waitForTx(
-      await p2pPairStaking.connect(user2.signer).claimCApeReward(user2.address)
+      await p2pPairStaking.connect(user2.signer).claimPCApeReward(user2.address)
     );
     await waitForTx(
-      await p2pPairStaking.connect(user3.signer).claimCApeReward(user3.address)
+      await p2pPairStaking.connect(user3.signer).claimPCApeReward(user3.address)
     );
 
-    almostEqual(await cApe.balanceOf(user1.address), parseEther("720"));
-    almostEqual(await cApe.balanceOf(user3.address), parseEther("720"));
-    almostEqual(await cApe.balanceOf(user2.address), parseEther("2160"));
+    almostEqual(await pCApe.balanceOf(user1.address), parseEther("720"));
+    almostEqual(await pCApe.balanceOf(user3.address), parseEther("720"));
+    almostEqual(await pCApe.balanceOf(user2.address), parseEther("2160"));
+    await waitForTx(
+      await pCApe
+        .connect(user2.signer)
+        .transfer(user1.address, await pCApe.balanceOf(user2.address))
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -534,15 +554,15 @@ describe("P2P Pair Staking Test", () => {
     expect(await bakc.balanceOf(nBAKC.address)).to.be.equal(1);
     almostEqual(await pCApe.balanceOf(user2.address), apeAmount);
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user1.address),
+      await p2pPairStaking.pendingPCApeReward(user1.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user3.address),
+      await p2pPairStaking.pendingPCApeReward(user3.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2160")
     );
   });
@@ -1077,11 +1097,11 @@ describe("P2P Pair Staking Test", () => {
     expect(await bayc.balanceOf(nBAYC.address)).to.be.equal(1);
     almostEqual(await pCApe.balanceOf(user2.address), apeAmount);
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user3.address),
+      await p2pPairStaking.pendingPCApeReward(user3.address),
       parseEther("720")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2880")
     );
   });
@@ -1158,15 +1178,15 @@ describe("P2P Pair Staking Test", () => {
     );
 
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(p2pPairStaking.address),
+      await p2pPairStaking.pendingPCApeReward(p2pPairStaking.address),
       parseEther("18")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user3.address),
+      await p2pPairStaking.pendingPCApeReward(user3.address),
       parseEther("716.4")
     );
     almostEqual(
-      await p2pPairStaking.pendingCApeReward(user2.address),
+      await p2pPairStaking.pendingPCApeReward(user2.address),
       parseEther("2865.6")
     );
 
@@ -1176,7 +1196,7 @@ describe("P2P Pair Staking Test", () => {
         .claimCompoundFee(gatewayAdmin.address)
     );
 
-    almostEqual(await cApe.balanceOf(gatewayAdmin.address), parseEther("18"));
+    almostEqual(await pCApe.balanceOf(gatewayAdmin.address), parseEther("18"));
   });
 
   it("check ape token can be matched twice", async () => {
