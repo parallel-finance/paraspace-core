@@ -36,6 +36,7 @@ import {
   strategyXCDOT,
   strategyWGLMR,
   strategyBAKC,
+  strategySEWER,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -118,6 +119,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
   },
 };
 
@@ -262,6 +264,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: "0x49cf6f5d44e70224e2e23fdcdd2c053f30ada28b",
     sAPE: "0x0000000000000000000000000000000000000001",
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    SEWER: "0x764AeebcF425d56800eF2c84F2578689415a2DAa",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -314,6 +317,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     cAPE: strategyCAPE,
     UniswapV3: strategyUniswapV3,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
