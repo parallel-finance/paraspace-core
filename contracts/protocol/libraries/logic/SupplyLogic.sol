@@ -101,11 +101,18 @@ library SupplyLogic {
             0
         );
 
-        IERC20(params.asset).safeTransferFrom(
-            params.payer,
-            reserveCache.xTokenAddress,
-            params.amount
-        );
+        if (params.payer == address(this)) {
+            IERC20(params.asset).safeTransfer(
+                reserveCache.xTokenAddress,
+                params.amount
+            );
+        } else {
+            IERC20(params.asset).safeTransferFrom(
+                params.payer,
+                reserveCache.xTokenAddress,
+                params.amount
+            );
+        }
 
         bool isFirstSupply = IPToken(reserveCache.xTokenAddress).mint(
             msg.sender,

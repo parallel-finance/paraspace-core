@@ -150,7 +150,7 @@ library BorrowLogic {
         // Allows a user to repay with xTokens without leaving dust from interest.
         if (params.usePTokens && params.amount == type(uint256).max) {
             params.amount = IPToken(reserveCache.xTokenAddress).balanceOf(
-                msg.sender
+                params.payer
             );
         }
 
@@ -180,20 +180,27 @@ library BorrowLogic {
 
         if (params.usePTokens) {
             IPToken(reserveCache.xTokenAddress).burn(
-                msg.sender,
+                params.payer,
                 reserveCache.xTokenAddress,
                 paybackAmount,
                 reserveCache.nextLiquidityIndex
             );
         } else {
             // send paybackAmount from user to reserve
-            IERC20(params.asset).safeTransferFrom(
-                msg.sender,
-                reserveCache.xTokenAddress,
-                paybackAmount
-            );
+            if (params.payer == address(this)) {
+                IERC20(params.asset).safeTransfer(
+                    reserveCache.xTokenAddress,
+                    paybackAmount
+                );
+            } else {
+                IERC20(params.asset).safeTransferFrom(
+                    params.payer,
+                    reserveCache.xTokenAddress,
+                    paybackAmount
+                );
+            }
             IPToken(reserveCache.xTokenAddress).handleRepayment(
-                msg.sender,
+                params.payer,
                 paybackAmount
             );
         }
@@ -201,7 +208,7 @@ library BorrowLogic {
         emit Repay(
             params.asset,
             params.onBehalfOf,
-            msg.sender,
+            params.payer,
             paybackAmount,
             params.usePTokens
         );
