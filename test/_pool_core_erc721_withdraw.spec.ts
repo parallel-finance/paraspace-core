@@ -19,7 +19,7 @@ describe("Functionality tests of ERC721 withdraw in PoolCore contract", () => {
     } = await loadFixture(testEnvFixture);
 
     await expect(withdrawAndValidate(bayc, "1", user1, 0)).to.be.revertedWith(
-      "not the owner of Ntoken"
+      "ERC721: owner query for nonexistent token"
     );
   });
 

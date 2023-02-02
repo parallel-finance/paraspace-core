@@ -307,6 +307,7 @@ describe("APE Coin Staking Test", () => {
           user1.address,
           0,
           parseEther("10"),
+          0,
           false,
           {gasLimit: 5000000}
         )

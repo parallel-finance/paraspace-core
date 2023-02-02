@@ -141,6 +141,15 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         );
     }
 
+    function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
+        external
+        override
+        onlyPoolAdmin
+        nonReentrant
+    {
+        revert();
+    }
+
     function _safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         require(success, "ETH_TRANSFER_FAILED");

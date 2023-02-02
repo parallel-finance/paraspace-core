@@ -216,12 +216,15 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         return this.onERC1155BatchReceived.selector;
     }
 
-    function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
-        return _underlyingAsset;
+    function setApprovalForAllTo(address token, address to)
+        external
+        onlyPoolAdmin
+    {
+        IERC721(token).setApprovalForAll(to, true);
     }
 
-    function getAtomicPricingConfig() external view returns (bool) {
-        return ATOMIC_PRICING;
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
+        return _underlyingAsset;
     }
 
     function getXTokenType()

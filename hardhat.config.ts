@@ -50,7 +50,7 @@ const hardhatConfig: HardhatUserConfig = {
     alphaSort: true,
     runOnCompile: false,
     disambiguatePaths: false,
-    except: ["Mock*"],
+    except: ["Mock*", "ApeCoinStaking"],
   },
   paths: {
     sources: "./contracts",
