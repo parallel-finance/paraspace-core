@@ -76,8 +76,6 @@ abstract contract MintableIncentivizedERC721 is
     IPool public immutable POOL;
     bool public immutable ATOMIC_PRICING;
 
-    address internal _underlyingAsset;
-
     /**
      * @dev Constructor.
      * @param pool The reference to the main Pool contract

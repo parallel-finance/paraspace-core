@@ -62,7 +62,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         _setSymbol(nTokenSymbol);
 
         require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        _underlyingAsset = underlyingAsset;
+        _ERC721Data.underlyingAsset = underlyingAsset;
         _ERC721Data.rewardController = incentivesController;
 
         emit Initialized(
@@ -104,7 +104,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                IERC721(_underlyingAsset).safeTransferFrom(
+                IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
                     address(this),
                     receiverOfUnderlying,
                     tokenIds[index]
@@ -139,7 +139,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         uint256[] calldata ids
     ) external override onlyPoolAdmin {
         require(
-            token != _underlyingAsset,
+            token != _ERC721Data.underlyingAsset,
             Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
         );
         for (uint256 i = 0; i < ids.length; i++) {
@@ -192,7 +192,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         override
         returns (address)
     {
-        return _underlyingAsset;
+        return _ERC721Data.underlyingAsset;
     }
 
     /// @inheritdoc INToken
@@ -203,7 +203,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         onlyPool
         nonReentrant
     {
-        IERC721(_underlyingAsset).safeTransferFrom(
+        IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
             address(this),
             target,
             tokenId
@@ -235,7 +235,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         uint256 tokenId,
         bool validate
     ) internal virtual {
-        address underlyingAsset = _underlyingAsset;
+        address underlyingAsset = _ERC721Data.underlyingAsset;
 
         uint256 fromBalanceBefore;
         if (validate) {
@@ -318,7 +318,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         override
         returns (string memory)
     {
-        return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
+        return IERC721Metadata(_ERC721Data.underlyingAsset).tokenURI(tokenId);
     }
 
     function getXTokenType()

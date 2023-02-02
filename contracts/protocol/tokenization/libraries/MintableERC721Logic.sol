@@ -46,6 +46,7 @@ struct MintableERC721Data {
     uint64 balanceLimit;
     mapping(uint256 => bool) isUsedAsCollateral;
     mapping(uint256 => DataTypes.Auction) auctions;
+    address underlyingAsset;
     // Mapping from owner to list of owned atomic token IDs
     mapping(address => mapping(uint256 => uint256)) ownedAtomicTokens;
     // Mapping from token ID to index of the owned atomic tokens list
