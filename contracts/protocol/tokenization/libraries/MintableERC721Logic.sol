@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
-import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol";
-import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
-import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";
 import "../../../interfaces/IPool.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
+import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
+import {IERC1155} from "../../../dependencies/openzeppelin/contracts/IERC1155.sol";
 
 struct UserState {
     uint64 balance;
@@ -51,6 +51,48 @@ struct MintableERC721Data {
  */
 library MintableERC721Logic {
     /**
+     * @dev Emitted during rescueERC20()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param amount The amount being rescued
+     **/
+    event RescueERC20(
+        address indexed token,
+        address indexed to,
+        uint256 amount
+    );
+    /**
+     * @dev Emitted during rescueERC721()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     **/
+    event RescueERC721(
+        address indexed token,
+        address indexed to,
+        uint256[] ids
+    );
+    /**
+     * @dev Emitted during RescueERC1155()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
+     **/
+    event RescueERC1155(
+        address indexed token,
+        address indexed to,
+        uint256[] ids,
+        uint256[] amounts,
+        bytes data
+    );
+    /**
+     * @dev Emitted during executeAirdrop()
+     * @param airdropContract The address of the airdrop contract
+     **/
+    event ExecuteAirdrop(address indexed airdropContract);
+    /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */
     event Transfer(
@@ -76,6 +118,8 @@ library MintableERC721Logic {
         address indexed operator,
         bool approved
     );
+
+    using SafeERC20 for IERC20;
 
     function executeTransfer(
         MintableERC721Data storage erc721Data,
@@ -156,7 +200,7 @@ library MintableERC721Logic {
         uint256 tokenId,
         bool useAsCollateral,
         address sender
-    ) internal returns (bool) {
+    ) public returns (bool) {
         if (erc721Data.isUsedAsCollateral[tokenId] == useAsCollateral)
             return false;
 
@@ -182,6 +226,38 @@ library MintableERC721Logic {
             .collateralizedBalance = collateralizedBalance;
 
         return true;
+    }
+
+    function executeBatchSetIsUsedAsCollateral(
+        MintableERC721Data storage erc721Data,
+        IPool POOL,
+        uint256[] calldata tokenIds,
+        bool useAsCollateral,
+        address sender
+    )
+        external
+        returns (
+            uint256 oldCollateralizedBalance,
+            uint256 newCollateralizedBalance
+        )
+    {
+        oldCollateralizedBalance = erc721Data
+            .userState[sender]
+            .collateralizedBalance;
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            executeSetIsUsedAsCollateral(
+                erc721Data,
+                POOL,
+                tokenIds[index],
+                useAsCollateral,
+                sender
+            );
+        }
+
+        newCollateralizedBalance = erc721Data
+            .userState[sender]
+            .collateralizedBalance;
     }
 
     function executeMintMultiple(
@@ -431,6 +507,68 @@ library MintableERC721Logic {
             POOL
                 .getUserConfiguration(erc721Data.owners[tokenId])
                 .auctionValidityTime;
+    }
+
+    function executeRescueERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external {
+        IERC20(token).safeTransfer(to, amount);
+        emit RescueERC20(token, to, amount);
+    }
+
+    function executeRescueERC721(
+        address _underlyingAsset,
+        address token,
+        address to,
+        uint256[] calldata ids
+    ) external {
+        require(
+            token != _underlyingAsset,
+            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
+        );
+        for (uint256 i = 0; i < ids.length; i++) {
+            IERC721(token).safeTransferFrom(address(this), to, ids[i]);
+        }
+        emit RescueERC721(token, to, ids);
+    }
+
+    function executeRescueERC1155(
+        address token,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external {
+        IERC1155(token).safeBatchTransferFrom(
+            address(this),
+            to,
+            ids,
+            amounts,
+            data
+        );
+        emit RescueERC1155(token, to, ids, amounts, data);
+    }
+
+    function executeAirdrop(
+        address airdropContract,
+        bytes calldata airdropParams
+    ) external {
+        require(
+            airdropContract != address(0),
+            Errors.INVALID_AIRDROP_CONTRACT_ADDRESS
+        );
+        require(airdropParams.length >= 4, Errors.INVALID_AIRDROP_PARAMETERS);
+
+        // call project airdrop contract
+        Address.functionCall(
+            airdropContract,
+            airdropParams,
+            Errors.CALL_AIRDROP_METHOD_FAILED
+        );
+
+        emit ExecuteAirdrop(airdropContract);
     }
 
     /**
