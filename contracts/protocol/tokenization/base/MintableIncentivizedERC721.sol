@@ -615,13 +615,11 @@ abstract contract MintableIncentivizedERC721 is
         uint256 atomicCollateralizedBalance = _ERC721Data
             .userState[user]
             .atomicCollateralizedBalance;
-        uint256 atomicBalance = _ERC721Data.userState[user].atomicBalance;
 
-        uint256 collateralizedTokens = 0;
+        uint256 collateralizedTokens;
         for (
             uint256 index = 0;
-            index < atomicBalance &&
-                collateralizedTokens != atomicCollateralizedBalance;
+            collateralizedTokens != atomicCollateralizedBalance;
             index++
         ) {
             uint256 tokenId = _ERC721Data.ownedAtomicTokens[user][index];
