@@ -28,16 +28,16 @@ const adHoc = async () => {
   const paraSpaceConfig = getParaSpaceConfig();
   const protocolDataProvider = await getProtocolDataProvider();
 
-  const nftFloorOracle = "0x8a84ce9d8eefcd759321a918cf154983622342ee";
+  const nftFloorOracle = "0xE7BD56364DedF1c5BeBEA9b77A748ab3C5F8c43E";
   const projects = [
     {
       symbol: "SEWER",
-      address: "0x3aa026cd539fa1f6ae58ae238a10e2f1cf831454",
+      address: "0x764AeebcF425d56800eF2c84F2578689415a2DAa",
       aggregator: "",
     },
     {
       symbol: "PPG",
-      address: "0xf140558cA4d4e10f63661504D4F3f74FADDDe3E8",
+      address: "0xbd3531da5cf5857e7cfaa92426877b022e612cf8",
       aggregator: "",
     },
   ];
@@ -113,8 +113,8 @@ const adHoc = async () => {
   console.timeEnd("configuring reserves...");
 
   await deployUiPoolDataProvider(
-    "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
-    "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
     false
   );
 
