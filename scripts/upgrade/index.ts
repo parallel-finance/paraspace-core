@@ -32,6 +32,7 @@ export const resetPool = async (verify = false) => {
   for (const facet of facets.filter(
     (x) =>
       x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" &&
+      x.implAddress !== "0x9Db53FD98a5536d9d36A76C39639A5980ce6396D" &&
       x.implAddress !== "0x3254600f59B4Ca187D1E6BA23BB8058955A9FBB1" // ParaProxyInterfaces
   )) {
     const implementation = [

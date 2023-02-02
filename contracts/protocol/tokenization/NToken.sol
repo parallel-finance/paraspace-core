@@ -30,7 +30,7 @@ import {MintableERC721Logic} from "./libraries/MintableERC721Logic.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 220;
+    uint256 public constant NTOKEN_REVISION = 230;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -65,23 +65,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         _ERC721Data.underlyingAsset = underlyingAsset;
         _ERC721Data.rewardController = incentivesController;
-
-        if (ATOMIC_PRICING) {
-            uint256 length = _ERC721Data.allTokens.length;
-            for (uint256 i = 0; i < length; i++) {
-                uint256 tokenId = _ERC721Data.allTokens[i];
-                address owner = _ERC721Data.owners[tokenId];
-                if (owner != address(0)) {
-                    MintableERC721Logic.executeTranslateToken(
-                        _ERC721Data,
-                        owner,
-                        tokenId,
-                        false,
-                        true
-                    );
-                }
-            }
-        }
 
         emit Initialized(
             underlyingAsset,
