@@ -571,7 +571,10 @@ hardhat:
 anvil:
 	anvil \
 		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
+		$(if $(FORK_BLOCK_NUMBER),--fork-block-number $(FORK_BLOCK_NUMBER),) \
+		$(if $(DEPLOYER_MNEMONIC),--mnemonic "$(DEPLOYER_MNEMONIC)",) \
 		--chain-id 522 \
+		--timeout 90000 \
 		--tracing \
 		--host 0.0.0.0 \
 		--state-interval 60 \
