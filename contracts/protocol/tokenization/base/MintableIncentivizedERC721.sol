@@ -22,6 +22,7 @@ import {IACLManager} from "../../../interfaces/IACLManager.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {ReentrancyGuard} from "../../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import {MintableERC721Logic, UserState, MintableERC721Data} from "../libraries/MintableERC721Logic.sol";
+import {Helpers} from "../../libraries/helpers/Helpers.sol";
 
 /**
  * @title MintableIncentivizedERC721
@@ -603,6 +604,37 @@ abstract contract MintableIncentivizedERC721 is
         returns (uint256)
     {
         return _ERC721Data.traitsMultipliers[tokenId];
+    }
+
+    /// @inheritdoc IAtomicCollateralizableERC721
+    function getTraitMultiplierSumOfAllCollateralized(address user)
+        external
+        view
+        returns (uint256 totalMultiplier)
+    {
+        uint256 atomicCollateralizedBalance = _ERC721Data
+            .userState[user]
+            .atomicCollateralizedBalance;
+        uint256 atomicBalance = _ERC721Data.userState[user].atomicBalance;
+
+        uint256 collateralizedTokens = 0;
+        for (
+            uint256 index = 0;
+            index < atomicBalance &&
+                collateralizedTokens != atomicCollateralizedBalance;
+            index++
+        ) {
+            uint256 tokenId = _ERC721Data.ownedAtomicTokens[user][index];
+            uint256 multiplier = _ERC721Data.traitsMultipliers[tokenId];
+            if (_ERC721Data.isUsedAsCollateral[tokenId]) {
+                if (Helpers.isTraitMultiplierEffective(multiplier)) {
+                    totalMultiplier += multiplier;
+                } else {
+                    totalMultiplier += WadRayMath.WAD;
+                }
+                collateralizedTokens++;
+            }
+        }
     }
 
     /// @inheritdoc IAuctionableERC721

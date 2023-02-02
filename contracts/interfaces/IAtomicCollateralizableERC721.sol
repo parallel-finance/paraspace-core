@@ -58,4 +58,12 @@ interface IAtomicCollateralizableERC721 {
         external
         view
         returns (uint256);
+
+    /**
+     * @dev get the trait multiplier sum of all collateralized tokens
+     */
+    function getTraitMultiplierSumOfAllCollateralized(address user)
+        external
+        view
+        returns (uint256);
 }

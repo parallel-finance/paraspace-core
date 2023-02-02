@@ -378,22 +378,9 @@ library GenericLogic {
         ) = IAtomicCollateralizableERC721(vars.xTokenAddress)
                 .underlyingBalancesOf(params.user);
         totalValue = collateralizedBalance * assetPrice;
-
-        for (uint256 index = 0; index < atomicBalance; index++) {
-            uint256 tokenId = IAtomicCollateralizableERC721(vars.xTokenAddress)
-                .atomicTokenOfOwnerByIndex(params.user, index);
-            if (
-                ICollateralizableERC721(vars.xTokenAddress).isUsedAsCollateral(
-                    tokenId
-                )
-            ) {
-                totalValue += Helpers.getTraitBoostedTokenPrice(
-                    vars.xTokenAddress,
-                    assetPrice,
-                    tokenId
-                );
-            }
-        }
+        totalValue += IAtomicCollateralizableERC721(vars.xTokenAddress)
+            .getTraitMultiplierSumOfAllCollateralized(params.user)
+            .wadMul(assetPrice);
     }
 
     function getLtvAndLTForUniswapV3(
