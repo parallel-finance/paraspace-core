@@ -12,7 +12,6 @@ import "../../interfaces/INTokenApeStaking.sol";
 import {ValidationLogic} from "../libraries/logic/ValidationLogic.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
-import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {GenericLogic} from "../libraries/logic/GenericLogic.sol";
 import {UserConfiguration} from "../libraries/configuration/UserConfiguration.sol";
@@ -612,30 +611,31 @@ contract PoolApeStaking is
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
-    function _beforeCompoundForUsers(ApeStakingLocalVars memory localVar)
-        internal
-    {
-        APE_COMPOUND.deposit(
-            address(this),
-            localVar.totalAmount - localVar.totalNonDepositAmount
-        );
-        uint256 apeFee = localVar
-            .totalAmount
-            .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)
-            .percentMul(localVar.compoundFee);
-        if (apeFee > 0) {
-            APE_COMPOUND.deposit(msg.sender, apeFee);
-        }
-    }
-
     function _compoundForUsers(
         DataTypes.PoolStorage storage ps,
         ApeStakingLocalVars memory localVar,
         address[] calldata users
     ) internal {
-        _beforeCompoundForUsers(localVar);
+        APE_COMPOUND.deposit(
+            address(this),
+            localVar.totalAmount - localVar.totalNonDepositAmount
+        );
+        uint256 compoundFee = localVar
+            .totalAmount
+            .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)
+            .percentMul(localVar.compoundFee);
+        if (compoundFee > 0) {
+            APE_COMPOUND.deposit(msg.sender, compoundFee);
+        }
 
         for (uint256 i = 0; i < users.length; i++) {
+            _swapAndSupplyForUser(
+                ps,
+                address(USDC),
+                localVar.swapAmounts[i],
+                users[i],
+                _getApeRelativePrice(address(USDC), 1E6)
+            );
             _repayAndSupplyForUser(
                 ps,
                 address(APE_COMPOUND),
@@ -643,18 +643,6 @@ contract PoolApeStaking is
                 users[i],
                 localVar.amounts[i] - localVar.swapAmounts[i]
             );
-            if (
-                localVar.options[i].ty ==
-                DataTypes.ApeCompoundType.SwapAndSupply
-            ) {
-                _swapAndSupplyForUser(
-                    ps,
-                    address(USDC),
-                    localVar.swapAmounts[i],
-                    users[i],
-                    _getApeRelativePrice(address(USDC), 1E6)
-                );
-            }
         }
     }
 
