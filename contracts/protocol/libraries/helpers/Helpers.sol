@@ -42,10 +42,6 @@ library Helpers {
     ) internal view returns (uint256) {
         uint256 multiplier = IAtomicCollateralizableERC721(xTokenAddress)
             .getTraitMultiplier(tokenId);
-        if (isTraitMultiplierEffective(multiplier)) {
-            return assetPrice.wadMul(multiplier);
-        } else {
-            return assetPrice;
-        }
+        return assetPrice.wadMul(multiplier);
     }
 }

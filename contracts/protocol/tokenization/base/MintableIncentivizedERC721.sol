@@ -110,28 +110,7 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (uint256)
     {
-        return
-            _ERC721Data.userState[account].balance +
-            _ERC721Data.userState[account].atomicBalance;
-    }
-
-    function underlyingBalancesOf(address account)
-        public
-        view
-        virtual
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        return (
-            _ERC721Data.userState[account].balance,
-            _ERC721Data.userState[account].atomicBalance,
-            _ERC721Data.userState[account].collateralizedBalance,
-            _ERC721Data.userState[account].atomicCollateralizedBalance
-        );
+        return _ERC721Data.userState[account].balance;
     }
 
     /**
@@ -475,31 +454,7 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (uint256)
     {
-        return
-            _ERC721Data.userState[account].collateralizedBalance +
-            _ERC721Data.userState[account].atomicCollateralizedBalance;
-    }
-
-    /// @inheritdoc IAtomicCollateralizableERC721
-    function atomicCollateralizedBalanceOf(address account)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _ERC721Data.userState[account].atomicCollateralizedBalance;
-    }
-
-    /// @inheritdoc IAtomicCollateralizableERC721
-    function atomicBalanceOf(address account)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _ERC721Data.userState[account].atomicBalance;
+        return _ERC721Data.userState[account].collateralizedBalance;
     }
 
     /// @inheritdoc ICollateralizableERC721
@@ -535,9 +490,9 @@ abstract contract MintableIncentivizedERC721 is
             uint256 newCollateralizedBalance
         )
     {
-        oldCollateralizedBalance =
-            _ERC721Data.userState[sender].collateralizedBalance +
-            _ERC721Data.userState[sender].atomicCollateralizedBalance;
+        oldCollateralizedBalance = _ERC721Data
+            .userState[sender]
+            .collateralizedBalance;
 
         for (uint256 index = 0; index < tokenIds.length; index++) {
             MintableERC721Logic.executeSetIsUsedAsCollateral(
@@ -550,9 +505,9 @@ abstract contract MintableIncentivizedERC721 is
             );
         }
 
-        newCollateralizedBalance =
-            _ERC721Data.userState[sender].collateralizedBalance +
-            _ERC721Data.userState[sender].atomicCollateralizedBalance;
+        newCollateralizedBalance = _ERC721Data
+            .userState[sender]
+            .collateralizedBalance;
     }
 
     /// @inheritdoc ICollateralizableERC721
@@ -576,61 +531,13 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc IAtomicCollateralizableERC721
-    function isAtomicToken(uint256 tokenId)
-        external
-        view
-        virtual
-        returns (bool)
-    {
-        return
-            MintableERC721Logic.isAtomicToken(
-                _ERC721Data,
-                ATOMIC_PRICING,
-                tokenId
-            );
-    }
-
-    /// @inheritdoc IAtomicCollateralizableERC721
     function isAtomicPricing() external view virtual returns (bool) {
         return ATOMIC_PRICING;
     }
 
     /// @inheritdoc IAtomicCollateralizableERC721
-    function getTraitMultiplier(uint256 tokenId)
-        external
-        view
-        returns (uint256)
-    {
-        return _ERC721Data.traitsMultipliers[tokenId];
-    }
-
-    /// @inheritdoc IAtomicCollateralizableERC721
-    function getTraitMultiplierSumOfAllCollateralized(address user)
-        external
-        view
-        returns (uint256 totalMultiplier)
-    {
-        uint256 atomicCollateralizedBalance = _ERC721Data
-            .userState[user]
-            .atomicCollateralizedBalance;
-
-        uint256 collateralizedTokens;
-        for (
-            uint256 index = 0;
-            collateralizedTokens != atomicCollateralizedBalance;
-            index++
-        ) {
-            uint256 tokenId = _ERC721Data.ownedAtomicTokens[user][index];
-            uint256 multiplier = _ERC721Data.traitsMultipliers[tokenId];
-            if (_ERC721Data.isUsedAsCollateral[tokenId]) {
-                if (Helpers.isTraitMultiplierEffective(multiplier)) {
-                    totalMultiplier += multiplier;
-                } else {
-                    totalMultiplier += WadRayMath.WAD;
-                }
-                collateralizedTokens++;
-            }
-        }
+    function avgMultiplierOf(address user) external view returns (uint256) {
+        return _ERC721Data.userState[user].avgMultiplier;
     }
 
     /// @inheritdoc IAuctionableERC721
@@ -685,6 +592,16 @@ abstract contract MintableIncentivizedERC721 is
         }
     }
 
+    /// @inheritdoc IAtomicCollateralizableERC721
+    function getTraitMultiplier(uint256 tokenId)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return MintableERC721Logic.getTraitMultiplier(_ERC721Data, tokenId);
+    }
+
     /**
      * @dev See {IERC165-supportsInterface}.
      */
@@ -712,32 +629,11 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (uint256)
     {
-        uint256 balance = _ERC721Data.userState[owner].balance;
-        uint256 atomicBalance = _ERC721Data.userState[owner].atomicBalance;
         require(
-            index < balance + atomicBalance,
+            index < _ERC721Data.userState[owner].balance,
             "ERC721Enumerable: owner index out of bounds"
         );
-        if (index < balance) {
-            return _ERC721Data.ownedTokens[owner][index];
-        } else {
-            return _ERC721Data.ownedAtomicTokens[owner][index - balance];
-        }
-    }
-
-    function atomicTokenOfOwnerByIndex(address owner, uint256 index)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        uint256 atomicBalance = _ERC721Data.userState[owner].atomicBalance;
-        require(
-            index < atomicBalance,
-            "ERC721Enumerable: owner index out of bounds"
-        );
-        return _ERC721Data.ownedAtomicTokens[owner][index];
+        return _ERC721Data.ownedTokens[owner][index];
     }
 
     /**

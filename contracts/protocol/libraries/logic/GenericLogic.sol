@@ -370,17 +370,13 @@ library GenericLogic {
             vars.currentReserveAddress
         );
 
-        (
-            ,
-            uint256 atomicBalance,
-            uint256 collateralizedBalance,
-
-        ) = IAtomicCollateralizableERC721(vars.xTokenAddress)
-                .underlyingBalancesOf(params.user);
-        totalValue = collateralizedBalance * assetPrice;
-        totalValue += IAtomicCollateralizableERC721(vars.xTokenAddress)
-            .getTraitMultiplierSumOfAllCollateralized(params.user)
-            .wadMul(assetPrice);
+        uint256 collateralizedBalance = ICollateralizableERC721(
+            vars.xTokenAddress
+        ).collateralizedBalanceOf(params.user);
+        uint256 avgMultiplier = IAtomicCollateralizableERC721(
+            vars.xTokenAddress
+        ).avgMultiplierOf(params.user);
+        totalValue = (collateralizedBalance * avgMultiplier).wadMul(assetPrice);
     }
 
     function getLtvAndLTForUniswapV3(

@@ -19,7 +19,7 @@ describe("NToken general", async () => {
     expect(await nMOONBIRD.supportsInterface("0x80ac58cd")).to.be.true;
   });
 
-  it("TC-ntoken-02: NToken atomic balance is correct when mint", async () => {
+  it("TC-ntoken-02: NToken avg multiplier is correct when mint", async () => {
     const {
       nBAYC,
       bayc,
@@ -32,17 +32,14 @@ describe("NToken general", async () => {
         .setTraitsMultipliers(["0"], [HALF_WAD])
     );
     expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
-    expect(await nBAYC.isAtomicToken("0")).to.true;
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(0);
 
     await supplyAndValidate(bayc, "1", user1, true);
 
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(1);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      1
-    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(HALF_WAD);
   });
 
-  it("TC-ntoken-03: NToken atomic balance is correct when setIsUsedAsCollateral", async () => {
+  it("TC-ntoken-03: NToken avg multiplier is correct when setIsUsedAsCollateral", async () => {
     const {
       nBAYC,
       bayc,
@@ -56,9 +53,9 @@ describe("NToken general", async () => {
         .setTraitsMultipliers(["0"], [HALF_WAD])
     );
     expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
-    expect(await nBAYC.isAtomicToken("0")).to.true;
 
     await supplyAndValidate(bayc, "1", user1, true);
+    expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
 
     // remove from collateral
     await waitForTx(
@@ -66,10 +63,7 @@ describe("NToken general", async () => {
         .connect(user1.signer)
         .setUserUseERC721AsCollateral(bayc.address, ["0"], false)
     );
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(1);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      0
-    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(0);
 
     // add back to collateral
     await waitForTx(
@@ -77,13 +71,10 @@ describe("NToken general", async () => {
         .connect(user1.signer)
         .setUserUseERC721AsCollateral(bayc.address, ["0"], true)
     );
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(1);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      1
-    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(HALF_WAD);
   });
 
-  it("TC-ntoken-04: NToken atomic balance is correct when trait multiplier got removed or added", async () => {
+  it("TC-ntoken-04: NToken avg multiplier is correct when trait multiplier got removed or added", async () => {
     const {
       nBAYC,
       bayc,
@@ -96,19 +87,15 @@ describe("NToken general", async () => {
         .setTraitsMultipliers(["0"], [HALF_WAD])
     );
     expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
-    expect(await nBAYC.isAtomicToken("0")).to.true;
 
     await supplyAndValidate(bayc, "1", user1, true);
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(HALF_WAD);
 
     // remove multiplier
     await waitForTx(
       await nBAYC.connect(poolAdmin.signer).setTraitsMultipliers(["0"], ["0"])
     );
-
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(0);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      0
-    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(0);
 
     // add back multiplier
     await waitForTx(
@@ -116,17 +103,15 @@ describe("NToken general", async () => {
         .connect(poolAdmin.signer)
         .setTraitsMultipliers(["0"], [HALF_WAD])
     );
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(1);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      1
-    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(HALF_WAD);
   });
 
-  it("TC-ntoken-05: NToken atomic balance is correct when transfer", async () => {
+  it("TC-ntoken-05: NToken avg multiplier is correct when transfer", async () => {
     const {
       nBAYC,
       bayc,
       users: [user1, user2],
+      pool,
       poolAdmin,
     } = await loadFixture(testEnvFixture);
     await waitForTx(
@@ -135,28 +120,27 @@ describe("NToken general", async () => {
         .setTraitsMultipliers(["0"], [HALF_WAD])
     );
     expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
-    expect(await nBAYC.isAtomicToken("0")).to.true;
 
     await supplyAndValidate(bayc, "1", user1, true);
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(HALF_WAD);
 
     await waitForTx(
       await nBAYC
         .connect(user1.signer)
         .transferFrom(user1.address, user2.address, "0")
     );
-
-    expect(await nBAYC.atomicBalanceOf(user2.address)).to.be.eq(1);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user2.address)).to.be.eq(
-      0
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(0);
+    expect(await nBAYC.avgMultiplierOf(user2.address)).to.be.eq(0);
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .setUserUseERC721AsCollateral(bayc.address, ["0"], true)
     );
-
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(0);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      0
-    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(0);
+    expect(await nBAYC.avgMultiplierOf(user2.address)).to.be.eq(HALF_WAD);
   });
 
-  it("TC-ntoken-06: NToken atomic balance is correct when burn", async () => {
+  it("TC-ntoken-06: NToken avg multiplier is correct when burn", async () => {
     const {
       nBAYC,
       bayc,
@@ -170,23 +154,19 @@ describe("NToken general", async () => {
         .setTraitsMultipliers(["0"], [HALF_WAD])
     );
     expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
-    expect(await nBAYC.isAtomicToken("0")).to.true;
 
     await supplyAndValidate(bayc, "1", user1, true);
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(HALF_WAD);
 
     await waitForTx(
       await pool
         .connect(user1.signer)
         .withdrawERC721(bayc.address, ["0"], user1.address)
     );
-
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(0);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      0
-    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(0);
   });
 
-  it("TC-ntoken-07: NToken atomic balance when mixed tokens mint", async () => {
+  it("TC-ntoken-07: NToken avg multiplier is correct when mixed tokens minted", async () => {
     const {
       nBAYC,
       bayc,
@@ -200,32 +180,40 @@ describe("NToken general", async () => {
         .setTraitsMultipliers(["0"], [HALF_WAD])
     );
     expect(await nBAYC.getTraitMultiplier("0")).eq(HALF_WAD);
-    expect(await nBAYC.isAtomicToken("0")).to.true;
 
-    await mintAndValidate(bayc, "2", user1);
+    await supplyAndValidate(bayc, "2", user1, true);
+    // (0.5 + 1) / 2 = 0.75
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(WAD).mul(3).div(4)
+    );
 
     await waitForTx(
       await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
 
     await waitForTx(
-      await pool.connect(user1.signer).supplyERC721(
-        bayc.address,
-        [
-          {tokenId: 0, useAsCollateral: true},
-          {tokenId: 1, useAsCollateral: false},
-        ],
-        user1.address,
-        "0"
-      )
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, ["1"], false)
     );
 
-    expect(await nBAYC.atomicBalanceOf(user1.address)).to.be.eq(1);
-    expect(await nBAYC.balanceOf(user1.address)).to.be.eq(2);
-    expect(await nBAYC.atomicCollateralizedBalanceOf(user1.address)).to.be.eq(
-      1
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(HALF_WAD);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, ["0"], false)
     );
-    expect(await nBAYC.collateralizedBalanceOf(user1.address)).to.be.eq(1);
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(0);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, ["0", "1"], true)
+    );
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(WAD).mul(3).div(4)
+    );
   });
 
   it("TC-ntoken-08: only pool admin is allowed to set trait multipliers", async () => {
@@ -264,60 +252,19 @@ describe("NToken general", async () => {
     );
   });
 
-  it("TC-ntoken-10: non-atomic tokens have no limit but atomic tokens do have", async () => {
+  it("TC-ntoken-10: no balance limit for normal nfts", async () => {
     const {
       nBAYC,
       bayc,
       poolAdmin,
-      pool,
       users: [user1],
     } = await loadFixture(testEnvFixture);
-    await waitForTx(await nBAYC.connect(poolAdmin.signer).setBalanceLimit(1));
+    await waitForTx(await nBAYC.connect(poolAdmin.signer).setBalanceLimit(10));
 
-    await mintAndValidate(bayc, "12", user1);
-
-    await waitForTx(
-      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
-    );
-
-    await waitForTx(
-      await pool.connect(user1.signer).supplyERC721(
-        bayc.address,
-        [...Array(10).keys()].map((x) => ({
-          tokenId: x,
-          useAsCollateral: true,
-        })),
-        user1.address,
-        "0"
-      )
-    );
-
-    await waitForTx(
-      await nBAYC
-        .connect(poolAdmin.signer)
-        .setTraitsMultipliers(["10", "11"], [HALF_WAD, HALF_WAD])
-    );
-
-    await expect(
-      pool.connect(user1.signer).supplyERC721(
-        bayc.address,
-        [
-          {
-            tokenId: "10",
-            useAsCollateral: true,
-          },
-          {
-            tokenId: "11",
-            useAsCollateral: true,
-          },
-        ],
-        user1.address,
-        "0"
-      )
-    ).to.revertedWith(ProtocolErrors.NTOKEN_BALANCE_EXCEEDED);
+    await supplyAndValidate(bayc, "12", user1, true);
   });
 
-  it("TC-ntoken-11: userAccountData increases multiplier times when there is a multiplier", async () => {
+  it("TC-ntoken-11: userAccountData increases avgMultiplier times when there are multipliers on collateralized tokens", async () => {
     const {
       nBAYC,
       bayc,
@@ -331,7 +278,7 @@ describe("NToken general", async () => {
       await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
 
-    // somehow hardhat may didn't restore snapshot correctly etc
+    // somehow hardhat may didn't revert snapshot correctly etc
     await waitForTx(
       await nBAYC.connect(poolAdmin.signer).setTraitsMultipliers(["0"], ["0"])
     );
@@ -369,90 +316,5 @@ describe("NToken general", async () => {
         .connect(poolAdmin.signer)
         .setTraitsMultipliers(["0"], [HALF_WAD])
     ).to.be.reverted;
-  });
-
-  it("TC-ntoken-13: atomicTokenOfOwnerByIndex works as expected", async () => {
-    const {
-      nBAYC,
-      bayc,
-      poolAdmin,
-      pool,
-      users: [user1],
-    } = await loadFixture(testEnvFixture);
-    await mintAndValidate(bayc, "3", user1);
-
-    await waitForTx(
-      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
-    );
-
-    await waitForTx(
-      await nBAYC
-        .connect(poolAdmin.signer)
-        .setTraitsMultipliers(["0", "1", "2"], [HALF_WAD, HALF_WAD, HALF_WAD])
-    );
-
-    await waitForTx(
-      await pool.connect(user1.signer).supplyERC721(
-        bayc.address,
-        [...Array(3).keys()]
-          .map((x) => ({
-            tokenId: x,
-            useAsCollateral: true,
-          }))
-          .reverse(),
-        user1.address,
-        "0"
-      )
-    );
-
-    expect(await nBAYC.atomicTokenOfOwnerByIndex(user1.address, 0)).eq(2);
-    expect(await nBAYC.atomicTokenOfOwnerByIndex(user1.address, 1)).eq(1);
-    expect(await nBAYC.atomicTokenOfOwnerByIndex(user1.address, 2)).eq(0);
-  });
-
-  it("TC-ntoken-14: tokenOfOwnerByIndex works as expected", async () => {
-    const {
-      nBAYC,
-      bayc,
-      poolAdmin,
-      pool,
-      users: [user1],
-    } = await loadFixture(testEnvFixture);
-    await mintAndValidate(bayc, "4", user1);
-
-    await waitForTx(
-      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
-    );
-
-    await waitForTx(
-      await nBAYC
-        .connect(poolAdmin.signer)
-        .setTraitsMultipliers(
-          ["0", "1", "2", "3"],
-          ["0", "0", HALF_WAD, HALF_WAD]
-        )
-    );
-
-    await waitForTx(
-      await pool.connect(user1.signer).supplyERC721(
-        bayc.address,
-        [...Array(4).keys()]
-          .map((x) => ({
-            tokenId: x,
-            useAsCollateral: true,
-          }))
-          .reverse(),
-        user1.address,
-        "0"
-      )
-    );
-
-    // Tokens: [1, 0]
-    // AtomicTokens: [3, 2]
-
-    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 0)).eq(1);
-    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 1)).eq(0);
-    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 2)).eq(3);
-    expect(await nBAYC.tokenOfOwnerByIndex(user1.address, 3)).eq(2);
   });
 });
