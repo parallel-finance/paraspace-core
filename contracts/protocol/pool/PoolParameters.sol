@@ -244,6 +244,7 @@ contract PoolParameters is
     /// @inheritdoc IPoolParameters
     function getUserApeCompoundStrategy(address user)
         external
+        view
         returns (DataTypes.ApeCompoundStrategy memory strategy)
     {
         DataTypes.PoolStorage storage ps = poolStorage();

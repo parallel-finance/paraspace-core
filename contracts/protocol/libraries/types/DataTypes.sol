@@ -356,7 +356,6 @@ library DataTypes {
     }
 
     enum ApeCompoundType {
-        RepayAndSupply,
         SwapAndSupply
     }
 
