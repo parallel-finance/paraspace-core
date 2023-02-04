@@ -14,7 +14,7 @@ describe("Token Aidrop Contract", () => {
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
   let testEnv: TestEnv;
   let aidropContract: ParaSpaceAidrop;
-  let deadline: string = "2675468152";
+  const deadline = "2675468152";
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {ape} = testEnv;
