@@ -6,8 +6,9 @@ import {Ownable} from "../dependencies/openzeppelin/contracts/Ownable.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
+import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 
-contract ParaSpaceAidrop is Ownable {
+contract ParaSpaceAidrop is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     struct AidropStatus {
@@ -60,10 +61,11 @@ contract ParaSpaceAidrop is Ownable {
     IERC20 immutable aidropToken;
     mapping(address => AidropStatus) public userStatus;
 
-    uint256 public constant DEADLINE = 1977098986; // change later. we can also make dynamic if needed
+    uint256 public immutable deadline; // change later. we can also make dynamic if needed
 
-    constructor(address _token) {
+    constructor(address _token, uint256 _deadline) {
         aidropToken = IERC20(_token);
+        deadline = _deadline;
     }
 
     function setUsersAirdropAmounts(
@@ -78,11 +80,11 @@ contract ParaSpaceAidrop is Ownable {
         }
     }
 
-    function claimAidrop() external {
+    function claimAidrop() external nonReentrant {
         AidropStatus memory status = userStatus[msg.sender];
         require(status.amount != 0, "no airdrop set for this user");
         require(!status.claimed, "airdrop already claimed");
-        require(block.timestamp < DEADLINE);
+        require(block.timestamp < deadline);
 
         userStatus[msg.sender].claimed = true;
 

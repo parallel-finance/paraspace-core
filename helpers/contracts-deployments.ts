@@ -228,6 +228,8 @@ import {
   NTokenBAKC__factory,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  ParaSpaceAidrop__factory,
+  ParaSpaceAidrop,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2378,3 +2380,15 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployParaSpaceAidrop = async (
+  token: tEthereumAddress,
+  deadline: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ParaSpaceAidrop__factory(await getFirstSigner()),
+    eContractid.ParaSpaceAidrop,
+    [token, deadline],
+    verify
+  ) as Promise<ParaSpaceAidrop>;
