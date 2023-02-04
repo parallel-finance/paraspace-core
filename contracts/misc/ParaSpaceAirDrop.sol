@@ -84,7 +84,7 @@ contract ParaSpaceAidrop is Ownable, ReentrancyGuard {
         AidropStatus memory status = userStatus[msg.sender];
         require(status.amount != 0, "no airdrop set for this user");
         require(!status.claimed, "airdrop already claimed");
-        require(block.timestamp < deadline);
+        require(block.timestamp < deadline, "airdrop ended");
 
         userStatus[msg.sender].claimed = true;
 
