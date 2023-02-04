@@ -1,11 +1,5 @@
-import hre from "hardhat";
 import {expect} from "chai";
 import {utils} from "ethers";
-import {
-  createRandomAddress,
-  evmRevert,
-  evmSnapshot,
-} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 
 import {ProtocolErrors} from "../helpers/types";
@@ -13,7 +7,6 @@ import {deployParaSpaceAidrop} from "../helpers/contracts-deployments";
 import {loadFixture} from "ethereum-waffle";
 import {TestEnv} from "./helpers/make-suite";
 import {ParaSpaceAidrop} from "../types";
-import BigNumber from "bignumber.js";
 import {toBN} from "../helpers/seaport-helpers/encoding";
 
 describe("Token Aidrop Contract", () => {
@@ -59,7 +52,7 @@ describe("Token Aidrop Contract", () => {
 
   it("user shouldn't be able to claim an aidrop twice", async () => {
     const {
-      users: [user1, user2],
+      users: [, user2],
     } = await loadFixture(fixture);
 
     await expect(
