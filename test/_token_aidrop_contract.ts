@@ -8,6 +8,7 @@ import {loadFixture} from "ethereum-waffle";
 import {TestEnv} from "./helpers/make-suite";
 import {ParaSpaceAidrop} from "../types";
 import {toBN} from "../helpers/seaport-helpers/encoding";
+import {advanceTimeAndBlock} from "../helpers/misc-utils";
 
 describe("Token Aidrop Contract", () => {
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
@@ -60,13 +61,25 @@ describe("Token Aidrop Contract", () => {
     ).to.be.revertedWith("airdrop already claimed");
   });
 
-  it("user shouldn't be able to claim an aidrop with amount 0", async () => {
+  it("user shouldn't be able to claim an aidrop after deadline", async () => {
     const {
       users: [, , user3],
     } = await loadFixture(fixture);
+    await aidropContract.setUsersAirdropAmounts([user3.address], ["1000"]);
+    await advanceTimeAndBlock(Number(deadline) + 1);
 
     await expect(
       aidropContract.connect(user3.signer).claimAidrop()
+    ).to.be.revertedWith("airdrop ended");
+  });
+
+  it("user shouldn't be able to claim an aidrop with amount 0", async () => {
+    const {
+      users: [, , , user4],
+    } = await loadFixture(fixture);
+
+    await expect(
+      aidropContract.connect(user4.signer).claimAidrop()
     ).to.be.revertedWith("no airdrop set for this user");
   });
 
