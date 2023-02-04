@@ -228,6 +228,8 @@ import {
   NTokenBAKC__factory,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  CLwstETHSynchronicityPriceAdapter__factory,
+  CLwstETHSynchronicityPriceAdapter,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2132,6 +2134,18 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployCLwstETHSynchronicityPriceAdapter = async (
+  stEthToETHAggregator: tEthereumAddress,
+  wstETHTostETHAggregator: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLwstETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
+    eContractid.CApeDebtToken,
+    [stEthToETHAggregator, wstETHTostETHAggregator],
+    verify
+  ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
