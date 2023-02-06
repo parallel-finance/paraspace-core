@@ -232,6 +232,8 @@ import {
   CLwstETHSynchronicityPriceAdapter,
   WstETHMocked__factory,
   WstETHMocked,
+  BAYCSewerPass__factory,
+  BAYCSewerPass,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1067,6 +1069,14 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         continue;
       }
 
+      if (tokenSymbol === ERC721TokenContractId.CLONEX) {
+        tokens[tokenSymbol] = await deploySewerPass(
+          ["SEWER", "SEWER", paraSpaceConfig.ParaSpaceTeam],
+          verify
+        );
+        continue;
+      }
+
       if (tokenSymbol === ERC721TokenContractId.MEEBITS) {
         const punks = await getPunks();
         tokens[tokenSymbol] = await deployMeebits(
@@ -1285,6 +1295,17 @@ export const deployCloneX = async (args: [], verify?: boolean) =>
     [...args],
     verify
   ) as Promise<CloneX>;
+
+export const deploySewerPass = async (
+  args: [string, string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new BAYCSewerPass__factory(await getFirstSigner()),
+    eContractid.SEWER,
+    [...args],
+    verify
+  ) as Promise<BAYCSewerPass>;
 
 export const deployDoodle = async (args: [], verify?: boolean) =>
   withSaveAndVerify(

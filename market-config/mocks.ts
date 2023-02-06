@@ -31,6 +31,8 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   OTHR: parseEther("25").toString(),
   CLONEX: parseEther("27").toString(),
   BAKC: parseEther("6").toString(),
+  SEWER: parseEther("2").toString(),
+  PPG: parseEther("5").toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {
@@ -56,6 +58,8 @@ export const MOCK_TOKEN_MINT_VALUE = {
   OTHR: 1,
   CLONEX: 1,
   BAKC: 1,
+  SEWER: 1,
+  PPG: 1,
 };
 
 export const MocksConfig: IMocksConfig = {

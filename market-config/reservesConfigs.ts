@@ -21,6 +21,8 @@ import {
   auctionStrategyMeebits,
   auctionStrategyMoonbird,
   auctionStrategyOthr,
+  auctionStrategyPudgyPenguins,
+  auctionStrategySEWER,
   auctionStrategyUniswapV3,
   auctionStrategyWPunks,
   auctionStrategyZero,
@@ -339,6 +341,36 @@ export const strategyUniswapV3: IReserveParams = {
   borrowingEnabled: false,
   reserveDecimals: "0",
   xTokenImpl: eContractid.NTokenUniswapV3Impl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategySEWER: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategySEWER, // same as BAKC, it won't be used as collateral so it's ok
+  baseLTVAsCollateral: "0",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "0000",
+  liquidationBonus: "00000",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "1000",
+};
+
+export const strategyPudgyPenguins: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyPudgyPenguins,
+  baseLTVAsCollateral: "3000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "6500",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "0",

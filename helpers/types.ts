@@ -235,6 +235,7 @@ export enum eContractid {
   BlurExchangeImpl = "BlurExchangeImpl",
   BlurExchangeProxy = "BlurExchangeProxy",
   BAKC = "BAKC",
+  SEWER = "SEWER",
   TimeLockExecutor = "TimeLockExecutor",
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
@@ -485,6 +486,8 @@ export enum ERC721TokenContractId {
   OTHR = "OTHR",
   UniswapV3 = "UniswapV3",
   BAKC = "BAKC",
+  SEWER = "SEWER",
+  PPG = "PPG",
 }
 
 export enum NTokenContractId {
@@ -495,6 +498,8 @@ export enum NTokenContractId {
   nMOONBIRD = "nMOONBIRD",
   nUniswapV3 = "nUniswapV3",
   nBAKC = "nBAKC",
+  nSEWER = "nSEWER",
+  nPPG = "nPPG",
 }
 
 export enum PTokenContractId {

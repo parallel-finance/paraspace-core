@@ -37,6 +37,8 @@ import {
   strategyWGLMR,
   strategyBAKC,
   strategyWSTETH,
+  strategySEWER,
+  strategyPudgyPenguins,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -173,6 +175,8 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: "0x0000000000000000000000000000000000000001",
     WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    PPG: "0xf140558cA4d4e10f63661504D4F3f74FADDDe3E8",
+    SEWER: "0x3aa026cd539fa1f6ae58ae238a10e2f1cf831454",
   },
   YogaLabs: {
     ApeCoinStaking: "0xeF37717B1807a253c6D140Aca0141404D23c26D4",
@@ -223,6 +227,8 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
   },
 };
 
@@ -266,6 +272,8 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: "0x49cf6f5d44e70224e2e23fdcdd2c053f30ada28b",
     sAPE: "0x0000000000000000000000000000000000000001",
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    SEWER: "0x764AeebcF425d56800eF2c84F2578689415a2DAa",
+    PPG: "0xbd3531da5cf5857e7cfaa92426877b022e612cf8",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -319,6 +327,8 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     cAPE: strategyCAPE,
     UniswapV3: strategyUniswapV3,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
