@@ -215,6 +215,7 @@ export enum eContractid {
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",
   NonfungiblePositionManager = "NonfungiblePositionManager",
   StETH = "stETH",
+  WStETH = "wstETH",
   MockAToken = "MockAToken",
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
@@ -241,6 +242,7 @@ export enum eContractid {
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
+  CLwstETHSynchronicityPriceAdapter = "CLwstETHSynchronicityPriceAdapter",
 }
 
 /*
@@ -404,6 +406,7 @@ export interface iAssetBase<T> {
   PUNK: T;
   WBTC: T;
   stETH: T;
+  wstETH: T;
   APE: T;
   sAPE: T;
   cAPE: T;
@@ -431,6 +434,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "WETH"
   | "WBTC"
   | "stETH"
+  | "wstETH"
   | "xcDOT"
   | "WGLMR"
   | "APE"
@@ -459,6 +463,7 @@ export enum ERC20TokenContractId {
   USDT = "USDT",
   WBTC = "WBTC",
   stETH = "stETH",
+  wstETH = "wstETH",
   APE = "APE",
   sAPE = "sAPE",
   cAPE = "cAPE",
@@ -499,6 +504,7 @@ export enum PTokenContractId {
   pWETH = "pWETH",
   paWETH = "paWETH",
   pstETH = "pstETH",
+  pwstETH = "pwstETH",
 }
 
 export interface IReserveParams
@@ -587,6 +593,7 @@ export interface IMarketplaceConfig {
 export interface IChainlinkConfig {
   WETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
+  wstETH?: tEthereumAddress;
   DAI?: tEthereumAddress;
   USDC?: tEthereumAddress;
   USDT?: tEthereumAddress;

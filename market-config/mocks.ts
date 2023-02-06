@@ -10,6 +10,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   WETH: parseEther("1").toString(),
   WBTC: parseEther("18.356369399062118").toString(),
   stETH: parseEther("1").toString(),
+  wstETH: parseEther("1").toString(),
   APE: parseEther("0.0036906841286").toString(),
   sAPE: parseEther("0.0036906841286").toString(),
   cAPE: parseEther("0.0036906841286").toString(),
