@@ -95,7 +95,7 @@ describe("NToken general", async () => {
     await waitForTx(
       await nBAYC.connect(poolAdmin.signer).setTraitsMultipliers(["0"], ["0"])
     );
-    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(0);
+    expect(await nBAYC.avgMultiplierOf(user1.address)).to.be.eq(WAD);
 
     // add back multiplier
     await waitForTx(

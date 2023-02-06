@@ -473,14 +473,15 @@ library MintableERC721Logic {
         );
         for (uint256 i = 0; i < tokenIds.length; i++) {
             _checkTraitMultiplier(multipliers[i]);
-            uint256 oldMultiplier = erc721Data.traitsMultipliers[tokenIds[i]];
+            uint256 oldMultiplier = getTraitMultiplier(erc721Data, tokenIds[i]);
             erc721Data.traitsMultipliers[tokenIds[i]] = multipliers[i];
+            uint256 newMultiplier = getTraitMultiplier(erc721Data, tokenIds[i]);
             address owner = erc721Data.owners[tokenIds[i]];
             if (owner == address(0)) {
                 continue;
             }
 
-            int256 multiplierDelta = multipliers[i].toInt256() -
+            int256 multiplierDelta = newMultiplier.toInt256() -
                 oldMultiplier.toInt256();
             _executeUpdateTraitMultiplier(
                 erc721Data,
