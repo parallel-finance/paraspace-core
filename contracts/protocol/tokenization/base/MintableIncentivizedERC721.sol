@@ -630,7 +630,7 @@ abstract contract MintableIncentivizedERC721 is
         returns (uint256)
     {
         require(
-            index < _ERC721Data.userState[owner].balance,
+            index < balanceOf(owner),
             "ERC721Enumerable: owner index out of bounds"
         );
         return _ERC721Data.ownedTokens[owner][index];
