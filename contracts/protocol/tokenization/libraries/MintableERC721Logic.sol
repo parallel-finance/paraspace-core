@@ -210,7 +210,7 @@ library MintableERC721Logic {
                     .toInt256()
                 : -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
                     .toInt256(),
-            useAsCollateral ? int64(1) : int64(-1)
+            useAsCollateral ? int256(1) : int256(-1)
         );
 
         uint64 collateralizedBalance = erc721Data

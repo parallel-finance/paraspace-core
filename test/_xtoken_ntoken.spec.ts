@@ -5,7 +5,11 @@ import {HALF_WAD, WAD} from "../helpers/constants";
 import {waitForTx} from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
-import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {
+  assertAlmostEqual,
+  mintAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
 
 describe("NToken general", async () => {
   it("TC-ntoken-01: NToken is ERC721 compatible", async () => {
@@ -360,5 +364,156 @@ describe("NToken general", async () => {
     );
 
     expect(await nBAYC.avgMultiplierOf(user1.address)).eq(HALF_WAD);
+  });
+
+  it("TC-ntoken-14: NToken avg multiplier is correct when multiple tokens minted", async () => {
+    const {
+      nBAYC,
+      bayc,
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = await loadFixture(testEnvFixture);
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(
+          ["0", "1", "2", "3", "4"],
+          [
+            BigNumber.from(HALF_WAD).mul(1),
+            BigNumber.from(HALF_WAD).mul(2),
+            BigNumber.from(HALF_WAD).mul(3),
+            BigNumber.from(HALF_WAD).mul(4),
+            BigNumber.from(HALF_WAD).mul(5),
+          ]
+        )
+    );
+
+    await mintAndValidate(bayc, "5", user1);
+    await waitForTx(
+      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        bayc.address,
+        [
+          {tokenId: "0", useAsCollateral: true},
+          {tokenId: "1", useAsCollateral: true},
+          {tokenId: "2", useAsCollateral: true},
+          {tokenId: "3", useAsCollateral: true},
+          {tokenId: "4", useAsCollateral: true},
+        ],
+        user1.address,
+        0
+      )
+    );
+    // (0.5 + 1 + 1.5 + 2 + 2.5) / 5 = 1.5
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(HALF_WAD).mul(3)
+    );
+  });
+
+  it("TC-ntoken-15: NToken avg multiplier is correct when multiple tokens burnt", async () => {
+    const {
+      nBAYC,
+      bayc,
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = await loadFixture(testEnvFixture);
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(
+          ["0", "1", "2", "3", "4"],
+          [
+            BigNumber.from(HALF_WAD).mul(1),
+            BigNumber.from(HALF_WAD).mul(2),
+            BigNumber.from(HALF_WAD).mul(3),
+            BigNumber.from(HALF_WAD).mul(4),
+            BigNumber.from(HALF_WAD).mul(5),
+          ]
+        )
+    );
+
+    await supplyAndValidate(bayc, "5", user1, true);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawERC721(bayc.address, ["1", "2", "4"], user1.address)
+    );
+    // (0.5 + 2) / 2 = 1.25
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(WAD).mul(5).div(4)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawERC721(bayc.address, ["0", "3"], user1.address)
+    );
+
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(BigNumber.from(WAD));
+  });
+
+  it("TC-ntoken-16: NToken avg multiplier is correct when turn on & off multiple collaterals", async () => {
+    const {
+      nBAYC,
+      bayc,
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = await loadFixture(testEnvFixture);
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(
+          ["0", "1", "2", "3", "4"],
+          [
+            BigNumber.from(HALF_WAD).mul(1),
+            BigNumber.from(HALF_WAD).mul(2),
+            BigNumber.from(HALF_WAD).mul(3),
+            BigNumber.from(HALF_WAD).mul(4),
+            BigNumber.from(HALF_WAD).mul(5),
+          ]
+        )
+    );
+
+    await supplyAndValidate(bayc, "5", user1, true);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, ["1", "2", "4"], false)
+    );
+    // (0.5 + 2) / 2 = 1.25
+    assertAlmostEqual(
+      await nBAYC.avgMultiplierOf(user1.address),
+      BigNumber.from(WAD).mul(5).div(4)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, ["0", "3"], false)
+    );
+
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(BigNumber.from(WAD));
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(
+          bayc.address,
+          ["0", "1", "2", "3", "4"],
+          true
+        )
+    );
+    assertAlmostEqual(
+      await nBAYC.avgMultiplierOf(user1.address),
+      BigNumber.from(HALF_WAD).mul(3)
+    );
   });
 });
