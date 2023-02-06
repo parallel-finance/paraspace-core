@@ -53,7 +53,7 @@ struct MintableERC721Data {
 struct LocalVars {
     uint64 oldBalance;
     uint64 oldCollateralizedBalance;
-    uint64 collateralizedBalanceDelta;
+    uint256 collateralizedBalanceDelta;
     uint256 multiplierDelta;
 }
 
@@ -278,11 +278,11 @@ library MintableERC721Logic {
             erc721Data,
             to,
             vars.multiplierDelta.toInt256(),
-            uint256(vars.collateralizedBalanceDelta).toInt256()
+            vars.collateralizedBalanceDelta.toInt256()
         );
 
         uint64 newCollateralizedBalance = vars.oldCollateralizedBalance +
-            vars.collateralizedBalanceDelta;
+            vars.collateralizedBalanceDelta.toUint64();
         erc721Data
             .userState[to]
             .collateralizedBalance = newCollateralizedBalance;
@@ -362,10 +362,10 @@ library MintableERC721Logic {
             erc721Data,
             user,
             -vars.multiplierDelta.toInt256(),
-            -uint256(vars.collateralizedBalanceDelta).toInt256()
+            -vars.collateralizedBalanceDelta.toInt256()
         );
         uint64 newCollateralizedBalance = vars.oldCollateralizedBalance -
-            vars.collateralizedBalanceDelta;
+            vars.collateralizedBalanceDelta.toUint64();
         erc721Data
             .userState[user]
             .collateralizedBalance = newCollateralizedBalance;
