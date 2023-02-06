@@ -537,7 +537,10 @@ abstract contract MintableIncentivizedERC721 is
 
     /// @inheritdoc IAtomicCollateralizableERC721
     function avgMultiplierOf(address user) external view returns (uint256) {
-        return _ERC721Data.userState[user].avgMultiplier;
+        return
+            MintableERC721Logic.getTraitMultiplier(
+                _ERC721Data.userState[user].avgMultiplier
+            );
     }
 
     /// @inheritdoc IAuctionableERC721
@@ -599,7 +602,10 @@ abstract contract MintableIncentivizedERC721 is
         override
         returns (uint256)
     {
-        return MintableERC721Logic.getTraitMultiplier(_ERC721Data, tokenId);
+        return
+            MintableERC721Logic.getTraitMultiplier(
+                _ERC721Data.traitsMultipliers[tokenId]
+            );
     }
 
     /**

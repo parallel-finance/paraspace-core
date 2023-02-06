@@ -169,7 +169,8 @@ library MintableERC721Logic {
             _executeUpdateTraitMultiplier(
                 erc721Data,
                 tokenId,
-                -getTraitMultiplier(erc721Data, tokenId).toInt256(),
+                -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                    .toInt256(),
                 -1
             );
             erc721Data.userState[from].collateralizedBalance -= 1;
@@ -204,8 +205,10 @@ library MintableERC721Logic {
             erc721Data,
             tokenId,
             useAsCollateral
-                ? getTraitMultiplier(erc721Data, tokenId).toInt256()
-                : -getTraitMultiplier(erc721Data, tokenId).toInt256(),
+                ? getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                    .toInt256()
+                : -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                    .toInt256(),
             useAsCollateral ? int64(1) : int64(-1)
         );
         uint64 collateralizedBalance = erc721Data
@@ -261,7 +264,9 @@ library MintableERC721Logic {
             ) {
                 erc721Data.isUsedAsCollateral[tokenId] = true;
                 vars.collateralizedTokens++;
-                uint256 multiplier = getTraitMultiplier(erc721Data, tokenId);
+                uint256 multiplier = getTraitMultiplier(
+                    erc721Data.traitsMultipliers[tokenId]
+                );
                 _executeUpdateTraitMultiplier(
                     erc721Data,
                     tokenId,
@@ -337,7 +342,9 @@ library MintableERC721Logic {
             if (erc721Data.isUsedAsCollateral[tokenId]) {
                 delete erc721Data.isUsedAsCollateral[tokenId];
                 vars.collateralizedTokens += 1;
-                uint256 multiplier = getTraitMultiplier(erc721Data, tokenId);
+                uint256 multiplier = getTraitMultiplier(
+                    erc721Data.traitsMultipliers[tokenId]
+                );
                 _executeUpdateTraitMultiplier(
                     erc721Data,
                     tokenId,
@@ -474,12 +481,22 @@ library MintableERC721Logic {
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            _checkTraitMultiplier(multipliers[i]);
-            uint256 oldMultiplier = getTraitMultiplier(erc721Data, tokenIds[i]);
-            erc721Data.traitsMultipliers[tokenIds[i]] = multipliers[i];
-            uint256 newMultiplier = getTraitMultiplier(erc721Data, tokenIds[i]);
-            address owner = erc721Data.owners[tokenIds[i]];
-            if (owner == address(0)) {
+            uint256 tokenId = tokenIds[i];
+            uint256 multiplier = multipliers[i];
+            _checkTraitMultiplier(multiplier);
+            uint256 oldMultiplier = getTraitMultiplier(
+                erc721Data.traitsMultipliers[tokenId]
+            );
+            erc721Data.traitsMultipliers[tokenId] = getTraitMultiplier(
+                multiplier
+            );
+            uint256 newMultiplier = getTraitMultiplier(
+                erc721Data.traitsMultipliers[tokenId]
+            );
+            address owner = erc721Data.owners[tokenId];
+            if (
+                owner == address(0) || !erc721Data.isUsedAsCollateral[tokenId]
+            ) {
                 continue;
             }
 
@@ -534,11 +551,11 @@ library MintableERC721Logic {
             .collateralizedBalance;
     }
 
-    function getTraitMultiplier(
-        MintableERC721Data storage erc721Data,
-        uint256 tokenId
-    ) internal view returns (uint256) {
-        uint256 multiplier = erc721Data.traitsMultipliers[tokenId];
+    function getTraitMultiplier(uint256 multiplier)
+        public
+        view
+        returns (uint256)
+    {
         return
             !Helpers.isTraitMultiplierEffective(multiplier)
                 ? WadRayMath.WAD
