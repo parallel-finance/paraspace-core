@@ -227,6 +227,31 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function setApeCompoundStrategy(
+        DataTypes.ApeCompoundStrategy calldata strategy
+    ) external {
+        require(
+            strategy.swapPercent == 0 ||
+                (strategy.ty == DataTypes.ApeCompoundType.SwapAndSupply &&
+                    strategy.swapPercent > 0 &&
+                    strategy.swapPercent <= PercentageMath.PERCENTAGE_FACTOR),
+            "Invalid swap percent"
+        );
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._apeCompoundStrategies[msg.sender] = strategy;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function getUserApeCompoundStrategy(address user)
+        external
+        view
+        returns (DataTypes.ApeCompoundStrategy memory strategy)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        strategy = ps._apeCompoundStrategies[user];
+    }
+
+    /// @inheritdoc IPoolParameters
     function setAuctionRecoveryHealthFactor(uint64 value)
         external
         virtual
