@@ -27,14 +27,6 @@ library Helpers {
         return (IERC20(debtTokenAddress).balanceOf(user));
     }
 
-    function isTraitMultiplierEffective(uint256 multiplier)
-        internal
-        pure
-        returns (bool)
-    {
-        return multiplier != 0 && multiplier != WadRayMath.WAD;
-    }
-
     function getTraitBoostedTokenPrice(
         address xTokenAddress,
         uint256 assetPrice,

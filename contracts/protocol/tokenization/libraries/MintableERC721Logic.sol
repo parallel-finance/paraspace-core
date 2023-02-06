@@ -552,14 +552,14 @@ library MintableERC721Logic {
     }
 
     function getTraitMultiplier(uint256 multiplier)
-        public
-        view
+        internal
+        pure
         returns (uint256)
     {
         return
-            !Helpers.isTraitMultiplierEffective(multiplier)
-                ? WadRayMath.WAD
-                : multiplier;
+            multiplier != 0 && multiplier != WadRayMath.WAD
+                ? multiplier
+                : WadRayMath.WAD;
     }
 
     function isAuctioned(
