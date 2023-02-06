@@ -50,6 +50,7 @@ import {
   getX2Y2Adapter,
   getBlurAdapter,
   getNTokenBAKC,
+  getWstETH,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -80,6 +81,7 @@ import {
   SeaportAdapter,
   StETHDebtToken,
   UiPoolDataProvider,
+  WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
 } from "../../types";
@@ -167,6 +169,7 @@ export interface TestEnv {
   nWPunk: NToken;
   wBTC: MintableERC20;
   stETH: StETHMocked;
+  wstETH: WstETHMocked;
   pstETH: PTokenStETH;
   ape: MintableERC20;
   nMAYC: NTokenMAYC;
@@ -242,6 +245,7 @@ export async function initializeMakeSuite() {
     nWPunk: {} as NToken,
     wBTC: {} as MintableERC20,
     stETH: {} as StETHMocked,
+    wstETH: {} as WstETHMocked,
     pstETH: {} as PTokenStETH,
     ape: {} as MintableERC20,
     mayc: {} as MintableERC721,
@@ -433,6 +437,9 @@ export async function initializeMakeSuite() {
   const stETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.stETH
   )?.tokenAddress;
+  const wstETHAddress = reservesTokens.find(
+    (token) => token.symbol === ERC20TokenContractId.wstETH
+  )?.tokenAddress;
 
   const {variableDebtTokenAddress: variableDebtStETHAddress} =
     await testEnv.protocolDataProvider.getReserveTokensAddresses(
@@ -503,6 +510,7 @@ export async function initializeMakeSuite() {
 
   testEnv.wBTC = await getMintableERC20(wBTCAddress);
   testEnv.stETH = await getStETH(stETHAddress);
+  testEnv.wstETH = await getWstETH(wstETHAddress);
   testEnv.aWETH = await getMockAToken(aWETHAddress);
   testEnv.ape = await getMintableERC20(apeAddress);
   testEnv.mayc = await getMintableERC721(maycAddress);

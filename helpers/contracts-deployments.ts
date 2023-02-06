@@ -2158,15 +2158,14 @@ export const deployCApeDebtToken = async (
   ) as Promise<CApeDebtToken>;
 
 export const deployCLwstETHSynchronicityPriceAdapter = async (
-  stEthToETHAggregator: tEthereumAddress,
-  wstETHTostETHAggregator: tEthereumAddress,
-  decimals: string,
+  stETHAggregator: tEthereumAddress,
+  stETH: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new CLwstETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
-    eContractid.CLwstETHSynchronicityPriceAdapter,
-    [stEthToETHAggregator, wstETHTostETHAggregator, decimals],
+    eContractid.Aggregator.concat(upperFirst(eContractid.WStETH)),
+    [stETHAggregator, stETH, 18],
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 

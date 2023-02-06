@@ -242,7 +242,6 @@ export enum eContractid {
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
-  CLwstETHSynchronicityPriceAdapter = "CLwstETHSynchronicityPriceAdapter",
 }
 
 /*
