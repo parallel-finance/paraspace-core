@@ -104,7 +104,7 @@ library MintableERC721Logic {
     function executeTransfer(
         MintableERC721Data storage erc721Data,
         IPool POOL,
-        bool,
+        bool atomic_pricing,
         address from,
         address to,
         uint256 tokenId
@@ -126,7 +126,9 @@ library MintableERC721Logic {
         uint64 oldSenderBalance = erc721Data.userState[from].balance;
         erc721Data.userState[from].balance = oldSenderBalance - 1;
         uint64 oldRecipientBalance = erc721Data.userState[to].balance;
-        erc721Data.userState[to].balance = oldRecipientBalance + 1;
+        uint64 newRecipientBalance = oldRecipientBalance + 1;
+        _checkBalanceLimit(erc721Data, atomic_pricing, newRecipientBalance);
+        erc721Data.userState[to].balance = newRecipientBalance;
         erc721Data.owners[tokenId] = to;
 
         if (from != to && erc721Data.auctions[tokenId].startTime > 0) {
