@@ -459,7 +459,7 @@ describe("P2P Pair Staking Test", () => {
         .connect(user3.signer)
         .setApprovalForAll(p2pPairStaking.address, true)
     );
-    const apeAmount = await p2pPairStaking.getApeCoinStakingCap(3);
+    const apeAmount = await p2pPairStaking.getApeCoinStakingCap(2);
 
     await waitForTx(
       await p2pPairStaking
@@ -469,7 +469,7 @@ describe("P2P Pair Staking Test", () => {
 
     const user1SignedOrder = await getSignedListingOrder(
       p2pPairStaking,
-      3,
+      2,
       mayc,
       0,
       2000,
@@ -477,7 +477,7 @@ describe("P2P Pair Staking Test", () => {
     );
     const user3SignedOrder = await getSignedListingOrder(
       p2pPairStaking,
-      3,
+      2,
       bakc,
       0,
       2000,
@@ -485,7 +485,7 @@ describe("P2P Pair Staking Test", () => {
     );
     const user2SignedOrder = await getSignedListingOrder(
       p2pPairStaking,
-      3,
+      2,
       pCApe,
       0,
       6000,

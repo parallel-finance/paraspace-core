@@ -219,7 +219,7 @@ contract P2PPairStaking is
 
         //2 check if orders can match
         require(
-            apeOrder.stakingType >= StakingType.BAYCPairStaking,
+            apeOrder.stakingType == StakingType.BAKCPairStaking,
             "invalid stake type"
         );
         require(
@@ -267,7 +267,7 @@ contract P2PPairStaking is
             memory _otherPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
                 0
             );
-        if (apeOrder.stakingType == StakingType.BAYCPairStaking) {
+        if (apeOrder.token == bayc) {
             apeCoinStaking.depositBAKC(_stakingPairs, _otherPairs);
         } else {
             apeCoinStaking.depositBAKC(_otherPairs, _stakingPairs);
@@ -295,7 +295,7 @@ contract P2PPairStaking is
                 msg.sender == apeNTokenOwner ||
                 msg.sender == order.apeCoinOfferer ||
                 (msg.sender == nBakcOwner &&
-                    order.stakingType >= StakingType.BAYCPairStaking),
+                    order.stakingType == StakingType.BAKCPairStaking),
             "no permission to break up"
         );
 
@@ -308,7 +308,7 @@ contract P2PPairStaking is
         delete matchedOrders[orderHash];
 
         //4 exit from ApeCoinStaking
-        if (order.stakingType < StakingType.BAYCPairStaking) {
+        if (order.stakingType < StakingType.BAKCPairStaking) {
             ApeCoinStaking.SingleNft[]
                 memory _nfts = new ApeCoinStaking.SingleNft[](1);
             _nfts[0].tokenId = order.apeTokenId;
@@ -331,7 +331,7 @@ contract P2PPairStaking is
                 memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                     0
                 );
-            if (order.stakingType == StakingType.BAYCPairStaking) {
+            if (order.apeToken == bayc) {
                 apeCoinStaking.withdrawBAKC(_nfts, _otherPairs);
             } else {
                 apeCoinStaking.withdrawBAKC(_otherPairs, _nfts);
@@ -357,7 +357,7 @@ contract P2PPairStaking is
             order.apeCoinOfferer,
             0
         );
-        if (order.stakingType >= StakingType.BAYCPairStaking) {
+        if (order.stakingType == StakingType.BAKCPairStaking) {
             IERC721(bakc).safeTransferFrom(
                 address(this),
                 nBakc,
@@ -531,7 +531,7 @@ contract P2PPairStaking is
     ) internal returns (uint256, uint256) {
         MatchedOrder memory order = matchedOrders[orderHash];
         uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
-        if (order.stakingType < StakingType.BAYCPairStaking) {
+        if (order.stakingType < StakingType.BAKCPairStaking) {
             uint256[] memory _nfts = new uint256[](1);
             _nfts[0] = order.apeTokenId;
             if (order.stakingType == StakingType.BAYCStaking) {
@@ -546,7 +546,7 @@ contract P2PPairStaking is
             _nfts[0].bakcTokenId = order.bakcTokenId;
             ApeCoinStaking.PairNft[]
                 memory _otherPairs = new ApeCoinStaking.PairNft[](0);
-            if (order.stakingType == StakingType.BAYCPairStaking) {
+            if (order.apeToken == bayc) {
                 apeCoinStaking.claimSelfBAKC(_nfts, _otherPairs);
             } else {
                 apeCoinStaking.claimSelfBAKC(_otherPairs, _nfts);
@@ -655,15 +655,11 @@ contract P2PPairStaking is
     function _validateApeOrder(ListingOrder calldata apeOrder) internal view {
         _validateOrderBasicInfo(apeOrder);
 
-        address expectedToken = bayc;
-        if (
-            apeOrder.stakingType == StakingType.MAYCStaking ||
-            apeOrder.stakingType == StakingType.MAYCPairStaking
-        ) {
-            expectedToken = mayc;
-        }
-        require(apeOrder.token == expectedToken, "ape order invalid token");
-        address nToken = _getApeNTokenAddress(expectedToken);
+        require(
+            apeOrder.token == bayc || apeOrder.token == mayc,
+            "ape order invalid token"
+        );
+        address nToken = _getApeNTokenAddress(apeOrder.token);
         require(
             IERC721(nToken).ownerOf(apeOrder.tokenId) == apeOrder.offerer,
             "ape order invalid NToken owner"

@@ -7,8 +7,7 @@ interface IP2PPairStaking {
     enum StakingType {
         BAYCStaking,
         MAYCStaking,
-        BAYCPairStaking,
-        MAYCPairStaking
+        BAKCPairStaking
     }
 
     enum ListingOrderStatus {
