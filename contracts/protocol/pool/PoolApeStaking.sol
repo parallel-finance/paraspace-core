@@ -44,7 +44,7 @@ contract PoolApeStaking is
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
     IERC20 internal immutable USDC;
-    uint256 internal constant POOL_REVISION = 130;
+    uint256 internal constant POOL_REVISION = 142;
     ISwapRouter internal immutable SWAP_ROUTER;
 
     uint256 internal constant DEFAULT_MAX_SLIPPAGE = 500; // 5%

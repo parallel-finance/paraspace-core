@@ -63,7 +63,7 @@ export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
 );
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");
-export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "21");
+export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "22");
 export const DEPLOY_INCREMENTAL =
   process.env.DEPLOY_INCREMENTAL == "true" ? true : false;
 
@@ -89,7 +89,7 @@ export const GLOBAL_OVERRIDES: Overrides = {
   // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
   // maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
   // type: 2,
-  gasLimit: 12_450_000,
+  // gasLimit: 12_450_000,
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
