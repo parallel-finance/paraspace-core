@@ -6,6 +6,7 @@ import {
 import {
   getInitializableAdminUpgradeabilityProxy,
   getNToken,
+  getP2PPairStaking,
 } from "../../helpers/contracts-getters";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
@@ -26,22 +27,26 @@ const releaseV142 = async (verify = false) => {
   );
 
   console.log("deploy p2p pair staking");
-  const p2pPairStaking = await deployP2PPairStaking(verify);
+  const p2pPairStaking = await getP2PPairStaking(
+    (
+      await deployP2PPairStaking(verify)
+    ).address
+  );
   const p2pPairStakingProxy = await getInitializableAdminUpgradeabilityProxy(
     p2pPairStaking.address
   );
-  // await waitForTx(
-  //   await p2pPairStakingProxy.changeAdmin(
-  //     "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  //     GLOBAL_OVERRIDES
-  //   )
-  // );
-  // await waitForTx(
-  //   await p2pPairStaking.transferOwnership(
-  //     "0xca8678d2d273b1913148402aed2E99b085ea3F02",
-  //     GLOBAL_OVERRIDES
-  //   )
-  // );
+  await waitForTx(
+    await p2pPairStakingProxy.changeAdmin(
+      "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+      GLOBAL_OVERRIDES
+    )
+  );
+  await waitForTx(
+    await p2pPairStaking.transferOwnership(
+      "0xca8678d2d273b1913148402aed2E99b085ea3F02",
+      GLOBAL_OVERRIDES
+    )
+  );
 
   const nBAYC = await getNToken("0xdb5485C85Bd95f38f9def0cA85499eF67dC581c0");
   const nMAYC = await getNToken("0xFA51cdc70c512c13eF1e4A3dbf1e99082b242896");
