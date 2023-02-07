@@ -408,6 +408,10 @@ set-auto-mining:
 send-eth:
 	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
 
+.PHONY: release-v1.4.2
+release-v1.4.2:
+	make SCRIPT_PATH=./scripts/dev/11.release-v1.4.2.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
