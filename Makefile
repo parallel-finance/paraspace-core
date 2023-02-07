@@ -256,6 +256,10 @@ test-ape-staking:
 test-auto-compound-ape:
 	make TEST_TARGET=auto_compound_ape.spec.ts test
 
+.PHONY: test-p2p-pair-staking
+test-p2p-pair-staking:
+	make TEST_TARGET=p2p_pair_staking.spec.ts test
+
 .PHONY: test-sape-operation
 test-sape-operation:
 	make TEST_TARGET=_sape_pool_operation.spec.ts test
@@ -367,6 +371,7 @@ deploy-flashClaimRegistry:
 .PHONY: deploy-renounceOwnership
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
+
 .PHONY: deploy-p2p-pair-staking
 deploy-p2p-pair-staking:
 	make TASK_NAME=deploy:P2PPairStaking run-task
