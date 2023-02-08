@@ -1,19 +1,31 @@
 import rawBRE from "hardhat";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployP2PPairStaking,
   // deployParaSpaceAidrop,
 } from "../../helpers/contracts-deployments";
 import {
+  getFirstSigner,
   getInitializableAdminUpgradeabilityProxy,
   getNToken,
   getP2PPairStaking,
+  getPoolAddressesProvider,
+  getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {
+  dryRunEncodedData,
+  getFunctionSignatures,
+  withSaveAndVerify,
+} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
+import {eContractid} from "../../helpers/types";
+import {IParaProxy, PoolApeStaking__factory} from "../../types";
 
 const releaseV142 = async (verify = false) => {
   console.time("release-v1.4.2");
+  const pool = await getPoolProxy();
+  const provider = await getPoolAddressesProvider();
   // console.log("deploy airdrop");
   // const airDrop = await deployParaSpaceAidrop(
   //   "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
@@ -25,6 +37,51 @@ const releaseV142 = async (verify = false) => {
   //     "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714"
   //   )
   // );
+  const apeStakingLibraries = {
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+      "0xeC2C5d6B97Bf930ea687E7B29D487cb7562660Be",
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+      "0xf3Cc33c6133410Ebc08f832D85688dd1F834Dd75",
+  };
+  const newSelectors = getFunctionSignatures(PoolApeStaking__factory.abi);
+  const poolApeStaking = await withSaveAndVerify(
+    new PoolApeStaking__factory(apeStakingLibraries, await getFirstSigner()),
+    eContractid.PoolApeStakingImpl,
+    [
+      provider.address,
+      "0xC5c9fB6223A989208Df27dCEE33fC59ff5c26fFF",
+      "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
+    ],
+    verify,
+    false,
+    apeStakingLibraries,
+    newSelectors
+  );
+  const oldSelectors = await pool.facetFunctionSelectors(
+    "0xf1809240EF10F1aca92fC619ACa2c36eB1e9f226"
+  );
+  const proxyImplementationChange: IParaProxy.ProxyImplementationStruct[] = [
+    {
+      implAddress: ZERO_ADDRESS,
+      action: 2,
+      functionSelectors: oldSelectors,
+    },
+    {
+      implAddress: poolApeStaking.address,
+      action: 0,
+      functionSelectors: newSelectors.map((s) => s.signature),
+    },
+  ];
+
+  console.time("upgrade PoolApeStaking");
+  if (DRY_RUN) {
+    const encodedData = provider.interface.encodeFunctionData(
+      "updatePoolImpl",
+      [proxyImplementationChange, ZERO_ADDRESS, "0x"]
+    );
+    await dryRunEncodedData(provider.address, encodedData);
+  }
+  console.timeEnd("upgrade PoolApeStaking");
 
   console.log("deploy p2p pair staking");
   const p2pPairStaking = await getP2PPairStaking(
