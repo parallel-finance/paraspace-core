@@ -2767,8 +2767,6 @@ describe("APE Coin Staking Test", () => {
       mayc,
       pool,
       nMAYC,
-      weth,
-      bakc,
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user3, true);
