@@ -92,6 +92,18 @@ const hardhatConfig: HardhatUserConfig = {
         },
       },
     ],
+    overrides: {
+      "contracts/protocol/pool/PoolApeStaking.sol": {
+        version: "0.8.10",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+          evmVersion: "london",
+        },
+      },
+    },
   },
   typechain: {
     outDir: "types",

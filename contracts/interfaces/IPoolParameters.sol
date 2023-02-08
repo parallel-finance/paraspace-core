@@ -122,6 +122,22 @@ interface IPoolParameters {
     function setClaimApeForCompoundFee(uint256 fee) external;
 
     /**
+     * @notice undate ape compound strategy
+     * @param strategy new compound strategy
+     */
+    function setApeCompoundStrategy(
+        DataTypes.ApeCompoundStrategy calldata strategy
+    ) external;
+
+    /**
+     * @notice get user ape compound strategy
+     * @param user The user address
+     */
+    function getUserApeCompoundStrategy(address user)
+        external
+        returns (DataTypes.ApeCompoundStrategy memory);
+
+    /**
      * @notice Set the auction recovery health factor
      * @param value The new auction health factor
      */

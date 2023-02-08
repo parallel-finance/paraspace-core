@@ -238,6 +238,7 @@ import {
   getPoolProxy,
   getProtocolDataProvider,
   getPunks,
+  getUniswapV3SwapRouter,
   getWETH,
 } from "./contracts-getters";
 import {
@@ -600,6 +601,8 @@ export const deployPoolComponents = async (
                 await deployAutoCompoundApe(verify)
               ).address,
             allTokens.APE.address,
+            allTokens.USDC.address,
+            (await getUniswapV3SwapRouter()).address,
           ],
           verify,
           false,
