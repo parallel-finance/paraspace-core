@@ -1,7 +1,7 @@
 import rawBRE from "hardhat";
 import {
   deployP2PPairStaking,
-  deployParaSpaceAidrop,
+  // deployParaSpaceAidrop,
 } from "../../helpers/contracts-deployments";
 import {
   getInitializableAdminUpgradeabilityProxy,
@@ -14,17 +14,17 @@ import {waitForTx} from "../../helpers/misc-utils";
 
 const releaseV142 = async (verify = false) => {
   console.time("release-v1.4.2");
-  console.log("deploy airdrop");
-  const airDrop = await deployParaSpaceAidrop(
-    "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
-    "2675468152",
-    verify
-  );
-  await waitForTx(
-    await airDrop.transferOwnership(
-      "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714"
-    )
-  );
+  // console.log("deploy airdrop");
+  // const airDrop = await deployParaSpaceAidrop(
+  //   "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
+  //   "2675468152",
+  //   verify
+  // );
+  // await waitForTx(
+  //   await airDrop.transferOwnership(
+  //     "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714"
+  //   )
+  // );
 
   console.log("deploy p2p pair staking");
   const p2pPairStaking = await getP2PPairStaking(

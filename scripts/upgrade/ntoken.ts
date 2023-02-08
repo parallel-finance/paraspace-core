@@ -52,13 +52,10 @@ export const upgradeNToken = async (verify = false) => {
 
     if (
       ![
-        XTokenType.NToken,
-        XTokenType.NTokenMoonBirds,
-        XTokenType.NTokenUniswapV3,
-        XTokenType.NTokenBAYC,
-        XTokenType.NTokenMAYC,
-        XTokenType.NTokenBAKC,
-      ].includes(xTokenType)
+        NTokenContractId.nBAKC,
+        NTokenContractId.nMAYC,
+        NTokenContractId.nBAYC,
+      ].includes(symbol as NTokenContractId)
     ) {
       continue;
     }
