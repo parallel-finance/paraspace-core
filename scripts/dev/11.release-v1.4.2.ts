@@ -39,9 +39,9 @@ const releaseV142 = async (verify = false) => {
   // );
   const apeStakingLibraries = {
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-      "0xeC2C5d6B97Bf930ea687E7B29D487cb7562660Be",
-    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
       "0xf3Cc33c6133410Ebc08f832D85688dd1F834Dd75",
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+      "0xec2c5d6b97bf930ea687e7b29d487cb7562660be",
   };
   const newSelectors = getFunctionSignatures(PoolApeStaking__factory.abi);
   const poolApeStaking = await withSaveAndVerify(
