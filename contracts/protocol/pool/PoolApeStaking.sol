@@ -351,6 +351,20 @@ contract PoolApeStaking is
                 localVar.beforeBalance,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
         );
+
+        //7 collateralize sAPE
+        uint16 sApeReserveId = ps._reserves[DataTypes.SApeAddress].id;
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            msg.sender
+        ];
+        bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
+        if (!currentStatus) {
+            userConfig.setUsingAsCollateral(sApeReserveId, true);
+            emit ReserveUsedAsCollateralEnabled(
+                DataTypes.SApeAddress,
+                msg.sender
+            );
+        }
     }
 
     /// @inheritdoc IPoolApeStaking
