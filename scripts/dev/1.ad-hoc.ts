@@ -1,7 +1,11 @@
 import rawBRE from "hardhat";
+import {getFunctionSignatures} from "../../helpers/contracts-helpers";
+import {PoolApeStaking__factory} from "../../types";
 
 const adHoc = async () => {
   console.time("ad-hoc");
+  const newSelectors = getFunctionSignatures(PoolApeStaking__factory.abi);
+  console.log(newSelectors);
   console.timeEnd("ad-hoc");
 };
 

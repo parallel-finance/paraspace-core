@@ -60,18 +60,33 @@ const releaseV142 = async (verify = false) => {
   const oldSelectors = await pool.facetFunctionSelectors(
     "0xf1809240EF10F1aca92fC619ACa2c36eB1e9f226"
   );
-  const proxyImplementationChange: IParaProxy.ProxyImplementationStruct[] = [
-    {
-      implAddress: ZERO_ADDRESS,
-      action: 2,
-      functionSelectors: oldSelectors,
-    },
-    {
+  // const toAdd = newSelectors.filter((s) => !oldSelectors.includes(s.signature));
+  const toReplace = newSelectors.filter((s) =>
+    oldSelectors.includes(s.signature)
+  );
+  // const toRemove = oldSelectors.filter(
+  //   (s) => !newSelectors.map((x) => x.signature).includes(s)
+  // );
+  const proxyImplementationChange: IParaProxy.ProxyImplementationStruct[] = [];
+  // if (toRemove.length)
+  //   proxyImplementationChange.push({
+  //     implAddress: ZERO_ADDRESS,
+  //     action: 2,
+  //     functionSelectors: toRemove,
+  //   });
+  if (toReplace.length)
+    proxyImplementationChange.push({
       implAddress: poolApeStaking.address,
-      action: 0,
-      functionSelectors: newSelectors.map((s) => s.signature),
-    },
-  ];
+      action: 1,
+      functionSelectors: toReplace.map((s) => s.signature),
+    });
+  // if (toAdd.length)
+  //   proxyImplementationChange.push({
+  //     implAddress: poolApeStaking.address,
+  //     action: 0,
+  //     functionSelectors: toAdd.map((s) => s.signature),
+  //   });
+  console.log(proxyImplementationChange);
 
   console.time("upgrade PoolApeStaking");
   if (DRY_RUN) {
