@@ -79,6 +79,7 @@ import {
   NTokenBAKC__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
+  WstETHMocked__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -845,6 +846,16 @@ export const getStETH = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
+
+export const getWstETH = async (address?: tEthereumAddress) =>
+  await WstETHMocked__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.WStETH}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getPTokenStETH = async (address?: tEthereumAddress) =>
   await PTokenStETH__factory.connect(
     address ||

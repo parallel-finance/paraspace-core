@@ -228,6 +228,12 @@ import {
   NTokenBAKC__factory,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  CLwstETHSynchronicityPriceAdapter__factory,
+  CLwstETHSynchronicityPriceAdapter,
+  WstETHMocked__factory,
+  WstETHMocked,
+  BAYCSewerPass__factory,
+  BAYCSewerPass,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -856,6 +862,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | MintableERC20
       | WETH9Mocked
       | StETHMocked
+      | WstETHMocked
       | MockAToken
       | AutoCompoundApe;
   } = {};
@@ -916,6 +923,14 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
 
       if (tokenSymbol === ERC20TokenContractId.stETH) {
         tokens[tokenSymbol] = await deployStETH(verify);
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.wstETH) {
+        tokens[tokenSymbol] = await deployWStETH(
+          tokens[ERC20TokenContractId.stETH].address,
+          verify
+        );
         continue;
       }
 
@@ -1054,6 +1069,14 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
 
       if (tokenSymbol === ERC721TokenContractId.CLONEX) {
         tokens[tokenSymbol] = await deployCloneX([], verify);
+        continue;
+      }
+
+      if (tokenSymbol === ERC721TokenContractId.CLONEX) {
+        tokens[tokenSymbol] = await deploySewerPass(
+          ["SEWER", "SEWER", paraSpaceConfig.ParaSpaceTeam],
+          verify
+        );
         continue;
       }
 
@@ -1275,6 +1298,17 @@ export const deployCloneX = async (args: [], verify?: boolean) =>
     [...args],
     verify
   ) as Promise<CloneX>;
+
+export const deploySewerPass = async (
+  args: [string, string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new BAYCSewerPass__factory(await getFirstSigner()),
+    eContractid.SEWER,
+    [...args],
+    verify
+  ) as Promise<BAYCSewerPass>;
 
 export const deployDoodle = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
@@ -1690,6 +1724,17 @@ export const deployStETH = async (verify?: boolean): Promise<StETHMocked> =>
     [],
     verify
   ) as Promise<StETHMocked>;
+
+export const deployWStETH = async (
+  stETHAddress: tEthereumAddress,
+  verify?: boolean
+): Promise<WstETHMocked> =>
+  withSaveAndVerify(
+    new WstETHMocked__factory(await getFirstSigner()),
+    eContractid.WStETH,
+    [stETHAddress],
+    verify
+  ) as Promise<WstETHMocked>;
 
 export const deployMockAToken = async (
   args: [string, string, string],
@@ -2135,6 +2180,18 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployCLwstETHSynchronicityPriceAdapter = async (
+  stETHAggregator: tEthereumAddress,
+  stETH: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLwstETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(eContractid.WStETH)),
+    [stETHAggregator, stETH, 18],
+    verify
+  ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
