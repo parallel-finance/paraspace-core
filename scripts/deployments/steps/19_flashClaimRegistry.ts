@@ -4,6 +4,7 @@ import {
   deployMockMultiAssetAirdropProject,
   deployAirdropFlashClaimReceiver,
   deployUserFlashClaimRegistryProxy,
+  deployBAYCSewerPassClaim,
 } from "../../../helpers/contracts-deployments";
 import {
   getAllTokens,
@@ -54,6 +55,24 @@ export const step_19 = async (verify = false) => {
 
     await deployMockAirdropProject(baycAddress, verify);
     await deployMockMultiAssetAirdropProject(baycAddress, maycAddress, verify);
+
+    const bakcAddress = allTokens[ERC721TokenContractId.BAKC].address;
+    if (!bakcAddress) {
+      return;
+    }
+
+    const sewerAddress = allTokens[ERC721TokenContractId.SEWER].address;
+    if (!sewerAddress) {
+      return;
+    }
+
+    await deployBAYCSewerPassClaim(
+      baycAddress,
+      maycAddress,
+      bakcAddress,
+      sewerAddress,
+      verify
+    );
   } catch (error) {
     console.error(error);
     process.exit(1);

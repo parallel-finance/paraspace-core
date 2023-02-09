@@ -51,6 +51,18 @@ task("upgrade:auto-compound-ape", "upgrade auto compound ape").setAction(
   }
 );
 
+task("upgrade:p2p-pair-staking", "upgrade p2p pair staking").setAction(
+  async (_, DRE) => {
+    const {upgradeP2PPairStaking} = await import(
+      "../../scripts/upgrade/P2PPairStaking"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade p2p pair staking");
+    await upgradeP2PPairStaking(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade p2p pair staking");
+  }
+);
+
 task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   const {upgradePToken} = await import("../../scripts/upgrade/ptoken");
   await DRE.run("set-DRE");
