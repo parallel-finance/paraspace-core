@@ -1,9 +1,9 @@
 import {DRE} from "../../helpers/misc-utils";
 import {
+  AutoCompoundApe,
   MintableERC20,
   MintableERC721,
   P2PPairStaking,
-  PToken,
 } from "../../types";
 import {SignerWithAddress} from "./make-suite";
 import {convertSignatureToEIP2098} from "../../helpers/seaport-helpers/encoding";
@@ -25,7 +25,7 @@ export type ListingOrder = {
 export async function getSignedListingOrder(
   p2pPairStaking: P2PPairStaking,
   stakingType: number,
-  listingToken: MintableERC721 | MintableERC20 | PToken,
+  listingToken: MintableERC721 | MintableERC20 | AutoCompoundApe,
   tokenId: number,
   share: number,
   signer: SignerWithAddress
