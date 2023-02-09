@@ -6,9 +6,9 @@ import {
   deployUserFlashClaimRegistryProxy,
 } from "../../../helpers/contracts-deployments";
 import {
+  getAllTokens,
   getFirstSigner,
   getPoolAddressesProvider,
-  getProtocolDataProvider,
 } from "../../../helpers/contracts-getters";
 import {isLocalTestnet, isPublicTestnet} from "../../../helpers/misc-utils";
 import {ERC721TokenContractId} from "../../../helpers/types";
@@ -16,6 +16,7 @@ import {ERC721TokenContractId} from "../../../helpers/types";
 export const step_19 = async (verify = false) => {
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
+  const allTokens = await getAllTokens();
 
   try {
     const addressesProvider = await getPoolAddressesProvider();
@@ -41,18 +42,12 @@ export const step_19 = async (verify = false) => {
       return;
     }
 
-    const dataProvider = await getProtocolDataProvider();
-    const reservesTokens = await dataProvider.getAllReservesTokens();
-    const baycAddress = reservesTokens.find(
-      (token) => token.symbol === ERC721TokenContractId.BAYC
-    )?.tokenAddress;
+    const baycAddress = allTokens[ERC721TokenContractId.BAYC].address;
     if (!baycAddress) {
       return;
     }
 
-    const maycAddress = reservesTokens.find(
-      (token) => token.symbol === ERC721TokenContractId.MAYC
-    )?.tokenAddress;
+    const maycAddress = allTokens[ERC721TokenContractId.MAYC].address;
     if (!maycAddress) {
       return;
     }
