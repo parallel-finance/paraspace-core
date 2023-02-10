@@ -11,6 +11,7 @@ import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";
 import "../../../interfaces/IPool.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
+import "hardhat/console.sol";
 
 struct UserState {
     uint64 balance;
@@ -64,6 +65,7 @@ struct LocalVars {
  */
 library MintableERC721Logic {
     using SafeCast for uint256;
+    using SafeCast for int256;
     /**
      * @dev This constant represents the maximum trait multiplier that a single tokenId can have
      * A value of 10e18 results in 10x of price
@@ -456,11 +458,20 @@ library MintableERC721Logic {
             return;
         }
 
-        uint256 collateralizedBalance = uint256(
-            erc721Data.userState[owner].collateralizedBalance
-        );
         uint256 avgMultiplier = getTraitMultiplier(
             erc721Data.userState[owner].avgMultiplier
+        );
+        if (
+            collateralizedBalanceDelta != 0 &&
+            multiplierDelta > 0 &&
+            (multiplierDelta / collateralizedBalanceDelta).toUint256() ==
+            avgMultiplier
+        ) {
+            return;
+        }
+
+        uint256 collateralizedBalance = uint256(
+            erc721Data.userState[owner].collateralizedBalance
         );
 
         int256 numerator = (avgMultiplier * collateralizedBalance).toInt256() +
@@ -469,7 +480,7 @@ library MintableERC721Logic {
             collateralizedBalanceDelta;
 
         uint256 newAvgMultiplier = denominator != 0
-            ? uint256(numerator / denominator)
+            ? (numerator / denominator).toUint256()
             : 0;
         erc721Data.userState[owner].avgMultiplier = newAvgMultiplier;
     }
@@ -558,10 +569,7 @@ library MintableERC721Logic {
         pure
         returns (uint256)
     {
-        return
-            multiplier != 0 && multiplier != WadRayMath.WAD
-                ? multiplier
-                : WadRayMath.WAD;
+        return multiplier != 0 ? multiplier : WadRayMath.WAD;
     }
 
     function isAuctioned(
