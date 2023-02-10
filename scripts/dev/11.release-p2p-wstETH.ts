@@ -147,7 +147,8 @@ const releaseP2PWstETH = async (verify = false) => {
     verify,
     "0x46d24Ac3f5c7eeFF3f79D107BB727Bfa8e70B770",
     undefined,
-    "0x986a94186c0F16Ce8D7e14456A3833C6Eb6Df4bE"
+    "0x986a94186c0F16Ce8D7e14456A3833C6Eb6Df4bE",
+    "0x457A5eC6F2F3A98FD470a65Ad3Dcb593ff842c6d"
   );
 
   console.log("configuring reserves");
