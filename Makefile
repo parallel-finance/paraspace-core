@@ -412,6 +412,10 @@ set-auto-mining:
 send-eth:
 	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
 
+.PHONY: release-bakc-autoswap
+release-bakc-autoswap:
+	make SCRIPT_PATH=./scripts/dev/11.release-bakc-autoswap.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
