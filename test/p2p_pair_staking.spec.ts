@@ -44,23 +44,6 @@ describe("P2P Pair Staking Test", () => {
     cApe = await getAutoCompoundApe();
     MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
 
-    // approve nBAYC, nMAYC and nBAKC to P2P
-    await waitForTx(
-      await nBAYC
-        .connect(poolAdmin.signer)
-        .setApprovalForAllTo(bayc.address, p2pPairStaking.address)
-    );
-    await waitForTx(
-      await nMAYC
-        .connect(poolAdmin.signer)
-        .setApprovalForAllTo(mayc.address, p2pPairStaking.address)
-    );
-    await waitForTx(
-      await nBAKC
-        .connect(poolAdmin.signer)
-        .setApprovalForAllTo(bakc.address, p2pPairStaking.address)
-    );
-
     // send extra tokens to the apestaking contract for rewards
     await waitForTx(
       await ape
