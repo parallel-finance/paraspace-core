@@ -135,6 +135,7 @@ interface IPoolParameters {
      */
     function getUserApeCompoundStrategy(address user)
         external
+        view
         returns (DataTypes.ApeCompoundStrategy memory);
 
     /**
