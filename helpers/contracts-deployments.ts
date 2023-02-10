@@ -1069,7 +1069,7 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         continue;
       }
 
-      if (tokenSymbol === ERC721TokenContractId.CLONEX) {
+      if (tokenSymbol === ERC721TokenContractId.SEWER) {
         tokens[tokenSymbol] = await deploySewerPass(
           ["SEWER", "SEWER", paraSpaceConfig.ParaSpaceTeam],
           verify
