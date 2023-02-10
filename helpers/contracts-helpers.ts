@@ -111,6 +111,7 @@ import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {encodeMulti, MetaTransaction} from "ethers-multisend";
+import dayjs from "dayjs";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -140,6 +141,7 @@ export const registerContractInDb = async (
   const value = {
     address: instance.address,
     deployer: instance.deployTransaction?.from,
+    deployDate: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     constructorArgs,
     verified: false,
     version: VERSION,
@@ -161,6 +163,7 @@ export const insertContractAddressInDb = async (
   const newValue = {
     ...old,
     address,
+    deployDate: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     version: VERSION,
   };
   if (!Array.isArray(newValue.constructorArgs) && verifiable) {
