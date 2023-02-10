@@ -11,7 +11,6 @@ import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";
 import "../../../interfaces/IPool.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
-import "hardhat/console.sol";
 
 struct UserState {
     uint64 balance;
