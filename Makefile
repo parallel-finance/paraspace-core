@@ -112,6 +112,10 @@ test-erc20-supply:
 test-erc20-withdraw:
 	make TEST_TARGET=_pool_core_erc20_withdraw.spec.ts test
 
+.PHONY: test-erc721-withdraw
+test-erc721-withdraw:
+	make TEST_TARGET=_pool_core_erc721_withdraw.spec.ts test
+
 .PHONY: test-erc20-repay
 test-erc20-repay:
 	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test

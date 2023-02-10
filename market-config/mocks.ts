@@ -10,6 +10,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   WETH: parseEther("1").toString(),
   WBTC: parseEther("18.356369399062118").toString(),
   stETH: parseEther("1").toString(),
+  wstETH: parseEther("1").toString(),
   APE: parseEther("0.0036906841286").toString(),
   sAPE: parseEther("0.0036906841286").toString(),
   cAPE: parseEther("0.0036906841286").toString(),
@@ -30,6 +31,8 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   OTHR: parseEther("25").toString(),
   CLONEX: parseEther("27").toString(),
   BAKC: parseEther("6").toString(),
+  SEWER: parseEther("2").toString(),
+  PPG: parseEther("5").toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {
@@ -55,6 +58,8 @@ export const MOCK_TOKEN_MINT_VALUE = {
   OTHR: 1,
   CLONEX: 1,
   BAKC: 1,
+  SEWER: 1,
+  PPG: 1,
 };
 
 export const MocksConfig: IMocksConfig = {

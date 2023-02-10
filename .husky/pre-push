@@ -3,3 +3,4 @@
 
 yarn typechain
 yarn lint
+yarn size

@@ -140,6 +140,7 @@ export enum eContractid {
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
   UserFlashClaimRegistryProxy = "UserFlashClaimRegistryProxy",
+  BAYCSewerPassClaim = "BAYCSewerPassClaim",
   AirdropFlashClaimReceiver = "AirdropFlashClaimReceiver",
   ProtocolDataProvider = "ProtocolDataProvider",
   MockPToken = "MockPToken",
@@ -215,6 +216,7 @@ export enum eContractid {
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",
   NonfungiblePositionManager = "NonfungiblePositionManager",
   StETH = "stETH",
+  WStETH = "wstETH",
   MockAToken = "MockAToken",
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
@@ -234,6 +236,7 @@ export enum eContractid {
   BlurExchangeImpl = "BlurExchangeImpl",
   BlurExchangeProxy = "BlurExchangeProxy",
   BAKC = "BAKC",
+  SEWER = "SEWER",
   TimeLockExecutor = "TimeLockExecutor",
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
@@ -406,6 +409,7 @@ export interface iAssetBase<T> {
   PUNK: T;
   WBTC: T;
   stETH: T;
+  wstETH: T;
   APE: T;
   sAPE: T;
   cAPE: T;
@@ -433,6 +437,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "WETH"
   | "WBTC"
   | "stETH"
+  | "wstETH"
   | "xcDOT"
   | "WGLMR"
   | "APE"
@@ -461,6 +466,7 @@ export enum ERC20TokenContractId {
   USDT = "USDT",
   WBTC = "WBTC",
   stETH = "stETH",
+  wstETH = "wstETH",
   APE = "APE",
   sAPE = "sAPE",
   cAPE = "cAPE",
@@ -483,6 +489,8 @@ export enum ERC721TokenContractId {
   OTHR = "OTHR",
   UniswapV3 = "UniswapV3",
   BAKC = "BAKC",
+  SEWER = "SEWER",
+  PPG = "PPG",
 }
 
 export enum NTokenContractId {
@@ -493,6 +501,8 @@ export enum NTokenContractId {
   nMOONBIRD = "nMOONBIRD",
   nUniswapV3 = "nUniswapV3",
   nBAKC = "nBAKC",
+  nSEWER = "nSEWER",
+  nPPG = "nPPG",
 }
 
 export enum PTokenContractId {
@@ -501,6 +511,7 @@ export enum PTokenContractId {
   pWETH = "pWETH",
   paWETH = "paWETH",
   pstETH = "pstETH",
+  pwstETH = "pwstETH",
 }
 
 export interface IReserveParams
@@ -589,6 +600,7 @@ export interface IMarketplaceConfig {
 export interface IChainlinkConfig {
   WETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
+  wstETH?: tEthereumAddress;
   DAI?: tEthereumAddress;
   USDC?: tEthereumAddress;
   USDT?: tEthereumAddress;

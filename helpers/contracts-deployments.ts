@@ -230,10 +230,18 @@ import {
   P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  CLwstETHSynchronicityPriceAdapter__factory,
+  CLwstETHSynchronicityPriceAdapter,
+  WstETHMocked__factory,
+  WstETHMocked,
+  BAYCSewerPass__factory,
+  BAYCSewerPass,
+  BAYCSewerPassClaim__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
+  getBAYCSewerPass,
   getFirstSigner,
   getProtocolDataProvider,
   getPunks,
@@ -860,6 +868,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | MintableERC20
       | WETH9Mocked
       | StETHMocked
+      | WstETHMocked
       | MockAToken
       | AutoCompoundApe;
   } = {};
@@ -923,6 +932,14 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
         continue;
       }
 
+      if (tokenSymbol === ERC20TokenContractId.wstETH) {
+        tokens[tokenSymbol] = await deployWStETH(
+          tokens[ERC20TokenContractId.stETH].address,
+          verify
+        );
+        continue;
+      }
+
       if (tokenSymbol === ERC20TokenContractId.aWETH) {
         tokens[tokenSymbol] = await deployMockAToken(
           [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
@@ -966,6 +983,8 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
   const paraSpaceConfig = getParaSpaceConfig();
   const reservesConfig = paraSpaceConfig.ReservesConfig;
   const tokensConfig = paraSpaceConfig.Tokens;
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
 
   for (const tokenSymbol of Object.keys(ERC721TokenContractId)) {
     const db = getDb();
@@ -1058,6 +1077,14 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
 
       if (tokenSymbol === ERC721TokenContractId.CLONEX) {
         tokens[tokenSymbol] = await deployCloneX([], verify);
+        continue;
+      }
+
+      if (tokenSymbol === ERC721TokenContractId.SEWER) {
+        tokens[tokenSymbol] = await deploySewerPass(
+          ["SEWER", "SEWER", deployerAddress],
+          verify
+        );
         continue;
       }
 
@@ -1279,6 +1306,17 @@ export const deployCloneX = async (args: [], verify?: boolean) =>
     [...args],
     verify
   ) as Promise<CloneX>;
+
+export const deploySewerPass = async (
+  args: [string, string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new BAYCSewerPass__factory(await getFirstSigner()),
+    eContractid.SEWER,
+    [...args],
+    verify
+  ) as Promise<BAYCSewerPass>;
 
 export const deployDoodle = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
@@ -1695,6 +1733,17 @@ export const deployStETH = async (verify?: boolean): Promise<StETHMocked> =>
     verify
   ) as Promise<StETHMocked>;
 
+export const deployWStETH = async (
+  stETHAddress: tEthereumAddress,
+  verify?: boolean
+): Promise<WstETHMocked> =>
+  withSaveAndVerify(
+    new WstETHMocked__factory(await getFirstSigner()),
+    eContractid.WStETH,
+    [stETHAddress],
+    verify
+  ) as Promise<WstETHMocked>;
+
 export const deployMockAToken = async (
   args: [string, string, string],
   verify?: boolean
@@ -1756,6 +1805,7 @@ export const deployUserFlashClaimRegistry = async (
 export const deployUserFlashClaimRegistryProxy = async (
   admin: string,
   registryImpl: string,
+  // eslint-disable-next-line
   initData: any,
   verify?: boolean
 ) => {
@@ -1769,6 +1819,37 @@ export const deployUserFlashClaimRegistryProxy = async (
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+};
+
+export const deployBAYCSewerPassClaim = async (
+  bayc: string,
+  mayc: string,
+  bakc: string,
+  sewerPass: string,
+  verify?: boolean
+) => {
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+  const baycSewerPassClaim = await withSaveAndVerify(
+    new BAYCSewerPassClaim__factory(await getFirstSigner()),
+    eContractid.BAYCSewerPassClaim,
+    [bayc, mayc, bakc, sewerPass, deployerAddress],
+    verify
+  );
+
+  const baycSewerPass = await getBAYCSewerPass(sewerPass);
+  await baycSewerPass.setRegistryAddress(
+    baycSewerPassClaim.address,
+    GLOBAL_OVERRIDES
+  );
+  await baycSewerPass.flipMintIsActiveState(GLOBAL_OVERRIDES);
+  await baycSewerPassClaim.flipClaimIsActiveState(GLOBAL_OVERRIDES);
+  await baycSewerPass.toggleMinterContract(
+    baycSewerPassClaim.address,
+    GLOBAL_OVERRIDES
+  );
+
+  return baycSewerPassClaim;
 };
 
 export const deployAirdropFlashClaimReceiver = async (
@@ -2198,6 +2279,18 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployCLwstETHSynchronicityPriceAdapter = async (
+  stETHAggregator: tEthereumAddress,
+  stETH: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLwstETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(eContractid.WStETH)),
+    [stETHAggregator, stETH, 18],
+    verify
+  ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
