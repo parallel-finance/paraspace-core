@@ -107,6 +107,12 @@ library ApeStakingLogic {
         APEStakingParameter storage stakingParameter,
         UnstakeAndRepayParams memory params
     ) external {
+        if (
+            IERC721(params._underlyingAsset).ownerOf(params.tokenId) !=
+            address(this)
+        ) {
+            return;
+        }
         address positionOwner = _owners[params.tokenId];
         IERC20 _apeCoin = params._apeCoinStaking.apeCoin();
         uint256 balanceBefore = _apeCoin.balanceOf(address(this));
@@ -223,6 +229,7 @@ library ApeStakingLogic {
     function getUserTotalStakingAmount(
         mapping(address => UserState) storage userState,
         mapping(address => mapping(uint256 => uint256)) storage ownedTokens,
+        address _underlyingAsset,
         address user,
         uint256 poolId,
         ApeCoinStaking _apeCoinStaking
@@ -232,6 +239,7 @@ library ApeStakingLogic {
         for (uint256 index = 0; index < totalBalance; index++) {
             uint256 tokenId = ownedTokens[user][index];
             totalAmount += getTokenIdStakingAmount(
+                _underlyingAsset,
                 poolId,
                 _apeCoinStaking,
                 tokenId
@@ -248,10 +256,14 @@ library ApeStakingLogic {
      * @param tokenId specified the tokenId for the position
      */
     function getTokenIdStakingAmount(
+        address _underlyingAsset,
         uint256 poolId,
         ApeCoinStaking _apeCoinStaking,
         uint256 tokenId
     ) public view returns (uint256) {
+        if (IERC721(_underlyingAsset).ownerOf(tokenId) != address(this)) {
+            return 0;
+        }
         (uint256 apeStakedAmount, ) = _apeCoinStaking.nftPosition(
             poolId,
             tokenId

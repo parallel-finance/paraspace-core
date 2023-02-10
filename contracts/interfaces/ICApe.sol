@@ -19,4 +19,9 @@ interface ICApe is IERC20 {
         external
         view
         returns (uint256);
+
+    /**
+     * @return the amount of shares belongs to _account.
+     */
+    function sharesOf(address _account) external view returns (uint256);
 }

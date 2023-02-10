@@ -238,6 +238,8 @@ export enum eContractid {
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
+  P2PPairStaking = "P2PPairStaking",
+  P2PPairStakingImpl = "P2PPairStakingImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",

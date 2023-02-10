@@ -43,8 +43,8 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
+    uint256 internal constant POOL_REVISION = 142;
     IERC20 internal immutable USDC;
-    uint256 internal constant POOL_REVISION = 130;
     ISwapRouter internal immutable SWAP_ROUTER;
 
     uint256 internal constant DEFAULT_MAX_SLIPPAGE = 500; // 5%
@@ -354,6 +354,20 @@ contract PoolApeStaking is
                 localVar.balanceBefore,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
         );
+
+        //7 collateralize sAPE
+        uint16 sApeReserveId = ps._reserves[DataTypes.SApeAddress].id;
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            msg.sender
+        ];
+        bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
+        if (!currentStatus) {
+            userConfig.setUsingAsCollateral(sApeReserveId, true);
+            emit ReserveUsedAsCollateralEnabled(
+                DataTypes.SApeAddress,
+                msg.sender
+            );
+        }
     }
 
     /// @inheritdoc IPoolApeStaking

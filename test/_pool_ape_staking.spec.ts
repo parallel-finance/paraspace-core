@@ -2883,4 +2883,52 @@ describe("APE Coin Staking Test", () => {
     totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
     expect(totalStake).equal(amount2);
   });
+
+  it("TC-pool-ape-staking-46 test borrowApeAndStake will turn on the sAPE collateral", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user3, true);
+    // transfer mayc#0 to user1 who hasn't collateralized sAPE
+    await waitForTx(
+      await nMAYC
+        .connect(user3.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user3.address,
+          user1.address,
+          "0"
+        )
+    );
+    await mintAndValidate(ape, "15000", user1);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+    const sApeReserveData = await pool.getReserveData(sApeAddress);
+    const configDataBefore = (await pool.getUserConfiguration(user1.address))
+      .data;
+    expect(isUsingAsCollateral(configDataBefore, sApeReserveData.id)).false;
+
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
+    );
+
+    const configDataAfter = (await pool.getUserConfiguration(user1.address))
+      .data;
+    expect(isUsingAsCollateral(configDataAfter, sApeReserveData.id)).true;
+  });
 });
