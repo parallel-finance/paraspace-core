@@ -22,18 +22,7 @@ describe("P2P Pair Staking Test", () => {
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {
-      ape,
-      users,
-      apeCoinStaking,
-      bayc,
-      mayc,
-      bakc,
-      nBAYC,
-      nMAYC,
-      nBAKC,
-      poolAdmin,
-    } = testEnv;
+    const {ape, users, apeCoinStaking} = testEnv;
 
     const user1 = users[0];
     const user2 = users[1];
