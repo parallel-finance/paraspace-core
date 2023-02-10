@@ -5,6 +5,7 @@ import {
   getConduitController,
   getInitializableAdminUpgradeabilityProxy,
   getNFTFloorOracle,
+  getP2PPairStaking,
   getPausableZoneController,
   getPoolAddressesProvider,
   getPoolAddressesProviderRegistry,
@@ -21,7 +22,7 @@ import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {eContractid} from "../../../helpers/types";
 
-export const step_20 = async (
+export const step_21 = async (
   // eslint-disable-next-line
   verify = false,
   admins?: {
@@ -340,6 +341,47 @@ export const step_20 = async (
         }
       }
       console.timeEnd("transferring cAPE ownership...");
+      console.log();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // P2PPairStaking
+    ////////////////////////////////////////////////////////////////////////////////
+    if (await getContractAddressInDb(eContractid.P2PPairStaking)) {
+      console.time("transferring P2PPairStaking ownership...");
+      const p2pPairStaking = await getP2PPairStaking();
+      const p2pPairStakingProxy =
+        await getInitializableAdminUpgradeabilityProxy(p2pPairStaking.address);
+      if (DRY_RUN) {
+        const encodedData1 = p2pPairStakingProxy.interface.encodeFunctionData(
+          "changeAdmin",
+          [paraSpaceAdminAddress]
+        );
+        await dryRunEncodedData(p2pPairStakingProxy.address, encodedData1);
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          const encodedData2 = p2pPairStaking.interface.encodeFunctionData(
+            "transferOwnership",
+            [gatewayAdminAddress]
+          );
+          await dryRunEncodedData(p2pPairStaking.address, encodedData2);
+        }
+      } else {
+        await waitForTx(
+          await p2pPairStakingProxy.changeAdmin(
+            paraSpaceAdminAddress,
+            GLOBAL_OVERRIDES
+          )
+        );
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          await waitForTx(
+            await p2pPairStaking.transferOwnership(
+              gatewayAdminAddress,
+              GLOBAL_OVERRIDES
+            )
+          );
+        }
+      }
+      console.timeEnd("transferring P2PPairStaking ownership...");
       console.log();
     }
 

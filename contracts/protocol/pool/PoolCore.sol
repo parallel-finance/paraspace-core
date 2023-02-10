@@ -50,7 +50,7 @@ contract PoolCore is
 {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 130;
+    uint256 public constant POOL_REVISION = 142;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -306,6 +306,7 @@ contract PoolCore is
                     asset: asset,
                     amount: amount,
                     onBehalfOf: onBehalfOf,
+                    payer: msg.sender,
                     usePTokens: false
                 })
             );
@@ -329,6 +330,7 @@ contract PoolCore is
                     asset: asset,
                     amount: amount,
                     onBehalfOf: msg.sender,
+                    payer: msg.sender,
                     usePTokens: true
                 })
             );
@@ -363,6 +365,7 @@ contract PoolCore is
                     asset: asset,
                     amount: amount,
                     onBehalfOf: onBehalfOf,
+                    payer: msg.sender,
                     usePTokens: false
                 });
             return
