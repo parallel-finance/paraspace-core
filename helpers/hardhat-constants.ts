@@ -4,6 +4,7 @@ import {ethers} from "ethers";
 import fs from "fs";
 import {HttpNetworkAccountsUserConfig} from "hardhat/types";
 import {input} from "./wallet-helpers";
+import {version} from "../package.json";
 
 dotenv.config();
 
@@ -107,3 +108,5 @@ export const MULTI_SIG =
   process.env.MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 export const MULTI_SEND =
   process.env.MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D";
+
+export const VERSION = version;
