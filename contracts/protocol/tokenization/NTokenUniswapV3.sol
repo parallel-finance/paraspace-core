@@ -69,9 +69,8 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                         deadline: block.timestamp
                     });
 
-            INonfungiblePositionManager(_underlyingAsset).decreaseLiquidity(
-                params
-            );
+            INonfungiblePositionManager(_ERC721Data.underlyingAsset)
+                .decreaseLiquidity(params);
         }
 
         (
@@ -87,7 +86,9 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             ,
             ,
 
-        ) = INonfungiblePositionManager(_underlyingAsset).positions(tokenId);
+        ) = INonfungiblePositionManager(_ERC721Data.underlyingAsset).positions(
+                tokenId
+            );
 
         address weth = _addressesProvider.getWETH();
         receiveEthAsWeth = (receiveEthAsWeth &&
@@ -101,8 +102,9 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                 amount1Max: type(uint128).max
             });
 
-        (amount0, amount1) = INonfungiblePositionManager(_underlyingAsset)
-            .collect(collectParams);
+        (amount0, amount1) = INonfungiblePositionManager(
+            _ERC721Data.underlyingAsset
+        ).collect(collectParams);
 
         if (receiveEthAsWeth) {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
@@ -139,6 +141,15 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             amount1Min,
             receiveEthAsWeth
         );
+    }
+
+    function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
+        external
+        override
+        onlyPoolAdmin
+        nonReentrant
+    {
+        revert();
     }
 
     function _safeTransferETH(address to, uint256 value) internal {

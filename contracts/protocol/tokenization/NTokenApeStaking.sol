@@ -94,7 +94,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.UnstakeAndRepayParams({
                 POOL: POOL,
                 _apeCoinStaking: _apeCoinStaking,
-                _underlyingAsset: _underlyingAsset,
+                _underlyingAsset: _ERC721Data.underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
                 incentiveReceiver: address(0),
@@ -119,7 +119,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 ApeStakingLogic.UnstakeAndRepayParams({
                     POOL: POOL,
                     _apeCoinStaking: _apeCoinStaking,
-                    _underlyingAsset: _underlyingAsset,
+                    _underlyingAsset: _ERC721Data.underlyingAsset,
                     poolId: POOL_ID(),
                     tokenId: tokenIds[index],
                     incentiveReceiver: address(0),
@@ -183,7 +183,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.UnstakeAndRepayParams({
                 POOL: POOL,
                 _apeCoinStaking: _apeCoinStaking,
-                _underlyingAsset: _underlyingAsset,
+                _underlyingAsset: _ERC721Data.underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
                 incentiveReceiver: incentiveReceiver,

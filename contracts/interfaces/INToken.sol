@@ -187,6 +187,4 @@ interface INToken is
         address airdropContract,
         bytes calldata airdropParams
     ) external;
-
-    function getAtomicPricingConfig() external view returns (bool);
 }
