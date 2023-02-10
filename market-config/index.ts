@@ -122,6 +122,8 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
   },
 };
 
