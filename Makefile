@@ -408,6 +408,10 @@ set-auto-mining:
 send-eth:
 	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
 
+.PHONY: release-p2p-wstETH
+release-p2p-wstETH:
+	make SCRIPT_PATH=./scripts/dev/11.release-p2p-wstETH.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
