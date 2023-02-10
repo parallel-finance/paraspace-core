@@ -161,6 +161,7 @@ export const insertContractAddressInDb = async (
   const newValue = {
     ...old,
     address,
+    version: VERSION,
   };
   if (!Array.isArray(newValue.constructorArgs) && verifiable) {
     newValue["constructorArgs"] = [];
