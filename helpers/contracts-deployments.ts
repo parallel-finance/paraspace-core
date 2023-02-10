@@ -230,6 +230,10 @@ import {
   P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  NonfungiblePositionManager__factory,
+  SwapRouter__factory,
+  UniswapV3Logic__factory,
+  UniswapV3Logic,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -249,8 +253,8 @@ import {
   withSaveAndVerify,
 } from "./contracts-helpers";
 
-import * as nonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
-import * as uniSwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
+// import * as nonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
+// import * as uniSwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
 import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json";
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Address} from "hardhat-deploy/dist/types";
@@ -332,6 +336,14 @@ export const deploySupplyLogic = async (verify?: boolean) =>
     verify
   ) as Promise<SupplyLogic>;
 
+export const deployUniswapV3Logic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new UniswapV3Logic__factory(await getFirstSigner()),
+    eContractid.UniswapV3Logic,
+    [],
+    verify
+  ) as Promise<UniswapV3Logic>;
+
 export const deployFlashClaimLogic = async (verify?: boolean) =>
   withSaveAndVerify(
     new FlashClaimLogic__factory(await getFirstSigner()),
@@ -390,6 +402,7 @@ export const deployPoolCoreLibraries = async (
     },
     verify
   );
+  const uniswapV3Logic = await deployUniswapV3Logic(verify);
   const flashClaimLogic = await deployFlashClaimLogic(verify);
 
   return {
@@ -403,6 +416,8 @@ export const deployPoolCoreLibraries = async (
       borrowLogic.address,
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
       flashClaimLogic.address,
+    ["contracts/protocol/libraries/logic/UniswapV3Logic.sol:UniswapV3Logic"]:
+      uniswapV3Logic.address,
   };
 };
 
@@ -1659,12 +1674,8 @@ export const deployNonfungiblePositionManager = async (
   args: [string, string, string],
   verify?: boolean
 ) => {
-  const nonfungiblePositionManagerFactory = (
-    await DRE.ethers.getContractFactoryFromArtifact(nonfungiblePositionManager)
-  ).connect(await getFirstSigner());
-
   return withSaveAndVerify(
-    nonfungiblePositionManagerFactory,
+    new NonfungiblePositionManager__factory(await getFirstSigner()),
     eContractid.UniswapV3,
     [...args],
     verify
@@ -1675,12 +1686,8 @@ export const deployUniswapSwapRouter = async (
   args: [string, string],
   verify?: boolean
 ) => {
-  const swapRouter = (
-    await DRE.ethers.getContractFactoryFromArtifact(uniSwapRouter)
-  ).connect(await getFirstSigner());
-
   return withSaveAndVerify(
-    swapRouter,
+    new SwapRouter__factory(await getFirstSigner()),
     eContractid.UniswapV3SwapRouter,
     [...args],
     verify

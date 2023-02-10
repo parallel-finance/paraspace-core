@@ -8,6 +8,7 @@ import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
+import {UniswapV3Logic} from "../libraries/logic/UniswapV3Logic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
 import {AuctionLogic} from "../libraries/logic/AuctionLogic.sol";
@@ -95,6 +96,37 @@ contract PoolCore is
         uint16 referralCode
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
+
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteSupplyParams({
+                asset: asset,
+                amount: amount,
+                onBehalfOf: onBehalfOf,
+                payer: msg.sender,
+                referralCode: referralCode
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function supplyFromXToken(
+        address asset,
+        uint256 amount,
+        address onBehalfOf,
+        uint16 referralCode,
+        address xTokenUnderlyingAsset
+    ) external virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage xtokenReserve = ps._reserves[
+            xTokenUnderlyingAsset
+        ];
+
+        require(
+            msg.sender == xtokenReserve.xTokenAddress,
+            Errors.CALLER_NOT_XTOKEN
+        );
 
         SupplyLogic.executeSupply(
             ps._reserves,
@@ -234,6 +266,26 @@ contract PoolCore is
             );
     }
 
+    function collectCompoundAndSupplyUniswapV3Fees(
+        address asset,
+        uint256 tokenId
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        return
+            UniswapV3Logic.executeCollectSupplyUniswapV3Fees(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
+                DataTypes.ExecuteCollectAndSupplyUniswapV3FeesParams({
+                    asset: asset,
+                    tokenId: tokenId,
+                    reservesCount: ps._reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                })
+            );
+    }
+
     function decreaseUniswapV3Liquidity(
         address asset,
         uint256 tokenId,
@@ -245,7 +297,7 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
-            SupplyLogic.executeDecreaseUniswapV3Liquidity(
+            UniswapV3Logic.executeDecreaseUniswapV3Liquidity(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],

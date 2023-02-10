@@ -113,6 +113,7 @@ export enum eContractid {
   LiquidationLogic = "LiquidationLogic",
   AuctionLogic = "AuctionLogic",
   PoolLogic = "PoolLogic",
+  UniswapV3Logic = "UniswapV3Logic",
   ConfiguratorLogic = "ConfiguratorLogic",
   PoolProxy = "PoolProxy",
   PriceOracle = "PriceOracle",
