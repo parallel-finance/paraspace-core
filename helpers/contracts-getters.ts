@@ -80,6 +80,7 @@ import {
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
   WstETHMocked__factory,
+  BAYCSewerPass__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1139,6 +1140,15 @@ export const getMultiSendCallOnly = async (address?: tEthereumAddress) =>
         await getDb()
           .get(`${eContractid.MultiSendCallOnly}.${DRE.network.name}`)
           .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
+  await BAYCSewerPass__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.SEWER}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );

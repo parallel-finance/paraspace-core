@@ -140,6 +140,7 @@ export enum eContractid {
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
   UserFlashClaimRegistryProxy = "UserFlashClaimRegistryProxy",
+  BAYCSewerPassClaim = "BAYCSewerPassClaim",
   AirdropFlashClaimReceiver = "AirdropFlashClaimReceiver",
   ProtocolDataProvider = "ProtocolDataProvider",
   MockPToken = "MockPToken",

@@ -234,10 +234,12 @@ import {
   WstETHMocked,
   BAYCSewerPass__factory,
   BAYCSewerPass,
+  BAYCSewerPassClaim__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
+  getBAYCSewerPass,
   getFirstSigner,
   getPunks,
   getWETH,
@@ -974,6 +976,8 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
   const paraSpaceConfig = getParaSpaceConfig();
   const reservesConfig = paraSpaceConfig.ReservesConfig;
   const tokensConfig = paraSpaceConfig.Tokens;
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
 
   for (const tokenSymbol of Object.keys(ERC721TokenContractId)) {
     const db = getDb();
@@ -1071,7 +1075,7 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
 
       if (tokenSymbol === ERC721TokenContractId.SEWER) {
         tokens[tokenSymbol] = await deploySewerPass(
-          ["SEWER", "SEWER", paraSpaceConfig.ParaSpaceTeam],
+          ["SEWER", "SEWER", deployerAddress],
           verify
         );
         continue;
@@ -1794,6 +1798,7 @@ export const deployUserFlashClaimRegistry = async (
 export const deployUserFlashClaimRegistryProxy = async (
   admin: string,
   registryImpl: string,
+  // eslint-disable-next-line
   initData: any,
   verify?: boolean
 ) => {
@@ -1807,6 +1812,37 @@ export const deployUserFlashClaimRegistryProxy = async (
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+};
+
+export const deployBAYCSewerPassClaim = async (
+  bayc: string,
+  mayc: string,
+  bakc: string,
+  sewerPass: string,
+  verify?: boolean
+) => {
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+  const baycSewerPassClaim = await withSaveAndVerify(
+    new BAYCSewerPassClaim__factory(await getFirstSigner()),
+    eContractid.BAYCSewerPassClaim,
+    [bayc, mayc, bakc, sewerPass, deployerAddress],
+    verify
+  );
+
+  const baycSewerPass = await getBAYCSewerPass(sewerPass);
+  await baycSewerPass.setRegistryAddress(
+    baycSewerPassClaim.address,
+    GLOBAL_OVERRIDES
+  );
+  await baycSewerPass.flipMintIsActiveState(GLOBAL_OVERRIDES);
+  await baycSewerPassClaim.flipClaimIsActiveState(GLOBAL_OVERRIDES);
+  await baycSewerPass.toggleMinterContract(
+    baycSewerPassClaim.address,
+    GLOBAL_OVERRIDES
+  );
+
+  return baycSewerPassClaim;
 };
 
 export const deployAirdropFlashClaimReceiver = async (
