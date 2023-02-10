@@ -50,7 +50,8 @@ const hardhatConfig: HardhatUserConfig = {
     alphaSort: true,
     runOnCompile: false,
     disambiguatePaths: false,
-    except: ["Mock*"],
+    except: ["Mock*", "ApeCoinStaking"],
+    strict: true,
   },
   paths: {
     sources: "./contracts",
@@ -74,7 +75,7 @@ const hardhatConfig: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 2000,
+            runs: 200,
           },
           evmVersion: "london",
         },
