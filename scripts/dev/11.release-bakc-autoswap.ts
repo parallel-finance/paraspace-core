@@ -84,7 +84,7 @@ const releaseBAKCAutoSwap = async (verify = false) => {
   );
 
   const oldApeStakingSelectors = await pool.facetFunctionSelectors(
-    "0xf1809240EF10F1aca92fC619ACa2c36eB1e9f226"
+    "0x8636946E1bC715a0Fea68e1c3A61DCa1e9D32610"
   );
   const oldCoreSelectors = await pool.facetFunctionSelectors(
     "0x2E2315F401948367ab8D5E7abe2a783a0b3695b8"
