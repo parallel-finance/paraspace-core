@@ -24,6 +24,7 @@ import {
   IParaProxy,
   PoolApeStaking__factory,
   PoolCore__factory,
+  PoolParameters__factory,
 } from "../../types";
 
 const releaseBAKCAutoSwap = async (verify = false) => {
@@ -52,11 +53,18 @@ const releaseBAKCAutoSwap = async (verify = false) => {
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
+  const parametersLibraries = {
+    ["contracts/protocol/libraries/logic/PoolLogic.sol:PoolLogic"]:
+      "0x2e77d36531934980f2EaF749CC81721Db14fcad5",
+  };
 
   const newApeStakingSelectors = getFunctionSignatures(
     PoolApeStaking__factory.abi
   );
   const newCoreSelectors = getFunctionSignatures(PoolCore__factory.abi);
+  const newParametersSelectors = getFunctionSignatures(
+    PoolParameters__factory.abi
+  );
 
   const poolApeStaking = await withSaveAndVerify(
     new PoolApeStaking__factory(apeStakingLibraries, await getFirstSigner()),
@@ -82,12 +90,24 @@ const releaseBAKCAutoSwap = async (verify = false) => {
     coreLibraries,
     newCoreSelectors
   );
+  const poolParameters = await withSaveAndVerify(
+    new PoolParameters__factory(parametersLibraries, await getFirstSigner()),
+    eContractid.PoolParametersImpl,
+    [provider.address],
+    verify,
+    false,
+    parametersLibraries,
+    newParametersSelectors
+  );
 
   const oldApeStakingSelectors = await pool.facetFunctionSelectors(
     "0x8636946E1bC715a0Fea68e1c3A61DCa1e9D32610"
   );
   const oldCoreSelectors = await pool.facetFunctionSelectors(
     "0x2E2315F401948367ab8D5E7abe2a783a0b3695b8"
+  );
+  const oldParametersSelectors = await pool.facetFunctionSelectors(
+    "0xe3649B06952d1C6d4d20447b3ad8016901878a05"
   );
   const apeStakingToAdd = newApeStakingSelectors.filter(
     (s) => !oldApeStakingSelectors.includes(s.signature)
@@ -107,8 +127,18 @@ const releaseBAKCAutoSwap = async (verify = false) => {
   const coreToRemove = oldCoreSelectors.filter(
     (s) => !newCoreSelectors.map((x) => x.signature).includes(s)
   );
+  const parametersToAdd = newParametersSelectors.filter(
+    (s) => !oldParametersSelectors.includes(s.signature)
+  );
+  const parametersToReplace = newParametersSelectors.filter((s) =>
+    oldParametersSelectors.includes(s.signature)
+  );
+  const parametersToRemove = oldParametersSelectors.filter(
+    (s) => !newParametersSelectors.map((x) => x.signature).includes(s)
+  );
   const apeStakingImplChange: IParaProxy.ProxyImplementationStruct[] = [];
   const coreImplChange: IParaProxy.ProxyImplementationStruct[] = [];
+  const parametersImplChange: IParaProxy.ProxyImplementationStruct[] = [];
   if (apeStakingToRemove.length)
     apeStakingImplChange.push({
       implAddress: ZERO_ADDRESS,
@@ -145,8 +175,27 @@ const releaseBAKCAutoSwap = async (verify = false) => {
       action: 0,
       functionSelectors: coreToAdd.map((s) => s.signature),
     });
+  if (parametersToRemove.length)
+    parametersImplChange.push({
+      implAddress: ZERO_ADDRESS,
+      action: 2,
+      functionSelectors: parametersToRemove,
+    });
+  if (parametersToReplace.length)
+    parametersImplChange.push({
+      implAddress: poolParameters.address,
+      action: 1,
+      functionSelectors: parametersToReplace.map((s) => s.signature),
+    });
+  if (parametersToAdd.length)
+    parametersImplChange.push({
+      implAddress: poolParameters.address,
+      action: 0,
+      functionSelectors: parametersToAdd.map((s) => s.signature),
+    });
   console.log(apeStakingImplChange);
   console.log(coreImplChange);
+  console.log(parametersImplChange);
 
   console.time("upgrade PoolApeStaking");
   if (DRY_RUN) {
@@ -167,6 +216,16 @@ const releaseBAKCAutoSwap = async (verify = false) => {
     await dryRunEncodedData(provider.address, encodedData);
   }
   console.timeEnd("upgrade PoolCore");
+
+  console.time("upgrade PoolParameters");
+  if (DRY_RUN) {
+    const encodedData = provider.interface.encodeFunctionData(
+      "updatePoolImpl",
+      [parametersImplChange, ZERO_ADDRESS, "0x"]
+    );
+    await dryRunEncodedData(provider.address, encodedData);
+  }
+  console.timeEnd("upgrade PoolParameters");
 
   if (DRY_RUN) {
     const encodedData = pool.interface.encodeFunctionData(
