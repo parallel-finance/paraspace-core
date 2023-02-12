@@ -580,7 +580,7 @@ hardhat:
 anvil:
 	anvil \
 		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
-		--chain-id 522 \
+		$(if $(FORK),--chain-id 522,--chain-id 31337) \
 		--tracing \
 		--host 0.0.0.0 \
 		--state-interval 60 \
