@@ -21,6 +21,8 @@ import {
   auctionStrategyMeebits,
   auctionStrategyMoonbird,
   auctionStrategyOthr,
+  auctionStrategyPudgyPenguins,
+  auctionStrategySEWER,
   auctionStrategyUniswapV3,
   auctionStrategyWPunks,
   auctionStrategyZero,
@@ -344,6 +346,36 @@ export const strategyUniswapV3: IReserveParams = {
   supplyCap: "0",
 };
 
+export const strategySEWER: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategySEWER, // same as BAKC, it won't be used as collateral so it's ok
+  baseLTVAsCollateral: "0",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "0000",
+  liquidationBonus: "00000",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "1000",
+};
+
+export const strategyPudgyPenguins: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyPudgyPenguins,
+  baseLTVAsCollateral: "3000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "6500",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
 ////////////////////////////////////////////////////////////
 // V2
 ////////////////////////////////////////////////////////////
@@ -357,6 +389,21 @@ export const strategySTETH: IReserveParams = {
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenStETHImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyWSTETH: IReserveParams = {
+  strategy: rateStrategyXETH,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "6900",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8100",
+  liquidationBonus: "10750",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
   borrowCap: "0",
   supplyCap: "0",

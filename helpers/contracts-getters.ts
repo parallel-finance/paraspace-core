@@ -77,8 +77,11 @@ import {
   ApeStakingLogic__factory,
   MintableERC721Logic__factory,
   NTokenBAKC__factory,
+  P2PPairStaking__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
+  WstETHMocked__factory,
+  BAYCSewerPass__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -414,7 +417,6 @@ export const getAllERC721Tokens = async () => {
     }, Promise.resolve({}));
   return tokens;
 };
-
 export const getAllTokens = async () => {
   return Object.assign(await getAllERC20Tokens(), await getAllERC721Tokens());
 };
@@ -845,6 +847,16 @@ export const getStETH = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
+
+export const getWstETH = async (address?: tEthereumAddress) =>
+  await WstETHMocked__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.WStETH}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getPTokenStETH = async (address?: tEthereumAddress) =>
   await PTokenStETH__factory.connect(
     address ||
@@ -1058,6 +1070,17 @@ export const getAutoCompoundApe = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getP2PPairStaking = async (address?: tEthereumAddress) =>
+  await P2PPairStaking__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getInitializableAdminUpgradeabilityProxy = async (
   address: tEthereumAddress
 ) =>
@@ -1128,6 +1151,15 @@ export const getMultiSendCallOnly = async (address?: tEthereumAddress) =>
         await getDb()
           .get(`${eContractid.MultiSendCallOnly}.${DRE.network.name}`)
           .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
+  await BAYCSewerPass__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.SEWER}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );

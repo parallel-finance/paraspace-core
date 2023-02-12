@@ -4,6 +4,7 @@ import {ethers} from "ethers";
 import fs from "fs";
 import {HttpNetworkAccountsUserConfig} from "hardhat/types";
 import {input} from "./wallet-helpers";
+import {version} from "../package.json";
 
 dotenv.config();
 
@@ -63,7 +64,7 @@ export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
 );
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");
-export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "21");
+export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "22");
 export const DEPLOY_INCREMENTAL =
   process.env.DEPLOY_INCREMENTAL == "true" ? true : false;
 
@@ -89,7 +90,7 @@ export const GLOBAL_OVERRIDES: Overrides = {
   // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
   // maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
   // type: 2,
-  gasLimit: 12_450_000,
+  // gasLimit: 12_450_000,
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
@@ -107,3 +108,5 @@ export const MULTI_SIG =
   process.env.MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 export const MULTI_SEND =
   process.env.MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D";
+
+export const VERSION = version;
