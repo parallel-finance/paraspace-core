@@ -106,7 +106,7 @@ library MintableERC721Logic {
     function executeTransfer(
         MintableERC721Data storage erc721Data,
         IPool POOL,
-        bool atomic_pricing,
+        bool ATOMIC_PRICING,
         address from,
         address to,
         uint256 tokenId
@@ -120,6 +120,7 @@ library MintableERC721Logic {
             !isAuctioned(erc721Data, POOL, tokenId),
             Errors.TOKEN_IN_AUCTION
         );
+
         _beforeTokenTransfer(erc721Data, from, to, tokenId);
 
         // Clear approvals from the previous owner
@@ -129,7 +130,7 @@ library MintableERC721Logic {
         erc721Data.userState[from].balance = oldSenderBalance - 1;
         uint64 oldRecipientBalance = erc721Data.userState[to].balance;
         uint64 newRecipientBalance = oldRecipientBalance + 1;
-        _checkBalanceLimit(erc721Data, atomic_pricing, newRecipientBalance);
+        _checkBalanceLimit(erc721Data, ATOMIC_PRICING, newRecipientBalance);
         erc721Data.userState[to].balance = newRecipientBalance;
         erc721Data.owners[tokenId] = to;
 
@@ -160,7 +161,7 @@ library MintableERC721Logic {
     function executeTransferCollateralizable(
         MintableERC721Data storage erc721Data,
         IPool POOL,
-        bool atomic_pricing,
+        bool ATOMIC_PRICING,
         address from,
         address to,
         uint256 tokenId
@@ -179,7 +180,7 @@ library MintableERC721Logic {
             delete erc721Data.isUsedAsCollateral[tokenId];
         }
 
-        executeTransfer(erc721Data, POOL, atomic_pricing, from, to, tokenId);
+        executeTransfer(erc721Data, POOL, ATOMIC_PRICING, from, to, tokenId);
     }
 
     function executeSetIsUsedAsCollateral(
@@ -231,7 +232,7 @@ library MintableERC721Logic {
 
     function executeMintMultiple(
         MintableERC721Data storage erc721Data,
-        bool atomic_pricing,
+        bool ATOMIC_PRICING,
         address to,
         DataTypes.ERC721SupplyParams[] calldata tokenData
     ) external returns (uint64, uint64) {
@@ -288,7 +289,7 @@ library MintableERC721Logic {
             .userState[to]
             .collateralizedBalance = newCollateralizedBalance;
         uint64 newBalance = vars.oldBalance + uint64(tokenData.length);
-        _checkBalanceLimit(erc721Data, atomic_pricing, newBalance);
+        _checkBalanceLimit(erc721Data, ATOMIC_PRICING, newBalance);
         erc721Data.userState[to].balance = newBalance;
 
         // calculate incentives
@@ -525,10 +526,10 @@ library MintableERC721Logic {
 
     function _checkBalanceLimit(
         MintableERC721Data storage erc721Data,
-        bool atomic_pricing,
+        bool ATOMIC_PRICING,
         uint64 balance
     ) private view {
-        if (!atomic_pricing) return;
+        if (!ATOMIC_PRICING) return;
         uint64 balanceLimit = erc721Data.balanceLimit;
         require(
             balanceLimit == 0 || balance <= balanceLimit,
@@ -670,6 +671,9 @@ library MintableERC721Logic {
         uint256 tokenId,
         uint256 userBalance
     ) private {
+        // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
+        // then delete the last slot (swap and pop).
+
         uint256 lastTokenIndex = userBalance - 1;
         uint256 tokenIndex = erc721Data.ownedTokensIndex[tokenId];
 
