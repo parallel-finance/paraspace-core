@@ -17,7 +17,6 @@ import {
   getPToken,
   getPTokenSApe,
   getUniswapV3OracleWrapper,
-  getUniswapV3SwapRouter,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
@@ -69,7 +68,6 @@ describe("Auto Compound Ape Test", () => {
     const {xTokenAddress: pSApeCoinAddress} =
       await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
     pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
-    const swapRouter = await getUniswapV3SwapRouter();
 
     await mintAndValidate(ape, "1000", user1);
     await mintAndValidate(ape, "2000", user2);
@@ -106,18 +104,6 @@ describe("Auto Compound Ape Test", () => {
     );
     await waitForTx(
       await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(poolAdmin.signer)
-        .unlimitedApproveTo(ape.address, cApe.address)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(poolAdmin.signer)
-        .unlimitedApproveTo(ape.address, swapRouter.address)
     );
 
     await waitForTx(

@@ -56,7 +56,6 @@ describe("APE Coin Staking Test", () => {
       apeCoinStaking,
       nMAYC,
       nBAYC,
-      poolAdmin,
     } = testEnv;
     const user1 = users[0];
     const depositor = users[1];
@@ -122,12 +121,6 @@ describe("APE Coin Staking Test", () => {
       await ape
         .connect(user1.signer)
         ["mint(address,uint256)"](nBAYC.address, InitialNTokenApeBalance)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(poolAdmin.signer)
-        .unlimitedApproveTo(ape.address, cApe.address)
     );
 
     await mintAndValidate(ape, "1", user4);

@@ -3,11 +3,14 @@ import {deployPoolComponents} from "../../../helpers/contracts-deployments";
 import {
   getPoolProxy,
   getPoolAddressesProvider,
+  getAutoCompoundApe,
+  getAllTokens,
+  getUniswapV3SwapRouter,
 } from "../../../helpers/contracts-getters";
 import {registerContractInDb} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
-import {eContractid} from "../../../helpers/types";
+import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
@@ -108,6 +111,25 @@ export const step_06 = async (verify = false) => {
     );
 
     const poolProxy = await getPoolProxy(poolAddress);
+    const cAPE = await getAutoCompoundApe();
+    const uniswapV3Router = await getUniswapV3SwapRouter();
+    const allTokens = await getAllTokens();
+
+    if (allTokens[ERC20TokenContractId.APE]) {
+      await waitForTx(
+        await poolProxy.unlimitedApproveTo(
+          allTokens[ERC20TokenContractId.APE].address,
+          uniswapV3Router.address
+        )
+      );
+      await waitForTx(
+        await poolProxy.unlimitedApproveTo(
+          allTokens[ERC20TokenContractId.APE].address,
+          cAPE.address
+        )
+      );
+    }
+
     await registerContractInDb(eContractid.PoolProxy, poolProxy, [
       addressesProvider.address,
     ]);
