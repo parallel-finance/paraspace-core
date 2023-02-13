@@ -461,18 +461,18 @@ library MintableERC721Logic {
         uint256 avgMultiplier = getTraitMultiplier(
             erc721Data.userState[owner].avgMultiplier
         );
+        uint256 collateralizedBalance = uint256(
+            erc721Data.userState[owner].collateralizedBalance
+        );
         if (
+            (collateralizedBalance.toInt256() + collateralizedBalanceDelta) !=
+            0 &&
             collateralizedBalanceDelta != 0 &&
-            multiplierDelta > 0 &&
             (multiplierDelta / collateralizedBalanceDelta).toUint256() ==
             avgMultiplier
         ) {
             return;
         }
-
-        uint256 collateralizedBalance = uint256(
-            erc721Data.userState[owner].collateralizedBalance
-        );
 
         int256 numerator = (avgMultiplier * collateralizedBalance).toInt256() +
             multiplierDelta;
