@@ -52,7 +52,7 @@ ALCHEMY_KEY=
 DEPLOYER_MNEMONIC=
 ETHERSCAN_VERIFICATION=false
 MOCHA_JOBS=1
-DB_PATH=deployed-contracts.json # must be the live fork's deploed-contracts.json
+DB_PATH=deployed-contracts.json # must be the live fork's deployed-contracts.json
 RPC_URL=http://localhost:8545 # impersonate to paraspace admin for upgrading
 FORK=goerli|mainnet
 
@@ -94,7 +94,7 @@ Use flatten layout
    contains all used contracts and necessary transactions.
 
 Example 1:
-You make a story contains two step, and steps have to be executed in sequence. You should init the
+You make a story that contains two steps, and steps have to be executed in sequence. You should init the
 testEnv at the before hook.
 
 ```typescript
@@ -110,7 +110,7 @@ describe("A story", () => {
 ```
 
 Example 2:
-You wanna do a serial of tests for different paths of a certain secenrio. You make changes and wanna
+You wanna do a serial of tests for different paths of a certain scenario. You make changes and wanna
 reset to that state during following steps.
 
 ```typescript
