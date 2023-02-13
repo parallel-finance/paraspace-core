@@ -67,9 +67,9 @@ library MintableERC721Logic {
     using SafeCast for int256;
     /**
      * @dev This constant represents the maximum trait multiplier that a single tokenId can have
-     * A value of 10e18 results in 10x of price
+     * A value of 20e18 results in 20x of price
      */
-    uint256 internal constant MAX_TRAIT_MULTIPLIER = 10e18;
+    uint256 internal constant MAX_TRAIT_MULTIPLIER = 20e18;
     /**
      * @dev This constant represents the minimum trait multiplier that a single tokenId can have
      * A value of 1e18 results in no price multiplier
@@ -458,31 +458,50 @@ library MintableERC721Logic {
             return;
         }
 
-        uint256 avgMultiplier = getTraitMultiplier(
+        uint256 oldAvgMultiplier = getTraitMultiplier(
             erc721Data.userState[owner].avgMultiplier
         );
         uint256 collateralizedBalance = uint256(
             erc721Data.userState[owner].collateralizedBalance
         );
-        if (
-            (collateralizedBalance.toInt256() + collateralizedBalanceDelta) !=
-            0 &&
-            collateralizedBalanceDelta != 0 &&
-            (multiplierDelta / collateralizedBalanceDelta).toUint256() ==
-            avgMultiplier
-        ) {
-            return;
-        }
 
-        int256 numerator = (avgMultiplier * collateralizedBalance).toInt256() +
-            multiplierDelta;
+        int256 numerator = (oldAvgMultiplier * collateralizedBalance)
+            .toInt256() + multiplierDelta;
         int256 denominator = collateralizedBalance.toInt256() +
             collateralizedBalanceDelta;
 
-        uint256 newAvgMultiplier = denominator != 0
+        uint256 newAvgMultiplier = numerator != 0 && denominator != 0
             ? (numerator / denominator).toUint256()
-            : 0;
-        erc721Data.userState[owner].avgMultiplier = newAvgMultiplier;
+            : WadRayMath.WAD;
+
+        if (oldAvgMultiplier != newAvgMultiplier) {
+            erc721Data.userState[owner].avgMultiplier = newAvgMultiplier;
+        }
+    }
+
+    function executeResetUserAvgMultiplier(
+        MintableERC721Data storage erc721Data,
+        address user
+    ) external {
+        uint256 balance = erc721Data.userState[user].balance;
+        uint256 totalMultiplier;
+        for (uint256 i = 0; i < balance; i += 1) {
+            uint256 tokenId = erc721Data.ownedTokens[user][i];
+            if (!erc721Data.isUsedAsCollateral[tokenId]) {
+                continue;
+            }
+            totalMultiplier += getTraitMultiplier(
+                erc721Data.traitsMultipliers[tokenId]
+            );
+        }
+        uint256 collateralizedBalance = erc721Data
+            .userState[user]
+            .collateralizedBalance;
+        uint256 newAvgMultiplier = totalMultiplier != 0 &&
+            collateralizedBalance != 0
+            ? totalMultiplier / collateralizedBalance
+            : WadRayMath.WAD;
+        erc721Data.userState[user].avgMultiplier = newAvgMultiplier;
     }
 
     function executeSetTraitsMultipliers(

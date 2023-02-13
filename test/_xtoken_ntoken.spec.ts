@@ -234,7 +234,7 @@ describe("NToken general", async () => {
     );
   });
 
-  it("TC-ntoken-09: trait multipliers must be in range [0, 10)", async () => {
+  it("TC-ntoken-09: trait multipliers must be in range [0, 20)", async () => {
     const {nBAYC, poolAdmin} = await loadFixture(testEnvFixture);
     await waitForTx(
       await nBAYC.connect(poolAdmin.signer).setTraitsMultipliers(["0"], ["0"])
@@ -247,12 +247,12 @@ describe("NToken general", async () => {
     await expect(
       nBAYC
         .connect(poolAdmin.signer)
-        .setTraitsMultipliers(["0"], [BigNumber.from(WAD).mul(10)])
+        .setTraitsMultipliers(["0"], [BigNumber.from(WAD).mul(20)])
     ).to.be.revertedWith(ProtocolErrors.INVALID_AMOUNT);
     await waitForTx(
       await nBAYC
         .connect(poolAdmin.signer)
-        .setTraitsMultipliers(["0"], [BigNumber.from(WAD).mul(10).sub(1)])
+        .setTraitsMultipliers(["0"], [BigNumber.from(WAD).mul(20).sub(1)])
     );
   });
 
@@ -515,5 +515,94 @@ describe("NToken general", async () => {
       await nBAYC.avgMultiplierOf(user1.address),
       BigNumber.from(HALF_WAD).mul(3)
     );
+  });
+
+  it("TC-ntoken-17: resetUserAvgMultiplier works when user has multiple trait boosted tokens ", async () => {
+    const {
+      nBAYC,
+      bayc,
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = await loadFixture(testEnvFixture);
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(
+          ["0", "1", "2", "3", "4"],
+          [
+            BigNumber.from(HALF_WAD).mul(1),
+            BigNumber.from(HALF_WAD).mul(2),
+            BigNumber.from(HALF_WAD).mul(3),
+            BigNumber.from(HALF_WAD).mul(4),
+            BigNumber.from(HALF_WAD).mul(5),
+          ]
+        )
+    );
+
+    await mintAndValidate(bayc, "5", user1);
+    await waitForTx(
+      await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        bayc.address,
+        [
+          {tokenId: "0", useAsCollateral: true},
+          {tokenId: "1", useAsCollateral: true},
+          {tokenId: "2", useAsCollateral: true},
+          {tokenId: "3", useAsCollateral: true},
+          {tokenId: "4", useAsCollateral: true},
+        ],
+        user1.address,
+        0
+      )
+    );
+    // (0.5 + 1 + 1.5 + 2 + 2.5) / 5 = 1.5
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(HALF_WAD).mul(3)
+    );
+
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .resetUserAvgMultiplier(user1.address)
+    );
+
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(HALF_WAD).mul(3)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC721AsCollateral(bayc.address, ["0", "1"], false)
+    );
+
+    // (1.5 + 2 + 2.5) / 3 = 2
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(HALF_WAD).mul(4)
+    );
+
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .resetUserAvgMultiplier(user1.address)
+    );
+
+    expect(await nBAYC.avgMultiplierOf(user1.address)).eq(
+      BigNumber.from(HALF_WAD).mul(4)
+    );
+  });
+
+  it("TC-ntoken-18: non-poolAdmin has no rights to call resetUserAvgMultiplier", async () => {
+    const {
+      nBAYC,
+      users: [user1],
+    } = await loadFixture(testEnvFixture);
+    await expect(
+      nBAYC.connect(user1.signer).resetUserAvgMultiplier(user1.address)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
   });
 });

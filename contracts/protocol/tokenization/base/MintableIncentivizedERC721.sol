@@ -576,6 +576,15 @@ abstract contract MintableIncentivizedERC721 is
         );
     }
 
+    function resetUserAvgMultiplier(address user)
+        external
+        virtual
+        onlyPoolAdmin
+        nonReentrant
+    {
+        MintableERC721Logic.executeResetUserAvgMultiplier(_ERC721Data, user);
+    }
+
     /// @inheritdoc IAuctionableERC721
     function getAuctionData(uint256 tokenId)
         external
