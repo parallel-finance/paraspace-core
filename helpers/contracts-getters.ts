@@ -82,6 +82,7 @@ import {
   MultiSendCallOnly__factory,
   WstETHMocked__factory,
   BAYCSewerPass__factory,
+  HelperContract__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1076,6 +1077,17 @@ export const getP2PPairStaking = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getHelperContract = async (address?: tEthereumAddress) =>
+  await HelperContract__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.HelperContract}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

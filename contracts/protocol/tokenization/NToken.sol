@@ -185,11 +185,12 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         emit ExecuteAirdrop(airdropContract);
     }
 
-    function setApprovalForAllTo(address token, address to)
-        external
-        onlyPoolAdmin
-    {
-        IERC721(token).setApprovalForAll(to, true);
+    function setApprovalForAllTo(
+        address token,
+        address to,
+        bool _approved
+    ) external onlyPoolAdmin {
+        IERC721(token).setApprovalForAll(to, _approved);
     }
 
     /// @inheritdoc INToken
