@@ -59,15 +59,28 @@ abstract contract ParaReentrancyGuard {
      * `private` function that does the actual work.
      */
     modifier nonReentrant() {
+        _nonReentrantBefore();
+
+        _;
+
+        _reentrancyGuardEntered();
+    }
+
+    function _nonReentrantBefore() private {
         RGStorage storage rgs = rgStorage();
         // On the first call to nonReentrant, _notEntered will be true
         require(rgs._status != _ENTERED, "ReentrancyGuard: reentrant call");
 
         // Any calls to nonReentrant after this point will fail
         rgs._status = _ENTERED;
+    }
 
-        _;
-
+    /**
+     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+     * `nonReentrant` function in the call stack.
+     */
+    function _reentrancyGuardEntered() private {
+        RGStorage storage rgs = rgStorage();
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         rgs._status = _NOT_ENTERED;

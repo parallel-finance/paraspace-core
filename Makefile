@@ -112,6 +112,10 @@ test-erc20-supply:
 test-erc20-withdraw:
 	make TEST_TARGET=_pool_core_erc20_withdraw.spec.ts test
 
+.PHONY: test-erc721-withdraw
+test-erc721-withdraw:
+	make TEST_TARGET=_pool_core_erc721_withdraw.spec.ts test
+
 .PHONY: test-erc20-repay
 test-erc20-repay:
 	make TEST_TARGET=_pool_core_erc20_repay.spec.ts test
@@ -256,6 +260,10 @@ test-ape-staking:
 test-auto-compound-ape:
 	make TEST_TARGET=auto_compound_ape.spec.ts test
 
+.PHONY: test-p2p-pair-staking
+test-p2p-pair-staking:
+	make TEST_TARGET=p2p_pair_staking.spec.ts test
+
 .PHONY: test-sape-operation
 test-sape-operation:
 	make TEST_TARGET=_sape_pool_operation.spec.ts test
@@ -367,6 +375,10 @@ deploy-flashClaimRegistry:
 .PHONY: deploy-renounceOwnership
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
+
+.PHONY: deploy-p2p-pair-staking
+deploy-p2p-pair-staking:
+	make TASK_NAME=deploy:P2PPairStaking run-task
 
 .PHONY: ad-hoc
 ad-hoc:
@@ -543,6 +555,10 @@ upgrade-configurator:
 .PHONY: upgrade-auto-compound-ape
 upgrade-auto-compound-ape:
 	make TASK_NAME=upgrade:auto-compound-ape run-task
+
+.PHONY: upgrade-p2p-pair-staking
+upgrade-p2p-pair-staking:
+	make TASK_NAME=upgrade:p2p-pair-staking run-task
 
 .PHONY: upgrade-ntoken
 upgrade-ntoken:

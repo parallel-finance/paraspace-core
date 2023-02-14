@@ -8,15 +8,17 @@ import {
   supplyAndValidate,
   borrowAndValidate,
   withdrawAndValidate,
+  mintAndValidate,
 } from "./helpers/validated-steps";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 
 describe("Functionality tests of ERC721 withdraw in PoolCore contract", () => {
   it("TC-erc721-withdraw-01:User shouldn't withdraw a ERC721 token that hasn't been supplied by him", async () => {
     const {
-      users: [user1],
+      users: [user1, user2],
       bayc,
     } = await loadFixture(testEnvFixture);
+    await mintAndValidate(bayc, "2", user2);
 
     await expect(withdrawAndValidate(bayc, "1", user1, 0)).to.be.revertedWith(
       "not the owner of Ntoken"

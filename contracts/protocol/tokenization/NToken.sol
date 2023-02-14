@@ -29,7 +29,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 130;
+    uint256 public constant NTOKEN_REVISION = 142;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -122,6 +122,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         uint256 value
     ) external onlyPool nonReentrant {
         _transfer(from, to, value, false);
+    }
+
+    function setApprovalForAllTo(address token, address to)
+        external
+        onlyPoolAdmin
+    {
+        IERC721(token).setApprovalForAll(to, true);
     }
 
     /// @inheritdoc INToken

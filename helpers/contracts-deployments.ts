@@ -226,14 +226,26 @@ import {
   MockedDelegateRegistry__factory,
   NTokenBAKC,
   NTokenBAKC__factory,
+  P2PPairStaking__factory,
+  P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  CLwstETHSynchronicityPriceAdapter__factory,
+  CLwstETHSynchronicityPriceAdapter,
+  WstETHMocked__factory,
+  WstETHMocked,
+  BAYCSewerPass__factory,
+  BAYCSewerPass,
+  BAYCSewerPassClaim__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
+  getBAYCSewerPass,
   getFirstSigner,
+  getProtocolDataProvider,
   getPunks,
+  getUniswapV3SwapRouter,
   getWETH,
 } from "./contracts-getters";
 import {
@@ -260,6 +272,7 @@ import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/P
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
+import {parseEther} from "ethers/lib/utils";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -595,6 +608,8 @@ export const deployPoolComponents = async (
                 await deployAutoCompoundApe(verify)
               ).address,
             allTokens.APE.address,
+            allTokens.USDC.address,
+            (await getUniswapV3SwapRouter()).address,
           ],
           verify,
           false,
@@ -853,6 +868,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | MintableERC20
       | WETH9Mocked
       | StETHMocked
+      | WstETHMocked
       | MockAToken
       | AutoCompoundApe;
   } = {};
@@ -916,6 +932,14 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
         continue;
       }
 
+      if (tokenSymbol === ERC20TokenContractId.wstETH) {
+        tokens[tokenSymbol] = await deployWStETH(
+          tokens[ERC20TokenContractId.stETH].address,
+          verify
+        );
+        continue;
+      }
+
       if (tokenSymbol === ERC20TokenContractId.aWETH) {
         tokens[tokenSymbol] = await deployMockAToken(
           [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
@@ -959,6 +983,8 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
   const paraSpaceConfig = getParaSpaceConfig();
   const reservesConfig = paraSpaceConfig.ReservesConfig;
   const tokensConfig = paraSpaceConfig.Tokens;
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
 
   for (const tokenSymbol of Object.keys(ERC721TokenContractId)) {
     const db = getDb();
@@ -1051,6 +1077,14 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
 
       if (tokenSymbol === ERC721TokenContractId.CLONEX) {
         tokens[tokenSymbol] = await deployCloneX([], verify);
+        continue;
+      }
+
+      if (tokenSymbol === ERC721TokenContractId.SEWER) {
+        tokens[tokenSymbol] = await deploySewerPass(
+          ["SEWER", "SEWER", deployerAddress],
+          verify
+        );
         continue;
       }
 
@@ -1272,6 +1306,17 @@ export const deployCloneX = async (args: [], verify?: boolean) =>
     [...args],
     verify
   ) as Promise<CloneX>;
+
+export const deploySewerPass = async (
+  args: [string, string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new BAYCSewerPass__factory(await getFirstSigner()),
+    eContractid.SEWER,
+    [...args],
+    verify
+  ) as Promise<BAYCSewerPass>;
 
 export const deployDoodle = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
@@ -1688,6 +1733,17 @@ export const deployStETH = async (verify?: boolean): Promise<StETHMocked> =>
     verify
   ) as Promise<StETHMocked>;
 
+export const deployWStETH = async (
+  stETHAddress: tEthereumAddress,
+  verify?: boolean
+): Promise<WstETHMocked> =>
+  withSaveAndVerify(
+    new WstETHMocked__factory(await getFirstSigner()),
+    eContractid.WStETH,
+    [stETHAddress],
+    verify
+  ) as Promise<WstETHMocked>;
+
 export const deployMockAToken = async (
   args: [string, string, string],
   verify?: boolean
@@ -1749,6 +1805,7 @@ export const deployUserFlashClaimRegistry = async (
 export const deployUserFlashClaimRegistryProxy = async (
   admin: string,
   registryImpl: string,
+  // eslint-disable-next-line
   initData: any,
   verify?: boolean
 ) => {
@@ -1762,6 +1819,37 @@ export const deployUserFlashClaimRegistryProxy = async (
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+};
+
+export const deployBAYCSewerPassClaim = async (
+  bayc: string,
+  mayc: string,
+  bakc: string,
+  sewerPass: string,
+  verify?: boolean
+) => {
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+  const baycSewerPassClaim = await withSaveAndVerify(
+    new BAYCSewerPassClaim__factory(await getFirstSigner()),
+    eContractid.BAYCSewerPassClaim,
+    [bayc, mayc, bakc, sewerPass, deployerAddress],
+    verify
+  );
+
+  const baycSewerPass = await getBAYCSewerPass(sewerPass);
+  await baycSewerPass.setRegistryAddress(
+    baycSewerPassClaim.address,
+    GLOBAL_OVERRIDES
+  );
+  await baycSewerPass.flipMintIsActiveState(GLOBAL_OVERRIDES);
+  await baycSewerPassClaim.flipClaimIsActiveState(GLOBAL_OVERRIDES);
+  await baycSewerPass.toggleMinterContract(
+    baycSewerPassClaim.address,
+    GLOBAL_OVERRIDES
+  );
+
+  return baycSewerPassClaim;
 };
 
 export const deployAirdropFlashClaimReceiver = async (
@@ -1823,7 +1911,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("10000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1831,7 +1919,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("200000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1839,7 +1927,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1847,7 +1935,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   return apeCoinStaking;
@@ -2111,6 +2199,65 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   return proxyInstance as AutoCompoundApe;
 };
 
+export const deployP2PPairStakingImpl = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const nBAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
+  ).xTokenAddress;
+  const nMAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
+  ).xTokenAddress;
+  const nBAKC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
+  ).xTokenAddress;
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const args = [
+    allTokens.BAYC.address,
+    allTokens.MAYC.address,
+    allTokens.BAKC.address,
+    nBAYC,
+    nMAYC,
+    nBAKC,
+    allTokens.APE.address,
+    allTokens.cAPE.address,
+    apeCoinStaking,
+  ];
+
+  return withSaveAndVerify(
+    new P2PPairStaking__factory(await getFirstSigner()),
+    eContractid.P2PPairStakingImpl,
+    [...args],
+    verify
+  ) as Promise<P2PPairStaking>;
+};
+
+export const deployP2PPairStaking = async (verify?: boolean) => {
+  const p2pImplementation = await deployP2PPairStakingImpl(verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = p2pImplementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.P2PPairStaking,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as P2PPairStaking;
+};
+
 export const deployPTokenCApe = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
@@ -2132,6 +2279,18 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployCLwstETHSynchronicityPriceAdapter = async (
+  stETHAggregator: tEthereumAddress,
+  stETH: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLwstETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(eContractid.WStETH)),
+    [stETHAggregator, stETH, 18],
+    verify
+  ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

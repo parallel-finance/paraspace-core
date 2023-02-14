@@ -203,6 +203,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.getUserTotalStakingAmount(
                 _ERC721Data.userState,
                 _ERC721Data.ownedTokens,
+                _underlyingAsset,
                 user,
                 POOL_ID(),
                 _apeCoinStaking

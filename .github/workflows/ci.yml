@@ -37,6 +37,7 @@ jobs:
           yarn build
           yarn doc
           yarn lint
+          yarn size
 
   tests:
     name: Unit Tests
