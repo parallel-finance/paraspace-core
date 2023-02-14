@@ -160,6 +160,7 @@ task("decode-queued-txs", "Decode queued transactions").setAction(
       if (!(await timeLock.isActionQueued(e.args.actionHash))) {
         continue;
       }
+      console.log(e.args.target.toString());
       console.log(
         JSON.stringify(decodeInputData(e.args.data.toString()), null, 4)
       );
@@ -178,7 +179,8 @@ task("decode-buffered-txs", "Decode buffered transactions").setAction(
     const actions = await getTimeLockDataInDb();
 
     for (const a of actions) {
-      const [, , , data] = a.action;
+      const [target, , , data] = a.action;
+      console.log(target);
       console.log(JSON.stringify(decodeInputData(data.toString()), null, 4));
       console.log();
     }
