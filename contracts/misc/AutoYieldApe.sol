@@ -7,6 +7,7 @@ import "../dependencies/openzeppelin/upgradeability/ERC20Upgradeable.sol";
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../dependencies/openzeppelin/contracts/Address.sol";
+import "../dependencies/univ3/interfaces/ISwapRouter.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../interfaces/IAutoYieldApe.sol";
 import "../interfaces/IYieldInfo.sol";
@@ -27,8 +28,6 @@ contract AutoYieldApe is
 
     /// @notice ApeCoin single pool POOL_ID for ApeCoinStaking
     uint256 public constant APE_COIN_POOL_ID = 0;
-    /// @notice Minimal ApeCoin reward amount to harvest from ApeCoinStaking
-    uint256 public constant MIN_HARVEST_AMOUNT = 100 * 1e18;
     // Equals to `bytes4(keccak256("onAutoYieldApeReceived(address,address)"))`
     bytes4 private constant _AUTO_YIELD_APE_RECEIVED = 0xc7540caa;
     uint256 internal constant RAY = 1e27;
@@ -38,15 +37,19 @@ contract AutoYieldApe is
     address private immutable _yieldUnderlying;
     address private immutable _yieldToken;
     IPoolCore private immutable _lendingPool;
+    ISwapRouter private immutable _swapRouter;
+
     uint256 private _currentYieldIndex;
     mapping(address => uint256) private _userYieldIndex;
     mapping(address => uint256) private _userPendingYield;
+    address public harvestOperator;
 
     constructor(
         address apeStaking,
         address apeCoin,
         address yieldUnderlying,
-        address lendingPool
+        address lendingPool,
+        address swapRouter
     ) {
         _apeStaking = ApeCoinStaking(apeStaking);
         _apeCoin = apeCoin;
@@ -59,6 +62,7 @@ contract AutoYieldApe is
             _yieldToken != address(0),
             "unsupported yield underlying token"
         );
+        _swapRouter = ISwapRouter(swapRouter);
     }
 
     function initialize() public initializer {
@@ -87,16 +91,28 @@ contract AutoYieldApe is
                 type(uint256).max
             );
         }
+        //approve ApeCoin for uniswap
+        allowance = IERC20(_apeCoin).allowance(
+            address(this),
+            address(_swapRouter)
+        );
+        if (allowance == 0) {
+            IERC20(_apeCoin).safeApprove(
+                address(_swapRouter),
+                type(uint256).max
+            );
+        }
     }
 
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
-        _harvest();
         _updateYieldIndex(msg.sender);
         _mint(onBehalf, amount);
 
         IERC20(_apeCoin).safeTransferFrom(msg.sender, address(this), amount);
         _apeStaking.depositSelfApeCoin(amount);
+
+        emit Deposit(msg.sender, onBehalf, amount);
     }
 
     function withdraw(uint256 amount) external override {
@@ -104,7 +120,6 @@ contract AutoYieldApe is
     }
 
     function claim() external override {
-        _harvest();
         _updateYieldIndex(msg.sender);
         _claim();
     }
@@ -112,6 +127,11 @@ contract AutoYieldApe is
     function exit() external override {
         _withdraw(balanceOf(msg.sender));
         _claim();
+    }
+
+    function harvest(uint160 sqrtPriceLimitX96) external {
+        require(msg.sender == harvestOperator, "non harvest operator");
+        _harvest(sqrtPriceLimitX96);
     }
 
     function yieldAmount(address account) public view returns (uint256) {
@@ -146,6 +166,15 @@ contract AutoYieldApe is
         return (_yieldUnderlying, _yieldToken, _currentYieldIndex);
     }
 
+    function setHarvestOperator(address _harvestOperator) external onlyOwner {
+        require(_harvestOperator != address(0), "zero address");
+        address oldOperator = harvestOperator;
+        if (oldOperator != _harvestOperator) {
+            harvestOperator = _harvestOperator;
+            emit HarvestOperatorUpdated(oldOperator, _harvestOperator);
+        }
+    }
+
     function rescueERC20(
         address token,
         address to,
@@ -159,12 +188,13 @@ contract AutoYieldApe is
     function _withdraw(uint256 amount) internal {
         require(amount > 0, "zero amount");
 
-        _harvest();
         _updateYieldIndex(msg.sender);
         _burn(msg.sender, amount);
 
         _apeStaking.withdrawSelfApeCoin(amount);
         IERC20(_apeCoin).safeTransfer(msg.sender, amount);
+
+        emit Redeem(msg.sender, amount);
     }
 
     function _claim() internal {
@@ -173,19 +203,20 @@ contract AutoYieldApe is
             _userPendingYield[msg.sender] = 0;
             IERC20(_yieldToken).safeTransfer(msg.sender, pendingYield);
         }
+        emit YieldClaimed(msg.sender, pendingYield);
     }
 
-    function _harvest() internal {
+    function _harvest(uint160 sqrtPriceLimitX96) internal {
         uint256 rewardAmount = _apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
             address(this),
             0
         );
-        //if (rewardAmount > MIN_HARVEST_AMOUNT) {
         if (rewardAmount > 0) {
             _apeStaking.claimSelfApeCoin();
             uint256 yieldUnderlyingAmount = _sellApeCoinForYieldToken(
-                rewardAmount
+                rewardAmount,
+                sqrtPriceLimitX96
             );
             IPoolCore(_lendingPool).supply(
                 _yieldUnderlying,
@@ -214,11 +245,23 @@ contract AutoYieldApe is
         }
     }
 
-    function _sellApeCoinForYieldToken(uint256 apeCoinAmount)
-        internal
-        returns (uint256)
-    {
-        return apeCoinAmount / 1000000000000;
+    function _sellApeCoinForYieldToken(
+        uint256 apeCoinAmount,
+        uint160 sqrtPriceLimitX96
+    ) internal returns (uint256) {
+        return
+            _swapRouter.exactInputSingle(
+                ISwapRouter.ExactInputSingleParams({
+                    tokenIn: _apeCoin,
+                    tokenOut: _yieldUnderlying,
+                    fee: 3000,
+                    recipient: address(this),
+                    deadline: block.timestamp,
+                    amountIn: apeCoinAmount,
+                    amountOutMinimum: 0,
+                    sqrtPriceLimitX96: sqrtPriceLimitX96
+                })
+            );
     }
 
     function _transfer(
@@ -226,7 +269,6 @@ contract AutoYieldApe is
         address recipient,
         uint256 amount
     ) internal override {
-        _harvest();
         _updateYieldIndex(sender);
         _updateYieldIndex(recipient);
         super._transfer(sender, recipient, amount);

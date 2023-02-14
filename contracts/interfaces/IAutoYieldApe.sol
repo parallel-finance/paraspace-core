@@ -24,6 +24,13 @@ interface IAutoYieldApe {
     event Redeem(address indexed user, uint256 amountWithdraw);
 
     /**
+     * @dev Emitted during claim()
+     * @param user The address of the user
+     * @param amount The amount being claimed
+     **/
+    event YieldClaimed(address indexed user, uint256 amount);
+
+    /**
      * @dev Emitted during rescueERC20()
      * @param token The address of the token
      * @param to The address of the recipient
@@ -34,6 +41,13 @@ interface IAutoYieldApe {
         address indexed to,
         uint256 amount
     );
+
+    /**
+     * @dev Emitted during setHarvestOperator()
+     * @param oldOperator The address of the old harvest operator
+     * @param newOperator The address of the new harvest operator
+     **/
+    event HarvestOperatorUpdated(address oldOperator, address newOperator);
 
     /**
      * @notice deposit an `amount` of ape into pool.

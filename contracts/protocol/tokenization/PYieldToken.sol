@@ -37,7 +37,6 @@ contract PYieldToken is PToken {
         uint256 amount,
         uint256 index
     ) external override onlyPool returns (bool) {
-        IAutoYieldApe(_underlyingAsset).claim();
         uint256 principle = balanceOf(onBehalfOf);
         uint256 yieldIndex = IYieldInfo(_underlyingAsset).yieldIndex();
         _updateUserIndex(onBehalfOf, principle, yieldIndex);
@@ -51,7 +50,6 @@ contract PYieldToken is PToken {
         uint256 amount,
         uint256 index
     ) external override onlyPool {
-        IAutoYieldApe(_underlyingAsset).claim();
         uint256 principle = balanceOf(from);
         uint256 yieldIndex = IYieldInfo(_underlyingAsset).yieldIndex();
         _updateUserIndex(from, principle, yieldIndex);
@@ -68,7 +66,6 @@ contract PYieldToken is PToken {
         uint256 amount,
         bool validate
     ) internal override {
-        IAutoYieldApe(_underlyingAsset).claim();
         uint256 principleFrom = balanceOf(from);
         uint256 principleTo = balanceOf(to);
         uint256 yieldIndex = IYieldInfo(_underlyingAsset).yieldIndex();

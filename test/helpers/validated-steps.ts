@@ -24,6 +24,7 @@ import {
 import {waitForTx} from "../../helpers/misc-utils";
 import {
   AutoCompoundApe,
+  AutoYieldApe,
   ERC20,
   ERC721,
   INonfungiblePositionManager,
@@ -47,6 +48,7 @@ type SupportedAsset =
   | MintableERC721
   | WETH9Mocked
   | AutoCompoundApe
+  | AutoYieldApe
   | StETHMocked
   | INonfungiblePositionManager;
 

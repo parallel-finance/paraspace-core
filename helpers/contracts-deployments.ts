@@ -2275,11 +2275,13 @@ export const deployAutoYieldApeImpl = async (verify?: boolean) => {
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
   const pool = await getPoolProxy();
+  const swapRouter = await getUniswapV3SwapRouter();
   const args = [
     apeCoinStaking,
     allTokens.APE.address,
     allTokens.USDC.address,
     pool.address,
+    swapRouter.address,
   ];
 
   return withSaveAndVerify(
