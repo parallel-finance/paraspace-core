@@ -79,6 +79,7 @@ import {
   NTokenBAKC__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
+  MockLendPool__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1127,6 +1128,17 @@ export const getMultiSendCallOnly = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.MultiSendCallOnly}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockBendDaoLendPool = async (address?: tEthereumAddress) =>
+  await MockLendPool__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockBendDaoLendPool}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

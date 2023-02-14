@@ -146,4 +146,13 @@ contract PoolMarketplace is
             referralCode
         );
     }
+
+    // function movePositionFromBendDAO(uint256[] calldata loanIds) external nonReentrant {
+    //     DataTypes.PoolStorage storage ps = poolStorage();
+
+    //     PositionMoverLogic.executeMovePositionFromBendDAO(
+    //         ps,
+    //         ADDRESSES_PROVIDER
+    //     );
+    // }
 }

@@ -6,6 +6,7 @@ import {PoolConfiguratorLibraryAddresses} from "../types/factories/protocol/pool
 import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCore__factory";
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
+import {PoolPositionMoverLibraryAddresses} from "../types/factories/protocol/pool/PoolPositionMover__factory";
 import {NTokenBAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenBAYC__factory";
 import {NTokenMAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMAYC__factory";
 import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMoonBirds__factory";
@@ -80,6 +81,7 @@ export type ParaSpaceLibraryAddresses =
   | NTokenLibraryAddresses
   | NTokenUniswapV3LibraryAddresses
   | NTokenMoonBirdsLibraryAddresses
+  | PoolPositionMoverLibraryAddresses
   | {["NFTDescriptor"]: string};
 
 export enum eEthereumNetwork {
@@ -241,6 +243,9 @@ export enum eContractid {
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
+  MockBendDaoLendPool = "MockBendDaoLendPool",
+  PositionMoverLogic = "PositionMoverLogic",
+  PoolPositionMoverImpl = "PoolPositionMoverImpl",
 }
 
 /*
