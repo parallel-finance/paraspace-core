@@ -416,6 +416,10 @@ send-eth:
 release-bakc-autoswap:
 	make SCRIPT_PATH=./scripts/dev/11.release-bakc-autoswap.ts run
 
+.PHONY: rescue-funds
+rescue-funds:
+	make SCRIPT_PATH=./scripts/dev/12.rescue-funds.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -590,8 +594,8 @@ anvil:
 		--state-interval 60 \
 		--dump-state state.json \
 		$(if $(wildcard state.json),--load-state state.json,) \
-		--disable-block-gas-limit \
 		--code-size-limit 100000 \
+		# --disable-block-gas-limit \
 
 .PHONY: image
 image:

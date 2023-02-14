@@ -1,16 +1,14 @@
 import {utils} from "ethers";
 import rawBRE from "hardhat";
 import {getFirstSigner} from "../../helpers/contracts-getters";
-import {getParaSpaceAdmins} from "../../helpers/contracts-helpers";
 import {waitForTx} from "../../helpers/misc-utils";
 
 const sendETH = async () => {
   console.time("send-eth");
   const signer = await getFirstSigner();
-  const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
   await waitForTx(
     await signer.sendTransaction({
-      to: paraSpaceAdminAddress,
+      to: "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
       value: utils.parseEther("10").toString(),
     })
   );
