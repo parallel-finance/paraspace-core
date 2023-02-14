@@ -725,10 +725,10 @@ abstract contract MintableIncentivizedERC721 is
      * @param airdropContract The address of the airdrop contract
      * @param airdropParams Third party airdrop abi data. You need to get this from the third party airdrop.
      **/
-    function airdrop(address airdropContract, bytes calldata airdropParams)
-        external
-        onlyPoolAdmin
-    {
+    function executeAirdrop(
+        address airdropContract,
+        bytes calldata airdropParams
+    ) external onlyPoolAdmin {
         MintableERC721Logic.executeAirdrop(airdropContract, airdropParams);
     }
 }
