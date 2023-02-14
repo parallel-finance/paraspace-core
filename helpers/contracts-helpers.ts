@@ -99,6 +99,7 @@ import {
   FORK,
   MULTI_SEND,
   TIME_LOCK_DEFAULT_OPERATION,
+  VERSION,
 } from "./hardhat-constants";
 import {chunk, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
@@ -141,6 +142,7 @@ export const registerContractInDb = async (
     deployer: instance.deployTransaction?.from,
     constructorArgs,
     verified: false,
+    version: VERSION,
   };
 
   if (libraries) value["libraries"] = libraries;
@@ -159,6 +161,7 @@ export const insertContractAddressInDb = async (
   const newValue = {
     ...old,
     address,
+    version: VERSION,
   };
   if (!Array.isArray(newValue.constructorArgs) && verifiable) {
     newValue["constructorArgs"] = [];
