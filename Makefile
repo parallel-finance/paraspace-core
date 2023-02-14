@@ -586,6 +586,7 @@ anvil:
 		--state-interval 60 \
 		--dump-state state.json \
 		$(if $(wildcard state.json),--load-state state.json,) \
+		--disable-block-gas-limit \
 		--code-size-limit 100000 \
 
 .PHONY: image
