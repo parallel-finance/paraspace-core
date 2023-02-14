@@ -43,6 +43,7 @@ struct MintableERC721Data {
     mapping(uint256 => bool) isUsedAsCollateral;
     mapping(uint256 => DataTypes.Auction) auctions;
     address underlyingAsset;
+    bool isTraitBoosted;
     mapping(uint256 => uint256) traitsMultipliers;
 }
 
@@ -165,8 +166,8 @@ library MintableERC721Logic {
         isUsedAsCollateral_ = erc721Data.isUsedAsCollateral[tokenId];
 
         if (from != to && isUsedAsCollateral_) {
-            if (!ATOMIC_PRICING) {
-                _executeUpdateTraitMultiplier(
+            if (_shouldUpdateUserAvgMultiplier(erc721Data, ATOMIC_PRICING)) {
+                _executeUpdateUserAvgMultiplier(
                     erc721Data,
                     from,
                     -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
@@ -202,8 +203,8 @@ library MintableERC721Logic {
             );
         }
 
-        if (!ATOMIC_PRICING) {
-            _executeUpdateTraitMultiplier(
+        if (_shouldUpdateUserAvgMultiplier(erc721Data, ATOMIC_PRICING)) {
+            _executeUpdateUserAvgMultiplier(
                 erc721Data,
                 owner,
                 useAsCollateral
@@ -239,6 +240,10 @@ library MintableERC721Logic {
         require(to != address(0), "ERC721: mint to the zero address");
         LocalVars memory vars = _cache(erc721Data, to);
         uint256 oldTotalSupply = erc721Data.allTokens.length;
+        bool shouldUpdateUserAvgMultiplier = _shouldUpdateUserAvgMultiplier(
+            erc721Data,
+            ATOMIC_PRICING
+        );
 
         for (uint256 index = 0; index < tokenData.length; index++) {
             uint256 tokenId = tokenData[index].tokenId;
@@ -268,7 +273,7 @@ library MintableERC721Logic {
             ) {
                 erc721Data.isUsedAsCollateral[tokenId] = true;
                 vars.collateralizedBalanceDelta++;
-                if (!ATOMIC_PRICING) {
+                if (shouldUpdateUserAvgMultiplier) {
                     vars.multiplierDelta += getTraitMultiplier(
                         erc721Data.traitsMultipliers[tokenId]
                     );
@@ -278,8 +283,8 @@ library MintableERC721Logic {
             emit Transfer(address(0), to, tokenId);
         }
 
-        if (!ATOMIC_PRICING) {
-            _executeUpdateTraitMultiplier(
+        if (shouldUpdateUserAvgMultiplier) {
+            _executeUpdateUserAvgMultiplier(
                 erc721Data,
                 to,
                 vars.multiplierDelta.toInt256(),
@@ -318,6 +323,10 @@ library MintableERC721Logic {
     ) external returns (uint64, uint64) {
         LocalVars memory vars = _cache(erc721Data, user);
         uint256 oldTotalSupply = erc721Data.allTokens.length;
+        bool shouldUpdateUserAvgMultiplier = _shouldUpdateUserAvgMultiplier(
+            erc721Data,
+            ATOMIC_PRICING
+        );
 
         for (uint256 index = 0; index < tokenIds.length; index++) {
             uint256 tokenId = tokenIds[index];
@@ -350,7 +359,7 @@ library MintableERC721Logic {
             if (erc721Data.isUsedAsCollateral[tokenId]) {
                 delete erc721Data.isUsedAsCollateral[tokenId];
                 vars.collateralizedBalanceDelta += 1;
-                if (!ATOMIC_PRICING) {
+                if (shouldUpdateUserAvgMultiplier) {
                     vars.multiplierDelta += getTraitMultiplier(
                         erc721Data.traitsMultipliers[tokenId]
                     );
@@ -366,8 +375,8 @@ library MintableERC721Logic {
             vars.oldBalance -
             uint64(tokenIds.length);
 
-        if (!ATOMIC_PRICING) {
-            _executeUpdateTraitMultiplier(
+        if (shouldUpdateUserAvgMultiplier) {
+            _executeUpdateUserAvgMultiplier(
                 erc721Data,
                 user,
                 -vars.multiplierDelta.toInt256(),
@@ -456,7 +465,7 @@ library MintableERC721Logic {
         delete erc721Data.auctions[tokenId];
     }
 
-    function _executeUpdateTraitMultiplier(
+    function _executeUpdateUserAvgMultiplier(
         MintableERC721Data storage erc721Data,
         address owner,
         int256 multiplierDelta,
@@ -542,13 +551,21 @@ library MintableERC721Logic {
 
             int256 multiplierDelta = newMultiplier.toInt256() -
                 oldMultiplier.toInt256();
-            _executeUpdateTraitMultiplier(
+            _executeUpdateUserAvgMultiplier(
                 erc721Data,
                 owner,
                 multiplierDelta,
                 0
             );
         }
+        if (!erc721Data.isTraitBoosted) erc721Data.isTraitBoosted = true;
+    }
+
+    function _shouldUpdateUserAvgMultiplier(
+        MintableERC721Data storage erc721Data,
+        bool ATOMIC_PRICING
+    ) private view returns (bool) {
+        return !ATOMIC_PRICING && erc721Data.isTraitBoosted;
     }
 
     function _checkBalanceLimit(
