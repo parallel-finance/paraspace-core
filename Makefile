@@ -416,6 +416,10 @@ send-eth:
 release-bakc-autoswap:
 	make SCRIPT_PATH=./scripts/dev/11.release-bakc-autoswap.ts run
 
+.PHONY: fix-pool-parameters
+fix-pool-parameters:
+	make SCRIPT_PATH=./scripts/dev/12.fix-pool-parameters.ts run
+
 .PHONY: rescue-funds
 rescue-funds:
 	make SCRIPT_PATH=./scripts/dev/12.rescue-funds.ts run
