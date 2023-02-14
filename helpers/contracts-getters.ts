@@ -79,6 +79,8 @@ import {
   NTokenBAKC__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
+  AutoYieldApe__factory,
+  PYieldToken__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -271,6 +273,17 @@ export const getPToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getPYieldToken = async (address?: tEthereumAddress) =>
+  await PYieldToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.PYieldTokenImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getNToken = async (address?: tEthereumAddress) =>
   await NToken__factory.connect(
     address ||
@@ -386,7 +399,10 @@ export const getAllERC20Tokens = async () => {
         accumulator[tokenSymbol] = await getMintableERC20(address);
         return Promise.resolve(accumulator);
       } else {
-        if (tokenSymbol === ERC20TokenContractId.cAPE) {
+        if (
+          tokenSymbol === ERC20TokenContractId.cAPE ||
+          tokenSymbol === ERC20TokenContractId.yAPE
+        ) {
           return Promise.resolve(accumulator);
         }
         return Promise.reject(`${tokenSymbol} is not in db`);
@@ -1054,6 +1070,15 @@ export const getAutoCompoundApe = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.cAPE}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getAutoYieldApe = async (address?: tEthereumAddress) =>
+  await AutoYieldApe__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.yAPE}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );

@@ -228,11 +228,16 @@ import {
   NTokenBAKC__factory,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  AutoYieldApe__factory,
+  AutoYieldApe,
+  PYieldToken__factory,
+  PYieldToken,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
   getFirstSigner,
+  getPoolProxy,
   getPunks,
   getWETH,
 } from "./contracts-getters";
@@ -925,7 +930,13 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       }
 
       if (tokenSymbol === ERC20TokenContractId.cAPE) {
+        //cAPE need to deploy later because it has a dependency for ApeCoinStaking address
         console.log("cAPE deploy later....");
+        continue;
+      }
+      if (tokenSymbol === ERC20TokenContractId.yAPE) {
+        //yAPE need to deploy later because it has a dependency for ApeCoinStaking address
+        console.log("yAPE deploy later....");
         continue;
       }
 
@@ -2111,6 +2122,52 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   return proxyInstance as AutoCompoundApe;
 };
 
+export const deployAutoYieldApeImpl = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const pool = await getPoolProxy();
+  const args = [
+    apeCoinStaking,
+    allTokens.APE.address,
+    allTokens.USDC.address,
+    pool.address,
+  ];
+
+  return withSaveAndVerify(
+    new AutoYieldApe__factory(await getFirstSigner()),
+    eContractid.yAPEImpl,
+    [...args],
+    verify
+  ) as Promise<AutoYieldApe>;
+};
+
+export const deployAutoYieldApe = async (verify?: boolean) => {
+  const yApeImplementation = await deployAutoYieldApeImpl(verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData =
+    yApeImplementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.yAPE,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](yApeImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as AutoYieldApe;
+};
+
 export const deployPTokenCApe = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
@@ -2132,6 +2189,17 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployPYieldToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new PYieldToken__factory(await getFirstSigner()),
+    eContractid.PYieldTokenImpl,
+    [poolAddress],
+    verify
+  ) as Promise<PYieldToken>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
