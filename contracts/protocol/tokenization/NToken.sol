@@ -14,8 +14,6 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
-import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
-import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";

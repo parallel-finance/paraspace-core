@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
-import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol";
-import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
-import {Helpers} from "../../libraries/helpers/Helpers.sol";
-import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";
 import "../../../interfaces/IPool.sol";
@@ -169,13 +165,15 @@ library MintableERC721Logic {
         isUsedAsCollateral_ = erc721Data.isUsedAsCollateral[tokenId];
 
         if (from != to && isUsedAsCollateral_) {
-            _executeUpdateTraitMultiplier(
-                erc721Data,
-                from,
-                -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
-                    .toInt256(),
-                -1
-            );
+            if (!ATOMIC_PRICING) {
+                _executeUpdateTraitMultiplier(
+                    erc721Data,
+                    from,
+                    -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                        .toInt256(),
+                    -1
+                );
+            }
             erc721Data.userState[from].collateralizedBalance -= 1;
             delete erc721Data.isUsedAsCollateral[tokenId];
         }
@@ -186,7 +184,7 @@ library MintableERC721Logic {
     function executeSetIsUsedAsCollateral(
         MintableERC721Data storage erc721Data,
         IPool POOL,
-        bool,
+        bool ATOMIC_PRICING,
         uint256 tokenId,
         bool useAsCollateral,
         address sender
@@ -204,16 +202,18 @@ library MintableERC721Logic {
             );
         }
 
-        _executeUpdateTraitMultiplier(
-            erc721Data,
-            owner,
-            useAsCollateral
-                ? getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
-                    .toInt256()
-                : -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
-                    .toInt256(),
-            useAsCollateral ? int256(1) : int256(-1)
-        );
+        if (!ATOMIC_PRICING) {
+            _executeUpdateTraitMultiplier(
+                erc721Data,
+                owner,
+                useAsCollateral
+                    ? getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                        .toInt256()
+                    : -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                        .toInt256(),
+                useAsCollateral ? int256(1) : int256(-1)
+            );
+        }
 
         uint64 collateralizedBalance = erc721Data
             .userState[owner]
@@ -268,20 +268,24 @@ library MintableERC721Logic {
             ) {
                 erc721Data.isUsedAsCollateral[tokenId] = true;
                 vars.collateralizedBalanceDelta++;
-                vars.multiplierDelta += getTraitMultiplier(
-                    erc721Data.traitsMultipliers[tokenId]
-                );
+                if (!ATOMIC_PRICING) {
+                    vars.multiplierDelta += getTraitMultiplier(
+                        erc721Data.traitsMultipliers[tokenId]
+                    );
+                }
             }
 
             emit Transfer(address(0), to, tokenId);
         }
 
-        _executeUpdateTraitMultiplier(
-            erc721Data,
-            to,
-            vars.multiplierDelta.toInt256(),
-            vars.collateralizedBalanceDelta.toInt256()
-        );
+        if (!ATOMIC_PRICING) {
+            _executeUpdateTraitMultiplier(
+                erc721Data,
+                to,
+                vars.multiplierDelta.toInt256(),
+                vars.collateralizedBalanceDelta.toInt256()
+            );
+        }
 
         uint64 newCollateralizedBalance = vars.oldCollateralizedBalance +
             vars.collateralizedBalanceDelta.toUint64();
@@ -308,7 +312,7 @@ library MintableERC721Logic {
     function executeBurnMultiple(
         MintableERC721Data storage erc721Data,
         IPool POOL,
-        bool,
+        bool ATOMIC_PRICING,
         address user,
         uint256[] calldata tokenIds
     ) external returns (uint64, uint64) {
@@ -346,9 +350,11 @@ library MintableERC721Logic {
             if (erc721Data.isUsedAsCollateral[tokenId]) {
                 delete erc721Data.isUsedAsCollateral[tokenId];
                 vars.collateralizedBalanceDelta += 1;
-                vars.multiplierDelta += getTraitMultiplier(
-                    erc721Data.traitsMultipliers[tokenId]
-                );
+                if (!ATOMIC_PRICING) {
+                    vars.multiplierDelta += getTraitMultiplier(
+                        erc721Data.traitsMultipliers[tokenId]
+                    );
+                }
             }
 
             delete erc721Data.owners[tokenId];
@@ -360,12 +366,14 @@ library MintableERC721Logic {
             vars.oldBalance -
             uint64(tokenIds.length);
 
-        _executeUpdateTraitMultiplier(
-            erc721Data,
-            user,
-            -vars.multiplierDelta.toInt256(),
-            -vars.collateralizedBalanceDelta.toInt256()
-        );
+        if (!ATOMIC_PRICING) {
+            _executeUpdateTraitMultiplier(
+                erc721Data,
+                user,
+                -vars.multiplierDelta.toInt256(),
+                -vars.collateralizedBalanceDelta.toInt256()
+            );
+        }
         uint64 newCollateralizedBalance = vars.oldCollateralizedBalance -
             vars.collateralizedBalanceDelta.toUint64();
         erc721Data
