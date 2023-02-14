@@ -5,6 +5,7 @@ import {INToken} from "../../../interfaces/INToken.sol";
 import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
+import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
@@ -33,6 +34,8 @@ library PositionMoverLogic {
         uint256 borrowAmount;
     }
 
+    event PositionMoved(address asset, uint256 tokenId, address user);
+
     function executeMovePositionFromBendDAO(
         DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider,
@@ -55,17 +58,21 @@ library PositionMoverLogic {
             ) = _repayBendDAOPositionLoan(
                 lendPoolLoan,
                 lendPool,
+                tmpVar.weth,
                 tmpVar.xTokenAddress,
                 loandIds[index]
             );
 
             supplyNFTandBorrowWETH(ps, poolAddressProvider, tmpVar);
+
+            emit PositionMoved(tmpVar.nftAsset, tmpVar.tokenId, msg.sender);
         }
     }
 
     function _repayBendDAOPositionLoan(
         ILendPoolLoan lendPoolLoan,
         ILendPool lendPool,
+        address weth,
         address xTokenAddress,
         uint256 loanId
     )
@@ -86,10 +93,14 @@ library PositionMoverLogic {
 
         (, borrowAmount) = lendPoolLoan.getLoanReserveBorrowAmount(loanId);
 
+        DataTypes.TimeLockParams memory timeLockParams;
+
         IPToken(xTokenAddress).transferUnderlyingTo(
             address(this),
-            borrowAmount
+            borrowAmount,
+            timeLockParams
         );
+        IERC20(weth).approve(address(lendPool), borrowAmount);
 
         lendPool.repay(loanData.nftAsset, loanData.nftTokenId, borrowAmount);
 
