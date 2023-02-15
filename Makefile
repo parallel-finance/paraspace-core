@@ -184,6 +184,10 @@ test-marketplace-adapter:
 test-uniswap-v3-oracle:
 	make TEST_TARGET=_uniswap-v3-oracle.spec.ts test
 
+.PHONY: test-uniswap-v3-twap-oracle
+test-uniswap-v3-twap-oracle:
+	make TEST_TARGET=_uniswap-v3-twap-oracle.spec.ts test
+
 .PHONY: test-uniswap-v3-ltv-validation
 test-uniswap-v3-ltv-validation:
 	make TEST_TARGET=_uniswap_ltv_validation.spec.ts test
