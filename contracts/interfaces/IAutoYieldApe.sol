@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 /**
- * @title SApe receiver interface
+ * @title AutoYieldApe interface
  */
 interface IAutoYieldApe {
     /**
@@ -58,13 +58,13 @@ interface IAutoYieldApe {
 
     /**
      * @notice deposit an `amount` of ape into pool.
-     * @param onBehalf The address of user will receive the sApe balance
+     * @param onBehalf The address of user will receive the yApe balance
      * @param amount The amount of ape to be deposit
      **/
     function deposit(address onBehalf, uint256 amount) external;
 
     /**
-     * @notice withdraw an `amount` of ape from compound pool.
+     * @notice withdraw an `amount` of ape from yield pool.
      * @param amount The amount of ape to be withdraw
      **/
     function withdraw(uint256 amount) external;
@@ -78,4 +78,16 @@ interface IAutoYieldApe {
      * @notice withdraw all balance of ape from pool.
      **/
     function exit() external;
+
+    /**
+     * @notice This function will claim the pending Ape Coin reward and sell it to usdc by uniswap,
+     then supply usdc to pUsdc. This is is the only way to increase yield index.
+     * @param sqrtPriceLimitX96 The minimal accept price to sell Ape coin to usdc
+     **/
+    function harvest(uint160 sqrtPriceLimitX96) external;
+
+    /**
+     * @notice fetch the pending yield amount for the specified account.
+     **/
+    function yieldAmount(address account) external view returns (uint256);
 }

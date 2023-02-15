@@ -107,6 +107,7 @@ contract AutoYieldApe is
         }
     }
 
+    /// @inheritdoc IAutoYieldApe
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
         _updateYieldIndex(msg.sender);
@@ -118,26 +119,36 @@ contract AutoYieldApe is
         emit Deposit(msg.sender, onBehalf, amount);
     }
 
+    /// @inheritdoc IAutoYieldApe
     function withdraw(uint256 amount) external override {
         _withdraw(amount);
     }
 
+    /// @inheritdoc IAutoYieldApe
     function claim() external override {
         _updateYieldIndex(msg.sender);
         _claim();
     }
 
+    /// @inheritdoc IAutoYieldApe
     function exit() external override {
         _withdraw(balanceOf(msg.sender));
         _claim();
     }
 
-    function harvest(uint160 sqrtPriceLimitX96) external {
+    /// @inheritdoc IAutoYieldApe
+    function harvest(uint160 sqrtPriceLimitX96) external override {
         require(msg.sender == harvestOperator, "non harvest operator");
         _harvest(sqrtPriceLimitX96);
     }
 
-    function yieldAmount(address account) public view returns (uint256) {
+    /// @inheritdoc IAutoYieldApe
+    function yieldAmount(address account)
+        public
+        view
+        override
+        returns (uint256)
+    {
         uint256 pendingYield = _userPendingYield[account];
         uint256 indexDiff = _currentYieldIndex - _userYieldIndex[account];
         uint256 userBalance = balanceOf(account);
@@ -156,17 +167,21 @@ contract AutoYieldApe is
         return pendingYield;
     }
 
-    function yieldIndex() external view returns (uint256) {
+    /// @inheritdoc IYieldInfo
+    function yieldIndex() external view override returns (uint256) {
         return _currentYieldIndex;
     }
 
-    function yieldToken() external view returns (address) {
+    /// @inheritdoc IYieldInfo
+    function yieldToken() external view override returns (address) {
         return address(_yieldToken);
     }
 
+    /// @inheritdoc IYieldInfo
     function yieldInfo()
         external
         view
+        override
         returns (
             address,
             address,
@@ -229,17 +244,21 @@ contract AutoYieldApe is
     }
 
     function _harvest(uint160 sqrtPriceLimitX96) internal {
+        //1, get current pending ape coin reward amount
         uint256 rewardAmount = _apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
             address(this),
             0
         );
         if (rewardAmount > 0) {
+            //2, claim pending ape coin reward
             _apeStaking.claimSelfApeCoin();
+            //3, sell ape coin to usdc
             uint256 yieldUnderlyingAmount = _sellApeCoinForYieldToken(
                 rewardAmount,
                 sqrtPriceLimitX96
             );
+            //4, supply usdc to pUsdc
             IPoolCore(_lendingPool).supply(
                 _yieldUnderlying,
                 yieldUnderlyingAmount,
@@ -251,11 +270,13 @@ contract AutoYieldApe is
             );
             uint256 _yieldAmount = yieldUnderlyingAmount.rayDiv(liquidityIndex);
             uint256 _harvestFee = harvestFee;
+            //5, calculate harvest fee
             if (_harvestFee > 0) {
                 uint256 fee = _yieldAmount.percentMul(_harvestFee);
                 _userPendingYield[owner()] += fee;
                 _yieldAmount -= fee;
             }
+            //6, update yield index
             uint256 accuIndex = (_yieldAmount * RAY) / totalSupply();
             _currentYieldIndex += accuIndex;
         }
@@ -298,6 +319,7 @@ contract AutoYieldApe is
         address recipient,
         uint256 amount
     ) internal override {
+        require(sender != recipient, "same address for transfer");
         _updateYieldIndex(sender);
         _updateYieldIndex(recipient);
         super._transfer(sender, recipient, amount);
@@ -328,7 +350,7 @@ contract AutoYieldApe is
         bytes4 retval = abi.decode(returndata, (bytes4));
         require(
             success && retval == _AUTO_YIELD_APE_RECEIVED,
-            "transfer to non yApe implementer2"
+            "transfer to non yApe implementer"
         );
         return true;
     }

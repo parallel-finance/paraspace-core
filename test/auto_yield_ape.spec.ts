@@ -202,6 +202,14 @@ describe("Auto Yield Ape Test", () => {
       await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
     );
 
+    almostEqual(
+      await yApe.yieldAmount(user1.address),
+      await convertToCurrencyDecimals(usdc.address, "1800")
+    );
+    almostEqual(
+      await yApe.yieldAmount(user2.address),
+      await convertToCurrencyDecimals(usdc.address, "1800")
+    );
     await waitForTx(await yApe.connect(user1.signer).claim());
     await waitForTx(await yApe.connect(user2.signer).claim());
     almostEqual(
@@ -224,6 +232,18 @@ describe("Auto Yield Ape Test", () => {
       await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
     );
 
+    almostEqual(
+      await yApe.yieldAmount(user1.address),
+      await convertToCurrencyDecimals(usdc.address, "900")
+    );
+    almostEqual(
+      await yApe.yieldAmount(user2.address),
+      await convertToCurrencyDecimals(usdc.address, "1800")
+    );
+    almostEqual(
+      await yApe.yieldAmount(user3.address),
+      await convertToCurrencyDecimals(usdc.address, "900")
+    );
     await waitForTx(await yApe.connect(user1.signer).claim());
     await waitForTx(await yApe.connect(user2.signer).claim());
     await waitForTx(await yApe.connect(user3.signer).claim());
@@ -251,6 +271,18 @@ describe("Auto Yield Ape Test", () => {
       await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
     );
 
+    almostEqual(
+      await yApe.yieldAmount(user1.address),
+      await convertToCurrencyDecimals(usdc.address, "900")
+    );
+    almostEqual(
+      await yApe.yieldAmount(user2.address),
+      await convertToCurrencyDecimals(usdc.address, "900")
+    );
+    almostEqual(
+      await yApe.yieldAmount(user3.address),
+      await convertToCurrencyDecimals(usdc.address, "1800")
+    );
     await waitForTx(await yApe.connect(user1.signer).claim());
     await waitForTx(await yApe.connect(user2.signer).claim());
     await waitForTx(await yApe.connect(user3.signer).claim());
@@ -441,5 +473,86 @@ describe("Auto Yield Ape Test", () => {
       await yUSDC.balanceOf(user1.address),
       await convertToCurrencyDecimals(usdc.address, "3600")
     );
+  });
+
+  it("harvest fee calculation as expected", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      usdc,
+      gatewayAdmin,
+    } = await loadFixture(fixture);
+
+    await expect(
+      yApe.connect(user2.signer).setHarvestOperator(user2.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+    await expect(
+      yApe.connect(user2.signer).setHarvestFee(1000)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+    await waitForTx(
+      await yApe.connect(gatewayAdmin.signer).setHarvestOperator(user2.address)
+    );
+    await waitForTx(
+      await yApe.connect(gatewayAdmin.signer).setHarvestFee(1000)
+    );
+
+    await mintAndValidate(ape, "200", user1);
+    await mintAndValidate(ape, "200", user2);
+
+    await waitForTx(
+      await yApe.connect(user1.signer).deposit(user1.address, parseEther("200"))
+    );
+    await waitForTx(
+      await yApe.connect(user2.signer).deposit(user2.address, parseEther("200"))
+    );
+
+    await advanceTimeAndBlock(3600);
+    await waitForTx(
+      await yApe.connect(user2.signer).harvest(MAX_SQRT_RATIO.sub(1))
+    );
+
+    //user1 is owner, so total yield is 1620 + 360 = 1980
+    almostEqual(
+      await yApe.yieldAmount(user1.address),
+      await convertToCurrencyDecimals(usdc.address, "1980")
+    );
+    almostEqual(
+      await yApe.yieldAmount(user2.address),
+      await convertToCurrencyDecimals(usdc.address, "1620")
+    );
+
+    await waitForTx(await yApe.connect(gatewayAdmin.signer).claim());
+
+    almostEqual(
+      await yUSDC.balanceOf(gatewayAdmin.address),
+      await convertToCurrencyDecimals(usdc.address, "1980")
+    );
+  });
+
+  it("check rescueERC20", async () => {
+    const {
+      users: [user1, user2],
+      weth,
+      gatewayAdmin,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(weth, "1", user1);
+    await waitForTx(
+      await weth.connect(user1.signer).transfer(yApe.address, parseEther("1"))
+    );
+
+    await expect(
+      yApe
+        .connect(user2.signer)
+        .rescueERC20(weth.address, user2.address, parseEther("1"))
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await waitForTx(
+      await yApe
+        .connect(gatewayAdmin.signer)
+        .rescueERC20(weth.address, user1.address, parseEther("1"))
+    );
+
+    almostEqual(await weth.balanceOf(user1.address), parseEther("1"));
   });
 });
