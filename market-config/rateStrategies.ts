@@ -76,6 +76,14 @@ export const rateStrategyWGLMR: IInterestRateStrategyParams = {
   variableRateSlope2: utils.parseUnits("0.25", 27).toString(),
 };
 
+export const rateStrategyBLUR: IInterestRateStrategyParams = {
+  name: "rateStrategyBLUR",
+  optimalUsageRatio: utils.parseUnits("0.90", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0.70", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.45", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.55", 27).toString(),
+};
+
 export const rateStrategyNFT: IInterestRateStrategyParams = {
   name: "rateStrategyNFT",
   optimalUsageRatio: utils.parseUnits("0.45", 27).toString(),
