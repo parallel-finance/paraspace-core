@@ -50,6 +50,13 @@ interface IAutoYieldApe {
     event HarvestOperatorUpdated(address oldOperator, address newOperator);
 
     /**
+     * @dev Emitted during setHarvestFee()
+     * @param oldFee The value of the old harvest fee
+     * @param newFee The value of the new harvest fee
+     **/
+    event HarvestFeeUpdated(uint256 oldFee, uint256 newFee);
+
+    /**
      * @notice deposit an `amount` of ape into pool.
      * @param onBehalf The address of user will receive the sApe balance
      * @param amount The amount of ape to be deposit

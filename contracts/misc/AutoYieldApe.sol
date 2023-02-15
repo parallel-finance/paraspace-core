@@ -13,7 +13,8 @@ import "../interfaces/IAutoYieldApe.sol";
 import "../interfaces/IYieldInfo.sol";
 import "../interfaces/IAutoYieldApeReceiver.sol";
 import "../interfaces/IPoolCore.sol";
-import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
+import "../protocol/libraries/math/WadRayMath.sol";
+import "../protocol/libraries/math/PercentageMath.sol";
 
 contract AutoYieldApe is
     Initializable,
@@ -22,6 +23,7 @@ contract AutoYieldApe is
     IAutoYieldApe,
     IYieldInfo
 {
+    using PercentageMath for uint256;
     using WadRayMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
@@ -43,6 +45,7 @@ contract AutoYieldApe is
     mapping(address => uint256) private _userYieldIndex;
     mapping(address => uint256) private _userPendingYield;
     address public harvestOperator;
+    uint256 public harvestFee;
 
     constructor(
         address apeStaking,
@@ -136,6 +139,13 @@ contract AutoYieldApe is
 
     function yieldAmount(address account) public view returns (uint256) {
         uint256 pendingYield = _userPendingYield[account];
+        uint256 indexDiff = _currentYieldIndex - _userYieldIndex[account];
+        uint256 userBalance = balanceOf(account);
+        if (indexDiff > 0 && userBalance > 0) {
+            uint256 rewardDiff = (userBalance * indexDiff) / RAY;
+            pendingYield += rewardDiff;
+        }
+
         if (pendingYield > 0) {
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
@@ -172,6 +182,18 @@ contract AutoYieldApe is
         if (oldOperator != _harvestOperator) {
             harvestOperator = _harvestOperator;
             emit HarvestOperatorUpdated(oldOperator, _harvestOperator);
+        }
+    }
+
+    function setHarvestFee(uint256 _harvestFee) external onlyOwner {
+        require(
+            _harvestFee < PercentageMath.HALF_PERCENTAGE_FACTOR,
+            "Fee Too High"
+        );
+        uint256 oldValue = harvestFee;
+        if (oldValue != _harvestFee) {
+            harvestFee = _harvestFee;
+            emit HarvestFeeUpdated(oldValue, _harvestFee);
         }
     }
 
@@ -228,6 +250,12 @@ contract AutoYieldApe is
                 _yieldUnderlying
             );
             uint256 _yieldAmount = yieldUnderlyingAmount.rayDiv(liquidityIndex);
+            uint256 _harvestFee = harvestFee;
+            if (_harvestFee > 0) {
+                uint256 fee = _yieldAmount.percentMul(_harvestFee);
+                _userPendingYield[owner()] += fee;
+                _yieldAmount -= fee;
+            }
             uint256 accuIndex = (_yieldAmount * RAY) / totalSupply();
             _currentYieldIndex += accuIndex;
         }
@@ -237,8 +265,9 @@ contract AutoYieldApe is
         uint256 currentYieldIndex = _currentYieldIndex;
         uint256 indexDiff = currentYieldIndex - _userYieldIndex[account];
         if (indexDiff > 0) {
-            uint256 rewardDiff = (balanceOf(account) * indexDiff) / RAY;
-            if (rewardDiff > 0) {
+            uint256 userBalance = balanceOf(account);
+            if (userBalance > 0) {
+                uint256 rewardDiff = (userBalance * indexDiff) / RAY;
                 _userPendingYield[account] += rewardDiff;
             }
             _userYieldIndex[account] = currentYieldIndex;
