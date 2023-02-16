@@ -116,6 +116,13 @@ interface IPoolParameters {
     function unlimitedApproveTo(address token, address to) external;
 
     /**
+     * @notice reset token's allowance value to the 'to' address
+     * @param token The ERC20 token address
+     * @param to The address receive the grant
+     */
+    function revokeUnlimitedApprove(address token, address to) external;
+
+    /**
      * @notice undate fee percentage for claim ape for compound
      * @param fee new fee percentage
      */

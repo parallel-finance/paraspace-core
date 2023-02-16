@@ -242,6 +242,8 @@ export enum eContractid {
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
   P2PPairStaking = "P2PPairStaking",
+  HelperContractImpl = "HelperContractImpl",
+  HelperContract = "HelperContract",
   P2PPairStakingImpl = "P2PPairStakingImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",

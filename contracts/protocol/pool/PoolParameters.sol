@@ -216,6 +216,16 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function revokeUnlimitedApprove(address token, address to)
+        external
+        virtual
+        override
+        onlyPoolAdmin
+    {
+        IERC20(token).approve(to, 0);
+    }
+
+    /// @inheritdoc IPoolParameters
     function setClaimApeForCompoundFee(uint256 fee) external onlyPoolAdmin {
         require(fee < PercentageMath.HALF_PERCENTAGE_FACTOR, "Value Too High");
         DataTypes.PoolStorage storage ps = poolStorage();
