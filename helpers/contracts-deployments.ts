@@ -237,6 +237,8 @@ import {
   BAYCSewerPass__factory,
   BAYCSewerPass,
   BAYCSewerPassClaim__factory,
+  UniswapV3TwapOracleWrapper,
+  UniswapV3TwapOracleWrapper__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1692,6 +1694,20 @@ export const deployUniswapV3OracleWrapper = async (
     [factory, manager, addressProvider],
     verify
   ) as Promise<UniswapV3OracleWrapper>;
+
+export const deployUniswapV3TwapOracleWrapper = async (
+  pool: string,
+  baseCurrency: string,
+  twapWindow: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new UniswapV3TwapOracleWrapper__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [pool, baseCurrency, twapWindow],
+    verify
+  ) as Promise<UniswapV3TwapOracleWrapper>;
 
 export const deployNonfungiblePositionManager = async (
   args: [string, string, string],
