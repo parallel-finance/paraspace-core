@@ -100,6 +100,15 @@ library MintableERC721Logic {
         bool approved
     );
 
+    /**
+     * @dev Emitted when trait multiplier got updated
+     */
+    event TraitMultiplierSet(
+        address indexed owner,
+        uint256 indexed tokenId,
+        uint256 multiplier
+    );
+
     function executeTransfer(
         MintableERC721Data storage erc721Data,
         IPool POOL,
@@ -499,8 +508,11 @@ library MintableERC721Logic {
     function executeResetUserAvgMultiplier(
         MintableERC721Data storage erc721Data,
         address user
-    ) external {
+    ) external returns (bool notEqual) {
         uint256 balance = erc721Data.userState[user].balance;
+        uint256 oldAvgMultiplier = getTraitMultiplier(
+            erc721Data.userState[user].avgMultiplier
+        );
         uint256 totalMultiplier;
         for (uint256 i = 0; i < balance; i += 1) {
             uint256 tokenId = erc721Data.ownedTokens[user][i];
@@ -518,7 +530,10 @@ library MintableERC721Logic {
             collateralizedBalance != 0
             ? totalMultiplier / collateralizedBalance
             : WadRayMath.WAD;
-        erc721Data.userState[user].avgMultiplier = newAvgMultiplier;
+        notEqual = oldAvgMultiplier != newAvgMultiplier;
+        if (notEqual) {
+            erc721Data.userState[user].avgMultiplier = newAvgMultiplier;
+        }
     }
 
     function executeSetTraitsMultipliers(
@@ -542,6 +557,8 @@ library MintableERC721Logic {
             uint256 newMultiplier = getTraitMultiplier(multiplier);
             erc721Data.traitsMultipliers[tokenId] = newMultiplier;
             address owner = erc721Data.owners[tokenId];
+
+            emit TraitMultiplierSet(owner, tokenId, newMultiplier);
 
             if (
                 owner == address(0) || !erc721Data.isUsedAsCollateral[tokenId]
