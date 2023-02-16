@@ -237,13 +237,10 @@ import {
   BAYCSewerPass__factory,
   BAYCSewerPass,
   BAYCSewerPassClaim__factory,
-<<<<<<< HEAD
   UniswapV3TwapOracleWrapper,
   UniswapV3TwapOracleWrapper__factory,
-=======
   HelperContract,
   HelperContract__factory,
->>>>>>> origin/nBAKC_fix
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {

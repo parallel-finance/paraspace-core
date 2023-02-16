@@ -125,10 +125,9 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     function setApprovalForAllTo(
         address token,
         address to,
-        uint256 amount
+        bool _approved
     ) external onlyPoolAdmin {
-        IERC20(token).safeTransfer(to, amount);
-        emit RescueERC20(token, to, amount);
+        IERC721(token).setApprovalForAll(to, _approved);
     }
 
     /// @inheritdoc INToken
