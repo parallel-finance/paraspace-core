@@ -37,10 +37,6 @@ function almostEqual(value0: BigNumberish, value1: BigNumberish) {
   expect(abs.lte(maxDiff)).to.be.equal(true);
 }
 
-const MAX_SQRT_RATIO = BigNumber.from(
-  "1461446703485210103287273052203988822378723970342"
-);
-
 describe("Auto Yield Ape Test", () => {
   let testEnv: TestEnv;
   let yApe: AutoYieldApe;
@@ -198,9 +194,7 @@ describe("Auto Yield Ape Test", () => {
     ).to.be.equal(parseEther("400"));
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(
-      await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
-    );
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
 
     almostEqual(
       await yApe.yieldAmount(user1.address),
@@ -210,8 +204,8 @@ describe("Auto Yield Ape Test", () => {
       await yApe.yieldAmount(user2.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
-    await waitForTx(await yApe.connect(user1.signer).claim());
-    await waitForTx(await yApe.connect(user2.signer).claim());
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user1.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user2.address));
     almostEqual(
       await yUSDC.balanceOf(user1.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
@@ -228,9 +222,7 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(
-      await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
-    );
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
 
     almostEqual(
       await yApe.yieldAmount(user1.address),
@@ -244,9 +236,9 @@ describe("Auto Yield Ape Test", () => {
       await yApe.yieldAmount(user3.address),
       await convertToCurrencyDecimals(usdc.address, "900")
     );
-    await waitForTx(await yApe.connect(user1.signer).claim());
-    await waitForTx(await yApe.connect(user2.signer).claim());
-    await waitForTx(await yApe.connect(user3.signer).claim());
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user1.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user2.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user3.address));
     almostEqual(
       await yUSDC.balanceOf(user1.address),
       await convertToCurrencyDecimals(usdc.address, "2700")
@@ -267,9 +259,7 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(
-      await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
-    );
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
 
     almostEqual(
       await yApe.yieldAmount(user1.address),
@@ -283,9 +273,9 @@ describe("Auto Yield Ape Test", () => {
       await yApe.yieldAmount(user3.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
-    await waitForTx(await yApe.connect(user1.signer).claim());
-    await waitForTx(await yApe.connect(user2.signer).claim());
-    await waitForTx(await yApe.connect(user3.signer).claim());
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user1.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user2.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user3.address));
     almostEqual(
       await yUSDC.balanceOf(user1.address),
       await convertToCurrencyDecimals(usdc.address, "3600")
@@ -330,11 +320,13 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
     await waitForTx(
-      await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
+      await yApePToken.connect(user1.signer).claimYieldFor(user1.address)
     );
-    await waitForTx(await yApePToken.connect(user1.signer).claimYield());
-    await waitForTx(await yApePToken.connect(user2.signer).claimYield());
+    await waitForTx(
+      await yApePToken.connect(user1.signer).claimYieldFor(user2.address)
+    );
 
     almostEqual(
       await yUSDC.balanceOf(user1.address),
@@ -352,12 +344,16 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
     await waitForTx(
-      await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
+      await yApePToken.connect(user1.signer).claimYieldFor(user1.address)
     );
-    await waitForTx(await yApePToken.connect(user1.signer).claimYield());
-    await waitForTx(await yApePToken.connect(user2.signer).claimYield());
-    await waitForTx(await yApePToken.connect(user3.signer).claimYield());
+    await waitForTx(
+      await yApePToken.connect(user1.signer).claimYieldFor(user2.address)
+    );
+    await waitForTx(
+      await yApePToken.connect(user1.signer).claimYieldFor(user3.address)
+    );
     //1800 + 900
     almostEqual(
       await yUSDC.balanceOf(user1.address),
@@ -379,12 +375,16 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
     await waitForTx(
-      await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
+      await yApePToken.connect(user1.signer).claimYieldFor(user1.address)
     );
-    await waitForTx(await yApePToken.connect(user1.signer).claimYield());
-    await waitForTx(await yApePToken.connect(user2.signer).claimYield());
-    await waitForTx(await yApePToken.connect(user3.signer).claimYield());
+    await waitForTx(
+      await yApePToken.connect(user1.signer).claimYieldFor(user2.address)
+    );
+    await waitForTx(
+      await yApePToken.connect(user1.signer).claimYieldFor(user3.address)
+    );
     //1800 + 900
     almostEqual(
       await yUSDC.balanceOf(user1.address),
@@ -438,9 +438,7 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(
-      await yApe.connect(user3.signer).harvest(MAX_SQRT_RATIO.sub(1))
-    );
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
     almostEqual(
       await yUSDC.balanceOf(yApe.address),
       await convertToCurrencyDecimals(usdc.address, "3600")
@@ -468,7 +466,9 @@ describe("Auto Yield Ape Test", () => {
 
     expect(await yApe.balanceOf(user2.address)).to.be.equal(parseEther("2000"));
 
-    await waitForTx(await yApePToken.connect(user1.signer).claimYield());
+    await waitForTx(
+      await yApePToken.connect(user1.signer).claimYieldFor(user1.address)
+    );
     almostEqual(
       await yUSDC.balanceOf(user1.address),
       await convertToCurrencyDecimals(usdc.address, "3600")
@@ -487,13 +487,13 @@ describe("Auto Yield Ape Test", () => {
       yApe.connect(user2.signer).setHarvestOperator(user2.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
-      yApe.connect(user2.signer).setHarvestFee(1000)
+      yApe.connect(user2.signer).setHarvestFeeRate(1000)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await waitForTx(
       await yApe.connect(gatewayAdmin.signer).setHarvestOperator(user2.address)
     );
     await waitForTx(
-      await yApe.connect(gatewayAdmin.signer).setHarvestFee(1000)
+      await yApe.connect(gatewayAdmin.signer).setHarvestFeeRate(1000)
     );
 
     await mintAndValidate(ape, "200", user1);
@@ -507,9 +507,7 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(
-      await yApe.connect(user2.signer).harvest(MAX_SQRT_RATIO.sub(1))
-    );
+    await waitForTx(await yApe.connect(user2.signer).harvest("990000"));
 
     //user1 is owner, so total yield is 1620 + 360 = 1980
     almostEqual(
@@ -521,7 +519,9 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "1620")
     );
 
-    await waitForTx(await yApe.connect(gatewayAdmin.signer).claim());
+    await waitForTx(
+      await yApe.connect(gatewayAdmin.signer).claimFor(gatewayAdmin.address)
+    );
 
     almostEqual(
       await yUSDC.balanceOf(gatewayAdmin.address),

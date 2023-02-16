@@ -11,7 +11,6 @@ import "../dependencies/univ3/interfaces/ISwapRouter.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../interfaces/IAutoYieldApe.sol";
 import "../interfaces/IYieldInfo.sol";
-import "../interfaces/IAutoYieldApeReceiver.sol";
 import "../interfaces/IPoolCore.sol";
 import "../protocol/libraries/math/WadRayMath.sol";
 import "../protocol/libraries/math/PercentageMath.sol";
@@ -30,8 +29,6 @@ contract AutoYieldApe is
 
     /// @notice ApeCoin single pool POOL_ID for ApeCoinStaking
     uint256 public constant APE_COIN_POOL_ID = 0;
-    // Equals to `bytes4(keccak256("onAutoYieldApeReceived(address,address)"))`
-    bytes4 private constant _AUTO_YIELD_APE_RECEIVED = 0xc7540caa;
     uint256 internal constant RAY = 1e27;
 
     ApeCoinStaking private immutable _apeStaking;
@@ -41,11 +38,16 @@ contract AutoYieldApe is
     IPoolCore private immutable _lendingPool;
     ISwapRouter private immutable _swapRouter;
 
-    uint256 private _currentYieldIndex;
+    //Accumulator of the total earned yield rate since the opening of the pool
+    uint256 private _poolYieldIndex;
+    //Record of calculated yield rate for each user account
     mapping(address => uint256) private _userYieldIndex;
+    //Record of pending yield for each user account,
     mapping(address => uint256) private _userPendingYield;
+    /// @notice This account is the only role who can perform harvest action.
     address public harvestOperator;
-    uint256 public harvestFee;
+    /// @notice The pool's fee rate for harvest operation. Expressed in bps, a value of 30 results in 0.3%
+    uint256 public harvestFeeRate;
 
     constructor(
         address apeStaking,
@@ -110,7 +112,7 @@ contract AutoYieldApe is
     /// @inheritdoc IAutoYieldApe
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
-        _updateYieldIndex(msg.sender);
+        _updateYieldIndex(onBehalf);
         _mint(onBehalf, amount);
 
         IERC20(_apeCoin).safeTransferFrom(msg.sender, address(this), amount);
@@ -125,21 +127,21 @@ contract AutoYieldApe is
     }
 
     /// @inheritdoc IAutoYieldApe
-    function claim() external override {
-        _updateYieldIndex(msg.sender);
-        _claim();
+    function claimFor(address account) external override {
+        _updateYieldIndex(account);
+        _claimFor(account);
     }
 
     /// @inheritdoc IAutoYieldApe
     function exit() external override {
         _withdraw(balanceOf(msg.sender));
-        _claim();
+        _claimFor(msg.sender);
     }
 
     /// @inheritdoc IAutoYieldApe
-    function harvest(uint160 sqrtPriceLimitX96) external override {
+    function harvest(uint256 minimumDealPrice) external override {
         require(msg.sender == harvestOperator, "non harvest operator");
-        _harvest(sqrtPriceLimitX96);
+        _harvest(minimumDealPrice);
     }
 
     /// @inheritdoc IAutoYieldApe
@@ -149,12 +151,16 @@ contract AutoYieldApe is
         override
         returns (uint256)
     {
+        //index_diff = pool_yield_index - user_yield_index
+        //accrued_yield = user_balance * index_diff
+        //total_pending_yield = pending_yield + accrued_yield
+        //scaled_yield_amount = total_pending_yield * liquidity_index
         uint256 pendingYield = _userPendingYield[account];
-        uint256 indexDiff = _currentYieldIndex - _userYieldIndex[account];
+        uint256 indexDiff = _poolYieldIndex - _userYieldIndex[account];
         uint256 userBalance = balanceOf(account);
         if (indexDiff > 0 && userBalance > 0) {
-            uint256 rewardDiff = (userBalance * indexDiff) / RAY;
-            pendingYield += rewardDiff;
+            uint256 accruedYield = (userBalance * indexDiff) / RAY;
+            pendingYield += accruedYield;
         }
 
         if (pendingYield > 0) {
@@ -169,7 +175,7 @@ contract AutoYieldApe is
 
     /// @inheritdoc IYieldInfo
     function yieldIndex() external view override returns (uint256) {
-        return _currentYieldIndex;
+        return _poolYieldIndex;
     }
 
     /// @inheritdoc IYieldInfo
@@ -188,9 +194,13 @@ contract AutoYieldApe is
             uint256
         )
     {
-        return (_yieldUnderlying, _yieldToken, _currentYieldIndex);
+        return (_yieldUnderlying, _yieldToken, _poolYieldIndex);
     }
 
+    /**
+     * @notice Set a new address for harvest role. Only owner can call this function
+     * @param _harvestOperator The address of the harvest role
+     **/
     function setHarvestOperator(address _harvestOperator) external onlyOwner {
         require(_harvestOperator != address(0), "zero address");
         address oldOperator = harvestOperator;
@@ -200,18 +210,28 @@ contract AutoYieldApe is
         }
     }
 
-    function setHarvestFee(uint256 _harvestFee) external onlyOwner {
+    /**
+     * @notice Set a new harvest fee rate. Only owner can call this function
+     * @param _harvestFeeRate The new fee rate for harvest. Expressed in bps, a value of 30 results in 0.3%
+     **/
+    function setHarvestFeeRate(uint256 _harvestFeeRate) external onlyOwner {
         require(
-            _harvestFee < PercentageMath.HALF_PERCENTAGE_FACTOR,
+            _harvestFeeRate < PercentageMath.HALF_PERCENTAGE_FACTOR,
             "Fee Too High"
         );
-        uint256 oldValue = harvestFee;
-        if (oldValue != _harvestFee) {
-            harvestFee = _harvestFee;
-            emit HarvestFeeUpdated(oldValue, _harvestFee);
+        uint256 oldValue = harvestFeeRate;
+        if (oldValue != _harvestFeeRate) {
+            harvestFeeRate = _harvestFeeRate;
+            emit HarvestFeeRateUpdated(oldValue, _harvestFeeRate);
         }
     }
 
+    /**
+     * @notice Rescue erc20 from this contract address. Only owner can call this function
+     * @param token The token address to be rescued, _yieldToken cannot be rescued.
+     * @param to The account address to receive token
+     * @param amount The amount to be rescued
+     **/
     function rescueERC20(
         address token,
         address to,
@@ -222,6 +242,10 @@ contract AutoYieldApe is
         emit RescueERC20(token, to, amount);
     }
 
+    /**
+     * @notice implementation for withdraw function.
+     * @param amount The amount of ape to be withdraw
+     **/
     function _withdraw(uint256 amount) internal {
         require(amount > 0, "zero amount");
 
@@ -234,22 +258,28 @@ contract AutoYieldApe is
         emit Redeem(msg.sender, amount);
     }
 
-    function _claim() internal {
-        uint256 pendingYield = _userPendingYield[msg.sender];
+    /**
+     * @notice implementation for claimFor function.
+     **/
+    function _claimFor(address account) internal {
+        uint256 pendingYield = _userPendingYield[account];
         if (pendingYield > 0) {
-            _userPendingYield[msg.sender] = 0;
+            _userPendingYield[account] = 0;
 
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
-            pendingYield = pendingYield.rayMul(liquidityIndex);
-            IERC20(_yieldToken).safeTransfer(msg.sender, pendingYield);
+            uint256 scaledYield = pendingYield.rayMul(liquidityIndex);
+            IERC20(_yieldToken).safeTransfer(account, scaledYield);
 
-            emit YieldClaimed(msg.sender, pendingYield);
+            emit YieldClaimed(msg.sender, account, pendingYield);
         }
     }
 
-    function _harvest(uint160 sqrtPriceLimitX96) internal {
+    /**
+     * @notice implementation for harvest function.
+     **/
+    function _harvest(uint256 minimumDealPrice) internal {
         //1, get current pending ape coin reward amount
         uint256 rewardAmount = _apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
@@ -259,11 +289,13 @@ contract AutoYieldApe is
         if (rewardAmount > 0) {
             //2, claim pending ape coin reward
             _apeStaking.claimSelfApeCoin();
+
             //3, sell ape coin to usdc
-            uint256 yieldUnderlyingAmount = _sellApeCoinForYieldToken(
+            uint256 yieldUnderlyingAmount = _sellApeCoinForUnderlyingYieldToken(
                 rewardAmount,
-                sqrtPriceLimitX96
+                minimumDealPrice
             );
+
             //4, supply usdc to pUsdc
             IPoolCore(_lendingPool).supply(
                 _yieldUnderlying,
@@ -271,39 +303,57 @@ contract AutoYieldApe is
                 address(this),
                 0
             );
+
+            //5, calculate yield token amount
+            //yield_amount = underlying_yield_amount / pool_liquidity_index
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
             uint256 _yieldAmount = yieldUnderlyingAmount.rayDiv(liquidityIndex);
-            uint256 _harvestFee = harvestFee;
-            //5, calculate harvest fee
-            if (_harvestFee > 0) {
-                uint256 fee = _yieldAmount.percentMul(_harvestFee);
+
+            //6, calculate harvest fee and subtracting harvest fee from yield amount
+            //harvest_fee = yield_amount * harvest_fee_rate
+            //new_yield_amount = yield_amount - harvest_fee
+            uint256 _harvestFeeRate = harvestFeeRate;
+            if (_harvestFeeRate > 0) {
+                uint256 fee = _yieldAmount.percentMul(_harvestFeeRate);
                 _userPendingYield[owner()] += fee;
                 _yieldAmount -= fee;
             }
-            //6, update yield index
-            uint256 accuIndex = (_yieldAmount * RAY) / totalSupply();
-            _currentYieldIndex += accuIndex;
+
+            //7, update pool yield index.
+            //accrued_index = yield_amount / total_supply
+            //new_pool_yield_index = old_pool_yield_index + accrued_index
+            uint256 accruedIndex = (_yieldAmount * RAY) / totalSupply();
+            _poolYieldIndex += accruedIndex;
         }
     }
 
+    /**
+     * @notice update user yield index to _poolYieldIndex and accrue pending yield for user
+     * This function need to be called when user yApe balance changed and claimed all user yield
+     **/
     function _updateYieldIndex(address account) internal {
-        uint256 currentYieldIndex = _currentYieldIndex;
+        uint256 currentYieldIndex = _poolYieldIndex;
         uint256 indexDiff = currentYieldIndex - _userYieldIndex[account];
         if (indexDiff > 0) {
             uint256 userBalance = balanceOf(account);
             if (userBalance > 0) {
-                uint256 rewardDiff = (userBalance * indexDiff) / RAY;
-                _userPendingYield[account] += rewardDiff;
+                uint256 accruedYield = (userBalance * indexDiff) / RAY;
+                _userPendingYield[account] += accruedYield;
             }
             _userYieldIndex[account] = currentYieldIndex;
         }
     }
 
-    function _sellApeCoinForYieldToken(
+    /**
+     * @notice sell Ape Coin to underlying yield token by uniswap v3. Need to take care price move issue.
+     * @param apeCoinAmount The amount of Ape Coin to sell
+     * @param minimumDealPrice The minimal accept deal price
+     **/
+    function _sellApeCoinForUnderlyingYieldToken(
         uint256 apeCoinAmount,
-        uint160 sqrtPriceLimitX96
+        uint256 minimumDealPrice
     ) internal returns (uint256) {
         return
             _swapRouter.exactInputSingle(
@@ -314,8 +364,8 @@ contract AutoYieldApe is
                     recipient: address(this),
                     deadline: block.timestamp,
                     amountIn: apeCoinAmount,
-                    amountOutMinimum: 0,
-                    sqrtPriceLimitX96: sqrtPriceLimitX96
+                    amountOutMinimum: apeCoinAmount.wadMul(minimumDealPrice),
+                    sqrtPriceLimitX96: 0
                 })
             );
     }
@@ -329,35 +379,5 @@ contract AutoYieldApe is
         _updateYieldIndex(sender);
         _updateYieldIndex(recipient);
         super._transfer(sender, recipient, amount);
-    }
-
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256
-    ) internal override {
-        _checkOnAutoYieldApeReceived(from, to);
-    }
-
-    function _checkOnAutoYieldApeReceived(address from, address to)
-        internal
-        returns (bool)
-    {
-        if (!to.isContract()) {
-            return true;
-        }
-        (bool success, bytes memory returndata) = to.call{gas: 5000}(
-            abi.encodeWithSelector(
-                IAutoYieldApeReceiver(to).onAutoYieldApeReceived.selector,
-                _msgSender(),
-                from
-            )
-        );
-        bytes4 retval = abi.decode(returndata, (bytes4));
-        require(
-            success && retval == _AUTO_YIELD_APE_RECEIVED,
-            "transfer to non yApe implementer"
-        );
-        return true;
     }
 }

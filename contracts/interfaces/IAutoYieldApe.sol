@@ -28,7 +28,11 @@ interface IAutoYieldApe {
      * @param user The address of the user
      * @param amount The amount being claimed
      **/
-    event YieldClaimed(address indexed user, uint256 amount);
+    event YieldClaimed(
+        address indexed caller,
+        address indexed user,
+        uint256 amount
+    );
 
     /**
      * @dev Emitted during rescueERC20()
@@ -50,11 +54,11 @@ interface IAutoYieldApe {
     event HarvestOperatorUpdated(address oldOperator, address newOperator);
 
     /**
-     * @dev Emitted during setHarvestFee()
+     * @dev Emitted during setHarvestFeeRate()
      * @param oldFee The value of the old harvest fee
      * @param newFee The value of the new harvest fee
      **/
-    event HarvestFeeUpdated(uint256 oldFee, uint256 newFee);
+    event HarvestFeeRateUpdated(uint256 oldFee, uint256 newFee);
 
     /**
      * @notice deposit an `amount` of ape into pool.
@@ -70,9 +74,10 @@ interface IAutoYieldApe {
     function withdraw(uint256 amount) external;
 
     /**
-     * @notice claim the yield token.
+     * @notice claim the yield token for the specified account.
+     * @param account The account address will be claimed
      **/
-    function claim() external;
+    function claimFor(address account) external;
 
     /**
      * @notice withdraw all balance of ape from pool.
@@ -81,10 +86,10 @@ interface IAutoYieldApe {
 
     /**
      * @notice This function will claim the pending Ape Coin reward and sell it to usdc by uniswap,
-     then supply usdc to pUsdc. This is is the only way to increase yield index.
-     * @param sqrtPriceLimitX96 The minimal accept price to sell Ape coin to usdc
+     then supply usdc to pUsdc. This is is the only way to increase yield index. This can only be called by harvestOperator
+     * @param minimumDealPrice The minimal accept deal price to sell Ape coin to usdc
      **/
-    function harvest(uint160 sqrtPriceLimitX96) external;
+    function harvest(uint256 minimumDealPrice) external;
 
     /**
      * @notice fetch the pending yield amount for the specified account.

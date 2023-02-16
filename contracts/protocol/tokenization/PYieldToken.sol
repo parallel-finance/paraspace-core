@@ -11,7 +11,6 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IYieldInfo} from "../../interfaces/IYieldInfo.sol";
 import {IAutoYieldApe} from "../../interfaces/IAutoYieldApe.sol";
-import {IAutoYieldApeReceiver} from "../../interfaces/IAutoYieldApeReceiver.sol";
 
 /**
  * @title Rebasing PToken
@@ -75,24 +74,24 @@ contract PYieldToken is PToken {
         super._transfer(from, to, amount, validate);
     }
 
-    function claimYield() external {
-        uint256 principle = balanceOf(msg.sender);
+    function claimYieldFor(address account) external {
+        uint256 principle = balanceOf(account);
         (
             address yieldUnderlying,
             address yieldToken,
             uint256 yieldIndex
         ) = IYieldInfo(_underlyingAsset).yieldInfo();
-        uint256 pendingYield = _updateUserIndex(msg.sender, principle, yieldIndex);
+        uint256 pendingYield = _updateUserIndex(account, principle, yieldIndex);
         if (pendingYield > 0) {
             uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
                 yieldUnderlying
             );
             pendingYield = pendingYield.rayMul(liquidityIndex);
             if (pendingYield > IERC20(yieldToken).balanceOf(address(this))) {
-                IAutoYieldApe(_underlyingAsset).claim();
+                IAutoYieldApe(_underlyingAsset).claimFor(address(this));
             }
-            IERC20(yieldToken).safeTransfer(msg.sender, pendingYield);
-            _userPendingYield[msg.sender] = 0;
+            IERC20(yieldToken).safeTransfer(account, pendingYield);
+            _userPendingYield[account] = 0;
         }
     }
 
@@ -103,8 +102,8 @@ contract PYieldToken is PToken {
         ).yieldInfo();
         uint256 indexDiff = yieldIndex - _userYieldIndex[account];
         uint256 claimAmount = _userPendingYield[account] +
-        (principle * indexDiff) /
-        RAY;
+            (principle * indexDiff) /
+            RAY;
         uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
             yieldUnderlying
         );
@@ -115,7 +114,7 @@ contract PYieldToken is PToken {
         address account,
         uint256 userBalance,
         uint256 yieldIndex
-    ) internal returns(uint256){
+    ) internal returns (uint256) {
         uint256 pendingYield = _userPendingYield[account];
         uint256 indexDiff = yieldIndex - _userYieldIndex[account];
         if (indexDiff > 0) {
@@ -138,14 +137,5 @@ contract PYieldToken is PToken {
         returns (XTokenType)
     {
         return XTokenType.PYieldToken;
-    }
-
-    function onAutoYieldApeReceived(address, address)
-        external
-        pure
-        returns (bytes4)
-    {
-        //this.onAutoYieldApeReceived.selector
-        return 0xc7540caa;
     }
 }
