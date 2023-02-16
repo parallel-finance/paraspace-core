@@ -68,6 +68,9 @@ contract X2Y2Adapter is IMarketplace {
 
         ItemType itemType = ItemType.ERC20;
         address token = order.currency;
+        if (token == address(0)) {
+            itemType = ItemType.NATIVE;
+        }
         consideration[0] = ConsiderationItem(
             itemType,
             token,
