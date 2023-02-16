@@ -76,22 +76,24 @@ contract PYieldToken is PToken {
     }
 
     function claimYield() external {
-        IAutoYieldApe(_underlyingAsset).claim();
         uint256 principle = balanceOf(msg.sender);
         (
             address yieldUnderlying,
             address yieldToken,
             uint256 yieldIndex
         ) = IYieldInfo(_underlyingAsset).yieldInfo();
-        _updateUserIndex(msg.sender, principle, yieldIndex);
-        uint256 claimAmount = _yieldAmount(
-            msg.sender,
-            principle,
-            yieldUnderlying,
-            yieldIndex
-        );
-        IERC20(yieldToken).safeTransfer(msg.sender, claimAmount);
-        _userPendingYield[msg.sender] = 0;
+        uint256 pendingYield = _updateUserIndex(msg.sender, principle, yieldIndex);
+        if (pendingYield > 0) {
+            uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
+                yieldUnderlying
+            );
+            pendingYield = pendingYield.rayMul(liquidityIndex);
+            if (pendingYield > IERC20(yieldToken).balanceOf(address(this))) {
+                IAutoYieldApe(_underlyingAsset).claim();
+            }
+            IERC20(yieldToken).safeTransfer(msg.sender, pendingYield);
+            _userPendingYield[msg.sender] = 0;
+        }
     }
 
     function yieldAmount(address account) external view returns (uint256) {
@@ -99,19 +101,10 @@ contract PYieldToken is PToken {
         (address yieldUnderlying, , uint256 yieldIndex) = IYieldInfo(
             _underlyingAsset
         ).yieldInfo();
-        return _yieldAmount(account, principle, yieldUnderlying, yieldIndex);
-    }
-
-    function _yieldAmount(
-        address account,
-        uint256 principle,
-        address yieldUnderlying,
-        uint256 yieldIndex
-    ) internal view returns (uint256) {
         uint256 indexDiff = yieldIndex - _userYieldIndex[account];
         uint256 claimAmount = _userPendingYield[account] +
-            (principle * indexDiff) /
-            RAY;
+        (principle * indexDiff) /
+        RAY;
         uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
             yieldUnderlying
         );
@@ -122,15 +115,19 @@ contract PYieldToken is PToken {
         address account,
         uint256 userBalance,
         uint256 yieldIndex
-    ) internal {
+    ) internal returns(uint256){
+        uint256 pendingYield = _userPendingYield[account];
         uint256 indexDiff = yieldIndex - _userYieldIndex[account];
         if (indexDiff > 0) {
             if (userBalance > 0) {
                 uint256 yieldAdd = (userBalance * indexDiff) / RAY;
-                _userPendingYield[account] += yieldAdd;
+                pendingYield += yieldAdd;
+                _userPendingYield[account] = pendingYield;
             }
             _userYieldIndex[account] = yieldIndex;
         }
+
+        return pendingYield;
     }
 
     function getXTokenType()

@@ -34,7 +34,7 @@ contract AutoYieldApe is
     bytes4 private constant _AUTO_YIELD_APE_RECEIVED = 0xc7540caa;
     uint256 internal constant RAY = 1e27;
 
-    ApeCoinStaking public immutable _apeStaking;
+    ApeCoinStaking private immutable _apeStaking;
     address private immutable _apeCoin;
     address private immutable _yieldUnderlying;
     address private immutable _yieldToken;
@@ -235,12 +235,18 @@ contract AutoYieldApe is
     }
 
     function _claim() internal {
-        uint256 pendingYield = yieldAmount(msg.sender);
+        uint256 pendingYield = _userPendingYield[msg.sender];
         if (pendingYield > 0) {
             _userPendingYield[msg.sender] = 0;
+
+            uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
+                _yieldUnderlying
+            );
+            pendingYield = pendingYield.rayMul(liquidityIndex);
             IERC20(_yieldToken).safeTransfer(msg.sender, pendingYield);
+
+            emit YieldClaimed(msg.sender, pendingYield);
         }
-        emit YieldClaimed(msg.sender, pendingYield);
     }
 
     function _harvest(uint160 sqrtPriceLimitX96) internal {
