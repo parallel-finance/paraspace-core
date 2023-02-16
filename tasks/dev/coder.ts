@@ -15,6 +15,7 @@ task("decode-multi", "Decode multi inputs data")
     await DRE.run("set-DRE");
     const {decodeInputData} = await import("../../helpers/contracts-helpers");
     decodeMulti(data).forEach((x) => {
+      console.log(x.to);
       console.log(JSON.stringify(decodeInputData(x.data), null, 4));
       console.log();
     });

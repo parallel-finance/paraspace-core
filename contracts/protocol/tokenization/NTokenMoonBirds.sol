@@ -49,11 +49,11 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                IMoonBird(_underlyingAsset).safeTransferWhileNesting(
-                    address(this),
-                    receiverOfUnderlying,
-                    tokenIds[index]
-                );
+                IMoonBird(_ERC721Data.underlyingAsset).safeTransferWhileNesting(
+                        address(this),
+                        receiverOfUnderlying,
+                        tokenIds[index]
+                    );
             }
         }
 
@@ -72,7 +72,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
             return this.onERC721Received.selector;
         }
 
-        if (msg.sender == _underlyingAsset) {
+        if (msg.sender == _ERC721Data.underlyingAsset) {
             // supply the received token to the pool and set it as collateral
             DataTypes.ERC721SupplyParams[]
                 memory tokenData = new DataTypes.ERC721SupplyParams[](1);
@@ -82,7 +82,11 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
                 useAsCollateral: true
             });
 
-            POOL.supplyERC721FromNToken(_underlyingAsset, tokenData, from);
+            POOL.supplyERC721FromNToken(
+                _ERC721Data.underlyingAsset,
+                tokenData,
+                from
+            );
         }
 
         return this.onERC721Received.selector;
@@ -100,7 +104,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
             );
         }
 
-        IMoonBird(_underlyingAsset).toggleNesting(tokenIds);
+        IMoonBird(_ERC721Data.underlyingAsset).toggleNesting(tokenIds);
     }
 
     /**
@@ -116,7 +120,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
             uint256 total
         )
     {
-        return IMoonBird(_underlyingAsset).nestingPeriod(tokenId);
+        return IMoonBird(_ERC721Data.underlyingAsset).nestingPeriod(tokenId);
     }
 
     /**
@@ -124,6 +128,6 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         This function check if nesting is open for the underlying tokens
     */
     function nestingOpen() external view returns (bool) {
-        return IMoonBird(_underlyingAsset).nestingOpen();
+        return IMoonBird(_ERC721Data.underlyingAsset).nestingOpen();
     }
 }

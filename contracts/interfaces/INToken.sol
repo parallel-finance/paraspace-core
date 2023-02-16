@@ -81,6 +81,4 @@ interface INToken is
      * @return The address of the underlying asset
      **/
     function UNDERLYING_ASSET_ADDRESS() external view returns (address);
-
-    function getAtomicPricingConfig() external view returns (bool);
 }

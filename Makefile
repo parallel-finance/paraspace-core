@@ -416,6 +416,10 @@ set-auto-mining:
 send-eth:
 	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
 
+.PHONY: set-traits-multipliers
+set-traits-multipliers:
+	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -584,12 +588,13 @@ hardhat:
 anvil:
 	anvil \
 		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
-		--chain-id 522 \
+		$(if $(FORK),--chain-id 522,--chain-id 31337) \
 		--tracing \
 		--host 0.0.0.0 \
 		--state-interval 60 \
 		--dump-state state.json \
 		$(if $(wildcard state.json),--load-state state.json,) \
+		--disable-block-gas-limit \
 		--code-size-limit 100000 \
 
 .PHONY: image

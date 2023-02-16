@@ -7,6 +7,7 @@ import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {IScaledBalanceToken} from "../../../interfaces/IScaledBalanceToken.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
+import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
@@ -15,7 +16,8 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
-import {XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
+import {Helpers} from "../../libraries/helpers/Helpers.sol";
 
 /**
  * @title GenericLogic library
@@ -363,37 +365,18 @@ library GenericLogic {
         DataTypes.CalculateUserAccountDataParams memory params,
         CalculateUserAccountDataVars memory vars
     ) private view returns (uint256 totalValue) {
-        INToken nToken = INToken(vars.xTokenAddress);
-        bool isAtomicPrice = nToken.getAtomicPricingConfig();
-        if (isAtomicPrice) {
-            uint256 totalBalance = nToken.balanceOf(params.user);
+        uint256 assetPrice = _getAssetPrice(
+            params.oracle,
+            vars.currentReserveAddress
+        );
 
-            for (uint256 index = 0; index < totalBalance; index++) {
-                uint256 tokenId = nToken.tokenOfOwnerByIndex(
-                    params.user,
-                    index
-                );
-                if (
-                    ICollateralizableERC721(vars.xTokenAddress)
-                        .isUsedAsCollateral(tokenId)
-                ) {
-                    totalValue += _getTokenPrice(
-                        params.oracle,
-                        vars.currentReserveAddress,
-                        tokenId
-                    );
-                }
-            }
-        } else {
-            uint256 assetPrice = _getAssetPrice(
-                params.oracle,
-                vars.currentReserveAddress
-            );
-            totalValue =
-                ICollateralizableERC721(vars.xTokenAddress)
-                    .collateralizedBalanceOf(params.user) *
-                assetPrice;
-        }
+        uint256 collateralizedBalance = ICollateralizableERC721(
+            vars.xTokenAddress
+        ).collateralizedBalanceOf(params.user);
+        uint256 avgMultiplier = IAtomicCollateralizableERC721(
+            vars.xTokenAddress
+        ).avgMultiplierOf(params.user);
+        totalValue = (collateralizedBalance * avgMultiplier).wadMul(assetPrice);
     }
 
     function getLtvAndLTForUniswapV3(
