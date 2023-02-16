@@ -412,6 +412,10 @@ set-auto-mining:
 send-eth:
 	make SCRIPT_PATH=./scripts/dev/10.send-eth.ts run
 
+.PHONY: set-traits-multipliers
+set-traits-multipliers:
+	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
