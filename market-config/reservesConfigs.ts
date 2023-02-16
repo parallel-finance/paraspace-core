@@ -459,10 +459,10 @@ export const strategyPUNK: IReserveParams = {
 export const strategyBLUR: IReserveParams = {
   strategy: rateStrategyBLUR,
   auctionStrategy: auctionStrategyZero,
-  baseLTVAsCollateral: "5000",
+  baseLTVAsCollateral: "4000",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "6500",
-  liquidationBonus: "10500",
+  liquidationThreshold: "5500",
+  liquidationBonus: "11000",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
