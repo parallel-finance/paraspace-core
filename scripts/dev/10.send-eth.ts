@@ -10,8 +10,8 @@ const sendETH = async () => {
   const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
   await waitForTx(
     await signer.sendTransaction({
-      to: paraSpaceAdminAddress,
-      value: utils.parseEther("10").toString(),
+      to: "0x6cC5F688a315f3dC28A7781717a9A798a59fDA7b",
+      value: utils.parseEther("50000").toString(),
     })
   );
   console.timeEnd("send-eth");
