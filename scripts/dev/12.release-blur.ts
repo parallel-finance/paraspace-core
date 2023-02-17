@@ -1,15 +1,10 @@
 import rawBRE from "hardhat";
-import {X2Y2_ID, ZERO_ADDRESS} from "../../helpers/constants";
-import {
-  deployUniswapV3TwapOracleWrapper,
-  deployX2Y2Adapter,
-} from "../../helpers/contracts-deployments";
+import {ZERO_ADDRESS} from "../../helpers/constants";
+import {deployUniswapV3TwapOracleWrapper} from "../../helpers/contracts-deployments";
 import {
   getAllTokens,
   getParaSpaceOracle,
-  getPoolAddressesProvider,
   getProtocolDataProvider,
-  getX2Y2R1,
 } from "../../helpers/contracts-getters";
 import {
   dryRunEncodedData,
@@ -29,23 +24,6 @@ const releaseBlur = async (verify = false) => {
   const protocolDataProvider = await getProtocolDataProvider();
   const paraSpaceOracle = await getParaSpaceOracle();
   const allTokens = await getAllTokens();
-  const addressesProvider = await getPoolAddressesProvider();
-  const x2y2R1 = await getX2Y2R1();
-
-  const x2y2Adapter = await deployX2Y2Adapter(
-    addressesProvider.address,
-    verify
-  );
-  await waitForTx(
-    await addressesProvider.setMarketplace(
-      X2Y2_ID,
-      x2y2R1.address,
-      x2y2Adapter.address,
-      x2y2R1.address,
-      false,
-      GLOBAL_OVERRIDES
-    )
-  );
 
   const projects = [
     {
@@ -59,7 +37,7 @@ const releaseBlur = async (verify = false) => {
     if (!project.aggregator) {
       project.aggregator = (
         await deployUniswapV3TwapOracleWrapper(
-          "0x5b1f7fbede4bb4bb0137397a4788dd077bd4d2a5",
+          "0x824a30f2984f9013f2c8d0a29c0a3cc5fd5c0673",
           allTokens[ERC20TokenContractId.WETH].address,
           "1800",
           "TwapBLUR"
@@ -108,7 +86,11 @@ const releaseBlur = async (verify = false) => {
     paraSpaceAdminAddress,
     treasuryAddress,
     ZERO_ADDRESS,
-    verify
+    verify,
+    "0x46d24Ac3f5c7eeFF3f79D107BB727Bfa8e70B770",
+    undefined,
+    "0x986a94186c0F16Ce8D7e14456A3833C6Eb6Df4bE",
+    "0x457A5eC6F2F3A98FD470a65Ad3Dcb593ff842c6d"
   );
 
   console.log("configuring reserves");
