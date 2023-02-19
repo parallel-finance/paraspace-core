@@ -29,22 +29,22 @@ const releaseBlur = async (verify = false) => {
     {
       symbol: "BLUR",
       address: allTokens[ERC20TokenContractId.BLUR].address,
-      aggregator: "",
+      aggregator: "0x32a880e831814cfd55dc556645ef06816fe9be02",
     },
   ];
 
-  for (const project of projects) {
-    if (!project.aggregator) {
-      project.aggregator = (
-        await deployUniswapV3TwapOracleWrapper(
-          "0x824a30f2984f9013f2c8d0a29c0a3cc5fd5c0673",
-          allTokens[ERC20TokenContractId.WETH].address,
-          "1800",
-          "TwapBLUR"
-        )
-      ).address;
-    }
-  }
+  // for (const project of projects) {
+  //   if (!project.aggregator) {
+  //     project.aggregator = (
+  //       await deployUniswapV3TwapOracleWrapper(
+  //         "0x824a30f2984f9013f2c8d0a29c0a3cc5fd5c0673",
+  //         allTokens[ERC20TokenContractId.WETH].address,
+  //         "1800",
+  //         "TwapBLUR"
+  //       )
+  //     ).address;
+  //   }
+  // }
 
   const assets = [...projects];
   if (DRY_RUN) {
