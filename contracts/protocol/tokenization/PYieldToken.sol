@@ -25,6 +25,7 @@ contract PYieldToken is PToken {
     uint256 internal constant RAY = 1e27;
     mapping(address => uint256) private _userYieldIndex;
     mapping(address => uint256) private _userPendingYield;
+    mapping(address => uint256) private _userSettledYield;
 
     constructor(IPool pool) PToken(pool) {
         //intentionally empty
@@ -36,9 +37,7 @@ contract PYieldToken is PToken {
         uint256 amount,
         uint256 index
     ) external override onlyPool returns (bool) {
-        uint256 principle = balanceOf(onBehalfOf);
-        uint256 yieldIndex = IYieldInfo(_underlyingAsset).yieldIndex();
-        _updateUserIndex(onBehalfOf, principle, yieldIndex);
+        _updateUserIndex(onBehalfOf, int256(amount));
 
         return _mintScaled(caller, onBehalfOf, amount, index);
     }
@@ -49,9 +48,7 @@ contract PYieldToken is PToken {
         uint256 amount,
         uint256 index
     ) external override onlyPool {
-        uint256 principle = balanceOf(from);
-        uint256 yieldIndex = IYieldInfo(_underlyingAsset).yieldIndex();
-        _updateUserIndex(from, principle, yieldIndex);
+        _updateUserIndex(from, -int256(amount));
 
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
@@ -65,68 +62,109 @@ contract PYieldToken is PToken {
         uint256 amount,
         bool validate
     ) internal override {
-        uint256 principleFrom = balanceOf(from);
-        uint256 principleTo = balanceOf(to);
-        uint256 yieldIndex = IYieldInfo(_underlyingAsset).yieldIndex();
-        _updateUserIndex(from, principleFrom, yieldIndex);
-        _updateUserIndex(to, principleTo, yieldIndex);
+        _updateUserIndex(from, -int256(amount));
+        _updateUserIndex(to, int256(amount));
 
         super._transfer(from, to, amount, validate);
     }
 
-    function claimYieldFor(address account) external {
-        uint256 principle = balanceOf(account);
-        (
-            address yieldUnderlying,
-            address yieldToken,
-            uint256 yieldIndex
-        ) = IYieldInfo(_underlyingAsset).yieldInfo();
-        uint256 pendingYield = _updateUserIndex(account, principle, yieldIndex);
-        if (pendingYield > 0) {
+    function claimFor(address account) external {
+        uint256 settledYield = _updateUserIndex(account, 0);
+        if (settledYield > 0) {
+            (address yieldUnderlying, address yieldToken) = IYieldInfo(
+                _underlyingAsset
+            ).yieldToken();
             uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
                 yieldUnderlying
             );
-            pendingYield = pendingYield.rayMul(liquidityIndex);
-            if (pendingYield > IERC20(yieldToken).balanceOf(address(this))) {
+            settledYield = settledYield.rayMul(liquidityIndex);
+            if (settledYield > IERC20(yieldToken).balanceOf(address(this))) {
                 IAutoYieldApe(_underlyingAsset).claimFor(address(this));
             }
-            IERC20(yieldToken).safeTransfer(account, pendingYield);
-            _userPendingYield[account] = 0;
+            IERC20(yieldToken).safeTransfer(account, settledYield);
+            _userSettledYield[account] = 0;
         }
     }
 
     function yieldAmount(address account) external view returns (uint256) {
-        uint256 principle = balanceOf(account);
-        (address yieldUnderlying, , uint256 yieldIndex) = IYieldInfo(
-            _underlyingAsset
-        ).yieldInfo();
-        uint256 indexDiff = yieldIndex - _userYieldIndex[account];
-        uint256 claimAmount = _userPendingYield[account] +
-            (principle * indexDiff) /
-            RAY;
-        uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
-            yieldUnderlying
-        );
-        return claimAmount.rayMul(liquidityIndex);
-    }
-
-    function _updateUserIndex(
-        address account,
-        uint256 userBalance,
-        uint256 yieldIndex
-    ) internal returns (uint256) {
+        uint256 userBalance = balanceOf(account);
         uint256 pendingYield = _userPendingYield[account];
-        uint256 indexDiff = yieldIndex - _userYieldIndex[account];
-        if (indexDiff > 0) {
-            if (userBalance > 0) {
-                uint256 yieldAdd = (userBalance * indexDiff) / RAY;
-                pendingYield += yieldAdd;
-                _userPendingYield[account] = pendingYield;
+        if (userBalance > 0) {
+            uint256 userIndex = _userYieldIndex[account];
+            (uint256 settledYieldIndex, uint256 latestYieldIndex) = IYieldInfo(
+                _underlyingAsset
+            ).yieldIndex();
+            uint256 indexDiff = latestYieldIndex - userIndex;
+            if (indexDiff > 0) {
+                uint256 accruedYield = (userBalance * indexDiff) / RAY;
+                pendingYield += accruedYield;
             }
-            _userYieldIndex[account] = yieldIndex;
+            indexDiff = latestYieldIndex - settledYieldIndex;
+            if (indexDiff > 0) {
+                uint256 lockedYield = (userBalance * indexDiff) / RAY;
+                if (pendingYield > lockedYield) {
+                    pendingYield -= lockedYield;
+                } else {
+                    pendingYield = 0;
+                }
+            }
         }
 
-        return pendingYield;
+        uint256 totalYield = _userSettledYield[account] + pendingYield;
+        if (totalYield > 0) {
+            (address yieldUnderlying, ) = IYieldInfo(_underlyingAsset)
+                .yieldToken();
+            uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
+                yieldUnderlying
+            );
+            totalYield = totalYield.rayMul(liquidityIndex);
+        }
+
+        return totalYield;
+    }
+
+    function _updateUserIndex(address account, int256 balanceDiff)
+        internal
+        returns (uint256)
+    {
+        uint256 userBalance = balanceOf(account);
+        (uint256 settledYieldIndex, uint256 latestYieldIndex) = IYieldInfo(
+            _underlyingAsset
+        ).yieldIndex();
+        uint256 indexDiff = latestYieldIndex - _userYieldIndex[account];
+        uint256 pendingYield = _userPendingYield[account];
+        if (indexDiff > 0) {
+            if (userBalance > 0) {
+                uint256 accruedYield = (userBalance * indexDiff) / RAY;
+                pendingYield += accruedYield;
+            }
+            _userYieldIndex[account] = latestYieldIndex;
+        }
+
+        uint256 lockIndexDiff = latestYieldIndex - settledYieldIndex;
+        uint256 pendingYieldLimit = (userBalance * lockIndexDiff) / RAY;
+
+        uint256 settledYield = _userSettledYield[account];
+        if (balanceDiff >= 0) {
+            if (pendingYield > pendingYieldLimit) {
+                settledYield += (pendingYield - pendingYieldLimit);
+                _userSettledYield[account] = settledYield;
+                _userPendingYield[account] = pendingYieldLimit;
+            } else {
+                _userPendingYield[account] = pendingYield;
+            }
+        } else {
+            uint256 withdrawFee = (uint256(-balanceDiff) * lockIndexDiff) / RAY;
+            if (pendingYield >= pendingYieldLimit) {
+                settledYield += (pendingYield - pendingYieldLimit);
+                _userSettledYield[account] = settledYield;
+                _userPendingYield[account] = pendingYieldLimit - withdrawFee;
+            } else {
+                //in this case, pendingYield must be 0, there is nothing we need to update
+            }
+        }
+
+        return settledYield;
     }
 
     function getXTokenType()

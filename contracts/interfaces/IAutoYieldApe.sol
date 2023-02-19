@@ -86,13 +86,14 @@ interface IAutoYieldApe {
 
     /**
      * @notice This function will claim the pending Ape Coin reward and sell it to usdc by uniswap,
-     then supply usdc to pUsdc. This is is the only way to increase yield index. This can only be called by harvestOperator
+     then supply usdc to pUsdc. This is is the only way to update pool yield index.
+     This function can only be called by harvestOperator
      * @param minimumDealPrice The minimal accept deal price to sell Ape coin to usdc
      **/
     function harvest(uint256 minimumDealPrice) external;
 
     /**
-     * @notice fetch the pending yield amount for the specified account.
+     * @notice fetch the settled yield amount for the specified account.
      **/
     function yieldAmount(address account) external view returns (uint256);
 }

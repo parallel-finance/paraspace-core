@@ -28,7 +28,7 @@ contract AutoYieldApe is
     using Address for address;
 
     /// @notice ApeCoin single pool POOL_ID for ApeCoinStaking
-    uint256 public constant APE_COIN_POOL_ID = 0;
+    uint256 internal constant APE_COIN_POOL_ID = 0;
     uint256 internal constant RAY = 1e27;
 
     ApeCoinStaking private immutable _apeStaking;
@@ -38,12 +38,16 @@ contract AutoYieldApe is
     IPoolCore private immutable _lendingPool;
     ISwapRouter private immutable _swapRouter;
 
-    //Accumulator of the total earned yield rate since the opening of the pool
-    uint256 private _poolYieldIndex;
-    //Record of calculated yield rate for each user account
+    //Accumulator of the total settled yield index since the opening of the pool
+    uint256 private _poolSettledYieldIndex;
+    //Accumulator of the latest yield rate since the opening of the pool
+    uint256 private _poolLatestYieldIndex;
+    //Record of calculated yield index for each user account
     mapping(address => uint256) private _userYieldIndex;
     //Record of pending yield for each user account,
     mapping(address => uint256) private _userPendingYield;
+    //Record of settled yield for each user account,
+    mapping(address => uint256) private _userSettledYield;
     /// @notice This account is the only role who can perform harvest action.
     address public harvestOperator;
     /// @notice The pool's fee rate for harvest operation. Expressed in bps, a value of 30 results in 0.3%
@@ -112,7 +116,7 @@ contract AutoYieldApe is
     /// @inheritdoc IAutoYieldApe
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
-        _updateYieldIndex(onBehalf);
+        _updateYieldIndex(onBehalf, int256(amount));
         _mint(onBehalf, amount);
 
         IERC20(_apeCoin).safeTransferFrom(msg.sender, address(this), amount);
@@ -128,7 +132,7 @@ contract AutoYieldApe is
 
     /// @inheritdoc IAutoYieldApe
     function claimFor(address account) external override {
-        _updateYieldIndex(account);
+        _updateYieldIndex(account, 0);
         _claimFor(account);
     }
 
@@ -146,55 +150,59 @@ contract AutoYieldApe is
 
     /// @inheritdoc IAutoYieldApe
     function yieldAmount(address account)
-        public
+        external
         view
         override
         returns (uint256)
     {
-        //index_diff = pool_yield_index - user_yield_index
-        //accrued_yield = user_balance * index_diff
-        //total_pending_yield = pending_yield + accrued_yield
-        //scaled_yield_amount = total_pending_yield * liquidity_index
-        uint256 pendingYield = _userPendingYield[account];
-        uint256 indexDiff = _poolYieldIndex - _userYieldIndex[account];
         uint256 userBalance = balanceOf(account);
-        if (indexDiff > 0 && userBalance > 0) {
-            uint256 accruedYield = (userBalance * indexDiff) / RAY;
-            pendingYield += accruedYield;
+        uint256 pendingYield = _userPendingYield[account];
+        if (userBalance > 0) {
+            //index_diff = pool_latest_yield_index - user_yield_index
+            //accrued_yield = user_balance * index_diff
+            //lock_index_diff = pool_latest_yield_index - pool_settled_yield_index
+            //locked_yield = user_balance * index_diff
+            //total_pending_yield = pending_yield + accrued_yield - locked_yield
+            uint256 userIndex = _userYieldIndex[account];
+            uint256 poolSettledIndex = _poolSettledYieldIndex;
+            uint256 poolLatestIndex = _poolLatestYieldIndex;
+            uint256 indexDiff = poolLatestIndex - userIndex;
+            if (indexDiff > 0) {
+                uint256 accruedYield = (userBalance * indexDiff) / RAY;
+                pendingYield += accruedYield;
+            }
+            indexDiff = _poolLatestYieldIndex - poolSettledIndex;
+            if (indexDiff > 0) {
+                uint256 lockedYield = (userBalance * indexDiff) / RAY;
+                if (pendingYield > lockedYield) {
+                    pendingYield -= lockedYield;
+                } else {
+                    pendingYield = 0;
+                }
+            }
         }
 
-        if (pendingYield > 0) {
+        //total_yield = total_pending_yield + settled_yield
+        uint256 totalYield = _userSettledYield[account] + pendingYield;
+        if (totalYield > 0) {
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
-            pendingYield = pendingYield.rayMul(liquidityIndex);
+            //scaled_yield_amount = total_yield * liquidity_index
+            totalYield = totalYield.rayMul(liquidityIndex);
         }
 
-        return pendingYield;
+        return totalYield;
     }
 
     /// @inheritdoc IYieldInfo
-    function yieldIndex() external view override returns (uint256) {
-        return _poolYieldIndex;
+    function yieldIndex() external view override returns (uint256, uint256) {
+        return (_poolSettledYieldIndex, _poolLatestYieldIndex);
     }
 
     /// @inheritdoc IYieldInfo
-    function yieldToken() external view override returns (address) {
-        return address(_yieldToken);
-    }
-
-    /// @inheritdoc IYieldInfo
-    function yieldInfo()
-        external
-        view
-        override
-        returns (
-            address,
-            address,
-            uint256
-        )
-    {
-        return (_yieldUnderlying, _yieldToken, _poolYieldIndex);
+    function yieldToken() external view override returns (address, address) {
+        return (_yieldUnderlying, _yieldToken);
     }
 
     /**
@@ -249,7 +257,7 @@ contract AutoYieldApe is
     function _withdraw(uint256 amount) internal {
         require(amount > 0, "zero amount");
 
-        _updateYieldIndex(msg.sender);
+        _updateYieldIndex(msg.sender, -int256(amount));
         _burn(msg.sender, amount);
 
         _apeStaking.withdrawSelfApeCoin(amount);
@@ -262,17 +270,17 @@ contract AutoYieldApe is
      * @notice implementation for claimFor function.
      **/
     function _claimFor(address account) internal {
-        uint256 pendingYield = _userPendingYield[account];
-        if (pendingYield > 0) {
-            _userPendingYield[account] = 0;
+        uint256 settledYield = _userSettledYield[account];
+        if (settledYield > 0) {
+            _userSettledYield[account] = 0;
 
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
-            uint256 scaledYield = pendingYield.rayMul(liquidityIndex);
+            uint256 scaledYield = settledYield.rayMul(liquidityIndex);
             IERC20(_yieldToken).safeTransfer(account, scaledYield);
 
-            emit YieldClaimed(msg.sender, account, pendingYield);
+            emit YieldClaimed(msg.sender, account, scaledYield);
         }
     }
 
@@ -280,7 +288,7 @@ contract AutoYieldApe is
      * @notice implementation for harvest function.
      **/
     function _harvest(uint256 minimumDealPrice) internal {
-        //1, get current pending ape coin reward amount
+        //1, get current pending ape coin reward amount from ApeCoinStaking
         uint256 rewardAmount = _apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
             address(this),
@@ -317,32 +325,59 @@ contract AutoYieldApe is
             uint256 _harvestFeeRate = harvestFeeRate;
             if (_harvestFeeRate > 0) {
                 uint256 fee = _yieldAmount.percentMul(_harvestFeeRate);
-                _userPendingYield[owner()] += fee;
+                _userSettledYield[owner()] += fee;
                 _yieldAmount -= fee;
             }
 
             //7, update pool yield index.
-            //accrued_index = yield_amount / total_supply
-            //new_pool_yield_index = old_pool_yield_index + accrued_index
+            //accrued_index = new_yield_amount / total_supply
+            //new_pool_settle_yield_index = pool_latest_yield_index
+            //new_pool_latest_yield_index = pool_latest_yield_index + accrued_index
             uint256 accruedIndex = (_yieldAmount * RAY) / totalSupply();
-            _poolYieldIndex += accruedIndex;
+            uint256 latestYieldIndex = _poolLatestYieldIndex;
+            _poolSettledYieldIndex = latestYieldIndex;
+            _poolLatestYieldIndex = latestYieldIndex + accruedIndex;
         }
     }
 
     /**
-     * @notice update user yield index to _poolYieldIndex and accrue pending yield for user
+     * @notice update user yield index to _poolSettledYieldIndex and accrue pending yield for user
      * This function need to be called when user yApe balance changed and claimed all user yield
      **/
-    function _updateYieldIndex(address account) internal {
-        uint256 currentYieldIndex = _poolYieldIndex;
-        uint256 indexDiff = currentYieldIndex - _userYieldIndex[account];
+    function _updateYieldIndex(address account, int256 balanceDiff) internal {
+        uint256 userBalance = balanceOf(account);
+        uint256 latestYieldIndex = _poolLatestYieldIndex;
+        uint256 indexDiff = latestYieldIndex - _userYieldIndex[account];
+        uint256 pendingYield = _userPendingYield[account];
         if (indexDiff > 0) {
-            uint256 userBalance = balanceOf(account);
             if (userBalance > 0) {
                 uint256 accruedYield = (userBalance * indexDiff) / RAY;
-                _userPendingYield[account] += accruedYield;
+                pendingYield += accruedYield;
             }
-            _userYieldIndex[account] = currentYieldIndex;
+            _userYieldIndex[account] = latestYieldIndex;
+        }
+
+        uint256 lockIndexDiff = latestYieldIndex - _poolSettledYieldIndex;
+        uint256 lockedYield = (userBalance * lockIndexDiff) / RAY;
+        if (balanceDiff >= 0) {
+            if (pendingYield > lockedYield) {
+                _userSettledYield[account] += (pendingYield - lockedYield);
+                _userPendingYield[account] = lockedYield;
+            } else {
+                _userPendingYield[account] = pendingYield;
+            }
+        } else {
+            uint256 withdrawFee = (uint256(-balanceDiff) * lockIndexDiff) / RAY;
+            if (pendingYield >= lockedYield) {
+                uint256 accruedSettledYield = pendingYield - lockedYield;
+                if (accruedSettledYield > 0) {
+                    _userSettledYield[account] += accruedSettledYield;
+                }
+                _userPendingYield[account] = lockedYield - withdrawFee;
+                _userSettledYield[owner()] += withdrawFee;
+            } else {
+                //in this case, pendingYield must be 0, there is nothing we need to update
+            }
         }
     }
 
@@ -376,8 +411,8 @@ contract AutoYieldApe is
         uint256 amount
     ) internal override {
         require(sender != recipient, "same address for transfer");
-        _updateYieldIndex(sender);
-        _updateYieldIndex(recipient);
+        _updateYieldIndex(sender, -int256(amount));
+        _updateYieldIndex(recipient, int256(amount));
         super._transfer(sender, recipient, amount);
     }
 }
