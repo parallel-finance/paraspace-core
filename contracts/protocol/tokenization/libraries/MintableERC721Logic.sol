@@ -590,12 +590,13 @@ library MintableERC721Logic {
         bool ATOMIC_PRICING,
         uint64 balance
     ) private view {
-        if (!ATOMIC_PRICING) return;
-        uint64 balanceLimit = erc721Data.balanceLimit;
-        require(
-            balanceLimit == 0 || balance <= balanceLimit,
-            Errors.NTOKEN_BALANCE_EXCEEDED
-        );
+        if (ATOMIC_PRICING) {
+            uint64 balanceLimit = erc721Data.balanceLimit;
+            require(
+                balanceLimit == 0 || balance <= balanceLimit,
+                Errors.NTOKEN_BALANCE_EXCEEDED
+            );
+        }
     }
 
     function _checkTraitMultiplier(uint256 multiplier) private pure {
@@ -670,23 +671,20 @@ library MintableERC721Logic {
             uint256 length = erc721Data.allTokens.length;
             _addTokenToAllTokensEnumeration(erc721Data, tokenId, length);
         } else if (from != to) {
+            uint256 userBalance = erc721Data.userState[from].balance;
             _removeTokenFromOwnerEnumeration(
                 erc721Data,
                 from,
                 tokenId,
-                erc721Data.userState[from].balance
+                userBalance
             );
         }
         if (to == address(0)) {
             uint256 length = erc721Data.allTokens.length;
             _removeTokenFromAllTokensEnumeration(erc721Data, tokenId, length);
         } else if (to != from) {
-            _addTokenToOwnerEnumeration(
-                erc721Data,
-                to,
-                tokenId,
-                erc721Data.userState[to].balance
-            );
+            uint256 length = erc721Data.userState[to].balance;
+            _addTokenToOwnerEnumeration(erc721Data, to, tokenId, length);
         }
     }
 
