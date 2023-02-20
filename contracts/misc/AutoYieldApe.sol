@@ -376,7 +376,10 @@ contract AutoYieldApe is
                 _userPendingYield[account] = lockedYield - withdrawFee;
                 _userSettledYield[owner()] += withdrawFee;
             } else {
-                //in this case, pendingYield must be 0, there is nothing we need to update
+                if (pendingYield > 0) {
+                    _userPendingYield[account] = 0;
+                    _userSettledYield[owner()] += pendingYield;
+                }
             }
         }
     }
