@@ -160,7 +160,9 @@ contract PYieldToken is PToken {
                 _userSettledYield[account] = settledYield;
                 _userPendingYield[account] = pendingYieldLimit - withdrawFee;
             } else {
-                //in this case, pendingYield must be 0, there is nothing we need to update
+                if (pendingYield > 0) {
+                    _userPendingYield[account] = 0;
+                }
             }
         }
 
