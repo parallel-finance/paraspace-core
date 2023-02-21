@@ -103,6 +103,7 @@ import {
   TIME_LOCK_DEFAULT_OPERATION,
   VERSION,
   FLASHBOTS_RELAY_RPC,
+  MULTI_SIG_NONCE,
 } from "./hardhat-constants";
 import {chunk, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
@@ -866,7 +867,8 @@ export const proposeSafeTransaction = async (
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
+    nonce:
+      nonce || MULTI_SIG_NONCE || (await safeService.getNextNonce(MULTI_SIG)),
     operation,
     data,
   };
