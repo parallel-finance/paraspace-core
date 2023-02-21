@@ -38,16 +38,16 @@ contract AutoYieldApe is
     IPoolCore private immutable _lendingPool;
     ISwapRouter private immutable _swapRouter;
 
-    //Accumulator of the total settled yield index since the opening of the pool
-    uint256 private _poolSettledYieldIndex;
+    //The latest accrued yield index
+    uint256 private _poolLastAccruedIndex;
     //Accumulator of the latest yield rate since the opening of the pool
     uint256 private _poolLatestYieldIndex;
     //Record of calculated yield index for each user account
     mapping(address => uint256) private _userYieldIndex;
     //Record of pending yield for each user account,
     mapping(address => uint256) private _userPendingYield;
-    //Record of settled yield for each user account,
-    mapping(address => uint256) private _userSettledYield;
+    //Record of balance which was locked withdraw fee for each user account,
+    mapping(address => uint256) private _userLockFeeAmount;
     /// @notice This account is the only role who can perform harvest action.
     address public harvestOperator;
     /// @notice The pool's fee rate for harvest operation. Expressed in bps, a value of 30 results in 0.3%
@@ -155,32 +155,19 @@ contract AutoYieldApe is
         override
         returns (uint256)
     {
-        uint256 userBalance = balanceOf(account);
-        uint256 pendingYield = _userPendingYield[account];
-        if (userBalance > 0) {
-            uint256 userIndex = _userYieldIndex[account];
-            uint256 poolSettledIndex = _poolSettledYieldIndex;
-            if (poolSettledIndex > userIndex) {
-                pendingYield += userBalance * (poolSettledIndex - userIndex) / RAY;
-            }
-        }
-
-        //total_yield = total_pending_yield + settled_yield
-        uint256 totalYield = _userSettledYield[account] + pendingYield;
-        if (totalYield > 0) {
+        (uint256 freeYield, ) = _yieldAmount(account);
+        if (freeYield > 0) {
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
-            //scaled_yield_amount = total_yield * liquidity_index
-            totalYield = totalYield.rayMul(liquidityIndex);
+            freeYield = freeYield.rayMul(liquidityIndex);
         }
-
-        return totalYield;
+        return freeYield;
     }
 
     /// @inheritdoc IYieldInfo
     function yieldIndex() external view override returns (uint256, uint256) {
-        return (_poolSettledYieldIndex, _poolLatestYieldIndex);
+        return (_poolLastAccruedIndex, _poolLatestYieldIndex);
     }
 
     /// @inheritdoc IYieldInfo
@@ -249,18 +236,46 @@ contract AutoYieldApe is
         emit Redeem(msg.sender, amount);
     }
 
+    function _yieldAmount(address account)
+        internal
+        view
+        returns (uint256, uint256)
+    {
+        uint256 userBalance = balanceOf(account);
+        uint256 pendingYield = _userPendingYield[account];
+        uint256 lockedYield = 0;
+        if (userBalance > 0) {
+            uint256 userIndex = _userYieldIndex[account];
+            uint256 poolLatestIndex = _poolLatestYieldIndex;
+            uint256 indexDiff = poolLatestIndex - userIndex;
+            uint256 lockAmount;
+            if (indexDiff > 0) {
+                lockAmount = userBalance;
+                uint256 accruedYield = (userBalance * indexDiff) / RAY;
+                pendingYield += accruedYield;
+            } else {
+                lockAmount = _userLockFeeAmount[account];
+            }
+
+            lockedYield = (lockAmount * _poolLastAccruedIndex) / RAY;
+            pendingYield -= lockedYield;
+        }
+
+        return (pendingYield, lockedYield);
+    }
+
     /**
      * @notice implementation for claimFor function.
      **/
     function _claimFor(address account) internal {
-        uint256 settledYield = _userSettledYield[account];
-        if (settledYield > 0) {
-            _userSettledYield[account] = 0;
+        (uint256 freeYield, uint256 lockedYield) = _yieldAmount(account);
+        if (freeYield > 0) {
+            _userPendingYield[account] = lockedYield;
 
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
-            uint256 scaledYield = settledYield.rayMul(liquidityIndex);
+            uint256 scaledYield = freeYield.rayMul(liquidityIndex);
             IERC20(_yieldToken).safeTransfer(account, scaledYield);
 
             emit YieldClaimed(msg.sender, account, scaledYield);
@@ -300,26 +315,27 @@ contract AutoYieldApe is
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
-            uint256 _yieldAmount = yieldUnderlyingAmount.rayDiv(liquidityIndex);
+            uint256 _accruedYieldAmount = yieldUnderlyingAmount.rayDiv(
+                liquidityIndex
+            );
 
             //6, calculate harvest fee and subtracting harvest fee from yield amount
             //harvest_fee = yield_amount * harvest_fee_rate
             //new_yield_amount = yield_amount - harvest_fee
             uint256 _harvestFeeRate = harvestFeeRate;
             if (_harvestFeeRate > 0) {
-                uint256 fee = _yieldAmount.percentMul(_harvestFeeRate);
-                _userSettledYield[owner()] += fee;
-                _yieldAmount -= fee;
+                uint256 fee = _accruedYieldAmount.percentMul(_harvestFeeRate);
+                _userPendingYield[owner()] += fee;
+                _accruedYieldAmount -= fee;
             }
 
             //7, update pool yield index.
             //accrued_index = new_yield_amount / total_supply
-            //new_pool_settle_yield_index = pool_latest_yield_index
+            //new_pool_last_accrued_index = accruedIndex
             //new_pool_latest_yield_index = pool_latest_yield_index + accrued_index
-            uint256 accruedIndex = (_yieldAmount * RAY) / totalSupply();
-            uint256 latestYieldIndex = _poolLatestYieldIndex;
-            _poolSettledYieldIndex = latestYieldIndex;
-            _poolLatestYieldIndex = latestYieldIndex + accruedIndex;
+            uint256 accruedIndex = (_accruedYieldAmount * RAY) / totalSupply();
+            _poolLastAccruedIndex = accruedIndex;
+            _poolLatestYieldIndex += accruedIndex;
         }
     }
 
@@ -336,36 +352,24 @@ contract AutoYieldApe is
             if (userBalance > 0) {
                 uint256 accruedYield = (userBalance * indexDiff) / RAY;
                 pendingYield += accruedYield;
+                if (userBalance != _userLockFeeAmount[account]) {
+                    _userLockFeeAmount[account] = userBalance;
+                }
+                _userPendingYield[account] = pendingYield;
             }
             _userYieldIndex[account] = latestYieldIndex;
         }
 
-        uint256 lockIndexDiff = latestYieldIndex - _poolSettledYieldIndex;
-        uint256 lockedYield = (userBalance * lockIndexDiff) / RAY;
-        if (balanceDiff >= 0) {
-            if (pendingYield > lockedYield) {
-                _userSettledYield[account] += (pendingYield - lockedYield);
-                _userPendingYield[account] = lockedYield;
-            } else {
-                _userPendingYield[account] = pendingYield;
-            }
-        } else {
-            uint256 withdrawFee = (uint256(-balanceDiff) * lockIndexDiff) / RAY;
-            if (pendingYield >= lockedYield) {
-                uint256 accruedSettledYield = pendingYield - lockedYield;
-                if (accruedSettledYield > 0) {
-                    _userSettledYield[account] += accruedSettledYield;
-                }
-                _userPendingYield[account] = lockedYield - withdrawFee;
-                _userSettledYield[owner()] += withdrawFee;
-            } else {
-                if (pendingYield > withdrawFee) {
-                    _userPendingYield[account] = pendingYield - withdrawFee;
-                    _userSettledYield[owner()] += withdrawFee;
-                } else if (pendingYield > 0){
-                    _userPendingYield[account] = 0;
-                    _userSettledYield[owner()] += pendingYield;
-                }
+        if (balanceDiff < 0) {
+            uint256 leftBalance = userBalance - (uint256(-balanceDiff));
+            uint256 userLockFeeBalance = _userLockFeeAmount[account];
+            if (leftBalance < userLockFeeBalance) {
+                uint256 withdrawLockAmount = userLockFeeBalance - leftBalance;
+                uint256 withdrawFee = (withdrawLockAmount *
+                    _poolLastAccruedIndex) / RAY;
+                _userLockFeeAmount[account] -= withdrawLockAmount;
+                _userPendingYield[account] -= withdrawFee;
+                _userPendingYield[owner()] += withdrawFee;
             }
         }
     }
