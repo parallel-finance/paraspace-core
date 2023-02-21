@@ -165,7 +165,7 @@ describe("Auto Yield Ape Test", () => {
     return testEnv;
   };
 
-  it("yApe yield reward calculation as expected", async () => {
+  it("yApe yield reward calculation as expected 0", async () => {
     const {
       users: [user1, user2, user3, , user5],
       ape,
@@ -381,6 +381,67 @@ describe("Auto Yield Ape Test", () => {
     almostEqual(
       await yApe.yieldAmount(gatewayAdmin.address),
       await convertToCurrencyDecimals(usdc.address, "7200")
+    );
+  });
+
+  it("yApe yield reward calculation as expected 1", async () => {
+    const {
+      users: [, user2, user3,],
+      ape,
+      usdc,
+      gatewayAdmin,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(ape, "1000", user2);
+
+    await waitForTx(
+        await yApe.connect(user2.signer).deposit(user2.address, parseEther("800"))
+    );
+
+    await advanceTimeAndBlock(3600);
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+
+    await waitForTx(
+        await yApe.connect(user2.signer).deposit(user2.address, parseEther("200"))
+    );
+
+    await waitForTx(
+        await yApe.connect(user2.signer).withdraw(parseEther("200"))
+    );
+
+    almostEqual(
+        await yApe.yieldAmount(gatewayAdmin.address),
+        await convertToCurrencyDecimals(usdc.address, "900")
+    );
+  });
+
+  it("yApe yield reward calculation as expected 2", async () => {
+    const {
+      users: [, user2, user3,],
+      ape,
+      usdc,
+      gatewayAdmin,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(ape, "1000", user2);
+
+    await waitForTx(
+        await yApe.connect(user2.signer).deposit(user2.address, parseEther("400"))
+    );
+
+    await advanceTimeAndBlock(3600);
+    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+
+    await waitForTx(
+        await yApe.connect(user2.signer).deposit(user2.address, parseEther("400"))
+    );
+
+    await waitForTx(
+        await yApe.connect(user2.signer).withdraw(parseEther("600"))
+    );
+    almostEqual(
+        await yApe.yieldAmount(gatewayAdmin.address),
+        await convertToCurrencyDecimals(usdc.address, "3600")
     );
   });
 

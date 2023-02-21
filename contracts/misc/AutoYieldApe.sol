@@ -158,27 +158,10 @@ contract AutoYieldApe is
         uint256 userBalance = balanceOf(account);
         uint256 pendingYield = _userPendingYield[account];
         if (userBalance > 0) {
-            //index_diff = pool_latest_yield_index - user_yield_index
-            //accrued_yield = user_balance * index_diff
-            //lock_index_diff = pool_latest_yield_index - pool_settled_yield_index
-            //locked_yield = user_balance * index_diff
-            //total_pending_yield = pending_yield + accrued_yield - locked_yield
             uint256 userIndex = _userYieldIndex[account];
             uint256 poolSettledIndex = _poolSettledYieldIndex;
-            uint256 poolLatestIndex = _poolLatestYieldIndex;
-            uint256 indexDiff = poolLatestIndex - userIndex;
-            if (indexDiff > 0) {
-                uint256 accruedYield = (userBalance * indexDiff) / RAY;
-                pendingYield += accruedYield;
-            }
-            indexDiff = _poolLatestYieldIndex - poolSettledIndex;
-            if (indexDiff > 0) {
-                uint256 lockedYield = (userBalance * indexDiff) / RAY;
-                if (pendingYield > lockedYield) {
-                    pendingYield -= lockedYield;
-                } else {
-                    pendingYield = 0;
-                }
+            if (poolSettledIndex > userIndex) {
+                pendingYield += userBalance * (poolSettledIndex - userIndex) / RAY;
             }
         }
 
@@ -376,7 +359,10 @@ contract AutoYieldApe is
                 _userPendingYield[account] = lockedYield - withdrawFee;
                 _userSettledYield[owner()] += withdrawFee;
             } else {
-                if (pendingYield > 0) {
+                if (pendingYield > withdrawFee) {
+                    _userPendingYield[account] = pendingYield - withdrawFee;
+                    _userSettledYield[owner()] += withdrawFee;
+                } else if (pendingYield > 0){
                     _userPendingYield[account] = 0;
                     _userSettledYield[owner()] += pendingYield;
                 }

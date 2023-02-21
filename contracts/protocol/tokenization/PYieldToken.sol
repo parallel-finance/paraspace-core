@@ -94,19 +94,8 @@ contract PYieldToken is PToken {
             (uint256 settledYieldIndex, uint256 latestYieldIndex) = IYieldInfo(
                 _underlyingAsset
             ).yieldIndex();
-            uint256 indexDiff = latestYieldIndex - userIndex;
-            if (indexDiff > 0) {
-                uint256 accruedYield = (userBalance * indexDiff) / RAY;
-                pendingYield += accruedYield;
-            }
-            indexDiff = latestYieldIndex - settledYieldIndex;
-            if (indexDiff > 0) {
-                uint256 lockedYield = (userBalance * indexDiff) / RAY;
-                if (pendingYield > lockedYield) {
-                    pendingYield -= lockedYield;
-                } else {
-                    pendingYield = 0;
-                }
+            if (settledYieldIndex > userIndex) {
+                pendingYield += userBalance * (settledYieldIndex - userIndex) / RAY;
             }
         }
 
@@ -160,7 +149,9 @@ contract PYieldToken is PToken {
                 _userSettledYield[account] = settledYield;
                 _userPendingYield[account] = pendingYieldLimit - withdrawFee;
             } else {
-                if (pendingYield > 0) {
+                if (pendingYield > withdrawFee) {
+                    _userPendingYield[account] = pendingYield - withdrawFee;
+                } else if (pendingYield > 0){
                     _userPendingYield[account] = 0;
                 }
             }
