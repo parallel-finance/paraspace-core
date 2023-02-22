@@ -14,11 +14,13 @@ import "../interfaces/IYieldInfo.sol";
 import "../interfaces/IPoolCore.sol";
 import "../protocol/libraries/math/WadRayMath.sol";
 import "../protocol/libraries/math/PercentageMath.sol";
+import {VoteDelegator} from "./VoteDelegator.sol";
 
 contract AutoYieldApe is
     Initializable,
     OwnableUpgradeable,
     ERC20Upgradeable,
+    VoteDelegator,
     IAutoYieldApe,
     IYieldInfo
 {

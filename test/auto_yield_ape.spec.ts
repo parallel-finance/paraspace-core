@@ -8,7 +8,7 @@ import {
   mintAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
-import {parseEther} from "ethers/lib/utils";
+import {parseEther, solidityKeccak256} from "ethers/lib/utils";
 import {
   approveTo,
   createNewPool,
@@ -26,7 +26,11 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {BigNumber, BigNumberish} from "ethers";
-import {deployAggregator} from "../helpers/contracts-deployments";
+import {
+  deployAggregator,
+  deployMockedDelegateRegistry,
+} from "../helpers/contracts-deployments";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 function almostEqual(value0: BigNumberish, value1: BigNumberish) {
   const maxDiff = BigNumber.from(value0.toString()).mul(4).div("1000").abs();
@@ -864,5 +868,31 @@ describe("Auto Yield Ape Test", () => {
     );
 
     almostEqual(await weth.balanceOf(user1.address), parseEther("1"));
+  });
+
+  it("test vote delegation", async () => {
+    const {
+      users: [user1],
+      gatewayAdmin,
+    } = await loadFixture(fixture);
+
+    const delegateRegistry = await deployMockedDelegateRegistry(
+      ETHERSCAN_VERIFICATION
+    );
+
+    await yApe
+      .connect(gatewayAdmin.signer)
+      .setVotingDelegate(
+        delegateRegistry.address,
+        solidityKeccak256(["string"], ["test"]),
+        user1.address
+      );
+
+    expect(
+      await yApe.getDelegate(
+        delegateRegistry.address,
+        solidityKeccak256(["string"], ["test"])
+      )
+    ).to.be.eq(user1.address);
   });
 });
