@@ -295,6 +295,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     .isUsedAsCollateral(tokenIds[i][j]);
                 tokenData[i][j].isAuctioned = IAuctionableERC721(asset)
                     .isAuctioned(tokenIds[i][j]);
+                tokenData[i][j].multiplier = IAtomicCollateralizableERC721(
+                    asset
+                ).getTraitMultiplier(tokenIds[i][j]);
             }
         }
 
@@ -397,6 +400,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 userReservesData[i].scaledXTokenBalance = INToken(
                     baseData.xTokenAddress
                 ).balanceOf(user);
+                userReservesData[i]
+                    .avgMultiplier = IAtomicCollateralizableERC721(
+                    baseData.xTokenAddress
+                ).avgMultiplierOf(user);
                 userReservesData[i]
                     .collateralizedBalance = ICollateralizableERC721(
                     baseData.xTokenAddress

@@ -60,6 +60,7 @@ interface IUiPoolDataProvider {
         uint256 collateralizedBalance;
         bool usageAsCollateralEnabledOnUser;
         uint256 scaledVariableDebt;
+        uint256 avgMultiplier;
     }
 
     struct BaseCurrencyInfo {
