@@ -230,8 +230,8 @@ import {
   P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
-  ParaSpaceAidrop__factory,
-  ParaSpaceAidrop,
+  ParaSpaceAirdrop__factory,
+  ParaSpaceAirdrop,
   CLwstETHSynchronicityPriceAdapter__factory,
   CLwstETHSynchronicityPriceAdapter,
   WstETHMocked__factory,
@@ -2619,14 +2619,14 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     verify
   ) as Promise<MockedDelegateRegistry>;
 
-export const deployParaSpaceAidrop = async (
+export const deployParaSpaceAirdrop = async (
   token: tEthereumAddress,
   deadline: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new ParaSpaceAidrop__factory(await getFirstSigner()),
-    eContractid.ParaSpaceAidrop,
+    new ParaSpaceAirdrop__factory(await getFirstSigner()),
+    eContractid.ParaSpaceAirdrop,
     [token, deadline],
     verify
-  ) as Promise<ParaSpaceAidrop>;
+  ) as Promise<ParaSpaceAirdrop>;
