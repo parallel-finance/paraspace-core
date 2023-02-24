@@ -8,7 +8,7 @@ import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 
-contract ParaSpaceAidrop is Ownable, ReentrancyGuard {
+contract ParaSpaceAirdrop is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     struct AidropStatus {

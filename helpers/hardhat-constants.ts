@@ -108,5 +108,10 @@ export const MULTI_SIG =
   process.env.MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 export const MULTI_SEND =
   process.env.MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D";
+export const MULTI_SIG_NONCE = process.env.MULTI_SIG_NONCE
+  ? parseInt(process.env.MULTI_SIG_NONCE)
+  : undefined;
 
 export const VERSION = version;
+
+export const FLASHBOTS_RELAY_RPC = "https://relay.flashbots.net";

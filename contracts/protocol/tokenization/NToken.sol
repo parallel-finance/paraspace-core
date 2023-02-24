@@ -14,8 +14,6 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
-import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
-import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
@@ -29,7 +27,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 142;
+    uint256 public constant NTOKEN_REVISION = 145;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -62,7 +60,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         _setSymbol(nTokenSymbol);
 
         require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        _underlyingAsset = underlyingAsset;
+        _ERC721Data.underlyingAsset = underlyingAsset;
         _ERC721Data.rewardController = incentivesController;
 
         emit Initialized(
@@ -104,7 +102,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                IERC721(_underlyingAsset).safeTransferFrom(
+                IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
                     address(this),
                     receiverOfUnderlying,
                     tokenIds[index]
@@ -124,11 +122,12 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         _transfer(from, to, value, false);
     }
 
-    function setApprovalForAllTo(address token, address to)
-        external
-        onlyPoolAdmin
-    {
-        IERC721(token).setApprovalForAll(to, true);
+    function setApprovalForAllTo(
+        address token,
+        address to,
+        bool _approved
+    ) external onlyPoolAdmin {
+        IERC721(token).setApprovalForAll(to, _approved);
     }
 
     /// @inheritdoc INToken
@@ -139,7 +138,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         onlyPool
         nonReentrant
     {
-        IERC721(_underlyingAsset).safeTransferFrom(
+        IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
             address(this),
             target,
             tokenId
@@ -160,7 +159,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         uint256 tokenId,
         bool validate
     ) internal virtual {
-        address underlyingAsset = _underlyingAsset;
+        address underlyingAsset = _ERC721Data.underlyingAsset;
 
         uint256 fromBalanceBefore;
         if (validate) {
@@ -224,11 +223,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
-        return _underlyingAsset;
-    }
-
-    function getAtomicPricingConfig() external view returns (bool) {
-        return ATOMIC_PRICING;
+        return _ERC721Data.underlyingAsset;
     }
 
     function getXTokenType()

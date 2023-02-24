@@ -5,6 +5,7 @@ import {
   Signer,
   utils,
   BigNumber,
+  Wallet,
 } from "ethers";
 import {signTypedData_v4} from "eth-sig-util";
 import {fromRpcSig, ECDSASignature} from "ethereumjs-util";
@@ -22,6 +23,7 @@ import {
   isLocalTestnet,
   getParaSpaceConfig,
   isFork,
+  sleep,
 } from "./misc-utils";
 import {
   iFunctionSignature,
@@ -100,8 +102,10 @@ import {
   MULTI_SEND,
   TIME_LOCK_DEFAULT_OPERATION,
   VERSION,
+  FLASHBOTS_RELAY_RPC,
+  MULTI_SIG_NONCE,
 } from "./hardhat-constants";
-import {chunk, pick} from "lodash";
+import {pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import {
   OperationType,
@@ -111,6 +115,11 @@ import Safe from "@safe-global/safe-core-sdk";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {encodeMulti, MetaTransaction} from "ethers-multisend";
+import {
+  FlashbotsBundleProvider,
+  FlashbotsBundleRawTransaction,
+  FlashbotsBundleTransaction,
+} from "@flashbots/ethers-provider-bundle";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -798,6 +807,54 @@ export const dryRunEncodedData = async (
   }
 };
 
+export const dryRunMultipleEncodedData = async (
+  target: tEthereumAddress[],
+  data: string[],
+  executionTime?: string
+) => {
+  executionTime = executionTime || (await getExecutionTime());
+  if (
+    DRY_RUN == DryRunExecutor.TimeLock &&
+    (await getContractAddressInDb(eContractid.TimeLockExecutor))
+  ) {
+    for (let i = 0; i < target.length; i++) {
+      const timeLockData = await getTimeLockData(
+        target[i],
+        data[i],
+        executionTime
+      );
+      await insertTimeLockDataInDb(timeLockData);
+    }
+  } else if (DRY_RUN === DryRunExecutor.SafeWithTimeLock) {
+    const metaTransactions: MetaTransaction[] = [];
+    for (let i = 0; i < target.length; i++) {
+      const {newTarget, newData} = await getTimeLockData(
+        target[i],
+        data[i],
+        executionTime
+      );
+      metaTransactions.push({
+        to: newTarget,
+        data: newData,
+        value: "0",
+      });
+    }
+    await proposeMultiSafeTransactions(metaTransactions);
+  } else if (DRY_RUN === DryRunExecutor.Safe) {
+    const metaTransactions: MetaTransaction[] = [];
+    for (let i = 0; i < target.length; i++) {
+      metaTransactions.push({
+        to: target[i],
+        data: data[i],
+        value: "0",
+      });
+    }
+    await proposeMultiSafeTransactions(metaTransactions);
+  } else {
+    console.log(`target: ${target}, data: ${data}`);
+  }
+};
+
 export const decodeInputData = (data: string) => {
   const ABI = [
     ...IPool__factory.abi,
@@ -858,7 +915,8 @@ export const proposeSafeTransaction = async (
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce: nonce || (await safeService.getNextNonce(MULTI_SIG)),
+    nonce:
+      nonce || MULTI_SIG_NONCE || (await safeService.getNextNonce(MULTI_SIG)),
     operation,
     data,
   };
@@ -889,12 +947,60 @@ export const proposeSafeTransaction = async (
 export const proposeMultiSafeTransactions = async (
   transactions: MetaTransaction[],
   operation = OperationType.DelegateCall,
-  chunkSize = 4
+  nonce?: number
 ) => {
   const newTarget = MULTI_SEND;
-  const chunks = chunk(transactions, chunkSize);
-  for (let i = 0; i < chunks.length; i++) {
-    const {data: newData} = encodeMulti(chunks[i]);
-    await proposeSafeTransaction(newTarget, newData, undefined, operation);
+  const {data: newData} = encodeMulti(transactions);
+  await proposeSafeTransaction(newTarget, newData, nonce, operation);
+};
+
+export const sendPrivateTransactions = async (
+  bundledTransactions: Array<
+    FlashbotsBundleTransaction | FlashbotsBundleRawTransaction
+  >
+) => {
+  const flashbotsProvider = await FlashbotsBundleProvider.create(
+    DRE.ethers.provider,
+    Wallet.createRandom(),
+    FLASHBOTS_RELAY_RPC
+  );
+
+  // eslint-disable-next-line
+  while (true) {
+    const blockNumber = await DRE.ethers.provider.getBlockNumber();
+    try {
+      const nextBlock = blockNumber + 1;
+      console.log(`Preparing bundle for block: ${nextBlock}`);
+
+      const signedBundle = await flashbotsProvider.signBundle(
+        bundledTransactions
+      );
+      const txBundle = await flashbotsProvider.sendRawBundle(
+        signedBundle,
+        nextBlock
+      );
+
+      if ("error" in txBundle) {
+        console.log("bundle error:");
+        console.warn(txBundle.error.message);
+        continue;
+      }
+
+      console.log("Submitting bundle");
+      const response = await txBundle.simulate();
+      if ("error" in response) {
+        console.log("Simulate error");
+        console.error(response.error);
+        process.exit(1);
+      }
+
+      console.log("response:", response);
+    } catch (err) {
+      console.log("Request error");
+      console.error(err);
+      process.exit(1);
+    }
+
+    await sleep(3000);
   }
 };

@@ -6,7 +6,6 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
-import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 import {INTokenApeStaking} from "../../interfaces/INTokenApeStaking.sol";
@@ -20,8 +19,6 @@ import {IRewardController} from "../../interfaces/IRewardController.sol";
  * @notice Implementation of the NTokenBAKC for the ParaSpace protocol
  */
 contract NTokenBAKC is NToken {
-    using SafeERC20 for IERC20;
-
     ApeCoinStaking immutable _apeCoinStaking;
     address private immutable nBAYC;
     address private immutable nMAYC;
@@ -59,8 +56,16 @@ contract NTokenBAKC is NToken {
         );
 
         IERC20 ape = _apeCoinStaking.apeCoin();
-        ape.safeApprove(nBAYC, type(uint256).max);
-        ape.safeApprove(nMAYC, type(uint256).max);
+        //approve for nBAYC
+        uint256 allowance = ape.allowance(address(this), nBAYC);
+        if (allowance == 0) {
+            ape.approve(nBAYC, type(uint256).max);
+        }
+        //approve for Pool nMAYC
+        allowance = ape.allowance(address(this), nMAYC);
+        if (allowance == 0) {
+            ape.approve(nMAYC, type(uint256).max);
+        }
         IERC721(underlyingAsset).setApprovalForAll(address(POOL), true);
     }
 

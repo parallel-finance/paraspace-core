@@ -1,6 +1,6 @@
 {
   "name": "@paraspace/core-v1",
-  "version": "1.4.2",
+  "version": "1.4.5",
   "description": "ParaSpace Protocol V1 core smart contracts",
   "files": [
     "contracts",
@@ -24,6 +24,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",
     "@commitlint/config-conventional": "^17.0.3",
+    "@flashbots/ethers-provider-bundle": "^0.6.1",
     "@looksrare/sdk": "^0.7.4",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
     "@nomiclabs/hardhat-ethers": "^2.0.0",

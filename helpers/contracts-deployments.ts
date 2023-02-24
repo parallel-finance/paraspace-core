@@ -230,8 +230,6 @@ import {
   P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
-  ParaSpaceAidrop__factory,
-  ParaSpaceAidrop,
   CLwstETHSynchronicityPriceAdapter__factory,
   CLwstETHSynchronicityPriceAdapter,
   WstETHMocked__factory,
@@ -239,10 +237,12 @@ import {
   BAYCSewerPass__factory,
   BAYCSewerPass,
   BAYCSewerPassClaim__factory,
-  HelperContract,
-  HelperContract__factory,
   UniswapV3TwapOracleWrapper,
   UniswapV3TwapOracleWrapper__factory,
+  HelperContract,
+  HelperContract__factory,
+  ParaSpaceAirdrop__factory,
+  ParaSpaceAirdrop,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2360,6 +2360,18 @@ export const deployCLwstETHSynchronicityPriceAdapter = async (
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 
+export const deployParaSpaceAirdrop = async (
+  token: tEthereumAddress,
+  deadline: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ParaSpaceAirdrop__factory(await getFirstSigner()),
+    eContractid.ParaSpaceAirdrop,
+    [token, deadline],
+    verify
+  ) as Promise<ParaSpaceAirdrop>;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
 ////////////////////////////////////////////////////////////////////////////////
@@ -2618,15 +2630,3 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
-
-export const deployParaSpaceAidrop = async (
-  token: tEthereumAddress,
-  deadline: string,
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    new ParaSpaceAidrop__factory(await getFirstSigner()),
-    eContractid.ParaSpaceAidrop,
-    [token, deadline],
-    verify
-  ) as Promise<ParaSpaceAidrop>;

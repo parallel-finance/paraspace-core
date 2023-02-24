@@ -1,4 +1,4 @@
-FROM ghcr.io/foundry-rs/foundry:nightly-31f945c09f464487d139833c668d856ef43d58cc
+FROM ghcr.io/foundry-rs/foundry:latest
 
 WORKDIR /paraspace
 

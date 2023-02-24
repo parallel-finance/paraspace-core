@@ -3,23 +3,23 @@ import {utils} from "ethers";
 import {testEnvFixture} from "./helpers/setup-env";
 
 import {ProtocolErrors} from "../helpers/types";
-import {deployParaSpaceAidrop} from "../helpers/contracts-deployments";
+import {deployParaSpaceAirdrop} from "../helpers/contracts-deployments";
 import {loadFixture} from "ethereum-waffle";
 import {TestEnv} from "./helpers/make-suite";
-import {ParaSpaceAidrop} from "../types";
+import {ParaSpaceAirdrop} from "../types";
 import {toBN} from "../helpers/seaport-helpers/encoding";
 import {advanceTimeAndBlock} from "../helpers/misc-utils";
 
 describe("Token Aidrop Contract", () => {
   const {OWNABLE_ONLY_OWNER} = ProtocolErrors;
   let testEnv: TestEnv;
-  let aidropContract: ParaSpaceAidrop;
+  let aidropContract: ParaSpaceAirdrop;
   const deadline = "2675468152";
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {ape} = testEnv;
 
-    aidropContract = await deployParaSpaceAidrop(ape.address, deadline);
+    aidropContract = await deployParaSpaceAirdrop(ape.address, deadline);
     await ape["mint(address,uint256)"](aidropContract.address, "10000000");
 
     return testEnv;

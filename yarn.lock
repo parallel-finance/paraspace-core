@@ -795,6 +795,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@flashbots/ethers-provider-bundle@npm:^0.6.1":
+  version: 0.6.1
+  resolution: "@flashbots/ethers-provider-bundle@npm:0.6.1"
+  peerDependencies:
+    ethers: 5.7.2
+  checksum: 8d64e04555d39b87ec58ba40ededca8cfa289a6ce9746255d858c5fc353e974b80b55d4192b97cfbca1ace5e876090cf1433971569086692474f345e7206fe99
+  languageName: node
+  linkType: hard
+
 "@gar/promisify@npm:^1.1.3":
   version: 1.1.3
   resolution: "@gar/promisify@npm:1.1.3"
@@ -1349,6 +1358,7 @@ __metadata:
   dependencies:
     "@commitlint/cli": ^17.0.3
     "@commitlint/config-conventional": ^17.0.3
+    "@flashbots/ethers-provider-bundle": ^0.6.1
     "@looksrare/sdk": ^0.7.4
     "@nomicfoundation/hardhat-network-helpers": ^1.0.6
     "@nomiclabs/hardhat-ethers": ^2.0.0

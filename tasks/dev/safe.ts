@@ -85,9 +85,9 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
 
   for (const tx of txs) {
     const {to, data} = tx;
-    console.log();
     console.log(to);
     console.log(JSON.stringify(decodeInputData(data), null, 4));
+    console.log();
   }
 });
 

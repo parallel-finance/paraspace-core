@@ -81,6 +81,7 @@ library DataTypes {
 
     struct NTokenData {
         uint256 tokenId;
+        uint256 multiplier;
         bool useAsCollateral;
         bool isAuctioned;
     }

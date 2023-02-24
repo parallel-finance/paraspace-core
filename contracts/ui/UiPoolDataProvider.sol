@@ -10,6 +10,8 @@ import {IPool} from "../interfaces/IPool.sol";
 import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
+import {IAtomicCollateralizableERC721} from "../interfaces/IAtomicCollateralizableERC721.sol";
+import {XTokenType, IXTokenType} from "../interfaces/IXTokenType.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
@@ -24,6 +26,7 @@ import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -163,7 +166,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     ).name();
                 }
 
-                reserveData.isAtomicPricing = false;
                 if (reserveData.underlyingAsset != SAPE_ADDRESS) {
                     reserveData.availableLiquidity = IERC20Detailed(
                         reserveData.underlyingAsset
@@ -179,8 +181,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.availableLiquidity = IERC721(
                     reserveData.underlyingAsset
                 ).balanceOf(reserveData.xTokenAddress);
-                reserveData.isAtomicPricing = INToken(reserveData.xTokenAddress)
-                    .getAtomicPricingConfig();
+                reserveData.isAtomicPricing = IAtomicCollateralizableERC721(
+                    reserveData.xTokenAddress
+                ).isAtomicPricing();
             }
 
             (
@@ -292,6 +295,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     .isUsedAsCollateral(tokenIds[i][j]);
                 tokenData[i][j].isAuctioned = IAuctionableERC721(asset)
                     .isAuctioned(tokenIds[i][j]);
+                tokenData[i][j].multiplier = IAtomicCollateralizableERC721(
+                    asset
+                ).getTraitMultiplier(tokenIds[i][j]);
             }
         }
 
@@ -395,6 +401,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     baseData.xTokenAddress
                 ).balanceOf(user);
                 userReservesData[i]
+                    .avgMultiplier = IAtomicCollateralizableERC721(
+                    baseData.xTokenAddress
+                ).avgMultiplierOf(user);
+                userReservesData[i]
                     .collateralizedBalance = ICollateralizableERC721(
                     baseData.xTokenAddress
                 ).collateralizedBalanceOf(user);
@@ -494,14 +504,21 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         tokenData.tokenId
                     );
                 // token price
-                if (INToken(baseData.xTokenAddress).getAtomicPricingConfig()) {
+                if (
+                    IAtomicCollateralizableERC721(baseData.xTokenAddress)
+                        .isAtomicPricing()
+                ) {
                     try
                         oracle.getTokenPrice(tokenData.asset, tokenData.tokenId)
                     returns (uint256 price) {
                         tokenData.tokenPrice = price;
                     } catch {}
                 } else {
-                    tokenData.tokenPrice = collectionPrice;
+                    tokenData.tokenPrice = Helpers.getTraitBoostedTokenPrice(
+                        baseData.xTokenAddress,
+                        collectionPrice,
+                        tokenData.tokenId
+                    );
                 }
                 // token auction data
                 tokenData.auctionData = pool.getAuctionData(
