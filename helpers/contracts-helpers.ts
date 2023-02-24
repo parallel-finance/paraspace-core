@@ -105,7 +105,7 @@ import {
   FLASHBOTS_RELAY_RPC,
   MULTI_SIG_NONCE,
 } from "./hardhat-constants";
-import {chunk, pick} from "lodash";
+import {pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import {
   OperationType,
@@ -807,6 +807,54 @@ export const dryRunEncodedData = async (
   }
 };
 
+export const dryRunMultipleEncodedData = async (
+  target: tEthereumAddress[],
+  data: string[],
+  executionTime?: string
+) => {
+  executionTime = executionTime || (await getExecutionTime());
+  if (
+    DRY_RUN == DryRunExecutor.TimeLock &&
+    (await getContractAddressInDb(eContractid.TimeLockExecutor))
+  ) {
+    for (let i = 0; i < target.length; i++) {
+      const timeLockData = await getTimeLockData(
+        target[i],
+        data[i],
+        executionTime
+      );
+      await insertTimeLockDataInDb(timeLockData);
+    }
+  } else if (DRY_RUN === DryRunExecutor.SafeWithTimeLock) {
+    const metaTransactions: MetaTransaction[] = [];
+    for (let i = 0; i < target.length; i++) {
+      const {newTarget, newData} = await getTimeLockData(
+        target[i],
+        data[i],
+        executionTime
+      );
+      metaTransactions.push({
+        to: newTarget,
+        data: newData,
+        value: "0",
+      });
+    }
+    await proposeMultiSafeTransactions(metaTransactions);
+  } else if (DRY_RUN === DryRunExecutor.Safe) {
+    const metaTransactions: MetaTransaction[] = [];
+    for (let i = 0; i < target.length; i++) {
+      metaTransactions.push({
+        to: target[i],
+        data: data[i],
+        value: "0",
+      });
+    }
+    await proposeMultiSafeTransactions(metaTransactions);
+  } else {
+    console.log(`target: ${target}, data: ${data}`);
+  }
+};
+
 export const decodeInputData = (data: string) => {
   const ABI = [
     ...IPool__factory.abi,
@@ -899,14 +947,11 @@ export const proposeSafeTransaction = async (
 export const proposeMultiSafeTransactions = async (
   transactions: MetaTransaction[],
   operation = OperationType.DelegateCall,
-  chunkSize = 4
+  nonce?: number
 ) => {
   const newTarget = MULTI_SEND;
-  const chunks = chunk(transactions, chunkSize);
-  for (let i = 0; i < chunks.length; i++) {
-    const {data: newData} = encodeMulti(chunks[i]);
-    await proposeSafeTransaction(newTarget, newData, undefined, operation);
-  }
+  const {data: newData} = encodeMulti(transactions);
+  await proposeSafeTransaction(newTarget, newData, nonce, operation);
 };
 
 export const sendPrivateTransactions = async (
