@@ -3,6 +3,7 @@ import {
   getAutoCompoundApe,
   getConduit,
   getConduitController,
+  getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
   getNFTFloorOracle,
   getP2PPairStaking,
@@ -22,7 +23,7 @@ import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {eContractid} from "../../../helpers/types";
 
-export const step_21 = async (
+export const step_22 = async (
   // eslint-disable-next-line
   verify = false,
   admins?: {
@@ -382,6 +383,47 @@ export const step_21 = async (
         }
       }
       console.timeEnd("transferring P2PPairStaking ownership...");
+      console.log();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // HelperContract
+    ////////////////////////////////////////////////////////////////////////////////
+    if (await getContractAddressInDb(eContractid.HelperContract)) {
+      console.time("transferring HelperContract ownership...");
+      const helperContract = await getHelperContract();
+      const helperContractProxy =
+        await getInitializableAdminUpgradeabilityProxy(helperContract.address);
+      if (DRY_RUN) {
+        const encodedData1 = helperContractProxy.interface.encodeFunctionData(
+          "changeAdmin",
+          [paraSpaceAdminAddress]
+        );
+        await dryRunEncodedData(helperContractProxy.address, encodedData1);
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          const encodedData2 = helperContract.interface.encodeFunctionData(
+            "transferOwnership",
+            [gatewayAdminAddress]
+          );
+          await dryRunEncodedData(helperContract.address, encodedData2);
+        }
+      } else {
+        await waitForTx(
+          await helperContractProxy.changeAdmin(
+            paraSpaceAdminAddress,
+            GLOBAL_OVERRIDES
+          )
+        );
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          await waitForTx(
+            await helperContract.transferOwnership(
+              gatewayAdminAddress,
+              GLOBAL_OVERRIDES
+            )
+          );
+        }
+      }
+      console.timeEnd("transferring HelperContract ownership...");
       console.log();
     }
 

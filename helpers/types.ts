@@ -242,10 +242,13 @@ export enum eContractid {
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
   P2PPairStaking = "P2PPairStaking",
+  HelperContractImpl = "HelperContractImpl",
+  HelperContract = "HelperContract",
   P2PPairStakingImpl = "P2PPairStakingImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
+  ParaSpaceAidrop = "ParaSpaceAidrop",
 }
 
 /*
@@ -475,6 +478,7 @@ export enum ERC20TokenContractId {
   PUNK = "PUNK",
   xcDOT = "xcDOT",
   WGLMR = "WGLMR",
+  BLUR = "BLUR",
 }
 
 export enum ERC721TokenContractId {

@@ -39,6 +39,7 @@ import {
   strategyWSTETH,
   strategySEWER,
   strategyPudgyPenguins,
+  strategyBLUR,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -109,6 +110,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     aWETH: strategyAWETH,
     cETH: strategyCETH,
     PUNK: strategyPUNK,
+    BLUR: strategyBLUR,
     DOODLE: strategyDoodles,
     BAYC: strategyBAYC,
     MAYC: strategyMAYC,
@@ -216,6 +218,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     aWETH: strategyAWETH,
     cETH: strategyCETH,
     PUNK: strategyPUNK,
+    BLUR: strategyBLUR,
     DOODLE: strategyDoodles,
     BAYC: strategyBAYC,
     MAYC: strategyMAYC,
@@ -262,6 +265,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
     APE: "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
+    BLUR: "0x5283D291DBCF85356A21bA090E6db59121208b44",
     BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D",
     MAYC: "0x60E4d786628Fea6478F785A6d7e704777c86a7c6",
     PUNKS: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
@@ -316,6 +320,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     wstETH: strategyWSTETH,
     APE: strategyAPE,
     WBTC: strategyWBTC,
+    BLUR: strategyBLUR,
     DOODLE: strategyDoodles,
     BAYC: strategyBAYC,
     MAYC: strategyMAYC,

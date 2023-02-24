@@ -19,6 +19,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   PUNK: parseEther("140").toString(),
   xcDOT: parseEther("0.0038333333333").toString(),
   WGLMR: parseEther("0.00027291666666").toString(),
+  BLUR: parseEther("0.0005").toString(),
   // ERC721
   BAYC: parseEther("101").toString(),
   WPUNKS: parseEther("140").toString(),
@@ -47,6 +48,7 @@ export const MOCK_TOKEN_MINT_VALUE = {
   cWETH: 10,
   PUNK: 1000,
   xcDOT: 1000,
+  BLUR: 1000,
   // ERC721
   BAYC: 1,
   PUNKS: 1,
