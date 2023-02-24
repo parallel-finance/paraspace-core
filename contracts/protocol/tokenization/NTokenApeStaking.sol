@@ -8,9 +8,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
-import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import "../../interfaces/INTokenApeStaking.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -213,7 +211,6 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     }
 
     function getBAKCNTokenAddress() internal view returns (address) {
-        IERC721 BAKC = getBAKC();
-        return POOL.getReserveData(address(BAKC)).xTokenAddress;
+        return POOL.getReserveData(address(getBAKC())).xTokenAddress;
     }
 }
