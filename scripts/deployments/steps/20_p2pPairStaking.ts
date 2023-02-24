@@ -27,7 +27,11 @@ export const step_20 = async (verify = false) => {
         ).xTokenAddress
       );
       await waitForTx(
-        await nBAYC.setApprovalForAllTo(bayc.address, p2pPairStaking.address)
+        await nBAYC.setApprovalForAllTo(
+          bayc.address,
+          p2pPairStaking.address,
+          true
+        )
       );
     }
 
@@ -38,7 +42,11 @@ export const step_20 = async (verify = false) => {
         ).xTokenAddress
       );
       await waitForTx(
-        await nMAYC.setApprovalForAllTo(mayc.address, p2pPairStaking.address)
+        await nMAYC.setApprovalForAllTo(
+          mayc.address,
+          p2pPairStaking.address,
+          true
+        )
       );
     }
 
@@ -49,7 +57,11 @@ export const step_20 = async (verify = false) => {
         ).xTokenAddress
       );
       await waitForTx(
-        await nBAKC.setApprovalForAllTo(bakc.address, p2pPairStaking.address)
+        await nBAKC.setApprovalForAllTo(
+          bakc.address,
+          p2pPairStaking.address,
+          true
+        )
       );
     }
   } catch (error) {

@@ -157,8 +157,11 @@ contract PoolApeStaking is
                 Errors.NOT_THE_OWNER
             );
 
-            //only partially withdraw need user's BAKC
-            if (!_nftPairs[index].isUncommit) {
+            if (
+                !_nftPairs[index].isUncommit ||
+                localVar.bakcContract.ownerOf(_nftPairs[index].bakcTokenId) ==
+                localVar.bakcNToken
+            ) {
                 localVar.transferredTokenOwners[
                         actualTransferAmount
                     ] = _validateBAKCOwnerAndTransfer(
