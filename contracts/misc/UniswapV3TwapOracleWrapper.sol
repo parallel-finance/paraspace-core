@@ -17,7 +17,7 @@ contract UniswapV3TwapOracleWrapper is ICLSynchronicityPriceAdapter {
     int32 immutable TWAP_WINDOW;
     address immutable ASSET;
     bool immutable IS_ASSET_RESERVE_ZERO;
-    uint256 public immutable MANTISSA;
+    uint256 immutable MANTISSA;
 
     constructor(
         address _pool,
