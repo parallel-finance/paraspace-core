@@ -48,7 +48,7 @@ contract PoolParameters is
     using ReserveLogic for DataTypes.ReserveData;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 120;
+    uint256 internal constant POOL_REVISION = 142;
     uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 3e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
 
@@ -224,6 +224,31 @@ contract PoolParameters is
             ps._apeCompoundFee = uint16(fee);
             emit ClaimApeForYieldIncentiveUpdated(oldValue, fee);
         }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setApeCompoundStrategy(
+        DataTypes.ApeCompoundStrategy calldata strategy
+    ) external {
+        require(
+            strategy.swapPercent == 0 ||
+                (strategy.ty == DataTypes.ApeCompoundType.SwapAndSupply &&
+                    strategy.swapPercent > 0 &&
+                    strategy.swapPercent <= PercentageMath.PERCENTAGE_FACTOR),
+            "Invalid swap percent"
+        );
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._apeCompoundStrategies[msg.sender] = strategy;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function getUserApeCompoundStrategy(address user)
+        external
+        view
+        returns (DataTypes.ApeCompoundStrategy memory strategy)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        strategy = ps._apeCompoundStrategies[user];
     }
 
     /// @inheritdoc IPoolParameters

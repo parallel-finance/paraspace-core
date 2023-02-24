@@ -1,7 +1,11 @@
 import {BigNumber} from "ethers";
 import {task} from "hardhat/config";
-import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {waitForTx} from "../../helpers/misc-utils";
+import {
+  DRY_RUN,
+  GLOBAL_OVERRIDES,
+  TIME_LOCK_BUFFERING_TIME,
+} from "../../helpers/hardhat-constants";
+import {increaseTime, waitForTx} from "../../helpers/misc-utils";
 
 task("next-execution-time", "Next valid execution time").setAction(
   async (_, DRE) => {
@@ -9,6 +13,18 @@ task("next-execution-time", "Next valid execution time").setAction(
     const {getExecutionTime} = await import("../../helpers/contracts-helpers");
     const executionTime = await getExecutionTime();
     console.log("executionTime:", executionTime);
+  }
+);
+
+task("increase-to-execution-time", "Increase time to execution time").setAction(
+  async (_, DRE) => {
+    await DRE.run("set-DRE");
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const delay = await timeLock.getDelay();
+    await increaseTime(delay.add(TIME_LOCK_BUFFERING_TIME).toNumber());
   }
 );
 
@@ -21,7 +37,7 @@ task("queue-tx", "Queue transaction to be executed later")
   )
   .setAction(async ({target, data, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getActionAndData, printEncodedData} = await import(
+    const {getTimeLockData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -29,9 +45,9 @@ task("queue-tx", "Queue transaction to be executed later")
     );
     const timeLock = await getTimeLockExecutor();
     if (DRY_RUN) {
-      await printEncodedData(target, data, executionTime);
+      await dryRunEncodedData(target, data, executionTime);
     } else {
-      const {action} = await getActionAndData(target, data, executionTime);
+      const {action} = await getTimeLockData(target, data, executionTime);
       await waitForTx(
         await timeLock.queueTransaction(...action, GLOBAL_OVERRIDES)
       );
@@ -47,7 +63,7 @@ task("execute-tx", "Execute transaction which has been queued earlier")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getActionAndData, printEncodedData} = await import(
+    const {getTimeLockData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -55,9 +71,9 @@ task("execute-tx", "Execute transaction which has been queued earlier")
     );
     const timeLock = await getTimeLockExecutor();
     if (DRY_RUN) {
-      await printEncodedData(target, data, executionTime);
+      await dryRunEncodedData(target, data, executionTime);
     } else {
-      const {action} = await getActionAndData(target, data, executionTime);
+      const {action} = await getTimeLockData(target, data, executionTime);
       await waitForTx(
         await timeLock.executeTransaction(...action, GLOBAL_OVERRIDES)
       );
@@ -73,7 +89,7 @@ task("cancel-tx", "Cancel queued transaction")
   )
   .setAction(async ({data, target, executionTime}, DRE) => {
     await DRE.run("set-DRE");
-    const {getActionAndData, printEncodedData} = await import(
+    const {getTimeLockData, dryRunEncodedData} = await import(
       "../../helpers/contracts-helpers"
     );
     const {getTimeLockExecutor} = await import(
@@ -81,9 +97,9 @@ task("cancel-tx", "Cancel queued transaction")
     );
     const timeLock = await getTimeLockExecutor();
     if (DRY_RUN) {
-      await printEncodedData(target, data, executionTime);
+      await dryRunEncodedData(target, data, executionTime);
     } else {
-      const {action} = await getActionAndData(target, data, executionTime);
+      const {action} = await getTimeLockData(target, data, executionTime);
       await waitForTx(
         await timeLock.cancelTransaction(...action, GLOBAL_OVERRIDES)
       );
@@ -144,7 +160,9 @@ task("decode-queued-txs", "Decode queued transactions").setAction(
       if (!(await timeLock.isActionQueued(e.args.actionHash))) {
         continue;
       }
-      decodeInputData(e.args.data.toString());
+      console.log(
+        JSON.stringify(decodeInputData(e.args.data.toString()), null, 4)
+      );
       console.log();
     }
   }
@@ -161,7 +179,7 @@ task("decode-buffered-txs", "Decode buffered transactions").setAction(
 
     for (const a of actions) {
       const [, , , data] = a.action;
-      decodeInputData(data.toString());
+      console.log(JSON.stringify(decodeInputData(data.toString()), null, 4));
       console.log();
     }
   }

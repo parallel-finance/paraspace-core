@@ -20,6 +20,7 @@ export enum AssetType {
 export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
+  SafeWithTimeLock = "SafeWithTimeLock",
   None = "",
 }
 
@@ -28,6 +29,17 @@ export enum TimeLockOperation {
   Execute = "execute",
   Cancel = "cancel",
 }
+
+export type TimeLockData = {
+  action: Action;
+  actionHash: string;
+  queueData: string;
+  executeData: string;
+  cancelData: string;
+  executeTime: string;
+  queueExpireTime: string;
+  executeExpireTime: string;
+};
 
 export enum XTokenType {
   PhantomData = 0,
@@ -128,6 +140,7 @@ export enum eContractid {
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
   UserFlashClaimRegistryProxy = "UserFlashClaimRegistryProxy",
+  BAYCSewerPassClaim = "BAYCSewerPassClaim",
   AirdropFlashClaimReceiver = "AirdropFlashClaimReceiver",
   ProtocolDataProvider = "ProtocolDataProvider",
   MockPToken = "MockPToken",
@@ -203,6 +216,7 @@ export enum eContractid {
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",
   NonfungiblePositionManager = "NonfungiblePositionManager",
   StETH = "stETH",
+  WStETH = "wstETH",
   MockAToken = "MockAToken",
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
@@ -222,10 +236,13 @@ export enum eContractid {
   BlurExchangeImpl = "BlurExchangeImpl",
   BlurExchangeProxy = "BlurExchangeProxy",
   BAKC = "BAKC",
+  SEWER = "SEWER",
   TimeLockExecutor = "TimeLockExecutor",
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
+  P2PPairStaking = "P2PPairStaking",
+  P2PPairStakingImpl = "P2PPairStakingImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
@@ -393,6 +410,7 @@ export interface iAssetBase<T> {
   PUNK: T;
   WBTC: T;
   stETH: T;
+  wstETH: T;
   APE: T;
   sAPE: T;
   cAPE: T;
@@ -420,6 +438,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "WETH"
   | "WBTC"
   | "stETH"
+  | "wstETH"
   | "xcDOT"
   | "WGLMR"
   | "APE"
@@ -448,6 +467,7 @@ export enum ERC20TokenContractId {
   USDT = "USDT",
   WBTC = "WBTC",
   stETH = "stETH",
+  wstETH = "wstETH",
   APE = "APE",
   sAPE = "sAPE",
   cAPE = "cAPE",
@@ -456,6 +476,7 @@ export enum ERC20TokenContractId {
   PUNK = "PUNK",
   xcDOT = "xcDOT",
   WGLMR = "WGLMR",
+  BLUR = "BLUR",
 }
 
 export enum ERC721TokenContractId {
@@ -470,6 +491,8 @@ export enum ERC721TokenContractId {
   OTHR = "OTHR",
   UniswapV3 = "UniswapV3",
   BAKC = "BAKC",
+  SEWER = "SEWER",
+  PPG = "PPG",
 }
 
 export enum NTokenContractId {
@@ -480,6 +503,8 @@ export enum NTokenContractId {
   nMOONBIRD = "nMOONBIRD",
   nUniswapV3 = "nUniswapV3",
   nBAKC = "nBAKC",
+  nSEWER = "nSEWER",
+  nPPG = "nPPG",
 }
 
 export enum PTokenContractId {
@@ -488,6 +513,7 @@ export enum PTokenContractId {
   pWETH = "pWETH",
   paWETH = "paWETH",
   pstETH = "pstETH",
+  pwstETH = "pwstETH",
 }
 
 export interface IReserveParams
@@ -576,6 +602,7 @@ export interface IMarketplaceConfig {
 export interface IChainlinkConfig {
   WETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
+  wstETH?: tEthereumAddress;
   DAI?: tEthereumAddress;
   USDC?: tEthereumAddress;
   USDT?: tEthereumAddress;
@@ -607,6 +634,7 @@ export interface IUniswapConfig {
   V2Factory?: tEthereumAddress;
   V2Router?: tEthereumAddress;
   V3Factory?: tEthereumAddress;
+  V3Router?: tEthereumAddress;
   V3NFTPositionManager?: tEthereumAddress;
 }
 
@@ -668,10 +696,10 @@ export interface IParaSpaceConfiguration extends ICommonConfiguration {
 export type PoolConfiguration = ICommonConfiguration | IParaSpaceConfiguration;
 
 export type Action = [
-  PromiseOrValue<string>,
-  PromiseOrValue<BigNumberish>,
-  PromiseOrValue<string>,
-  PromiseOrValue<BytesLike>,
-  PromiseOrValue<BigNumberish>,
-  PromiseOrValue<boolean>
+  PromiseOrValue<string>, // target
+  PromiseOrValue<BigNumberish>, // value
+  PromiseOrValue<string>, // signature
+  PromiseOrValue<BytesLike>, // data
+  PromiseOrValue<BigNumberish>, // executeTime
+  PromiseOrValue<boolean> // withDelegatecall
 ];

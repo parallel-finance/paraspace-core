@@ -36,6 +36,10 @@ import {
   strategyXCDOT,
   strategyWGLMR,
   strategyBAKC,
+  strategyWSTETH,
+  strategySEWER,
+  strategyPudgyPenguins,
+  strategyBLUR,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -102,9 +106,11 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     APE: strategyAPE,
     WBTC: strategyWBTC,
     stETH: strategySTETH,
+    wstETH: strategyWSTETH,
     aWETH: strategyAWETH,
     cETH: strategyCETH,
     PUNK: strategyPUNK,
+    BLUR: strategyBLUR,
     DOODLE: strategyDoodles,
     BAYC: strategyBAYC,
     MAYC: strategyMAYC,
@@ -118,6 +124,8 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
   },
 };
 
@@ -171,6 +179,8 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: "0x0000000000000000000000000000000000000001",
     WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    PPG: "0xf140558cA4d4e10f63661504D4F3f74FADDDe3E8",
+    SEWER: "0x3aa026cd539fa1f6ae58ae238a10e2f1cf831454",
   },
   YogaLabs: {
     ApeCoinStaking: "0xeF37717B1807a253c6D140Aca0141404D23c26D4",
@@ -180,6 +190,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     V2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     V2Router: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     V3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    V3Router: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   Marketplace: {
@@ -203,9 +214,11 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     APE: strategyAPE,
     WBTC: strategyWBTC,
     stETH: strategySTETH,
+    wstETH: strategyWSTETH,
     aWETH: strategyAWETH,
     cETH: strategyCETH,
     PUNK: strategyPUNK,
+    BLUR: strategyBLUR,
     DOODLE: strategyDoodles,
     BAYC: strategyBAYC,
     MAYC: strategyMAYC,
@@ -219,6 +232,8 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
   },
 };
 
@@ -244,11 +259,13 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   Tokens: {
     WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+    wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
     USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     DAI: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
     APE: "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
+    BLUR: "0x5283D291DBCF85356A21bA090E6db59121208b44",
     BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D",
     MAYC: "0x60E4d786628Fea6478F785A6d7e704777c86a7c6",
     PUNKS: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
@@ -261,6 +278,8 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: "0x49cf6f5d44e70224e2e23fdcdd2c053f30ada28b",
     sAPE: "0x0000000000000000000000000000000000000001",
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    SEWER: "0x764AeebcF425d56800eF2c84F2578689415a2DAa",
+    PPG: "0xbd3531da5cf5857e7cfaa92426877b022e612cf8",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -269,6 +288,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     V2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     V2Router: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     V3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    V3Router: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   Marketplace: {
@@ -297,8 +317,10 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     USDT: strategyUSDT,
     WETH: strategyWETH,
     stETH: strategySTETH,
+    wstETH: strategyWSTETH,
     APE: strategyAPE,
     WBTC: strategyWBTC,
+    BLUR: strategyBLUR,
     DOODLE: strategyDoodles,
     BAYC: strategyBAYC,
     MAYC: strategyMAYC,
@@ -312,6 +334,8 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     cAPE: strategyCAPE,
     UniswapV3: strategyUniswapV3,
     BAKC: strategyBAKC,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
