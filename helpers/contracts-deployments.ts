@@ -241,6 +241,8 @@ import {
   UniswapV3TwapOracleWrapper__factory,
   HelperContract,
   HelperContract__factory,
+  ParaSpaceAirdrop__factory,
+  ParaSpaceAirdrop,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -277,7 +279,6 @@ import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/P
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
-import {parseEther} from "ethers/lib/utils";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -1930,7 +1931,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("10000"),
+    amount,
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1938,7 +1939,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("200000"),
+    amount,
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1946,7 +1947,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("100000"),
+    amount,
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1954,7 +1955,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("100000"),
+    amount,
     GLOBAL_OVERRIDES
   );
   return apeCoinStaking;
@@ -2357,6 +2358,18 @@ export const deployCLwstETHSynchronicityPriceAdapter = async (
     [stETHAggregator, stETH, 18],
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
+
+export const deployParaSpaceAidrop = async (
+  token: tEthereumAddress,
+  deadline: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ParaSpaceAirdrop__factory(await getFirstSigner()),
+    eContractid.ParaSpaceAirdrop,
+    [token, deadline],
+    verify
+  ) as Promise<ParaSpaceAirdrop>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
