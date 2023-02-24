@@ -2359,7 +2359,7 @@ export const deployCLwstETHSynchronicityPriceAdapter = async (
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 
-export const deployParaSpaceAidrop = async (
+export const deployParaSpaceAirdrop = async (
   token: tEthereumAddress,
   deadline: string,
   verify?: boolean
