@@ -230,6 +230,8 @@ import {
   P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
+  ParaSpaceAidrop__factory,
+  ParaSpaceAidrop,
   CLwstETHSynchronicityPriceAdapter__factory,
   CLwstETHSynchronicityPriceAdapter,
   WstETHMocked__factory,
@@ -237,12 +239,17 @@ import {
   BAYCSewerPass__factory,
   BAYCSewerPass,
   BAYCSewerPassClaim__factory,
+  HelperContract,
+  HelperContract__factory,
+  UniswapV3TwapOracleWrapper,
+  UniswapV3TwapOracleWrapper__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
   getAllTokens,
   getBAYCSewerPass,
   getFirstSigner,
+  getPoolProxy,
   getProtocolDataProvider,
   getPunks,
   getUniswapV3SwapRouter,
@@ -1693,6 +1700,20 @@ export const deployUniswapV3OracleWrapper = async (
     verify
   ) as Promise<UniswapV3OracleWrapper>;
 
+export const deployUniswapV3TwapOracleWrapper = async (
+  pool: string,
+  baseCurrency: string,
+  twapWindow: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new UniswapV3TwapOracleWrapper__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [pool, baseCurrency, twapWindow],
+    verify
+  ) as Promise<UniswapV3TwapOracleWrapper>;
+
 export const deployNonfungiblePositionManager = async (
   args: [string, string, string],
   verify?: boolean
@@ -2258,6 +2279,53 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
   return proxyInstance as P2PPairStaking;
 };
 
+export const deployHelperContractImpl = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const pCApe = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.cAPE.address)
+  ).xTokenAddress;
+  const pool = await getPoolProxy();
+  const args = [
+    allTokens.APE.address,
+    allTokens.cAPE.address,
+    pCApe,
+    pool.address,
+  ];
+
+  return withSaveAndVerify(
+    new HelperContract__factory(await getFirstSigner()),
+    eContractid.HelperContractImpl,
+    [...args],
+    verify
+  ) as Promise<HelperContract>;
+};
+
+export const deployHelperContract = async (verify?: boolean) => {
+  const helperImplementation = await deployHelperContractImpl(verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData =
+    helperImplementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.HelperContract,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](helperImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as HelperContract;
+};
+
 export const deployPTokenCApe = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
@@ -2550,3 +2618,15 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployParaSpaceAidrop = async (
+  token: tEthereumAddress,
+  deadline: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ParaSpaceAidrop__factory(await getFirstSigner()),
+    eContractid.ParaSpaceAidrop,
+    [token, deadline],
+    verify
+  ) as Promise<ParaSpaceAidrop>;
