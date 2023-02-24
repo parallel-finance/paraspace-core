@@ -66,12 +66,10 @@ contract NTokenBAYC is NTokenApeStaking {
     function depositBAKC(
         ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
     ) external onlyPool nonReentrant {
-        ApeCoinStaking.PairNftDepositWithAmount[]
-            memory _otherPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
-                0
-            );
-
-        _apeCoinStaking.depositBAKC(_nftPairs, _otherPairs);
+        _apeCoinStaking.depositBAKC(
+            _nftPairs,
+            new ApeCoinStaking.PairNftDepositWithAmount[](0)
+        );
     }
 
     /**
@@ -83,10 +81,11 @@ contract NTokenBAYC is NTokenApeStaking {
         ApeCoinStaking.PairNft[] calldata _nftPairs,
         address _recipient
     ) external onlyPool nonReentrant {
-        ApeCoinStaking.PairNft[]
-            memory _otherPairs = new ApeCoinStaking.PairNft[](0);
-
-        _apeCoinStaking.claimBAKC(_nftPairs, _otherPairs, _recipient);
+        _apeCoinStaking.claimBAKC(
+            _nftPairs,
+            new ApeCoinStaking.PairNft[](0),
+            _recipient
+        );
     }
 
     /**
@@ -95,7 +94,7 @@ contract NTokenBAYC is NTokenApeStaking {
      * @dev if pairs have split ownership and BAKC is attempting a withdraw, the withdraw must be for the total staked amount
      */
     function withdrawBAKC(
-        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs,
+        ApeCoinStaking.PairNftWithdrawWithAmount[] calldata _nftPairs,
         address _apeRecipient
     ) external onlyPool nonReentrant {
         ApeStakingLogic.withdrawBAKC(

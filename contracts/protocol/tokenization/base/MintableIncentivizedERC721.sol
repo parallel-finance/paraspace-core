@@ -6,6 +6,8 @@ import {Strings} from "../../../dependencies/openzeppelin/contracts/Strings.sol"
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC165} from "../../../dependencies/openzeppelin/contracts/IERC165.sol";
 import {IERC721Metadata} from "../../../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
+import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC1155} from "../../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC721Receiver} from "../../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
@@ -21,6 +23,7 @@ import {IACLManager} from "../../../interfaces/IACLManager.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {ReentrancyGuard} from "../../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import {MintableERC721Logic, UserState, MintableERC721Data} from "../libraries/MintableERC721Logic.sol";
+import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 
 /**
  * @title MintableIncentivizedERC721
@@ -36,14 +39,58 @@ abstract contract MintableIncentivizedERC721 is
     IERC721Enumerable,
     IERC165
 {
+    /**
+     * @dev Emitted during rescueERC20()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param amount The amount being rescued
+     **/
+    event RescueERC20(
+        address indexed token,
+        address indexed to,
+        uint256 amount
+    );
+
+    /**
+     * @dev Emitted during rescueERC721()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     **/
+    event RescueERC721(
+        address indexed token,
+        address indexed to,
+        uint256[] ids
+    );
+
+    /**
+     * @dev Emitted during RescueERC1155()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
+     **/
+    event RescueERC1155(
+        address indexed token,
+        address indexed to,
+        uint256[] ids,
+        uint256[] amounts,
+        bytes data
+    );
+
+    /**
+     * @dev Emitted during executeAirdrop()
+     * @param airdropContract The address of the airdrop contract
+     **/
+    event ExecuteAirdrop(address indexed airdropContract);
+
     using Address for address;
+    using SafeERC20 for IERC20;
 
     MintableERC721Data internal _ERC721Data;
 
-    /**
-     * @dev Only pool admin can call functions marked by this modifier.
-     **/
-    modifier onlyPoolAdmin() {
+    function _onlyPoolAdmin() private view {
         IACLManager aclManager = IACLManager(
             _addressesProvider.getACLManager()
         );
@@ -51,6 +98,17 @@ abstract contract MintableIncentivizedERC721 is
             aclManager.isPoolAdmin(msg.sender),
             Errors.CALLER_NOT_POOL_ADMIN
         );
+    }
+
+    function _onlyPool() private view {
+        require(_msgSender() == address(POOL), Errors.CALLER_MUST_BE_POOL);
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
         _;
     }
 
@@ -58,7 +116,7 @@ abstract contract MintableIncentivizedERC721 is
      * @dev Only pool can call functions marked by this modifier.
      **/
     modifier onlyPool() {
-        require(_msgSender() == address(POOL), Errors.CALLER_MUST_BE_POOL);
+        _onlyPool();
         _;
     }
 
@@ -70,8 +128,8 @@ abstract contract MintableIncentivizedERC721 is
      */
 
     IPoolAddressesProvider internal immutable _addressesProvider;
-    IPool public immutable POOL;
-    bool public immutable ATOMIC_PRICING;
+    IPool internal immutable POOL;
+    bool internal immutable ATOMIC_PRICING;
 
     address internal _underlyingAsset;
 
@@ -176,14 +234,14 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256)
+    function tokenURI(uint256 tokenId)
         external
         view
         virtual
         override
         returns (string memory)
     {
-        return "";
+        return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
     }
 
     /**
@@ -432,9 +490,9 @@ abstract contract MintableIncentivizedERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual returns (bool isUsedAsCollateral_) {
-        isUsedAsCollateral_ = MintableERC721Logic
-            .executeTransferCollateralizable(
+    ) internal virtual returns (bool) {
+        return
+            MintableERC721Logic.executeTransferCollateralizable(
                 _ERC721Data,
                 POOL,
                 ATOMIC_PRICING,
@@ -482,28 +540,16 @@ abstract contract MintableIncentivizedERC721 is
         override
         onlyPool
         nonReentrant
-        returns (
-            uint256 oldCollateralizedBalance,
-            uint256 newCollateralizedBalance
-        )
+        returns (uint256, uint256)
     {
-        oldCollateralizedBalance = _ERC721Data
-            .userState[sender]
-            .collateralizedBalance;
-
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            MintableERC721Logic.executeSetIsUsedAsCollateral(
+        return
+            MintableERC721Logic.executeBatchSetIsUsedAsCollateral(
                 _ERC721Data,
                 POOL,
-                tokenIds[index],
+                tokenIds,
                 useAsCollateral,
                 sender
             );
-        }
-
-        newCollateralizedBalance = _ERC721Data
-            .userState[sender]
-            .collateralizedBalance;
     }
 
     /// @inheritdoc ICollateralizableERC721
@@ -560,9 +606,7 @@ abstract contract MintableIncentivizedERC721 is
             POOL,
             tokenId
         );
-        if (!_isAuctioned) {
-            auction = DataTypes.Auction({startTime: 0});
-        } else {
+        if (_isAuctioned) {
             auction = _ERC721Data.auctions[tokenId];
         }
     }
@@ -623,5 +667,68 @@ abstract contract MintableIncentivizedERC721 is
             "ERC721Enumerable: global index out of bounds"
         );
         return _ERC721Data.allTokens[index];
+    }
+
+    /**
+     * @notice Rescue ERC20 Token.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param amount The amount being rescued
+     **/
+    function rescueERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external onlyPoolAdmin {
+        MintableERC721Logic.executeRescueERC20(token, to, amount);
+    }
+
+    /**
+     * @notice Rescue ERC721 Token.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     **/
+    function rescueERC721(
+        address token,
+        address to,
+        uint256[] calldata ids
+    ) external onlyPoolAdmin {
+        MintableERC721Logic.executeRescueERC721(
+            _underlyingAsset,
+            token,
+            to,
+            ids
+        );
+    }
+
+    /**
+     * @notice Rescue ERC1155 Token.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
+     **/
+    function rescueERC1155(
+        address token,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external onlyPoolAdmin {
+        MintableERC721Logic.executeRescueERC1155(token, to, ids, amounts, data);
+    }
+
+    /**
+     * @notice Executes airdrop.
+     * @param airdropContract The address of the airdrop contract
+     * @param airdropParams Third party airdrop abi data. You need to get this from the third party airdrop.
+     **/
+    function executeAirdrop(
+        address airdropContract,
+        bytes calldata airdropParams
+    ) external onlyPoolAdmin {
+        MintableERC721Logic.executeAirdrop(airdropContract, airdropParams);
     }
 }
