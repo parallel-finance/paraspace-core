@@ -29,7 +29,7 @@ contract VariableDebtToken is
     using WadRayMath for uint256;
     using SafeCast for uint256;
 
-    uint256 public constant DEBT_TOKEN_REVISION = 142;
+    uint256 public constant DEBT_TOKEN_REVISION = 145;
 
     /**
      * @dev Constructor.
