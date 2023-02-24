@@ -279,6 +279,7 @@ import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/P
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
+import {parseEther} from "ethers/lib/utils";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -1931,7 +1932,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("10000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1939,7 +1940,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("200000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1947,7 +1948,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   await apeCoinStaking.addTimeRange(
@@ -1955,7 +1956,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    amount,
+    parseEther("100000"),
     GLOBAL_OVERRIDES
   );
   return apeCoinStaking;
