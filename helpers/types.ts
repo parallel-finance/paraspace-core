@@ -248,6 +248,7 @@ export enum eContractid {
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
+  ParaSpaceAidrop = "ParaSpaceAidrop",
 }
 
 /*
@@ -477,6 +478,7 @@ export enum ERC20TokenContractId {
   PUNK = "PUNK",
   xcDOT = "xcDOT",
   WGLMR = "WGLMR",
+  BLUR = "BLUR",
 }
 
 export enum ERC721TokenContractId {
