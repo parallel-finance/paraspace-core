@@ -8,9 +8,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
-import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import "../../interfaces/INTokenApeStaking.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -49,8 +47,22 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         bytes calldata params
     ) public virtual override initializer {
         IERC20 _apeCoin = _apeCoinStaking.apeCoin();
-        _apeCoin.approve(address(_apeCoinStaking), type(uint256).max);
-        _apeCoin.approve(address(POOL), type(uint256).max);
+        //approve for apeCoinStaking
+        uint256 allowance = IERC20(_apeCoin).allowance(
+            address(this),
+            address(_apeCoinStaking)
+        );
+        if (allowance == 0) {
+            IERC20(_apeCoin).approve(
+                address(_apeCoinStaking),
+                type(uint256).max
+            );
+        }
+        //approve for Pool contract
+        allowance = IERC20(_apeCoin).allowance(address(this), address(POOL));
+        if (allowance == 0) {
+            IERC20(_apeCoin).approve(address(POOL), type(uint256).max);
+        }
         getBAKC().setApprovalForAll(address(POOL), true);
 
         super.initialize(
@@ -94,7 +106,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.UnstakeAndRepayParams({
                 POOL: POOL,
                 _apeCoinStaking: _apeCoinStaking,
-                _underlyingAsset: _underlyingAsset,
+                _underlyingAsset: _ERC721Data.underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
                 incentiveReceiver: address(0),
@@ -119,7 +131,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 ApeStakingLogic.UnstakeAndRepayParams({
                     POOL: POOL,
                     _apeCoinStaking: _apeCoinStaking,
-                    _underlyingAsset: _underlyingAsset,
+                    _underlyingAsset: _ERC721Data.underlyingAsset,
                     poolId: POOL_ID(),
                     tokenId: tokenIds[index],
                     incentiveReceiver: address(0),
@@ -183,7 +195,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.UnstakeAndRepayParams({
                 POOL: POOL,
                 _apeCoinStaking: _apeCoinStaking,
-                _underlyingAsset: _underlyingAsset,
+                _underlyingAsset: _ERC721Data.underlyingAsset,
                 poolId: POOL_ID(),
                 tokenId: tokenId,
                 incentiveReceiver: incentiveReceiver,
@@ -205,7 +217,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             ApeStakingLogic.getUserTotalStakingAmount(
                 _ERC721Data.userState,
                 _ERC721Data.ownedTokens,
-                _underlyingAsset,
+                _ERC721Data.underlyingAsset,
                 user,
                 POOL_ID(),
                 _apeCoinStaking
@@ -213,7 +225,6 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     }
 
     function getBAKCNTokenAddress() internal view returns (address) {
-        IERC721 BAKC = getBAKC();
-        return POOL.getReserveData(address(BAKC)).xTokenAddress;
+        return POOL.getReserveData(address(getBAKC())).xTokenAddress;
     }
 }

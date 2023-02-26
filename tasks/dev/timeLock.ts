@@ -160,6 +160,7 @@ task("decode-queued-txs", "Decode queued transactions").setAction(
       if (!(await timeLock.isActionQueued(e.args.actionHash))) {
         continue;
       }
+      console.log(e.args.target.toString());
       console.log(
         JSON.stringify(decodeInputData(e.args.data.toString()), null, 4)
       );
@@ -178,7 +179,8 @@ task("decode-buffered-txs", "Decode buffered transactions").setAction(
     const actions = await getTimeLockDataInDb();
 
     for (const a of actions) {
-      const [, , , data] = a.action;
+      const [target, , , data] = a.action;
+      console.log(target);
       console.log(JSON.stringify(decodeInputData(data.toString()), null, 4));
       console.log();
     }
@@ -236,6 +238,9 @@ task("queue-buffered-txs", "Queue buffered transactions").setAction(
 
     for (const a of actions) {
       console.log(a.actionHash);
+      if (await timeLock.isActionQueued(a.actionHash)) {
+        continue;
+      }
       await waitForTx(
         await timeLock.queueTransaction(...a.action, GLOBAL_OVERRIDES)
       );
@@ -257,6 +262,9 @@ task("execute-buffered-txs", "Execute buffered transactions").setAction(
 
     for (const a of actions) {
       console.log(a.actionHash);
+      if (!(await timeLock.isActionQueued(a.actionHash))) {
+        continue;
+      }
       await waitForTx(
         await timeLock.executeTransaction(...a.action, GLOBAL_OVERRIDES)
       );
@@ -278,6 +286,9 @@ task("cancel-buffered-txs", "Cancel buffered transactions").setAction(
 
     for (const a of actions) {
       console.log(a.actionHash);
+      if (!(await timeLock.isActionQueued(a.actionHash))) {
+        continue;
+      }
       await waitForTx(
         await timeLock.cancelTransaction(...a.action, GLOBAL_OVERRIDES)
       );

@@ -2,7 +2,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
 import {parseEther} from "ethers/lib/utils";
-import {ZERO_ADDRESS} from "../helpers/constants";
+import {WAD, ZERO_ADDRESS} from "../helpers/constants";
 import {getAggregator} from "../helpers/contracts-getters";
 import {advanceBlock, waitForTx} from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
@@ -944,6 +944,67 @@ describe("Liquidation Auction", () => {
       );
 
       expect(await nBAYC.isAuctioned(0)).to.be.false;
+    });
+
+    it("TC-auction-liquidation-33 Trait multiplier is configured on the token. Auction price * trait multiplier is used in liquidation, not floor or atomic price", async () => {
+      const {
+        users: [borrower, liquidator],
+        pool,
+        bayc,
+        nBAYC,
+        poolAdmin,
+      } = testEnv;
+
+      await waitForTx(
+        await nBAYC
+          .connect(poolAdmin.signer)
+          .setTraitsMultipliers(["0"], [BigNumber.from(WAD).mul(2)])
+      );
+
+      // drop BAYC price to liquidation levels
+      await changePriceAndValidate(bayc, "4");
+
+      await waitForTx(
+        await pool
+          .connect(liquidator.signer)
+          .startAuction(borrower.address, bayc.address, 0)
+      );
+
+      const {startTime, tickLength} = await pool.getAuctionData(
+        nBAYC.address,
+        0
+      );
+
+      // prices drops to ~1.5 floor price
+      await advanceBlock(
+        startTime.add(tickLength.mul(BigNumber.from(30))).toNumber()
+      );
+
+      // 4 * 2 * 1.5 / 1.05 = 11.428571428571428571 needed
+      await expect(
+        pool
+          .connect(liquidator.signer)
+          .liquidateERC721(
+            bayc.address,
+            borrower.address,
+            0,
+            parseEther("11").toString(),
+            false,
+            {gasLimit: 5000000}
+          )
+      ).to.be.reverted;
+
+      await pool
+        .connect(liquidator.signer)
+        .liquidateERC721(
+          bayc.address,
+          borrower.address,
+          0,
+          parseEther("12").toString(),
+          false,
+          {gasLimit: 5000000}
+        );
+      expect(await nBAYC.balanceOf(borrower.address)).to.be.equal(2);
     });
   });
 });

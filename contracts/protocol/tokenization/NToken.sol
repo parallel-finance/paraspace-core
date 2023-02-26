@@ -14,8 +14,6 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
-import {IInitializableNToken} from "../../interfaces/IInitializableNToken.sol";
-import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
@@ -29,7 +27,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 142;
+    uint256 public constant NTOKEN_REVISION = 145;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -62,7 +60,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         _setSymbol(nTokenSymbol);
 
         require(underlyingAsset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        _underlyingAsset = underlyingAsset;
+        _ERC721Data.underlyingAsset = underlyingAsset;
         _ERC721Data.rewardController = incentivesController;
 
         emit Initialized(
@@ -104,7 +102,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
 
         if (receiverOfUnderlying != address(this)) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                IERC721(_underlyingAsset).safeTransferFrom(
+                IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
                     address(this),
                     receiverOfUnderlying,
                     tokenIds[index]
@@ -124,82 +122,12 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         _transfer(from, to, value, false);
     }
 
-    function rescueERC20(
+    function setApprovalForAllTo(
         address token,
         address to,
-        uint256 amount
-    ) external override onlyPoolAdmin {
-        IERC20(token).safeTransfer(to, amount);
-        emit RescueERC20(token, to, amount);
-    }
-
-    function rescueERC721(
-        address token,
-        address to,
-        uint256[] calldata ids
-    ) external override onlyPoolAdmin {
-        require(
-            token != _underlyingAsset,
-            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
-        );
-        for (uint256 i = 0; i < ids.length; i++) {
-            IERC721(token).safeTransferFrom(address(this), to, ids[i]);
-        }
-        emit RescueERC721(token, to, ids);
-    }
-
-    function rescueERC1155(
-        address token,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
-    ) external override onlyPoolAdmin {
-        IERC1155(token).safeBatchTransferFrom(
-            address(this),
-            to,
-            ids,
-            amounts,
-            data
-        );
-        emit RescueERC1155(token, to, ids, amounts, data);
-    }
-
-    function executeAirdrop(
-        address airdropContract,
-        bytes calldata airdropParams
-    ) external override onlyPoolAdmin {
-        require(
-            airdropContract != address(0),
-            Errors.INVALID_AIRDROP_CONTRACT_ADDRESS
-        );
-        require(airdropParams.length >= 4, Errors.INVALID_AIRDROP_PARAMETERS);
-
-        // call project airdrop contract
-        Address.functionCall(
-            airdropContract,
-            airdropParams,
-            Errors.CALL_AIRDROP_METHOD_FAILED
-        );
-
-        emit ExecuteAirdrop(airdropContract);
-    }
-
-    function setApprovalForAllTo(address token, address to)
-        external
-        onlyPoolAdmin
-    {
-        IERC721(token).setApprovalForAll(to, true);
-    }
-
-    /// @inheritdoc INToken
-    function UNDERLYING_ASSET_ADDRESS()
-        external
-        view
-        override
-        returns (address)
-    {
-        return _underlyingAsset;
+        bool _approved
+    ) external onlyPoolAdmin {
+        IERC721(token).setApprovalForAll(to, _approved);
     }
 
     /// @inheritdoc INToken
@@ -210,22 +138,11 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         onlyPool
         nonReentrant
     {
-        IERC721(_underlyingAsset).safeTransferFrom(
+        IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
             address(this),
             target,
             tokenId
         );
-    }
-
-    /// @inheritdoc INToken
-    function handleRepayment(address user, uint256 amount)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
-        // Intentionally left blank
     }
 
     /**
@@ -242,7 +159,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         uint256 tokenId,
         bool validate
     ) internal virtual {
-        address underlyingAsset = _underlyingAsset;
+        address underlyingAsset = _ERC721Data.underlyingAsset;
 
         uint256 fromBalanceBefore;
         if (validate) {
@@ -286,50 +203,27 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
     ) external pure override returns (bytes4) {
-        operator;
-        from;
-        id;
-        value;
-        data;
         return this.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external pure override returns (bytes4) {
-        operator;
-        from;
-        ids;
-        values;
-        data;
         return this.onERC1155BatchReceived.selector;
     }
 
-    /**
-     * @dev See {IERC721Metadata-tokenURI}.
-     */
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
-        return IERC721Metadata(_underlyingAsset).tokenURI(tokenId);
-    }
-
-    function getAtomicPricingConfig() external view returns (bool) {
-        return ATOMIC_PRICING;
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
+        return _ERC721Data.underlyingAsset;
     }
 
     function getXTokenType()

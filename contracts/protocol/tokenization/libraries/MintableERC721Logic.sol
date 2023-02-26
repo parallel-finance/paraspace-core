@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
-import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol";
-import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
-import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+
+import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";
 import "../../../interfaces/IPool.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
+import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
+import {IERC1155} from "../../../dependencies/openzeppelin/contracts/IERC1155.sol";
 
 struct UserState {
     uint64 balance;
     uint64 collateralizedBalance;
     uint128 additionalData;
+    uint256 avgMultiplier;
 }
 
 struct MintableERC721Data {
@@ -42,6 +46,16 @@ struct MintableERC721Data {
     uint64 balanceLimit;
     mapping(uint256 => bool) isUsedAsCollateral;
     mapping(uint256 => DataTypes.Auction) auctions;
+    address underlyingAsset;
+    bool isTraitBoosted;
+    mapping(uint256 => uint256) traitsMultipliers;
+}
+
+struct LocalVars {
+    uint64 oldBalance;
+    uint64 oldCollateralizedBalance;
+    uint256 collateralizedBalanceDelta;
+    uint256 multiplierDelta;
 }
 
 /**
@@ -50,6 +64,61 @@ struct MintableERC721Data {
  * @notice Implements the base logic for MintableERC721
  */
 library MintableERC721Logic {
+    using SafeCast for uint256;
+    using SafeCast for int256;
+    /**
+     * @dev This constant represents the maximum trait multiplier that a single tokenId can have
+     * A value of 20e18 results in 20x of price
+     */
+    uint256 internal constant MAX_TRAIT_MULTIPLIER = 20e18;
+    /**
+     * @dev This constant represents the minimum trait multiplier that a single tokenId can have
+     * A value of 1e18 results in no price multiplier
+     */
+    uint256 internal constant MIN_TRAIT_MULTIPLIER = 0e18;
+
+    /**
+     * @dev Emitted during rescueERC20()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param amount The amount being rescued
+     **/
+    event RescueERC20(
+        address indexed token,
+        address indexed to,
+        uint256 amount
+    );
+    /**
+     * @dev Emitted during rescueERC721()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     **/
+    event RescueERC721(
+        address indexed token,
+        address indexed to,
+        uint256[] ids
+    );
+    /**
+     * @dev Emitted during RescueERC1155()
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
+     **/
+    event RescueERC1155(
+        address indexed token,
+        address indexed to,
+        uint256[] ids,
+        uint256[] amounts,
+        bytes data
+    );
+    /**
+     * @dev Emitted during executeAirdrop()
+     * @param airdropContract The address of the airdrop contract
+     **/
+    event ExecuteAirdrop(address indexed airdropContract);
     /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */
@@ -76,6 +145,16 @@ library MintableERC721Logic {
         address indexed operator,
         bool approved
     );
+
+    /**
+     * @dev Emitted when trait multiplier got updated
+     */
+    event TraitMultiplierSet(
+        address indexed owner,
+        uint256 indexed tokenId,
+        uint256 multiplier
+    );
+    using SafeERC20 for IERC20;
 
     function executeTransfer(
         MintableERC721Data storage erc721Data,
@@ -143,6 +222,15 @@ library MintableERC721Logic {
         isUsedAsCollateral_ = erc721Data.isUsedAsCollateral[tokenId];
 
         if (from != to && isUsedAsCollateral_) {
+            if (_shouldUpdateUserAvgMultiplier(erc721Data, ATOMIC_PRICING)) {
+                _executeUpdateUserAvgMultiplier(
+                    erc721Data,
+                    from,
+                    -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                        .toInt256(),
+                    -1
+                );
+            }
             erc721Data.userState[from].collateralizedBalance -= 1;
             delete erc721Data.isUsedAsCollateral[tokenId];
         }
@@ -153,10 +241,11 @@ library MintableERC721Logic {
     function executeSetIsUsedAsCollateral(
         MintableERC721Data storage erc721Data,
         IPool POOL,
+        bool ATOMIC_PRICING,
         uint256 tokenId,
         bool useAsCollateral,
         address sender
-    ) internal returns (bool) {
+    ) public returns (bool) {
         if (erc721Data.isUsedAsCollateral[tokenId] == useAsCollateral)
             return false;
 
@@ -170,6 +259,19 @@ library MintableERC721Logic {
             );
         }
 
+        if (_shouldUpdateUserAvgMultiplier(erc721Data, ATOMIC_PRICING)) {
+            _executeUpdateUserAvgMultiplier(
+                erc721Data,
+                owner,
+                useAsCollateral
+                    ? getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                        .toInt256()
+                    : -getTraitMultiplier(erc721Data.traitsMultipliers[tokenId])
+                        .toInt256(),
+                useAsCollateral ? int256(1) : int256(-1)
+            );
+        }
+
         uint64 collateralizedBalance = erc721Data
             .userState[owner]
             .collateralizedBalance;
@@ -177,6 +279,7 @@ library MintableERC721Logic {
         collateralizedBalance = useAsCollateral
             ? collateralizedBalance + 1
             : collateralizedBalance - 1;
+
         erc721Data
             .userState[owner]
             .collateralizedBalance = collateralizedBalance;
@@ -184,25 +287,53 @@ library MintableERC721Logic {
         return true;
     }
 
+    function executeBatchSetIsUsedAsCollateral(
+        MintableERC721Data storage erc721Data,
+        IPool POOL,
+        bool ATOMIC_PRICING,
+        uint256[] calldata tokenIds,
+        bool useAsCollateral,
+        address sender
+    )
+        external
+        returns (
+            uint256 oldCollateralizedBalance,
+            uint256 newCollateralizedBalance
+        )
+    {
+        oldCollateralizedBalance = erc721Data
+            .userState[sender]
+            .collateralizedBalance;
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            executeSetIsUsedAsCollateral(
+                erc721Data,
+                POOL,
+                ATOMIC_PRICING,
+                tokenIds[index],
+                useAsCollateral,
+                sender
+            );
+        }
+
+        newCollateralizedBalance = erc721Data
+            .userState[sender]
+            .collateralizedBalance;
+    }
+
     function executeMintMultiple(
         MintableERC721Data storage erc721Data,
         bool ATOMIC_PRICING,
         address to,
         DataTypes.ERC721SupplyParams[] calldata tokenData
-    )
-        external
-        returns (
-            uint64 oldCollateralizedBalance,
-            uint64 newCollateralizedBalance
-        )
-    {
+    ) external returns (uint64, uint64) {
         require(to != address(0), "ERC721: mint to the zero address");
-        uint64 oldBalance = erc721Data.userState[to].balance;
-        oldCollateralizedBalance = erc721Data
-            .userState[to]
-            .collateralizedBalance;
+        LocalVars memory vars = _cache(erc721Data, to);
         uint256 oldTotalSupply = erc721Data.allTokens.length;
-        uint64 collateralizedTokens = 0;
+        bool shouldUpdateUserAvgMultiplier = _shouldUpdateUserAvgMultiplier(
+            erc721Data,
+            ATOMIC_PRICING
+        );
 
         for (uint256 index = 0; index < tokenData.length; index++) {
             uint256 tokenId = tokenData[index].tokenId;
@@ -221,7 +352,7 @@ library MintableERC721Logic {
                 erc721Data,
                 to,
                 tokenId,
-                oldBalance + index
+                vars.oldBalance + index
             );
 
             erc721Data.owners[tokenId] = to;
@@ -231,51 +362,61 @@ library MintableERC721Logic {
                 !erc721Data.isUsedAsCollateral[tokenId]
             ) {
                 erc721Data.isUsedAsCollateral[tokenId] = true;
-                collateralizedTokens++;
+                vars.collateralizedBalanceDelta++;
+                if (shouldUpdateUserAvgMultiplier) {
+                    vars.multiplierDelta += getTraitMultiplier(
+                        erc721Data.traitsMultipliers[tokenId]
+                    );
+                }
             }
 
             emit Transfer(address(0), to, tokenId);
         }
 
-        newCollateralizedBalance =
-            oldCollateralizedBalance +
-            collateralizedTokens;
+        if (shouldUpdateUserAvgMultiplier) {
+            _executeUpdateUserAvgMultiplier(
+                erc721Data,
+                to,
+                vars.multiplierDelta.toInt256(),
+                vars.collateralizedBalanceDelta.toInt256()
+            );
+        }
+
+        uint64 newCollateralizedBalance = vars.oldCollateralizedBalance +
+            vars.collateralizedBalanceDelta.toUint64();
         erc721Data
             .userState[to]
             .collateralizedBalance = newCollateralizedBalance;
-
-        uint64 newBalance = oldBalance + uint64(tokenData.length);
+        uint64 newBalance = vars.oldBalance + uint64(tokenData.length);
         _checkBalanceLimit(erc721Data, ATOMIC_PRICING, newBalance);
         erc721Data.userState[to].balance = newBalance;
 
         // calculate incentives
         IRewardController rewardControllerLocal = erc721Data.rewardController;
         if (address(rewardControllerLocal) != address(0)) {
-            rewardControllerLocal.handleAction(to, oldTotalSupply, oldBalance);
+            rewardControllerLocal.handleAction(
+                to,
+                oldTotalSupply,
+                vars.oldBalance
+            );
         }
 
-        return (oldCollateralizedBalance, newCollateralizedBalance);
+        return (vars.oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     function executeBurnMultiple(
         MintableERC721Data storage erc721Data,
         IPool POOL,
+        bool ATOMIC_PRICING,
         address user,
         uint256[] calldata tokenIds
-    )
-        external
-        returns (
-            uint64 oldCollateralizedBalance,
-            uint64 newCollateralizedBalance
-        )
-    {
-        uint64 burntCollateralizedTokens = 0;
-        uint64 balanceToBurn;
+    ) external returns (uint64, uint64) {
+        LocalVars memory vars = _cache(erc721Data, user);
         uint256 oldTotalSupply = erc721Data.allTokens.length;
-        uint256 oldBalance = erc721Data.userState[user].balance;
-        oldCollateralizedBalance = erc721Data
-            .userState[user]
-            .collateralizedBalance;
+        bool shouldUpdateUserAvgMultiplier = _shouldUpdateUserAvgMultiplier(
+            erc721Data,
+            ATOMIC_PRICING
+        );
 
         for (uint256 index = 0; index < tokenIds.length; index++) {
             uint256 tokenId = tokenIds[index];
@@ -295,14 +436,11 @@ library MintableERC721Logic {
                 erc721Data,
                 user,
                 tokenId,
-                oldBalance - index
+                vars.oldBalance - index
             );
 
             // Clear approvals
             _approve(erc721Data, address(0), tokenId);
-
-            balanceToBurn++;
-            delete erc721Data.owners[tokenId];
 
             if (erc721Data.auctions[tokenId].startTime > 0) {
                 delete erc721Data.auctions[tokenId];
@@ -310,15 +448,33 @@ library MintableERC721Logic {
 
             if (erc721Data.isUsedAsCollateral[tokenId]) {
                 delete erc721Data.isUsedAsCollateral[tokenId];
-                burntCollateralizedTokens++;
+                vars.collateralizedBalanceDelta += 1;
+                if (shouldUpdateUserAvgMultiplier) {
+                    vars.multiplierDelta += getTraitMultiplier(
+                        erc721Data.traitsMultipliers[tokenId]
+                    );
+                }
             }
+
+            delete erc721Data.owners[tokenId];
+
             emit Transfer(owner, address(0), tokenId);
         }
 
-        erc721Data.userState[user].balance -= balanceToBurn;
-        newCollateralizedBalance =
-            oldCollateralizedBalance -
-            burntCollateralizedTokens;
+        erc721Data.userState[user].balance =
+            vars.oldBalance -
+            uint64(tokenIds.length);
+
+        if (shouldUpdateUserAvgMultiplier) {
+            _executeUpdateUserAvgMultiplier(
+                erc721Data,
+                user,
+                -vars.multiplierDelta.toInt256(),
+                -vars.collateralizedBalanceDelta.toInt256()
+            );
+        }
+        uint64 newCollateralizedBalance = vars.oldCollateralizedBalance -
+            vars.collateralizedBalanceDelta.toUint64();
         erc721Data
             .userState[user]
             .collateralizedBalance = newCollateralizedBalance;
@@ -330,11 +486,11 @@ library MintableERC721Logic {
             rewardControllerLocal.handleAction(
                 user,
                 oldTotalSupply,
-                oldBalance
+                vars.oldBalance
             );
         }
 
-        return (oldCollateralizedBalance, newCollateralizedBalance);
+        return (vars.oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     function executeApprove(
@@ -399,6 +555,117 @@ library MintableERC721Logic {
         delete erc721Data.auctions[tokenId];
     }
 
+    function _executeUpdateUserAvgMultiplier(
+        MintableERC721Data storage erc721Data,
+        address owner,
+        int256 multiplierDelta,
+        int256 collateralizedBalanceDelta
+    ) internal {
+        if (owner == address(0)) {
+            return;
+        }
+
+        uint256 oldAvgMultiplier = getTraitMultiplier(
+            erc721Data.userState[owner].avgMultiplier
+        );
+        uint256 collateralizedBalance = uint256(
+            erc721Data.userState[owner].collateralizedBalance
+        );
+
+        int256 numerator = (oldAvgMultiplier * collateralizedBalance)
+            .toInt256() + multiplierDelta;
+        int256 denominator = collateralizedBalance.toInt256() +
+            collateralizedBalanceDelta;
+
+        uint256 newAvgMultiplier = numerator != 0 && denominator != 0
+            ? (numerator / denominator).toUint256()
+            : WadRayMath.WAD;
+
+        if (oldAvgMultiplier != newAvgMultiplier) {
+            erc721Data.userState[owner].avgMultiplier = newAvgMultiplier;
+        }
+    }
+
+    function executeResetUserAvgMultiplier(
+        MintableERC721Data storage erc721Data,
+        address user
+    ) external returns (bool notEqual) {
+        uint256 balance = erc721Data.userState[user].balance;
+        uint256 oldAvgMultiplier = getTraitMultiplier(
+            erc721Data.userState[user].avgMultiplier
+        );
+        uint256 totalMultiplier;
+        for (uint256 i = 0; i < balance; i += 1) {
+            uint256 tokenId = erc721Data.ownedTokens[user][i];
+            if (!erc721Data.isUsedAsCollateral[tokenId]) {
+                continue;
+            }
+            totalMultiplier += getTraitMultiplier(
+                erc721Data.traitsMultipliers[tokenId]
+            );
+        }
+        uint256 collateralizedBalance = erc721Data
+            .userState[user]
+            .collateralizedBalance;
+        uint256 newAvgMultiplier = totalMultiplier != 0 &&
+            collateralizedBalance != 0
+            ? totalMultiplier / collateralizedBalance
+            : WadRayMath.WAD;
+        notEqual = oldAvgMultiplier != newAvgMultiplier;
+        if (notEqual) {
+            erc721Data.userState[user].avgMultiplier = newAvgMultiplier;
+        }
+    }
+
+    function executeSetTraitsMultipliers(
+        MintableERC721Data storage erc721Data,
+        uint256[] calldata tokenIds,
+        uint256[] calldata multipliers
+    ) external {
+        require(
+            tokenIds.length == multipliers.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            uint256 multiplier = multipliers[i];
+
+            _checkTraitMultiplier(multiplier);
+
+            uint256 oldMultiplier = getTraitMultiplier(
+                erc721Data.traitsMultipliers[tokenId]
+            );
+            uint256 newMultiplier = getTraitMultiplier(multiplier);
+            erc721Data.traitsMultipliers[tokenId] = newMultiplier;
+            address owner = erc721Data.owners[tokenId];
+
+            emit TraitMultiplierSet(owner, tokenId, newMultiplier);
+
+            if (
+                owner == address(0) || !erc721Data.isUsedAsCollateral[tokenId]
+            ) {
+                continue;
+            }
+
+            int256 multiplierDelta = newMultiplier.toInt256() -
+                oldMultiplier.toInt256();
+            _executeUpdateUserAvgMultiplier(
+                erc721Data,
+                owner,
+                multiplierDelta,
+                0
+            );
+        }
+        if (!erc721Data.isTraitBoosted) erc721Data.isTraitBoosted = true;
+    }
+
+    function _shouldUpdateUserAvgMultiplier(
+        MintableERC721Data storage erc721Data,
+        bool ATOMIC_PRICING
+    ) private view returns (bool) {
+        return !ATOMIC_PRICING && erc721Data.isTraitBoosted;
+    }
+
     function _checkBalanceLimit(
         MintableERC721Data storage erc721Data,
         bool ATOMIC_PRICING,
@@ -413,12 +680,39 @@ library MintableERC721Logic {
         }
     }
 
+    function _checkTraitMultiplier(uint256 multiplier) private pure {
+        require(
+            multiplier >= MIN_TRAIT_MULTIPLIER &&
+                multiplier < MAX_TRAIT_MULTIPLIER,
+            Errors.INVALID_AMOUNT
+        );
+    }
+
     function _exists(MintableERC721Data storage erc721Data, uint256 tokenId)
         private
         view
         returns (bool)
     {
         return erc721Data.owners[tokenId] != address(0);
+    }
+
+    function _cache(MintableERC721Data storage erc721Data, address user)
+        private
+        view
+        returns (LocalVars memory vars)
+    {
+        vars.oldBalance = erc721Data.userState[user].balance;
+        vars.oldCollateralizedBalance = erc721Data
+            .userState[user]
+            .collateralizedBalance;
+    }
+
+    function getTraitMultiplier(uint256 multiplier)
+        internal
+        pure
+        returns (uint256)
+    {
+        return multiplier != 0 ? multiplier : WadRayMath.WAD;
     }
 
     function isAuctioned(
@@ -431,6 +725,68 @@ library MintableERC721Logic {
             POOL
                 .getUserConfiguration(erc721Data.owners[tokenId])
                 .auctionValidityTime;
+    }
+
+    function executeRescueERC20(
+        address token,
+        address to,
+        uint256 amount
+    ) external {
+        IERC20(token).safeTransfer(to, amount);
+        emit RescueERC20(token, to, amount);
+    }
+
+    function executeRescueERC721(
+        address _underlyingAsset,
+        address token,
+        address to,
+        uint256[] calldata ids
+    ) external {
+        require(
+            token != _underlyingAsset,
+            Errors.UNDERLYING_ASSET_CAN_NOT_BE_TRANSFERRED
+        );
+        for (uint256 i = 0; i < ids.length; i++) {
+            IERC721(token).safeTransferFrom(address(this), to, ids[i]);
+        }
+        emit RescueERC721(token, to, ids);
+    }
+
+    function executeRescueERC1155(
+        address token,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external {
+        IERC1155(token).safeBatchTransferFrom(
+            address(this),
+            to,
+            ids,
+            amounts,
+            data
+        );
+        emit RescueERC1155(token, to, ids, amounts, data);
+    }
+
+    function executeAirdrop(
+        address airdropContract,
+        bytes calldata airdropParams
+    ) external {
+        require(
+            airdropContract != address(0),
+            Errors.INVALID_AIRDROP_CONTRACT_ADDRESS
+        );
+        require(airdropParams.length >= 4, Errors.INVALID_AIRDROP_PARAMETERS);
+
+        // call project airdrop contract
+        Address.functionCall(
+            airdropContract,
+            airdropParams,
+            Errors.CALL_AIRDROP_METHOD_FAILED
+        );
+
+        emit ExecuteAirdrop(airdropContract);
     }
 
     /**

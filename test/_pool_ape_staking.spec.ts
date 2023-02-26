@@ -56,7 +56,6 @@ describe("APE Coin Staking Test", () => {
       apeCoinStaking,
       nMAYC,
       nBAYC,
-      poolAdmin,
     } = testEnv;
     const user1 = users[0];
     const depositor = users[1];
@@ -122,12 +121,6 @@ describe("APE Coin Staking Test", () => {
       await ape
         .connect(user1.signer)
         ["mint(address,uint256)"](nBAYC.address, InitialNTokenApeBalance)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(poolAdmin.signer)
-        .unlimitedApproveTo(ape.address, cApe.address)
     );
 
     await mintAndValidate(ape, "1", user4);
@@ -1632,9 +1625,11 @@ describe("APE Coin Staking Test", () => {
 
     const apeData = await pool.getReserveData(cApe.address);
     await supplyAndValidate(ape, "1", user1, true);
-    await pool
-      .connect(user1.signer)
-      .setUserUseERC20AsCollateral(ape.address, false);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC20AsCollateral(ape.address, false)
+    );
     let userConfig = BigNumber.from(
       (await pool.getUserConfiguration(user1.address)).data
     );
@@ -1744,15 +1739,17 @@ describe("APE Coin Staking Test", () => {
     const amount1 = await convertToCurrencyDecimals(ape.address, "0");
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = amount1.add(amount2);
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: bayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount2,
-        cashAmount: amount1,
-      },
-      [],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount2,
+          cashAmount: amount1,
+        },
+        [],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+      )
     );
 
     // User 1 - totalStake should increased in Stake amount
@@ -1803,30 +1800,36 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = amount1.add(amount2);
 
-    await ape
-      .connect(user1.signer)
-      ["mint(address,uint256)"](user1.address, amount);
-
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: bayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: 0,
-        cashAmount: amount1,
-      },
-      [{tokenId: 0, amount: amount1}],
-      []
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        ["mint(address,uint256)"](user1.address, amount)
     );
 
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: bayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount2,
-        cashAmount: 0,
-      },
-      [],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        []
+      )
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount2,
+          cashAmount: 0,
+        },
+        [],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     // User 1 - totalStake should increased in Stake amount
@@ -1876,30 +1879,36 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = amount1.add(amount2);
 
-    await ape
-      .connect(user1.signer)
-      ["mint(address,uint256)"](user1.address, amount);
-
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: 0,
-        cashAmount: amount1,
-      },
-      [{tokenId: 0, amount: amount1}],
-      []
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        ["mint(address,uint256)"](user1.address, amount)
     );
 
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount2,
-        cashAmount: 0,
-      },
-      [],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: amount1,
+        },
+        [{tokenId: 0, amount: amount1}],
+        []
+      )
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount2,
+          cashAmount: 0,
+        },
+        [],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
     // User 1 - totalStake should increased in Stake amount
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -2078,13 +2087,15 @@ describe("APE Coin Staking Test", () => {
     const userBalance = await ape.balanceOf(user1.address);
     const user3Balance = await ape.balanceOf(user3.address);
 
-    await bakc
-      .connect(user1.signer)
-      ["safeTransferFrom(address,address,uint256)"](
-        user1.address,
-        user3.address,
-        "0"
-      );
+    await waitForTx(
+      await bakc
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user3.address,
+          "0"
+        )
+    );
 
     const bakcBalance = await bakc.balanceOf(user1.address);
     expect(bakcBalance).equal(1);
@@ -2092,11 +2103,13 @@ describe("APE Coin Staking Test", () => {
     const bakcBalanceUser3 = await bakc.balanceOf(user3.address);
     expect(bakcBalanceUser3).equal(1);
 
-    await pool
-      .connect(user1.signer)
-      .withdrawBAKC(mayc.address, [
-        {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
-      ]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
+        ])
+    );
 
     // User 1 - totalStake should have decreased in BAKC amount
     const totalStakeAfter = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -2141,13 +2154,15 @@ describe("APE Coin Staking Test", () => {
         [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
       )
     );
-    await bakc
-      .connect(user1.signer)
-      ["safeTransferFrom(address,address,uint256)"](
-        user1.address,
-        user3.address,
-        "0"
-      );
+    await waitForTx(
+      await bakc
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user3.address,
+          "0"
+        )
+    );
 
     const bakcBalance = await bakc.balanceOf(user1.address);
     expect(bakcBalance).equal(1);
@@ -2191,13 +2206,15 @@ describe("APE Coin Staking Test", () => {
         [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
       )
     );
-    await bakc
-      .connect(user1.signer)
-      ["safeTransferFrom(address,address,uint256)"](
-        user1.address,
-        user3.address,
-        "0"
-      );
+    await waitForTx(
+      await bakc
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user3.address,
+          "0"
+        )
+    );
 
     const bakcBalance = await bakc.balanceOf(user1.address);
     expect(bakcBalance).equal(1);
@@ -2242,13 +2259,15 @@ describe("APE Coin Staking Test", () => {
       )
     );
 
-    await bakc
-      .connect(user1.signer)
-      ["safeTransferFrom(address,address,uint256)"](
-        user1.address,
-        user3.address,
-        "0"
-      );
+    await waitForTx(
+      await bakc
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user3.address,
+          "0"
+        )
+    );
 
     const bakcBalance = await bakc.balanceOf(user1.address);
     expect(bakcBalance).equal(1);
@@ -2332,15 +2351,17 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     // 2. stake  one bakc and borrow 15000 ape
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount,
-        cashAmount: 0,
-      },
-      [{tokenId: 0, amount: amount1}],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2370,14 +2391,16 @@ describe("APE Coin Staking Test", () => {
     expect(pSApeBalance).equal(amount);
 
     const withdrawAmount = await convertToCurrencyDecimals(ape.address, "8000");
-    await pool.connect(user1.signer).withdrawBAKC(mayc.address, [
-      {
-        mainTokenId: 0,
-        bakcTokenId: 0,
-        amount: withdrawAmount,
-        isUncommit: true,
-      },
-    ]);
+    await waitForTx(
+      await pool.connect(user1.signer).withdrawBAKC(mayc.address, [
+        {
+          mainTokenId: 0,
+          bakcTokenId: 0,
+          amount: withdrawAmount,
+          isUncommit: true,
+        },
+      ])
+    );
 
     const bakcBalance = await bakc.balanceOf(user1.address);
     // User 1 - bakc balanace should increased 2
@@ -2405,15 +2428,17 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     // borrow and stake 15000
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount,
-        cashAmount: 0,
-      },
-      [{tokenId: 0, amount: amount1}],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2442,9 +2467,11 @@ describe("APE Coin Staking Test", () => {
     const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
     expect(pSApeBalance).equal(amount);
 
-    await pool
-      .connect(user1.signer)
-      .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount1}]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount1}])
+    );
     const apeBalance = await ape.balanceOf(user1.address);
     expect(apeBalance).equal(amount1);
     totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -2467,15 +2494,17 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     // 2. stake  one bakc and borrow 15000 ape
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount,
-        cashAmount: 0,
-      },
-      [{tokenId: 0, amount: amount1}],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2525,15 +2554,17 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     // 2. stake  one bakc and borrow 15000 ape
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount,
-        cashAmount: 0,
-      },
-      [{tokenId: 0, amount: amount1}],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2558,9 +2589,11 @@ describe("APE Coin Staking Test", () => {
     const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
     expect(pSApeBalance).equal(amount);
 
-    await bakc
-      .connect(user1.signer)
-      .transferFrom(user1.address, user3.address, 0);
+    await waitForTx(
+      await bakc
+        .connect(user1.signer)
+        .transferFrom(user1.address, user3.address, 0)
+    );
     // User 3 - The NFT owner with bakc id 0 should be changed to user3
     expect(await bakc.balanceOf(user3.address)).equal(1);
     expect(await bakc.ownerOf(0)).eq(user3.address);
@@ -2596,15 +2629,17 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     // 2. stake  one bakc and borrow 15000 ape
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount,
-        cashAmount: 0,
-      },
-      [{tokenId: 0, amount: amount1}],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2645,21 +2680,25 @@ describe("APE Coin Staking Test", () => {
       "0"
     );
 
-    await bakc
-      .connect(user1.signer)
-      ["safeTransferFrom(address,address,uint256)"](
-        user1.address,
-        user3.address,
-        0
-      );
+    await waitForTx(
+      await bakc
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user3.address,
+          0
+        )
+    );
     // User 3 - The NFT owner with bakc id 0 should be changed to user3
     expect(await bakc.ownerOf(0)).eq(user3.address);
 
-    await pool
-      .connect(user1.signer)
-      .withdrawBAKC(mayc.address, [
-        {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
-      ]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
+        ])
+    );
 
     // User1 - ape balance should increased amount2
     expect(await ape.balanceOf(user1.address)).eq(amount2);
@@ -2686,15 +2725,17 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     // 2. stake  one bakc and borrow 15000 ape
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount,
-        cashAmount: 0,
-      },
-      [{tokenId: 0, amount: amount1}],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2735,11 +2776,13 @@ describe("APE Coin Staking Test", () => {
       "0"
     );
 
-    await pool
-      .connect(user1.signer)
-      .withdrawBAKC(mayc.address, [
-        {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
-      ]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
+        ])
+    );
 
     // User1 - ape balance should increased amount2 + pendingRewardsPool3
     expect(await ape.balanceOf(user1.address)).eq(
@@ -2765,15 +2808,17 @@ describe("APE Coin Staking Test", () => {
 
     const amount = await convertToCurrencyDecimals(ape.address, "1000");
     // 2. stake  one bakc and borrow 15000 ape
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: 0,
-        cashAmount: amount,
-      },
-      [{tokenId: 0, amount: amount}],
-      []
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: amount,
+        },
+        [{tokenId: 0, amount: amount}],
+        []
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2796,13 +2841,15 @@ describe("APE Coin Staking Test", () => {
     const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
     expect(pSApeBalance).equal(amount);
 
-    await nMAYC
-      .connect(user1.signer)
-      ["safeTransferFrom(address,address,uint256)"](
-        user1.address,
-        user3.address,
-        0
-      );
+    await waitForTx(
+      await nMAYC
+        .connect(user1.signer)
+        ["safeTransferFrom(address,address,uint256)"](
+          user1.address,
+          user3.address,
+          0
+        )
+    );
     expect(await nMAYC.balanceOf(user3.address)).eq(1);
     expect(await nMAYC.ownerOf(0)).eq(user3.address);
 
@@ -2829,15 +2876,17 @@ describe("APE Coin Staking Test", () => {
     const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
     const amount = await convertToCurrencyDecimals(ape.address, "15000");
     // 2. stake  one bakc and borrow 15000 ape
-    await pool.connect(user1.signer).borrowApeAndStake(
-      {
-        nftAsset: mayc.address,
-        borrowAsset: ape.address,
-        borrowAmount: amount,
-        cashAmount: 0,
-      },
-      [{tokenId: 0, amount: amount1}],
-      [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+      )
     );
 
     const userAccount = await pool.getUserAccountData(user1.address);
@@ -2871,9 +2920,11 @@ describe("APE Coin Staking Test", () => {
       nMAYC.address,
       "0"
     );
-    await pool
-      .connect(user1.signer)
-      .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount1}]);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount1}])
+    );
 
     // User1 - ape balance should increased amount1 + pendingRewardsPool2
     expect(await ape.balanceOf(user1.address)).to.be.eq(

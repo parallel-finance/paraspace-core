@@ -18,7 +18,9 @@ import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol"
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {IWETH} from "../../../misc/interfaces/IWETH.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
+import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
+import {IXTokenType, XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {PRBMath} from "../../../dependencies/math/PRBMath.sol";
 import {PRBMathUD60x18} from "../../../dependencies/math/PRBMathUD60x18.sol";
@@ -40,6 +42,7 @@ library LiquidationLogic {
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using PRBMathUD60x18 for uint256;
+    using WadRayMath for uint256;
     using GPv2SafeERC20 for IERC20;
 
     /**
@@ -776,15 +779,24 @@ library LiquidationLogic {
         ).collateralizedBalanceOf(params.borrower);
 
         // price of the asset that is used as collateral
-        if (INToken(superVars.collateralXToken).getAtomicPricingConfig()) {
+        if (
+            IXTokenType(superVars.collateralXToken).getXTokenType() ==
+            XTokenType.NTokenUniswapV3
+        ) {
             vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
                 .getTokenPrice(
                     params.collateralAsset,
                     params.collateralTokenId
                 );
         } else {
-            vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
+            uint256 assetPrice = IPriceOracleGetter(params.priceOracle)
                 .getAssetPrice(params.collateralAsset);
+
+            vars.collateralPrice = Helpers.getTraitBoostedTokenPrice(
+                superVars.collateralXToken,
+                assetPrice,
+                params.collateralTokenId
+            );
         }
 
         if (
