@@ -23,8 +23,11 @@ contract PYieldToken is PToken {
     using GPv2SafeERC20 for IERC20;
 
     uint256 internal constant RAY = 1e27;
+    //Record of calculated yield index for each user account
     mapping(address => uint256) private _userYieldIndex;
+    //Record of pending yield for each user account,
     mapping(address => uint256) private _userPendingYield;
+    //Record of balance which was locked withdraw fee for each user account,
     mapping(address => uint256) private _userLockFeeAmount;
 
     constructor(IPool pool) PToken(pool) {
@@ -74,7 +77,8 @@ contract PYieldToken is PToken {
         returns (uint256, uint256)
     {
         uint256 userBalance = balanceOf(account);
-        uint256 pendingYield = _userPendingYield[account];
+        //free_yield = pending_yield + accrued_yield - free_yield
+        uint256 freeYield = _userPendingYield[account];
         uint256 lockedYield = 0;
         if (userBalance > 0) {
             uint256 userIndex = _userYieldIndex[account];
@@ -85,17 +89,19 @@ contract PYieldToken is PToken {
             uint256 lockAmount;
             if (indexDiff > 0) {
                 lockAmount = userBalance;
+                //calculate newly accrued yield
                 uint256 accruedYield = (userBalance * indexDiff) / RAY;
-                pendingYield += accruedYield;
+                freeYield += accruedYield;
             } else {
                 lockAmount = _userLockFeeAmount[account];
             }
 
+            //calculate locked yield for withdraw fee
             lockedYield = (lockAmount * lastAccruedIndex) / RAY;
-            pendingYield -= lockedYield;
+            freeYield -= lockedYield;
         }
 
-        return (pendingYield, lockedYield);
+        return (freeYield, lockedYield);
     }
 
     function claimFor(address account) external {
@@ -138,6 +144,7 @@ contract PYieldToken is PToken {
         ).yieldIndex();
         uint256 indexDiff = latestYieldIndex - _userYieldIndex[account];
         uint256 pendingYield = _userPendingYield[account];
+        //update pending yield and user lock fee amount first if necessary
         if (indexDiff > 0) {
             if (userBalance > 0) {
                 uint256 accruedYield = (userBalance * indexDiff) / RAY;
@@ -150,11 +157,13 @@ contract PYieldToken is PToken {
             _userYieldIndex[account] = latestYieldIndex;
         }
 
+        //if it's the withdraw or transfer balance out case
         if (balanceDiff < 0) {
             uint256 leftBalance = userBalance - (uint256(-balanceDiff));
-            if (leftBalance < _userLockFeeAmount[account]) {
-                uint256 withdrawLockAmount = _userLockFeeAmount[account] -
-                    leftBalance;
+            uint256 userLockFeeBalance = _userLockFeeAmount[account];
+            //here we only need to update lock fee amount and charge fee when reduce user lock fee amount
+            if (leftBalance < userLockFeeBalance) {
+                uint256 withdrawLockAmount = userLockFeeBalance - leftBalance;
                 uint256 withdrawFee = (withdrawLockAmount * lastAccruedIndex) /
                     RAY;
                 _userLockFeeAmount[account] -= withdrawLockAmount;

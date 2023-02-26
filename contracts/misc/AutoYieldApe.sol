@@ -40,7 +40,7 @@ contract AutoYieldApe is
     IPoolCore private immutable _lendingPool;
     ISwapRouter private immutable _swapRouter;
 
-    //The latest accrued yield index
+    //The last accrued yield index
     uint256 private _poolLastAccruedIndex;
     //Accumulator of the latest yield rate since the opening of the pool
     uint256 private _poolLatestYieldIndex;
@@ -244,7 +244,8 @@ contract AutoYieldApe is
         returns (uint256, uint256)
     {
         uint256 userBalance = balanceOf(account);
-        uint256 pendingYield = _userPendingYield[account];
+        //free_yield = pending_yield + accrued_yield - free_yield
+        uint256 freeYield = _userPendingYield[account];
         uint256 lockedYield = 0;
         if (userBalance > 0) {
             uint256 userIndex = _userYieldIndex[account];
@@ -252,18 +253,20 @@ contract AutoYieldApe is
             uint256 indexDiff = poolLatestIndex - userIndex;
             uint256 lockAmount;
             if (indexDiff > 0) {
+                //calculate newly accrued yield
                 lockAmount = userBalance;
                 uint256 accruedYield = (userBalance * indexDiff) / RAY;
-                pendingYield += accruedYield;
+                freeYield += accruedYield;
             } else {
                 lockAmount = _userLockFeeAmount[account];
             }
 
+            //calculate locked yield for withdraw fee
             lockedYield = (lockAmount * _poolLastAccruedIndex) / RAY;
-            pendingYield -= lockedYield;
+            freeYield -= lockedYield;
         }
 
-        return (pendingYield, lockedYield);
+        return (freeYield, lockedYield);
     }
 
     /**
@@ -350,6 +353,7 @@ contract AutoYieldApe is
         uint256 latestYieldIndex = _poolLatestYieldIndex;
         uint256 indexDiff = latestYieldIndex - _userYieldIndex[account];
         uint256 pendingYield = _userPendingYield[account];
+        //update pending yield and user lock fee amount first if necessary
         if (indexDiff > 0) {
             if (userBalance > 0) {
                 uint256 accruedYield = (userBalance * indexDiff) / RAY;
@@ -362,9 +366,11 @@ contract AutoYieldApe is
             _userYieldIndex[account] = latestYieldIndex;
         }
 
+        //if it's the withdraw or transfer balance out case
         if (balanceDiff < 0) {
             uint256 leftBalance = userBalance - (uint256(-balanceDiff));
             uint256 userLockFeeBalance = _userLockFeeAmount[account];
+            //here we only need to update lock fee amount and charge fee when reduce user lock fee amount
             if (leftBalance < userLockFeeBalance) {
                 uint256 withdrawLockAmount = userLockFeeBalance - leftBalance;
                 uint256 withdrawFee = (withdrawLockAmount *
