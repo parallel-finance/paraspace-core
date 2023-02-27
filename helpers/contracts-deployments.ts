@@ -253,7 +253,6 @@ import {
   getAllTokens,
   getBAYCSewerPass,
   getFirstSigner,
-  getPoolProxy,
   getProtocolDataProvider,
   getPoolProxy,
   getPunks,
