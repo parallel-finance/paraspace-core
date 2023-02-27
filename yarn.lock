@@ -1414,6 +1414,8 @@ __metadata:
     prettier-plugin-solidity: ^1.0.0-alpha.53
     pretty-quick: ^3.1.1
     prompt-sync: ^4.2.0
+    readline-sync: ^1.4.10
+    shelljs: ^0.8.5
     solhint: ^3.3.6
     solidity-coverage: ^0.8.2
     solidity-docgen-forked: ^0.6.0-beta.29
@@ -1421,6 +1423,7 @@ __metadata:
     ts-node: ^10.9.1
     typechain: ^8.1.0
     typescript: 4.7.4
+    yaml: ^2.2.1
   languageName: unknown
   linkType: soft
 
@@ -12488,6 +12491,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"readline-sync@npm:^1.4.10":
+  version: 1.4.10
+  resolution: "readline-sync@npm:1.4.10"
+  checksum: 4dbd8925af028dc4cb1bb813f51ca3479035199aa5224886b560eec8e768ab27d7ebf11d69a67ed93d5a130b7c994f0bdb77796326e563cf928bbfd560e3747e
+  languageName: node
+  linkType: hard
+
 "rechoir@npm:^0.6.2":
   version: 0.6.2
   resolution: "rechoir@npm:0.6.2"
@@ -13344,7 +13354,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shelljs@npm:^0.8.3":
+"shelljs@npm:^0.8.3, shelljs@npm:^0.8.5":
   version: 0.8.5
   resolution: "shelljs@npm:0.8.5"
   dependencies:
@@ -15993,6 +16003,13 @@ __metadata:
   version: 1.10.2
   resolution: "yaml@npm:1.10.2"
   checksum: ce4ada136e8a78a0b08dc10b4b900936912d15de59905b2bf415b4d33c63df1d555d23acb2a41b23cf9fb5da41c256441afca3d6509de7247daa062fd2c5ea5f
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "yaml@npm:2.2.1"
+  checksum: 84f68cbe462d5da4e7ded4a8bded949ffa912bc264472e5a684c3d45b22d8f73a3019963a32164023bdf3d83cfb6f5b58ff7b2b10ef5b717c630f40bd6369a23
   languageName: node
   linkType: hard
 
