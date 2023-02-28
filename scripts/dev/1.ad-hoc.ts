@@ -146,8 +146,8 @@ const initiate = (config: Config) => {
     volumes: {},
   };
 
-  let executionPort = 8551;
-  let consensusPort = 5052;
+  const executionPort = 8551;
+  const consensusPort = 5052;
   for (const [index, node] of config.nodes.entries()) {
     node.executionLayer.flags.push(`--datadir=${node.executionLayer.dataDir}`);
     node.executionLayer.flags.push(`--authrpc.addr=0.0.0.0`);
@@ -162,14 +162,16 @@ const initiate = (config: Config) => {
       `--jwt-secrets=/${config.outputDir}/jwtsecret`
     );
     node.consensusLayer.flags.push(
-      `--execution-endpoints=http://127.0.0.1:${executionPort + index}`
+      `--execution-endpoints=http://${node.name}-execution:${
+        executionPort + index
+      }`
     );
     node.consensusLayer.flags.push(`--http-address=0.0.0.0`);
     node.consensusLayer.flags.push(`--http-port=${consensusPort + index}`);
 
     node.validator.flags.push(`--datadir=${node.validator.dataDir}`);
     node.validator.flags.push(
-      `--beacon-nodes=http://127.0.0.1:${consensusPort + index}`
+      `--beacon-nodes=http://${node.name}-consensus:${consensusPort + index}`
     );
 
     exec(
@@ -233,7 +235,7 @@ const initiate = (config: Config) => {
     }
 
     const consensusConfig: DockerNode = {
-      ports: [`${consensusPort + index}:${consensusPort}`],
+      ports: [`${consensusPort + index}:${consensusPort + index}`],
       volumes: [`${node.volume}:/data`],
       build: {
         context: ".",
@@ -258,7 +260,7 @@ const initiate = (config: Config) => {
     };
 
     const executionConfig: DockerNode = {
-      ports: [`${executionPort + index}:${executionPort}`],
+      ports: [`${executionPort + index}:${executionPort + index}`],
       volumes: [`${node.volume}:/data`],
       build: {
         context: ".",
