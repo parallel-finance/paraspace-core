@@ -3,6 +3,7 @@ import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
 import {BigNumber} from "ethers";
 import {WAD} from "../../helpers/constants";
+import {getParaSpaceOracle} from "../../helpers/contracts-getters";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
@@ -16,6 +17,7 @@ task("market-info", "Print markets info")
       "../../helpers/contracts-helpers"
     );
     const ui = await getUiPoolDataProvider();
+    const paraSpaceOracle = await getParaSpaceOracle();
     const provider = await getPoolAddressesProvider();
     const [reservesData, baseCurrencyInfo] = await ui.getReservesData(
       provider.address,
@@ -74,5 +76,9 @@ task("market-info", "Print markets info")
       console.log(" liquidityRate:", fromBn(x.liquidityRate, 27));
       console.log(" variableBorrowRate:", fromBn(x.variableBorrowRate, 27));
       console.log(" variableBorrowIndex:", fromBn(x.variableBorrowIndex, 27));
+      console.log(
+        " source:",
+        await paraSpaceOracle.getSourceOfAsset(x.underlyingAsset)
+      );
     }
   });

@@ -1,7 +1,10 @@
+import {parseEther} from "ethers/lib/utils";
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
+  deployAggregator,
   deployBaseCurrencySynchronicityPriceAdapter,
+  deployCLwstETHSynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
 } from "../../helpers/contracts-deployments";
 import {
@@ -29,32 +32,32 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
   const projects = [
     {
       symbol: "aWETH",
-      address: "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e",
+      address: "0x7649e0d153752c556b8b23DB1f1D3d42993E83a5",
       aggregator: "",
     },
     {
       symbol: "bendETH",
-      address: "0xeD1840223484483C0cb050E6fC344d1eBF0778a9",
+      address: "0x57FEbd640424C85b72b4361fE557a781C8d2a509",
       aggregator: "",
     },
     {
       symbol: "astETH",
-      address: "0x1982b2f5814301d4e9a8b0201555376e62f82428",
-      aggregator: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
+      address: "0x4d7A1D1d05f6A1B87A6c382FfA003Aef1d7aF1D0",
+      aggregator: "0xD6245F74B32389c9dA056A8C076D03d78dF0729A",
     },
     {
       symbol: "awstETH",
-      address: "0x0B925eD163218f6662a35e0f0371Ac234f9E9371",
-      aggregator: "0x1d05d899c3AC6CfA35D50c063325ccA39727c7c8",
+      address: "0xb278E539999942EAE8119eD2d72A2f8EC27aAf92",
+      aggregator: "0x3885EBF000bc929Aa3d3bcA084d973b1B04Ee4ec",
     },
     {
       symbol: "cbETH",
-      address: "0xbe9895146f7af43049ca1c1ae358b0541ea49704",
-      aggregator: "0xf017fcb346a1885194689ba23eff2fe6fa5c483b",
+      address: "0x0F23e38Ef5dd7d5a5cB58BB3c0030A6076EB6427",
+      aggregator: "",
     },
     {
       symbol: "rETH",
-      address: "0xae78736cd615f374d3085123a210448e74fc6393",
+      address: "0x67a5FA99B08d19aC11Ee496A74Fa43612543Eb90",
       aggregator: "",
     },
   ];
@@ -73,12 +76,27 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
           verify
         )
       ).address;
-    }
-    if (project.symbol == "rETH") {
+    } else if (project.symbol == "rETH") {
       project.aggregator = (
         await deployExchangeRateSynchronicityPriceAdapter(
           project.address,
           project.symbol,
+          verify
+        )
+      ).address;
+    } else if (project.symbol == "awstETH") {
+      project.aggregator = (
+        await deployCLwstETHSynchronicityPriceAdapter(
+          "0xD6245F74B32389c9dA056A8C076D03d78dF0729A",
+          "0xaD03FfABC3bcae0f869BEa32544c0C0131Fd13Fe",
+          verify
+        )
+      ).address;
+    } else {
+      project.aggregator = (
+        await deployAggregator(
+          project.symbol,
+          parseEther("1").toString(),
           verify
         )
       ).address;

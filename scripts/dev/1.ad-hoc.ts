@@ -1,19 +1,22 @@
 import rawBRE from "hardhat";
-import {getParaSpaceOracle} from "../../helpers/contracts-getters";
+import {
+  deployMintableERC20,
+  deployMockAStETH,
+  deployMockAToken,
+  deployMockRETH,
+} from "../../helpers/contracts-deployments";
 
-const adHoc = async () => {
+const adHoc = async (verify = false) => {
   console.time("ad-hoc");
+  const awstETH = await deployMockAToken(["awstETH", "awstETH", "18"], verify);
+  const astETH = await deployMockAStETH(["astETH", "astETH", "18"], verify);
+  const reth = await deployMockRETH(["rETH", "rETH", "18"], verify);
+  const cbeth = await deployMintableERC20(["cbETH", "cbETH", "18"], verify);
   console.timeEnd("ad-hoc");
 };
 
 async function main() {
   await rawBRE.run("set-DRE");
-  const paraspaceOracle = await getParaSpaceOracle();
-  console.log(
-    await paraspaceOracle.getAssetPrice(
-      "0xDa8b420EDa077bF188a1d133Eb8F162265F4abEc"
-    )
-  );
   await adHoc();
 }
 
