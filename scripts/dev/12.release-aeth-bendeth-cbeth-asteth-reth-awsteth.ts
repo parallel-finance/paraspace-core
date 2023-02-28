@@ -6,7 +6,6 @@ import {
 } from "../../helpers/contracts-deployments";
 import {
   getParaSpaceOracle,
-  getPoolAddressesProvider,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
 import {

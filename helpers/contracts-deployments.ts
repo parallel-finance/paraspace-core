@@ -250,6 +250,10 @@ import {
   PTokenAStETH,
   AStETHDebtToken__factory,
   AStETHDebtToken,
+  MockAStETH,
+  MockAStETH__factory,
+  MockRETH,
+  MockRETH__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -954,8 +958,27 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
         continue;
       }
 
-      if (tokenSymbol === ERC20TokenContractId.aWETH) {
+      if (
+        tokenSymbol === ERC20TokenContractId.aWETH ||
+        tokenSymbol === ERC20TokenContractId.awstETH
+      ) {
         tokens[tokenSymbol] = await deployMockAToken(
+          [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
+          verify
+        );
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.astETH) {
+        tokens[tokenSymbol] = await deployMockAStETH(
+          [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
+          verify
+        );
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.rETH) {
+        tokens[tokenSymbol] = await deployMockRETH(
           [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
           verify
         );
@@ -1782,6 +1805,28 @@ export const deployMockAToken = async (
     [...args],
     verify
   ) as Promise<MockAToken>;
+
+export const deployMockAStETH = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MockAStETH> =>
+  withSaveAndVerify(
+    new MockAStETH__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MockAStETH>;
+
+export const deployMockRETH = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MockRETH> =>
+  withSaveAndVerify(
+    new MockRETH__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MockRETH>;
 
 export const deployPTokenAToken = async (
   poolAddress: tEthereumAddress,

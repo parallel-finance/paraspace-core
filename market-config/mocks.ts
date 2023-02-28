@@ -19,7 +19,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   bendETH: parseEther("1").toString(),
   cbETH: parseEther("1").toString(),
   astETH: parseEther("1").toString(),
-  rETH: parseEther("1").toString(),
+  rETH: parseEther("1.125").toString(),
   awstETH: parseEther("1").toString(),
   PUNK: parseEther("140").toString(),
   xcDOT: parseEther("0.0038333333333").toString(),
