@@ -21,6 +21,7 @@ import {
   deployUniswapV3OracleWrapper,
   deployCLwstETHSynchronicityPriceAdapter,
   deployBaseCurrencySynchronicityPriceAdapter,
+  deployExchangeRateSynchronicityPriceAdapter,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
@@ -106,6 +107,15 @@ export const deployAllAggregators = async (
     }
     if (tokenSymbol === ERC20TokenContractId.astETH) {
       aggregators[tokenSymbol] = aggregators[ERC20TokenContractId.stETH];
+      continue;
+    }
+    if (tokenSymbol === ERC20TokenContractId.rETH) {
+      aggregators[tokenSymbol] =
+        await deployExchangeRateSynchronicityPriceAdapter(
+          tokens[ERC20TokenContractId.rETH].address,
+          tokenSymbol,
+          verify
+        );
       continue;
     }
     if (tokenSymbol === ERC721TokenContractId.UniswapV3) {
