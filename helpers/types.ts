@@ -127,6 +127,7 @@ export enum eContractid {
   PTokenSApeImpl = "PTokenSApeImpl",
   PTokenATokenImpl = "PTokenATokenImpl",
   PTokenStETHImpl = "PTokenStETHImpl",
+  PTokenAStETHImpl = "PTokenAStETHImpl",
   PTokenCApeImpl = "PTokenCApeImpl",
   NTokenImpl = "NTokenImpl",
   NTokenMoonBirdsImpl = "NTokenMoonBirdsImpl",
@@ -227,6 +228,7 @@ export enum eContractid {
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
   CApeDebtToken = "CApeDebtToken",
+  AStETHDebtToken = "AStETHDebtToken",
   ApeStakingLogic = "ApeStakingLogic",
   MintableERC721Logic = "MintableERC721Logic",
   MerkleVerifier = "MerkleVerifier",
@@ -403,6 +405,11 @@ export interface iAssetBase<T> {
   WETH: T;
   aWETH: T;
   cETH: T;
+  bendETH: T;
+  cbETH: T;
+  rETH: T;
+  astETH: T;
+  awstETH: T;
   DAI: T;
   USDC: T;
   USDT: T;
@@ -441,6 +448,11 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "WBTC"
   | "stETH"
   | "wstETH"
+  | "bendETH"
+  | "cbETH"
+  | "rETH"
+  | "astETH"
+  | "awstETH"
   | "xcDOT"
   | "WGLMR"
   | "APE"
@@ -470,10 +482,15 @@ export enum ERC20TokenContractId {
   WBTC = "WBTC",
   stETH = "stETH",
   wstETH = "wstETH",
+  bendETH = "bendETH",
+  cbETH = "cbETH",
+  rETH = "rETH",
+  astETH = "astETH",
+  awstETH = "awstETH",
+  aWETH = "aWETH",
   APE = "APE",
   sAPE = "sAPE",
   cAPE = "cAPE",
-  aWETH = "aWETH",
   cETH = "cETH",
   PUNK = "PUNK",
   xcDOT = "xcDOT",
@@ -603,8 +620,14 @@ export interface IMarketplaceConfig {
 
 export interface IChainlinkConfig {
   WETH?: tEthereumAddress;
+  aWETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
   wstETH?: tEthereumAddress;
+  cbETH?: tEthereumAddress;
+  rETH?: tEthereumAddress;
+  astETH?: tEthereumAddress;
+  awstETH?: tEthereumAddress;
+  bendETH?: tEthereumAddress;
   DAI?: tEthereumAddress;
   USDC?: tEthereumAddress;
   USDT?: tEthereumAddress;

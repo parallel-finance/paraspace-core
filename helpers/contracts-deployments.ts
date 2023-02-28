@@ -231,6 +231,7 @@ import {
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
   CLwstETHSynchronicityPriceAdapter__factory,
+  CLExchangeRateSynchronicityPriceAdapter__factory,
   CLwstETHSynchronicityPriceAdapter,
   WstETHMocked__factory,
   WstETHMocked,
@@ -243,6 +244,12 @@ import {
   HelperContract__factory,
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
+  CLExchangeRateSynchronicityPriceAdapter,
+  CLBaseCurrencySynchronicityPriceAdapter__factory,
+  PTokenAStETH__factory,
+  PTokenAStETH,
+  AStETHDebtToken__factory,
+  AStETHDebtToken,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1798,6 +1805,17 @@ export const deployPTokenStETH = async (
     verify
   ) as Promise<PTokenStETH>;
 
+export const deployPTokenAStETH = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new PTokenAStETH__factory(await getFirstSigner()),
+    eContractid.PTokenAStETHImpl,
+    [poolAddress],
+    verify
+  ) as Promise<PTokenAStETH>;
+
 export const deployPTokenSApe = async (
   poolAddress: tEthereumAddress,
   nBAYC: tEthereumAddress,
@@ -2073,6 +2091,17 @@ export const deployStETHDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<StETHDebtToken>;
+
+export const deployAStETHDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AStETHDebtToken__factory(await getFirstSigner()),
+    eContractid.AStETHDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<AStETHDebtToken>;
 
 export const deployMintableERC721Logic = async (verify?: boolean) => {
   return withSaveAndVerify(
@@ -2359,6 +2388,35 @@ export const deployCLwstETHSynchronicityPriceAdapter = async (
     [stETHAggregator, stETH, 18],
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
+
+export const deployExchangeRateSynchronicityPriceAdapter = async (
+  asset: tEthereumAddress,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLExchangeRateSynchronicityPriceAdapter__factory(
+      await getFirstSigner()
+    ),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [asset],
+    verify
+  ) as Promise<CLExchangeRateSynchronicityPriceAdapter>;
+
+export const deployBaseCurrencySynchronicityPriceAdapter = async (
+  baseCurrency: tEthereumAddress,
+  baseCurrencyUnit: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLBaseCurrencySynchronicityPriceAdapter__factory(
+      await getFirstSigner()
+    ),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [baseCurrency, baseCurrencyUnit],
+    verify
+  ) as Promise<CLExchangeRateSynchronicityPriceAdapter>;
 
 export const deployParaSpaceAirdrop = async (
   token: tEthereumAddress,

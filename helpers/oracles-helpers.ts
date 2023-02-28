@@ -7,6 +7,8 @@ import {
   eContractid,
 } from "./types";
 import {
+  CLBaseCurrencySynchronicityPriceAdapter,
+  CLExchangeRateSynchronicityPriceAdapter,
   CLwstETHSynchronicityPriceAdapter,
   ERC721OracleWrapper,
   MockAggregator,
@@ -18,6 +20,7 @@ import {
   deployAggregator,
   deployUniswapV3OracleWrapper,
   deployCLwstETHSynchronicityPriceAdapter,
+  deployBaseCurrencySynchronicityPriceAdapter,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
@@ -60,7 +63,9 @@ export const deployAllAggregators = async (
       | MockAggregator
       | UniswapV3OracleWrapper
       | CLwstETHSynchronicityPriceAdapter
-      | ERC721OracleWrapper;
+      | ERC721OracleWrapper
+      | CLExchangeRateSynchronicityPriceAdapter
+      | CLBaseCurrencySynchronicityPriceAdapter;
   } = {};
   const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
@@ -71,12 +76,36 @@ export const deployAllAggregators = async (
     if (tokenSymbol === ERC20TokenContractId[oracleConfig.BaseCurrency]) {
       continue;
     }
+    if (
+      ERC20TokenContractId[oracleConfig.BaseCurrency] ==
+        ERC20TokenContractId.WETH &&
+      [ERC20TokenContractId.bendETH, ERC20TokenContractId.aWETH].includes(
+        tokenSymbol as ERC20TokenContractId
+      )
+    ) {
+      aggregators[tokenSymbol] =
+        await deployBaseCurrencySynchronicityPriceAdapter(
+          tokens[oracleConfig.BaseCurrency].address,
+          oracleConfig.BaseCurrencyUnit,
+          tokenSymbol,
+          verify
+        );
+      continue;
+    }
     if (tokenSymbol === ERC20TokenContractId.wstETH) {
       aggregators[tokenSymbol] = await deployCLwstETHSynchronicityPriceAdapter(
         aggregators[ERC20TokenContractId.stETH].address,
         tokens[ERC20TokenContractId.stETH].address,
         verify
       );
+      continue;
+    }
+    if (tokenSymbol === ERC20TokenContractId.awstETH) {
+      aggregators[tokenSymbol] = aggregators[ERC20TokenContractId.wstETH];
+      continue;
+    }
+    if (tokenSymbol === ERC20TokenContractId.astETH) {
+      aggregators[tokenSymbol] = aggregators[ERC20TokenContractId.stETH];
       continue;
     }
     if (tokenSymbol === ERC721TokenContractId.UniswapV3) {
