@@ -58,12 +58,19 @@ export interface DockerConfig {
 }
 
 export interface DockerNode {
+  ports: string[];
   volumes: string[];
   build: {
     context: string;
     dockerfile: string;
   };
   command: string[];
+  ulimits: {
+    nofile: {
+      soft: number;
+      hard: number;
+    };
+  };
 }
 
 /**
@@ -139,9 +146,12 @@ const initiate = (config: Config) => {
     volumes: {},
   };
 
+  let executionPort = 8551;
+  let consensusPort = 5052;
   for (const [index, node] of config.nodes.entries()) {
     node.executionLayer.flags.push(`--datadir=${node.executionLayer.dataDir}`);
     node.executionLayer.flags.push(`--authrpc.addr=0.0.0.0`);
+    node.executionLayer.flags.push(`--authrpc.port=${executionPort + index}`);
     node.executionLayer.flags.push(
       `--authrpc.jwtsecret=/${config.outputDir}/jwtsecret`
     );
@@ -152,13 +162,14 @@ const initiate = (config: Config) => {
       `--jwt-secrets=/${config.outputDir}/jwtsecret`
     );
     node.consensusLayer.flags.push(
-      `--execution-endpoints=http://${node.name}-execution:8551`
+      `--execution-endpoints=http://127.0.0.1:${executionPort + index}`
     );
     node.consensusLayer.flags.push(`--http-address=0.0.0.0`);
+    node.consensusLayer.flags.push(`--http-port=${consensusPort + index}`);
 
     node.validator.flags.push(`--datadir=${node.validator.dataDir}`);
     node.validator.flags.push(
-      `--beacon-nodes=http://${node.name}-consensus:5052`
+      `--beacon-nodes=http://127.0.0.1:${consensusPort + index}`
     );
 
     exec(
@@ -222,6 +233,7 @@ const initiate = (config: Config) => {
     }
 
     const consensusConfig: DockerNode = {
+      ports: [`${consensusPort + index}:${consensusPort}`],
       volumes: [`${node.volume}:/data`],
       build: {
         context: ".",
@@ -233,6 +245,12 @@ const initiate = (config: Config) => {
         "bn",
         ...node.consensusLayer.flags,
       ],
+      ulimits: {
+        nofile: {
+          soft: 65536,
+          hard: 65536,
+        },
+      },
     };
     dockerCompose.services[`${node.name}-consensus`] = consensusConfig;
     dockerCompose.volumes[node.volume] = {
@@ -240,22 +258,36 @@ const initiate = (config: Config) => {
     };
 
     const executionConfig: DockerNode = {
+      ports: [`${executionPort + index}:${executionPort}`],
       volumes: [`${node.volume}:/data`],
       build: {
         context: ".",
         dockerfile: "executionLayer.Dockerfile",
       },
-      command: ["--testnet-dir=/app", ...node.executionLayer.flags],
+      command: [...node.executionLayer.flags],
+      ulimits: {
+        nofile: {
+          soft: 65536,
+          hard: 65536,
+        },
+      },
     };
     dockerCompose.services[`${node.name}-execution`] = executionConfig;
 
     const validatorConfig: DockerNode = {
+      ports: [],
       volumes: [`${node.volume}:/data`],
       build: {
         context: ".",
         dockerfile: "validator.Dockerfile",
       },
       command: [`lighthouse`, "vc", ...node.validator.flags],
+      ulimits: {
+        nofile: {
+          soft: 65536,
+          hard: 65536,
+        },
+      },
     };
     dockerCompose.services[`${node.name}-validator`] = validatorConfig;
   }
