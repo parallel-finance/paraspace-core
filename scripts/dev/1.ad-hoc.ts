@@ -245,11 +245,7 @@ const initiate = (config: Config) => {
         context: ".",
         dockerfile: "executionLayer.Dockerfile",
       },
-      command: [
-        "lighthouse",
-        "--testnet-dir=/app",
-        ...node.executionLayer.flags,
-      ],
+      command: ["--testnet-dir=/app", ...node.executionLayer.flags],
     };
     dockerCompose.services[`${node.name}-execution`] = executionConfig;
 
