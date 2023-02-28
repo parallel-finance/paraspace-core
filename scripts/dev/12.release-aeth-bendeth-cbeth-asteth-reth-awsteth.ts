@@ -48,7 +48,7 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
     {
       symbol: "awstETH",
       address: "0xb278E539999942EAE8119eD2d72A2f8EC27aAf92",
-      aggregator: "0x3885EBF000bc929Aa3d3bcA084d973b1B04Ee4ec",
+      aggregator: "",
     },
     {
       symbol: "cbETH",
@@ -81,14 +81,6 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
         await deployExchangeRateSynchronicityPriceAdapter(
           project.address,
           project.symbol,
-          verify
-        )
-      ).address;
-    } else if (project.symbol == "awstETH") {
-      project.aggregator = (
-        await deployCLwstETHSynchronicityPriceAdapter(
-          "0xD6245F74B32389c9dA056A8C076D03d78dF0729A",
-          "0xaD03FfABC3bcae0f869BEa32544c0C0131Fd13Fe",
           verify
         )
       ).address;
