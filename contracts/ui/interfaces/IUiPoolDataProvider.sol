@@ -105,7 +105,7 @@ interface IUiPoolDataProvider {
         uint256 tokenPrice;
         bool isAuctioned;
         DataTypes.AuctionData auctionData;
-        uint256 multiplier;
+        uint256 traitMultiplier;
     }
 
     function getReservesList(IPoolAddressesProvider provider)
