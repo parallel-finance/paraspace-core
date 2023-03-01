@@ -146,32 +146,41 @@ const initiate = (config: Config) => {
     volumes: {},
   };
 
-  const executionPort = 8551;
+  const executionPort = 8545;
+  const executionAuthPort = 8551;
   const consensusPort = 5052;
   for (const [index, node] of config.nodes.entries()) {
-    node.executionLayer.flags.push(`--datadir=${node.executionLayer.dataDir}`);
+    node.executionLayer.flags.push(
+      `--datadir=/data/${node.executionLayer.dataDir}`
+    );
     node.executionLayer.flags.push(`--authrpc.addr=0.0.0.0`);
     node.executionLayer.flags.push(`--authrpc.vhosts=*`);
+    node.executionLayer.flags.push(`--http.addr=0.0.0.0`);
+    node.executionLayer.flags.push(`--http.port=${executionPort + index}`);
     node.executionLayer.flags.push(`--http.vhosts=*`);
-    node.executionLayer.flags.push(`--authrpc.port=${executionPort + index}`);
+    node.executionLayer.flags.push(
+      `--authrpc.port=${executionAuthPort + index}`
+    );
     node.executionLayer.flags.push(
       `--authrpc.jwtsecret=/${config.outputDir}/jwtsecret`
     );
     node.executionLayer.flags.push(`--networkid=${genesisJson.config.chainId}`);
 
-    node.consensusLayer.flags.push(`--datadir=${node.consensusLayer.dataDir}`);
+    node.consensusLayer.flags.push(
+      `--datadir=/data/${node.consensusLayer.dataDir}`
+    );
     node.consensusLayer.flags.push(
       `--jwt-secrets=/${config.outputDir}/jwtsecret`
     );
     node.consensusLayer.flags.push(
       `--execution-endpoints=http://${node.name}-execution:${
-        executionPort + index
+        executionAuthPort + index
       }`
     );
     node.consensusLayer.flags.push(`--http-address=0.0.0.0`);
     node.consensusLayer.flags.push(`--http-port=${consensusPort + index}`);
 
-    node.validator.flags.push(`--datadir=${node.validator.dataDir}`);
+    node.validator.flags.push(`--datadir=/data/${node.validator.dataDir}`);
     node.validator.flags.push(
       `--beacon-nodes=http://${node.name}-consensus:${consensusPort + index}`
     );
@@ -262,7 +271,10 @@ const initiate = (config: Config) => {
     };
 
     const executionConfig: DockerNode = {
-      ports: [`${executionPort + index}:${executionPort + index}`],
+      ports: [
+        `${executionAuthPort + index}:${executionAuthPort + index}`,
+        `${executionPort + index}:${executionPort + index}`,
+      ],
       volumes: [`${node.volume}:/data`],
       build: {
         context: ".",
