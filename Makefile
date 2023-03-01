@@ -420,8 +420,8 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
-.PHONY: launch-validators
-launch-validators:
+.PHONY: setup-validators
+setup-validators:
 	make SCRIPT_PATH=./scripts/dev/12.setup-validators.ts run
 
 .PHONY: shutdown-validators
