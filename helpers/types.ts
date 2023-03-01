@@ -219,6 +219,7 @@ export enum eContractid {
   StETH = "stETH",
   WStETH = "wstETH",
   MockAToken = "MockAToken",
+  MockCToken = "MockCToken",
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
@@ -533,6 +534,7 @@ export enum PTokenContractId {
   paWETH = "paWETH",
   pstETH = "pstETH",
   pwstETH = "pwstETH",
+  pcETH = "pcETH",
 }
 
 export interface IReserveParams

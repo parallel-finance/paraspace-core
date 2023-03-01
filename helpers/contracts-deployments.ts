@@ -254,6 +254,10 @@ import {
   MockAStETH__factory,
   MockRETH,
   MockRETH__factory,
+  CLCETHSynchronicityPriceAdapter__factory,
+  CLCETHSynchronicityPriceAdapter,
+  MockCToken,
+  MockCToken__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -980,6 +984,14 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       if (tokenSymbol === ERC20TokenContractId.rETH) {
         tokens[tokenSymbol] = await deployMockRETH(
           [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
+          verify
+        );
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.cETH) {
+        tokens[tokenSymbol] = await deployMockCToken(
+          [tokenSymbol, tokenSymbol, ZERO_ADDRESS],
           verify
         );
         continue;
@@ -1806,6 +1818,17 @@ export const deployMockAToken = async (
     verify
   ) as Promise<MockAToken>;
 
+export const deployMockCToken = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MockCToken> =>
+  withSaveAndVerify(
+    new MockCToken__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MockCToken>;
+
 export const deployMockAStETH = async (
   args: [string, string, string],
   verify?: boolean
@@ -2447,6 +2470,18 @@ export const deployExchangeRateSynchronicityPriceAdapter = async (
     [asset],
     verify
   ) as Promise<CLExchangeRateSynchronicityPriceAdapter>;
+
+export const deployCTokenSynchronicityPriceAdapter = async (
+  asset: tEthereumAddress,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLCETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [asset],
+    verify
+  ) as Promise<CLCETHSynchronicityPriceAdapter>;
 
 export const deployBaseCurrencySynchronicityPriceAdapter = async (
   baseCurrency: tEthereumAddress,

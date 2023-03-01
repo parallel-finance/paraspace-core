@@ -8,6 +8,7 @@ import {
 } from "./types";
 import {
   CLBaseCurrencySynchronicityPriceAdapter,
+  CLCETHSynchronicityPriceAdapter,
   CLExchangeRateSynchronicityPriceAdapter,
   CLwstETHSynchronicityPriceAdapter,
   ERC721OracleWrapper,
@@ -22,6 +23,7 @@ import {
   deployCLwstETHSynchronicityPriceAdapter,
   deployBaseCurrencySynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
+  deployCTokenSynchronicityPriceAdapter,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
@@ -66,7 +68,8 @@ export const deployAllAggregators = async (
       | CLwstETHSynchronicityPriceAdapter
       | ERC721OracleWrapper
       | CLExchangeRateSynchronicityPriceAdapter
-      | CLBaseCurrencySynchronicityPriceAdapter;
+      | CLBaseCurrencySynchronicityPriceAdapter
+      | CLCETHSynchronicityPriceAdapter;
   } = {};
   const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
@@ -91,6 +94,14 @@ export const deployAllAggregators = async (
           tokenSymbol,
           verify
         );
+      continue;
+    }
+    if (tokenSymbol === ERC20TokenContractId.cETH) {
+      aggregators[tokenSymbol] = await deployCTokenSynchronicityPriceAdapter(
+        tokens[tokenSymbol].address,
+        tokenSymbol,
+        verify
+      );
       continue;
     }
     if (tokenSymbol === ERC20TokenContractId.wstETH) {

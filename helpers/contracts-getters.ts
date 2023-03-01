@@ -83,6 +83,7 @@ import {
   WstETHMocked__factory,
   BAYCSewerPass__factory,
   HelperContract__factory,
+  MockCToken__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -886,6 +887,17 @@ export const getMockAToken = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.MockAToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockCToken = async (address?: tEthereumAddress) =>
+  await MockCToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockCToken}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

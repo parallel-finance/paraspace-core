@@ -10,24 +10,29 @@ import {SafeCast} from "../dependencies/openzeppelin/contracts/SafeCast.sol";
  * @notice Price adapter to calculate price using exchange rate
  */
 contract CLExchangeRateSynchronicityPriceAdapter is
-    ICLSynchronicityPriceAdapter
+    ICLSynchronicityPriceAdapter,
+    IExchangeRate
 {
     using SafeCast for uint256;
 
     /**
      * @notice asset which provides exchange rate
      */
-    IExchangeRate public immutable ASSET;
+    address public immutable ASSET;
 
     /**
      * @param asset the address of ASSET
      */
     constructor(address asset) {
-        ASSET = IExchangeRate(asset);
+        ASSET = asset;
+    }
+
+    function getExchangeRate() public view virtual returns (uint256) {
+        return IExchangeRate(ASSET).getExchangeRate();
     }
 
     /// @inheritdoc ICLSynchronicityPriceAdapter
     function latestAnswer() public view virtual override returns (int256) {
-        return ASSET.getExchangeRate().toInt256();
+        return getExchangeRate().toInt256();
     }
 }

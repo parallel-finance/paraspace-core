@@ -3,16 +3,17 @@ import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
 import {BigNumber} from "ethers";
 import {WAD} from "../../helpers/constants";
-import {getParaSpaceOracle} from "../../helpers/contracts-getters";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
   .addPositionalParam("blockHash", "block hash", undefined, undefined, true)
   .setAction(async ({market, blockHash}, DRE) => {
     await DRE.run("set-DRE");
-    const {getPoolAddressesProvider, getUiPoolDataProvider} = await import(
-      "../../helpers/contracts-getters"
-    );
+    const {
+      getPoolAddressesProvider,
+      getUiPoolDataProvider,
+      getParaSpaceOracle,
+    } = await import("../../helpers/contracts-getters");
     const {getProxyImplementation} = await import(
       "../../helpers/contracts-helpers"
     );

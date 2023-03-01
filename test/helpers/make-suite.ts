@@ -51,6 +51,7 @@ import {
   getBlurAdapter,
   getNTokenBAKC,
   getWstETH,
+  getMockCToken,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -70,6 +71,7 @@ import {
   ExecutionDelegate,
   IPool,
   LooksRareAdapter,
+  MockCToken,
   NFTFloorOracle,
   NTokenBAKC,
   NTokenBAYC,
@@ -150,6 +152,8 @@ export interface TestEnv {
   pWETH: PToken;
   aWETH: MockAToken;
   paWETH: PTokenAToken;
+  cETH: MockCToken;
+  pcETH: PToken;
   dai: MintableERC20;
   pDai: PToken;
   variableDebtDai: VariableDebtToken;
@@ -226,6 +230,8 @@ export async function initializeMakeSuite() {
     pWETH: {} as PToken,
     aWETH: {} as MockAToken,
     paWETH: {} as PTokenAToken,
+    cETH: {} as MockCToken,
+    pcETH: {} as PToken,
     dai: {} as MintableERC20,
     pDai: {} as PToken,
     variableDebtDai: {} as VariableDebtToken,
@@ -347,6 +353,10 @@ export async function initializeMakeSuite() {
     (xToken) => xToken.symbol === PTokenContractId.pUSDC
   )?.tokenAddress;
 
+  const pcEthAddress = allTokens.find(
+    (xToken) => xToken.symbol === PTokenContractId.pcETH
+  )?.tokenAddress;
+
   const pWEthAddress = allTokens.find(
     (xToken) => xToken.symbol === PTokenContractId.pWETH
   )?.tokenAddress;
@@ -407,6 +417,9 @@ export async function initializeMakeSuite() {
   )?.tokenAddress;
   const wethAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.WETH
+  )?.tokenAddress;
+  const cETHAddress = reservesTokens.find(
+    (token) => token.symbol === ERC20TokenContractId.cETH
   )?.tokenAddress;
 
   const {variableDebtTokenAddress: variableDebtWethAddress} =
@@ -480,6 +493,7 @@ export async function initializeMakeSuite() {
   testEnv.pWETH = await getPToken(pWEthAddress);
   testEnv.paWETH = await getPTokenAToken(paWEthAddress);
   testEnv.pstETH = await getPTokenStETH(pstEthAddress);
+  testEnv.pcETH = await getPToken(pcEthAddress);
   testEnv.variableDebtStETH = await getVariableDebtToken(
     variableDebtStETHAddress
   );
@@ -497,6 +511,7 @@ export async function initializeMakeSuite() {
   testEnv.dai = await getMintableERC20(daiAddress);
   testEnv.usdc = await getMintableERC20(usdcAddress);
   testEnv.usdt = await getMintableERC20(usdtAddress);
+  testEnv.cETH = await getMockCToken(cETHAddress);
 
   testEnv.weth = await getWETH(wethAddress);
 
