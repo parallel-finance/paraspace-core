@@ -429,6 +429,7 @@ shutdown-validators:
 	docker-compose \
 		-f app/docker-compose.yml \
 		down \
+		--volumes \
 		--remove-orphans > /dev/null 2>&1 || true
 	sudo rm -fr app || true
 	docker volume prune -f

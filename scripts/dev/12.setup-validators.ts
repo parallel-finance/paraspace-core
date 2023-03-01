@@ -334,6 +334,23 @@ const info = (config: Config) => {
   }
 };
 
+const depositData = (config: Config) => {
+  for (const account of config.wallet.accounts) {
+    exec(`ethdo validator depositdata \
+         --validatoraccount ${account.name} \
+         --withdrawaladdress 0x018281853eCC543Aa251732e8FDaa7323247eBeB \
+         --depositvalue 32Ether \
+         --launchpad \
+         --wallet-passphrase="${config.wallet.passphrase}" \
+         --passphrase="${account.passphrase}" \
+         --base-dir="${config.outputDir}/${config.wallet.baseDir}" \
+         > ${config.outputDir}/${account.name.replace(
+      /\//g,
+      "-"
+    )}-depositdata.json`);
+  }
+};
+
 const setupValidators = async () => {
   console.time("setup-validators");
   const configStr = fs.readFileSync("config.yml", "utf8");
@@ -344,6 +361,7 @@ const setupValidators = async () => {
 
   initiate(config);
   info(config);
+  depositData(config);
   console.timeEnd("setup-validators");
 };
 
