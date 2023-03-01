@@ -85,6 +85,7 @@ export type ParaSpaceLibraryAddresses =
 export enum eEthereumNetwork {
   kovan = "kovan",
   ropsten = "ropsten",
+  zhejiang = "zhejiang",
   goerli = "goerli",
   mainnet = "mainnet",
   hardhat = "hardhat",
@@ -571,6 +572,7 @@ export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.kovan]: T;
   [eEthereumNetwork.ropsten]: T;
+  [eEthereumNetwork.zhejiang]: T;
   [eEthereumNetwork.goerli]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;

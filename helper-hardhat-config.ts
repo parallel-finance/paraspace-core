@@ -44,6 +44,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     RPC_URL || ALCHEMY_KEY
       ? `https://eth-ropsten.alchemyapi.io/v2/${ALCHEMY_KEY}`
       : `https://ropsten.infura.io/v3/${INFURA_KEY}`,
+  [eEthereumNetwork.zhejiang]: "https://rpc.zhejiang.ethpandaops.io",
   [eEthereumNetwork.goerli]:
     RPC_URL || ALCHEMY_KEY
       ? `https://eth-goerli.alchemyapi.io/v2/${ALCHEMY_KEY}`
@@ -65,6 +66,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.mainnet]: MAINNET_CHAINID,
   [eEthereumNetwork.kovan]: undefined,
   [eEthereumNetwork.ropsten]: undefined,
+  [eEthereumNetwork.zhejiang]: undefined,
   [eEthereumNetwork.goerli]: GOERLI_CHAINID,
   [eEthereumNetwork.hardhat]: FORK ? FORK_CHAINID : HARDHAT_CHAINID,
   [eEthereumNetwork.anvil]: HARDHAT_CHAINID,
@@ -78,6 +80,7 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.mainnet]: undefined,
   [eEthereumNetwork.kovan]: undefined,
   [eEthereumNetwork.ropsten]: undefined,
+  [eEthereumNetwork.zhejiang]: undefined,
   [eEthereumNetwork.goerli]: undefined,
   [eEthereumNetwork.hardhat]: undefined,
   [eEthereumNetwork.anvil]: undefined,

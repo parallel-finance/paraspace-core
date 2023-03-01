@@ -420,6 +420,19 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
+.PHONY: setup-validators
+setup-validators:
+	make SCRIPT_PATH=./scripts/dev/12.setup-validators.ts run
+
+.PHONY: shutdown-validators
+shutdown-validators:
+	docker-compose \
+		-f app/docker-compose.yml \
+		down \
+		--remove-orphans > /dev/null 2>&1 || true
+	sudo rm -fr app || true
+	docker volume prune -f
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
