@@ -151,6 +151,8 @@ const initiate = (config: Config) => {
   for (const [index, node] of config.nodes.entries()) {
     node.executionLayer.flags.push(`--datadir=${node.executionLayer.dataDir}`);
     node.executionLayer.flags.push(`--authrpc.addr=0.0.0.0`);
+    node.executionLayer.flags.push(`--authrpc.vhosts=*`);
+    node.executionLayer.flags.push(`--http.vhosts=*`);
     node.executionLayer.flags.push(`--authrpc.port=${executionPort + index}`);
     node.executionLayer.flags.push(
       `--authrpc.jwtsecret=/${config.outputDir}/jwtsecret`
