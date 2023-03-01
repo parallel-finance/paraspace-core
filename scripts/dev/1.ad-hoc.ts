@@ -161,17 +161,13 @@ const initiate = (config: Config) => {
     node.executionLayer.flags.push(
       `--authrpc.port=${executionAuthPort + index}`
     );
-    node.executionLayer.flags.push(
-      `--authrpc.jwtsecret=/${config.outputDir}/jwtsecret`
-    );
+    node.executionLayer.flags.push(`--authrpc.jwtsecret=/app/jwtsecret`);
     node.executionLayer.flags.push(`--networkid=${genesisJson.config.chainId}`);
 
     node.consensusLayer.flags.push(
       `--datadir=/data/${node.consensusLayer.dataDir}`
     );
-    node.consensusLayer.flags.push(
-      `--jwt-secrets=/${config.outputDir}/jwtsecret`
-    );
+    node.consensusLayer.flags.push(`--jwt-secrets=/app/jwtsecret`);
     node.consensusLayer.flags.push(
       `--execution-endpoints=http://${node.name}-execution:${
         executionAuthPort + index
@@ -297,7 +293,12 @@ const initiate = (config: Config) => {
         context: ".",
         dockerfile: "validator.Dockerfile",
       },
-      command: [`lighthouse`, "vc", ...node.validator.flags],
+      command: [
+        `lighthouse`,
+        `--testnet-dir=/app`,
+        "vc",
+        ...node.validator.flags,
+      ],
       ulimits: {
         nofile: {
           soft: 65536,
