@@ -420,10 +420,6 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
-.PHONY: release-aeth-bendeth-cbeth-asteth-reth-awsteth
-release-aeth-bendeth-cbeth-asteth-reth-awsteth:
-	make SCRIPT_PATH=./scripts/dev/12.release-aeth-bendeth-cbeth-asteth-reth-awsteth.ts run
-
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
