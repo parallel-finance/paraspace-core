@@ -17,10 +17,10 @@ contract CLCETHSynchronicityPriceAdapter is
 {
     using SafeCast for uint256;
 
-    uint256 constant EXP_SCALE = 1e18;
+    uint256 constant SCALE = 1e18;
     uint256 constant CETH_UNIT = 1e8;
     uint256 constant ETH_UNIT = 1e18;
-    uint256 constant BASE_CURRENCY_UNIT = 1e18;
+    uint256 constant ETH_PRICE = 1e18;
 
     /**
      * @param asset the address of ASSET
@@ -36,9 +36,8 @@ contract CLCETHSynchronicityPriceAdapter is
     {
         uint256 exchangeRate = ICToken(ASSET).exchangeRateStored();
 
-        // cETH price = baseCurrencyUnit * exchangeRate / (underlyingUnit * expScale / cTokenUnit)
-        return
-            (BASE_CURRENCY_UNIT * (exchangeRate * CETH_UNIT)) /
-            (ETH_UNIT * EXP_SCALE);
+        // cETH price / CETH_UNIT = ETH price / ETH_UNIT * (exchangeRate / SCALE)
+        // cETH price = ETH price * exchangeRate * CETH_UNIT / (ETH_UNIT * SCALE)
+        return (ETH_PRICE * (exchangeRate * CETH_UNIT)) / (ETH_UNIT * SCALE);
     }
 }
