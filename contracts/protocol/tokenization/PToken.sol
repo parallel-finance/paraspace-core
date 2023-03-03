@@ -40,6 +40,7 @@ contract PToken is
 
     address internal _treasury;
     address internal _underlyingAsset;
+    uint256[50] private __gap;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
