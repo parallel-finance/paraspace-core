@@ -83,6 +83,9 @@ import {
   WstETHMocked__factory,
   BAYCSewerPass__factory,
   HelperContract__factory,
+  StableDebtToken__factory,
+  MockStableDebtToken__factory,
+  LoanVault__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1172,6 +1175,39 @@ export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.SEWER}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getStableDebtToken = async (address?: tEthereumAddress) =>
+  await StableDebtToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.StableDebtToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockStableDebtToken = async (address?: tEthereumAddress) =>
+  await MockStableDebtToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockStableDebtToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getLoanVault = async (address?: tEthereumAddress) =>
+  await LoanVault__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.LoanVault}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );

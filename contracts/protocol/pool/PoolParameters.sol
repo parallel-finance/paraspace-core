@@ -21,7 +21,6 @@ import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
@@ -112,6 +111,7 @@ contract PoolParameters is
     function initReserve(
         address asset,
         address xTokenAddress,
+        address stableDebtAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress,
         address auctionStrategyAddress
@@ -125,6 +125,7 @@ contract PoolParameters is
                 DataTypes.InitReserveParams({
                     asset: asset,
                     xTokenAddress: xTokenAddress,
+                    stableDebtAddress: stableDebtAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
                     auctionStrategyAddress: auctionStrategyAddress,

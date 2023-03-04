@@ -77,6 +77,7 @@ library ValidationLogic {
             bool isActive,
             bool isFrozen,
             ,
+            ,
             bool isPaused,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
@@ -174,6 +175,7 @@ library ValidationLogic {
             bool isActive,
             ,
             ,
+            ,
             bool isPaused,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
@@ -194,6 +196,7 @@ library ValidationLogic {
     ) internal view {
         (
             bool isActive,
+            ,
             ,
             ,
             bool isPaused,
@@ -240,8 +243,68 @@ library ValidationLogic {
         bool isFrozen;
         bool isPaused;
         bool borrowingEnabled;
+        bool stableRateBorrowingEnabled;
         bool siloedBorrowingEnabled;
         DataTypes.AssetType assetType;
+    }
+
+    function validateBorrowAsset(
+        DataTypes.ReserveCache memory reserveCache,
+        uint256 amount,
+        ValidateBorrowLocalVars memory vars
+    ) internal pure {
+        require(amount != 0, Errors.INVALID_AMOUNT);
+
+        (
+            vars.isActive,
+            vars.isFrozen,
+            vars.borrowingEnabled,
+            vars.stableRateBorrowingEnabled,
+            vars.isPaused,
+            vars.assetType
+        ) = reserveCache.reserveConfiguration.getFlags();
+
+        require(
+            vars.assetType == DataTypes.AssetType.ERC20,
+            Errors.INVALID_ASSET_TYPE
+        );
+        require(vars.isActive, Errors.RESERVE_INACTIVE);
+        require(!vars.isPaused, Errors.RESERVE_PAUSED);
+        require(!vars.isFrozen, Errors.RESERVE_FROZEN);
+        require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
+
+        vars.reserveDecimals = reserveCache.reserveConfiguration.getDecimals();
+        vars.borrowCap = reserveCache.reserveConfiguration.getBorrowCap();
+        unchecked {
+            vars.assetUnit = 10**vars.reserveDecimals;
+        }
+
+        if (vars.borrowCap != 0) {
+            vars.totalSupplyVariableDebt = reserveCache
+                .currScaledVariableDebt
+                .rayMul(reserveCache.nextVariableBorrowIndex);
+
+            vars.totalDebt = vars.totalSupplyVariableDebt + amount;
+
+            unchecked {
+                require(
+                    vars.totalDebt <= vars.borrowCap * vars.assetUnit,
+                    Errors.BORROW_CAP_EXCEEDED
+                );
+            }
+        }
+    }
+
+    function validateInstantWithdrawBorrow(
+        DataTypes.ReserveCache memory reserveCache,
+        uint256 amount
+    ) internal pure {
+        ValidateBorrowLocalVars memory vars;
+        validateBorrowAsset(reserveCache, amount, vars);
+        require(
+            vars.stableRateBorrowingEnabled,
+            Errors.STABLE_BORROWING_NOT_ENABLED
+        );
     }
 
     /**
@@ -255,25 +318,8 @@ library ValidationLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.ValidateBorrowParams memory params
     ) internal view {
-        require(params.amount != 0, Errors.INVALID_AMOUNT);
         ValidateBorrowLocalVars memory vars;
-
-        (
-            vars.isActive,
-            vars.isFrozen,
-            vars.borrowingEnabled,
-            vars.isPaused,
-            vars.assetType
-        ) = params.reserveCache.reserveConfiguration.getFlags();
-
-        require(
-            vars.assetType == DataTypes.AssetType.ERC20,
-            Errors.INVALID_ASSET_TYPE
-        );
-        require(vars.isActive, Errors.RESERVE_INACTIVE);
-        require(!vars.isPaused, Errors.RESERVE_PAUSED);
-        require(!vars.isFrozen, Errors.RESERVE_FROZEN);
-        require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
+        validateBorrowAsset(params.reserveCache, params.amount, vars);
 
         require(
             params.priceOracleSentinel == address(0) ||
@@ -281,34 +327,6 @@ library ValidationLogic {
                     .isBorrowAllowed(),
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
-
-        vars.reserveDecimals = params
-            .reserveCache
-            .reserveConfiguration
-            .getDecimals();
-        vars.borrowCap = params
-            .reserveCache
-            .reserveConfiguration
-            .getBorrowCap();
-        unchecked {
-            vars.assetUnit = 10**vars.reserveDecimals;
-        }
-
-        if (vars.borrowCap != 0) {
-            vars.totalSupplyVariableDebt = params
-                .reserveCache
-                .currScaledVariableDebt
-                .rayMul(params.reserveCache.nextVariableBorrowIndex);
-
-            vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
-
-            unchecked {
-                require(
-                    vars.totalDebt <= vars.borrowCap * vars.assetUnit,
-                    Errors.BORROW_CAP_EXCEEDED
-                );
-            }
-        }
 
         (
             vars.userCollateralInBaseCurrency,
@@ -384,6 +402,7 @@ library ValidationLogic {
             bool isActive,
             ,
             ,
+            ,
             bool isPaused,
             DataTypes.AssetType assetType
         ) = reserveCache.reserveConfiguration.getFlags();
@@ -427,6 +446,7 @@ library ValidationLogic {
             bool isActive,
             ,
             ,
+            ,
             bool isPaused,
             DataTypes.AssetType reserveAssetType
         ) = reserveCache.reserveConfiguration.getFlags();
@@ -447,6 +467,7 @@ library ValidationLogic {
     ) internal view {
         (
             bool isActive,
+            ,
             ,
             ,
             bool isPaused,
@@ -508,6 +529,7 @@ library ValidationLogic {
             vars.collateralReserveActive,
             ,
             ,
+            ,
             vars.collateralReservePaused,
             vars.collateralReserveAssetType
         ) = collateralReserve.configuration.getFlags();
@@ -537,6 +559,7 @@ library ValidationLogic {
 
         (
             vars.principalReserveActive,
+            ,
             ,
             ,
             vars.principalReservePaused,
@@ -604,6 +627,7 @@ library ValidationLogic {
             vars.collateralReserveActive,
             ,
             ,
+            ,
             vars.collateralReservePaused,
             vars.collateralReserveAssetType
         ) = collateralReserve.configuration.getFlags();
@@ -627,6 +651,7 @@ library ValidationLogic {
 
         (
             vars.principalReserveActive,
+            ,
             ,
             ,
             vars.principalReservePaused,
@@ -755,6 +780,7 @@ library ValidationLogic {
             vars.collateralReserveActive,
             ,
             ,
+            ,
             vars.collateralReservePaused,
             vars.collateralReserveAssetType
         ) = collateralConfiguration.getFlags();
@@ -812,6 +838,7 @@ library ValidationLogic {
 
         (
             vars.collateralReserveActive,
+            ,
             ,
             ,
             vars.collateralReservePaused,
@@ -1024,7 +1051,7 @@ library ValidationLogic {
                 DataTypes.SApeAddress
             ];
 
-            (bool isActive, , , bool isPaused, ) = sApeReserve
+            (bool isActive, , , , bool isPaused, ) = sApeReserve
                 .configuration
                 .getFlags();
 
@@ -1051,6 +1078,7 @@ library ValidationLogic {
     {
         (
             bool isActive,
+            ,
             ,
             ,
             bool isPaused,
@@ -1182,6 +1210,7 @@ library ValidationLogic {
             vars.token0IsActive,
             vars.token0IsFrozen,
             ,
+            ,
             vars.token0IsPaused,
 
         ) = reservesData[token0].configuration.getFlags();
@@ -1189,6 +1218,7 @@ library ValidationLogic {
         (
             vars.token1IsActive,
             vars.token1IsFrozen,
+            ,
             ,
             vars.token1IsPaused,
 

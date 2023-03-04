@@ -56,6 +56,7 @@ describe("Pool: Initialization", () => {
         .initReserve(
           dai.address,
           config.xTokenAddress,
+          config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
           ZERO_ADDRESS
@@ -82,6 +83,7 @@ describe("Pool: Initialization", () => {
         .connect(configSigner)
         .initReserve(
           users[0].address,
+          ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,

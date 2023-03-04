@@ -11,6 +11,10 @@ import {NTokenMAYCLibraryAddresses} from "../types/factories/protocol/tokenizati
 import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMoonBirds__factory";
 import {NTokenUniswapV3LibraryAddresses} from "../types/factories/protocol/tokenization/NTokenUniswapV3__factory";
 import {NTokenLibraryAddresses} from "../types/factories/protocol/tokenization/NToken__factory";
+import {
+  deployLoanVaultImpl,
+  deployMockETHNFTOracle,
+} from "./contracts-deployments";
 
 export enum AssetType {
   ERC20 = 0,
@@ -98,6 +102,8 @@ export enum eEthereumNetwork {
 
 export enum eContractid {
   PoolAddressesProvider = "PoolAddressesProvider",
+  MockStableDebtToken = "MockStableDebtToken",
+  StableDebtToken = "StableDebtToken",
   MintableERC20 = "MintableERC20",
   MintableERC721 = "MintableERC721",
   MintableDelegationERC20 = "MintableDelegationERC20",
@@ -221,6 +227,7 @@ export enum eContractid {
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
+  PoolETHWithdrawImpl = "PoolETHWithdrawImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   ApeCoinStaking = "ApeCoinStaking",
@@ -248,6 +255,10 @@ export enum eContractid {
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
+  MockETHNFTOracle = "MockETHNFTOracle",
+  MockedInstantWithdrawNFT = "MockedInstantWithdrawNFT",
+  LoanVault = "LoanVault",
+  LoanVaultImpl = "LoanVaultImpl",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
 }
 
@@ -534,6 +545,11 @@ export interface IInterestRateStrategyParams {
   baseVariableBorrowRate: string;
   variableRateSlope1: string;
   variableRateSlope2: string;
+  stableRateSlope1: string;
+  stableRateSlope2: string;
+  baseStableRateOffset: string;
+  stableRateExcessOffset: string;
+  optimalStableToTotalDebtRatio: string;
 }
 
 export interface IAuctionStrategyParams {
@@ -550,6 +566,7 @@ export interface IAuctionStrategyParams {
 
 export interface IReserveBorrowParams {
   borrowingEnabled: boolean;
+  stableBorrowRateEnabled: boolean;
   reserveDecimals: string;
   borrowCap: string;
 }
@@ -665,6 +682,7 @@ export interface ICommonConfiguration {
   MarketId: string;
   ParaSpaceTeam: tEthereumAddress;
   PTokenNamePrefix: string;
+  StableDebtTokenNamePrefix: string;
   VariableDebtTokenNamePrefix: string;
   SymbolPrefix: string;
   ProviderId: number;

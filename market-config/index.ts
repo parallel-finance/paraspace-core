@@ -48,6 +48,7 @@ export const CommonConfig: Pick<
   | "MarketId"
   | "PTokenNamePrefix"
   | "VariableDebtTokenNamePrefix"
+  | "StableDebtTokenNamePrefix"
   | "SymbolPrefix"
   | "ProviderId"
   | "AuctionRecoveryHealthFactor"
@@ -65,6 +66,7 @@ export const CommonConfig: Pick<
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
   PTokenNamePrefix: "ParaSpace Derivative Token",
+  StableDebtTokenNamePrefix: "ParaSpace Stable Debt Token",
   VariableDebtTokenNamePrefix: "ParaSpace Variable Debt Token",
   SymbolPrefix: "",
   ProviderId: 1,

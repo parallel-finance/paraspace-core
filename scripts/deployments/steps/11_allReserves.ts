@@ -31,8 +31,12 @@ export const step_11 = async (verify = false) => {
 
     const config = getParaSpaceConfig();
 
-    const {PTokenNamePrefix, VariableDebtTokenNamePrefix, SymbolPrefix} =
-      config;
+    const {
+      PTokenNamePrefix,
+      StableDebtTokenNamePrefix,
+      VariableDebtTokenNamePrefix,
+      SymbolPrefix,
+    } = config;
     const treasuryAddress = config.Treasury;
 
     // Add an IncentivesController
@@ -69,12 +73,14 @@ export const step_11 = async (verify = false) => {
       reservesParams,
       allTokenAddresses,
       PTokenNamePrefix,
+      StableDebtTokenNamePrefix,
       VariableDebtTokenNamePrefix,
       SymbolPrefix,
       paraSpaceAdminAddress,
       treasuryAddress,
       incentivesController,
       verify,
+      undefined,
       undefined,
       undefined,
       undefined,

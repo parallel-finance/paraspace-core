@@ -1,16 +1,30 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
-import {deployPoolComponents} from "../../../helpers/contracts-deployments";
+import {
+  deployLoanVault,
+  deployMockETHNFTOracle,
+  deployPoolComponents,
+} from "../../../helpers/contracts-deployments";
 import {
   getPoolProxy,
   getPoolAddressesProvider,
   getAutoCompoundApe,
   getAllTokens,
   getUniswapV3SwapRouter,
+  getFirstSigner,
 } from "../../../helpers/contracts-getters";
-import {registerContractInDb} from "../../../helpers/contracts-helpers";
+import {
+  getContractAddressInDb,
+  getFunctionSignatures,
+  registerContractInDb,
+  withSaveAndVerify,
+} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
+import {
+  PoolInstantWithdraw,
+  PoolInstantWithdraw__factory,
+} from "../../../types";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
@@ -26,6 +40,7 @@ export const step_06 = async (verify = false) => {
       poolParametersSelectors,
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
+      poolInstantWithdrawSelectors,
       poolParaProxyInterfacesSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
 
@@ -102,6 +117,38 @@ export const step_06 = async (verify = false) => {
             implAddress: poolParaProxyInterfaces.address,
             action: 0,
             functionSelectors: poolParaProxyInterfacesSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
+
+    const loanVaultAddress =
+      (await getContractAddressInDb(eContractid.LoanVault)) ||
+      (await deployLoanVault(poolAddress, verify)).address;
+    const nFTOracleAddress =
+      (await getContractAddressInDb(eContractid.MockETHNFTOracle)) ||
+      (await deployMockETHNFTOracle(verify)).address;
+    // create PoolETHWithdraw here instead of in deployPoolComponents since LoanVault have a dependency for Pool address
+    const poolInstantWithdraw = (await withSaveAndVerify(
+      new PoolInstantWithdraw__factory(await getFirstSigner()),
+      eContractid.PoolETHWithdrawImpl,
+      [addressesProvider.address, loanVaultAddress, nFTOracleAddress],
+      verify,
+      false,
+      undefined,
+      getFunctionSignatures(PoolInstantWithdraw__factory.abi)
+    )) as PoolInstantWithdraw;
+
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        [
+          {
+            implAddress: poolInstantWithdraw.address,
+            action: 0,
+            functionSelectors: poolInstantWithdrawSelectors,
           },
         ],
         ZERO_ADDRESS,

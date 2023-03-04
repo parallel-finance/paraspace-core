@@ -8,6 +8,7 @@ import {UserConfiguration} from "../protocol/libraries/configuration/UserConfigu
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
+import {IStableDebtToken} from "../interfaces/IStableDebtToken.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
 import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IScaledBalanceToken} from "../interfaces/IScaledBalanceToken.sol";
@@ -132,6 +133,7 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             reserveData.isActive,
             reserveData.isFrozen,
             reserveData.borrowingEnabled,
+            reserveData.stableBorrowRateEnabled,
             reserveData.isPaused,
 
         ) = configuration.getFlags();
@@ -179,9 +181,12 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         returns (
             uint256 accruedToTreasuryScaled,
             uint256 totalPToken,
+            uint256 totalStableDebt,
             uint256 totalVariableDebt,
             uint256 liquidityRate,
             uint256 variableBorrowRate,
+            uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate,
             uint256 liquidityIndex,
             uint256 variableBorrowIndex,
             uint40 lastUpdateTimestamp
@@ -194,9 +199,13 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         return (
             reserve.accruedToTreasury,
             IERC20Detailed(reserve.xTokenAddress).totalSupply(),
+            IERC20Detailed(reserve.stableDebtTokenAddress).totalSupply(),
             IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply(),
             reserve.currentLiquidityRate,
             reserve.currentVariableBorrowRate,
+            reserve.currentStableBorrowRate,
+            IStableDebtToken(reserve.stableDebtTokenAddress)
+                .getAverageStableRate(),
             reserve.liquidityIndex,
             reserve.variableBorrowIndex,
             reserve.lastUpdateTimestamp
@@ -230,7 +239,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
-        return IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply();
+        return
+            IERC20Detailed(reserve.stableDebtTokenAddress).totalSupply() +
+            IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply();
     }
 
     /// @inheritdoc IProtocolDataProvider
@@ -244,6 +255,10 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,
+            uint256 currentStableDebt,
+            uint256 principalStableDebt,
+            uint256 stableBorrowRate,
+            uint40 stableRateLastUpdated,
             bool usageAsCollateralEnabled
         )
     {
@@ -264,36 +279,52 @@ contract ProtocolDataProvider is IProtocolDataProvider {
             );
             scaledXTokenBalance = IPToken(reserve.xTokenAddress)
                 .scaledBalanceOf(user);
+            stableBorrowRate = IStableDebtToken(reserve.stableDebtTokenAddress)
+                .getUserStableRate(user);
+            stableRateLastUpdated = IStableDebtToken(
+                reserve.stableDebtTokenAddress
+            ).getUserLastUpdated(user);
+            currentVariableDebt = IERC20Detailed(
+                reserve.variableDebtTokenAddress
+            ).balanceOf(user);
+            currentStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress)
+                .balanceOf(user);
+            principalStableDebt = IStableDebtToken(
+                reserve.stableDebtTokenAddress
+            ).principalBalanceOf(user);
+            scaledVariableDebt = IVariableDebtToken(
+                reserve.variableDebtTokenAddress
+            ).scaledBalanceOf(user);
         } else {
             currentXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
                 user
             );
-            scaledXTokenBalance = INToken(reserve.xTokenAddress).balanceOf(
-                user
-            );
+            scaledXTokenBalance = currentXTokenBalance;
             collateralizedBalance = ICollateralizableERC721(
                 reserve.xTokenAddress
             ).collateralizedBalanceOf(user);
         }
-
-        currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress)
-            .balanceOf(user);
-        scaledVariableDebt = IVariableDebtToken(
-            reserve.variableDebtTokenAddress
-        ).scaledBalanceOf(user);
     }
 
     /// @inheritdoc IProtocolDataProvider
     function getReserveTokensAddresses(address asset)
         external
         view
-        returns (address xTokenAddress, address variableDebtTokenAddress)
+        returns (
+            address xTokenAddress,
+            address stableDebtTokenAddress,
+            address variableDebtTokenAddress
+        )
     {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
 
-        return (reserve.xTokenAddress, reserve.variableDebtTokenAddress);
+        return (
+            reserve.xTokenAddress,
+            reserve.stableDebtTokenAddress,
+            reserve.variableDebtTokenAddress
+        );
     }
 
     /// @inheritdoc IProtocolDataProvider

@@ -243,6 +243,16 @@ import {
   HelperContract__factory,
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
+  StableDebtToken,
+  StableDebtToken__factory,
+  MockStableDebtToken__factory,
+  PoolInstantWithdraw__factory,
+  LoanVault__factory,
+  LoanVault,
+  MockedETHNFTOracle,
+  MockedETHNFTOracle__factory,
+  MockedInstantWithdrawNFT__factory,
+  MockedInstantWithdrawNFT,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -463,6 +473,10 @@ export const getPoolSignatures = () => {
     PoolApeStaking__factory.abi
   );
 
+  const poolInstantWithdrawSelectors = getFunctionSignatures(
+    PoolInstantWithdraw__factory.abi
+  );
+
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
   const poolParaProxyInterfacesSelectors = getFunctionSignatures(
@@ -475,6 +489,7 @@ export const getPoolSignatures = () => {
     ...poolParametersSelectors,
     ...poolMarketplaceSelectors,
     ...poolApeStakingSelectors,
+    ...poolInstantWithdrawSelectors,
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
   ];
@@ -495,6 +510,7 @@ export const getPoolSignatures = () => {
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolInstantWithdrawSelectors,
     poolParaProxyInterfacesSelectors,
   };
 };
@@ -573,6 +589,7 @@ export const deployPoolComponents = async (
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolInstantWithdrawSelectors,
     poolParaProxyInterfacesSelectors,
   } = getPoolSignatures();
 
@@ -637,6 +654,9 @@ export const deployPoolComponents = async (
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
+    poolInstantWithdrawSelectors: poolInstantWithdrawSelectors.map(
+      (s) => s.signature
+    ),
     poolParaProxyInterfacesSelectors: poolParaProxyInterfacesSelectors.map(
       (s) => s.signature
     ),
@@ -758,7 +778,18 @@ export const deployReserveAuctionStrategy = async (
 
 export const deployReserveInterestRateStrategy = async (
   strategyName: string,
-  args: [tEthereumAddress, string, string, string, string],
+  args: [
+    tEthereumAddress,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string
+  ],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -2630,3 +2661,103 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployGenericStableDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new StableDebtToken__factory(await getFirstSigner()),
+    eContractid.StableDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<StableDebtToken>;
+
+export const deployMockStableDebtToken = async (
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    string,
+    string,
+    string
+  ],
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    new MockStableDebtToken__factory(await getFirstSigner()),
+    eContractid.MockStableDebtToken,
+    [args[0]],
+    verify
+  );
+
+  await instance.initialize(
+    args[0],
+    args[1],
+    args[2],
+    "18",
+    args[3],
+    args[4],
+    args[5]
+  );
+
+  return instance;
+};
+
+export const deployLoanVaultImpl = async (
+  poolAddress: string,
+  verify?: boolean
+) => {
+  const allTokens = await getAllTokens();
+  const args = [poolAddress, allTokens.WETH.address, allTokens.aWETH.address];
+
+  return withSaveAndVerify(
+    new LoanVault__factory(await getFirstSigner()),
+    eContractid.LoanVaultImpl,
+    [...args],
+    verify
+  ) as Promise<LoanVault>;
+};
+
+export const deployLoanVault = async (
+  poolAddress: string,
+  verify?: boolean
+) => {
+  const implementation = await deployLoanVaultImpl(poolAddress, verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = implementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.LoanVault,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](implementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as LoanVault;
+};
+
+export const deployMockETHNFTOracle = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new MockedETHNFTOracle__factory(await getFirstSigner()),
+    eContractid.MockETHNFTOracle,
+    [],
+    verify
+  ) as Promise<MockedETHNFTOracle>;
+
+export const deployMockedInstantWithdrawNFT = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new MockedInstantWithdrawNFT__factory(await getFirstSigner()),
+    eContractid.MockedInstantWithdrawNFT,
+    ["MockETHNFT", "MockETHNFT", ""],
+    verify
+  ) as Promise<MockedInstantWithdrawNFT>;

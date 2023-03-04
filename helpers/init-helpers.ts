@@ -44,6 +44,7 @@ import {
   deployPTokenCApe,
   deployCApeDebtToken,
   deployNTokenBAKCImpl,
+  deployGenericStableDebtToken,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -51,6 +52,7 @@ export const initReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: {[symbol: string]: tEthereumAddress},
   xTokenNamePrefix: string,
+  stableDebtTokenNamePrefix: string,
   variableDebtTokenNamePrefix: string,
   symbolPrefix: string,
   admin: tEthereumAddress,
@@ -59,6 +61,7 @@ export const initReservesByHelper = async (
   verify: boolean,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
+  genericStableDebtTokenAddress?: tEthereumAddress,
   genericVariableDebtTokenAddress?: tEthereumAddress,
   defaultReserveInterestRateStrategyAddress?: tEthereumAddress,
   defaultReserveAuctionStrategyAddress?: tEthereumAddress,
@@ -84,6 +87,7 @@ export const initReservesByHelper = async (
   const initInputParams: {
     xTokenImpl: string;
     assetType: BigNumberish;
+    stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
     underlyingAssetDecimals: BigNumberish;
     interestRateStrategyAddress: string;
@@ -96,6 +100,8 @@ export const initReservesByHelper = async (
     xTokenSymbol: string;
     variableDebtTokenName: string;
     variableDebtTokenSymbol: string;
+    stableDebtTokenName: string;
+    stableDebtTokenSymbol: string;
     params: string;
     atomicPricing?: boolean;
   }[] = [];
@@ -117,6 +123,7 @@ export const initReservesByHelper = async (
   let nTokenUniSwapV3ImplementationAddress = "";
   let nTokenBAYCImplementationAddress = "";
   let nTokenMAYCImplementationAddress = "";
+  let stableDebtTokenImplementationAddress = genericStableDebtTokenAddress;
   let variableDebtTokenImplementationAddress = genericVariableDebtTokenAddress;
   let stETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
@@ -181,6 +188,11 @@ export const initReservesByHelper = async (
       baseVariableBorrowRate,
       variableRateSlope1,
       variableRateSlope2,
+      stableRateSlope1,
+      stableRateSlope2,
+      baseStableRateOffset,
+      stableRateExcessOffset,
+      optimalStableToTotalDebtRatio,
     } = strategy;
     const {
       maxPriceMultiplier,
@@ -210,6 +222,11 @@ export const initReservesByHelper = async (
               baseVariableBorrowRate,
               variableRateSlope1,
               variableRateSlope2,
+              stableRateSlope1,
+              stableRateSlope2,
+              baseStableRateOffset,
+              stableRateExcessOffset,
+              optimalStableToTotalDebtRatio,
             ],
             verify
           )
@@ -286,6 +303,7 @@ export const initReservesByHelper = async (
     initInputParams.push({
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       xTokenImpl: "",
+      stableDebtTokenImpl: "",
       variableDebtTokenImpl: "",
       assetType: xTokenType[reserveSymbols[i]] == "nft" ? 1 : 0,
       underlyingAssetDecimals: reserveInitDecimals[i],
@@ -300,6 +318,8 @@ export const initReservesByHelper = async (
         xTokenType[reserveSymbols[i]] === "nft"
           ? `n${symbolPrefix}${reserveSymbols[i]}`
           : `p${symbolPrefix}${reserveSymbols[i]}`,
+      stableDebtTokenName: `${stableDebtTokenNamePrefix} ${symbolPrefix}${reserveSymbols[i]}`,
+      stableDebtTokenSymbol: `sDebt${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenName: `${variableDebtTokenNamePrefix} ${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenSymbol: `vDebt${symbolPrefix}${reserveSymbols[i]}`,
       params: "0x10",
@@ -327,6 +347,7 @@ export const initReservesByHelper = async (
 
     for (let i = 0; i < inputs.length; i += 1) {
       let xTokenToUse = "";
+      let stableDebtTokenToUse = "";
       let variableDebtTokenToUse = "";
       const reserveSymbol = inputs[i].underlyingAssetName;
       console.log("IS ", reserveSymbol);
@@ -486,15 +507,24 @@ export const initReservesByHelper = async (
 
       if (!variableDebtTokenToUse) {
         if (!variableDebtTokenImplementationAddress) {
-          variableDebtTokenImplementationAddress = await await (
+          variableDebtTokenImplementationAddress = (
             await deployGenericVariableDebtToken(pool.address, verify)
           ).address;
         }
         variableDebtTokenToUse = variableDebtTokenImplementationAddress;
       }
+      if (!stableDebtTokenToUse) {
+        if (!stableDebtTokenImplementationAddress) {
+          stableDebtTokenImplementationAddress = (
+            await deployGenericStableDebtToken(pool.address, verify)
+          ).address;
+        }
+        stableDebtTokenToUse = stableDebtTokenImplementationAddress;
+      }
 
       inputs[i].xTokenImpl = xTokenToUse;
       inputs[i].variableDebtTokenImpl = variableDebtTokenToUse;
+      inputs[i].stableDebtTokenImpl = stableDebtTokenToUse;
     }
 
     console.log(
@@ -548,6 +578,7 @@ export const configureReservesByHelper = async (
     reserveFactor: BigNumberish;
     borrowCap: BigNumberish;
     supplyCap: BigNumberish;
+    stableBorrowingEnabled: boolean;
     borrowingEnabled: boolean;
   }[] = [];
 
@@ -561,6 +592,7 @@ export const configureReservesByHelper = async (
       reserveFactor,
       borrowCap,
       supplyCap,
+      stableBorrowRateEnabled,
       borrowingEnabled,
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
@@ -598,6 +630,7 @@ export const configureReservesByHelper = async (
       reserveFactor,
       borrowCap,
       supplyCap,
+      stableBorrowingEnabled: stableBorrowRateEnabled,
       borrowingEnabled: borrowingEnabled,
     });
 

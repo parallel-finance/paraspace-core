@@ -14,6 +14,7 @@ import {
   MockReserveInterestRateStrategy__factory,
   PoolCore__factory,
   PToken__factory,
+  StableDebtToken__factory,
   VariableDebtToken__factory,
 } from "../types";
 import {ProtocolErrors} from "../helpers/types";
@@ -118,6 +119,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      false,
       0,
     ]);
     expect(await configMock.getFrozen()).to.be.false;
@@ -128,11 +130,13 @@ describe("ReserveConfiguration", async () => {
       true,
       false,
       false,
+      false,
       0,
     ]);
     expect(await configMock.getFrozen()).to.be.true;
     expect(await configMock.setFrozen(false));
     expect(await configMock.getFlags()).to.be.eql([
+      false,
       false,
       false,
       false,
@@ -148,6 +152,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      false,
       0,
     ]);
     expect(await configMock.getAssetType()).to.be.eq(0);
@@ -159,11 +164,13 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      false,
       1,
     ]);
     expect(await configMock.getAssetType()).to.be.eq(1);
     expect(await configMock.setAssetType(0));
     expect(await configMock.getFlags()).to.be.eql([
+      false,
       false,
       false,
       false,
@@ -178,6 +185,7 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      false,
       0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.false;
@@ -188,6 +196,7 @@ describe("ReserveConfiguration", async () => {
       false,
       true,
       false,
+      false,
       0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.true;
@@ -197,9 +206,43 @@ describe("ReserveConfiguration", async () => {
       false,
       false,
       false,
+      false,
       0,
     ]);
     expect(await configMock.getBorrowingEnabled()).to.be.false;
+  });
+
+  it("TC-reserve-configuration-06 getStableRateBorrowingEnabled()", async () => {
+    expect(await configMock.getFlags()).to.be.eql([
+      false,
+      false,
+      false,
+      false,
+      false,
+      0,
+    ]);
+    expect(await configMock.getStableRateBorrowingEnabled()).to.be.false;
+    expect(await configMock.setStableRateBorrowingEnabled(true));
+    // borrowing is the 3rd flag
+    expect(await configMock.getFlags()).to.be.eql([
+      false,
+      false,
+      false,
+      true,
+      false,
+      0,
+    ]);
+    expect(await configMock.getStableRateBorrowingEnabled()).to.be.true;
+    expect(await configMock.setStableRateBorrowingEnabled(false));
+    expect(await configMock.getFlags()).to.be.eql([
+      false,
+      false,
+      false,
+      false,
+      false,
+      0,
+    ]);
+    expect(await configMock.getStableRateBorrowingEnabled()).to.be.false;
   });
 
   it("TC-reserve-configuration-07 getReserveFactor()", async () => {
@@ -430,6 +473,7 @@ describe("ReserveConfiguration", async () => {
       pool.connect(configSigner).initReserve(
         dai.address,
         config.xTokenAddress, // just need a non-used reserve token
+        config.stableDebtTokenAddress,
         config.variableDebtTokenAddress,
         ZERO_ADDRESS,
         ZERO_ADDRESS
@@ -466,6 +510,7 @@ describe("ReserveConfiguration", async () => {
         .initReserve(
           config.xTokenAddress,
           ZERO_ADDRESS,
+          config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
           ZERO_ADDRESS
@@ -481,6 +526,7 @@ describe("ReserveConfiguration", async () => {
         .initReserve(
           config.xTokenAddress,
           ZERO_ADDRESS,
+          config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
           ZERO_ADDRESS
@@ -670,6 +716,9 @@ describe("ReserveConfiguration", async () => {
     const xTokenImp = await new PToken__factory(await getFirstSigner()).deploy(
       pool.address
     );
+    const stableDebtTokenImp = await new StableDebtToken__factory(
+      deployer.signer
+    ).deploy(pool.address);
     const variableDebtTokenImp = await new VariableDebtToken__factory(
       deployer.signer
     ).deploy(pool.address);
@@ -688,7 +737,7 @@ describe("ReserveConfiguration", async () => {
     );
     const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
       await getFirstSigner()
-    ).deploy(addressesProvider.address, 0, 0, 0, 0);
+    ).deploy(addressesProvider.address, 0, 0, 0, 0, 0, 0);
     const mockAuctionStrategy = await deployReserveAuctionStrategy("test", [
       auctionStrategyExp.maxPriceMultiplier,
       auctionStrategyExp.minExpPriceMultiplier,
@@ -701,6 +750,7 @@ describe("ReserveConfiguration", async () => {
     // Init the reserve
     const initInputParams: {
       xTokenImpl: string;
+      stableDebtTokenImpl: string;
       variableDebtTokenImpl: string;
       underlyingAssetDecimals: BigNumberish;
       interestRateStrategyAddress: string;
@@ -720,6 +770,7 @@ describe("ReserveConfiguration", async () => {
     }[] = [
       {
         xTokenImpl: xTokenImp.address,
+        stableDebtTokenImpl: stableDebtTokenImp.address,
         variableDebtTokenImpl: variableDebtTokenImp.address,
         underlyingAssetDecimals: 18,
         interestRateStrategyAddress: mockRateStrategy.address,
@@ -760,6 +811,9 @@ const getReserveParams = async (
   const mockToken = await new MintableERC20__factory(
     await getFirstSigner()
   ).deploy("MOCK", "MOCK", "18");
+  const stableDebtTokenImplementation = await new StableDebtToken__factory(
+    await getFirstSigner()
+  ).deploy(pool.address);
   const variableDebtTokenImplementation = await new VariableDebtToken__factory(
     await getFirstSigner()
   ).deploy(pool.address);
@@ -768,12 +822,13 @@ const getReserveParams = async (
   ).deploy(pool.address);
   const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
     await getFirstSigner()
-  ).deploy(addressesProvider.address, 0, 0, 0, 0);
+  ).deploy(addressesProvider.address, 0, 0, 0, 0, 0, 0);
 
   // Init the reserve
   const initInputParams = [
     {
       xTokenImpl: xTokenImplementation.address,
+      stableDebtTokenImpl: stableDebtTokenImplementation.address,
       variableDebtTokenImpl: variableDebtTokenImplementation.address,
       assetType: 0,
       underlyingAssetDecimals: 18,
@@ -786,6 +841,8 @@ const getReserveParams = async (
       xTokenSymbol: "PMOCK",
       variableDebtTokenName: "VMOCK",
       variableDebtTokenSymbol: "VMOCK",
+      stableDebtTokenName: "SMOCK",
+      stableDebtTokenSymbol: "SMOCK",
       params: "0x10",
     },
   ];

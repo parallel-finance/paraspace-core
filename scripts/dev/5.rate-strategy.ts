@@ -13,6 +13,11 @@ const deployRateStrategy = async () => {
     baseVariableBorrowRate: utils.parseUnits("0.6", 27).toString(),
     variableRateSlope1: utils.parseUnits("0.5", 27).toString(),
     variableRateSlope2: utils.parseUnits("0.6", 27).toString(),
+    stableRateSlope1: "0",
+    stableRateSlope2: "0",
+    baseStableRateOffset: utils.parseUnits("0.02", 27).toString(),
+    stableRateExcessOffset: utils.parseUnits("0.05", 27).toString(),
+    optimalStableToTotalDebtRatio: utils.parseUnits("0.2", 27).toString(),
   };
   const newStrategy = await deployReserveInterestRateStrategy(
     strategy.name,
@@ -22,6 +27,11 @@ const deployRateStrategy = async () => {
       strategy.baseVariableBorrowRate,
       strategy.variableRateSlope1,
       strategy.variableRateSlope2,
+      strategy.stableRateSlope1,
+      strategy.stableRateSlope2,
+      strategy.baseStableRateOffset,
+      strategy.stableRateExcessOffset,
+      strategy.optimalStableToTotalDebtRatio,
     ],
     false
   );

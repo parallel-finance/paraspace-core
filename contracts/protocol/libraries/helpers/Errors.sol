@@ -125,4 +125,7 @@ library Errors {
     string public constant NOT_THE_BAKC_OWNER = "130"; //user is not the bakc owner.
     string public constant CALLER_NOT_EOA = "131"; //The caller of the function is not an EOA account
     string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
+    string public constant INVALID_LOAN_STATE = "133"; // invalid term loan status
+    string public constant SETTLE_TIME_NOT_REACH = "134"; // collateral settle time not reach
+    string public constant INVALID_BORROW_ASSET = "134"; // invalid borrow asset for collateral
 }

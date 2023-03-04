@@ -23,11 +23,37 @@ interface IReserveInterestRateStrategy {
 
     /**
      * @notice Calculates the interest rates depending on the reserve's state and configurations
-     * @param params The parameters needed to calculate interest rates
      * @return liquidityRate The liquidity rate expressed in rays
+     * @return stableBorrowRate The stable borrow rate expressed in rays
      * @return variableBorrowRate The variable borrow rate expressed in rays
      **/
     function calculateInterestRates(
-        DataTypes.CalculateInterestRatesParams memory params
+        uint256 availableLiquidity,
+        uint256 totalStableDebt,
+        uint256 totalVariableDebt,
+        uint256 averageStableBorrowRate,
+        uint256 reserveFactor
+    )
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        );
+
+    function calculateBorrowRates(
+        uint256 availableLiquidity,
+        uint256 totalStableDebt,
+        uint256 totalVariableDebt
     ) external view returns (uint256, uint256);
+
+    function calculateLiquidityRate(
+        uint256 availableLiquidity,
+        uint256 totalStableDebt,
+        uint256 totalVariableDebt,
+        uint256 currentVariableBorrowRate,
+        uint256 currentAverageStableBorrowRate,
+        uint256 reserveFactor
+    ) external view returns (uint256);
 }

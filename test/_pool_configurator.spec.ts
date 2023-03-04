@@ -28,6 +28,7 @@ import {
   MockReserveInterestRateStrategy__factory,
   ProtocolDataProvider,
   PToken__factory,
+  StableDebtToken__factory,
   VariableDebtToken__factory,
 } from "../types";
 import {TestEnv} from "./helpers/make-suite";
@@ -174,6 +175,9 @@ describe("PoolConfigurator: Common", () => {
     const mockToken = await new MintableERC20__factory(
       await getFirstSigner()
     ).deploy("MOCK", "MOCK", "18");
+    const stableDebtTokenImplementation = await new StableDebtToken__factory(
+      await getFirstSigner()
+    ).deploy(pool.address);
     const variableDebtTokenImplementation =
       await new VariableDebtToken__factory(await getFirstSigner()).deploy(
         pool.address
@@ -183,7 +187,7 @@ describe("PoolConfigurator: Common", () => {
     ).deploy(pool.address);
     const mockRateStrategy = await new MockReserveInterestRateStrategy__factory(
       await getFirstSigner()
-    ).deploy(addressesProvider.address, 0, 0, 0, 0);
+    ).deploy(addressesProvider.address, 0, 0, 0, 0, 0, 0);
     const mockAuctionStrategy = await deployReserveAuctionStrategy(
       eContractid.DefaultReserveAuctionStrategy,
       [
@@ -200,6 +204,7 @@ describe("PoolConfigurator: Common", () => {
     const initInputParams = [
       {
         xTokenImpl: xTokenImplementation.address,
+        stableDebtTokenImpl: stableDebtTokenImplementation.address,
         variableDebtTokenImpl: variableDebtTokenImplementation.address,
         assetType: 0,
         underlyingAssetDecimals: 18,
@@ -212,6 +217,8 @@ describe("PoolConfigurator: Common", () => {
         xTokenSymbol: "PMOCK",
         variableDebtTokenName: "VMOCK",
         variableDebtTokenSymbol: "VMOCK",
+        stableDebtTokenName: "SMOCK",
+        stableDebtTokenSymbol: "SMOCK",
         params: "0x10",
       },
     ];
@@ -382,6 +389,11 @@ describe("PoolConfigurator: Common", () => {
     const {configurator, protocolDataProvider, weth} = await loadFixture(
       testEnvFixture
     );
+
+    await waitForTx(
+      await configurator.setReserveStableRateBorrowing(weth.address, false)
+    );
+
     expect(await configurator.setReserveBorrowing(weth.address, false))
       .to.emit(configurator, "ReserveBorrowing")
       .withArgs(weth.address, false);
@@ -395,6 +407,11 @@ describe("PoolConfigurator: Common", () => {
   it("TC-poolConfigurator-setReserveBorrowing-02: Deactivates the ETH reserve for borrowing via risk admin", async () => {
     const {configurator, protocolDataProvider, weth, riskAdmin} =
       await loadFixture(testEnvFixture);
+
+    await waitForTx(
+      await configurator.setReserveStableRateBorrowing(weth.address, false)
+    );
+
     expect(
       await configurator
         .connect(riskAdmin.signer)
@@ -1176,6 +1193,7 @@ describe("PoolConfigurator: Modifiers", () => {
       {
         xTokenImpl: randomAddress,
         assetType: 0,
+        stableDebtTokenImpl: randomAddress,
         variableDebtTokenImpl: randomAddress,
         underlyingAssetDecimals: randomNumber,
         interestRateStrategyAddress: randomAddress,
@@ -1188,6 +1206,8 @@ describe("PoolConfigurator: Modifiers", () => {
         xTokenSymbol: "MOCK",
         variableDebtTokenName: "MOCK",
         variableDebtTokenSymbol: "MOCK",
+        stableDebtTokenName: "MOCK",
+        stableDebtTokenSymbol: "MOCK",
         params: "0x10",
       },
     ];
@@ -1465,6 +1485,9 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
       "18"
     );
 
+    const stableDebtTokenImplementation = await new StableDebtToken__factory(
+      await getFirstSigner()
+    ).deploy(pool.address);
     const variableDebtTokenImplementation =
       await new VariableDebtToken__factory(await getFirstSigner()).deploy(
         pool.address
@@ -1500,6 +1523,7 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
     // Init the reserve
     const initInputParams: {
       xTokenImpl: string;
+      stableDebtTokenImpl: string;
       variableDebtTokenImpl: string;
       underlyingAssetDecimals: BigNumberish;
       interestRateStrategyAddress: string;
@@ -1512,10 +1536,13 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
       xTokenSymbol: string;
       variableDebtTokenName: string;
       variableDebtTokenSymbol: string;
+      stableDebtTokenName: string;
+      stableDebtTokenSymbol: string;
       params: string;
     }[] = [
       {
         xTokenImpl: xTokenImplementation.address,
+        stableDebtTokenImpl: stableDebtTokenImplementation.address,
         variableDebtTokenImpl: variableDebtTokenImplementation.address,
         underlyingAssetDecimals: 18,
         interestRateStrategyAddress: interestRateStrategyAddress,
@@ -1528,6 +1555,8 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
         xTokenSymbol: "PMOCK",
         variableDebtTokenName: "VMOCK",
         variableDebtTokenSymbol: "VMOCK",
+        stableDebtTokenName: "SMOCK",
+        stableDebtTokenSymbol: "SMOCK",
         params: "0x10",
       },
     ];
