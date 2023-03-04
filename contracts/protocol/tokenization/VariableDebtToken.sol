@@ -30,6 +30,7 @@ contract VariableDebtToken is
     using SafeCast for uint256;
 
     uint256 public constant DEBT_TOKEN_REVISION = 145;
+    uint256[50] private __gap;
 
     /**
      * @dev Constructor.

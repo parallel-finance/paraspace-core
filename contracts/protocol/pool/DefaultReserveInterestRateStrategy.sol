@@ -259,7 +259,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
         uint256 currentVariableBorrowRate,
         uint256 currentAverageStableBorrowRate,
         uint256 reserveFactor
-    ) public view override returns (uint256) {
+    ) public pure override returns (uint256) {
         uint256 totalDebt = totalStableDebt + totalVariableDebt;
         if (totalDebt == 0) return 0;
 
@@ -365,7 +365,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
         uint256 currentAverageStableBorrowRate,
         uint256 usageRatio,
         uint256 reserveFactor
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 overallBorrowRate = _getOverallBorrowRate(
             totalStableDebt,
             totalVariableDebt,

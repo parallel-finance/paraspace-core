@@ -2,7 +2,6 @@ import {
   eContractid,
   ERC20TokenContractId,
   ERC721TokenContractId,
-  iMultiPoolsAssets,
   IReserveParams,
   NTokenContractId,
   tEthereumAddress,
@@ -16,6 +15,7 @@ import {
   getPoolConfiguratorProxy,
   getPoolProxy,
   getProtocolDataProvider,
+  getAutoYieldApe,
 } from "./contracts-getters";
 import {
   getContractAddressInDb,
@@ -44,12 +44,14 @@ import {
   deployPTokenCApe,
   deployCApeDebtToken,
   deployNTokenBAKCImpl,
+  deployPYieldToken,
+  deployAutoYieldApe,
   deployGenericStableDebtToken,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
 export const initReservesByHelper = async (
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  reserves: [string, IReserveParams][],
   tokenAddresses: {[symbol: string]: tEthereumAddress},
   xTokenNamePrefix: string,
   stableDebtTokenNamePrefix: string,
@@ -118,6 +120,7 @@ export const initReservesByHelper = async (
   let pTokenATokenImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
   let pTokenPsApeImplementationAddress = "";
+  let pYieldTokenImplementationAddress = "";
   let nTokenImplementationAddress = genericNTokenImplAddress;
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
@@ -159,28 +162,34 @@ export const initReservesByHelper = async (
     );
   }
 
-  const reserves = Object.entries(reservesParams).filter(
-    ([, {xTokenImpl}]) =>
-      xTokenImpl === eContractid.DelegationAwarePTokenImpl ||
-      xTokenImpl === eContractid.PTokenImpl ||
-      xTokenImpl === eContractid.NTokenImpl ||
-      xTokenImpl === eContractid.NTokenBAYCImpl ||
-      xTokenImpl === eContractid.NTokenMAYCImpl ||
-      xTokenImpl === eContractid.NTokenMoonBirdsImpl ||
-      xTokenImpl === eContractid.NTokenUniswapV3Impl ||
-      xTokenImpl === eContractid.PTokenStETHImpl ||
-      xTokenImpl === eContractid.PTokenATokenImpl ||
-      xTokenImpl === eContractid.PTokenSApeImpl ||
-      xTokenImpl === eContractid.PTokenCApeImpl ||
-      xTokenImpl === eContractid.NTokenBAKCImpl
-  ) as [string, IReserveParams][];
+  // const reserves = Object.entries(reservesParams).filter(
+  //   ([, {xTokenImpl}]) =>
+  //     xTokenImpl === eContractid.DelegationAwarePTokenImpl ||
+  //     xTokenImpl === eContractid.PTokenImpl ||
+  //     xTokenImpl === eContractid.NTokenImpl ||
+  //     xTokenImpl === eContractid.NTokenBAYCImpl ||
+  //     xTokenImpl === eContractid.NTokenMAYCImpl ||
+  //     xTokenImpl === eContractid.NTokenMoonBirdsImpl ||
+  //     xTokenImpl === eContractid.NTokenUniswapV3Impl ||
+  //     xTokenImpl === eContractid.PTokenStETHImpl ||
+  //     xTokenImpl === eContractid.PTokenATokenImpl ||
+  //     xTokenImpl === eContractid.PTokenSApeImpl ||
+  //     xTokenImpl === eContractid.PTokenCApeImpl ||
+  //     xTokenImpl === eContractid.PYieldTokenImpl ||
+  //     xTokenImpl === eContractid.NTokenBAKCImpl
+  // ) as [string, IReserveParams][];
 
   for (const [symbol, params] of reserves) {
     if (!tokenAddresses[symbol]) {
-      console.log(
-        `- Skipping init of ${symbol} due token address is not set at markets config`
-      );
-      continue;
+      if (symbol === ERC20TokenContractId.yAPE) {
+        await deployAutoYieldApe();
+        tokenAddresses[symbol] = (await getAutoYieldApe()).address;
+      } else {
+        console.log(
+          `- Skipping init of ${symbol} due token address is not set at markets config`
+        );
+        continue;
+      }
     }
     const {strategy, auctionStrategy, xTokenImpl, reserveDecimals} = params;
     const {
@@ -411,6 +420,13 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = PsApeVariableDebtTokenImplementationAddress;
+        } else if (reserveSymbol === ERC20TokenContractId.yAPE) {
+          if (!pYieldTokenImplementationAddress) {
+            pYieldTokenImplementationAddress = (
+              await deployPYieldToken(pool.address, verify)
+            ).address;
+          }
+          xTokenToUse = pYieldTokenImplementationAddress;
         }
 
         if (!xTokenToUse) {
@@ -550,7 +566,7 @@ export const initReservesByHelper = async (
 };
 
 export const configureReservesByHelper = async (
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  reserves: [string, IReserveParams][],
   tokenAddresses: {[symbol: string]: tEthereumAddress},
   helpers: ProtocolDataProvider,
   admin: tEthereumAddress,
@@ -595,10 +611,10 @@ export const configureReservesByHelper = async (
       stableBorrowRateEnabled,
       borrowingEnabled,
     },
-  ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
+  ] of reserves) {
     if (!tokenAddresses[assetSymbol]) {
       console.log(
-        `- Skipping init of ${assetSymbol} due token address is not set at markets config`
+        `- Skipping config for ${assetSymbol} due token address is not set at markets config`
       );
       continue;
     }
