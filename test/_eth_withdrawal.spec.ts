@@ -1,7 +1,6 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther, parseUnits} from "ethers/lib/utils";
-import {ZERO_ADDRESS} from "../helpers/constants";
 import {deployETHWithdrawal} from "../helpers/contracts-deployments";
 import {getCurrentTime} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
