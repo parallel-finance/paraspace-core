@@ -9,6 +9,7 @@ import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Rec
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {AccessControl} from "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import {Initializable} from "../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
@@ -17,8 +18,9 @@ import {MathUtils} from "../protocol/libraries/math/MathUtils.sol";
 
 error Unimplemented();
 error AlreadyMature();
+error AlreadyMinted();
 error NotMature();
-error InvalidRecipient();
+error InvalidParams();
 error NotOwner();
 
 contract ETHWithdrawal is
@@ -32,7 +34,7 @@ contract ETHWithdrawal is
     using SafeERC20 for IERC20;
     using WadRayMath for uint256;
 
-    bytes32 public constant DEFAULT_ISSUER = keccak256("DEFAULT_ISSUER");
+    bytes32 public constant DEFAULT_ISSUER_ROLE = keccak256("DEFAULT_ISSUER");
 
     mapping(uint256 => IETHWithdrawal.TokenInfo) private tokenInfos;
 
@@ -43,6 +45,7 @@ contract ETHWithdrawal is
     function initialize(address _admin) public initializer {
         require(_admin != address(0), "Address cannot be zero");
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);
+        _setupRole(DEFAULT_ISSUER_ROLE, _admin);
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -66,14 +69,18 @@ contract ETHWithdrawal is
         uint256 balance,
         address recipient,
         uint256 withdrawableTime
-    ) external nonReentrant onlyRole(DEFAULT_ISSUER) {
+    ) external nonReentrant onlyRole(DEFAULT_ISSUER_ROLE) {
         if (provider == IETHWithdrawal.StakingProvider.Validator) {
             if (block.timestamp >= withdrawableTime) {
                 revert AlreadyMature();
             }
 
-            if (recipient == address(0)) {
-                revert InvalidRecipient();
+            if (recipient == address(0) || balance == 0) {
+                revert InvalidParams();
+            }
+
+            if (tokenInfos[tokenId].balance > 0) {
+                revert AlreadyMinted();
             }
 
             tokenInfos[tokenId] = IETHWithdrawal.TokenInfo(
@@ -122,7 +129,7 @@ contract ETHWithdrawal is
             uint40(block.timestamp),
             tokenInfo.withdrawableTime
         );
-        return tokenInfo.balance.rayMul(discountRate);
+        return tokenInfo.balance.rayDiv(discountRate);
     }
 
     receive() external payable {}
@@ -138,7 +145,7 @@ contract ETHWithdrawal is
         address token,
         address to,
         uint256 amount
-    ) external onlyRole(DEFAULT_ISSUER) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         IERC20(token).safeTransfer(to, amount);
     }
 

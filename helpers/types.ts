@@ -17,6 +17,13 @@ export enum AssetType {
   ERC721 = 1,
 }
 
+export enum StakingProvider {
+  Validator = 0,
+  Lido = 1,
+  RocketPool = 2,
+  Coinbase = 3,
+}
+
 export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
@@ -241,6 +248,8 @@ export enum eContractid {
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
+  ETHWithdrawal = "ETHWithdrawal",
+  ETHWithdrawalImpl = "ETHWithdrawalImpl",
   P2PPairStaking = "P2PPairStaking",
   HelperContractImpl = "HelperContractImpl",
   HelperContract = "HelperContract",

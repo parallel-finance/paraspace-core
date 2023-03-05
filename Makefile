@@ -84,6 +84,10 @@ test-pool-initialization:
 test-ntoken:
 	make TEST_TARGET=_xtoken_ntoken.spec.ts test
 
+.PHONY: test-eth-withdrawal
+test-eth-withdrawal:
+	make TEST_TARGET=_eth_withdrawal.spec.ts test
+
 .PHONY: test-ntoken-punk
 test-ntoken-punk:
 	make TEST_TARGET=ntoken-punk.spec.ts test

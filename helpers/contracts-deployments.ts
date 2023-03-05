@@ -243,6 +243,8 @@ import {
   HelperContract__factory,
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
+  ETHWithdrawal__factory,
+  ETHWithdrawal,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -260,6 +262,7 @@ import {
   getContractAddressInDb,
   getFunctionSignatures,
   getFunctionSignaturesFromDb,
+  getParaSpaceAdmins,
   insertContractAddressInDb,
   withSaveAndVerify,
 } from "./contracts-helpers";
@@ -2217,7 +2220,61 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
     ](cApeImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as AutoCompoundApe;
+  return AutoCompoundApe__factory.connect(proxyInstance.address, deployer);
+};
+
+export const deployETHWithdrawalImpl = async (
+  name: string,
+  symbol: string,
+  verify?: boolean
+) => {
+  return withSaveAndVerify(
+    new ETHWithdrawal__factory(await getFirstSigner()),
+    eContractid.ETHWithdrawalImpl,
+    [name, symbol],
+    verify
+  ) as Promise<ETHWithdrawal>;
+};
+
+export const deployETHWithdrawal = async (
+  name: string,
+  symbol: string,
+  verify?: boolean
+) => {
+  const ethWithdrawalImplementation = await deployETHWithdrawalImpl(
+    name,
+    symbol,
+    verify
+  );
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+  const {gatewayAdminAddress} = await getParaSpaceAdmins();
+
+  const initData = ethWithdrawalImplementation.interface.encodeFunctionData(
+    "initialize",
+    [gatewayAdminAddress]
+  );
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.ETHWithdrawal,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](
+      ethWithdrawalImplementation.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return ETHWithdrawal__factory.connect(proxyInstance.address, deployer);
 };
 
 export const deployP2PPairStakingImpl = async (verify?: boolean) => {
@@ -2276,7 +2333,7 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
     ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as P2PPairStaking;
+  return P2PPairStaking__factory.connect(proxyInstance.address, deployer);
 };
 
 export const deployHelperContractImpl = async (verify?: boolean) => {
@@ -2323,7 +2380,7 @@ export const deployHelperContract = async (verify?: boolean) => {
     ](helperImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as HelperContract;
+  return HelperContract__factory.connect(proxyInstance.address, deployer);
 };
 
 export const deployPTokenCApe = async (
