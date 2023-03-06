@@ -574,12 +574,18 @@ export const deployPoolComponents = async (
   const APE_USDC_SWAP_PATH = isPublicTestnet()
     ? ethers.utils.solidityPack(
         ["address", "uint24", "address"],
-        [allTokens.APE, 3000, allTokens.USDC] // [ape, fee, usdc]
+        [allTokens.APE.address, 3000, allTokens.USDC.address] // [ape, fee, usdc]
       )
-    // mainnet: 0x4d224452801aced8b2f0aebe155379bb5d594381000bb8c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20001f4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
-    : ethers.utils.solidityPack(
+    : // mainnet: 0x4d224452801aced8b2f0aebe155379bb5d594381000bb8c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20001f4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
+      ethers.utils.solidityPack(
         ["address", "uint24", "address", "uint24", "address"],
-        [allTokens.APE, 3000, allTokens.WETH, 500, allTokens.USDC] // [ape, fee, weth, fee, usdc]
+        [
+          allTokens.APE.address,
+          3000,
+          allTokens.WETH.address,
+          500,
+          allTokens.USDC.address,
+        ] // [ape, fee, weth, fee, usdc]
       );
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
