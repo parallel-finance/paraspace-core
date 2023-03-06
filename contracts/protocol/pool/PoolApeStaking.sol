@@ -48,7 +48,9 @@ contract PoolApeStaking is
     ISwapRouter internal immutable SWAP_ROUTER;
 
     uint256 internal constant DEFAULT_MAX_SLIPPAGE = 500; // 5%
-    bytes internal APE_USDC_SWAP_PATH;  // ape -> weth -> usdc
+    uint24 internal immutable APE_WETH_FEE;
+    uint24 internal immutable WETH_USDC_FEE;
+    address internal immutable WETH;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -80,14 +82,18 @@ contract PoolApeStaking is
         IERC20 apeCoin,
         IERC20 usdc,
         ISwapRouter uniswapV3SwapRouter,
-        bytes memory apeUsdcSwapPath
+        address weth,
+        uint24 apeWethFee,
+        uint24 wethUsdcFee
     ) {
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
         USDC = IERC20(usdc);
         SWAP_ROUTER = ISwapRouter(uniswapV3SwapRouter);
-        APE_USDC_SWAP_PATH = apeUsdcSwapPath;
+        WETH = weth;
+        APE_WETH_FEE = apeWethFee;
+        WETH_USDC_FEE = wethUsdcFee;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -676,9 +682,16 @@ contract PoolApeStaking is
         if (amountIn == 0) {
             return;
         }
+        bytes memory swapPath = abi.encodePacked(
+            APE_COIN,
+            APE_WETH_FEE,
+            WETH,
+            WETH_USDC_FEE,
+            USDC
+        );
         uint256 amountOut = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
-                path: APE_USDC_SWAP_PATH,
+                path: swapPath,
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amountIn,
