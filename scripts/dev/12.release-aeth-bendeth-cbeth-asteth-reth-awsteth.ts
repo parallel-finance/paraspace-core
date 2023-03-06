@@ -61,7 +61,12 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
     {
       symbol: "WBTC",
       address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-      aggregator: "0xa338e0492b2f944e9f8c0653d3ad1484f2657a37",
+      aggregator: "0xdeb288f737066589598e9214e782fa5a8ed689e8",
+    },
+    {
+      symbol: "FRAX",
+      address: "0x853d955acef822db058eb8505911ed77f175b99e",
+      aggregator: "0x14d04fff8d21bd62987a5ce9ce543d2f1edf5d3e",
     },
   ];
 
