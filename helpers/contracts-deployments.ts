@@ -273,6 +273,7 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
+  getAutoCompoundApe,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
@@ -583,6 +584,11 @@ export const deployPoolComponents = async (
 
   const allTokens = await getAllTokens();
 
+  if (allTokens.APE) {
+    await deployAutoCompoundApe(verify);
+    await deployAutoYieldApe(verify);
+  }
+
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
   );
@@ -629,10 +635,7 @@ export const deployPoolComponents = async (
           eContractid.PoolApeStakingImpl,
           [
             provider,
-            (await getContractAddressInDb(eContractid.cAPE)) ||
-              (
-                await deployAutoCompoundApe(verify)
-              ).address,
+            (await getAutoCompoundApe()).address,
             allTokens.APE.address,
             allTokens.USDC.address,
             (await getUniswapV3SwapRouter()).address,
@@ -896,7 +899,8 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | StETHMocked
       | WstETHMocked
       | MockAToken
-      | AutoCompoundApe;
+      | AutoCompoundApe
+      | AutoYieldApe;
   } = {};
 
   const paraSpaceConfig = getParaSpaceConfig();
