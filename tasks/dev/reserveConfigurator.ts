@@ -1,3 +1,4 @@
+import {getAddress} from "ethers/lib/utils";
 import {task} from "hardhat/config";
 import {DRY_RUN} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
@@ -18,7 +19,9 @@ task("set-ltv", "Set LTV")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find((x) => x.underlyingAsset === asset);
+    const reserveData = reservesData.find(
+      (x) => x.underlyingAsset === getAddress(asset)
+    );
     if (!reserveData) {
       return;
     }
@@ -62,7 +65,9 @@ task("set-liquidation-threshold", "Set liquidation threshold")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find((x) => x.underlyingAsset === asset);
+    const reserveData = reservesData.find(
+      (x) => x.underlyingAsset === getAddress(asset)
+    );
     if (!reserveData) {
       return;
     }
@@ -106,7 +111,9 @@ task("set-reserve-factor", "Set reserve factor")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find((x) => x.underlyingAsset === asset);
+    const reserveData = reservesData.find(
+      (x) => x.underlyingAsset === getAddress(asset)
+    );
     if (!reserveData) {
       return;
     }
@@ -146,7 +153,9 @@ task("set-interest-rate-strategy", "Set interest rate strategy")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find((x) => x.underlyingAsset === asset);
+    const reserveData = reservesData.find(
+      (x) => x.underlyingAsset === getAddress(asset)
+    );
     if (!reserveData) {
       return;
     }
@@ -183,7 +192,9 @@ task("set-auction-strategy", "Set auction strategy")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find((x) => x.underlyingAsset === asset);
+    const reserveData = reservesData.find(
+      (x) => x.underlyingAsset === getAddress(asset)
+    );
     if (!reserveData) {
       return;
     }
@@ -220,7 +231,9 @@ task("set-supply-cap", "Set supply cap")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find((x) => x.underlyingAsset === asset);
+    const reserveData = reservesData.find(
+      (x) => x.underlyingAsset === getAddress(asset)
+    );
     if (!reserveData) {
       return;
     }
@@ -254,7 +267,9 @@ task("set-borrow-cap", "Set borrow cap")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find((x) => x.underlyingAsset === asset);
+    const reserveData = reservesData.find(
+      (x) => x.underlyingAsset === getAddress(asset)
+    );
     if (!reserveData) {
       return;
     }
