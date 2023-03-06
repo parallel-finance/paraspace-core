@@ -7,6 +7,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   DAI: parseEther("0.000908578801039414").toString(),
   USDC: parseEther("0.000915952223931999").toString(),
   USDT: parseEther("0.000915952223931999").toString(),
+  FRAX: parseEther("0.000915952223931999").toString(),
   WETH: parseEther("1").toString(),
   WBTC: parseEther("18.356369399062118").toString(),
   stETH: parseEther("1").toString(),

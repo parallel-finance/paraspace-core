@@ -11,6 +11,7 @@ import {
   rateStrategyXCDOT,
   rateStrategyWGLMR,
   rateStrategyBLUR,
+  rateStrategyFRAX,
 } from "./rateStrategies";
 import {
   auctionStrategyAzuki,
@@ -71,6 +72,21 @@ export const strategyUSDT: IReserveParams = {
   liquidationBonus: "10500",
   borrowingEnabled: true,
   reserveDecimals: "6",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyFRAX: IReserveParams = {
+  strategy: rateStrategyFRAX,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "7500",
+  liquidationThreshold: "8000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
   borrowCap: "0",

@@ -414,6 +414,7 @@ export interface iAssetBase<T> {
   DAI: T;
   USDC: T;
   USDT: T;
+  FRAX: T;
   BAYC: T;
   WPUNKS: T;
   PUNKS: T;
@@ -445,6 +446,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "DAI"
   | "USDC"
   | "USDT"
+  | "FRAX"
   | "WETH"
   | "WBTC"
   | "stETH"
@@ -480,6 +482,7 @@ export enum ERC20TokenContractId {
   WETH = "WETH",
   USDC = "USDC",
   USDT = "USDT",
+  FRAX = "FRAX",
   WBTC = "WBTC",
   stETH = "stETH",
   wstETH = "wstETH",
@@ -633,6 +636,7 @@ export interface IChainlinkConfig {
   DAI?: tEthereumAddress;
   USDC?: tEthereumAddress;
   USDT?: tEthereumAddress;
+  FRAX?: tEthereumAddress;
   WBTC?: tEthereumAddress;
   STETH?: tEthereumAddress;
   APE?: tEthereumAddress;

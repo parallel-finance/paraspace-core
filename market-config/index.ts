@@ -45,6 +45,7 @@ import {
   strategyAWSTETH,
   strategyRETH,
   strategyBENDETH,
+  strategyFRAX,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -107,6 +108,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     DAI: strategyDAI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,
+    FRAX: strategyFRAX,
     WETH: strategyWETH,
     APE: strategyAPE,
     WBTC: strategyWBTC,
@@ -217,6 +219,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     DAI: strategyDAI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,
+    FRAX: strategyFRAX,
     WETH: strategyWETH,
     APE: strategyAPE,
     WBTC: strategyWBTC,
@@ -281,6 +284,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     DAI: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
     USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    FRAX: "0x853d955acef822db058eb8505911ed77f175b99e",
     WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
     APE: "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
     BLUR: "0x5283D291DBCF85356A21bA090E6db59121208b44",
@@ -323,6 +327,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     DAI: "0x773616E4d11A78F511299002da57A0a94577F1f4",
     USDC: "0x986b5E1e1755e3C2440e960477f25201B0a8bbD4",
     USDT: "0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46",
+    FRAX: "0x14d04fff8d21bd62987a5ce9ce543d2f1edf5d3e",
     WBTC: "0xdeb288F737066589598e9214E782fa5A8eD689e8",
     APE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
     sAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
@@ -338,6 +343,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     DAI: strategyDAI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,
+    FRAX: strategyFRAX,
     WETH: strategyWETH,
     aWETH: strategyAWETH,
     bendETH: strategyBENDETH,
