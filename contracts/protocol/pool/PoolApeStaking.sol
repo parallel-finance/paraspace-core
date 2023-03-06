@@ -48,6 +48,7 @@ contract PoolApeStaking is
     ISwapRouter internal immutable SWAP_ROUTER;
 
     uint256 internal constant DEFAULT_MAX_SLIPPAGE = 500; // 5%
+    bytes internal APE_USDC_SWAP_PATH;  // ape -> weth -> usdc
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -78,13 +79,15 @@ contract PoolApeStaking is
         IAutoCompoundApe apeCompound,
         IERC20 apeCoin,
         IERC20 usdc,
-        ISwapRouter uniswapV3SwapRouter
+        ISwapRouter uniswapV3SwapRouter,
+        bytes memory apeUsdcSwapPath
     ) {
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
         USDC = IERC20(usdc);
         SWAP_ROUTER = ISwapRouter(uniswapV3SwapRouter);
+        APE_USDC_SWAP_PATH = apeUsdcSwapPath;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -673,16 +676,13 @@ contract PoolApeStaking is
         if (amountIn == 0) {
             return;
         }
-        uint256 amountOut = SWAP_ROUTER.exactInputSingle(
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: address(APE_COIN),
-                tokenOut: tokenOut,
-                fee: 3000,
+        uint256 amountOut = SWAP_ROUTER.exactInput(
+            ISwapRouter.ExactInputParams({
+                path: APE_USDC_SWAP_PATH,
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amountIn,
-                amountOutMinimum: amountIn.wadMul(price),
-                sqrtPriceLimitX96: 0
+                amountOutMinimum: amountIn.wadMul(price)
             })
         );
         _supplyForUser(ps, tokenOut, address(this), user, amountOut);

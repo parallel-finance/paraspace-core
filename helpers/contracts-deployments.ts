@@ -1,4 +1,10 @@
-import {DRE, getDb, getParaSpaceConfig, waitForTx} from "./misc-utils";
+import {
+  DRE,
+  getDb,
+  getParaSpaceConfig,
+  isPublicTestnet,
+  waitForTx,
+} from "./misc-utils";
 import {
   eContractid,
   ERC20TokenContractId,
@@ -280,6 +286,7 @@ import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {parseEther} from "ethers/lib/utils";
+import {ethers} from "hardhat";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -564,6 +571,16 @@ export const deployPoolComponents = async (
 
   const allTokens = await getAllTokens();
 
+  const APE_USDC_SWAP_PATH = isPublicTestnet()
+    ? ethers.utils.solidityPack(
+        ["address", "uint24", "address"],
+        [allTokens.APE, 3000, allTokens.USDC] // [ape, fee, usdc]
+      )
+    // mainnet: 0x4d224452801aced8b2f0aebe155379bb5d594381000bb8c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20001f4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
+    : ethers.utils.solidityPack(
+        ["address", "uint24", "address", "uint24", "address"],
+        [allTokens.APE, 3000, allTokens.WETH, 500, allTokens.USDC] // [ape, fee, weth, fee, usdc]
+      );
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
   );
@@ -617,6 +634,7 @@ export const deployPoolComponents = async (
             allTokens.APE.address,
             allTokens.USDC.address,
             (await getUniswapV3SwapRouter()).address,
+            APE_USDC_SWAP_PATH,
           ],
           verify,
           false,
