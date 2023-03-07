@@ -154,6 +154,12 @@ library MintableERC721Logic {
         uint256 indexed tokenId,
         uint256 multiplier
     );
+
+    /**
+     * @dev Emitted when user's avg multiplier got updated
+     */
+    event AvgMultiplierUpdated(address indexed owner, uint256 avgMultiplier);
+
     using SafeERC20 for IERC20;
 
     function executeTransfer(
@@ -583,6 +589,7 @@ library MintableERC721Logic {
 
         if (oldAvgMultiplier != newAvgMultiplier) {
             erc721Data.userState[owner].avgMultiplier = newAvgMultiplier;
+            emit AvgMultiplierUpdated(owner, newAvgMultiplier);
         }
     }
 

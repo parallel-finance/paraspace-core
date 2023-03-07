@@ -88,6 +88,20 @@ abstract contract MintableIncentivizedERC721 is
      **/
     event ExecuteAirdrop(address indexed airdropContract);
 
+    /**
+     * @dev Emitted when trait multiplier got updated
+     */
+    event TraitMultiplierSet(
+        address indexed owner,
+        uint256 indexed tokenId,
+        uint256 multiplier
+    );
+
+    /**
+     * @dev Emitted when user's avg multiplier got updated
+     */
+    event AvgMultiplierUpdated(address indexed owner, uint256 avgMultiplier);
+
     using Address for address;
     using SafeERC20 for IERC20;
 

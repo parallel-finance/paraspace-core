@@ -420,6 +420,10 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
+.PHONY: query-traits-multipliers
+query-traits-multipliers:
+	make SCRIPT_PATH=./scripts/dev/13.query-traits-multipliers.ts run
+
 .PHONY: release-aeth-bendeth-cbeth-asteth-reth-awsteth
 release-aeth-bendeth-cbeth-asteth-reth-awsteth:
 	make SCRIPT_PATH=./scripts/dev/12.release-aeth-bendeth-cbeth-asteth-reth-awsteth.ts run
@@ -500,9 +504,13 @@ cancel-buffered-txs:
 decode-safe-txs:
 	make TASK_NAME=decode-safe-txs run-task
 
-.PHONY: propose-safe-txs
-propose-safe-txs:
-	make TASK_NAME=propose-safe-txs run-task
+.PHONY: propose-buffered-txs
+propose-buffered-txs:
+	make TASK_NAME=propose-buffered-txs run-task
+
+.PHONY: propose-queued-txs
+propose-queued-txs:
+	make TASK_NAME=propose-queued-txs run-task
 
 .PHONY: set-ltv
 set-ltv:

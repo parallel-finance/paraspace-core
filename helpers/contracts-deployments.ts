@@ -583,10 +583,21 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
+  const reserveConfig = await getParaSpaceConfig().ReservesConfig;
 
   if (allTokens.APE) {
-    await deployAutoCompoundApe(verify);
-    await deployAutoYieldApe(verify);
+    if (
+      reserveConfig[ERC20TokenContractId.cAPE] &&
+      !(await getContractAddressInDb(eContractid.cAPE))
+    ) {
+      await deployAutoCompoundApe(verify);
+    }
+    // if (
+    //   reserveConfig[ERC20TokenContractId.yAPE] &&
+    //   !(await getContractAddressInDb(eContractid.yAPE))
+    // ) {
+    //   await deployAutoYieldApe(verify);
+    // }
   }
 
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(

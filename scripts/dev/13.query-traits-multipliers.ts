@@ -1,16 +1,13 @@
-import {toBn} from "evm-bn";
+import {fromBn, toBn} from "evm-bn";
 import rawBRE from "hardhat";
-import {chunk, zip} from "lodash";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   getAllTokens,
   getNToken,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN} from "../../helpers/hardhat-constants";
 import {ERC721TokenContractId} from "../../helpers/types";
-
-const CHUNK_SIZE = 150;
 
 const BAYCTraits = [
   {
@@ -1268,8 +1265,8 @@ const AZUKITraits = [
   },
 ];
 
-const setTraitsMultipliers = async () => {
-  console.time("set-traits-multipliers");
+const queryTraitsMultipliers = async () => {
+  console.time("query-traits-multipliers");
   const allTokens = await getAllTokens();
   const pool = await getPoolProxy();
 
@@ -1309,21 +1306,13 @@ const setTraitsMultipliers = async () => {
   // BAYC
   ////////////////////////////////////////////////////////////////////////////////
   if (DRY_RUN) {
+    console.log("BAYC");
     const tokenIds = BAYCTraits.map((x) => x.tokenIds).flat();
-    const multipliers = BAYCTraits.map((x) =>
-      x.tokenIds.map(() => x.traitMultiplier)
-    ).flat();
-
-    const chunked = zip(
-      chunk(tokenIds, CHUNK_SIZE),
-      chunk(multipliers, CHUNK_SIZE)
-    );
-    for (const [tokenIds, multipliers] of chunked) {
-      const encodedData = nBAYC.interface.encodeFunctionData(
-        "setTraitsMultipliers",
-        [tokenIds!, multipliers!]
-      );
-      await dryRunEncodedData(nBAYC.address, encodedData);
+    for (const tokenId of tokenIds) {
+      const owner = await nBAYC.ownerOf(tokenId);
+      if (owner != ZERO_ADDRESS) {
+        console.log(fromBn(await nBAYC.avgMultiplierOf(owner)), owner, tokenId);
+      }
     }
   }
 
@@ -1331,21 +1320,13 @@ const setTraitsMultipliers = async () => {
   // MAYC
   ////////////////////////////////////////////////////////////////////////////////
   if (DRY_RUN) {
+    console.log("MAYC");
     const tokenIds = MAYCTraits.map((x) => x.tokenIds).flat();
-    const multipliers = MAYCTraits.map((x) =>
-      x.tokenIds.map(() => x.traitMultiplier)
-    ).flat();
-
-    const chunked = zip(
-      chunk(tokenIds, CHUNK_SIZE),
-      chunk(multipliers, CHUNK_SIZE)
-    );
-    for (const [tokenIds, multipliers] of chunked) {
-      const encodedData = nMAYC.interface.encodeFunctionData(
-        "setTraitsMultipliers",
-        [tokenIds!, multipliers!]
-      );
-      await dryRunEncodedData(nMAYC.address, encodedData);
+    for (const tokenId of tokenIds) {
+      const owner = await nMAYC.ownerOf(tokenId);
+      if (owner != ZERO_ADDRESS) {
+        console.log(fromBn(await nMAYC.avgMultiplierOf(owner)), owner, tokenId);
+      }
     }
   }
 
@@ -1353,21 +1334,13 @@ const setTraitsMultipliers = async () => {
   // BAKC
   ////////////////////////////////////////////////////////////////////////////////
   if (DRY_RUN) {
+    console.log("BAKC");
     const tokenIds = BAKCTraits.map((x) => x.tokenIds).flat();
-    const multipliers = BAKCTraits.map((x) =>
-      x.tokenIds.map(() => x.traitMultiplier)
-    ).flat();
-
-    const chunked = zip(
-      chunk(tokenIds, CHUNK_SIZE),
-      chunk(multipliers, CHUNK_SIZE)
-    );
-    for (const [tokenIds, multipliers] of chunked) {
-      const encodedData = nBAKC.interface.encodeFunctionData(
-        "setTraitsMultipliers",
-        [tokenIds!, multipliers!]
-      );
-      await dryRunEncodedData(nBAKC.address, encodedData);
+    for (const tokenId of tokenIds) {
+      const owner = await nBAKC.ownerOf(tokenId);
+      if (owner != ZERO_ADDRESS) {
+        console.log(fromBn(await nBAKC.avgMultiplierOf(owner)), owner, tokenId);
+      }
     }
   }
 
@@ -1375,21 +1348,13 @@ const setTraitsMultipliers = async () => {
   // OTHR
   ////////////////////////////////////////////////////////////////////////////////
   if (DRY_RUN) {
+    console.log("OTHR");
     const tokenIds = OTHRTraits.map((x) => x.tokenIds).flat();
-    const multipliers = OTHRTraits.map((x) =>
-      x.tokenIds.map(() => x.traitMultiplier)
-    ).flat();
-
-    const chunked = zip(
-      chunk(tokenIds, CHUNK_SIZE),
-      chunk(multipliers, CHUNK_SIZE)
-    );
-    for (const [tokenIds, multipliers] of chunked) {
-      const encodedData = nOTHR.interface.encodeFunctionData(
-        "setTraitsMultipliers",
-        [tokenIds!, multipliers!]
-      );
-      await dryRunEncodedData(nOTHR.address, encodedData);
+    for (const tokenId of tokenIds) {
+      const owner = await nOTHR.ownerOf(tokenId);
+      if (owner != ZERO_ADDRESS) {
+        console.log(fromBn(await nOTHR.avgMultiplierOf(owner)), owner, tokenId);
+      }
     }
   }
 
@@ -1397,30 +1362,26 @@ const setTraitsMultipliers = async () => {
   // AZUKI
   ////////////////////////////////////////////////////////////////////////////////
   if (DRY_RUN) {
+    console.log("AZUKI");
     const tokenIds = AZUKITraits.map((x) => x.tokenIds).flat();
-    const multipliers = AZUKITraits.map((x) =>
-      x.tokenIds.map(() => x.traitMultiplier)
-    ).flat();
-
-    const chunked = zip(
-      chunk(tokenIds, CHUNK_SIZE),
-      chunk(multipliers, CHUNK_SIZE)
-    );
-    for (const [tokenIds, multipliers] of chunked) {
-      const encodedData = nAZUKI.interface.encodeFunctionData(
-        "setTraitsMultipliers",
-        [tokenIds!, multipliers!]
-      );
-      await dryRunEncodedData(nAZUKI.address, encodedData);
+    for (const tokenId of tokenIds) {
+      const owner = await nAZUKI.ownerOf(tokenId);
+      if (owner != ZERO_ADDRESS) {
+        console.log(
+          fromBn(await nAZUKI.avgMultiplierOf(owner)),
+          owner,
+          tokenId
+        );
+      }
     }
   }
 
-  console.timeEnd("set-traits-multipliers");
+  console.timeEnd("query-traits-multipliers");
 };
 
 async function main() {
   await rawBRE.run("set-DRE");
-  await setTraitsMultipliers();
+  await queryTraitsMultipliers();
 }
 
 main()
