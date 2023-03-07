@@ -1,10 +1,4 @@
-import {
-  DRE,
-  getDb,
-  getParaSpaceConfig,
-  isPublicTestnet,
-  waitForTx,
-} from "./misc-utils";
+import {DRE, getDb, getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
   eContractid,
   ERC20TokenContractId,
@@ -286,7 +280,6 @@ import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {parseEther} from "ethers/lib/utils";
-import {ethers} from "hardhat";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -631,7 +624,7 @@ export const deployPoolComponents = async (
             (await getUniswapV3SwapRouter()).address,
             allTokens.WETH.address,
             APE_WETH_FEE,
-            WETH_USDC_FEE
+            WETH_USDC_FEE,
           ],
           verify,
           false,
