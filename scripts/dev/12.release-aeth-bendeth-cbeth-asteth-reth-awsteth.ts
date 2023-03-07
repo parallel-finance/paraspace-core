@@ -1,6 +1,9 @@
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
-import {deployExchangeRateSynchronicityPriceAdapter} from "../../helpers/contracts-deployments";
+import {
+  deployBaseCurrencySynchronicityPriceAdapter,
+  deployExchangeRateSynchronicityPriceAdapter,
+} from "../../helpers/contracts-deployments";
 import {
   getParaSpaceOracle,
   getProtocolDataProvider,
@@ -28,11 +31,11 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
   const paraSpaceOracle = await getParaSpaceOracle();
 
   const projects = [
-    // {
-    //   symbol: "aWETH",
-    //   address: "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e",
-    //   aggregator: "",
-    // },
+    {
+      symbol: "aWETH",
+      address: "0x030bA81f1c18d280636F32af80b9AAd02Cf0854e",
+      aggregator: "",
+    },
     // {
     //   symbol: "bendETH",
     //   address: "0xeD1840223484483C0cb050E6fC344d1eBF0778a9",
@@ -75,16 +78,16 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
     if (project.aggregator) {
       continue;
     }
-    // if (project.symbol == "aWETH" || project.symbol == "bendETH") {
-    //   project.aggregator = (
-    //     await deployBaseCurrencySynchronicityPriceAdapter(
-    //       "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    //       paraSpaceConfig.Oracle.BaseCurrencyUnit,
-    //       project.symbol,
-    //       verify
-    //     )
-    //   ).address;
-    // }
+    if (project.symbol == "aWETH") {
+      project.aggregator = (
+        await deployBaseCurrencySynchronicityPriceAdapter(
+          "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+          paraSpaceConfig.Oracle.BaseCurrencyUnit,
+          project.symbol,
+          verify
+        )
+      ).address;
+    }
     if (project.symbol == "rETH") {
       project.aggregator = (
         await deployExchangeRateSynchronicityPriceAdapter(
