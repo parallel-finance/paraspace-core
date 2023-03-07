@@ -1,12 +1,16 @@
 import rawBRE from "hardhat";
-import {ZERO_ADDRESS} from "../../helpers/constants";
+import {OPENSEA_SEAPORT_V14_ID, ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployBaseCurrencySynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
+  deployReserveAuctionStrategy,
   deployUiPoolDataProvider,
 } from "../../helpers/contracts-deployments";
 import {
+  getAllTokens,
   getParaSpaceOracle,
+  getPoolAddressesProvider,
+  getPoolConfiguratorProxy,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
 import {
@@ -21,15 +25,83 @@ import {
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {
   eContractid,
+  ERC20TokenContractId,
+  ERC721TokenContractId,
   IReserveParams,
   tEthereumAddress,
 } from "../../helpers/types";
+import {
+  auctionStrategyBAKC,
+  auctionStrategyOthr,
+} from "../../market-config/auctionStrategies";
 
 const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
   console.time("release-aeth-bendeth-cbeth-asteth-reth-awsteth");
   const paraSpaceConfig = getParaSpaceConfig();
   const protocolDataProvider = await getProtocolDataProvider();
   const paraSpaceOracle = await getParaSpaceOracle();
+  const configurator = await getPoolConfiguratorProxy();
+  const addressesProvider = await getPoolAddressesProvider();
+  const allTokens = await getAllTokens();
+
+  if (DRY_RUN) {
+    const encodedData1 = addressesProvider.interface.encodeFunctionData(
+      "setMarketplace",
+      [
+        OPENSEA_SEAPORT_V14_ID,
+        "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+        "0x2D51197B2160000DD4a616578249f173337487F4",
+        "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+        false,
+      ]
+    );
+    await dryRunEncodedData(addressesProvider.address, encodedData1);
+
+    const encodedData2 = configurator.interface.encodeFunctionData(
+      "setReserveInterestRateStrategyAddress",
+      [
+        allTokens[ERC20TokenContractId.DAI].address,
+        "0x0F384682ccbc84B736BeF58F007DAE77F3E4FdA6",
+      ]
+    );
+    await dryRunEncodedData(configurator.address, encodedData2);
+
+    const newStrategyOthr = await deployReserveAuctionStrategy(
+      auctionStrategyOthr.name,
+      [
+        auctionStrategyOthr.maxPriceMultiplier.toString(),
+        auctionStrategyOthr.minExpPriceMultiplier.toString(),
+        auctionStrategyOthr.minPriceMultiplier.toString(),
+        auctionStrategyOthr.stepLinear.toString(),
+        auctionStrategyOthr.stepExp.toString(),
+        auctionStrategyOthr.tickLength.toString(),
+      ],
+      verify
+    );
+    const encodedData3 = configurator.interface.encodeFunctionData(
+      "setReserveAuctionStrategyAddress",
+      [allTokens[ERC721TokenContractId.OTHR].address, newStrategyOthr.address]
+    );
+    await dryRunEncodedData(configurator.address, encodedData3);
+
+    const newStrategyBAKC = await deployReserveAuctionStrategy(
+      auctionStrategyBAKC.name,
+      [
+        auctionStrategyBAKC.maxPriceMultiplier.toString(),
+        auctionStrategyBAKC.minExpPriceMultiplier.toString(),
+        auctionStrategyBAKC.minPriceMultiplier.toString(),
+        auctionStrategyBAKC.stepLinear.toString(),
+        auctionStrategyBAKC.stepExp.toString(),
+        auctionStrategyBAKC.tickLength.toString(),
+      ],
+      verify
+    );
+    const encodedData4 = configurator.interface.encodeFunctionData(
+      "setReserveAuctionStrategyAddress",
+      [allTokens[ERC721TokenContractId.BAKC].address, newStrategyBAKC.address]
+    );
+    await dryRunEncodedData(configurator.address, encodedData4);
+  }
 
   const projects = [
     {
