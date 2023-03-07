@@ -2,16 +2,14 @@
 pragma solidity 0.8.10;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
 import {MathUtils} from "../libraries/math/MathUtils.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
-import {IInitializableDebtToken} from "../../interfaces/IInitializableDebtToken.sol";
 import {IStableDebtToken} from "../../interfaces/IStableDebtToken.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {EIP712Base} from "./base/EIP712Base.sol";
-import {DebtTokenBase} from "./base/DebtTokenBase.sol";
+import {StableDebtToken} from "./StableDebtToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
@@ -22,106 +20,31 @@ import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
  * at stable rate mode
  * @dev Transfer and approve functionalities are disabled since its a non-transferable token
  **/
-contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
+contract RebaseStableDebtToken is StableDebtToken {
     using WadRayMath for uint256;
     using SafeCast for uint256;
-
-    uint256 public constant DEBT_TOKEN_REVISION = 145;
-
-    // Map of users address and the timestamp of their last update (userAddress => lastUpdateTimestamp)
-    mapping(address => uint40) internal _timestamps;
-
-    uint128 internal _avgStableRate;
-
-    // Timestamp of the last update of the total supply
-    uint40 internal _totalSupplyTimestamp;
 
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool)
-        DebtTokenBase()
-        IncentivizedERC20(
-            pool,
-            "STABLE_DEBT_TOKEN_IMPL",
-            "STABLE_DEBT_TOKEN_IMPL",
-            0
-        )
-    {
-        // Intentionally left blank
+    constructor(IPool pool) StableDebtToken(pool) {
+        //intentionally empty
     }
 
-    /// @inheritdoc IInitializableDebtToken
-    function initialize(
-        IPool initializingPool,
-        address underlyingAsset,
-        IRewardController incentivesController,
-        uint8 debtTokenDecimals,
-        string memory debtTokenName,
-        string memory debtTokenSymbol,
-        bytes calldata params
-    ) external override initializer {
-        require(initializingPool == POOL, Errors.POOL_ADDRESSES_DO_NOT_MATCH);
-        _setName(debtTokenName);
-        _setSymbol(debtTokenSymbol);
-        _setDecimals(debtTokenDecimals);
-
-        _underlyingAsset = underlyingAsset;
-        _rewardController = incentivesController;
-
-        _domainSeparator = _calculateDomainSeparator();
-
-        emit Initialized(
-            underlyingAsset,
-            address(POOL),
-            address(incentivesController),
-            debtTokenDecimals,
-            debtTokenName,
-            debtTokenSymbol,
-            params
-        );
+    /**
+     * @return Current rebasing index in RAY
+     **/
+    function lastRebasingIndex() internal view virtual returns (uint256) {
+        // returns 1 RAY by default which makes it identical to StableDebtToken in behaviour
+        return WadRayMath.RAY;
     }
 
-    /// @inheritdoc VersionedInitializable
-    function getRevision() internal pure virtual override returns (uint256) {
-        return DEBT_TOKEN_REVISION;
-    }
-
-    /// @inheritdoc IStableDebtToken
-    function getAverageStableRate()
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _avgStableRate;
-    }
-
-    /// @inheritdoc IStableDebtToken
-    function getUserLastUpdated(address user)
-        external
-        view
-        virtual
-        override
-        returns (uint40)
-    {
-        return _timestamps[user];
-    }
-
-    /// @inheritdoc IStableDebtToken
-    function getUserStableRate(address user)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        return _userState[user].additionalData;
-    }
-
-    /// @inheritdoc IERC20
+    /**
+     * @dev Calculates the balance of the user: principal balance + debt interest accrued by the principal
+     * @param account The user address whose balance is calculated
+     * @return The balance of the user
+     **/
     function balanceOf(address account)
         public
         view
@@ -129,25 +52,18 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
         override
         returns (uint256)
     {
-        uint256 accountBalance = super.balanceOf(account);
-        if (accountBalance == 0) {
+        uint256 shareBalance = _userState[account].balance;
+        if (shareBalance == 0) {
             return 0;
         }
-        uint256 stableRate = _userState[account].additionalData;
-        uint256 cumulatedInterest = MathUtils.calculateCompoundedInterest(
-            stableRate,
-            _timestamps[account]
-        );
-        return accountBalance.rayMul(cumulatedInterest);
-    }
-
-    struct MintLocalVars {
-        uint256 previousSupply;
-        uint256 nextSupply;
-        uint256 amountInRay;
-        uint256 currentStableRate;
-        uint256 nextStableRate;
-        uint256 currentAvgStableRate;
+        return
+            _calculateBalanceForTimestamp(
+                shareBalance,
+                lastRebasingIndex(),
+                _userState[account].additionalData,
+                uint40(block.timestamp),
+                _timestamps[account]
+            );
     }
 
     /// @inheritdoc IStableDebtToken
@@ -181,7 +97,7 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
 
         vars.previousSupply = totalSupply();
         vars.currentAvgStableRate = _avgStableRate;
-        vars.nextSupply = _totalSupply = vars.previousSupply + amount;
+        vars.nextSupply = vars.previousSupply + amount;
 
         vars.amountInRay = amount.wadToRay();
 
@@ -208,7 +124,10 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
         ).toUint128();
 
         uint256 amountToMint = amount + balanceIncrease;
-        _mint(onBehalfOf, amountToMint, vars.previousSupply);
+        uint256 rebaseIndex = lastRebasingIndex();
+        uint256 shareAmountToMint = amountToMint.rayDiv(rebaseIndex);
+        uint256 totalShareSupply = vars.previousSupply.rayDiv(rebaseIndex);
+        _mint(onBehalfOf, shareAmountToMint, totalShareSupply);
 
         emit Transfer(address(0), onBehalfOf, amountToMint);
         emit Mint(
@@ -254,9 +173,8 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
         // In this case we simply set the total supply and the avg stable rate to 0
         if (previousSupply <= amount) {
             _avgStableRate = 0;
-            _totalSupply = 0;
         } else {
-            nextSupply = _totalSupply = previousSupply - amount;
+            nextSupply = previousSupply - amount;
             uint256 firstTerm = uint256(_avgStableRate).rayMul(
                 previousSupply.wadToRay()
             );
@@ -266,7 +184,7 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
             // happen that user rate * user balance > avg rate * total supply. In that case,
             // we simply set the avg rate to 0
             if (secondTerm >= firstTerm) {
-                nextAvgStableRate = _totalSupply = _avgStableRate = 0;
+                nextAvgStableRate = _avgStableRate = 0;
             } else {
                 nextAvgStableRate = _avgStableRate = (
                     (firstTerm - secondTerm).rayDiv(nextSupply.wadToRay())
@@ -284,9 +202,12 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
         //solium-disable-next-line
         _totalSupplyTimestamp = uint40(block.timestamp);
 
+        uint256 rebaseIndex = lastRebasingIndex();
         if (balanceIncrease > amount) {
             uint256 amountToMint = balanceIncrease - amount;
-            _mint(from, amountToMint, previousSupply);
+            uint256 shareAmountToMint = amountToMint.rayDiv(rebaseIndex);
+            uint256 totalShareSupply = previousSupply.rayDiv(rebaseIndex);
+            _mint(from, shareAmountToMint, totalShareSupply);
             emit Transfer(address(0), from, amountToMint);
             emit Mint(
                 from,
@@ -300,7 +221,9 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
             );
         } else {
             uint256 amountToBurn = amount - balanceIncrease;
-            _burn(from, amountToBurn, previousSupply);
+            uint256 shareAmountToBurn = amountToBurn.rayDiv(rebaseIndex);
+            uint256 totalShareSupply = previousSupply.rayDiv(rebaseIndex);
+            _burn(from, shareAmountToBurn, totalShareSupply);
             emit Transfer(from, address(0), amountToBurn);
             emit Burn(
                 from,
@@ -315,6 +238,22 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
         return (nextSupply, nextAvgStableRate);
     }
 
+    function _calculateBalanceForTimestamp(
+        uint256 shareBalance,
+        uint256 rebaseIndex,
+        uint256 stableRate,
+        uint40 timestamp,
+        uint40 lastUpdateTimestamp
+    ) internal pure returns (uint256) {
+        uint256 scaledBalance = shareBalance.rayMul(rebaseIndex);
+        uint256 cumulatedInterest = MathUtils.calculateCompoundedInterest(
+            stableRate,
+            lastUpdateTimestamp,
+            timestamp
+        );
+        return scaledBalance.rayMul(cumulatedInterest);
+    }
+
     /**
      * @notice Calculates the increase in balance since the last user interaction
      * @param user The address of the user for which the interest is being accumulated
@@ -325,28 +264,39 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
     function _calculateBalanceIncrease(address user)
         internal
         view
-        virtual
+        override
         returns (
             uint256,
             uint256,
             uint256
         )
     {
-        uint256 previousPrincipalBalance = super.balanceOf(user);
-        if (previousPrincipalBalance == 0) {
+        uint256 shareBalance = _userState[user].balance;
+        if (shareBalance == 0) {
             return (0, 0, 0);
         }
+        uint256 rebaseIndex = lastRebasingIndex();
+        uint256 stableRate = _userState[user].additionalData;
+        uint40 lastUpdateTimestamp = _timestamps[user];
 
-        uint256 newPrincipalBalance = balanceOf(user);
-
-        return (
-            previousPrincipalBalance,
-            newPrincipalBalance,
-            newPrincipalBalance - previousPrincipalBalance
+        uint256 previousBalance = _calculateBalanceForTimestamp(
+            shareBalance,
+            rebaseIndex,
+            stableRate,
+            lastUpdateTimestamp,
+            lastUpdateTimestamp
         );
+        uint256 newBalance = _calculateBalanceForTimestamp(
+            shareBalance,
+            rebaseIndex,
+            stableRate,
+            uint40(block.timestamp),
+            lastUpdateTimestamp
+        );
+
+        return (previousBalance, newBalance, newBalance - previousBalance);
     }
 
-    /// @inheritdoc IStableDebtToken
     function getSupplyData()
         external
         view
@@ -360,9 +310,11 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
         )
     {
         uint256 avgRate = _avgStableRate;
+        uint256 rebaseIndex = lastRebasingIndex();
+
         return (
-            super.totalSupply(),
-            _calcTotalSupply(avgRate),
+            _totalSupply.rayMul(rebaseIndex),
+            _calcTotalSupply(avgRate, rebaseIndex),
             avgRate,
             _totalSupplyTimestamp
         );
@@ -372,27 +324,16 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
     function getTotalSupplyAndAvgRate()
         external
         view
-        virtual
         override
         returns (uint256, uint256)
     {
         uint256 avgRate = _avgStableRate;
-        return (_calcTotalSupply(avgRate), avgRate);
+        return (_calcTotalSupply(avgRate, lastRebasingIndex()), avgRate);
     }
 
     /// @inheritdoc IERC20
     function totalSupply() public view virtual override returns (uint256) {
-        return _calcTotalSupply(_avgStableRate);
-    }
-
-    /// @inheritdoc IStableDebtToken
-    function getTotalSupplyLastUpdated()
-        external
-        view
-        override
-        returns (uint40)
-    {
-        return _totalSupplyTimestamp;
+        return _calcTotalSupply(_avgStableRate, lastRebasingIndex());
     }
 
     /// @inheritdoc IStableDebtToken
@@ -403,58 +344,57 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
         override
         returns (uint256)
     {
-        return super.balanceOf(user);
-    }
-
-    /// @inheritdoc IStableDebtToken
-    function UNDERLYING_ASSET_ADDRESS()
-        external
-        view
-        override
-        returns (address)
-    {
-        return _underlyingAsset;
+        uint256 shareBalance = _userState[user].balance;
+        return shareBalance.rayMul(lastRebasingIndex());
     }
 
     /**
      * @notice Calculates the total supply
      * @param avgRate The average rate at which the total supply increases
+     * @param rebaseIndex Current rebase index
      * @return The debt balance of the user since the last burn/mint action
      **/
-    function _calcTotalSupply(uint256 avgRate) internal view returns (uint256) {
-        uint256 principalSupply = super.totalSupply();
+    function _calcTotalSupply(uint256 avgRate, uint256 rebaseIndex)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 principalSupply = _totalSupply;
         if (principalSupply == 0) {
             return 0;
         }
 
-        uint256 cumulatedInterest = MathUtils.calculateCompoundedInterest(
-            avgRate,
-            _totalSupplyTimestamp
-        );
-
-        return principalSupply.rayMul(cumulatedInterest);
+        return
+            _calculateBalanceForTimestamp(
+                principalSupply,
+                rebaseIndex,
+                avgRate,
+                uint40(block.timestamp),
+                _totalSupplyTimestamp
+            );
     }
 
     /**
      * @notice Mints stable debt tokens to a user
      * @param account The account receiving the debt tokens
-     * @param amount The amount being minted
-     * @param oldTotalSupply The total supply before the minting event
+     * @param shareAmount The share amount being minted
+     * @param oldTotalShareSupply The total share supply before the minting event
      **/
     function _mint(
         address account,
-        uint256 amount,
-        uint256 oldTotalSupply
-    ) internal virtual {
-        uint128 castAmount = amount.toUint128();
-        uint128 oldAccountBalance = _userState[account].balance;
-        _userState[account].balance = oldAccountBalance + castAmount;
+        uint256 shareAmount,
+        uint256 oldTotalShareSupply
+    ) internal override {
+        uint128 castShareAmount = shareAmount.toUint128();
+        uint128 oldShareBalance = _userState[account].balance;
+        _userState[account].balance = oldShareBalance + castShareAmount;
+        _totalSupply += shareAmount;
 
         if (address(_rewardController) != address(0)) {
             _rewardController.handleAction(
                 account,
-                oldTotalSupply,
-                oldAccountBalance
+                oldTotalShareSupply,
+                oldShareBalance
             );
         }
     }
@@ -462,87 +402,25 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
     /**
      * @notice Burns stable debt tokens of a user
      * @param account The user getting his debt burned
-     * @param amount The amount being burned
-     * @param oldTotalSupply The total supply before the burning event
+     * @param shareAmount The share amount being burned
+     * @param oldTotalShareSupply The total share supply before the burning event
      **/
     function _burn(
         address account,
-        uint256 amount,
-        uint256 oldTotalSupply
-    ) internal virtual {
-        uint128 castAmount = amount.toUint128();
-        uint128 oldAccountBalance = _userState[account].balance;
-        _userState[account].balance = oldAccountBalance - castAmount;
+        uint256 shareAmount,
+        uint256 oldTotalShareSupply
+    ) internal override {
+        uint128 castShareAmount = shareAmount.toUint128();
+        uint128 oldShareBalance = _userState[account].balance;
+        _userState[account].balance = oldShareBalance - castShareAmount;
+        _totalSupply -= shareAmount;
 
         if (address(_rewardController) != address(0)) {
             _rewardController.handleAction(
                 account,
-                oldTotalSupply,
-                oldAccountBalance
+                oldTotalShareSupply,
+                oldShareBalance
             );
         }
-    }
-
-    /// @inheritdoc EIP712Base
-    function _EIP712BaseId() internal view override returns (string memory) {
-        return name();
-    }
-
-    /**
-     * @dev Being non transferrable, the debt token does not implement any of the
-     * standard ERC20 functions for transfer and allowance.
-     **/
-    function transfer(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
-        revert(Errors.OPERATION_NOT_SUPPORTED);
-    }
-
-    function allowance(address, address)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        revert(Errors.OPERATION_NOT_SUPPORTED);
-    }
-
-    function approve(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
-        revert(Errors.OPERATION_NOT_SUPPORTED);
-    }
-
-    function transferFrom(
-        address,
-        address,
-        uint256
-    ) external virtual override returns (bool) {
-        revert(Errors.OPERATION_NOT_SUPPORTED);
-    }
-
-    function increaseAllowance(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
-        revert(Errors.OPERATION_NOT_SUPPORTED);
-    }
-
-    function decreaseAllowance(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
-        revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 }

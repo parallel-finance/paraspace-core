@@ -47,6 +47,7 @@ import {
   deployPYieldToken,
   deployAutoYieldApe,
   deployGenericStableDebtToken,
+  deployATokenStableDebtToken,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -130,6 +131,7 @@ export const initReservesByHelper = async (
   let variableDebtTokenImplementationAddress = genericVariableDebtTokenAddress;
   let stETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
+  let aTokenStableDebtTokenImplementationAddress = "";
   let PsApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
 
@@ -161,23 +163,6 @@ export const initReservesByHelper = async (
       false
     );
   }
-
-  // const reserves = Object.entries(reservesParams).filter(
-  //   ([, {xTokenImpl}]) =>
-  //     xTokenImpl === eContractid.DelegationAwarePTokenImpl ||
-  //     xTokenImpl === eContractid.PTokenImpl ||
-  //     xTokenImpl === eContractid.NTokenImpl ||
-  //     xTokenImpl === eContractid.NTokenBAYCImpl ||
-  //     xTokenImpl === eContractid.NTokenMAYCImpl ||
-  //     xTokenImpl === eContractid.NTokenMoonBirdsImpl ||
-  //     xTokenImpl === eContractid.NTokenUniswapV3Impl ||
-  //     xTokenImpl === eContractid.PTokenStETHImpl ||
-  //     xTokenImpl === eContractid.PTokenATokenImpl ||
-  //     xTokenImpl === eContractid.PTokenSApeImpl ||
-  //     xTokenImpl === eContractid.PTokenCApeImpl ||
-  //     xTokenImpl === eContractid.PYieldTokenImpl ||
-  //     xTokenImpl === eContractid.NTokenBAKCImpl
-  // ) as [string, IReserveParams][];
 
   for (const [symbol, params] of reserves) {
     if (!tokenAddresses[symbol]) {
@@ -388,6 +373,12 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = aTokenVariableDebtTokenImplementationAddress;
+          if (!aTokenStableDebtTokenImplementationAddress) {
+            aTokenStableDebtTokenImplementationAddress = (
+              await deployATokenStableDebtToken(pool.address, verify)
+            ).address;
+          }
+          stableDebtTokenToUse = aTokenStableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.sAPE) {
           if (!pTokenSApeImplementationAddress) {
             const protocolDataProvider = await getProtocolDataProvider();

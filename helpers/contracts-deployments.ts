@@ -257,6 +257,8 @@ import {
   MockedETHNFTOracle__factory,
   MockedInstantWithdrawNFT__factory,
   MockedInstantWithdrawNFT,
+  ATokenStableDebtToken,
+  ATokenStableDebtToken__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2741,6 +2743,17 @@ export const deployGenericStableDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<StableDebtToken>;
+
+export const deployATokenStableDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ATokenStableDebtToken__factory(await getFirstSigner()),
+    eContractid.ATokenStableDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<ATokenStableDebtToken>;
 
 export const deployMockStableDebtToken = async (
   args: [

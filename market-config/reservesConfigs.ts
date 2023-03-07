@@ -459,7 +459,7 @@ export const strategyAWETH: IReserveParams = {
   liquidationThreshold: "8100",
   liquidationBonus: "10750",
   borrowingEnabled: true,
-  stableBorrowRateEnabled: false,
+  stableBorrowRateEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenATokenImpl,
   reserveFactor: "1000",
