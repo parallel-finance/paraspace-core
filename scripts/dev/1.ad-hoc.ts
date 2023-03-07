@@ -6,6 +6,20 @@ import {
   getPoolProxy,
 } from "../../helpers/contracts-getters";
 import {ERC721TokenContractId} from "../../helpers/types";
+import {NToken} from "../../types";
+
+const getTokens = async (ntoken: NToken, user: string) => {
+  const balance = (await ntoken.balanceOf(user)).toNumber();
+  const res: string[] = [];
+  for (let i = 0; i < balance; i++) {
+    const tokenId = await ntoken.tokenOfOwnerByIndex(user, i);
+    if (!(await ntoken.isUsedAsCollateral(tokenId))) {
+      continue;
+    }
+    res.push(tokenId.toString());
+  }
+  return res;
+};
 
 const adHoc = async () => {
   console.time("ad-hoc");
@@ -49,6 +63,7 @@ const adHoc = async () => {
     [user: string]: {
       [asset: string]: {
         avgMultiplier: string;
+        traitBoostedTokenIds: string[];
         tokenIds: string[];
       };
     };
@@ -71,7 +86,8 @@ const adHoc = async () => {
 
       users[e.args.owner][await ntoken.symbol()] = {
         avgMultiplier: fromBn(await ntoken.avgMultiplierOf(e.args.owner)),
-        tokenIds,
+        traitBoostedTokenIds: tokenIds,
+        tokenIds: await getTokens(ntoken, e.args.owner),
       };
     }
   }
