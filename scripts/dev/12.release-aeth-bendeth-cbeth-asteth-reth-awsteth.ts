@@ -3,6 +3,7 @@ import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployBaseCurrencySynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
+  deployUiPoolDataProvider,
 } from "../../helpers/contracts-deployments";
 import {
   getParaSpaceOracle,
@@ -171,6 +172,12 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
     paraSpaceAdminAddress
   );
   console.timeEnd("configuring reserves...");
+
+  await deployUiPoolDataProvider(
+    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    verify
+  );
   console.timeEnd("release-aeth-bendeth-cbeth-asteth-reth-awsteth");
 };
 
