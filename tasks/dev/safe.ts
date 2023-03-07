@@ -137,7 +137,6 @@ task("propose-queued-txs", "Propose queued timelock transactions").setAction(
       if (!(await timeLock.isActionQueued(e.args.actionHash))) {
         continue;
       }
-      console.log(e.transactionHash);
       const {newTarget, newData} = await getTimeLockData(
         e.args.target.toString(),
         e.args.data.toString(),

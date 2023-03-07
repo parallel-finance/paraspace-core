@@ -11405,7 +11405,7 @@ const MAYCTraits = Object.values(TRAIT_BOOST_JSON["MAYC"]);
 
 const BAKCTraits = Object.values(TRAIT_BOOST_JSON["BAKC"]);
 
-// const OTHRTraits = Object.values(TRAIT_BOOST_JSON["OTHR"]);
+const OTHRTraits = Object.values(TRAIT_BOOST_JSON["Otherdeeds"]);
 
 const AZUKITraits = Object.values(TRAIT_BOOST_JSON["Azuki"]);
 
@@ -11417,7 +11417,7 @@ const setTraitsMultipliers = async () => {
   const bayc = allTokens[ERC721TokenContractId.BAYC];
   const mayc = allTokens[ERC721TokenContractId.MAYC];
   const bakc = allTokens[ERC721TokenContractId.BAKC];
-  // const othr = allTokens[ERC721TokenContractId.OTHR];
+  const othr = allTokens[ERC721TokenContractId.OTHR];
   const azuki = allTokens[ERC721TokenContractId.AZUKI];
 
   const nBAYC = await getNToken(
@@ -11435,11 +11435,11 @@ const setTraitsMultipliers = async () => {
       await pool.getReserveData(bakc.address)
     ).xTokenAddress
   );
-  // const nOTHR = await getNToken(
-  //   (
-  //     await pool.getReserveData(othr.address)
-  //   ).xTokenAddress
-  // );
+  const nOTHR = await getNToken(
+    (
+      await pool.getReserveData(othr.address)
+    ).xTokenAddress
+  );
   const nAZUKI = await getNToken(
     (
       await pool.getReserveData(azuki.address)
@@ -11512,28 +11512,6 @@ const setTraitsMultipliers = async () => {
     }
   }
 
-  // ////////////////////////////////////////////////////////////////////////////////
-  // // OTHR
-  // ////////////////////////////////////////////////////////////////////////////////
-  // if (DRY_RUN) {
-  //   const tokenIds = OTHRTraits.map((x) => x.tokenIds).flat();
-  //   const multipliers = OTHRTraits.map((x) =>
-  //     x.tokenIds.map(() => x.traitMultiplier)
-  //   ).flat();
-  //
-  //   const chunked = zip(
-  //     chunk(tokenIds, CHUNK_SIZE),
-  //     chunk(multipliers, CHUNK_SIZE)
-  //   );
-  //   for (const [tokenIds, multipliers] of chunked) {
-  //     const encodedData = nOTHR.interface.encodeFunctionData(
-  //       "setTraitsMultipliers",
-  //       [tokenIds!, multipliers!]
-  //     );
-  //     await dryRunEncodedData(nOTHR.address, encodedData);
-  //   }
-  // }
-  //
   ////////////////////////////////////////////////////////////////////////////////
   // AZUKI
   ////////////////////////////////////////////////////////////////////////////////
@@ -11553,6 +11531,28 @@ const setTraitsMultipliers = async () => {
         [tokenIds!, multipliers!]
       );
       await dryRunEncodedData(nAZUKI.address, encodedData);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // OTHR
+  ////////////////////////////////////////////////////////////////////////////////
+  if (DRY_RUN) {
+    const tokenIds = OTHRTraits.map((x) => x.ids).flat();
+    const multipliers = OTHRTraits.map((x) =>
+      x.ids.map(() => toBn(x.boost.toString()))
+    ).flat();
+
+    const chunked = zip(
+      chunk(tokenIds, CHUNK_SIZE),
+      chunk(multipliers, CHUNK_SIZE)
+    );
+    for (const [tokenIds, multipliers] of chunked) {
+      const encodedData = nOTHR.interface.encodeFunctionData(
+        "setTraitsMultipliers",
+        [tokenIds!, multipliers!]
+      );
+      await dryRunEncodedData(nOTHR.address, encodedData);
     }
   }
 
