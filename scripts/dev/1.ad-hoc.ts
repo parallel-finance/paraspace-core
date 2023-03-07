@@ -1,6 +1,5 @@
 import {fromBn} from "evm-bn";
 import rawBRE from "hardhat";
-import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   getAllTokens,
   getNToken,
@@ -44,86 +43,40 @@ const adHoc = async () => {
       await pool.getReserveData(azuki.address)
     ).xTokenAddress
   );
+  const ntokens = [nBAYC, nMAYC, nBAKC, nOTHR, nAZUKI];
 
-  const filterBAYC = nBAYC.filters.TraitMultiplierSet(undefined, undefined);
-  for (const e of (await nBAYC.queryFilter(filterBAYC)).filter(
-    (x) => x.args.owner != ZERO_ADDRESS
-  )) {
-    console.log(
-      "BAYC",
-      e.args.owner,
-      fromBn(await nBAYC.avgMultiplierOf(e.args.owner)),
-      (
-        await nBAYC.queryFilter(
-          nBAYC.filters.TraitMultiplierSet(e.args.owner, undefined)
+  const users: {
+    [user: string]: {
+      [asset: string]: {
+        avgMultiplier: string;
+        tokenIds: string[];
+      };
+    };
+  } = {};
+
+  for (const ntoken of ntokens) {
+    const filter = ntoken.filters.AvgMultiplierUpdated(undefined, undefined);
+    const events = await ntoken.queryFilter(filter);
+
+    for (const e of events) {
+      if (!users[e.args.owner]) {
+        users[e.args.owner] = {};
+      }
+
+      const tokenIds = (
+        await ntoken.queryFilter(
+          ntoken.filters.TraitMultiplierSet(e.args.owner)
         )
-      ).map((e) => e.args.tokenId.toString())
-    );
+      ).map((x) => x.args.tokenId.toString());
+
+      users[e.args.owner][await ntoken.symbol()] = {
+        avgMultiplier: fromBn(await ntoken.avgMultiplierOf(e.args.owner)),
+        tokenIds,
+      };
+    }
   }
 
-  const filterMAYC = nMAYC.filters.TraitMultiplierSet(undefined, undefined);
-  for (const e of (await nMAYC.queryFilter(filterMAYC)).filter(
-    (x) => x.args.owner != ZERO_ADDRESS
-  )) {
-    console.log(
-      "MAYC",
-      e.args.owner,
-      fromBn(await nMAYC.avgMultiplierOf(e.args.owner)),
-      (
-        await nMAYC.queryFilter(
-          nMAYC.filters.TraitMultiplierSet(e.args.owner, undefined)
-        )
-      ).map((e) => e.args.tokenId.toString())
-    );
-  }
-
-  const filterBAKC = nBAKC.filters.TraitMultiplierSet(undefined, undefined);
-  for (const e of (await nBAKC.queryFilter(filterBAKC)).filter(
-    (x) => x.args.owner != ZERO_ADDRESS
-  )) {
-    console.log(
-      "BAKC",
-      e.args.owner,
-      fromBn(await nBAKC.avgMultiplierOf(e.args.owner)),
-      (
-        await nBAKC.queryFilter(
-          nBAKC.filters.TraitMultiplierSet(e.args.owner, undefined)
-        )
-      ).map((e) => e.args.tokenId.toString())
-    );
-  }
-
-  const filterOTHR = nOTHR.filters.TraitMultiplierSet(undefined, undefined);
-  for (const e of (await nOTHR.queryFilter(filterOTHR)).filter(
-    (x) => x.args.owner != ZERO_ADDRESS
-  )) {
-    console.log(
-      "OTHR",
-      e.args.owner,
-      fromBn(await nOTHR.avgMultiplierOf(e.args.owner)),
-      (
-        await nOTHR.queryFilter(
-          nOTHR.filters.TraitMultiplierSet(e.args.owner, undefined)
-        )
-      ).map((e) => e.args.tokenId.toString())
-    );
-  }
-
-  const filterAZUKI = nAZUKI.filters.TraitMultiplierSet(undefined, undefined);
-  for (const e of (await nAZUKI.queryFilter(filterAZUKI)).filter(
-    (x) => x.args.owner != ZERO_ADDRESS
-  )) {
-    console.log(
-      "AZUKI",
-      e.args.owner,
-      fromBn(await nAZUKI.avgMultiplierOf(e.args.owner)),
-      (
-        await nAZUKI.queryFilter(
-          nAZUKI.filters.TraitMultiplierSet(e.args.owner, undefined)
-        )
-      ).map((e) => e.args.tokenId.toString())
-    );
-  }
+  console.log(JSON.stringify(users, null, 4));
 
   console.timeEnd("ad-hoc");
 };
