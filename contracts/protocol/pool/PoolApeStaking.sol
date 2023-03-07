@@ -654,13 +654,24 @@ contract PoolApeStaking is
             APE_COMPOUND.deposit(msg.sender, compoundFee);
         }
 
+        bytes memory swapPath = abi.encodePacked(
+            APE_COIN,
+            APE_WETH_FEE,
+            WETH,
+            WETH_USDC_FEE,
+            USDC
+        );
+
+        uint256 price = _getApeRelativePrice(address(USDC), 1E6);
+
         for (uint256 i = 0; i < users.length; i++) {
             _swapAndSupplyForUser(
                 ps,
                 address(USDC),
                 localVar.swapAmounts[i],
+                swapPath,
                 users[i],
-                _getApeRelativePrice(address(USDC), 1E6)
+                price
             );
             _repayAndSupplyForUser(
                 ps,
@@ -676,19 +687,13 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps,
         address tokenOut,
         uint256 amountIn,
+        bytes memory swapPath,
         address user,
         uint256 price
     ) internal {
         if (amountIn == 0) {
             return;
         }
-        bytes memory swapPath = abi.encodePacked(
-            APE_COIN,
-            APE_WETH_FEE,
-            WETH,
-            WETH_USDC_FEE,
-            USDC
-        );
         uint256 amountOut = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
                 path: swapPath,
