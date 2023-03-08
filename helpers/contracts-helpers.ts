@@ -495,7 +495,7 @@ export const createSeaportOrder = async <
 ) => {
   const domainData = {
     name: "ParaSpace",
-    version: "1.1",
+    version: "1.4",
     chainId: (await DRE.ethers.provider.getNetwork()).chainId,
     verifyingContract: seaport.address,
   };

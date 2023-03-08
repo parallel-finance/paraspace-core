@@ -3024,7 +3024,7 @@ abstract contract AccessControlEnumerable is
 // File contracts/mocks/tokens/Moonbirds.sol
 
 // UNLICENSED
-pragma solidity >=0.8.10 <0.9.0;
+pragma solidity >=0.8.17 <0.9.0;
 
 /**
  * @dev Interface for the NFT Royalty Standard.

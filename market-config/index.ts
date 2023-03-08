@@ -196,7 +196,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   Marketplace: {
-    Seaport: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+    Seaport: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
   },
   Chainlink: {
     WETH: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
@@ -295,7 +295,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   Marketplace: {
-    Seaport: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+    Seaport: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
   },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",

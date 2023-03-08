@@ -71,7 +71,7 @@ const hardhatConfig: HardhatUserConfig = {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
     compilers: [
       {
-        version: "0.8.10",
+        version: "0.8.17",
         settings: {
           optimizer: {
             enabled: true,
@@ -95,7 +95,7 @@ const hardhatConfig: HardhatUserConfig = {
     ],
     overrides: {
       "contracts/protocol/pool/PoolApeStaking.sol": {
-        version: "0.8.10",
+        version: "0.8.17",
         settings: {
           optimizer: {
             enabled: true,

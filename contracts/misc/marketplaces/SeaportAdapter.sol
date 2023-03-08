@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity 0.8.17;
 
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
@@ -68,9 +68,9 @@ contract SeaportAdapter is IMarketplace {
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
-        (AdvancedOrder[] memory advancedOrders, , ) = abi.decode(
+        (AdvancedOrder[] memory advancedOrders, , , ) = abi.decode(
             params,
-            (AdvancedOrder[], CriteriaResolver[], Fulfillment[])
+            (AdvancedOrder[], CriteriaResolver[], Fulfillment[], address)
         );
         // support advanced order in the future
         require(

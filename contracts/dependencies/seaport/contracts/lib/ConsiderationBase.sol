@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity 0.8.17;
 
 import {
     ConduitControllerInterface
@@ -9,14 +9,59 @@ import {
     ConsiderationEventsAndErrors
 } from "../interfaces/ConsiderationEventsAndErrors.sol";
 
-import "./ConsiderationConstants.sol";
+import {
+    BulkOrder_Typehash_Height_One,
+    BulkOrder_Typehash_Height_Two,
+    BulkOrder_Typehash_Height_Three,
+    BulkOrder_Typehash_Height_Four,
+    BulkOrder_Typehash_Height_Five,
+    BulkOrder_Typehash_Height_Six,
+    BulkOrder_Typehash_Height_Seven,
+    BulkOrder_Typehash_Height_Eight,
+    BulkOrder_Typehash_Height_Nine,
+    BulkOrder_Typehash_Height_Ten,
+    BulkOrder_Typehash_Height_Eleven,
+    BulkOrder_Typehash_Height_Twelve,
+    BulkOrder_Typehash_Height_Thirteen,
+    BulkOrder_Typehash_Height_Fourteen,
+    BulkOrder_Typehash_Height_Fifteen,
+    BulkOrder_Typehash_Height_Sixteen,
+    BulkOrder_Typehash_Height_Seventeen,
+    BulkOrder_Typehash_Height_Eighteen,
+    BulkOrder_Typehash_Height_Nineteen,
+    BulkOrder_Typehash_Height_Twenty,
+    BulkOrder_Typehash_Height_TwentyOne,
+    BulkOrder_Typehash_Height_TwentyTwo,
+    BulkOrder_Typehash_Height_TwentyThree,
+    BulkOrder_Typehash_Height_TwentyFour,
+    EIP712_domainData_chainId_offset,
+    EIP712_domainData_nameHash_offset,
+    EIP712_domainData_size,
+    EIP712_domainData_verifyingContract_offset,
+    EIP712_domainData_versionHash_offset,
+    FreeMemoryPointerSlot,
+    NameLengthPtr,
+    NameWithLength,
+    OneWord,
+    Slot0x80,
+    ThreeWords,
+    ZeroSlot
+} from "./ConsiderationConstants.sol";
+
+import { ConsiderationDecoder } from "./ConsiderationDecoder.sol";
+
+import { ConsiderationEncoder } from "./ConsiderationEncoder.sol";
 
 /**
  * @title ConsiderationBase
  * @author 0age
  * @notice ConsiderationBase contains immutable constants and constructor logic.
  */
-contract ConsiderationBase is ConsiderationEventsAndErrors {
+contract ConsiderationBase is
+    ConsiderationDecoder,
+    ConsiderationEncoder,
+    ConsiderationEventsAndErrors
+{
     // Precompute hashes, original chainId, and domain separator on deployment.
     bytes32 internal immutable _NAME_HASH;
     bytes32 internal immutable _VERSION_HASH;
@@ -68,19 +113,48 @@ contract ConsiderationBase is ConsiderationEventsAndErrors {
     /**
      * @dev Internal view function to derive the EIP-712 domain separator.
      *
-     * @return The derived domain separator.
+     * @return domainSeparator The derived domain separator.
      */
-    function _deriveDomainSeparator() internal view returns (bytes32) {
-        // prettier-ignore
-        return keccak256(
-            abi.encode(
-                _EIP_712_DOMAIN_TYPEHASH,
-                _NAME_HASH,
-                _VERSION_HASH,
-                block.chainid,
-                address(this)
-            )
-        );
+    function _deriveDomainSeparator()
+        internal
+        view
+        returns (bytes32 domainSeparator)
+    {
+        bytes32 typehash = _EIP_712_DOMAIN_TYPEHASH;
+        bytes32 nameHash = _NAME_HASH;
+        bytes32 versionHash = _VERSION_HASH;
+
+        // Leverage scratch space and other memory to perform an efficient hash.
+        assembly {
+            // Retrieve the free memory pointer; it will be replaced afterwards.
+            let freeMemoryPointer := mload(FreeMemoryPointerSlot)
+
+            // Retrieve value at 0x80; it will also be replaced afterwards.
+            let slot0x80 := mload(Slot0x80)
+
+            // Place typehash, name hash, and version hash at start of memory.
+            mstore(0, typehash)
+            mstore(EIP712_domainData_nameHash_offset, nameHash)
+            mstore(EIP712_domainData_versionHash_offset, versionHash)
+
+            // Place chainId in the next memory location.
+            mstore(EIP712_domainData_chainId_offset, chainid())
+
+            // Place the address of this contract in the next memory location.
+            mstore(EIP712_domainData_verifyingContract_offset, address())
+
+            // Hash relevant region of memory to derive the domain separator.
+            domainSeparator := keccak256(0, EIP712_domainData_size)
+
+            // Restore the free memory pointer.
+            mstore(FreeMemoryPointerSlot, freeMemoryPointer)
+
+            // Restore the zero slot to zero.
+            mstore(ZeroSlot, 0)
+
+            // Restore the value at 0x80.
+            mstore(Slot0x80, slot0x80)
+        }
     }
 
     /**
@@ -150,60 +224,56 @@ contract ConsiderationBase is ConsiderationEventsAndErrors {
         nameHash = keccak256(bytes(_nameString()));
 
         // Derive hash of the version string of the contract.
-        versionHash = keccak256(bytes("1.1"));
+        versionHash = keccak256(bytes("1.4"));
 
         // Construct the OfferItem type string.
-        // prettier-ignore
-        bytes memory offerItemTypeString = abi.encodePacked(
-            "OfferItem(",
-                "uint8 itemType,",
-                "address token,",
-                "uint256 identifierOrCriteria,",
-                "uint256 startAmount,",
-                "uint256 endAmount",
+        bytes memory offerItemTypeString = bytes(
+            "OfferItem("
+            "uint8 itemType,"
+            "address token,"
+            "uint256 identifierOrCriteria,"
+            "uint256 startAmount,"
+            "uint256 endAmount"
             ")"
         );
 
         // Construct the ConsiderationItem type string.
-        // prettier-ignore
-        bytes memory considerationItemTypeString = abi.encodePacked(
-            "ConsiderationItem(",
-                "uint8 itemType,",
-                "address token,",
-                "uint256 identifierOrCriteria,",
-                "uint256 startAmount,",
-                "uint256 endAmount,",
-                "address recipient",
+        bytes memory considerationItemTypeString = bytes(
+            "ConsiderationItem("
+            "uint8 itemType,"
+            "address token,"
+            "uint256 identifierOrCriteria,"
+            "uint256 startAmount,"
+            "uint256 endAmount,"
+            "address recipient"
             ")"
         );
 
         // Construct the OrderComponents type string, not including the above.
-        // prettier-ignore
-        bytes memory orderComponentsPartialTypeString = abi.encodePacked(
-            "OrderComponents(",
-                "address offerer,",
-                "address zone,",
-                "OfferItem[] offer,",
-                "ConsiderationItem[] consideration,",
-                "uint8 orderType,",
-                "uint256 startTime,",
-                "uint256 endTime,",
-                "bytes32 zoneHash,",
-                "uint256 salt,",
-                "bytes32 conduitKey,",
-                "uint256 counter",
+        bytes memory orderComponentsPartialTypeString = bytes(
+            "OrderComponents("
+            "address offerer,"
+            "address zone,"
+            "OfferItem[] offer,"
+            "ConsiderationItem[] consideration,"
+            "uint8 orderType,"
+            "uint256 startTime,"
+            "uint256 endTime,"
+            "bytes32 zoneHash,"
+            "uint256 salt,"
+            "bytes32 conduitKey,"
+            "uint256 counter"
             ")"
         );
 
         // Construct the primary EIP-712 domain type string.
-        // prettier-ignore
         eip712DomainTypehash = keccak256(
-            abi.encodePacked(
-                "EIP712Domain(",
-                    "string name,",
-                    "string version,",
-                    "uint256 chainId,",
-                    "address verifyingContract",
+            bytes(
+                "EIP712Domain("
+                "string name,"
+                "string version,"
+                "uint256 chainId,"
+                "address verifyingContract"
                 ")"
             )
         );
@@ -214,13 +284,196 @@ contract ConsiderationBase is ConsiderationEventsAndErrors {
         // Derive ConsiderationItem type hash using corresponding type string.
         considerationItemTypehash = keccak256(considerationItemTypeString);
 
-        // Derive OrderItem type hash via combination of relevant type strings.
-        orderTypehash = keccak256(
-            abi.encodePacked(
-                orderComponentsPartialTypeString,
-                considerationItemTypeString,
-                offerItemTypeString
-            )
+        bytes memory orderTypeString = bytes.concat(
+            orderComponentsPartialTypeString,
+            considerationItemTypeString,
+            offerItemTypeString
         );
+
+        // Derive OrderItem type hash via combination of relevant type strings.
+        orderTypehash = keccak256(orderTypeString);
+    }
+
+    /**
+     * @dev Internal pure function to look up one of twenty-four potential bulk
+     *      order typehash constants based on the height of the bulk order tree.
+     *      Note that values between one and twenty-four are supported, which is
+     *      enforced by _isValidBulkOrderSize.
+     *
+     * @param _treeHeight The height of the bulk order tree. The value must be
+     *                    between one and twenty-four.
+     *
+     * @return _typeHash The EIP-712 typehash for the bulk order type with the
+     *                   given height.
+     */
+    function _lookupBulkOrderTypehash(
+        uint256 _treeHeight
+    ) internal pure returns (bytes32 _typeHash) {
+        // Utilize assembly to efficiently retrieve correct bulk order typehash.
+        assembly {
+            // Use a Yul function to enable use of the `leave` keyword
+            // to stop searching once the appropriate type hash is found.
+            function lookupTypeHash(treeHeight) -> typeHash {
+                // Handle tree heights one through eight.
+                if lt(treeHeight, 9) {
+                    // Handle tree heights one through four.
+                    if lt(treeHeight, 5) {
+                        // Handle tree heights one and two.
+                        if lt(treeHeight, 3) {
+                            // Utilize branchless logic to determine typehash.
+                            typeHash := ternary(
+                                eq(treeHeight, 1),
+                                BulkOrder_Typehash_Height_One,
+                                BulkOrder_Typehash_Height_Two
+                            )
+
+                            // Exit the function once typehash has been located.
+                            leave
+                        }
+
+                        // Handle height three and four via branchless logic.
+                        typeHash := ternary(
+                            eq(treeHeight, 3),
+                            BulkOrder_Typehash_Height_Three,
+                            BulkOrder_Typehash_Height_Four
+                        )
+
+                        // Exit the function once typehash has been located.
+                        leave
+                    }
+
+                    // Handle tree height five and six.
+                    if lt(treeHeight, 7) {
+                        // Utilize branchless logic to determine typehash.
+                        typeHash := ternary(
+                            eq(treeHeight, 5),
+                            BulkOrder_Typehash_Height_Five,
+                            BulkOrder_Typehash_Height_Six
+                        )
+
+                        // Exit the function once typehash has been located.
+                        leave
+                    }
+
+                    // Handle height seven and eight via branchless logic.
+                    typeHash := ternary(
+                        eq(treeHeight, 7),
+                        BulkOrder_Typehash_Height_Seven,
+                        BulkOrder_Typehash_Height_Eight
+                    )
+
+                    // Exit the function once typehash has been located.
+                    leave
+                }
+
+                // Handle tree height nine through sixteen.
+                if lt(treeHeight, 17) {
+                    // Handle tree height nine through twelve.
+                    if lt(treeHeight, 13) {
+                        // Handle tree height nine and ten.
+                        if lt(treeHeight, 11) {
+                            // Utilize branchless logic to determine typehash.
+                            typeHash := ternary(
+                                eq(treeHeight, 9),
+                                BulkOrder_Typehash_Height_Nine,
+                                BulkOrder_Typehash_Height_Ten
+                            )
+
+                            // Exit the function once typehash has been located.
+                            leave
+                        }
+
+                        // Handle height eleven and twelve via branchless logic.
+                        typeHash := ternary(
+                            eq(treeHeight, 11),
+                            BulkOrder_Typehash_Height_Eleven,
+                            BulkOrder_Typehash_Height_Twelve
+                        )
+
+                        // Exit the function once typehash has been located.
+                        leave
+                    }
+
+                    // Handle tree height thirteen and fourteen.
+                    if lt(treeHeight, 15) {
+                        // Utilize branchless logic to determine typehash.
+                        typeHash := ternary(
+                            eq(treeHeight, 13),
+                            BulkOrder_Typehash_Height_Thirteen,
+                            BulkOrder_Typehash_Height_Fourteen
+                        )
+
+                        // Exit the function once typehash has been located.
+                        leave
+                    }
+                    // Handle height fifteen and sixteen via branchless logic.
+                    typeHash := ternary(
+                        eq(treeHeight, 15),
+                        BulkOrder_Typehash_Height_Fifteen,
+                        BulkOrder_Typehash_Height_Sixteen
+                    )
+
+                    // Exit the function once typehash has been located.
+                    leave
+                }
+
+                // Handle tree height seventeen through twenty.
+                if lt(treeHeight, 21) {
+                    // Handle tree height seventeen and eighteen.
+                    if lt(treeHeight, 19) {
+                        // Utilize branchless logic to determine typehash.
+                        typeHash := ternary(
+                            eq(treeHeight, 17),
+                            BulkOrder_Typehash_Height_Seventeen,
+                            BulkOrder_Typehash_Height_Eighteen
+                        )
+
+                        // Exit the function once typehash has been located.
+                        leave
+                    }
+
+                    // Handle height nineteen and twenty via branchless logic.
+                    typeHash := ternary(
+                        eq(treeHeight, 19),
+                        BulkOrder_Typehash_Height_Nineteen,
+                        BulkOrder_Typehash_Height_Twenty
+                    )
+
+                    // Exit the function once typehash has been located.
+                    leave
+                }
+
+                // Handle tree height twenty-one and twenty-two.
+                if lt(treeHeight, 23) {
+                    // Utilize branchless logic to determine typehash.
+                    typeHash := ternary(
+                        eq(treeHeight, 21),
+                        BulkOrder_Typehash_Height_TwentyOne,
+                        BulkOrder_Typehash_Height_TwentyTwo
+                    )
+
+                    // Exit the function once typehash has been located.
+                    leave
+                }
+
+                // Handle height twenty-three & twenty-four w/ branchless logic.
+                typeHash := ternary(
+                    eq(treeHeight, 23),
+                    BulkOrder_Typehash_Height_TwentyThree,
+                    BulkOrder_Typehash_Height_TwentyFour
+                )
+
+                // Exit the function once typehash has been located.
+                leave
+            }
+
+            // Implement ternary conditional using branchless logic.
+            function ternary(cond, ifTrue, ifFalse) -> c {
+                c := xor(ifFalse, mul(cond, xor(ifFalse, ifTrue)))
+            }
+
+            // Look up the typehash using the supplied tree height.
+            _typeHash := lookupTypeHash(_treeHeight)
+        }
     }
 }

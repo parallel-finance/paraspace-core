@@ -3,7 +3,7 @@
 
 // File contracts/Mimetics/IMimeticMetadata.sol
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.17;
 
 interface IMimeticMetadata {
     struct Generation {

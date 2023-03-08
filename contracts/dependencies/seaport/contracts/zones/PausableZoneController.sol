@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.17;
 
 import { PausableZone } from "./PausableZone.sol";
 
@@ -12,12 +12,12 @@ import {
 } from "./interfaces/PausableZoneEventsAndErrors.sol";
 
 import {
-    Order,
-    Fulfillment,
-    OrderComponents,
     AdvancedOrder,
     CriteriaResolver,
-    Execution
+    Execution,
+    Fulfillment,
+    Order,
+    OrderComponents
 } from "../lib/ConsiderationStructs.sol";
 
 import { SeaportInterface } from "../interfaces/SeaportInterface.sol";
@@ -76,11 +76,9 @@ contract PausableZoneController is
      *
      * @return derivedAddress The derived address for the zone.
      */
-    function createZone(bytes32 salt)
-        external
-        override
-        returns (address derivedAddress)
-    {
+    function createZone(
+        bytes32 salt
+    ) external override returns (address derivedAddress) {
         // Ensure the caller is the owner.
         if (msg.sender != _owner) {
             revert CallerIsNotOwner();
@@ -122,12 +120,9 @@ contract PausableZoneController is
      *
      * @return success A boolean indicating the zone has been paused.
      */
-    function pause(address zone)
-        external
-        override
-        isPauser
-        returns (bool success)
-    {
+    function pause(
+        address zone
+    ) external override isPauser returns (bool success) {
         // Call pause on the given zone.
         PausableZone(zone).pause(msg.sender);
 
@@ -329,7 +324,7 @@ contract PausableZoneController is
         _pauser = pauserToAssign;
 
         // Emit an event indicating the pauser has been assigned.
-        emit PauserUpdated(_pauser);
+        emit PauserUpdated(pauserToAssign);
     }
 
     /**
