@@ -85,6 +85,7 @@ import {
   AutoYieldApe__factory,
   PYieldToken__factory,
   HelperContract__factory,
+  DelegationRegistry__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1198,6 +1199,17 @@ export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.SEWER}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getDelegationRegistry = async (address?: tEthereumAddress) =>
+  await DelegationRegistry__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.DelegationRegistry}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );

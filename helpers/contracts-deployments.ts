@@ -247,6 +247,8 @@ import {
   HelperContract__factory,
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
+  DelegationRegistry,
+  DelegationRegistry__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -797,6 +799,7 @@ export const deployGenericPTokenImpl = async (
 export const deployGenericNTokenImpl = async (
   poolAddress: tEthereumAddress,
   atomicPricing: boolean,
+  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -810,7 +813,7 @@ export const deployGenericNTokenImpl = async (
   return withSaveAndVerify(
     new NToken__factory(libraries, await getFirstSigner()),
     eContractid.NTokenImpl,
-    [poolAddress, atomicPricing],
+    [poolAddress, atomicPricing, delegationRegistry],
     verify,
     false,
     libraries
@@ -819,6 +822,7 @@ export const deployGenericNTokenImpl = async (
 
 export const deployUniswapV3NTokenImpl = async (
   poolAddress: tEthereumAddress,
+  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -832,7 +836,7 @@ export const deployUniswapV3NTokenImpl = async (
   return withSaveAndVerify(
     new NTokenUniswapV3__factory(libraries, await getFirstSigner()),
     eContractid.NTokenUniswapV3Impl,
-    [poolAddress],
+    [poolAddress, delegationRegistry],
     verify,
     false,
     libraries
@@ -841,6 +845,7 @@ export const deployUniswapV3NTokenImpl = async (
 
 export const deployGenericMoonbirdNTokenImpl = async (
   poolAddress: tEthereumAddress,
+  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -854,7 +859,7 @@ export const deployGenericMoonbirdNTokenImpl = async (
   return withSaveAndVerify(
     new NTokenMoonBirds__factory(libraries, await getFirstSigner()),
     eContractid.NTokenMoonBirdsImpl,
-    [poolAddress],
+    [poolAddress, delegationRegistry],
     verify,
     false,
     libraries
@@ -1984,6 +1989,7 @@ export const deployApeStakingLogic = async (verify?: boolean) => {
 export const deployNTokenBAYCImpl = async (
   apeCoinStaking: tEthereumAddress,
   poolAddress: tEthereumAddress,
+  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const apeStakingLogic =
@@ -2003,7 +2009,7 @@ export const deployNTokenBAYCImpl = async (
   return withSaveAndVerify(
     new NTokenBAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenBAYCImpl,
-    [poolAddress, apeCoinStaking],
+    [poolAddress, apeCoinStaking, delegationRegistry],
     verify,
     false,
     libraries
@@ -2013,6 +2019,7 @@ export const deployNTokenBAYCImpl = async (
 export const deployNTokenMAYCImpl = async (
   apeCoinStaking: tEthereumAddress,
   poolAddress: tEthereumAddress,
+  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const apeStakingLogic =
@@ -2031,7 +2038,7 @@ export const deployNTokenMAYCImpl = async (
   return withSaveAndVerify(
     new NTokenMAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenMAYCImpl,
-    [poolAddress, apeCoinStaking],
+    [poolAddress, apeCoinStaking, delegationRegistry],
     verify,
     false,
     libraries
@@ -2043,6 +2050,7 @@ export const deployNTokenBAKCImpl = async (
   apeCoinStaking: tEthereumAddress,
   nBAYC: tEthereumAddress,
   nMAYC: tEthereumAddress,
+  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -2055,7 +2063,7 @@ export const deployNTokenBAKCImpl = async (
   return withSaveAndVerify(
     new NTokenBAKC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenBAKCImpl,
-    [poolAddress, apeCoinStaking, nBAYC, nMAYC],
+    [poolAddress, apeCoinStaking, nBAYC, nMAYC, delegationRegistry],
     verify,
     false,
     libraries
@@ -2577,7 +2585,7 @@ export const deployMockNToken = async (
   const instance = (await withSaveAndVerify(
     new MockNToken__factory(libraries, await getFirstSigner()),
     eContractid.MockNToken,
-    [args[0], false],
+    [args[0], ZERO_ADDRESS, false],
     verify
   )) as MockNToken;
 
@@ -2699,3 +2707,11 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployDelegationRegistry = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new DelegationRegistry__factory(await getFirstSigner()),
+    eContractid.DelegationRegistry,
+    [],
+    verify
+  ) as Promise<DelegationRegistry>;

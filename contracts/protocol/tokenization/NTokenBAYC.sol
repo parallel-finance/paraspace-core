@@ -13,9 +13,11 @@ import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
 contract NTokenBAYC is NTokenApeStaking {
-    constructor(IPool pool, address apeCoinStaking)
-        NTokenApeStaking(pool, apeCoinStaking)
-    {}
+    constructor(
+        IPool pool,
+        address apeCoinStaking,
+        address delegateRegistry
+    ) NTokenApeStaking(pool, apeCoinStaking, delegateRegistry) {}
 
     /**
      * @notice Deposit ApeCoin to the BAYC Pool

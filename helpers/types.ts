@@ -252,6 +252,7 @@ export enum eContractid {
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
+  DelegationRegistry = "DelegationRegistry",
 }
 
 /*
@@ -695,6 +696,7 @@ export interface ICommonConfiguration {
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
+  DelegationRegistry: tEthereumAddress;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {
