@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity 0.8.17;
 
 import {IUniswapV3PoolDerivedState} from "../dependencies/uniswap/IUniswapV3PoolDerivedState.sol";
 import {IUniswapV3PoolState} from "../dependencies/uniswap/IUniswapV3PoolState.sol";

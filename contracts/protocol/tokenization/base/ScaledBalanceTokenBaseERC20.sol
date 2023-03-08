@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity 0.8.17;
 
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity 0.8.17;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
@@ -11,6 +11,7 @@ import {INToken} from "../../interfaces/INToken.sol";
 import {IPToken} from "../../interfaces/IPToken.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
+import {ScaledBalanceTokenBaseERC20} from "../../protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 
 /**
@@ -61,7 +62,7 @@ contract PTokenSApe is PToken {
     function scaledBalanceOf(address user)
         public
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return balanceOf(user);

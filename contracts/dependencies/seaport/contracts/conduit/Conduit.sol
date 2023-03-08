@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.17;
 
 import { ConduitInterface } from "../interfaces/ConduitInterface.sol";
 
@@ -8,14 +8,23 @@ import { ConduitItemType } from "./lib/ConduitEnums.sol";
 import { TokenTransferrer } from "../lib/TokenTransferrer.sol";
 
 import {
-    ConduitTransfer,
-    ConduitBatch1155Transfer
+    ConduitBatch1155Transfer,
+    ConduitTransfer
 } from "./lib/ConduitStructs.sol";
 
-import "./lib/ConduitConstants.sol";
+import {
+    ChannelClosed_channel_ptr,
+    ChannelClosed_error_length,
+    ChannelClosed_error_ptr,
+    ChannelClosed_error_signature,
+    ChannelKey_channel_ptr,
+    ChannelKey_length,
+    ChannelKey_slot_ptr
+} from "./lib/ConduitConstants.sol";
 
 import { INToken } from "../../../../interfaces/INToken.sol";
 import { IProtocolDataProvider } from "../../../../interfaces/IProtocolDataProvider.sol";
+
 
 /**
  * @title Conduit
@@ -32,10 +41,11 @@ import { IProtocolDataProvider } from "../../../../interfaces/IProtocolDataProvi
 contract Conduit is ConduitInterface, TokenTransferrer {
     // Set deployer as an immutable controller that can update channel statuses.
     address private immutable _controller;
-    address private _protocolDataProvider;
 
     // Track the status of each channel.
     mapping(address => bool) private _channels;
+
+    address private _protocolDataProvider;
 
     /**
      * @notice Ensure that the caller is currently registered as an open channel
@@ -62,7 +72,11 @@ contract Conduit is ConduitInterface, TokenTransferrer {
                 // Next, set the caller as the argument.
                 mstore(ChannelClosed_channel_ptr, caller())
 
-                // Finally, revert, returning full custom error with argument.
+                // Finally, revert, returning full custom error with argument
+                // data in memory.
+                // revert(abi.encodeWithSignature(
+                //     "ChannelClosed(address)", caller()
+                // ))
                 revert(ChannelClosed_error_ptr, ChannelClosed_error_length)
             }
         }
@@ -79,11 +93,11 @@ contract Conduit is ConduitInterface, TokenTransferrer {
         _controller = msg.sender;
     }
 
-
     function initialize(address protocolDataProvider) external {
         require(_protocolDataProvider == address(0),"Conduit: already initialized");
         _protocolDataProvider = protocolDataProvider;
     }
+
 
     /**
      * @notice Execute a sequence of ERC20/721/1155 transfers. Only a caller
@@ -99,12 +113,9 @@ contract Conduit is ConduitInterface, TokenTransferrer {
      * @return magicValue A magic value indicating that the transfers were
      *                    performed successfully.
      */
-    function execute(ConduitTransfer[] calldata transfers)
-        external
-        override
-        onlyOpenChannel
-        returns (bytes4 magicValue)
-    {
+    function execute(
+        ConduitTransfer[] calldata transfers
+    ) external override onlyOpenChannel returns (bytes4 magicValue) {
         // Retrieve the total number of transfers and place on the stack.
         uint256 totalStandardTransfers = transfers.length;
 
@@ -233,7 +244,7 @@ contract Conduit is ConduitInterface, TokenTransferrer {
         } else if (item.itemType == ConduitItemType.ERC721) {
             // Ensure that exactly one 721 item is being transferred.
             if (item.amount != 1) {
-                revert InvalidERC721TransferAmount();
+                revert InvalidERC721TransferAmount(item.amount);
             }
 
             if (_protocolDataProvider != address(0)) {
