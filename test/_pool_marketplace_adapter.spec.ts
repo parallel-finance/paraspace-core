@@ -168,7 +168,7 @@ describe("Marketplace Adapters - Negative Tests", () => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "matchAdvancedOrders",
-      [[buyOrder, sellOrder], criteriaResolvers, fulfillment]
+      [[buyOrder, sellOrder], criteriaResolvers, fulfillment, taker.address]
     );
     await expect(
       seaportAdapter.getBidOrderInfo(`0x${encodedData.slice(10)}`)

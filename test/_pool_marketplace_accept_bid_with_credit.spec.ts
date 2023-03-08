@@ -563,12 +563,12 @@ describe("Leveraged Bid - unit tests", () => {
     // encode order 1
     const encodedData = seaport.interface.encodeFunctionData(
       "matchAdvancedOrders",
-      [[sellOrder, buyOrder], [], fulfillment]
+      [[sellOrder, buyOrder], [], fulfillment, taker.address]
     );
     // encode order 2
     const encodedData2 = seaport.interface.encodeFunctionData(
       "matchAdvancedOrders",
-      [[sellOrder2, buyOrder2], [], fulfillment]
+      [[sellOrder2, buyOrder2], [], fulfillment, taker.address]
     );
 
     const domainData = {
@@ -768,7 +768,7 @@ describe("Leveraged Bid - unit tests", () => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "matchAdvancedOrders",
-      [[buyOrder, sellOrder], criteriaResolvers, fulfillment]
+      [[buyOrder, sellOrder], criteriaResolvers, fulfillment, taker.address]
     );
 
     const domainData = {
@@ -953,7 +953,7 @@ describe("Leveraged Bid - unit tests", () => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "matchAdvancedOrders",
-      [[buyOrder, sellOrder], criteriaResolvers, fulfillment]
+      [[buyOrder, sellOrder], criteriaResolvers, fulfillment, taker.address]
     );
 
     const domainData = {
@@ -1167,7 +1167,7 @@ describe("Leveraged Bid - unit tests", () => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "matchAdvancedOrders",
-      [[buyOrder, sellOrder], criteriaResolvers, fulfillment]
+      [[buyOrder, sellOrder], criteriaResolvers, fulfillment, taker.address]
     );
 
     const domainData = {
@@ -1788,7 +1788,7 @@ describe("Leveraged Bid - Negative tests", () => {
 
     const encodedData = seaport.interface.encodeFunctionData(
       "matchAdvancedOrders",
-      [[sellOrder, buyOrder], [], fulfillment]
+      [[sellOrder, buyOrder], [], fulfillment, taker.address]
     );
 
     const domainData = {

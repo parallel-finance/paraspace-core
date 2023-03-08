@@ -478,7 +478,7 @@ export async function executeAcceptBidWithCredit(
 
   const encodedData = seaport.interface.encodeFunctionData(
     "matchAdvancedOrders",
-    [[sellOrder, buyOrder], [], fulfillment]
+    [[sellOrder, buyOrder], [], fulfillment, taker.address]
   );
 
   const domainData = {
