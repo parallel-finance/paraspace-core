@@ -457,8 +457,8 @@ library DataTypes {
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
         // Reserve storage for ape staking
         uint256[20] __apeStakingReserve;
-        // loan origination fee rate
-        uint256 _loanOriginationFeeRate;
+        // loan creation fee rate
+        uint256 _loanCreationFeeRate;
         // Map of collateral and borrowable ERC20 asset address set
         mapping(address => EnumerableSet.AddressSet) _collateralBorrowableAsset;
         // Loan Id Counter

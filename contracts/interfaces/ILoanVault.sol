@@ -18,5 +18,5 @@ interface ILoanVault {
         uint256 collateralTokenId
     ) external;
 
-    function convertETHToAsset(address asset, uint256 amount) external;
+    function swapETHToDerivativeAsset(address asset, uint256 amount) external;
 }

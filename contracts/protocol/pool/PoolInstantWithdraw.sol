@@ -149,7 +149,7 @@ contract PoolInstantWithdraw is
     }
 
     /// @inheritdoc IPoolInstantWithdraw
-    function setLoanOriginationFeeRate(uint256 feeRate)
+    function setLoanCreationFeeRate(uint256 feeRate)
         external
         virtual
         override
@@ -160,10 +160,10 @@ contract PoolInstantWithdraw is
             "Value Too High"
         );
         DataTypes.PoolStorage storage ps = poolStorage();
-        uint256 oldValue = ps._loanOriginationFeeRate;
+        uint256 oldValue = ps._loanCreationFeeRate;
         if (oldValue != feeRate) {
-            ps._loanOriginationFeeRate = feeRate;
-            emit LoanOriginationFeeRateUpdated(oldValue, feeRate);
+            ps._loanCreationFeeRate = feeRate;
+            emit LoanCreationFeeRateUpdated(oldValue, feeRate);
         }
     }
 
@@ -232,13 +232,13 @@ contract PoolInstantWithdraw is
             Errors.INVALID_LOAN_STATE
         );
 
-        uint256 totalDebt = _calculateTotalStableDebt(
+        uint256 loanDebt = _calculateLoanStableDebt(
             loan.borrowAmount,
             loan.stableRate,
             loan.startTime
         );
 
-        return totalDebt;
+        return loanDebt;
     }
 
     /// @inheritdoc IPoolInstantWithdraw
@@ -295,12 +295,12 @@ contract PoolInstantWithdraw is
                     nextBorrowRate
                 );
 
-            uint256 borrowAssetAmount = _calculateAssetAmountByETHValue(
-                borrowAsset,
-                presentValue
-            );
-            uint256 MaxBorrowAmount = borrowAssetAmount.percentMul(
-                PercentageMath.PERCENTAGE_FACTOR - ps._loanOriginationFeeRate
+            uint256 presentValueInBorrowAsset = _calculatePresentValueInBorrowAsset(
+                    borrowAsset,
+                    presentValue
+                );
+            uint256 MaxBorrowAmount = presentValueInBorrowAsset.percentMul(
+                PercentageMath.PERCENTAGE_FACTOR - ps._loanCreationFeeRate
             );
             require(
                 borrowAmount <= MaxBorrowAmount,
@@ -401,7 +401,8 @@ contract PoolInstantWithdraw is
                 collateralTokenId,
                 loan.discountRate
             );
-        uint256 borrowAssetAmountNeeded = _calculateAssetAmountByETHValue(
+        //repayableBorrowAssetAmount
+        uint256 presentValueInBorrowAsset = _calculatePresentValueInBorrowAsset(
             borrowAsset,
             presentValue
         );
@@ -413,20 +414,24 @@ contract PoolInstantWithdraw is
         reserve.updateState(reserveCache);
 
         // repay borrow asset debt and update interest rate
-        uint256 totalDebt = _calculateTotalStableDebt(
+        uint256 loanDebt = _calculateLoanStableDebt(
             loan.borrowAmount,
             loan.stableRate,
             loan.startTime
         );
-        _repayLoanDebt(reserveCache, borrowAsset, totalDebt, msg.sender);
+        require(
+            presentValueInBorrowAsset >= loanDebt,
+            Errors.INVALID_PRESENT_VALUE
+        );
+        _repayLoanDebt(reserveCache, borrowAsset, loanDebt, msg.sender);
         reserve.updateInterestRates(reserveCache, borrowAsset, 0, 0);
 
         // transfer to vault contract if got excess amount
-        if (borrowAssetAmountNeeded > totalDebt) {
+        if (presentValueInBorrowAsset != loanDebt) {
             IERC20(borrowAsset).safeTransferFrom(
                 msg.sender,
                 VAULT_CONTRACT,
-                borrowAssetAmountNeeded - totalDebt
+                presentValueInBorrowAsset - loanDebt
             );
         }
 
@@ -444,14 +449,14 @@ contract PoolInstantWithdraw is
             borrowAsset,
             VAULT_CONTRACT,
             VAULT_CONTRACT,
-            totalDebt,
+            loanDebt,
             false
         );
         emit LoanCollateralSwapped(
             msg.sender,
             loanId,
             borrowAsset,
-            borrowAssetAmountNeeded
+            presentValueInBorrowAsset
         );
     }
 
@@ -464,7 +469,6 @@ contract PoolInstantWithdraw is
             loan.state == DataTypes.LoanState.Active,
             Errors.INVALID_LOAN_STATE
         );
-        require(block.timestamp >= loan.endTime, Errors.SETTLE_TIME_NOT_REACH);
 
         address collateralAsset = loan.collateralAsset;
         uint256 collateralTokenId = uint256(loan.collateralTokenId);
@@ -480,21 +484,25 @@ contract PoolInstantWithdraw is
         LoanVault.settleCollateral(collateralAsset, collateralTokenId);
 
         // repay borrow asset debt and update interest rate
-        uint256 totalDebt = _calculateTotalStableDebt(
+        // rename to loanTotalDebt.
+        uint256 loanDebt = _calculateLoanStableDebt(
             loan.borrowAmount,
             loan.stableRate,
             loan.startTime
         );
         uint256 vaultBalance = IERC20(borrowAsset).balanceOf(VAULT_CONTRACT);
-        if (totalDebt > vaultBalance) {
-            LoanVault.convertETHToAsset(borrowAsset, totalDebt - vaultBalance);
+        if (loanDebt > vaultBalance) {
+            LoanVault.swapETHToDerivativeAsset(
+                borrowAsset,
+                loanDebt - vaultBalance
+            );
         }
         vaultBalance = IERC20(borrowAsset).balanceOf(VAULT_CONTRACT);
         // repay Math.min(totalDebt, vaultBalance) to prevent rebase token precision issue
         _repayLoanDebt(
             reserveCache,
             borrowAsset,
-            Math.min(totalDebt, vaultBalance),
+            Math.min(loanDebt, vaultBalance),
             VAULT_CONTRACT
         );
         reserve.updateInterestRates(reserveCache, borrowAsset, 0, 0);
@@ -506,10 +514,10 @@ contract PoolInstantWithdraw is
             borrowAsset,
             VAULT_CONTRACT,
             VAULT_CONTRACT,
-            totalDebt,
+            loanDebt,
             false
         );
-        emit LoanSettled(loanId, msg.sender, borrowAsset, totalDebt);
+        emit LoanSettled(loanId, msg.sender, borrowAsset, loanDebt);
     }
 
     function _validateBorrowAsset(
@@ -522,7 +530,7 @@ contract PoolInstantWithdraw is
         require(marketSets.contains(borrowAsset), Errors.INVALID_BORROW_ASSET);
     }
 
-    function _calculateAssetAmountByETHValue(address asset, uint256 value)
+    function _calculatePresentValueInBorrowAsset(address asset, uint256 value)
         internal
         view
         returns (uint256)
@@ -536,7 +544,7 @@ contract PoolInstantWithdraw is
         return (value * assetUnit) / assetPrice;
     }
 
-    function _calculateTotalStableDebt(
+    function _calculateLoanStableDebt(
         uint256 principalStableDebt,
         uint256 stableRate,
         uint40 lastUpdateTime

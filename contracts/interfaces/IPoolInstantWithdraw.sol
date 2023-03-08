@@ -11,9 +11,9 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
  **/
 interface IPoolInstantWithdraw {
     /**
-     * @dev Emitted when the value of loan origination fee rate update
+     * @dev Emitted when the value of loan creation fee rate update
      **/
-    event LoanOriginationFeeRateUpdated(uint256 oldValue, uint256 newValue);
+    event LoanCreationFeeRateUpdated(uint256 oldValue, uint256 newValue);
 
     /**
      * @dev Emitted when a loan is created
@@ -92,7 +92,7 @@ interface IPoolInstantWithdraw {
      * @dev Only callable by asset listing or pool admin
      * @param feeRate new fee rate
      **/
-    function setLoanOriginationFeeRate(uint256 feeRate) external;
+    function setLoanCreationFeeRate(uint256 feeRate) external;
 
     /**
      * @notice get borrowable asset list for the specified collateral asset
