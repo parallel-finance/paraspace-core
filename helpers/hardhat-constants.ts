@@ -111,6 +111,9 @@ export const MULTI_SEND =
 export const MULTI_SIG_NONCE = process.env.MULTI_SIG_NONCE
   ? parseInt(process.env.MULTI_SIG_NONCE)
   : undefined;
+export const MULTI_SEND_CHUNK_SIZE = parseInt(
+  process.env.MULTI_SEND_CHUNK_SIZE || "1"
+);
 
 export const VERSION = version;
 
