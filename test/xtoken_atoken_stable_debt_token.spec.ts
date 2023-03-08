@@ -18,6 +18,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {TestEnv} from "./helpers/make-suite";
 import {almostEqual} from "./helpers/uniswapv3-helper";
+import {parseEther} from "ethers/lib/utils";
 
 describe("AToken Stable Debt Token Test", () => {
   let testEnv: TestEnv;
@@ -65,13 +66,18 @@ describe("AToken Stable Debt Token Test", () => {
     ).to.be.revertedWith(CALLER_MUST_BE_POOL);
   });
 
-  it("Mint stable debt tokens", async () => {
-    const rate1 = BigNumber.from(10).pow(27);
-    const rate2 = BigNumber.from(10).pow(28);
-    const amount1 = BigNumber.from(10).pow(3);
-    const amount2 = BigNumber.from(10).pow(3);
-    const {deployer, pool, aWETH, protocolDataProvider, users} =
-      await loadFixture(fixture);
+  it("Mint and Burn as expected", async () => {
+    const rate1 = BigNumber.from(10).pow(26);
+    const rate2 = BigNumber.from(10).pow(26).mul(2);
+    const amount1 = parseEther("1");
+    const amount2 = parseEther("1");
+    const {
+      deployer,
+      pool,
+      aWETH,
+      protocolDataProvider,
+      users: [user0, user1],
+    } = await loadFixture(fixture);
 
     const poolSigner = await DRE.ethers.getSigner(pool.address);
     const config = await protocolDataProvider.getReserveTokensAddresses(
@@ -84,30 +90,63 @@ describe("AToken Stable Debt Token Test", () => {
     await setAutomine(false);
     await stableDebt
       .connect(poolSigner)
-      .mint(users[0].address, users[0].address, amount1, rate1);
+      .mint(user0.address, user0.address, amount1, rate1);
     await setAutomine(true);
     await waitForTx(
       await stableDebt
         .connect(poolSigner)
-        .mint(users[1].address, users[1].address, amount2, rate2)
+        .mint(user1.address, user1.address, amount2, rate2)
     );
 
     let supplyData = await stableDebt.getSupplyData();
-    expect(supplyData[0]).to.be.eq(BigNumber.from(10).pow(3).mul(2));
-    expect(supplyData[1]).to.be.eq(BigNumber.from(10).pow(3).mul(2));
-    expect(supplyData[2]).to.be.eq(BigNumber.from(10).pow(26).mul(55));
+    almostEqual(supplyData[0], parseEther("1").mul(2));
+    almostEqual(supplyData[1], parseEther("1").mul(2));
+    almostEqual(supplyData[2], BigNumber.from(10).pow(25).mul(15));
+    let user0Balance = await stableDebt.balanceOf(user0.address);
+    let user1Balance = await stableDebt.balanceOf(user1.address);
+    almostEqual(user0Balance, parseEther("1"));
+    almostEqual(user1Balance, parseEther("1"));
 
     await increaseTime(60 * 60 * 24 * 365);
     supplyData = await stableDebt.getSupplyData();
-    expect(supplyData[0]).to.be.eq(BigNumber.from(10).pow(3).mul(2));
-    almostEqual(supplyData[1], BigNumber.from(98708));
-    expect(supplyData[2]).to.be.eq(BigNumber.from(10).pow(26).mul(55));
+    almostEqual(supplyData[0], parseEther("1").mul(2));
+    almostEqual(supplyData[1], BigNumber.from("2323618618389325423"));
+    almostEqual(supplyData[2], BigNumber.from(10).pow(25).mul(15));
+    user0Balance = await stableDebt.balanceOf(user0.address);
+    user1Balance = await stableDebt.balanceOf(user1.address);
+    almostEqual(user0Balance, BigNumber.from("1105162046325274579"));
+    almostEqual(user1Balance, BigNumber.from("1221332933560973813"));
+    almostEqual(user0Balance.add(user1Balance), supplyData[1]);
 
     await aWETH.setIncomeIndex(BigNumber.from(10).pow(27).mul(2));
     supplyData = await stableDebt.getSupplyData();
-    expect(supplyData[0]).to.be.eq(BigNumber.from(10).pow(3).mul(4));
-    almostEqual(supplyData[1], BigNumber.from(98708 * 2));
-    expect(supplyData[2]).to.be.eq(BigNumber.from(10).pow(26).mul(55));
+    almostEqual(supplyData[0], parseEther("1").mul(4));
+    almostEqual(supplyData[1], BigNumber.from("2323618618389325423").mul(2));
+    almostEqual(supplyData[2], BigNumber.from(10).pow(25).mul(15));
+    user0Balance = await stableDebt.balanceOf(user0.address);
+    user1Balance = await stableDebt.balanceOf(user1.address);
+    almostEqual(user0Balance, BigNumber.from("1105162046325274579").mul(2));
+    almostEqual(user1Balance, BigNumber.from("1221332933560973813").mul(2));
+
+    //burn user0's debt
+    await waitForTx(
+      await stableDebt.connect(poolSigner).burn(user0.address, user0Balance)
+    );
+    user0Balance = await stableDebt.balanceOf(user0.address);
+    expect(user0Balance).to.be.lte(parseEther("0.0001"));
+
+    //burn user1's debt
+    await waitForTx(
+      await stableDebt.connect(poolSigner).burn(user1.address, user1Balance)
+    );
+    supplyData = await stableDebt.getSupplyData();
+    expect(supplyData[0]).to.be.eq(0);
+    expect(supplyData[1]).to.be.eq(0);
+    expect(supplyData[2]).to.be.eq(0);
+    user0Balance = await stableDebt.balanceOf(user0.address);
+    user1Balance = await stableDebt.balanceOf(user1.address);
+    expect(user0Balance).to.be.lte(parseEther("0.0001"));
+    expect(user1Balance).to.be.lte(parseEther("0.0001"));
   });
 
   it("Burn stable debt tokens such that `secondTerm >= firstTerm`", async () => {

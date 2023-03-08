@@ -325,7 +325,6 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
     function _calculateBalanceIncrease(address user)
         internal
         view
-        virtual
         returns (
             uint256,
             uint256,

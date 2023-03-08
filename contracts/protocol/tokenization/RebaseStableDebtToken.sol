@@ -89,15 +89,20 @@ contract RebaseStableDebtToken is StableDebtToken {
             _decreaseBorrowAllowance(onBehalfOf, user, amount);
         }
 
+        uint256 rebaseIndex = lastRebasingIndex();
         (
             ,
             uint256 currentBalance,
             uint256 balanceIncrease
-        ) = _calculateBalanceIncrease(onBehalfOf);
+        ) = _calculateBalanceIncrease(onBehalfOf, rebaseIndex);
 
-        vars.previousSupply = totalSupply();
         vars.currentAvgStableRate = _avgStableRate;
+        vars.previousSupply = _calcTotalSupply(
+            vars.currentAvgStableRate,
+            rebaseIndex
+        );
         vars.nextSupply = vars.previousSupply + amount;
+        _totalSupply = vars.nextSupply.rayDiv(rebaseIndex);
 
         vars.amountInRay = amount.wadToRay();
 
@@ -124,7 +129,6 @@ contract RebaseStableDebtToken is StableDebtToken {
         ).toUint128();
 
         uint256 amountToMint = amount + balanceIncrease;
-        uint256 rebaseIndex = lastRebasingIndex();
         uint256 shareAmountToMint = amountToMint.rayDiv(rebaseIndex);
         uint256 totalShareSupply = vars.previousSupply.rayDiv(rebaseIndex);
         _mint(onBehalfOf, shareAmountToMint, totalShareSupply);
@@ -156,13 +160,18 @@ contract RebaseStableDebtToken is StableDebtToken {
         onlyPool
         returns (uint256, uint256)
     {
+        uint256 rebaseIndex = lastRebasingIndex();
         (
             ,
             uint256 currentBalance,
             uint256 balanceIncrease
-        ) = _calculateBalanceIncrease(from);
+        ) = _calculateBalanceIncrease(from, rebaseIndex);
 
-        uint256 previousSupply = totalSupply();
+        uint256 currentAvgStableRate = uint256(_avgStableRate);
+        uint256 previousSupply = _calcTotalSupply(
+            currentAvgStableRate,
+            rebaseIndex
+        );
         uint256 nextAvgStableRate = 0;
         uint256 nextSupply = 0;
         uint256 userStableRate = _userState[from].additionalData;
@@ -173,9 +182,11 @@ contract RebaseStableDebtToken is StableDebtToken {
         // In this case we simply set the total supply and the avg stable rate to 0
         if (previousSupply <= amount) {
             _avgStableRate = 0;
+            _totalSupply = 0;
         } else {
             nextSupply = previousSupply - amount;
-            uint256 firstTerm = uint256(_avgStableRate).rayMul(
+            _totalSupply = nextSupply.rayDiv(rebaseIndex);
+            uint256 firstTerm = uint256(currentAvgStableRate).rayMul(
                 previousSupply.wadToRay()
             );
             uint256 secondTerm = userStableRate.rayMul(amount.wadToRay());
@@ -184,7 +195,7 @@ contract RebaseStableDebtToken is StableDebtToken {
             // happen that user rate * user balance > avg rate * total supply. In that case,
             // we simply set the avg rate to 0
             if (secondTerm >= firstTerm) {
-                nextAvgStableRate = _avgStableRate = 0;
+                nextAvgStableRate = _totalSupply = _avgStableRate = 0;
             } else {
                 nextAvgStableRate = _avgStableRate = (
                     (firstTerm - secondTerm).rayDiv(nextSupply.wadToRay())
@@ -202,7 +213,6 @@ contract RebaseStableDebtToken is StableDebtToken {
         //solium-disable-next-line
         _totalSupplyTimestamp = uint40(block.timestamp);
 
-        uint256 rebaseIndex = lastRebasingIndex();
         if (balanceIncrease > amount) {
             uint256 amountToMint = balanceIncrease - amount;
             uint256 shareAmountToMint = amountToMint.rayDiv(rebaseIndex);
@@ -236,65 +246,6 @@ contract RebaseStableDebtToken is StableDebtToken {
         }
 
         return (nextSupply, nextAvgStableRate);
-    }
-
-    function _calculateBalanceForTimestamp(
-        uint256 shareBalance,
-        uint256 rebaseIndex,
-        uint256 stableRate,
-        uint40 timestamp,
-        uint40 lastUpdateTimestamp
-    ) internal pure returns (uint256) {
-        uint256 scaledBalance = shareBalance.rayMul(rebaseIndex);
-        uint256 cumulatedInterest = MathUtils.calculateCompoundedInterest(
-            stableRate,
-            lastUpdateTimestamp,
-            timestamp
-        );
-        return scaledBalance.rayMul(cumulatedInterest);
-    }
-
-    /**
-     * @notice Calculates the increase in balance since the last user interaction
-     * @param user The address of the user for which the interest is being accumulated
-     * @return The previous principal balance
-     * @return The new principal balance
-     * @return The balance increase
-     **/
-    function _calculateBalanceIncrease(address user)
-        internal
-        view
-        override
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        uint256 shareBalance = _userState[user].balance;
-        if (shareBalance == 0) {
-            return (0, 0, 0);
-        }
-        uint256 rebaseIndex = lastRebasingIndex();
-        uint256 stableRate = _userState[user].additionalData;
-        uint40 lastUpdateTimestamp = _timestamps[user];
-
-        uint256 previousBalance = _calculateBalanceForTimestamp(
-            shareBalance,
-            rebaseIndex,
-            stableRate,
-            lastUpdateTimestamp,
-            lastUpdateTimestamp
-        );
-        uint256 newBalance = _calculateBalanceForTimestamp(
-            shareBalance,
-            rebaseIndex,
-            stableRate,
-            uint40(block.timestamp),
-            lastUpdateTimestamp
-        );
-
-        return (previousBalance, newBalance, newBalance - previousBalance);
     }
 
     function getSupplyData()
@@ -349,6 +300,65 @@ contract RebaseStableDebtToken is StableDebtToken {
     }
 
     /**
+     * @notice Calculates the increase in balance since the last user interaction
+     * @param user The address of the user for which the interest is being accumulated
+     * @param rebaseIndex Current rebase index
+     * @return The previous principal balance
+     * @return The new principal balance
+     * @return The balance increase
+     **/
+    function _calculateBalanceIncrease(address user, uint256 rebaseIndex)
+        internal
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        uint256 shareBalance = _userState[user].balance;
+        if (shareBalance == 0) {
+            return (0, 0, 0);
+        }
+
+        uint256 stableRate = _userState[user].additionalData;
+        uint40 lastUpdateTimestamp = _timestamps[user];
+
+        uint256 previousBalance = _calculateBalanceForTimestamp(
+            shareBalance,
+            rebaseIndex,
+            stableRate,
+            lastUpdateTimestamp,
+            lastUpdateTimestamp
+        );
+        uint256 newBalance = _calculateBalanceForTimestamp(
+            shareBalance,
+            rebaseIndex,
+            stableRate,
+            uint40(block.timestamp),
+            lastUpdateTimestamp
+        );
+
+        return (previousBalance, newBalance, newBalance - previousBalance);
+    }
+
+    function _calculateBalanceForTimestamp(
+        uint256 shareBalance,
+        uint256 rebaseIndex,
+        uint256 stableRate,
+        uint40 timestamp,
+        uint40 lastUpdateTimestamp
+    ) internal pure returns (uint256) {
+        uint256 scaledBalance = shareBalance.rayMul(rebaseIndex);
+        uint256 cumulatedInterest = MathUtils.calculateCompoundedInterest(
+            stableRate,
+            lastUpdateTimestamp,
+            timestamp
+        );
+        return scaledBalance.rayMul(cumulatedInterest);
+    }
+
+    /**
      * @notice Calculates the total supply
      * @param avgRate The average rate at which the total supply increases
      * @param rebaseIndex Current rebase index
@@ -388,7 +398,6 @@ contract RebaseStableDebtToken is StableDebtToken {
         uint128 castShareAmount = shareAmount.toUint128();
         uint128 oldShareBalance = _userState[account].balance;
         _userState[account].balance = oldShareBalance + castShareAmount;
-        _totalSupply += shareAmount;
 
         if (address(_rewardController) != address(0)) {
             _rewardController.handleAction(
@@ -413,7 +422,6 @@ contract RebaseStableDebtToken is StableDebtToken {
         uint128 castShareAmount = shareAmount.toUint128();
         uint128 oldShareBalance = _userState[account].balance;
         _userState[account].balance = oldShareBalance - castShareAmount;
-        _totalSupply -= shareAmount;
 
         if (address(_rewardController) != address(0)) {
             _rewardController.handleAction(

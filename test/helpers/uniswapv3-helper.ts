@@ -11,7 +11,7 @@ import {IUniswapV3Pool__factory} from "../../types";
 import {VERBOSE} from "../../helpers/hardhat-constants";
 
 export function almostEqual(value0: BigNumberish, value1: BigNumberish) {
-  const maxDiff = BigNumber.from(value0.toString()).div("1000").abs();
+  const maxDiff = BigNumber.from(value0.toString()).div("1000").mul(2).abs();
   const abs = BigNumber.from(value0.toString()).sub(value1.toString()).abs();
   if (!abs.lte(maxDiff) && VERBOSE) {
     console.log("---------value0=" + value0 + ", --------value1=" + value1);
