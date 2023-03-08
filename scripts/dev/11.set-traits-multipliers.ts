@@ -1392,7 +1392,7 @@ const TRAIT_BOOST_JSON = {
   },
   Otherdeeds: {
     Otherdeeds_Koda: {
-      boost: 6.5,
+      boost: 8,
       ids: [
         "7",
         "15",
