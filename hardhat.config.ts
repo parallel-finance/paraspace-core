@@ -174,6 +174,11 @@ const hardhatConfig: HardhatUserConfig = {
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
     },
+    zhejiang: {
+      chainId: CHAINS_ID[eEthereumNetwork.zhejiang],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.zhejiang],
+      accounts: DEPLOYER,
+    },
     goerli: {
       chainId: CHAINS_ID[eEthereumNetwork.goerli],
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],

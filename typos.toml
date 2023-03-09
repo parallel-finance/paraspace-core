@@ -1,5 +1,11 @@
 [files]
-extend-exclude = ["contracts/dependencies", "contracts/mocks", "lib/", "app/"]
+extend-exclude = [
+  "contracts/dependencies",
+  "contracts/mocks",
+  "lib/",
+  "app/",
+  "config.yml",
+]
 
 [default.extend-words]
 BAKC = "BAKC"

@@ -1,6 +1,7 @@
 import {
   getACLManager,
   getAutoCompoundApe,
+  getAutoYieldApe,
   getConduit,
   getConduitController,
   getHelperContract,
@@ -306,6 +307,42 @@ export const step_22 = async (
         );
       }
       console.timeEnd("transferring wpunkGateway ownership...");
+      console.log();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // yAPE
+    ////////////////////////////////////////////////////////////////////////////////
+    if (await getContractAddressInDb(eContractid.yAPE)) {
+      console.time("transferring yAPE ownership...");
+      const yApe = await getAutoYieldApe();
+      const yApeProxy = await getInitializableAdminUpgradeabilityProxy(
+        yApe.address
+      );
+      if (DRY_RUN) {
+        const encodedData1 = yApeProxy.interface.encodeFunctionData(
+          "changeAdmin",
+          [paraSpaceAdminAddress]
+        );
+        await dryRunEncodedData(yApeProxy.address, encodedData1);
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          const encodedData2 = yApe.interface.encodeFunctionData(
+            "transferOwnership",
+            [gatewayAdminAddress]
+          );
+          await dryRunEncodedData(yApe.address, encodedData2);
+        }
+      } else {
+        await waitForTx(
+          await yApeProxy.changeAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
+        );
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          await waitForTx(
+            await yApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
+          );
+        }
+      }
+      console.timeEnd("transferring yAPE ownership...");
       console.log();
     }
 
