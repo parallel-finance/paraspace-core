@@ -24,7 +24,7 @@ interface IETHWithdrawal {
         uint256 balance,
         address recipient,
         uint256 withdrawableTime
-    ) external;
+    ) external returns (uint256);
 
     function burn(
         uint256 tokenId,

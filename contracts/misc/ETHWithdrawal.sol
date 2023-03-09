@@ -65,7 +65,12 @@ contract ETHWithdrawal is
         uint256 balance,
         address recipient,
         uint256 withdrawableTime
-    ) external nonReentrant onlyRole(DEFAULT_ISSUER_ROLE) {
+    )
+        external
+        nonReentrant
+        onlyRole(DEFAULT_ISSUER_ROLE)
+        returns (uint256 tokenId)
+    {
         if (provider == IETHWithdrawal.StakingProvider.Validator) {
             if (block.timestamp >= withdrawableTime) {
                 revert AlreadyMature();
@@ -75,7 +80,7 @@ contract ETHWithdrawal is
                 revert InvalidParams();
             }
 
-            uint256 tokenId = nextTokenId++;
+            tokenId = nextTokenId++;
 
             if (tokenInfos[tokenId].balance > 0) {
                 revert AlreadyMinted();
