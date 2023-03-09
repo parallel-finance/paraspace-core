@@ -520,6 +520,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                         tokenData.tokenId
                     );
                 }
+                tokenData.traitMultiplier = IAtomicCollateralizableERC721(
+                    baseData.xTokenAddress
+                ).getTraitMultiplier(tokenData.tokenId);
                 // token auction data
                 tokenData.auctionData = pool.getAuctionData(
                     baseData.xTokenAddress,

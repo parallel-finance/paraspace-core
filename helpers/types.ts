@@ -129,6 +129,7 @@ export enum eContractid {
   PTokenATokenImpl = "PTokenATokenImpl",
   PTokenStETHImpl = "PTokenStETHImpl",
   PTokenCApeImpl = "PTokenCApeImpl",
+  PYieldTokenImpl = "PYieldTokenImpl",
   NTokenImpl = "NTokenImpl",
   NTokenMoonBirdsImpl = "NTokenMoonBirdsImpl",
   NTokenUniswapV3Impl = "NTokenUniswapV3Impl",
@@ -246,6 +247,8 @@ export enum eContractid {
   HelperContractImpl = "HelperContractImpl",
   HelperContract = "HelperContract",
   P2PPairStakingImpl = "P2PPairStakingImpl",
+  yAPE = "yAPE",
+  yAPEImpl = "yAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
@@ -418,6 +421,7 @@ export interface iAssetBase<T> {
   APE: T;
   sAPE: T;
   cAPE: T;
+  yAPE: T;
   xcDOT: T;
   WGLMR: T;
   MAYC: T;
@@ -475,6 +479,7 @@ export enum ERC20TokenContractId {
   APE = "APE",
   sAPE = "sAPE",
   cAPE = "cAPE",
+  yAPE = "yAPE",
   aWETH = "aWETH",
   cETH = "cETH",
   PUNK = "PUNK",
@@ -617,6 +622,7 @@ export interface IChainlinkConfig {
   PUNK?: tEthereumAddress;
   sAPE?: tEthereumAddress;
   cAPE?: tEthereumAddress;
+  yAPE?: tEthereumAddress;
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
   MAYC?: tEthereumAddress;

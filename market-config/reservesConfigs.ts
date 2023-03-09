@@ -152,6 +152,21 @@ export const strategyCAPE: IReserveParams = {
   supplyCap: "18062500",
 };
 
+export const strategyYAPE: IReserveParams = {
+  strategy: rateStrategyAPE,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "2000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "7000",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PYieldTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "18062500",
+};
+
 export const strategyXCDOT: IReserveParams = {
   strategy: rateStrategyXCDOT,
   auctionStrategy: auctionStrategyZero,

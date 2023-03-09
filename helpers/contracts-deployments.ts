@@ -237,6 +237,10 @@ import {
   BAYCSewerPass__factory,
   BAYCSewerPass,
   BAYCSewerPassClaim__factory,
+  AutoYieldApe__factory,
+  AutoYieldApe,
+  PYieldToken__factory,
+  PYieldToken,
   UniswapV3TwapOracleWrapper,
   UniswapV3TwapOracleWrapper__factory,
   HelperContract,
@@ -249,8 +253,8 @@ import {
   getAllTokens,
   getBAYCSewerPass,
   getFirstSigner,
-  getPoolProxy,
   getProtocolDataProvider,
+  getPoolProxy,
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
@@ -564,6 +568,11 @@ export const deployPoolComponents = async (
 
   const allTokens = await getAllTokens();
 
+  const APE_WETH_FEE = 3000;
+  const WETH_USDC_FEE = 500;
+
+  // mainnet swap path: 0x4d224452801aced8b2f0aebe155379bb5d594381000bb8c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20001f4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
+
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
   );
@@ -617,6 +626,9 @@ export const deployPoolComponents = async (
             allTokens.APE.address,
             allTokens.USDC.address,
             (await getUniswapV3SwapRouter()).address,
+            allTokens.WETH.address,
+            APE_WETH_FEE,
+            WETH_USDC_FEE,
           ],
           verify,
           false,
@@ -956,7 +968,13 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       }
 
       if (tokenSymbol === ERC20TokenContractId.cAPE) {
+        //cAPE need to deploy later because it has a dependency for ApeCoinStaking address
         console.log("cAPE deploy later....");
+        continue;
+      }
+      if (tokenSymbol === ERC20TokenContractId.yAPE) {
+        //yAPE need to deploy later because it has a dependency for ApeCoinStaking address
+        console.log("yAPE deploy later....");
         continue;
       }
 
@@ -2279,6 +2297,54 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
   return proxyInstance as P2PPairStaking;
 };
 
+export const deployAutoYieldApeImpl = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const pool = await getPoolProxy();
+  const swapRouter = await getUniswapV3SwapRouter();
+  const args = [
+    apeCoinStaking,
+    allTokens.APE.address,
+    allTokens.USDC.address,
+    pool.address,
+    swapRouter.address,
+  ];
+
+  return withSaveAndVerify(
+    new AutoYieldApe__factory(await getFirstSigner()),
+    eContractid.yAPEImpl,
+    [...args],
+    verify
+  ) as Promise<AutoYieldApe>;
+};
+
+export const deployAutoYieldApe = async (verify?: boolean) => {
+  const yApeImplementation = await deployAutoYieldApeImpl(verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData =
+    yApeImplementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.yAPE,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](yApeImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as AutoYieldApe;
+};
+
 export const deployHelperContractImpl = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
@@ -2347,6 +2413,17 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployPYieldToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new PYieldToken__factory(await getFirstSigner()),
+    eContractid.PYieldTokenImpl,
+    [poolAddress],
+    verify
+  ) as Promise<PYieldToken>;
 
 export const deployCLwstETHSynchronicityPriceAdapter = async (
   stETHAggregator: tEthereumAddress,

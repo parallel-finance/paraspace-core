@@ -5,6 +5,7 @@ on:
     branches:
       - v*
       - main
+      - auto_yield_ape_impl
   workflow_dispatch: {}
 
 env:

@@ -48,6 +48,9 @@ contract PoolApeStaking is
     ISwapRouter internal immutable SWAP_ROUTER;
 
     uint256 internal constant DEFAULT_MAX_SLIPPAGE = 500; // 5%
+    uint24 internal immutable APE_WETH_FEE;
+    uint24 internal immutable WETH_USDC_FEE;
+    address internal immutable WETH;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -78,13 +81,19 @@ contract PoolApeStaking is
         IAutoCompoundApe apeCompound,
         IERC20 apeCoin,
         IERC20 usdc,
-        ISwapRouter uniswapV3SwapRouter
+        ISwapRouter uniswapV3SwapRouter,
+        address weth,
+        uint24 apeWethFee,
+        uint24 wethUsdcFee
     ) {
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
         USDC = IERC20(usdc);
         SWAP_ROUTER = ISwapRouter(uniswapV3SwapRouter);
+        WETH = weth;
+        APE_WETH_FEE = apeWethFee;
+        WETH_USDC_FEE = wethUsdcFee;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -645,13 +654,24 @@ contract PoolApeStaking is
             APE_COMPOUND.deposit(msg.sender, compoundFee);
         }
 
+        bytes memory swapPath = abi.encodePacked(
+            APE_COIN,
+            APE_WETH_FEE,
+            WETH,
+            WETH_USDC_FEE,
+            USDC
+        );
+
+        uint256 price = _getApeRelativePrice(address(USDC), 1E6);
+
         for (uint256 i = 0; i < users.length; i++) {
             _swapAndSupplyForUser(
                 ps,
                 address(USDC),
                 localVar.swapAmounts[i],
+                swapPath,
                 users[i],
-                _getApeRelativePrice(address(USDC), 1E6)
+                price
             );
             _repayAndSupplyForUser(
                 ps,
@@ -667,22 +687,20 @@ contract PoolApeStaking is
         DataTypes.PoolStorage storage ps,
         address tokenOut,
         uint256 amountIn,
+        bytes memory swapPath,
         address user,
         uint256 price
     ) internal {
         if (amountIn == 0) {
             return;
         }
-        uint256 amountOut = SWAP_ROUTER.exactInputSingle(
-            ISwapRouter.ExactInputSingleParams({
-                tokenIn: address(APE_COIN),
-                tokenOut: tokenOut,
-                fee: 3000,
+        uint256 amountOut = SWAP_ROUTER.exactInput(
+            ISwapRouter.ExactInputParams({
+                path: swapPath,
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amountIn,
-                amountOutMinimum: amountIn.wadMul(price),
-                sqrtPriceLimitX96: 0
+                amountOutMinimum: amountIn.wadMul(price)
             })
         );
         _supplyForUser(ps, tokenOut, address(this), user, amountOut);
