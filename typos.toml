@@ -1,5 +1,5 @@
 [files]
-extend-exclude = ["contracts/dependencies", "contracts/mocks", "lib/"]
+extend-exclude = ["contracts/dependencies", "contracts/mocks", "lib/", "app/"]
 
 [default.extend-words]
 BAKC = "BAKC"

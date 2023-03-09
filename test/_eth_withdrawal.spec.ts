@@ -11,22 +11,9 @@ import {assertAlmostEqual} from "./helpers/validated-steps";
 describe("ETH Withdrawal", async () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
-    testEnv.ethWithdrawal = await deployETHWithdrawal(
-      "ETHWithdrawal",
-      "ETHWithdrawal"
-    );
+    testEnv.ethWithdrawal = await deployETHWithdrawal("ETHWithdrawal");
     return testEnv;
   };
-
-  it("TC-eth-withdrawal-01: ETH Withdrawal is ERC721 compatible", async () => {
-    const {
-      ethWithdrawal,
-      users: [user1],
-    } = await loadFixture(fixture);
-    expect(
-      await ethWithdrawal.connect(user1.signer).supportsInterface("0x80ac58cd")
-    ).to.be.true;
-  });
 
   it("TC-eth-withdrawal-02: Check we can mint ETH withdrawal NFT", async () => {
     const {
@@ -40,7 +27,6 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .mint(
           StakingProvider.Validator,
-          0,
           1111,
           1111,
           parseEther("32"),
@@ -51,8 +37,10 @@ describe("ETH Withdrawal", async () => {
     );
 
     expect(
-      await ethWithdrawal.connect(gatewayAdmin.signer).ownerOf("0")
-    ).to.be.equal(gatewayAdmin.address);
+      await ethWithdrawal
+        .connect(gatewayAdmin.signer)
+        .balanceOf(gatewayAdmin.address, "0")
+    ).eq(parseEther("32"));
 
     // (1 + 0.3 / 31536000) ** (30 * 24 * 3600) = 1.0249640452079391053
     // 32 / 1.0249640452079391053 = 31.220607346775773819
@@ -85,7 +73,6 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .mint(
           StakingProvider.Validator,
-          0,
           1111,
           1111,
           parseEther("32"),
@@ -96,8 +83,10 @@ describe("ETH Withdrawal", async () => {
     );
 
     expect(
-      await ethWithdrawal.connect(gatewayAdmin.signer).ownerOf("0")
-    ).to.be.equal(gatewayAdmin.address);
+      await ethWithdrawal
+        .connect(gatewayAdmin.signer)
+        .balanceOf(gatewayAdmin.address, "0")
+    ).to.be.equal(parseEther("32"));
 
     await advanceTimeAndBlock(30 * 24 * 3600);
 
@@ -111,7 +100,7 @@ describe("ETH Withdrawal", async () => {
     await waitForTx(
       await ethWithdrawal
         .connect(gatewayAdmin.signer)
-        .burn("0", gatewayAdmin.address)
+        .burn("0", gatewayAdmin.address, parseEther("32"))
     );
   });
 });

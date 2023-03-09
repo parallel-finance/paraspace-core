@@ -2,14 +2,12 @@
 pragma solidity 0.8.10;
 
 import {IETHWithdrawal} from "../misc/interfaces/IETHWithdrawal.sol";
-import {ERC721Enumerable} from "../dependencies/openzeppelin/contracts/ERC721Enumerable.sol";
-import {ERC721} from "../dependencies/openzeppelin/contracts/ERC721.sol";
+import {ERC1155} from "../dependencies/openzeppelin/contracts/ERC1155.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {AccessControl} from "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import {Initializable} from "../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
@@ -21,13 +19,12 @@ error AlreadyMature();
 error AlreadyMinted();
 error NotMature();
 error InvalidParams();
-error NotOwner();
 
 contract ETHWithdrawal is
     Initializable,
     ReentrancyGuard,
     AccessControl,
-    ERC721Enumerable,
+    ERC1155,
     IERC721Receiver,
     IETHWithdrawal
 {
@@ -38,9 +35,9 @@ contract ETHWithdrawal is
 
     mapping(uint256 => IETHWithdrawal.TokenInfo) private tokenInfos;
 
-    constructor(string memory name_, string memory symbol_)
-        ERC721(name_, symbol_)
-    {}
+    uint256 public nextTokenId;
+
+    constructor(string memory uri_) ERC1155(uri_) {}
 
     function initialize(address _admin) public initializer {
         require(_admin != address(0), "Address cannot be zero");
@@ -52,7 +49,7 @@ contract ETHWithdrawal is
         public
         view
         virtual
-        override(AccessControl, ERC721Enumerable)
+        override(AccessControl, ERC1155)
         returns (bool)
     {
         return
@@ -63,7 +60,6 @@ contract ETHWithdrawal is
 
     function mint(
         IETHWithdrawal.StakingProvider provider,
-        uint64 tokenId,
         uint64 exitEpoch,
         uint64 withdrawableEpoch,
         uint256 balance,
@@ -79,6 +75,8 @@ contract ETHWithdrawal is
                 revert InvalidParams();
             }
 
+            uint256 tokenId = nextTokenId++;
+
             if (tokenInfos[tokenId].balance > 0) {
                 revert AlreadyMinted();
             }
@@ -90,26 +88,25 @@ contract ETHWithdrawal is
                 balance,
                 withdrawableTime
             );
-            _mint(recipient, tokenId);
+            _mint(recipient, tokenId, balance, bytes(""));
         } else {
             revert Unimplemented();
         }
     }
 
-    function burn(uint256 tokenId, address recipient) external nonReentrant {
+    function burn(
+        uint256 tokenId,
+        address recipient,
+        uint256 amount
+    ) external nonReentrant {
         TokenInfo memory tokenInfo = tokenInfos[tokenId];
         if (tokenInfo.provider == IETHWithdrawal.StakingProvider.Validator) {
             if (block.timestamp < tokenInfo.withdrawableTime) {
                 revert NotMature();
             }
 
-            address owner = ERC721.ownerOf(tokenId);
-            if (owner != msg.sender) {
-                revert NotOwner();
-            }
-
             Helpers.safeTransferETH(recipient, tokenInfo.balance);
-            _burn(tokenId);
+            _burn(msg.sender, tokenId, amount);
         } else {
             revert Unimplemented();
         }

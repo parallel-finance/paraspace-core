@@ -19,7 +19,6 @@ interface IETHWithdrawal {
 
     function mint(
         StakingProvider provider,
-        uint64 tokenId,
         uint64 exitEpoch,
         uint64 withdrawableEpoch,
         uint256 balance,
@@ -27,7 +26,11 @@ interface IETHWithdrawal {
         uint256 withdrawableTime
     ) external;
 
-    function burn(uint256 tokenId, address recipient) external;
+    function burn(
+        uint256 tokenId,
+        address recipient,
+        uint256 amount
+    ) external;
 
     function getTokenPrice(uint256 tokenId, uint256 borrowRate)
         external

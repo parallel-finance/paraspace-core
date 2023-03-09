@@ -2224,26 +2224,20 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
 };
 
 export const deployETHWithdrawalImpl = async (
-  name: string,
-  symbol: string,
+  uri: string,
   verify?: boolean
 ) => {
   return withSaveAndVerify(
     new ETHWithdrawal__factory(await getFirstSigner()),
     eContractid.ETHWithdrawalImpl,
-    [name, symbol],
+    [uri],
     verify
   ) as Promise<ETHWithdrawal>;
 };
 
-export const deployETHWithdrawal = async (
-  name: string,
-  symbol: string,
-  verify?: boolean
-) => {
+export const deployETHWithdrawal = async (uri: string, verify?: boolean) => {
   const ethWithdrawalImplementation = await deployETHWithdrawalImpl(
-    name,
-    symbol,
+    uri,
     verify
   );
 
