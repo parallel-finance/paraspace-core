@@ -556,6 +556,10 @@ facet-address:
 facet-function-selectors:
 	make TASK_NAME=facet-function-selectors run-task
 
+.PHONY: rescue-erc20-from-ntoken
+rescue-erc20-from-ntoken:
+	make TASK_NAME=rescue-erc20-from-ntoken run-task
+
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
