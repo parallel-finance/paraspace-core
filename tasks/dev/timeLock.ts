@@ -126,6 +126,11 @@ task("list-queued-txs", "List queued transactions").setAction(
 
       const executeTime = e.args.executionTime.add(delay);
       const expireTime = e.args.executionTime.add(gracePeriod);
+
+      if (time.gt(expireTime)) {
+        continue;
+      }
+
       console.log(e.transactionHash);
       console.log(" actionHash:", e.args.actionHash);
       console.log(" target:", e.args.target);
@@ -152,14 +157,25 @@ task("decode-queued-txs", "Decode queued transactions").setAction(
     const {getTimeLockExecutor} = await import(
       "../../helpers/contracts-getters"
     );
-    const {decodeInputData} = await import("../../helpers/contracts-helpers");
+    const {decodeInputData, getCurrentTime} = await import(
+      "../../helpers/contracts-helpers"
+    );
     const timeLock = await getTimeLockExecutor();
+    const time = await getCurrentTime();
+    const gracePeriod = await timeLock.GRACE_PERIOD();
     const filter = timeLock.filters.QueuedAction();
     const events = await timeLock.queryFilter(filter);
     for (const e of events) {
       if (!(await timeLock.isActionQueued(e.args.actionHash))) {
         continue;
       }
+
+      const expireTime = e.args.executionTime.add(gracePeriod);
+
+      if (time.gt(expireTime)) {
+        continue;
+      }
+
       console.log(e.args.target.toString());
       console.log(
         JSON.stringify(decodeInputData(e.args.data.toString()), null, 4)

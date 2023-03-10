@@ -122,13 +122,15 @@ task(
 task("propose-queued-txs", "Propose queued timelock transactions").setAction(
   async (_, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockData, proposeMultiSafeTransactions} = await import(
-      "../../helpers/contracts-helpers"
-    );
+    const {getTimeLockData, proposeMultiSafeTransactions, getCurrentTime} =
+      await import("../../helpers/contracts-helpers");
     const {getTimeLockExecutor} = await import(
       "../../helpers/contracts-getters"
     );
     const timeLock = await getTimeLockExecutor();
+    const time = await getCurrentTime();
+    const delay = await timeLock.getDelay();
+    const gracePeriod = await timeLock.GRACE_PERIOD();
     const filter = timeLock.filters.QueuedAction();
     const events = await timeLock.queryFilter(filter);
 
@@ -137,6 +139,14 @@ task("propose-queued-txs", "Propose queued timelock transactions").setAction(
       if (!(await timeLock.isActionQueued(e.args.actionHash))) {
         continue;
       }
+
+      const executeTime = e.args.executionTime.add(delay);
+      const expireTime = e.args.executionTime.add(gracePeriod);
+
+      if (time.lt(executeTime) || time.gt(expireTime)) {
+        continue;
+      }
+
       const {newTarget, newData} = await getTimeLockData(
         e.args.target.toString(),
         e.args.data.toString(),
