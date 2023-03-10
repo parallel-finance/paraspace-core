@@ -914,13 +914,14 @@ export const proposeSafeTransaction = async (
     data = newData;
   }
 
+  const staticNonce = nonce || MULTI_SIG_NONCE;
+
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce:
-      (nonce ||
-        MULTI_SIG_NONCE ||
-        (await safeService.getNextNonce(MULTI_SIG))) + idx,
+    nonce: staticNonce
+      ? staticNonce + idx
+      : await safeService.getNextNonce(MULTI_SIG),
     operation,
     data,
   };
