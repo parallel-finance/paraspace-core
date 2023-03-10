@@ -64,7 +64,7 @@ export const initReservesByHelper = async (
   genericVariableDebtTokenAddress?: tEthereumAddress,
   defaultReserveInterestRateStrategyAddress?: tEthereumAddress,
   defaultReserveAuctionStrategyAddress?: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
+  delegationRegistryAddress?: tEthereumAddress,
   genericDelegationAwarePTokenImplAddress?: tEthereumAddress,
   poolAddressesProviderProxy?: tEthereumAddress,
   poolProxy?: tEthereumAddress,
