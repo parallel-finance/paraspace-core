@@ -8,6 +8,9 @@ interface IUiPoolDataProvider {
     struct InterestRates {
         uint256 variableRateSlope1;
         uint256 variableRateSlope2;
+        uint256 stableRateSlope1;
+        uint256 stableRateSlope2;
+        uint256 baseStableBorrowRate;
         uint256 baseVariableBorrowRate;
         uint256 optimalUsageRatio;
     }
@@ -23,6 +26,7 @@ interface IUiPoolDataProvider {
         uint256 reserveFactor;
         bool usageAsCollateralEnabled;
         bool borrowingEnabled;
+        bool stableBorrowRateEnabled;
         bool auctionEnabled;
         bool isActive;
         bool isFrozen;
@@ -33,17 +37,25 @@ interface IUiPoolDataProvider {
         uint128 variableBorrowIndex;
         uint128 liquidityRate;
         uint128 variableBorrowRate;
+        uint128 stableBorrowRate;
         uint40 lastUpdateTimestamp;
         address xTokenAddress;
+        address stableDebtTokenAddress;
         address variableDebtTokenAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
         uint256 availableLiquidity;
+        uint256 totalPrincipalStableDebt;
+        uint256 averageStableRate;
+        uint256 stableDebtLastUpdateTimestamp;
         uint256 totalScaledVariableDebt;
         uint256 priceInMarketReferenceCurrency;
         address priceOracle;
         uint256 variableRateSlope1;
         uint256 variableRateSlope2;
+        uint256 stableRateSlope1;
+        uint256 stableRateSlope2;
+        uint256 baseStableBorrowRate;
         uint256 baseVariableBorrowRate;
         uint256 optimalUsageRatio;
         uint128 accruedToTreasury;
@@ -59,7 +71,10 @@ interface IUiPoolDataProvider {
         uint256 scaledXTokenBalance;
         uint256 collateralizedBalance;
         bool usageAsCollateralEnabledOnUser;
+        uint256 stableBorrowRate;
         uint256 scaledVariableDebt;
+        uint256 principalStableDebt;
+        uint256 stableBorrowLastUpdateTimestamp;
         uint256 avgMultiplier;
     }
 

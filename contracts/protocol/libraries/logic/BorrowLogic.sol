@@ -29,6 +29,7 @@ library BorrowLogic {
         address user,
         address indexed onBehalfOf,
         uint256 amount,
+        DataTypes.InterestRateMode interestRateMode,
         uint256 borrowRate,
         uint16 indexed referralCode
     );
@@ -110,6 +111,7 @@ library BorrowLogic {
             params.user,
             params.onBehalfOf,
             params.amount,
+            DataTypes.InterestRateMode.VARIABLE,
             reserve.currentVariableBorrowRate,
             params.referralCode
         );

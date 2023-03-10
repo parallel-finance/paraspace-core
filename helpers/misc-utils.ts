@@ -194,3 +194,18 @@ export const notFalsyOrZeroAddress = (
   }
   return isAddress(address) && !isZeroAddress(address);
 };
+
+export const impersonateAccountsHardhat = async (
+  accounts: tEthereumAddress[]
+) => {
+  if (DRE.network.name !== "hardhat") {
+    return;
+  }
+
+  for (const account of accounts) {
+    await DRE.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [account],
+    });
+  }
+};

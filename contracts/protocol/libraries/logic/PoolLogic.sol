@@ -46,6 +46,7 @@ library PoolLogic {
         }
         reservesData[params.asset].init(
             params.xTokenAddress,
+            params.stableDebtAddress,
             params.variableDebtAddress,
             params.interestRateStrategyAddress,
             params.auctionStrategyAddress
