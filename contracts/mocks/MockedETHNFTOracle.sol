@@ -11,7 +11,7 @@ contract MockedETHNFTOracle is IInstantNFTOracle {
         endTime = block.timestamp + 86400;
     }
 
-    function getPresentValueAndDiscountRate(uint256, uint256)
+    function getPresentValueAndDiscountRate(uint256, uint256, uint256)
     external
     view
     returns (uint256, uint256) {
@@ -19,6 +19,7 @@ contract MockedETHNFTOracle is IInstantNFTOracle {
     }
 
     function getPresentValueByDiscountRate(
+        uint256,
         uint256,
         uint256
     ) external view returns (uint256) {

@@ -416,14 +416,14 @@ library DataTypes {
         LoanState state;
         //loan start timestamp
         uint40 startTime;
-        //loan end timestamp
-        uint40 endTime;
         //address of borrower
         address borrower;
         //address of collateral asset token
         address collateralAsset;
         //the token id or collateral amount of collateral token
         uint64 collateralTokenId;
+        //the amount of collateral token
+        uint64 collateralAmount;
         //address of borrow asset
         address borrowAsset;
         //amount of borrow asset

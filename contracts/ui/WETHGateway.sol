@@ -180,10 +180,12 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @notice create a ETH term loan with the specified collateral asset
      * @param collateralAsset The address of the collateral asset
      * @param collateralTokenId The token id of the collateral asset
+     * @param collateralAmount The collateral token amount of the loan
      **/
     function createLoan(
         address collateralAsset,
         uint256 collateralTokenId,
+        uint256 collateralAmount,
         uint16 referralCode
     ) external override nonReentrant {
         IERC721(collateralAsset).safeTransferFrom(
@@ -195,6 +197,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         uint256 ethAmount = IPool(pool).createLoan(
             collateralAsset,
             collateralTokenId,
+            collateralAmount,
             weth,
             referralCode
         );

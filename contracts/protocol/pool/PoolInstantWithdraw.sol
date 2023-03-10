@@ -7,7 +7,7 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
 import {IERC20Detailed} from "../../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
-import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
+import {IERC1155} from "../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {IPoolInstantWithdraw} from "../../interfaces/IPoolInstantWithdraw.sol";
@@ -217,6 +217,7 @@ contract PoolInstantWithdraw is
         uint256 presentValue = IInstantNFTOracle(WITHDRAW_ORACLE)
             .getPresentValueByDiscountRate(
                 loan.collateralTokenId,
+                loan.collateralAmount,
                 loan.discountRate
             );
 
@@ -245,6 +246,7 @@ contract PoolInstantWithdraw is
     function createLoan(
         address collateralAsset,
         uint256 collateralTokenId,
+        uint256 collateralAmount,
         address borrowAsset,
         uint16 referralCode
     ) external nonReentrant returns (uint256) {
@@ -265,6 +267,7 @@ contract PoolInstantWithdraw is
             (presentValue, discountRate) = IInstantNFTOracle(WITHDRAW_ORACLE)
                 .getPresentValueAndDiscountRate(
                     collateralTokenId,
+                    collateralAmount,
                     reserve.currentStableBorrowRate
                 );
 
@@ -286,10 +289,12 @@ contract PoolInstantWithdraw is
         // handle asset
         {
             // transfer collateralAsset to reserveAddress
-            IERC721(collateralAsset).safeTransferFrom(
+            IERC1155(collateralAsset).safeTransferFrom(
                 msg.sender,
                 VAULT_CONTRACT,
-                collateralTokenId
+                collateralTokenId,
+                collateralAmount,
+                ""
             );
 
             // mint debt token for reserveAddress and transfer borrow asset to borrower
@@ -319,12 +324,10 @@ contract PoolInstantWithdraw is
             loanId: loanId,
             state: DataTypes.LoanState.Active,
             startTime: uint40(block.timestamp),
-            endTime: uint40(
-                IInstantNFTOracle(WITHDRAW_ORACLE).getEndTime(collateralTokenId)
-            ),
             borrower: msg.sender,
             collateralAsset: collateralAsset,
             collateralTokenId: collateralTokenId.toUint64(),
+            collateralAmount: collateralAmount.toUint64(),
             borrowAsset: borrowAsset,
             borrowAmount: borrowAmount,
             discountRate: discountRate
@@ -345,6 +348,7 @@ contract PoolInstantWithdraw is
             loanId,
             collateralAsset,
             collateralTokenId,
+            collateralAmount,
             borrowAsset,
             borrowAmount,
             discountRate
@@ -369,18 +373,24 @@ contract PoolInstantWithdraw is
 
         address collateralAsset = loan.collateralAsset;
         uint256 collateralTokenId = uint256(loan.collateralTokenId);
+        uint256 collateralAmount = uint256(loan.collateralAmount);
         address borrowAsset = loan.borrowAsset;
-        //here oracle need to guarantee presentValue > debtValue.
-        uint256 presentValue = IInstantNFTOracle(WITHDRAW_ORACLE)
-            .getPresentValueByDiscountRate(
-                collateralTokenId,
-                loan.discountRate
+        uint256 presentValueInBorrowAsset;
+        //calculate borrow asset amount needed
+        {
+            //here oracle need to guarantee presentValue > debtValue.
+            uint256 presentValue = IInstantNFTOracle(WITHDRAW_ORACLE)
+                .getPresentValueByDiscountRate(
+                    collateralTokenId,
+                    collateralAmount,
+                    loan.discountRate
+                );
+            //repayableBorrowAssetAmount
+            presentValueInBorrowAsset = _calculatePresentValueInBorrowAsset(
+                borrowAsset,
+                presentValue
             );
-        //repayableBorrowAssetAmount
-        uint256 presentValueInBorrowAsset = _calculatePresentValueInBorrowAsset(
-            borrowAsset,
-            presentValue
-        );
+        }
 
         // update borrow asset state
         DataTypes.ReserveCache memory reserveCache;
@@ -414,6 +424,7 @@ contract PoolInstantWithdraw is
         ILoanVault(VAULT_CONTRACT).transferCollateral(
             collateralAsset,
             collateralTokenId,
+            collateralAmount,
             receiver
         );
 
@@ -447,6 +458,7 @@ contract PoolInstantWithdraw is
 
         address collateralAsset = loan.collateralAsset;
         uint256 collateralTokenId = uint256(loan.collateralTokenId);
+        uint256 collateralAmount = uint256(loan.collateralAmount);
         address borrowAsset = loan.borrowAsset;
 
         // update borrow asset state
@@ -456,7 +468,11 @@ contract PoolInstantWithdraw is
         reserve.updateState(reserveCache);
 
         ILoanVault LoanVault = ILoanVault(VAULT_CONTRACT);
-        LoanVault.settleCollateral(collateralAsset, collateralTokenId);
+        LoanVault.settleCollateral(
+            collateralAsset,
+            collateralTokenId,
+            collateralAmount
+        );
 
         // repay borrow asset debt and update interest rate
         // rename to loanTotalDebt.

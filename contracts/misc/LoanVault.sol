@@ -4,7 +4,7 @@ pragma solidity 0.8.10;
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
-import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
+import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IInstantWithdrawNFT} from "../interfaces/IInstantWithdrawNFT.sol";
 import {IPool} from "../interfaces/IPool.sol";
@@ -34,15 +34,19 @@ contract LoanVault is Initializable, OwnableUpgradeable {
     );
 
     /**
-     * @dev Emitted during rescueERC721()
+     * @dev Emitted during RescueERC1155()
      * @param token The address of the token
      * @param to The address of the recipient
      * @param ids The ids of the tokens being rescued
+     * @param amounts The amount of NFTs being rescued for a specific id.
+     * @param data The data of the tokens that is being rescued. Usually this is 0.
      **/
-    event RescueERC721(
+    event RescueERC1155(
         address indexed token,
         address indexed to,
-        uint256[] ids
+        uint256[] ids,
+        uint256[] amounts,
+        bytes data
     );
 
     address private immutable lendingPool;
@@ -119,20 +123,27 @@ contract LoanVault is Initializable, OwnableUpgradeable {
     function transferCollateral(
         address collateralAsset,
         uint256 collateralTokenId,
+        uint256 collateralAmount,
         address to
     ) external onlyPool {
-        IERC721(collateralAsset).safeTransferFrom(
+        IERC1155(collateralAsset).safeTransferFrom(
             address(this),
             to,
-            collateralTokenId
+            collateralTokenId,
+            collateralAmount,
+            ""
         );
     }
 
     function settleCollateral(
         address collateralAsset,
-        uint256 collateralTokenId
+        uint256 collateralTokenId,
+        uint256 collateralAmount
     ) external onlyPool {
-        IInstantWithdrawNFT(collateralAsset).burn(collateralTokenId);
+        IInstantWithdrawNFT(collateralAsset).burn(
+            collateralTokenId,
+            collateralAmount
+        );
     }
 
     function swapETHToDerivativeAsset(address asset, uint256 amount)
@@ -167,13 +178,14 @@ contract LoanVault is Initializable, OwnableUpgradeable {
 
     receive() external payable {}
 
-    function onERC721Received(
+    function onERC1155Received(
         address,
         address,
         uint256,
+        uint256,
         bytes memory
-    ) external pure returns (bytes4) {
-        return this.onERC721Received.selector;
+    ) public pure returns (bytes4) {
+        return this.onERC1155Received.selector;
     }
 
     function rescueERC20(
@@ -185,14 +197,20 @@ contract LoanVault is Initializable, OwnableUpgradeable {
         emit RescueERC20(token, to, amount);
     }
 
-    function rescueERC721(
+    function rescueERC1155(
         address token,
         address to,
-        uint256[] calldata ids
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
     ) external onlyOwner {
-        for (uint256 i = 0; i < ids.length; i++) {
-            IERC721(token).safeTransferFrom(address(this), to, ids[i]);
-        }
-        emit RescueERC721(token, to, ids);
+        IERC1155(token).safeBatchTransferFrom(
+            address(this),
+            to,
+            ids,
+            amounts,
+            data
+        );
+        emit RescueERC1155(token, to, ids, amounts, data);
     }
 }

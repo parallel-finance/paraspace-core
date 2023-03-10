@@ -7,5 +7,5 @@ pragma solidity 0.8.10;
  * @notice Defines the basic interface for an InstantWithdrawNFT contract.
  **/
 interface IInstantWithdrawNFT {
-    function burn(uint256 tokenId) external;
+    function burn(uint256 tokenId, uint256 amount) external;
 }

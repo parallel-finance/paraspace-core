@@ -14,6 +14,8 @@ describe("Pool Instant Withdraw Test", () => {
   let testEnv: TestEnv;
   let instantWithdrawNFT: MockedInstantWithdrawNFT;
   let loanVault: LoanVault;
+  const tokenID = 1;
+  const tokenAmount = 10000;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -36,9 +38,7 @@ describe("Pool Instant Withdraw Test", () => {
     await supplyAndValidate(weth, "100", user1, true);
 
     await waitForTx(
-      await instantWithdrawNFT
-        .connect(user2.signer)
-      ["mint(address)"](user2.address)
+      await instantWithdrawNFT.connect(user2.signer).mint(tokenID, tokenAmount)
     );
     await waitForTx(
       await instantWithdrawNFT
@@ -71,20 +71,25 @@ describe("Pool Instant Withdraw Test", () => {
         .connect(user2.signer)
         .createLoan(
           instantWithdrawNFT.address,
-          0,
+          tokenID,
+          tokenAmount,
           weth.address,
           0
         )
     );
 
     expect(await weth.balanceOf(user2.address)).to.be.gte(parseEther("1"));
-    expect(await instantWithdrawNFT.ownerOf("0")).to.be.eq(loanVault.address);
+    expect(
+      await instantWithdrawNFT.balanceOf(loanVault.address, tokenID)
+    ).to.be.eq(tokenAmount);
 
     await waitForTx(
       await pool.connect(user3.signer).swapLoanCollateral(0, user3.address)
     );
 
-    expect(await instantWithdrawNFT.ownerOf("0")).to.be.eq(user3.address);
+    expect(await instantWithdrawNFT.balanceOf(user3.address, tokenID)).to.be.eq(
+      tokenAmount
+    );
   });
 
   it("term loan can be settled", async () => {
@@ -99,19 +104,24 @@ describe("Pool Instant Withdraw Test", () => {
         .connect(user2.signer)
         .createLoan(
           instantWithdrawNFT.address,
-          0,
+          tokenID,
+          tokenAmount,
           weth.address,
           0
         )
     );
 
     expect(await weth.balanceOf(user2.address)).to.be.gte(parseEther("1"));
-    expect(await instantWithdrawNFT.ownerOf("0")).to.be.eq(loanVault.address);
+    expect(
+      await instantWithdrawNFT.balanceOf(loanVault.address, tokenID)
+    ).to.be.eq(tokenAmount);
 
     await advanceTimeAndBlock(parseInt("86400"));
 
     await waitForTx(await pool.connect(user3.signer).settleTermLoan(0));
 
-    expect(await instantWithdrawNFT.balanceOf(loanVault.address)).to.be.eq(0);
+    expect(
+      await instantWithdrawNFT.balanceOf(loanVault.address, tokenID)
+    ).to.be.eq(0);
   });
 });

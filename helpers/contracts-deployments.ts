@@ -2840,6 +2840,6 @@ export const deployMockedInstantWithdrawNFT = async (verify?: boolean) =>
   withSaveAndVerify(
     new MockedInstantWithdrawNFT__factory(await getFirstSigner()),
     eContractid.MockedInstantWithdrawNFT,
-    ["MockETHNFT", "MockETHNFT", ""],
+    [],
     verify
   ) as Promise<MockedInstantWithdrawNFT>;

@@ -21,6 +21,7 @@ interface IPoolInstantWithdraw {
      * @param loanId The Id of the loan
      * @param collateralAsset The collateral asset of the loan
      * @param collateralTokenId The collateral token Id of the loan
+     * @param collateralAmount The collateral token amount of the loan
      * @param borrowAsset The borrow asset token address of the loan
      * @param borrowAmount The borrow amount of the loan
      * @param discountRate The discount rate of the collateral asset when created the loan
@@ -30,6 +31,7 @@ interface IPoolInstantWithdraw {
         uint256 indexed loanId,
         address collateralAsset,
         uint256 collateralTokenId,
+        uint256 collateralAmount,
         address borrowAsset,
         uint256 borrowAmount,
         uint256 discountRate
@@ -135,12 +137,14 @@ interface IPoolInstantWithdraw {
      * @notice create a term loan with the specified collateral asset
      * @param collateralAsset The address of the collateral asset
      * @param collateralTokenId The token id of the collateral asset
+     * @param collateralAmount The collateral token amount of the loan
      * @param borrowAsset The address of the asset user wanted to borrow
      * @return the loan's borrow amount
      **/
     function createLoan(
         address collateralAsset,
         uint256 collateralTokenId,
+        uint256 collateralAmount,
         address borrowAsset,
         uint16 referralCode
     ) external returns (uint256);
