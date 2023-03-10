@@ -1,4 +1,4 @@
-import {BigNumber} from "ethers";
+import {parseUnits} from "ethers/lib/utils";
 import {task} from "hardhat/config";
 
 task("rescue-erc20-from-ntoken", "Rescue ERC20 from NToken")
@@ -26,7 +26,7 @@ task("rescue-erc20-from-ntoken", "Rescue ERC20 from NToken")
     ).interface.encodeFunctionData("rescueERC20", [
       tokenAddress,
       to,
-      BigNumber.from(amount).mul(10 ** decimals),
+      parseUnits(amount, decimals),
     ]);
 
     await dryRunEncodedData(nTokenAddress, encodedData);
