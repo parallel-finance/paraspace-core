@@ -297,14 +297,27 @@ library ValidationLogic {
 
     function validateInstantWithdrawBorrow(
         DataTypes.ReserveCache memory reserveCache,
+        address reverve,
         uint256 amount
-    ) internal pure {
+    ) internal view {
         ValidateBorrowLocalVars memory vars;
         validateBorrowAsset(reserveCache, amount, vars);
         require(
             vars.stableRateBorrowingEnabled,
             Errors.STABLE_BORROWING_NOT_ENABLED
         );
+
+        uint256 totalVariableDebt = reserveCache.nextScaledVariableDebt.rayMul(
+            reserveCache.nextVariableBorrowIndex
+        );
+        uint256 totalDebt = totalVariableDebt +
+            reserveCache.nextTotalStableDebt;
+        uint256 availableLiquidity = IToken(reverve).balanceOf(
+            reserveCache.xTokenAddress
+        );
+        uint256 availableLiquidityPlusDebt = availableLiquidity + totalDebt;
+        uint256 usageRatio = totalDebt.rayDiv(availableLiquidityPlusDebt);
+        require(usageRatio <= 0.8e27, Errors.USAGE_RATIO_TOO_HIGH);
     }
 
     /**
