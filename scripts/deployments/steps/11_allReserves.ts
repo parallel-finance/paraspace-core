@@ -1,4 +1,5 @@
 import {
+  deployDelegationRegistry,
   deployMockIncentivesController,
   deployMockReserveAuctionStrategy,
 } from "../../../helpers/contracts-deployments";
@@ -46,6 +47,7 @@ export const step_11 = async (verify = false) => {
     // Add an IncentivesController
     let incentivesController = config.IncentivesController;
     let auctionStrategy: tEthereumAddress | undefined = undefined;
+    let delegationRegistry = config.DelegationRegistry;
 
     if (isLocalTestnet()) {
       incentivesController = (await deployMockIncentivesController(verify))
@@ -71,6 +73,8 @@ export const step_11 = async (verify = false) => {
           verify
         )
       ).address;
+
+      delegationRegistry = (await deployDelegationRegistry()).address;
     }
 
     const reserves = Object.entries(reservesParams).filter(
@@ -106,6 +110,7 @@ export const step_11 = async (verify = false) => {
         paraSpaceAdminAddress,
         treasuryAddress,
         incentivesController,
+        delegationRegistry,
         verify,
         undefined,
         undefined,

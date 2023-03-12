@@ -136,6 +136,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
   },
+  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
@@ -169,6 +170,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
     USDC: strategyUSDC,
   },
   Oracle: MoonbeamOracleConfig,
+  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
@@ -253,6 +255,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
   },
+  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
@@ -380,6 +383,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
+  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
 export const ParaSpaceConfigs: Partial<
