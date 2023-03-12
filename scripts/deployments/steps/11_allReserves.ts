@@ -116,8 +116,7 @@ export const step_11 = async (verify = false) => {
         undefined,
         undefined,
         undefined,
-        auctionStrategy,
-        delegationRegistry
+        auctionStrategy
       );
 
       await configureReservesByHelper(

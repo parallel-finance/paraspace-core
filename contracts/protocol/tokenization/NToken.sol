@@ -252,16 +252,21 @@ contract NToken is
 
     function delegateForToken(
         address delegate,
-        uint256 tokenId,
+        uint256[] calldata tokenIds,
         bool value
     ) external nonReentrant {
-        require(msg.sender == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            require(
+                msg.sender == ownerOf(tokenIds[index]),
+                Errors.NOT_THE_OWNER
+            );
 
-        IDelegationRegistry(DELEGATE_REGISTRY_ADDRESS).delegateForToken(
-            delegate,
-            _ERC721Data.underlyingAsset,
-            tokenId,
-            value
-        );
+            IDelegationRegistry(DELEGATE_REGISTRY_ADDRESS).delegateForToken(
+                delegate,
+                _ERC721Data.underlyingAsset,
+                tokenIds[index],
+                value
+            );
+        }
     }
 }

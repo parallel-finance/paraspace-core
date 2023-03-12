@@ -26,7 +26,7 @@ describe("NToken general", async () => {
 
     await nBAYC
       .connect(user1.signer)
-      .delegateForToken(user2.address, "0", true);
+      .delegateForToken(user2.address, ["0"], true);
     await expect(
       (
         await delegationRegistry.getDelegatesForToken(
@@ -46,7 +46,7 @@ describe("NToken general", async () => {
     } = testEnv;
 
     await expect(
-      nBAYC.connect(user2.signer).delegateForToken(user1.address, "0", true)
+      nBAYC.connect(user2.signer).delegateForToken(user1.address, ["0"], true)
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
     await expect(
       (
@@ -68,7 +68,7 @@ describe("NToken general", async () => {
 
     await nBAYC
       .connect(user1.signer)
-      .delegateForToken(user2.address, "0", false);
+      .delegateForToken(user2.address, ["0"], false);
     await expect(
       await delegationRegistry.getDelegatesForToken(
         nBAYC.address,
