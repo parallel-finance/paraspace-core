@@ -110,6 +110,7 @@ export const step_11 = async (verify = false) => {
         paraSpaceAdminAddress,
         treasuryAddress,
         incentivesController,
+        delegationRegistry,
         verify,
         undefined,
         undefined,

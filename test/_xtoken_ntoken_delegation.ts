@@ -1,18 +1,10 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {BigNumber} from "ethers";
-import {HALF_WAD, WAD} from "../helpers/constants";
-import {deployDelegationRegistry} from "../helpers/contracts-deployments";
 import {getDelegationRegistry} from "../helpers/contracts-getters";
-import {waitForTx} from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {
-  assertAlmostEqual,
-  mintAndValidate,
-  supplyAndValidate,
-} from "./helpers/validated-steps";
+import {supplyAndValidate} from "./helpers/validated-steps";
 
 describe("NToken general", async () => {
   let delegationRegistry;
