@@ -34,7 +34,7 @@ contract NToken is
 {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 145;
+    uint256 public constant NTOKEN_REVISION = 146;
     address immutable DELEGATE_REGISTRY_ADDRESS;
 
     /// @inheritdoc VersionedInitializable
