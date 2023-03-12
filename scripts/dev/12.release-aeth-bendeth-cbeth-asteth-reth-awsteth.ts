@@ -232,6 +232,7 @@ const releaseAethBendethCbethAstethRethAwsteth = async (verify = false) => {
     paraSpaceAdminAddress,
     treasuryAddress,
     ZERO_ADDRESS,
+    paraSpaceConfig.DelegationRegistry,
     verify
   );
   console.timeEnd("initializing reserves...");
