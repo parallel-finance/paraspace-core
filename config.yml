@@ -7,6 +7,7 @@ wallet:
       passphrase: my account secret
       path: m/12381/3600/1/0/0
 outputDir: app
+depositContract: 0x4242424242424242424242424242424242424242
 genesis:
   - https://cdn.jsdelivr.net/gh/ethpandaops/withdrawals-testnet/zhejiang-testnet/custom_config_data/genesis.json
   - https://cdn.jsdelivr.net/gh/ethpandaops/withdrawals-testnet/zhejiang-testnet/custom_config_data/genesis.ssz

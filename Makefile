@@ -426,7 +426,15 @@ set-traits-multipliers:
 
 .PHONY: setup-validators
 setup-validators:
-	make SCRIPT_PATH=./scripts/dev/12.setup-validators.ts run
+	make TASK_NAME=setup-validators run-task
+
+.PHONY: list-validators
+list-validators:
+	make TASK_NAME=list-validators run-task
+
+.PHONY: register-validators
+register-validators:
+	make TASK_NAME=register-validators run-task
 
 .PHONY: shutdown-validators
 shutdown-validators:

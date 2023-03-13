@@ -7,6 +7,7 @@ wallet:
       passphrase: my account secret
       path: m/12381/3600/1/0/0
 outputDir: app
+depositContract: 0xff50ed3d0ec03ac01d4c79aad74928bff48a7b2b
 genesis: []
 nodes:
   - name: validator1
