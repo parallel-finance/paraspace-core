@@ -5,65 +5,55 @@ import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IETHStakingProviderStrategy} from "../interfaces/IETHStakingProviderStrategy.sol";
-import {PercentageMath} from "../protocol/libraries/math/PercentageMath.sol";
 import {IETHWithdrawal} from "./interfaces/IETHWithdrawal.sol";
+import {MathUtils} from "../protocol/libraries/math/MathUtils.sol";
 
 contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
-    using PercentageMath for uint256;
+    using WadRayMath for uint256;
 
-    uint256 constant STAKING_RATE = 1E7; // ETH per Day
-    uint256 constant SLASHING_RISK = 0;
-    uint256 constant PROVIDER_PREMIUM = 2500; // ~25% APY in RAY divided by 365 days
-    uint256 constant DISCOUNT_RATE_SCALEDOWN_FACTOR = 50;
+    uint256 internal immutable STAKING_RATE;
+    uint256 internal immutable SLASHING_RATE;
+    uint256 internal immutable PROVIDER_PREMIUM;
+
+    constructor(
+        uint256 stakingRate,
+        uint256 slashingRate,
+        uint256 providerPremium
+    ) {
+        STAKING_RATE = stakingRate;
+        SLASHING_RATE = slashingRate;
+        PROVIDER_PREMIUM = providerPremium;
+    }
 
     function getTokenPresentValue(
         IETHWithdrawal.TokenInfo calldata tokenInfo,
+        uint256 amount,
         uint256 discountRate
     ) external view returns (uint256 price) {
-        return
-            tokenInfo.balance.percentDiv(
-                PercentageMath.PERCENTAGE_FACTOR + discountRate
-            ) +
-            STAKING_RATE.percentDiv(
-                PercentageMath.PERCENTAGE_FACTOR + discountRate
-            );
+        if (block.timestamp >= tokenInfo.withdrawableTime) {
+            return amount;
+        }
+        uint256 index = MathUtils.calculateCompoundedInterest(
+            discountRate,
+            uint40(block.timestamp),
+            tokenInfo.withdrawableTime
+        );
+        return amount.rayDiv(index);
     }
 
     function getDiscountRate(
-        IETHWithdrawal.TokenInfo calldata tokenInfo,
+        IETHWithdrawal.TokenInfo calldata,
         uint256 borrowRate
-    ) external view returns (uint256 discountRate) {
-        uint256 daysUntilRedemption = (tokenInfo.withdrawableTime -
-            block.timestamp) / 86400;
-        return
-            PROVIDER_PREMIUM +
-            ((PercentageMath.PERCENTAGE_FACTOR *
-                ((borrowRate / 365) * daysUntilRedemption)) /
-                DISCOUNT_RATE_SCALEDOWN_FACTOR) /
-            WadRayMath.RAY;
+    ) external pure returns (uint256 discountRate) {
+        // TODO: finalize the formula
+        discountRate = borrowRate;
     }
 
-    function getSlashingRisk(uint256 tokenId)
-        external
-        view
-        returns (uint256 slashingRisk)
-    {
-        return SLASHING_RISK;
+    function getSlashingRate() external view returns (uint256) {
+        return SLASHING_RATE;
     }
 
-    function getStakingRate(uint256 tokenId)
-        external
-        view
-        returns (uint256 stakingRate)
-    {
+    function getStakingRate() external view returns (uint256) {
         return STAKING_RATE;
-    }
-
-    function getLidoRedemptionRate(uint256 tokenId)
-        internal
-        view
-        returns (uint256)
-    {
-        return WadRayMath.WAD;
     }
 }

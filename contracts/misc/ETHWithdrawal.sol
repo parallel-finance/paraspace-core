@@ -61,6 +61,7 @@ contract ETHWithdrawal is
             super.supportsInterface(interfaceId);
     }
 
+    /// @inheritdoc IETHWithdrawal
     function mint(
         IETHWithdrawal.StakingProvider provider,
         uint64 exitEpoch,
@@ -97,11 +98,13 @@ contract ETHWithdrawal is
                 withdrawableTime
             );
             _mint(recipient, tokenId, balance, bytes(""));
+            emit Mint(recipient, tokenId, balance);
         } else {
             revert Unimplemented();
         }
     }
 
+    /// @inheritdoc IETHWithdrawal
     function burn(
         uint256 tokenId,
         address recipient,
@@ -115,34 +118,18 @@ contract ETHWithdrawal is
 
             Helpers.safeTransferETH(recipient, tokenInfo.balance);
             _burn(msg.sender, tokenId, amount);
+            emit Burn(msg.sender, tokenId, amount);
         } else {
             revert Unimplemented();
         }
     }
 
-    // TODO remove
-    function getTokenPrice(uint256 tokenId, uint256 borrowRate)
-        external
-        view
-        returns (uint256)
-    {
-        TokenInfo memory tokenInfo = tokenInfos[tokenId];
-        if (block.timestamp >= tokenInfo.withdrawableTime) {
-            return tokenInfo.balance;
-        }
-        uint256 discountRate = MathUtils.calculateCompoundedInterest(
-            borrowRate,
-            uint40(block.timestamp),
-            tokenInfo.withdrawableTime
-        );
-        return tokenInfo.balance.rayDiv(discountRate);
-    }
-
-    function getPresentValueAndDiscountRate(uint256 tokenId, uint256 borrowRate)
-        external
-        view
-        returns (uint256 price, uint256 discountRate)
-    {
+    /// @inheritdoc IETHWithdrawal
+    function getPresentValueAndDiscountRate(
+        uint256 tokenId,
+        uint256 amount,
+        uint256 borrowRate
+    ) external view returns (uint256 price, uint256 discountRate) {
         IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
 
         IETHStakingProviderStrategy strategy = IETHStakingProviderStrategy(
@@ -150,11 +137,13 @@ contract ETHWithdrawal is
         );
 
         discountRate = strategy.getDiscountRate(tokenInfo, borrowRate);
-        price = strategy.getTokenPresentValue(tokenInfo, discountRate);
+        price = strategy.getTokenPresentValue(tokenInfo, amount, discountRate);
     }
 
+    /// @inheritdoc IETHWithdrawal
     function getPresentValueByDiscountRate(
         uint256 tokenId,
+        uint256 amount,
         uint256 discountRate
     ) external view returns (uint256 price) {
         IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
@@ -162,9 +151,10 @@ contract ETHWithdrawal is
             providerStrategyAddress[tokenInfo.provider]
         );
 
-        price = strategy.getTokenPresentValue(tokenInfo, discountRate);
+        price = strategy.getTokenPresentValue(tokenInfo, amount, discountRate);
     }
 
+    /// @inheritdoc IETHWithdrawal
     function setProviderStrategyAddress(
         IETHWithdrawal.StakingProvider provider,
         address strategy
@@ -179,6 +169,7 @@ contract ETHWithdrawal is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         Helpers.safeTransferETH(to, value);
+        emit RescueETH(to, value);
     }
 
     function rescueERC20(
@@ -187,6 +178,7 @@ contract ETHWithdrawal is
         uint256 amount
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         IERC20(token).safeTransfer(to, amount);
+        emit RescueERC20(token, to, amount);
     }
 
     function rescueERC721(
@@ -197,6 +189,7 @@ contract ETHWithdrawal is
         for (uint256 i = 0; i < ids.length; i++) {
             IERC721(token).safeTransferFrom(address(this), to, ids[i]);
         }
+        emit RescueERC721(token, to, ids);
     }
 
     function onERC721Received(

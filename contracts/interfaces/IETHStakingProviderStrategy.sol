@@ -11,6 +11,7 @@ import {IETHWithdrawal} from "../misc/interfaces/IETHWithdrawal.sol";
 interface IETHStakingProviderStrategy {
     function getTokenPresentValue(
         IETHWithdrawal.TokenInfo calldata tokenInfo,
+        uint256 amount,
         uint256 discountRate
     ) external view returns (uint256 price);
 
@@ -19,13 +20,7 @@ interface IETHStakingProviderStrategy {
         uint256 borrowRate
     ) external view returns (uint256 discountRate);
 
-    function getSlashingRisk(uint256 tokenId)
-        external
-        view
-        returns (uint256 slashingRisk);
+    function getSlashingRate() external view returns (uint256);
 
-    function getStakingRate(uint256 tokenId)
-        external
-        view
-        returns (uint256 stakingRate);
+    function getStakingRate() external view returns (uint256);
 }
