@@ -2761,10 +2761,15 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     verify
   ) as Promise<MockedDelegateRegistry>;
 
-export const deployETHValidatorStakingStrategy = async (verify?: boolean) =>
+export const deployETHValidatorStakingStrategy = async (
+  stakingRate: string,
+  slashingRate: string,
+  providerPremium: string,
+  verify?: boolean
+) =>
   withSaveAndVerify(
     new ETHValidatorStakingStrategy__factory(await getFirstSigner()),
     eContractid.ETHValidatorStakingStrategy,
-    [],
+    [stakingRate, slashingRate, providerPremium],
     verify
   ) as Promise<ETHValidatorStakingStrategy>;

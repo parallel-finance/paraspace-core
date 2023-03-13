@@ -164,6 +164,12 @@ contract ETHWithdrawal is
 
     receive() external payable {}
 
+    /**
+     * @dev Transfers any ETH that has been sent to this contract to the specified recipient.
+     * @param to The address of the recipient.
+     * @param value The amount of ETH to transfer.
+     * @notice This function can only be called by accounts with the DEFAULT_ADMIN_ROLE.
+     */
     function rescueETH(address to, uint256 value)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -172,6 +178,13 @@ contract ETHWithdrawal is
         emit RescueETH(to, value);
     }
 
+    /**
+     * @dev Transfers any ERC20 tokens held by this contract to the specified recipient.
+     * @param token The address of the ERC20 token to transfer.
+     * @param to The address of the recipient.
+     * @param amount The amount of ERC20 tokens to transfer.
+     * @notice This function can only be called by accounts with the DEFAULT_ADMIN_ROLE.
+     */
     function rescueERC20(
         address token,
         address to,
@@ -181,6 +194,13 @@ contract ETHWithdrawal is
         emit RescueERC20(token, to, amount);
     }
 
+    /**
+     * @dev Transfers any ERC721 tokens held by this contract to the specified recipient.
+     * @param token The address of the ERC721 token to transfer.
+     * @param to The address of the recipient.
+     * @param ids An array of the token IDs to transfer.
+     * @notice This function can only be called by accounts with the DEFAULT_ADMIN_ROLE.
+     */
     function rescueERC721(
         address token,
         address to,
