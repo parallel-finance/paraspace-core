@@ -266,13 +266,10 @@ task("setup-validators", "Setup validators")
           dockerfile: "consensusLayer.Dockerfile",
         },
         command: [
-          `lighthouse${
-            node.consensusLayer.flags.some((flag) =>
-              flag.startsWith("--network")
-            )
-              ? ""
-              : " --testnet-dir=/app"
-          }`,
+          "lighthouse",
+          node.consensusLayer.flags.some((flag) => flag.startsWith("--network"))
+            ? ""
+            : "--testnet-dir=/app",
           "bn",
           ...node.consensusLayer.flags,
         ],
@@ -316,11 +313,10 @@ task("setup-validators", "Setup validators")
           dockerfile: "validator.Dockerfile",
         },
         command: [
-          `lighthouse${
-            node.validator.flags.some((flag) => flag.startsWith("--network"))
-              ? ""
-              : " --testnet-dir=/app"
-          }`,
+          "lighthouse",
+          node.validator.flags.some((flag) => flag.startsWith("--network"))
+            ? ""
+            : "--testnet-dir=/app",
           "vc",
           ...node.validator.flags,
         ],
