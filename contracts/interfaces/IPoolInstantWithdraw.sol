@@ -95,6 +95,12 @@ interface IPoolInstantWithdraw {
     function setLoanCreationFeeRate(uint256 feeRate) external;
 
     /**
+     * @notice get fee rate for creating loan
+     * @return fee rate for creating loan
+     **/
+    function getLoanCreationFeeRate() external view returns (uint256);
+
+    /**
      * @notice get borrowable asset list for the specified collateral asset
      * @param collateralAsset The address of the collateral asset
      **/

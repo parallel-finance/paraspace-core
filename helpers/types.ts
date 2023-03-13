@@ -398,6 +398,10 @@ export enum ProtocolErrors {
   EMEGENCY_DISABLE_CALL = "emergency disable call",
 
   MAKER_SAME_AS_TAKER = "132",
+  INVALID_LOAN_STATE = "133", // invalid term loan status
+  INVALID_BORROW_ASSET = "134", // invalid borrow asset for collateral
+  INVALID_PRESENT_VALUE = "135", // invalid present value
+  USAGE_RATIO_TOO_HIGH = "136", // usage ratio too high after borrow
 }
 
 export type tEthereumAddress = string;

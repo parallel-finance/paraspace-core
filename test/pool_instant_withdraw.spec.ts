@@ -9,6 +9,7 @@ import {LoanVault, MockedInstantWithdrawNFT} from "../types";
 import {deployMockedInstantWithdrawNFT} from "../helpers/contracts-deployments";
 import {getLoanVault} from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {ProtocolErrors} from "../helpers/types";
 
 describe("Pool Instant Withdraw Test", () => {
   let testEnv: TestEnv;
@@ -59,7 +60,7 @@ describe("Pool Instant Withdraw Test", () => {
     return testEnv;
   };
 
-  it("term loan can be bought by other user", async () => {
+  it("active term loan can be swaped by other user", async () => {
     const {
       users: [, user2, user3],
       weth,
@@ -92,7 +93,7 @@ describe("Pool Instant Withdraw Test", () => {
     );
   });
 
-  it("term loan can be settled", async () => {
+  it("active term loan can be settled", async () => {
     const {
       users: [, user2, user3],
       weth,
@@ -123,5 +124,195 @@ describe("Pool Instant Withdraw Test", () => {
     expect(
       await instantWithdrawNFT.balanceOf(loanVault.address, tokenID)
     ).to.be.eq(0);
+  });
+
+  it("cannot create term loan when borrow asset usage ratio too high", async () => {
+    const {
+      users: [user1, user2],
+      weth,
+      pool,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdraw(weth.address, parseEther("98.8"), user1.address)
+    );
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .createLoan(
+          instantWithdrawNFT.address,
+          tokenID,
+          tokenAmount,
+          weth.address,
+          0
+        )
+    ).to.be.revertedWith(ProtocolErrors.USAGE_RATIO_TOO_HIGH);
+  });
+
+  it("settled term loan can not be swaped", async () => {
+    const {
+      users: [, user2, user3],
+      weth,
+      pool,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .createLoan(
+          instantWithdrawNFT.address,
+          tokenID,
+          tokenAmount,
+          weth.address,
+          0
+        )
+    );
+
+    await advanceTimeAndBlock(parseInt("86400"));
+
+    await waitForTx(await pool.connect(user3.signer).settleTermLoan(0));
+
+    await expect(
+      pool.connect(user3.signer).swapLoanCollateral(0, user3.address)
+    ).to.be.revertedWith(ProtocolErrors.INVALID_LOAN_STATE);
+  });
+
+  it("swaped term loan can not be settled", async () => {
+    const {
+      users: [, user2, user3],
+      weth,
+      pool,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .createLoan(
+          instantWithdrawNFT.address,
+          tokenID,
+          tokenAmount,
+          weth.address,
+          0
+        )
+    );
+
+    await waitForTx(
+      await pool.connect(user3.signer).swapLoanCollateral(0, user3.address)
+    );
+
+    await expect(
+      pool.connect(user3.signer).settleTermLoan(0)
+    ).to.be.revertedWith(ProtocolErrors.INVALID_LOAN_STATE);
+  });
+
+  it("can not create loan with unsupported borrow asset", async () => {
+    const {
+      users: [, user2],
+      usdt,
+      pool,
+    } = await loadFixture(fixture);
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .createLoan(
+          instantWithdrawNFT.address,
+          tokenID,
+          tokenAmount,
+          usdt.address,
+          0
+        )
+    ).to.be.revertedWith(ProtocolErrors.INVALID_BORROW_ASSET);
+  });
+
+  it("only admin or asset listing can add or remove support borrow asset", async () => {
+    const {
+      users: [, user2],
+      usdt,
+      pool,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .addBorrowableAssets(instantWithdrawNFT.address, [usdt.address])
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
+
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .addBorrowableAssets(instantWithdrawNFT.address, [usdt.address])
+    );
+
+    let supportedBorrowAsset = await pool.getBorrowableAssets(
+      instantWithdrawNFT.address
+    );
+    expect(supportedBorrowAsset.length).to.be.eq(2);
+    expect(supportedBorrowAsset[1]).to.be.eq(usdt.address);
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .removeBorrowableAssets(instantWithdrawNFT.address, [usdt.address])
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
+
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .removeBorrowableAssets(instantWithdrawNFT.address, [usdt.address])
+    );
+    supportedBorrowAsset = await pool.getBorrowableAssets(
+      instantWithdrawNFT.address
+    );
+    expect(supportedBorrowAsset.length).to.be.eq(1);
+  });
+
+  it("only admin or asset listing can set loan creation fee rate", async () => {
+    const {
+      users: [, user2],
+      pool,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await expect(
+      pool.connect(user2.signer).setLoanCreationFeeRate(300)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ASSET_LISTING_OR_POOL_ADMIN);
+
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setLoanCreationFeeRate(300)
+    );
+
+    expect(await pool.getLoanCreationFeeRate()).to.be.eq(300);
+  });
+
+  it("user will borrow less if set loan creation fee rate", async () => {
+    const {
+      users: [, user2],
+      weth,
+      pool,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setLoanCreationFeeRate(1000)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .createLoan(
+          instantWithdrawNFT.address,
+          tokenID,
+          tokenAmount,
+          weth.address,
+          0
+        )
+    );
+
+    expect(await weth.balanceOf(user2.address)).to.be.lt(parseEther("1"));
   });
 });

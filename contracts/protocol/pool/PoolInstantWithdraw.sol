@@ -167,6 +167,17 @@ contract PoolInstantWithdraw is
         }
     }
 
+    function getLoanCreationFeeRate()
+        external
+        view
+        virtual
+        override
+        returns (uint256)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return ps._loanCreationFeeRate;
+    }
+
     /// @inheritdoc IPoolInstantWithdraw
     function getBorrowableAssets(address collateralAsset)
         external
@@ -261,7 +272,7 @@ contract PoolInstantWithdraw is
         uint256 presentValue;
         uint256 discountRate;
         uint256 borrowAmount;
-        // calculate borrow amount
+        // calculate amount can be borrowed
         {
             // fetch present value and discount rate from Oracle
             (presentValue, discountRate) = IInstantNFTOracle(WITHDRAW_ORACLE)
@@ -377,16 +388,14 @@ contract PoolInstantWithdraw is
         uint256 collateralAmount = uint256(loan.collateralAmount);
         address borrowAsset = loan.borrowAsset;
         uint256 presentValueInBorrowAsset;
-        //calculate borrow asset amount needed
+        // calculate amount for borrow asset with current present value
         {
-            //here oracle need to guarantee presentValue > debtValue.
             uint256 presentValue = IInstantNFTOracle(WITHDRAW_ORACLE)
                 .getPresentValueByDiscountRate(
                     collateralTokenId,
                     collateralAmount,
                     loan.discountRate
                 );
-            //repayableBorrowAssetAmount
             presentValueInBorrowAsset = _calculatePresentValueInBorrowAsset(
                 borrowAsset,
                 presentValue
@@ -429,7 +438,7 @@ contract PoolInstantWithdraw is
             receiver
         );
 
-        // update loan
+        // update loan state
         loan.state = DataTypes.LoanState.Repaid;
 
         emit Repay(
@@ -476,7 +485,6 @@ contract PoolInstantWithdraw is
         );
 
         // repay borrow asset debt and update interest rate
-        // rename to loanTotalDebt.
         uint256 loanDebt = _calculateLoanStableDebt(
             loan.borrowAmount,
             loan.discountRate,
@@ -499,7 +507,7 @@ contract PoolInstantWithdraw is
         );
         reserve.updateInterestRates(reserveCache, borrowAsset, 0, 0);
 
-        // update loan
+        // update loan state
         loan.state = DataTypes.LoanState.Settled;
 
         emit Repay(

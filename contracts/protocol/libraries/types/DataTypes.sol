@@ -25,16 +25,12 @@ library DataTypes {
         uint128 variableBorrowIndex;
         //the current variable borrow rate. Expressed in ray
         uint128 currentVariableBorrowRate;
-        //the current stable borrow rate. Expressed in ray
-        uint128 currentStableBorrowRate;
         //timestamp of last update
         uint40 lastUpdateTimestamp;
         //the id of the reserve. Represents the position in the list of the active reserves
         uint16 id;
         //xToken address
         address xTokenAddress;
-        //stableDebtToken address
-        address stableDebtTokenAddress;
         //variableDebtToken address
         address variableDebtTokenAddress;
         //address of the interest rate strategy
@@ -43,6 +39,10 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
+        //the current stable borrow rate. Expressed in ray
+        uint128 currentStableBorrowRate;
+        //stableDebtToken address
+        address stableDebtTokenAddress;
     }
 
     struct ReserveConfigurationMap {

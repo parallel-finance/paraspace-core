@@ -297,7 +297,7 @@ library ValidationLogic {
 
     function validateInstantWithdrawBorrow(
         DataTypes.ReserveCache memory reserveCache,
-        address reverve,
+        address reserve,
         uint256 amount
     ) internal view {
         ValidateBorrowLocalVars memory vars;
@@ -311,10 +311,11 @@ library ValidationLogic {
             reserveCache.nextVariableBorrowIndex
         );
         uint256 totalDebt = totalVariableDebt +
-            reserveCache.nextTotalStableDebt;
-        uint256 availableLiquidity = IToken(reverve).balanceOf(
+            reserveCache.nextTotalStableDebt +
+            amount;
+        uint256 availableLiquidity = IToken(reserve).balanceOf(
             reserveCache.xTokenAddress
-        );
+        ) - amount;
         uint256 availableLiquidityPlusDebt = availableLiquidity + totalDebt;
         uint256 usageRatio = totalDebt.rayDiv(availableLiquidityPlusDebt);
         require(usageRatio <= 0.8e27, Errors.USAGE_RATIO_TOO_HIGH);
