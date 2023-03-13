@@ -1,0 +1,43 @@
+wallet:
+  name: paraspace/validators
+  passphrase: my wallet secret
+  baseDir: keystore/ethereum2
+  accounts:
+    - name: paraspace/validators/1
+      passphrase: my account secret
+      path: m/12381/3600/1/0/0
+outputDir: app
+genesis: []
+nodes:
+  - name: validator1
+    volume: validator1-data
+    executionLayer:
+      image: ethereum/client-go:latest
+      dataDir: geth
+      flags:
+        - --goerli
+        - --http
+        - --http.api=engine,eth,web3,net,debug
+        - --ws
+        - --ws.api=engine,eth,web3,net,debug
+        - --http.corsdomain=*
+        - --syncmode=full
+        - --networkid=5
+    consensusLayer:
+      image: sigp/lighthouse:v3.5.1
+      dataDir: lighthouse
+      flags:
+        - --network=prater
+        - --eth1
+        - --http
+        - --http-allow-sync-stalled
+        - --enr-udp-port=9000
+        - --enr-tcp-port=9000
+        - --discovery-port=9000
+        - --suggested-fee-recipient=0x018281853eCC543Aa251732e8FDaa7323247eBeB
+    validator:
+      image: sigp/lighthouse:v3.5.1
+      dataDir: lighthouse/validator-data
+      flags:
+        - --network=prater
+        - --suggested-fee-recipient=0x018281853eCC543Aa251732e8FDaa7323247eBeB

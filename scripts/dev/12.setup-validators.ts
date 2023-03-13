@@ -140,10 +140,6 @@ const initiate = (config: Config) => {
     exec(`cd ${config.outputDir} && curl -fsSLO ${genesis}`);
   }
 
-  const genesisJson = JSON.parse(
-    fs.readFileSync(`${config.outputDir}/genesis.json`, "utf8")
-  );
-
   exec(`openssl rand -hex 32 | tr -d "\n" > "${config.outputDir}/jwtsecret"`);
 
   const dockerComposePath = `${config.outputDir}/docker-compose.yml`;
@@ -169,7 +165,6 @@ const initiate = (config: Config) => {
       `--authrpc.port=${executionAuthPort + index}`
     );
     node.executionLayer.flags.push(`--authrpc.jwtsecret=/app/jwtsecret`);
-    node.executionLayer.flags.push(`--networkid=${genesisJson.config.chainId}`);
 
     node.consensusLayer.flags.push(
       `--datadir=/data/${node.consensusLayer.dataDir}`
@@ -191,15 +186,17 @@ const initiate = (config: Config) => {
     exec(
       `(docker volume rm ${node.volume} || true) && docker volume create ${node.volume}`
     );
-    exec(
-      `docker run \
+    if (fs.existsSync(`${config.outputDir}/genesis.json`)) {
+      exec(
+        `docker run \
         -v "${node.volume}:/data" \
         -v "$(pwd)/${config.outputDir}:/app" \
         --rm ${node.executionLayer.image} \
         --datadir "/data/${node.executionLayer.dataDir}" \
         init /app/genesis.json`,
-      {fatal: true, silent: false}
-    );
+        {fatal: true, silent: false}
+      );
+    }
     exec(
       `docker run \
         -v "${node.volume}:/data" \
@@ -257,8 +254,11 @@ const initiate = (config: Config) => {
         dockerfile: "consensusLayer.Dockerfile",
       },
       command: [
-        `lighthouse`,
-        `--testnet-dir=/app`,
+        `lighthouse${
+          node.consensusLayer.flags.some((flag) => flag.startsWith("--network"))
+            ? ""
+            : " --testnet-dir=/app"
+        }`,
         "bn",
         ...node.consensusLayer.flags,
       ],
@@ -302,8 +302,11 @@ const initiate = (config: Config) => {
         dockerfile: "validator.Dockerfile",
       },
       command: [
-        `lighthouse`,
-        `--testnet-dir=/app`,
+        `lighthouse${
+          node.validator.flags.some((flag) => flag.startsWith("--network"))
+            ? ""
+            : " --testnet-dir=/app"
+        }`,
         "vc",
         ...node.validator.flags,
       ],
