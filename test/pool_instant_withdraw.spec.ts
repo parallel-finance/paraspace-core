@@ -60,7 +60,7 @@ describe("Pool Instant Withdraw Test", () => {
     return testEnv;
   };
 
-  it("active term loan can be swaped by other user", async () => {
+  it("active term loan can be swapped by other user", async () => {
     const {
       users: [, user2, user3],
       weth,
@@ -152,7 +152,7 @@ describe("Pool Instant Withdraw Test", () => {
     ).to.be.revertedWith(ProtocolErrors.USAGE_RATIO_TOO_HIGH);
   });
 
-  it("settled term loan can not be swaped", async () => {
+  it("settled term loan can not be swapped", async () => {
     const {
       users: [, user2, user3],
       weth,
@@ -180,7 +180,7 @@ describe("Pool Instant Withdraw Test", () => {
     ).to.be.revertedWith(ProtocolErrors.INVALID_LOAN_STATE);
   });
 
-  it("swaped term loan can not be settled", async () => {
+  it("swapped term loan can not be settled", async () => {
     const {
       users: [, user2, user3],
       weth,

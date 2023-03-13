@@ -55,6 +55,10 @@ library ValidationLogic {
      */
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
+    // Max usage ratio for instant withdraw borrowing
+    // A value of 0.8e27 results in 80%
+    uint256 public constant INSTANT_WITHDRAW_USAGE_RATIO_THRESHOLD = 0.8e27;
+
     /**
      * @notice Validates a supply action.
      * @param reserveCache The cached data of the reserve
@@ -318,7 +322,10 @@ library ValidationLogic {
         ) - amount;
         uint256 availableLiquidityPlusDebt = availableLiquidity + totalDebt;
         uint256 usageRatio = totalDebt.rayDiv(availableLiquidityPlusDebt);
-        require(usageRatio <= 0.8e27, Errors.USAGE_RATIO_TOO_HIGH);
+        require(
+            usageRatio <= INSTANT_WITHDRAW_USAGE_RATIO_THRESHOLD,
+            Errors.USAGE_RATIO_TOO_HIGH
+        );
     }
 
     /**
