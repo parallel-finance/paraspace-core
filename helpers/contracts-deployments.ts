@@ -253,10 +253,8 @@ import {
   PoolInstantWithdraw__factory,
   LoanVault__factory,
   LoanVault,
-  MockedETHNFTOracle,
-  MockedETHNFTOracle__factory,
-  MockedInstantWithdrawNFT__factory,
-  MockedInstantWithdrawNFT,
+  MockedETHWithdrawNFT__factory,
+  MockedETHWithdrawNFT,
   ATokenStableDebtToken,
   ATokenStableDebtToken__factory,
 } from "../types";
@@ -2836,18 +2834,10 @@ export const deployLoanVault = async (
   return proxyInstance as LoanVault;
 };
 
-export const deployMockETHNFTOracle = async (verify?: boolean) =>
+export const deployMockedETHWithdrawNFT = async (verify?: boolean) =>
   withSaveAndVerify(
-    new MockedETHNFTOracle__factory(await getFirstSigner()),
-    eContractid.MockETHNFTOracle,
+    new MockedETHWithdrawNFT__factory(await getFirstSigner()),
+    eContractid.MockedETHWithdrawNFT,
     [],
     verify
-  ) as Promise<MockedETHNFTOracle>;
-
-export const deployMockedInstantWithdrawNFT = async (verify?: boolean) =>
-  withSaveAndVerify(
-    new MockedInstantWithdrawNFT__factory(await getFirstSigner()),
-    eContractid.MockedInstantWithdrawNFT,
-    [],
-    verify
-  ) as Promise<MockedInstantWithdrawNFT>;
+  ) as Promise<MockedETHWithdrawNFT>;

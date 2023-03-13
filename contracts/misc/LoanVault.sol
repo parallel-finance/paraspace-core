@@ -142,6 +142,7 @@ contract LoanVault is Initializable, OwnableUpgradeable {
     ) external onlyPool {
         IInstantWithdrawNFT(collateralAsset).burn(
             collateralTokenId,
+            address(this),
             collateralAmount
         );
     }

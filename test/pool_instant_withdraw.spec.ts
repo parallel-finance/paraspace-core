@@ -5,15 +5,15 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {parseEther} from "ethers/lib/utils";
-import {LoanVault, MockedInstantWithdrawNFT} from "../types";
-import {deployMockedInstantWithdrawNFT} from "../helpers/contracts-deployments";
+import {LoanVault, MockedETHWithdrawNFT} from "../types";
+import {deployMockedETHWithdrawNFT} from "../helpers/contracts-deployments";
 import {getLoanVault} from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {ProtocolErrors} from "../helpers/types";
 
 describe("Pool Instant Withdraw Test", () => {
   let testEnv: TestEnv;
-  let instantWithdrawNFT: MockedInstantWithdrawNFT;
+  let instantWithdrawNFT: MockedETHWithdrawNFT;
   let loanVault: LoanVault;
   const tokenID = 1;
   const tokenAmount = 10000;
@@ -27,7 +27,7 @@ describe("Pool Instant Withdraw Test", () => {
       users: [user1, user2, user3],
     } = testEnv;
 
-    instantWithdrawNFT = await deployMockedInstantWithdrawNFT();
+    instantWithdrawNFT = await deployMockedETHWithdrawNFT();
     loanVault = await getLoanVault();
 
     await waitForTx(

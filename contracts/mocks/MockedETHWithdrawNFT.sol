@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.10;
 
-import "../interfaces/IInstantNFTOracle.sol";
+import "./tokens/MintableERC1155.sol";
+import "../interfaces/IInstantWithdrawNFT.sol";
 
-contract MockedETHNFTOracle is IInstantNFTOracle {
+contract MockedETHWithdrawNFT is MintableERC1155, IInstantWithdrawNFT {
     uint256 internal startTime;
     uint256 internal endTime;
     constructor() {
@@ -26,8 +27,8 @@ contract MockedETHNFTOracle is IInstantNFTOracle {
         return _getPresentValue();
     }
 
-    function getEndTime(uint256) external view returns (uint256) {
-        return endTime;
+    function burn(uint256 tokenId, address, uint256 amount) external {
+        _burn(msg.sender, tokenId, amount);
     }
 
     function _getPresentValue() internal view returns(uint256) {

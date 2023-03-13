@@ -1,7 +1,6 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployLoanVault,
-  deployMockETHNFTOracle,
   deployPoolComponents,
 } from "../../../helpers/contracts-deployments";
 import {
@@ -128,14 +127,11 @@ export const step_06 = async (verify = false) => {
     const loanVaultAddress =
       (await getContractAddressInDb(eContractid.LoanVault)) ||
       (await deployLoanVault(poolAddress, verify)).address;
-    const nFTOracleAddress =
-      (await getContractAddressInDb(eContractid.MockETHNFTOracle)) ||
-      (await deployMockETHNFTOracle(verify)).address;
     // create PoolETHWithdraw here instead of in deployPoolComponents since LoanVault have a dependency for Pool address
     const poolInstantWithdraw = (await withSaveAndVerify(
       new PoolInstantWithdraw__factory(await getFirstSigner()),
       eContractid.PoolETHWithdrawImpl,
-      [addressesProvider.address, loanVaultAddress, nFTOracleAddress],
+      [addressesProvider.address, loanVaultAddress],
       verify,
       false,
       undefined,

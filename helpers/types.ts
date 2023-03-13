@@ -11,10 +11,7 @@ import {NTokenMAYCLibraryAddresses} from "../types/factories/protocol/tokenizati
 import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMoonBirds__factory";
 import {NTokenUniswapV3LibraryAddresses} from "../types/factories/protocol/tokenization/NTokenUniswapV3__factory";
 import {NTokenLibraryAddresses} from "../types/factories/protocol/tokenization/NToken__factory";
-import {
-  deployLoanVaultImpl,
-  deployMockETHNFTOracle,
-} from "./contracts-deployments";
+import {deployLoanVaultImpl} from "./contracts-deployments";
 
 export enum AssetType {
   ERC20 = 0,
@@ -259,8 +256,7 @@ export enum eContractid {
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
-  MockETHNFTOracle = "MockETHNFTOracle",
-  MockedInstantWithdrawNFT = "MockedInstantWithdrawNFT",
+  MockedETHWithdrawNFT = "MockedETHWithdrawNFT",
   LoanVault = "LoanVault",
   LoanVaultImpl = "LoanVaultImpl",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",

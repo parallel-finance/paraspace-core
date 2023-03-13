@@ -11,7 +11,7 @@ import {IERC1155} from "../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {IPoolInstantWithdraw} from "../../interfaces/IPoolInstantWithdraw.sol";
-import {IInstantNFTOracle} from "../../interfaces/IInstantNFTOracle.sol";
+import {IInstantWithdrawNFT} from "../../interfaces/IInstantWithdrawNFT.sol";
 import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {IReserveInterestRateStrategy} from "../../interfaces/IReserveInterestRateStrategy.sol";
 import {IStableDebtToken} from "../../interfaces/IStableDebtToken.sol";
@@ -56,7 +56,6 @@ contract PoolInstantWithdraw is
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     address internal immutable VAULT_CONTRACT;
-    address internal immutable WITHDRAW_ORACLE;
     uint256 internal constant POOL_REVISION = 145;
 
     // See `IPoolCore` for descriptions
@@ -100,14 +99,9 @@ contract PoolInstantWithdraw is
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
-    constructor(
-        IPoolAddressesProvider provider,
-        address vault,
-        address withdrawOracle
-    ) {
+    constructor(IPoolAddressesProvider provider, address vault) {
         ADDRESSES_PROVIDER = provider;
         VAULT_CONTRACT = vault;
-        WITHDRAW_ORACLE = withdrawOracle;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -225,7 +219,7 @@ contract PoolInstantWithdraw is
             Errors.INVALID_LOAN_STATE
         );
 
-        uint256 presentValue = IInstantNFTOracle(WITHDRAW_ORACLE)
+        uint256 presentValue = IInstantWithdrawNFT(loan.collateralAsset)
             .getPresentValueByDiscountRate(
                 loan.collateralTokenId,
                 loan.collateralAmount,
@@ -275,7 +269,7 @@ contract PoolInstantWithdraw is
         // calculate amount can be borrowed
         {
             // fetch present value and discount rate from Oracle
-            (presentValue, discountRate) = IInstantNFTOracle(WITHDRAW_ORACLE)
+            (presentValue, discountRate) = IInstantWithdrawNFT(collateralAsset)
                 .getPresentValueAndDiscountRate(
                     collateralTokenId,
                     collateralAmount,
@@ -390,7 +384,7 @@ contract PoolInstantWithdraw is
         uint256 presentValueInBorrowAsset;
         // calculate amount for borrow asset with current present value
         {
-            uint256 presentValue = IInstantNFTOracle(WITHDRAW_ORACLE)
+            uint256 presentValue = IInstantWithdrawNFT(loan.collateralAsset)
                 .getPresentValueByDiscountRate(
                     collateralTokenId,
                     collateralAmount,
