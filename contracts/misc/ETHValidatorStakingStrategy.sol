@@ -12,6 +12,7 @@ contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
     using PercentageMath for uint256;
 
     uint256 constant STAKING_RATE = 1E7; // ETH per Day
+    uint256 constant SLASHING_RISK = 0;
     uint256 constant PROVIDER_PREMIUM = 2500; // ~25% APY in RAY divided by 365 days
     uint256 constant DISCOUNT_RATE_SCALEDOWN_FACTOR = 50;
 
