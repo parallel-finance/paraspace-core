@@ -1,7 +1,10 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther, parseUnits} from "ethers/lib/utils";
-import {deployETHWithdrawal} from "../helpers/contracts-deployments";
+import {
+  deployETHValidatorStakingStrategy,
+  deployETHWithdrawal,
+} from "../helpers/contracts-deployments";
 import {getCurrentTime} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {StakingProvider} from "../helpers/types";
@@ -11,7 +14,16 @@ import {assertAlmostEqual} from "./helpers/validated-steps";
 describe("ETH Withdrawal", async () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
+    const {
+      gatewayAdmin,
+      users: [user1],
+    } = testEnv;
     testEnv.ethWithdrawal = await deployETHWithdrawal("ETHWithdrawal");
+    const validatorStrategy = await deployETHValidatorStakingStrategy();
+
+    await testEnv.ethWithdrawal
+      .connect(gatewayAdmin.signer)
+      .setProviderStrategyAddress(0, validatorStrategy.address);
     return testEnv;
   };
 

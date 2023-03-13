@@ -13,6 +13,7 @@ import {ReentrancyGuard} from "../dependencies/openzeppelin/contracts/Reentrancy
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {MathUtils} from "../protocol/libraries/math/MathUtils.sol";
+import {IETHStakingProviderStrategy} from "../interfaces/IETHStakingProviderStrategy.sol";
 
 error Unimplemented();
 error AlreadyMature();
@@ -34,6 +35,8 @@ contract ETHWithdrawal is
     bytes32 public constant DEFAULT_ISSUER_ROLE = keccak256("DEFAULT_ISSUER");
 
     mapping(uint256 => IETHWithdrawal.TokenInfo) private tokenInfos;
+    mapping(IETHWithdrawal.StakingProvider => address)
+        public providerStrategyAddress;
 
     uint256 public nextTokenId;
 
@@ -117,6 +120,7 @@ contract ETHWithdrawal is
         }
     }
 
+    // TODO remove
     function getTokenPrice(uint256 tokenId, uint256 borrowRate)
         external
         view
@@ -132,6 +136,40 @@ contract ETHWithdrawal is
             tokenInfo.withdrawableTime
         );
         return tokenInfo.balance.rayDiv(discountRate);
+    }
+
+    function getPresentValueAndDiscountRate(uint256 tokenId, uint256 borrowRate)
+        external
+        view
+        returns (uint256 price, uint256 discountRate)
+    {
+        IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
+
+        IETHStakingProviderStrategy strategy = IETHStakingProviderStrategy(
+            providerStrategyAddress[tokenInfo.provider]
+        );
+
+        discountRate = strategy.getDiscountRate(tokenInfo, borrowRate);
+        price = strategy.getTokenPresentValue(tokenInfo, discountRate);
+    }
+
+    function getPresentValueByDiscountRate(
+        uint256 tokenId,
+        uint256 discountRate
+    ) external view returns (uint256 price) {
+        IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
+        IETHStakingProviderStrategy strategy = IETHStakingProviderStrategy(
+            providerStrategyAddress[tokenInfo.provider]
+        );
+
+        price = strategy.getTokenPresentValue(tokenInfo, discountRate);
+    }
+
+    function setProviderStrategyAddress(
+        IETHWithdrawal.StakingProvider provider,
+        address strategy
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        providerStrategyAddress[provider] = strategy;
     }
 
     receive() external payable {}

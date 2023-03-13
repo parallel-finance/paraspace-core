@@ -263,6 +263,7 @@ export enum eContractid {
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
   DepositContract = "DepositContract",
+  ETHValidatorStakingStrategy = "ETHValidatorStakingStrategy",
 }
 
 /*

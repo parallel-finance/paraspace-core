@@ -36,4 +36,19 @@ interface IETHWithdrawal {
         external
         view
         returns (uint256);
+
+    function getPresentValueAndDiscountRate(uint256 tokenId, uint256 borrowRate)
+        external
+        view
+        returns (uint256 price, uint256 discountRate);
+
+    function getPresentValueByDiscountRate(
+        uint256 tokenId,
+        uint256 discountRate
+    ) external view returns (uint256 price);
+
+    function setProviderStrategyAddress(
+        StakingProvider provider,
+        address strategy
+    ) external;
 }
