@@ -86,6 +86,7 @@ import {
   PYieldToken__factory,
   HelperContract__factory,
   DepositContract__factory,
+  ETHWithdrawal__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1209,6 +1210,17 @@ export const getDepositContract = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.DepositContract}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getETHWithdrawal = async (address?: tEthereumAddress) =>
+  await ETHWithdrawal__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ETHWithdrawal}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
