@@ -17,9 +17,10 @@ describe("ETH Withdrawal", async () => {
     const {gatewayAdmin} = testEnv;
     testEnv.ethWithdrawal = await deployETHWithdrawal("ETHWithdrawal");
     const validatorStrategy = await deployETHValidatorStakingStrategy(
-      "0",
-      "0",
-      "0"
+      "1", // staking rate
+      parseUnits("13", 10).toString(),
+      parseUnits("0.05", 27).toString(),
+      parseUnits("4.32", 6).toString()
     );
 
     await testEnv.ethWithdrawal
@@ -65,8 +66,10 @@ describe("ETH Withdrawal", async () => {
         parseUnits("0.3", 27)
       );
 
-    assertAlmostEqual(price, "15610304096641855125");
-    assertAlmostEqual(discountRate, parseUnits("0.3", 27));
+    // console.log(price, discountRate, parseUnits("0.05", 27).add(parseUnits("0.3", 27).mul(29 * 24 * 60 * 60).div(parseUnits("4.32", 6))));
+
+    assertAlmostEqual(price, "15700730965593906306");
+    assertAlmostEqual(discountRate, "229999930555555555555555555");
 
     await advanceTimeAndBlock(30 * 24 * 3600);
 
