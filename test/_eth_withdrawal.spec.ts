@@ -1,5 +1,6 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
+import {BigNumber} from "ethers";
 import {parseEther, parseUnits} from "ethers/lib/utils";
 import {
   deployETHValidatorStakingStrategy,
@@ -10,7 +11,11 @@ import {advanceTimeAndBlock, DRE, waitForTx} from "../helpers/misc-utils";
 import {StakingProvider} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {assertAlmostEqual} from "./helpers/validated-steps";
+import {calcCompoundedInterest} from "./helpers/utils/calculations";
+import "./helpers/utils/wadraymath";
+import {ONE_YEAR, RAY} from "../helpers/constants";
 
+const SECONDS_PER_YEAR = BigNumber.from(ONE_YEAR);
 describe("ETH Withdrawal", async () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
@@ -27,6 +32,66 @@ describe("ETH Withdrawal", async () => {
       .connect(gatewayAdmin.signer)
       .setProviderStrategyAddress(0, validatorStrategy.address);
     return testEnv;
+  };
+
+  const calculateDiscountRate = async (
+    providerPremium: BigNumber,
+    borrowRate: BigNumber,
+    timeUntilWithdrawal: BigNumber,
+    durationFactor: BigNumber
+  ) => {
+    // r_discount = r_base_vendor +  (borrowRate * T) / durationFactor
+    return providerPremium.add(
+      borrowRate.mul(timeUntilWithdrawal).div(durationFactor)
+    );
+  };
+
+  const calculatePresentValue = async (
+    principal: BigNumber,
+    discountRate: BigNumber,
+    stakingRate: BigNumber,
+    slashingRate: BigNumber,
+    timeUntilWithdrawal: BigNumber,
+    currentTime: BigNumber
+  ) => {
+    if (currentTime >= timeUntilWithdrawal) {
+      return principal;
+    }
+
+    // presentValue = (principal * (1 - slashinkRate * T)) / (1 + discountRate)^T + rewards * (1 - 1/(1 + discountRate)^T) / discountRate
+
+    const comppoundedInterestFromDiscountRate = calcCompoundedInterest(
+      discountRate,
+      timeUntilWithdrawal,
+      currentTime
+    );
+
+    const timeUntilRedemption = timeUntilWithdrawal.sub(currentTime);
+
+    // TODO finalize staking rewards calculation for partial collateral
+    const scaledUpStakingReward = stakingRate
+      .wadToRay()
+      .mul(timeUntilRedemption)
+      .mul(RAY);
+
+    const scaledPrincipal = principal.wadToRay();
+
+    const pricipleAfterSlashingRisk = scaledPrincipal.sub(
+      scaledPrincipal
+        .mul(slashingRate)
+        .mul(timeUntilRedemption)
+        .div(SECONDS_PER_YEAR.mul(RAY))
+    );
+
+    const tokenPrice = pricipleAfterSlashingRisk
+      .rayDiv(comppoundedInterestFromDiscountRate)
+      .add(
+        scaledUpStakingReward
+          .sub(scaledUpStakingReward.div(comppoundedInterestFromDiscountRate))
+          .div(discountRate.div(SECONDS_PER_YEAR))
+      );
+
+    return tokenPrice.rayToWad();
   };
 
   it("TC-eth-withdrawal-02: Check we can mint ETH withdrawal NFT", async () => {
@@ -66,10 +131,26 @@ describe("ETH Withdrawal", async () => {
         parseUnits("0.3", 27)
       );
 
-    // console.log(price, discountRate, parseUnits("0.05", 27).add(parseUnits("0.3", 27).mul(29 * 24 * 60 * 60).div(parseUnits("4.32", 6))));
-
-    assertAlmostEqual(price, "15700730965593906306");
-    assertAlmostEqual(discountRate, "229999930555555555555555555");
+    assertAlmostEqual(
+      price,
+      await calculatePresentValue(
+        parseEther("16"),
+        discountRate,
+        BigNumber.from(1),
+        parseUnits("13", 10),
+        currentTime.add(30 * 24 * 3600),
+        currentTime
+      )
+    );
+    assertAlmostEqual(
+      discountRate,
+      await calculateDiscountRate(
+        parseUnits("0.05", 27),
+        parseUnits("0.3", 27),
+        BigNumber.from(30 * 24 * 3600),
+        parseUnits("4.32", 6)
+      )
+    );
 
     await advanceTimeAndBlock(30 * 24 * 3600);
 

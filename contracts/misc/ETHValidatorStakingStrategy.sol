@@ -37,12 +37,15 @@ contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
             return amount;
         }
 
+        // presentValue = (principal * (1 - slashinkRate * T)) / (1 + discountRate)^T + rewards * (1 - 1/(1 + discountRate)^T) / discountRate
+
         uint256 comppoundedInterestFromDiscountRate = MathUtils
             .calculateCompoundedInterest(
                 discountRate,
                 uint40(block.timestamp),
                 tokenInfo.withdrawableTime
             );
+
         uint256 timeUntilRedemption = (tokenInfo.withdrawableTime -
             block.timestamp);
 
@@ -51,10 +54,10 @@ contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
             timeUntilRedemption *
             WadRayMath.RAY;
 
-        uint256 scaledPrinciple = amount.wadToRay();
+        uint256 scaledPrincipal = amount.wadToRay();
 
-        uint256 pricipleAfterSlashingRisk = scaledPrinciple -
-            (scaledPrinciple * SLASHING_RATE * timeUntilRedemption) /
+        uint256 pricipleAfterSlashingRisk = scaledPrincipal -
+            (scaledPrincipal * SLASHING_RATE * timeUntilRedemption) /
             (MathUtils.SECONDS_PER_YEAR * WadRayMath.RAY);
 
         uint256 tokenPrice = pricipleAfterSlashingRisk.rayDiv(

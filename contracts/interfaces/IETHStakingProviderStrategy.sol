@@ -16,7 +16,7 @@ interface IETHStakingProviderStrategy {
 @param tokenInfo Information about the token being evaluated
 @param amount The amount of tokens being evaluated
 @param discountRate The discount rate to be applied
-@return The present value of the given token
+@return price present value of the given token
 */
     function getTokenPresentValue(
         IETHWithdrawal.TokenInfo calldata tokenInfo,
@@ -29,7 +29,7 @@ interface IETHStakingProviderStrategy {
 @dev Calculates the discount rate for a given token and borrow rate
 @param tokenInfo Information about the token being evaluated
 @param borrowRate The borrow rate to be used in the calculation
-@return The discount rate for the given token and borrow rate
+@return discountRate discount rate for the given token and borrow rate
 */
     function getDiscountRate(
         IETHWithdrawal.TokenInfo calldata tokenInfo,
