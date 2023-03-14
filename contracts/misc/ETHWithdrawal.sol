@@ -116,7 +116,7 @@ contract ETHWithdrawal is
                 revert NotMature();
             }
 
-            Helpers.safeTransferETH(recipient, tokenInfo.balance);
+            Helpers.safeTransferETH(recipient, amount);
             _burn(msg.sender, tokenId, amount);
             emit Burn(msg.sender, tokenId, amount);
         } else {
