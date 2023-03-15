@@ -129,4 +129,5 @@ library Errors {
     string public constant INVALID_BORROW_ASSET = "134"; // invalid borrow asset for collateral
     string public constant INVALID_PRESENT_VALUE = "135"; // invalid present value
     string public constant USAGE_RATIO_TOO_HIGH = "136"; // usage ratio too high after borrow
+    string public constant STABLE_DEBT_TOKEN_ALREADY_SET = "137"; // stable debt token already set
 }

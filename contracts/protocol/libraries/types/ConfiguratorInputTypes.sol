@@ -51,4 +51,14 @@ library ConfiguratorInputTypes {
         address implementation;
         bytes params;
     }
+
+    struct ConfigStableDebtTokenInput {
+        address stableDebtTokenImpl;
+        address underlyingAsset;
+        address incentivesController;
+        uint8 underlyingAssetDecimals;
+        string stableDebtTokenName;
+        string stableDebtTokenSymbol;
+        bytes params;
+    }
 }

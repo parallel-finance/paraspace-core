@@ -148,6 +148,30 @@ library ConfiguratorLogic {
         );
     }
 
+    function executeInitStableDebtToken(
+        IPool pool,
+        ConfiguratorInputTypes.ConfigStableDebtTokenInput calldata input
+    ) public {
+        address stableDebtTokenProxyAddress = _initTokenWithProxy(
+            input.stableDebtTokenImpl,
+            abi.encodeWithSelector(
+                IInitializableDebtToken.initialize.selector,
+                pool,
+                input.underlyingAsset,
+                input.incentivesController,
+                input.underlyingAssetDecimals,
+                input.stableDebtTokenName,
+                input.stableDebtTokenSymbol,
+                input.params
+            )
+        );
+
+        pool.setReserveStableDebtTokenAddress(
+            input.underlyingAsset,
+            stableDebtTokenProxyAddress
+        );
+    }
+
     /**
      * @notice Updates the xToken implementation and initializes it
      * @dev Emits the `XTokenUpgraded` event

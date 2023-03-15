@@ -356,6 +356,13 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
+    function configReserveStableDebtTokenAddress(
+        ConfiguratorInputTypes.ConfigStableDebtTokenInput calldata input
+    ) external override onlyRiskOrPoolAdmins {
+        ConfiguratorLogic.executeInitStableDebtToken(_pool, input);
+    }
+
+    /// @inheritdoc IPoolConfigurator
     function setReserveAuctionStrategyAddress(
         address asset,
         address newAuctionStrategyAddress

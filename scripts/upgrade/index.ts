@@ -1,9 +1,11 @@
 import {waitForTx} from "../../helpers/misc-utils";
 import {
+  deployLoanVault,
   deployPoolComponents,
   getPoolSignaturesFromDb,
 } from "../../helpers/contracts-deployments";
 import {
+  getFirstSigner,
   getPoolAddressesProvider,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
@@ -12,8 +14,18 @@ import {ZERO_ADDRESS} from "../../helpers/constants";
 import {upgradePToken} from "./ptoken";
 import {upgradeNToken} from "./ntoken";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {IParaProxy} from "../../types";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {
+  IParaProxy,
+  PoolInstantWithdraw,
+  PoolInstantWithdraw__factory,
+} from "../../types";
+import {
+  dryRunEncodedData,
+  getContractAddressInDb,
+  getFunctionSignatures,
+  withSaveAndVerify,
+} from "../../helpers/contracts-helpers";
+import {eContractid} from "../../helpers/types";
 
 dotenv.config();
 
@@ -69,13 +81,30 @@ export const resetPool = async (verify = false) => {
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
     poolApeStakingSelectors: newPoolApeStakingSelectors,
+    poolInstantWithdrawSelectors: newPoolInstantWithdrawSelectors,
   } = await deployPoolComponents(addressesProvider.address, verify);
+
+  const poolAddress = await addressesProvider.getPool();
+  const loanVaultAddress =
+    (await getContractAddressInDb(eContractid.LoanVault)) ||
+    (await deployLoanVault(poolAddress, verify)).address;
+  const poolInstantWithdraw = (await withSaveAndVerify(
+    new PoolInstantWithdraw__factory(await getFirstSigner()),
+    eContractid.PoolETHWithdrawImpl,
+    [addressesProvider.address, loanVaultAddress],
+    verify,
+    false,
+    undefined,
+    getFunctionSignatures(PoolInstantWithdraw__factory.abi)
+  )) as PoolInstantWithdraw;
+
   console.timeEnd("deploy PoolComponent");
 
   const implementations = [
     [poolCore.address, newPoolCoreSelectors],
     [poolMarketplace.address, newPoolMarketplaceSelectors],
     [poolParameters.address, newPoolParametersSelectors],
+    [poolInstantWithdraw.address, newPoolInstantWithdrawSelectors],
   ] as [string, string[]][];
   if (poolApeStaking) {
     implementations.push([poolApeStaking.address, newPoolApeStakingSelectors]);
@@ -85,6 +114,7 @@ export const resetPool = async (verify = false) => {
     coreProxyImplementation,
     marketplaceProxyImplementation,
     parametersProxyImplementation,
+    instantWithdrawProxyImplementation,
     apeStakingProxyImplementation,
   ] = implementations.map(([implAddress, newSelectors]) => {
     const proxyImplementation: IParaProxy.ProxyImplementationStruct[] = [];
@@ -101,6 +131,10 @@ export const resetPool = async (verify = false) => {
   console.log(
     "marketplaceProxyImplementation:",
     marketplaceProxyImplementation
+  );
+  console.log(
+    "instantWithdrawProxyImplementation:",
+    instantWithdrawProxyImplementation
   );
   console.log("apeStakingProxyImplementation:", apeStakingProxyImplementation);
 
@@ -167,6 +201,27 @@ export const resetPool = async (verify = false) => {
   }
   console.timeEnd("upgrade PoolMarketplace");
 
+  console.time("upgrade PoolInstantWithdraw");
+  if (instantWithdrawProxyImplementation) {
+    if (DRY_RUN) {
+      const encodedData = addressesProvider.interface.encodeFunctionData(
+        "updatePoolImpl",
+        [instantWithdrawProxyImplementation, ZERO_ADDRESS, "0x"]
+      );
+      await dryRunEncodedData(addressesProvider.address, encodedData);
+    } else {
+      await waitForTx(
+        await addressesProvider.updatePoolImpl(
+          instantWithdrawProxyImplementation,
+          ZERO_ADDRESS,
+          "0x",
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
+  }
+  console.timeEnd("upgrade PoolInstantWithdraw");
+
   console.time("upgrade PoolApeStaking");
   if (apeStakingProxyImplementation) {
     if (DRY_RUN) {
@@ -197,6 +252,7 @@ export const upgradePool = async (verify = false) => {
     poolParametersSelectors: oldPoolParametersSelectors,
     poolMarketplaceSelectors: oldPoolMarketplaceSelectors,
     poolApeStakingSelectors: oldPoolApeStakingSelectors,
+    poolWithdrawSelectors: oldPoolWithdrawSelectors,
     poolParaProxyInterfacesSelectors: oldPoolParaProxyInterfacesSelectors,
   } = await getPoolSignaturesFromDb();
 
@@ -210,8 +266,24 @@ export const upgradePool = async (verify = false) => {
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
     poolApeStakingSelectors: newPoolApeStakingSelectors,
+    poolInstantWithdrawSelectors: newPoolInstantWithdrawSelectors,
     poolParaProxyInterfacesSelectors: newPoolParaProxyInterfacesSelectors,
   } = await deployPoolComponents(addressesProvider.address, verify);
+
+  const poolAddress = await addressesProvider.getPool();
+  const loanVaultAddress =
+    (await getContractAddressInDb(eContractid.LoanVault)) ||
+    (await deployLoanVault(poolAddress, verify)).address;
+  const poolInstantWithdraw = (await withSaveAndVerify(
+    new PoolInstantWithdraw__factory(await getFirstSigner()),
+    eContractid.PoolETHWithdrawImpl,
+    [addressesProvider.address, loanVaultAddress],
+    verify,
+    false,
+    undefined,
+    getFunctionSignatures(PoolInstantWithdraw__factory.abi)
+  )) as PoolInstantWithdraw;
+
   console.timeEnd("deploy PoolComponent");
 
   const implementations = [
@@ -225,6 +297,11 @@ export const upgradePool = async (verify = false) => {
       poolParameters.address,
       newPoolParametersSelectors,
       oldPoolParametersSelectors,
+    ],
+    [
+      poolInstantWithdraw.address,
+      newPoolInstantWithdrawSelectors,
+      oldPoolWithdrawSelectors,
     ],
     [
       poolParaProxyInterfaces.address,
@@ -245,6 +322,7 @@ export const upgradePool = async (verify = false) => {
     coreProxyImplementation,
     marketplaceProxyImplementation,
     parametersProxyImplementation,
+    instantWithdrawProxyImplementation,
     interfacesProxyImplementation,
     apeStakingProxyImplementation,
   ] = implementations.map(([implAddress, newSelectors, oldSelectors]) => {
@@ -277,6 +355,10 @@ export const upgradePool = async (verify = false) => {
   console.log(
     "marketplaceProxyImplementation:",
     marketplaceProxyImplementation
+  );
+  console.log(
+    "instantWithdrawProxyImplementation:",
+    instantWithdrawProxyImplementation
   );
   console.log("apeStakingProxyImplementation:", apeStakingProxyImplementation);
   console.log("interfacesProxyImplementation:", interfacesProxyImplementation);
@@ -343,6 +425,27 @@ export const upgradePool = async (verify = false) => {
     }
   }
   console.timeEnd("upgrade PoolMarketplace");
+
+  console.time("upgrade PoolInstantWithdraw");
+  if (instantWithdrawProxyImplementation) {
+    if (DRY_RUN) {
+      const encodedData = addressesProvider.interface.encodeFunctionData(
+        "updatePoolImpl",
+        [instantWithdrawProxyImplementation, ZERO_ADDRESS, "0x"]
+      );
+      await dryRunEncodedData(addressesProvider.address, encodedData);
+    } else {
+      await waitForTx(
+        await addressesProvider.updatePoolImpl(
+          instantWithdrawProxyImplementation,
+          ZERO_ADDRESS,
+          "0x",
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
+  }
+  console.timeEnd("upgrade PoolInstantWithdraw");
 
   console.time("upgrade PoolApeStaking");
   if (apeStakingProxyImplementation) {

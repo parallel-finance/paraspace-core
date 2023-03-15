@@ -257,6 +257,8 @@ import {
   MockedETHWithdrawNFT,
   ATokenStableDebtToken,
   ATokenStableDebtToken__factory,
+  StETHStableDebtToken__factory,
+  StETHStableDebtToken,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -536,6 +538,10 @@ export const getPoolSignaturesFromDb = async () => {
     eContractid.PoolApeStakingImpl
   );
 
+  const poolWithdrawSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolETHWithdrawImpl
+  );
+
   const poolParaProxyInterfacesSelectors = await getFunctionSignaturesFromDb(
     eContractid.ParaProxyInterfacesImpl
   );
@@ -545,6 +551,7 @@ export const getPoolSignaturesFromDb = async () => {
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolWithdrawSelectors,
     poolParaProxyInterfacesSelectors,
   };
 };
@@ -2761,6 +2768,17 @@ export const deployATokenStableDebtToken = async (
     verify
   ) as Promise<ATokenStableDebtToken>;
 
+export const deployStETHStableDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new StETHStableDebtToken__factory(await getFirstSigner()),
+    eContractid.StETHStableDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<StETHStableDebtToken>;
+
 export const deployMockStableDebtToken = async (
   args: [
     tEthereumAddress,
@@ -2797,7 +2815,12 @@ export const deployLoanVaultImpl = async (
   verify?: boolean
 ) => {
   const allTokens = await getAllTokens();
-  const args = [poolAddress, allTokens.WETH.address, allTokens.aWETH.address];
+  const args = [
+    poolAddress,
+    allTokens.WETH.address,
+    allTokens.aWETH.address,
+    allTokens.wstETH.address,
+  ];
 
   return withSaveAndVerify(
     new LoanVault__factory(await getFirstSigner()),

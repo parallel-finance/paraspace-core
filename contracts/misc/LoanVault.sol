@@ -53,14 +53,14 @@ contract LoanVault is Initializable, OwnableUpgradeable {
     address private immutable wETH;
     address private immutable aETH;
     IPool private immutable aavePool;
+    address private immutable stETH;
+    address private immutable wstETH;
     /*
     address private immutable astETH;
     address private immutable awstETH;
     address private immutable bendETH;
     address private immutable bendPool;
     address private immutable cETH;
-    address private immutable stETH;
-    address private immutable wstETH;
     */
 
     /**
@@ -74,12 +74,12 @@ contract LoanVault is Initializable, OwnableUpgradeable {
     constructor(
         address _lendingPool,
         address _wETH,
-        address _aETH
+        address _aETH,
+        address _wstETH
     )
     /*
         address _bendETH,
         address _cETH,
-        address _wstETH,
         address _astETH,
         address _awstETH
 */
@@ -88,13 +88,13 @@ contract LoanVault is Initializable, OwnableUpgradeable {
         wETH = _wETH;
         aETH = _aETH;
         aavePool = IAToken(_aETH).POOL();
+        wstETH = _wstETH;
+        stETH = IWstETH(_wstETH).stETH();
         /*
         astETH = _astETH;
         awstETH = _awstETH;
         bendETH = _bendETH;
         cETH = _cETH;
-        wstETH = _wstETH;
-        stETH = IWstETH(_wstETH).stETH();
         bendPool = address(IAToken(_bendETH).POOL());
         */
     }
@@ -104,12 +104,13 @@ contract LoanVault is Initializable, OwnableUpgradeable {
 
         _unlimitedApproveToLendingPool(wETH);
         _unlimitedApproveToLendingPool(aETH);
+        _unlimitedApproveToLendingPool(stETH);
+        _unlimitedApproveToLendingPool(wstETH);
         /*
         _unlimitedApproveToLendingPool(astETH);
         _unlimitedApproveToLendingPool(awstETH);
         _unlimitedApproveToLendingPool(bendETH);
         _unlimitedApproveToLendingPool(cETH);
-        _unlimitedApproveToLendingPool(stETH);
         */
     }
 
@@ -156,6 +157,11 @@ contract LoanVault is Initializable, OwnableUpgradeable {
         } else if (asset == aETH) {
             IWETH(wETH).deposit{value: amount}();
             aavePool.supply(wETH, amount, address(this), 0);
+        } else if (asset == stETH) {
+            ILido(stETH).submit{value: amount}(address(0));
+        } else if (asset == wstETH) {
+            ILido(stETH).submit{value: amount}(address(0));
+            IWstETH(wstETH).wrap(amount);
             /*
         } else if (asset == astETH) {
             ILido(stETH).submit{value: amount}(address(0));
@@ -169,8 +175,6 @@ contract LoanVault is Initializable, OwnableUpgradeable {
             IBendPool(bendPool).deposit(wETH, amount, address(this), 0);
         } else if (asset == cETH) {
             ICEther(cETH).mint{value: amount}();
-        } else if (asset == stETH) {
-            ILido(stETH).submit{value: amount}(address(0));
         */
         } else {
             revert("not support asset");

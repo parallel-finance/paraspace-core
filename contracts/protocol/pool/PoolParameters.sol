@@ -151,6 +151,29 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function setReserveStableDebtTokenAddress(
+        address asset,
+        address stableDebtTokenAddress
+    ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage reserve = ps._reserves[asset];
+
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            reserve.id != 0 || ps._reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        require(
+            reserve.stableDebtTokenAddress == address(0),
+            Errors.STABLE_DEBT_TOKEN_ALREADY_SET
+        );
+        reserve.stableDebtTokenAddress = stableDebtTokenAddress;
+
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+        reserve.updateInterestRates(reserveCache, asset, 0, 0);
+    }
+
+    /// @inheritdoc IPoolParameters
     function setReserveInterestRateStrategyAddress(
         address asset,
         address rateStrategyAddress

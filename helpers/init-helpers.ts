@@ -48,6 +48,7 @@ import {
   deployAutoYieldApe,
   deployGenericStableDebtToken,
   deployATokenStableDebtToken,
+  deployStETHStableDebtToken,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -132,6 +133,7 @@ export const initReservesByHelper = async (
   let stETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
   let aTokenStableDebtTokenImplementationAddress = "";
+  let stETHStableDebtTokenImplementationAddress = "";
   let PsApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
 
@@ -360,6 +362,12 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = stETHVariableDebtTokenImplementationAddress;
+          if (!stETHStableDebtTokenImplementationAddress) {
+            stETHStableDebtTokenImplementationAddress = (
+              await deployStETHStableDebtToken(pool.address, verify)
+            ).address;
+          }
+          stableDebtTokenToUse = stETHStableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.aWETH) {
           if (!pTokenATokenImplementationAddress) {
             pTokenATokenImplementationAddress = (

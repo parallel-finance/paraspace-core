@@ -368,4 +368,12 @@ interface IPoolConfigurator {
      * @param siloed The new siloed borrowing state
      */
     function setSiloedBorrowing(address asset, bool siloed) external;
+
+    /**
+     * @notice config stable debt token address after asset init
+     * @param input The stable debt token config parameters
+     */
+    function configReserveStableDebtTokenAddress(
+        ConfiguratorInputTypes.ConfigStableDebtTokenInput calldata input
+    ) external;
 }

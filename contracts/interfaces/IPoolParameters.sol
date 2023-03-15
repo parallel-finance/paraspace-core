@@ -60,6 +60,17 @@ interface IPoolParameters {
     function dropReserve(address asset) external;
 
     /**
+     * @notice Updates the address of the stable debt token contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param stableDebtTokenAddress The address of the stable debt token contract
+     **/
+    function setReserveStableDebtTokenAddress(
+        address asset,
+        address stableDebtTokenAddress
+    ) external;
+
+    /**
      * @notice Updates the address of the interest rate strategy contract
      * @dev Only callable by the PoolConfigurator contract
      * @param asset The address of the underlying asset of the reserve

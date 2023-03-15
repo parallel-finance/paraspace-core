@@ -420,6 +420,10 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
+.PHONY: upgrade-eth-instant-withdraw
+upgrade-eth-instant-withdraw:
+	make SCRIPT_PATH=./scripts/dev/12-update-eth-instant-withdraw.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
