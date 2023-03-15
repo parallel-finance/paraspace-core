@@ -95,11 +95,7 @@ describe("ETH Withdrawal", async () => {
   };
 
   it("TC-eth-withdrawal-01: Check we can mint ETH withdrawal NFT", async () => {
-    const {
-      ethWithdrawal,
-      gatewayAdmin,
-      users: [user1],
-    } = await loadFixture(fixture);
+    const {ethWithdrawal, gatewayAdmin} = await loadFixture(fixture);
     const currentTime = await getCurrentTime();
     await waitForTx(
       await ethWithdrawal
@@ -352,8 +348,7 @@ describe("ETH Withdrawal", async () => {
   it("TC-eth-withdrawal-03: non-admin of ETH withdrawal NFT can't change the present value strategy contract address ", async () => {
     const {
       ethWithdrawal,
-      gatewayAdmin,
-      users: [user1, user2],
+      users: [user2],
     } = await loadFixture(fixture);
 
     const validatorStrategy = await deployETHValidatorStakingStrategy(
