@@ -67,6 +67,7 @@ export interface DockerNode {
     context: string;
     dockerfile: string;
   };
+  restart: string;
   command: string[];
   ulimits: {
     nofile: {
@@ -265,6 +266,7 @@ task("setup-validators", "Setup validators")
           context: ".",
           dockerfile: "consensusLayer.Dockerfile",
         },
+        restart: "always",
         command: [
           "lighthouse",
           node.consensusLayer.flags.some((flag) => flag.startsWith("--network"))
@@ -295,6 +297,7 @@ task("setup-validators", "Setup validators")
           context: ".",
           dockerfile: "executionLayer.Dockerfile",
         },
+        restart: "always",
         command: [...node.executionLayer.flags],
         ulimits: {
           nofile: {
@@ -312,6 +315,7 @@ task("setup-validators", "Setup validators")
           context: ".",
           dockerfile: "validator.Dockerfile",
         },
+        restart: "always",
         command: [
           "lighthouse",
           node.validator.flags.some((flag) => flag.startsWith("--network"))
