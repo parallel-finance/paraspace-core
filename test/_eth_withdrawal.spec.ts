@@ -251,7 +251,7 @@ describe("ETH Withdrawal", async () => {
     ).to.be.equal(parseEther("16"));
   });
 
-  it("TC-eth-withdrawal-03: Admin of ETH withdrawal NFT can change the present value strategy contract address ", async () => {
+  it("TC-eth-withdrawal-04: Admin of ETH withdrawal NFT can change the present value strategy contract address ", async () => {
     const {
       ethWithdrawal,
       gatewayAdmin,
@@ -345,7 +345,7 @@ describe("ETH Withdrawal", async () => {
     );
   });
 
-  it("TC-eth-withdrawal-03: non-admin of ETH withdrawal NFT can't change the present value strategy contract address ", async () => {
+  it("TC-eth-withdrawal-05: non-admin of ETH withdrawal NFT can't change the present value strategy contract address ", async () => {
     const {
       ethWithdrawal,
       users: [user2],
@@ -365,7 +365,7 @@ describe("ETH Withdrawal", async () => {
     ).to.be.reverted;
   });
 
-  it("TC-eth-withdrawal-02: Check we can burn ETH withdrawal NFT", async () => {
+  it("TC-eth-withdrawal-06: Check we can burn ETH withdrawal NFT", async () => {
     const {
       ethWithdrawal,
       gatewayAdmin,
