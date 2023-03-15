@@ -60,6 +60,43 @@ describe("Pool Instant Withdraw Test", () => {
     return testEnv;
   };
 
+  it("user can create two loan with 1 transaction with multicall", async () => {
+    const {
+      users: [, user2],
+      weth,
+      pool,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await instantWithdrawNFT.connect(user2.signer).mint(2, tokenAmount)
+    );
+
+    const tx0 = pool.interface.encodeFunctionData("createLoan", [
+      instantWithdrawNFT.address,
+      1,
+      tokenAmount,
+      weth.address,
+      0,
+    ]);
+    const tx1 = pool.interface.encodeFunctionData("createLoan", [
+      instantWithdrawNFT.address,
+      2,
+      tokenAmount,
+      weth.address,
+      0,
+    ]);
+
+    await waitForTx(await pool.connect(user2.signer).multicall([tx0, tx1]));
+
+    expect(await weth.balanceOf(user2.address)).to.be.gte(parseEther("2"));
+    expect(await instantWithdrawNFT.balanceOf(loanVault.address, 1)).to.be.eq(
+      tokenAmount
+    );
+    expect(await instantWithdrawNFT.balanceOf(loanVault.address, 2)).to.be.eq(
+      tokenAmount
+    );
+  });
+
   it("active term loan can be swapped by other user", async () => {
     const {
       users: [, user2, user3],

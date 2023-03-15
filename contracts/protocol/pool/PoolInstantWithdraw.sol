@@ -109,6 +109,19 @@ contract PoolInstantWithdraw is
     }
 
     /// @inheritdoc IPoolInstantWithdraw
+    function multicall(bytes[] calldata data)
+        external
+        virtual
+        returns (bytes[] memory results)
+    {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            results[i] = Address.functionDelegateCall(address(this), data[i]);
+        }
+        return results;
+    }
+
+    /// @inheritdoc IPoolInstantWithdraw
     function addBorrowableAssets(
         address collateralAsset,
         address[] calldata borrowableAssets
