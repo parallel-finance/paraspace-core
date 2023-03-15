@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {IERC721Metadata} from "../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
+import {IDelegationRegistry} from "../dependencies/delegation/IDelegationRegistry.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IUiPoolDataProvider} from "./interfaces/IUiPoolDataProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
@@ -533,5 +534,24 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             }
         }
         return (userData, tokensData);
+    }
+
+    function getDelegatesForTokens(
+        address delegationRegistry,
+        address vault,
+        address contract_,
+        uint256[] calldata tokenIds
+    ) external view returns (DelegationData[] memory) {
+        DelegationData[] memory delegationData = new DelegationData[](
+            tokenIds.length
+        );
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            delegationData[index].delegations = IDelegationRegistry(
+                delegationRegistry
+            ).getDelegatesForToken(vault, contract_, tokenIds[index]);
+        }
+
+        return delegationData;
     }
 }

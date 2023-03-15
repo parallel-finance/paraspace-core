@@ -1,6 +1,9 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {getDelegationRegistry} from "../helpers/contracts-getters";
+import {
+  getDelegationRegistry,
+  getUiPoolDataProvider,
+} from "../helpers/contracts-getters";
 import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -38,7 +41,7 @@ describe("NToken general", async () => {
     ).to.be.eq(user2.address);
   });
 
-  it("TC-ntoken-delegation-01: Non-Owner of NToken can not delegate to a given address", async () => {
+  it("TC-ntoken-delegation-02: Non-Owner of NToken can not delegate to a given address", async () => {
     const {
       nBAYC,
       bayc,
@@ -59,7 +62,7 @@ describe("NToken general", async () => {
     ).to.be.eq(user2.address);
   });
 
-  it("TC-ntoken-delegation-01: Owner of NToken can revoke delegation of a given address", async () => {
+  it("TC-ntoken-delegation-03: Owner of NToken can revoke delegation of a given address", async () => {
     const {
       nBAYC,
       bayc,
@@ -76,5 +79,66 @@ describe("NToken general", async () => {
         "0"
       )
     ).to.be.empty;
+  });
+
+  it("TC-ntoken-delegation-04: Delegation status after resupplying the same token by different user", async () => {
+    const {
+      nBAYC,
+      bayc,
+      users: [user1, user2],
+      pool,
+    } = testEnv;
+
+    await nBAYC
+      .connect(user1.signer)
+      .delegateForToken(user2.address, ["0"], true);
+
+    const delegatesBefore = await delegationRegistry.getDelegatesForToken(
+      nBAYC.address,
+      bayc.address,
+      "0"
+    );
+
+    await pool
+      .connect(user1.signer)
+      .withdrawERC721(bayc.address, ["0"], user2.address);
+    await bayc.connect(user2.signer).setApprovalForAll(pool.address, true);
+    await pool
+      .connect(user2.signer)
+      .supplyERC721(
+        bayc.address,
+        [{tokenId: 0, useAsCollateral: true}],
+        user2.address,
+        "0x0"
+      );
+
+    const delegatesAfter = await delegationRegistry.getDelegatesForToken(
+      nBAYC.address,
+      bayc.address,
+      "0"
+    );
+
+    await expect(delegatesBefore).to.be.eql(delegatesAfter);
+  });
+
+  it("TC-ntoken-delegation-05: UI Provider can reterive delegation data for multiple tokens", async () => {
+    const {nBAYC, bayc} = testEnv;
+
+    const uiProvider = await getUiPoolDataProvider();
+
+    const delegatesForToken = await delegationRegistry.getDelegatesForToken(
+      nBAYC.address,
+      bayc.address,
+      "0"
+    );
+
+    const delegations = await uiProvider.getDelegatesForTokens(
+      delegationRegistry.address,
+      nBAYC.address,
+      bayc.address,
+      ["0"]
+    );
+
+    await expect(delegatesForToken).to.be.eql(delegations[0].delegations);
   });
 });

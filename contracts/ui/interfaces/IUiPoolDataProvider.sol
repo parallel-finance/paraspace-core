@@ -108,6 +108,10 @@ interface IUiPoolDataProvider {
         uint256 traitMultiplier;
     }
 
+    struct DelegationData {
+        address[] delegations;
+    }
+
     function getReservesList(IPoolAddressesProvider provider)
         external
         view
@@ -149,4 +153,11 @@ interface IUiPoolDataProvider {
         external
         view
         returns (UserGlobalData memory, TokenInLiquidationData[][] memory);
+
+    function getDelegatesForTokens(
+        address delegationRegistry,
+        address vault,
+        address contract_,
+        uint256[] calldata tokenIds
+    ) external view returns (DelegationData[] memory);
 }
