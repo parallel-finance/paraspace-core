@@ -56,11 +56,11 @@ contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
 
         uint256 scaledPrincipal = amount.wadToRay();
 
-        uint256 pricipleAfterSlashingRisk = scaledPrincipal -
+        uint256 pricipalAfterSlashingRisk = scaledPrincipal -
             (scaledPrincipal * SLASHING_RATE * timeUntilRedemption) /
             (MathUtils.SECONDS_PER_YEAR * WadRayMath.RAY);
 
-        uint256 tokenPrice = pricipleAfterSlashingRisk.rayDiv(
+        uint256 tokenPrice = pricipalAfterSlashingRisk.rayDiv(
             comppoundedInterestFromDiscountRate
         ) +
             (scaledUpStakingReward -
