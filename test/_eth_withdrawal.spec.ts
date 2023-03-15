@@ -114,7 +114,7 @@ describe("ETH Withdrawal", async () => {
       await ethWithdrawal
         .connect(gatewayAdmin.signer)
         .balanceOf(gatewayAdmin.address, "0")
-    ).eq(parseEther("32"));
+    ).eq("10000");
   });
 
   it("TC-eth-withdrawal-02: ETH withdrawal NFT should return the present value and discount rate for full balance with 30% borrow rate", async () => {
@@ -142,11 +142,7 @@ describe("ETH Withdrawal", async () => {
 
     const {price, discountRate} = await ethWithdrawal
       .connect(user1.signer)
-      .getPresentValueAndDiscountRate(
-        "0",
-        parseEther("32"),
-        parseUnits("0.3", 27)
-      );
+      .getPresentValueAndDiscountRate("0", 10000, parseUnits("0.3", 27));
 
     assertAlmostEqual(
       price,
@@ -175,11 +171,7 @@ describe("ETH Withdrawal", async () => {
       (
         await ethWithdrawal
           .connect(user1.signer)
-          .getPresentValueAndDiscountRate(
-            "0",
-            parseEther("32"),
-            parseUnits("0.3", 27)
-          )
+          .getPresentValueAndDiscountRate("0", 10000, parseUnits("0.3", 27))
       ).price
     ).to.be.equal(parseEther("32"));
   });
@@ -269,11 +261,7 @@ describe("ETH Withdrawal", async () => {
 
     [price, discountRate] = await ethWithdrawal
       .connect(user1.signer)
-      .getPresentValueAndDiscountRate(
-        "0",
-        parseEther("16"),
-        parseUnits("0.3", 27)
-      );
+      .getPresentValueAndDiscountRate("0", 5000, parseUnits("0.3", 27));
 
     assertAlmostEqual(
       price,
@@ -309,11 +297,7 @@ describe("ETH Withdrawal", async () => {
 
     [price, discountRate] = await ethWithdrawal
       .connect(user1.signer)
-      .getPresentValueAndDiscountRate(
-        "0",
-        parseEther("16"),
-        parseUnits("0.3", 27)
-      );
+      .getPresentValueAndDiscountRate("0", 5000, parseUnits("0.3", 27));
 
     assertAlmostEqual(
       price,
@@ -340,7 +324,7 @@ describe("ETH Withdrawal", async () => {
   it("TC-eth-withdrawal-05: non-admin of ETH withdrawal NFT can't change the present value strategy contract address ", async () => {
     const {
       ethWithdrawal,
-      users: [user2],
+      users: [, user2],
     } = await loadFixture(fixture);
 
     const validatorStrategy = await deployETHValidatorStakingStrategy(

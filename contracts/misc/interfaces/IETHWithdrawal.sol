@@ -107,7 +107,7 @@ interface IETHWithdrawal {
     /**
      * @dev Calculates the present value and discount rate of provided ETH withdrawal tokens.
      * @param tokenId The tokenId.
-     * @param amount The amount of tokens.
+     * @param shares The shares of tokens.
      * @param borrowRate The current borrow rate.
      * @return price The present value of the provided tokens.
      * @return discountRate The discount rate used to calculate it.
@@ -115,20 +115,20 @@ interface IETHWithdrawal {
      */
     function getPresentValueAndDiscountRate(
         uint256 tokenId,
-        uint256 amount,
+        uint64 shares,
         uint256 borrowRate
     ) external view returns (uint256 price, uint256 discountRate);
 
     /**
      * @dev Calculates the present value of provided ETH withdrawal tokens.
      * @param tokenId The tokenId.
-     * @param amount The amount of tokens.
+     * @param shares The shares of tokens.
      * @param discountRate The discount rate to use in the calculation.
      * @return price The present value of the provided tokens.
      */
     function getPresentValueByDiscountRate(
         uint256 tokenId,
-        uint256 amount,
+        uint64 shares,
         uint256 discountRate
     ) external view returns (uint256 price);
 
@@ -142,4 +142,15 @@ interface IETHWithdrawal {
         StakingProvider provider,
         address strategy
     ) external;
+
+    /**
+
+    @dev Returns the metadata of the token with the given ID.
+    @param tokenId The ID of the token to retrieve metadata for.
+    @return TokenInfo struct containing the metadata of the token.
+    */
+    function getTokenInfo(uint256 tokenId)
+        external
+        view
+        returns (TokenInfo memory);
 }

@@ -99,7 +99,7 @@ contract ETHWithdrawal is
                 withdrawableTime
             );
             _mint(recipient, tokenId, TOTAL_SHARES, bytes(""));
-            emit Mint(recipient, tokenId, balance);
+            emit Mint(recipient, tokenId, TOTAL_SHARES);
         } else {
             revert Unimplemented();
         }
@@ -123,8 +123,8 @@ contract ETHWithdrawal is
             }
 
             Helpers.safeTransferETH(recipient, amount);
-            _burn(msg.sender, tokenId, amount);
-            emit Burn(msg.sender, tokenId, amount);
+            _burn(msg.sender, tokenId, shares);
+            emit Burn(msg.sender, tokenId, shares);
         } else {
             revert Unimplemented();
         }
@@ -133,7 +133,7 @@ contract ETHWithdrawal is
     /// @inheritdoc IETHWithdrawal
     function getPresentValueAndDiscountRate(
         uint256 tokenId,
-        uint256 amount,
+        uint64 shares,
         uint256 borrowRate
     ) external view returns (uint256 price, uint256 discountRate) {
         IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
@@ -142,6 +142,7 @@ contract ETHWithdrawal is
             providerStrategyAddress[tokenInfo.provider]
         );
 
+        uint256 amount = (tokenInfo.balance * shares) / TOTAL_SHARES;
         discountRate = strategy.getDiscountRate(tokenInfo, borrowRate);
         price = strategy.getTokenPresentValue(tokenInfo, amount, discountRate);
     }
@@ -149,7 +150,7 @@ contract ETHWithdrawal is
     /// @inheritdoc IETHWithdrawal
     function getPresentValueByDiscountRate(
         uint256 tokenId,
-        uint256 amount,
+        uint64 shares,
         uint256 discountRate
     ) external view returns (uint256 price) {
         IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
@@ -157,6 +158,7 @@ contract ETHWithdrawal is
             providerStrategyAddress[tokenInfo.provider]
         );
 
+        uint256 amount = (tokenInfo.balance * shares) / TOTAL_SHARES;
         price = strategy.getTokenPresentValue(tokenInfo, amount, discountRate);
     }
 
@@ -166,6 +168,15 @@ contract ETHWithdrawal is
         address strategy
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         providerStrategyAddress[provider] = strategy;
+    }
+
+    /// @inheritdoc IETHWithdrawal
+    function getTokenInfo(uint256 tokenId)
+        external
+        view
+        returns (TokenInfo memory)
+    {
+        return tokenInfos[tokenId];
     }
 
     receive() external payable {}
