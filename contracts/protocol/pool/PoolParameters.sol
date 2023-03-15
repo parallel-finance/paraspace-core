@@ -170,6 +170,7 @@ contract PoolParameters is
         reserve.stableDebtTokenAddress = stableDebtTokenAddress;
 
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
+        reserve.updateState(reserveCache);
         reserve.updateInterestRates(reserveCache, asset, 0, 0);
     }
 

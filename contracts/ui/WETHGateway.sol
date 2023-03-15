@@ -205,19 +205,6 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         _safeTransferETH(msg.sender, ethAmount);
     }
 
-    /**
-     * @notice swap a term loan collateral with ETH,
-     * the amount user need to pay is calculated by the present value of the collateral
-     * @param loanId The id for the specified loan
-     * @param receiver The address to receive the collateral asset
-     **/
-    function swapLoanCollateral(uint256 loanId, address receiver)
-        external
-        payable
-        override
-        nonReentrant
-    {}
-
     function onERC721Received(
         address,
         address,

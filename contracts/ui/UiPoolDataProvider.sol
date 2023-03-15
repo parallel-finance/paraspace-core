@@ -28,7 +28,6 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
 import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
-import "hardhat/console.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -138,13 +137,16 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.underlyingAsset
             );
 
-            (
-                reserveData.totalPrincipalStableDebt,
-                ,
-                reserveData.averageStableRate,
-                reserveData.stableDebtLastUpdateTimestamp
-            ) = IStableDebtToken(reserveData.stableDebtTokenAddress)
-                .getSupplyData();
+            if (reserveData.stableDebtTokenAddress != address(0)) {
+                (
+                    reserveData.totalPrincipalStableDebt,
+                    ,
+                    reserveData.averageStableRate,
+                    reserveData.stableDebtLastUpdateTimestamp
+                ) = IStableDebtToken(reserveData.stableDebtTokenAddress)
+                    .getSupplyData();
+            }
+
             reserveData.totalScaledVariableDebt = IVariableDebtToken(
                 reserveData.variableDebtTokenAddress
             ).scaledTotalSupply();

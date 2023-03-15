@@ -31,8 +31,4 @@ interface IWETHGateway {
         uint256 collateralAmount,
         uint16 referralCode
     ) external;
-
-    function swapLoanCollateral(uint256 loanId, address receiver)
-        external
-        payable;
 }

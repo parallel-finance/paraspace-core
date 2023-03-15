@@ -17,6 +17,7 @@ import {tEthereumAddress} from "../../helpers/types";
 import {
   deployATokenStableDebtToken,
   deployGenericStableDebtToken,
+  deployProtocolDataProvider,
   deployReserveInterestRateStrategy,
   deployStETHStableDebtToken,
 } from "../../helpers/contracts-deployments";
@@ -63,20 +64,23 @@ const updateETHInstantWithdraw = async () => {
   const assetAddressMap: Record<string, tEthereumAddress> = {};
 
   for (const assetAddress of assetAddresses) {
+    let tokenSymbol;
     if (assetAddress === ONE_ADDRESS) {
-      console.log("skip for sApe, continue");
-      continue;
+      tokenSymbol = "sAPE";
+    } else {
+      const token = await MintableERC20.attach(assetAddress);
+      const signers = await getEthersSigners();
+      tokenSymbol = await token.connect(signers[2]).symbol();
     }
-
-    const token = await MintableERC20.attach(assetAddress);
-    const signers = await getEthersSigners();
-    const tokenSymbol = await token.connect(signers[2]).symbol();
     console.log("tokenSymbol:", tokenSymbol);
+    console.log("assetAddress:", assetAddress);
+
+    let reserveIRStrategy;
     if (!reservesParams[tokenSymbol]) {
-      console.log("token has no params, continue");
-      continue;
+      reserveIRStrategy = reservesParams["sAPE"].strategy;
+    } else {
+      reserveIRStrategy = reservesParams[tokenSymbol].strategy;
     }
-    const reserveIRStrategy = reservesParams[tokenSymbol].strategy;
     assetAddressMap[tokenSymbol] = assetAddress;
 
     //4.1 deploy interest rate strategy
@@ -204,6 +208,35 @@ const updateETHInstantWithdraw = async () => {
       await poolConfiguratorProxy.setPoolPause(false, GLOBAL_OVERRIDES)
     );
   }
+
+  // 7. upgrade protocol data provider
+  console.log("upgrade protocol data provider");
+  const protocolDataProvider = await deployProtocolDataProvider(
+    addressesProvider.address,
+    false
+  );
+  await addressesProvider.setProtocolDataProvider(
+    protocolDataProvider.address,
+    GLOBAL_OVERRIDES
+  );
+  console.log("upgrade protocol data provider done...");
+
+  console.log("start add borrowing asset");
+
+  // 8. add borrowing asset
+  await waitForTx(
+    await pool.addBorrowableAssets(
+      "0xff3E5AD98a99d17044Cff0cB7D442682898E77aF",
+      [
+        assetAddressMap["WETH"],
+        assetAddressMap["aWETH"],
+        assetAddressMap["stETH"],
+        assetAddressMap["wstETH"],
+      ],
+      GLOBAL_OVERRIDES
+    )
+  );
+  console.log("add borrowing asset done.....");
 
   console.timeEnd("update eth instant withdraw");
 };
