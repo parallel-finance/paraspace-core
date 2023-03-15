@@ -22,7 +22,7 @@ describe("ETH Withdrawal", async () => {
     const {gatewayAdmin} = testEnv;
     testEnv.ethWithdrawal = await deployETHWithdrawal("ETHWithdrawal");
     const validatorStrategy = await deployETHValidatorStakingStrategy(
-      "1", // staking rate
+      "0", // staking rate
       parseUnits("13", 10).toString(),
       parseUnits("0.05", 27).toString(),
       parseUnits("4.32", 6).toString()
@@ -76,14 +76,14 @@ describe("ETH Withdrawal", async () => {
 
     const scaledPrincipal = principal.wadToRay();
 
-    const pricipleAfterSlashingRisk = scaledPrincipal.sub(
+    const principalAfterSlashingRisk = scaledPrincipal.sub(
       scaledPrincipal
         .mul(slashingRate)
         .mul(timeUntilRedemption)
         .div(SECONDS_PER_YEAR.mul(RAY))
     );
 
-    const tokenPrice = pricipleAfterSlashingRisk
+    const tokenPrice = principalAfterSlashingRisk
       .rayDiv(comppoundedInterestFromDiscountRate)
       .add(
         scaledUpStakingReward
