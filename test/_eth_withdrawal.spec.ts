@@ -94,7 +94,7 @@ describe("ETH Withdrawal", async () => {
     return tokenPrice.rayToWad();
   };
 
-  it("TC-eth-withdrawal-02: Check we can mint ETH withdrawal NFT", async () => {
+  it("TC-eth-withdrawal-01: Check we can mint ETH withdrawal NFT", async () => {
     const {
       ethWithdrawal,
       gatewayAdmin,
@@ -119,6 +119,94 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .balanceOf(gatewayAdmin.address, "0")
     ).eq(parseEther("32"));
+  });
+
+  it("TC-eth-withdrawal-02: ETH withdrawal NFT should return the present value and discount rate for full balance with 30% borrow rate", async () => {
+    const {
+      ethWithdrawal,
+      gatewayAdmin,
+      users: [user1],
+    } = await loadFixture(fixture);
+    const currentTime = await getCurrentTime();
+    await waitForTx(
+      await ethWithdrawal
+        .connect(gatewayAdmin.signer)
+        .mint(
+          StakingProvider.Validator,
+          "1111",
+          "1111",
+          parseEther("32").toString(),
+          gatewayAdmin.address,
+          currentTime.add(30 * 24 * 3600)
+        )
+    );
+
+    // (1 + 0.3 / 31536000) ** (30 * 24 * 3600) = 1.0249640452079391053
+    // 32 / 1.0249640452079391053 = 31.220607346775773819
+
+    const {price, discountRate} = await ethWithdrawal
+      .connect(user1.signer)
+      .getPresentValueAndDiscountRate(
+        "0",
+        parseEther("32"),
+        parseUnits("0.3", 27)
+      );
+
+    assertAlmostEqual(
+      price,
+      await calculatePresentValue(
+        parseEther("32"),
+        discountRate,
+        BigNumber.from(1),
+        parseUnits("13", 10),
+        currentTime.add(30 * 24 * 3600),
+        currentTime
+      )
+    );
+    assertAlmostEqual(
+      discountRate,
+      await calculateDiscountRate(
+        parseUnits("0.05", 27),
+        parseUnits("0.3", 27),
+        BigNumber.from(30 * 24 * 3600),
+        parseUnits("4.32", 6)
+      )
+    );
+
+    await advanceTimeAndBlock(30 * 24 * 3600);
+
+    expect(
+      (
+        await ethWithdrawal
+          .connect(user1.signer)
+          .getPresentValueAndDiscountRate(
+            "0",
+            parseEther("32"),
+            parseUnits("0.3", 27)
+          )
+      ).price
+    ).to.be.equal(parseEther("32"));
+  });
+
+  it("TC-eth-withdrawal-03: ETH withdrawal NFT should return the present value and discount rate for partial balance with 30% borrow rate", async () => {
+    const {
+      ethWithdrawal,
+      gatewayAdmin,
+      users: [user1],
+    } = await loadFixture(fixture);
+    const currentTime = await getCurrentTime();
+    await waitForTx(
+      await ethWithdrawal
+        .connect(gatewayAdmin.signer)
+        .mint(
+          StakingProvider.Validator,
+          "1111",
+          "1111",
+          parseEther("32").toString(),
+          gatewayAdmin.address,
+          currentTime.add(30 * 24 * 3600)
+        )
+    );
 
     // (1 + 0.3 / 31536000) ** (30 * 24 * 3600) = 1.0249640452079391053
     // 32 / 1.0249640452079391053 = 31.220607346775773819
@@ -167,7 +255,122 @@ describe("ETH Withdrawal", async () => {
     ).to.be.equal(parseEther("16"));
   });
 
-  it("TC-eth-withdrawal-03: Check we can burn ETH withdrawal NFT", async () => {
+  it("TC-eth-withdrawal-03: Admin of ETH withdrawal NFT can change the present value strategy contract address ", async () => {
+    const {
+      ethWithdrawal,
+      gatewayAdmin,
+      users: [user1],
+    } = await loadFixture(fixture);
+    const currentTime = await getCurrentTime();
+    await waitForTx(
+      await ethWithdrawal
+        .connect(gatewayAdmin.signer)
+        .mint(
+          StakingProvider.Validator,
+          "1111",
+          "1111",
+          parseEther("32").toString(),
+          gatewayAdmin.address,
+          currentTime.add(30 * 24 * 3600)
+        )
+    );
+
+    // (1 + 0.3 / 31536000) ** (30 * 24 * 3600) = 1.0249640452079391053
+    // 32 / 1.0249640452079391053 = 31.220607346775773819
+    let price, discountRate;
+
+    [price, discountRate] = await ethWithdrawal
+      .connect(user1.signer)
+      .getPresentValueAndDiscountRate(
+        "0",
+        parseEther("16"),
+        parseUnits("0.3", 27)
+      );
+
+    assertAlmostEqual(
+      price,
+      await calculatePresentValue(
+        parseEther("16"),
+        discountRate,
+        BigNumber.from(1),
+        parseUnits("13", 10),
+        currentTime.add(30 * 24 * 3600),
+        currentTime
+      )
+    );
+    assertAlmostEqual(
+      discountRate,
+      await calculateDiscountRate(
+        parseUnits("0.05", 27),
+        parseUnits("0.3", 27),
+        BigNumber.from(30 * 24 * 3600),
+        parseUnits("4.32", 6)
+      )
+    );
+
+    const validatorStrategy = await deployETHValidatorStakingStrategy(
+      "0", // staking rate
+      parseUnits("13", 15).toString(),
+      parseUnits("0.10", 27).toString(),
+      parseUnits("4.32", 6).toString()
+    );
+
+    await ethWithdrawal
+      .connect(gatewayAdmin.signer)
+      .setProviderStrategyAddress(0, validatorStrategy.address);
+
+    [price, discountRate] = await ethWithdrawal
+      .connect(user1.signer)
+      .getPresentValueAndDiscountRate(
+        "0",
+        parseEther("16"),
+        parseUnits("0.3", 27)
+      );
+
+    assertAlmostEqual(
+      price,
+      await calculatePresentValue(
+        parseEther("16"),
+        discountRate,
+        BigNumber.from(0),
+        parseUnits("13", 15),
+        currentTime.add(30 * 24 * 3600),
+        currentTime
+      )
+    );
+    assertAlmostEqual(
+      discountRate,
+      await calculateDiscountRate(
+        parseUnits("0.10", 27),
+        parseUnits("0.3", 27),
+        BigNumber.from(30 * 24 * 3600),
+        parseUnits("4.32", 6)
+      )
+    );
+  });
+
+  it("TC-eth-withdrawal-03: non-admin of ETH withdrawal NFT can't change the present value strategy contract address ", async () => {
+    const {
+      ethWithdrawal,
+      gatewayAdmin,
+      users: [user1, user2],
+    } = await loadFixture(fixture);
+
+    const validatorStrategy = await deployETHValidatorStakingStrategy(
+      "0", // staking rate
+      parseUnits("13", 15).toString(),
+      parseUnits("0.10", 27).toString(),
+      parseUnits("4.32", 6).toString()
+    );
+
+    await expect(
+      ethWithdrawal
+        .connect(user2.signer)
+        .setProviderStrategyAddress(0, validatorStrategy.address)
+    ).to.be.reverted;
+  });
+
+  it("TC-eth-withdrawal-02: Check we can burn ETH withdrawal NFT", async () => {
     const {
       ethWithdrawal,
       gatewayAdmin,
