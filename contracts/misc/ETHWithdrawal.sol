@@ -33,6 +33,7 @@ contract ETHWithdrawal is
     using WadRayMath for uint256;
 
     bytes32 public constant DEFAULT_ISSUER_ROLE = keccak256("DEFAULT_ISSUER");
+    uint64 public constant TOTAL_SHARES = 10000;
 
     mapping(uint256 => IETHWithdrawal.TokenInfo) private tokenInfos;
     mapping(IETHWithdrawal.StakingProvider => address)
@@ -97,7 +98,7 @@ contract ETHWithdrawal is
                 balance,
                 withdrawableTime
             );
-            _mint(recipient, tokenId, balance, bytes(""));
+            _mint(recipient, tokenId, TOTAL_SHARES, bytes(""));
             emit Mint(recipient, tokenId, balance);
         } else {
             revert Unimplemented();
@@ -108,12 +109,17 @@ contract ETHWithdrawal is
     function burn(
         uint256 tokenId,
         address recipient,
-        uint256 amount
+        uint64 shares
     ) external nonReentrant {
         TokenInfo memory tokenInfo = tokenInfos[tokenId];
         if (tokenInfo.provider == IETHWithdrawal.StakingProvider.Validator) {
             if (block.timestamp < tokenInfo.withdrawableTime) {
                 revert NotMature();
+            }
+
+            uint256 amount = (tokenInfo.balance * shares) / TOTAL_SHARES;
+            if (amount == 0) {
+                return;
             }
 
             Helpers.safeTransferETH(recipient, amount);

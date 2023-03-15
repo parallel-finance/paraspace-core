@@ -96,12 +96,12 @@ interface IETHWithdrawal {
      * @dev Burn function destroys an existing ETH withdrawn bond token with the specified tokenId and burns a specified amount of tokens from it.
      * @param tokenId The ID of the token being burned.
      * @param recipient The address of the recipient receiving the burned tokens.
-     * @param amount The amount of tokens to be burned.
+     * @param shares The shares of tokens to be burned.
      */
     function burn(
         uint256 tokenId,
         address recipient,
-        uint256 amount
+        uint64 shares
     ) external;
 
     /**

@@ -59,11 +59,7 @@ describe("ETH Withdrawal", async () => {
 
     const {price, discountRate} = await ethWithdrawal
       .connect(user1.signer)
-      .getPresentValueAndDiscountRate(
-        "0",
-        parseEther("16"),
-        parseUnits("0.3", 27)
-      );
+      .getPresentValueAndDiscountRate("0", 5000, parseUnits("0.3", 27));
 
     assertAlmostEqual(price, "15610304096641855125");
     assertAlmostEqual(discountRate, parseUnits("0.3", 27));
@@ -74,11 +70,7 @@ describe("ETH Withdrawal", async () => {
       (
         await ethWithdrawal
           .connect(user1.signer)
-          .getPresentValueAndDiscountRate(
-            "0",
-            parseEther("16"),
-            parseUnits("0.3", 27)
-          )
+          .getPresentValueAndDiscountRate("0", 5000, parseUnits("0.3", 27))
       ).price
     ).to.be.equal(parseEther("16"));
   });
@@ -108,7 +100,7 @@ describe("ETH Withdrawal", async () => {
       await ethWithdrawal
         .connect(gatewayAdmin.signer)
         .balanceOf(gatewayAdmin.address, "0")
-    ).to.be.equal(parseEther("32"));
+    ).to.be.equal(10000);
 
     await advanceTimeAndBlock(30 * 24 * 3600);
 
@@ -122,7 +114,7 @@ describe("ETH Withdrawal", async () => {
     await waitForTx(
       await ethWithdrawal
         .connect(gatewayAdmin.signer)
-        .burn("0", gatewayAdmin.address, parseEther("32"))
+        .burn("0", gatewayAdmin.address, 10000)
     );
 
     expect(
