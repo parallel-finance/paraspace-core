@@ -2765,11 +2765,12 @@ export const deployETHValidatorStakingStrategy = async (
   stakingRate: string,
   slashingRate: string,
   providerPremium: string,
+  providerDurationFactor: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new ETHValidatorStakingStrategy__factory(await getFirstSigner()),
     eContractid.ETHValidatorStakingStrategy,
-    [stakingRate, slashingRate, providerPremium],
+    [stakingRate, slashingRate, providerPremium, providerDurationFactor],
     verify
   ) as Promise<ETHValidatorStakingStrategy>;
