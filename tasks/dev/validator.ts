@@ -272,7 +272,7 @@ task("setup-validators", "Setup validators")
             : "--testnet-dir=/app",
           "bn",
           ...node.consensusLayer.flags,
-        ],
+        ].filter((x) => x),
         ulimits: {
           nofile: {
             soft: 65536,
@@ -319,7 +319,7 @@ task("setup-validators", "Setup validators")
             : "--testnet-dir=/app",
           "vc",
           ...node.validator.flags,
-        ],
+        ].filter((x) => x),
         ulimits: {
           nofile: {
             soft: 65536,

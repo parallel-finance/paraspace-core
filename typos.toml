@@ -4,7 +4,7 @@ extend-exclude = [
   "contracts/mocks",
   "lib/",
   "app/",
-  "config.yml",
+  "config.*.yml",
 ]
 
 [default.extend-words]
