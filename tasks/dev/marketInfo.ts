@@ -9,13 +9,16 @@ task("market-info", "Print markets info")
   .addPositionalParam("blockHash", "block hash", undefined, undefined, true)
   .setAction(async ({market, blockHash}, DRE) => {
     await DRE.run("set-DRE");
-    const {getPoolAddressesProvider, getUiPoolDataProvider} = await import(
-      "../../helpers/contracts-getters"
-    );
+    const {
+      getPoolAddressesProvider,
+      getUiPoolDataProvider,
+      getParaSpaceOracle,
+    } = await import("../../helpers/contracts-getters");
     const {getProxyImplementation} = await import(
       "../../helpers/contracts-helpers"
     );
     const ui = await getUiPoolDataProvider();
+    const paraSpaceOracle = await getParaSpaceOracle();
     const provider = await getPoolAddressesProvider();
     const [reservesData, baseCurrencyInfo] = await ui.getReservesData(
       provider.address,
@@ -74,5 +77,9 @@ task("market-info", "Print markets info")
       console.log(" liquidityRate:", fromBn(x.liquidityRate, 27));
       console.log(" variableBorrowRate:", fromBn(x.variableBorrowRate, 27));
       console.log(" variableBorrowIndex:", fromBn(x.variableBorrowIndex, 27));
+      console.log(
+        " oracle:",
+        await paraSpaceOracle.getSourceOfAsset(x.underlyingAsset)
+      );
     }
   });

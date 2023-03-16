@@ -104,8 +104,9 @@ import {
   VERSION,
   FLASHBOTS_RELAY_RPC,
   MULTI_SIG_NONCE,
+  MULTI_SEND_CHUNK_SIZE,
 } from "./hardhat-constants";
-import {pick} from "lodash";
+import {chunk, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import {
   OperationType,
@@ -886,6 +887,7 @@ export const proposeSafeTransaction = async (
   target: tEthereumAddress,
   data: string,
   nonce?: number,
+  idx = 0,
   operation = OperationType.Call,
   withTimeLock = false
 ) => {
@@ -912,11 +914,14 @@ export const proposeSafeTransaction = async (
     data = newData;
   }
 
+  const staticNonce = nonce || MULTI_SIG_NONCE;
+
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce:
-      nonce || MULTI_SIG_NONCE || (await safeService.getNextNonce(MULTI_SIG)),
+    nonce: staticNonce
+      ? staticNonce + idx
+      : await safeService.getNextNonce(MULTI_SIG),
     operation,
     data,
   };
@@ -950,8 +955,11 @@ export const proposeMultiSafeTransactions = async (
   nonce?: number
 ) => {
   const newTarget = MULTI_SEND;
-  const {data: newData} = encodeMulti(transactions);
-  await proposeSafeTransaction(newTarget, newData, nonce, operation);
+  const chunks = chunk(transactions, MULTI_SEND_CHUNK_SIZE);
+  for (const [i, c] of chunks.entries()) {
+    const {data: newData} = encodeMulti(c);
+    await proposeSafeTransaction(newTarget, newData, nonce, i, operation);
+  }
 };
 
 export const sendPrivateTransactions = async (

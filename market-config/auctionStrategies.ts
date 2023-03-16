@@ -46,11 +46,11 @@ export const auctionStrategyDoodles: IAuctionStrategyParams = {
 
 export const auctionStrategyOthr: IAuctionStrategyParams = {
   name: "auctionStrategyOthr",
-  maxPriceMultiplier: utils.parseUnits("11", 18).toString(),
+  maxPriceMultiplier: utils.parseUnits("3", 18).toString(),
   minExpPriceMultiplier: utils.parseUnits("1.9", 18).toString(),
   minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
-  stepLinear: utils.parseUnits("0.1375", 18).toString(),
-  stepExp: utils.parseUnits("0.2195051733", 18).toString(),
+  stepLinear: utils.parseUnits("0.06875", 18).toString(),
+  stepExp: utils.parseUnits("0.0285474001559822", 18).toString(),
   tickLength: "900",
 };
 
@@ -106,7 +106,7 @@ export const auctionStrategyUniswapV3: IAuctionStrategyParams = {
 
 export const auctionStrategyBAKC: IAuctionStrategyParams = {
   name: "auctionStrategyBAKC",
-  maxPriceMultiplier: utils.parseUnits("2.5", 18).toString(),
+  maxPriceMultiplier: utils.parseUnits("2", 18).toString(),
   minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
   minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
   stepLinear: utils.parseUnits("0.01102276665", 18).toString(),

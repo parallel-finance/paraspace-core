@@ -127,6 +127,7 @@ export enum eContractid {
   PTokenSApeImpl = "PTokenSApeImpl",
   PTokenATokenImpl = "PTokenATokenImpl",
   PTokenStETHImpl = "PTokenStETHImpl",
+  PTokenAStETHImpl = "PTokenAStETHImpl",
   PTokenCApeImpl = "PTokenCApeImpl",
   PYieldTokenImpl = "PYieldTokenImpl",
   NTokenImpl = "NTokenImpl",
@@ -219,6 +220,7 @@ export enum eContractid {
   StETH = "stETH",
   WStETH = "wstETH",
   MockAToken = "MockAToken",
+  MockCToken = "MockCToken",
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
@@ -228,6 +230,7 @@ export enum eContractid {
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
   CApeDebtToken = "CApeDebtToken",
+  AStETHDebtToken = "AStETHDebtToken",
   ApeStakingLogic = "ApeStakingLogic",
   MintableERC721Logic = "MintableERC721Logic",
   MerkleVerifier = "MerkleVerifier",
@@ -406,9 +409,15 @@ export interface iAssetBase<T> {
   WETH: T;
   aWETH: T;
   cETH: T;
+  bendETH: T;
+  cbETH: T;
+  rETH: T;
+  astETH: T;
+  awstETH: T;
   DAI: T;
   USDC: T;
   USDT: T;
+  FRAX: T;
   BAYC: T;
   WPUNKS: T;
   PUNKS: T;
@@ -441,10 +450,16 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "DAI"
   | "USDC"
   | "USDT"
+  | "FRAX"
   | "WETH"
   | "WBTC"
   | "stETH"
   | "wstETH"
+  | "bendETH"
+  | "cbETH"
+  | "rETH"
+  | "astETH"
+  | "awstETH"
   | "xcDOT"
   | "WGLMR"
   | "APE"
@@ -471,14 +486,20 @@ export enum ERC20TokenContractId {
   WETH = "WETH",
   USDC = "USDC",
   USDT = "USDT",
+  FRAX = "FRAX",
   WBTC = "WBTC",
   stETH = "stETH",
   wstETH = "wstETH",
+  bendETH = "bendETH",
+  cbETH = "cbETH",
+  rETH = "rETH",
+  astETH = "astETH",
+  awstETH = "awstETH",
+  aWETH = "aWETH",
   APE = "APE",
   sAPE = "sAPE",
   cAPE = "cAPE",
   yAPE = "yAPE",
-  aWETH = "aWETH",
   cETH = "cETH",
   PUNK = "PUNK",
   xcDOT = "xcDOT",
@@ -521,6 +542,7 @@ export enum PTokenContractId {
   paWETH = "paWETH",
   pstETH = "pstETH",
   pwstETH = "pwstETH",
+  pcETH = "pcETH",
 }
 
 export interface IReserveParams
@@ -608,11 +630,18 @@ export interface IMarketplaceConfig {
 
 export interface IChainlinkConfig {
   WETH?: tEthereumAddress;
+  aWETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
   wstETH?: tEthereumAddress;
+  cbETH?: tEthereumAddress;
+  rETH?: tEthereumAddress;
+  astETH?: tEthereumAddress;
+  awstETH?: tEthereumAddress;
+  bendETH?: tEthereumAddress;
   DAI?: tEthereumAddress;
   USDC?: tEthereumAddress;
   USDT?: tEthereumAddress;
+  FRAX?: tEthereumAddress;
   WBTC?: tEthereumAddress;
   STETH?: tEthereumAddress;
   APE?: tEthereumAddress;

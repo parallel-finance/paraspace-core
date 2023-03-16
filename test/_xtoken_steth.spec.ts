@@ -1853,7 +1853,7 @@ describe("StETH pToken & variableDebtToken", async () => {
       await checkBalGt(pstETH, lenderAAddress, "12500");
       await checkSupplyGt(pstETH, "12500");
       await checkBalGt(stETH, reserveData.xTokenAddress, "12500");
-      await checkBalGt(stETH, borrowerAAddress, "1469.6299");
+      await checkBalGt(stETH, borrowerAAddress, "1428.5123");
       await checkBal(debtToken, borrowerAAddress, "0");
       await checkBal(pstETH, treasuryAddress, "0");
 

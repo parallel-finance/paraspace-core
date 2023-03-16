@@ -42,52 +42,6 @@ abstract contract MintableIncentivizedERC721 is
     IERC721Enumerable,
     IERC165
 {
-    /**
-     * @dev Emitted during rescueERC20()
-     * @param token The address of the token
-     * @param to The address of the recipient
-     * @param amount The amount being rescued
-     **/
-    event RescueERC20(
-        address indexed token,
-        address indexed to,
-        uint256 amount
-    );
-
-    /**
-     * @dev Emitted during rescueERC721()
-     * @param token The address of the token
-     * @param to The address of the recipient
-     * @param ids The ids of the tokens being rescued
-     **/
-    event RescueERC721(
-        address indexed token,
-        address indexed to,
-        uint256[] ids
-    );
-
-    /**
-     * @dev Emitted during RescueERC1155()
-     * @param token The address of the token
-     * @param to The address of the recipient
-     * @param ids The ids of the tokens being rescued
-     * @param amounts The amount of NFTs being rescued for a specific id.
-     * @param data The data of the tokens that is being rescued. Usually this is 0.
-     **/
-    event RescueERC1155(
-        address indexed token,
-        address indexed to,
-        uint256[] ids,
-        uint256[] amounts,
-        bytes data
-    );
-
-    /**
-     * @dev Emitted during executeAirdrop()
-     * @param airdropContract The address of the airdrop contract
-     **/
-    event ExecuteAirdrop(address indexed airdropContract);
-
     using Address for address;
     using SafeERC20 for IERC20;
 
