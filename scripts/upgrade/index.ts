@@ -29,7 +29,6 @@ export const resetPool = async (verify = false) => {
   const pool = await getPoolProxy();
   const facets = await pool.facets();
 
-  console.time("reset pool");
   for (const facet of facets.filter(
     (x) => x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" // ParaProxyInterfaces
   )) {
@@ -57,7 +56,6 @@ export const resetPool = async (verify = false) => {
       );
     }
   }
-  console.timeEnd("reset pool");
 
   console.time("deploy PoolComponent");
   const {

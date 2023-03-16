@@ -100,7 +100,7 @@ export const VERBOSE = process.env.VERBOSE == "true" ? true : false;
 export const DRY_RUN = process.env.DRY_RUN || "";
 
 export const TIME_LOCK_BUFFERING_TIME = parseInt(
-  process.env.TIME_LOCK_BUFFERING_TIME || "3600"
+  process.env.TIME_LOCK_BUFFERING_TIME || "14400"
 );
 export const TIME_LOCK_DEFAULT_OPERATION =
   process.env.TIME_LOCK_DEFAULT_OPERATION || "queue";
@@ -112,6 +112,9 @@ export const MULTI_SEND =
 export const MULTI_SIG_NONCE = process.env.MULTI_SIG_NONCE
   ? parseInt(process.env.MULTI_SIG_NONCE)
   : undefined;
+export const MULTI_SEND_CHUNK_SIZE = parseInt(
+  process.env.MULTI_SEND_CHUNK_SIZE || "12"
+);
 
 export const VERSION = version;
 

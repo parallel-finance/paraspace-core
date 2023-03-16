@@ -44,6 +44,8 @@ import {
   deployPTokenCApe,
   deployCApeDebtToken,
   deployNTokenBAKCImpl,
+  deployPTokenAStETH,
+  deployAStETHDebtToken,
   deployPYieldToken,
   deployAutoYieldApe,
 } from "./contracts-deployments";
@@ -112,6 +114,7 @@ export const initReservesByHelper = async (
   let pTokenImplementationAddress = genericPTokenImplAddress;
   let pTokenStETHImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
+  let pTokenAStETHImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
   let pTokenPsApeImplementationAddress = "";
   let pYieldTokenImplementationAddress = "";
@@ -122,6 +125,7 @@ export const initReservesByHelper = async (
   let nTokenMAYCImplementationAddress = "";
   let variableDebtTokenImplementationAddress = genericVariableDebtTokenAddress;
   let stETHVariableDebtTokenImplementationAddress = "";
+  let astETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
   let PsApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
@@ -154,23 +158,6 @@ export const initReservesByHelper = async (
       false
     );
   }
-
-  // const reserves = Object.entries(reservesParams).filter(
-  //   ([, {xTokenImpl}]) =>
-  //     xTokenImpl === eContractid.DelegationAwarePTokenImpl ||
-  //     xTokenImpl === eContractid.PTokenImpl ||
-  //     xTokenImpl === eContractid.NTokenImpl ||
-  //     xTokenImpl === eContractid.NTokenBAYCImpl ||
-  //     xTokenImpl === eContractid.NTokenMAYCImpl ||
-  //     xTokenImpl === eContractid.NTokenMoonBirdsImpl ||
-  //     xTokenImpl === eContractid.NTokenUniswapV3Impl ||
-  //     xTokenImpl === eContractid.PTokenStETHImpl ||
-  //     xTokenImpl === eContractid.PTokenATokenImpl ||
-  //     xTokenImpl === eContractid.PTokenSApeImpl ||
-  //     xTokenImpl === eContractid.PTokenCApeImpl ||
-  //     xTokenImpl === eContractid.PYieldTokenImpl ||
-  //     xTokenImpl === eContractid.NTokenBAKCImpl
-  // ) as [string, IReserveParams][];
 
   for (const [symbol, params] of reserves) {
     if (!tokenAddresses[symbol]) {
@@ -354,7 +341,10 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = stETHVariableDebtTokenImplementationAddress;
-        } else if (reserveSymbol === ERC20TokenContractId.aWETH) {
+        } else if (
+          reserveSymbol === ERC20TokenContractId.aWETH ||
+          reserveSymbol === ERC20TokenContractId.awstETH
+        ) {
           if (!pTokenATokenImplementationAddress) {
             pTokenATokenImplementationAddress = (
               await deployPTokenAToken(pool.address, verify)
@@ -367,6 +357,19 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = aTokenVariableDebtTokenImplementationAddress;
+        } else if (reserveSymbol === ERC20TokenContractId.astETH) {
+          if (!pTokenAStETHImplementationAddress) {
+            pTokenAStETHImplementationAddress = (
+              await deployPTokenAStETH(pool.address, verify)
+            ).address;
+          }
+          xTokenToUse = pTokenAStETHImplementationAddress;
+          if (!astETHVariableDebtTokenImplementationAddress) {
+            astETHVariableDebtTokenImplementationAddress = (
+              await deployAStETHDebtToken(pool.address, verify)
+            ).address;
+          }
+          variableDebtTokenToUse = astETHVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.sAPE) {
           if (!pTokenSApeImplementationAddress) {
             const protocolDataProvider = await getProtocolDataProvider();
