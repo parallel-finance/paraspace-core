@@ -30,6 +30,7 @@ describe("NToken general", async () => {
     await nBAYC
       .connect(user1.signer)
       .delegateForToken(user2.address, ["0"], true);
+
     await expect(
       (
         await delegationRegistry.getDelegatesForToken(
@@ -72,6 +73,7 @@ describe("NToken general", async () => {
     await nBAYC
       .connect(user1.signer)
       .delegateForToken(user2.address, ["0"], false);
+
     await expect(
       await delegationRegistry.getDelegatesForToken(
         nBAYC.address,
@@ -93,12 +95,6 @@ describe("NToken general", async () => {
       .connect(user1.signer)
       .delegateForToken(user2.address, ["0"], true);
 
-    const delegatesBefore = await delegationRegistry.getDelegatesForToken(
-      nBAYC.address,
-      bayc.address,
-      "0"
-    );
-
     await pool
       .connect(user1.signer)
       .withdrawERC721(bayc.address, ["0"], user2.address);
@@ -118,7 +114,7 @@ describe("NToken general", async () => {
       "0"
     );
 
-    await expect(delegatesBefore).to.be.eql(delegatesAfter);
+    await expect(delegatesAfter).to.be.empty;
   });
 
   it("TC-ntoken-delegation-05: UI Provider can reterive delegation data for multiple tokens", async () => {
@@ -132,12 +128,9 @@ describe("NToken general", async () => {
       "0"
     );
 
-    const delegations = await uiProvider.getDelegatesForTokens(
-      delegationRegistry.address,
-      nBAYC.address,
-      bayc.address,
-      ["0"]
-    );
+    const delegations = await uiProvider.getDelegatesForTokens(nBAYC.address, [
+      "0",
+    ]);
 
     await expect(delegatesForToken).to.be.eql(delegations[0].delegations);
   });

@@ -35,7 +35,7 @@ contract NToken is
     using SafeERC20 for IERC20;
 
     uint256 public constant NTOKEN_REVISION = 146;
-    address immutable DELEGATE_REGISTRY_ADDRESS;
+    address internal immutable DELEGATE_REGISTRY_ADDRESS;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -121,6 +121,17 @@ contract NToken is
                     receiverOfUnderlying,
                     tokenIds[index]
                 );
+
+                address tokenDelegationAddress = _ERC721Data.tokenDelegations[
+                    tokenIds[index]
+                ];
+                if (tokenDelegationAddress != address(0)) {
+                    _updateTokenDelegation(
+                        tokenDelegationAddress,
+                        tokenIds[index],
+                        false
+                    );
+                }
             }
         }
 
@@ -261,12 +272,36 @@ contract NToken is
                 Errors.NOT_THE_OWNER
             );
 
-            IDelegationRegistry(DELEGATE_REGISTRY_ADDRESS).delegateForToken(
-                delegate,
-                _ERC721Data.underlyingAsset,
-                tokenIds[index],
-                value
+            require(
+                !value ||
+                    _ERC721Data.tokenDelegations[tokenIds[index]] == address(0),
+                Errors.TOKEN_ALREADY_DELEGATED
             );
+
+            _updateTokenDelegation(delegate, tokenIds[index], value);
         }
+    }
+
+    function _updateTokenDelegation(
+        address delegate,
+        uint256 tokenId,
+        bool value
+    ) internal {
+        if (value) {
+            _ERC721Data.tokenDelegations[tokenId] = delegate;
+        } else {
+            delete _ERC721Data.tokenDelegations[tokenId];
+        }
+
+        IDelegationRegistry(DELEGATE_REGISTRY_ADDRESS).delegateForToken(
+            delegate,
+            _ERC721Data.underlyingAsset,
+            tokenId,
+            value
+        );
+    }
+
+    function DELEGATE_REGISTRY() external view returns (address) {
+        return DELEGATE_REGISTRY_ADDRESS;
     }
 }
