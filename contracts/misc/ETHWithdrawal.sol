@@ -15,7 +15,8 @@ import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {MathUtils} from "../protocol/libraries/math/MathUtils.sol";
 import {IETHStakingProviderStrategy} from "../interfaces/IETHStakingProviderStrategy.sol";
 import {Base64} from "../dependencies/openzeppelin/contracts/Base64.sol";
-import "hardhat/console.sol";
+import {Strings} from "../dependencies/openzeppelin/contracts/Strings.sol";
+import {BokkyPooBahsDateTimeLibrary} from "../dependencies/RollaProject/DateTime.sol";
 
 error Unimplemented();
 error AlreadyMature();
@@ -33,6 +34,7 @@ contract ETHWithdrawal is
 {
     using SafeERC20 for IERC20;
     using WadRayMath for uint256;
+    using Strings for uint256;
 
     bytes32 public constant DEFAULT_ISSUER_ROLE = keccak256("DEFAULT_ISSUER");
     uint64 public constant TOTAL_SHARES = 10000;
@@ -247,7 +249,7 @@ contract ETHWithdrawal is
         override
         returns (string memory)
     {
-        // TokenInfo memory tokenInfo = tokenInfos[tokenId];
+        TokenInfo memory tokenInfo = tokenInfos[tokenId];
         string memory defs = string(
             abi.encodePacked(
                 '<svg viewBox="0 0 500 500" width="500" height="500" xmlns="http://www.w3.org/2000/svg">',
@@ -284,19 +286,38 @@ contract ETHWithdrawal is
         );
         string memory footer = string(
             abi.encodePacked(
-                '<text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; white-space: pre;" x="210.531" y="464.604">Validator</text>'
-                '<text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; white-space: pre;" x="302.886" y="464.643">Never</text>'
-                '<text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; white-space: pre;" x="140.451" y="463.925">2.452</text>'
+                '<text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; white-space: pre;" x="210.531" y="464.604">',
+                "Validator",
+                "</text>",
+                '<text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; white-space: pre;" x="302.886" y="464.643">'
+                "Never",
+                "</text>",
+                '<text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; white-space: pre;" x="140.451" y="463.925">',
+                tokenInfo.balance > 32 ether
+                    ? ((tokenInfo.balance - 32 ether) / 1 ether).toString()
+                    : "0",
+                "</text>"
             )
         );
         string memory balance = string(
             abi.encodePacked(
-                '<text style="fill: rgb(255, 255, 255); fill-opacity: 0.23; font-family: Arial, sans-serif; font-size: 90px; font-weight: 700; letter-spacing: 20px; paint-order: stroke; stroke: rgb(0, 0, 0); stroke-width: 3px; text-anchor: middle; white-space: pre;" x="256.426" y="412.142">32</text>'
+                '<text style="fill: rgb(255, 255, 255); fill-opacity: 0.23; font-family: Arial, sans-serif; font-size: 90px; font-weight: 700; letter-spacing: 20px; paint-order: stroke; stroke: rgb(0, 0, 0); stroke-width: 3px; text-anchor: middle; white-space: pre;" x="256.426" y="412.142">',
+                (tokenInfo.balance / 1 ether).toString(),
+                "</text>"
             )
         );
+
+        (uint256 year, uint256 month, uint256 day) = BokkyPooBahsDateTimeLibrary
+            .timestampToDate(tokenInfo.withdrawableTime);
         string memory date = string(
             abi.encodePacked(
-                '<text style="fill: rgba(51, 51, 51, 0.93); font-family: Arial, sans-serif; font-size: 25.4px; font-weight: 700; white-space: pre;" x="202.446" y="318.237">1/3/2023</text>'
+                '<text style="fill: rgba(51, 51, 51, 0.93); font-family: Arial, sans-serif; font-size: 25.4px; font-weight: 700; white-space: pre;" x="202.446" y="318.237">',
+                day.toString(),
+                "/",
+                month.toString(),
+                "/",
+                year.toString(),
+                "</text>"
             )
         );
         string memory image = Base64.encode(
@@ -325,7 +346,7 @@ contract ETHWithdrawal is
                                 '{"name":"',
                                 "ParaSpace ETH Instant Unstake NFT",
                                 '", "description":"',
-                                "This NFT represents a bond in ParaSpace",
+                                "This NFT represents a ETH bond in ParaSpace",
                                 '", "image": "',
                                 "data:image/svg+xml;base64,",
                                 image,
