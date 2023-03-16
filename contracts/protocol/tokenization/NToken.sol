@@ -28,7 +28,6 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
     uint256 public constant NTOKEN_REVISION = 146;
-    address internal immutable DELEGATE_REGISTRY_ADDRESS;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -51,9 +50,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             atomic_pricing,
             delegateRegistry
         )
-    {
-        DELEGATE_REGISTRY_ADDRESS = delegateRegistry;
-    }
+    {}
 
     function initialize(
         IPool initializingPool,
