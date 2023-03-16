@@ -18,20 +18,13 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
-import {INTokenDelegation} from "../../interfaces/INTokenDelegation.sol";
-import {IDelegationRegistry} from "../../dependencies/delegation/IDelegationRegistry.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
  *
  * @notice Implementation of the NFT derivative token for the ParaSpace protocol
  */
-contract NToken is
-    VersionedInitializable,
-    MintableIncentivizedERC721,
-    INToken,
-    INTokenDelegation
-{
+contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
     uint256 public constant NTOKEN_REVISION = 146;
@@ -55,7 +48,8 @@ contract NToken is
             pool,
             "NTOKEN_IMPL",
             "NTOKEN_IMPL",
-            atomic_pricing
+            atomic_pricing,
+            delegateRegistry
         )
     {
         DELEGATE_REGISTRY_ADDRESS = delegateRegistry;
@@ -121,17 +115,6 @@ contract NToken is
                     receiverOfUnderlying,
                     tokenIds[index]
                 );
-
-                address tokenDelegationAddress = _ERC721Data.tokenDelegations[
-                    tokenIds[index]
-                ];
-                if (tokenDelegationAddress != address(0)) {
-                    _updateTokenDelegation(
-                        tokenDelegationAddress,
-                        tokenIds[index],
-                        false
-                    );
-                }
             }
         }
 
@@ -259,49 +242,5 @@ contract NToken is
         returns (XTokenType)
     {
         return XTokenType.NToken;
-    }
-
-    function delegateForToken(
-        address delegate,
-        uint256[] calldata tokenIds,
-        bool value
-    ) external nonReentrant {
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            require(
-                msg.sender == ownerOf(tokenIds[index]),
-                Errors.NOT_THE_OWNER
-            );
-
-            require(
-                !value ||
-                    _ERC721Data.tokenDelegations[tokenIds[index]] == address(0),
-                Errors.TOKEN_ALREADY_DELEGATED
-            );
-
-            _updateTokenDelegation(delegate, tokenIds[index], value);
-        }
-    }
-
-    function _updateTokenDelegation(
-        address delegate,
-        uint256 tokenId,
-        bool value
-    ) internal {
-        if (value) {
-            _ERC721Data.tokenDelegations[tokenId] = delegate;
-        } else {
-            delete _ERC721Data.tokenDelegations[tokenId];
-        }
-
-        IDelegationRegistry(DELEGATE_REGISTRY_ADDRESS).delegateForToken(
-            delegate,
-            _ERC721Data.underlyingAsset,
-            tokenId,
-            value
-        );
-    }
-
-    function DELEGATE_REGISTRY() external view returns (address) {
-        return DELEGATE_REGISTRY_ADDRESS;
     }
 }

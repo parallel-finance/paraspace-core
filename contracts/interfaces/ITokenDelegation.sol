@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-interface INTokenDelegation {
+interface ITokenDelegation {
     /**
      * @notice Allow the delegate to act on your behalf for a specific token
      * @param delegate The hotwallet to act on your behalf

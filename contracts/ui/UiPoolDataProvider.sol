@@ -15,7 +15,7 @@ import {IAtomicCollateralizableERC721} from "../interfaces/IAtomicCollateralizab
 import {XTokenType, IXTokenType} from "../interfaces/IXTokenType.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
-import {INTokenDelegation} from "../interfaces/INTokenDelegation.sol";
+import {ITokenDelegation} from "../interfaces/ITokenDelegation.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
@@ -543,7 +543,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         returns (DelegationData[] memory)
     {
         address contract_ = INToken(vault).UNDERLYING_ASSET_ADDRESS();
-        address delegationRegistry = INTokenDelegation(vault)
+        address delegationRegistry = ITokenDelegation(vault)
             .DELEGATE_REGISTRY();
 
         DelegationData[] memory delegationData = new DelegationData[](

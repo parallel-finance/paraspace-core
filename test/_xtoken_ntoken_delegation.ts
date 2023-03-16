@@ -117,8 +117,44 @@ describe("NToken general", async () => {
     await expect(delegatesAfter).to.be.empty;
   });
 
-  it("TC-ntoken-delegation-05: UI Provider can reterive delegation data for multiple tokens", async () => {
-    const {nBAYC, bayc} = testEnv;
+  it("TC-ntoken-delegation-05: Delegation status after transferring the ntoken", async () => {
+    const {
+      nBAYC,
+      bayc,
+      users: [user1, user2, user3],
+    } = testEnv;
+
+    await nBAYC
+      .connect(user2.signer)
+      .delegateForToken(user3.address, ["0"], true);
+
+    await nBAYC
+      .connect(user2.signer)
+      ["safeTransferFrom(address,address,uint256)"](
+        user2.address,
+        user1.address,
+        "0"
+      );
+
+    const delegatesAfter = await delegationRegistry.getDelegatesForToken(
+      nBAYC.address,
+      bayc.address,
+      "0"
+    );
+
+    await expect(delegatesAfter).to.be.empty;
+  });
+
+  it("TC-ntoken-delegation-06: UI Provider can reterive delegation data for multiple tokens", async () => {
+    const {
+      nBAYC,
+      bayc,
+      users: [user1, user2],
+    } = testEnv;
+
+    await nBAYC
+      .connect(user1.signer)
+      .delegateForToken(user2.address, ["0"], true);
 
     const uiProvider = await getUiPoolDataProvider();
 

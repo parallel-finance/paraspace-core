@@ -14,6 +14,8 @@ import {IERC721Enumerable} from "../../../dependencies/openzeppelin/contracts/IE
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
+import {ITokenDelegation} from "../../../interfaces/ITokenDelegation.sol";
+import {IDelegationRegistry} from "../../../dependencies/delegation/IDelegationRegistry.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
@@ -37,6 +39,7 @@ abstract contract MintableIncentivizedERC721 is
     ICollateralizableERC721,
     IAtomicCollateralizableERC721,
     IAuctionableERC721,
+    ITokenDelegation,
     Context,
     IERC721Metadata,
     IERC721Enumerable,
@@ -133,6 +136,7 @@ abstract contract MintableIncentivizedERC721 is
     IPoolAddressesProvider internal immutable _addressesProvider;
     IPool internal immutable POOL;
     bool internal immutable ATOMIC_PRICING;
+    address internal immutable DELEGATE_REGISTRY_ADDRESS1;
 
     /**
      * @dev Constructor.
@@ -144,13 +148,15 @@ abstract contract MintableIncentivizedERC721 is
         IPool pool,
         string memory name_,
         string memory symbol_,
-        bool atomic_pricing
+        bool atomic_pricing,
+        address delegateRegistry
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
         _ERC721Data.name = name_;
         _ERC721Data.symbol = symbol_;
         POOL = pool;
         ATOMIC_PRICING = atomic_pricing;
+        DELEGATE_REGISTRY_ADDRESS1 = delegateRegistry;
     }
 
     function name() public view override returns (string memory) {
@@ -454,9 +460,41 @@ abstract contract MintableIncentivizedERC721 is
                 _ERC721Data,
                 POOL,
                 ATOMIC_PRICING,
+                DELEGATE_REGISTRY_ADDRESS1,
                 user,
                 tokenIds
             );
+    }
+
+    function delegateForToken(
+        address delegate,
+        uint256[] calldata tokenIds,
+        bool value
+    ) external nonReentrant {
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            require(
+                msg.sender == ownerOf(tokenIds[index]),
+                Errors.NOT_THE_OWNER
+            );
+
+            require(
+                !value ||
+                    _ERC721Data.tokenDelegations[tokenIds[index]] == address(0),
+                Errors.TOKEN_ALREADY_DELEGATED
+            );
+
+            MintableERC721Logic.executeUpdateTokenDelegation(
+                _ERC721Data,
+                DELEGATE_REGISTRY_ADDRESS1,
+                delegate,
+                tokenIds[index],
+                value
+            );
+        }
+    }
+
+    function DELEGATE_REGISTRY() external view returns (address) {
+        return DELEGATE_REGISTRY_ADDRESS1;
     }
 
     /**
@@ -479,6 +517,7 @@ abstract contract MintableIncentivizedERC721 is
             _ERC721Data,
             POOL,
             ATOMIC_PRICING,
+            DELEGATE_REGISTRY_ADDRESS1,
             from,
             to,
             tokenId
@@ -498,6 +537,7 @@ abstract contract MintableIncentivizedERC721 is
                 _ERC721Data,
                 POOL,
                 ATOMIC_PRICING,
+                DELEGATE_REGISTRY_ADDRESS1,
                 from,
                 to,
                 tokenId

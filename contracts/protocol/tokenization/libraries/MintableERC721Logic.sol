@@ -11,6 +11,7 @@ import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../../../dependencies/openzeppelin/contracts/IERC1155.sol";
+import {IDelegationRegistry} from "../../../dependencies/delegation/IDelegationRegistry.sol";
 
 struct UserState {
     uint64 balance;
@@ -161,6 +162,7 @@ library MintableERC721Logic {
         MintableERC721Data storage erc721Data,
         IPool POOL,
         bool ATOMIC_PRICING,
+        address DELEGATION_REGISTRY,
         address from,
         address to,
         uint256 tokenId
@@ -192,6 +194,17 @@ library MintableERC721Logic {
             delete erc721Data.auctions[tokenId];
         }
 
+        address tokenDelegationAddress = erc721Data.tokenDelegations[tokenId];
+        if (from != to && tokenDelegationAddress != address(0)) {
+            _updateTokenDelegation(
+                erc721Data,
+                DELEGATION_REGISTRY,
+                tokenDelegationAddress,
+                tokenId,
+                false
+            );
+        }
+
         IRewardController rewardControllerLocal = erc721Data.rewardController;
         if (address(rewardControllerLocal) != address(0)) {
             uint256 oldTotalSupply = erc721Data.allTokens.length;
@@ -216,6 +229,7 @@ library MintableERC721Logic {
         MintableERC721Data storage erc721Data,
         IPool POOL,
         bool ATOMIC_PRICING,
+        address DELEGATION_REGISTRY,
         address from,
         address to,
         uint256 tokenId
@@ -236,7 +250,15 @@ library MintableERC721Logic {
             delete erc721Data.isUsedAsCollateral[tokenId];
         }
 
-        executeTransfer(erc721Data, POOL, ATOMIC_PRICING, from, to, tokenId);
+        executeTransfer(
+            erc721Data,
+            POOL,
+            ATOMIC_PRICING,
+            DELEGATION_REGISTRY,
+            from,
+            to,
+            tokenId
+        );
     }
 
     function executeSetIsUsedAsCollateral(
@@ -409,6 +431,7 @@ library MintableERC721Logic {
         MintableERC721Data storage erc721Data,
         IPool POOL,
         bool ATOMIC_PRICING,
+        address DELEGATION_REGISTRY,
         address user,
         uint256[] calldata tokenIds
     ) external returns (uint64, uint64) {
@@ -420,46 +443,59 @@ library MintableERC721Logic {
         );
 
         for (uint256 index = 0; index < tokenIds.length; index++) {
-            uint256 tokenId = tokenIds[index];
-            address owner = erc721Data.owners[tokenId];
+            // uint256 tokenId = tokenIds[index];
+            address owner = erc721Data.owners[tokenIds[index]];
             require(owner == user, "not the owner of Ntoken");
             require(
-                !isAuctioned(erc721Data, POOL, tokenId),
+                !isAuctioned(erc721Data, POOL, tokenIds[index]),
                 Errors.TOKEN_IN_AUCTION
             );
 
             _removeTokenFromAllTokensEnumeration(
                 erc721Data,
-                tokenId,
+                tokenIds[index],
                 oldTotalSupply - index
             );
             _removeTokenFromOwnerEnumeration(
                 erc721Data,
                 user,
-                tokenId,
+                tokenIds[index],
                 vars.oldBalance - index
             );
 
             // Clear approvals
-            _approve(erc721Data, address(0), tokenId);
+            _approve(erc721Data, address(0), tokenIds[index]);
 
-            if (erc721Data.auctions[tokenId].startTime > 0) {
-                delete erc721Data.auctions[tokenId];
+            if (erc721Data.auctions[tokenIds[index]].startTime > 0) {
+                delete erc721Data.auctions[tokenIds[index]];
             }
 
-            if (erc721Data.isUsedAsCollateral[tokenId]) {
-                delete erc721Data.isUsedAsCollateral[tokenId];
+            if (erc721Data.isUsedAsCollateral[tokenIds[index]]) {
+                delete erc721Data.isUsedAsCollateral[tokenIds[index]];
                 vars.collateralizedBalanceDelta += 1;
                 if (shouldUpdateUserAvgMultiplier) {
                     vars.multiplierDelta += getTraitMultiplier(
-                        erc721Data.traitsMultipliers[tokenId]
+                        erc721Data.traitsMultipliers[tokenIds[index]]
                     );
                 }
             }
 
-            delete erc721Data.owners[tokenId];
+            address tokenDelegationAddress = erc721Data.tokenDelegations[
+                tokenIds[index]
+            ];
+            if (tokenDelegationAddress != address(0)) {
+                _updateTokenDelegation(
+                    erc721Data,
+                    DELEGATION_REGISTRY,
+                    tokenDelegationAddress,
+                    tokenIds[index],
+                    false
+                );
+            }
 
-            emit Transfer(owner, address(0), tokenId);
+            delete erc721Data.owners[tokenIds[index]];
+
+            emit Transfer(owner, address(0), tokenIds[index]);
         }
 
         erc721Data.userState[user].balance =
@@ -492,6 +528,43 @@ library MintableERC721Logic {
         }
 
         return (vars.oldCollateralizedBalance, newCollateralizedBalance);
+    }
+
+    function executeUpdateTokenDelegation(
+        MintableERC721Data storage erc721Data,
+        address delegationRegistry,
+        address delegate,
+        uint256 tokenId,
+        bool value
+    ) external {
+        _updateTokenDelegation(
+            erc721Data,
+            delegationRegistry,
+            delegate,
+            tokenId,
+            value
+        );
+    }
+
+    function _updateTokenDelegation(
+        MintableERC721Data storage erc721Data,
+        address delegationRegistry,
+        address delegate,
+        uint256 tokenId,
+        bool value
+    ) internal {
+        if (value) {
+            erc721Data.tokenDelegations[tokenId] = delegate;
+        } else {
+            delete erc721Data.tokenDelegations[tokenId];
+        }
+
+        IDelegationRegistry(delegationRegistry).delegateForToken(
+            delegate,
+            erc721Data.underlyingAsset,
+            tokenId,
+            value
+        );
     }
 
     function executeApprove(
