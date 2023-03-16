@@ -234,6 +234,7 @@ export enum eContractid {
   StETHStableDebtToken = "StETHStableDebtToken",
   StETHDebtToken = "StETHDebtToken",
   CApeDebtToken = "CApeDebtToken",
+  CApeStableDebtToken = "CApeStableDebtToken",
   ApeStakingLogic = "ApeStakingLogic",
   MintableERC721Logic = "MintableERC721Logic",
   MerkleVerifier = "MerkleVerifier",

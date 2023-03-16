@@ -137,15 +137,13 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 reserveData.underlyingAsset
             );
 
-            if (reserveData.stableDebtTokenAddress != address(0)) {
-                (
-                    reserveData.totalPrincipalStableDebt,
-                    ,
-                    reserveData.averageStableRate,
-                    reserveData.stableDebtLastUpdateTimestamp
-                ) = IStableDebtToken(reserveData.stableDebtTokenAddress)
-                    .getSupplyData();
-            }
+            (
+                reserveData.totalPrincipalStableDebt,
+                ,
+                reserveData.averageStableRate,
+                reserveData.stableDebtLastUpdateTimestamp
+            ) = IStableDebtToken(reserveData.stableDebtTokenAddress)
+                .getSupplyData();
 
             reserveData.totalScaledVariableDebt = IVariableDebtToken(
                 reserveData.variableDebtTokenAddress

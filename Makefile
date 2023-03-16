@@ -422,7 +422,7 @@ set-traits-multipliers:
 
 .PHONY: upgrade-eth-instant-withdraw
 upgrade-eth-instant-withdraw:
-	make SCRIPT_PATH=./scripts/dev/12-update-eth-instant-withdraw.ts run
+	make SCRIPT_PATH=./scripts/dev/12.update-eth-instant-withdraw.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:

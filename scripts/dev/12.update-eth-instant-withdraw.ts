@@ -16,6 +16,7 @@ import {getParaSpaceConfig} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
 import {
   deployATokenStableDebtToken,
+  deployCApeStableDebtToken,
   deployGenericStableDebtToken,
   deployProtocolDataProvider,
   deployReserveInterestRateStrategy,
@@ -55,13 +56,27 @@ const updateETHInstantWithdraw = async () => {
   //3, update pool
   await resetPool(false);
 
-  //4, update asset interest rate strategy
+  //4, update asset interest rate strategy and set stable debt token address
   const config = getParaSpaceConfig();
   const reservesParams = config.ReservesConfig;
   const assetAddresses = await pool.getReservesList();
   const MintableERC20 = await DRE.ethers.getContractFactory("MintableERC20");
   const strategyAddresses: Record<string, tEthereumAddress> = {};
   const assetAddressMap: Record<string, tEthereumAddress> = {};
+
+  //4.1 deploy stable debt token implementation
+  const genericStableDebtTokenImplementationAddress = (
+    await deployGenericStableDebtToken(pool.address, false)
+  ).address;
+  const aTokenStableDebtTokenImplementationAddress = (
+    await deployATokenStableDebtToken(pool.address, false)
+  ).address;
+  const stETHStableDebtTokenImplementationAddress = (
+    await deployStETHStableDebtToken(pool.address, false)
+  ).address;
+  const cApeStableDebtTokenImplementationAddress = (
+    await deployCApeStableDebtToken(pool.address, false)
+  ).address;
 
   for (const assetAddress of assetAddresses) {
     let tokenSymbol;
@@ -83,7 +98,7 @@ const updateETHInstantWithdraw = async () => {
     }
     assetAddressMap[tokenSymbol] = assetAddress;
 
-    //4.1 deploy interest rate strategy
+    //4.2 deploy interest rate strategy
     if (!strategyAddresses[reserveIRStrategy.name]) {
       strategyAddresses[reserveIRStrategy.name] = (
         await deployReserveInterestRateStrategy(
@@ -105,7 +120,7 @@ const updateETHInstantWithdraw = async () => {
       ).address;
     }
 
-    //4.2 update interest rate strategy
+    //4.3 update interest rate strategy
     if (DRY_RUN) {
       const encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
         "setReserveInterestRateStrategyAddress",
@@ -121,31 +136,19 @@ const updateETHInstantWithdraw = async () => {
         )
       );
     }
-  }
 
-  //5 enable stable borrow for erc20 that needed
-  const stableBorrowAsset = ["WETH", "aWETH", "stETH", "wstETH"];
-
-  //5.1 deploy stable debt token implementation
-  const genericStableDebtTokenImplementationAddress = (
-    await deployGenericStableDebtToken(pool.address, false)
-  ).address;
-  const aTokenStableDebtTokenImplementationAddress = (
-    await deployATokenStableDebtToken(pool.address, false)
-  ).address;
-  const stETHStableDebtTokenImplementationAddress = (
-    await deployStETHStableDebtToken(pool.address, false)
-  ).address;
-
-  for (const symbol of stableBorrowAsset) {
+    //4.4 update stable debt token address
     let stableDebtTokenImplementationAddress =
       genericStableDebtTokenImplementationAddress;
-    if (symbol === "aWETH") {
+    if (tokenSymbol === "aWETH") {
       stableDebtTokenImplementationAddress =
         aTokenStableDebtTokenImplementationAddress;
-    } else if (symbol === "stETH") {
+    } else if (tokenSymbol === "stETH") {
       stableDebtTokenImplementationAddress =
         stETHStableDebtTokenImplementationAddress;
+    } else if (tokenSymbol === "cAPE") {
+      stableDebtTokenImplementationAddress =
+        cApeStableDebtTokenImplementationAddress;
     }
 
     const configStableDebtTokenInput: {
@@ -158,25 +161,18 @@ const updateETHInstantWithdraw = async () => {
       params: string;
     } = {
       stableDebtTokenImpl: stableDebtTokenImplementationAddress,
-      underlyingAsset: assetAddressMap[symbol],
+      underlyingAsset: assetAddress,
       incentivesController: config.IncentivesController,
-      underlyingAssetDecimals: reservesParams[symbol].reserveDecimals,
-      stableDebtTokenName: `${config.StableDebtTokenNamePrefix} ${config.SymbolPrefix}${symbol}`,
-      stableDebtTokenSymbol: `sDebt${config.SymbolPrefix}${symbol}`,
+      underlyingAssetDecimals: reservesParams[tokenSymbol].reserveDecimals,
+      stableDebtTokenName: `${config.StableDebtTokenNamePrefix} ${config.SymbolPrefix}${tokenSymbol}`,
+      stableDebtTokenSymbol: `sDebt${config.SymbolPrefix}${tokenSymbol}`,
       params: "0x10",
     };
 
-    //5.2 deploy and set stable debt token proxy for asset and enable stable borrowing
     if (DRY_RUN) {
-      let encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
+      const encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
         "configReserveStableDebtTokenAddress",
         [configStableDebtTokenInput]
-      );
-      await dryRunEncodedData(poolConfiguratorProxy.address, encodedData);
-
-      encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
-        "setReserveStableRateBorrowing",
-        [assetAddressMap[symbol], true]
       );
       await dryRunEncodedData(poolConfiguratorProxy.address, encodedData);
     } else {
@@ -186,6 +182,19 @@ const updateETHInstantWithdraw = async () => {
           GLOBAL_OVERRIDES
         )
       );
+    }
+  }
+
+  //5 enable stable borrow for erc20 that needed
+  const stableBorrowAsset = ["WETH", "aWETH", "stETH", "wstETH"];
+  for (const symbol of stableBorrowAsset) {
+    if (DRY_RUN) {
+      const encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
+        "setReserveStableRateBorrowing",
+        [assetAddressMap[symbol], true]
+      );
+      await dryRunEncodedData(poolConfiguratorProxy.address, encodedData);
+    } else {
       await waitForTx(
         await poolConfiguratorProxy.setReserveStableRateBorrowing(
           assetAddressMap[symbol],
@@ -220,23 +229,6 @@ const updateETHInstantWithdraw = async () => {
     GLOBAL_OVERRIDES
   );
   console.log("upgrade protocol data provider done...");
-
-  console.log("start add borrowing asset");
-
-  // 8. add borrowing asset
-  await waitForTx(
-    await pool.addBorrowableAssets(
-      "0xff3E5AD98a99d17044Cff0cB7D442682898E77aF",
-      [
-        assetAddressMap["WETH"],
-        assetAddressMap["aWETH"],
-        assetAddressMap["stETH"],
-        assetAddressMap["wstETH"],
-      ],
-      GLOBAL_OVERRIDES
-    )
-  );
-  console.log("add borrowing asset done.....");
 
   console.timeEnd("update eth instant withdraw");
 };

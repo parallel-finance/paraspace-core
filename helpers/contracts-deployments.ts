@@ -259,6 +259,8 @@ import {
   ATokenStableDebtToken__factory,
   StETHStableDebtToken__factory,
   StETHStableDebtToken,
+  CApeStableDebtToken__factory,
+  CApeStableDebtToken,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2451,6 +2453,17 @@ export const deployCApeDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<CApeDebtToken>;
+
+export const deployCApeStableDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CApeStableDebtToken__factory(await getFirstSigner()),
+    eContractid.CApeStableDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<CApeStableDebtToken>;
 
 export const deployPYieldToken = async (
   poolAddress: tEthereumAddress,
