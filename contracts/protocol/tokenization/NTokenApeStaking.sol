@@ -8,6 +8,9 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
+import {MintableERC721Logic} from "./libraries/MintableERC721Logic.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
+
 import "../../interfaces/INTokenApeStaking.sol";
 
 /**
@@ -29,6 +32,20 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
      * Expressed in bps, a value of 30 results in 0.3%
      */
     uint256 internal constant DEFAULT_UNSTAKE_INCENTIVE_PERCENTAGE = 30;
+
+    function _onlyApeRescueAdmin() private view {
+        ApeStakingLogic.APEStakingParameter storage s = apeStakingDataStorage();
+
+        require(msg.sender == s.apeRescueAdmin, Errors.CALLER_NOT_ADMIN);
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyApeRescueAdmin() {
+        _onlyApeRescueAdmin();
+        _;
+    }
 
     /**
      * @dev Constructor.
@@ -226,5 +243,71 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
 
     function getBAKCNTokenAddress() internal view returns (address) {
         return POOL.getReserveData(address(getBAKC())).xTokenAddress;
+    }
+
+    function setApeRescueAdmin(address newAdmin) external onlyPoolAdmin {
+        require(newAdmin != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+
+        ApeStakingLogic.APEStakingParameter storage s = apeStakingDataStorage();
+        s.apeRescueAdmin = newAdmin;
+    }
+
+    function rescueLockedAPE(uint256 amount, address to)
+        external
+        onlyApeRescueAdmin
+    {
+        IERC20 _apeCoin = _apeCoinStaking.apeCoin();
+
+        MintableERC721Logic.executeRescueERC20(address(_apeCoin), to, amount);
+    }
+
+    function updateApeRescueClaim(
+        uint256 tokenId,
+        bytes32 txHash,
+        uint128 amount,
+        ApeStakingLogic.APERescueClaimStatus status
+    ) external onlyApeRescueAdmin {
+        ApeStakingLogic.APEStakingParameter storage s = apeStakingDataStorage();
+        ApeStakingLogic.ClaimData memory claimData = s.apeRescueClaims[tokenId][
+            txHash
+        ];
+
+        require(
+            claimData.status != ApeStakingLogic.APERescueClaimStatus.CLAIMED,
+            "Already Claimed"
+        );
+        require(amount > 0, "amount can't be zero");
+
+        s.apeRescueClaims[tokenId][txHash].amount = amount;
+        s.apeRescueClaims[tokenId][txHash].status = status;
+    }
+
+    function claimLockedAPE(uint256 tokenId, bytes32 txHash) external {
+        ApeStakingLogic.APEStakingParameter storage s = apeStakingDataStorage();
+        ApeStakingLogic.ClaimData memory claimData = s.apeRescueClaims[tokenId][
+            txHash
+        ];
+
+        require(
+            claimData.status == ApeStakingLogic.APERescueClaimStatus.APPROVED,
+            "Claim not approved"
+        );
+        require(
+            IERC721(_ERC721Data.underlyingAsset).ownerOf(tokenId) ==
+                msg.sender ||
+                ownerOf(tokenId) == msg.sender,
+            Errors.NOT_THE_OWNER
+        );
+
+        s.apeRescueClaims[tokenId][txHash].status = ApeStakingLogic
+            .APERescueClaimStatus
+            .CLAIMED;
+
+        IERC20 _apeCoin = _apeCoinStaking.apeCoin();
+        MintableERC721Logic.executeRescueERC20(
+            address(_apeCoin),
+            msg.sender,
+            claimData.amount
+        );
     }
 }

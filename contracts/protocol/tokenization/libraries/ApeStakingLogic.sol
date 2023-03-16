@@ -25,8 +25,21 @@ library ApeStakingLogic {
     uint256 constant MAYC_POOL_ID = 2;
     uint256 constant BAKC_POOL_ID = 3;
 
+    enum APERescueClaimStatus {
+        REVOKED,
+        APPROVED,
+        CLAIMED
+    }
+
+    struct ClaimData {
+        APERescueClaimStatus status;
+        uint128 amount;
+    }
+
     struct APEStakingParameter {
         uint256 unstakeIncentive;
+        address apeRescueAdmin;
+        mapping(uint256 => mapping(bytes32 => ClaimData)) apeRescueClaims;
     }
     event UnstakeApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
