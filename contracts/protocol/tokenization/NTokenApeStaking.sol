@@ -245,6 +245,10 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         return POOL.getReserveData(address(getBAKC())).xTokenAddress;
     }
 
+    /**
+     * @dev Sets a new Ape Rescue Admin
+     * @param newAdmin The address of the new Ape Rescue Admin
+     */
     function setApeRescueAdmin(address newAdmin) external onlyPoolAdmin {
         require(newAdmin != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
 
@@ -252,15 +256,26 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         s.apeRescueAdmin = newAdmin;
     }
 
+    /**
+     * @dev Rescues locked APE tokens
+     * @param amount The amount of APE tokens to rescue
+     * @param to The address to send the rescued tokens
+     */
     function rescueLockedAPE(uint256 amount, address to)
         external
         onlyApeRescueAdmin
     {
-        IERC20 _apeCoin = _apeCoinStaking.apeCoin();
-
-        MintableERC721Logic.executeRescueERC20(address(_apeCoin), to, amount);
+        IERC20 apeCoin = _apeCoinStaking.apeCoin();
+        MintableERC721Logic.executeRescueERC20(address(apeCoin), to, amount);
     }
 
+    /**
+     * @dev Updates the Ape Rescue Claim
+     * @param tokenId The token ID associated with the claim
+     * @param txHash The transaction hash of the claim
+     * @param amount The claim amount
+     * @param status The claim status
+     */
     function updateApeRescueClaim(
         uint256 tokenId,
         bytes32 txHash,
@@ -282,6 +297,11 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         s.apeRescueClaims[tokenId][txHash].status = status;
     }
 
+    /**
+     * @dev Claims the locked APE tokens
+     * @param tokenId The token ID associated with the claim
+     * @param txHash The transaction hash of the claim
+     */
     function claimLockedAPE(uint256 tokenId, bytes32 txHash) external {
         ApeStakingLogic.APEStakingParameter storage s = apeStakingDataStorage();
         ApeStakingLogic.ClaimData memory claimData = s.apeRescueClaims[tokenId][
@@ -303,9 +323,9 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             .APERescueClaimStatus
             .CLAIMED;
 
-        IERC20 _apeCoin = _apeCoinStaking.apeCoin();
+        IERC20 apeCoin = _apeCoinStaking.apeCoin();
         MintableERC721Logic.executeRescueERC20(
-            address(_apeCoin),
+            address(apeCoin),
             msg.sender,
             claimData.amount
         );
