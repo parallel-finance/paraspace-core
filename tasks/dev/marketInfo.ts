@@ -78,7 +78,7 @@ task("market-info", "Print markets info")
       console.log(" variableBorrowRate:", fromBn(x.variableBorrowRate, 27));
       console.log(" variableBorrowIndex:", fromBn(x.variableBorrowIndex, 27));
       console.log(
-        " source:",
+        " oracle:",
         await paraSpaceOracle.getSourceOfAsset(x.underlyingAsset)
       );
     }

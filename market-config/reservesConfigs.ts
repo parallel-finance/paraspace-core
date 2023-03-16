@@ -414,16 +414,16 @@ export const strategyPudgyPenguins: IReserveParams = {
 export const strategyCBETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
-  baseLTVAsCollateral: "6900",
+  baseLTVAsCollateral: "7200",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "8100",
-  liquidationBonus: "10750",
+  liquidationThreshold: "8300",
+  liquidationBonus: "10700",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "0",
-  supplyCap: "0",
+  borrowCap: "110000",
+  supplyCap: "110000",
 };
 
 export const strategySTETH: IReserveParams = {
@@ -504,16 +504,16 @@ export const strategyBENDETH: IReserveParams = {
 export const strategyAWETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
-  baseLTVAsCollateral: "6900",
+  baseLTVAsCollateral: "8250",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "8100",
-  liquidationBonus: "10750",
+  liquidationThreshold: "8600",
+  liquidationBonus: "10450",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenATokenImpl,
   reserveFactor: "1000",
-  borrowCap: "0",
-  supplyCap: "0",
+  borrowCap: "80000",
+  supplyCap: "80000",
 };
 
 export const strategyCETH: IReserveParams = {
@@ -534,16 +534,16 @@ export const strategyCETH: IReserveParams = {
 export const strategyRETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
-  baseLTVAsCollateral: "6900",
+  baseLTVAsCollateral: "7200",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "8100",
-  liquidationBonus: "10750",
+  liquidationThreshold: "8300",
+  liquidationBonus: "10700",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "0",
-  supplyCap: "0",
+  borrowCap: "20000",
+  supplyCap: "20000",
 };
 
 export const strategyPUNK: IReserveParams = {

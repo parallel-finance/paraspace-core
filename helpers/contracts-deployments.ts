@@ -582,6 +582,22 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
+  const reserveConfig = await getParaSpaceConfig().ReservesConfig;
+
+  if (allTokens.APE) {
+    if (
+      reserveConfig[ERC20TokenContractId.cAPE] &&
+      !(await getContractAddressInDb(eContractid.cAPE))
+    ) {
+      await deployAutoCompoundApe(verify);
+    }
+    if (
+      reserveConfig[ERC20TokenContractId.yAPE] &&
+      !(await getContractAddressInDb(eContractid.yAPE))
+    ) {
+      await deployAutoYieldApe(verify);
+    }
+  }
 
   const APE_WETH_FEE = 3000;
   const WETH_USDC_FEE = 500;
@@ -634,10 +650,7 @@ export const deployPoolComponents = async (
           eContractid.PoolApeStakingImpl,
           [
             provider,
-            (await getContractAddressInDb(eContractid.cAPE)) ||
-              (
-                await deployAutoCompoundApe(verify)
-              ).address,
+            (await getContractAddressInDb(eContractid.cAPE)).address,
             allTokens.APE.address,
             allTokens.USDC.address,
             (await getUniswapV3SwapRouter()).address,
