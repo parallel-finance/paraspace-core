@@ -582,27 +582,9 @@ export const deployPoolComponents = async (
   );
 
   const allTokens = await getAllTokens();
-  const reserveConfig = await getParaSpaceConfig().ReservesConfig;
-
-  if (allTokens.APE) {
-    if (
-      reserveConfig[ERC20TokenContractId.cAPE] &&
-      !(await getContractAddressInDb(eContractid.cAPE))
-    ) {
-      await deployAutoCompoundApe(verify);
-    }
-    if (
-      reserveConfig[ERC20TokenContractId.yAPE] &&
-      !(await getContractAddressInDb(eContractid.yAPE))
-    ) {
-      await deployAutoYieldApe(verify);
-    }
-  }
 
   const APE_WETH_FEE = 3000;
   const WETH_USDC_FEE = 500;
-
-  // mainnet swap path: 0x4d224452801aced8b2f0aebe155379bb5d594381000bb8c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20001f4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
 
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
@@ -650,7 +632,10 @@ export const deployPoolComponents = async (
           eContractid.PoolApeStakingImpl,
           [
             provider,
-            (await getContractAddressInDb(eContractid.cAPE)).address,
+            (await getContractAddressInDb(eContractid.cAPE)) ||
+              (
+                await deployAutoCompoundApe(verify)
+              ).address,
             allTokens.APE.address,
             allTokens.USDC.address,
             (await getUniswapV3SwapRouter()).address,
