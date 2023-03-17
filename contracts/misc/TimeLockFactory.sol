@@ -58,16 +58,16 @@ contract TimeLock is Ownable {
     mapping(uint256 => Agreement) public agreements;
     uint256 public agreementCount;
     bool public frozen;
-    address public admin;
+    address immutable public USER;
 
     modifier onlyUser() {
-        require(msg.sender == user, "Not allowed");
+        require(msg.sender == USER, "Not allowed");
         _;
     }
 
     constructor(address _user, address _admin) {
         transferOwnership(_admin);
-        user = _user;
+        USER = _user;
     }
 
     function createAgreement(
