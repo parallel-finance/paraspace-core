@@ -6,8 +6,10 @@ import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {Ownable} from "../dependencies/openzeppelin/contracts/Ownable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
+import {ITimeLockFactory} from "../interfaces/ITimeLockFactory.sol";
+import {ITimeLock} from "../interfaces/ITimeLock.sol";
 
-contract TimeLockFactory is Ownable {
+contract TimeLockFactory is ITimeLockFactory, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     mapping(address => address) public userTimeLocks;
@@ -38,7 +40,7 @@ contract TimeLockFactory is Ownable {
     }
 }
 
-contract TimeLock is Ownable {
+contract TimeLock is ITimeLock, Ownable {
     enum TokenType {
         ERC20,
         ERC721,
@@ -58,7 +60,7 @@ contract TimeLock is Ownable {
     mapping(uint256 => Agreement) public agreements;
     uint256 public agreementCount;
     bool public frozen;
-    address immutable public USER;
+    address public immutable USER;
 
     modifier onlyUser() {
         require(msg.sender == USER, "Not allowed");
