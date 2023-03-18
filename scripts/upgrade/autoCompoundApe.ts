@@ -17,14 +17,20 @@ export const upgradeAutoCompoundApe = async (verify = false) => {
   console.timeEnd("deploy AutocompoundApe");
 
   console.time("upgrade AutocompoundApe");
+  const initializeData = cAPE.interface.encodeFunctionData("pause");
   if (DRY_RUN) {
-    const encodedData = cAPEProxy.interface.encodeFunctionData("upgradeTo", [
-      cAPEImpl.address,
-    ]);
+    const encodedData = cAPEProxy.interface.encodeFunctionData(
+      "upgradeToAndCall",
+      [cAPEImpl.address, initializeData]
+    );
     await dryRunEncodedData(cAPEProxy.address, encodedData);
   } else {
     await waitForTx(
-      await cAPEProxy.upgradeTo(cAPEImpl.address, GLOBAL_OVERRIDES)
+      await cAPEProxy.upgradeToAndCall(
+        cAPEImpl.address,
+        initializeData,
+        GLOBAL_OVERRIDES
+      )
     );
   }
   console.timeEnd("upgrade AutocompoundApe");

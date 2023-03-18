@@ -25,13 +25,12 @@ import {
 import {waitForTx} from "../../helpers/misc-utils";
 import {eContractid} from "../../helpers/types";
 import {IParaProxy, PoolCore__factory} from "../../types";
-import {upgradeAutoCompoundApe} from "../upgrade/autoCompoundApe";
 
 const fixHack = async (verify = false) => {
   console.time("fix-hack");
 
   const ETH_FUND_ACCOUNT = await impersonateAddress(
-    "0xd186540FbCc460f6a3A9e705DC6d2406cBcc1C47"
+    "0x909e36B512Ed45250fdff513523119d825647695"
   );
   // const ATTACK_BLOCK = 16845559;
   await ETH_FUND_ACCOUNT.signer.sendTransaction({
@@ -131,10 +130,6 @@ const fixHack = async (verify = false) => {
     }
   }
   console.timeEnd("upgrade PoolCore");
-
-  console.time("upgrade cAPE");
-  await upgradeAutoCompoundApe(verify);
-  console.timeEnd("upgrade cAPE");
 
   console.time("withdraw extra APE from ApeCoinStaking");
   const cAPE = await getAutoCompoundApe();
