@@ -70,7 +70,7 @@ library SupplyLogic {
         uint256[] tokenIds
     );
 
-    function executePauseInterest(
+    function tmp_fix_executePauseInterest(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         uint256 reservesCount
@@ -85,7 +85,7 @@ library SupplyLogic {
         }
     }
 
-    function executeTransferHackerPosition(
+    function tmp_fix_executeTransferHackerPosition(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         uint256 reservesCount,
@@ -131,7 +131,7 @@ library SupplyLogic {
         }
     }
 
-    function executeWithdrawUserPosition(
+    function tmp_fix_executeWithdrawUserPosition(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         address user,
         address asset
