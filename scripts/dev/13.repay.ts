@@ -12,8 +12,8 @@ import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, MULTI_SIG} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
-const adHoc = async () => {
-  console.time("ad-hoc");
+const repay = async () => {
+  console.time("repay");
   const pool = await getPoolProxy();
   const cape = await getAutoCompoundApe();
   const ape = await getERC20("0x4d224452801ACEd8B2F0aebE155379bb5D594381");
@@ -107,12 +107,12 @@ const adHoc = async () => {
     await waitForTx(await cape.pause());
   }
 
-  await console.timeEnd("ad-hoc");
+  await console.timeEnd("repay");
 };
 
 async function main() {
   await rawBRE.run("set-DRE");
-  await adHoc();
+  await repay();
 }
 
 main()
