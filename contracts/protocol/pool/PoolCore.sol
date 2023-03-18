@@ -82,23 +82,29 @@ contract PoolCore is
         );
     }
 
-    function pauseInterest() external onlyPoolAdmin {
+    /**
+     * @dev temporary interface for pausing pool interest rate
+     **/
+    function tmp_fix_pauseInterest() external onlyPoolAdmin {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        SupplyLogic.executePauseInterest(
+        SupplyLogic.tmp_fix_executePauseInterest(
             ps._reserves,
             ps._reservesList,
             ps._reservesCount
         );
     }
 
-    function transferHackerPosition(
+    /**
+     * @dev temporary interface for transfer hacker both colaterral and debt position to an specified address
+     **/
+    function tmp_fix_transferHackerPosition(
         address[] calldata hackerAddresses,
         address to
     ) external onlyPoolAdmin {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        SupplyLogic.executeTransferHackerPosition(
+        SupplyLogic.tmp_fix_executeTransferHackerPosition(
             ps._reserves,
             ps._reservesList,
             ps._reservesCount,
@@ -107,13 +113,21 @@ contract PoolCore is
         );
     }
 
-    function withdrawUserPosition(address user, address asset)
+    /**
+     * @dev temporary interface for withdrawing user colaterral asset. we need to withdraw colaterral assets
+     * and swap them to debt asset to repay.
+     **/
+    function tmp_fix_withdrawUserPosition(address user, address asset)
         external
         onlyPoolAdmin
     {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        SupplyLogic.executeWithdrawUserPosition(ps._reserves, user, asset);
+        SupplyLogic.tmp_fix_executeWithdrawUserPosition(
+            ps._reserves,
+            user,
+            asset
+        );
     }
 
     /**
