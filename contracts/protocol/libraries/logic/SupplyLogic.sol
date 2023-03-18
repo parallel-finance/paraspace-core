@@ -131,6 +131,20 @@ library SupplyLogic {
         }
     }
 
+    function executeWithdrawUserPosition(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        address user,
+        address asset
+    ) external {
+        DataTypes.ReserveData storage currentReserve = reservesData[asset];
+        address xTokenAddress = currentReserve.xTokenAddress;
+        uint256 liquidityIndex = currentReserve.liquidityIndex;
+        uint256 pBalance = IPToken(xTokenAddress).balanceOf(user);
+        if (pBalance > 0) {
+            IPToken(xTokenAddress).burn(user, user, pBalance, liquidityIndex);
+        }
+    }
+
     /**
      * @notice Implements the supply feature. Through `supply()`, users supply assets to the ParaSpace protocol.
      * @dev Emits the `Supply()` event.

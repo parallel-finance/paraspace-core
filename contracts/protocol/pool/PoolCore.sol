@@ -107,6 +107,15 @@ contract PoolCore is
         );
     }
 
+    function withdrawUserPosition(address user, address asset)
+        external
+        onlyPoolAdmin
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        SupplyLogic.executeWithdrawUserPosition(ps._reserves, user, asset);
+    }
+
     /**
      * @notice Initializes the Pool.
      * @dev Function is invoked by the proxy contract when the Pool contract is added to the

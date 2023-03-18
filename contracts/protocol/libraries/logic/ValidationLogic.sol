@@ -388,20 +388,20 @@ library ValidationLogic {
             DataTypes.AssetType assetType
         ) = reserveCache.reserveConfiguration.getFlags();
         require(isActive, Errors.RESERVE_INACTIVE);
-        require(!isPaused, Errors.RESERVE_PAUSED);
+        // require(!isPaused, Errors.RESERVE_PAUSED);
         require(
             assetType == DataTypes.AssetType.ERC20,
             Errors.INVALID_ASSET_TYPE
         );
 
-        uint256 variableDebtPreviousIndex = IScaledBalanceToken(
-            reserveCache.variableDebtTokenAddress
-        ).getPreviousIndex(onBehalfOf);
+        // uint256 variableDebtPreviousIndex = IScaledBalanceToken(
+        //     reserveCache.variableDebtTokenAddress
+        // ).getPreviousIndex(onBehalfOf);
 
-        require(
-            (variableDebtPreviousIndex < reserveCache.nextVariableBorrowIndex),
-            Errors.SAME_BLOCK_BORROW_REPAY
-        );
+        // require(
+        //     (variableDebtPreviousIndex < reserveCache.nextVariableBorrowIndex),
+        //     Errors.SAME_BLOCK_BORROW_REPAY
+        // );
 
         require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
     }
