@@ -103,7 +103,11 @@ const repay = async () => {
     );
 
     await waitForTx(await pool.repay(cape.address, MAX_UINT_AMOUNT, MULTI_SIG));
-    await waitForTx(await wethgateway.repayETH(MAX_UINT_AMOUNT, MULTI_SIG));
+    await waitForTx(
+      await wethgateway.repayETH(MAX_UINT_AMOUNT, MULTI_SIG, {
+        value: await debtWeth.balanceOf(MULTI_SIG),
+      })
+    );
     await waitForTx(await cape.pause());
   }
 
