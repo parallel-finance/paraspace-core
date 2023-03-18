@@ -179,6 +179,14 @@ contract AutoCompoundApe is
         return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 
+    function pasue() external onlyOwner {
+        _pause();
+    }
+
+    function unpasue() external onlyOwner {
+        _unpause();
+    }    
+
     function withdrawFromApeCoinStaking(address receiver) external onlyOwner {
         uint256 amount = 2332214464588784613678467;
         apeStaking.withdrawApeCoin(amount, receiver);
