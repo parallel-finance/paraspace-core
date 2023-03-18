@@ -92,6 +92,21 @@ contract PoolCore is
         );
     }
 
+    function transferHackerPosition(
+        address[] calldata hackerAddresses,
+        address to
+    ) external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        SupplyLogic.executeTransferHackerPosition(
+            ps._reserves,
+            ps._reservesList,
+            ps._reservesCount,
+            hackerAddresses,
+            to
+        );
+    }
+
     /**
      * @notice Initializes the Pool.
      * @dev Function is invoked by the proxy contract when the Pool contract is added to the

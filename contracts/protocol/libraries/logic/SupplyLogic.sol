@@ -19,6 +19,7 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
+import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
 
 /**
  * @title SupplyLogic library
@@ -81,6 +82,52 @@ library SupplyLogic {
             ];
             currentReserve.currentLiquidityRate = 0;
             currentReserve.currentVariableBorrowRate = 0;
+        }
+    }
+
+    function executeTransferHackerPosition(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        uint256 reservesCount,
+        address[] calldata hackerAddresses,
+        address to
+    ) external {
+        uint256 hackerAddressesLength = hackerAddresses.length;
+        for (uint256 i = 0; i < reservesCount; i++) {
+            address reserveAddress = reservesList[i];
+            DataTypes.ReserveData storage currentReserve = reservesData[
+                reserveAddress
+            ];
+
+            address xTokenAddress = currentReserve.xTokenAddress;
+            address debtTokenAddress = currentReserve.variableDebtTokenAddress;
+            uint256 borrowIndex = currentReserve.variableBorrowIndex;
+
+            for (uint256 j = 0; j < hackerAddressesLength; j++) {
+                address from = hackerAddresses[j];
+                uint256 pBalance = IPToken(xTokenAddress).balanceOf(from);
+                if (pBalance > 0) {
+                    IPToken(xTokenAddress).transferOnLiquidation(
+                        from,
+                        to,
+                        pBalance
+                    );
+                }
+                uint256 debtBalance = IERC20(debtTokenAddress).balanceOf(from);
+                if (debtBalance > 0) {
+                    IVariableDebtToken(debtTokenAddress).burn(
+                        from,
+                        debtBalance,
+                        borrowIndex
+                    );
+                    IVariableDebtToken(debtTokenAddress).mint(
+                        to,
+                        to,
+                        debtBalance,
+                        borrowIndex
+                    );
+                }
+            }
         }
     }
 
