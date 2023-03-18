@@ -104,6 +104,7 @@ export const TIME_LOCK_BUFFERING_TIME = parseInt(
 export const TIME_LOCK_DEFAULT_OPERATION =
   process.env.TIME_LOCK_DEFAULT_OPERATION || "queue";
 
+export const HACK_RECOVERY = "0xA41084D0D5fBDa4FDD1aED856E4C822F021d1D89";
 export const MULTI_SIG =
   process.env.MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 export const MULTI_SEND =

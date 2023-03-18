@@ -787,6 +787,7 @@ export const getTimeLockData = async (
 export const dryRunEncodedData = async (
   target: tEthereumAddress,
   data: string,
+  value = "0",
   executionTime?: string
 ) => {
   if (
@@ -803,7 +804,7 @@ export const dryRunEncodedData = async (
     );
     await proposeSafeTransaction(newTarget, newData);
   } else if (DRY_RUN === DryRunExecutor.Safe) {
-    await proposeSafeTransaction(target, data);
+    await proposeSafeTransaction(target, data, value);
   } else {
     console.log(`target: ${target}, data: ${data}`);
   }
@@ -888,6 +889,7 @@ export const decodeInputData = (data: string) => {
 export const proposeSafeTransaction = async (
   target: tEthereumAddress,
   data: string,
+  value = "0",
   nonce?: number,
   idx = 0,
   operation = OperationType.Call,
@@ -920,7 +922,7 @@ export const proposeSafeTransaction = async (
 
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
-    value: "0",
+    value: value,
     nonce: staticNonce
       ? staticNonce + idx
       : await safeService.getNextNonce(MULTI_SIG),
@@ -954,13 +956,22 @@ export const proposeSafeTransaction = async (
 export const proposeMultiSafeTransactions = async (
   transactions: MetaTransaction[],
   operation = OperationType.DelegateCall,
+  value = "0",
   nonce?: number
 ) => {
   const newTarget = MULTI_SEND;
   const chunks = chunk(transactions, MULTI_SEND_CHUNK_SIZE);
   for (const [i, c] of chunks.entries()) {
     const {data: newData} = encodeMulti(c);
-    await proposeSafeTransaction(newTarget, newData, nonce, i, operation);
+    await proposeSafeTransaction(
+      newTarget,
+      newData,
+      value,
+      nonce,
+      i,
+      operation
+    );
+    if (value) value = "0";
   }
 };
 

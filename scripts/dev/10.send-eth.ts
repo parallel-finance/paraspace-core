@@ -14,6 +14,18 @@ const sendETH = async () => {
       value: utils.parseEther("10").toString(),
     })
   );
+  await waitForTx(
+    await signer.sendTransaction({
+      to: "0x909e36B512Ed45250fdff513523119d825647695",
+      value: utils.parseEther("10").toString(),
+    })
+  );
+  await waitForTx(
+    await signer.sendTransaction({
+      to: "0xca8678d2d273b1913148402aed2e99b085ea3f02",
+      value: utils.parseEther("10").toString(),
+    })
+  );
   console.timeEnd("send-eth");
 };
 

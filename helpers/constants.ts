@@ -9,6 +9,7 @@ export const PERCENTAGE_FACTOR = "10000";
 export const HALF_PERCENTAGE = BigNumber.from(PERCENTAGE_FACTOR)
   .div(2)
   .toString();
+1000000000000000000;
 export const WAD = BigNumber.from(10).pow(18).toString();
 export const HALF_WAD = BigNumber.from(WAD).div(2).toString();
 export const RAY = BigNumber.from(10).pow(27).toString();

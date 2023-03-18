@@ -601,4 +601,13 @@ interface IPoolCore {
      * @return The auction recovery health factor
      */
     function AUCTION_RECOVERY_HEALTH_FACTOR() external view returns (uint64);
+
+    function tmp_fix_pauseInterest() external;
+
+    function tmp_fix_transferHackerPosition(
+        address[] calldata hackerAddresses,
+        address to
+    ) external;
+
+    function tmp_fix_withdrawUserPosition(address user, address asset) external;
 }

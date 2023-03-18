@@ -92,7 +92,7 @@ import {
   ERC20TokenMap,
   ERC721TokenMap,
   impersonateAddress,
-  getParaSpaceAdmins,
+  // getParaSpaceAdmins,
 } from "./contracts-helpers";
 import {DRE, getDb, getParaSpaceConfig} from "./misc-utils";
 import {
@@ -106,15 +106,15 @@ import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
 } from "../types";
-import {RPC_URL} from "./hardhat-constants";
+import {MULTI_SIG, RPC_URL} from "./hardhat-constants";
 
 export const getFirstSigner = async () => {
   if (!RPC_URL) {
     return first(await getEthersSigners())!;
   }
 
-  const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
-  return (await impersonateAddress(paraSpaceAdminAddress)).signer;
+  // const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
+  return (await impersonateAddress(MULTI_SIG)).signer;
 };
 
 export const getLastSigner = async () => last(await getEthersSigners())!;

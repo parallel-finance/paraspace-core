@@ -20,23 +20,27 @@ import {
 import {
   DRY_RUN,
   GLOBAL_OVERRIDES,
-  MULTI_SIG,
+  HACK_RECOVERY,
 } from "../../helpers/hardhat-constants";
-import {waitForTx} from "../../helpers/misc-utils";
+import {isFork, waitForTx} from "../../helpers/misc-utils";
 import {eContractid} from "../../helpers/types";
 import {IParaProxy, PoolCore__factory} from "../../types";
 
 const fixHack = async (verify = false) => {
   console.time("fix-hack");
 
-  const ETH_FUND_ACCOUNT = await impersonateAddress(
-    "0x909e36B512Ed45250fdff513523119d825647695"
-  );
-  // const ATTACK_BLOCK = 16845559;
-  await ETH_FUND_ACCOUNT.signer.sendTransaction({
-    to: MULTI_SIG,
-    value: parseEther("2900"),
-  });
+  if (isFork()) {
+    const ETH_FUND_ACCOUNT = await impersonateAddress(
+      "0x909e36B512Ed45250fdff513523119d825647695"
+    );
+    // const ATTACK_BLOCK = 16845559;
+    await waitForTx(
+      await ETH_FUND_ACCOUNT.signer.sendTransaction({
+        to: HACK_RECOVERY,
+        value: parseEther("2900"),
+      })
+    );
+  }
 
   const addressesProvider = await getPoolAddressesProvider();
   const pool = await getPoolProxy();
@@ -136,12 +140,64 @@ const fixHack = async (verify = false) => {
   if (DRY_RUN) {
     const encodedData = cAPE.interface.encodeFunctionData(
       "tmp_fix_withdrawFromApeCoinStaking",
-      [MULTI_SIG]
+      [HACK_RECOVERY]
     );
     await dryRunEncodedData(cAPE.address, encodedData);
   }
   console.timeEnd("withdraw extra APE from ApeCoinStaking");
 
+  console.time("fix sub accounts");
+  if (DRY_RUN) {
+    const encodedData = pool.interface.encodeFunctionData(
+      "tmp_fix_pauseInterest"
+    );
+    await dryRunEncodedData(pool.address, encodedData);
+  }
+  console.timeEnd("fix sub accounts");
+
+  console.time("transfer hacker position");
+  if (DRY_RUN) {
+    const encodedData = pool.interface.encodeFunctionData(
+      "tmp_fix_transferHackerPosition",
+      [
+        [
+          "0xc0064dea80567e7abd0294e55db32426535001cc",
+          "0x0DAb8bbc6B23234CB95c2063199daF9FAaFd0288",
+          "0x335441A28B16Ae8A89541307fe398A4bdA35fb76",
+          "0x5eF895a4320312127Ba01678Aa5Aa87C3A404C16",
+          "0xBC1f4b38EC14396B7482496aE5711774D44ABC94",
+          "0xfcE3d3D46Ddd52e6CBe353A5664263298bFd2BeF",
+          "0x19Ec952365151a53a5B1b5BE04dF16Df9b0Bb15c",
+          "0xD81EbCF3748C0EeA59C141e6233cFcEE4D3Dcc06",
+          "0xB5ae840838f6f9497aDfCC8747E6A232F62b76fd",
+        ],
+        HACK_RECOVERY,
+      ]
+    );
+    await dryRunEncodedData(pool.address, encodedData);
+  }
+  console.timeEnd("transfer hacker position");
+
+  console.time("transfer cAPE ownership");
+  if (DRY_RUN) {
+    const encodedData = await cAPE.interface.encodeFunctionData(
+      "transferOwnership",
+      [HACK_RECOVERY]
+    );
+    await dryRunEncodedData(cAPE.address, encodedData);
+  }
+  console.timeEnd("transfer cAPE ownership");
+
+  // console.time("fix user position");
+  // if (DRY_RUN) {
+  //   const encodedData = pool.interface.encodeFunctionData(
+  //     "tmp_fix_withdrawUserPosition",
+  //     [HACK_RECOVERY, "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"]
+  //   );
+  //   await dryRunEncodedData(pool.address, encodedData);
+  // }
+
+  console.time("fix user position");
   console.timeEnd("fix-hack");
 };
 

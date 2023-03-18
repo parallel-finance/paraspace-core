@@ -424,6 +424,14 @@ set-traits-multipliers:
 fix-hack:
 	make SCRIPT_PATH=./scripts/dev/12.fix-hack.ts run
 
+.PHONY: repay
+repay:
+	make SCRIPT_PATH=./scripts/dev/13.repay.ts run
+
+.PHONY: diff
+diff:
+	make SCRIPT_PATH=./scripts/dev/14.diff.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -487,7 +495,6 @@ decode-buffered-txs:
 .PHONY: queue-and-execute-buffered-txs
 queue-and-execute-buffered-txs:
 	make send-eth
-	make set-interval-mining
 	make RPC_URL=http://127.0.0.1:8545 queue-buffered-txs
 	make increase-to-execution-time
 	make RPC_URL=http://127.0.0.1:8545 execute-buffered-txs
