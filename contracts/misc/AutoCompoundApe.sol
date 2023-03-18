@@ -181,7 +181,7 @@ contract AutoCompoundApe is
         return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 
-    function pause() external onlyOwner {
+    function pause() external {
         _pause();
     }
 
