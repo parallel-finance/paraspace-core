@@ -175,24 +175,28 @@ library ReserveLogic {
     ) internal {
         UpdateInterestRatesLocalVars memory vars;
 
-        vars.totalVariableDebt = reserveCache.nextScaledVariableDebt.rayMul(
-            reserveCache.nextVariableBorrowIndex
-        );
+        //Here we temporarily comment interest rate calculation incase trigger insterest rate update accidently duration pause.
 
-        (
-            vars.nextLiquidityRate,
-            vars.nextVariableRate
-        ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress)
-            .calculateInterestRates(
-                DataTypes.CalculateInterestRatesParams({
-                    liquidityAdded: liquidityAdded,
-                    liquidityTaken: liquidityTaken,
-                    totalVariableDebt: vars.totalVariableDebt,
-                    reserveFactor: reserveCache.reserveFactor,
-                    reserve: reserveAddress,
-                    xToken: reserveCache.xTokenAddress
-                })
-            );
+        // vars.totalVariableDebt = reserveCache.nextScaledVariableDebt.rayMul(
+        //     reserveCache.nextVariableBorrowIndex
+        // );
+
+        // (
+        //     vars.nextLiquidityRate,
+        //     vars.nextVariableRate
+        // ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress)
+        //     .calculateInterestRates(
+        //         DataTypes.CalculateInterestRatesParams({
+        //             liquidityAdded: liquidityAdded,
+        //             liquidityTaken: liquidityTaken,
+        //             totalVariableDebt: vars.totalVariableDebt,
+        //             reserveFactor: reserveCache.reserveFactor,
+        //             reserve: reserveAddress,
+        //             xToken: reserveCache.xTokenAddress
+        //         })
+        //     );
+        vars.nextLiquidityRate = 0;
+        vars.nextVariableRate = 0;
 
         reserve.currentLiquidityRate = vars.nextLiquidityRate.toUint128();
         reserve.currentVariableBorrowRate = vars.nextVariableRate.toUint128();

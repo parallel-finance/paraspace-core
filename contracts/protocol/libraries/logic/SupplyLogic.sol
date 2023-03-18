@@ -69,6 +69,21 @@ library SupplyLogic {
         uint256[] tokenIds
     );
 
+    function executePauseInterest(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        uint256 reservesCount
+    ) external {
+        for (uint256 index = 0; index < reservesCount; index++) {
+            address reserveAddress = reservesList[index];
+            DataTypes.ReserveData storage currentReserve = reservesData[
+                reserveAddress
+            ];
+            currentReserve.currentLiquidityRate = 0;
+            currentReserve.currentVariableBorrowRate = 0;
+        }
+    }
+
     /**
      * @notice Implements the supply feature. Through `supply()`, users supply assets to the ParaSpace protocol.
      * @dev Emits the `Supply()` event.

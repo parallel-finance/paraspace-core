@@ -66,6 +66,33 @@ contract PoolCore is
     }
 
     /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
+        _;
+    }
+
+    function _onlyPoolAdmin() internal view virtual {
+        require(
+            IACLManager(ADDRESSES_PROVIDER.getACLManager()).isPoolAdmin(
+                msg.sender
+            ),
+            Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function pauseInterest() external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        SupplyLogic.executePauseInterest(
+            ps._reserves,
+            ps._reservesList,
+            ps._reservesCount
+        );
+    }
+
+    /**
      * @notice Initializes the Pool.
      * @dev Function is invoked by the proxy contract when the Pool contract is added to the
      * PoolAddressesProvider of the market.
