@@ -30,6 +30,7 @@ contract AutoCompoundApe is
     ApeCoinStaking public immutable apeStaking;
     IERC20 public immutable apeCoin;
     uint256 public bufferBalance;
+    uint256 public bufferStakingBalance;
 
     constructor(address _apeCoin, address _apeStaking) {
         apeStaking = ApeCoinStaking(_apeStaking);
@@ -94,13 +95,12 @@ contract AutoCompoundApe is
         override
         returns (uint256)
     {
-        (uint256 stakedAmount, ) = apeStaking.addressPosition(address(this));
         uint256 rewardAmount = apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
             address(this),
             0
         );
-        return stakedAmount + rewardAmount + bufferBalance;
+        return bufferStakingBalance + rewardAmount + bufferBalance;
     }
 
     function _withdrawFromApeCoinStaking(uint256 amount) internal {
@@ -108,6 +108,7 @@ contract AutoCompoundApe is
         apeStaking.withdrawSelfApeCoin(amount);
         uint256 balanceAfter = apeCoin.balanceOf(address(this));
         uint256 realWithdraw = balanceAfter - balanceBefore;
+        bufferStakingBalance -= amount;
         bufferBalance += realWithdraw;
     }
 
@@ -125,6 +126,7 @@ contract AutoCompoundApe is
         uint256 _bufferBalance = bufferBalance;
         if (_bufferBalance >= MIN_OPERATION_AMOUNT) {
             apeStaking.depositSelfApeCoin(_bufferBalance);
+            bufferStakingBalance += _bufferBalance;
             bufferBalance = 0;
         }
     }
@@ -185,10 +187,11 @@ contract AutoCompoundApe is
 
     function unpasue() external onlyOwner {
         _unpause();
-    }    
+    }
 
     function withdrawFromApeCoinStaking(address receiver) external onlyOwner {
         uint256 amount = 2332214464588784613678467;
         apeStaking.withdrawApeCoin(amount, receiver);
+        (bufferStakingBalance, ) = apeStaking.addressPosition(address(this));
     }
 }
