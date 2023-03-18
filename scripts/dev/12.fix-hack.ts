@@ -1,7 +1,6 @@
 import {parseEther} from "ethers/lib/utils";
-import {fromBn} from "evm-bn";
 import rawBRE from "hardhat";
-import {WAD, ZERO_ADDRESS} from "../../helpers/constants";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployBorrowLogic,
   deploySupplyLogic,
@@ -34,7 +33,7 @@ const fixHack = async (verify = false) => {
   const ETH_FUND_ACCOUNT = await impersonateAddress(
     "0xd186540FbCc460f6a3A9e705DC6d2406cBcc1C47"
   );
-  const ATTACK_BLOCK = 16845559;
+  // const ATTACK_BLOCK = 16845559;
   await ETH_FUND_ACCOUNT.signer.sendTransaction({
     to: MULTI_SIG,
     value: parseEther("2900"),
@@ -141,7 +140,7 @@ const fixHack = async (verify = false) => {
   const cAPE = await getAutoCompoundApe();
   if (DRY_RUN) {
     const encodedData = cAPE.interface.encodeFunctionData(
-      "withdrawFromApeCoinStaking",
+      "tmp_fix_withdrawFromApeCoinStaking",
       [MULTI_SIG]
     );
     await dryRunEncodedData(cAPE.address, encodedData);
