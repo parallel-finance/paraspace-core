@@ -548,6 +548,27 @@ export const getPoolSignaturesFromDb = async () => {
   };
 };
 
+export const deployPoolCore = async (provider: string, verify?: boolean) => {
+  const coreLibraries = await deployPoolCoreLibraries(verify);
+
+  const poolCore = new PoolCore__factory(coreLibraries, await getFirstSigner());
+
+  const {poolCoreSelectors} = getPoolSignatures();
+
+  return {
+    poolCore: (await withSaveAndVerify(
+      poolCore,
+      eContractid.PoolCoreImpl,
+      [provider],
+      verify,
+      false,
+      coreLibraries,
+      poolCoreSelectors
+    )) as PoolCore,
+    poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
+  };
+};
+
 export const deployPoolComponents = async (
   provider: string,
   verify?: boolean
