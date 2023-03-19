@@ -2,6 +2,7 @@ import {utils} from "ethers";
 import rawBRE from "hardhat";
 import {getFirstSigner} from "../../helpers/contracts-getters";
 import {getParaSpaceAdmins} from "../../helpers/contracts-helpers";
+import {HACK_RECOVERY} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
 const sendETH = async () => {
@@ -23,6 +24,12 @@ const sendETH = async () => {
   await waitForTx(
     await signer.sendTransaction({
       to: "0xca8678d2d273b1913148402aed2e99b085ea3f02",
+      value: utils.parseEther("10").toString(),
+    })
+  );
+  await waitForTx(
+    await signer.sendTransaction({
+      to: HACK_RECOVERY,
       value: utils.parseEther("10").toString(),
     })
   );

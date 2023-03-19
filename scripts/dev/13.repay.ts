@@ -117,15 +117,15 @@ const repay = async () => {
     });
 
     console.log("repay weth");
-    const encodedData9 = await wethgateway.interface.encodeFunctionData(
-      "repayETH",
-      [MAX_UINT_AMOUNT, MULTI_SIG]
-    );
-    transactions.push({
-      to: wethgateway.address,
-      value: (await debtWeth.balanceOf(MULTI_SIG)).toString(),
-      data: encodedData9,
-    });
+    // const encodedData9 = await wethgateway.interface.encodeFunctionData(
+    //   "repayETH",
+    //   [MAX_UINT_AMOUNT, MULTI_SIG]
+    // );
+    // transactions.push({
+    //   to: wethgateway.address,
+    //   value: (await debtWeth.balanceOf(MULTI_SIG)).toString(),
+    //   data: encodedData9,
+    // });
 
     console.log("pause cAPE");
     const encodedData10 = cape.interface.encodeFunctionData("pause");
@@ -138,7 +138,7 @@ const repay = async () => {
     await proposeMultiSafeTransactions(
       transactions,
       OperationType.DelegateCall,
-      (await debtWeth.balanceOf(MULTI_SIG)).toString()
+      "0"
     );
   } else {
     await waitForTx(await pool.repayWithPTokens(cape.address, MAX_UINT_AMOUNT));
@@ -158,11 +158,11 @@ const repay = async () => {
     );
 
     await waitForTx(await pool.repay(cape.address, MAX_UINT_AMOUNT, MULTI_SIG));
-    await waitForTx(
-      await wethgateway.repayETH(MAX_UINT_AMOUNT, MULTI_SIG, {
-        value: await debtWeth.balanceOf(MULTI_SIG),
-      })
-    );
+    // await waitForTx(
+    //   await wethgateway.repayETH(MAX_UINT_AMOUNT, MULTI_SIG, {
+    //     value: await debtWeth.balanceOf(MULTI_SIG),
+    //   })
+    // );
     await waitForTx(await cape.pause());
   }
 
