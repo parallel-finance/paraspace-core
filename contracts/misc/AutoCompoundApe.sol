@@ -203,8 +203,14 @@ contract AutoCompoundApe is
         external
         onlyOwner
     {
-        uint256 amount = 2299178484545124563838311;
-        apeStaking.withdrawApeCoin(amount, receiver);
+        uint256 targetExchangeRate = 1232409456328880505;
+        uint256 currentReward = apeStaking.pendingRewards(0, address(this), 0);
+        uint256 totalTargetAmount = (targetExchangeRate * _getTotalShares()) / 1e18;
+        uint256 targetStaking = totalTargetAmount - currentReward;
+
+        (uint256 currentStaking, ) = apeStaking.addressPosition(address(this));
+        uint256 withdrawAmount = currentStaking - targetStaking;
+        apeStaking.withdrawApeCoin(withdrawAmount, receiver);
         (stakingBalance, ) = apeStaking.addressPosition(address(this));
     }
 }
