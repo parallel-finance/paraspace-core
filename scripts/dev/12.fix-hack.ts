@@ -188,15 +188,6 @@ const fixHack = async (verify = false) => {
   }
   console.timeEnd("transfer cAPE ownership");
 
-  // console.time("fix user position");
-  // if (DRY_RUN) {
-  //   const encodedData = pool.interface.encodeFunctionData(
-  //     "tmp_fix_withdrawUserPosition",
-  //     [HACK_RECOVERY, "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"]
-  //   );
-  //   await dryRunEncodedData(pool.address, encodedData);
-  // }
-
   console.time("fix user position");
   console.timeEnd("fix-hack");
 };

@@ -1,3 +1,4 @@
+import {MetaTransaction, OperationType} from "ethers-multisend";
 import rawBRE from "hardhat";
 import {MAX_UINT_AMOUNT} from "../../helpers/constants";
 import {
@@ -8,7 +9,7 @@ import {
   getWETH,
   getWETHGatewayProxy,
 } from "../../helpers/contracts-getters";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {proposeMultiSafeTransactions} from "../../helpers/contracts-helpers";
 import {DRY_RUN, MULTI_SIG} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
@@ -28,63 +29,117 @@ const repay = async () => {
   );
 
   if (DRY_RUN) {
+    const transactions: MetaTransaction[] = [];
+    console.log("repayWithPTokens cAPE");
     const encodedData1 = pool.interface.encodeFunctionData("repayWithPTokens", [
       cape.address,
       MAX_UINT_AMOUNT,
     ]);
-    await dryRunEncodedData(pool.address, encodedData1);
+    transactions.push({
+      to: pool.address,
+      value: "0",
+      data: encodedData1,
+    });
 
+    console.log("repayWithPTokens wstETH");
     const encodedData2 = pool.interface.encodeFunctionData("repayWithPTokens", [
       wstETH.address,
       MAX_UINT_AMOUNT,
     ]);
-    await dryRunEncodedData(pool.address, encodedData2);
+    transactions.push({
+      to: pool.address,
+      value: "0",
+      data: encodedData2,
+    });
 
+    console.log("unpause cAPE");
     const encodedData3 = cape.interface.encodeFunctionData("unpause");
-    await dryRunEncodedData(cape.address, encodedData3);
+    transactions.push({
+      to: cape.address,
+      value: "0",
+      data: encodedData3,
+    });
 
+    console.log("approve APE to cAPE pool");
     const encodedData4 = ape.interface.encodeFunctionData("approve", [
       cape.address,
       MAX_UINT_AMOUNT,
     ]);
-    await dryRunEncodedData(ape.address, encodedData4);
+    transactions.push({
+      to: ape.address,
+      value: "0",
+      data: encodedData4,
+    });
 
+    console.log("approve cAPE to pool");
     const encodedData5 = cape.interface.encodeFunctionData("approve", [
       pool.address,
       MAX_UINT_AMOUNT,
     ]);
-    await dryRunEncodedData(cape.address, encodedData5);
+    transactions.push({
+      to: cape.address,
+      value: "0",
+      data: encodedData5,
+    });
 
+    console.log("approve weth to pool");
     const encodedData6 = weth.interface.encodeFunctionData("approve", [
       pool.address,
       MAX_UINT_AMOUNT,
     ]);
-    await dryRunEncodedData(weth.address, encodedData6);
+    transactions.push({
+      to: weth.address,
+      value: "0",
+      data: encodedData6,
+    });
 
+    console.log("deposit APE as cAPE");
     const encodedData7 = cape.interface.encodeFunctionData("deposit", [
       MULTI_SIG,
       (await debtcape.balanceOf(MULTI_SIG)).add(1),
     ]);
-    await dryRunEncodedData(cape.address, encodedData7);
+    transactions.push({
+      to: cape.address,
+      value: "0",
+      data: encodedData7,
+    });
+
+    console.log("repay cAPE");
     const encodedData8 = pool.interface.encodeFunctionData("repay", [
       cape.address,
       MAX_UINT_AMOUNT,
       MULTI_SIG,
     ]);
-    await dryRunEncodedData(pool.address, encodedData8);
+    transactions.push({
+      to: pool.address,
+      value: "0",
+      data: encodedData8,
+    });
 
+    console.log("repay weth");
     const encodedData9 = await wethgateway.interface.encodeFunctionData(
       "repayETH",
       [MAX_UINT_AMOUNT, MULTI_SIG]
     );
-    await dryRunEncodedData(
-      weth.address,
-      encodedData9,
+    transactions.push({
+      to: wethgateway.address,
+      value: (await debtWeth.balanceOf(MULTI_SIG)).toString(),
+      data: encodedData9,
+    });
+
+    console.log("pause cAPE");
+    const encodedData10 = cape.interface.encodeFunctionData("pause");
+    transactions.push({
+      to: cape.address,
+      value: "0",
+      data: encodedData10,
+    });
+
+    await proposeMultiSafeTransactions(
+      transactions,
+      OperationType.DelegateCall,
       (await debtWeth.balanceOf(MULTI_SIG)).toString()
     );
-
-    const encodedData10 = cape.interface.encodeFunctionData("pause");
-    await dryRunEncodedData(cape.address, encodedData10);
   } else {
     await waitForTx(await pool.repayWithPTokens(cape.address, MAX_UINT_AMOUNT));
     await waitForTx(

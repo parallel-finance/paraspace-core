@@ -432,6 +432,10 @@ repay:
 diff:
 	make SCRIPT_PATH=./scripts/dev/14.diff.ts run
 
+.PHONY: withdraw-wstETH
+withdraw-wstETH:
+	make SCRIPT_PATH=./scripts/dev/15.withdraw-wstETH.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
