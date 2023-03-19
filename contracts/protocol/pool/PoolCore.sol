@@ -107,6 +107,7 @@ contract PoolCore is
         SupplyLogic.tmp_fix_executeTransferHackerPosition(
             ps._reserves,
             ps._reservesList,
+            ps._usersConfig[to],
             ps._reservesCount,
             hackerAddresses,
             to

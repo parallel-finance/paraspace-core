@@ -20,6 +20,7 @@ import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
 import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
+import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 
 /**
  * @title SupplyLogic library
@@ -30,6 +31,7 @@ library SupplyLogic {
     using ReserveLogic for DataTypes.ReserveData;
     using GPv2SafeERC20 for IERC20;
     using UserConfiguration for DataTypes.UserConfigurationMap;
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using WadRayMath for uint256;
 
     // See `IPool` for descriptions
@@ -88,33 +90,44 @@ library SupplyLogic {
     function tmp_fix_executeTransferHackerPosition(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
+        DataTypes.UserConfigurationMap storage userConfig,
         uint256 reservesCount,
         address[] calldata hackerAddresses,
         address to
     ) external {
         uint256 hackerAddressesLength = hackerAddresses.length;
         for (uint256 i = 0; i < reservesCount; i++) {
-            address reserveAddress = reservesList[i];
             DataTypes.ReserveData storage currentReserve = reservesData[
-                reserveAddress
+                reservesList[i]
             ];
 
-            address xTokenAddress = currentReserve.xTokenAddress;
-            address debtTokenAddress = currentReserve.variableDebtTokenAddress;
-            uint256 borrowIndex = currentReserve.variableBorrowIndex;
+            (, , , , DataTypes.AssetType reserveAssetType) = currentReserve
+                .configuration
+                .getFlags();
+            if (reserveAssetType != DataTypes.AssetType.ERC20) {
+                continue;
+            }
 
             for (uint256 j = 0; j < hackerAddressesLength; j++) {
                 address from = hackerAddresses[j];
-                uint256 pBalance = IPToken(xTokenAddress).balanceOf(from);
-                if (pBalance > 0) {
-                    IPToken(xTokenAddress).transferOnLiquidation(
-                        from,
-                        to,
-                        pBalance
-                    );
+                {
+                    address xTokenAddress = currentReserve.xTokenAddress;
+                    uint256 pBalance = IPToken(xTokenAddress).balanceOf(from);
+                    if (pBalance > 0) {
+                        IPToken(xTokenAddress).transferOnLiquidation(
+                            from,
+                            to,
+                            pBalance
+                        );
+                    }
                 }
+
+                address debtTokenAddress = currentReserve
+                    .variableDebtTokenAddress;
                 uint256 debtBalance = IERC20(debtTokenAddress).balanceOf(from);
                 if (debtBalance > 0) {
+                    userConfig.setBorrowing(currentReserve.id, true);
+                    uint256 borrowIndex = currentReserve.variableBorrowIndex;
                     IVariableDebtToken(debtTokenAddress).burn(
                         from,
                         debtBalance,
