@@ -138,8 +138,11 @@ contract AutoCompoundApe is
             0
         );
         if (rewardAmount > 0) {
+            uint256 balanceBefore = apeCoin.balanceOf(address(this));
             apeStaking.claimSelfApeCoin();
-            bufferBalance += rewardAmount;
+            uint256 balanceAfter = apeCoin.balanceOf(address(this));
+            uint256 realClaim = balanceAfter - balanceBefore;
+            bufferBalance += realClaim;
         }
     }
 
@@ -187,6 +190,10 @@ contract AutoCompoundApe is
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function rebaseFromApeCoinStaking() external onlyOwner {
+        (stakingBalance, ) = apeStaking.addressPosition(address(this));
     }
 
     /**
