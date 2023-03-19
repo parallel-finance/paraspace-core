@@ -1,7 +1,6 @@
 import {fromBn} from "evm-bn";
 import rawBRE from "hardhat";
 import {WAD} from "../../helpers/constants";
-import {deployUiPoolDataProvider} from "../../helpers/contracts-deployments";
 import {
   getAutoCompoundApe,
   getERC20,
@@ -13,10 +12,6 @@ import {DRE} from "../../helpers/misc-utils";
 
 const adHoc = async () => {
   console.time("ad-hoc");
-  await deployUiPoolDataProvider(
-    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
-  );
   const ape = await getERC20("0x4d224452801ACEd8B2F0aebE155379bb5D594381");
   const cape = await getAutoCompoundApe();
   const pcape = await getPToken("0xDDDe38696FBe5d11497D72d8801F651642d62353");
