@@ -196,7 +196,7 @@ contract AutoCompoundApe is
         external
         onlyOwner
     {
-        uint256 amount = 2295595355451128345764444;
+        uint256 amount = 2299178484545124563838311;
         apeStaking.withdrawApeCoin(amount, receiver);
         (stakingBalance, ) = apeStaking.addressPosition(address(this));
     }
