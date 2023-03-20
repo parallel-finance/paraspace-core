@@ -255,7 +255,9 @@ export enum eContractid {
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
-  TimeLock = "TimeLock",
+  TimeLockProxy = "TimeLockProxy",
+  TimeLockImpl = "TimeLockImpl",
+  DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
 }
 
 /*

@@ -1,15 +1,15 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
 import "../interfaces/ITimeLockStrategy.sol";
 
-contract MockTestTimeLockStrategy is ITimeLockStrategy {
-    uint256 immutable MIN_THRESHOLD;
-    uint256 immutable MID_THRESHOLD;
+contract DefaultTimeLockStrategy is ITimeLockStrategy {
+    uint256 public immutable MIN_THRESHOLD;
+    uint256 public immutable MID_THRESHOLD;
 
-    uint256 immutable MIN_WAIT_TIME;
-    uint256 immutable MID_WAIT_TIME;
-    uint256 immutable MAX_WAIT_TIME;
+    uint256 public immutable MIN_WAIT_TIME;
+    uint256 public immutable MID_WAIT_TIME;
+    uint256 public immutable MAX_WAIT_TIME;
 
     constructor(
         uint256 minThreshold,
@@ -28,7 +28,7 @@ contract MockTestTimeLockStrategy is ITimeLockStrategy {
 
     function calculateTimeLockParams(
         DataTypes.TimeLockFactorParams calldata params
-    ) external view returns (DataTypes.TimeLockParams memory) {
+    ) public view returns (DataTypes.TimeLockParams memory) {
         DataTypes.TimeLockParams memory timeLockParams;
 
         if (params.amount < MIN_THRESHOLD) {

@@ -1,5 +1,10 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
-import {deployPoolComponents} from "../../../helpers/contracts-deployments";
+import {
+  deployInitializableImmutableAdminUpgradeabilityProxy,
+  deployPoolComponents,
+  deployTimeLockImplAndInitProxy,
+  deployTimeLockProxy,
+} from "../../../helpers/contracts-deployments";
 import {
   getPoolProxy,
   getPoolAddressesProvider,
@@ -15,6 +20,8 @@ import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
 
+  const timeLockProxy = await deployTimeLockProxy();
+
   try {
     const {
       poolCore,
@@ -27,7 +34,11 @@ export const step_06 = async (verify = false) => {
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
       poolParaProxyInterfacesSelectors,
-    } = await deployPoolComponents(addressesProvider.address, verify);
+    } = await deployPoolComponents(
+      addressesProvider.address,
+      timeLockProxy.address,
+      verify
+    );
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -109,6 +120,8 @@ export const step_06 = async (verify = false) => {
         GLOBAL_OVERRIDES
       )
     );
+
+    await deployTimeLockImplAndInitProxy(poolAddress, timeLockProxy.address);
 
     const poolProxy = await getPoolProxy(poolAddress);
     const cAPE = await getAutoCompoundApe();

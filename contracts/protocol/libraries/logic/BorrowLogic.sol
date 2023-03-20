@@ -100,15 +100,18 @@ library BorrowLogic {
         );
 
         if (params.releaseUnderlying) {
-            DataTypes.TimeLockParams memory timeLockParams = ITimeLockStrategy(
-                reserve.timeLockStrategyAddress
-            ).calculateTimeLockParams(
-                    DataTypes.TimeLockFactorParams({
-                        assetType: DataTypes.AssetType.ERC20,
-                        asset: params.asset,
-                        amount: params.amount
-                    })
-                );
+            DataTypes.TimeLockParams memory timeLockParams;
+            address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
+            if (timeLockStrategyAddress != address(0)) {
+                timeLockParams = ITimeLockStrategy(timeLockStrategyAddress)
+                    .calculateTimeLockParams(
+                        DataTypes.TimeLockFactorParams({
+                            assetType: DataTypes.AssetType.ERC20,
+                            asset: params.asset,
+                            amount: params.amount
+                        })
+                    );
+            }
 
             IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
                 params.user,
