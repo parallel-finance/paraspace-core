@@ -299,14 +299,15 @@ task("set-pool-pause", "Set pool pause")
     const configurator = await getPoolConfiguratorProxy();
     paused = paused == "false" ? false : true;
 
-    const encodedData = configurator.interface.encodeFunctionData(
-      "setPoolPause",
-      [paused]
-    );
+    const encodedData = paused
+      ? configurator.interface.encodeFunctionData("pausePool")
+      : configurator.interface.encodeFunctionData("unpausePool");
     if (DRY_RUN) {
       await dryRunEncodedData(configurator.address, encodedData);
+    } else if (paused) {
+      await waitForTx(await configurator.pausePool());
     } else {
-      await waitForTx(await configurator.setPoolPause(paused));
+      await waitForTx(await configurator.unpausePool());
     }
   });
 
@@ -322,14 +323,15 @@ task("set-reserve-pause", "Set reserve pause")
     const configurator = await getPoolConfiguratorProxy();
     paused = paused == "false" ? false : true;
 
-    const encodedData = configurator.interface.encodeFunctionData(
-      "setReservePause",
-      [asset, paused]
-    );
+    const encodedData = paused
+      ? configurator.interface.encodeFunctionData("pauseReserve", [asset])
+      : configurator.interface.encodeFunctionData("unpauseReserve", [asset]);
     if (DRY_RUN) {
       await dryRunEncodedData(configurator.address, encodedData);
+    } else if (paused) {
+      await waitForTx(await configurator.pauseReserve(asset));
     } else {
-      await waitForTx(await configurator.setReservePause(asset, paused));
+      await waitForTx(await configurator.unpauseReserve(asset));
     }
   });
 
