@@ -262,9 +262,7 @@ import {
   CLCETHSynchronicityPriceAdapter,
   MockCToken,
   MockCToken__factory,
-  TimeLock,
   TimeLock__factory,
-  DefaultTimeLockStrategy,
   DefaultTimeLockStrategy__factory,
   GenericLogic__factory,
   GenericLogic,
@@ -2883,7 +2881,7 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
 
 export const deployTimeLockImplAndInitProxy = async (
   poolAddress: tEthereumAddress,
-  proxyAddres: tEthereumAddress,
+  proxyAddress: tEthereumAddress,
   verify?: boolean
 ) => {
   const implementation = await withSaveAndVerify(
@@ -2899,7 +2897,7 @@ export const deployTimeLockImplAndInitProxy = async (
   const initData = implementation.interface.encodeFunctionData("initialize");
 
   const proxyInstance = InitializableAdminUpgradeabilityProxy__factory.connect(
-    proxyAddres,
+    proxyAddress,
     await getFirstSigner()
   );
 
