@@ -10,6 +10,7 @@ import {INToken} from "../../../interfaces/INToken.sol";
 import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
+import {ITimeLockStrategy} from "../../../interfaces/ITimeLockStrategy.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {DataTypes} from "../types/DataTypes.sol";
@@ -19,7 +20,6 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
-import {GenericLogic} from "./GenericLogic.sol";
 
 /**
  * @title SupplyLogic library
@@ -323,9 +323,9 @@ library SupplyLogic {
             amountToWithdraw
         );
 
-        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
-            .calculateTimeLockParams(
-                reservesData,
+        DataTypes.TimeLockParams memory timeLockParams = ITimeLockStrategy(
+            reserve.timeLockStrategyAddress
+        ).calculateTimeLockParams(
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC20,
                     asset: params.asset,
@@ -427,9 +427,9 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
-        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
-            .calculateTimeLockParams(
-                reservesData,
+        DataTypes.TimeLockParams memory timeLockParams = ITimeLockStrategy(
+            reservesData[params.asset].timeLockStrategyAddress
+        ).calculateTimeLockParams(
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC721,
                     asset: params.asset,

@@ -5,6 +5,7 @@ import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC2
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
+import {ITimeLockStrategy} from "../../../interfaces/ITimeLockStrategy.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
@@ -12,7 +13,6 @@ import {Helpers} from "../helpers/Helpers.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {GenericLogic} from "./GenericLogic.sol";
 
 /**
  * @title BorrowLogic library
@@ -100,9 +100,9 @@ library BorrowLogic {
         );
 
         if (params.releaseUnderlying) {
-            DataTypes.TimeLockParams memory timeLockParams = GenericLogic
-                .calculateTimeLockParams(
-                    reservesData,
+            DataTypes.TimeLockParams memory timeLockParams = ITimeLockStrategy(
+                reserve.timeLockStrategyAddress
+            ).calculateTimeLockParams(
                     DataTypes.TimeLockFactorParams({
                         assetType: DataTypes.AssetType.ERC20,
                         asset: params.asset,

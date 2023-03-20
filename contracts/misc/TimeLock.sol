@@ -40,10 +40,11 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256[] tokenIdsOrAmounts,
         address indexed beneficiary
     );
-
     mapping(uint256 => Agreement) public agreements;
-    uint256 public agreementCount;
+
+    uint248 public agreementCount;
     bool public frozen;
+
     IPool private immutable POOL;
 
     modifier onlyXToken(address asset) {
@@ -52,8 +53,7 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         _;
     }
 
-    constructor(address _admin, IPool pool) {
-        transferOwnership(_admin);
+    constructor(IPool pool) {
         POOL = pool;
     }
 

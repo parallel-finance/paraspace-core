@@ -262,6 +262,8 @@ import {
   CLCETHSynchronicityPriceAdapter,
   MockCToken,
   MockCToken__factory,
+  TimeLock,
+  TimeLock__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2843,3 +2845,14 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployTimeLock = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new TimeLock__factory(await getFirstSigner()),
+    eContractid.TimeLock,
+    [poolAddress],
+    verify
+  ) as Promise<TimeLock>;
