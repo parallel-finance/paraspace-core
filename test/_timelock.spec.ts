@@ -6,7 +6,7 @@ import {
   getTimeLockProxy,
 } from "../helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
-import {advanceTimeAndBlock} from "../helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
 
@@ -45,9 +45,14 @@ describe("TimeLock functionality tests", () => {
     );
 
     const poolConfigurator = await getPoolConfiguratorProxy();
-    await poolConfigurator
-      .connect(poolAdmin.signer)
-      .setReserveTimeLockStrategyAddress(usdc.address, defaultStrategy.address);
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(
+          usdc.address,
+          defaultStrategy.address
+        )
+    );
 
     return testEnv;
   };
@@ -62,11 +67,13 @@ describe("TimeLock functionality tests", () => {
     const amount = await convertToCurrencyDecimals(usdc.address, "100");
     //FIXME(alan): may we have a error code for this.
 
-    await pool
-      .connect(user1.signer)
-      .borrow(usdc.address, amount, "0", user1.address, {
-        gasLimit: 5000000,
-      });
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .borrow(usdc.address, amount, "0", user1.address, {
+          gasLimit: 5000000,
+        })
+    );
 
     await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
 
@@ -75,7 +82,7 @@ describe("TimeLock functionality tests", () => {
 
     await advanceTimeAndBlock(10);
 
-    await timeLockProxy.connect(user1.signer).claim("0");
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim("0"));
 
     const balanceAfter = await usdc.balanceOf(user1.address);
 
