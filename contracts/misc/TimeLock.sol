@@ -44,7 +44,7 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256[] tokenIdsOrAmounts,
         address indexed beneficiary
     );
-    mapping(uint256 => Agreement) public agreements;
+    mapping(uint256 => Agreement) private agreements;
 
     uint248 public agreementCount;
     bool public frozen;
@@ -172,5 +172,13 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function freezeAllAgreements(bool freeze) external onlyOwner {
         frozen = freeze;
+    }
+
+    function getAgreement(uint256 agreementId)
+        external
+        view
+        returns (Agreement memory agreement)
+    {
+        agreement = agreements[agreementId];
     }
 }
