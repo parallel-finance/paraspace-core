@@ -19,6 +19,7 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
+import {GenericLogic} from "./GenericLogic.sol";
 
 /**
  * @title SupplyLogic library
@@ -322,11 +323,22 @@ library SupplyLogic {
             amountToWithdraw
         );
 
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+            .calculateTimeLockParams(
+                reservesData,
+                DataTypes.TimeLockFactorParams({
+                    assetType: DataTypes.AssetType.ERC20,
+                    asset: params.asset,
+                    amount: amountToWithdraw
+                })
+            );
+
         IPToken(reserveCache.xTokenAddress).burn(
             msg.sender,
             params.to,
             amountToWithdraw,
-            reserveCache.nextLiquidityIndex
+            reserveCache.nextLiquidityIndex,
+            timeLockParams
         );
 
         if (userConfig.isUsingAsCollateral(reserve.id)) {
@@ -376,11 +388,7 @@ library SupplyLogic {
         (
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
-        ) = INToken(reserveCache.xTokenAddress).burn(
-                msg.sender,
-                params.to,
-                params.tokenIds
-            );
+        ) = _burnNToken(reserveCache.xTokenAddress, reservesData, params);
 
         bool isWithdrawCollateral = (newCollateralizedBalance <
             oldCollateralizedBalance);
@@ -412,6 +420,30 @@ library SupplyLogic {
         );
 
         return amountToWithdraw;
+    }
+
+    function _burnNToken(
+        address xTokenAddress,
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.ExecuteWithdrawERC721Params memory params
+    ) internal returns (uint64, uint64) {
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+            .calculateTimeLockParams(
+                reservesData,
+                DataTypes.TimeLockFactorParams({
+                    assetType: DataTypes.AssetType.ERC721,
+                    asset: params.asset,
+                    amount: params.tokenIds.length
+                })
+            );
+
+        return
+            INToken(xTokenAddress).burn(
+                msg.sender,
+                params.to,
+                params.tokenIds,
+                timeLockParams
+            );
     }
 
     function executeDecreaseUniswapV3Liquidity(

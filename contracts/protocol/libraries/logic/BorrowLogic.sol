@@ -12,6 +12,7 @@ import {Helpers} from "../helpers/Helpers.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
+import {GenericLogic} from "./GenericLogic.sol";
 
 /**
  * @title BorrowLogic library
@@ -99,9 +100,20 @@ library BorrowLogic {
         );
 
         if (params.releaseUnderlying) {
+            DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+                .calculateTimeLockParams(
+                    reservesData,
+                    DataTypes.TimeLockFactorParams({
+                        assetType: DataTypes.AssetType.ERC20,
+                        asset: params.asset,
+                        amount: params.amount
+                    })
+                );
+
             IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
                 params.user,
-                params.amount
+                params.amount,
+                timeLockParams
             );
         }
 
@@ -179,11 +191,14 @@ library BorrowLogic {
         }
 
         if (params.usePTokens) {
+            // no time lock needed here
+            DataTypes.TimeLockParams memory timeLockParams;
             IPToken(reserveCache.xTokenAddress).burn(
                 params.payer,
                 reserveCache.xTokenAddress,
                 paybackAmount,
-                reserveCache.nextLiquidityIndex
+                reserveCache.nextLiquidityIndex,
+                timeLockParams
             );
         } else {
             // send paybackAmount from user to reserve

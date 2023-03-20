@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IPoolAddressesProvider} from "./IPoolAddressesProvider.sol";
+import {ITimeLock} from "./ITimeLock.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
@@ -517,6 +518,8 @@ interface IPoolCore {
         view
         returns (DataTypes.ReserveData memory);
 
+    function getReserveXToken(address asset) external view returns (address);
+
     /**
      * @notice Validates and finalizes an PToken transfer
      * @dev Only callable by the overlying xToken of the `asset`
@@ -589,6 +592,8 @@ interface IPoolCore {
         external
         view
         returns (IPoolAddressesProvider);
+
+    function TIME_LOCK() external view returns (ITimeLock);
 
     /**
      * @notice Returns the maximum number of reserves supported to be listed in this Pool

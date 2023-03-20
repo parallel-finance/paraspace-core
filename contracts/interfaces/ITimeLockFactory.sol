@@ -5,5 +5,5 @@ interface ITimeLockFactory {
         external
         returns (address);
 
-    function getTimeLock(address user) external view returns (address);
+    // function getTimeLock(address user) external view returns (address);
 }

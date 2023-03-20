@@ -6,112 +6,57 @@ import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {Ownable} from "../dependencies/openzeppelin/contracts/Ownable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
-import {ITimeLockFactory} from "../interfaces/ITimeLockFactory.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
-
-contract TimeLockFactory is ITimeLockFactory, Ownable {
-    using EnumerableSet for EnumerableSet.AddressSet;
-
-    mapping(address => address) public userTimeLocks;
-    EnumerableSet.AddressSet private _timeLocks;
-
-    function createTimeLock(address user, address admin)
-        public
-        onlyOwner
-        returns (address)
-    {
-        require(
-            userTimeLocks[user] == address(0),
-            "User already has a TimeLock"
-        );
-        TimeLock timeLock = new TimeLock(user, admin);
-        userTimeLocks[user] = address(timeLock);
-        _timeLocks.add(address(timeLock));
-        return address(timeLock);
-    }
-
-    function getTimeLocks() public view returns (address[] memory) {
-        uint256 length = _timeLocks.length();
-        address[] memory timeLockList = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            timeLockList[i] = _timeLocks.at(i);
-        }
-        return timeLockList;
-    }
-}
+import {IPool} from "../interfaces/IPool.sol";
+import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 contract TimeLock is ITimeLock, Ownable {
-    enum TokenType {
-        ERC20,
-        ERC721,
-        ERC1155
-    }
-
     struct Agreement {
-        TokenType tokenType;
-        address token;
-        uint256[] tokenIds;
-        uint256[] amounts;
-        address beneficiary;
-        uint256 releaseTime;
+        DataTypes.AssetType assetType;
         bool isFrozen;
+        address token;
+        address beneficiary;
+        uint256 releaseTime; //TODO change to smaller unit
+        uint256[] tokenIdsOrAmounts;
     }
 
     mapping(uint256 => Agreement) public agreements;
     uint256 public agreementCount;
     bool public frozen;
-    address public immutable USER;
+    IPool private immutable POOL;
 
-    modifier onlyUser() {
-        require(msg.sender == USER, "Not allowed");
+    modifier onlyXToken(address token) {
+        // TODO add message
+        require(msg.sender == POOL.getReserveXToken(token));
         _;
     }
 
-    constructor(address _user, address _admin) {
+    constructor(address _admin, IPool pool) {
         transferOwnership(_admin);
-        USER = _user;
+        POOL = pool;
     }
 
     function createAgreement(
-        TokenType tokenType,
+        DataTypes.AssetType assetType,
         address token,
-        uint256[] memory tokenIds,
-        uint256[] memory amounts,
+        uint256[] memory tokenIdsOrAmounts,
         address beneficiary,
         uint256 releaseTime
-    ) public onlyOwner returns (uint256) {
+    ) public onlyXToken(token) returns (uint256) {
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
-            tokenType: tokenType,
+            assetType: assetType,
             token: token,
-            tokenIds: tokenIds,
-            amounts: amounts,
+            tokenIdsOrAmounts: tokenIdsOrAmounts,
             beneficiary: beneficiary,
             releaseTime: releaseTime,
             isFrozen: false
         });
 
-        if (tokenType == TokenType.ERC20) {
-            IERC20(token).transferFrom(msg.sender, address(this), amounts[0]);
-        } else if (tokenType == TokenType.ERC721) {
-            IERC721 erc721 = IERC721(token);
-            for (uint256 i = 0; i < tokenIds.length; i++) {
-                erc721.transferFrom(msg.sender, address(this), tokenIds[i]);
-            }
-        } else if (tokenType == TokenType.ERC1155) {
-            IERC1155(token).safeBatchTransferFrom(
-                msg.sender,
-                address(this),
-                tokenIds,
-                amounts,
-                ""
-            );
-        }
-
         return agreementId;
     }
 
-    function claim(uint256 agreementId) external onlyUser {
+    function claim(uint256 agreementId) external {
         require(!frozen, "TimeLock is frozen");
 
         Agreement storage agreement = agreements[agreementId];
@@ -122,28 +67,20 @@ contract TimeLock is ITimeLock, Ownable {
         );
         require(!agreement.isFrozen, "Agreement frozen");
 
-        if (agreement.tokenType == TokenType.ERC20) {
+        if (agreement.assetType == DataTypes.AssetType.ERC20) {
             IERC20(agreement.token).transfer(
                 agreement.beneficiary,
-                agreement.amounts[0]
+                agreement.tokenIdsOrAmounts[0]
             );
-        } else if (agreement.tokenType == TokenType.ERC721) {
+        } else if (agreement.assetType == DataTypes.AssetType.ERC721) {
             IERC721 erc721 = IERC721(agreement.token);
-            for (uint256 i = 0; i < agreement.tokenIds.length; i++) {
+            for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
                 erc721.transferFrom(
                     address(this),
                     agreement.beneficiary,
-                    agreement.tokenIds[i]
+                    agreement.tokenIdsOrAmounts[i]
                 );
             }
-        } else if (agreement.tokenType == TokenType.ERC1155) {
-            IERC1155(agreement.token).safeBatchTransferFrom(
-                address(this),
-                agreement.beneficiary,
-                agreement.tokenIds,
-                agreement.amounts,
-                ""
-            );
         }
 
         delete agreements[agreementId];
@@ -157,6 +94,6 @@ contract TimeLock is ITimeLock, Ownable {
     }
 
     function freezeAllAgreements(bool freeze) external onlyOwner {
-        frozen = true;
+        frozen = freeze;
     }
 }

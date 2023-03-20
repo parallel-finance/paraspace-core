@@ -1,19 +1,12 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
+
+import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 interface ITimeLock {
-    struct Agreement {
-        address lockedAsset;
-        uint256[] tokenIds;
-        uint256[] tokenAmounts;
-        address beneficiary;
-        uint256 releaseTime;
-        bool frozen;
-    }
-
-    function submitAgreement(
-        address lockedAsset,
-        uint256[] memory tokenIds,
-        uint256[] memory tokenAmounts,
+    function createAgreement(
+        DataTypes.AssetType assetType,
+        address token,
+        uint256[] memory tokenIdsOrAmounts,
         address beneficiary,
         uint256 releaseTime
     ) external returns (uint256);

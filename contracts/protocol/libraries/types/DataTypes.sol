@@ -37,6 +37,8 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
+        // timelock strategy
+        address timeLockStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -399,5 +401,15 @@ library DataTypes {
         bool isActive;
         bool isFrozen;
         bool isPaused;
+    }
+
+    struct TimeLockParams {
+        uint256 releaseTime;
+    }
+
+    struct TimeLockFactorParams {
+        AssetType assetType;
+        address asset;
+        uint256 amount;
     }
 }
