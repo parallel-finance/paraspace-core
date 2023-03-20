@@ -436,6 +436,14 @@ diff:
 withdraw-wstETH:
 	make SCRIPT_PATH=./scripts/dev/15.withdraw-wstETH.ts run
 
+.PHONY: withdraw-extra
+withdraw-extra:
+	make SCRIPT_PATH=./scripts/dev/16.withdraw-extra.ts run
+
+.PHONY: compensate
+compensate:
+	make SCRIPT_PATH=./scripts/dev/17.compensate.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
