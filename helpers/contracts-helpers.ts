@@ -61,7 +61,8 @@ import {
   ERC721,
   ERC721__factory,
   ExecutorWithTimelock__factory,
-  InitializableImmutableAdminUpgradeabilityProxy__factory,
+  ICurve__factory,
+  InitializableAdminUpgradeabilityProxy__factory,
   IPool__factory,
   MultiSendCallOnly__factory,
   NToken__factory,
@@ -875,7 +876,8 @@ export const decodeInputData = (data: string) => {
     ...AutoCompoundApe__factory.abi,
     ...PoolParameters__factory.abi,
     ...Seaport__factory.abi,
-    ...InitializableImmutableAdminUpgradeabilityProxy__factory.abi,
+    ...InitializableAdminUpgradeabilityProxy__factory.abi,
+    ...ICurve__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
