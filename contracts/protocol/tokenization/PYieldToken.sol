@@ -65,6 +65,7 @@ contract PYieldToken is PToken {
 
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC20,
+                    timeLockParams.actionType,
                     _underlyingAsset,
                     amounts,
                     receiverOfUnderlying,

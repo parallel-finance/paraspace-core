@@ -5,10 +5,11 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 interface ITimeLock {
     function createAgreement(
         DataTypes.AssetType assetType,
-        address token,
+        DataTypes.TimeLockActionType actionType,
+        address asset,
         uint256[] memory tokenIdsOrAmounts,
         address beneficiary,
-        uint256 releaseTime
+        uint48 releaseTime
     ) external returns (uint256);
 
     function claim(uint256 agreementId) external;

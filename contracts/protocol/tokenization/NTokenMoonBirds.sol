@@ -55,6 +55,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
                 ITimeLock timeLock = POOL.TIME_LOCK();
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC721,
+                    timeLockParams.actionType,
                     underlyingAsset,
                     tokenIds,
                     receiverOfUnderlying,

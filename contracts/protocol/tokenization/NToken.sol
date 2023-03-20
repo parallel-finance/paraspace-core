@@ -109,6 +109,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
                 ITimeLock timeLock = POOL.TIME_LOCK();
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC721,
+                    timeLockParams.actionType,
                     underlyingAsset,
                     tokenIds,
                     receiverOfUnderlying,
@@ -159,6 +160,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             tokenIds[0] = tokenId;
             timeLock.createAgreement(
                 DataTypes.AssetType.ERC721,
+                timeLockParams.actionType,
                 underlyingAsset,
                 tokenIds,
                 target,

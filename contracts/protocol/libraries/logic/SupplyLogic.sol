@@ -20,6 +20,7 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
+import {GenericLogic} from "./GenericLogic.sol";
 
 /**
  * @title SupplyLogic library
@@ -323,18 +324,16 @@ library SupplyLogic {
             amountToWithdraw
         );
 
-        DataTypes.TimeLockParams memory timeLockParams;
-        address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
-        if (timeLockStrategyAddress != address(0)) {
-            timeLockParams = ITimeLockStrategy(reserve.timeLockStrategyAddress)
-                .calculateTimeLockParams(
-                    DataTypes.TimeLockFactorParams({
-                        assetType: DataTypes.AssetType.ERC20,
-                        asset: params.asset,
-                        amount: amountToWithdraw
-                    })
-                );
-        }
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+            .calculateTimeLockParams(
+                reserve,
+                DataTypes.TimeLockFactorParams({
+                    assetType: DataTypes.AssetType.ERC20,
+                    asset: params.asset,
+                    amount: params.amount
+                })
+            );
+        timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
 
         IPToken(reserveCache.xTokenAddress).burn(
             msg.sender,
@@ -430,18 +429,16 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
-        DataTypes.TimeLockParams memory timeLockParams;
-        address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
-        if (timeLockStrategyAddress != address(0)) {
-            timeLockParams = ITimeLockStrategy(timeLockStrategyAddress)
-                .calculateTimeLockParams(
-                    DataTypes.TimeLockFactorParams({
-                        assetType: DataTypes.AssetType.ERC721,
-                        asset: params.asset,
-                        amount: params.tokenIds.length
-                    })
-                );
-        }
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+            .calculateTimeLockParams(
+                reserve,
+                DataTypes.TimeLockFactorParams({
+                    assetType: DataTypes.AssetType.ERC721,
+                    asset: params.asset,
+                    amount: params.tokenIds.length
+                })
+            );
+        timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
 
         return
             INToken(xTokenAddress).burn(

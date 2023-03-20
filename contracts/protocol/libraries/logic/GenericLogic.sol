@@ -535,4 +535,18 @@ library GenericLogic {
                 tokenId
             );
     }
+
+    function calculateTimeLockParams(
+        DataTypes.ReserveData storage reserve,
+        DataTypes.TimeLockFactorParams calldata params
+    ) external returns (DataTypes.TimeLockParams memory) {
+        DataTypes.TimeLockParams memory timeLockParams;
+        address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
+        if (timeLockStrategyAddress != address(0)) {
+            timeLockParams = ITimeLockStrategy(timeLockStrategyAddress)
+                .calculateTimeLockParams(params);
+        }
+
+        return timeLockParams;
+    }
 }

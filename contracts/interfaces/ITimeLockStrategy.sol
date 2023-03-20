@@ -13,5 +13,5 @@ interface ITimeLockStrategy {
      */
     function calculateTimeLockParams(
         DataTypes.TimeLockFactorParams calldata params
-    ) external view returns (DataTypes.TimeLockParams memory);
+    ) external returns (DataTypes.TimeLockParams memory);
 }

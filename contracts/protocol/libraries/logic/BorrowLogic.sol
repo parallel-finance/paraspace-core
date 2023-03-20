@@ -13,6 +13,7 @@ import {Helpers} from "../helpers/Helpers.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
+import {GenericLogic} from "./GenericLogic.sol";
 
 /**
  * @title BorrowLogic library
@@ -100,18 +101,16 @@ library BorrowLogic {
         );
 
         if (params.releaseUnderlying) {
-            DataTypes.TimeLockParams memory timeLockParams;
-            address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
-            if (timeLockStrategyAddress != address(0)) {
-                timeLockParams = ITimeLockStrategy(timeLockStrategyAddress)
-                    .calculateTimeLockParams(
-                        DataTypes.TimeLockFactorParams({
-                            assetType: DataTypes.AssetType.ERC20,
-                            asset: params.asset,
-                            amount: params.amount
-                        })
-                    );
-            }
+            DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+                .calculateTimeLockParams(
+                    reserve,
+                    DataTypes.TimeLockFactorParams({
+                        assetType: DataTypes.AssetType.ERC20,
+                        asset: params.asset,
+                        amount: params.amount
+                    })
+                );
+            timeLockParams.actionType = DataTypes.TimeLockActionType.BORROW;
 
             IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
                 params.user,

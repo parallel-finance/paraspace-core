@@ -404,12 +404,18 @@ library DataTypes {
     }
 
     struct TimeLockParams {
-        uint256 releaseTime;
+        uint48 releaseTime;
+        TimeLockActionType actionType;
     }
 
     struct TimeLockFactorParams {
         AssetType assetType;
         address asset;
         uint256 amount;
+    }
+
+    enum TimeLockActionType {
+        BORROW,
+        WITHDRAW
     }
 }

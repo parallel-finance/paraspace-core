@@ -17,10 +17,11 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     struct Agreement {
         DataTypes.AssetType assetType;
+        DataTypes.TimeLockActionType actionType;
         bool isFrozen;
         address asset;
         address beneficiary;
-        uint256 releaseTime; //TODO change to smaller unit
+        uint48 releaseTime;
         uint256[] tokenIdsOrAmounts;
     }
 
@@ -30,7 +31,7 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address indexed asset,
         uint256[] tokenIdsOrAmounts,
         address indexed beneficiary,
-        uint256 releaseTime
+        uint48 releaseTime
     );
 
     event AgreementClaimed(
@@ -64,14 +65,16 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function createAgreement(
         DataTypes.AssetType assetType,
+        DataTypes.TimeLockActionType actionType,
         address asset,
-        uint256[] memory tokenIdsOrAmounts,
+        uint256[] calldata tokenIdsOrAmounts,
         address beneficiary,
-        uint256 releaseTime
-    ) public onlyXToken(asset) returns (uint256) {
+        uint48 releaseTime
+    ) external onlyXToken(asset) returns (uint256) {
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
             assetType: assetType,
+            actionType: actionType,
             asset: asset,
             tokenIdsOrAmounts: tokenIdsOrAmounts,
             beneficiary: beneficiary,

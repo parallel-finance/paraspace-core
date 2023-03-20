@@ -2902,4 +2902,4 @@ export const deployDefaultTimeLockStrategy = async (
     eContractid.DefaultTimeLockStrategy,
     [minThreshold, midThreshold, minWaitTime, midWaitTime, maxWaitTime],
     verify
-  );
+  ) as Promise<DefaultReserveAuctionStrategy>;
