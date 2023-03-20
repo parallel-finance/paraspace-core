@@ -544,6 +544,10 @@ set-supply-cap:
 set-borrow-cap:
 	make TASK_NAME=set-borrow-cap run-task
 
+.PHONY: set-pool-pause
+set-pool-pause:
+	make TASK_NAME=set-pool-pause run-task
+
 .PHONY: list-facets
 list-facets:
 	make TASK_NAME=list-facets run-task
