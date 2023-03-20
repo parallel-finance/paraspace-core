@@ -8,6 +8,7 @@ import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
+import {IMoonBird} from "../dependencies/erc721-collections/IMoonBird.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
@@ -28,6 +29,7 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     event AgreementCreated(
         uint256 agreementId,
         DataTypes.AssetType assetType,
+        DataTypes.TimeLockActionType actionType,
         address indexed asset,
         uint256[] tokenIdsOrAmounts,
         address indexed beneficiary,
@@ -37,6 +39,7 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     event AgreementClaimed(
         uint256 agreementId,
         DataTypes.AssetType assetType,
+        DataTypes.TimeLockActionType actionType,
         address indexed asset,
         uint256[] tokenIdsOrAmounts,
         address indexed beneficiary
@@ -85,6 +88,7 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         emit AgreementCreated(
             agreementId,
             assetType,
+            actionType,
             asset,
             tokenIdsOrAmounts,
             beneficiary,
@@ -94,7 +98,10 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         return agreementId;
     }
 
-    function claim(uint256 agreementId) external nonReentrant {
+    function _validateAndDeleteAgreement(uint256 agreementId)
+        internal
+        returns (Agreement memory)
+    {
         require(!frozen, "TimeLock is frozen");
 
         Agreement memory agreement = agreements[agreementId];
@@ -104,8 +111,22 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
             "Release time not reached"
         );
         require(!agreement.isFrozen, "Agreement frozen");
-
         delete agreements[agreementId];
+
+        emit AgreementClaimed(
+            agreementId,
+            agreement.assetType,
+            agreement.actionType,
+            agreement.asset,
+            agreement.tokenIdsOrAmounts,
+            agreement.beneficiary
+        );
+
+        return agreement;
+    }
+
+    function claim(uint256 agreementId) external nonReentrant {
+        Agreement memory agreement = _validateAndDeleteAgreement(agreementId);
 
         if (agreement.assetType == DataTypes.AssetType.ERC20) {
             IERC20(agreement.asset).safeTransfer(
@@ -122,14 +143,24 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 );
             }
         }
+    }
 
-        emit AgreementClaimed(
-            agreementId,
-            agreement.assetType,
-            agreement.asset,
-            agreement.tokenIdsOrAmounts,
-            agreement.beneficiary
+    function claimMoonBirds(uint256 agreementId) external nonReentrant {
+        Agreement memory agreement = _validateAndDeleteAgreement(agreementId);
+
+        require(
+            agreement.assetType == DataTypes.AssetType.ERC721,
+            "wrong asset type"
         );
+
+        IMoonBird moonBirds = IMoonBird(agreement.asset);
+        for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
+            moonBirds.safeTransferWhileNesting(
+                address(this),
+                agreement.beneficiary,
+                agreement.tokenIdsOrAmounts[i]
+            );
+        }
     }
 
     function freezeAgreement(uint256 agreementId, bool freeze)

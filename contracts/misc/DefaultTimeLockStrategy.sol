@@ -19,6 +19,8 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
     uint128 public totalAmountInCurrentPeriod;
     uint48 public lastResetTimestamp;
 
+    event PeriodReset();
+
     modifier onlyPool() {
         require(msg.sender == POOL, "Only pool allowed");
         _;
@@ -58,6 +60,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         uint256 currentTimestamp = block.timestamp;
         if (currentTimestamp - lastResetTimestamp >= PERIOD) {
             resetPeriodLimit();
+            emit PeriodReset();
         }
 
         DataTypes.TimeLockParams memory timeLockParams;

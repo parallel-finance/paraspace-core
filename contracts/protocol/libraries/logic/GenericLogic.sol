@@ -57,6 +57,8 @@ library GenericLogic {
         XTokenType xTokenType;
     }
 
+    event dummyEventforTypeChain();
+
     /**
      * @notice Calculates the user data across the reserves.
      * @dev It includes the total liquidity/collateral/borrow balances in the base currency used by the price feed,

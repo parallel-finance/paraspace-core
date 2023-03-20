@@ -104,13 +104,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         ) = _burnMultiple(from, tokenIds);
 
         if (receiverOfUnderlying != address(this)) {
-            address underlyingAsset = _ERC721Data.underlyingAsset;
+            // address underlyingAsset = _ERC721Data.underlyingAsset;
             if (timeLockParams.releaseTime != 0) {
                 ITimeLock timeLock = POOL.TIME_LOCK();
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC721,
                     timeLockParams.actionType,
-                    underlyingAsset,
+                    _ERC721Data.underlyingAsset,
                     tokenIds,
                     receiverOfUnderlying,
                     timeLockParams.releaseTime
@@ -119,7 +119,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             }
 
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                IERC721(underlyingAsset).safeTransferFrom(
+                IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
                     address(this),
                     receiverOfUnderlying,
                     tokenIds[index]

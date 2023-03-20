@@ -3,14 +3,21 @@ import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
 import {utils} from "ethers";
 import {MAX_UINT_AMOUNT, ONE_YEAR, MAX_BORROW_CAP} from "../helpers/constants";
-import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {
+  convertToCurrencyDecimals,
+  getParaSpaceAdmins,
+} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {deployDefaultTimeLockStrategy} from "../helpers/contracts-deployments";
-import {getPoolConfiguratorProxy} from "../helpers/contracts-getters";
+import {
+  getFirstSigner,
+  getPoolConfiguratorProxy,
+  getTimeLockProxy,
+} from "../helpers/contracts-getters";
 
 describe("TimeLock functionality tests", () => {
   const minTime = 5;
@@ -23,47 +30,64 @@ describe("TimeLock functionality tests", () => {
       dai,
       usdc,
       users: [user1, user2],
+      pool,
+      poolAdmin,
     } = testEnv;
 
     // User 1 - Deposit dai
     await supplyAndValidate(dai, "200000", user1, true);
     // User 2 - Deposit usdc
-    await supplyAndValidate(dai, "200000", user2, true);
+    await supplyAndValidate(usdc, "200000", user2, true);
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "10000");
 
     const defaultStrategy = await deployDefaultTimeLockStrategy(
+      pool.address,
       minThreshold.toString(),
       midThreshold.toString(),
       minTime.toString(),
       midTime.toString(),
-      maxTime.toString()
+      maxTime.toString(),
+      midThreshold.mul(10).toString(),
+      (12 * 3600).toString(),
+      (24 * 3600).toString()
     );
 
     const poolConfigurator = await getPoolConfiguratorProxy();
-    poolConfigurator.setReserveTimeLockStrategyAddress(
-      usdc.address,
-      defaultStrategy
-    );
+    await poolConfigurator
+      .connect(poolAdmin.signer)
+      .setReserveTimeLockStrategyAddress(usdc.address, defaultStrategy.address);
 
     return testEnv;
   };
 
-  it("Borrow below threshold ", async () => {
+  it("borrowed amount below minThreshold should be timeBlocked for 1 block only", async () => {
     const {
       pool,
       users: [user1],
       usdc,
     } = await loadFixture(fixture);
 
-    // const amount = await convertToCurrencyDecimals(usdc.address, "100");
-    // //FIXME(alan): may we have a error code for this.
-    // await expect(
-    //   pool
-    //     .connect(user1.signer)
-    //     .borrow(usdc.address, amount, "0", user1.address, {
-    //       gasLimit: 5000000,
-    //     })
-    // ).to.be.reverted;
+    const amount = await convertToCurrencyDecimals(usdc.address, "100");
+    //FIXME(alan): may we have a error code for this.
+
+    await pool
+      .connect(user1.signer)
+      .borrow(usdc.address, amount, "0", user1.address, {
+        gasLimit: 5000000,
+      });
+
+    await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
+
+    const timeLockProxy = await getTimeLockProxy();
+    const balanceBefore = await usdc.balanceOf(user1.address);
+
+    await advanceTimeAndBlock(10);
+
+    await timeLockProxy.connect(user1.signer).claim("0");
+
+    const balanceAfter = await usdc.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
   });
 });

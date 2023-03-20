@@ -86,6 +86,7 @@ import {
   PYieldToken__factory,
   HelperContract__factory,
   MockCToken__factory,
+  TimeLock__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1210,6 +1211,17 @@ export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.SEWER}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTimeLockProxy = async (address?: tEthereumAddress) =>
+  await TimeLock__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );
