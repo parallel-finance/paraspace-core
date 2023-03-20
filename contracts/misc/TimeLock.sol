@@ -9,8 +9,11 @@ import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSe
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
+import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 
 contract TimeLock is ITimeLock, Ownable {
+    using GPv2SafeERC20 for IERC20;
+
     struct Agreement {
         DataTypes.AssetType assetType;
         bool isFrozen;
@@ -53,6 +56,8 @@ contract TimeLock is ITimeLock, Ownable {
             isFrozen: false
         });
 
+        // TODO require statement to check the balance
+
         return agreementId;
     }
 
@@ -68,14 +73,14 @@ contract TimeLock is ITimeLock, Ownable {
         require(!agreement.isFrozen, "Agreement frozen");
 
         if (agreement.assetType == DataTypes.AssetType.ERC20) {
-            IERC20(agreement.token).transfer(
+            IERC20(agreement.token).safeTransfer(
                 agreement.beneficiary,
                 agreement.tokenIdsOrAmounts[0]
             );
         } else if (agreement.assetType == DataTypes.AssetType.ERC721) {
             IERC721 erc721 = IERC721(agreement.token);
             for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
-                erc721.transferFrom(
+                erc721.safeTransferFrom(
                     address(this),
                     agreement.beneficiary,
                     agreement.tokenIdsOrAmounts[i]
