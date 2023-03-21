@@ -14,6 +14,7 @@ import {
   getNToken,
   getApeCoinStaking,
   getPoolProxy,
+  getDelegationRegistry,
 } from "../../helpers/contracts-getters";
 import {NTokenContractId, XTokenType} from "../../helpers/types";
 
@@ -32,6 +33,7 @@ export const upgradeNToken = async (verify = false) => {
   );
   const protocolDataProvider = await getProtocolDataProvider();
   const allXTokens = await protocolDataProvider.getAllXTokens();
+  const delegationRegistryAddress = (await getDelegationRegistry()).address;
   let nTokenImplementationAddress = "";
   let nTokenBAYCImplementationAddress = "";
   let nTokenMAYCImplementationAddress = "";
@@ -71,6 +73,7 @@ export const upgradeNToken = async (verify = false) => {
           await deployNTokenBAYCImpl(
             apeCoinStaking.address,
             poolAddress,
+            delegationRegistryAddress,
             verify
           )
         ).address;
@@ -84,6 +87,7 @@ export const upgradeNToken = async (verify = false) => {
           await deployNTokenMAYCImpl(
             apeCoinStaking.address,
             poolAddress,
+            delegationRegistryAddress,
             verify
           )
         ).address;
@@ -109,6 +113,7 @@ export const upgradeNToken = async (verify = false) => {
             apeCoinStaking.address,
             nBAYC,
             nMAYC,
+            delegationRegistryAddress,
             verify
           )
         ).address;
@@ -118,7 +123,11 @@ export const upgradeNToken = async (verify = false) => {
       if (!nTokenUniSwapV3ImplementationAddress) {
         console.log("deploy NTokenUniswapV3 implementation");
         nTokenUniSwapV3ImplementationAddress = (
-          await deployUniswapV3NTokenImpl(poolAddress, verify)
+          await deployUniswapV3NTokenImpl(
+            poolAddress,
+            delegationRegistryAddress,
+            verify
+          )
         ).address;
       }
       newImpl = nTokenUniSwapV3ImplementationAddress;
@@ -126,7 +135,11 @@ export const upgradeNToken = async (verify = false) => {
       if (!nTokenMoonBirdImplementationAddress) {
         console.log("deploy NTokenMoonBirds implementation");
         nTokenMoonBirdImplementationAddress = (
-          await deployGenericMoonbirdNTokenImpl(poolAddress, verify)
+          await deployGenericMoonbirdNTokenImpl(
+            poolAddress,
+            delegationRegistryAddress,
+            verify
+          )
         ).address;
       }
       newImpl = nTokenMoonBirdImplementationAddress;
@@ -134,7 +147,12 @@ export const upgradeNToken = async (verify = false) => {
       if (!nTokenImplementationAddress) {
         console.log("deploy NToken implementation");
         nTokenImplementationAddress = (
-          await deployGenericNTokenImpl(poolAddress, false, verify)
+          await deployGenericNTokenImpl(
+            poolAddress,
+            false,
+            delegationRegistryAddress,
+            verify
+          )
         ).address;
       }
       newImpl = nTokenImplementationAddress;

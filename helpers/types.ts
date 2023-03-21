@@ -268,6 +268,7 @@ export enum eContractid {
   TimeLockProxy = "TimeLockProxy",
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
+  DelegationRegistry = "DelegationRegistry",
 }
 
 /*
@@ -748,6 +749,7 @@ export interface ICommonConfiguration {
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
+  DelegationRegistry: tEthereumAddress;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

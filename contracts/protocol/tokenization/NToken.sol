@@ -39,12 +39,17 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, bool atomic_pricing)
+    constructor(
+        IPool pool,
+        bool atomic_pricing,
+        address delegateRegistry
+    )
         MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
             "NTOKEN_IMPL",
-            atomic_pricing
+            atomic_pricing,
+            delegateRegistry
         )
     {}
 

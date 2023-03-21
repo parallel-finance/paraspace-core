@@ -90,6 +90,7 @@ import {
   LoanVault__factory,
   MockCToken__factory,
   TimeLock__factory,
+  DelegationRegistry__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1257,6 +1258,17 @@ export const getTimeLockProxy = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getDelegationRegistry = async (address?: tEthereumAddress) =>
+  await DelegationRegistry__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.DelegationRegistry}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
