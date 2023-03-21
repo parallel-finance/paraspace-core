@@ -43,7 +43,9 @@ export const resetPool = async (verify = false) => {
 
   console.time("reset pool");
   for (const facet of facets.filter(
-    (x) => x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" // ParaProxyInterfaces
+    (x) =>
+      x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" &&
+      x.implAddress !== "0xC85d346eB17B37b93B30a37603Ef9550Ab18aC83" // ParaProxyInterfaces
   )) {
     const implementation = [
       {
