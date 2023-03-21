@@ -81,6 +81,11 @@ interface IPoolParameters {
         address rateStrategyAddress
     ) external;
 
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newStrategyAddress
+    ) external;
+
     /**
      * @notice Updates the address of the auction strategy contract
      * @dev Only callable by the PoolConfigurator contract

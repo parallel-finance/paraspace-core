@@ -265,6 +265,9 @@ export enum eContractid {
   LoanVault = "LoanVault",
   LoanVaultImpl = "LoanVaultImpl",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
+  TimeLockProxy = "TimeLockProxy",
+  TimeLockImpl = "TimeLockImpl",
+  DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
 }
 
 /*

@@ -190,6 +190,21 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newStrategyAddress
+    ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        ps._reserves[asset].timeLockStrategyAddress = newStrategyAddress;
+    }
+
+    /// @inheritdoc IPoolParameters
     function setReserveAuctionStrategyAddress(
         address asset,
         address auctionStrategyAddress

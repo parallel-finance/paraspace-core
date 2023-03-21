@@ -89,6 +89,7 @@ import {
   MockStableDebtToken__factory,
   LoanVault__factory,
   MockCToken__factory,
+  TimeLock__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1245,6 +1246,17 @@ export const getLoanVault = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.LoanVault}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTimeLockProxy = async (address?: tEthereumAddress) =>
+  await TimeLock__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

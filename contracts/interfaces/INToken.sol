@@ -102,7 +102,8 @@ interface INToken is
     function burn(
         address from,
         address receiverOfUnderlying,
-        uint256[] calldata tokenIds
+        uint256[] calldata tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
     ) external returns (uint64, uint64);
 
     // TODO are we using the Treasury at all? Can we remove?
@@ -131,7 +132,11 @@ interface INToken is
      * @param user The recipient of the underlying
      * @param tokenId The id of the token getting transferred
      **/
-    function transferUnderlyingTo(address user, uint256 tokenId) external;
+    function transferUnderlyingTo(
+        address user,
+        uint256 tokenId,
+        DataTypes.TimeLockParams calldata timeLockParams
+    ) external;
 
     /**
      * @notice Returns the address of the underlying asset of this nToken (E.g. WETH for pWETH)

@@ -417,9 +417,12 @@ library MarketplaceLogic {
 
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         ValidationLogic.validateFlashloanSimple(reserve);
+        DataTypes.TimeLockParams memory timeLockParams;
+
         IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
             to,
-            vars.creditAmount
+            vars.creditAmount,
+            timeLockParams
         );
 
         if (vars.isETH) {

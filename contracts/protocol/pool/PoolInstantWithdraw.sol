@@ -327,9 +327,11 @@ contract PoolInstantWithdraw is
                 borrowAmount,
                 discountRate
             );
+            DataTypes.TimeLockParams memory timeLockParams;
             IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
                 msg.sender,
-                borrowAmount
+                borrowAmount,
+                timeLockParams
             );
 
             // update borrow asset interest rate

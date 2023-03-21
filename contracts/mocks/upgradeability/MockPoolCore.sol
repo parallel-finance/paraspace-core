@@ -26,6 +26,7 @@ import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../../protocol/libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
+import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 
 import {IPoolCore} from "../../interfaces/IPoolCore.sol";
 import {PoolCore} from "../../protocol/pool/PoolCore.sol";
@@ -42,7 +43,7 @@ contract PoolCoreV2 is
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
-    constructor(IPoolAddressesProvider provider) PoolCore(provider){
+    constructor(IPoolAddressesProvider provider, ITimeLock timeLock) PoolCore(provider, timeLock){
 
     }
 

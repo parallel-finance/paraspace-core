@@ -43,6 +43,8 @@ library DataTypes {
         uint128 currentStableBorrowRate;
         //stableDebtToken address
         address stableDebtTokenAddress;
+        // timelock strategy
+        address timeLockStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -476,5 +478,21 @@ library DataTypes {
         bool isActive;
         bool isFrozen;
         bool isPaused;
+    }
+
+    struct TimeLockParams {
+        uint48 releaseTime;
+        TimeLockActionType actionType;
+    }
+
+    struct TimeLockFactorParams {
+        AssetType assetType;
+        address asset;
+        uint256 amount;
+    }
+
+    enum TimeLockActionType {
+        BORROW,
+        WITHDRAW
     }
 }
