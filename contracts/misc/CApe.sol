@@ -311,7 +311,7 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
         address owner,
         address spender,
         uint256 amount
-    ) internal virtual whenNotPaused {
+    ) internal virtual {
         require(owner != address(0), "approve from the zero address");
         require(spender != address(0), "approve to the zero address");
 
@@ -347,7 +347,7 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
         address _sender,
         address _recipient,
         uint256 _sharesAmount
-    ) internal whenNotPaused {
+    ) internal {
         shares[_sender] = shares[_sender].sub(
             _sharesAmount,
             "transfer amount exceeds balance"
@@ -364,11 +364,7 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      *
      * - `to` cannot be the zero address.
      */
-    function _mint(address account, uint256 sharesAmount)
-        internal
-        virtual
-        whenNotPaused
-    {
+    function _mint(address account, uint256 sharesAmount) internal virtual {
         require(account != address(0), "mint to the zero address");
 
         _totalShare = _totalShare.add(sharesAmount);
