@@ -56,7 +56,7 @@ contract PoolInstantWithdraw is
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     address internal immutable VAULT_CONTRACT;
-    uint256 internal constant POOL_REVISION = 146;
+    uint256 internal constant POOL_REVISION = 150;
 
     // See `IPoolCore` for descriptions
     event Borrow(
