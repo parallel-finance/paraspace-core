@@ -13,6 +13,7 @@ import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
+import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 
 contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using GPv2SafeERC20 for IERC20;
@@ -50,16 +51,19 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint248 public agreementCount;
     bool public frozen;
 
-    IPool private immutable POOL;
+    IPoolAddressesProvider private immutable ADDRESSES_PROVIDER;
 
     modifier onlyXToken(address asset) {
-        // TODO add message
-        require(msg.sender == POOL.getReserveXToken(asset));
+        require(
+            msg.sender ==
+                IPool(ADDRESSES_PROVIDER.getPool()).getReserveXToken(asset),
+            Errors.CALLER_NOT_XTOKEN
+        );
         _;
     }
 
     constructor(IPoolAddressesProvider provider) {
-        POOL = IPool(IPoolAddressesProvider(provider).getPool());
+        ADDRESSES_PROVIDER = provider;
     }
 
     function initialize() public initializer {

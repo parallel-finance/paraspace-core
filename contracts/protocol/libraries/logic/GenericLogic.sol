@@ -540,8 +540,8 @@ library GenericLogic {
 
     function calculateTimeLockParams(
         DataTypes.ReserveData storage reserve,
-        DataTypes.TimeLockFactorParams calldata params
-    ) external returns (DataTypes.TimeLockParams memory) {
+        DataTypes.TimeLockFactorParams memory params
+    ) internal returns (DataTypes.TimeLockParams memory) {
         DataTypes.TimeLockParams memory timeLockParams;
         address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
         if (timeLockStrategyAddress != address(0)) {

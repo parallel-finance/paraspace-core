@@ -59,7 +59,7 @@ describe("TimeLock functionality tests", () => {
   };
 
   before(async () => {
-    const testEnv = await loadFixture(testEnvFixture);
+    await loadFixture(testEnvFixture);
 
     timeLockProxy = await getTimeLockProxy();
   });

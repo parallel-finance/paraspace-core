@@ -296,8 +296,6 @@ import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artif
 import {Address} from "hardhat-deploy/dist/types";
 import {Contract} from "ethers";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
-import {SupplyLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/SupplyLogic__factory";
-import {BorrowLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/BorrowLogic__factory";
 import {MarketplaceLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/MarketplaceLogic__factory";
 import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCore__factory";
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
@@ -366,12 +364,9 @@ export const deployPoolConfigurator = async (verify?: boolean) => {
   ) as Promise<PoolConfigurator>;
 };
 
-export const deploySupplyLogic = async (
-  libraries: SupplyLogicLibraryAddresses,
-  verify?: boolean
-) =>
+export const deploySupplyLogic = async (verify?: boolean) =>
   withSaveAndVerify(
-    new SupplyLogic__factory(libraries, await getFirstSigner()),
+    new SupplyLogic__factory(await getFirstSigner()),
     eContractid.SupplyLogic,
     [],
     verify
@@ -385,12 +380,9 @@ export const deployFlashClaimLogic = async (verify?: boolean) =>
     verify
   ) as Promise<FlashClaimLogic>;
 
-export const deployBorrowLogic = async (
-  libraries: BorrowLogicLibraryAddresses,
-  verify?: boolean
-) =>
+export const deployBorrowLogic = async (verify?: boolean) =>
   withSaveAndVerify(
-    new BorrowLogic__factory(libraries, await getFirstSigner()),
+    new BorrowLogic__factory(await getFirstSigner()),
     eContractid.BorrowLogic,
     [],
     verify
@@ -436,22 +428,8 @@ export const deployPoolLogic = async (verify?: boolean) =>
 export const deployPoolCoreLibraries = async (
   verify?: boolean
 ): Promise<PoolCoreLibraryAddresses> => {
-  const genericLogic = await deployGenericLogic(verify);
-
-  const supplyLogic = await deploySupplyLogic(
-    {
-      ["contracts/protocol/libraries/logic/GenericLogic.sol:GenericLogic"]:
-        genericLogic.address,
-    },
-    verify
-  );
-  const borrowLogic = await deployBorrowLogic(
-    {
-      ["contracts/protocol/libraries/logic/GenericLogic.sol:GenericLogic"]:
-        genericLogic.address,
-    },
-    verify
-  );
+  const supplyLogic = await deploySupplyLogic(verify);
+  const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
   const liquidationLogic = await deployLiquidationLogic(
     {
