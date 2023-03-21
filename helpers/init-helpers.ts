@@ -44,6 +44,8 @@ import {
   deployPTokenCApe,
   deployCApeDebtToken,
   deployNTokenBAKCImpl,
+  deployPTokenAStETH,
+  deployAStETHDebtToken,
   deployPYieldToken,
   deployAutoYieldApe,
   deployGenericStableDebtToken,
@@ -120,6 +122,7 @@ export const initReservesByHelper = async (
   let pTokenImplementationAddress = genericPTokenImplAddress;
   let pTokenStETHImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
+  let pTokenAStETHImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
   let pTokenPsApeImplementationAddress = "";
   let pYieldTokenImplementationAddress = "";
@@ -131,6 +134,7 @@ export const initReservesByHelper = async (
   let stableDebtTokenImplementationAddress = genericStableDebtTokenAddress;
   let variableDebtTokenImplementationAddress = genericVariableDebtTokenAddress;
   let stETHVariableDebtTokenImplementationAddress = "";
+  let astETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
   let aTokenStableDebtTokenImplementationAddress = "";
   let stETHStableDebtTokenImplementationAddress = "";
@@ -368,7 +372,10 @@ export const initReservesByHelper = async (
             ).address;
           }
           stableDebtTokenToUse = stETHStableDebtTokenImplementationAddress;
-        } else if (reserveSymbol === ERC20TokenContractId.aWETH) {
+        } else if (
+          reserveSymbol === ERC20TokenContractId.aWETH ||
+          reserveSymbol === ERC20TokenContractId.awstETH
+        ) {
           if (!pTokenATokenImplementationAddress) {
             pTokenATokenImplementationAddress = (
               await deployPTokenAToken(pool.address, verify)
@@ -387,6 +394,19 @@ export const initReservesByHelper = async (
             ).address;
           }
           stableDebtTokenToUse = aTokenStableDebtTokenImplementationAddress;
+        } else if (reserveSymbol === ERC20TokenContractId.astETH) {
+          if (!pTokenAStETHImplementationAddress) {
+            pTokenAStETHImplementationAddress = (
+              await deployPTokenAStETH(pool.address, verify)
+            ).address;
+          }
+          xTokenToUse = pTokenAStETHImplementationAddress;
+          if (!astETHVariableDebtTokenImplementationAddress) {
+            astETHVariableDebtTokenImplementationAddress = (
+              await deployAStETHDebtToken(pool.address, verify)
+            ).address;
+          }
+          variableDebtTokenToUse = astETHVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.sAPE) {
           if (!pTokenSApeImplementationAddress) {
             const protocolDataProvider = await getProtocolDataProvider();

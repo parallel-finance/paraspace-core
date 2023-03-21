@@ -500,9 +500,13 @@ cancel-buffered-txs:
 decode-safe-txs:
 	make TASK_NAME=decode-safe-txs run-task
 
-.PHONY: propose-safe-txs
-propose-safe-txs:
-	make TASK_NAME=propose-safe-txs run-task
+.PHONY: propose-buffered-txs
+propose-buffered-txs:
+	make TASK_NAME=propose-buffered-txs run-task
+
+.PHONY: propose-queued-txs
+propose-queued-txs:
+	make TASK_NAME=propose-queued-txs run-task
 
 .PHONY: set-ltv
 set-ltv:
@@ -547,6 +551,10 @@ facet-address:
 .PHONY: facet-function-selectors
 facet-function-selectors:
 	make TASK_NAME=facet-function-selectors run-task
+
+.PHONY: rescue-erc20-from-ntoken
+rescue-erc20-from-ntoken:
+	make TASK_NAME=rescue-erc20-from-ntoken run-task
 
 .PHONY: upgrade
 upgrade:

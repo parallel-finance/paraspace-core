@@ -11,6 +11,7 @@ import {
   rateStrategyXCDOT,
   rateStrategyWGLMR,
   rateStrategyBLUR,
+  rateStrategyFRAX,
 } from "./rateStrategies";
 import {
   auctionStrategyAzuki,
@@ -80,6 +81,21 @@ export const strategyUSDT: IReserveParams = {
   supplyCap: "0",
 };
 
+export const strategyFRAX: IReserveParams = {
+  strategy: rateStrategyFRAX,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "7500",
+  liquidationThreshold: "8000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
 export const strategyWETH: IReserveParams = {
   strategy: rateStrategyWETH,
   auctionStrategy: auctionStrategyZero,
@@ -107,7 +123,7 @@ export const strategyWBTC: IReserveParams = {
   stableBorrowRateEnabled: false,
   reserveDecimals: "8",
   xTokenImpl: eContractid.PTokenImpl,
-  reserveFactor: "2000",
+  reserveFactor: "1000",
   borrowCap: "0",
   supplyCap: "0",
 };
@@ -419,6 +435,21 @@ export const strategyPudgyPenguins: IReserveParams = {
 ////////////////////////////////////////////////////////////
 // V2
 ////////////////////////////////////////////////////////////
+export const strategyCBETH: IReserveParams = {
+  strategy: rateStrategyXETH,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "7200",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8300",
+  liquidationBonus: "10700",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "110000",
+  supplyCap: "110000",
+};
+
 export const strategySTETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
@@ -430,6 +461,21 @@ export const strategySTETH: IReserveParams = {
   stableBorrowRateEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenStETHImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyASTETH: IReserveParams = {
+  strategy: rateStrategyXETH,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "6900",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8100",
+  liquidationBonus: "10750",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenAStETHImpl,
   reserveFactor: "1000",
   borrowCap: "0",
   supplyCap: "0",
@@ -451,7 +497,7 @@ export const strategyWSTETH: IReserveParams = {
   supplyCap: "0",
 };
 
-export const strategyAWETH: IReserveParams = {
+export const strategyAWSTETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
   baseLTVAsCollateral: "6900",
@@ -465,6 +511,36 @@ export const strategyAWETH: IReserveParams = {
   reserveFactor: "1000",
   borrowCap: "0",
   supplyCap: "0",
+};
+
+export const strategyBENDETH: IReserveParams = {
+  strategy: rateStrategyXETH,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "6900",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8100",
+  liquidationBonus: "10750",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenATokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyAWETH: IReserveParams = {
+  strategy: rateStrategyXETH,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "8250",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8600",
+  liquidationBonus: "10450",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenATokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "80000",
+  supplyCap: "80000",
 };
 
 export const strategyCETH: IReserveParams = {
@@ -481,6 +557,21 @@ export const strategyCETH: IReserveParams = {
   reserveFactor: "1000",
   borrowCap: "0",
   supplyCap: "0",
+};
+
+export const strategyRETH: IReserveParams = {
+  strategy: rateStrategyXETH,
+  auctionStrategy: auctionStrategyZero,
+  baseLTVAsCollateral: "7200",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8300",
+  liquidationBonus: "10700",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "20000",
+  supplyCap: "20000",
 };
 
 export const strategyPUNK: IReserveParams = {
