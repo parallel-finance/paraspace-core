@@ -444,6 +444,10 @@ withdraw-extra:
 compensate:
 	make SCRIPT_PATH=./scripts/dev/17.compensate.ts run
 
+.PHONY: enable-supply
+enable-supply:
+	make SCRIPT_PATH=./scripts/dev/18.enable-supply.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
