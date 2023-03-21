@@ -34,7 +34,6 @@ describe("defaultTimeLockStrategy tests", function () {
     user2 = users[1];
 
     defaultTimeLockStrategy = await deployDefaultTimeLockStrategy(
-      user1.address,
       minThreshold.toString(),
       midThreshold.toString(),
       minWaitTime.toString(),
@@ -47,7 +46,6 @@ describe("defaultTimeLockStrategy tests", function () {
   });
 
   it("should initialize the contract with correct values", async function () {
-    expect(await defaultTimeLockStrategy.POOL()).to.equal(user1.address);
     expect(await defaultTimeLockStrategy.MIN_THRESHOLD()).to.equal(
       minThreshold
     );
@@ -57,7 +55,7 @@ describe("defaultTimeLockStrategy tests", function () {
     expect(await defaultTimeLockStrategy.MIN_WAIT_TIME()).to.equal(minWaitTime);
     expect(await defaultTimeLockStrategy.MID_WAIT_TIME()).to.equal(midWaitTime);
     expect(await defaultTimeLockStrategy.MAX_WAIT_TIME()).to.equal(maxWaitTime);
-    expect(await defaultTimeLockStrategy.MAX_POOL_PERIOD_RATE()).to.equal(
+    expect(await defaultTimeLockStrategy.POOL_PERIOD_LIMIT()).to.equal(
       maxPoolPeriodRate
     );
     expect(await defaultTimeLockStrategy.POOL_PERIOD_RATE_WAIT_TIME()).to.equal(
@@ -90,18 +88,6 @@ describe("defaultTimeLockStrategy tests", function () {
     expect(await defaultTimeLockStrategy.totalAmountInCurrentPeriod()).to.eq(
       amount
     );
-  });
-
-  it("should revert when not called by the pool", async function () {
-    const amount = minThreshold;
-
-    await expect(
-      defaultTimeLockStrategy.connect(user2.signer).calculateTimeLockParams({
-        amount: amount,
-        asset: ZERO_ADDRESS,
-        assetType: 0,
-      })
-    ).to.be.revertedWith("Only pool allowed");
   });
 
   it("should set the correct release time for an amount below the min threshold", async function () {

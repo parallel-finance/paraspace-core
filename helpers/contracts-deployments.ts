@@ -2605,6 +2605,65 @@ export const deployParaSpaceAirdrop = async (
     verify
   ) as Promise<ParaSpaceAirdrop>;
 
+export const deployTimeLock = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) => {
+  const implementation = await withSaveAndVerify(
+    new TimeLock__factory(await getFirstSigner()),
+    eContractid.TimeLockImpl,
+    [poolAddress],
+    verify
+  );
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = implementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.TimeLockProxy,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](implementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as TimeLock;
+};
+
+export const deployDefaultTimeLockStrategy = async (
+  minThreshold: string,
+  midThreshold: string,
+  minWaitTime: string,
+  midWaitTime: string,
+  maxWaitTime: string,
+  maxPoolPeriodRate: string,
+  maxPoolPeriodWaitTime: string,
+  period: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new DefaultTimeLockStrategy__factory(await getFirstSigner()),
+    eContractid.DefaultTimeLockStrategy,
+    [
+      minThreshold,
+      midThreshold,
+      minWaitTime,
+      midWaitTime,
+      maxWaitTime,
+      maxPoolPeriodRate,
+      maxPoolPeriodWaitTime,
+      period,
+    ],
+    verify
+  ) as Promise<DefaultTimeLockStrategy>;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
 ////////////////////////////////////////////////////////////////////////////////
@@ -2863,64 +2922,3 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
-
-export const deployTimeLock = async (
-  poolAddress: tEthereumAddress,
-  verify?: boolean
-) => {
-  const implementation = await withSaveAndVerify(
-    new TimeLock__factory(await getFirstSigner()),
-    eContractid.TimeLockImpl,
-    [poolAddress],
-    verify
-  );
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
-
-  const initData = implementation.interface.encodeFunctionData("initialize");
-
-  const proxyInstance = await withSaveAndVerify(
-    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
-    eContractid.TimeLockProxy,
-    [],
-    verify
-  );
-
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](implementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
-  );
-
-  return proxyInstance as TimeLock;
-};
-
-export const deployDefaultTimeLockStrategy = async (
-  pool: string,
-  minThreshold: string,
-  midThreshold: string,
-  minWaitTime: string,
-  midWaitTime: string,
-  maxWaitTime: string,
-  maxPoolPeriodRate: string,
-  maxPoolPeriodWaitTime: string,
-  period: string,
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    new DefaultTimeLockStrategy__factory(await getFirstSigner()),
-    eContractid.DefaultTimeLockStrategy,
-    [
-      pool,
-      minThreshold,
-      midThreshold,
-      minWaitTime,
-      midWaitTime,
-      maxWaitTime,
-      maxPoolPeriodRate,
-      maxPoolPeriodWaitTime,
-      period,
-    ],
-    verify
-  ) as Promise<DefaultTimeLockStrategy>;
