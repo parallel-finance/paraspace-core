@@ -1,26 +1,25 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {advanceTimeAndBlock, timeLatest} from "../helpers/misc-utils";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import {deployDefaultTimeLockStrategy} from "../helpers/contracts-deployments";
-import {testEnvFixture} from "./helpers/setup-env";
-import {TestEnv} from "./helpers/make-suite";
-import {DefaultTimeLockStrategy} from "../types";
 import {ZERO_ADDRESS} from "../helpers/constants";
+import {deployDefaultTimeLockStrategy} from "../helpers/contracts-deployments";
+import {advanceTimeAndBlock, timeLatest} from "../helpers/misc-utils";
+import {DefaultTimeLockStrategy} from "../types";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 
 describe("defaultTimeLockStrategy tests", function () {
   let defaultTimeLockStrategy: DefaultTimeLockStrategy;
   let testEnv: TestEnv;
   let user1;
-  let user2;
 
   const minThreshold = BigNumber.from(10);
   const midThreshold = BigNumber.from(20);
   const minWaitTime = 10;
   const midWaitTime = 200;
   const maxWaitTime = 3600;
-  const maxPoolPeriodRate = BigNumber.from(400);
-  const maxPoolPeriodWaitTime = 40;
+  const poolPeriodLimit = BigNumber.from(400);
+  const poolPeriodWaitTime = 40;
   const period = 86400;
   const amountBelowMinThreshold = minThreshold.sub(2);
   const amountBetweenMinAndMidThreshold = minThreshold.add(2);
@@ -31,7 +30,6 @@ describe("defaultTimeLockStrategy tests", function () {
     const {users} = testEnv;
 
     user1 = users[0];
-    user2 = users[1];
 
     defaultTimeLockStrategy = await deployDefaultTimeLockStrategy(
       minThreshold.toString(),
@@ -39,8 +37,8 @@ describe("defaultTimeLockStrategy tests", function () {
       minWaitTime.toString(),
       midWaitTime.toString(),
       maxWaitTime.toString(),
-      maxPoolPeriodRate.toString(),
-      maxPoolPeriodWaitTime.toString(),
+      poolPeriodLimit.toString(),
+      poolPeriodWaitTime.toString(),
       period.toString()
     );
   });
@@ -56,10 +54,10 @@ describe("defaultTimeLockStrategy tests", function () {
     expect(await defaultTimeLockStrategy.MID_WAIT_TIME()).to.equal(midWaitTime);
     expect(await defaultTimeLockStrategy.MAX_WAIT_TIME()).to.equal(maxWaitTime);
     expect(await defaultTimeLockStrategy.POOL_PERIOD_LIMIT()).to.equal(
-      maxPoolPeriodRate
+      poolPeriodLimit
     );
     expect(await defaultTimeLockStrategy.POOL_PERIOD_RATE_WAIT_TIME()).to.equal(
-      maxPoolPeriodWaitTime
+      poolPeriodWaitTime
     );
     expect(await defaultTimeLockStrategy.PERIOD()).to.equal(period);
   });
@@ -152,7 +150,7 @@ describe("defaultTimeLockStrategy tests", function () {
     await defaultTimeLockStrategy
       .connect(user1.signer)
       .calculateTimeLockParams({
-        amount: maxPoolPeriodRate.mul(2),
+        amount: poolPeriodLimit.mul(2),
         asset: ZERO_ADDRESS,
         assetType: 0,
       });
@@ -165,8 +163,7 @@ describe("defaultTimeLockStrategy tests", function () {
         assetType: 0,
       });
     const currentTime = (await timeLatest()).toNumber();
-    const expectedReleaseTime =
-      currentTime + minWaitTime + maxPoolPeriodWaitTime;
+    const expectedReleaseTime = currentTime + minWaitTime + poolPeriodWaitTime;
     expect(timeLockParams.releaseTime).to.be.closeTo(expectedReleaseTime, 15);
   });
 });

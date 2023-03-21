@@ -2702,8 +2702,8 @@ export const deployDefaultTimeLockStrategy = async (
   minWaitTime: string,
   midWaitTime: string,
   maxWaitTime: string,
-  maxPoolPeriodRate: string,
-  maxPoolPeriodWaitTime: string,
+  poolPeriodLimit: string,
+  poolPeriodWaitTime: string,
   period: string,
   verify?: boolean
 ) =>
@@ -2716,8 +2716,8 @@ export const deployDefaultTimeLockStrategy = async (
       minWaitTime,
       midWaitTime,
       maxWaitTime,
-      maxPoolPeriodRate,
-      maxPoolPeriodWaitTime,
+      poolPeriodLimit,
+      poolPeriodWaitTime,
       period,
     ],
     verify
