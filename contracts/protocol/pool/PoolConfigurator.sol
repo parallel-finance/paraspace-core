@@ -224,7 +224,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     function unpauseReserve(address asset)
         public
         override
-        onlyRiskOrPoolAdmins
+        onlyPoolAdmin
     {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
@@ -365,7 +365,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
         }
     }
 
-    function unpausePool() external override onlyEmergencyAdmin {
+    function unpausePool() external override onlyPoolAdmin {
         address[] memory reserves = _pool.getReservesList();
 
         for (uint256 i = 0; i < reserves.length; i++) {
