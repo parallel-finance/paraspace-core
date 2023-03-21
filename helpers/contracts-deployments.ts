@@ -267,6 +267,7 @@ import {
   GenericLogic__factory,
   GenericLogic,
   DefaultTimeLockStrategy,
+  TimeLock,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -585,7 +586,6 @@ export const getPoolSignaturesFromDb = async () => {
 
 export const deployPoolComponents = async (
   provider: string,
-  timeLockProxy: string,
   verify?: boolean
 ) => {
   const coreLibraries = await deployPoolCoreLibraries(verify);
@@ -638,7 +638,13 @@ export const deployPoolComponents = async (
     poolCore: (await withSaveAndVerify(
       poolCore,
       eContractid.PoolCoreImpl,
-      [provider, timeLockProxy],
+      [
+        provider,
+        (await getContractAddressInDb(eContractid.TimeLockProxy)) ||
+          (
+            await deployTimeLock(provider, verify)
+          ).address,
+      ],
       verify,
       false,
       coreLibraries,
@@ -2880,9 +2886,8 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     verify
   ) as Promise<MockedDelegateRegistry>;
 
-export const deployTimeLockImplAndInitProxy = async (
+export const deployTimeLock = async (
   poolAddress: tEthereumAddress,
-  proxyAddress: tEthereumAddress,
   verify?: boolean
 ) => {
   const implementation = await withSaveAndVerify(
@@ -2897,19 +2902,6 @@ export const deployTimeLockImplAndInitProxy = async (
 
   const initData = implementation.interface.encodeFunctionData("initialize");
 
-  const proxyInstance = InitializableAdminUpgradeabilityProxy__factory.connect(
-    proxyAddress,
-    await getFirstSigner()
-  );
-
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](implementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
-  );
-};
-
-export const deployTimeLockProxy = async (verify?: boolean) => {
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
     eContractid.TimeLockProxy,
@@ -2917,7 +2909,13 @@ export const deployTimeLockProxy = async (verify?: boolean) => {
     verify
   );
 
-  return proxyInstance;
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](implementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return proxyInstance as TimeLock;
 };
 
 export const deployDefaultTimeLockStrategy = async (

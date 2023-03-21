@@ -9,6 +9,7 @@ import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.s
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
 import {IMoonBird} from "../dependencies/erc721-collections/IMoonBird.sol";
+import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
@@ -57,8 +58,8 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         _;
     }
 
-    constructor(IPool pool) {
-        POOL = pool;
+    constructor(IPoolAddressesProvider provider) {
+        POOL = IPool(IPoolAddressesProvider(provider).getPool());
     }
 
     function initialize() public initializer {

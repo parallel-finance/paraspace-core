@@ -96,13 +96,11 @@ describe("defaultTimeLockStrategy tests", function () {
     const amount = minThreshold;
 
     await expect(
-      defaultTimeLockStrategy
-        .connect(user2.signer)
-        .calculateTimeLockParams({
-          amount: amount,
-          asset: ZERO_ADDRESS,
-          assetType: 0,
-        })
+      defaultTimeLockStrategy.connect(user2.signer).calculateTimeLockParams({
+        amount: amount,
+        asset: ZERO_ADDRESS,
+        assetType: 0,
+      })
     ).to.be.revertedWith("Only pool allowed");
   });
 
@@ -151,13 +149,11 @@ describe("defaultTimeLockStrategy tests", function () {
     await advanceTimeAndBlock(period);
     // Call calculateTimeLockParams again, which should trigger a period reset
     await expect(
-      defaultTimeLockStrategy
-        .connect(user1.signer)
-        .calculateTimeLockParams({
-          amount: amountBelowMinThreshold,
-          asset: ZERO_ADDRESS,
-          assetType: 0,
-        })
+      defaultTimeLockStrategy.connect(user1.signer).calculateTimeLockParams({
+        amount: amountBelowMinThreshold,
+        asset: ZERO_ADDRESS,
+        assetType: 0,
+      })
     ).to.emit(defaultTimeLockStrategy, "PeriodReset");
 
     const newLastResetTimestamp =

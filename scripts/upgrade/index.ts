@@ -6,7 +6,6 @@ import {
 import {
   getPoolAddressesProvider,
   getPoolProxy,
-  getTimeLockProxy,
 } from "../../helpers/contracts-getters";
 import dotenv from "dotenv";
 import {ZERO_ADDRESS} from "../../helpers/constants";
@@ -59,7 +58,6 @@ export const resetPool = async (verify = false) => {
   }
 
   console.time("deploy PoolComponent");
-  const timeLockProxy = await getTimeLockProxy();
   const {
     poolCore,
     poolParameters,
@@ -69,11 +67,7 @@ export const resetPool = async (verify = false) => {
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
     poolApeStakingSelectors: newPoolApeStakingSelectors,
-  } = await deployPoolComponents(
-    addressesProvider.address,
-    timeLockProxy.address,
-    verify
-  );
+  } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
   const implementations = [
@@ -204,7 +198,6 @@ export const upgradePool = async (verify = false) => {
     poolParaProxyInterfacesSelectors: oldPoolParaProxyInterfacesSelectors,
   } = await getPoolSignaturesFromDb();
 
-  const timeLockProxy = await getTimeLockProxy();
   const {
     poolCore,
     poolParameters,
@@ -216,11 +209,7 @@ export const upgradePool = async (verify = false) => {
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
     poolApeStakingSelectors: newPoolApeStakingSelectors,
     poolParaProxyInterfacesSelectors: newPoolParaProxyInterfacesSelectors,
-  } = await deployPoolComponents(
-    addressesProvider.address,
-    timeLockProxy.address,
-    verify
-  );
+  } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
   const implementations = [
