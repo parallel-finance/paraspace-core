@@ -14,6 +14,7 @@ describe("TimeLock functionality tests", () => {
   const minTime = 5;
   const midTime = 300;
   const maxTime = 3600;
+  let timeLockProxy;
 
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
@@ -26,11 +27,11 @@ describe("TimeLock functionality tests", () => {
     } = testEnv;
 
     // User 1 - Deposit dai
-    await supplyAndValidate(dai, "200000", user1, true);
+    await supplyAndValidate(dai, "20000000", user1, true);
     // User 2 - Deposit usdc
     await supplyAndValidate(usdc, "200000", user2, true);
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
-    const midThreshold = await convertToCurrencyDecimals(usdc.address, "10000");
+    const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
 
     const defaultStrategy = await deployDefaultTimeLockStrategy(
       pool.address,
@@ -57,7 +58,13 @@ describe("TimeLock functionality tests", () => {
     return testEnv;
   };
 
-  it("borrowed amount below minThreshold should be timeBlocked for 1 block only", async () => {
+  before(async () => {
+    const testEnv = await loadFixture(testEnvFixture);
+
+    timeLockProxy = await getTimeLockProxy();
+  });
+
+  it("borrowed amount below minThreshold should be time locked for 1 block only", async () => {
     const {
       pool,
       users: [user1],
@@ -77,13 +84,80 @@ describe("TimeLock functionality tests", () => {
 
     await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
 
-    const timeLockProxy = await getTimeLockProxy();
     const balanceBefore = await usdc.balanceOf(user1.address);
 
     await advanceTimeAndBlock(10);
 
     await waitForTx(await timeLockProxy.connect(user1.signer).claim("0"));
 
+    const balanceAfter = await usdc.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
+  });
+
+  it("borrowed amount below above min and below mid thresholds should be time locked for 300 seconds", async () => {
+    const {
+      pool,
+      users: [user1],
+      usdc,
+    } = await loadFixture(fixture);
+
+    const amount = await convertToCurrencyDecimals(usdc.address, "1200");
+    //FIXME(alan): may we have a error code for this.
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .borrow(usdc.address, amount, "0", user1.address, {
+          gasLimit: 5000000,
+        })
+    );
+
+    await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
+
+    const balanceBefore = await usdc.balanceOf(user1.address);
+
+    await advanceTimeAndBlock(10);
+
+    await expect(timeLockProxy.connect(user1.signer).claim("0")).to.be.reverted;
+
+    await advanceTimeAndBlock(300);
+
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim("0"));
+    const balanceAfter = await usdc.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
+  });
+
+  it("borrowed amount below above max thresholds should be time locked for 3600 seconds", async () => {
+    const {
+      pool,
+      users: [user1],
+      usdc,
+    } = await loadFixture(fixture);
+
+    const amount = await convertToCurrencyDecimals(usdc.address, "2200");
+    //FIXME(alan): may we have a error code for this.
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .borrow(usdc.address, amount, "0", user1.address, {
+          gasLimit: 5000000,
+        })
+    );
+
+    await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
+
+    const balanceBefore = await usdc.balanceOf(user1.address);
+
+    await advanceTimeAndBlock(300);
+
+    await expect(timeLockProxy.connect(user1.signer).claim("0")).to.be.reverted;
+
+    await advanceTimeAndBlock(3400);
+
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim("0"));
     const balanceAfter = await usdc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));

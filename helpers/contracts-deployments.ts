@@ -266,6 +266,7 @@ import {
   DefaultTimeLockStrategy__factory,
   GenericLogic__factory,
   GenericLogic,
+  DefaultTimeLockStrategy,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2946,4 +2947,4 @@ export const deployDefaultTimeLockStrategy = async (
       period,
     ],
     verify
-  ) as Promise<DefaultReserveAuctionStrategy>;
+  ) as Promise<DefaultTimeLockStrategy>;
