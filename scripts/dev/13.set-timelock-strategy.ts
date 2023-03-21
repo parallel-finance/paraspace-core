@@ -1,8 +1,10 @@
 import rawBRE from "hardhat";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 import {deployDefaultTimeLockStrategy} from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
   getPoolConfiguratorProxy,
+  getPoolProxy,
   getUiPoolDataProvider,
 } from "../../helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../../helpers/contracts-helpers";
@@ -12,9 +14,16 @@ const setTimeLockStrategy = async () => {
   console.time("set-timelock-strategy");
 
   const ui = await getUiPoolDataProvider();
+  const pool = await getPoolProxy();
   const provider = await getPoolAddressesProvider();
   const [reservesData] = await ui.getReservesData(provider.address);
   for (const x of reservesData) {
+    if (
+      (await pool.getReserveData(x.underlyingAsset)).timeLockStrategyAddress !=
+      ZERO_ADDRESS
+    ) {
+      continue;
+    }
     const minTime = 5;
     const midTime = 300;
     const maxTime = 3600;

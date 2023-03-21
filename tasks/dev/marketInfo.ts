@@ -54,6 +54,11 @@ task("market-info", "Print markets info")
         await getProxyImplementation(x.variableDebtTokenAddress)
       );
       console.log(
+        " stableDebtTokenImpl:",
+        await getProxyImplementation(x.stableDebtTokenAddress)
+      );
+      console.log(" stableDebtTokenProxy:", x.stableDebtTokenAddress);
+      console.log(
         " interestRateStrategyAddress:",
         x.interestRateStrategyAddress
       );

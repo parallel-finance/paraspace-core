@@ -424,6 +424,10 @@ set-traits-multipliers:
 upgrade-eth-instant-withdraw:
 	make SCRIPT_PATH=./scripts/dev/12.update-eth-instant-withdraw.ts run
 
+.PHONY: set-timelock-strategy
+set-timelock-strategy:
+	make SCRIPT_PATH=./scripts/dev/13.set-timelock-strategy.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
