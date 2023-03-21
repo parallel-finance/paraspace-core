@@ -10,6 +10,8 @@ import {IAutoCompoundApe} from "../interfaces/IAutoCompoundApe.sol";
 import {CApe} from "./CApe.sol";
 import {IVoteDelegator} from "./interfaces/IVoteDelegator.sol";
 import {IDelegation} from "./interfaces/IDelegation.sol";
+import {IACLManager} from "../interfaces/IACLManager.sol";
+import {Errors} from "../protocol/libraries/helpers/Errors.sol";
 
 contract AutoCompoundApe is
     Initializable,
@@ -31,10 +33,16 @@ contract AutoCompoundApe is
     IERC20 public immutable apeCoin;
     uint256 public bufferBalance;
     uint256 public stakingBalance;
+    IACLManager private immutable aclManager;
 
-    constructor(address _apeCoin, address _apeStaking) {
+    constructor(
+        address _apeCoin,
+        address _apeStaking,
+        address _aclManager
+    ) {
         apeStaking = ApeCoinStaking(_apeStaking);
         apeCoin = IERC20(_apeCoin);
+        aclManager = IACLManager(_aclManager);
     }
 
     function initialize() public initializer {
@@ -150,7 +158,7 @@ contract AutoCompoundApe is
         address token,
         address to,
         uint256 amount
-    ) external onlyOwner {
+    ) external onlyPoolAdmin {
         if (token == address(apeCoin)) {
             require(
                 bufferBalance <= (apeCoin.balanceOf(address(this)) - amount),
@@ -165,13 +173,13 @@ contract AutoCompoundApe is
         address delegateContract,
         bytes32 spaceId,
         address delegate
-    ) external onlyOwner {
+    ) external onlyPoolAdmin {
         IDelegation(delegateContract).setDelegate(spaceId, delegate);
     }
 
     function clearVotingDelegate(address delegateContract, bytes32 spaceId)
         external
-        onlyOwner
+        onlyPoolAdmin
     {
         IDelegation(delegateContract).clearDelegate(spaceId);
     }
@@ -184,15 +192,46 @@ contract AutoCompoundApe is
         return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 
-    function pause() external onlyOwner {
+    function pause() external onlyEmergencyOrPoolAdmin {
         _pause();
     }
 
-    function unpause() external onlyOwner {
+    function unpause() external onlyPoolAdmin {
         _unpause();
     }
 
-    function rebaseFromApeCoinStaking() external onlyOwner {
+    function rebaseFromApeCoinStaking() external onlyPoolAdmin {
         (stakingBalance, ) = apeStaking.addressPosition(address(this));
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
+        _;
+    }
+
+    /**
+     * @dev Only emergency or pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyEmergencyOrPoolAdmin() {
+        _onlyPoolOrEmergencyAdmin();
+        _;
+    }
+
+    function _onlyPoolAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function _onlyPoolOrEmergencyAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender) ||
+                aclManager.isEmergencyAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
     }
 }

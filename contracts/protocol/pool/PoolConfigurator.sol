@@ -221,11 +221,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function unpauseReserve(address asset)
-        public
-        override
-        onlyPoolAdmin
-    {
+    function unpauseReserve(address asset) public override onlyPoolAdmin {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
         currentConfig.setPaused(false);
