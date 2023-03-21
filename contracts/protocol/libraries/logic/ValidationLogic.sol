@@ -83,7 +83,7 @@ library ValidationLogic {
 
         require(reserveAssetType == assetType, Errors.INVALID_ASSET_TYPE);
         require(isActive, Errors.RESERVE_INACTIVE);
-        require(!isPaused, Errors.RESERVE_PAUSED);
+        // require(!isPaused, Errors.RESERVE_PAUSED);
         require(!isFrozen, Errors.RESERVE_FROZEN);
 
         uint256 supplyCap = reserveCache.reserveConfiguration.getSupplyCap();
@@ -436,7 +436,7 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(isActive, Errors.RESERVE_INACTIVE);
-        require(!isPaused, Errors.RESERVE_PAUSED);
+        // require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
     function validateSetUseERC721AsCollateral(
@@ -458,7 +458,7 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
         require(isActive, Errors.RESERVE_INACTIVE);
-        require(!isPaused, Errors.RESERVE_PAUSED);
+        // require(!isPaused, Errors.RESERVE_PAUSED);
 
         INToken nToken = INToken(reserveCache.xTokenAddress);
         if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
