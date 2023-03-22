@@ -21,6 +21,7 @@ describe("TimeLock functionality tests", () => {
     const {
       dai,
       usdc,
+      pool,
       users: [user1, user2],
       poolAdmin,
     } = testEnv;
@@ -33,6 +34,7 @@ describe("TimeLock functionality tests", () => {
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
 
     const defaultStrategy = await deployDefaultTimeLockStrategy(
+      pool.address,
       minThreshold.toString(),
       midThreshold.toString(),
       minTime.toString(),
@@ -86,7 +88,7 @@ describe("TimeLock functionality tests", () => {
 
     await advanceTimeAndBlock(10);
 
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim("0"));
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
 
     const balanceAfter = await usdc.balanceOf(user1.address);
 
@@ -117,11 +119,12 @@ describe("TimeLock functionality tests", () => {
 
     await advanceTimeAndBlock(10);
 
-    await expect(timeLockProxy.connect(user1.signer).claim("0")).to.be.reverted;
+    await expect(timeLockProxy.connect(user1.signer).claim(["0"])).to.be
+      .reverted;
 
     await advanceTimeAndBlock(300);
 
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim("0"));
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
     const balanceAfter = await usdc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
@@ -151,11 +154,12 @@ describe("TimeLock functionality tests", () => {
 
     await advanceTimeAndBlock(300);
 
-    await expect(timeLockProxy.connect(user1.signer).claim("0")).to.be.reverted;
+    await expect(timeLockProxy.connect(user1.signer).claim(["0"])).to.be
+      .reverted;
 
     await advanceTimeAndBlock(3400);
 
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim("0"));
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
     const balanceAfter = await usdc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));

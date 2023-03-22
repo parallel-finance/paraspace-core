@@ -295,10 +295,12 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
+  getTimeLockProxy,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
   getContractAddressInDb,
+  getEthersSigners,
   getFunctionSignatures,
   getFunctionSignaturesFromDb,
   insertContractAddressInDb,
@@ -2664,21 +2666,27 @@ export const deployParaSpaceAirdrop = async (
     verify
   ) as Promise<ParaSpaceAirdrop>;
 
-export const deployTimeLock = async (
-  poolAddress: tEthereumAddress,
+export const deployTimeLockImpl = async (
+  provider: tEthereumAddress,
   verify?: boolean
-) => {
-  const implementation = await withSaveAndVerify(
+) =>
+  await withSaveAndVerify(
     new TimeLock__factory(await getFirstSigner()),
     eContractid.TimeLockImpl,
-    [poolAddress],
+    [provider],
     verify
   );
+
+export const deployTimeLock = async (
+  provider: tEthereumAddress,
+  verify?: boolean
+) => {
+  const impl = await deployTimeLockImpl(provider, verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
 
-  const initData = implementation.interface.encodeFunctionData("initialize");
+  const initData = impl.interface.encodeFunctionData("initialize");
 
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
@@ -2690,13 +2698,14 @@ export const deployTimeLock = async (
   await waitForTx(
     await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
       "initialize(address,address,bytes)"
-    ](implementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+    ](impl.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
   return proxyInstance as TimeLock;
 };
 
 export const deployDefaultTimeLockStrategy = async (
+  pool: string,
   minThreshold: string,
   midThreshold: string,
   minWaitTime: string,
@@ -2711,6 +2720,7 @@ export const deployDefaultTimeLockStrategy = async (
     new DefaultTimeLockStrategy__factory(await getFirstSigner()),
     eContractid.DefaultTimeLockStrategy,
     [
+      pool,
       minThreshold,
       midThreshold,
       minWaitTime,

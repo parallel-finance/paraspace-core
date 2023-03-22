@@ -13,6 +13,7 @@ import {IVariableDebtToken} from "../../interfaces/IVariableDebtToken.sol";
 import {EIP712Base} from "./base/EIP712Base.sol";
 import {DebtTokenBase} from "./base/DebtTokenBase.sol";
 import {ScaledBalanceTokenBaseERC20} from "./base/ScaledBalanceTokenBaseERC20.sol";
+import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 
 /**
  * @title VariableDebtToken
@@ -89,7 +90,7 @@ contract VariableDebtToken is
         public
         view
         virtual
-        override
+        override(IVariableDebtToken, IncentivizedERC20)
         returns (uint256)
     {
         uint256 scaledBalance = super.balanceOf(user);

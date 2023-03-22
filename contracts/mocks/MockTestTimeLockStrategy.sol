@@ -11,4 +11,11 @@ contract MockTestTimeLockStrategy is ITimeLockStrategy {
 
         return timeLockParams;
     }
+
+    function getTimeLockStrategyData()
+        external
+        view
+        returns (ITimeLockStrategy.TimeLockStrategyData memory TimeLockStrategyData) {
+
+        }
 }

@@ -1,17 +1,23 @@
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {BigNumber} from "ethers";
-import {ZERO_ADDRESS} from "../helpers/constants";
+import {
+  advanceTimeAndBlock,
+  timeLatest,
+  waitForTx,
+} from "../helpers/misc-utils";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {deployDefaultTimeLockStrategy} from "../helpers/contracts-deployments";
-import {advanceTimeAndBlock, timeLatest} from "../helpers/misc-utils";
-import {DefaultTimeLockStrategy} from "../types";
-import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
+import {TestEnv} from "./helpers/make-suite";
+import {DefaultTimeLockStrategy} from "../types";
+import {ZERO_ADDRESS} from "../helpers/constants";
+import {ProtocolErrors} from "../helpers/types";
 
 describe("defaultTimeLockStrategy tests", function () {
   let defaultTimeLockStrategy: DefaultTimeLockStrategy;
   let testEnv: TestEnv;
   let user1;
+  let user2;
 
   const minThreshold = BigNumber.from(10);
   const midThreshold = BigNumber.from(20);
@@ -30,8 +36,10 @@ describe("defaultTimeLockStrategy tests", function () {
     const {users} = testEnv;
 
     user1 = users[0];
+    user2 = users[1];
 
     defaultTimeLockStrategy = await deployDefaultTimeLockStrategy(
+      user1.address,
       minThreshold.toString(),
       midThreshold.toString(),
       minWaitTime.toString(),
@@ -56,7 +64,7 @@ describe("defaultTimeLockStrategy tests", function () {
     expect(await defaultTimeLockStrategy.POOL_PERIOD_LIMIT()).to.equal(
       poolPeriodLimit
     );
-    expect(await defaultTimeLockStrategy.POOL_PERIOD_RATE_WAIT_TIME()).to.equal(
+    expect(await defaultTimeLockStrategy.POOL_PERIOD_WAIT_TIME()).to.equal(
       poolPeriodWaitTime
     );
     expect(await defaultTimeLockStrategy.PERIOD()).to.equal(period);
@@ -76,13 +84,15 @@ describe("defaultTimeLockStrategy tests", function () {
         assetType: 0,
       });
     expect(timeLockParams.releaseTime).to.be.gte(minWaitTime);
-    await defaultTimeLockStrategy
-      .connect(user1.signer)
-      .calculateTimeLockParams({
-        amount: amount,
-        asset: ZERO_ADDRESS,
-        assetType: 0,
-      });
+    await waitForTx(
+      await defaultTimeLockStrategy
+        .connect(user1.signer)
+        .calculateTimeLockParams({
+          amount: amount,
+          asset: ZERO_ADDRESS,
+          assetType: 0,
+        })
+    );
     expect(await defaultTimeLockStrategy.totalAmountInCurrentPeriod()).to.eq(
       amount
     );
@@ -147,13 +157,15 @@ describe("defaultTimeLockStrategy tests", function () {
 
   it("should add POOL_PERIOD_RATE_WAIT_TIME when the updated total amount is greater than MAX_POOL_PERIOD_RATE", async function () {
     // Set totalAmountInCurrentPeriod to a value greater than MAX_POOL_PERIOD_RATE
-    await defaultTimeLockStrategy
-      .connect(user1.signer)
-      .calculateTimeLockParams({
-        amount: poolPeriodLimit.mul(2),
-        asset: ZERO_ADDRESS,
-        assetType: 0,
-      });
+    await waitForTx(
+      await defaultTimeLockStrategy
+        .connect(user1.signer)
+        .calculateTimeLockParams({
+          amount: poolPeriodLimit.mul(2),
+          asset: ZERO_ADDRESS,
+          assetType: 0,
+        })
+    );
 
     const timeLockParams = await defaultTimeLockStrategy
       .connect(user1.signer)
@@ -165,5 +177,17 @@ describe("defaultTimeLockStrategy tests", function () {
     const currentTime = (await timeLatest()).toNumber();
     const expectedReleaseTime = currentTime + minWaitTime + poolPeriodWaitTime;
     expect(timeLockParams.releaseTime).to.be.closeTo(expectedReleaseTime, 15);
+  });
+
+  it("should revert when not called by the pool", async function () {
+    const amount = minThreshold;
+
+    await expect(
+      defaultTimeLockStrategy.connect(user2.signer).calculateTimeLockParams({
+        amount: amount,
+        asset: ZERO_ADDRESS,
+        assetType: 0,
+      })
+    ).to.be.revertedWith(ProtocolErrors.CALLER_MUST_BE_POOL);
   });
 });

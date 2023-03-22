@@ -18,16 +18,6 @@ import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using GPv2SafeERC20 for IERC20;
 
-    struct Agreement {
-        DataTypes.AssetType assetType;
-        DataTypes.TimeLockActionType actionType;
-        bool isFrozen;
-        address asset;
-        address beneficiary;
-        uint48 releaseTime;
-        uint256[] tokenIdsOrAmounts;
-    }
-
     event AgreementCreated(
         uint256 agreementId,
         DataTypes.AssetType assetType,
@@ -107,8 +97,6 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         internal
         returns (Agreement memory)
     {
-        require(!frozen, "TimeLock is frozen");
-
         Agreement memory agreement = agreements[agreementId];
         require(msg.sender == agreement.beneficiary, "Not beneficiary");
         require(
@@ -130,22 +118,32 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         return agreement;
     }
 
-    function claim(uint256 agreementId) external nonReentrant {
-        Agreement memory agreement = _validateAndDeleteAgreement(agreementId);
+    function claim(uint256[] calldata agreementIds) external nonReentrant {
+        require(!frozen, "TimeLock is frozen");
 
-        if (agreement.assetType == DataTypes.AssetType.ERC20) {
-            IERC20(agreement.asset).safeTransfer(
-                agreement.beneficiary,
-                agreement.tokenIdsOrAmounts[0]
+        for (uint256 index = 0; index < agreementIds.length; index++) {
+            Agreement memory agreement = _validateAndDeleteAgreement(
+                agreementIds[index]
             );
-        } else if (agreement.assetType == DataTypes.AssetType.ERC721) {
-            IERC721 erc721 = IERC721(agreement.asset);
-            for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
-                erc721.safeTransferFrom(
-                    address(this),
+
+            if (agreement.assetType == DataTypes.AssetType.ERC20) {
+                IERC20(agreement.asset).safeTransfer(
                     agreement.beneficiary,
-                    agreement.tokenIdsOrAmounts[i]
+                    agreement.tokenIdsOrAmounts[0]
                 );
+            } else if (agreement.assetType == DataTypes.AssetType.ERC721) {
+                IERC721 erc721 = IERC721(agreement.asset);
+                for (
+                    uint256 i = 0;
+                    i < agreement.tokenIdsOrAmounts.length;
+                    i++
+                ) {
+                    erc721.safeTransferFrom(
+                        address(this),
+                        agreement.beneficiary,
+                        agreement.tokenIdsOrAmounts[i]
+                    );
+                }
             }
         }
     }

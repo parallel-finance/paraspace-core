@@ -2,8 +2,11 @@
 pragma solidity 0.8.10;
 
 import "../interfaces/ITimeLockStrategy.sol";
+import "../protocol/libraries/helpers/Errors.sol";
 
 contract DefaultTimeLockStrategy is ITimeLockStrategy {
+    address private immutable POOL;
+
     uint256 public immutable MIN_THRESHOLD;
     uint256 public immutable MID_THRESHOLD;
 
@@ -11,7 +14,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
     uint48 public immutable MID_WAIT_TIME;
     uint48 public immutable MAX_WAIT_TIME;
 
-    uint48 public immutable POOL_PERIOD_RATE_WAIT_TIME;
+    uint48 public immutable POOL_PERIOD_WAIT_TIME;
     uint256 public immutable POOL_PERIOD_LIMIT;
     uint256 public immutable PERIOD;
 
@@ -20,7 +23,13 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
 
     event PeriodReset();
 
+    modifier onlyPool() {
+        require(msg.sender == POOL, Errors.CALLER_MUST_BE_POOL);
+        _;
+    }
+
     constructor(
+        address pool,
         uint256 minThreshold,
         uint256 midThreshold,
         uint48 minWaitTime,
@@ -30,6 +39,8 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         uint48 poolPeriodWaitTime,
         uint256 period
     ) {
+        POOL = pool;
+
         MIN_THRESHOLD = minThreshold;
         MID_THRESHOLD = midThreshold;
 
@@ -38,7 +49,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         MAX_WAIT_TIME = maxWaitTime;
 
         POOL_PERIOD_LIMIT = poolPeriodLimit;
-        POOL_PERIOD_RATE_WAIT_TIME = poolPeriodWaitTime;
+        POOL_PERIOD_WAIT_TIME = poolPeriodWaitTime;
         PERIOD = period;
     }
 
@@ -57,13 +68,13 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         totalAmountInCurrentPeriod = uint128(newTotalAmountInCurrentPeriod);
 
         if (newTotalAmountInCurrentPeriod > POOL_PERIOD_LIMIT) {
-            extraDelay = POOL_PERIOD_RATE_WAIT_TIME;
+            extraDelay = POOL_PERIOD_WAIT_TIME;
         }
     }
 
     function calculateTimeLockParams(
         DataTypes.TimeLockFactorParams calldata params
-    ) external returns (DataTypes.TimeLockParams memory) {
+    ) external onlyPool returns (DataTypes.TimeLockParams memory) {
         uint48 currentTimestamp = uint48(block.timestamp);
         DataTypes.TimeLockParams memory timeLockParams;
 
@@ -80,5 +91,23 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         }
 
         return timeLockParams;
+    }
+
+    function getTimeLockStrategyData()
+        external
+        view
+        returns (TimeLockStrategyData memory timeLockStrategyData)
+    {
+        timeLockStrategyData.minThreshold = MIN_THRESHOLD;
+        timeLockStrategyData.midThreshold = MID_THRESHOLD;
+        timeLockStrategyData.minWaitTime = MIN_WAIT_TIME;
+        timeLockStrategyData.midWaitTime = MID_WAIT_TIME;
+        timeLockStrategyData.maxWaitTime = MAX_WAIT_TIME;
+        timeLockStrategyData.poolPeriodLimit = POOL_PERIOD_LIMIT;
+        timeLockStrategyData.poolPeriodWaitTime = POOL_PERIOD_WAIT_TIME;
+        timeLockStrategyData.period = PERIOD;
+        timeLockStrategyData
+            .totalAmountInCurrentPeriod = totalAmountInCurrentPeriod;
+        timeLockStrategyData.lastResetTimestamp = lastResetTimestamp;
     }
 }
