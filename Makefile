@@ -420,6 +420,10 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
+.PHONY: set-timelock-strategy
+set-timelock-strategy:
+	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run

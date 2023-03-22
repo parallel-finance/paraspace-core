@@ -61,6 +61,7 @@ import {
   ERC721,
   ERC721__factory,
   ExecutorWithTimelock__factory,
+  IERC20Detailed__factory,
   IPool__factory,
   MultiSendCallOnly__factory,
   NToken__factory,
@@ -322,7 +323,12 @@ export const convertToCurrencyDecimals = async (
   tokenAddress: tEthereumAddress,
   amount: string
 ) => {
-  const token = await getIErc20Detailed(tokenAddress);
+  const token = await IERC20Detailed__factory.connect(
+    tokenAddress,
+    new ethers.providers.JsonRpcProvider(
+      (DRE.network.config as HttpNetworkConfig).url
+    )
+  );
   const decimals = (await token.decimals()).toString();
 
   return DRE.ethers.utils.parseUnits(amount, decimals);
