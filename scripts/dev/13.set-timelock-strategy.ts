@@ -40,6 +40,7 @@ const setTimeLockStrategy = async () => {
     );
 
     const defaultStrategy = await deployDefaultTimeLockStrategy(
+      await getPoolProxy(),
       minThreshold.toString(),
       midThreshold.toString(),
       minTime.toString(),
