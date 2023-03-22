@@ -14,7 +14,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
     uint48 public immutable MID_WAIT_TIME;
     uint48 public immutable MAX_WAIT_TIME;
 
-    uint48 public immutable POOL_PERIOD_RATE_WAIT_TIME;
+    uint48 public immutable POOL_PERIOD_WAIT_TIME;
     uint256 public immutable POOL_PERIOD_LIMIT;
     uint256 public immutable PERIOD;
 
@@ -49,7 +49,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         MAX_WAIT_TIME = maxWaitTime;
 
         POOL_PERIOD_LIMIT = poolPeriodLimit;
-        POOL_PERIOD_RATE_WAIT_TIME = poolPeriodWaitTime;
+        POOL_PERIOD_WAIT_TIME = poolPeriodWaitTime;
         PERIOD = period;
     }
 
@@ -68,7 +68,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         totalAmountInCurrentPeriod = uint128(newTotalAmountInCurrentPeriod);
 
         if (newTotalAmountInCurrentPeriod > POOL_PERIOD_LIMIT) {
-            extraDelay = POOL_PERIOD_RATE_WAIT_TIME;
+            extraDelay = POOL_PERIOD_WAIT_TIME;
         }
     }
 
@@ -91,5 +91,23 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         }
 
         return timeLockParams;
+    }
+
+    function getTimeLockStrategyData()
+        external
+        view
+        returns (TimeLockStrategyData memory timeLockStrategyData)
+    {
+        timeLockStrategyData.minThreshold = MIN_THRESHOLD;
+        timeLockStrategyData.midThreshold = MID_THRESHOLD;
+        timeLockStrategyData.minWaitTime = MIN_WAIT_TIME;
+        timeLockStrategyData.midWaitTime = MID_WAIT_TIME;
+        timeLockStrategyData.maxWaitTime = MAX_WAIT_TIME;
+        timeLockStrategyData.poolPeriodLimit = POOL_PERIOD_LIMIT;
+        timeLockStrategyData.poolPeriodWaitTime = POOL_PERIOD_WAIT_TIME;
+        timeLockStrategyData.period = PERIOD;
+        timeLockStrategyData
+            .totalAmountInCurrentPeriod = totalAmountInCurrentPeriod;
+        timeLockStrategyData.lastResetTimestamp = lastResetTimestamp;
     }
 }

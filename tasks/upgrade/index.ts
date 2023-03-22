@@ -51,6 +51,14 @@ task("upgrade:auto-compound-ape", "upgrade auto compound ape").setAction(
   }
 );
 
+task("upgrade:timelock", "upgrade timelock").setAction(async (_, DRE) => {
+  const {upgradeTimeLock} = await import("../../scripts/upgrade/timeLock");
+  await DRE.run("set-DRE");
+  console.time("upgrade timelock");
+  await upgradeTimeLock(ETHERSCAN_VERIFICATION);
+  console.timeEnd("upgrade timelock");
+});
+
 task("upgrade:p2p-pair-staking", "upgrade p2p pair staking").setAction(
   async (_, DRE) => {
     const {upgradeP2PPairStaking} = await import(

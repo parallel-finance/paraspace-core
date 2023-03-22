@@ -18,16 +18,6 @@ import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using GPv2SafeERC20 for IERC20;
 
-    struct Agreement {
-        DataTypes.AssetType assetType;
-        DataTypes.TimeLockActionType actionType;
-        bool isFrozen;
-        address asset;
-        address beneficiary;
-        uint48 releaseTime;
-        uint256[] tokenIdsOrAmounts;
-    }
-
     event AgreementCreated(
         uint256 agreementId,
         DataTypes.AssetType assetType,

@@ -12,6 +12,7 @@ import {
   getPoolAddressesProvider,
   getPoolAddressesProviderRegistry,
   getReservesSetupHelper,
+  getTimeLockProxy,
   getWETHGatewayProxy,
   getWPunkGatewayProxy,
 } from "../../../helpers/contracts-getters";
@@ -461,6 +462,48 @@ export const step_22 = async (
         }
       }
       console.timeEnd("transferring HelperContract ownership...");
+      console.log();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // TimeLock
+    ////////////////////////////////////////////////////////////////////////////////
+    if (await getContractAddressInDb(eContractid.TimeLockProxy)) {
+      console.time("transferring TimeLockProxy ownership...");
+      const timeLock = await getTimeLockProxy();
+      const timeLockProxy = await getInitializableAdminUpgradeabilityProxy(
+        timeLock.address
+      );
+      if (DRY_RUN) {
+        const encodedData1 = timeLockProxy.interface.encodeFunctionData(
+          "changeAdmin",
+          [paraSpaceAdminAddress]
+        );
+        await dryRunEncodedData(timeLockProxy.address, encodedData1);
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          const encodedData2 = timeLock.interface.encodeFunctionData(
+            "transferOwnership",
+            [gatewayAdminAddress]
+          );
+          await dryRunEncodedData(timeLock.address, encodedData2);
+        }
+      } else {
+        await waitForTx(
+          await timeLockProxy.changeAdmin(
+            paraSpaceAdminAddress,
+            GLOBAL_OVERRIDES
+          )
+        );
+        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
+          await waitForTx(
+            await timeLock.transferOwnership(
+              gatewayAdminAddress,
+              GLOBAL_OVERRIDES
+            )
+          );
+        }
+      }
+      console.timeEnd("transferring TimeLock ownership...");
       console.log();
     }
 

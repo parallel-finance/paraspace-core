@@ -64,7 +64,7 @@ describe("defaultTimeLockStrategy tests", function () {
     expect(await defaultTimeLockStrategy.POOL_PERIOD_LIMIT()).to.equal(
       maxPoolPeriodRate
     );
-    expect(await defaultTimeLockStrategy.POOL_PERIOD_RATE_WAIT_TIME()).to.equal(
+    expect(await defaultTimeLockStrategy.POOL_PERIOD_WAIT_TIME()).to.equal(
       maxPoolPeriodWaitTime
     );
     expect(await defaultTimeLockStrategy.PERIOD()).to.equal(period);
