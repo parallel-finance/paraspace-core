@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../dependencies/openzeppelin/upgradeability/ERC20Upgradeable.sol";
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeERC20.sol";
@@ -14,14 +13,16 @@ import "../interfaces/IYieldInfo.sol";
 import "../interfaces/IPoolCore.sol";
 import "../protocol/libraries/math/WadRayMath.sol";
 import "../protocol/libraries/math/PercentageMath.sol";
-import {VoteDelegator} from "./VoteDelegator.sol";
+import "../interfaces/IACLManager.sol";
+import "../protocol/libraries/helpers/Errors.sol";
+import "./interfaces/IVoteDelegator.sol";
+import "./interfaces/IDelegation.sol";
 
 contract AutoYieldApe is
     Initializable,
-    OwnableUpgradeable,
     ERC20Upgradeable,
-    VoteDelegator,
     IAutoYieldApe,
+    IVoteDelegator,
     IYieldInfo
 {
     using PercentageMath for uint256;
@@ -39,6 +40,7 @@ contract AutoYieldApe is
     address private immutable _yieldToken;
     IPoolCore private immutable _lendingPool;
     ISwapRouter private immutable _swapRouter;
+    IACLManager private immutable _aclManager;
 
     //The last accrued yield index
     uint256 private _poolLastAccruedIndex;
@@ -60,7 +62,8 @@ contract AutoYieldApe is
         address apeCoin,
         address yieldUnderlying,
         address lendingPool,
-        address swapRouter
+        address swapRouter,
+        address aclManager
     ) {
         _apeStaking = ApeCoinStaking(apeStaking);
         _apeCoin = apeCoin;
@@ -74,10 +77,10 @@ contract AutoYieldApe is
             "unsupported yield underlying token"
         );
         _swapRouter = ISwapRouter(swapRouter);
+        _aclManager = IACLManager(aclManager);
     }
 
     function initialize() public initializer {
-        __Ownable_init();
         __ERC20_init("ParaSpace Auto Yield APE", "yAPE");
 
         //approve ApeCoin for apeCoinStaking
@@ -181,7 +184,7 @@ contract AutoYieldApe is
      * @notice Set a new address for harvest role. Only owner can call this function
      * @param _harvestOperator The address of the harvest role
      **/
-    function setHarvestOperator(address _harvestOperator) external onlyOwner {
+    function setHarvestOperator(address _harvestOperator) external onlyPoolAdmin {
         require(_harvestOperator != address(0), "zero address");
         address oldOperator = harvestOperator;
         if (oldOperator != _harvestOperator) {
@@ -194,7 +197,7 @@ contract AutoYieldApe is
      * @notice Set a new harvest fee rate. Only owner can call this function
      * @param _harvestFeeRate The new fee rate for harvest. Expressed in bps, a value of 30 results in 0.3%
      **/
-    function setHarvestFeeRate(uint256 _harvestFeeRate) external onlyOwner {
+    function setHarvestFeeRate(uint256 _harvestFeeRate) external onlyPoolAdmin {
         require(
             _harvestFeeRate < PercentageMath.HALF_PERCENTAGE_FACTOR,
             "Fee Too High"
@@ -216,10 +219,77 @@ contract AutoYieldApe is
         address token,
         address to,
         uint256 amount
-    ) external onlyOwner {
+    ) external onlyPoolAdmin {
         require(token != address(_yieldToken), "cannot rescue yield token");
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
+    }
+
+    function claimHarvestFee(address receiver) external onlyPoolAdmin {
+        (uint256 freeYield, ) = _yieldAmount(address(this));
+        if (freeYield > 0) {
+            uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
+                _yieldUnderlying
+            );
+            uint256 scaledYield = freeYield.rayMul(liquidityIndex);
+            IERC20(_yieldToken).safeTransfer(receiver, scaledYield);
+
+            emit YieldClaimed(msg.sender, receiver, scaledYield);
+        }
+    }
+
+    function setVotingDelegate(
+        address delegateContract,
+        bytes32 spaceId,
+        address delegate
+    ) external onlyPoolAdmin {
+        IDelegation(delegateContract).setDelegate(spaceId, delegate);
+    }
+
+    function clearVotingDelegate(address delegateContract, bytes32 spaceId)
+        external
+        onlyPoolAdmin
+    {
+        IDelegation(delegateContract).clearDelegate(spaceId);
+    }
+
+    function getDelegate(address delegateContract, bytes32 spaceId)
+        external
+        view
+        returns (address)
+    {
+        return IDelegation(delegateContract).delegation(address(this), spaceId);
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
+        _;
+    }
+
+    /**
+     * @dev Only emergency or pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyEmergencyOrPoolAdmin() {
+        _onlyPoolOrEmergencyAdmin();
+        _;
+    }
+
+    function _onlyPoolAdmin() internal view {
+        require(
+            _aclManager.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function _onlyPoolOrEmergencyAdmin() internal view {
+        require(
+            _aclManager.isPoolAdmin(msg.sender) ||
+                _aclManager.isEmergencyAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
     }
 
     /**
@@ -330,7 +400,7 @@ contract AutoYieldApe is
             uint256 _harvestFeeRate = harvestFeeRate;
             if (_harvestFeeRate > 0) {
                 uint256 fee = _accruedYieldAmount.percentMul(_harvestFeeRate);
-                _userPendingYield[owner()] += fee;
+                _userPendingYield[address(this)] += fee;
                 _accruedYieldAmount -= fee;
             }
 
@@ -377,7 +447,7 @@ contract AutoYieldApe is
                     _poolLastAccruedIndex) / RAY;
                 _userLockFeeAmount[account] -= withdrawLockAmount;
                 _userPendingYield[account] -= withdrawFee;
-                _userPendingYield[owner()] += withdrawFee;
+                _userPendingYield[address(this)] += withdrawFee;
             }
         }
     }

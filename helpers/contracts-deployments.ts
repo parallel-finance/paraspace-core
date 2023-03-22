@@ -273,6 +273,7 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
+  getACLManager,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
@@ -2399,12 +2400,14 @@ export const deployAutoYieldApeImpl = async (verify?: boolean) => {
     (await deployApeCoinStaking(verify)).address;
   const pool = await getPoolProxy();
   const swapRouter = await getUniswapV3SwapRouter();
+  const aclManager = await getACLManager();
   const args = [
     apeCoinStaking,
     allTokens.APE.address,
     allTokens.USDC.address,
     pool.address,
     swapRouter.address,
+    aclManager.address,
   ];
 
   return withSaveAndVerify(
