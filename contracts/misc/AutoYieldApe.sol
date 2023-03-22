@@ -167,7 +167,7 @@ contract AutoYieldApe is
     }
 
     /**
-     * @notice Set a new address for harvest role. Only owner can call this function
+     * @notice Set a new address for harvest role. Only pool admin can call this function
      * @param _harvestOperator The address of the harvest role
      **/
     function setHarvestOperator(address _harvestOperator)
@@ -183,7 +183,7 @@ contract AutoYieldApe is
     }
 
     /**
-     * @notice Set a new harvest fee rate. Only owner can call this function
+     * @notice Set a new harvest fee rate. Only pool admin can call this function
      * @param _harvestFeeRate The new fee rate for harvest. Expressed in bps, a value of 30 results in 0.3%
      **/
     function setHarvestFeeRate(uint256 _harvestFeeRate) external onlyPoolAdmin {
@@ -199,7 +199,7 @@ contract AutoYieldApe is
     }
 
     /**
-     * @notice Rescue erc20 from this contract address. Only owner can call this function
+     * @notice Rescue erc20 from this contract address. Only pool admin can call this function
      * @param token The token address to be rescued, _yieldToken cannot be rescued.
      * @param to The account address to receive token
      * @param amount The amount to be rescued
@@ -214,6 +214,10 @@ contract AutoYieldApe is
         emit RescueERC20(token, to, amount);
     }
 
+    /**
+     * @notice claim harvest fee. Only pool admin can call this function
+     * @param receiver The address to receive the fee
+     **/
     function claimHarvestFee(address receiver) external onlyPoolAdmin {
         (uint256 freeYield, ) = _yieldAmount(address(this));
         if (freeYield > 0) {
@@ -227,6 +231,12 @@ contract AutoYieldApe is
         }
     }
 
+    /**
+     * @notice Set delegation for staking Ape coin voting power. Only pool admin can call this function
+     * @param delegateContract The delegate registry contract address
+     * @param spaceId The id of the space delegating for
+     * @param delegate The address to be delegate to
+     **/
     function setVotingDelegate(
         address delegateContract,
         bytes32 spaceId,
@@ -235,6 +245,11 @@ contract AutoYieldApe is
         IDelegation(delegateContract).setDelegate(spaceId, delegate);
     }
 
+    /**
+     * @notice Clear delegation for staking Ape coin voting power. Only pool admin can call this function
+     * @param delegateContract The delegate registry contract address
+     * @param spaceId The id of the space delegating for
+     **/
     function clearVotingDelegate(address delegateContract, bytes32 spaceId)
         external
         onlyPoolAdmin
@@ -242,6 +257,11 @@ contract AutoYieldApe is
         IDelegation(delegateContract).clearDelegate(spaceId);
     }
 
+    /**
+     * @notice Get delegation address for staking Ape coin voting power.
+     * @param delegateContract The delegate registry contract address
+     * @param spaceId The id of the space delegating for
+     **/
     function getDelegate(address delegateContract, bytes32 spaceId)
         external
         view
@@ -250,10 +270,16 @@ contract AutoYieldApe is
         return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 
+    /**
+     * @notice Pauses the contract. Only pool admin or emergency admin can call this function
+     **/
     function pause() external onlyEmergencyOrPoolAdmin {
         _pause();
     }
 
+    /**
+     * @notice Unpause the contract. Only pool admin or emergency admin can call this function
+     **/
     function unpause() external onlyPoolAdmin {
         _unpause();
     }
