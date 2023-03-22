@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../dependencies/openzeppelin/upgradeability/ERC20Upgradeable.sol";
+import "../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../dependencies/openzeppelin/contracts/Address.sol";
@@ -20,6 +21,7 @@ import "./interfaces/IDelegation.sol";
 
 contract AutoYieldApe is
     Initializable,
+    PausableUpgradeable,
     ERC20Upgradeable,
     IAutoYieldApe,
     IVoteDelegator,
@@ -119,7 +121,11 @@ contract AutoYieldApe is
     }
 
     /// @inheritdoc IAutoYieldApe
-    function deposit(address onBehalf, uint256 amount) external override {
+    function deposit(address onBehalf, uint256 amount)
+        external
+        override
+        whenNotPaused
+    {
         require(amount > 0, "zero amount");
         _updateYieldIndex(onBehalf, int256(amount));
         _mint(onBehalf, amount);
@@ -131,18 +137,18 @@ contract AutoYieldApe is
     }
 
     /// @inheritdoc IAutoYieldApe
-    function withdraw(uint256 amount) external override {
+    function withdraw(uint256 amount) external override whenNotPaused {
         _withdraw(amount);
     }
 
     /// @inheritdoc IAutoYieldApe
-    function claimFor(address account) external override {
+    function claimFor(address account) external override whenNotPaused {
         _updateYieldIndex(account, 0);
         _claimFor(account);
     }
 
     /// @inheritdoc IAutoYieldApe
-    function exit() external override {
+    function exit() external override whenNotPaused {
         _withdraw(balanceOf(msg.sender));
         _claimFor(msg.sender);
     }
@@ -184,7 +190,10 @@ contract AutoYieldApe is
      * @notice Set a new address for harvest role. Only owner can call this function
      * @param _harvestOperator The address of the harvest role
      **/
-    function setHarvestOperator(address _harvestOperator) external onlyPoolAdmin {
+    function setHarvestOperator(address _harvestOperator)
+        external
+        onlyPoolAdmin
+    {
         require(_harvestOperator != address(0), "zero address");
         address oldOperator = harvestOperator;
         if (oldOperator != _harvestOperator) {
@@ -259,6 +268,14 @@ contract AutoYieldApe is
         returns (address)
     {
         return IDelegation(delegateContract).delegation(address(this), spaceId);
+    }
+
+    function pause() external onlyEmergencyOrPoolAdmin {
+        _pause();
+    }
+
+    function unpause() external onlyPoolAdmin {
+        _unpause();
     }
 
     /**

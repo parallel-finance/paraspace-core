@@ -34,8 +34,12 @@ export const step_22 = async (
     riskAdminAddress: string;
   }
 ) => {
-  const {paraSpaceAdminAddress, emergencyAdminAddresses, gatewayAdminAddress, riskAdminAddress} =
-    admins || (await getParaSpaceAdmins());
+  const {
+    paraSpaceAdminAddress,
+    emergencyAdminAddresses,
+    gatewayAdminAddress,
+    riskAdminAddress,
+  } = admins || (await getParaSpaceAdmins());
 
   try {
     const addressesProviderRegistry = await getPoolAddressesProviderRegistry();
@@ -328,7 +332,10 @@ export const step_22 = async (
         await dryRunEncodedData(yApeProxy.address, encodedData1);
       } else {
         await waitForTx(
-          await yApeProxy.changeAdmin(emergencyAdminAddresses[0], GLOBAL_OVERRIDES)
+          await yApeProxy.changeAdmin(
+            emergencyAdminAddresses[0],
+            GLOBAL_OVERRIDES
+          )
         );
       }
       console.timeEnd("transferring yAPE ownership...");

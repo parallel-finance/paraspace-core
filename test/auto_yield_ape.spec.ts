@@ -1,14 +1,14 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { expect } from "chai";
-import { AutoYieldApe, PToken, PYieldToken } from "../types";
-import { TestEnv } from "./helpers/make-suite";
-import { testEnvFixture } from "./helpers/setup-env";
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {expect} from "chai";
+import {AutoYieldApe, PToken, PYieldToken} from "../types";
+import {TestEnv} from "./helpers/make-suite";
+import {testEnvFixture} from "./helpers/setup-env";
 import {
   changePriceAndValidate,
   mintAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
-import { parseEther, solidityKeccak256 } from "ethers/lib/utils";
+import {parseEther, solidityKeccak256} from "ethers/lib/utils";
 import {
   approveTo,
   createNewPool,
@@ -21,17 +21,17 @@ import {
   getPToken,
   getPYieldToken,
 } from "../helpers/contracts-getters";
-import { MAX_UINT_AMOUNT } from "../helpers/constants";
-import { advanceTimeAndBlock, waitForTx } from "../helpers/misc-utils";
-import { convertToCurrencyDecimals } from "../helpers/contracts-helpers";
-import { encodeSqrtRatioX96 } from "@uniswap/v3-sdk";
-import { BigNumber, BigNumberish } from "ethers";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
+import {BigNumber, BigNumberish} from "ethers";
 import {
   deployAggregator,
   deployMockedDelegateRegistry,
 } from "../helpers/contracts-deployments";
-import { ETHERSCAN_VERIFICATION } from "../helpers/hardhat-constants";
-import { ProtocolErrors } from "../helpers/types";
+import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
+import {ProtocolErrors} from "../helpers/types";
 
 function almostEqual(value0: BigNumberish, value1: BigNumberish) {
   const maxDiff = BigNumber.from(value0.toString()).mul(4).div("1000").abs();
@@ -47,7 +47,8 @@ describe("Auto Yield Ape Test", () => {
   let yApe: AutoYieldApe;
   let yApePToken: PYieldToken;
   let yUSDC: PToken;
-  const { CALLER_NOT_POOL_ADMIN } = ProtocolErrors;
+  const {CALLER_NOT_POOL_ADMIN, CALLER_NOT_POOL_OR_EMERGENCY_ADMIN} =
+    ProtocolErrors;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -64,10 +65,10 @@ describe("Auto Yield Ape Test", () => {
 
     yApe = await getAutoYieldApe();
 
-    const { xTokenAddress: pyApeAddress } =
+    const {xTokenAddress: pyApeAddress} =
       await protocolDataProvider.getReserveTokensAddresses(yApe.address);
     yApePToken = await getPYieldToken(pyApeAddress);
-    const { xTokenAddress: pUSDCAddress } =
+    const {xTokenAddress: pUSDCAddress} =
       await protocolDataProvider.getReserveTokensAddresses(usdc.address);
     yUSDC = await getPToken(pUSDCAddress);
 
@@ -98,10 +99,10 @@ describe("Auto Yield Ape Test", () => {
     await waitForTx(
       await ape
         .connect(user1.signer)
-      ["mint(address,uint256)"](
-        apeCoinStaking.address,
-        parseEther("100000000000")
-      )
+        ["mint(address,uint256)"](
+          apeCoinStaking.address,
+          parseEther("100000000000")
+        )
     );
 
     //yApe Oracle
@@ -129,8 +130,8 @@ describe("Auto Yield Ape Test", () => {
       usdc.address,
       "10000000000"
     );
-    await fund({ token: ape, user: user4, amount: userApeAmount });
-    await fund({ token: usdc, user: user4, amount: userUsdcAmount });
+    await fund({token: ape, user: user4, amount: userApeAmount});
+    await fund({token: usdc, user: user4, amount: userUsdcAmount});
     const nft = nftPositionManager.connect(user4.signer);
     await approveTo({
       target: nftPositionManager.address,
@@ -176,7 +177,6 @@ describe("Auto Yield Ape Test", () => {
       ape,
       usdc,
       apeCoinStaking,
-      poolAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(ape, "200", user2);
@@ -394,7 +394,6 @@ describe("Auto Yield Ape Test", () => {
       users: [, user2, , , user3],
       ape,
       usdc,
-      poolAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(ape, "1000", user2);
@@ -425,7 +424,6 @@ describe("Auto Yield Ape Test", () => {
       users: [, user2, , , user3],
       ape,
       usdc,
-      poolAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(ape, "1000", user2);
@@ -785,7 +783,7 @@ describe("Auto Yield Ape Test", () => {
 
   it("harvest fee calculation as expected", async () => {
     const {
-      users: [user1, user2, , , user3],
+      users: [, user2, , , user3],
       ape,
       usdc,
       poolAdmin,
@@ -842,6 +840,56 @@ describe("Auto Yield Ape Test", () => {
       await yUSDC.balanceOf(poolAdmin.address),
       await convertToCurrencyDecimals(usdc.address, "720")
     );
+  });
+
+  it("pause function as expected", async () => {
+    const {
+      users: [user1],
+      ape,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(ape, "400", user1);
+
+    await expect(yApe.connect(user1.signer).pause()).to.be.revertedWith(
+      CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).pause());
+
+    await expect(
+      yApe.connect(user1.signer).deposit(user1.address, parseEther("400"))
+    ).to.be.revertedWith("Pausable: paused");
+
+    await expect(yApe.connect(user1.signer).unpause()).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).unpause());
+
+    await waitForTx(
+      await yApe.connect(user1.signer).deposit(user1.address, parseEther("400"))
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).pause());
+
+    await advanceTimeAndBlock(3600);
+
+    await expect(
+      yApe.connect(user1.signer).withdraw(parseEther("400"))
+    ).to.be.revertedWith("Pausable: paused");
+
+    await expect(
+      yApe.connect(user1.signer).claimFor(user1.address)
+    ).to.be.revertedWith("Pausable: paused");
+
+    await expect(yApe.connect(user1.signer).exit()).to.be.revertedWith(
+      "Pausable: paused"
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).unpause());
+
+    await waitForTx(await yApe.connect(user1.signer).exit());
   });
 
   it("check rescueERC20", async () => {
