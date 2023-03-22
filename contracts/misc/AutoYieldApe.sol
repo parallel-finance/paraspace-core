@@ -86,38 +86,15 @@ contract AutoYieldApe is
         __ERC20_init("ParaSpace Auto Yield APE", "yAPE");
 
         //approve ApeCoin for apeCoinStaking
-        uint256 allowance = IERC20(_apeCoin).allowance(
-            address(this),
-            address(_apeStaking)
-        );
-        if (allowance == 0) {
-            IERC20(_apeCoin).safeApprove(
-                address(_apeStaking),
-                type(uint256).max
-            );
-        }
+        IERC20(_apeCoin).safeApprove(address(_apeStaking), type(uint256).max);
+
         //approve _yieldUnderlying for lending pool
-        allowance = IERC20(_yieldUnderlying).allowance(
-            address(this),
-            address(_lendingPool)
+        IERC20(_yieldUnderlying).safeApprove(
+            address(_lendingPool),
+            type(uint256).max
         );
-        if (allowance == 0) {
-            IERC20(_yieldUnderlying).safeApprove(
-                address(_lendingPool),
-                type(uint256).max
-            );
-        }
         //approve ApeCoin for uniswap
-        allowance = IERC20(_apeCoin).allowance(
-            address(this),
-            address(_swapRouter)
-        );
-        if (allowance == 0) {
-            IERC20(_apeCoin).safeApprove(
-                address(_swapRouter),
-                type(uint256).max
-            );
-        }
+        IERC20(_apeCoin).safeApprove(address(_swapRouter), type(uint256).max);
     }
 
     /// @inheritdoc IAutoYieldApe
