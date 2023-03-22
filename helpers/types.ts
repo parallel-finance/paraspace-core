@@ -55,6 +55,8 @@ export enum XTokenType {
   PTokenStETH = 10,
   PTokenSApe = 11,
   NTokenBAKC = 12,
+  PYieldToken = 13,
+  PTokenCApe = 14,
 }
 
 export type ConstructorArgs = (
