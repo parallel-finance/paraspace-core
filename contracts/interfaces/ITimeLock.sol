@@ -12,7 +12,7 @@ interface ITimeLock {
         uint48 releaseTime
     ) external returns (uint256);
 
-    function claim(uint256 agreementId) external;
+    function claim(uint256[] calldata agreementIds) external;
 
     function freezeAgreement(uint256 agreementId, bool freeze) external;
 }
