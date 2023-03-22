@@ -2638,6 +2638,7 @@ export const deployTimeLock = async (
 };
 
 export const deployDefaultTimeLockStrategy = async (
+  pool: string,
   minThreshold: string,
   midThreshold: string,
   minWaitTime: string,
@@ -2652,6 +2653,7 @@ export const deployDefaultTimeLockStrategy = async (
     new DefaultTimeLockStrategy__factory(await getFirstSigner()),
     eContractid.DefaultTimeLockStrategy,
     [
+      pool,
       minThreshold,
       midThreshold,
       minWaitTime,

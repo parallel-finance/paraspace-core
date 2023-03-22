@@ -2,8 +2,11 @@
 pragma solidity 0.8.10;
 
 import "../interfaces/ITimeLockStrategy.sol";
+import "../protocol/libraries/helpers/Errors.sol";
 
 contract DefaultTimeLockStrategy is ITimeLockStrategy {
+    address private immutable POOL;
+
     uint256 public immutable MIN_THRESHOLD;
     uint256 public immutable MID_THRESHOLD;
 
@@ -20,7 +23,13 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
 
     event PeriodReset();
 
+    modifier onlyPool() {
+        require(msg.sender == POOL, Errors.CALLER_MUST_BE_POOL);
+        _;
+    }
+
     constructor(
+        address pool,
         uint256 minThreshold,
         uint256 midThreshold,
         uint48 minWaitTime,
@@ -30,6 +39,8 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         uint48 poolPeriodWaitTime,
         uint256 period
     ) {
+        POOL = pool;
+
         MIN_THRESHOLD = minThreshold;
         MID_THRESHOLD = midThreshold;
 
@@ -63,7 +74,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
 
     function calculateTimeLockParams(
         DataTypes.TimeLockFactorParams calldata params
-    ) external returns (DataTypes.TimeLockParams memory) {
+    ) external onlyPool returns (DataTypes.TimeLockParams memory) {
         uint48 currentTimestamp = uint48(block.timestamp);
         DataTypes.TimeLockParams memory timeLockParams;
 

@@ -21,6 +21,7 @@ describe("TimeLock functionality tests", () => {
     const {
       dai,
       usdc,
+      pool,
       users: [user1, user2],
       poolAdmin,
     } = testEnv;
@@ -33,6 +34,7 @@ describe("TimeLock functionality tests", () => {
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
 
     const defaultStrategy = await deployDefaultTimeLockStrategy(
+      pool.address,
       minThreshold.toString(),
       midThreshold.toString(),
       minTime.toString(),
