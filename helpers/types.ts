@@ -556,6 +556,7 @@ export interface IReserveParams
   supplyCap: string;
   strategy: IInterestRateStrategyParams;
   auctionStrategy: IAuctionStrategyParams;
+  timeLockStrategy: ITimeLockStrategyParams;
 }
 
 export interface IInterestRateStrategyParams {
@@ -576,6 +577,18 @@ export interface IAuctionStrategyParams {
   stepLinear: string;
   stepExp: string;
   tickLength: string;
+}
+
+export interface ITimeLockStrategyParams {
+  name: string;
+  minThreshold: string;
+  midThreshold: string;
+  minWaitTime: string;
+  midWaitTime: string;
+  maxWaitTime: string;
+  poolPeriodWaitTime: string;
+  poolPeriodLimit: string;
+  period: string;
 }
 
 export interface IReserveBorrowParams {

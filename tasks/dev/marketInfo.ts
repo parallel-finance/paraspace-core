@@ -58,6 +58,7 @@ task("market-info", "Print markets info")
         x.interestRateStrategyAddress
       );
       console.log(" auctionStrategyAddress:", x.auctionStrategyAddress);
+      console.log(" timeLockStrategyAddress:", x.timeLockStrategyAddress);
       console.log(" price:", fromBn(x.priceInMarketReferenceCurrency));
       console.log(
         " price($):",

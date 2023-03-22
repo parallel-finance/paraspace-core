@@ -1,12 +1,13 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {deployDefaultTimeLockStrategy} from "../helpers/contracts-deployments";
+import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
 import {
   getPoolConfiguratorProxy,
   getTimeLockProxy,
 } from "../helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {eContractid} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
 
@@ -33,7 +34,8 @@ describe("TimeLock functionality tests", () => {
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
 
-    const defaultStrategy = await deployDefaultTimeLockStrategy(
+    const defaultStrategy = await deployReserveTimeLockStrategy(
+      eContractid.DefaultTimeLockStrategy,
       pool.address,
       minThreshold.toString(),
       midThreshold.toString(),

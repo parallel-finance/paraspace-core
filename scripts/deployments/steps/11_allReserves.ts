@@ -111,7 +111,8 @@ export const step_11 = async (verify = false) => {
         undefined,
         undefined,
         undefined,
-        auctionStrategy
+        auctionStrategy,
+        undefined
       );
 
       await configureReservesByHelper(

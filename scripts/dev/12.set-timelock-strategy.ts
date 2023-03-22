@@ -2,7 +2,7 @@ import {BigNumber} from "ethers";
 import {parseUnits} from "ethers/lib/utils";
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
-import {deployDefaultTimeLockStrategy} from "../../helpers/contracts-deployments";
+import {deployReserveTimeLockStrategy as deployReserveTimeLockStrategy} from "../../helpers/contracts-deployments";
 import {
   getPoolConfiguratorProxy,
   getPoolProxy,
@@ -10,6 +10,7 @@ import {
 } from "../../helpers/contracts-getters";
 import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
+import {eContractid} from "../../helpers/types";
 
 const setTimeLockStrategy = async () => {
   console.time("set-timelock-strategy");
@@ -41,7 +42,8 @@ const setTimeLockStrategy = async () => {
         ? parseUnits("10000", decimals)
         : BigNumber.from("10");
 
-      const defaultStrategy = await deployDefaultTimeLockStrategy(
+      const defaultStrategy = await deployReserveTimeLockStrategy(
+        eContractid.DefaultTimeLockStrategy,
         (
           await getPoolProxy()
         ).address,

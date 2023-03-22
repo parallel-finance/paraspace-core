@@ -2633,7 +2633,8 @@ export const deployTimeLock = async (
   return proxyInstance as TimeLock;
 };
 
-export const deployDefaultTimeLockStrategy = async (
+export const deployReserveTimeLockStrategy = async (
+  name: string,
   pool: string,
   minThreshold: string,
   midThreshold: string,
@@ -2647,7 +2648,7 @@ export const deployDefaultTimeLockStrategy = async (
 ) =>
   withSaveAndVerify(
     new DefaultTimeLockStrategy__factory(await getFirstSigner()),
-    eContractid.DefaultTimeLockStrategy,
+    name,
     [
       pool,
       minThreshold,

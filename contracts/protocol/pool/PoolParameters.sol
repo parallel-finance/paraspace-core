@@ -114,7 +114,8 @@ contract PoolParameters is
         address xTokenAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress,
-        address auctionStrategyAddress
+        address auctionStrategyAddress,
+        address timeLockStrategyAddress
     ) external virtual override onlyPoolConfigurator {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -127,6 +128,7 @@ contract PoolParameters is
                     xTokenAddress: xTokenAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
+                    timeLockStrategyAddress: timeLockStrategyAddress,
                     auctionStrategyAddress: auctionStrategyAddress,
                     reservesCount: ps._reservesCount,
                     maxNumberReserves: ReserveConfiguration.MAX_RESERVES_COUNT
