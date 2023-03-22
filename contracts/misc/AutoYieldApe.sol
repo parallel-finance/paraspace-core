@@ -131,9 +131,12 @@ contract AutoYieldApe is
     }
 
     /// @inheritdoc IAutoYieldApe
-    function harvest(uint256 minimumDealPrice) external override {
+    function harvest(bytes memory swapPath, uint256 minimumDealPrice)
+        external
+        override
+    {
         require(msg.sender == harvestOperator, "non harvest operator");
-        _harvest(minimumDealPrice);
+        _harvest(swapPath, minimumDealPrice);
     }
 
     /// @inheritdoc IAutoYieldApe
@@ -354,7 +357,9 @@ contract AutoYieldApe is
     /**
      * @notice implementation for harvest function.
      **/
-    function _harvest(uint256 minimumDealPrice) internal {
+    function _harvest(bytes memory swapPath, uint256 minimumDealPrice)
+        internal
+    {
         //1, get current pending ape coin reward amount from ApeCoinStaking
         uint256 rewardAmount = _apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
@@ -368,6 +373,7 @@ contract AutoYieldApe is
             //3, sell ape coin to usdc
             uint256 yieldUnderlyingAmount = _sellApeCoinForUnderlyingYieldToken(
                 rewardAmount,
+                swapPath,
                 minimumDealPrice
             );
 
@@ -453,19 +459,17 @@ contract AutoYieldApe is
      **/
     function _sellApeCoinForUnderlyingYieldToken(
         uint256 apeCoinAmount,
+        bytes memory swapPath,
         uint256 minimumDealPrice
     ) internal returns (uint256) {
         return
-            _swapRouter.exactInputSingle(
-                ISwapRouter.ExactInputSingleParams({
-                    tokenIn: _apeCoin,
-                    tokenOut: _yieldUnderlying,
-                    fee: 3000,
+            _swapRouter.exactInput(
+                ISwapRouter.ExactInputParams({
+                    path: swapPath,
                     recipient: address(this),
                     deadline: block.timestamp,
                     amountIn: apeCoinAmount,
-                    amountOutMinimum: apeCoinAmount.wadMul(minimumDealPrice),
-                    sqrtPriceLimitX96: 0
+                    amountOutMinimum: apeCoinAmount.wadMul(minimumDealPrice)
                 })
             );
     }

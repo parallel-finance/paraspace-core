@@ -22,7 +22,7 @@ import {
   getPYieldToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
-import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {advanceTimeAndBlock, DRE, waitForTx} from "../helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {BigNumber, BigNumberish} from "ethers";
@@ -49,6 +49,7 @@ describe("Auto Yield Ape Test", () => {
   let yUSDC: PToken;
   const {CALLER_NOT_POOL_ADMIN, CALLER_NOT_POOL_OR_EMERGENCY_ADMIN} =
     ProtocolErrors;
+  let swapPath;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -122,6 +123,11 @@ describe("Auto Yield Ape Test", () => {
     ////////////////////////////////////////////////////////////////////////////////
     // Uniswap
     ////////////////////////////////////////////////////////////////////////////////
+    swapPath = DRE.ethers.utils.solidityPack(
+      ["address", "uint24", "address"],
+      [ape.address, 3000, usdc.address]
+    );
+
     const userApeAmount = await convertToCurrencyDecimals(
       ape.address,
       "10000000000"
@@ -204,7 +210,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     expect(await yApe.yieldAmount(user2.address)).to.be.equal(0);
     expect(await yApe.yieldAmount(user3.address)).to.be.equal(0);
@@ -233,7 +241,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
     expect(await yApe.yieldAmount(user2.address)).to.be.equal(0);
     almostEqual(
       await yApe.yieldAmount(user3.address),
@@ -258,7 +268,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -296,7 +308,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -327,7 +341,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -368,7 +384,9 @@ describe("Auto Yield Ape Test", () => {
     expect(await yApe.balanceOf(user4.address)).to.be.equal(0);
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -403,7 +421,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     await waitForTx(
       await yApe.connect(user2.signer).deposit(user2.address, parseEther("200"))
@@ -433,7 +453,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     await waitForTx(
       await yApe.connect(user2.signer).deposit(user2.address, parseEther("400"))
@@ -490,7 +512,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     expect(await yApePToken.yieldAmount(user2.address)).to.be.equal(0);
     expect(await yApePToken.yieldAmount(user3.address)).to.be.equal(0);
@@ -523,7 +547,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
     expect(await yApePToken.yieldAmount(user2.address)).to.be.equal(0);
     almostEqual(
       await yApePToken.yieldAmount(user3.address),
@@ -551,7 +577,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -594,7 +622,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -632,7 +662,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -688,7 +720,9 @@ describe("Auto Yield Ape Test", () => {
     expect(await yApePToken.balanceOf(user4.address)).to.be.equal(0);
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -740,10 +774,14 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yUSDC.balanceOf(yApe.address),
@@ -813,10 +851,14 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user2.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user2.signer).harvest(swapPath, "990000")
+    );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user2.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user2.signer).harvest(swapPath, "990000")
+    );
 
     //harvest fee = 3600 * 0.1 * 2
     almostEqual(
