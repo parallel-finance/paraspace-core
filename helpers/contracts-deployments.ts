@@ -264,8 +264,6 @@ import {
   MockCToken__factory,
   TimeLock__factory,
   DefaultTimeLockStrategy__factory,
-  GenericLogic__factory,
-  GenericLogic,
   DefaultTimeLockStrategy,
   TimeLock,
 } from "../types";
@@ -279,12 +277,10 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
-  getTimeLockProxy,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
   getContractAddressInDb,
-  getEthersSigners,
   getFunctionSignatures,
   getFunctionSignaturesFromDb,
   insertContractAddressInDb,
@@ -410,14 +406,6 @@ export const deployAuctionLogic = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<AuctionLogic>;
-
-export const deployGenericLogic = async (verify?: boolean) =>
-  withSaveAndVerify(
-    new GenericLogic__factory(await getFirstSigner()),
-    eContractid.GenericLogic,
-    [],
-    verify
-  ) as Promise<GenericLogic>;
 
 export const deployPoolLogic = async (verify?: boolean) =>
   withSaveAndVerify(
