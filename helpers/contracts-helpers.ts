@@ -319,11 +319,10 @@ export const convertToCurrencyDecimals = async (
   tokenAddress: tEthereumAddress,
   amount: string
 ) => {
+  const url = (DRE.network.config as HttpNetworkConfig).url;
   const token = await IERC20Detailed__factory.connect(
     tokenAddress,
-    new ethers.providers.JsonRpcProvider(
-      (DRE.network.config as HttpNetworkConfig).url
-    )
+    url ? new ethers.providers.JsonRpcProvider(url) : DRE.ethers.provider
   );
   const decimals = (await token.decimals()).toString();
 

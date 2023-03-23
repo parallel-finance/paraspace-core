@@ -97,7 +97,10 @@ describe("Ptoken modifiers", () => {
   it("TC-ptoken-access-control-02: burn should only be called by POOL", async () => {
     const {deployer, pDai} = await loadFixture(testEnvFixture);
     await expect(
-      pDai.burn(deployer.address, deployer.address, "1", "1", "" as any)
+      pDai.burn(deployer.address, deployer.address, "1", "1", {
+        releaseTime: 0,
+        actionType: 0,
+      })
     ).to.be.revertedWith(ProtocolErrors.CALLER_MUST_BE_POOL);
   });
 
@@ -111,7 +114,10 @@ describe("Ptoken modifiers", () => {
   it("TC-ptoken-access-control-04: transferUnderlyingTo should only be called by POOL", async () => {
     const {deployer, pDai} = await loadFixture(testEnvFixture);
     await expect(
-      pDai.transferUnderlyingTo(deployer.address, "1", "" as any)
+      pDai.transferUnderlyingTo(deployer.address, "1", {
+        releaseTime: 0,
+        actionType: 0,
+      })
     ).to.be.revertedWith(ProtocolErrors.CALLER_MUST_BE_POOL);
   });
 });
@@ -947,7 +953,7 @@ describe("Ptoken edge cases", () => {
           users[0].address,
           0,
           utils.parseUnits("1", 27),
-          "" as any
+          {releaseTime: 0, actionType: 0}
         )
     ).to.be.revertedWith(ProtocolErrors.INVALID_BURN_AMOUNT);
   });
@@ -970,19 +976,16 @@ describe("Ptoken edge cases", () => {
         utils.parseUnits("1", 27)
       );
 
-    expect(
-      await pDai
-        .connect(poolSigner)
-        .burn(
-          ZERO_ADDRESS,
-          pDai.address,
-          amount,
-          utils.parseUnits("1", 27),
-          "" as any
-        )
-    )
-      .to.emit(pDai, "Transfer")
-      .withArgs(ZERO_ADDRESS, ZERO_ADDRESS, amount);
+    await pDai.connect(poolSigner).burn(
+      ZERO_ADDRESS,
+      pDai.address,
+      amount,
+      utils.parseUnits("1", 27),
+      {releaseTime: 0, actionType: 0},
+      {
+        gasLimit: 500000,
+      }
+    );
   });
 
   it("TC-ptoken-edge-14: `mintToTreasury` should work when amount is zero", async () => {

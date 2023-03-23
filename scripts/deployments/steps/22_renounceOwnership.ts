@@ -503,7 +503,7 @@ export const step_22 = async (
           );
         }
       }
-      console.timeEnd("transferring TimeLock ownership...");
+      console.timeEnd("transferring TimeLockProxy ownership...");
       console.log();
     }
 
