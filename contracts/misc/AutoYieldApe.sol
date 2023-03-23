@@ -76,7 +76,7 @@ contract AutoYieldApe is
             .xTokenAddress;
         require(
             _yieldToken != address(0),
-            "unsupported yield underlying token"
+            Errors.INVALID_YIELD_UNDERLYING_TOKEN
         );
         _swapRouter = ISwapRouter(swapRouter);
         _aclManager = IACLManager(aclManager);
@@ -103,7 +103,7 @@ contract AutoYieldApe is
         override
         whenNotPaused
     {
-        require(amount > 0, "zero amount");
+        require(amount > 0, Errors.INVALID_AMOUNT);
         _updateYieldIndex(onBehalf, int256(amount));
         _mint(onBehalf, amount);
 
@@ -135,7 +135,7 @@ contract AutoYieldApe is
         external
         override
     {
-        require(msg.sender == harvestOperator, "non harvest operator");
+        require(msg.sender == harvestOperator, Errors.CALLER_NOT_OPERATOR);
         _harvest(swapPath, minimumDealPrice);
     }
 
@@ -174,7 +174,7 @@ contract AutoYieldApe is
         external
         onlyPoolAdmin
     {
-        require(_harvestOperator != address(0), "zero address");
+        require(_harvestOperator != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         address oldOperator = harvestOperator;
         if (oldOperator != _harvestOperator) {
             harvestOperator = _harvestOperator;
@@ -189,7 +189,7 @@ contract AutoYieldApe is
     function setHarvestFeeRate(uint256 _harvestFeeRate) external onlyPoolAdmin {
         require(
             _harvestFeeRate < PercentageMath.HALF_PERCENTAGE_FACTOR,
-            "Fee Too High"
+            Errors.INVALID_FEE_VALUE
         );
         uint256 oldValue = harvestFeeRate;
         if (oldValue != _harvestFeeRate) {
@@ -209,7 +209,7 @@ contract AutoYieldApe is
         address to,
         uint256 amount
     ) external onlyPoolAdmin {
-        require(token != address(_yieldToken), "cannot rescue yield token");
+        require(token != address(_yieldToken), Errors.TOKEN_NOT_ALLOW_RESCUE);
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
     }
@@ -320,7 +320,7 @@ contract AutoYieldApe is
      * @param amount The amount of ape to be withdraw
      **/
     function _withdraw(uint256 amount) internal {
-        require(amount > 0, "zero amount");
+        require(amount > 0, Errors.INVALID_AMOUNT);
 
         _updateYieldIndex(msg.sender, -int256(amount));
         _burn(msg.sender, amount);
@@ -505,7 +505,7 @@ contract AutoYieldApe is
         address recipient,
         uint256 amount
     ) internal override {
-        require(sender != recipient, "same address for transfer");
+        require(sender != recipient, Errors.SENDER_SAME_AS_RECEIVER);
         _updateYieldIndex(sender, -int256(amount));
         _updateYieldIndex(recipient, int256(amount));
         super._transfer(sender, recipient, amount);
