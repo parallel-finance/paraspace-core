@@ -277,12 +277,10 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
-  getTimeLockProxy,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
   getContractAddressInDb,
-  getEthersSigners,
   getFunctionSignatures,
   getFunctionSignaturesFromDb,
   insertContractAddressInDb,

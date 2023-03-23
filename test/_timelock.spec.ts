@@ -86,7 +86,6 @@ describe("TimeLock functionality tests", () => {
       pool,
       users: [user1],
       usdc,
-      mayc,
     } = await loadFixture(fixture);
 
     const amount = await convertToCurrencyDecimals(usdc.address, "100");
