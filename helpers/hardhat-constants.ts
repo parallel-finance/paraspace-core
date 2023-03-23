@@ -118,3 +118,19 @@ export const MULTI_SEND_CHUNK_SIZE = parseInt(
 export const VERSION = version;
 
 export const FLASHBOTS_RELAY_RPC = "https://relay.flashbots.net";
+
+export const TIME_LOCK_SIGS = {
+  "0xc1a287e2": "GRACE_PERIOD()",
+  "0x7d645fab": "MAXIMUM_DELAY()",
+  "0xb1b43ae5": "MINIMUM_DELAY()",
+  "0x0e18b681": "acceptAdmin()",
+  "0x1dc40b51": "cancelTransaction(address,uint256,string,bytes,uint256,bool)",
+  "0x8902ab65": "executeTransaction(address,uint256,string,bytes,uint256,bool)",
+  "0x6e9960c3": "getAdmin()",
+  "0xcebc9a82": "getDelay()",
+  "0xd0468156": "getPendingAdmin()",
+  "0xb1fc8796": "isActionQueued(bytes32)",
+  "0x8d8fe2e3": "queueTransaction(address,uint256,string,bytes,uint256,bool)",
+  "0xe177246e": "setDelay(uint256)",
+  "0x4dd18bf5": "setPendingAdmin(address)",
+};
