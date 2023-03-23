@@ -564,6 +564,18 @@ upgrade:
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: upgrade-pool-core
+upgrade-pool-core:
+	make TASK_NAME=upgrade:pool-core run-task
+
+.PHONY: upgrade-pool-marketplace
+upgrade-pool-marketplace:
+	make TASK_NAME=upgrade:pool-marketplace run-task
+
+.PHONY: upgrade-pool-ape-staking
+upgrade-pool-ape-staking:
+	make TASK_NAME=upgrade:pool-ape-staking run-task
+
 .PHONY: reset-pool
 reset-pool:
 	make TASK_NAME=reset:pool run-task

@@ -734,7 +734,7 @@ describe("Upgradeability", () => {
       const poolCoreV2 = await new PoolCoreV2__factory(
         coreLibraries,
         await getFirstSigner()
-      ).deploy(addressesProvider.address);
+      ).deploy(addressesProvider.address, ZERO_ADDRESS);
 
       await waitForTx(
         await addressesProvider.updatePoolImpl(

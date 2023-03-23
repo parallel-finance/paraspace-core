@@ -34,7 +34,7 @@ describe("Pool: Initialization", () => {
     const poolCore = await new PoolCore__factory(
       coreLibraries,
       await getFirstSigner()
-    ).deploy(addressesProvider.address);
+    ).deploy(addressesProvider.address, ZERO_ADDRESS);
 
     await expect(poolCore.initialize(deployer.address)).to.be.revertedWith(
       INVALID_ADDRESSES_PROVIDER
@@ -57,6 +57,7 @@ describe("Pool: Initialization", () => {
           dai.address,
           config.xTokenAddress,
           config.variableDebtTokenAddress,
+          ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS
         )
@@ -82,6 +83,7 @@ describe("Pool: Initialization", () => {
         .connect(configSigner)
         .initReserve(
           users[0].address,
+          ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,

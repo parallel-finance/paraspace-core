@@ -76,11 +76,7 @@ import {
   Seaport__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {
-  getFirstSigner,
-  getIErc20Detailed,
-  getTimeLockExecutor,
-} from "./contracts-getters";
+import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
