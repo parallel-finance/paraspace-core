@@ -264,8 +264,6 @@ import {
   MockCToken__factory,
   TimeLock__factory,
   DefaultTimeLockStrategy__factory,
-  GenericLogic__factory,
-  GenericLogic,
   DefaultTimeLockStrategy,
   TimeLock,
 } from "../types";

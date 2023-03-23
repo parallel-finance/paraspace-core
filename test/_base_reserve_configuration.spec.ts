@@ -22,7 +22,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ZERO_ADDRESS} from "../helpers/constants";
 import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
-import {getFirstSigner} from "../helpers/contracts-getters";
+import {getFirstSigner, getTimeLockProxy} from "../helpers/contracts-getters";
 import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {BigNumberish, utils} from "ethers";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
@@ -662,10 +662,12 @@ describe("ReserveConfiguration", async () => {
     );
 
     const coreLibraries = await deployPoolCoreLibraries(false);
+    const timeLock = await getTimeLockProxy();
+
     const NEW_POOL_IMPL_ARTIFACT = await new PoolCore__factory(
       coreLibraries,
       await getFirstSigner()
-    ).deploy(addressesProvider.address);
+    ).deploy(addressesProvider.address, timeLock.address);
 
     const xTokenImp = await new PToken__factory(await getFirstSigner()).deploy(
       pool.address
