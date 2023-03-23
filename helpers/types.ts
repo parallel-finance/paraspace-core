@@ -21,6 +21,7 @@ export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
   SafeWithTimeLock = "SafeWithTimeLock",
+  Run = "Run",
   None = "",
 }
 
