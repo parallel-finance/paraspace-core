@@ -48,6 +48,8 @@ import {
   deployAStETHDebtToken,
   deployPYieldToken,
   deployAutoYieldApe,
+  deployOtherdeedNTokenImpl,
+  deployHotWalletProxy,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -483,6 +485,16 @@ export const initReservesByHelper = async (
               )
             ).address;
           }
+          xTokenToUse = nTokenBAKCImplementationAddress;
+        } else if (reserveSymbol == ERC721TokenContractId.OTHR) {
+          // This should be a temporary solution. delegation will be removed
+          const warmWallet = await deployHotWalletProxy(verify);
+          await warmWallet.initialize(admin, admin);
+
+          nTokenBAKCImplementationAddress = (
+            await deployOtherdeedNTokenImpl(pool.address, warmWallet.address)
+          ).address;
+
           xTokenToUse = nTokenBAKCImplementationAddress;
         }
 

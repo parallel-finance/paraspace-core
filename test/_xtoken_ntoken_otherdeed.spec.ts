@@ -1,16 +1,14 @@
 import {expect} from "chai";
-import {timeLatest, waitForTx} from "../helpers/misc-utils";
-import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../helpers/constants";
-import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {timeLatest} from "../helpers/misc-utils";
+
 import {TestEnv} from "./helpers/make-suite";
-import {getAggregator, getMoonBirds} from "../helpers/contracts-getters";
-import {parseEther} from "ethers/lib/utils";
+
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {executeSeaportBuyWithCredit} from "./helpers/marketplace-helper";
-import {supplyAndValidate} from "./helpers/validated-steps";
+
 import {HotWalletProxy} from "../types";
 import {deployHotWalletProxy} from "../helpers/contracts-deployments";
+import {getHotWalletProxy} from "../helpers/contracts-getters";
 
 describe("Otherdeed nToken warmwallet delegation", () => {
   let testEnv: TestEnv;
@@ -20,8 +18,7 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     testEnv = await loadFixture(testEnvFixture);
     const {deployer} = testEnv;
 
-    hotWallet = await deployHotWalletProxy();
-    await hotWallet.initialize(deployer.address, deployer.address);
+    hotWallet = await getHotWalletProxy();
   });
 
   it("Admin can set hot wallet from NToken", async () => {
@@ -39,10 +36,12 @@ describe("Otherdeed nToken warmwallet delegation", () => {
         .setHotWallet(user1.address, currentTime.add(3600), true)
     );
 
-    await expect(hotWallet.getHotWallet(nOTHR.address)).to.be.eq(user1.address);
+    await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
+      user1.address
+    );
   });
 
-  it("Admin can't set hot wallet from NToken", async () => {
+  it("Non-admin can't set hot wallet from NToken", async () => {
     const {
       users: [user1, user2],
       nOTHR,
@@ -55,7 +54,9 @@ describe("Otherdeed nToken warmwallet delegation", () => {
       nOTHR
         .connect(user2.signer)
         .setHotWallet(user2.address, currentTime.add(3600), true)
-    ).to.be.reverted();
-    await expect(hotWallet.getHotWallet(nOTHR.address)).to.be.eq(user1.address);
+    ).to.be.reverted;
+    await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
+      user1.address
+    );
   });
 });
