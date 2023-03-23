@@ -25,7 +25,7 @@ import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {eContractid} from "../../../helpers/types";
 
-export const step_22 = async (
+export const step_23 = async (
   // eslint-disable-next-line
   verify = false,
   admins?: {
@@ -495,12 +495,12 @@ export const step_22 = async (
           )
         );
         if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          await waitForTx(
-            await timeLock.transferOwnership(
-              gatewayAdminAddress,
-              GLOBAL_OVERRIDES
-            )
-          );
+          // await waitForTx(
+          //   await timeLock.transferOwnership(
+          //     gatewayAdminAddress,
+          //     GLOBAL_OVERRIDES
+          //   )
+          // );
         }
       }
       console.timeEnd("transferring TimeLockProxy ownership...");

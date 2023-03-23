@@ -37,10 +37,25 @@ describe("TimeLock functionality tests", () => {
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
 
+    const minThresholdNFT = 2;
+    const midThresholdNFT = 5;
+
     const defaultStrategy = await deployDefaultTimeLockStrategy(
       pool.address,
       minThreshold.toString(),
       midThreshold.toString(),
+      minTime.toString(),
+      midTime.toString(),
+      maxTime.toString(),
+      midThreshold.mul(10).toString(),
+      (12 * 3600).toString(),
+      (24 * 3600).toString()
+    );
+
+    const defaultStrategyNFT = await deployDefaultTimeLockStrategy(
+      pool.address,
+      minThresholdNFT.toString(),
+      midThresholdNFT.toString(),
       minTime.toString(),
       midTime.toString(),
       maxTime.toString(),
@@ -63,7 +78,7 @@ describe("TimeLock functionality tests", () => {
         .connect(poolAdmin.signer)
         .setReserveTimeLockStrategyAddress(
           mayc.address,
-          defaultStrategy.address
+          defaultStrategyNFT.address
         )
     );
     await waitForTx(
@@ -294,6 +309,39 @@ describe("TimeLock functionality tests", () => {
     await expect(balanceAfter).to.be.eq(balanceBefore.add(1));
   });
 
+  it("withdraw erc721 tokens above midThreshold should be time locked for 3600 seconds", async () => {
+    const {
+      pool,
+      users: [user1],
+      mayc,
+    } = await loadFixture(fixture);
+
+    const balanceBefore = await mayc.balanceOf(user1.address);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawERC721(
+          mayc.address,
+          Array.from(Array(7).keys()),
+          user1.address,
+          {
+            gasLimit: 5000000,
+          }
+        )
+    );
+
+    await advanceTimeAndBlock(10);
+    await expect(timeLockProxy.connect(user1.signer).claim(["0"])).to.be
+      .reverted;
+
+    await advanceTimeAndBlock(4000);
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    const balanceAfter = await mayc.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(7));
+  });
+
   it("withdraw multiple ERC721 and batch claim at once", async () => {
     const {
       pool,
@@ -313,7 +361,7 @@ describe("TimeLock functionality tests", () => {
       );
     }
 
-    await advanceTimeAndBlock(10);
+    await advanceTimeAndBlock(4000);
     await waitForTx(
       await timeLockProxy
         .connect(user1.signer)

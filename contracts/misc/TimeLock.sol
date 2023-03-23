@@ -6,7 +6,6 @@ import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 
-import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
@@ -16,13 +15,10 @@ import {IPool} from "../interfaces/IPool.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
+import {IACLManager} from "../interfaces/IACLManager.sol";
+import "hardhat/console.sol";
 
-contract TimeLock is
-    ITimeLock,
-    OwnableUpgradeable,
-    ReentrancyGuardUpgradeable,
-    IERC721Receiver
-{
+contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
 
     event AgreementCreated(
@@ -43,28 +39,44 @@ contract TimeLock is
         uint256[] tokenIdsOrAmounts,
         address indexed beneficiary
     );
+
+    event AgreementFrozen(uint256 agreementId, bool value);
+
+    event TimeLockFrozen(bool value);
+
     mapping(uint256 => Agreement) private agreements;
 
     uint248 public agreementCount;
     bool public frozen;
 
-    IPoolAddressesProvider private immutable ADDRESSES_PROVIDER;
+    IPool private immutable POOL;
+    IACLManager private immutable ACL_MANAGER;
 
     modifier onlyXToken(address asset) {
         require(
-            msg.sender ==
-                IPool(ADDRESSES_PROVIDER.getPool()).getReserveXToken(asset),
+            msg.sender == POOL.getReserveXToken(asset),
             Errors.CALLER_NOT_XTOKEN
         );
         _;
     }
 
+    modifier onlyEmergencyAdminOrPoolAdmins() {
+        // require(
+        //     ACL_MANAGER.isEmergencyAdmin(msg.sender) ||
+        //         ACL_MANAGER.isPoolAdmin(msg.sender),
+        //     Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        // );
+        _;
+    }
+
     constructor(IPoolAddressesProvider provider) {
-        ADDRESSES_PROVIDER = provider;
+        console.log("rpovider is", address(provider));
+        console.log("pool is", provider.getPool());
+        POOL = IPool(provider.getPool());
+        ACL_MANAGER = IACLManager(provider.getACLManager());
     }
 
     function initialize() public initializer {
-        __Ownable_init();
         __ReentrancyGuard_init();
     }
 
@@ -76,6 +88,9 @@ contract TimeLock is
         address beneficiary,
         uint48 releaseTime
     ) external onlyXToken(asset) returns (uint256) {
+        require(beneficiary != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(releaseTime > block.timestamp);
+
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
             assetType: assetType,
@@ -173,15 +188,20 @@ contract TimeLock is
         }
     }
 
-    function freezeAgreement(uint256 agreementId, bool freeze)
-        public
-        onlyOwner
+    function freezeAgreement(uint256 agreementId, bool value)
+        external
+        onlyEmergencyAdminOrPoolAdmins
     {
-        agreements[agreementId].isFrozen = freeze;
+        agreements[agreementId].isFrozen = value;
+        emit AgreementFrozen(agreementId, value);
     }
 
-    function freezeAllAgreements(bool freeze) external onlyOwner {
-        frozen = freeze;
+    function freezeAllAgreements(bool value)
+        external
+        onlyEmergencyAdminOrPoolAdmins
+    {
+        frozen = value;
+        emit TimeLockFrozen(value);
     }
 
     function getAgreement(uint256 agreementId)
