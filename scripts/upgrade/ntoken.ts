@@ -21,6 +21,7 @@ import {NTokenContractId, XTokenType} from "../../helpers/types";
 import dotenv from "dotenv";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 
 dotenv.config();
 
@@ -33,7 +34,7 @@ export const upgradeNToken = async (verify = false) => {
   );
   const protocolDataProvider = await getProtocolDataProvider();
   const allXTokens = await protocolDataProvider.getAllXTokens();
-  const delegationRegistryAddress = (await getDelegationRegistry()).address;
+  const delegationRegistryAddress = ZERO_ADDRESS;
   let nTokenImplementationAddress = "";
   let nTokenBAYCImplementationAddress = "";
   let nTokenMAYCImplementationAddress = "";
@@ -52,16 +53,7 @@ export const upgradeNToken = async (verify = false) => {
     const symbol = await nToken.symbol();
     const xTokenType = await nToken.getXTokenType();
 
-    if (
-      ![
-        XTokenType.NToken,
-        XTokenType.NTokenMoonBirds,
-        XTokenType.NTokenUniswapV3,
-        XTokenType.NTokenBAYC,
-        XTokenType.NTokenMAYC,
-        XTokenType.NTokenBAKC,
-      ].includes(xTokenType)
-    ) {
+    if (![XTokenType.NTokenBAYC].includes(xTokenType)) {
       continue;
     }
 

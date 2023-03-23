@@ -16,6 +16,7 @@ import {IPool} from "../interfaces/IPool.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
+import "hardhat/console.sol";
 
 contract TimeLock is
     ITimeLock,
@@ -51,11 +52,13 @@ contract TimeLock is
     IPoolAddressesProvider private immutable ADDRESSES_PROVIDER;
 
     modifier onlyXToken(address asset) {
+        console.log(9);
         require(
             msg.sender ==
                 IPool(ADDRESSES_PROVIDER.getPool()).getReserveXToken(asset),
             Errors.CALLER_NOT_XTOKEN
         );
+        console.log(10);
         _;
     }
 
@@ -76,6 +79,7 @@ contract TimeLock is
         address beneficiary,
         uint48 releaseTime
     ) external onlyXToken(asset) returns (uint256) {
+        console.log(11);
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
             assetType: assetType,
@@ -86,6 +90,7 @@ contract TimeLock is
             releaseTime: releaseTime,
             isFrozen: false
         });
+        console.log(12);
 
         emit AgreementCreated(
             agreementId,

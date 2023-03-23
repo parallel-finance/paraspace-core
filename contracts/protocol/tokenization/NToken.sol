@@ -19,6 +19,7 @@ import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
+import "hardhat/console.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
@@ -28,7 +29,7 @@ import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 150;
+    uint256 public constant NTOKEN_REVISION = 154;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -107,11 +108,15 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
         ) = _burnMultiple(from, tokenIds);
+        console.log(1);
 
         if (receiverOfUnderlying != address(this)) {
             // address underlyingAsset = _ERC721Data.underlyingAsset;
             if (timeLockParams.releaseTime != 0) {
+                console.log(6);
                 ITimeLock timeLock = POOL.TIME_LOCK();
+                console.log(7);
+                console.log("timeLock:", address(timeLock));
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC721,
                     timeLockParams.actionType,
@@ -120,10 +125,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
                     receiverOfUnderlying,
                     timeLockParams.releaseTime
                 );
+                console.log(8);
                 receiverOfUnderlying = address(timeLock);
+                console.log(2);
             }
 
             for (uint256 index = 0; index < tokenIds.length; index++) {
+                console.log(3);
                 IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
                     address(this),
                     receiverOfUnderlying,

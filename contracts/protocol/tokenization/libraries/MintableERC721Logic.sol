@@ -13,6 +13,7 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IDelegationRegistry} from "../../../dependencies/delegation/IDelegationRegistry.sol";
+import "hardhat/console.sol";
 
 struct UserState {
     uint64 balance;
@@ -448,6 +449,7 @@ library MintableERC721Logic {
             erc721Data,
             ATOMIC_PRICING
         );
+        console.log(5);
 
         for (uint256 index = 0; index < tokenIds.length; index++) {
             // uint256 tokenId = tokenIds[index];
