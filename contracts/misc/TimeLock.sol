@@ -4,6 +4,8 @@ pragma solidity ^0.8.10;
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
+import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
+
 import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
@@ -15,7 +17,12 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 
-contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract TimeLock is
+    ITimeLock,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    IERC721Receiver
+{
     using GPv2SafeERC20 for IERC20;
 
     event AgreementCreated(
@@ -183,5 +190,14 @@ contract TimeLock is ITimeLock, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         returns (Agreement memory agreement)
     {
         agreement = agreements[agreementId];
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external virtual override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

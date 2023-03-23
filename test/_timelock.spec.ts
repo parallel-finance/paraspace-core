@@ -22,6 +22,7 @@ describe("TimeLock functionality tests", () => {
       dai,
       usdc,
       pool,
+      mayc,
       users: [user1, user2],
       poolAdmin,
     } = testEnv;
@@ -30,6 +31,9 @@ describe("TimeLock functionality tests", () => {
     await supplyAndValidate(dai, "20000000", user1, true);
     // User 2 - Deposit usdc
     await supplyAndValidate(usdc, "200000", user2, true);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
 
@@ -54,6 +58,19 @@ describe("TimeLock functionality tests", () => {
           defaultStrategy.address
         )
     );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(
+          mayc.address,
+          defaultStrategy.address
+        )
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(dai.address, defaultStrategy.address)
+    );
 
     return testEnv;
   };
@@ -69,6 +86,7 @@ describe("TimeLock functionality tests", () => {
       pool,
       users: [user1],
       usdc,
+      mayc,
     } = await loadFixture(fixture);
 
     const amount = await convertToCurrencyDecimals(usdc.address, "100");
@@ -163,5 +181,55 @@ describe("TimeLock functionality tests", () => {
     const balanceAfter = await usdc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
+  });
+
+  it("withdraw ERC20 amount below minThreshold should be time locked for 1 block only", async () => {
+    const {
+      pool,
+      users: [user1],
+      dai,
+      usdc,
+    } = await loadFixture(fixture);
+    const amount = await convertToCurrencyDecimals(usdc.address, "100"); // used usdc intentionally since the mock strategy uses usdc decimals
+
+    const balanceBefore = await dai.balanceOf(user1.address);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdraw(dai.address, amount, user1.address, {
+          gasLimit: 5000000,
+        })
+    );
+
+    await advanceTimeAndBlock(10);
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    const balanceAfter = await dai.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
+  });
+
+  it("withdraw erc721 tokens below minThreshold should be time locked for 1 block only", async () => {
+    const {
+      pool,
+      users: [user1],
+      mayc,
+    } = await loadFixture(fixture);
+
+    const balanceBefore = await mayc.balanceOf(user1.address);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawERC721(mayc.address, ["0"], user1.address, {
+          gasLimit: 5000000,
+        })
+    );
+
+    await advanceTimeAndBlock(10);
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    const balanceAfter = await mayc.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(1));
   });
 });

@@ -330,7 +330,7 @@ library SupplyLogic {
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC20,
                     asset: params.asset,
-                    amount: params.amount
+                    amount: amountToWithdraw
                 })
             );
         timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
