@@ -13,6 +13,7 @@ enum XTokenType {
     NTokenUniswapV3,
     NTokenBAYC,
     NTokenMAYC,
+    NTokenOtherdeed,
     PToken,
     DelegationAwarePToken,
     RebasingPToken,

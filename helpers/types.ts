@@ -255,6 +255,8 @@ export enum eContractid {
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
+  NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  HotWalletProxy = "HotWalletProxy",
 }
 
 /*
