@@ -409,14 +409,6 @@ export const deployAuctionLogic = async (verify?: boolean) =>
     verify
   ) as Promise<AuctionLogic>;
 
-export const deployGenericLogic = async (verify?: boolean) =>
-  withSaveAndVerify(
-    new GenericLogic__factory(await getFirstSigner()),
-    eContractid.GenericLogic,
-    [],
-    verify
-  ) as Promise<GenericLogic>;
-
 export const deployPoolLogic = async (verify?: boolean) =>
   withSaveAndVerify(
     new PoolLogic__factory(await getFirstSigner()),
