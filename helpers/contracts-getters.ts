@@ -222,9 +222,13 @@ export const getPoolLogic = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getPoolProxy = async (address?: tEthereumAddress) =>
-  await IPool__factory.connect(
+export const getPoolProxy = async (address?: tEthereumAddress) => {
+  const poolAddressesProvider = await getPoolAddressesProvider();
+  const poolAddress = await poolAddressesProvider.getPool();
+
+  return await IPool__factory.connect(
     address ||
+      poolAddress ||
       (
         await getDb()
           .get(`${eContractid.PoolProxy}.${DRE.network.name}`)
@@ -232,7 +236,7 @@ export const getPoolProxy = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
-
+};
 export const getPriceOracle = async (address?: tEthereumAddress) =>
   await PriceOracle__factory.connect(
     address ||
