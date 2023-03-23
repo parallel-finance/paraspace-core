@@ -13,7 +13,6 @@ enum XTokenType {
     NTokenUniswapV3,
     NTokenBAYC,
     NTokenMAYC,
-    NTokenOtherdeed,
     PToken,
     DelegationAwarePToken,
     RebasingPToken,
@@ -21,7 +20,8 @@ enum XTokenType {
     PTokenStETH,
     PTokenSApe,
     NTokenBAKC,
-    PYieldToken
+    PYieldToken,
+    NTokenOtherdeed
 }
 
 interface IXTokenType {
