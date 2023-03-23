@@ -447,6 +447,14 @@ library MarketplaceLogic {
             return; // impossible to supply ETH on behalf of the
         }
 
+        uint256 supplyAmount = Math.min(
+            IERC20(vars.creditToken).allowance(seller, address(this)),
+            vars.price.percentMul(DEFAULT_SUPPLY_RATIO)
+        );
+        if (supplyAmount == 0) {
+            return;
+        }
+
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         DataTypes.UserConfigurationMap storage sellerConfig = ps._usersConfig[
             seller
@@ -455,14 +463,6 @@ library MarketplaceLogic {
         uint16 reserveId = reserve.id; // cache to reduce one storage read
 
         reserve.updateState(reserveCache);
-
-        uint256 supplyAmount = Math.min(
-            IERC20(vars.creditToken).allowance(seller, address(this)),
-            vars.price.percentMul(DEFAULT_SUPPLY_RATIO)
-        );
-        if (supplyAmount == 0) {
-            return;
-        }
 
         ValidationLogic.validateSupply(
             reserveCache,
