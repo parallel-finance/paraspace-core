@@ -120,9 +120,11 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             reserveData.auctionEnabled =
                 reserveData.auctionStrategyAddress != address(0);
 
-            reserveData.timeLockStrategyData = ITimeLockStrategy(
-                reserveData.timeLockStrategyAddress
-            ).getTimeLockStrategyData();
+            if (reserveData.timeLockStrategyAddress != address(0)) {
+                reserveData.timeLockStrategyData = ITimeLockStrategy(
+                    reserveData.timeLockStrategyAddress
+                ).getTimeLockStrategyData();
+            }
 
             try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
                 uint256 price
