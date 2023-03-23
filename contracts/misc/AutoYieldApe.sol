@@ -6,6 +6,7 @@ import "../dependencies/openzeppelin/upgradeability/ERC20Upgradeable.sol";
 import "../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "../dependencies/openzeppelin/contracts/Address.sol";
 import "../dependencies/univ3/interfaces/ISwapRouter.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
@@ -31,6 +32,8 @@ contract AutoYieldApe is
     using WadRayMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
+    using SafeCast for uint256;
+    using SafeCast for int256;
 
     /// @notice ApeCoin single pool POOL_ID for ApeCoinStaking
     uint256 internal constant APE_COIN_POOL_ID = 0;
@@ -104,7 +107,7 @@ contract AutoYieldApe is
         whenNotPaused
     {
         require(amount > 0, Errors.INVALID_AMOUNT);
-        _updateYieldIndex(onBehalf, int256(amount));
+        _updateYieldIndex(onBehalf, amount.toInt256());
         _mint(onBehalf, amount);
 
         IERC20(_apeCoin).safeTransferFrom(msg.sender, address(this), amount);
@@ -322,7 +325,7 @@ contract AutoYieldApe is
     function _withdraw(uint256 amount) internal {
         require(amount > 0, Errors.INVALID_AMOUNT);
 
-        _updateYieldIndex(msg.sender, -int256(amount));
+        _updateYieldIndex(msg.sender, -(amount.toInt256()));
         _burn(msg.sender, amount);
 
         _apeStaking.withdrawSelfApeCoin(amount);
@@ -464,7 +467,7 @@ contract AutoYieldApe is
 
         //if it's the withdraw or transfer balance out case
         if (balanceDiff < 0) {
-            uint256 leftBalance = userBalance - (uint256(-balanceDiff));
+            uint256 leftBalance = userBalance - ((-balanceDiff).toUint256());
             uint256 userLockFeeBalance = _userLockFeeAmount[account];
             //here we only need to update lock fee amount and charge fee when reduce user lock fee amount
             if (leftBalance < userLockFeeBalance) {
@@ -506,8 +509,8 @@ contract AutoYieldApe is
         uint256 amount
     ) internal override {
         require(sender != recipient, Errors.SENDER_SAME_AS_RECEIVER);
-        _updateYieldIndex(sender, -int256(amount));
-        _updateYieldIndex(recipient, int256(amount));
+        _updateYieldIndex(sender, -(amount.toInt256()));
+        _updateYieldIndex(recipient, amount.toInt256());
         super._transfer(sender, recipient, amount);
     }
 }
