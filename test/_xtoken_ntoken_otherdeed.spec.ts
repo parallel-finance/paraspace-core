@@ -1,14 +1,11 @@
 import {expect} from "chai";
 import {timeLatest} from "../helpers/misc-utils";
-
 import {TestEnv} from "./helpers/make-suite";
-
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-
 import {HotWalletProxy} from "../types";
-import {deployHotWalletProxy} from "../helpers/contracts-deployments";
 import {getHotWalletProxy} from "../helpers/contracts-getters";
+import {ZERO_ADDRESS} from "../helpers/constants";
 
 describe("Otherdeed nToken warmwallet delegation", () => {
   let testEnv: TestEnv;
@@ -16,14 +13,12 @@ describe("Otherdeed nToken warmwallet delegation", () => {
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {deployer} = testEnv;
-
     hotWallet = await getHotWalletProxy();
   });
 
   it("Admin can set hot wallet from NToken", async () => {
     const {
-      users: [user1, user2],
+      users: [user1],
       nOTHR,
       poolAdmin,
     } = testEnv;
@@ -33,7 +28,7 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     await expect(
       await nOTHR
         .connect(poolAdmin.signer)
-        .setHotWallet(user1.address, currentTime.add(3600), true)
+        .setHotWallet(user1.address, currentTime.add(3600), false)
     );
 
     await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
@@ -45,7 +40,6 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     const {
       users: [user1, user2],
       nOTHR,
-      poolAdmin,
     } = testEnv;
 
     const currentTime = await timeLatest();
@@ -53,10 +47,45 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     await expect(
       nOTHR
         .connect(user2.signer)
-        .setHotWallet(user2.address, currentTime.add(3600), true)
+        .setHotWallet(user2.address, currentTime.add(3600), false)
     ).to.be.reverted;
+
     await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
       user1.address
+    );
+  });
+
+  it("Delegation should expire after the set expiration time", async () => {
+    const {
+      users: [user1],
+    } = testEnv;
+
+    const currentTime = await timeLatest();
+
+    await expect(
+      (
+        await hotWallet.getColdWalletLinks(user1.address)
+      )[0].expirationTimestamp
+    ).to.be.lt(currentTime.add(3700).toNumber());
+  });
+
+  it("Hot Wallet shouldn't be locked", async () => {
+    const {
+      users: [user1],
+    } = testEnv;
+    await expect(await hotWallet.isLocked(user1.address)).to.be.eq(false);
+  });
+
+  it("Hot Wallet should be able to renounce itself from delegation", async () => {
+    const {
+      users: [user1],
+      nOTHR,
+    } = testEnv;
+
+    await expect(await hotWallet.connect(user1.signer).renounceHotWallet());
+
+    await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
+      ZERO_ADDRESS
     );
   });
 });

@@ -27,7 +27,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 145;
+    uint256 public constant NTOKEN_REVISION = 231;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
