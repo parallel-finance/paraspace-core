@@ -28,7 +28,7 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     await expect(
       await nOTHR
         .connect(poolAdmin.signer)
-        .setHotWallet(user1.address, currentTime.add(3600), false)
+        .setHotWallet(user1.address, currentTime.add(3600), true)
     );
 
     await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
@@ -47,7 +47,7 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     await expect(
       nOTHR
         .connect(user2.signer)
-        .setHotWallet(user2.address, currentTime.add(3600), false)
+        .setHotWallet(user2.address, currentTime.add(3600), true)
     ).to.be.reverted;
 
     await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
@@ -69,11 +69,11 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     ).to.be.lt(currentTime.add(3700).toNumber());
   });
 
-  it("Hot Wallet shouldn't be locked", async () => {
+  it("Hot Wallet should be locked", async () => {
     const {
       users: [user1],
     } = testEnv;
-    await expect(await hotWallet.isLocked(user1.address)).to.be.eq(false);
+    await expect(await hotWallet.isLocked(user1.address)).to.be.eq(true);
   });
 
   it("Hot Wallet should be able to renounce itself from delegation", async () => {
