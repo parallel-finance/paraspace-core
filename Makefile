@@ -348,6 +348,10 @@ deploy-allReserves:
 deploy-uiIncentiveDataProvider:
 	make TASK_NAME=deploy:ui-incentive-data-provider run-task
 
+.PHONY: deploy-uiPoolDataProvider
+deploy-uiPoolDataProvider:
+	make TASK_NAME=deploy:ui-pool-data-provider run-task
+
 .PHONY: deploy-wethGateway
 deploy-wethGateway:
 	make TASK_NAME=deploy:weth-gateway run-task
