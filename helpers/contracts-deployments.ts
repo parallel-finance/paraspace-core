@@ -273,6 +273,7 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
+  getACLManager,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
@@ -2298,7 +2299,8 @@ export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
-  const args = [allTokens.APE.address, apeCoinStaking];
+  const aclManager = await getACLManager();
+  const args = [allTokens.APE.address, apeCoinStaking, aclManager.address];
 
   return withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),

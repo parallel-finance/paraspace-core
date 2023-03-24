@@ -15,7 +15,7 @@ describe("PausablePool", () => {
       "Invalid 'TO' balance after transfer!";
     const INVALID_FROM_BALANCE_AFTER_TRANSFER =
       "Invalid 'FROMO' balance after transfer!";
-    const {users, pool, dai, pDai, configurator, emergencyAdmin} =
+    const {users, pool, dai, pDai, configurator, emergencyAdmin, poolAdmin} =
       await loadFixture(testEnvFixture);
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
@@ -35,7 +35,7 @@ describe("PausablePool", () => {
     const user1Balance = await pDai.balanceOf(users[1].address);
 
     // Configurator pauses the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    await configurator.connect(emergencyAdmin.signer).pausePool();
 
     // User 0 tries the transfer to User 1
     await expect(
@@ -57,7 +57,7 @@ describe("PausablePool", () => {
     );
 
     // Configurator unpauses the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    await configurator.connect(poolAdmin.signer).unpausePool();
 
     // User 0 succeeds transfer to User 1
     await pDai
@@ -78,9 +78,8 @@ describe("PausablePool", () => {
   });
 
   it("TC-poolPausable-02: Supply revert due to pausable pool", async () => {
-    const {users, pool, dai, configurator, emergencyAdmin} = await loadFixture(
-      testEnvFixture
-    );
+    const {users, pool, dai, configurator, emergencyAdmin, poolAdmin} =
+      await loadFixture(testEnvFixture);
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
@@ -93,7 +92,7 @@ describe("PausablePool", () => {
     await dai.connect(users[0].signer).approve(pool.address, MAX_UINT_AMOUNT);
 
     // Configurator pauses the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    await configurator.connect(emergencyAdmin.signer).pausePool();
     await expect(
       pool
         .connect(users[0].signer)
@@ -101,13 +100,12 @@ describe("PausablePool", () => {
     ).to.revertedWith(RESERVE_PAUSED);
 
     // Configurator unpauses the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    await configurator.connect(poolAdmin.signer).unpausePool();
   });
 
   it("TC-poolPausable-03: Supply succeed and then pause pool, withdraw revert", async () => {
-    const {users, pool, dai, configurator, emergencyAdmin} = await loadFixture(
-      testEnvFixture
-    );
+    const {users, pool, dai, configurator, emergencyAdmin, poolAdmin} =
+      await loadFixture(testEnvFixture);
 
     const amountDAItoDeposit = await convertToCurrencyDecimals(
       dai.address,
@@ -123,7 +121,7 @@ describe("PausablePool", () => {
       .supply(dai.address, amountDAItoDeposit, users[0].address, "0");
 
     // Configurator pauses the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    await configurator.connect(emergencyAdmin.signer).pausePool();
 
     // user tries to burn
     await expect(
@@ -133,17 +131,16 @@ describe("PausablePool", () => {
     ).to.revertedWith(RESERVE_PAUSED);
 
     // Configurator unpauses the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    await configurator.connect(poolAdmin.signer).unpausePool();
   });
 
   it("TC-poolPausable-04: Borrow revert due to pausable pool", async () => {
-    const {pool, dai, configurator, emergencyAdmin} = await loadFixture(
-      testEnvFixture
-    );
+    const {pool, dai, configurator, emergencyAdmin, poolAdmin} =
+      await loadFixture(testEnvFixture);
 
     const user = emergencyAdmin;
     // Pause the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    await configurator.connect(emergencyAdmin.signer).pausePool();
 
     // Try to execute liquidation
     await expect(
@@ -151,17 +148,16 @@ describe("PausablePool", () => {
     ).to.be.revertedWith(RESERVE_PAUSED);
 
     // Unpause the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    await configurator.connect(poolAdmin.signer).unpausePool();
   });
 
   it("TC-poolPausable-05: Repay revert due to pausable pool", async () => {
-    const {pool, dai, configurator, emergencyAdmin} = await loadFixture(
-      testEnvFixture
-    );
+    const {pool, dai, configurator, emergencyAdmin, poolAdmin} =
+      await loadFixture(testEnvFixture);
 
     const user = emergencyAdmin;
     // Pause the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    await configurator.connect(emergencyAdmin.signer).pausePool();
 
     // Try to execute liquidation
     await expect(
@@ -169,7 +165,7 @@ describe("PausablePool", () => {
     ).to.be.revertedWith(RESERVE_PAUSED);
 
     // Unpause the pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    await configurator.connect(poolAdmin.signer).unpausePool();
   });
 
   it("TC-poolPausable-06: Supply and borrow succeed, pause pool, then liquidation call revert", async () => {
@@ -182,6 +178,7 @@ describe("PausablePool", () => {
       configurator,
       protocolDataProvider,
       emergencyAdmin,
+      poolAdmin,
     } = await loadFixture(testEnvFixture);
     const supplyor = users[3];
     const borrower = users[4];
@@ -256,7 +253,7 @@ describe("PausablePool", () => {
       .toString();
 
     // Pause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    await configurator.connect(emergencyAdmin.signer).pausePool();
 
     // Do liquidation
     await expect(
@@ -270,14 +267,13 @@ describe("PausablePool", () => {
     ).to.be.revertedWith(RESERVE_PAUSED);
 
     // Unpause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    await configurator.connect(poolAdmin.signer).unpausePool();
   });
 
   it("TC-poolPausable-07: SetUserUseERC20AsCollateral revert due to pausable pool", async () => {
     // eslint-disable-next-line no-unused-vars
-    const {pool, weth, configurator, emergencyAdmin} = await loadFixture(
-      testEnvFixture
-    );
+    const {pool, weth, configurator, emergencyAdmin, poolAdmin} =
+      await loadFixture(testEnvFixture);
     const user = emergencyAdmin;
 
     const amountWETHToDeposit = utils.parseEther("1");
@@ -288,13 +284,13 @@ describe("PausablePool", () => {
       .supply(weth.address, amountWETHToDeposit, user.address, "0");
 
     // Pause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(true);
+    await configurator.connect(emergencyAdmin.signer).pausePool();
 
     await expect(
       pool.connect(user.signer).setUserUseERC20AsCollateral(weth.address, false)
     ).to.be.revertedWith(RESERVE_PAUSED);
 
     // Unpause pool
-    await configurator.connect(emergencyAdmin.signer).setPoolPause(false);
+    await configurator.connect(poolAdmin.signer).unpausePool();
   });
 });
