@@ -882,6 +882,8 @@ describe("Auto Yield Ape Test", () => {
       await yUSDC.balanceOf(poolAdmin.address),
       await convertToCurrencyDecimals(usdc.address, "720")
     );
+
+    expect(await yApe.yieldAmount(yApe.address)).to.be.eq(0);
   });
 
   it("pause function as expected", async () => {

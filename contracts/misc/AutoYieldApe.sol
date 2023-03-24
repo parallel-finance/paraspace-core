@@ -222,8 +222,9 @@ contract AutoYieldApe is
      * @param receiver The address to receive the fee
      **/
     function claimHarvestFee(address receiver) external onlyPoolAdmin {
-        (uint256 freeYield, ) = _yieldAmount(address(this));
+        uint256 freeYield = _userPendingYield[address(this)];
         if (freeYield > 0) {
+            _userPendingYield[address(this)] = 0;
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
                 _yieldUnderlying
             );
