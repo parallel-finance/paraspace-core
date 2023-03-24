@@ -16,7 +16,6 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
-import "hardhat/console.sol";
 
 contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
@@ -60,18 +59,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         _;
     }
 
-    modifier onlyEmergencyAdminOrPoolAdmins() {
-        // require(
-        //     ACL_MANAGER.isEmergencyAdmin(msg.sender) ||
-        //         ACL_MANAGER.isPoolAdmin(msg.sender),
-        //     Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
-        // );
-        _;
-    }
-
     constructor(IPoolAddressesProvider provider) {
-        console.log("rpovider is", address(provider));
-        console.log("pool is", provider.getPool());
         POOL = IPool(provider.getPool());
         ACL_MANAGER = IACLManager(provider.getACLManager());
     }
@@ -89,7 +77,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         uint48 releaseTime
     ) external onlyXToken(asset) returns (uint256) {
         require(beneficiary != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        require(releaseTime > block.timestamp);
+        require(releaseTime > block.timestamp, Errors.INVALID_EXPIRATION);
 
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
