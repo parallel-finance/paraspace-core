@@ -3079,7 +3079,9 @@ export const deployOtherdeedNTokenImpl = async (
   warmWallet: tEthereumAddress,
   verify?: boolean
 ) => {
-  const mintableERC721Logic = "0x02160dA32659a25dB90Dc1c7eae506fAd4e89a31";
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
