@@ -1,4 +1,5 @@
 import rawBRE from "hardhat";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 import {deployReserveTimeLockStrategy as deployReserveTimeLockStrategy} from "../../helpers/contracts-deployments";
 import {
   getPoolConfiguratorProxy,
@@ -45,6 +46,7 @@ import {
   timeLockStrategyUniswapV3,
   timeLockStrategySEWER,
   timeLockStrategyPenguins,
+  timeLockStrategySTETH,
 } from "../../market-config/timeLockStrategies";
 
 const TIME_LOCK_STRATEGY = {
@@ -56,32 +58,45 @@ const TIME_LOCK_STRATEGY = {
   cbETH: timeLockStrategyCBETH,
   rETH: timeLockStrategyRETH,
   astETH: timeLockStrategyASTETH,
+  stETH: timeLockStrategySTETH,
   wstETH: timeLockStrategyWSTETH,
   bendETH: timeLockStrategyBENDETH,
+  bendWETH: timeLockStrategyBENDETH,
   awstETH: timeLockStrategyAWSTETH,
   aWETH: timeLockStrategyAWETH,
+  aEthWETH: timeLockStrategyAWETH,
   cETH: timeLockStrategyCETH,
   PUNK: timeLockStrategyPUNK,
   WBTC: timeLockStrategyWBTC,
   APE: timeLockStrategyAPE,
+  M20: timeLockStrategyAPE,
   sAPE: timeLockStrategySAPE,
+  SAPE: timeLockStrategySAPE,
   cAPE: timeLockStrategyCAPE,
   yAPE: timeLockStrategyYAPE,
   xcDOT: timeLockStrategyXCDOT,
   WGLMR: timeLockStrategyWGLMR,
   BLUR: timeLockStrategyBLUR,
   BAYC: timeLockStrategyBAYC,
+  ATK: timeLockStrategyBAYC,
   MAYC: timeLockStrategyMAYC,
+  BTK: timeLockStrategyMAYC,
   BAKC: timeLockStrategyBAKC,
+  GTK: timeLockStrategyBAKC,
   DOODLES: timeLockStrategyDoodles,
+  DOODLE: timeLockStrategyDoodles,
   OTHR: timeLockStrategyOTHR,
   CLONEX: timeLockStrategyCloneX,
+  Clonex: timeLockStrategyCloneX,
   MOONBIRD: timeLockStrategyMoonbird,
   MEEBITS: timeLockStrategyMeebits,
+  "⚇": timeLockStrategyMeebits,
   AZUKI: timeLockStrategyAzuki,
   WPUNKS: timeLockStrategyWPunks,
   UniswapV3: timeLockStrategyUniswapV3,
+  "UNI-V3-POS": timeLockStrategyUniswapV3,
   SEWER: timeLockStrategySEWER,
+  SewerPass: timeLockStrategySEWER,
   PPG: timeLockStrategyPenguins,
 };
 
@@ -93,8 +108,13 @@ const setTimeLockStrategy = async () => {
   const configurator = await getPoolConfiguratorProxy();
   const reservesData = await ui.getAllReservesTokens();
   for (const x of reservesData) {
+    const reserveData = await pool.getReserveData(x.tokenAddress);
+    if (reserveData.timeLockStrategyAddress != ZERO_ADDRESS) {
+      continue;
+    }
     const strategy = TIME_LOCK_STRATEGY[x.symbol];
     if (!strategy) {
+      console.log("no stratey found for", x.symbol);
       continue;
     }
 

@@ -85,6 +85,18 @@ export const timeLockStrategyRETH: ITimeLockStrategyParams = {
   period: "86400",
 };
 
+export const timeLockStrategySTETH: ITimeLockStrategyParams = {
+  name: "timeLockStrategySTETH",
+  minThreshold: parseUnits("51.5", 18).toString(),
+  midThreshold: parseUnits("155", 18).toString(),
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: parseUnits("1900", 18).toString(),
+  period: "86400",
+};
+
 export const timeLockStrategyASTETH: ITimeLockStrategyParams = {
   name: "timeLockStrategyASTETH",
   minThreshold: parseUnits("51.5", 18).toString(),
