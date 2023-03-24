@@ -104,6 +104,7 @@ import {
   FLASHBOTS_RELAY_RPC,
   MULTI_SIG_NONCE,
   MULTI_SEND_CHUNK_SIZE,
+  PKG_DATA,
 } from "./hardhat-constants";
 import {chunk, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
@@ -151,7 +152,7 @@ export const registerContractInDb = async (
     deployer: instance.deployTransaction?.from,
     constructorArgs,
     verified: false,
-    version: VERSION,
+    package: PKG_DATA,
   };
 
   if (libraries) value["libraries"] = libraries;
@@ -171,6 +172,7 @@ export const insertContractAddressInDb = async (
     ...old,
     address,
     version: VERSION,
+    package: PKG_DATA,
   };
   if (!Array.isArray(newValue.constructorArgs) && verifiable) {
     newValue["constructorArgs"] = [];

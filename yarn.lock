@@ -1400,6 +1400,7 @@ __metadata:
     ethers: 5.7.2
     ethers-multisend: ^2.4.0
     evm-bn: ^1.1.2
+    git-rev-sync: ^3.0.2
     hardhat: ^2.12.0
     hardhat-contract-sizer: ^2.0.3
     hardhat-deploy: ^0.11.4
@@ -7862,6 +7863,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"git-rev-sync@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "git-rev-sync@npm:3.0.2"
+  dependencies:
+    escape-string-regexp: 1.0.5
+    graceful-fs: 4.1.15
+    shelljs: 0.8.5
+  checksum: a6c1b8d9417643f40db0e005df9f05b0f6440756ef5ed379f1565cb90ad58ac1192da193838b243ccf8979ca5109a43c9ca7eb016c612af06912868dab307dd3
+  languageName: node
+  linkType: hard
+
 "glob-parent@npm:^5.1.2, glob-parent@npm:~5.1.0, glob-parent@npm:~5.1.2":
   version: 5.1.2
   resolution: "glob-parent@npm:5.1.2"
@@ -8098,6 +8110,13 @@ __metadata:
     p-cancelable: ^2.0.0
     responselike: ^2.0.0
   checksum: 2de8a1bbda4e9b6b2b72b2d2100bc055a59adc1740529e631f61feb44a8b9a1f9f8590941ed9da9df0090b6d6d0ed8ffee94cd9ac086ec3409b392b33440f7d2
+  languageName: node
+  linkType: hard
+
+"graceful-fs@npm:4.1.15":
+  version: 4.1.15
+  resolution: "graceful-fs@npm:4.1.15"
+  checksum: 0c7d7fcb739f760b3b702f993b64e2c111fce22084bbc9c5c8ff7f1a051691a7bba2baf0bf1c464ea5081225f8e17610c6b30167bcd6899aaabca820d55e403c
   languageName: node
   linkType: hard
 
@@ -13344,7 +13363,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shelljs@npm:^0.8.3":
+"shelljs@npm:0.8.5, shelljs@npm:^0.8.3":
   version: 0.8.5
   resolution: "shelljs@npm:0.8.5"
   dependencies:

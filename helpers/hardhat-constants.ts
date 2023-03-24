@@ -5,6 +5,7 @@ import fs from "fs";
 import {HttpNetworkAccountsUserConfig} from "hardhat/types";
 import {input} from "./wallet-helpers";
 import {version} from "../package.json";
+import git from "git-rev-sync";
 
 dotenv.config();
 
@@ -116,6 +117,21 @@ export const MULTI_SEND_CHUNK_SIZE = parseInt(
 );
 
 export const VERSION = version;
+export const COMMIT = git.short();
+export const COMPILER_OPTIMIZER_RUNS = 1000;
+export const COMPILER_VERSION = "0.8.10";
+export const PKG_DATA = {
+  version: VERSION,
+  git: {
+    commit: COMMIT,
+  },
+  compiler: {
+    version: COMPILER_VERSION,
+    optimizer: {
+      runs: COMPILER_OPTIMIZER_RUNS,
+    },
+  },
+};
 
 export const FLASHBOTS_RELAY_RPC = "https://relay.flashbots.net";
 
