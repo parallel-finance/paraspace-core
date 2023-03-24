@@ -50,7 +50,6 @@ import {
   deployAutoYieldApe,
   deployReserveTimeLockStrategy,
   deployOtherdeedNTokenImpl,
-  deployHotWalletProxy,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -63,6 +62,7 @@ export const initReservesByHelper = async (
   admin: tEthereumAddress,
   treasuryAddress: tEthereumAddress,
   incentivesController: tEthereumAddress,
+  hotWallet: tEthereumAddress,
   verify: boolean,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
@@ -136,6 +136,7 @@ export const initReservesByHelper = async (
   let aTokenVariableDebtTokenImplementationAddress = "";
   let PsApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
+  let nTokenOTHRImplementationAddress = "";
 
   if (genericPTokenImplAddress) {
     await insertContractAddressInDb(
@@ -548,15 +549,11 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = nTokenBAKCImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.OTHR) {
-          // This should be a temporary solution. delegation will be removed
-          const warmWallet = await deployHotWalletProxy(verify);
-          await warmWallet.initialize(admin, admin);
-
-          nTokenBAKCImplementationAddress = (
-            await deployOtherdeedNTokenImpl(pool.address, warmWallet.address)
+          nTokenOTHRImplementationAddress = (
+            await deployOtherdeedNTokenImpl(pool.address, hotWallet)
           ).address;
 
-          xTokenToUse = nTokenBAKCImplementationAddress;
+          xTokenToUse = nTokenOTHRImplementationAddress;
         }
 
         if (!xTokenToUse) {

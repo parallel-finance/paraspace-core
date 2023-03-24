@@ -746,7 +746,7 @@ export interface ICommonConfiguration {
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
-  WarmWallet: tEthereumAddress;
+  HotWallet: tEthereumAddress | undefined;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

@@ -21,6 +21,7 @@ import {NTokenContractId, XTokenType} from "../../helpers/types";
 import dotenv from "dotenv";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 
 dotenv.config();
 
@@ -139,7 +140,7 @@ export const upgradeNToken = async (verify = false) => {
         nTokenOTHRImplementationAddress = (
           await deployOtherdeedNTokenImpl(
             poolAddress,
-            paraSpaceConfig.WarmWallet,
+            paraSpaceConfig.HotWallet || ZERO_ADDRESS,
             verify
           )
         ).address;
