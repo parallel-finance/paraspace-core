@@ -1,11 +1,5 @@
-import {
-  deployHelperContract,
-  deployTimeLockImplAssignItToProxy,
-} from "../../../helpers/contracts-deployments";
-import {
-  getPoolAddressesProvider,
-  getTimeLockProxy,
-} from "../../../helpers/contracts-getters";
+import {deployTimeLockImplAssignItToProxy} from "../../../helpers/contracts-deployments";
+import {getPoolAddressesProvider} from "../../../helpers/contracts-getters";
 export const step_22 = async (verify = false) => {
   try {
     const addressesProvider = await getPoolAddressesProvider();
