@@ -292,7 +292,6 @@ describe("TimeLock functionality tests", () => {
       users: [user1],
       dai,
       pDai,
-      usdc,
     } = await loadFixture(fixture);
     const amount = await convertToCurrencyDecimals(dai.address, "100"); // used usdc intentionally since the mock strategy uses usdc decimals
 
