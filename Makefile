@@ -432,6 +432,10 @@ set-traits-multipliers:
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
+.PHONY: release-timelock-othr
+release-timelock-othr:
+	make SCRIPT_PATH=./scripts/dev/13.release-timelock-othr.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -623,6 +627,18 @@ upgrade-ptoken:
 .PHONY: upgrade-debt-token
 upgrade-debt-token:
 	make TASK_NAME=upgrade:debt-token run-task
+
+.PHONY: add-emergency-admin
+add-emergency-admin:
+	make TASK_NAME=add-emergency-admin run-task
+
+.PHONY: add-pool-admin
+add-pool-admin:
+	make TASK_NAME=add-pool-admin run-task
+
+.PHONY: remove-emergency-admin
+remove-emergency-admin:
+	make TASK_NAME=remove-emergency-admin run-task
 
 .PHONY: hardhat
 hardhat:

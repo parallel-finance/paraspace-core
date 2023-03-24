@@ -13,7 +13,11 @@ import {
   getProtocolDataProvider,
   getPToken,
 } from "../../helpers/contracts-getters";
-import {NTokenContractId, XTokenType} from "../../helpers/types";
+import {
+  NTokenContractId,
+  PTokenContractId,
+  XTokenType,
+} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
@@ -61,13 +65,24 @@ export const upgradePToken = async (verify = false) => {
     const incentivesController = paraSpaceConfig.IncentivesController;
 
     if (xTokenType == XTokenType.PTokenAToken) {
-      if (!pTokenATokenImplementationAddress) {
-        console.log("deploy PTokenAToken implementation");
-        pTokenATokenImplementationAddress = (
-          await deployPTokenAToken(poolAddress, verify)
-        ).address;
+      // compatibility
+      if (symbol == PTokenContractId.pcAPE) {
+        if (!pTokenCApeImplementationAddress) {
+          console.log("deploy PTokenCApe implementation");
+          pTokenCApeImplementationAddress = (
+            await deployPTokenCApe(poolAddress, verify)
+          ).address;
+        }
+        newImpl = pTokenCApeImplementationAddress;
+      } else {
+        if (!pTokenATokenImplementationAddress) {
+          console.log("deploy PTokenAToken implementation");
+          pTokenATokenImplementationAddress = (
+            await deployPTokenAToken(poolAddress, verify)
+          ).address;
+        }
+        newImpl = pTokenATokenImplementationAddress;
       }
-      newImpl = pTokenATokenImplementationAddress;
     } else if (xTokenType == XTokenType.PTokenSApe) {
       if (!pTokenSApeImplementationAddress) {
         console.log("deploy PTokenSApe implementation");

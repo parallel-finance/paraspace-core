@@ -542,6 +542,7 @@ export enum NTokenContractId {
   nBAKC = "nBAKC",
   nSEWER = "nSEWER",
   nPPG = "nPPG",
+  nOTHR = "nOTHR",
 }
 
 export enum PTokenContractId {
@@ -552,6 +553,7 @@ export enum PTokenContractId {
   pstETH = "pstETH",
   pwstETH = "pwstETH",
   pcETH = "pcETH",
+  pcAPE = "pcAPE",
 }
 
 export interface IReserveParams
