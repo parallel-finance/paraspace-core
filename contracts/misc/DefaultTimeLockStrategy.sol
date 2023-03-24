@@ -41,6 +41,11 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
     ) {
         POOL = pool;
 
+        require(minThreshold < midThreshold, "minThreshold > midThreshold");
+        require(minWaitTime < midWaitTime, "minWaitTime > midWaitTime");
+        require(midWaitTime < maxWaitTime, "midWaitTime > maxWaitTime");
+        require(poolPeriodLimit > 0, "poolPeriodLimit can't be 0");
+
         MIN_THRESHOLD = minThreshold;
         MID_THRESHOLD = midThreshold;
 

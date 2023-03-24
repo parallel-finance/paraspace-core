@@ -976,16 +976,20 @@ describe("Ptoken edge cases", () => {
         utils.parseUnits("1", 27)
       );
 
-    await pDai.connect(poolSigner).burn(
-      ZERO_ADDRESS,
-      pDai.address,
-      amount,
-      utils.parseUnits("1", 27),
-      {releaseTime: 0, actionType: 0},
-      {
-        gasLimit: 500000,
-      }
-    );
+    expect(
+      await pDai.connect(poolSigner).burn(
+        ZERO_ADDRESS,
+        pDai.address,
+        amount,
+        utils.parseUnits("1", 27),
+        {releaseTime: 0, actionType: 0},
+        {
+          gasLimit: 500000,
+        }
+      )
+    )
+      .to.emit(pDai, "Transfer")
+      .withArgs(ZERO_ADDRESS, ZERO_ADDRESS, amount);
   });
 
   it("TC-ptoken-edge-14: `mintToTreasury` should work when amount is zero", async () => {

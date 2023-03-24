@@ -16,7 +16,7 @@ export const timeLockStrategyUSDC: ITimeLockStrategyParams = {
 export const timeLockStrategyUSDT: ITimeLockStrategyParams = {
   name: "timeLockStrategyUSDT",
   minThreshold: parseUnits("105000", 6).toString(),
-  midThreshold: parseUnits("400000", 6).toString(),
+  midThreshold: parseUnits("200500", 6).toString(),
   minWaitTime: "12",
   midWaitTime: "7200",
   maxWaitTime: "43200",
@@ -40,7 +40,7 @@ export const timeLockStrategyDAI: ITimeLockStrategyParams = {
 export const timeLockStrategyFRAX: ITimeLockStrategyParams = {
   name: "timeLockStrategyFRAX",
   minThreshold: parseUnits("30000", 18).toString(),
-  midThreshold: parseUnits("30000", 18).toString(),
+  midThreshold: parseUnits("50000", 18).toString(),
   minWaitTime: "12",
   midWaitTime: "7200",
   maxWaitTime: "43200",
@@ -172,7 +172,7 @@ export const timeLockStrategyPUNK: ITimeLockStrategyParams = {
 export const timeLockStrategyWBTC: ITimeLockStrategyParams = {
   name: "timeLockStrategyWBTC",
   minThreshold: parseUnits("2.5", 8).toString(),
-  midThreshold: parseUnits("2.5", 8).toString(),
+  midThreshold: parseUnits("2.8", 8).toString(),
   minWaitTime: "12",
   midWaitTime: "7200",
   maxWaitTime: "43200",
