@@ -1,6 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {
   getPoolConfiguratorProxy,
   getTimeLockProxy,
@@ -285,6 +286,32 @@ describe("TimeLock functionality tests", () => {
 
     const balanceAfter = await dai.balanceOf(user1.address);
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount.mul(10)));
+  });
+
+  it("withdraw ERC20 using max(uint) should work as expected", async () => {
+    const {
+      pool,
+      users: [user1],
+      dai,
+      pDai,
+    } = await loadFixture(fixture);
+    const amount = await convertToCurrencyDecimals(dai.address, "100"); // used usdc intentionally since the mock strategy uses usdc decimals
+
+    const pDaiBalance = await pDai.balanceOf(user1.address);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdraw(dai.address, MAX_UINT_AMOUNT, user1.address, {
+          gasLimit: 5000000,
+        })
+    );
+
+    await advanceTimeAndBlock(36 * 3600);
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+
+    const balanceAfter = await dai.balanceOf(user1.address);
+    await expect(balanceAfter).to.be.closeTo(pDaiBalance, amount);
   });
 
   it("withdraw erc721 tokens below minThreshold should be time locked for 1 block only", async () => {

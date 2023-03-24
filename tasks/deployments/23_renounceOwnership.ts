@@ -10,6 +10,7 @@ task("deploy:renounce-ownership", "Renounce deployer ownership")
     );
     await step_23(ETHERSCAN_VERIFICATION, {
       paraSpaceAdminAddress: newAdmin,
+      emergencyAdminAddresses: [newAdmin],
       gatewayAdminAddress: newAdmin,
       riskAdminAddress: newAdmin,
     });

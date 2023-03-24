@@ -378,7 +378,7 @@ describe("Flash Claim Test", () => {
       .connect(user1.signer)
       .userReceivers(user1.address);
 
-    await waitForTx(await configurator.setReservePause(sApeAddress, true));
+    await waitForTx(await configurator.pauseReserve(sApeAddress));
 
     await expect(
       pool
