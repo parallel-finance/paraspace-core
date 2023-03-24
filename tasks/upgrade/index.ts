@@ -76,7 +76,7 @@ task("upgrade:pool-marketplace", "upgrade pool marketplace")
     console.timeEnd("upgrade poolMarketplace");
   });
 
-task("upgrade:pool-ape-staking", "upgrade pool marketplace")
+task("upgrade:pool-ape-staking", "upgrade pool ape staking")
   .addPositionalParam("oldPoolApeStaking", "old pool ape staking")
   .setAction(async ({oldPoolApeStaking}, DRE) => {
     const {upgradePoolApeStaking} = await import("../../scripts/upgrade/pool");
@@ -84,6 +84,16 @@ task("upgrade:pool-ape-staking", "upgrade pool marketplace")
     console.time("upgrade poolApeStaking");
     await upgradePoolApeStaking(oldPoolApeStaking, ETHERSCAN_VERIFICATION);
     console.timeEnd("upgrade poolApeStaking");
+  });
+
+task("upgrade:pool-parameters", "upgrade pool parameters")
+  .addPositionalParam("oldPoolParameters", "old pool parameters")
+  .setAction(async ({oldPoolParameters}, DRE) => {
+    const {upgradePoolParameters} = await import("../../scripts/upgrade/pool");
+    await DRE.run("set-DRE");
+    console.time("upgrade poolParameters");
+    await upgradePoolParameters(oldPoolParameters, ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade poolParameters");
   });
 
 task("upgrade:configurator", "upgrade pool configurator").setAction(
