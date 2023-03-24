@@ -70,7 +70,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         address beneficiary,
         uint48 releaseTime
     ) external onlyXToken(asset) returns (uint256) {
-        require(beneficiary != address(0), "beneficiary cant be zero address");
+        require(beneficiary != address(0), "Beneficiary cant be zero address");
         require(releaseTime > block.timestamp, "Release time not valid");
 
         uint256 agreementId = agreementCount++;
@@ -165,7 +165,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
 
             require(
                 agreement.assetType == DataTypes.AssetType.ERC721,
-                "wrong asset type"
+                "Wrong asset type"
             );
 
             IMoonBird moonBirds = IMoonBird(agreement.asset);
