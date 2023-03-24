@@ -548,6 +548,14 @@ set-borrow-cap:
 set-pool-pause:
 	make TASK_NAME=set-pool-pause run-task
 
+.PHONY: set-reserve-pause
+set-reserve-pause:
+	make TASK_NAME=set-reserve-pause run-task
+
+.PHONY: set-cAPE-pause
+set-cAPE-pause:
+	make TASK_NAME=set-cAPE-pause run-task
+
 .PHONY: list-facets
 list-facets:
 	make TASK_NAME=list-facets run-task
@@ -623,6 +631,18 @@ upgrade-ptoken:
 .PHONY: upgrade-debt-token
 upgrade-debt-token:
 	make TASK_NAME=upgrade:debt-token run-task
+
+.PHONY: add-emergency-admin
+add-emergency-admin:
+	make TASK_NAME=add-emergency-admin run-task
+
+.PHONY: add-pool-admin
+add-pool-admin:
+	make TASK_NAME=add-pool-admin run-task
+
+.PHONY: remove-emergency-admin
+remove-emergency-admin:
+	make TASK_NAME=remove-emergency-admin run-task
 
 .PHONY: hardhat
 hardhat:

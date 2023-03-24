@@ -1,5 +1,4 @@
 import rawBRE from "hardhat";
-import {ZERO_ADDRESS} from "../../helpers/constants";
 import {deployReserveTimeLockStrategy as deployReserveTimeLockStrategy} from "../../helpers/contracts-deployments";
 import {
   getPoolConfiguratorProxy,
@@ -72,6 +71,7 @@ const TIME_LOCK_STRATEGY = {
   M20: timeLockStrategyAPE,
   sAPE: timeLockStrategySAPE,
   SAPE: timeLockStrategySAPE,
+  SApe: timeLockStrategySAPE,
   cAPE: timeLockStrategyCAPE,
   yAPE: timeLockStrategyYAPE,
   xcDOT: timeLockStrategyXCDOT,
@@ -88,6 +88,7 @@ const TIME_LOCK_STRATEGY = {
   OTHR: timeLockStrategyOTHR,
   CLONEX: timeLockStrategyCloneX,
   Clonex: timeLockStrategyCloneX,
+  CloneX: timeLockStrategyCloneX,
   MOONBIRD: timeLockStrategyMoonbird,
   MEEBITS: timeLockStrategyMeebits,
   "⚇": timeLockStrategyMeebits,
@@ -108,10 +109,6 @@ const setTimeLockStrategy = async () => {
   const configurator = await getPoolConfiguratorProxy();
   const reservesData = await ui.getAllReservesTokens();
   for (const x of reservesData) {
-    const reserveData = await pool.getReserveData(x.tokenAddress);
-    if (reserveData.timeLockStrategyAddress != ZERO_ADDRESS) {
-      continue;
-    }
     const strategy = TIME_LOCK_STRATEGY[x.symbol];
     if (!strategy) {
       console.log("no stratey found for", x.symbol);

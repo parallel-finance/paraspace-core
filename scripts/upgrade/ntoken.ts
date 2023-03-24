@@ -147,13 +147,28 @@ export const upgradeNToken = async (verify = false) => {
       }
       newImpl = nTokenOTHRImplementationAddress;
     } else if (xTokenType == XTokenType.NToken) {
-      if (!nTokenImplementationAddress) {
-        console.log("deploy NToken implementation");
-        nTokenImplementationAddress = (
-          await deployGenericNTokenImpl(poolAddress, false, verify)
-        ).address;
+      // compatibility
+      if (symbol == NTokenContractId.nOTHR) {
+        if (!nTokenOTHRImplementationAddress) {
+          console.log("deploy NTokenOtherdeed implementation");
+          nTokenOTHRImplementationAddress = (
+            await deployOtherdeedNTokenImpl(
+              poolAddress,
+              paraSpaceConfig.HotWallet || ZERO_ADDRESS,
+              verify
+            )
+          ).address;
+        }
+        newImpl = nTokenOTHRImplementationAddress;
+      } else {
+        if (!nTokenImplementationAddress) {
+          console.log("deploy NToken implementation");
+          nTokenImplementationAddress = (
+            await deployGenericNTokenImpl(poolAddress, false, verify)
+          ).address;
+        }
+        newImpl = nTokenImplementationAddress;
       }
-      newImpl = nTokenImplementationAddress;
     } else {
       continue;
     }
