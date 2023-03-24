@@ -6,7 +6,7 @@ import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 
-import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
 import {IMoonBird} from "../dependencies/erc721-collections/IMoonBird.sol";
@@ -192,12 +192,14 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         emit AgreementFrozen(agreementId, false);
     }
 
-    function freezeAllAgreements(bool value)
-        external
-        onlyEmergencyAdminOrPoolAdmins
-    {
-        frozen = value;
-        emit TimeLockFrozen(value);
+    function freezeAllAgreements() external onlyEmergencyAdminOrPoolAdmins {
+        frozen = true;
+        emit TimeLockFrozen(true);
+    }
+
+    function unfreezeAllAgreements() external onlyPoolAdmin {
+        frozen = false;
+        emit TimeLockFrozen(false);
     }
 
     function getAgreement(uint256 agreementId)

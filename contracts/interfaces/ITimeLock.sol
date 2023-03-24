@@ -103,4 +103,14 @@ interface ITimeLock {
      * @param agreementId ID of the agreement to be unfrozen
      */
     function unfreezeAgreement(uint256 agreementId) external;
+
+    /** @dev Function to freeze all time-lock agreements
+     * @notice This function can only be called by an authorized user
+     */
+    function freezeAllAgreements() external;
+
+    /** @dev Function to unfreeze all time-lock agreements
+     * @notice This function can only be called by an authorized user
+     */
+    function unfreezeAllAgreements() external;
 }
