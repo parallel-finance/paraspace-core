@@ -131,13 +131,16 @@ library ReserveLogic {
      * @param xTokenAddress The address of the overlying xtoken contract
      * @param variableDebtTokenAddress The address of the overlying variable debt token contract
      * @param interestRateStrategyAddress The address of the interest rate strategy contract
+     * @param auctionStrategyAddress The address of the auction strategy contract
+     * @param timeLockStrategyAddress The address of the timeLock strategy contract
      **/
     function init(
         DataTypes.ReserveData storage reserve,
         address xTokenAddress,
         address variableDebtTokenAddress,
         address interestRateStrategyAddress,
-        address auctionStrategyAddress
+        address auctionStrategyAddress,
+        address timeLockStrategyAddress
     ) internal {
         require(
             reserve.xTokenAddress == address(0),
@@ -150,6 +153,7 @@ library ReserveLogic {
         reserve.variableDebtTokenAddress = variableDebtTokenAddress;
         reserve.interestRateStrategyAddress = interestRateStrategyAddress;
         reserve.auctionStrategyAddress = auctionStrategyAddress;
+        reserve.timeLockStrategyAddress = timeLockStrategyAddress;
     }
 
     struct UpdateInterestRatesLocalVars {
