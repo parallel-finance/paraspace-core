@@ -11,6 +11,7 @@ const SYMBOL_MAP = {
   ATK: "BAYC",
   BTK: "MAYC",
   GTK: "BAKC",
+  "UNI-V3-POS": "UniswapV3",
 };
 
 export const afterAll = async () => {
