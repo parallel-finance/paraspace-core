@@ -279,7 +279,7 @@ export const timeLockStrategyBLUR: ITimeLockStrategyParams = {
 
 export const timeLockStrategyBAYC: ITimeLockStrategyParams = {
   name: "timeLockStrategyBAYC",
-  minThreshold: "1",
+  minThreshold: "2",
   midThreshold: "4",
   minWaitTime: "12",
   midWaitTime: "7200",
@@ -387,7 +387,7 @@ export const timeLockStrategyAzuki: ITimeLockStrategyParams = {
 
 export const timeLockStrategyWPunks: ITimeLockStrategyParams = {
   name: "timeLockStrategyWPunks",
-  minThreshold: "1",
+  minThreshold: "2",
   midThreshold: "4",
   minWaitTime: "12",
   midWaitTime: "7200",
