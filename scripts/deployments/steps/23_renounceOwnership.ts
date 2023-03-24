@@ -480,13 +480,6 @@ export const step_23 = async (
           [paraSpaceAdminAddress]
         );
         await dryRunEncodedData(timeLockProxy.address, encodedData1);
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          const encodedData2 = timeLock.interface.encodeFunctionData(
-            "transferOwnership",
-            [gatewayAdminAddress]
-          );
-          await dryRunEncodedData(timeLock.address, encodedData2);
-        }
       } else {
         await waitForTx(
           await timeLockProxy.changeAdmin(
@@ -494,14 +487,6 @@ export const step_23 = async (
             GLOBAL_OVERRIDES
           )
         );
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          // await waitForTx(
-          //   await timeLock.transferOwnership(
-          //     gatewayAdminAddress,
-          //     GLOBAL_OVERRIDES
-          //   )
-          // );
-        }
       }
       console.timeEnd("transferring TimeLockProxy ownership...");
       console.log();

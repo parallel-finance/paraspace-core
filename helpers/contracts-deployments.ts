@@ -2668,8 +2668,6 @@ export const deployTimeLockImplAssignItToProxy = async (
       "initialize(address,address,bytes)"
     ](impl.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
-
-  return proxyInstance as TimeLock;
 };
 
 export const deployDefaultTimeLockStrategy = async (
