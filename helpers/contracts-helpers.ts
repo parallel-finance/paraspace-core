@@ -804,6 +804,15 @@ export const dryRunEncodedData = async (
     await proposeSafeTransaction(newTarget, newData);
   } else if (DRY_RUN === DryRunExecutor.Safe) {
     await proposeSafeTransaction(target, data);
+  } else if (DRY_RUN === DryRunExecutor.Run) {
+    const signer = await getFirstSigner();
+    await waitForTx(
+      await signer.sendTransaction({
+        to: target,
+        data,
+        ...GLOBAL_OVERRIDES,
+      })
+    );
   } else {
     console.log(`target: ${target}, data: ${data}`);
   }
@@ -852,6 +861,17 @@ export const dryRunMultipleEncodedData = async (
       });
     }
     await proposeMultiSafeTransactions(metaTransactions);
+  } else if (DRY_RUN === DryRunExecutor.Run) {
+    const signer = await getFirstSigner();
+    for (let i = 0; i < target.length; i++) {
+      await waitForTx(
+        await signer.sendTransaction({
+          to: target[i],
+          data: data[i],
+          ...GLOBAL_OVERRIDES,
+        })
+      );
+    }
   } else {
     console.log(`target: ${target}, data: ${data}`);
   }
