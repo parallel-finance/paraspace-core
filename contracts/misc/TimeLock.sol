@@ -20,29 +20,6 @@ import {IACLManager} from "../interfaces/IACLManager.sol";
 contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
 
-    event AgreementCreated(
-        uint256 agreementId,
-        DataTypes.AssetType assetType,
-        DataTypes.TimeLockActionType actionType,
-        address indexed asset,
-        uint256[] tokenIdsOrAmounts,
-        address indexed beneficiary,
-        uint48 releaseTime
-    );
-
-    event AgreementClaimed(
-        uint256 agreementId,
-        DataTypes.AssetType assetType,
-        DataTypes.TimeLockActionType actionType,
-        address indexed asset,
-        uint256[] tokenIdsOrAmounts,
-        address indexed beneficiary
-    );
-
-    event AgreementFrozen(uint256 agreementId, bool value);
-
-    event TimeLockFrozen(bool value);
-
     mapping(uint256 => Agreement) private agreements;
 
     uint248 public agreementCount;
@@ -64,6 +41,14 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             ACL_MANAGER.isEmergencyAdmin(msg.sender) ||
                 ACL_MANAGER.isPoolAdmin(msg.sender),
             Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
+        _;
+    }
+
+    modifier onlyPoolAdmin() {
+        require(
+            ACL_MANAGER.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_ADMIN
         );
         _;
     }
@@ -167,30 +152,44 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         }
     }
 
-    function claimMoonBirds(uint256 agreementId) external nonReentrant {
-        Agreement memory agreement = _validateAndDeleteAgreement(agreementId);
+    function claimMoonBirds(uint256[] calldata agreementIds)
+        external
+        nonReentrant
+    {
+        require(!frozen, "TimeLock is frozen");
 
-        require(
-            agreement.assetType == DataTypes.AssetType.ERC721,
-            "wrong asset type"
-        );
-
-        IMoonBird moonBirds = IMoonBird(agreement.asset);
-        for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
-            moonBirds.safeTransferWhileNesting(
-                address(this),
-                agreement.beneficiary,
-                agreement.tokenIdsOrAmounts[i]
+        for (uint256 index = 0; index < agreementIds.length; index++) {
+            Agreement memory agreement = _validateAndDeleteAgreement(
+                agreementIds[index]
             );
+
+            require(
+                agreement.assetType == DataTypes.AssetType.ERC721,
+                "wrong asset type"
+            );
+
+            IMoonBird moonBirds = IMoonBird(agreement.asset);
+            for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
+                moonBirds.safeTransferWhileNesting(
+                    address(this),
+                    agreement.beneficiary,
+                    agreement.tokenIdsOrAmounts[i]
+                );
+            }
         }
     }
 
-    function freezeAgreement(uint256 agreementId, bool value)
+    function freezeAgreement(uint256 agreementId)
         external
         onlyEmergencyAdminOrPoolAdmins
     {
-        agreements[agreementId].isFrozen = value;
-        emit AgreementFrozen(agreementId, value);
+        agreements[agreementId].isFrozen = true;
+        emit AgreementFrozen(agreementId, true);
+    }
+
+    function unfreezeAgreement(uint256 agreementId) external onlyPoolAdmin {
+        agreements[agreementId].isFrozen = false;
+        emit AgreementFrozen(agreementId, false);
     }
 
     function freezeAllAgreements(bool value)
