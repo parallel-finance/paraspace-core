@@ -1,3 +1,4 @@
+import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployMockIncentivesController,
   deployMockReserveAuctionStrategy,
@@ -46,6 +47,7 @@ export const step_11 = async (verify = false) => {
     // Add an IncentivesController
     let incentivesController = config.IncentivesController;
     let auctionStrategy: tEthereumAddress | undefined = undefined;
+    let timeLockStrategy: tEthereumAddress | undefined = undefined;
 
     if (isLocalTestnet()) {
       incentivesController = (await deployMockIncentivesController(verify))
@@ -71,6 +73,7 @@ export const step_11 = async (verify = false) => {
           verify
         )
       ).address;
+      timeLockStrategy = ZERO_ADDRESS;
     }
 
     const reserves = Object.entries(reservesParams).filter(
@@ -112,7 +115,7 @@ export const step_11 = async (verify = false) => {
         undefined,
         undefined,
         auctionStrategy,
-        undefined
+        timeLockStrategy
       );
 
       await configureReservesByHelper(
