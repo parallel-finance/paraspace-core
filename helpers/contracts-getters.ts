@@ -109,7 +109,7 @@ import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
 } from "../types";
-import {RPC_URL} from "./hardhat-constants";
+import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
 
 export const getFirstSigner = async () => {
   if (!RPC_URL) {
@@ -117,7 +117,9 @@ export const getFirstSigner = async () => {
   }
 
   const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
-  return (await impersonateAddress(paraSpaceAdminAddress)).signer;
+  return (
+    await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
+  ).signer;
 };
 
 export const getLastSigner = async () => last(await getEthersSigners())!;

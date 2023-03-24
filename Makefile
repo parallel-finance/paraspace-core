@@ -552,6 +552,14 @@ set-borrow-cap:
 set-pool-pause:
 	make TASK_NAME=set-pool-pause run-task
 
+.PHONY: set-reserve-pause
+set-reserve-pause:
+	make TASK_NAME=set-reserve-pause run-task
+
+.PHONY: set-cAPE-pause
+set-cAPE-pause:
+	make TASK_NAME=set-cAPE-pause run-task
+
 .PHONY: list-facets
 list-facets:
 	make TASK_NAME=list-facets run-task

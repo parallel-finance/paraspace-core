@@ -105,6 +105,7 @@ export const TIME_LOCK_BUFFERING_TIME = parseInt(
 export const TIME_LOCK_DEFAULT_OPERATION =
   process.env.TIME_LOCK_DEFAULT_OPERATION || "queue";
 
+export const IMPERSONATE_ADDRESS = process.env.IMPERSONATE_ADDRESS || "";
 export const MULTI_SIG =
   process.env.MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 export const MULTI_SEND =
