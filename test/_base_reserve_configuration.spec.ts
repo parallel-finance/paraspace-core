@@ -21,12 +21,12 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {getFirstSigner, getTimeLockProxy} from "../helpers/contracts-getters";
 import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {BigNumberish, utils} from "ethers";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {impersonateAddress} from "../helpers/contracts-helpers";
+import {ConfiguratorInputTypes} from "../types/contracts/interfaces/IPoolConfigurator";
 
 describe("ReserveConfiguration", async () => {
   const fixture = async () => {

@@ -1,16 +1,16 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {PromiseOrValue} from "../types/common";
-import {BlurExchangeLibraryAddresses} from "../types/factories/dependencies/blur-exchange/BlurExchange__factory";
-import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
-import {PoolConfiguratorLibraryAddresses} from "../types/factories/protocol/pool/PoolConfigurator__factory";
-import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCore__factory";
-import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
-import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
-import {NTokenBAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenBAYC__factory";
-import {NTokenMAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMAYC__factory";
-import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMoonBirds__factory";
-import {NTokenUniswapV3LibraryAddresses} from "../types/factories/protocol/tokenization/NTokenUniswapV3__factory";
-import {NTokenLibraryAddresses} from "../types/factories/protocol/tokenization/NToken__factory";
+import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
+import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
+import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
+import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
+import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
+import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
+import {NTokenBAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenBAYC__factory";
+import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMAYC__factory";
+import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
+import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
+import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
 
 export enum AssetType {
   ERC20 = 0,
@@ -261,6 +261,8 @@ export enum eContractid {
   TimeLockProxy = "TimeLockProxy",
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
+  NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  HotWalletProxy = "HotWalletProxy",
 }
 
 /*

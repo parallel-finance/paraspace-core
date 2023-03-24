@@ -21,7 +21,8 @@ enum XTokenType {
     PTokenSApe,
     NTokenBAKC,
     PYieldToken,
-    PTokenCAPE
+    PTokenCAPE,
+    NTokenOtherdeed
 }
 
 interface IXTokenType {

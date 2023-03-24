@@ -87,6 +87,8 @@ import {
   HelperContract__factory,
   MockCToken__factory,
   TimeLock__factory,
+  HotWalletProxy__factory,
+  NTokenOtherdeed__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1221,6 +1223,28 @@ export const getTimeLockProxy = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
+  await NTokenOtherdeed__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getHotWalletProxy = async (address?: tEthereumAddress) =>
+  await HotWalletProxy__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.HotWalletProxy}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

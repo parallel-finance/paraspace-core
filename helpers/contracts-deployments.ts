@@ -265,6 +265,10 @@ import {
   TimeLock__factory,
   DefaultTimeLockStrategy__factory,
   DefaultTimeLockStrategy,
+  NTokenOtherdeed__factory,
+  NTokenOtherdeed,
+  HotWalletProxy__factory,
+  HotWalletProxy,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -295,11 +299,11 @@ import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/librar
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Address} from "hardhat-deploy/dist/types";
 import {Contract} from "ethers";
-import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
-import {MarketplaceLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/MarketplaceLogic__factory";
-import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCore__factory";
-import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
-import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
+import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
+import {MarketplaceLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/MarketplaceLogic__factory";
+import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
+import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
+import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
 
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
@@ -3069,3 +3073,32 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployOtherdeedNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  warmWallet: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic = "0x02160dA32659a25dB90Dc1c7eae506fAd4e89a31";
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    new NTokenOtherdeed__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenOtherdeedImpl,
+    [poolAddress, warmWallet],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenOtherdeed>;
+};
+
+export const deployHotWalletProxy = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new HotWalletProxy__factory(await getFirstSigner()),
+    eContractid.HotWalletProxy,
+    [],
+    verify
+  ) as Promise<HotWalletProxy>;
