@@ -1,72 +1,131 @@
-import {BigNumber} from "ethers";
-import {parseUnits} from "ethers/lib/utils";
 import rawBRE from "hardhat";
-import {ZERO_ADDRESS} from "../../helpers/constants";
 import {deployReserveTimeLockStrategy as deployReserveTimeLockStrategy} from "../../helpers/contracts-deployments";
 import {
   getPoolConfiguratorProxy,
   getPoolProxy,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
-import {GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
-import {eContractid} from "../../helpers/types";
+
+import {
+  timeLockStrategyUSDC,
+  timeLockStrategyUSDT,
+  timeLockStrategyDAI,
+  timeLockStrategyFRAX,
+  timeLockStrategyWETH,
+  timeLockStrategyCBETH,
+  timeLockStrategyRETH,
+  timeLockStrategyASTETH,
+  timeLockStrategyWSTETH,
+  timeLockStrategyBENDETH,
+  timeLockStrategyAWSTETH,
+  timeLockStrategyAWETH,
+  timeLockStrategyCETH,
+  timeLockStrategyPUNK,
+  timeLockStrategyWBTC,
+  timeLockStrategyAPE,
+  timeLockStrategySAPE,
+  timeLockStrategyCAPE,
+  timeLockStrategyYAPE,
+  timeLockStrategyXCDOT,
+  timeLockStrategyWGLMR,
+  timeLockStrategyBLUR,
+  timeLockStrategyBAYC,
+  timeLockStrategyMAYC,
+  timeLockStrategyBAKC,
+  timeLockStrategyDoodles,
+  timeLockStrategyOTHR,
+  timeLockStrategyCloneX,
+  timeLockStrategyMoonbird,
+  timeLockStrategyMeebits,
+  timeLockStrategyAzuki,
+  timeLockStrategyWPunks,
+  timeLockStrategyUniswapV3,
+  timeLockStrategySEWER,
+  timeLockStrategyPenguins,
+} from "../../market-config/timeLockStrategies";
+
+const TIME_LOCK_STRATEGY = {
+  USDC: timeLockStrategyUSDC,
+  USDT: timeLockStrategyUSDT,
+  DAI: timeLockStrategyDAI,
+  FRAX: timeLockStrategyFRAX,
+  WETH: timeLockStrategyWETH,
+  cbETH: timeLockStrategyCBETH,
+  rETH: timeLockStrategyRETH,
+  astETH: timeLockStrategyASTETH,
+  wstETH: timeLockStrategyWSTETH,
+  bendETH: timeLockStrategyBENDETH,
+  awstETH: timeLockStrategyAWSTETH,
+  aWETH: timeLockStrategyAWETH,
+  cETH: timeLockStrategyCETH,
+  PUNK: timeLockStrategyPUNK,
+  WBTC: timeLockStrategyWBTC,
+  APE: timeLockStrategyAPE,
+  sAPE: timeLockStrategySAPE,
+  cAPE: timeLockStrategyCAPE,
+  yAPE: timeLockStrategyYAPE,
+  xcDOT: timeLockStrategyXCDOT,
+  WGLMR: timeLockStrategyWGLMR,
+  BLUR: timeLockStrategyBLUR,
+  BAYC: timeLockStrategyBAYC,
+  MAYC: timeLockStrategyMAYC,
+  BAKC: timeLockStrategyBAKC,
+  DOODLES: timeLockStrategyDoodles,
+  OTHR: timeLockStrategyOTHR,
+  CLONEX: timeLockStrategyCloneX,
+  MOONBIRD: timeLockStrategyMoonbird,
+  MEEBITS: timeLockStrategyMeebits,
+  AZUKI: timeLockStrategyAzuki,
+  WPUNKS: timeLockStrategyWPunks,
+  UniswapV3: timeLockStrategyUniswapV3,
+  SEWER: timeLockStrategySEWER,
+  PPG: timeLockStrategyPenguins,
+};
 
 const setTimeLockStrategy = async () => {
   console.time("set-timelock-strategy");
 
   const ui = await getProtocolDataProvider();
   const pool = await getPoolProxy();
+  const configurator = await getPoolConfiguratorProxy();
   const reservesData = await ui.getAllReservesTokens();
   for (const x of reservesData) {
-    const reserveData = await pool.getReserveData(x.tokenAddress);
-    const reserveConfiguration = (await pool.getConfiguration(x.tokenAddress))
-      .data;
-    const assetType = reserveConfiguration.shr(168).and(1);
-    const decimals = reserveConfiguration.shr(48).and(255);
-    if (reserveData.timeLockStrategyAddress != ZERO_ADDRESS) {
+    const strategy = TIME_LOCK_STRATEGY[x.symbol];
+    if (!strategy) {
       continue;
     }
-    const minTime = 5;
-    const midTime = 300;
-    const maxTime = 3600;
-    const poolPeriodWaitTime = 40;
-    const period = 86400;
 
-    try {
-      console.log(x.tokenAddress);
-      const minThreshold = assetType.eq(0)
-        ? parseUnits("1000", decimals)
-        : BigNumber.from("5");
-      const midThreshold = assetType.eq(0)
-        ? parseUnits("10000", decimals)
-        : BigNumber.from("10");
+    console.log(x.symbol);
+    const defaultStrategy = await deployReserveTimeLockStrategy(
+      strategy.name,
+      pool.address,
+      strategy.minThreshold.toString(),
+      strategy.midThreshold.toString(),
+      strategy.minTime.toString(),
+      strategy.midTime.toString(),
+      strategy.maxTime.toString(),
+      strategy.midThreshold.mul(10).toString(),
+      strategy.poolPeriodWaitTime.toString(),
+      strategy.period.toString()
+    );
 
-      const defaultStrategy = await deployReserveTimeLockStrategy(
-        eContractid.DefaultTimeLockStrategy,
-        (
-          await getPoolProxy()
-        ).address,
-        minThreshold.toString(),
-        midThreshold.toString(),
-        minTime.toString(),
-        midTime.toString(),
-        maxTime.toString(),
-        midThreshold.mul(10).toString(),
-        poolPeriodWaitTime.toString(),
-        period.toString()
+    if (DRY_RUN) {
+      const encodedData = configurator.interface.encodeFunctionData(
+        "setReserveTimeLockStrategyAddress",
+        [x.tokenAddress, defaultStrategy.address]
       );
-
-      const poolConfigurator = await getPoolConfiguratorProxy();
+      await dryRunEncodedData(configurator.address, encodedData);
+    } else {
       await waitForTx(
-        await poolConfigurator.setReserveTimeLockStrategyAddress(
+        await configurator.setReserveTimeLockStrategyAddress(
           x.tokenAddress,
           defaultStrategy.address,
           GLOBAL_OVERRIDES
         )
       );
-    } catch (e) {
-      console.log(e, x.symbol);
     }
   }
   console.timeEnd("set-timelock-strategy");
