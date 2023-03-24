@@ -5,7 +5,7 @@ import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
-
+import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";

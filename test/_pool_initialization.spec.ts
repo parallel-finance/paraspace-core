@@ -60,6 +60,7 @@ describe("Pool: Initialization", () => {
           config.xTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
+          ZERO_ADDRESS,
           ZERO_ADDRESS
         )
     ).to.be.revertedWith(CALLER_NOT_POOL_CONFIGURATOR);
@@ -84,6 +85,7 @@ describe("Pool: Initialization", () => {
         .connect(configSigner)
         .initReserve(
           users[0].address,
+          ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,

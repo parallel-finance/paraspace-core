@@ -223,12 +223,8 @@ export const getPoolLogic = async (address?: tEthereumAddress) =>
   );
 
 export const getPoolProxy = async (address?: tEthereumAddress) => {
-  const poolAddressesProvider = await getPoolAddressesProvider();
-  const poolAddress = await poolAddressesProvider.getPool();
-
   return await IPool__factory.connect(
     address ||
-      poolAddress ||
       (
         await getDb()
           .get(`${eContractid.PoolProxy}.${DRE.network.name}`)

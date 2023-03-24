@@ -3,6 +3,7 @@ import {
   deployDelegationAwarePTokenImpl,
   deployGenericPTokenImpl,
   deployPTokenAToken,
+  deployPTokenCApe,
   deployPTokenSApe,
   deployPTokenStETH,
 } from "../../helpers/contracts-deployments";
@@ -33,6 +34,7 @@ export const upgradePToken = async (verify = false) => {
   let pTokenDelegationAwareImplementationAddress = "";
   let pTokenStETHImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
+  let pTokenCApeImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
   let newImpl = "";
 
@@ -49,6 +51,7 @@ export const upgradePToken = async (verify = false) => {
         XTokenType.DelegationAwarePToken,
         XTokenType.PTokenStETH,
         XTokenType.PTokenSApe,
+        XTokenType.PTokenCApe,
         XTokenType.PTokenAToken,
       ].includes(xTokenType)
     ) {
@@ -83,6 +86,14 @@ export const upgradePToken = async (verify = false) => {
         ).address;
       }
       newImpl = pTokenSApeImplementationAddress;
+    } else if (xTokenType == XTokenType.PTokenCApe) {
+      if (!pTokenCApeImplementationAddress) {
+        console.log("deploy PTokenCApe implementation");
+        pTokenCApeImplementationAddress = (
+          await deployPTokenCApe(poolAddress, verify)
+        ).address;
+      }
+      newImpl = pTokenCApeImplementationAddress;
     } else if (xTokenType == XTokenType.PTokenStETH) {
       if (!pTokenStETHImplementationAddress) {
         console.log("deploy PTokenStETH implementation");

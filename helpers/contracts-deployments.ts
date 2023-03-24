@@ -265,7 +265,6 @@ import {
   TimeLock__factory,
   DefaultTimeLockStrategy__factory,
   DefaultTimeLockStrategy,
-  TimeLock,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -447,6 +446,146 @@ export const deployPoolCoreLibraries = async (
   };
 };
 
+export const deployPoolCore = async (provider: string, verify?: boolean) => {
+  const coreLibraries = await deployPoolCoreLibraries(verify);
+  const {poolCoreSelectors} = getPoolSignatures();
+
+  const poolCore = (await withSaveAndVerify(
+    new PoolCore__factory(coreLibraries, await getFirstSigner()),
+    eContractid.PoolCoreImpl,
+    [
+      provider,
+      (await getContractAddressInDb(eContractid.TimeLockProxy)) ||
+        (
+          await deployTimeLockProxy(verify)
+        ).address,
+    ],
+    verify,
+    false,
+    coreLibraries,
+    poolCoreSelectors
+  )) as PoolCore;
+
+  return {
+    poolCore,
+    poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
+  };
+};
+
+export const deployPoolMarketplace = async (
+  provider: string,
+  verify?: boolean
+) => {
+  const supplyLogic = await deploySupplyLogic(verify);
+  const borrowLogic = await deployBorrowLogic(verify);
+  const marketplaceLogic = await deployMarketplaceLogic(
+    {
+      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+        supplyLogic.address,
+      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+        borrowLogic.address,
+    },
+    verify
+  );
+  const marketplaceLibraries = {
+    "contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic":
+      marketplaceLogic.address,
+  };
+
+  const {poolMarketplaceSelectors} = getPoolSignatures();
+
+  const poolMarketplace = (await withSaveAndVerify(
+    new PoolMarketplace__factory(marketplaceLibraries, await getFirstSigner()),
+    eContractid.PoolMarketplaceImpl,
+    [provider],
+    verify,
+    false,
+    marketplaceLibraries,
+    poolMarketplaceSelectors
+  )) as PoolCore;
+
+  return {
+    poolMarketplace,
+    poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
+  };
+};
+
+export const deployPoolApeStaking = async (
+  provider: string,
+  verify?: boolean
+) => {
+  const supplyLogic = await deploySupplyLogic(verify);
+  const borrowLogic = await deployBorrowLogic(verify);
+  const apeStakingLibraries = {
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+      supplyLogic.address,
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+      borrowLogic.address,
+  };
+
+  const APE_WETH_FEE = 3000;
+  const WETH_USDC_FEE = 500;
+
+  const {poolApeStakingSelectors} = await getPoolSignatures();
+
+  const allTokens = await getAllTokens();
+
+  const poolApeStaking = (await withSaveAndVerify(
+    new PoolApeStaking__factory(apeStakingLibraries, await getFirstSigner()),
+    eContractid.PoolApeStakingImpl,
+    [
+      provider,
+      (await getContractAddressInDb(eContractid.cAPE)) ||
+        (
+          await deployAutoCompoundApe(verify)
+        ).address,
+      allTokens.APE.address,
+      allTokens.USDC.address,
+      (await getUniswapV3SwapRouter()).address,
+      allTokens.WETH.address,
+      APE_WETH_FEE,
+      WETH_USDC_FEE,
+    ],
+    verify,
+    false,
+    apeStakingLibraries,
+    poolApeStakingSelectors
+  )) as PoolApeStaking;
+
+  return {
+    poolApeStaking,
+    poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
+  };
+};
+
+export const deployPoolParameters = async (
+  provider: string,
+  verify?: boolean
+) => {
+  const poolLogic = await deployPoolLogic(verify);
+
+  const {poolParametersSelectors} = await getPoolSignatures();
+  const parametersLibraries = {
+    "contracts/protocol/libraries/logic/PoolLogic.sol:PoolLogic":
+      poolLogic.address,
+  };
+
+  const poolParameters = (await withSaveAndVerify(
+    new PoolParameters__factory(parametersLibraries, await getFirstSigner()),
+    eContractid.PoolParametersImpl,
+    [provider],
+    verify,
+    false,
+    parametersLibraries,
+    poolParametersSelectors
+  )) as PoolParameters;
+
+  return {
+    poolParameters,
+    poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
+  };
+};
+
 export const deployPoolMarketplaceLibraries = async (
   coreLibraries: PoolCoreLibraryAddresses,
   verify?: boolean
@@ -571,31 +710,10 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
 
-  const poolCore = new PoolCore__factory(coreLibraries, await getFirstSigner());
-
-  const poolParameters = new PoolParameters__factory(
-    parametersLibraries,
-    await getFirstSigner()
-  );
-
-  const poolMarketplace = new PoolMarketplace__factory(
-    marketplaceLibraries,
-    await getFirstSigner()
-  );
-
-  const poolApeStaking = new PoolApeStaking__factory(
-    apeStakingLibraries,
-    await getFirstSigner()
-  );
-
   const allTokens = await getAllTokens();
 
   const APE_WETH_FEE = 3000;
   const WETH_USDC_FEE = 500;
-
-  const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
-    await getFirstSigner()
-  );
 
   const {
     poolCoreSelectors,
@@ -605,72 +723,85 @@ export const deployPoolComponents = async (
     poolParaProxyInterfacesSelectors,
   } = getPoolSignatures();
 
-  return {
-    poolCore: (await withSaveAndVerify(
-      poolCore,
-      eContractid.PoolCoreImpl,
-      [
-        provider,
-        (await getContractAddressInDb(eContractid.TimeLockProxy)) ||
-          (
-            await deployTimeLockProxy(verify)
-          ).address,
-      ],
-      verify,
-      false,
-      coreLibraries,
-      poolCoreSelectors
-    )) as PoolCore,
-    poolParameters: (await withSaveAndVerify(
-      poolParameters,
-      eContractid.PoolParametersImpl,
-      [provider],
-      verify,
-      false,
-      parametersLibraries,
-      poolParametersSelectors
-    )) as PoolParameters,
-    poolMarketplace: (await withSaveAndVerify(
-      poolMarketplace,
-      eContractid.PoolMarketplaceImpl,
-      [provider],
-      verify,
-      false,
-      marketplaceLibraries,
-      poolMarketplaceSelectors
-    )) as PoolMarketplace,
-    poolApeStaking: allTokens.APE
-      ? ((await withSaveAndVerify(
-          poolApeStaking,
-          eContractid.PoolApeStakingImpl,
-          [
-            provider,
-            (await getContractAddressInDb(eContractid.cAPE)) ||
-              (
-                await deployAutoCompoundApe(verify)
-              ).address,
-            allTokens.APE.address,
-            allTokens.USDC.address,
-            (await getUniswapV3SwapRouter()).address,
-            allTokens.WETH.address,
-            APE_WETH_FEE,
-            WETH_USDC_FEE,
-          ],
-          verify,
-          false,
+  const poolCore = (await withSaveAndVerify(
+    new PoolCore__factory(coreLibraries, await getFirstSigner()),
+    eContractid.PoolCoreImpl,
+    [
+      provider,
+      (await getContractAddressInDb(eContractid.TimeLockProxy)) ||
+        (
+          await deployTimeLockProxy(verify)
+        ).address,
+    ],
+    verify,
+    false,
+    coreLibraries,
+    poolCoreSelectors
+  )) as PoolCore;
+
+  const poolParameters = (await withSaveAndVerify(
+    new PoolParameters__factory(parametersLibraries, await getFirstSigner()),
+    eContractid.PoolParametersImpl,
+    [provider],
+    verify,
+    false,
+    parametersLibraries,
+    poolParametersSelectors
+  )) as PoolParameters;
+
+  const poolMarketplace = (await withSaveAndVerify(
+    new PoolMarketplace__factory(marketplaceLibraries, await getFirstSigner()),
+    eContractid.PoolMarketplaceImpl,
+    [provider],
+    verify,
+    false,
+    marketplaceLibraries,
+    poolMarketplaceSelectors
+  )) as PoolMarketplace;
+
+  const poolApeStaking = allTokens.APE
+    ? ((await withSaveAndVerify(
+        new PoolApeStaking__factory(
           apeStakingLibraries,
-          poolApeStakingSelectors
-        )) as PoolApeStaking)
-      : undefined,
-    poolParaProxyInterfaces: (await withSaveAndVerify(
-      poolParaProxyInterfaces,
-      eContractid.ParaProxyInterfacesImpl,
-      [],
-      verify,
-      false,
-      undefined,
-      poolParaProxyInterfacesSelectors
-    )) as ParaProxyInterfaces,
+          await getFirstSigner()
+        ),
+        eContractid.PoolApeStakingImpl,
+        [
+          provider,
+          (await getContractAddressInDb(eContractid.cAPE)) ||
+            (
+              await deployAutoCompoundApe(verify)
+            ).address,
+          allTokens.APE.address,
+          allTokens.USDC.address,
+          (await getUniswapV3SwapRouter()).address,
+          allTokens.WETH.address,
+          APE_WETH_FEE,
+          WETH_USDC_FEE,
+        ],
+        verify,
+        false,
+        apeStakingLibraries,
+        poolApeStakingSelectors
+      )) as PoolApeStaking)
+    : undefined;
+
+  const poolParaProxyInterfaces = (await withSaveAndVerify(
+    new ParaProxyInterfaces__factory(await getFirstSigner()),
+    eContractid.ParaProxyInterfacesImpl,
+    [],
+    verify,
+    false,
+    undefined,
+    poolParaProxyInterfacesSelectors
+  )) as ParaProxyInterfaces;
+
+  return {
+    poolCore,
+    poolParameters,
+    poolMarketplace,
+    poolApeStaking,
+    poolParaProxyInterfaces,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
@@ -2610,33 +2741,6 @@ export const deployTimeLockImpl = async (
     verify
   );
 
-export const deployTimeLock = async (
-  provider: tEthereumAddress,
-  verify?: boolean
-) => {
-  const impl = await deployTimeLockImpl(provider, verify);
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
-
-  const initData = impl.interface.encodeFunctionData("initialize");
-
-  const proxyInstance = await withSaveAndVerify(
-    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
-    eContractid.TimeLockProxy,
-    [],
-    verify
-  );
-
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](impl.address, deployerAddress, initData, GLOBAL_OVERRIDES)
-  );
-
-  return proxyInstance as TimeLock;
-};
-
 export const deployTimeLockProxy = async (verify?: boolean) => {
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
@@ -2648,7 +2752,7 @@ export const deployTimeLockProxy = async (verify?: boolean) => {
   return proxyInstance as InitializableAdminUpgradeabilityProxy;
 };
 
-export const deployTimeLockImplAssignItToProxy = async (
+export const deployTimeLockImplAndAssignItToProxy = async (
   provider: tEthereumAddress,
   verify?: boolean
 ) => {
@@ -2672,7 +2776,8 @@ export const deployTimeLockImplAssignItToProxy = async (
   );
 };
 
-export const deployDefaultTimeLockStrategy = async (
+export const deployReserveTimeLockStrategy = async (
+  name: string,
   pool: string,
   minThreshold: string,
   midThreshold: string,
@@ -2686,7 +2791,7 @@ export const deployDefaultTimeLockStrategy = async (
 ) =>
   withSaveAndVerify(
     new DefaultTimeLockStrategy__factory(await getFirstSigner()),
-    eContractid.DefaultTimeLockStrategy,
+    name,
     [
       pool,
       minThreshold,

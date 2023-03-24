@@ -21,6 +21,7 @@ export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
   SafeWithTimeLock = "SafeWithTimeLock",
+  Run = "Run",
   None = "",
 }
 
@@ -55,6 +56,8 @@ export enum XTokenType {
   PTokenStETH = 10,
   PTokenSApe = 11,
   NTokenBAKC = 12,
+  PYieldToken = 13,
+  PTokenCApe = 14,
 }
 
 export type ConstructorArgs = (
@@ -556,6 +559,7 @@ export interface IReserveParams
   supplyCap: string;
   strategy: IInterestRateStrategyParams;
   auctionStrategy: IAuctionStrategyParams;
+  timeLockStrategy: ITimeLockStrategyParams;
 }
 
 export interface IInterestRateStrategyParams {
@@ -576,6 +580,18 @@ export interface IAuctionStrategyParams {
   stepLinear: string;
   stepExp: string;
   tickLength: string;
+}
+
+export interface ITimeLockStrategyParams {
+  name: string;
+  minThreshold: string;
+  midThreshold: string;
+  minWaitTime: string;
+  midWaitTime: string;
+  maxWaitTime: string;
+  poolPeriodWaitTime: string;
+  poolPeriodLimit: string;
+  period: string;
 }
 
 export interface IReserveBorrowParams {

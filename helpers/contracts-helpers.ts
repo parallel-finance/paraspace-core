@@ -61,6 +61,7 @@ import {
   ERC721,
   ERC721__factory,
   ExecutorWithTimelock__factory,
+  IERC20Detailed__factory,
   IPool__factory,
   MultiSendCallOnly__factory,
   NToken__factory,
@@ -75,11 +76,7 @@ import {
   Seaport__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {
-  getFirstSigner,
-  getIErc20Detailed,
-  getTimeLockExecutor,
-} from "./contracts-getters";
+import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -322,7 +319,11 @@ export const convertToCurrencyDecimals = async (
   tokenAddress: tEthereumAddress,
   amount: string
 ) => {
-  const token = await getIErc20Detailed(tokenAddress);
+  const url = (DRE.network.config as HttpNetworkConfig).url;
+  const token = await IERC20Detailed__factory.connect(
+    tokenAddress,
+    url ? new ethers.providers.JsonRpcProvider(url) : DRE.ethers.provider
+  );
   const decimals = (await token.decimals()).toString();
 
   return DRE.ethers.utils.parseUnits(amount, decimals);
@@ -803,6 +804,15 @@ export const dryRunEncodedData = async (
     await proposeSafeTransaction(newTarget, newData);
   } else if (DRY_RUN === DryRunExecutor.Safe) {
     await proposeSafeTransaction(target, data);
+  } else if (DRY_RUN === DryRunExecutor.Run) {
+    const signer = await getFirstSigner();
+    await waitForTx(
+      await signer.sendTransaction({
+        to: target,
+        data,
+        ...GLOBAL_OVERRIDES,
+      })
+    );
   } else {
     console.log(`target: ${target}, data: ${data}`);
   }
@@ -851,6 +861,17 @@ export const dryRunMultipleEncodedData = async (
       });
     }
     await proposeMultiSafeTransactions(metaTransactions);
+  } else if (DRY_RUN === DryRunExecutor.Run) {
+    const signer = await getFirstSigner();
+    for (let i = 0; i < target.length; i++) {
+      await waitForTx(
+        await signer.sendTransaction({
+          to: target[i],
+          data: data[i],
+          ...GLOBAL_OVERRIDES,
+        })
+      );
+    }
   } else {
     console.log(`target: ${target}, data: ${data}`);
   }

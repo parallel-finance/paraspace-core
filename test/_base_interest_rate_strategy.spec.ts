@@ -322,6 +322,7 @@ describe("Interest Rate Tests", () => {
           underlyingAssetDecimals: 18,
           interestRateStrategyAddress: mockRateStrategy.address,
           auctionStrategyAddress: mockAuctionStrategy.address,
+          timeLockStrategyAddress: ZERO_ADDRESS,
           assetType: 0,
           underlyingAsset: mockToken.address,
           treasury: ZERO_ADDRESS,

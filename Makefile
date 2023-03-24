@@ -420,6 +420,10 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
+.PHONY: set-timelock-strategy
+set-timelock-strategy:
+	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -559,6 +563,18 @@ upgrade:
 .PHONY: upgrade-pool
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
+
+.PHONY: upgrade-pool-core
+upgrade-pool-core:
+	make TASK_NAME=upgrade:pool-core run-task
+
+.PHONY: upgrade-pool-marketplace
+upgrade-pool-marketplace:
+	make TASK_NAME=upgrade:pool-marketplace run-task
+
+.PHONY: upgrade-pool-ape-staking
+upgrade-pool-ape-staking:
+	make TASK_NAME=upgrade:pool-ape-staking run-task
 
 .PHONY: reset-pool
 reset-pool:
