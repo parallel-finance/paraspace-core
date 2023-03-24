@@ -68,6 +68,7 @@ export const CommonConfig: Pick<
   | "GatewayAdminIndex"
   | "Mocks"
   | "Oracle"
+  | "WarmWallet"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -89,6 +90,7 @@ export const CommonConfig: Pick<
   Mocks: MocksConfig,
   // Oracle
   Oracle: TestnetOracleConfig,
+  WarmWallet: ZERO_ADDRESS,
 };
 
 export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
@@ -381,6 +383,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
+  WarmWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
 };
 
 export const ParaSpaceConfigs: Partial<

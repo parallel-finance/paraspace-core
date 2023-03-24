@@ -1174,6 +1174,7 @@ describe("PoolConfigurator: Modifiers", () => {
         underlyingAssetDecimals: randomNumber,
         interestRateStrategyAddress: randomAddress,
         auctionStrategyAddress: randomAddress,
+        timeLockStrategyAddress: randomAddress,
         underlyingAsset: randomAddress,
         treasury: randomAddress,
         incentivesController: randomAddress,

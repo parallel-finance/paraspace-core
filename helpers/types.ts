@@ -58,6 +58,7 @@ export enum XTokenType {
   NTokenBAKC = 12,
   PYieldToken = 13,
   PTokenCApe = 14,
+  NTokenOtherdeed = 15,
 }
 
 export type ConstructorArgs = (
@@ -745,6 +746,7 @@ export interface ICommonConfiguration {
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
+  WarmWallet: tEthereumAddress;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

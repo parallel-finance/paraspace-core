@@ -5,6 +5,7 @@ import {
   deployNTokenBAKCImpl,
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
+  deployOtherdeedNTokenImpl,
   deployUniswapV3NTokenImpl,
 } from "../../helpers/contracts-deployments";
 import {
@@ -38,6 +39,7 @@ export const upgradeNToken = async (verify = false) => {
   let nTokenBAKCImplementationAddress = "";
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
+  let nTokenOTHRImplementationAddress = "";
   let newImpl = "";
 
   for (let i = 0; i < allXTokens.length; i++) {
@@ -58,6 +60,7 @@ export const upgradeNToken = async (verify = false) => {
         XTokenType.NTokenBAYC,
         XTokenType.NTokenMAYC,
         XTokenType.NTokenBAKC,
+        XTokenType.NTokenOtherdeed,
       ].includes(xTokenType)
     ) {
       continue;
@@ -130,6 +133,18 @@ export const upgradeNToken = async (verify = false) => {
         ).address;
       }
       newImpl = nTokenMoonBirdImplementationAddress;
+    } else if (xTokenType == XTokenType.NTokenOtherdeed) {
+      if (!nTokenOTHRImplementationAddress) {
+        console.log("deploy NTokenOtherdeed implementation");
+        nTokenOTHRImplementationAddress = (
+          await deployOtherdeedNTokenImpl(
+            poolAddress,
+            paraSpaceConfig.WarmWallet,
+            verify
+          )
+        ).address;
+      }
+      newImpl = nTokenOTHRImplementationAddress;
     } else if (xTokenType == XTokenType.NToken) {
       if (!nTokenImplementationAddress) {
         console.log("deploy NToken implementation");
