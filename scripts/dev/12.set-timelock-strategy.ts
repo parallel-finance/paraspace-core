@@ -102,14 +102,14 @@ const setTimeLockStrategy = async () => {
     const defaultStrategy = await deployReserveTimeLockStrategy(
       strategy.name,
       pool.address,
-      strategy.minThreshold.toString(),
-      strategy.midThreshold.toString(),
-      strategy.minTime.toString(),
-      strategy.midTime.toString(),
-      strategy.maxTime.toString(),
-      strategy.midThreshold.mul(10).toString(),
-      strategy.poolPeriodWaitTime.toString(),
-      strategy.period.toString()
+      strategy.minThreshold,
+      strategy.midThreshold,
+      strategy.minWaitTime,
+      strategy.midWaitTime,
+      strategy.maxWaitTime,
+      strategy.poolPeriodLimit,
+      strategy.poolPeriodWaitTime,
+      strategy.period
     );
 
     if (DRY_RUN) {

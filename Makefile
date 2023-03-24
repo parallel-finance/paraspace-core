@@ -380,6 +380,10 @@ deploy-flashClaimRegistry:
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
 
+.PHONY: deploy-timelock
+deploy-timelock:
+	make TASK_NAME=deploy:timelock run-task
+
 .PHONY: deploy-p2p-pair-staking
 deploy-p2p-pair-staking:
 	make TASK_NAME=deploy:P2PPairStaking run-task
