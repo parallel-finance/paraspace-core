@@ -52,6 +52,7 @@ import {
   getNTokenBAKC,
   getWstETH,
   getMockCToken,
+  getNTokenOtherdeed,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -77,6 +78,7 @@ import {
   NTokenBAYC,
   NTokenMAYC,
   NTokenMoonBirds,
+  NTokenOtherdeed,
   NTokenUniswapV3,
   PausableZone,
   PausableZoneController,
@@ -164,6 +166,7 @@ export interface TestEnv {
   usdc: MintableERC20;
   usdt: MintableERC20;
   nBAYC: NTokenBAYC;
+  nOTHR: NTokenOtherdeed;
   bayc: MintableERC721;
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
@@ -319,6 +322,8 @@ export async function initializeMakeSuite() {
   testEnv.paraspaceOracle = (await getParaSpaceOracle()).connect(
     testEnv.poolAdmin.signer
   );
+
+  testEnv.nOTHR = await getNTokenOtherdeed();
 
   testEnv.protocolDataProvider = await getProtocolDataProvider();
 
