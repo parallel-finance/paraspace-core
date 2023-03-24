@@ -24,37 +24,13 @@ task("upgrade:pool", "upgrade pool components")
   .addPositionalParam("oldPoolApeStaking", "old pool ape staking")
   .addPositionalParam("oldPoolMarketplace", "old pool marketplace")
   .addPositionalParam("oldPoolParameters", "old pool parameters")
-  .addPositionalParam(
-    "oldPoolParaProxyInterfaces",
-    "old pool para proxy interfaces"
-  )
-  .setAction(
-    async (
-      {
-        oldPoolCore,
-        oldPoolApeStaking,
-        oldPoolMarketplace,
-        oldPoolParaProxyInterfaces,
-        oldPoolParameters,
-      },
-      DRE
-    ) => {
-      const {upgradePool} = await import("../../scripts/upgrade/pool");
-      await DRE.run("set-DRE");
-      console.time("upgrade pool");
-      await upgradePool(
-        {
-          oldPoolCore,
-          oldPoolApeStaking,
-          oldPoolMarketplace,
-          oldPoolParameters,
-          oldPoolParaProxyInterfaces,
-        },
-        ETHERSCAN_VERIFICATION
-      );
-      console.timeEnd("upgrade pool");
-    }
-  );
+  .setAction(async (args, DRE) => {
+    const {upgradePool} = await import("../../scripts/upgrade/pool");
+    await DRE.run("set-DRE");
+    console.time("upgrade pool");
+    await upgradePool(args, ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade pool");
+  });
 
 task("upgrade:pool-core", "upgrade pool core")
   .addPositionalParam("oldPoolCore", "old pool core")

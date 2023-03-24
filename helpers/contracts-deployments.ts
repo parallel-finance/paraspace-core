@@ -586,6 +586,26 @@ export const deployPoolParameters = async (
   };
 };
 
+export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
+  const {poolParaProxyInterfacesSelectors} = await getPoolSignatures();
+  const poolParaProxyInterfaces = (await withSaveAndVerify(
+    new ParaProxyInterfaces__factory(await getFirstSigner()),
+    eContractid.ParaProxyInterfacesImpl,
+    [],
+    verify,
+    false,
+    undefined,
+    poolParaProxyInterfacesSelectors
+  )) as ParaProxyInterfaces;
+
+  return {
+    poolParaProxyInterfaces,
+    poolParaProxyInterfacesSelectors: poolParaProxyInterfacesSelectors.map(
+      (s) => s.signature
+    ),
+  };
+};
+
 export const deployPoolMarketplaceLibraries = async (
   coreLibraries: PoolCoreLibraryAddresses,
   verify?: boolean
@@ -720,7 +740,6 @@ export const deployPoolComponents = async (
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
-    poolParaProxyInterfacesSelectors,
   } = getPoolSignatures();
 
   const poolCore = (await withSaveAndVerify(
@@ -786,29 +805,15 @@ export const deployPoolComponents = async (
       )) as PoolApeStaking)
     : undefined;
 
-  const poolParaProxyInterfaces = (await withSaveAndVerify(
-    new ParaProxyInterfaces__factory(await getFirstSigner()),
-    eContractid.ParaProxyInterfacesImpl,
-    [],
-    verify,
-    false,
-    undefined,
-    poolParaProxyInterfacesSelectors
-  )) as ParaProxyInterfaces;
-
   return {
     poolCore,
     poolParameters,
     poolMarketplace,
     poolApeStaking,
-    poolParaProxyInterfaces,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
-    poolParaProxyInterfacesSelectors: poolParaProxyInterfacesSelectors.map(
-      (s) => s.signature
-    ),
   };
 };
 

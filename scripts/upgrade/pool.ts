@@ -149,13 +149,11 @@ export const upgradePool = async (
     oldPoolApeStaking,
     oldPoolMarketplace,
     oldPoolParameters,
-    oldPoolParaProxyInterfaces,
   }: {
     oldPoolCore: tEthereumAddress;
     oldPoolMarketplace: tEthereumAddress;
     oldPoolApeStaking: tEthereumAddress;
     oldPoolParameters: tEthereumAddress;
-    oldPoolParaProxyInterfaces: tEthereumAddress;
   },
   verify = false
 ) => {
@@ -172,21 +170,16 @@ export const upgradePool = async (
   const oldPoolParametersSelectors = await pool.facetFunctionSelectors(
     oldPoolParameters
   );
-  const oldPoolParaProxyInterfacesSelectors = await pool.facetFunctionSelectors(
-    oldPoolParaProxyInterfaces
-  );
 
   const {
     poolCore,
     poolParameters,
     poolMarketplace,
     poolApeStaking,
-    poolParaProxyInterfaces,
     poolCoreSelectors: newPoolCoreSelectors,
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
     poolApeStakingSelectors: newPoolApeStakingSelectors,
-    poolParaProxyInterfacesSelectors: newPoolParaProxyInterfacesSelectors,
   } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
@@ -201,11 +194,6 @@ export const upgradePool = async (
       poolParameters.address,
       newPoolParametersSelectors,
       oldPoolParametersSelectors,
-    ],
-    [
-      poolParaProxyInterfaces.address,
-      newPoolParaProxyInterfacesSelectors,
-      oldPoolParaProxyInterfacesSelectors,
     ],
   ] as [string, string[], string[]][];
 
