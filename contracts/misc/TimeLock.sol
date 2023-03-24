@@ -59,6 +59,15 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         _;
     }
 
+    modifier onlyEmergencyAdminOrPoolAdmins() {
+        require(
+            ACL_MANAGER.isEmergencyAdmin(msg.sender) ||
+                ACL_MANAGER.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
+        _;
+    }
+
     constructor(IPoolAddressesProvider provider) {
         POOL = IPool(provider.getPool());
         ACL_MANAGER = IACLManager(provider.getACLManager());
@@ -76,8 +85,8 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         address beneficiary,
         uint48 releaseTime
     ) external onlyXToken(asset) returns (uint256) {
-        require(beneficiary != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
-        require(releaseTime > block.timestamp, Errors.INVALID_EXPIRATION);
+        require(beneficiary != address(0), "beneficiary cant be zero address");
+        require(releaseTime > block.timestamp, "Release time not valid");
 
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
