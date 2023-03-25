@@ -87,16 +87,10 @@ task(
   await DRE.run("set-DRE");
   const {getTimeLockDataInDb, getTimeLockData, proposeMultiSafeTransactions} =
     await import("../../helpers/contracts-helpers");
-  const {getTimeLockExecutor} = await import("../../helpers/contracts-getters");
-  const timeLock = await getTimeLockExecutor();
   const actions = await getTimeLockDataInDb();
   const transactions: MetaTransaction[] = [];
 
   for (const a of actions) {
-    if (await timeLock.isActionQueued(a.actionHash)) {
-      continue;
-    }
-
     console.log(a.actionHash);
     const [target, , , data, executionTime] = a.action;
     const {newTarget, newData} = await getTimeLockData(
