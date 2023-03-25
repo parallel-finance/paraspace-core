@@ -76,6 +76,7 @@ import {
   ReservesSetupHelper__factory,
   Seaport,
   Seaport__factory,
+  NTokenOtherdeed__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
 import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
@@ -900,6 +901,7 @@ export const decodeInputData = (data: string) => {
     ...Seaport__factory.abi,
     ...InitializableAdminUpgradeabilityProxy__factory.abi,
     ...ICurve__factory.abi,
+    ...NTokenOtherdeed__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
