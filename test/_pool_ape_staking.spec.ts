@@ -2982,4 +2982,73 @@ describe("APE Coin Staking Test", () => {
       .data;
     expect(isUsingAsCollateral(configDataAfter, sApeReserveData.id)).true;
   });
+
+  it("sets a new Ape Rescue Admin", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+      deployer,
+    } = await loadFixture(fixture);
+
+    await expect(
+      await nMAYC
+        .connect(deployer.signer)
+        .setApeRescueAdmin(await user1.address)
+    );
+  });
+
+  it("reverts when trying to set zero address as Ape Rescue Admin", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+      deployer,
+    } = await loadFixture(fixture);
+
+    await expect(
+      nMAYC.connect(deployer.signer).setApeRescueAdmin(ZERO_ADDRESS)
+    ).to.be.revertedWith("ZERO_ADDRESS_NOT_VALID");
+  });
+
+  it("rescues locked APE tokens", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+      deployer,
+    } = await loadFixture(fixture);
+
+    const initialBalance = await ape.balanceOf(user3.address);
+
+    await ape["mint(address,uint256)"](nMAYC.address, parseEther("110"));
+    await nMAYC
+      .connect(user3.signer)
+      .rescueLockedAPE(parseEther("100"), user3.address);
+
+    const finalBalance = await ape.balanceOf(user3.address);
+    expect(finalBalance).to.equal(initialBalance.add(parseEther("100")));
+  });
+
+  it("reverts when non-apeRescueAdmin tries to rescue locked APE tokens", async () => {
+    const {
+      users: [user1, , user3],
+      ape,
+      mayc,
+      pool,
+      nMAYC,
+      deployer,
+    } = await loadFixture(fixture);
+    await expect(
+      nMAYC
+        .connect(user3.signer)
+        .rescueLockedAPE(parseEther("100"), user3.address)
+    ).to.be.revertedWith("Caller is not the Ape Rescue Admin");
+  });
 });
