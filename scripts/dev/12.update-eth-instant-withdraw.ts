@@ -22,7 +22,7 @@ import {
   deployReserveInterestRateStrategy,
   deployStETHStableDebtToken,
 } from "../../helpers/contracts-deployments";
-import {resetPool} from "../upgrade";
+import {resetPool} from "../upgrade/pool";
 import {ONE_ADDRESS} from "../../helpers/constants";
 import {upgradeConfigurator} from "../upgrade/configurator";
 
@@ -39,15 +39,11 @@ const updateETHInstantWithdraw = async () => {
 
   //1. pause pool
   if (DRY_RUN) {
-    const encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
-      "setPoolPause",
-      [true]
-    );
+    const encodedData =
+      poolConfiguratorProxy.interface.encodeFunctionData("pausePool");
     await dryRunEncodedData(poolConfiguratorProxy.address, encodedData);
   } else {
-    await waitForTx(
-      await poolConfiguratorProxy.setPoolPause(true, GLOBAL_OVERRIDES)
-    );
+    await waitForTx(await poolConfiguratorProxy.pausePool(GLOBAL_OVERRIDES));
   }
 
   //2. upgrade pool configurator
@@ -207,15 +203,11 @@ const updateETHInstantWithdraw = async () => {
 
   //6. unpause pool
   if (DRY_RUN) {
-    const encodedData = poolConfiguratorProxy.interface.encodeFunctionData(
-      "setPoolPause",
-      [false]
-    );
+    const encodedData =
+      poolConfiguratorProxy.interface.encodeFunctionData("unpausePool");
     await dryRunEncodedData(poolConfiguratorProxy.address, encodedData);
   } else {
-    await waitForTx(
-      await poolConfiguratorProxy.setPoolPause(false, GLOBAL_OVERRIDES)
-    );
+    await waitForTx(await poolConfiguratorProxy.unpausePool(GLOBAL_OVERRIDES));
   }
 
   // 7. upgrade protocol data provider

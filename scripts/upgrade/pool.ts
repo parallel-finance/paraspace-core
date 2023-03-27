@@ -1,5 +1,6 @@
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
+  deployLoanVault,
   deployPoolApeStaking,
   deployPoolComponents,
   deployPoolCore,
@@ -7,14 +8,24 @@ import {
   deployPoolParameters,
 } from "../../helpers/contracts-deployments";
 import {
+  getFirstSigner,
   getPoolAddressesProvider,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {
+  dryRunEncodedData,
+  getContractAddressInDb,
+  getFunctionSignatures,
+  withSaveAndVerify,
+} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
-import {tEthereumAddress} from "../../helpers/types";
-import {IParaProxy} from "../../types";
+import {eContractid, tEthereumAddress} from "../../helpers/types";
+import {
+  IParaProxy,
+  PoolInstantWithdraw,
+  PoolInstantWithdraw__factory,
+} from "../../types";
 
 const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
@@ -123,13 +134,30 @@ export const resetPool = async (verify = false) => {
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
     poolApeStakingSelectors: newPoolApeStakingSelectors,
+    poolInstantWithdrawSelectors: newPoolInstantWithdrawSelectors,
   } = await deployPoolComponents(addressesProvider.address, verify);
+
+  const poolAddress = await addressesProvider.getPool();
+  const loanVaultAddress =
+    (await getContractAddressInDb(eContractid.LoanVault)) ||
+    (await deployLoanVault(poolAddress, verify)).address;
+  const poolInstantWithdraw = (await withSaveAndVerify(
+    new PoolInstantWithdraw__factory(await getFirstSigner()),
+    eContractid.PoolETHWithdrawImpl,
+    [addressesProvider.address, loanVaultAddress],
+    verify,
+    false,
+    undefined,
+    getFunctionSignatures(PoolInstantWithdraw__factory.abi)
+  )) as PoolInstantWithdraw;
+
   console.timeEnd("deploy PoolComponent");
 
   const implementations = [
     [poolCore.address, newPoolCoreSelectors, []],
     [poolMarketplace.address, newPoolMarketplaceSelectors, []],
     [poolParameters.address, newPoolParametersSelectors, []],
+    [poolInstantWithdraw.address, newPoolInstantWithdrawSelectors, []],
   ] as [string, string[], string[]][];
 
   if (poolApeStaking) {

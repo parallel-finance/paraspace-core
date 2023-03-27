@@ -90,6 +90,7 @@ describe("Pool: Initialization", () => {
           ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS,
+          ZERO_ADDRESS,
           ZERO_ADDRESS
         )
     ).to.be.revertedWith(NOT_CONTRACT);
