@@ -21,7 +21,8 @@ export const getAllSteps = async () => {
   const {step_19} = await import("./19_flashClaimRegistry");
   const {step_20} = await import("./20_p2pPairStaking");
   const {step_21} = await import("./21_helperContract");
-  const {step_22} = await import("./22_renounceOwnership");
+  const {step_22} = await import("./22_timelock");
+  const {step_23} = await import("./23_renounceOwnership");
 
   return [
     step_00,
@@ -47,5 +48,6 @@ export const getAllSteps = async () => {
     step_20,
     step_21,
     step_22,
+    step_23,
   ];
 };

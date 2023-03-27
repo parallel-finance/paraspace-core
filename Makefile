@@ -348,6 +348,10 @@ deploy-allReserves:
 deploy-uiIncentiveDataProvider:
 	make TASK_NAME=deploy:ui-incentive-data-provider run-task
 
+.PHONY: deploy-uiPoolDataProvider
+deploy-uiPoolDataProvider:
+	make TASK_NAME=deploy:ui-pool-data-provider run-task
+
 .PHONY: deploy-wethGateway
 deploy-wethGateway:
 	make TASK_NAME=deploy:weth-gateway run-task
@@ -379,6 +383,10 @@ deploy-flashClaimRegistry:
 .PHONY: deploy-renounceOwnership
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
+
+.PHONY: deploy-timelock
+deploy-timelock:
+	make TASK_NAME=deploy:timelock run-task
 
 .PHONY: deploy-p2p-pair-staking
 deploy-p2p-pair-staking:
@@ -419,6 +427,10 @@ send-eth:
 .PHONY: set-traits-multipliers
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
+
+.PHONY: set-timelock-strategy
+set-timelock-strategy:
+	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
@@ -532,6 +544,18 @@ set-supply-cap:
 set-borrow-cap:
 	make TASK_NAME=set-borrow-cap run-task
 
+.PHONY: set-pool-pause
+set-pool-pause:
+	make TASK_NAME=set-pool-pause run-task
+
+.PHONY: set-reserve-pause
+set-reserve-pause:
+	make TASK_NAME=set-reserve-pause run-task
+
+.PHONY: set-cAPE-pause
+set-cAPE-pause:
+	make TASK_NAME=set-cAPE-pause run-task
+
 .PHONY: list-facets
 list-facets:
 	make TASK_NAME=list-facets run-task
@@ -560,6 +584,22 @@ upgrade:
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: upgrade-pool-core
+upgrade-pool-core:
+	make TASK_NAME=upgrade:pool-core run-task
+
+.PHONY: upgrade-pool-marketplace
+upgrade-pool-marketplace:
+	make TASK_NAME=upgrade:pool-marketplace run-task
+
+.PHONY: upgrade-pool-ape-staking
+upgrade-pool-ape-staking:
+	make TASK_NAME=upgrade:pool-ape-staking run-task
+
+.PHONY: upgrade-pool-parameters
+upgrade-pool-parameters:
+	make TASK_NAME=upgrade:pool-parameters run-task
+
 .PHONY: reset-pool
 reset-pool:
 	make TASK_NAME=reset:pool run-task
@@ -571,6 +611,10 @@ upgrade-configurator:
 .PHONY: upgrade-auto-compound-ape
 upgrade-auto-compound-ape:
 	make TASK_NAME=upgrade:auto-compound-ape run-task
+
+.PHONY: upgrade-timelock
+upgrade-timelock:
+	make TASK_NAME=upgrade:timelock run-task
 
 .PHONY: upgrade-p2p-pair-staking
 upgrade-p2p-pair-staking:
@@ -587,6 +631,18 @@ upgrade-ptoken:
 .PHONY: upgrade-debt-token
 upgrade-debt-token:
 	make TASK_NAME=upgrade:debt-token run-task
+
+.PHONY: add-emergency-admin
+add-emergency-admin:
+	make TASK_NAME=add-emergency-admin run-task
+
+.PHONY: add-pool-admin
+add-pool-admin:
+	make TASK_NAME=add-pool-admin run-task
+
+.PHONY: remove-emergency-admin
+remove-emergency-admin:
+	make TASK_NAME=remove-emergency-admin run-task
 
 .PHONY: hardhat
 hardhat:

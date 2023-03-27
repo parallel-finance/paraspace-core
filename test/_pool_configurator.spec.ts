@@ -205,6 +205,7 @@ describe("PoolConfigurator: Common", () => {
         underlyingAssetDecimals: 18,
         interestRateStrategyAddress: mockRateStrategy.address,
         auctionStrategyAddress: mockAuctionStrategy.address,
+        timeLockStrategyAddress: ZERO_ADDRESS,
         underlyingAsset: mockToken.address,
         treasury: ZERO_ADDRESS,
         incentivesController: ZERO_ADDRESS,
@@ -1173,6 +1174,7 @@ describe("PoolConfigurator: Modifiers", () => {
         underlyingAssetDecimals: randomNumber,
         interestRateStrategyAddress: randomAddress,
         auctionStrategyAddress: randomAddress,
+        timeLockStrategyAddress: randomAddress,
         underlyingAsset: randomAddress,
         treasury: randomAddress,
         incentivesController: randomAddress,
@@ -1493,6 +1495,7 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
       underlyingAssetDecimals: BigNumberish;
       interestRateStrategyAddress: string;
       auctionStrategyAddress: string;
+      timeLockStrategyAddress: string;
       underlyingAsset: string;
       assetType: BigNumberish;
       treasury: string;
@@ -1509,6 +1512,7 @@ describe("PoolConfigurator: Reserve Without Incentives Controller", () => {
         underlyingAssetDecimals: 18,
         interestRateStrategyAddress: interestRateStrategyAddress,
         auctionStrategyAddress: mockAuctionStrategy.address,
+        timeLockStrategyAddress: ZERO_ADDRESS,
         underlyingAsset: mockToken.address,
         assetType: 0,
         treasury: ZERO_ADDRESS,

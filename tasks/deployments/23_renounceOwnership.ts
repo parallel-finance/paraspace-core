@@ -5,10 +5,10 @@ task("deploy:renounce-ownership", "Renounce deployer ownership")
   .addPositionalParam("newAdmin", "New Admin Address")
   .setAction(async ({newAdmin}, DRE) => {
     await DRE.run("set-DRE");
-    const {step_22} = await import(
-      "../../scripts/deployments/steps/22_renounceOwnership"
+    const {step_23} = await import(
+      "../../scripts/deployments/steps/23_renounceOwnership"
     );
-    await step_22(ETHERSCAN_VERIFICATION, {
+    await step_23(ETHERSCAN_VERIFICATION, {
       paraSpaceAdminAddress: newAdmin,
       emergencyAdminAddresses: [newAdmin],
       gatewayAdminAddress: newAdmin,

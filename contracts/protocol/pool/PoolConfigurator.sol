@@ -66,7 +66,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
         _;
     }
 
-    uint256 public constant CONFIGURATOR_REVISION = 145;
+    uint256 public constant CONFIGURATOR_REVISION = 146;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -317,18 +317,15 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     /// @inheritdoc IPoolConfigurator
     function setReserveInterestRateStrategyAddress(
         address asset,
-        address newRateStrategyAddress
+        address newStrategyAddress
     ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
-        address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
-        _pool.setReserveInterestRateStrategyAddress(
-            asset,
-            newRateStrategyAddress
-        );
+        address oldStrategyAddress = reserve.interestRateStrategyAddress;
+        _pool.setReserveInterestRateStrategyAddress(asset, newStrategyAddress);
         emit ReserveInterestRateStrategyChanged(
             asset,
-            oldRateStrategyAddress,
-            newRateStrategyAddress
+            oldStrategyAddress,
+            newStrategyAddress
         );
     }
 
@@ -351,6 +348,21 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newRateStrategyAddress
+    ) external override onlyRiskOrPoolAdmins {
+        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+        address oldRateStrategyAddress = reserve.timeLockStrategyAddress;
+        _pool.setReserveTimeLockStrategyAddress(asset, newRateStrategyAddress);
+        emit ReserveTimeLockStrategyChanged(
+            asset,
+            oldRateStrategyAddress,
+            newRateStrategyAddress
+        );
+    }
+
+    /// @inheritdoc IPoolConfigurator
     function pausePool() external override onlyEmergencyAdmin {
         address[] memory reserves = _pool.getReservesList();
 
@@ -361,6 +373,7 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
         }
     }
 
+    /// @inheritdoc IPoolConfigurator
     function unpausePool() external override onlyPoolAdmin {
         address[] memory reserves = _pool.getReservesList();
 

@@ -1,16 +1,16 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {PromiseOrValue} from "../types/common";
-import {BlurExchangeLibraryAddresses} from "../types/factories/dependencies/blur-exchange/BlurExchange__factory";
-import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
-import {PoolConfiguratorLibraryAddresses} from "../types/factories/protocol/pool/PoolConfigurator__factory";
-import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCore__factory";
-import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
-import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
-import {NTokenBAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenBAYC__factory";
-import {NTokenMAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMAYC__factory";
-import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMoonBirds__factory";
-import {NTokenUniswapV3LibraryAddresses} from "../types/factories/protocol/tokenization/NTokenUniswapV3__factory";
-import {NTokenLibraryAddresses} from "../types/factories/protocol/tokenization/NToken__factory";
+import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
+import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
+import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
+import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
+import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
+import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
+import {NTokenBAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenBAYC__factory";
+import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMAYC__factory";
+import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
+import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
+import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
 
 export enum AssetType {
   ERC20 = 0,
@@ -21,6 +21,7 @@ export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
   SafeWithTimeLock = "SafeWithTimeLock",
+  Run = "Run",
   None = "",
 }
 
@@ -55,6 +56,9 @@ export enum XTokenType {
   PTokenStETH = 10,
   PTokenSApe = 11,
   NTokenBAKC = 12,
+  PYieldToken = 13,
+  PTokenCApe = 14,
+  NTokenOtherdeed = 15,
 }
 
 export type ConstructorArgs = (
@@ -255,6 +259,9 @@ export enum eContractid {
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
+  TimeLockProxy = "TimeLockProxy",
+  TimeLockImpl = "TimeLockImpl",
+  DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
   HotWalletProxy = "HotWalletProxy",
 }
@@ -535,6 +542,7 @@ export enum NTokenContractId {
   nBAKC = "nBAKC",
   nSEWER = "nSEWER",
   nPPG = "nPPG",
+  nOTHR = "nOTHR",
 }
 
 export enum PTokenContractId {
@@ -545,6 +553,7 @@ export enum PTokenContractId {
   pstETH = "pstETH",
   pwstETH = "pwstETH",
   pcETH = "pcETH",
+  pcAPE = "pcAPE",
 }
 
 export interface IReserveParams
@@ -555,6 +564,7 @@ export interface IReserveParams
   supplyCap: string;
   strategy: IInterestRateStrategyParams;
   auctionStrategy: IAuctionStrategyParams;
+  timeLockStrategy: ITimeLockStrategyParams;
 }
 
 export interface IInterestRateStrategyParams {
@@ -575,6 +585,18 @@ export interface IAuctionStrategyParams {
   stepLinear: string;
   stepExp: string;
   tickLength: string;
+}
+
+export interface ITimeLockStrategyParams {
+  name: string;
+  minThreshold: string;
+  midThreshold: string;
+  minWaitTime: string;
+  midWaitTime: string;
+  maxWaitTime: string;
+  poolPeriodWaitTime: string;
+  poolPeriodLimit: string;
+  period: string;
 }
 
 export interface IReserveBorrowParams {
@@ -726,6 +748,7 @@ export interface ICommonConfiguration {
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
+  HotWallet: tEthereumAddress | undefined;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

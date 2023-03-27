@@ -86,10 +86,9 @@ import {
   PYieldToken__factory,
   HelperContract__factory,
   MockCToken__factory,
+  TimeLock__factory,
   HotWalletProxy__factory,
-  HotWalletProxy,
   NTokenOtherdeed__factory,
-  NTokenOtherdeed,
 } from "../types";
 import {
   getEthersSigners,
@@ -110,7 +109,7 @@ import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
 } from "../types";
-import {RPC_URL} from "./hardhat-constants";
+import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
 
 export const getFirstSigner = async () => {
   if (!RPC_URL) {
@@ -118,7 +117,9 @@ export const getFirstSigner = async () => {
   }
 
   const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
-  return (await impersonateAddress(paraSpaceAdminAddress)).signer;
+  return (
+    await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
+  ).signer;
 };
 
 export const getLastSigner = async () => last(await getEthersSigners())!;
@@ -225,8 +226,8 @@ export const getPoolLogic = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getPoolProxy = async (address?: tEthereumAddress) =>
-  await IPool__factory.connect(
+export const getPoolProxy = async (address?: tEthereumAddress) => {
+  return await IPool__factory.connect(
     address ||
       (
         await getDb()
@@ -235,7 +236,7 @@ export const getPoolProxy = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
-
+};
 export const getPriceOracle = async (address?: tEthereumAddress) =>
   await PriceOracle__factory.connect(
     address ||
@@ -1214,6 +1215,17 @@ export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.SEWER}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTimeLockProxy = async (address?: tEthereumAddress) =>
+  await TimeLock__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );

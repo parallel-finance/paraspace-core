@@ -48,8 +48,8 @@ import {
   deployAStETHDebtToken,
   deployPYieldToken,
   deployAutoYieldApe,
+  deployReserveTimeLockStrategy,
   deployOtherdeedNTokenImpl,
-  deployHotWalletProxy,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -62,12 +62,14 @@ export const initReservesByHelper = async (
   admin: tEthereumAddress,
   treasuryAddress: tEthereumAddress,
   incentivesController: tEthereumAddress,
+  hotWallet: tEthereumAddress,
   verify: boolean,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
   genericVariableDebtTokenAddress?: tEthereumAddress,
   defaultReserveInterestRateStrategyAddress?: tEthereumAddress,
   defaultReserveAuctionStrategyAddress?: tEthereumAddress,
+  defaultReserveTimeLockStrategyAddress?: tEthereumAddress,
   genericDelegationAwarePTokenImplAddress?: tEthereumAddress,
   poolAddressesProviderProxy?: tEthereumAddress,
   poolProxy?: tEthereumAddress,
@@ -94,6 +96,7 @@ export const initReservesByHelper = async (
     underlyingAssetDecimals: BigNumberish;
     interestRateStrategyAddress: string;
     auctionStrategyAddress: string;
+    timeLockStrategyAddress: string;
     underlyingAsset: string;
     treasury: string;
     incentivesController: string;
@@ -108,8 +111,10 @@ export const initReservesByHelper = async (
 
   const strategyAddresses: Record<string, tEthereumAddress> = {};
   const auctionStrategyAddresses: Record<string, tEthereumAddress> = {};
+  const timeLockStrategyAddresses: Record<string, tEthereumAddress> = {};
   const strategyAddressPerAsset: Record<string, string> = {};
   const auctionStrategyAddressPerAsset: Record<string, string> = {};
+  const timeLockStrategyAddressPerAsset: Record<string, string> = {};
   const xTokenType: Record<string, string> = {};
   let delegationAwarePTokenImplementationAddress =
     genericDelegationAwarePTokenImplAddress;
@@ -131,6 +136,7 @@ export const initReservesByHelper = async (
   let aTokenVariableDebtTokenImplementationAddress = "";
   let PsApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
+  let nTokenOTHRImplementationAddress = "";
 
   if (genericPTokenImplAddress) {
     await insertContractAddressInDb(
@@ -173,7 +179,13 @@ export const initReservesByHelper = async (
         continue;
       }
     }
-    const {strategy, auctionStrategy, xTokenImpl, reserveDecimals} = params;
+    const {
+      strategy,
+      auctionStrategy,
+      timeLockStrategy,
+      xTokenImpl,
+      reserveDecimals,
+    } = params;
     const {
       optimalUsageRatio,
       baseVariableBorrowRate,
@@ -188,6 +200,16 @@ export const initReservesByHelper = async (
       stepExp,
       tickLength,
     } = auctionStrategy;
+    const {
+      minThreshold,
+      midThreshold,
+      minWaitTime,
+      midWaitTime,
+      maxWaitTime,
+      poolPeriodWaitTime,
+      poolPeriodLimit,
+      period,
+    } = timeLockStrategy;
     if (!strategyAddresses[strategy.name]) {
       // Strategy does not exist, create a new one
       if (defaultReserveInterestRateStrategyAddress) {
@@ -244,9 +266,42 @@ export const initReservesByHelper = async (
       }
     }
 
+    if (!timeLockStrategyAddresses[timeLockStrategy.name]) {
+      if (timeLockStrategy.name == "timeLockStrategyZero") {
+        timeLockStrategyAddresses[timeLockStrategy.name] = ZERO_ADDRESS;
+      } else if (defaultReserveTimeLockStrategyAddress) {
+        timeLockStrategyAddresses[timeLockStrategy.name] =
+          defaultReserveTimeLockStrategyAddress;
+        await insertContractAddressInDb(
+          timeLockStrategy.name,
+          timeLockStrategyAddresses[timeLockStrategy.name],
+          false
+        );
+      } else {
+        // Strategy does not exist, create a new one
+        timeLockStrategyAddresses[timeLockStrategy.name] = (
+          await deployReserveTimeLockStrategy(
+            timeLockStrategy.name,
+            pool.address,
+            minThreshold,
+            midThreshold,
+            minWaitTime,
+            midWaitTime,
+            maxWaitTime,
+            poolPeriodLimit,
+            poolPeriodWaitTime,
+            period,
+            verify
+          )
+        ).address;
+      }
+    }
+
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     auctionStrategyAddressPerAsset[symbol] =
       auctionStrategyAddresses[auctionStrategy.name];
+    timeLockStrategyAddressPerAsset[symbol] =
+      timeLockStrategyAddresses[timeLockStrategy.name];
     console.log(
       "Strategy address for asset %s: %s",
       symbol,
@@ -256,6 +311,11 @@ export const initReservesByHelper = async (
       "Auction strategy address for asset %s: %s",
       symbol,
       auctionStrategyAddressPerAsset[symbol]
+    );
+    console.log(
+      "TimeLock strategy address for asset %s: %s",
+      symbol,
+      timeLockStrategyAddressPerAsset[symbol]
     );
 
     if (xTokenImpl === eContractid.DelegationAwarePTokenImpl) {
@@ -289,6 +349,8 @@ export const initReservesByHelper = async (
       underlyingAssetDecimals: reserveInitDecimals[i],
       interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbols[i]],
       auctionStrategyAddress: auctionStrategyAddressPerAsset[reserveSymbols[i]],
+      timeLockStrategyAddress:
+        timeLockStrategyAddressPerAsset[reserveSymbols[i]],
       underlyingAsset: reserveTokens[i],
       treasury: treasuryAddress,
       incentivesController,
@@ -487,15 +549,11 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = nTokenBAKCImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.OTHR) {
-          // This should be a temporary solution. delegation will be removed
-          const warmWallet = await deployHotWalletProxy(verify);
-          await warmWallet.initialize(admin, admin);
-
-          nTokenBAKCImplementationAddress = (
-            await deployOtherdeedNTokenImpl(pool.address, warmWallet.address)
+          nTokenOTHRImplementationAddress = (
+            await deployOtherdeedNTokenImpl(pool.address, hotWallet)
           ).address;
 
-          xTokenToUse = nTokenBAKCImplementationAddress;
+          xTokenToUse = nTokenOTHRImplementationAddress;
         }
 
         if (!xTokenToUse) {

@@ -11,7 +11,7 @@ task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
 
 task("reset:pool", "reset pool function selectors").setAction(
   async (_, DRE) => {
-    const {resetPool} = await import("../../scripts/upgrade");
+    const {resetPool} = await import("../../scripts/upgrade/pool");
     await DRE.run("set-DRE");
     console.time("reset pool");
     await resetPool(ETHERSCAN_VERIFICATION);
@@ -19,13 +19,58 @@ task("reset:pool", "reset pool function selectors").setAction(
   }
 );
 
-task("upgrade:pool", "upgrade pool components").setAction(async (_, DRE) => {
-  const {upgradePool} = await import("../../scripts/upgrade");
-  await DRE.run("set-DRE");
-  console.time("upgrade pool");
-  await upgradePool(ETHERSCAN_VERIFICATION);
-  console.timeEnd("upgrade pool");
-});
+task("upgrade:pool", "upgrade pool components")
+  .addPositionalParam("oldPoolCore", "old pool core")
+  .addPositionalParam("oldPoolApeStaking", "old pool ape staking")
+  .addPositionalParam("oldPoolMarketplace", "old pool marketplace")
+  .addPositionalParam("oldPoolParameters", "old pool parameters")
+  .setAction(async (args, DRE) => {
+    const {upgradePool} = await import("../../scripts/upgrade/pool");
+    await DRE.run("set-DRE");
+    console.time("upgrade pool");
+    await upgradePool(args, ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade pool");
+  });
+
+task("upgrade:pool-core", "upgrade pool core")
+  .addPositionalParam("oldPoolCore", "old pool core")
+  .setAction(async ({oldPoolCore}, DRE) => {
+    const {upgradePoolCore} = await import("../../scripts/upgrade/pool");
+    await DRE.run("set-DRE");
+    console.time("upgrade poolCore");
+    await upgradePoolCore(oldPoolCore, ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade poolCore");
+  });
+
+task("upgrade:pool-marketplace", "upgrade pool marketplace")
+  .addPositionalParam("oldPoolMarketplace", "old pool marketplace")
+  .setAction(async ({oldPoolMarketplace}, DRE) => {
+    const {upgradePoolMarketplace} = await import("../../scripts/upgrade/pool");
+    await DRE.run("set-DRE");
+    console.time("upgrade poolMarketplace");
+    await upgradePoolMarketplace(oldPoolMarketplace, ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade poolMarketplace");
+  });
+
+task("upgrade:pool-ape-staking", "upgrade pool ape staking")
+  .addPositionalParam("oldPoolApeStaking", "old pool ape staking")
+  .setAction(async ({oldPoolApeStaking}, DRE) => {
+    const {upgradePoolApeStaking} = await import("../../scripts/upgrade/pool");
+    await DRE.run("set-DRE");
+    console.time("upgrade poolApeStaking");
+    await upgradePoolApeStaking(oldPoolApeStaking, ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade poolApeStaking");
+  });
+
+task("upgrade:pool-parameters", "upgrade pool parameters")
+  .addPositionalParam("oldPoolParameters", "old pool parameters")
+  .setAction(async ({oldPoolParameters}, DRE) => {
+    const {upgradePoolParameters} = await import("../../scripts/upgrade/pool");
+    await DRE.run("set-DRE");
+    console.time("upgrade poolParameters");
+    await upgradePoolParameters(oldPoolParameters, ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade poolParameters");
+  });
 
 task("upgrade:configurator", "upgrade pool configurator").setAction(
   async (_, DRE) => {
@@ -50,6 +95,14 @@ task("upgrade:auto-compound-ape", "upgrade auto compound ape").setAction(
     console.timeEnd("upgrade auto compound ape");
   }
 );
+
+task("upgrade:timelock", "upgrade timelock").setAction(async (_, DRE) => {
+  const {upgradeTimeLock} = await import("../../scripts/upgrade/timeLock");
+  await DRE.run("set-DRE");
+  console.time("upgrade timelock");
+  await upgradeTimeLock(ETHERSCAN_VERIFICATION);
+  console.timeEnd("upgrade timelock");
+});
 
 task("upgrade:p2p-pair-staking", "upgrade p2p pair staking").setAction(
   async (_, DRE) => {

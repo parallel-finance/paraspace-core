@@ -47,4 +47,10 @@ interface IVariableDebtToken is IScaledBalanceToken, IInitializableDebtToken {
      * @return The address of the underlying asset
      **/
     function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+
+    /**
+     * @notice Returns the variable debt of user
+     * @return The address of the user
+     **/
+    function balanceOf(address user) external view returns (uint256);
 }

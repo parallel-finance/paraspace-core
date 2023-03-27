@@ -132,6 +132,17 @@ interface IPoolConfigurator {
     );
 
     /**
+     * @dev Emitted when a reserve timelock strategy contract is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param oldStrategy The address of the old strategy contract
+     * @param newStrategy The address of the new strategy contract
+     **/
+    event ReserveTimeLockStrategyChanged(
+        address indexed asset,
+        address oldStrategy,
+        address newStrategy
+    );
+    /**
      * @dev Emitted when a reserve auction strategy contract is updated.
      * @param asset The address of the underlying asset of the reserve
      * @param oldStrategy The address of the old auction strategy contract
@@ -294,6 +305,16 @@ interface IPoolConfigurator {
     function setReserveAuctionStrategyAddress(
         address asset,
         address newAuctionStrategyAddress
+    ) external;
+
+    /**
+     * @notice Sets the timelock strategy of a reserve.
+     * @param asset The address of the underlying asset of the reserve
+     * @param newStrategyAddress The address of the new strategy contract
+     **/
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newStrategyAddress
     ) external;
 
     /**
