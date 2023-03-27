@@ -3,8 +3,11 @@ pragma solidity 0.8.10;
 
 import "../interfaces/ITimeLockStrategy.sol";
 import "../protocol/libraries/helpers/Errors.sol";
+import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 
 contract DefaultTimeLockStrategy is ITimeLockStrategy {
+    using SafeCast for uint256;
+
     address private immutable POOL;
 
     uint256 public immutable MIN_THRESHOLD;
@@ -68,9 +71,9 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
             emit PeriodReset();
         }
 
-        uint256 newTotalAmountInCurrentPeriod = totalAmountInCurrentPeriod +
+        uint128 newTotalAmountInCurrentPeriod = totalAmountInCurrentPeriod +
             amount;
-        totalAmountInCurrentPeriod = uint128(newTotalAmountInCurrentPeriod);
+        totalAmountInCurrentPeriod = newTotalAmountInCurrentPeriod;
 
         if (newTotalAmountInCurrentPeriod > POOL_PERIOD_LIMIT) {
             extraDelay = POOL_PERIOD_WAIT_TIME;
@@ -85,7 +88,7 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
 
         timeLockParams.releaseTime +=
             currentTimestamp +
-            _updatePeriodLimit(currentTimestamp, uint128(params.amount));
+            _updatePeriodLimit(currentTimestamp, params.amount.toUint128());
 
         if (params.amount < MIN_THRESHOLD) {
             timeLockParams.releaseTime += MIN_WAIT_TIME;
