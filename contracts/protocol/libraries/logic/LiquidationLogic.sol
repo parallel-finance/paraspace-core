@@ -451,13 +451,15 @@ library LiquidationLogic {
             0,
             vars.actualCollateralToLiquidate
         );
-
+        // no time lock needed here
+        DataTypes.TimeLockParams memory timeLockParams;
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         IPToken(vars.collateralXToken).burn(
             params.borrower,
             params.liquidator,
             vars.actualCollateralToLiquidate,
-            collateralReserveCache.nextLiquidityIndex
+            collateralReserveCache.nextLiquidityIndex,
+            timeLockParams
         );
     }
 
@@ -474,10 +476,14 @@ library LiquidationLogic {
         // Burn the equivalent amount of xToken, sending the underlying to the liquidator
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = params.collateralTokenId;
+        // no time lock needed here
+        DataTypes.TimeLockParams memory timeLockParams;
+
         INToken(vars.collateralXToken).burn(
             params.borrower,
             params.liquidator,
-            tokenIds
+            tokenIds,
+            timeLockParams
         );
     }
 

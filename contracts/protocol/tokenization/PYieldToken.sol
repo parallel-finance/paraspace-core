@@ -11,6 +11,8 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IYieldInfo} from "../../interfaces/IYieldInfo.sol";
 import {IAutoYieldApe} from "../../interfaces/IAutoYieldApe.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 
 /**
  * @title Rebasing PToken
@@ -49,12 +51,28 @@ contract PYieldToken is PToken {
         address from,
         address receiverOfUnderlying,
         uint256 amount,
-        uint256 index
+        uint256 index,
+        DataTypes.TimeLockParams calldata timeLockParams
     ) external override onlyPool {
         _updateUserIndex(from, -int256(amount));
 
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
+            if (timeLockParams.releaseTime != 0) {
+                ITimeLock timeLock = POOL.TIME_LOCK();
+                uint256[] memory amounts = new uint256[](1);
+                amounts[0] = amount;
+
+                timeLock.createAgreement(
+                    DataTypes.AssetType.ERC20,
+                    timeLockParams.actionType,
+                    _underlyingAsset,
+                    amounts,
+                    receiverOfUnderlying,
+                    timeLockParams.releaseTime
+                );
+                receiverOfUnderlying = address(timeLock);
+            }
             IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
         }
     }

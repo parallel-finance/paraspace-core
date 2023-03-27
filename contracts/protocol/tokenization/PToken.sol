@@ -15,6 +15,8 @@ import {ScaledBalanceTokenBaseERC20} from "./base/ScaledBalanceTokenBaseERC20.so
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {EIP712Base} from "./base/EIP712Base.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {ITimeLock} from "../../interfaces/ITimeLock.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -36,7 +38,7 @@ contract PToken is
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
 
-    uint256 public constant PTOKEN_REVISION = 145;
+    uint256 public constant PTOKEN_REVISION = 146;
 
     address internal _treasury;
     address internal _underlyingAsset;
@@ -108,10 +110,26 @@ contract PToken is
         address from,
         address receiverOfUnderlying,
         uint256 amount,
-        uint256 index
+        uint256 index,
+        DataTypes.TimeLockParams calldata timeLockParams
     ) external virtual override onlyPool {
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
+            if (timeLockParams.releaseTime != 0) {
+                ITimeLock timeLock = POOL.TIME_LOCK();
+                uint256[] memory amounts = new uint256[](1);
+                amounts[0] = amount;
+
+                timeLock.createAgreement(
+                    DataTypes.AssetType.ERC20,
+                    timeLockParams.actionType,
+                    _underlyingAsset,
+                    amounts,
+                    receiverOfUnderlying,
+                    timeLockParams.releaseTime
+                );
+                receiverOfUnderlying = address(timeLock);
+            }
             IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
         }
     }
@@ -193,12 +211,26 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function transferUnderlyingTo(address target, uint256 amount)
-        external
-        virtual
-        override
-        onlyPool
-    {
+    function transferUnderlyingTo(
+        address target,
+        uint256 amount,
+        DataTypes.TimeLockParams calldata timeLockParams
+    ) external virtual override onlyPool {
+        if (timeLockParams.releaseTime != 0) {
+            ITimeLock timeLock = POOL.TIME_LOCK();
+            uint256[] memory amounts = new uint256[](1);
+            amounts[0] = amount;
+
+            timeLock.createAgreement(
+                DataTypes.AssetType.ERC20,
+                timeLockParams.actionType,
+                _underlyingAsset,
+                amounts,
+                target,
+                timeLockParams.releaseTime
+            );
+            target = address(timeLock);
+        }
         IERC20(_underlyingAsset).safeTransfer(target, amount);
     }
 

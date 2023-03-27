@@ -43,7 +43,7 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
-    uint256 internal constant POOL_REVISION = 145;
+    uint256 internal constant POOL_REVISION = 146;
     IERC20 internal immutable USDC;
     ISwapRouter internal immutable SWAP_ROUTER;
 
@@ -269,19 +269,22 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
             stakingInfo.borrowAsset
         ];
-
+        // no time lock needed here
+        DataTypes.TimeLockParams memory timeLockParams;
         // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
             ValidationLogic.validateFlashloanSimple(borrowAssetReserve);
             if (stakingInfo.borrowAsset == address(APE_COIN)) {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     localVar.xTokenAddress,
-                    stakingInfo.borrowAmount
+                    stakingInfo.borrowAmount,
+                    timeLockParams
                 );
             } else {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     address(this),
-                    stakingInfo.borrowAmount
+                    stakingInfo.borrowAmount,
+                    timeLockParams
                 );
                 APE_COMPOUND.withdraw(stakingInfo.borrowAmount);
                 APE_COIN.safeTransfer(

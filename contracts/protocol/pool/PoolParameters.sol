@@ -48,7 +48,7 @@ contract PoolParameters is
     using ReserveLogic for DataTypes.ReserveData;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 145;
+    uint256 internal constant POOL_REVISION = 146;
     uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 3e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
 
@@ -114,7 +114,8 @@ contract PoolParameters is
         address xTokenAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress,
-        address auctionStrategyAddress
+        address auctionStrategyAddress,
+        address timeLockStrategyAddress
     ) external virtual override onlyPoolConfigurator {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -127,6 +128,7 @@ contract PoolParameters is
                     xTokenAddress: xTokenAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
+                    timeLockStrategyAddress: timeLockStrategyAddress,
                     auctionStrategyAddress: auctionStrategyAddress,
                     reservesCount: ps._reservesCount,
                     maxNumberReserves: ReserveConfiguration.MAX_RESERVES_COUNT
@@ -162,6 +164,21 @@ contract PoolParameters is
             Errors.ASSET_NOT_LISTED
         );
         ps._reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newStrategyAddress
+    ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            ps._reserves[asset].id != 0 || ps._reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        ps._reserves[asset].timeLockStrategyAddress = newStrategyAddress;
     }
 
     /// @inheritdoc IPoolParameters
