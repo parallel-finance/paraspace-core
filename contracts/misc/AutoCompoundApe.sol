@@ -8,13 +8,16 @@ import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IAutoCompoundApe} from "../interfaces/IAutoCompoundApe.sol";
 import {CApe} from "./CApe.sol";
-import {VoteDelegator} from "./VoteDelegator.sol";
+import {IVoteDelegator} from "./interfaces/IVoteDelegator.sol";
+import {IDelegation} from "./interfaces/IDelegation.sol";
+import {IACLManager} from "../interfaces/IACLManager.sol";
+import {Errors} from "../protocol/libraries/helpers/Errors.sol";
 
 contract AutoCompoundApe is
     Initializable,
     OwnableUpgradeable,
     CApe,
-    VoteDelegator,
+    IVoteDelegator,
     IAutoCompoundApe
 {
     using SafeERC20 for IERC20;
@@ -29,10 +32,17 @@ contract AutoCompoundApe is
     ApeCoinStaking public immutable apeStaking;
     IERC20 public immutable apeCoin;
     uint256 public bufferBalance;
+    uint256 public stakingBalance;
+    IACLManager private immutable aclManager;
 
-    constructor(address _apeCoin, address _apeStaking) {
+    constructor(
+        address _apeCoin,
+        address _apeStaking,
+        address _aclManager
+    ) {
         apeStaking = ApeCoinStaking(_apeStaking);
         apeCoin = IERC20(_apeCoin);
+        aclManager = IACLManager(_aclManager);
     }
 
     function initialize() public initializer {
@@ -93,13 +103,12 @@ contract AutoCompoundApe is
         override
         returns (uint256)
     {
-        (uint256 stakedAmount, ) = apeStaking.addressPosition(address(this));
         uint256 rewardAmount = apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
             address(this),
             0
         );
-        return stakedAmount + rewardAmount + bufferBalance;
+        return stakingBalance + rewardAmount + bufferBalance;
     }
 
     function _withdrawFromApeCoinStaking(uint256 amount) internal {
@@ -107,6 +116,7 @@ contract AutoCompoundApe is
         apeStaking.withdrawSelfApeCoin(amount);
         uint256 balanceAfter = apeCoin.balanceOf(address(this));
         uint256 realWithdraw = balanceAfter - balanceBefore;
+        stakingBalance -= amount;
         bufferBalance += realWithdraw;
     }
 
@@ -124,6 +134,7 @@ contract AutoCompoundApe is
         uint256 _bufferBalance = bufferBalance;
         if (_bufferBalance >= MIN_OPERATION_AMOUNT) {
             apeStaking.depositSelfApeCoin(_bufferBalance);
+            stakingBalance += _bufferBalance;
             bufferBalance = 0;
         }
     }
@@ -135,8 +146,11 @@ contract AutoCompoundApe is
             0
         );
         if (rewardAmount > 0) {
+            uint256 balanceBefore = apeCoin.balanceOf(address(this));
             apeStaking.claimSelfApeCoin();
-            bufferBalance += rewardAmount;
+            uint256 balanceAfter = apeCoin.balanceOf(address(this));
+            uint256 realClaim = balanceAfter - balanceBefore;
+            bufferBalance += realClaim;
         }
     }
 
@@ -144,7 +158,7 @@ contract AutoCompoundApe is
         address token,
         address to,
         uint256 amount
-    ) external onlyOwner {
+    ) external onlyPoolAdmin {
         if (token == address(apeCoin)) {
             require(
                 bufferBalance <= (apeCoin.balanceOf(address(this)) - amount),
@@ -153,5 +167,71 @@ contract AutoCompoundApe is
         }
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
+    }
+
+    function setVotingDelegate(
+        address delegateContract,
+        bytes32 spaceId,
+        address delegate
+    ) external onlyPoolAdmin {
+        IDelegation(delegateContract).setDelegate(spaceId, delegate);
+    }
+
+    function clearVotingDelegate(address delegateContract, bytes32 spaceId)
+        external
+        onlyPoolAdmin
+    {
+        IDelegation(delegateContract).clearDelegate(spaceId);
+    }
+
+    function getDelegate(address delegateContract, bytes32 spaceId)
+        external
+        view
+        returns (address)
+    {
+        return IDelegation(delegateContract).delegation(address(this), spaceId);
+    }
+
+    function pause() external onlyEmergencyOrPoolAdmin {
+        _pause();
+    }
+
+    function unpause() external onlyPoolAdmin {
+        _unpause();
+    }
+
+    function rebaseFromApeCoinStaking() external onlyPoolAdmin {
+        (stakingBalance, ) = apeStaking.addressPosition(address(this));
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
+        _;
+    }
+
+    /**
+     * @dev Only emergency or pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyEmergencyOrPoolAdmin() {
+        _onlyPoolOrEmergencyAdmin();
+        _;
+    }
+
+    function _onlyPoolAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function _onlyPoolOrEmergencyAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender) ||
+                aclManager.isEmergencyAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
     }
 }

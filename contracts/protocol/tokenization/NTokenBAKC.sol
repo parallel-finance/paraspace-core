@@ -12,6 +12,7 @@ import {INTokenApeStaking} from "../../interfaces/INTokenApeStaking.sol";
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
  * @title NTokenBAKC
@@ -85,14 +86,15 @@ contract NTokenBAKC is NToken {
     function burn(
         address from,
         address receiverOfUnderlying,
-        uint256[] calldata tokenIds
+        uint256[] calldata tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         if (from != receiverOfUnderlying) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
                 _unStakePairedApePosition(tokenIds[index]);
             }
         }
-        return _burn(from, receiverOfUnderlying, tokenIds);
+        return _burn(from, receiverOfUnderlying, tokenIds, timeLockParams);
     }
 
     function _unStakePairedApePosition(uint256 tokenId) internal {

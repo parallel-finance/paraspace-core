@@ -1,19 +1,5 @@
 import {eContractid, IReserveParams} from "../helpers/types";
 import {
-  rateStrategyXETH,
-  rateStrategyWBTC,
-  rateStrategyAPE,
-  rateStrategyNFT,
-  rateStrategyDAI,
-  rateStrategyUSDC,
-  rateStrategyUSDT,
-  rateStrategyWETH,
-  rateStrategyXCDOT,
-  rateStrategyWGLMR,
-  rateStrategyBLUR,
-  rateStrategyFRAX,
-} from "./rateStrategies";
-import {
   auctionStrategyAzuki,
   auctionStrategyBAKC,
   auctionStrategyBAYC,
@@ -29,6 +15,56 @@ import {
   auctionStrategyWPunks,
   auctionStrategyZero,
 } from "./auctionStrategies";
+import {
+  rateStrategyAPE,
+  rateStrategyBLUR,
+  rateStrategyDAI,
+  rateStrategyFRAX,
+  rateStrategyNFT,
+  rateStrategyUSDC,
+  rateStrategyUSDT,
+  rateStrategyWBTC,
+  rateStrategyWETH,
+  rateStrategyWGLMR,
+  rateStrategyXCDOT,
+  rateStrategyXETH,
+} from "./rateStrategies";
+import {
+  timeLockStrategyAPE,
+  timeLockStrategyASTETH,
+  timeLockStrategyAWETH,
+  timeLockStrategyAWSTETH,
+  timeLockStrategyAzuki,
+  timeLockStrategyBAKC,
+  timeLockStrategyBAYC,
+  timeLockStrategyBENDETH,
+  timeLockStrategyBLUR,
+  timeLockStrategyCAPE,
+  timeLockStrategyCETH,
+  timeLockStrategyCloneX,
+  timeLockStrategyDAI,
+  timeLockStrategyDoodles,
+  timeLockStrategyFRAX,
+  timeLockStrategyMAYC,
+  timeLockStrategyMeebits,
+  timeLockStrategyMoonbird,
+  timeLockStrategyOTHR,
+  timeLockStrategyPenguins,
+  timeLockStrategyPUNK,
+  timeLockStrategyRETH,
+  timeLockStrategySAPE,
+  timeLockStrategySEWER,
+  timeLockStrategyUniswapV3,
+  timeLockStrategyUSDC,
+  timeLockStrategyUSDT,
+  timeLockStrategyWBTC,
+  timeLockStrategyWETH,
+  timeLockStrategyWGLMR,
+  timeLockStrategyWPunks,
+  timeLockStrategyWSTETH,
+  timeLockStrategyXCDOT,
+  timeLockStrategyYAPE,
+} from "./timeLockStrategies";
 
 ////////////////////////////////////////////////////////////
 // V1
@@ -36,6 +72,7 @@ import {
 export const strategyDAI: IReserveParams = {
   strategy: rateStrategyDAI,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyDAI,
   baseLTVAsCollateral: "7700",
   liquidationThreshold: "9000",
   liquidationProtocolFeePercentage: "0",
@@ -52,6 +89,7 @@ export const strategyDAI: IReserveParams = {
 export const strategyUSDC: IReserveParams = {
   strategy: rateStrategyUSDC,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyUSDC,
   baseLTVAsCollateral: "8700",
   liquidationThreshold: "8900",
   liquidationProtocolFeePercentage: "0",
@@ -68,6 +106,7 @@ export const strategyUSDC: IReserveParams = {
 export const strategyUSDT: IReserveParams = {
   strategy: rateStrategyUSDT,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyUSDT,
   baseLTVAsCollateral: "7500",
   liquidationThreshold: "8000",
   liquidationProtocolFeePercentage: "0",
@@ -84,6 +123,7 @@ export const strategyUSDT: IReserveParams = {
 export const strategyFRAX: IReserveParams = {
   strategy: rateStrategyFRAX,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyFRAX,
   baseLTVAsCollateral: "7500",
   liquidationThreshold: "8000",
   liquidationProtocolFeePercentage: "0",
@@ -100,6 +140,7 @@ export const strategyFRAX: IReserveParams = {
 export const strategyWETH: IReserveParams = {
   strategy: rateStrategyWETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWETH,
   baseLTVAsCollateral: "8250",
   liquidationThreshold: "8600",
   liquidationProtocolFeePercentage: "0",
@@ -116,6 +157,7 @@ export const strategyWETH: IReserveParams = {
 export const strategyWBTC: IReserveParams = {
   strategy: rateStrategyWBTC,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWBTC,
   baseLTVAsCollateral: "7200",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8200",
@@ -132,6 +174,7 @@ export const strategyWBTC: IReserveParams = {
 export const strategyAPE: IReserveParams = {
   strategy: rateStrategyAPE,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyAPE,
   baseLTVAsCollateral: "2000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -148,6 +191,7 @@ export const strategyAPE: IReserveParams = {
 export const strategySAPE: IReserveParams = {
   strategy: rateStrategyAPE,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategySAPE,
   baseLTVAsCollateral: "2000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -164,6 +208,7 @@ export const strategySAPE: IReserveParams = {
 export const strategyCAPE: IReserveParams = {
   strategy: rateStrategyAPE,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyCAPE,
   baseLTVAsCollateral: "2000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -180,6 +225,7 @@ export const strategyCAPE: IReserveParams = {
 export const strategyYAPE: IReserveParams = {
   strategy: rateStrategyAPE,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyYAPE,
   baseLTVAsCollateral: "2000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -196,6 +242,7 @@ export const strategyYAPE: IReserveParams = {
 export const strategyXCDOT: IReserveParams = {
   strategy: rateStrategyXCDOT,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyXCDOT,
   baseLTVAsCollateral: "6000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -212,6 +259,7 @@ export const strategyXCDOT: IReserveParams = {
 export const strategyWGLMR: IReserveParams = {
   strategy: rateStrategyWGLMR,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWGLMR,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "4500",
@@ -228,6 +276,7 @@ export const strategyWGLMR: IReserveParams = {
 export const strategyBAYC: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyBAYC,
+  timeLockStrategy: timeLockStrategyBAYC,
   baseLTVAsCollateral: "4000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8000",
@@ -244,6 +293,7 @@ export const strategyBAYC: IReserveParams = {
 export const strategyMAYC: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyMAYC,
+  timeLockStrategy: timeLockStrategyMAYC,
   baseLTVAsCollateral: "3250",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -260,6 +310,7 @@ export const strategyMAYC: IReserveParams = {
 export const strategyBAKC: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyBAKC,
+  timeLockStrategy: timeLockStrategyBAKC,
   baseLTVAsCollateral: "4000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8000",
@@ -276,6 +327,7 @@ export const strategyBAKC: IReserveParams = {
 export const strategyDoodles: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyDoodles,
+  timeLockStrategy: timeLockStrategyDoodles,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -292,6 +344,7 @@ export const strategyDoodles: IReserveParams = {
 export const strategyOthr: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyOthr,
+  timeLockStrategy: timeLockStrategyOTHR,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -308,6 +361,7 @@ export const strategyOthr: IReserveParams = {
 export const strategyClonex: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyCloneX,
+  timeLockStrategy: timeLockStrategyCloneX,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -324,6 +378,7 @@ export const strategyClonex: IReserveParams = {
 export const strategyMoonbird: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyMoonbird,
+  timeLockStrategy: timeLockStrategyMoonbird,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -340,6 +395,7 @@ export const strategyMoonbird: IReserveParams = {
 export const strategyMeebits: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyMeebits,
+  timeLockStrategy: timeLockStrategyMeebits,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -356,6 +412,7 @@ export const strategyMeebits: IReserveParams = {
 export const strategyAzuki: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyAzuki,
+  timeLockStrategy: timeLockStrategyAzuki,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -372,6 +429,7 @@ export const strategyAzuki: IReserveParams = {
 export const strategyWPunks: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyWPunks,
+  timeLockStrategy: timeLockStrategyWPunks,
   baseLTVAsCollateral: "3500",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -388,6 +446,7 @@ export const strategyWPunks: IReserveParams = {
 export const strategyUniswapV3: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyUniswapV3,
+  timeLockStrategy: timeLockStrategyUniswapV3,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -404,6 +463,7 @@ export const strategyUniswapV3: IReserveParams = {
 export const strategySEWER: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategySEWER, // same as BAKC, it won't be used as collateral so it's ok
+  timeLockStrategy: timeLockStrategySEWER,
   baseLTVAsCollateral: "0",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "0000",
@@ -420,6 +480,7 @@ export const strategySEWER: IReserveParams = {
 export const strategyPudgyPenguins: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyPudgyPenguins,
+  timeLockStrategy: timeLockStrategyPenguins,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -439,6 +500,7 @@ export const strategyPudgyPenguins: IReserveParams = {
 export const strategyCBETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWETH,
   baseLTVAsCollateral: "7200",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8300",
@@ -455,6 +517,7 @@ export const strategyCBETH: IReserveParams = {
 export const strategySTETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWETH,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8100",
@@ -471,6 +534,7 @@ export const strategySTETH: IReserveParams = {
 export const strategyASTETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyASTETH,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8100",
@@ -487,6 +551,7 @@ export const strategyASTETH: IReserveParams = {
 export const strategyWSTETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWSTETH,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8100",
@@ -503,6 +568,7 @@ export const strategyWSTETH: IReserveParams = {
 export const strategyAWSTETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyAWSTETH,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8100",
@@ -519,6 +585,7 @@ export const strategyAWSTETH: IReserveParams = {
 export const strategyBENDETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyBENDETH,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8100",
@@ -535,6 +602,7 @@ export const strategyBENDETH: IReserveParams = {
 export const strategyAWETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyAWETH,
   baseLTVAsCollateral: "8250",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8600",
@@ -551,6 +619,7 @@ export const strategyAWETH: IReserveParams = {
 export const strategyCETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyCETH,
   baseLTVAsCollateral: "6900",
   liquidationThreshold: "8100",
   liquidationProtocolFeePercentage: "0",
@@ -567,6 +636,7 @@ export const strategyCETH: IReserveParams = {
 export const strategyRETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyRETH,
   baseLTVAsCollateral: "7200",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8300",
@@ -584,6 +654,7 @@ export const strategyPUNK: IReserveParams = {
   // address: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyPUNK,
   baseLTVAsCollateral: "6900",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "8100",
@@ -600,6 +671,7 @@ export const strategyPUNK: IReserveParams = {
 export const strategyBLUR: IReserveParams = {
   strategy: rateStrategyBLUR,
   auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyBLUR,
   baseLTVAsCollateral: "2500",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "3500",

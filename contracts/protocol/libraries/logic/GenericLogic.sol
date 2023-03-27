@@ -9,6 +9,7 @@ import {INToken} from "../../../interfaces/INToken.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
+import {ITimeLockStrategy} from "../../../interfaces/ITimeLockStrategy.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
@@ -533,5 +534,19 @@ library GenericLogic {
                 currentReserveAddress,
                 tokenId
             );
+    }
+
+    function calculateTimeLockParams(
+        DataTypes.ReserveData storage reserve,
+        DataTypes.TimeLockFactorParams memory params
+    ) internal returns (DataTypes.TimeLockParams memory) {
+        DataTypes.TimeLockParams memory timeLockParams;
+        address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
+        if (timeLockStrategyAddress != address(0)) {
+            timeLockParams = ITimeLockStrategy(timeLockStrategyAddress)
+                .calculateTimeLockParams(params);
+        }
+
+        return timeLockParams;
     }
 }

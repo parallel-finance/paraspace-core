@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
+import {ITimeLockStrategy} from "../../interfaces/ITimeLockStrategy.sol";
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 interface IUiPoolDataProvider {
@@ -44,6 +45,7 @@ interface IUiPoolDataProvider {
         address variableDebtTokenAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
+        address timeLockStrategyAddress;
         uint256 availableLiquidity;
         uint256 totalPrincipalStableDebt;
         uint256 averageStableRate;
@@ -63,6 +65,7 @@ interface IUiPoolDataProvider {
         uint256 supplyCap;
         //AssetType
         DataTypes.AssetType assetType;
+        ITimeLockStrategy.TimeLockStrategyData timeLockStrategyData;
     }
 
     struct UserReserveData {
@@ -73,6 +76,7 @@ interface IUiPoolDataProvider {
         bool usageAsCollateralEnabledOnUser;
         uint256 stableBorrowRate;
         uint256 scaledVariableDebt;
+        uint256 currentVariableDebt;
         uint256 principalStableDebt;
         uint256 stableBorrowLastUpdateTimestamp;
         uint256 avgMultiplier;

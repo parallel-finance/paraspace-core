@@ -39,6 +39,8 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
+        // timelock strategy
+        address timeLockStrategyAddress;
         //the current stable borrow rate. Expressed in ray
         uint128 currentStableBorrowRate;
         //stableDebtToken address
@@ -306,6 +308,7 @@ library DataTypes {
         address variableDebtAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
+        address timeLockStrategyAddress;
         uint16 reservesCount;
         uint16 maxNumberReserves;
     }
@@ -476,5 +479,21 @@ library DataTypes {
         bool isActive;
         bool isFrozen;
         bool isPaused;
+    }
+
+    struct TimeLockParams {
+        uint48 releaseTime;
+        TimeLockActionType actionType;
+    }
+
+    struct TimeLockFactorParams {
+        AssetType assetType;
+        address asset;
+        uint256 amount;
+    }
+
+    enum TimeLockActionType {
+        BORROW,
+        WITHDRAW
     }
 }

@@ -30,7 +30,6 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getFirstSigner, getAggregator} from "../helpers/contracts-getters";
 import {auctionStrategyExp} from "../market-config/auctionStrategies";
-import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
 import {
   convertToCurrencyDecimals,
   impersonateAddress,
@@ -38,6 +37,7 @@ import {
 import {increaseTime} from "../helpers/misc-utils";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
+import {ConfiguratorInputTypes} from "../types/contracts/interfaces/IPoolConfigurator";
 
 type CalculateInterestRatesParams = {
   liquidityAdded: BigNumberish;
@@ -403,6 +403,7 @@ describe("Interest Rate Tests", () => {
           underlyingAssetDecimals: 18,
           interestRateStrategyAddress: mockRateStrategy.address,
           auctionStrategyAddress: mockAuctionStrategy.address,
+          timeLockStrategyAddress: ZERO_ADDRESS,
           assetType: 0,
           underlyingAsset: mockToken.address,
           treasury: ZERO_ADDRESS,

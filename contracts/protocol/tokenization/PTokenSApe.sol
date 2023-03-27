@@ -12,6 +12,7 @@ import {IPToken} from "../../interfaces/IPToken.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
  * @title sApe PToken
@@ -47,7 +48,8 @@ contract PTokenSApe is PToken {
         address,
         address,
         uint256,
-        uint256
+        uint256,
+        DataTypes.TimeLockParams calldata
     ) external virtual override onlyPool {
         revert("not allowed");
     }
@@ -67,12 +69,11 @@ contract PTokenSApe is PToken {
         return balanceOf(user);
     }
 
-    function transferUnderlyingTo(address, uint256)
-        external
-        virtual
-        override
-        onlyPool
-    {
+    function transferUnderlyingTo(
+        address,
+        uint256,
+        DataTypes.TimeLockParams calldata
+    ) external virtual override onlyPool {
         revert("not allowed");
     }
 

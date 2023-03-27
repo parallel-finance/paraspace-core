@@ -7,6 +7,7 @@ import {
   getMockInitializableImpleV2,
   getMockVariableDebtToken,
   getPToken,
+  getTimeLockProxy,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {
@@ -730,11 +731,12 @@ describe("Upgradeability", () => {
       const coreLibraries = await deployPoolCoreLibraries(
         ETHERSCAN_VERIFICATION
       );
+      const timeLock = await getTimeLockProxy();
 
       const poolCoreV2 = await new PoolCoreV2__factory(
         coreLibraries,
         await getFirstSigner()
-      ).deploy(addressesProvider.address);
+      ).deploy(addressesProvider.address, timeLock.address);
 
       await waitForTx(
         await addressesProvider.updatePoolImpl(

@@ -47,7 +47,7 @@ import {
 } from "./helpers/marketplace-helper";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {AdvancedOrderStruct} from "../types/dependencies/seaport/contracts/Seaport";
+import {AdvancedOrderStruct} from "../types/contracts/dependencies/seaport/contracts/Seaport";
 
 describe("Leveraged Buy - Positive tests", () => {
   it("TC-erc721-buy-01: ERC721 <=> ERC20 via seaport - no loan", async () => {

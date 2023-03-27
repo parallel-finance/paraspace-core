@@ -42,6 +42,8 @@ interface IPoolParameters {
      * @param stableDebtAddress The address of the StableDebtToken that will be assigned to the reserve
      * @param variableDebtAddress The address of the VariableDebtToken that will be assigned to the reserve
      * @param interestRateStrategyAddress The address of the interest rate strategy contract
+     * @param auctionStrategyAddress The address of the auction rate strategy contract
+     * @param timeLockStrategyAddress The address of the timeLock strategy contract
      **/
     function initReserve(
         address asset,
@@ -49,7 +51,8 @@ interface IPoolParameters {
         address stableDebtAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress,
-        address auctionStrategyAddress
+        address auctionStrategyAddress,
+        address timeLockStrategyAddress
     ) external;
 
     /**
@@ -79,6 +82,11 @@ interface IPoolParameters {
     function setReserveInterestRateStrategyAddress(
         address asset,
         address rateStrategyAddress
+    ) external;
+
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newStrategyAddress
     ) external;
 
     /**

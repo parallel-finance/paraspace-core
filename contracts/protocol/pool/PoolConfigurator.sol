@@ -240,16 +240,25 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReservePause(address asset, bool paused)
+    function pauseReserve(address asset)
         public
         override
         onlyEmergencyOrPoolAdmin
     {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
-        currentConfig.setPaused(paused);
+        currentConfig.setPaused(true);
         _pool.setConfiguration(asset, currentConfig);
-        emit ReservePaused(asset, paused);
+        emit ReservePaused(asset, true);
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function unpauseReserve(address asset) public override onlyPoolAdmin {
+        DataTypes.ReserveConfigurationMap memory currentConfig = _pool
+            .getConfiguration(asset);
+        currentConfig.setPaused(false);
+        _pool.setConfiguration(asset, currentConfig);
+        emit ReservePaused(asset, false);
     }
 
     /// @inheritdoc IPoolConfigurator
@@ -340,18 +349,15 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     /// @inheritdoc IPoolConfigurator
     function setReserveInterestRateStrategyAddress(
         address asset,
-        address newRateStrategyAddress
+        address newStrategyAddress
     ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
-        address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
-        _pool.setReserveInterestRateStrategyAddress(
-            asset,
-            newRateStrategyAddress
-        );
+        address oldStrategyAddress = reserve.interestRateStrategyAddress;
+        _pool.setReserveInterestRateStrategyAddress(asset, newStrategyAddress);
         emit ReserveInterestRateStrategyChanged(
             asset,
-            oldRateStrategyAddress,
-            newRateStrategyAddress
+            oldStrategyAddress,
+            newStrategyAddress
         );
     }
 
@@ -381,12 +387,38 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setPoolPause(bool paused) external override onlyEmergencyAdmin {
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newRateStrategyAddress
+    ) external override onlyRiskOrPoolAdmins {
+        DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+        address oldRateStrategyAddress = reserve.timeLockStrategyAddress;
+        _pool.setReserveTimeLockStrategyAddress(asset, newRateStrategyAddress);
+        emit ReserveTimeLockStrategyChanged(
+            asset,
+            oldRateStrategyAddress,
+            newRateStrategyAddress
+        );
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function pausePool() external override onlyEmergencyAdmin {
         address[] memory reserves = _pool.getReservesList();
 
         for (uint256 i = 0; i < reserves.length; i++) {
             if (reserves[i] != address(0)) {
-                setReservePause(reserves[i], paused);
+                pauseReserve(reserves[i]);
+            }
+        }
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function unpausePool() external override onlyPoolAdmin {
+        address[] memory reserves = _pool.getReservesList();
+
+        for (uint256 i = 0; i < reserves.length; i++) {
+            if (reserves[i] != address(0)) {
+                unpauseReserve(reserves[i]);
             }
         }
     }

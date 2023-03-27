@@ -49,7 +49,8 @@ library PoolLogic {
             params.stableDebtAddress,
             params.variableDebtAddress,
             params.interestRateStrategyAddress,
-            params.auctionStrategyAddress
+            params.auctionStrategyAddress,
+            params.timeLockStrategyAddress
         );
 
         bool reserveAlreadyAdded = reservesData[params.asset].id != 0 ||

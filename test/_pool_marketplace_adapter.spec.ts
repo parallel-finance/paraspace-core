@@ -37,8 +37,8 @@ import {
 } from "../helpers/seaport-helpers/types";
 import {ProtocolErrors} from "../helpers/types";
 import {createX2Y2Order, createRunput} from "../helpers/x2y2-helpers";
-import {InputStruct} from "../types/dependencies/blur-exchange/BlurExchange";
 import {testEnvFixture} from "./helpers/setup-env";
+import {InputStruct} from "../types/contracts/dependencies/blur-exchange/BlurExchange";
 
 describe("Marketplace Adapters - Negative Tests", () => {
   const nftId = "0";

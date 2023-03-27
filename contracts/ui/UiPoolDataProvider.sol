@@ -11,6 +11,7 @@ import {IParaSpaceOracle} from "../interfaces/IParaSpaceOracle.sol";
 import {IPToken} from "../interfaces/IPToken.sol";
 import {ICollateralizableERC721} from "../interfaces/ICollateralizableERC721.sol";
 import {IAtomicCollateralizableERC721} from "../interfaces/IAtomicCollateralizableERC721.sol";
+import {ITimeLockStrategy} from "../interfaces/ITimeLockStrategy.sol";
 import {XTokenType, IXTokenType} from "../interfaces/IXTokenType.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
@@ -125,8 +126,16 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 .interestRateStrategyAddress;
             reserveData.auctionStrategyAddress = baseData
                 .auctionStrategyAddress;
+            reserveData.timeLockStrategyAddress = baseData
+                .timeLockStrategyAddress;
             reserveData.auctionEnabled =
                 reserveData.auctionStrategyAddress != address(0);
+
+            if (reserveData.timeLockStrategyAddress != address(0)) {
+                reserveData.timeLockStrategyData = ITimeLockStrategy(
+                    reserveData.timeLockStrategyAddress
+                ).getTimeLockStrategyData();
+            }
 
             try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
                 uint256 price
@@ -438,6 +447,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 userReservesData[i].scaledVariableDebt = IVariableDebtToken(
                     baseData.variableDebtTokenAddress
                 ).scaledBalanceOf(user);
+                userReservesData[i].currentVariableDebt = IVariableDebtToken(
+                    baseData.variableDebtTokenAddress
+                ).balanceOf(user);
                 userReservesData[i].principalStableDebt = IStableDebtToken(
                     baseData.stableDebtTokenAddress
                 ).principalBalanceOf(user);
