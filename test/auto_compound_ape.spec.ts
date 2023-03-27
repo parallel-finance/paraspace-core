@@ -24,6 +24,7 @@ import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
+import {ProtocolErrors} from "../helpers/types";
 
 describe("Auto Compound Ape Test", () => {
   let testEnv: TestEnv;
@@ -37,24 +38,21 @@ describe("Auto Compound Ape Test", () => {
   let user3Amount;
   let MINIMUM_LIQUIDITY;
 
+  const {CALLER_NOT_POOL_ADMIN} = ProtocolErrors;
+
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       ape,
       usdc,
       weth,
-      users,
+      users: [user1, user2, , , user3, user4, user5],
       apeCoinStaking,
       pool,
       protocolDataProvider,
       poolAdmin,
       nftPositionManager,
     } = testEnv;
-    const user1 = users[0];
-    const user2 = users[1];
-    const user3 = users[2];
-    const user4 = users[5];
-    const user5 = users[6];
 
     cApe = await getAutoCompoundApe();
     MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
@@ -262,7 +260,7 @@ describe("Auto Compound Ape Test", () => {
 
   it("user receive reward as deposit portion 1", async () => {
     const {
-      users: [user1, user2, user3],
+      users: [user1, user2, , , user3],
       ape,
     } = await loadFixture(fixture);
 
@@ -411,7 +409,7 @@ describe("Auto Compound Ape Test", () => {
     const {
       pUsdc,
       usdc,
-      users: [user1, user2, user3],
+      users: [user1, user2, , , user3],
       mayc,
       pool,
       ape,
@@ -987,7 +985,7 @@ describe("Auto Compound Ape Test", () => {
       users: [user1, user2],
       ape,
       weth,
-      gatewayAdmin,
+      poolAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(weth, "1", user2);
@@ -1000,7 +998,7 @@ describe("Auto Compound Ape Test", () => {
       cApe
         .connect(user2.signer)
         .rescueERC20(weth.address, user2.address, parseEther("1"))
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
 
     await waitForTx(
       await ape.connect(user2.signer).transfer(cApe.address, parseEther("100"))
@@ -1014,13 +1012,13 @@ describe("Auto Compound Ape Test", () => {
 
     await expect(
       cApe
-        .connect(gatewayAdmin.signer)
+        .connect(poolAdmin.signer)
         .rescueERC20(ape.address, user1.address, parseEther("150"))
     ).to.be.revertedWith("balance below backed balance");
 
     await waitForTx(
       await cApe
-        .connect(gatewayAdmin.signer)
+        .connect(poolAdmin.signer)
         .rescueERC20(ape.address, user2.address, parseEther("100"))
     );
 
@@ -1132,7 +1130,7 @@ describe("Auto Compound Ape Test", () => {
   it("test vote delegation", async () => {
     const {
       users: [user1],
-      gatewayAdmin,
+      poolAdmin,
     } = await loadFixture(fixture);
 
     const delegateRegistry = await deployMockedDelegateRegistry(
@@ -1140,7 +1138,7 @@ describe("Auto Compound Ape Test", () => {
     );
 
     await cApe
-      .connect(gatewayAdmin.signer)
+      .connect(poolAdmin.signer)
       .setVotingDelegate(
         delegateRegistry.address,
         solidityKeccak256(["string"], ["test"]),

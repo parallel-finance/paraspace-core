@@ -85,6 +85,11 @@ import {
   AutoYieldApe__factory,
   PYieldToken__factory,
   HelperContract__factory,
+  MockCToken__factory,
+  HotWalletProxy__factory,
+  HotWalletProxy,
+  NTokenOtherdeed__factory,
+  NTokenOtherdeed,
 } from "../types";
 import {
   getEthersSigners,
@@ -908,6 +913,17 @@ export const getMockAToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getMockCToken = async (address?: tEthereumAddress) =>
+  await MockCToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockCToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getPTokenAToken = async (address?: tEthereumAddress) =>
   await PTokenAToken__factory.connect(
     address ||
@@ -1198,6 +1214,28 @@ export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.SEWER}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
+  await NTokenOtherdeed__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getHotWalletProxy = async (address?: tEthereumAddress) =>
+  await HotWalletProxy__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.HotWalletProxy}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );

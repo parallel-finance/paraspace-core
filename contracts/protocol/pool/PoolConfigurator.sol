@@ -208,16 +208,25 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReservePause(address asset, bool paused)
+    function pauseReserve(address asset)
         public
         override
         onlyEmergencyOrPoolAdmin
     {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
-        currentConfig.setPaused(paused);
+        currentConfig.setPaused(true);
         _pool.setConfiguration(asset, currentConfig);
-        emit ReservePaused(asset, paused);
+        emit ReservePaused(asset, true);
+    }
+
+    /// @inheritdoc IPoolConfigurator
+    function unpauseReserve(address asset) public override onlyPoolAdmin {
+        DataTypes.ReserveConfigurationMap memory currentConfig = _pool
+            .getConfiguration(asset);
+        currentConfig.setPaused(false);
+        _pool.setConfiguration(asset, currentConfig);
+        emit ReservePaused(asset, false);
     }
 
     /// @inheritdoc IPoolConfigurator
@@ -342,12 +351,22 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setPoolPause(bool paused) external override onlyEmergencyAdmin {
+    function pausePool() external override onlyEmergencyAdmin {
         address[] memory reserves = _pool.getReservesList();
 
         for (uint256 i = 0; i < reserves.length; i++) {
             if (reserves[i] != address(0)) {
-                setReservePause(reserves[i], paused);
+                pauseReserve(reserves[i]);
+            }
+        }
+    }
+
+    function unpausePool() external override onlyPoolAdmin {
+        address[] memory reserves = _pool.getReservesList();
+
+        for (uint256 i = 0; i < reserves.length; i++) {
+            if (reserves[i] != address(0)) {
+                unpauseReserve(reserves[i]);
             }
         }
     }

@@ -143,7 +143,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
         })
     );
 
-    await waitForTx(await configurator.setReservePause(weth.address, true));
+    await waitForTx(await configurator.pauseReserve(weth.address));
     await expect(
       pool
         .connect(user1.signer)
@@ -169,7 +169,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       nUniswapV3,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, false));
+    await waitForTx(await configurator.unpauseReserve(weth.address));
     await waitForTx(
       await pool
         .connect(user1.signer)
@@ -307,7 +307,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           }
         )
     );
-    await waitForTx(await configurator.setReservePause(weth.address, true));
+    await waitForTx(await configurator.pauseReserve(weth.address));
     await expect(
       pool
         .connect(user1.signer)
@@ -326,7 +326,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       configurator,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, false));
+    await waitForTx(await configurator.unpauseReserve(weth.address));
     await waitForTx(
       await pool
         .connect(user1.signer)
@@ -399,7 +399,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       configurator,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, true));
+    await waitForTx(await configurator.pauseReserve(weth.address));
     await expect(
       pool
         .connect(user1.signer)
@@ -419,7 +419,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       configurator,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, false));
+    await waitForTx(await configurator.unpauseReserve(weth.address));
     await waitForTx(
       await pool
         .connect(user1.signer)
@@ -503,7 +503,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       nftPositionManager,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, true));
+    await waitForTx(await configurator.pauseReserve(weth.address));
 
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
@@ -533,7 +533,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       configurator,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, false));
+    await waitForTx(await configurator.unpauseReserve(weth.address));
 
     const preLiquidationSnapshot = await snapshot.take();
 
@@ -588,7 +588,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       nUniswapV3,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, true));
+    await waitForTx(await configurator.pauseReserve(weth.address));
 
     await expect(
       nUniswapV3
@@ -606,7 +606,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       nUniswapV3,
       configurator,
     } = testEnv;
-    await waitForTx(await configurator.setReservePause(weth.address, false));
+    await waitForTx(await configurator.unpauseReserve(weth.address));
 
     const preLiquidationSnapshot = await snapshot.take();
 
@@ -834,7 +834,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       nftPositionManager,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, true));
+    await waitForTx(await configurator.pauseReserve(weth.address));
 
     const liquidationValue = await convertToCurrencyDecimals(
       weth.address,
@@ -866,7 +866,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
       configurator,
     } = testEnv;
 
-    await waitForTx(await configurator.setReservePause(weth.address, false));
+    await waitForTx(await configurator.unpauseReserve(weth.address));
 
     const preLiquidationSnapshot = await snapshot.take();
 

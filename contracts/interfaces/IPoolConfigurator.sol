@@ -254,9 +254,14 @@ interface IPoolConfigurator {
      * @notice Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
      * swap interest rate, liquidate, xtoken transfers).
      * @param asset The address of the underlying asset of the reserve
-     * @param paused True if pausing the reserve, false if unpausing
      **/
-    function setReservePause(address asset, bool paused) external;
+    function pauseReserve(address asset) external;
+
+    /**
+     * @notice unPauses a reserve.
+     * @param asset The address of the underlying asset of the reserve
+     **/
+    function unpauseReserve(address asset) external;
 
     /**
      * @notice set the auction recovery health factor
@@ -292,11 +297,15 @@ interface IPoolConfigurator {
     ) external;
 
     /**
-     * @notice Pauses or unpauses all the protocol reserves. In the paused state all the protocol interactions
+     * @notice Pauses all the protocol reserves. In the paused state all the protocol interactions
      * are suspended.
-     * @param paused True if protocol needs to be paused, false otherwise
      **/
-    function setPoolPause(bool paused) external;
+    function pausePool() external;
+
+    /**
+     * @notice Unpauses all the protocol reserves.
+     **/
+    function unpausePool() external;
 
     /**
      * @notice Updates the borrow cap of a reserve.

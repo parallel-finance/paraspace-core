@@ -91,21 +91,66 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   }
 });
 
-task("propose-safe-txs", "Propose buffered timelock transactions").setAction(
+task(
+  "propose-buffered-txs",
+  "Propose buffered timelock transactions"
+).setAction(async (_, DRE) => {
+  await DRE.run("set-DRE");
+  const {getTimeLockDataInDb, getTimeLockData, proposeMultiSafeTransactions} =
+    await import("../../helpers/contracts-helpers");
+  const actions = await getTimeLockDataInDb();
+  const transactions: MetaTransaction[] = [];
+
+  for (const a of actions) {
+    console.log(a.actionHash);
+    const [target, , , data, executionTime] = a.action;
+    const {newTarget, newData} = await getTimeLockData(
+      target.toString(),
+      data.toString(),
+      executionTime.toString()
+    );
+    transactions.push({
+      to: newTarget,
+      value: "0",
+      data: newData,
+    });
+  }
+
+  await proposeMultiSafeTransactions(transactions);
+});
+
+task("propose-queued-txs", "Propose queued timelock transactions").setAction(
   async (_, DRE) => {
     await DRE.run("set-DRE");
-    const {getTimeLockDataInDb, getTimeLockData, proposeMultiSafeTransactions} =
+    const {getTimeLockData, proposeMultiSafeTransactions, getCurrentTime} =
       await import("../../helpers/contracts-helpers");
-    const actions = await getTimeLockDataInDb();
-    const transactions: MetaTransaction[] = [];
+    const {getTimeLockExecutor} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const timeLock = await getTimeLockExecutor();
+    const time = await getCurrentTime();
+    const delay = await timeLock.getDelay();
+    const gracePeriod = await timeLock.GRACE_PERIOD();
+    const filter = timeLock.filters.QueuedAction();
+    const events = await timeLock.queryFilter(filter);
 
-    for (const a of actions) {
-      console.log(a.actionHash);
-      const [target, , , data, executionTime] = a.action;
+    const transactions: MetaTransaction[] = [];
+    for (const e of events) {
+      if (!(await timeLock.isActionQueued(e.args.actionHash))) {
+        continue;
+      }
+
+      const executeTime = e.args.executionTime.add(delay);
+      const expireTime = e.args.executionTime.add(gracePeriod);
+
+      if (time.lt(executeTime) || time.gt(expireTime)) {
+        continue;
+      }
+
       const {newTarget, newData} = await getTimeLockData(
-        target.toString(),
-        data.toString(),
-        executionTime.toString()
+        e.args.target.toString(),
+        e.args.data.toString(),
+        e.args.executionTime.toString()
       );
       transactions.push({
         to: newTarget,

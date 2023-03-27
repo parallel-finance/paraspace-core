@@ -231,6 +231,7 @@ import {
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
   CLwstETHSynchronicityPriceAdapter__factory,
+  CLExchangeRateSynchronicityPriceAdapter__factory,
   CLwstETHSynchronicityPriceAdapter,
   WstETHMocked__factory,
   WstETHMocked,
@@ -247,6 +248,24 @@ import {
   HelperContract__factory,
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
+  CLExchangeRateSynchronicityPriceAdapter,
+  CLBaseCurrencySynchronicityPriceAdapter__factory,
+  PTokenAStETH__factory,
+  PTokenAStETH,
+  AStETHDebtToken__factory,
+  AStETHDebtToken,
+  MockAStETH,
+  MockAStETH__factory,
+  MockRETH,
+  MockRETH__factory,
+  CLCETHSynchronicityPriceAdapter__factory,
+  CLCETHSynchronicityPriceAdapter,
+  MockCToken,
+  MockCToken__factory,
+  NTokenOtherdeed__factory,
+  NTokenOtherdeed,
+  HotWalletProxy__factory,
+  HotWalletProxy,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -258,6 +277,7 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
+  getACLManager,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
@@ -570,8 +590,6 @@ export const deployPoolComponents = async (
 
   const APE_WETH_FEE = 3000;
   const WETH_USDC_FEE = 500;
-
-  // mainnet swap path: 0x4d224452801aced8b2f0aebe155379bb5d594381000bb8c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20001f4a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
 
   const poolParaProxyInterfaces = new ParaProxyInterfaces__factory(
     await getFirstSigner()
@@ -959,9 +977,36 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
         continue;
       }
 
-      if (tokenSymbol === ERC20TokenContractId.aWETH) {
+      if (
+        tokenSymbol === ERC20TokenContractId.aWETH ||
+        tokenSymbol === ERC20TokenContractId.awstETH
+      ) {
         tokens[tokenSymbol] = await deployMockAToken(
           [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
+          verify
+        );
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.astETH) {
+        tokens[tokenSymbol] = await deployMockAStETH(
+          [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
+          verify
+        );
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.rETH) {
+        tokens[tokenSymbol] = await deployMockRETH(
+          [tokenSymbol, tokenSymbol, reserveConfig.reserveDecimals],
+          verify
+        );
+        continue;
+      }
+
+      if (tokenSymbol === ERC20TokenContractId.cETH) {
+        tokens[tokenSymbol] = await deployMockCToken(
+          [tokenSymbol, tokenSymbol, ZERO_ADDRESS],
           verify
         );
         continue;
@@ -1794,6 +1839,39 @@ export const deployMockAToken = async (
     verify
   ) as Promise<MockAToken>;
 
+export const deployMockCToken = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MockCToken> =>
+  withSaveAndVerify(
+    new MockCToken__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MockCToken>;
+
+export const deployMockAStETH = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MockAStETH> =>
+  withSaveAndVerify(
+    new MockAStETH__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MockAStETH>;
+
+export const deployMockRETH = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MockRETH> =>
+  withSaveAndVerify(
+    new MockRETH__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MockRETH>;
+
 export const deployPTokenAToken = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
@@ -1815,6 +1893,17 @@ export const deployPTokenStETH = async (
     [poolAddress],
     verify
   ) as Promise<PTokenStETH>;
+
+export const deployPTokenAStETH = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new PTokenAStETH__factory(await getFirstSigner()),
+    eContractid.PTokenAStETHImpl,
+    [poolAddress],
+    verify
+  ) as Promise<PTokenAStETH>;
 
 export const deployPTokenSApe = async (
   poolAddress: tEthereumAddress,
@@ -2092,6 +2181,17 @@ export const deployStETHDebtToken = async (
     verify
   ) as Promise<StETHDebtToken>;
 
+export const deployAStETHDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AStETHDebtToken__factory(await getFirstSigner()),
+    eContractid.AStETHDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<AStETHDebtToken>;
+
 export const deployMintableERC721Logic = async (verify?: boolean) => {
   return withSaveAndVerify(
     new MintableERC721Logic__factory(await getFirstSigner()),
@@ -2203,7 +2303,8 @@ export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
-  const args = [allTokens.APE.address, apeCoinStaking];
+  const aclManager = await getACLManager();
+  const args = [allTokens.APE.address, apeCoinStaking, aclManager.address];
 
   return withSaveAndVerify(
     new AutoCompoundApe__factory(await getFirstSigner()),
@@ -2436,6 +2537,47 @@ export const deployCLwstETHSynchronicityPriceAdapter = async (
     [stETHAggregator, stETH, 18],
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
+
+export const deployExchangeRateSynchronicityPriceAdapter = async (
+  asset: tEthereumAddress,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLExchangeRateSynchronicityPriceAdapter__factory(
+      await getFirstSigner()
+    ),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [asset],
+    verify
+  ) as Promise<CLExchangeRateSynchronicityPriceAdapter>;
+
+export const deployCTokenSynchronicityPriceAdapter = async (
+  asset: tEthereumAddress,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLCETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [asset],
+    verify
+  ) as Promise<CLCETHSynchronicityPriceAdapter>;
+
+export const deployBaseCurrencySynchronicityPriceAdapter = async (
+  baseCurrency: tEthereumAddress,
+  baseCurrencyUnit: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new CLBaseCurrencySynchronicityPriceAdapter__factory(
+      await getFirstSigner()
+    ),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [baseCurrency, baseCurrencyUnit],
+    verify
+  ) as Promise<CLExchangeRateSynchronicityPriceAdapter>;
 
 export const deployParaSpaceAirdrop = async (
   token: tEthereumAddress,
@@ -2707,3 +2849,32 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployOtherdeedNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  warmWallet: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic = "0x02160dA32659a25dB90Dc1c7eae506fAd4e89a31";
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    new NTokenOtherdeed__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenOtherdeedImpl,
+    [poolAddress, warmWallet],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenOtherdeed>;
+};
+
+export const deployHotWalletProxy = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new HotWalletProxy__factory(await getFirstSigner()),
+    eContractid.HotWalletProxy,
+    [],
+    verify
+  ) as Promise<HotWalletProxy>;
