@@ -417,6 +417,7 @@ library DataTypes {
 
     enum TimeLockActionType {
         BORROW,
-        WITHDRAW
+        WITHDRAW,
+        MOONBIRD_WITHDRAW
     }
 }

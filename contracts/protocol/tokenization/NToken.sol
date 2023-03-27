@@ -87,7 +87,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         return _burn(from, receiverOfUnderlying, tokenIds, timeLockParams);
     }
@@ -96,7 +96,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     )
         internal
         returns (

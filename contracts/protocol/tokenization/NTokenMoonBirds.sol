@@ -42,7 +42,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     )
         external
         virtual
@@ -62,6 +62,9 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         if (receiverOfUnderlying != address(this)) {
             address underlyingAsset = _ERC721Data.underlyingAsset;
             if (timeLockParams.releaseTime != 0) {
+                timeLockParams.actionType = DataTypes
+                    .TimeLockActionType
+                    .MOONBIRD_WITHDRAW;
                 ITimeLock timeLock = POOL.TIME_LOCK();
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC721,

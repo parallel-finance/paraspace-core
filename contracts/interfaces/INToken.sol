@@ -103,7 +103,7 @@ interface INToken is
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external returns (uint64, uint64);
 
     // TODO are we using the Treasury at all? Can we remove?
@@ -135,7 +135,7 @@ interface INToken is
     function transferUnderlyingTo(
         address user,
         uint256 tokenId,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external;
 
     /**

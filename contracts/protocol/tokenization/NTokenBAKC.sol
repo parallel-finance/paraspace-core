@@ -87,7 +87,7 @@ contract NTokenBAKC is NToken {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         if (from != receiverOfUnderlying) {
             for (uint256 index = 0; index < tokenIds.length; index++) {

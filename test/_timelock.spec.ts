@@ -25,6 +25,7 @@ describe("TimeLock functionality tests", () => {
       usdc,
       pool,
       mayc,
+      moonbirds,
       users: [user1, user2],
       poolAdmin,
     } = testEnv;
@@ -35,6 +36,8 @@ describe("TimeLock functionality tests", () => {
     await supplyAndValidate(usdc, "200000", user2, true);
 
     await supplyAndValidate(mayc, "10", user1, true);
+
+    await supplyAndValidate(moonbirds, "10", user1, true);
 
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
@@ -81,6 +84,14 @@ describe("TimeLock functionality tests", () => {
         .connect(poolAdmin.signer)
         .setReserveTimeLockStrategyAddress(
           mayc.address,
+          defaultStrategyNFT.address
+        )
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(
+          moonbirds.address,
           defaultStrategyNFT.address
         )
     );
@@ -399,5 +410,76 @@ describe("TimeLock functionality tests", () => {
     const balanceAfter = await mayc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(10));
+  });
+
+  it("withdraw multiple moonbirds and batch claim at once", async () => {
+    const {
+      pool,
+      users: [user1],
+      moonbirds,
+    } = await loadFixture(fixture);
+
+    const balanceBefore = await moonbirds.balanceOf(user1.address);
+
+    for (let index = 0; index < 10; index++) {
+      await waitForTx(
+        await pool
+          .connect(user1.signer)
+          .withdrawERC721(moonbirds.address, [index], user1.address, {
+            gasLimit: 5000000,
+          })
+      );
+    }
+
+    await advanceTimeAndBlock(4000);
+    await waitForTx(
+      await timeLockProxy
+        .connect(user1.signer)
+        .claim(Array.from(Array(10).keys()))
+    );
+    const balanceAfter = await moonbirds.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(10));
+  });
+
+  it("withdraw multiple mayc and moonbirds and batch claim at once", async () => {
+    const {
+      pool,
+      users: [user1],
+      mayc,
+      moonbirds,
+    } = await loadFixture(fixture);
+
+    const balanceBefore = await moonbirds.balanceOf(user1.address);
+
+    for (let index = 0; index < 2; index++) {
+      await waitForTx(
+        await pool
+          .connect(user1.signer)
+          .withdrawERC721(moonbirds.address, [index], user1.address, {
+            gasLimit: 5000000,
+          })
+      );
+    }
+
+    for (let index = 0; index < 2; index++) {
+      await waitForTx(
+        await pool
+          .connect(user1.signer)
+          .withdrawERC721(mayc.address, [index], user1.address, {
+            gasLimit: 5000000,
+          })
+      );
+    }
+
+    await advanceTimeAndBlock(4000);
+    await waitForTx(
+      await timeLockProxy
+        .connect(user1.signer)
+        .claim(Array.from(Array(4).keys()))
+    );
+    const balanceAfter = await moonbirds.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(2));
   });
 });

@@ -124,7 +124,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         address from,
         address receiverOfUnderlying,
         uint256[] calldata tokenIds,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         for (uint256 index = 0; index < tokenIds.length; index++) {
             ApeStakingLogic.executeUnstakePositionAndRepay(

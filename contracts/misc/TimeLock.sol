@@ -136,45 +136,36 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
                     agreement.tokenIdsOrAmounts[0]
                 );
             } else if (agreement.assetType == DataTypes.AssetType.ERC721) {
-                IERC721 erc721 = IERC721(agreement.asset);
-                for (
-                    uint256 i = 0;
-                    i < agreement.tokenIdsOrAmounts.length;
-                    i++
+                if (
+                    agreement.actionType ==
+                    DataTypes.TimeLockActionType.MOONBIRD_WITHDRAW
                 ) {
-                    erc721.safeTransferFrom(
-                        address(this),
-                        agreement.beneficiary,
-                        agreement.tokenIdsOrAmounts[i]
-                    );
+                    IMoonBird moonBirds = IMoonBird(agreement.asset);
+                    for (
+                        uint256 i = 0;
+                        i < agreement.tokenIdsOrAmounts.length;
+                        i++
+                    ) {
+                        moonBirds.safeTransferWhileNesting(
+                            address(this),
+                            agreement.beneficiary,
+                            agreement.tokenIdsOrAmounts[i]
+                        );
+                    }
+                } else {
+                    IERC721 erc721 = IERC721(agreement.asset);
+                    for (
+                        uint256 i = 0;
+                        i < agreement.tokenIdsOrAmounts.length;
+                        i++
+                    ) {
+                        erc721.safeTransferFrom(
+                            address(this),
+                            agreement.beneficiary,
+                            agreement.tokenIdsOrAmounts[i]
+                        );
+                    }
                 }
-            }
-        }
-    }
-
-    function claimMoonBirds(uint256[] calldata agreementIds)
-        external
-        nonReentrant
-    {
-        require(!frozen, "TimeLock is frozen");
-
-        for (uint256 index = 0; index < agreementIds.length; index++) {
-            Agreement memory agreement = _validateAndDeleteAgreement(
-                agreementIds[index]
-            );
-
-            require(
-                agreement.assetType == DataTypes.AssetType.ERC721,
-                "Wrong asset type"
-            );
-
-            IMoonBird moonBirds = IMoonBird(agreement.asset);
-            for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
-                moonBirds.safeTransferWhileNesting(
-                    address(this),
-                    agreement.beneficiary,
-                    agreement.tokenIdsOrAmounts[i]
-                );
             }
         }
     }
