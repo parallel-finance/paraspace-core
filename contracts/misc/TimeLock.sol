@@ -5,9 +5,9 @@ import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
-
-import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
+import {OwnableUpgradeable} from "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
 import {IMoonBird} from "../dependencies/erc721-collections/IMoonBird.sol";
@@ -16,6 +16,7 @@ import {IPool} from "../interfaces/IPool.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
+import {IACLManager} from "../interfaces/IACLManager.sol";
 
 contract TimeLock is
     ITimeLock,
@@ -25,46 +26,45 @@ contract TimeLock is
 {
     using GPv2SafeERC20 for IERC20;
 
-    event AgreementCreated(
-        uint256 agreementId,
-        DataTypes.AssetType assetType,
-        DataTypes.TimeLockActionType actionType,
-        address indexed asset,
-        uint256[] tokenIdsOrAmounts,
-        address indexed beneficiary,
-        uint48 releaseTime
-    );
-
-    event AgreementClaimed(
-        uint256 agreementId,
-        DataTypes.AssetType assetType,
-        DataTypes.TimeLockActionType actionType,
-        address indexed asset,
-        uint256[] tokenIdsOrAmounts,
-        address indexed beneficiary
-    );
     mapping(uint256 => Agreement) private agreements;
 
     uint248 public agreementCount;
     bool public frozen;
 
-    IPoolAddressesProvider private immutable ADDRESSES_PROVIDER;
+    IPool private immutable POOL;
+    IACLManager private immutable ACL_MANAGER;
 
     modifier onlyXToken(address asset) {
         require(
-            msg.sender ==
-                IPool(ADDRESSES_PROVIDER.getPool()).getReserveXToken(asset),
+            msg.sender == POOL.getReserveXToken(asset),
             Errors.CALLER_NOT_XTOKEN
         );
         _;
     }
 
+    modifier onlyEmergencyAdminOrPoolAdmins() {
+        require(
+            ACL_MANAGER.isEmergencyAdmin(msg.sender) ||
+                ACL_MANAGER.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
+        _;
+    }
+
+    modifier onlyPoolAdmin() {
+        require(
+            ACL_MANAGER.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_ADMIN
+        );
+        _;
+    }
+
     constructor(IPoolAddressesProvider provider) {
-        ADDRESSES_PROVIDER = provider;
+        POOL = IPool(provider.getPool());
+        ACL_MANAGER = IACLManager(provider.getACLManager());
     }
 
     function initialize() public initializer {
-        __Ownable_init();
         __ReentrancyGuard_init();
     }
 
@@ -76,6 +76,9 @@ contract TimeLock is
         address beneficiary,
         uint48 releaseTime
     ) external onlyXToken(asset) returns (uint256) {
+        require(beneficiary != address(0), "Beneficiary cant be zero address");
+        require(releaseTime > block.timestamp, "Release time not valid");
+
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
             assetType: assetType,
@@ -155,33 +158,54 @@ contract TimeLock is
         }
     }
 
-    function claimMoonBirds(uint256 agreementId) external nonReentrant {
-        Agreement memory agreement = _validateAndDeleteAgreement(agreementId);
+    function claimMoonBirds(uint256[] calldata agreementIds)
+        external
+        nonReentrant
+    {
+        require(!frozen, "TimeLock is frozen");
 
-        require(
-            agreement.assetType == DataTypes.AssetType.ERC721,
-            "wrong asset type"
-        );
-
-        IMoonBird moonBirds = IMoonBird(agreement.asset);
-        for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
-            moonBirds.safeTransferWhileNesting(
-                address(this),
-                agreement.beneficiary,
-                agreement.tokenIdsOrAmounts[i]
+        for (uint256 index = 0; index < agreementIds.length; index++) {
+            Agreement memory agreement = _validateAndDeleteAgreement(
+                agreementIds[index]
             );
+
+            require(
+                agreement.assetType == DataTypes.AssetType.ERC721,
+                "Wrong asset type"
+            );
+
+            IMoonBird moonBirds = IMoonBird(agreement.asset);
+            for (uint256 i = 0; i < agreement.tokenIdsOrAmounts.length; i++) {
+                moonBirds.safeTransferWhileNesting(
+                    address(this),
+                    agreement.beneficiary,
+                    agreement.tokenIdsOrAmounts[i]
+                );
+            }
         }
     }
 
-    function freezeAgreement(uint256 agreementId, bool freeze)
-        public
-        onlyOwner
+    function freezeAgreement(uint256 agreementId)
+        external
+        onlyEmergencyAdminOrPoolAdmins
     {
-        agreements[agreementId].isFrozen = freeze;
+        agreements[agreementId].isFrozen = true;
+        emit AgreementFrozen(agreementId, true);
     }
 
-    function freezeAllAgreements(bool freeze) external onlyOwner {
-        frozen = freeze;
+    function unfreezeAgreement(uint256 agreementId) external onlyPoolAdmin {
+        agreements[agreementId].isFrozen = false;
+        emit AgreementFrozen(agreementId, false);
+    }
+
+    function freezeAllAgreements() external onlyEmergencyAdminOrPoolAdmins {
+        frozen = true;
+        emit TimeLockFrozen(true);
+    }
+
+    function unfreezeAllAgreements() external onlyPoolAdmin {
+        frozen = false;
+        emit TimeLockFrozen(false);
     }
 
     function getAgreement(uint256 agreementId)
