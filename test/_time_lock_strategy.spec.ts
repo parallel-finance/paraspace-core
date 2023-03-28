@@ -6,12 +6,12 @@ import {
   waitForTx,
 } from "../helpers/misc-utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import {deployDefaultTimeLockStrategy} from "../helpers/contracts-deployments";
+import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
 import {testEnvFixture} from "./helpers/setup-env";
 import {TestEnv} from "./helpers/make-suite";
 import {DefaultTimeLockStrategy} from "../types";
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {ProtocolErrors} from "../helpers/types";
+import {eContractid, ProtocolErrors} from "../helpers/types";
 
 describe("defaultTimeLockStrategy tests", function () {
   let defaultTimeLockStrategy: DefaultTimeLockStrategy;
@@ -38,7 +38,8 @@ describe("defaultTimeLockStrategy tests", function () {
     user1 = users[0];
     user2 = users[1];
 
-    defaultTimeLockStrategy = await deployDefaultTimeLockStrategy(
+    defaultTimeLockStrategy = await deployReserveTimeLockStrategy(
+      eContractid.DefaultTimeLockStrategy,
       user1.address,
       minThreshold.toString(),
       midThreshold.toString(),

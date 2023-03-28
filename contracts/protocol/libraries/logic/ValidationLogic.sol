@@ -237,7 +237,6 @@ library ValidationLogic {
         uint256 availableLiquidity;
         uint256 healthFactor;
         uint256 totalDebt;
-        uint256 totalSupplyVariableDebt;
         uint256 reserveDecimals;
         uint256 borrowCap;
         uint256 amountInBaseCurrency;
@@ -284,12 +283,7 @@ library ValidationLogic {
         }
 
         if (vars.borrowCap != 0) {
-            vars.totalSupplyVariableDebt = reserveCache
-                .currScaledVariableDebt
-                .rayMul(reserveCache.nextVariableBorrowIndex);
-
-            vars.totalDebt = vars.totalSupplyVariableDebt + amount;
-
+            vars.totalDebt = calculateTotalDebt(reserveCache) + amount;
             unchecked {
                 require(
                     vars.totalDebt <= vars.borrowCap * vars.assetUnit,
@@ -311,17 +305,15 @@ library ValidationLogic {
             Errors.STABLE_BORROWING_NOT_ENABLED
         );
 
-        uint256 totalVariableDebt = reserveCache.nextScaledVariableDebt.rayMul(
-            reserveCache.nextVariableBorrowIndex
-        );
-        uint256 totalDebt = totalVariableDebt +
-            reserveCache.nextTotalStableDebt +
-            amount;
+        if (vars.totalDebt == 0) {
+            vars.totalDebt = calculateTotalDebt(reserveCache) + amount;
+        }
         uint256 availableLiquidity = IToken(reserve).balanceOf(
             reserveCache.xTokenAddress
         ) - amount;
-        uint256 availableLiquidityPlusDebt = availableLiquidity + totalDebt;
-        uint256 usageRatio = totalDebt.rayDiv(availableLiquidityPlusDebt);
+        uint256 availableLiquidityPlusDebt = availableLiquidity +
+            vars.totalDebt;
+        uint256 usageRatio = vars.totalDebt.rayDiv(availableLiquidityPlusDebt);
         require(
             usageRatio <= INSTANT_WITHDRAW_USAGE_RATIO_THRESHOLD,
             Errors.USAGE_RATIO_TOO_HIGH
@@ -1263,5 +1255,17 @@ library ValidationLogic {
                 Errors.RESERVE_FROZEN
             );
         }
+    }
+
+    function calculateTotalDebt(DataTypes.ReserveCache memory reserveCache)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 totalVariableDebt = reserveCache.currScaledVariableDebt.rayMul(
+            reserveCache.nextVariableBorrowIndex
+        );
+
+        return totalVariableDebt + reserveCache.currTotalStableDebt;
     }
 }

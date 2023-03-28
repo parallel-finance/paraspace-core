@@ -24,6 +24,7 @@ keystore/
 
 docs/*
 !docs/DEVELOPER-GUIDE.md
+!docs/ETHERSCAN-VERIFICATION.md
 docs.restore
 
 .vscode

@@ -11,6 +11,7 @@ library ConfiguratorInputTypes {
         uint8 underlyingAssetDecimals;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
+        address timeLockStrategyAddress;
         address underlyingAsset;
         DataTypes.AssetType assetType;
         address treasury;

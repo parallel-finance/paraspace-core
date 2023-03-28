@@ -22,12 +22,12 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {ConfiguratorInputTypes} from "../types/interfaces/IPoolConfigurator";
-import {getFirstSigner} from "../helpers/contracts-getters";
+import {getFirstSigner, getTimeLockProxy} from "../helpers/contracts-getters";
 import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {BigNumberish, utils} from "ethers";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {impersonateAddress} from "../helpers/contracts-helpers";
+import {ConfiguratorInputTypes} from "../types/contracts/interfaces/IPoolConfigurator";
 
 describe("ReserveConfiguration", async () => {
   const fixture = async () => {
@@ -476,6 +476,7 @@ describe("ReserveConfiguration", async () => {
         config.stableDebtTokenAddress,
         config.variableDebtTokenAddress,
         ZERO_ADDRESS,
+        ZERO_ADDRESS,
         ZERO_ADDRESS
       )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_ALREADY_INITIALIZED);
@@ -513,6 +514,7 @@ describe("ReserveConfiguration", async () => {
           config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
           ZERO_ADDRESS,
+          ZERO_ADDRESS,
           ZERO_ADDRESS
         )
     );
@@ -528,6 +530,7 @@ describe("ReserveConfiguration", async () => {
           ZERO_ADDRESS,
           config.stableDebtTokenAddress,
           config.variableDebtTokenAddress,
+          ZERO_ADDRESS,
           ZERO_ADDRESS,
           ZERO_ADDRESS
         )
@@ -708,10 +711,12 @@ describe("ReserveConfiguration", async () => {
     );
 
     const coreLibraries = await deployPoolCoreLibraries(false);
+    const timeLock = await getTimeLockProxy();
+
     const NEW_POOL_IMPL_ARTIFACT = await new PoolCore__factory(
       coreLibraries,
       await getFirstSigner()
-    ).deploy(addressesProvider.address);
+    ).deploy(addressesProvider.address, timeLock.address);
 
     const xTokenImp = await new PToken__factory(await getFirstSigner()).deploy(
       pool.address
@@ -755,6 +760,7 @@ describe("ReserveConfiguration", async () => {
       underlyingAssetDecimals: BigNumberish;
       interestRateStrategyAddress: string;
       auctionStrategyAddress: string;
+      timeLockStrategyAddress: string;
       underlyingAsset: string;
       assetType: BigNumberish;
       treasury: string;
@@ -775,6 +781,7 @@ describe("ReserveConfiguration", async () => {
         underlyingAssetDecimals: 18,
         interestRateStrategyAddress: mockRateStrategy.address,
         auctionStrategyAddress: mockAuctionStrategy.address,
+        timeLockStrategyAddress: ZERO_ADDRESS,
         underlyingAsset: mockErc20.address,
         assetType: 0,
         treasury: ZERO_ADDRESS,
@@ -834,6 +841,7 @@ const getReserveParams = async (
       underlyingAssetDecimals: 18,
       interestRateStrategyAddress: mockRateStrategy.address,
       auctionStrategyAddress: ZERO_ADDRESS,
+      timeLockStrategyAddress: ZERO_ADDRESS,
       underlyingAsset: mockToken.address,
       treasury: ZERO_ADDRESS,
       incentivesController: ZERO_ADDRESS,

@@ -1,16 +1,16 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {PromiseOrValue} from "../types/common";
-import {BlurExchangeLibraryAddresses} from "../types/factories/dependencies/blur-exchange/BlurExchange__factory";
-import {LiquidationLogicLibraryAddresses} from "../types/factories/protocol/libraries/logic/LiquidationLogic__factory";
-import {PoolConfiguratorLibraryAddresses} from "../types/factories/protocol/pool/PoolConfigurator__factory";
-import {PoolCoreLibraryAddresses} from "../types/factories/protocol/pool/PoolCore__factory";
-import {PoolMarketplaceLibraryAddresses} from "../types/factories/protocol/pool/PoolMarketplace__factory";
-import {PoolParametersLibraryAddresses} from "../types/factories/protocol/pool/PoolParameters__factory";
-import {NTokenBAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenBAYC__factory";
-import {NTokenMAYCLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMAYC__factory";
-import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/protocol/tokenization/NTokenMoonBirds__factory";
-import {NTokenUniswapV3LibraryAddresses} from "../types/factories/protocol/tokenization/NTokenUniswapV3__factory";
-import {NTokenLibraryAddresses} from "../types/factories/protocol/tokenization/NToken__factory";
+import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
+import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
+import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
+import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
+import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
+import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
+import {NTokenBAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenBAYC__factory";
+import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMAYC__factory";
+import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
+import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
+import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
 import {deployLoanVaultImpl} from "./contracts-deployments";
 
 export enum AssetType {
@@ -18,10 +18,18 @@ export enum AssetType {
   ERC721 = 1,
 }
 
+export enum StakingProvider {
+  Validator = 0,
+  Lido = 1,
+  RocketPool = 2,
+  Coinbase = 3,
+}
+
 export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
   SafeWithTimeLock = "SafeWithTimeLock",
+  Run = "Run",
   None = "",
 }
 
@@ -56,6 +64,9 @@ export enum XTokenType {
   PTokenStETH = 10,
   PTokenSApe = 11,
   NTokenBAKC = 12,
+  PYieldToken = 13,
+  PTokenCApe = 14,
+  NTokenOtherdeed = 15,
 }
 
 export type ConstructorArgs = (
@@ -86,6 +97,7 @@ export type ParaSpaceLibraryAddresses =
 export enum eEthereumNetwork {
   kovan = "kovan",
   ropsten = "ropsten",
+  zhejiang = "zhejiang",
   goerli = "goerli",
   mainnet = "mainnet",
   hardhat = "hardhat",
@@ -252,6 +264,8 @@ export enum eContractid {
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
+  ETHWithdrawalNFT = "ETHWithdrawalNFT",
+  ETHWithdrawalNFTImpl = "ETHWithdrawalNFTImpl",
   P2PPairStaking = "P2PPairStaking",
   HelperContractImpl = "HelperContractImpl",
   HelperContract = "HelperContract",
@@ -269,6 +283,10 @@ export enum eContractid {
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   DelegationRegistry = "DelegationRegistry",
+  DepositContract = "DepositContract",
+  ETHValidatorStakingStrategy = "ETHValidatorStakingStrategy",
+  NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  HotWalletProxy = "HotWalletProxy",
 }
 
 /*
@@ -551,6 +569,7 @@ export enum NTokenContractId {
   nBAKC = "nBAKC",
   nSEWER = "nSEWER",
   nPPG = "nPPG",
+  nOTHR = "nOTHR",
 }
 
 export enum PTokenContractId {
@@ -561,6 +580,7 @@ export enum PTokenContractId {
   pstETH = "pstETH",
   pwstETH = "pwstETH",
   pcETH = "pcETH",
+  pcAPE = "pcAPE",
 }
 
 export interface IReserveParams
@@ -571,6 +591,7 @@ export interface IReserveParams
   supplyCap: string;
   strategy: IInterestRateStrategyParams;
   auctionStrategy: IAuctionStrategyParams;
+  timeLockStrategy: ITimeLockStrategyParams;
 }
 
 export interface IInterestRateStrategyParams {
@@ -598,6 +619,18 @@ export interface IAuctionStrategyParams {
   tickLength: string;
 }
 
+export interface ITimeLockStrategyParams {
+  name: string;
+  minThreshold: string;
+  midThreshold: string;
+  minWaitTime: string;
+  midWaitTime: string;
+  maxWaitTime: string;
+  poolPeriodWaitTime: string;
+  poolPeriodLimit: string;
+  period: string;
+}
+
 export interface IReserveBorrowParams {
   borrowingEnabled: boolean;
   stableBorrowRateEnabled: boolean;
@@ -622,6 +655,7 @@ export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.kovan]: T;
   [eEthereumNetwork.ropsten]: T;
+  [eEthereumNetwork.zhejiang]: T;
   [eEthereumNetwork.goerli]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;
@@ -750,6 +784,7 @@ export interface ICommonConfiguration {
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
   DelegationRegistry: tEthereumAddress;
+  HotWallet: tEthereumAddress | undefined;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

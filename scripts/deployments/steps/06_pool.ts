@@ -1,6 +1,7 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployLoanVault,
+  deployPoolParaProxyInterfaces,
   deployPoolComponents,
 } from "../../../helpers/contracts-deployments";
 import {
@@ -35,13 +36,13 @@ export const step_06 = async (verify = false) => {
       poolMarketplace,
       poolApeStaking,
       poolCoreSelectors,
-      poolParaProxyInterfaces,
       poolParametersSelectors,
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
       poolInstantWithdrawSelectors,
-      poolParaProxyInterfacesSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
+    const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
+      await deployPoolParaProxyInterfaces(verify);
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(

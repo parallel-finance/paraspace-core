@@ -25,17 +25,22 @@ import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {eContractid} from "../../../helpers/types";
 
-export const step_22 = async (
+export const step_23 = async (
   // eslint-disable-next-line
   verify = false,
   admins?: {
     paraSpaceAdminAddress: string;
+    emergencyAdminAddresses: string[];
     gatewayAdminAddress: string;
     riskAdminAddress: string;
   }
 ) => {
-  const {paraSpaceAdminAddress, gatewayAdminAddress, riskAdminAddress} =
-    admins || (await getParaSpaceAdmins());
+  const {
+    paraSpaceAdminAddress,
+    emergencyAdminAddresses,
+    gatewayAdminAddress,
+    riskAdminAddress,
+  } = admins || (await getParaSpaceAdmins());
 
   try {
     const addressesProviderRegistry = await getPoolAddressesProviderRegistry();
@@ -359,25 +364,16 @@ export const step_22 = async (
       if (DRY_RUN) {
         const encodedData1 = cApeProxy.interface.encodeFunctionData(
           "changeAdmin",
-          [paraSpaceAdminAddress]
+          [emergencyAdminAddresses[0]]
         );
         await dryRunEncodedData(cApeProxy.address, encodedData1);
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          const encodedData2 = cApe.interface.encodeFunctionData(
-            "transferOwnership",
-            [gatewayAdminAddress]
-          );
-          await dryRunEncodedData(cApe.address, encodedData2);
-        }
       } else {
         await waitForTx(
-          await cApeProxy.changeAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
+          await cApeProxy.changeAdmin(
+            emergencyAdminAddresses[0],
+            GLOBAL_OVERRIDES
+          )
         );
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          await waitForTx(
-            await cApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
-          );
-        }
       }
       console.timeEnd("transferring cAPE ownership...");
       console.log();
@@ -480,13 +476,6 @@ export const step_22 = async (
           [paraSpaceAdminAddress]
         );
         await dryRunEncodedData(timeLockProxy.address, encodedData1);
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          const encodedData2 = timeLock.interface.encodeFunctionData(
-            "transferOwnership",
-            [gatewayAdminAddress]
-          );
-          await dryRunEncodedData(timeLock.address, encodedData2);
-        }
       } else {
         await waitForTx(
           await timeLockProxy.changeAdmin(
@@ -494,16 +483,8 @@ export const step_22 = async (
             GLOBAL_OVERRIDES
           )
         );
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          await waitForTx(
-            await timeLock.transferOwnership(
-              gatewayAdminAddress,
-              GLOBAL_OVERRIDES
-            )
-          );
-        }
       }
-      console.timeEnd("transferring TimeLock ownership...");
+      console.timeEnd("transferring TimeLockProxy ownership...");
       console.log();
     }
 

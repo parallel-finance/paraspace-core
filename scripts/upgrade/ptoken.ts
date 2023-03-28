@@ -2,6 +2,7 @@ import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {
   deployDelegationAwarePTokenImpl,
   deployGenericPTokenImpl,
+  deployPTokenAToken,
   deployPTokenCApe,
   deployPTokenSApe,
   deployPTokenStETH,
@@ -13,8 +14,8 @@ import {
   getPToken,
 } from "../../helpers/contracts-getters";
 import {
-  ERC20TokenContractId,
   NTokenContractId,
+  PTokenContractId,
   XTokenType,
 } from "../../helpers/types";
 
@@ -54,6 +55,7 @@ export const upgradePToken = async (verify = false) => {
         XTokenType.DelegationAwarePToken,
         XTokenType.PTokenStETH,
         XTokenType.PTokenSApe,
+        XTokenType.PTokenCApe,
         XTokenType.PTokenAToken,
       ].includes(xTokenType)
     ) {
@@ -63,9 +65,10 @@ export const upgradePToken = async (verify = false) => {
     const incentivesController = paraSpaceConfig.IncentivesController;
 
     if (xTokenType == XTokenType.PTokenAToken) {
-      if (symbol.endsWith(ERC20TokenContractId.cAPE)) {
+      // compatibility
+      if (symbol == PTokenContractId.pcAPE) {
         if (!pTokenCApeImplementationAddress) {
-          console.log("deploy PTokenCAPE implementation");
+          console.log("deploy PTokenCApe implementation");
           pTokenCApeImplementationAddress = (
             await deployPTokenCApe(poolAddress, verify)
           ).address;
@@ -75,7 +78,7 @@ export const upgradePToken = async (verify = false) => {
         if (!pTokenATokenImplementationAddress) {
           console.log("deploy PTokenAToken implementation");
           pTokenATokenImplementationAddress = (
-            await deployPTokenCApe(poolAddress, verify)
+            await deployPTokenAToken(poolAddress, verify)
           ).address;
         }
         newImpl = pTokenATokenImplementationAddress;
@@ -98,6 +101,14 @@ export const upgradePToken = async (verify = false) => {
         ).address;
       }
       newImpl = pTokenSApeImplementationAddress;
+    } else if (xTokenType == XTokenType.PTokenCApe) {
+      if (!pTokenCApeImplementationAddress) {
+        console.log("deploy PTokenCApe implementation");
+        pTokenCApeImplementationAddress = (
+          await deployPTokenCApe(poolAddress, verify)
+        ).address;
+      }
+      newImpl = pTokenCApeImplementationAddress;
     } else if (xTokenType == XTokenType.PTokenStETH) {
       if (!pTokenStETHImplementationAddress) {
         console.log("deploy PTokenStETH implementation");

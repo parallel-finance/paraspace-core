@@ -75,6 +75,7 @@ interface IUiPoolDataProvider {
         uint256 collateralizedBalance;
         bool usageAsCollateralEnabledOnUser;
         uint256 scaledVariableDebt;
+        uint256 currentVariableDebt;
         uint256 principalStableDebt;
         uint256 principalVariableDebt;
         uint256 stableBorrowRate;

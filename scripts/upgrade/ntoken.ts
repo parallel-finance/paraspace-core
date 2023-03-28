@@ -5,6 +5,7 @@ import {
   deployNTokenBAKCImpl,
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
+  deployOtherdeedNTokenImpl,
   deployUniswapV3NTokenImpl,
 } from "../../helpers/contracts-deployments";
 import {
@@ -21,6 +22,7 @@ import {NTokenContractId, XTokenType} from "../../helpers/types";
 import dotenv from "dotenv";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 
 dotenv.config();
 
@@ -40,6 +42,7 @@ export const upgradeNToken = async (verify = false) => {
   let nTokenBAKCImplementationAddress = "";
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
+  let nTokenOTHRImplementationAddress = "";
   let newImpl = "";
 
   for (let i = 0; i < allXTokens.length; i++) {
@@ -60,6 +63,7 @@ export const upgradeNToken = async (verify = false) => {
         XTokenType.NTokenBAYC,
         XTokenType.NTokenMAYC,
         XTokenType.NTokenBAKC,
+        XTokenType.NTokenOtherdeed,
       ].includes(xTokenType)
     ) {
       continue;
@@ -143,19 +147,46 @@ export const upgradeNToken = async (verify = false) => {
         ).address;
       }
       newImpl = nTokenMoonBirdImplementationAddress;
-    } else if (xTokenType == XTokenType.NToken) {
-      if (!nTokenImplementationAddress) {
-        console.log("deploy NToken implementation");
-        nTokenImplementationAddress = (
-          await deployGenericNTokenImpl(
+    } else if (xTokenType == XTokenType.NTokenOtherdeed) {
+      if (!nTokenOTHRImplementationAddress) {
+        console.log("deploy NTokenOtherdeed implementation");
+        nTokenOTHRImplementationAddress = (
+          await deployOtherdeedNTokenImpl(
             poolAddress,
-            false,
-            delegationRegistryAddress,
+            paraSpaceConfig.HotWallet || ZERO_ADDRESS,
             verify
           )
         ).address;
       }
-      newImpl = nTokenImplementationAddress;
+      newImpl = nTokenOTHRImplementationAddress;
+    } else if (xTokenType == XTokenType.NToken) {
+      // compatibility
+      if (symbol == NTokenContractId.nOTHR) {
+        if (!nTokenOTHRImplementationAddress) {
+          console.log("deploy NTokenOtherdeed implementation");
+          nTokenOTHRImplementationAddress = (
+            await deployOtherdeedNTokenImpl(
+              poolAddress,
+              paraSpaceConfig.HotWallet || ZERO_ADDRESS,
+              verify
+            )
+          ).address;
+        }
+        newImpl = nTokenOTHRImplementationAddress;
+      } else {
+        if (!nTokenImplementationAddress) {
+          console.log("deploy NToken implementation");
+          nTokenImplementationAddress = (
+            await deployGenericNTokenImpl(
+              poolAddress,
+              false,
+              paraSpaceConfig.DelegationRegistry,
+              verify
+            )
+          ).address;
+        }
+        newImpl = nTokenImplementationAddress;
+      }
     } else {
       continue;
     }

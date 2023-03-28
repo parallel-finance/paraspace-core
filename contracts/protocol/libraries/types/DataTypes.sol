@@ -308,6 +308,7 @@ library DataTypes {
         address variableDebtAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
+        address timeLockStrategyAddress;
         uint16 reservesCount;
         uint16 maxNumberReserves;
     }

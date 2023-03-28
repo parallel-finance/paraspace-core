@@ -1,5 +1,7 @@
+import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployDelegationRegistry,
+  deployHotWalletProxy,
   deployMockIncentivesController,
   deployMockReserveAuctionStrategy,
 } from "../../../helpers/contracts-deployments";
@@ -52,6 +54,8 @@ export const step_11 = async (verify = false) => {
     let incentivesController = config.IncentivesController;
     let auctionStrategy: tEthereumAddress | undefined = undefined;
     let delegationRegistry = config.DelegationRegistry;
+    let timeLockStrategy: tEthereumAddress | undefined = undefined;
+    let hotWallet: tEthereumAddress | undefined = config.HotWallet;
 
     if (isLocalTestnet()) {
       incentivesController = (await deployMockIncentivesController(verify))
@@ -79,6 +83,12 @@ export const step_11 = async (verify = false) => {
       ).address;
 
       delegationRegistry = (await deployDelegationRegistry()).address;
+      timeLockStrategy = ZERO_ADDRESS;
+      if (!hotWallet) {
+        const proxy = await deployHotWalletProxy();
+        await proxy.initialize(paraSpaceAdminAddress, paraSpaceAdminAddress);
+        hotWallet = proxy.address;
+      }
     }
 
     const reserves = Object.entries(reservesParams).filter(
@@ -116,13 +126,15 @@ export const step_11 = async (verify = false) => {
         treasuryAddress,
         incentivesController,
         delegationRegistry,
+        hotWallet || ZERO_ADDRESS,
         verify,
         undefined,
         undefined,
         undefined,
         undefined,
         undefined,
-        auctionStrategy
+        auctionStrategy,
+        timeLockStrategy
       );
 
       await configureReservesByHelper(

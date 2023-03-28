@@ -5,6 +5,7 @@ import fs from "fs";
 import {HttpNetworkAccountsUserConfig} from "hardhat/types";
 import {input} from "./wallet-helpers";
 import {version} from "../package.json";
+import git from "git-rev-sync";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ const getPrivateKeyfromEncryptedJson = (
     : "";
 
 export const HARDHAT_CHAINID = 31337;
+export const ZHEJIANG_CHAINID = 1337803;
 export const GOERLI_CHAINID = 5;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
@@ -64,7 +66,7 @@ export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
 );
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");
-export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "23");
+export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "24");
 export const DEPLOY_INCREMENTAL =
   process.env.DEPLOY_INCREMENTAL == "true" ? true : false;
 
@@ -104,6 +106,7 @@ export const TIME_LOCK_BUFFERING_TIME = parseInt(
 export const TIME_LOCK_DEFAULT_OPERATION =
   process.env.TIME_LOCK_DEFAULT_OPERATION || "queue";
 
+export const IMPERSONATE_ADDRESS = process.env.IMPERSONATE_ADDRESS || "";
 export const MULTI_SIG =
   process.env.MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
 export const MULTI_SEND =
@@ -112,9 +115,40 @@ export const MULTI_SIG_NONCE = process.env.MULTI_SIG_NONCE
   ? parseInt(process.env.MULTI_SIG_NONCE)
   : undefined;
 export const MULTI_SEND_CHUNK_SIZE = parseInt(
-  process.env.MULTI_SEND_CHUNK_SIZE || "12"
+  process.env.MULTI_SEND_CHUNK_SIZE || "30"
 );
 
 export const VERSION = version;
+export const COMMIT = git.short();
+export const COMPILER_OPTIMIZER_RUNS = 800;
+export const COMPILER_VERSION = "0.8.10";
+export const PKG_DATA = {
+  version: VERSION,
+  git: {
+    commit: COMMIT,
+  },
+  compiler: {
+    version: COMPILER_VERSION,
+    optimizer: {
+      runs: COMPILER_OPTIMIZER_RUNS,
+    },
+  },
+};
 
 export const FLASHBOTS_RELAY_RPC = "https://relay.flashbots.net";
+
+export const TIME_LOCK_SIGS = {
+  "0xc1a287e2": "GRACE_PERIOD()",
+  "0x7d645fab": "MAXIMUM_DELAY()",
+  "0xb1b43ae5": "MINIMUM_DELAY()",
+  "0x0e18b681": "acceptAdmin()",
+  "0x1dc40b51": "cancelTransaction(address,uint256,string,bytes,uint256,bool)",
+  "0x8902ab65": "executeTransaction(address,uint256,string,bytes,uint256,bool)",
+  "0x6e9960c3": "getAdmin()",
+  "0xcebc9a82": "getDelay()",
+  "0xd0468156": "getPendingAdmin()",
+  "0xb1fc8796": "isActionQueued(bytes32)",
+  "0x8d8fe2e3": "queueTransaction(address,uint256,string,bytes,uint256,bool)",
+  "0xe177246e": "setDelay(uint256)",
+  "0x4dd18bf5": "setPendingAdmin(address)",
+};

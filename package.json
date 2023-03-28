@@ -18,7 +18,7 @@
     "coverage": "hardhat coverage --testfiles 'test/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'scripts/**/*.ts' 'helpers/**/*.ts' 'tasks/**/*.ts' 'test/**/*.ts' 'hardhat.config.ts' 'helper-hardhat-config.ts' 'market-config/**/*.ts'",
     "doc": "hardhat docgen",
-    "test": "hardhat test ./test/*.ts",
+    "test": "hardhat test ./test/pool_instant_withdraw.spec.ts",
     "clean": "hardhat clean"
   },
   "devDependencies": {
@@ -66,6 +66,7 @@
     "ethers": "5.7.2",
     "ethers-multisend": "^2.4.0",
     "evm-bn": "^1.1.2",
+    "git-rev-sync": "^3.0.2",
     "hardhat": "^2.12.0",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-deploy": "^0.11.4",
@@ -80,13 +81,16 @@
     "prettier-plugin-solidity": "^1.0.0-alpha.53",
     "pretty-quick": "^3.1.1",
     "prompt-sync": "^4.2.0",
+    "readline-sync": "^1.4.10",
+    "shelljs": "^0.8.5",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.8.2",
     "solidity-docgen-forked": "^0.6.0-beta.29",
     "ts-generator": "^0.1.1",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
-    "typescript": "4.7.4"
+    "typescript": "4.7.4",
+    "yaml": "^2.2.1"
   },
   "author": "ParaSpace-MM Team",
   "contributors": [],

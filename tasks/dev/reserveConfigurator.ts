@@ -287,3 +287,73 @@ task("set-borrow-cap", "Set borrow cap")
       );
     }
   });
+
+task("set-pool-pause", "Set pool pause")
+  .addPositionalParam("paused", "paused", "true")
+  .setAction(async ({paused}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getPoolConfiguratorProxy} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const configurator = await getPoolConfiguratorProxy();
+    paused = paused == "false" ? false : true;
+
+    const encodedData = paused
+      ? configurator.interface.encodeFunctionData("pausePool")
+      : configurator.interface.encodeFunctionData("unpausePool");
+    if (DRY_RUN) {
+      await dryRunEncodedData(configurator.address, encodedData);
+    } else if (paused) {
+      await waitForTx(await configurator.pausePool());
+    } else {
+      await waitForTx(await configurator.unpausePool());
+    }
+  });
+
+task("set-reserve-pause", "Set reserve pause")
+  .addPositionalParam("asset", "asset")
+  .addPositionalParam("paused", "paused", "true")
+  .setAction(async ({asset, paused}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getPoolConfiguratorProxy} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const configurator = await getPoolConfiguratorProxy();
+    paused = paused == "false" ? false : true;
+
+    const encodedData = paused
+      ? configurator.interface.encodeFunctionData("pauseReserve", [asset])
+      : configurator.interface.encodeFunctionData("unpauseReserve", [asset]);
+    if (DRY_RUN) {
+      await dryRunEncodedData(configurator.address, encodedData);
+    } else if (paused) {
+      await waitForTx(await configurator.pauseReserve(asset));
+    } else {
+      await waitForTx(await configurator.unpauseReserve(asset));
+    }
+  });
+
+task("set-cAPE-pause", "Set cAPE pause")
+  .addPositionalParam("paused", "paused", "true")
+  .setAction(async ({paused}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getAutoCompoundApe} = await import(
+      "../../helpers/contracts-getters"
+    );
+    const cAPE = await getAutoCompoundApe();
+    paused = paused == "false" ? false : true;
+
+    const encodedData = paused
+      ? cAPE.interface.encodeFunctionData("pause")
+      : cAPE.interface.encodeFunctionData("unpause");
+    if (DRY_RUN) {
+      await dryRunEncodedData(cAPE.address, encodedData);
+    } else if (paused) {
+      await waitForTx(await cAPE.pause());
+    } else {
+      await waitForTx(await cAPE.unpause());
+    }
+  });

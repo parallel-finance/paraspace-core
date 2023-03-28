@@ -11,7 +11,7 @@ import {IERC1155} from "../../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {IPoolInstantWithdraw} from "../../interfaces/IPoolInstantWithdraw.sol";
-import {IInstantWithdrawNFT} from "../../interfaces/IInstantWithdrawNFT.sol";
+import {IInstantWithdrawNFT} from "../../misc/interfaces/IInstantWithdrawNFT.sol";
 import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {IReserveInterestRateStrategy} from "../../interfaces/IReserveInterestRateStrategy.sol";
 import {IStableDebtToken} from "../../interfaces/IStableDebtToken.sol";
@@ -134,6 +134,7 @@ contract PoolInstantWithdraw is
             address asset = borrowableAssets[i];
             if (!marketSets.contains(asset)) {
                 marketSets.add(asset);
+                emit FixTermBorrowablePairAdded(collateralAsset, asset);
             }
         }
     }
@@ -151,6 +152,7 @@ contract PoolInstantWithdraw is
             address asset = borrowableAssets[i];
             if (marketSets.contains(asset)) {
                 marketSets.remove(asset);
+                emit FixTermBorrowablePairRemoved(collateralAsset, asset);
             }
         }
     }

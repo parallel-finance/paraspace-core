@@ -39,7 +39,9 @@ describe("Pool Instant Withdraw Test", () => {
     await supplyAndValidate(weth, "100", user1, true);
 
     await waitForTx(
-      await instantWithdrawNFT.connect(user2.signer).mint(tokenID, tokenAmount)
+      await instantWithdrawNFT
+        .connect(user2.signer)
+        ["mint(uint256,uint256)"](tokenID, tokenAmount)
     );
     await waitForTx(
       await instantWithdrawNFT
@@ -68,7 +70,9 @@ describe("Pool Instant Withdraw Test", () => {
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await instantWithdrawNFT.connect(user2.signer).mint(2, tokenAmount)
+      await instantWithdrawNFT
+        .connect(user2.signer)
+        ["mint(uint256,uint256)"](2, tokenAmount)
     );
 
     const tx0 = pool.interface.encodeFunctionData("createLoan", [

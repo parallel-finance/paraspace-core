@@ -133,9 +133,11 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             reserveData.auctionEnabled =
                 reserveData.auctionStrategyAddress != address(0);
 
-            reserveData.timeLockStrategyData = ITimeLockStrategy(
-                reserveData.timeLockStrategyAddress
-            ).getTimeLockStrategyData();
+            if (reserveData.timeLockStrategyAddress != address(0)) {
+                reserveData.timeLockStrategyData = ITimeLockStrategy(
+                    reserveData.timeLockStrategyAddress
+                ).getTimeLockStrategyData();
+            }
 
             try oracle.getAssetPrice(reserveData.underlyingAsset) returns (
                 uint256 price
@@ -447,6 +449,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 userReservesData[i].scaledVariableDebt = IVariableDebtToken(
                     baseData.variableDebtTokenAddress
                 ).scaledBalanceOf(user);
+                userReservesData[i].currentVariableDebt = IVariableDebtToken(
+                    baseData.variableDebtTokenAddress
+                ).balanceOf(user);
                 userReservesData[i].principalStableDebt = IStableDebtToken(
                     baseData.stableDebtTokenAddress
                 ).principalBalanceOf(user);

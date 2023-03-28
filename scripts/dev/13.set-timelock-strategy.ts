@@ -1,6 +1,6 @@
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
-import {deployDefaultTimeLockStrategy} from "../../helpers/contracts-deployments";
+import {deployReserveTimeLockStrategy} from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
   getPoolConfiguratorProxy,
@@ -9,6 +9,7 @@ import {
 } from "../../helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../../helpers/contracts-helpers";
 import {waitForTx} from "../../helpers/misc-utils";
+import {eContractid} from "../../helpers/types";
 
 const setTimeLockStrategy = async () => {
   console.time("set-timelock-strategy");
@@ -39,8 +40,11 @@ const setTimeLockStrategy = async () => {
       x.assetType == 0 ? "10000" : "10"
     );
 
-    const defaultStrategy = await deployDefaultTimeLockStrategy(
-      await getPoolProxy(),
+    const defaultStrategy = await deployReserveTimeLockStrategy(
+      eContractid.DefaultTimeLockStrategy,
+      (
+        await getPoolProxy()
+      ).address,
       minThreshold.toString(),
       midThreshold.toString(),
       minTime.toString(),
