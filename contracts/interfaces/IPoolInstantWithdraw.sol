@@ -11,6 +11,20 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
  **/
 interface IPoolInstantWithdraw {
     /**
+     * @dev Emitted when add borrowable asset for a collateral asset
+     **/
+    event FixTermBorrowablePairAdded(
+        address collateralAsset,
+        address borrowAsset
+    );
+    /**
+     * @dev Emitted when remove borrowable asset for a collateral asset
+     **/
+    event FixTermBorrowablePairRemoved(
+        address collateralAsset,
+        address borrowAsset
+    );
+    /**
      * @dev Emitted when the value of loan creation fee rate update
      **/
     event LoanCreationFeeRateUpdated(uint256 oldValue, uint256 newValue);

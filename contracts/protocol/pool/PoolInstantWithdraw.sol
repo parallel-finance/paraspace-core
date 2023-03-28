@@ -134,6 +134,7 @@ contract PoolInstantWithdraw is
             address asset = borrowableAssets[i];
             if (!marketSets.contains(asset)) {
                 marketSets.add(asset);
+                emit FixTermBorrowablePairAdded(collateralAsset, asset);
             }
         }
     }
@@ -151,6 +152,7 @@ contract PoolInstantWithdraw is
             address asset = borrowableAssets[i];
             if (marketSets.contains(asset)) {
                 marketSets.remove(asset);
+                emit FixTermBorrowablePairRemoved(collateralAsset, asset);
             }
         }
     }
