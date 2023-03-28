@@ -20,7 +20,7 @@ describe("ETH Withdrawal", async () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
     const {gatewayAdmin} = testEnv;
-    testEnv.ethWithdrawal = await deployETHWithdrawalNFT("InstantWithdraw");
+    testEnv.ethWithdrawal = await deployETHWithdrawalNFT(false);
     const validatorStrategy = await deployETHValidatorStakingStrategy(
       "0", // staking rate
       parseUnits("13", 10).toString(),
