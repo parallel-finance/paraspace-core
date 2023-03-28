@@ -16,7 +16,6 @@ import {
   getAutoCompoundApe,
   getPToken,
   getPTokenSApe,
-  getUniswapV3OracleWrapper,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
@@ -46,6 +45,7 @@ describe("Auto Compound Ape Test", () => {
     const {
       ape,
       usdc,
+      weth,
       users: [user1, user2, , , user3, user4, user5],
       apeCoinStaking,
       pool,
@@ -126,7 +126,7 @@ describe("Auto Compound Ape Test", () => {
     );
 
     ////////////////////////////////////////////////////////////////////////////////
-    // Uniswap
+    // Uniswap APE/WETH/USDC
     ////////////////////////////////////////////////////////////////////////////////
     const userApeAmount = await convertToCurrencyDecimals(
       ape.address,
@@ -136,7 +136,12 @@ describe("Auto Compound Ape Test", () => {
       usdc.address,
       "800000"
     );
+    const userWethAmount = await convertToCurrencyDecimals(
+      weth.address,
+      "732.76177"
+    );
     await fund({token: ape, user: user5, amount: userApeAmount});
+    await fund({token: weth, user: user5, amount: userWethAmount.mul(2)});
     await fund({token: usdc, user: user5, amount: userUsdcAmount});
     const nft = nftPositionManager.connect(user5.signer);
     await approveTo({
@@ -149,36 +154,68 @@ describe("Auto Compound Ape Test", () => {
       token: usdc,
       user: user5,
     });
-    const fee = 3000;
-    const tickSpacing = fee / 50;
-    const initialPrice = encodeSqrtRatioX96(1000000000000000000, 4000000);
-    const lowerPrice = encodeSqrtRatioX96(100000000000000000, 4000000);
-    const upperPrice = encodeSqrtRatioX96(10000000000000000000, 4000000);
+    await approveTo({
+      target: nftPositionManager.address,
+      token: weth,
+      user: user5,
+    });
+    const apeWethFee = 3000;
+    const usdcWethFee = 500;
+    const apeWethTickSpacing = apeWethFee / 50;
+    const usdcWethTickSpacing = usdcWethFee / 50;
+    const apeWethInitialPrice = encodeSqrtRatioX96(1091760000, 4000000);
+    const apeWethLowerPrice = encodeSqrtRatioX96(109176000, 4000000);
+    const apeWethUpperPrice = encodeSqrtRatioX96(10917600000, 4000000);
+    const usdcWethInitialPrice = encodeSqrtRatioX96(
+      1000000000000000000,
+      1091760000
+    );
+    const usdcWethLowerPrice = encodeSqrtRatioX96(
+      100000000000000000,
+      1091760000
+    );
+    const usdcWethUpperPrice = encodeSqrtRatioX96(
+      10000000000000000000,
+      1091760000
+    );
+    await createNewPool({
+      positionManager: nft,
+      token0: weth,
+      token1: ape,
+      fee: apeWethFee,
+      initialSqrtPrice: apeWethInitialPrice.toString(),
+    });
     await createNewPool({
       positionManager: nft,
       token0: usdc,
+      token1: weth,
+      fee: usdcWethFee,
+      initialSqrtPrice: usdcWethInitialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: weth,
       token1: ape,
-      fee: fee,
-      initialSqrtPrice: initialPrice.toString(),
+      fee: apeWethFee,
+      user: user5,
+      tickSpacing: apeWethTickSpacing,
+      lowerPrice: apeWethLowerPrice,
+      upperPrice: apeWethUpperPrice,
+      token0Amount: userWethAmount,
+      token1Amount: userApeAmount,
     });
     await mintNewPosition({
       nft: nft,
       token0: usdc,
-      token1: ape,
-      fee: fee,
+      token1: weth,
+      fee: usdcWethFee,
       user: user5,
-      tickSpacing: tickSpacing,
-      lowerPrice,
-      upperPrice,
+      tickSpacing: usdcWethTickSpacing,
+      lowerPrice: usdcWethLowerPrice,
+      upperPrice: usdcWethUpperPrice,
       token0Amount: userUsdcAmount,
-      token1Amount: userApeAmount,
+      token1Amount: userWethAmount,
     });
-    expect(await nftPositionManager.balanceOf(user5.address)).to.eq(1);
-    expect(await nftPositionManager.ownerOf("1")).to.be.eq(user5.address);
-    const uniV3Oracle = await getUniswapV3OracleWrapper();
-    const liquidityAmount = await uniV3Oracle.getLiquidityAmount("1");
-    almostEqual(liquidityAmount.token0Amount, userUsdcAmount);
-    almostEqual(liquidityAmount.token1Amount, userApeAmount);
 
     return testEnv;
   };
@@ -520,7 +557,7 @@ describe("Auto Compound Ape Test", () => {
 
     almostEqual(
       await pUsdc.balanceOf(user3.address),
-      await convertToCurrencyDecimals(usdc.address, "4075.394024")
+      await convertToCurrencyDecimals(usdc.address, "4059.235923")
     );
 
     // 3600 * 0.003
@@ -619,6 +656,179 @@ describe("Auto Compound Ape Test", () => {
         .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], {
           gasLimit: 5000000,
         })
+    );
+  });
+
+  it("claimApeAndCompound function work as expected 3", async () => {
+    const {
+      pWETH,
+      weth,
+      users: [user1, user2, , , user3],
+      mayc,
+      pool,
+      ape,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await mayc.connect(user1.signer)["mint(address)"](user1.address)
+    );
+    await waitForTx(
+      await mayc.connect(user2.signer)["mint(address)"](user2.address)
+    );
+    await waitForTx(
+      await mayc.connect(user3.signer)["mint(address)"](user3.address)
+    );
+    await waitForTx(
+      await mayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await mayc.connect(user2.signer).setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await mayc.connect(user3.signer).setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: 0, useAsCollateral: true}],
+          user1.address,
+          "0"
+        )
+    );
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user2.address,
+          "0"
+        )
+    );
+    await waitForTx(
+      await pool
+        .connect(user3.signer)
+        .supplyERC721(
+          mayc.address,
+          [{tokenId: 2, useAsCollateral: true}],
+          user3.address,
+          "0"
+        )
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: user1Amount,
+        },
+        [{tokenId: 0, amount: user1Amount}],
+        []
+      )
+    );
+
+    await waitForTx(
+      await pool.connect(user2.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: user2Amount,
+        },
+        [{tokenId: 1, amount: user2Amount}],
+        []
+      )
+    );
+
+    await waitForTx(
+      await pool.connect(user3.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: user3Amount,
+        },
+        [{tokenId: 2, amount: user3Amount}],
+        []
+      )
+    );
+
+    await advanceTimeAndBlock(3600);
+
+    // repay then supply
+    await waitForTx(
+      await pool.connect(user1.signer).setApeCompoundStrategy({
+        ty: 0,
+        swapTokenOut: 0,
+        swapPercent: 0,
+      })
+    );
+
+    // repay then supply
+    await waitForTx(
+      await pool.connect(user2.signer).setApeCompoundStrategy({
+        ty: 0,
+        swapTokenOut: 0,
+        swapPercent: 0,
+      })
+    );
+
+    // swap half then supply
+    await waitForTx(
+      await pool.connect(user3.signer).setApeCompoundStrategy({
+        ty: 0,
+        swapTokenOut: 1,
+        swapPercent: 5000,
+      })
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address, user2.address, user3.address],
+          [[0], [1], [2]],
+          {gasLimit: 5000000}
+        )
+    );
+
+    // 3600 / 7 * 99.7% = 512.74
+    const user1Balance = await pCApe.balanceOf(user1.address);
+    almostEqual(user1Balance, parseEther("512.7428"));
+
+    // 3600 * 2 / 7 * 99.7% = 1025.48
+    const user2Balance = await pCApe.balanceOf(user2.address);
+    almostEqual(user2Balance, parseEther("1025.48"));
+
+    // 3600 * 4 / 7 * 99.7% * 50% = 1025.4857142857142858
+    const user3Balance = await pCApe.balanceOf(user3.address);
+    almostEqual(user3Balance, parseEther("1025.48571"));
+
+    almostEqual(
+      await pWETH.balanceOf(user3.address),
+      await convertToCurrencyDecimals(weth.address, "3.732876")
+    );
+
+    // 3600 * 0.003
+    const incentiveBalance = await cApe.balanceOf(user2.address);
+    almostEqual(incentiveBalance, parseEther("10.8"));
+
+    await advanceTimeAndBlock(3600);
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address, user2.address, user3.address],
+          [[0], [1], [2]],
+          {gasLimit: 5000000}
+        )
     );
   });
 
