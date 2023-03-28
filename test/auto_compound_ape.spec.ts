@@ -126,7 +126,7 @@ describe("Auto Compound Ape Test", () => {
     );
 
     ////////////////////////////////////////////////////////////////////////////////
-    // Uniswap APE/USDC
+    // Uniswap APE/WETH/USDC
     ////////////////////////////////////////////////////////////////////////////////
     const userApeAmount = await convertToCurrencyDecimals(
       ape.address,
@@ -163,9 +163,9 @@ describe("Auto Compound Ape Test", () => {
     const usdcWethFee = 500;
     const apeWethTickSpacing = apeWethFee / 50;
     const usdcWethTickSpacing = usdcWethFee / 50;
-    const apeWethInitialPrice = encodeSqrtRatioX96(4000000, 1091760000);
-    const apeWethLowerPrice = encodeSqrtRatioX96(400000, 1091760000);
-    const apeWethUpperPrice = encodeSqrtRatioX96(40000000, 1091760000);
+    const apeWethInitialPrice = encodeSqrtRatioX96(1091760000, 4000000);
+    const apeWethLowerPrice = encodeSqrtRatioX96(109176000, 4000000);
+    const apeWethUpperPrice = encodeSqrtRatioX96(10917600000, 4000000);
     const usdcWethInitialPrice = encodeSqrtRatioX96(
       1000000000000000000,
       1091760000
@@ -180,8 +180,8 @@ describe("Auto Compound Ape Test", () => {
     );
     await createNewPool({
       positionManager: nft,
-      token0: ape,
-      token1: weth,
+      token0: weth,
+      token1: ape,
       fee: apeWethFee,
       initialSqrtPrice: apeWethInitialPrice.toString(),
     });
@@ -194,15 +194,15 @@ describe("Auto Compound Ape Test", () => {
     });
     await mintNewPosition({
       nft: nft,
-      token0: ape,
-      token1: weth,
+      token0: weth,
+      token1: ape,
       fee: apeWethFee,
       user: user5,
       tickSpacing: apeWethTickSpacing,
       lowerPrice: apeWethLowerPrice,
       upperPrice: apeWethUpperPrice,
-      token0Amount: userApeAmount,
-      token1Amount: userWethAmount,
+      token0Amount: userWethAmount,
+      token1Amount: userApeAmount,
     });
     await mintNewPosition({
       nft: nft,
@@ -663,7 +663,7 @@ describe("Auto Compound Ape Test", () => {
     const {
       pWETH,
       weth,
-      users: [user1, user2, user3],
+      users: [user1, user2, , , user3],
       mayc,
       pool,
       ape,
