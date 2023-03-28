@@ -2532,7 +2532,7 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   return AutoCompoundApe__factory.connect(proxyInstance.address, deployer);
 };
 
-export const deployInstantWithdrawImpl = async (
+export const deployETHWithdrawalNFTImpl = async (
   uri: string,
   verify?: boolean
 ) => {
@@ -2544,8 +2544,8 @@ export const deployInstantWithdrawImpl = async (
   ) as Promise<ETHWithdrawalNFT>;
 };
 
-export const deployInstantWithdraw = async (uri: string, verify?: boolean) => {
-  const ethWithdrawalImplementation = await deployInstantWithdrawImpl(
+export const deployETHWithdrawalNFT = async (uri: string, verify?: boolean) => {
+  const ethWithdrawalImplementation = await deployETHWithdrawalNFTImpl(
     uri,
     verify
   );
