@@ -392,6 +392,7 @@ export const ParaSpaceConfigs: Partial<
   Record<eEthereumNetwork, IParaSpaceConfiguration>
 > = {
   [eEthereumNetwork.hardhat]: HardhatParaSpaceConfig,
+  [eEthereumNetwork.zhejiang]: HardhatParaSpaceConfig,
   [eEthereumNetwork.anvil]: HardhatParaSpaceConfig,
   [eEthereumNetwork.localhost]: HardhatParaSpaceConfig,
   [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,

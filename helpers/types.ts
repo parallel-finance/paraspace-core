@@ -18,6 +18,13 @@ export enum AssetType {
   ERC721 = 1,
 }
 
+export enum StakingProvider {
+  Validator = 0,
+  Lido = 1,
+  RocketPool = 2,
+  Coinbase = 3,
+}
+
 export enum DryRunExecutor {
   TimeLock = "TimeLock",
   Safe = "Safe",
@@ -90,6 +97,7 @@ export type ParaSpaceLibraryAddresses =
 export enum eEthereumNetwork {
   kovan = "kovan",
   ropsten = "ropsten",
+  zhejiang = "zhejiang",
   goerli = "goerli",
   mainnet = "mainnet",
   hardhat = "hardhat",
@@ -256,6 +264,8 @@ export enum eContractid {
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
+  ETHWithdrawal = "ETHWithdrawal",
+  ETHWithdrawalImpl = "ETHWithdrawalImpl",
   P2PPairStaking = "P2PPairStaking",
   HelperContractImpl = "HelperContractImpl",
   HelperContract = "HelperContract",
@@ -269,6 +279,8 @@ export enum eContractid {
   LoanVault = "LoanVault",
   LoanVaultImpl = "LoanVaultImpl",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
+  DepositContract = "DepositContract",
+  ETHValidatorStakingStrategy = "ETHValidatorStakingStrategy",
   TimeLockProxy = "TimeLockProxy",
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
@@ -642,6 +654,7 @@ export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.kovan]: T;
   [eEthereumNetwork.ropsten]: T;
+  [eEthereumNetwork.zhejiang]: T;
   [eEthereumNetwork.goerli]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;

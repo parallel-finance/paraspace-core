@@ -84,6 +84,10 @@ test-pool-initialization:
 test-ntoken:
 	make TEST_TARGET=_xtoken_ntoken.spec.ts test
 
+.PHONY: test-eth-withdrawal
+test-eth-withdrawal:
+	make TEST_TARGET=_eth_withdrawal.spec.ts test
+
 .PHONY: test-ntoken-punk
 test-ntoken-punk:
 	make TEST_TARGET=ntoken-punk.spec.ts test
@@ -427,6 +431,28 @@ send-eth:
 .PHONY: set-traits-multipliers
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
+
+.PHONY: setup-validators
+setup-validators:
+	make TASK_NAME=setup-validators run-task
+
+.PHONY: list-validators
+list-validators:
+	make TASK_NAME=list-validators run-task
+
+.PHONY: register-validators
+register-validators:
+	make TASK_NAME=register-validators run-task
+
+.PHONY: shutdown-validators
+shutdown-validators:
+	docker-compose \
+		-f app/docker-compose.yml \
+		down \
+		--volumes \
+		--remove-orphans > /dev/null 2>&1 || true
+	sudo rm -fr app || true
+	docker volume prune -f
 
 .PHONY: set-timelock-strategy
 set-timelock-strategy:

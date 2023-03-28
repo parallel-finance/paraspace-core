@@ -69,6 +69,7 @@ import {
   BlurExchange,
   Conduit,
   ERC721Delegate,
+  ETHWithdrawal,
   ExecutionDelegate,
   IPool,
   LooksRareAdapter,
@@ -174,6 +175,7 @@ export interface TestEnv {
   punks: CryptoPunksMarket;
   wPunk: WPunk;
   nWPunk: NToken;
+  ethWithdrawal: ETHWithdrawal;
   wBTC: MintableERC20;
   stETH: StETHMocked;
   wstETH: WstETHMocked;
@@ -252,6 +254,7 @@ export async function initializeMakeSuite() {
     punks: {} as CryptoPunksMarket,
     wPunk: {} as WPunk,
     nWPunk: {} as NToken,
+    ethWithdrawal: {} as ETHWithdrawal,
     wBTC: {} as MintableERC20,
     stETH: {} as StETHMocked,
     wstETH: {} as WstETHMocked,

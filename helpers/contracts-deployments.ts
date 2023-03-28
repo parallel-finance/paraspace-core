@@ -248,6 +248,10 @@ import {
   HelperContract__factory,
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
+  ETHWithdrawal__factory,
+  ETHWithdrawal,
+  ETHValidatorStakingStrategy__factory,
+  ETHValidatorStakingStrategy,
   StableDebtToken,
   StableDebtToken__factory,
   MockStableDebtToken__factory,
@@ -303,6 +307,7 @@ import {
   getContractAddressInDb,
   getFunctionSignatures,
   getFunctionSignaturesFromDb,
+  getParaSpaceAdmins,
   insertContractAddressInDb,
   withSaveAndVerify,
 } from "./contracts-helpers";
@@ -2524,7 +2529,55 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
     ](cApeImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as AutoCompoundApe;
+  return AutoCompoundApe__factory.connect(proxyInstance.address, deployer);
+};
+
+export const deployETHWithdrawalImpl = async (
+  uri: string,
+  verify?: boolean
+) => {
+  return withSaveAndVerify(
+    new ETHWithdrawal__factory(await getFirstSigner()),
+    eContractid.ETHWithdrawalImpl,
+    [uri],
+    verify
+  ) as Promise<ETHWithdrawal>;
+};
+
+export const deployETHWithdrawal = async (uri: string, verify?: boolean) => {
+  const ethWithdrawalImplementation = await deployETHWithdrawalImpl(
+    uri,
+    verify
+  );
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+  const {gatewayAdminAddress} = await getParaSpaceAdmins();
+
+  const initData = ethWithdrawalImplementation.interface.encodeFunctionData(
+    "initialize",
+    [gatewayAdminAddress]
+  );
+
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.ETHWithdrawal,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](
+      ethWithdrawalImplementation.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return ETHWithdrawal__factory.connect(proxyInstance.address, deployer);
 };
 
 export const deployP2PPairStakingImpl = async (verify?: boolean) => {
@@ -2583,7 +2636,7 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
     ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as P2PPairStaking;
+  return P2PPairStaking__factory.connect(proxyInstance.address, deployer);
 };
 
 export const deployAutoYieldApeImpl = async (verify?: boolean) => {
@@ -2678,7 +2731,7 @@ export const deployHelperContract = async (verify?: boolean) => {
     ](helperImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as HelperContract;
+  return HelperContract__factory.connect(proxyInstance.address, deployer);
 };
 
 export const deployPTokenCApe = async (
@@ -3124,6 +3177,20 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployETHValidatorStakingStrategy = async (
+  stakingRate: string,
+  slashingRate: string,
+  providerPremium: string,
+  providerDurationFactor: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ETHValidatorStakingStrategy__factory(await getFirstSigner()),
+    eContractid.ETHValidatorStakingStrategy,
+    [stakingRate, slashingRate, providerPremium, providerDurationFactor],
+    verify
+  ) as Promise<ETHValidatorStakingStrategy>;
 
 export const deployOtherdeedNTokenImpl = async (
   poolAddress: tEthereumAddress,
