@@ -34,6 +34,9 @@ task("market-info", "Print markets info")
       console.log();
       console.log(x.symbol);
       console.log(" asset:", x.underlyingAsset);
+      console.log(" isActive:", x.isActive);
+      console.log(" isPaused:", x.isPaused);
+      console.log(" isFrozen:", x.isFrozen);
       console.log(" ltv:", x.baseLTVasCollateral.toString());
       console.log(
         " liquidationThreshold:",
@@ -58,6 +61,7 @@ task("market-info", "Print markets info")
         x.interestRateStrategyAddress
       );
       console.log(" auctionStrategyAddress:", x.auctionStrategyAddress);
+      console.log(" timeLockStrategyAddress:", x.timeLockStrategyAddress);
       console.log(" price:", fromBn(x.priceInMarketReferenceCurrency));
       console.log(
         " price($):",

@@ -54,7 +54,7 @@ import {
   Side,
   SignatureVersion,
 } from "../../helpers/blur-helpers/types";
-import {InputStruct} from "../../types/dependencies/blur-exchange/IBlurExchange";
+import {InputStruct} from "../../types/contracts/dependencies/blur-exchange/BlurExchange";
 
 export async function executeLooksrareBuyWithCredit(
   tokenToBuy: MintableERC721 | NToken,

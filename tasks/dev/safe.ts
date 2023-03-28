@@ -1,26 +1,15 @@
 import {task} from "hardhat/config";
-import {FORK, MULTI_SEND, MULTI_SIG} from "../../helpers/hardhat-constants";
+import {
+  FORK,
+  MULTI_SEND,
+  MULTI_SIG,
+  TIME_LOCK_SIGS,
+} from "../../helpers/hardhat-constants";
 import {ethers} from "ethers";
 import {decodeMulti, MetaTransaction} from "ethers-multisend";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
-
-const TIME_LOCK_SIGS = {
-  "0xc1a287e2": "GRACE_PERIOD()",
-  "0x7d645fab": "MAXIMUM_DELAY()",
-  "0xb1b43ae5": "MINIMUM_DELAY()",
-  "0x0e18b681": "acceptAdmin()",
-  "0x1dc40b51": "cancelTransaction(address,uint256,string,bytes,uint256,bool)",
-  "0x8902ab65": "executeTransaction(address,uint256,string,bytes,uint256,bool)",
-  "0x6e9960c3": "getAdmin()",
-  "0xcebc9a82": "getDelay()",
-  "0xd0468156": "getPendingAdmin()",
-  "0xb1fc8796": "isActionQueued(bytes32)",
-  "0x8d8fe2e3": "queueTransaction(address,uint256,string,bytes,uint256,bool)",
-  "0xe177246e": "setDelay(uint256)",
-  "0x4dd18bf5": "setPendingAdmin(address)",
-};
 
 task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");

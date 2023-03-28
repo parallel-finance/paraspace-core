@@ -12,6 +12,8 @@ import {
   TENDERLY_USERNAME,
   DEPLOYER,
   VERBOSE,
+  COMPILER_VERSION,
+  COMPILER_OPTIMIZER_RUNS,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -71,11 +73,11 @@ const hardhatConfig: HardhatUserConfig = {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
     compilers: [
       {
-        version: "0.8.10",
+        version: COMPILER_VERSION,
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000,
+            runs: COMPILER_OPTIMIZER_RUNS,
           },
           evmVersion: "london",
         },
@@ -135,6 +137,7 @@ const hardhatConfig: HardhatUserConfig = {
       gasPrice: "auto",
       gas: "auto",
       allowUnlimitedContractSize: true,
+      timeout: 300000,
     },
     parallel: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],

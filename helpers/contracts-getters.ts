@@ -88,6 +88,9 @@ import {
   DepositContract__factory,
   ETHWithdrawal__factory,
   MockCToken__factory,
+  TimeLock__factory,
+  HotWalletProxy__factory,
+  NTokenOtherdeed__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -108,7 +111,7 @@ import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
 } from "../types";
-import {RPC_URL} from "./hardhat-constants";
+import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
 
 export const getFirstSigner = async () => {
   if (!RPC_URL) {
@@ -116,7 +119,9 @@ export const getFirstSigner = async () => {
   }
 
   const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
-  return (await impersonateAddress(paraSpaceAdminAddress)).signer;
+  return (
+    await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
+  ).signer;
 };
 
 export const getLastSigner = async () => last(await getEthersSigners())!;
@@ -223,8 +228,8 @@ export const getPoolLogic = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getPoolProxy = async (address?: tEthereumAddress) =>
-  await IPool__factory.connect(
+export const getPoolProxy = async (address?: tEthereumAddress) => {
+  return await IPool__factory.connect(
     address ||
       (
         await getDb()
@@ -233,7 +238,7 @@ export const getPoolProxy = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
-
+};
 export const getPriceOracle = async (address?: tEthereumAddress) =>
   await PriceOracle__factory.connect(
     address ||
@@ -1227,12 +1232,45 @@ export const getDepositContract = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getTimeLockProxy = async (address?: tEthereumAddress) =>
+  await TimeLock__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getETHWithdrawal = async (address?: tEthereumAddress) =>
   await ETHWithdrawal__factory.connect(
     address ||
       (
         await getDb()
           .get(`${eContractid.ETHWithdrawal}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
+  await NTokenOtherdeed__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getHotWalletProxy = async (address?: tEthereumAddress) =>
+  await HotWalletProxy__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.HotWalletProxy}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

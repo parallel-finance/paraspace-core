@@ -1100,7 +1100,7 @@ describe("APE Coin Staking Test", () => {
 
   it("TC-pool-ape-staking-18 test unstakeApePositionAndRepay by others succeeds when hf < 1", async () => {
     const {
-      users: [user1, unstaker, user2],
+      users: [user1, unstaker, , , user2],
       ape,
       mayc,
       pool,
@@ -1168,7 +1168,7 @@ describe("APE Coin Staking Test", () => {
 
   it("TC-pool-ape-staking-19 test can stake multiple times and partially unstake afterwards", async () => {
     const {
-      users: [user1, unstaker, user2],
+      users: [user1, unstaker, , , user2],
       ape,
       mayc,
       bayc,
