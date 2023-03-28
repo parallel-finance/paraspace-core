@@ -21,7 +21,6 @@ import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
@@ -112,6 +111,7 @@ contract PoolParameters is
     function initReserve(
         address asset,
         address xTokenAddress,
+        address stableDebtAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress,
         address auctionStrategyAddress,
@@ -126,6 +126,7 @@ contract PoolParameters is
                 DataTypes.InitReserveParams({
                     asset: asset,
                     xTokenAddress: xTokenAddress,
+                    stableDebtAddress: stableDebtAddress,
                     variableDebtAddress: variableDebtAddress,
                     interestRateStrategyAddress: interestRateStrategyAddress,
                     timeLockStrategyAddress: timeLockStrategyAddress,
@@ -149,6 +150,30 @@ contract PoolParameters is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         PoolLogic.executeDropReserve(ps._reserves, ps._reservesList, asset);
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setReserveStableDebtTokenAddress(
+        address asset,
+        address stableDebtTokenAddress
+    ) external virtual override onlyPoolConfigurator {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        DataTypes.ReserveData storage reserve = ps._reserves[asset];
+
+        require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        require(
+            reserve.id != 0 || ps._reservesList[0] == asset,
+            Errors.ASSET_NOT_LISTED
+        );
+        require(
+            reserve.stableDebtTokenAddress == address(0),
+            Errors.STABLE_DEBT_TOKEN_ALREADY_SET
+        );
+        reserve.stableDebtTokenAddress = stableDebtTokenAddress;
+
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+        reserve.updateState(reserveCache);
+        reserve.updateInterestRates(reserveCache, asset, 0, 0);
     }
 
     /// @inheritdoc IPoolParameters

@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {OwnableUpgradeable} from "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IWETH} from "../misc/interfaces/IWETH.sol";
 import {IWETHGateway} from "./interfaces/IWETHGateway.sol";
 import {IPool} from "../interfaces/IPool.sol";
@@ -173,6 +174,44 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         IPool(pool).withdraw(address(WETH), amountToWithdraw, address(this));
         WETH.withdraw(amountToWithdraw);
         _safeTransferETH(to, amountToWithdraw);
+    }
+
+    /**
+     * @notice create a ETH term loan with the specified collateral asset
+     * @param collateralAsset The address of the collateral asset
+     * @param collateralTokenId The token id of the collateral asset
+     * @param collateralAmount The collateral token amount of the loan
+     **/
+    function createLoan(
+        address collateralAsset,
+        uint256 collateralTokenId,
+        uint256 collateralAmount,
+        uint16 referralCode
+    ) external override nonReentrant {
+        IERC721(collateralAsset).safeTransferFrom(
+            msg.sender,
+            address(this),
+            collateralTokenId
+        );
+        IERC721(collateralAsset).setApprovalForAll(pool, true);
+        uint256 ethAmount = IPool(pool).createLoan(
+            collateralAsset,
+            collateralTokenId,
+            collateralAmount,
+            weth,
+            referralCode
+        );
+        WETH.withdraw(ethAmount);
+        _safeTransferETH(msg.sender, ethAmount);
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
     /**

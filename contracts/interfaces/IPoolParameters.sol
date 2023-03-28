@@ -14,6 +14,7 @@ interface IPoolParameters {
      * @dev Emitted when the state of a reserve is updated.
      * @param reserve The address of the underlying asset of the reserve
      * @param liquidityRate The next liquidity rate
+     * @param stableBorrowRate The next stable borrow rate
      * @param variableBorrowRate The next variable borrow rate
      * @param liquidityIndex The next liquidity index
      * @param variableBorrowIndex The next variable borrow index
@@ -21,6 +22,7 @@ interface IPoolParameters {
     event ReserveDataUpdated(
         address indexed reserve,
         uint256 liquidityRate,
+        uint256 stableBorrowRate,
         uint256 variableBorrowRate,
         uint256 liquidityIndex,
         uint256 variableBorrowIndex
@@ -37,6 +39,7 @@ interface IPoolParameters {
      * @dev Only callable by the PoolConfigurator contract
      * @param asset The address of the underlying asset of the reserve
      * @param xTokenAddress The address of the xToken that will be assigned to the reserve
+     * @param stableDebtAddress The address of the StableDebtToken that will be assigned to the reserve
      * @param variableDebtAddress The address of the VariableDebtToken that will be assigned to the reserve
      * @param interestRateStrategyAddress The address of the interest rate strategy contract
      * @param auctionStrategyAddress The address of the auction rate strategy contract
@@ -45,6 +48,7 @@ interface IPoolParameters {
     function initReserve(
         address asset,
         address xTokenAddress,
+        address stableDebtAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress,
         address auctionStrategyAddress,
@@ -57,6 +61,17 @@ interface IPoolParameters {
      * @param asset The address of the underlying asset of the reserve
      **/
     function dropReserve(address asset) external;
+
+    /**
+     * @notice Updates the address of the stable debt token contract
+     * @dev Only callable by the PoolConfigurator contract
+     * @param asset The address of the underlying asset of the reserve
+     * @param stableDebtTokenAddress The address of the stable debt token contract
+     **/
+    function setReserveStableDebtTokenAddress(
+        address asset,
+        address stableDebtTokenAddress
+    ) external;
 
     /**
      * @notice Updates the address of the interest rate strategy contract
@@ -131,13 +146,13 @@ interface IPoolParameters {
     function revokeUnlimitedApprove(address token, address to) external;
 
     /**
-     * @notice undate fee percentage for claim ape for compound
+     * @notice update fee percentage for claim ape for compound
      * @param fee new fee percentage
      */
     function setClaimApeForCompoundFee(uint256 fee) external;
 
     /**
-     * @notice undate ape compound strategy
+     * @notice update ape compound strategy
      * @param strategy new compound strategy
      */
     function setApeCompoundStrategy(

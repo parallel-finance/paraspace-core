@@ -458,6 +458,10 @@ shutdown-validators:
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
+.PHONY: upgrade-eth-instant-withdraw
+upgrade-eth-instant-withdraw:
+	make SCRIPT_PATH=./scripts/dev/12.update-eth-instant-withdraw.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -679,9 +683,12 @@ anvil:
 	anvil \
 		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
 		$(if $(FORK),--chain-id 522,--chain-id 31337) \
+		$(if $(DEPLOYER_MNEMONIC),--mnemonic "$(DEPLOYER_MNEMONIC)",) \
 		--tracing \
 		--host 0.0.0.0 \
+		--block-time 1 \
 		--state-interval 60 \
+		--timeout 300000 \
 		--dump-state state.json \
 		$(if $(wildcard state.json),--load-state state.json,) \
 		--disable-block-gas-limit \

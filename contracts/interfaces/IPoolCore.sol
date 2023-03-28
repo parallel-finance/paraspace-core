@@ -71,6 +71,7 @@ interface IPoolCore {
      * initiator of the transaction on flashLoan()
      * @param onBehalfOf The address that will be getting the debt
      * @param amount The amount borrowed out
+     * @param interestRateMode The rate mode: 1 for Stable, 2 for Variable
      * @param borrowRate The numeric rate at which the user has borrowed, expressed in ray
      * @param referralCode The referral code used
      **/
@@ -79,6 +80,7 @@ interface IPoolCore {
         address user,
         address indexed onBehalfOf,
         uint256 amount,
+        DataTypes.InterestRateMode interestRateMode,
         uint256 borrowRate,
         uint16 indexed referralCode
     );

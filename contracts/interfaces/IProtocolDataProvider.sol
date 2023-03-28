@@ -9,9 +9,12 @@ interface IProtocolDataProvider {
      * @param asset The address of the underlying asset of the reserve
      * @return accruedToTreasuryScaled The scaled amount of tokens accrued to treasury that is to be minted
      * @return totalPToken The total supply of the xToken
+     * @return totalStableDebt The total stable debt of the reserve
      * @return totalVariableDebt The total variable debt of the reserve
      * @return liquidityRate The liquidity rate of the reserve
      * @return variableBorrowRate The variable borrow rate of the reserve
+     * @return stableBorrowRate The stable borrow rate of the reserve
+     * @return averageStableBorrowRate The average stable borrow rate of the reserve
      * @return liquidityIndex The liquidity index of the reserve
      * @return variableBorrowIndex The variable borrow index of the reserve
      * @return lastUpdateTimestamp The timestamp of the last update of the reserve
@@ -22,9 +25,12 @@ interface IProtocolDataProvider {
         returns (
             uint256 accruedToTreasuryScaled,
             uint256 totalPToken,
+            uint256 totalStableDebt,
             uint256 totalVariableDebt,
             uint256 liquidityRate,
             uint256 variableBorrowRate,
+            uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate,
             uint256 liquidityIndex,
             uint256 variableBorrowIndex,
             uint40 lastUpdateTimestamp
@@ -114,6 +120,10 @@ interface IProtocolDataProvider {
      * @return currentVariableDebt The current variable debt of the user
      * @return scaledVariableDebt The scaled variable debt of the user
      * @return liquidityRate The liquidity rate of the reserve
+     * @return currentStableDebt The current stable debt of the user
+     * @return principalStableDebt The principal stable debt of the user
+     * @return stableBorrowRate The stable borrow rate of the user
+     * @return stableRateLastUpdated The timestamp of the last update of the user stable rate
      * @return usageAsCollateralEnabled True if the user is using the asset as collateral, false
      *         otherwise
      **/
@@ -127,6 +137,10 @@ interface IProtocolDataProvider {
             uint256 currentVariableDebt,
             uint256 scaledVariableDebt,
             uint256 liquidityRate,
+            uint256 currentStableDebt,
+            uint256 principalStableDebt,
+            uint256 stableBorrowRate,
+            uint40 stableRateLastUpdated,
             bool usageAsCollateralEnabled
         );
 
@@ -134,12 +148,17 @@ interface IProtocolDataProvider {
      * @notice Returns the token addresses of the reserve
      * @param asset The address of the underlying asset of the reserve
      * @return xTokenAddress The PToken address of the reserve
+     * @return stableDebtTokenAddress The StableDebtToken address of the reserve
      * @return variableDebtTokenAddress The VariableDebtToken address of the reserve
      */
     function getReserveTokensAddresses(address asset)
         external
         view
-        returns (address xTokenAddress, address variableDebtTokenAddress);
+        returns (
+            address xTokenAddress,
+            address stableDebtTokenAddress,
+            address variableDebtTokenAddress
+        );
 
     /**
      * @notice Returns the address of the Interest Rate strategy
