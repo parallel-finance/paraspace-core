@@ -364,7 +364,8 @@ library DataTypes {
     }
 
     enum ApeCompoundTokenOut {
-        USDC
+        USDC,
+        WETH
     }
 
     struct ApeCompoundStrategy {
