@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import {IETHWithdrawal} from "../misc/interfaces/IETHWithdrawal.sol";
+import {IInstantWithdrawNFT} from "../misc/interfaces/IInstantWithdrawNFT.sol";
 import {ERC1155} from "../dependencies/openzeppelin/contracts/ERC1155.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
@@ -24,13 +24,13 @@ error AlreadyMinted();
 error NotMature();
 error InvalidParams();
 
-contract ETHWithdrawal is
+contract ETHWithdrawalNFT is
     Initializable,
     ReentrancyGuard,
     AccessControl,
     ERC1155,
     IERC721Receiver,
-    IETHWithdrawal
+    IInstantWithdrawNFT
 {
     using SafeERC20 for IERC20;
     using WadRayMath for uint256;
@@ -39,8 +39,8 @@ contract ETHWithdrawal is
     bytes32 public constant DEFAULT_ISSUER_ROLE = keccak256("DEFAULT_ISSUER");
     uint64 public constant TOTAL_SHARES = 10000;
 
-    mapping(uint256 => IETHWithdrawal.TokenInfo) private tokenInfos;
-    mapping(IETHWithdrawal.StakingProvider => address)
+    mapping(uint256 => IInstantWithdrawNFT.TokenInfo) private tokenInfos;
+    mapping(IInstantWithdrawNFT.StakingProvider => address)
         public providerStrategyAddress;
 
     uint256 public nextTokenId;
@@ -61,14 +61,14 @@ contract ETHWithdrawal is
         returns (bool)
     {
         return
-            interfaceId == type(IETHWithdrawal).interfaceId ||
+            interfaceId == type(IInstantWithdrawNFT).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
-    /// @inheritdoc IETHWithdrawal
+    /// @inheritdoc IInstantWithdrawNFT
     function mint(
-        IETHWithdrawal.StakingProvider provider,
+        IInstantWithdrawNFT.StakingProvider provider,
         uint64 exitEpoch,
         uint64 withdrawableEpoch,
         uint256 balance,
@@ -80,7 +80,7 @@ contract ETHWithdrawal is
         onlyRole(DEFAULT_ISSUER_ROLE)
         returns (uint256 tokenId)
     {
-        if (provider == IETHWithdrawal.StakingProvider.Validator) {
+        if (provider == IInstantWithdrawNFT.StakingProvider.Validator) {
             if (block.timestamp >= withdrawableTime) {
                 revert AlreadyMature();
             }
@@ -95,7 +95,7 @@ contract ETHWithdrawal is
                 revert AlreadyMinted();
             }
 
-            tokenInfos[tokenId] = IETHWithdrawal.TokenInfo(
+            tokenInfos[tokenId] = IInstantWithdrawNFT.TokenInfo(
                 provider,
                 exitEpoch,
                 withdrawableEpoch,
@@ -109,14 +109,16 @@ contract ETHWithdrawal is
         }
     }
 
-    /// @inheritdoc IETHWithdrawal
+    /// @inheritdoc IInstantWithdrawNFT
     function burn(
         uint256 tokenId,
         address recipient,
-        uint64 shares
+        uint256 shares
     ) external nonReentrant {
         TokenInfo memory tokenInfo = tokenInfos[tokenId];
-        if (tokenInfo.provider == IETHWithdrawal.StakingProvider.Validator) {
+        if (
+            tokenInfo.provider == IInstantWithdrawNFT.StakingProvider.Validator
+        ) {
             if (block.timestamp < tokenInfo.withdrawableTime) {
                 revert NotMature();
             }
@@ -134,13 +136,13 @@ contract ETHWithdrawal is
         }
     }
 
-    /// @inheritdoc IETHWithdrawal
+    /// @inheritdoc IInstantWithdrawNFT
     function getPresentValueAndDiscountRate(
         uint256 tokenId,
-        uint64 shares,
+        uint256 shares,
         uint256 borrowRate
     ) external view returns (uint256 price, uint256 discountRate) {
-        IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
+        IInstantWithdrawNFT.TokenInfo memory tokenInfo = tokenInfos[tokenId];
 
         IETHStakingProviderStrategy strategy = IETHStakingProviderStrategy(
             providerStrategyAddress[tokenInfo.provider]
@@ -151,13 +153,13 @@ contract ETHWithdrawal is
         price = strategy.getTokenPresentValue(tokenInfo, amount, discountRate);
     }
 
-    /// @inheritdoc IETHWithdrawal
+    /// @inheritdoc IInstantWithdrawNFT
     function getPresentValueByDiscountRate(
         uint256 tokenId,
-        uint64 shares,
+        uint256 shares,
         uint256 discountRate
     ) external view returns (uint256 price) {
-        IETHWithdrawal.TokenInfo memory tokenInfo = tokenInfos[tokenId];
+        IInstantWithdrawNFT.TokenInfo memory tokenInfo = tokenInfos[tokenId];
         IETHStakingProviderStrategy strategy = IETHStakingProviderStrategy(
             providerStrategyAddress[tokenInfo.provider]
         );
@@ -166,15 +168,15 @@ contract ETHWithdrawal is
         price = strategy.getTokenPresentValue(tokenInfo, amount, discountRate);
     }
 
-    /// @inheritdoc IETHWithdrawal
+    /// @inheritdoc IInstantWithdrawNFT
     function setProviderStrategyAddress(
-        IETHWithdrawal.StakingProvider provider,
+        IInstantWithdrawNFT.StakingProvider provider,
         address strategy
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         providerStrategyAddress[provider] = strategy;
     }
 
-    /// @inheritdoc IETHWithdrawal
+    /// @inheritdoc IInstantWithdrawNFT
     function getTokenInfo(uint256 tokenId)
         external
         view

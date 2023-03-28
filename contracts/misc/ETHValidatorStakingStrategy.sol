@@ -5,7 +5,7 @@ import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IETHStakingProviderStrategy} from "../interfaces/IETHStakingProviderStrategy.sol";
-import {IETHWithdrawal} from "./interfaces/IETHWithdrawal.sol";
+import {IInstantWithdrawNFT} from "../misc/interfaces/IInstantWithdrawNFT.sol";
 import {MathUtils} from "../protocol/libraries/math/MathUtils.sol";
 
 contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
@@ -29,7 +29,7 @@ contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
     }
 
     function getTokenPresentValue(
-        IETHWithdrawal.TokenInfo calldata tokenInfo,
+        IInstantWithdrawNFT.TokenInfo calldata tokenInfo,
         uint256 amount,
         uint256 discountRate
     ) external view returns (uint256 price) {
@@ -72,7 +72,7 @@ contract ETHValidatorStakingStrategy is IETHStakingProviderStrategy {
     }
 
     function getDiscountRate(
-        IETHWithdrawal.TokenInfo calldata tokenInfo,
+        IInstantWithdrawNFT.TokenInfo calldata tokenInfo,
         uint256 borrowRate
     ) external view returns (uint256 discountRate) {
         if (block.timestamp >= tokenInfo.withdrawableTime) {

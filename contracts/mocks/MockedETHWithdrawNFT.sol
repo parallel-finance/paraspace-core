@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import "./tokens/MintableERC1155.sol";
-import "../interfaces/IInstantWithdrawNFT.sol";
+import "../misc/interfaces/IInstantWithdrawNFT.sol";
 
 contract MockedETHWithdrawNFT is MintableERC1155, IInstantWithdrawNFT {
     uint256 internal startTime;
@@ -34,4 +34,25 @@ contract MockedETHWithdrawNFT is MintableERC1155, IInstantWithdrawNFT {
     function _getPresentValue() internal view returns(uint256) {
         return (block.timestamp - startTime) * 1e12 + 1e18;
     }
+
+    function getTokenInfo(uint256 tokenId)
+        external
+        view
+        returns (TokenInfo memory) {
+
+        }
+
+    function setProviderStrategyAddress(
+        StakingProvider provider,
+        address strategy
+    ) external {}
+
+    function mint(
+        StakingProvider provider,
+        uint64 exitEpoch,
+        uint64 withdrawableEpoch,
+        uint256 balance,
+        address recipient,
+        uint256 withdrawableTime
+    ) external returns (uint256) {}
 }

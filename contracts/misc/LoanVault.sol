@@ -6,7 +6,7 @@ import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC1155} from "../dependencies/openzeppelin/contracts/IERC1155.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
-import {IInstantWithdrawNFT} from "../interfaces/IInstantWithdrawNFT.sol";
+import {IInstantWithdrawNFT} from "../misc/interfaces/IInstantWithdrawNFT.sol";
 import {IPool} from "../interfaces/IPool.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {ILido} from "../interfaces/ILido.sol";

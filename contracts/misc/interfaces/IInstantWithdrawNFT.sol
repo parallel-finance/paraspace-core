@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-interface IETHWithdrawal {
+interface IInstantWithdrawNFT {
     /**
      * @dev Emitted during rescueETH()
      * @param to The address of the recipient
@@ -101,7 +101,7 @@ interface IETHWithdrawal {
     function burn(
         uint256 tokenId,
         address recipient,
-        uint64 shares
+        uint256 shares
     ) external;
 
     /**
@@ -115,7 +115,7 @@ interface IETHWithdrawal {
      */
     function getPresentValueAndDiscountRate(
         uint256 tokenId,
-        uint64 shares,
+        uint256 shares,
         uint256 borrowRate
     ) external view returns (uint256 price, uint256 discountRate);
 
@@ -128,7 +128,7 @@ interface IETHWithdrawal {
      */
     function getPresentValueByDiscountRate(
         uint256 tokenId,
-        uint64 shares,
+        uint256 shares,
         uint256 discountRate
     ) external view returns (uint256 price);
 

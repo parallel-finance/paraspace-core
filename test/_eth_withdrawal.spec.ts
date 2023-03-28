@@ -4,7 +4,7 @@ import {BigNumber} from "ethers";
 import {parseEther, parseUnits} from "ethers/lib/utils";
 import {
   deployETHValidatorStakingStrategy,
-  deployETHWithdrawal,
+  deployInstantWithdraw,
 } from "../helpers/contracts-deployments";
 import {getCurrentTime} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, DRE, waitForTx} from "../helpers/misc-utils";
@@ -20,7 +20,7 @@ describe("ETH Withdrawal", async () => {
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
     const {gatewayAdmin} = testEnv;
-    testEnv.ethWithdrawal = await deployETHWithdrawal("ETHWithdrawal");
+    testEnv.ethWithdrawal = await deployInstantWithdraw("InstantWithdraw");
     const validatorStrategy = await deployETHValidatorStakingStrategy(
       "0", // staking rate
       parseUnits("13", 10).toString(),

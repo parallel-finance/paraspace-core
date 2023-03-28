@@ -86,7 +86,7 @@ import {
   PYieldToken__factory,
   HelperContract__factory,
   DepositContract__factory,
-  ETHWithdrawal__factory,
+  ETHWithdrawalNFT__factory,
   StableDebtToken__factory,
   MockStableDebtToken__factory,
   LoanVault__factory,
@@ -1224,15 +1224,15 @@ export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-
 export const getDepositContract = async (address?: tEthereumAddress) =>
   await DepositContract__factory.connect(
     address ||
       (
         await getDb()
-          .get(`${eContractid.DepositContract}.${DRE.network.name}`).value()
-          ).address,
-             await getFirstSigner()
+          .get(`${eContractid.DepositContract}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
   );
 
 export const getStableDebtToken = async (address?: tEthereumAddress) =>
@@ -1279,12 +1279,12 @@ export const getTimeLockProxy = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getETHWithdrawal = async (address?: tEthereumAddress) =>
-  await ETHWithdrawal__factory.connect(
+export const getETHWithdrawalNFT = async (address?: tEthereumAddress) =>
+  await ETHWithdrawalNFT__factory.connect(
     address ||
       (
         await getDb()
-          .get(`${eContractid.ETHWithdrawal}.${DRE.network.name}`)
+          .get(`${eContractid.ETHWithdrawalNFT}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

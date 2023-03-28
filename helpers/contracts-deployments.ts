@@ -248,8 +248,6 @@ import {
   HelperContract__factory,
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
-  ETHWithdrawal__factory,
-  ETHWithdrawal,
   ETHValidatorStakingStrategy__factory,
   ETHValidatorStakingStrategy,
   StableDebtToken,
@@ -287,6 +285,8 @@ import {
   NTokenOtherdeed,
   HotWalletProxy__factory,
   HotWalletProxy,
+  ETHWithdrawalNFT__factory,
+  ETHWithdrawalNFT,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2532,20 +2532,20 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   return AutoCompoundApe__factory.connect(proxyInstance.address, deployer);
 };
 
-export const deployETHWithdrawalImpl = async (
+export const deployInstantWithdrawImpl = async (
   uri: string,
   verify?: boolean
 ) => {
   return withSaveAndVerify(
-    new ETHWithdrawal__factory(await getFirstSigner()),
-    eContractid.ETHWithdrawalImpl,
+    new ETHWithdrawalNFT__factory(await getFirstSigner()),
+    eContractid.ETHWithdrawalNFTImpl,
     [uri],
     verify
-  ) as Promise<ETHWithdrawal>;
+  ) as Promise<ETHWithdrawalNFT>;
 };
 
-export const deployETHWithdrawal = async (uri: string, verify?: boolean) => {
-  const ethWithdrawalImplementation = await deployETHWithdrawalImpl(
+export const deployInstantWithdraw = async (uri: string, verify?: boolean) => {
+  const ethWithdrawalImplementation = await deployInstantWithdrawImpl(
     uri,
     verify
   );
@@ -2561,7 +2561,7 @@ export const deployETHWithdrawal = async (uri: string, verify?: boolean) => {
 
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
-    eContractid.ETHWithdrawal,
+    eContractid.ETHWithdrawalNFT,
     [],
     verify
   );
@@ -2577,7 +2577,7 @@ export const deployETHWithdrawal = async (uri: string, verify?: boolean) => {
     )
   );
 
-  return ETHWithdrawal__factory.connect(proxyInstance.address, deployer);
+  return ETHWithdrawalNFT__factory.connect(proxyInstance.address, deployer);
 };
 
 export const deployP2PPairStakingImpl = async (verify?: boolean) => {

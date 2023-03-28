@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import {IETHWithdrawal} from "../misc/interfaces/IETHWithdrawal.sol";
+import {IInstantWithdrawNFT} from "../misc/interfaces/IInstantWithdrawNFT.sol";
 
 /**
 
@@ -19,7 +19,7 @@ interface IETHStakingProviderStrategy {
 @return price present value of the given token
 */
     function getTokenPresentValue(
-        IETHWithdrawal.TokenInfo calldata tokenInfo,
+        IInstantWithdrawNFT.TokenInfo calldata tokenInfo,
         uint256 amount,
         uint256 discountRate
     ) external view returns (uint256 price);
@@ -32,7 +32,7 @@ interface IETHStakingProviderStrategy {
 @return discountRate discount rate for the given token and borrow rate
 */
     function getDiscountRate(
-        IETHWithdrawal.TokenInfo calldata tokenInfo,
+        IInstantWithdrawNFT.TokenInfo calldata tokenInfo,
         uint256 borrowRate
     ) external view returns (uint256 discountRate);
 
