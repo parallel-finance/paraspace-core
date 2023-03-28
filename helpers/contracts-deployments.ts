@@ -2532,23 +2532,17 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   return AutoCompoundApe__factory.connect(proxyInstance.address, deployer);
 };
 
-export const deployETHWithdrawalNFTImpl = async (
-  uri: string,
-  verify?: boolean
-) => {
+export const deployETHWithdrawalNFTImpl = async (verify?: boolean) => {
   return withSaveAndVerify(
     new ETHWithdrawalNFT__factory(await getFirstSigner()),
     eContractid.ETHWithdrawalNFTImpl,
-    [uri],
+    [""],
     verify
   ) as Promise<ETHWithdrawalNFT>;
 };
 
-export const deployETHWithdrawalNFT = async (uri: string, verify?: boolean) => {
-  const ethWithdrawalImplementation = await deployETHWithdrawalNFTImpl(
-    uri,
-    verify
-  );
+export const deployETHWithdrawalNFT = async (verify?: boolean) => {
+  const ethWithdrawalImplementation = await deployETHWithdrawalNFTImpl(verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
