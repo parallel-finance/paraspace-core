@@ -69,8 +69,6 @@ contract ETHWithdrawalNFT is
     /// @inheritdoc IInstantWithdrawNFT
     function mint(
         IInstantWithdrawNFT.StakingProvider provider,
-        uint64 exitEpoch,
-        uint64 withdrawableEpoch,
         uint256 balance,
         address recipient,
         uint256 withdrawableTime
@@ -97,8 +95,6 @@ contract ETHWithdrawalNFT is
 
             tokenInfos[tokenId] = IInstantWithdrawNFT.TokenInfo(
                 provider,
-                exitEpoch,
-                withdrawableEpoch,
                 balance,
                 withdrawableTime
             );

@@ -49,8 +49,6 @@ contract MockedETHWithdrawNFT is MintableERC1155, IInstantWithdrawNFT {
 
     function mint(
         StakingProvider provider,
-        uint64 exitEpoch,
-        uint64 withdrawableEpoch,
         uint256 balance,
         address recipient,
         uint256 withdrawableTime

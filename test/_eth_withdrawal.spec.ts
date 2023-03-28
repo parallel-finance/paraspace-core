@@ -102,8 +102,6 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .mint(
           StakingProvider.Validator,
-          "1111",
-          "1111",
           parseEther("32").toString(),
           gatewayAdmin.address,
           currentTime.add(30 * 24 * 3600)
@@ -129,8 +127,6 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .mint(
           StakingProvider.Validator,
-          "1111",
-          "1111",
           parseEther("32").toString(),
           gatewayAdmin.address,
           currentTime.add(30 * 24 * 3600)
@@ -188,8 +184,6 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .mint(
           StakingProvider.Validator,
-          "1111",
-          "1111",
           parseEther("32").toString(),
           gatewayAdmin.address,
           currentTime.add(30 * 24 * 3600)
@@ -247,8 +241,6 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .mint(
           StakingProvider.Validator,
-          "1111",
-          "1111",
           parseEther("32").toString(),
           gatewayAdmin.address,
           currentTime.add(30 * 24 * 3600)
@@ -353,8 +345,6 @@ describe("ETH Withdrawal", async () => {
         .connect(gatewayAdmin.signer)
         .mint(
           StakingProvider.Validator,
-          1111,
-          1111,
           parseEther("32"),
           gatewayAdmin.address,
           currentTime.add(30 * 24 * 3600),

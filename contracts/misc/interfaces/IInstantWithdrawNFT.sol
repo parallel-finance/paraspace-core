@@ -60,15 +60,11 @@ interface IInstantWithdrawNFT {
     /**
      * @dev Struct defining information about a ETH Withdrawal bond token.
      * @param provider The entity which requested minting ETH withdrawal bond token.
-     * @param exitEpoch The Epoch number at which the validator requested to exit.
-     * @param withdrawableEpoch The earliest Epoch at which the validator's funds can be withdrawn.
      * @param balance The current balance of the validator which includes principle + rewards.
      * @param withdrawableTime The earliest point in time at which the ETH can be withdrawn.
      */
     struct TokenInfo {
         StakingProvider provider;
-        uint64 exitEpoch;
-        uint64 withdrawableEpoch;
         uint256 balance;
         uint256 withdrawableTime;
     }
@@ -76,8 +72,6 @@ interface IInstantWithdrawNFT {
     /**
      * @dev Mint function creates a new ETH withdrawal bond token with the details provided.
      * @param provider The entity which requested minting ETH withdrawal bond token.
-     * @param exitEpoch The Epoch number at which the validator requested to exit.
-     * @param withdrawableEpoch The earliest Epoch at which the validator's funds can be withdrawn.
      * @param balance The current balance of the validator which includes principle + rewards.
      * @param recipient The address of the recipient receiving the minted tokens.
      * @param withdrawableTime The earliest point in time at which the ETH can be withdrawn.
@@ -85,8 +79,6 @@ interface IInstantWithdrawNFT {
      */
     function mint(
         StakingProvider provider,
-        uint64 exitEpoch,
-        uint64 withdrawableEpoch,
         uint256 balance,
         address recipient,
         uint256 withdrawableTime
