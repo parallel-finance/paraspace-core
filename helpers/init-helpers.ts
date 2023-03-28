@@ -607,7 +607,12 @@ export const initReservesByHelper = async (
           xTokenToUse = nTokenBAKCImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.OTHR) {
           nTokenOTHRImplementationAddress = (
-            await deployOtherdeedNTokenImpl(pool.address, hotWallet)
+            await deployOtherdeedNTokenImpl(
+              pool.address,
+              hotWallet,
+              delegationRegistryAddress,
+              verify
+            )
           ).address;
 
           xTokenToUse = nTokenOTHRImplementationAddress;

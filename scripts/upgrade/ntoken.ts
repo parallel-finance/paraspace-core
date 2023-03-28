@@ -154,6 +154,7 @@ export const upgradeNToken = async (verify = false) => {
           await deployOtherdeedNTokenImpl(
             poolAddress,
             paraSpaceConfig.HotWallet || ZERO_ADDRESS,
+            paraSpaceConfig.DelegationRegistry,
             verify
           )
         ).address;
@@ -168,6 +169,7 @@ export const upgradeNToken = async (verify = false) => {
             await deployOtherdeedNTokenImpl(
               poolAddress,
               paraSpaceConfig.HotWallet || ZERO_ADDRESS,
+              paraSpaceConfig.DelegationRegistry,
               verify
             )
           ).address;

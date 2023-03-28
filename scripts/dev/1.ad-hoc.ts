@@ -3,10 +3,6 @@ import {deployUiPoolDataProvider} from "../../helpers/contracts-deployments";
 
 const adHoc = async () => {
   console.time("ad-hoc");
-  await deployUiPoolDataProvider(
-    "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
-    "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e"
-  );
   console.timeEnd("ad-hoc");
 };
 

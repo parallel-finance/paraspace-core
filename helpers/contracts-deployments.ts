@@ -3203,6 +3203,7 @@ export const deployETHValidatorStakingStrategy = async (
 export const deployOtherdeedNTokenImpl = async (
   poolAddress: tEthereumAddress,
   warmWallet: tEthereumAddress,
+  delegationRegistryAddress: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -3216,7 +3217,7 @@ export const deployOtherdeedNTokenImpl = async (
   return withSaveAndVerify(
     new NTokenOtherdeed__factory(libraries, await getFirstSigner()),
     eContractid.NTokenOtherdeedImpl,
-    [poolAddress, warmWallet],
+    [poolAddress, warmWallet, delegationRegistryAddress],
     verify,
     false,
     libraries
