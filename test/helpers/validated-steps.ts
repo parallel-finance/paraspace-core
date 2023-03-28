@@ -31,6 +31,7 @@ import {
   IPool,
   MintableERC20,
   MintableERC721,
+  Moonbirds,
   NToken,
   StETHMocked,
   WETH9Mocked,
@@ -50,6 +51,7 @@ type SupportedAsset =
   | AutoCompoundApe
   | AutoYieldApe
   | StETHMocked
+  | Moonbirds
   | INonfungiblePositionManager;
 
 function isERC20(token: SupportedAsset): token is MintableERC20 | WETH9Mocked {

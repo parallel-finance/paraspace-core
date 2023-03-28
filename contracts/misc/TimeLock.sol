@@ -20,9 +20,7 @@ import {IACLManager} from "../interfaces/IACLManager.sol";
 contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
 
-    mapping(uint256 => Agreement) private agreements;
-
-    uint248 public agreementCount;
+    mapping(bytes32 => AgreementStatus) private agreementStatus;
     bool public frozen;
 
     IPool private immutable POOL;
@@ -69,23 +67,28 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         uint256[] calldata tokenIdsOrAmounts,
         address beneficiary,
         uint48 releaseTime
-    ) external onlyXToken(asset) returns (uint256) {
+    ) external onlyXToken(asset) returns (Agreement memory) {
         require(beneficiary != address(0), "Beneficiary cant be zero address");
         require(releaseTime > block.timestamp, "Release time not valid");
 
-        uint256 agreementId = agreementCount++;
-        agreements[agreementId] = Agreement({
+        Agreement memory agreement = Agreement({
             assetType: assetType,
             actionType: actionType,
             asset: asset,
             tokenIdsOrAmounts: tokenIdsOrAmounts,
             beneficiary: beneficiary,
-            releaseTime: releaseTime,
-            isFrozen: false
+            releaseTime: releaseTime
         });
 
+        bytes32 agreementHash = _getAgreementHash(agreement);
+        require(
+            agreementStatus[agreementHash] == AgreementStatus.NoExist,
+            "Agreement already exist"
+        );
+        agreementStatus[agreementHash] = AgreementStatus.Active;
+
         emit AgreementCreated(
-            agreementId,
+            agreementHash,
             assetType,
             actionType,
             asset,
@@ -94,41 +97,41 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             releaseTime
         );
 
-        return agreementId;
+        return agreement;
     }
 
-    function _validateAndDeleteAgreement(uint256 agreementId)
+    function _getAgreementHash(Agreement memory agreement)
         internal
-        returns (Agreement memory)
+        pure
+        returns (bytes32)
     {
-        Agreement memory agreement = agreements[agreementId];
+        return keccak256(abi.encode(agreement));
+    }
+
+    function _validateAgreement(Agreement memory agreement)
+        internal
+        view
+        returns (bytes32)
+    {
         require(msg.sender == agreement.beneficiary, "Not beneficiary");
         require(
             block.timestamp >= agreement.releaseTime,
             "Release time not reached"
         );
-        require(!agreement.isFrozen, "Agreement frozen");
-        delete agreements[agreementId];
-
-        emit AgreementClaimed(
-            agreementId,
-            agreement.assetType,
-            agreement.actionType,
-            agreement.asset,
-            agreement.tokenIdsOrAmounts,
-            agreement.beneficiary
+        bytes32 agreementHash = _getAgreementHash(agreement);
+        require(
+            agreementStatus[agreementHash] == AgreementStatus.Active,
+            "Agreement not exist or frozen"
         );
-
-        return agreement;
+        return agreementHash;
     }
 
-    function claim(uint256[] calldata agreementIds) external nonReentrant {
+    function claim(Agreement[] calldata agreements) external nonReentrant {
         require(!frozen, "TimeLock is frozen");
 
-        for (uint256 index = 0; index < agreementIds.length; index++) {
-            Agreement memory agreement = _validateAndDeleteAgreement(
-                agreementIds[index]
-            );
+        for (uint256 index = 0; index < agreements.length; index++) {
+            Agreement memory agreement = agreements[index];
+            bytes32 agreementHash = _validateAgreement(agreement);
 
             if (agreement.assetType == DataTypes.AssetType.ERC20) {
                 IERC20(agreement.asset).safeTransfer(
@@ -167,19 +170,32 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
                     }
                 }
             }
+
+            delete agreementStatus[agreementHash];
+
+            emit AgreementClaimed(
+                agreementHash,
+                agreement.assetType,
+                agreement.actionType,
+                agreement.asset,
+                agreement.tokenIdsOrAmounts,
+                agreement.beneficiary
+            );
         }
     }
 
-    function freezeAgreement(uint256 agreementId)
+    function freezeAgreement(bytes32 agreementId)
         external
         onlyEmergencyAdminOrPoolAdmins
     {
-        agreements[agreementId].isFrozen = true;
+        require(agreementStatus[agreementId] == AgreementStatus.Active);
+        agreementStatus[agreementId] = AgreementStatus.Frozen;
         emit AgreementFrozen(agreementId, true);
     }
 
-    function unfreezeAgreement(uint256 agreementId) external onlyPoolAdmin {
-        agreements[agreementId].isFrozen = false;
+    function unfreezeAgreement(bytes32 agreementId) external onlyPoolAdmin {
+        require(agreementStatus[agreementId] == AgreementStatus.Frozen);
+        agreementStatus[agreementId] = AgreementStatus.Active;
         emit AgreementFrozen(agreementId, false);
     }
 
@@ -191,14 +207,6 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     function unfreezeAllAgreements() external onlyPoolAdmin {
         frozen = false;
         emit TimeLockFrozen(false);
-    }
-
-    function getAgreement(uint256 agreementId)
-        external
-        view
-        returns (Agreement memory agreement)
-    {
-        agreement = agreements[agreementId];
     }
 
     function onERC721Received(

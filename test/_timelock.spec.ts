@@ -11,6 +11,118 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {eContractid} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
+import {IPool, ITimeLock, TimeLock} from "../types";
+import {PromiseOrValue} from "../types/common";
+import {BigNumberish, Signer, utils} from "ethers";
+
+const agreementEventSig = utils.keccak256(
+  utils.toUtf8Bytes(
+    "AgreementCreated(bytes32,uint8,uint8,address,uint256[],address,uint48)"
+  )
+);
+const withdrawEventSig = utils.keccak256(
+  utils.toUtf8Bytes("Withdraw(address,address,address,uint256)")
+);
+
+const wrapBorrowERC20 = async (
+  pool: IPool,
+  signer: Signer,
+  timeLockProxy: TimeLock,
+  asset: PromiseOrValue<string>,
+  amount: PromiseOrValue<BigNumberish>,
+  to: PromiseOrValue<string>
+): Promise<ITimeLock.AgreementStruct> => {
+  const tx = await waitForTx(
+    await pool.connect(signer).borrow(asset, amount, 0, to, {
+      gasLimit: 5000000,
+    })
+  );
+
+  const agreementEvents = tx.logs.filter(
+    ({topics}) => topics[0] === agreementEventSig
+  );
+
+  const parsedAgreementEvent = timeLockProxy.interface.parseLog(
+    agreementEvents[0]
+  );
+
+  return {
+    assetType: parsedAgreementEvent.args.assetType,
+    actionType: parsedAgreementEvent.args.actionType,
+    asset: asset,
+    beneficiary: to,
+    tokenIdsOrAmounts: [amount],
+    releaseTime: parsedAgreementEvent.args.releaseTime,
+  };
+};
+
+const wrapWithdrawERC20 = async (
+  pool: IPool,
+  signer: Signer,
+  timeLockProxy: TimeLock,
+  asset: PromiseOrValue<string>,
+  amount: PromiseOrValue<BigNumberish>,
+  to: PromiseOrValue<string>
+): Promise<ITimeLock.AgreementStruct> => {
+  const tx = await waitForTx(
+    await pool.connect(signer).withdraw(asset, amount, to, {
+      gasLimit: 5000000,
+    })
+  );
+
+  const agreementEvents = tx.logs.filter(
+    ({topics}) => topics[0] === agreementEventSig
+  );
+  const withdrawEvents = tx.logs.filter(
+    ({topics}) => topics[0] === withdrawEventSig
+  );
+
+  const parsedAgreementEvent = timeLockProxy.interface.parseLog(
+    agreementEvents[0]
+  );
+  const parsedWithdrawEvent = pool.interface.parseLog(withdrawEvents[0]);
+
+  return {
+    assetType: parsedAgreementEvent.args.assetType,
+    actionType: parsedAgreementEvent.args.actionType,
+    asset: asset,
+    beneficiary: to,
+    tokenIdsOrAmounts: [parsedWithdrawEvent.args.amount],
+    releaseTime: parsedAgreementEvent.args.releaseTime,
+  };
+};
+
+const wrapWithdrawERC721 = async (
+  pool: IPool,
+  signer: Signer,
+  timeLockProxy: TimeLock,
+  asset: PromiseOrValue<string>,
+  tokenIds: PromiseOrValue<BigNumberish>[],
+  to: PromiseOrValue<string>
+): Promise<ITimeLock.AgreementStruct> => {
+  const tx = await waitForTx(
+    await pool.connect(signer).withdrawERC721(asset, tokenIds, to, {
+      gasLimit: 5000000,
+    })
+  );
+
+  const agreementEvents = tx.logs.filter(
+    ({topics}) => topics[0] === agreementEventSig
+  );
+
+  const parsedAgreementEvent = timeLockProxy.interface.parseLog(
+    agreementEvents[0]
+  );
+
+  return {
+    assetType: parsedAgreementEvent.args.assetType,
+    actionType: parsedAgreementEvent.args.actionType,
+    asset: asset,
+    beneficiary: to,
+    tokenIdsOrAmounts: tokenIds,
+    releaseTime: parsedAgreementEvent.args.releaseTime,
+  };
+};
 
 describe("TimeLock functionality tests", () => {
   const minTime = 5;
@@ -120,12 +232,13 @@ describe("TimeLock functionality tests", () => {
     const amount = await convertToCurrencyDecimals(usdc.address, "100");
     //FIXME(alan): may we have a error code for this.
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .borrow(usdc.address, amount, "0", user1.address, {
-          gasLimit: 5000000,
-        })
+    const agreement = await wrapBorrowERC20(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      usdc.address,
+      amount,
+      user1.address
     );
 
     await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
@@ -134,7 +247,9 @@ describe("TimeLock functionality tests", () => {
 
     await advanceTimeAndBlock(10);
 
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
 
     const balanceAfter = await usdc.balanceOf(user1.address);
 
@@ -151,12 +266,13 @@ describe("TimeLock functionality tests", () => {
     const amount = await convertToCurrencyDecimals(usdc.address, "1200");
     //FIXME(alan): may we have a error code for this.
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .borrow(usdc.address, amount, "0", user1.address, {
-          gasLimit: 5000000,
-        })
+    const agreement = await wrapBorrowERC20(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      usdc.address,
+      amount,
+      user1.address
     );
 
     await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
@@ -165,12 +281,14 @@ describe("TimeLock functionality tests", () => {
 
     await advanceTimeAndBlock(10);
 
-    await expect(timeLockProxy.connect(user1.signer).claim(["0"])).to.be
+    await expect(timeLockProxy.connect(user1.signer).claim([agreement])).to.be
       .reverted;
 
     await advanceTimeAndBlock(300);
 
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
     const balanceAfter = await usdc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
@@ -186,12 +304,13 @@ describe("TimeLock functionality tests", () => {
     const amount = await convertToCurrencyDecimals(usdc.address, "2200");
     //FIXME(alan): may we have a error code for this.
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .borrow(usdc.address, amount, "0", user1.address, {
-          gasLimit: 5000000,
-        })
+    const agreement = await wrapBorrowERC20(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      usdc.address,
+      amount,
+      user1.address
     );
 
     await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
@@ -200,12 +319,14 @@ describe("TimeLock functionality tests", () => {
 
     await advanceTimeAndBlock(300);
 
-    await expect(timeLockProxy.connect(user1.signer).claim(["0"])).to.be
+    await expect(timeLockProxy.connect(user1.signer).claim([agreement])).to.be
       .reverted;
 
     await advanceTimeAndBlock(3400);
 
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
     const balanceAfter = await usdc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
@@ -222,16 +343,19 @@ describe("TimeLock functionality tests", () => {
 
     const balanceBefore = await dai.balanceOf(user1.address);
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .withdraw(dai.address, amount, user1.address, {
-          gasLimit: 5000000,
-        })
+    const agreement = await wrapWithdrawERC20(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      dai.address,
+      amount,
+      user1.address
     );
 
     await advanceTimeAndBlock(10);
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
     const balanceAfter = await dai.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
@@ -248,20 +372,23 @@ describe("TimeLock functionality tests", () => {
 
     const balanceBefore = await dai.balanceOf(user1.address);
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .withdraw(dai.address, amount, user1.address, {
-          gasLimit: 5000000,
-        })
+    const agreement = await wrapWithdrawERC20(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      dai.address,
+      amount,
+      user1.address
     );
 
     await advanceTimeAndBlock(10);
-    await expect(timeLockProxy.connect(user1.signer).claim(["0"])).to.be
+    await expect(timeLockProxy.connect(user1.signer).claim([agreement])).to.be
       .reverted;
 
     await advanceTimeAndBlock(300);
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
 
     const balanceAfter = await dai.balanceOf(user1.address);
     await expect(balanceAfter).to.be.eq(balanceBefore.add(amount));
@@ -278,21 +405,22 @@ describe("TimeLock functionality tests", () => {
 
     const balanceBefore = await dai.balanceOf(user1.address);
 
+    const agreements: ITimeLock.AgreementStruct[] = [];
     for (let index = 0; index < 10; index++) {
-      await waitForTx(
-        await pool
-          .connect(user1.signer)
-          .withdraw(dai.address, amount, user1.address, {
-            gasLimit: 5000000,
-          })
+      const agreement = await wrapWithdrawERC20(
+        pool,
+        user1.signer,
+        timeLockProxy,
+        dai.address,
+        amount,
+        user1.address
       );
+      agreements.push(agreement);
     }
 
     await advanceTimeAndBlock(10);
     await waitForTx(
-      await timeLockProxy
-        .connect(user1.signer)
-        .claim(Array.from(Array(10).keys()))
+      await timeLockProxy.connect(user1.signer).claim(agreements)
     );
 
     const balanceAfter = await dai.balanceOf(user1.address);
@@ -310,16 +438,19 @@ describe("TimeLock functionality tests", () => {
 
     const pDaiBalance = await pDai.balanceOf(user1.address);
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .withdraw(dai.address, MAX_UINT_AMOUNT, user1.address, {
-          gasLimit: 5000000,
-        })
+    const agreement = await wrapWithdrawERC20(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      dai.address,
+      MAX_UINT_AMOUNT,
+      user1.address
     );
 
     await advanceTimeAndBlock(36 * 3600);
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
 
     const balanceAfter = await dai.balanceOf(user1.address);
     await expect(balanceAfter).to.be.closeTo(pDaiBalance, amount);
@@ -334,16 +465,19 @@ describe("TimeLock functionality tests", () => {
 
     const balanceBefore = await mayc.balanceOf(user1.address);
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .withdrawERC721(mayc.address, ["0"], user1.address, {
-          gasLimit: 5000000,
-        })
+    const agreement = await wrapWithdrawERC721(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      mayc.address,
+      ["0"],
+      user1.address
     );
 
     await advanceTimeAndBlock(10);
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
     const balanceAfter = await mayc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(1));
@@ -358,25 +492,23 @@ describe("TimeLock functionality tests", () => {
 
     const balanceBefore = await mayc.balanceOf(user1.address);
 
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .withdrawERC721(
-          mayc.address,
-          Array.from(Array(7).keys()),
-          user1.address,
-          {
-            gasLimit: 5000000,
-          }
-        )
+    const agreement = await wrapWithdrawERC721(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      mayc.address,
+      Array.from(Array(7).keys()),
+      user1.address
     );
 
     await advanceTimeAndBlock(10);
-    await expect(timeLockProxy.connect(user1.signer).claim(["0"])).to.be
+    await expect(timeLockProxy.connect(user1.signer).claim([agreement])).to.be
       .reverted;
 
     await advanceTimeAndBlock(4000);
-    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
     const balanceAfter = await mayc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(7));
@@ -391,21 +523,22 @@ describe("TimeLock functionality tests", () => {
 
     const balanceBefore = await mayc.balanceOf(user1.address);
 
+    const agreements: ITimeLock.AgreementStruct[] = [];
     for (let index = 0; index < 10; index++) {
-      await waitForTx(
-        await pool
-          .connect(user1.signer)
-          .withdrawERC721(mayc.address, [index], user1.address, {
-            gasLimit: 5000000,
-          })
+      const agreement = await wrapWithdrawERC721(
+        pool,
+        user1.signer,
+        timeLockProxy,
+        mayc.address,
+        [index],
+        user1.address
       );
+      agreements.push(agreement);
     }
 
     await advanceTimeAndBlock(4000);
     await waitForTx(
-      await timeLockProxy
-        .connect(user1.signer)
-        .claim(Array.from(Array(10).keys()))
+      await timeLockProxy.connect(user1.signer).claim(agreements)
     );
     const balanceAfter = await mayc.balanceOf(user1.address);
 
@@ -421,21 +554,22 @@ describe("TimeLock functionality tests", () => {
 
     const balanceBefore = await moonbirds.balanceOf(user1.address);
 
+    const agreements: ITimeLock.AgreementStruct[] = [];
     for (let index = 0; index < 10; index++) {
-      await waitForTx(
-        await pool
-          .connect(user1.signer)
-          .withdrawERC721(moonbirds.address, [index], user1.address, {
-            gasLimit: 5000000,
-          })
+      const agreement = await wrapWithdrawERC721(
+        pool,
+        user1.signer,
+        timeLockProxy,
+        moonbirds.address,
+        [index],
+        user1.address
       );
+      agreements.push(agreement);
     }
 
     await advanceTimeAndBlock(4000);
     await waitForTx(
-      await timeLockProxy
-        .connect(user1.signer)
-        .claim(Array.from(Array(10).keys()))
+      await timeLockProxy.connect(user1.signer).claim(agreements)
     );
     const balanceAfter = await moonbirds.balanceOf(user1.address);
 
@@ -450,36 +584,42 @@ describe("TimeLock functionality tests", () => {
       moonbirds,
     } = await loadFixture(fixture);
 
-    const balanceBefore = await moonbirds.balanceOf(user1.address);
+    const moonbirdsBalanceBefore = await moonbirds.balanceOf(user1.address);
+    const maycBalanceBefore = await mayc.balanceOf(user1.address);
 
+    const agreements: ITimeLock.AgreementStruct[] = [];
     for (let index = 0; index < 2; index++) {
-      await waitForTx(
-        await pool
-          .connect(user1.signer)
-          .withdrawERC721(moonbirds.address, [index], user1.address, {
-            gasLimit: 5000000,
-          })
+      const agreement = await wrapWithdrawERC721(
+        pool,
+        user1.signer,
+        timeLockProxy,
+        moonbirds.address,
+        [index],
+        user1.address
       );
+      agreements.push(agreement);
     }
 
     for (let index = 0; index < 2; index++) {
-      await waitForTx(
-        await pool
-          .connect(user1.signer)
-          .withdrawERC721(mayc.address, [index], user1.address, {
-            gasLimit: 5000000,
-          })
+      const agreement = await wrapWithdrawERC721(
+        pool,
+        user1.signer,
+        timeLockProxy,
+        mayc.address,
+        [index],
+        user1.address
       );
+      agreements.push(agreement);
     }
 
     await advanceTimeAndBlock(4000);
     await waitForTx(
-      await timeLockProxy
-        .connect(user1.signer)
-        .claim(Array.from(Array(4).keys()))
+      await timeLockProxy.connect(user1.signer).claim(agreements)
     );
-    const balanceAfter = await moonbirds.balanceOf(user1.address);
+    const moonbirdsBalanceAfter = await moonbirds.balanceOf(user1.address);
+    const maycBalanceAfter = await mayc.balanceOf(user1.address);
 
-    await expect(balanceAfter).to.be.eq(balanceBefore.add(2));
+    await expect(moonbirdsBalanceAfter).to.be.eq(moonbirdsBalanceBefore.add(2));
+    await expect(maycBalanceAfter).to.be.eq(maycBalanceBefore.add(2));
   });
 });

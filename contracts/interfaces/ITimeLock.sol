@@ -5,10 +5,15 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /** @title ITimeLock interface for the TimeLock smart contract */
 interface ITimeLock {
+    enum AgreementStatus {
+        NoExist,
+        Active,
+        Frozen
+    }
+
     /** @dev Struct representing a time-lock agreement
      * @param assetType Type of the asset involved
      * @param actionType Type of action for the time-lock
-     * @param isFrozen Indicates if the agreement is frozen
      * @param asset Address of the asset
      * @param beneficiary Address of the beneficiary
      * @param releaseTime Timestamp when the assets can be claimed
@@ -17,7 +22,6 @@ interface ITimeLock {
     struct Agreement {
         DataTypes.AssetType assetType;
         DataTypes.TimeLockActionType actionType;
-        bool isFrozen;
         address asset;
         address beneficiary;
         uint48 releaseTime;
@@ -34,7 +38,7 @@ interface ITimeLock {
      * @param releaseTime Timestamp when the assets can be claimed
      */
     event AgreementCreated(
-        uint256 agreementId,
+        bytes32 agreementId,
         DataTypes.AssetType assetType,
         DataTypes.TimeLockActionType actionType,
         address indexed asset,
@@ -52,7 +56,7 @@ interface ITimeLock {
      * @param beneficiary Address of the beneficiary
      */
     event AgreementClaimed(
-        uint256 agreementId,
+        bytes32 agreementId,
         DataTypes.AssetType assetType,
         DataTypes.TimeLockActionType actionType,
         address indexed asset,
@@ -64,7 +68,7 @@ interface ITimeLock {
      * @param agreementId ID of the affected agreement
      * @param value Indicates whether the agreement is frozen (true) or unfrozen (false)
      */
-    event AgreementFrozen(uint256 agreementId, bool value);
+    event AgreementFrozen(bytes32 agreementId, bool value);
 
     /** @notice Event emitted when the entire TimeLock contract is frozen or unfrozen
      * @param value Indicates whether the contract is frozen (true) or unfrozen (false)
@@ -78,7 +82,7 @@ interface ITimeLock {
      * @param tokenIdsOrAmounts Array of token IDs or amounts
      * @param beneficiary Address of the beneficiary
      * @param releaseTime Timestamp when the assets can be claimed
-     * @return agreementId Returns the ID of the created agreement
+     * @return Returns the created agreement
      */
     function createAgreement(
         DataTypes.AssetType assetType,
@@ -87,22 +91,22 @@ interface ITimeLock {
         uint256[] memory tokenIdsOrAmounts,
         address beneficiary,
         uint48 releaseTime
-    ) external returns (uint256 agreementId);
+    ) external returns (Agreement memory);
 
     /** @dev Function to claim assets from time-lock agreements
-     * @param agreementIds Array of agreement IDs to be claimed
+     * @param agreements Array of agreements to be claimed
      */
-    function claim(uint256[] calldata agreementIds) external;
+    function claim(Agreement[] calldata agreements) external;
 
     /** @dev Function to freeze a specific time-lock agreement
      * @param agreementId ID of the agreement to be frozen
      */
-    function freezeAgreement(uint256 agreementId) external;
+    function freezeAgreement(bytes32 agreementId) external;
 
     /** @dev Function to unfreeze a specific time-lock agreement
      * @param agreementId ID of the agreement to be unfrozen
      */
-    function unfreezeAgreement(uint256 agreementId) external;
+    function unfreezeAgreement(bytes32 agreementId) external;
 
     /** @dev Function to freeze all time-lock agreements
      * @notice This function can only be called by an authorized user
