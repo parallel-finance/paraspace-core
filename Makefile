@@ -576,6 +576,10 @@ facet-function-selectors:
 rescue-erc20-from-ntoken:
 	make TASK_NAME=rescue-erc20-from-ntoken run-task
 
+.PHONY: unfreeze-agreement
+unfreeze-agreement:
+	make TASK_NAME=unfreeze-agreement run-task
+
 .PHONY: upgrade
 upgrade:
 	make TASK_NAME=upgrade:all run-task
