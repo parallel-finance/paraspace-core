@@ -47,7 +47,7 @@ interface IPToken is
         address receiverOfUnderlying,
         uint256 amount,
         uint256 index,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external;
 
     /**
@@ -78,7 +78,7 @@ interface IPToken is
     function transferUnderlyingTo(
         address user,
         uint256 amount,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external;
 
     /**

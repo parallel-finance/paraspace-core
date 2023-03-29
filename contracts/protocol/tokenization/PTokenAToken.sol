@@ -20,7 +20,7 @@ contract PTokenAToken is RebasingPToken {
     /**
      * @return Current rebasing index of aToken in RAY
      **/
-    function lastRebasingIndex() internal view override returns (uint256) {
+    function lastRebasingIndex() public view override returns (uint256) {
         // Returns Aave aToken liquidity index
         return
             IAToken(_underlyingAsset).POOL().getReserveNormalizedIncome(

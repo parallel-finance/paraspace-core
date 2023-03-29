@@ -49,7 +49,7 @@ contract PTokenSApe is PToken {
         address,
         uint256,
         uint256,
-        DataTypes.TimeLockParams calldata
+        DataTypes.TimeLockParams memory
     ) external virtual override onlyPool {
         revert("not allowed");
     }
@@ -72,7 +72,7 @@ contract PTokenSApe is PToken {
     function transferUnderlyingTo(
         address,
         uint256,
-        DataTypes.TimeLockParams calldata
+        DataTypes.TimeLockParams memory
     ) external virtual override onlyPool {
         revert("not allowed");
     }

@@ -9,6 +9,7 @@ import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.s
 import {ReentrancyGuardUpgradeable} from "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.sol";
 import {EnumerableSet} from "../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {ITimeLock} from "../interfaces/ITimeLock.sol";
+import {IRebasingPToken} from "../interfaces/IRebasingPToken.sol";
 import {IMoonBird} from "../dependencies/erc721-collections/IMoonBird.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
@@ -16,6 +17,7 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
+import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 
 contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
@@ -134,10 +136,25 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             bytes32 agreementHash = _validateAgreement(agreement);
 
             if (agreement.assetType == DataTypes.AssetType.ERC20) {
-                IERC20(agreement.asset).safeTransfer(
-                    agreement.beneficiary,
-                    agreement.tokenIdsOrAmounts[0]
-                );
+                if (
+                    agreement.actionType ==
+                    DataTypes.TimeLockActionType.REBASE_TOKEN_WITHDRAW
+                ) {
+                    address pToken = POOL.getReserveXToken(agreement.asset);
+                    uint256 rebaseIndex = IRebasingPToken(pToken)
+                        .lastRebasingIndex();
+                    uint256 rebaseAmount = (agreement.tokenIdsOrAmounts[0] *
+                        rebaseIndex) / WadRayMath.RAY;
+                    IERC20(agreement.asset).safeTransfer(
+                        agreement.beneficiary,
+                        rebaseAmount
+                    );
+                } else {
+                    IERC20(agreement.asset).safeTransfer(
+                        agreement.beneficiary,
+                        agreement.tokenIdsOrAmounts[0]
+                    );
+                }
             } else if (agreement.assetType == DataTypes.AssetType.ERC721) {
                 if (
                     agreement.actionType ==

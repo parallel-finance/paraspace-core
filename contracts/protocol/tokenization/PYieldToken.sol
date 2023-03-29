@@ -52,7 +52,7 @@ contract PYieldToken is PToken {
         address receiverOfUnderlying,
         uint256 amount,
         uint256 index,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external override onlyPool {
         _updateUserIndex(from, -int256(amount));
 

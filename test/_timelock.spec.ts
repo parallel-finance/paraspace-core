@@ -3,6 +3,7 @@ import {expect} from "chai";
 import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {
+  getAutoCompoundApe,
   getPoolConfiguratorProxy,
   getTimeLockProxy,
 } from "../helpers/contracts-getters";
@@ -10,10 +11,12 @@ import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {eContractid} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
-import {supplyAndValidate} from "./helpers/validated-steps";
-import {IPool, ITimeLock, TimeLock} from "../types";
+import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {AutoCompoundApe, IPool, ITimeLock, TimeLock} from "../types";
 import {PromiseOrValue} from "../types/common";
 import {BigNumberish, Signer, utils} from "ethers";
+import {parseEther} from "ethers/lib/utils";
+import {almostEqual} from "./helpers/uniswapv3-helper";
 
 const agreementEventSig = utils.keccak256(
   utils.toUtf8Bytes(
@@ -129,18 +132,60 @@ describe("TimeLock functionality tests", () => {
   const midTime = 300;
   const maxTime = 3600;
   let timeLockProxy;
+  let cApe: AutoCompoundApe;
+  let MINIMUM_LIQUIDITY;
 
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
     const {
+      ape,
+      apeCoinStaking,
       dai,
       usdc,
       pool,
       mayc,
       moonbirds,
-      users: [user1, user2],
+      users: [user1, user2, , , user3],
       poolAdmin,
     } = testEnv;
+
+    // User1 - Deposit cApe
+    cApe = await getAutoCompoundApe();
+    MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
+    await mintAndValidate(ape, "1000", user1);
+    await mintAndValidate(ape, "1", user3);
+    await waitForTx(
+      await ape.connect(user1.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await ape.connect(user3.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    // send extra tokens to the apestaking contract for rewards
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        ["mint(address,uint256)"](
+          apeCoinStaking.address,
+          parseEther("100000000000")
+        )
+    );
+    // user4 deposit MINIMUM_LIQUIDITY to make test case easy
+    await waitForTx(
+      await cApe.connect(user3.signer).deposit(user3.address, MINIMUM_LIQUIDITY)
+    );
+    await waitForTx(
+      await cApe
+        .connect(user1.signer)
+        .deposit(user1.address, parseEther("1000"))
+    );
+    await waitForTx(
+      await cApe.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supply(cApe.address, parseEther("1000"), user1.address, 0)
+    );
 
     // User 1 - Deposit dai
     await supplyAndValidate(dai, "20000000", user1, true);
@@ -165,6 +210,19 @@ describe("TimeLock functionality tests", () => {
       midTime.toString(),
       maxTime.toString(),
       midThreshold.mul(10).toString(),
+      (12 * 3600).toString(),
+      (24 * 3600).toString()
+    );
+
+    const cApeStrategy = await deployReserveTimeLockStrategy(
+      eContractid.DefaultTimeLockStrategy + "cApe",
+      pool.address,
+      parseEther("100").toString(),
+      parseEther("1000").toString(),
+      minTime.toString(),
+      midTime.toString(),
+      maxTime.toString(),
+      parseEther("10000").toString(),
       (12 * 3600).toString(),
       (24 * 3600).toString()
     );
@@ -211,6 +269,11 @@ describe("TimeLock functionality tests", () => {
       await poolConfigurator
         .connect(poolAdmin.signer)
         .setReserveTimeLockStrategyAddress(dai.address, defaultStrategy.address)
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(cApe.address, cApeStrategy.address)
     );
 
     return testEnv;
@@ -621,5 +684,33 @@ describe("TimeLock functionality tests", () => {
 
     await expect(moonbirdsBalanceAfter).to.be.eq(moonbirdsBalanceBefore.add(2));
     await expect(maycBalanceAfter).to.be.eq(maycBalanceBefore.add(2));
+  });
+
+  it("withdraw Rebase ERC20 should work as expected", async () => {
+    const {
+      pool,
+      users: [user1],
+    } = await loadFixture(fixture);
+
+    const agreement = await wrapWithdrawERC20(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      cApe.address,
+      MAX_UINT_AMOUNT,
+      user1.address
+    );
+
+    await expect(timeLockProxy.connect(user1.signer).claim([agreement])).to.be
+      .reverted;
+
+    await advanceTimeAndBlock(3600);
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
+
+    const balance = await cApe.balanceOf(user1.address);
+    // 1000 + 3600reward
+    almostEqual(balance, parseEther("4600"));
   });
 });

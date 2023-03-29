@@ -157,7 +157,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     function transferUnderlyingTo(
         address target,
         uint256 tokenId,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external virtual override onlyPool nonReentrant {
         address underlyingAsset = _ERC721Data.underlyingAsset;
         if (timeLockParams.releaseTime != 0) {

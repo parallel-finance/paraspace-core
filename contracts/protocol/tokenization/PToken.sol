@@ -111,7 +111,7 @@ contract PToken is
         address receiverOfUnderlying,
         uint256 amount,
         uint256 index,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external virtual override onlyPool {
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
@@ -214,7 +214,7 @@ contract PToken is
     function transferUnderlyingTo(
         address target,
         uint256 amount,
-        DataTypes.TimeLockParams calldata timeLockParams
+        DataTypes.TimeLockParams memory timeLockParams
     ) external virtual override onlyPool {
         if (timeLockParams.releaseTime != 0) {
             ITimeLock timeLock = POOL.TIME_LOCK();

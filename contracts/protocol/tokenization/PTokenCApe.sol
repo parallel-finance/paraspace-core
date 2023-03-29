@@ -20,7 +20,7 @@ contract PTokenCApe is RebasingPToken {
     /**
      * @return Current rebasing index of PsAPE in RAY
      **/
-    function lastRebasingIndex() internal view override returns (uint256) {
+    function lastRebasingIndex() public view override returns (uint256) {
         return ICApe(_underlyingAsset).getPooledApeByShares(WadRayMath.RAY);
     }
 

@@ -5,17 +5,20 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {IRebasingPToken} from "../../interfaces/IRebasingPToken.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
+import {ITimeLock} from "../../interfaces/ITimeLock.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
  * @title Rebasing PToken
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract RebasingPToken is PToken {
+contract RebasingPToken is PToken, IRebasingPToken {
     using WadRayMath for uint256;
     using SafeCast for uint256;
     using GPv2SafeERC20 for IERC20;
@@ -122,7 +125,7 @@ contract RebasingPToken is PToken {
     /**
      * @return Current rebasing index in RAY
      **/
-    function lastRebasingIndex() internal view virtual returns (uint256) {
+    function lastRebasingIndex() public view virtual returns (uint256) {
         // returns 1 RAY by default which makes it identical to PToken in behaviour
         return WadRayMath.RAY;
     }
@@ -135,6 +138,67 @@ contract RebasingPToken is PToken {
         returns (XTokenType)
     {
         return XTokenType.RebasingPToken;
+    }
+
+    function burn(
+        address from,
+        address receiverOfUnderlying,
+        uint256 amount,
+        uint256 index,
+        DataTypes.TimeLockParams memory timeLockParams
+    ) external virtual override onlyPool {
+        _burnScaled(from, receiverOfUnderlying, amount, index);
+        if (receiverOfUnderlying != address(this)) {
+            if (timeLockParams.releaseTime != 0) {
+                timeLockParams.actionType = DataTypes
+                    .TimeLockActionType
+                    .REBASE_TOKEN_WITHDRAW;
+                uint256 rebaseIndex = lastRebasingIndex();
+                uint256 shareAmount = (amount * WadRayMath.RAY) / rebaseIndex;
+                ITimeLock timeLock = POOL.TIME_LOCK();
+                uint256[] memory amounts = new uint256[](1);
+                amounts[0] = shareAmount;
+
+                timeLock.createAgreement(
+                    DataTypes.AssetType.ERC20,
+                    timeLockParams.actionType,
+                    _underlyingAsset,
+                    amounts,
+                    receiverOfUnderlying,
+                    timeLockParams.releaseTime
+                );
+                receiverOfUnderlying = address(timeLock);
+            }
+            IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+        }
+    }
+
+    function transferUnderlyingTo(
+        address target,
+        uint256 amount,
+        DataTypes.TimeLockParams memory timeLockParams
+    ) external virtual override onlyPool {
+        if (timeLockParams.releaseTime != 0) {
+            timeLockParams.actionType = DataTypes
+                .TimeLockActionType
+                .REBASE_TOKEN_WITHDRAW;
+            uint256 rebaseIndex = lastRebasingIndex();
+            uint256 shareAmount = (amount * WadRayMath.RAY) / rebaseIndex;
+            ITimeLock timeLock = POOL.TIME_LOCK();
+            uint256[] memory amounts = new uint256[](1);
+            amounts[0] = shareAmount;
+
+            timeLock.createAgreement(
+                DataTypes.AssetType.ERC20,
+                timeLockParams.actionType,
+                _underlyingAsset,
+                amounts,
+                target,
+                timeLockParams.releaseTime
+            );
+            target = address(timeLock);
+        }
+        IERC20(_underlyingAsset).safeTransfer(target, amount);
     }
 
     /**

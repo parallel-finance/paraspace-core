@@ -23,7 +23,7 @@ contract PTokenAStETH is RebasingPToken {
     /**
      * @return Current rebasing index of aToken in RAY
      **/
-    function lastRebasingIndex() internal view override returns (uint256) {
+    function lastRebasingIndex() public view override returns (uint256) {
         // Returns Aave aToken liquidity index
         address underlyingAsset = IAToken(_underlyingAsset)
             .UNDERLYING_ASSET_ADDRESS();
@@ -37,6 +37,6 @@ contract PTokenAStETH is RebasingPToken {
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
-        return XTokenType.PTokenAToken;
+        return XTokenType.PTokenAStETH;
     }
 }
