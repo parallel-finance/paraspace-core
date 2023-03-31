@@ -269,6 +269,7 @@ describe("ERC-721 Liquidation", () => {
         borrower.address,
         0,
         parseEther("2").toString(),
+        0,
         false,
         {gasLimit: 5000000}
       );
@@ -358,6 +359,7 @@ describe("ERC-721 Liquidation", () => {
           borrower.address,
           0,
           liquidationAmount,
+          0,
           false,
           {
             gasLimit: 5000000,

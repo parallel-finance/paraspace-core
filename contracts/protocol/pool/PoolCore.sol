@@ -446,6 +446,7 @@ contract PoolCore is
             DataTypes.ExecuteLiquidateParams({
                 reservesCount: ps._reservesCount,
                 liquidationAmount: liquidationAmount,
+                creditAmount: 0,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 weth: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
@@ -466,6 +467,7 @@ contract PoolCore is
         address borrower,
         uint256 collateralTokenId,
         uint256 maxLiquidationAmount,
+        uint256 creditAmount,
         bool receiveNToken
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
@@ -477,6 +479,7 @@ contract PoolCore is
             DataTypes.ExecuteLiquidateParams({
                 reservesCount: ps._reservesCount,
                 liquidationAmount: maxLiquidationAmount,
+                creditAmount: creditAmount,
                 auctionRecoveryHealthFactor: ps._auctionRecoveryHealthFactor,
                 weth: ADDRESSES_PROVIDER.getWETH(),
                 collateralAsset: collateralAsset,
