@@ -11,10 +11,18 @@ import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/
 import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
 import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
 import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
+import {deployLoanVaultImpl} from "./contracts-deployments";
 
 export enum AssetType {
   ERC20 = 0,
   ERC721 = 1,
+}
+
+export enum StakingProvider {
+  Validator = 0,
+  Lido = 1,
+  RocketPool = 2,
+  Coinbase = 3,
 }
 
 export enum DryRunExecutor {
@@ -89,6 +97,7 @@ export type ParaSpaceLibraryAddresses =
 export enum eEthereumNetwork {
   kovan = "kovan",
   ropsten = "ropsten",
+  zhejiang = "zhejiang",
   goerli = "goerli",
   mainnet = "mainnet",
   hardhat = "hardhat",
@@ -102,6 +111,8 @@ export enum eEthereumNetwork {
 
 export enum eContractid {
   PoolAddressesProvider = "PoolAddressesProvider",
+  MockStableDebtToken = "MockStableDebtToken",
+  StableDebtToken = "StableDebtToken",
   MintableERC20 = "MintableERC20",
   MintableERC721 = "MintableERC721",
   MintableDelegationERC20 = "MintableDelegationERC20",
@@ -228,12 +239,16 @@ export enum eContractid {
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
+  PoolETHWithdrawImpl = "PoolETHWithdrawImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
+  ATokenStableDebtToken = "ATokenStableDebtToken",
+  StETHStableDebtToken = "StETHStableDebtToken",
   StETHDebtToken = "StETHDebtToken",
   CApeDebtToken = "CApeDebtToken",
+  CApeStableDebtToken = "CApeStableDebtToken",
   AStETHDebtToken = "AStETHDebtToken",
   ApeStakingLogic = "ApeStakingLogic",
   MintableERC721Logic = "MintableERC721Logic",
@@ -249,6 +264,8 @@ export enum eContractid {
   MultiSendCallOnly = "MultiSendCallOnly",
   cAPE = "cAPE",
   cAPEImpl = "cAPEImpl",
+  ETHWithdrawalNFT = "ETHWithdrawalNFT",
+  ETHWithdrawalNFTImpl = "ETHWithdrawalNFTImpl",
   P2PPairStaking = "P2PPairStaking",
   HelperContractImpl = "HelperContractImpl",
   HelperContract = "HelperContract",
@@ -258,7 +275,12 @@ export enum eContractid {
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
   MockedDelegateRegistry = "MockedDelegateRegistry",
   MockMultiAssetAirdropProject = "MockMultiAssetAirdropProject",
+  MockedETHWithdrawNFT = "MockedETHWithdrawNFT",
+  LoanVault = "LoanVault",
+  LoanVaultImpl = "LoanVaultImpl",
   ParaSpaceAirdrop = "ParaSpaceAirdrop",
+  DepositContract = "DepositContract",
+  ETHValidatorStakingStrategy = "ETHValidatorStakingStrategy",
   TimeLockProxy = "TimeLockProxy",
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
@@ -398,6 +420,10 @@ export enum ProtocolErrors {
   EMEGENCY_DISABLE_CALL = "emergency disable call",
 
   MAKER_SAME_AS_TAKER = "132",
+  INVALID_LOAN_STATE = "133", // invalid term loan status
+  INVALID_BORROW_ASSET = "134", // invalid borrow asset for collateral
+  INVALID_PRESENT_VALUE = "135", // invalid present value
+  USAGE_RATIO_TOO_HIGH = "136", // usage ratio too high after borrow
 }
 
 export type tEthereumAddress = string;
@@ -573,6 +599,11 @@ export interface IInterestRateStrategyParams {
   baseVariableBorrowRate: string;
   variableRateSlope1: string;
   variableRateSlope2: string;
+  stableRateSlope1: string;
+  stableRateSlope2: string;
+  baseStableRateOffset: string;
+  stableRateExcessOffset: string;
+  optimalStableToTotalDebtRatio: string;
 }
 
 export interface IAuctionStrategyParams {
@@ -601,6 +632,7 @@ export interface ITimeLockStrategyParams {
 
 export interface IReserveBorrowParams {
   borrowingEnabled: boolean;
+  stableBorrowRateEnabled: boolean;
   reserveDecimals: string;
   borrowCap: string;
 }
@@ -622,6 +654,7 @@ export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.kovan]: T;
   [eEthereumNetwork.ropsten]: T;
+  [eEthereumNetwork.zhejiang]: T;
   [eEthereumNetwork.goerli]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;
@@ -724,6 +757,7 @@ export interface ICommonConfiguration {
   MarketId: string;
   ParaSpaceTeam: tEthereumAddress;
   PTokenNamePrefix: string;
+  StableDebtTokenNamePrefix: string;
   VariableDebtTokenNamePrefix: string;
   SymbolPrefix: string;
   ProviderId: number;

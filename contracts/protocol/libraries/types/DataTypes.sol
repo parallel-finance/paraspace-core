@@ -2,6 +2,8 @@
 pragma solidity 0.8.10;
 
 import {OfferItem, ConsiderationItem} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
+import {EnumerableSet} from "../../../dependencies/openzeppelin/contracts/EnumerableSet.sol";
+import {Counters} from "../../../dependencies/openzeppelin/contracts/Counters.sol";
 
 library DataTypes {
     enum AssetType {
@@ -39,6 +41,10 @@ library DataTypes {
         uint128 accruedToTreasury;
         // timelock strategy
         address timeLockStrategyAddress;
+        //the current stable borrow rate. Expressed in ray
+        uint128 currentStableBorrowRate;
+        //stableDebtToken address
+        address stableDebtTokenAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -88,9 +94,20 @@ library DataTypes {
         bool isAuctioned;
     }
 
+    enum InterestRateMode {
+        NONE,
+        STABLE,
+        VARIABLE
+    }
+
     struct ReserveCache {
         uint256 currScaledVariableDebt;
         uint256 nextScaledVariableDebt;
+        uint256 currPrincipalStableDebt;
+        uint256 currAvgStableBorrowRate;
+        uint256 currTotalStableDebt;
+        uint256 nextAvgStableBorrowRate;
+        uint256 nextTotalStableDebt;
         uint256 currLiquidityIndex;
         uint256 nextLiquidityIndex;
         uint256 currVariableBorrowIndex;
@@ -100,8 +117,10 @@ library DataTypes {
         uint256 reserveFactor;
         ReserveConfigurationMap reserveConfiguration;
         address xTokenAddress;
+        address stableDebtTokenAddress;
         address variableDebtTokenAddress;
         uint40 reserveLastUpdateTimestamp;
+        uint40 stableDebtLastUpdateTimestamp;
     }
 
     struct ExecuteLiquidateParams {
@@ -274,7 +293,9 @@ library DataTypes {
     struct CalculateInterestRatesParams {
         uint256 liquidityAdded;
         uint256 liquidityTaken;
+        uint256 totalStableDebt;
         uint256 totalVariableDebt;
+        uint256 averageStableBorrowRate;
         uint256 reserveFactor;
         address reserve;
         address xToken;
@@ -283,6 +304,7 @@ library DataTypes {
     struct InitReserveParams {
         address asset;
         address xTokenAddress;
+        address stableDebtAddress;
         address variableDebtAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
@@ -374,6 +396,46 @@ library DataTypes {
         uint256 swapPercent;
     }
 
+    /**
+     * @dev Enum describing the current state of a loan
+     * State change flow:
+     *  None -> Active -> RepaidByUser
+     *                 -> Settled
+     */
+    enum LoanState {
+        // Default status
+        None,
+        // Status after the loan has been created
+        Active,
+        // The loan has been repaid by user, and the user will get the collateral. This is a terminal state.
+        Repaid,
+        // The loan has been repaid by system, and the collateral has redeemed to system asset
+        Settled
+    }
+
+    struct TermLoanData {
+        //the id of the loan
+        uint256 loanId;
+        //the current state of the loan
+        LoanState state;
+        //loan start timestamp
+        uint40 startTime;
+        //address of borrower
+        address borrower;
+        //address of collateral asset token
+        address collateralAsset;
+        //the token id or collateral amount of collateral token
+        uint64 collateralTokenId;
+        //the amount of collateral token
+        uint64 collateralAmount;
+        //address of borrow asset
+        address borrowAsset;
+        //amount of borrow asset
+        uint256 borrowAmount;
+        //discount rate when created the loan
+        uint256 discountRate;
+    }
+
     struct PoolStorage {
         // Map of reserves and their data (underlyingAssetOfReserve => reserveData)
         mapping(address => ReserveData) _reserves;
@@ -390,6 +452,20 @@ library DataTypes {
         uint16 _apeCompoundFee;
         // Map of user's ape compound strategies
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
+        // Reserve storage for ape staking
+        uint256[20] __apeStakingReserve;
+        // loan creation fee rate
+        uint256 _loanCreationFeeRate;
+        // Map of collateral and borrowable ERC20 asset address set
+        mapping(address => EnumerableSet.AddressSet) _collateralBorrowableAsset;
+        // Loan Id Counter
+        Counters.Counter _loanIdCounter;
+        // Map of users address and their loanIds
+        mapping(address => uint256[]) _userLoanIds;
+        // Map of loanId and loan data
+        mapping(uint256 => DataTypes.TermLoanData) _termLoans;
+        // Reserve storage for ETH withdraw
+        uint256[20] __ethWithdrawReserve;
     }
 
     struct ReserveConfigData {
@@ -400,6 +476,7 @@ library DataTypes {
         uint256 reserveFactor;
         bool usageAsCollateralEnabled;
         bool borrowingEnabled;
+        bool stableBorrowRateEnabled;
         bool isActive;
         bool isFrozen;
         bool isPaused;

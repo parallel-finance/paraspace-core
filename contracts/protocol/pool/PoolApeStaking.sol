@@ -636,7 +636,9 @@ contract PoolApeStaking is
             DataTypes.SApeAddress
         ];
 
-        (bool isActive, , , bool isPaused, ) = reserve.configuration.getFlags();
+        (bool isActive, , , , bool isPaused, ) = reserve
+            .configuration
+            .getFlags();
 
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);

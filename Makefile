@@ -84,6 +84,10 @@ test-pool-initialization:
 test-ntoken:
 	make TEST_TARGET=_xtoken_ntoken.spec.ts test
 
+.PHONY: test-eth-withdrawal
+test-eth-withdrawal:
+	make TEST_TARGET=_eth_withdrawal.spec.ts test
+
 .PHONY: test-ntoken-punk
 test-ntoken-punk:
 	make TEST_TARGET=ntoken-punk.spec.ts test
@@ -428,9 +432,35 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
+.PHONY: setup-validators
+setup-validators:
+	make TASK_NAME=setup-validators run-task
+
+.PHONY: list-validators
+list-validators:
+	make TASK_NAME=list-validators run-task
+
+.PHONY: register-validators
+register-validators:
+	make TASK_NAME=register-validators run-task
+
+.PHONY: shutdown-validators
+shutdown-validators:
+	docker-compose \
+		-f app/docker-compose.yml \
+		down \
+		--volumes \
+		--remove-orphans > /dev/null 2>&1 || true
+	sudo rm -fr app || true
+	docker volume prune -f
+
 .PHONY: set-timelock-strategy
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
+
+.PHONY: upgrade-eth-instant-withdraw
+upgrade-eth-instant-withdraw:
+	make SCRIPT_PATH=./scripts/dev/12.update-eth-instant-withdraw.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
@@ -657,9 +687,12 @@ anvil:
 	anvil \
 		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
 		$(if $(FORK),--chain-id 522,--chain-id 31337) \
+		$(if $(DEPLOYER_MNEMONIC),--mnemonic "$(DEPLOYER_MNEMONIC)",) \
 		--tracing \
 		--host 0.0.0.0 \
+		--block-time 1 \
 		--state-interval 60 \
+		--timeout 300000 \
 		--dump-state state.json \
 		$(if $(wildcard state.json),--load-state state.json,) \
 		--disable-block-gas-limit \

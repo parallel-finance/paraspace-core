@@ -6,6 +6,7 @@ import {IPoolMarketplace} from "./IPoolMarketplace.sol";
 import {IPoolParameters} from "./IPoolParameters.sol";
 import {IParaProxyInterfaces} from "./IParaProxyInterfaces.sol";
 import "./IPoolApeStaking.sol";
+import "./IPoolInstantWithdraw.sol";
 
 /**
  * @title IPool
@@ -17,6 +18,7 @@ interface IPool is
     IPoolMarketplace,
     IPoolParameters,
     IPoolApeStaking,
+    IPoolInstantWithdraw,
     IParaProxyInterfaces
 {
 

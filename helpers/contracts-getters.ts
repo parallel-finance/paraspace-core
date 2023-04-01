@@ -85,6 +85,11 @@ import {
   AutoYieldApe__factory,
   PYieldToken__factory,
   HelperContract__factory,
+  DepositContract__factory,
+  ETHWithdrawalNFT__factory,
+  StableDebtToken__factory,
+  MockStableDebtToken__factory,
+  LoanVault__factory,
   MockCToken__factory,
   TimeLock__factory,
   HotWalletProxy__factory,
@@ -1219,12 +1224,67 @@ export const getBAYCSewerPass = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getDepositContract = async (address?: tEthereumAddress) =>
+  await DepositContract__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.DepositContract}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getStableDebtToken = async (address?: tEthereumAddress) =>
+  await StableDebtToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.StableDebtToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockStableDebtToken = async (address?: tEthereumAddress) =>
+  await MockStableDebtToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockStableDebtToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getLoanVault = async (address?: tEthereumAddress) =>
+  await LoanVault__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.LoanVault}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getTimeLockProxy = async (address?: tEthereumAddress) =>
   await TimeLock__factory.connect(
     address ||
       (
         await getDb()
           .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getETHWithdrawalNFT = async (address?: tEthereumAddress) =>
+  await ETHWithdrawalNFT__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ETHWithdrawalNFT}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

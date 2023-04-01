@@ -6,6 +6,7 @@ import {DataTypes} from "./DataTypes.sol";
 library ConfiguratorInputTypes {
     struct InitReserveInput {
         address xTokenImpl;
+        address stableDebtTokenImpl;
         address variableDebtTokenImpl;
         uint8 underlyingAssetDecimals;
         address interestRateStrategyAddress;
@@ -19,6 +20,8 @@ library ConfiguratorInputTypes {
         string xTokenSymbol;
         string variableDebtTokenName;
         string variableDebtTokenSymbol;
+        string stableDebtTokenName;
+        string stableDebtTokenSymbol;
         bytes params;
     }
 
@@ -47,6 +50,16 @@ library ConfiguratorInputTypes {
         string name;
         string symbol;
         address implementation;
+        bytes params;
+    }
+
+    struct ConfigStableDebtTokenInput {
+        address stableDebtTokenImpl;
+        address underlyingAsset;
+        address incentivesController;
+        uint8 underlyingAssetDecimals;
+        string stableDebtTokenName;
+        string stableDebtTokenSymbol;
         bytes params;
     }
 }

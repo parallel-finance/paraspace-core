@@ -2,7 +2,7 @@ import {task} from "hardhat/config";
 import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
 import {BigNumber} from "ethers";
-import {WAD} from "../../helpers/constants";
+import {RAY, WAD} from "../../helpers/constants";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
@@ -74,7 +74,11 @@ task("market-info", "Print markets info")
       console.log(
         " accruedToTreasury:",
         fromBn(
-          x.accruedToTreasury.mul(WAD).div(BigNumber.from(10).pow(x.decimals))
+          x.accruedToTreasury
+            .mul(x.liquidityIndex)
+            .div(RAY)
+            .mul(WAD)
+            .div(BigNumber.from(10).pow(x.decimals))
         )
       );
       console.log(" liquidityIndex:", fromBn(x.liquidityIndex, 27));

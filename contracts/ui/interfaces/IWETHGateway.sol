@@ -24,4 +24,11 @@ interface IWETHGateway {
         bytes32 permitR,
         bytes32 permitS
     ) external;
+
+    function createLoan(
+        address collateralAsset,
+        uint256 collateralTokenId,
+        uint256 collateralAmount,
+        uint16 referralCode
+    ) external;
 }
