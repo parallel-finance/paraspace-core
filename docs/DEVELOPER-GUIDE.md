@@ -25,21 +25,66 @@ make test
 make fast-test
 ```
 
-### Fork
+### Launch Goerli Fork
+
+1. Download artifacts
 
 ```
+wget https://paraspace-static-files.s3.amazonaws.com/contracts/goerli/latest/deployed-contracts.json
+```
 
+2. Prepare envs
+
+```
 NETWORK=localhost
 ALCHEMY_KEY=
-DEPLOYER_MNEMONIC=
+DEPLOYER_MNEMONIC=<goerli admin mnemonic>
 ETHERSCAN_VERIFICATION=false
 MOCHA_JOBS=1
 DB_PATH=deployed-contracts.json
-FORK=goerli|mainnet
-FORK_BLOCK_NUMBER=8035792|15909885
+FORK=goerli
+JSONRPC_VARIANT=hardhat
 
-make launch
+make shutdown
+make hardhat
+```
 
+### Upgrade Pools
+
+```
+make reset-pool
+```
+
+### Upgrade NTokens
+
+```
+make upgrade-ntoken
+```
+
+### Upgrade PToken
+
+```
+make upgrade-ptoken
+```
+
+### Upgrade DebtToken
+
+```
+make upgrade-debt-token
+```
+
+### Upgrade P2P
+
+```
+make upgrade-p2p-pair-staking
+```
+
+### Upgrade Configurator & cAPE & TimeLock
+
+```
+make upgrade-configurator
+make upgrade-auto-compound-ape
+make upgrade-timelock
 ```
 
 ### Upgrade Existing Fork
@@ -72,6 +117,13 @@ MOCHA_JOBS=1
 DB_PATH=deployed-contracts.json
 
 make upgrade
+```
+
+### Update artifacts
+
+```
+aws s3 cp deployed-contracts.json  s3://paraspace-static-files/contracts/goerli/latest/deployed-contracts.json
+aws s3 cp deployed-contracts.json  s3://paraspace-static-files/contracts/goerli/v1.4.6/deployed-contracts.json
 ```
 
 ### Available commands
