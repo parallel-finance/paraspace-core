@@ -264,6 +264,7 @@ export enum eContractid {
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
   HotWalletProxy = "HotWalletProxy",
+  DelegationRegistry = "DelegationRegistry",
 }
 
 /*
@@ -749,6 +750,7 @@ export interface ICommonConfiguration {
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
   HotWallet: tEthereumAddress | undefined;
+  DelegationRegistry: tEthereumAddress;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

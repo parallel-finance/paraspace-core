@@ -64,6 +64,7 @@ export const initReservesByHelper = async (
   incentivesController: tEthereumAddress,
   hotWallet: tEthereumAddress,
   verify: boolean,
+  delegationRegistryAddress: tEthereumAddress,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
   genericVariableDebtTokenAddress?: tEthereumAddress,
@@ -487,14 +488,22 @@ export const initReservesByHelper = async (
         if (reserveSymbol === ERC721TokenContractId.MOONBIRD) {
           if (!nTokenMoonBirdImplementationAddress) {
             nTokenMoonBirdImplementationAddress = (
-              await deployGenericMoonbirdNTokenImpl(pool.address, verify)
+              await deployGenericMoonbirdNTokenImpl(
+                pool.address,
+                delegationRegistryAddress,
+                verify
+              )
             ).address;
           }
           xTokenToUse = nTokenMoonBirdImplementationAddress;
         } else if (reserveSymbol === ERC721TokenContractId.UniswapV3) {
           if (!nTokenUniSwapV3ImplementationAddress) {
             nTokenUniSwapV3ImplementationAddress = (
-              await deployUniswapV3NTokenImpl(pool.address, verify)
+              await deployUniswapV3NTokenImpl(
+                pool.address,
+                delegationRegistryAddress,
+                verify
+              )
             ).address;
           }
           xTokenToUse = nTokenUniSwapV3ImplementationAddress;
@@ -505,7 +514,12 @@ export const initReservesByHelper = async (
 
           if (!nTokenBAYCImplementationAddress) {
             nTokenBAYCImplementationAddress = (
-              await deployNTokenBAYCImpl(apeCoinStaking, pool.address, verify)
+              await deployNTokenBAYCImpl(
+                apeCoinStaking,
+                pool.address,
+                delegationRegistryAddress,
+                verify
+              )
             ).address;
           }
           xTokenToUse = nTokenBAYCImplementationAddress;
@@ -516,7 +530,12 @@ export const initReservesByHelper = async (
 
           if (!nTokenMAYCImplementationAddress) {
             nTokenMAYCImplementationAddress = (
-              await deployNTokenMAYCImpl(apeCoinStaking, pool.address, verify)
+              await deployNTokenMAYCImpl(
+                apeCoinStaking,
+                pool.address,
+                delegationRegistryAddress,
+                verify
+              )
             ).address;
           }
           xTokenToUse = nTokenMAYCImplementationAddress;
@@ -543,6 +562,7 @@ export const initReservesByHelper = async (
                 apeCoinStaking,
                 nBAYC,
                 nMAYC,
+                delegationRegistryAddress,
                 verify
               )
             ).address;
@@ -550,7 +570,12 @@ export const initReservesByHelper = async (
           xTokenToUse = nTokenBAKCImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.OTHR) {
           nTokenOTHRImplementationAddress = (
-            await deployOtherdeedNTokenImpl(pool.address, hotWallet)
+            await deployOtherdeedNTokenImpl(
+              pool.address,
+              hotWallet,
+              delegationRegistryAddress,
+              verify
+            )
           ).address;
 
           xTokenToUse = nTokenOTHRImplementationAddress;
@@ -559,7 +584,12 @@ export const initReservesByHelper = async (
         if (!xTokenToUse) {
           if (!nTokenImplementationAddress) {
             nTokenImplementationAddress = (
-              await deployGenericNTokenImpl(pool.address, false, verify)
+              await deployGenericNTokenImpl(
+                pool.address,
+                false,
+                delegationRegistryAddress,
+                verify
+              )
             ).address;
           }
           xTokenToUse = nTokenImplementationAddress;
