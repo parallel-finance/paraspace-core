@@ -269,6 +269,8 @@ import {
   NTokenOtherdeed,
   HotWalletProxy__factory,
   HotWalletProxy,
+  NTokenStakefish__factory,
+  NTokenStakefish,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1252,6 +1254,16 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         await insertContractAddressInDb(
           eContractid.PUNKS,
           paraSpaceConfig.Tokens.PUNKS,
+          false
+        );
+      }
+      if (
+        tokenSymbol === ERC721TokenContractId.SFVLDR &&
+        paraSpaceConfig.StakefishManager
+      ) {
+        await insertContractAddressInDb(
+          eContractid.SFVLDR,
+          paraSpaceConfig.StakefishManager,
           false
         );
       }
@@ -3095,6 +3107,29 @@ export const deployOtherdeedNTokenImpl = async (
     false,
     libraries
   ) as Promise<NTokenOtherdeed>;
+};
+
+export const deployStakefishNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  stakefishManager: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    new NTokenStakefish__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenStakefishImpl,
+    [poolAddress, stakefishManager],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenStakefish>;
 };
 
 export const deployHotWalletProxy = async (verify?: boolean) =>

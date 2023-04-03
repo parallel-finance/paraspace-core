@@ -301,6 +301,21 @@ interface IPoolCore {
     ) external returns (uint256);
 
     /**
+
+    @dev Claims all pending withdrawals for the given asset and transfers the claimed
+    funds to the specified recipient.
+    @param asset Address of the target asset
+    @param tokenIds List of token IDs to be used to claim the withdrawals
+    @param to Address of the recipient that will receive the claimed funds
+    @notice This function is used to claim funds that have been previously deposited into the Pool,
+    */
+    function claimWithdrawals(
+        address asset,
+        uint256[] calldata tokenIds,
+        address to
+    ) external;
+
+    /**
      * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
      * that the user respects liquidation checks.
      * @param asset The asset address of uniswapV3

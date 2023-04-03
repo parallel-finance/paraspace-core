@@ -6,6 +6,7 @@ import {
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
   deployOtherdeedNTokenImpl,
+  deployStakefishNTokenImpl,
   deployUniswapV3NTokenImpl,
 } from "../../helpers/contracts-deployments";
 import {
@@ -41,6 +42,7 @@ export const upgradeNToken = async (verify = false) => {
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
+  let nTokenStakefishImplementationAddress = "";
   let newImpl = "";
 
   for (let i = 0; i < allXTokens.length; i++) {
@@ -62,6 +64,7 @@ export const upgradeNToken = async (verify = false) => {
         XTokenType.NTokenMAYC,
         XTokenType.NTokenBAKC,
         XTokenType.NTokenOtherdeed,
+        XTokenType.NTokenStakefish,
       ].includes(xTokenType)
     ) {
       continue;
@@ -146,6 +149,18 @@ export const upgradeNToken = async (verify = false) => {
         ).address;
       }
       newImpl = nTokenOTHRImplementationAddress;
+    } else if (xTokenType == XTokenType.NTokenStakefish) {
+      if (!nTokenStakefishImplementationAddress) {
+        console.log("deploy NTokenStakefish implementation");
+        nTokenStakefishImplementationAddress = (
+          await deployStakefishNTokenImpl(
+            poolAddress,
+            paraSpaceConfig.StakefishManager || ZERO_ADDRESS,
+            verify
+          )
+        ).address;
+      }
+      newImpl = nTokenStakefishImplementationAddress;
     } else if (xTokenType == XTokenType.NToken) {
       // compatibility
       if (symbol == NTokenContractId.nOTHR) {

@@ -237,6 +237,29 @@ contract PoolCore is
             );
     }
 
+    /// @inheritdoc IPoolCore
+    function claimWithdrawals(
+        address asset,
+        uint256[] calldata tokenIds,
+        address to
+    ) external nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        return
+            SupplyLogic.ExecuteClaimWithdrawals(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msg.sender],
+                DataTypes.ExecuteClaimWithdrawalsParams({
+                    asset: asset,
+                    tokenIds: tokenIds,
+                    to: to,
+                    reservesCount: ps._reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                })
+            );
+    }
+
     function decreaseUniswapV3Liquidity(
         address asset,
         uint256 tokenId,

@@ -69,6 +69,7 @@ export const CommonConfig: Pick<
   | "Mocks"
   | "Oracle"
   | "HotWallet"
+  | "StakefishManager"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -91,6 +92,7 @@ export const CommonConfig: Pick<
   // Oracle
   Oracle: TestnetOracleConfig,
   HotWallet: undefined,
+  StakefishManager: undefined,
 };
 
 export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
@@ -384,6 +386,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
   HotWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
+  StakefishManager: "0xffff2d93c83d4c613ed68ca887f057651135e089",
 };
 
 export const ParaSpaceConfigs: Partial<

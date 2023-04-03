@@ -50,6 +50,7 @@ import {
   deployAutoYieldApe,
   deployReserveTimeLockStrategy,
   deployOtherdeedNTokenImpl,
+  deployStakefishNTokenImpl,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -63,6 +64,7 @@ export const initReservesByHelper = async (
   treasuryAddress: tEthereumAddress,
   incentivesController: tEthereumAddress,
   hotWallet: tEthereumAddress,
+  stakefishManager: tEthereumAddress,
   verify: boolean,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
@@ -137,6 +139,7 @@ export const initReservesByHelper = async (
   let PsApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
+  let nTokenStakefishImplementationAddress = "";
 
   if (genericPTokenImplAddress) {
     await insertContractAddressInDb(
@@ -554,6 +557,12 @@ export const initReservesByHelper = async (
           ).address;
 
           xTokenToUse = nTokenOTHRImplementationAddress;
+        } else if (reserveSymbol == ERC721TokenContractId.SFVLDR) {
+          nTokenStakefishImplementationAddress = (
+            await deployStakefishNTokenImpl(pool.address, stakefishManager)
+          ).address;
+
+          xTokenToUse = nTokenStakefishImplementationAddress;
         }
 
         if (!xTokenToUse) {
