@@ -132,6 +132,17 @@ interface IPoolConfigurator {
     );
 
     /**
+     * @dev Emitted when a reserve timelock strategy contract is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param oldStrategy The address of the old strategy contract
+     * @param newStrategy The address of the new strategy contract
+     **/
+    event ReserveTimeLockStrategyChanged(
+        address indexed asset,
+        address oldStrategy,
+        address newStrategy
+    );
+    /**
      * @dev Emitted when a reserve auction strategy contract is updated.
      * @param asset The address of the underlying asset of the reserve
      * @param oldStrategy The address of the old auction strategy contract
@@ -254,9 +265,14 @@ interface IPoolConfigurator {
      * @notice Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
      * swap interest rate, liquidate, xtoken transfers).
      * @param asset The address of the underlying asset of the reserve
-     * @param paused True if pausing the reserve, false if unpausing
      **/
-    function setReservePause(address asset, bool paused) external;
+    function pauseReserve(address asset) external;
+
+    /**
+     * @notice unPauses a reserve.
+     * @param asset The address of the underlying asset of the reserve
+     **/
+    function unpauseReserve(address asset) external;
 
     /**
      * @notice set the auction recovery health factor
@@ -292,11 +308,25 @@ interface IPoolConfigurator {
     ) external;
 
     /**
-     * @notice Pauses or unpauses all the protocol reserves. In the paused state all the protocol interactions
-     * are suspended.
-     * @param paused True if protocol needs to be paused, false otherwise
+     * @notice Sets the timelock strategy of a reserve.
+     * @param asset The address of the underlying asset of the reserve
+     * @param newStrategyAddress The address of the new strategy contract
      **/
-    function setPoolPause(bool paused) external;
+    function setReserveTimeLockStrategyAddress(
+        address asset,
+        address newStrategyAddress
+    ) external;
+
+    /**
+     * @notice Pauses all the protocol reserves. In the paused state all the protocol interactions
+     * are suspended.
+     **/
+    function pausePool() external;
+
+    /**
+     * @notice Unpauses all the protocol reserves.
+     **/
+    function unpausePool() external;
 
     /**
      * @notice Updates the borrow cap of a reserve.

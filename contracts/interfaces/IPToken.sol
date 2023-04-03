@@ -5,6 +5,7 @@ import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "./IScaledBalanceToken.sol";
 import {IInitializablePToken} from "./IInitializablePToken.sol";
 import {IXTokenType} from "./IXTokenType.sol";
+import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
  * @title IPToken
@@ -45,7 +46,8 @@ interface IPToken is
         address from,
         address receiverOfUnderlying,
         uint256 amount,
-        uint256 index
+        uint256 index,
+        DataTypes.TimeLockParams calldata timeLockParams
     ) external;
 
     /**
@@ -73,7 +75,11 @@ interface IPToken is
      * @param user The recipient of the underlying
      * @param amount The amount getting transferred
      **/
-    function transferUnderlyingTo(address user, uint256 amount) external;
+    function transferUnderlyingTo(
+        address user,
+        uint256 amount,
+        DataTypes.TimeLockParams calldata timeLockParams
+    ) external;
 
     /**
      * @notice Handles the underlying received by the xToken after the transfer has been completed.

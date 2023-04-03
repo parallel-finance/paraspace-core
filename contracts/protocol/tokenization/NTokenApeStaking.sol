@@ -9,6 +9,7 @@ import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 import "../../interfaces/INTokenApeStaking.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -122,7 +123,8 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
     function burn(
         address from,
         address receiverOfUnderlying,
-        uint256[] calldata tokenIds
+        uint256[] calldata tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
         for (uint256 index = 0; index < tokenIds.length; index++) {
             ApeStakingLogic.executeUnstakePositionAndRepay(
@@ -140,7 +142,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
             );
         }
 
-        return _burn(from, receiverOfUnderlying, tokenIds);
+        return _burn(from, receiverOfUnderlying, tokenIds, timeLockParams);
     }
 
     function POOL_ID() internal pure virtual returns (uint256) {

@@ -18,6 +18,7 @@ import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 
 /**
  * @title MoonBird NToken
@@ -40,24 +41,47 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
     function burn(
         address from,
         address receiverOfUnderlying,
-        uint256[] calldata tokenIds
-    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
-        (
+        uint256[] calldata tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
+    )
+        external
+        virtual
+        override
+        onlyPool
+        nonReentrant
+        returns (
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
-        ) = _burnMultiple(from, tokenIds);
+        )
+    {
+        (oldCollateralizedBalance, newCollateralizedBalance) = _burnMultiple(
+            from,
+            tokenIds
+        );
 
         if (receiverOfUnderlying != address(this)) {
+            address underlyingAsset = _ERC721Data.underlyingAsset;
+            if (timeLockParams.releaseTime != 0) {
+                ITimeLock timeLock = POOL.TIME_LOCK();
+                timeLock.createAgreement(
+                    DataTypes.AssetType.ERC721,
+                    timeLockParams.actionType,
+                    underlyingAsset,
+                    tokenIds,
+                    receiverOfUnderlying,
+                    timeLockParams.releaseTime
+                );
+                receiverOfUnderlying = address(timeLock);
+            }
+
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                IMoonBird(_ERC721Data.underlyingAsset).safeTransferWhileNesting(
-                        address(this),
-                        receiverOfUnderlying,
-                        tokenIds[index]
-                    );
+                IMoonBird(underlyingAsset).safeTransferWhileNesting(
+                    address(this),
+                    receiverOfUnderlying,
+                    tokenIds[index]
+                );
             }
         }
-
-        return (oldCollateralizedBalance, newCollateralizedBalance);
     }
 
     function onERC721Received(

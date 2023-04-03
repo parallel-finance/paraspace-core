@@ -25,6 +25,6 @@ contract PTokenCApe is RebasingPToken {
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
-        return XTokenType.PTokenAToken;
+        return XTokenType.PTokenCAPE;
     }
 }

@@ -27,6 +27,7 @@ import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaRee
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
+import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 
 /**
  * @title Pool contract
@@ -50,8 +51,9 @@ contract PoolCore is
 {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 145;
+    uint256 public constant POOL_REVISION = 146;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+    ITimeLock public immutable TIME_LOCK;
 
     function getRevision() internal pure virtual override returns (uint256) {
         return POOL_REVISION;
@@ -61,8 +63,9 @@ contract PoolCore is
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
-    constructor(IPoolAddressesProvider provider) {
+    constructor(IPoolAddressesProvider provider, ITimeLock timeLock) {
         ADDRESSES_PROVIDER = provider;
+        TIME_LOCK = timeLock;
     }
 
     /**
@@ -566,6 +569,19 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset];
+    }
+
+    /// @inheritdoc IPoolCore
+    function getReserveXToken(address asset)
+        external
+        view
+        virtual
+        override
+        returns (address)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        return ps._reserves[asset].xTokenAddress;
     }
 
     /// @inheritdoc IPoolCore

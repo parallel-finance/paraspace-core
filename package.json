@@ -1,6 +1,6 @@
 {
   "name": "@paraspace/core-v1",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "ParaSpace Protocol V1 core smart contracts",
   "files": [
     "contracts",
@@ -66,6 +66,7 @@
     "ethers": "5.7.2",
     "ethers-multisend": "^2.4.0",
     "evm-bn": "^1.1.2",
+    "git-rev-sync": "^3.0.2",
     "hardhat": "^2.12.0",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-deploy": "^0.11.4",

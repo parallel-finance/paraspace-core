@@ -37,6 +37,8 @@ library DataTypes {
         address auctionStrategyAddress;
         //the current treasury balance, scaled
         uint128 accruedToTreasury;
+        // timelock strategy
+        address timeLockStrategyAddress;
     }
 
     struct ReserveConfigurationMap {
@@ -284,6 +286,7 @@ library DataTypes {
         address variableDebtAddress;
         address interestRateStrategyAddress;
         address auctionStrategyAddress;
+        address timeLockStrategyAddress;
         uint16 reservesCount;
         uint16 maxNumberReserves;
     }
@@ -361,7 +364,8 @@ library DataTypes {
     }
 
     enum ApeCompoundTokenOut {
-        USDC
+        USDC,
+        WETH
     }
 
     struct ApeCompoundStrategy {
@@ -399,5 +403,21 @@ library DataTypes {
         bool isActive;
         bool isFrozen;
         bool isPaused;
+    }
+
+    struct TimeLockParams {
+        uint48 releaseTime;
+        TimeLockActionType actionType;
+    }
+
+    struct TimeLockFactorParams {
+        AssetType assetType;
+        address asset;
+        uint256 amount;
+    }
+
+    enum TimeLockActionType {
+        BORROW,
+        WITHDRAW
     }
 }

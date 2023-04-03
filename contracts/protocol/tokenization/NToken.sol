@@ -18,6 +18,7 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
+import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
@@ -27,7 +28,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 145;
+    uint256 public constant NTOKEN_REVISION = 146;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -85,24 +86,46 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     function burn(
         address from,
         address receiverOfUnderlying,
-        uint256[] calldata tokenIds
+        uint256[] calldata tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
-        return _burn(from, receiverOfUnderlying, tokenIds);
+        return _burn(from, receiverOfUnderlying, tokenIds, timeLockParams);
     }
 
     function _burn(
         address from,
         address receiverOfUnderlying,
-        uint256[] calldata tokenIds
-    ) internal returns (uint64, uint64) {
-        (
+        uint256[] calldata tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
+    )
+        internal
+        returns (
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
-        ) = _burnMultiple(from, tokenIds);
+        )
+    {
+        (oldCollateralizedBalance, newCollateralizedBalance) = _burnMultiple(
+            from,
+            tokenIds
+        );
 
         if (receiverOfUnderlying != address(this)) {
+            address underlyingAsset = _ERC721Data.underlyingAsset;
+            if (timeLockParams.releaseTime != 0) {
+                ITimeLock timeLock = POOL.TIME_LOCK();
+                timeLock.createAgreement(
+                    DataTypes.AssetType.ERC721,
+                    timeLockParams.actionType,
+                    underlyingAsset,
+                    tokenIds,
+                    receiverOfUnderlying,
+                    timeLockParams.releaseTime
+                );
+                receiverOfUnderlying = address(timeLock);
+            }
+
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
+                IERC721(underlyingAsset).safeTransferFrom(
                     address(this),
                     receiverOfUnderlying,
                     tokenIds[index]
@@ -131,14 +154,28 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     }
 
     /// @inheritdoc INToken
-    function transferUnderlyingTo(address target, uint256 tokenId)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
-        IERC721(_ERC721Data.underlyingAsset).safeTransferFrom(
+    function transferUnderlyingTo(
+        address target,
+        uint256 tokenId,
+        DataTypes.TimeLockParams calldata timeLockParams
+    ) external virtual override onlyPool nonReentrant {
+        address underlyingAsset = _ERC721Data.underlyingAsset;
+        if (timeLockParams.releaseTime != 0) {
+            ITimeLock timeLock = POOL.TIME_LOCK();
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = tokenId;
+            timeLock.createAgreement(
+                DataTypes.AssetType.ERC721,
+                timeLockParams.actionType,
+                underlyingAsset,
+                tokenIds,
+                target,
+                timeLockParams.releaseTime
+            );
+            target = address(timeLock);
+        }
+
+        IERC721(underlyingAsset).safeTransferFrom(
             address(this),
             target,
             tokenId

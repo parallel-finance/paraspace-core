@@ -12,6 +12,7 @@ import {
   getPoolAddressesProvider,
   getPoolAddressesProviderRegistry,
   getReservesSetupHelper,
+  getTimeLockProxy,
   getWETHGatewayProxy,
   getWPunkGatewayProxy,
 } from "../../../helpers/contracts-getters";
@@ -24,7 +25,7 @@ import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {eContractid} from "../../../helpers/types";
 
-export const step_22 = async (
+export const step_23 = async (
   // eslint-disable-next-line
   verify = false,
   admins?: {
@@ -354,25 +355,16 @@ export const step_22 = async (
       if (DRY_RUN) {
         const encodedData1 = cApeProxy.interface.encodeFunctionData(
           "changeAdmin",
-          [paraSpaceAdminAddress]
+          [emergencyAdminAddresses[0]]
         );
         await dryRunEncodedData(cApeProxy.address, encodedData1);
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          const encodedData2 = cApe.interface.encodeFunctionData(
-            "transferOwnership",
-            [gatewayAdminAddress]
-          );
-          await dryRunEncodedData(cApe.address, encodedData2);
-        }
       } else {
         await waitForTx(
-          await cApeProxy.changeAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
+          await cApeProxy.changeAdmin(
+            emergencyAdminAddresses[0],
+            GLOBAL_OVERRIDES
+          )
         );
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          await waitForTx(
-            await cApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
-          );
-        }
       }
       console.timeEnd("transferring cAPE ownership...");
       console.log();
@@ -457,6 +449,33 @@ export const step_22 = async (
         }
       }
       console.timeEnd("transferring HelperContract ownership...");
+      console.log();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // TimeLock
+    ////////////////////////////////////////////////////////////////////////////////
+    if (await getContractAddressInDb(eContractid.TimeLockProxy)) {
+      console.time("transferring TimeLockProxy ownership...");
+      const timeLock = await getTimeLockProxy();
+      const timeLockProxy = await getInitializableAdminUpgradeabilityProxy(
+        timeLock.address
+      );
+      if (DRY_RUN) {
+        const encodedData1 = timeLockProxy.interface.encodeFunctionData(
+          "changeAdmin",
+          [paraSpaceAdminAddress]
+        );
+        await dryRunEncodedData(timeLockProxy.address, encodedData1);
+      } else {
+        await waitForTx(
+          await timeLockProxy.changeAdmin(
+            paraSpaceAdminAddress,
+            GLOBAL_OVERRIDES
+          )
+        );
+      }
+      console.timeEnd("transferring TimeLockProxy ownership...");
       console.log();
     }
 

@@ -13,6 +13,7 @@ import {IVariableDebtToken} from "../../interfaces/IVariableDebtToken.sol";
 import {EIP712Base} from "./base/EIP712Base.sol";
 import {DebtTokenBase} from "./base/DebtTokenBase.sol";
 import {ScaledBalanceTokenBaseERC20} from "./base/ScaledBalanceTokenBaseERC20.sol";
+import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 
 /**
  * @title VariableDebtToken
@@ -29,7 +30,7 @@ contract VariableDebtToken is
     using WadRayMath for uint256;
     using SafeCast for uint256;
 
-    uint256 public constant DEBT_TOKEN_REVISION = 145;
+    uint256 public constant DEBT_TOKEN_REVISION = 146;
     uint256[50] private __gap;
 
     /**
@@ -89,7 +90,7 @@ contract VariableDebtToken is
         public
         view
         virtual
-        override
+        override(IVariableDebtToken, IncentivizedERC20)
         returns (uint256)
     {
         uint256 scaledBalance = super.balanceOf(user);

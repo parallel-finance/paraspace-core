@@ -42,6 +42,8 @@ library FlashClaimLogic {
 
         uint256 index;
         uint256 i;
+        // no time lock needed here
+        DataTypes.TimeLockParams memory timeLockParams;
 
         for (index = 0; index < params.nftAssets.length; index++) {
             DataTypes.ReserveData storage reserve = ps._reserves[
@@ -60,7 +62,8 @@ library FlashClaimLogic {
             for (i = 0; i < params.nftTokenIds[index].length; i++) {
                 INToken(nTokenAddresses[index]).transferUnderlyingTo(
                     params.receiverAddress,
-                    params.nftTokenIds[index][i]
+                    params.nftTokenIds[index][i],
+                    timeLockParams
                 );
             }
         }

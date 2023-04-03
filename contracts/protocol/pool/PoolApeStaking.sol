@@ -43,7 +43,7 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
-    uint256 internal constant POOL_REVISION = 145;
+    uint256 internal constant POOL_REVISION = 146;
     IERC20 internal immutable USDC;
     ISwapRouter internal immutable SWAP_ROUTER;
 
@@ -70,6 +70,8 @@ contract PoolApeStaking is
         uint256 totalAmount;
         uint256 totalNonDepositAmount;
         uint256 compoundFee;
+        bytes usdcSwapPath;
+        bytes wethSwapPath;
     }
 
     /**
@@ -269,19 +271,22 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
             stakingInfo.borrowAsset
         ];
-
+        // no time lock needed here
+        DataTypes.TimeLockParams memory timeLockParams;
         // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
             ValidationLogic.validateFlashloanSimple(borrowAssetReserve);
             if (stakingInfo.borrowAsset == address(APE_COIN)) {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     localVar.xTokenAddress,
-                    stakingInfo.borrowAmount
+                    stakingInfo.borrowAmount,
+                    timeLockParams
                 );
             } else {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     address(this),
-                    stakingInfo.borrowAmount
+                    stakingInfo.borrowAmount,
+                    timeLockParams
                 );
                 APE_COMPOUND.withdraw(stakingInfo.borrowAmount);
                 APE_COIN.safeTransfer(
@@ -654,20 +659,36 @@ contract PoolApeStaking is
             APE_COMPOUND.deposit(msg.sender, compoundFee);
         }
 
-        bytes memory swapPath = abi.encodePacked(
+        uint256 usdcPrice = _getApeRelativePrice(address(USDC), 1E6);
+        uint256 wethPrice = _getApeRelativePrice(address(WETH), 1E18);
+        localVar.usdcSwapPath = abi.encodePacked(
             APE_COIN,
             APE_WETH_FEE,
             WETH,
             WETH_USDC_FEE,
             USDC
         );
-
-        uint256 price = _getApeRelativePrice(address(USDC), 1E6);
+        localVar.wethSwapPath = abi.encodePacked(APE_COIN, APE_WETH_FEE, WETH);
 
         for (uint256 i = 0; i < users.length; i++) {
+            address swapTokenOut;
+            bytes memory swapPath;
+            uint256 price;
+            if (
+                localVar.options[i].swapTokenOut ==
+                DataTypes.ApeCompoundTokenOut.USDC
+            ) {
+                swapTokenOut = address(USDC);
+                swapPath = localVar.usdcSwapPath;
+                price = usdcPrice;
+            } else {
+                swapTokenOut = address(WETH);
+                swapPath = localVar.wethSwapPath;
+                price = wethPrice;
+            }
             _swapAndSupplyForUser(
                 ps,
-                address(USDC),
+                swapTokenOut,
                 localVar.swapAmounts[i],
                 swapPath,
                 users[i],

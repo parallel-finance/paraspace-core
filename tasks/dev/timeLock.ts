@@ -311,3 +311,22 @@ task("cancel-buffered-txs", "Cancel buffered transactions").setAction(
     }
   }
 );
+
+task("unfreeze-agreement", "Unfreeze certain aggrement")
+  .addPositionalParam("agreementId", "Agreement Id")
+  .setAction(async ({agreementId}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getTimeLockProxy} = await import("../../helpers/contracts-getters");
+    const timeLock = await getTimeLockProxy();
+
+    if (DRY_RUN) {
+      const encodedData = timeLock.interface.encodeFunctionData(
+        "unfreezeAgreement",
+        [agreementId]
+      );
+      await dryRunEncodedData(timeLock.address, encodedData);
+    } else {
+      await waitForTx(await timeLock.unfreezeAgreement(agreementId));
+    }
+  });
