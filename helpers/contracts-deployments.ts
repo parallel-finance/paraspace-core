@@ -283,7 +283,6 @@ import {
   getACLManager,
   getTimeLockProxy,
   getInitializableAdminUpgradeabilityProxy,
-  getACLManager,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
