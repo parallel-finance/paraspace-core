@@ -15,7 +15,6 @@ import {
   getNToken,
   getApeCoinStaking,
   getPoolProxy,
-  getDelegationRegistry,
 } from "../../helpers/contracts-getters";
 import {NTokenContractId, XTokenType} from "../../helpers/types";
 
