@@ -647,10 +647,12 @@ contract PoolApeStaking is
         ApeStakingLocalVars memory localVar,
         address[] calldata users
     ) internal {
-        APE_COMPOUND.deposit(
-            address(this),
-            localVar.totalAmount - localVar.totalNonDepositAmount
-        );
+        if (localVar.totalAmount != localVar.totalNonDepositAmount) {
+            APE_COMPOUND.deposit(
+                address(this),
+                localVar.totalAmount - localVar.totalNonDepositAmount
+            );
+        }
         uint256 compoundFee = localVar
             .totalAmount
             .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)
