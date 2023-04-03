@@ -89,6 +89,7 @@ import {
   TimeLock__factory,
   HotWalletProxy__factory,
   NTokenOtherdeed__factory,
+  DelegationRegistry__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1247,6 +1248,17 @@ export const getHotWalletProxy = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.HotWalletProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getDelegationRegistry = async (address?: tEthereumAddress) =>
+  await DelegationRegistry__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.DelegationRegistry}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

@@ -19,6 +19,8 @@ import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
+import {ITokenDelegation} from "../../interfaces/ITokenDelegation.sol";
+import {IDelegationRegistry} from "../../dependencies/delegation/IDelegationRegistry.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
@@ -28,7 +30,7 @@ import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 146;
+    uint256 public constant NTOKEN_REVISION = 147;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -39,12 +41,17 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, bool atomic_pricing)
+    constructor(
+        IPool pool,
+        bool atomic_pricing,
+        address delegateRegistry
+    )
         MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
             "NTOKEN_IMPL",
-            atomic_pricing
+            atomic_pricing,
+            delegateRegistry
         )
     {}
 
