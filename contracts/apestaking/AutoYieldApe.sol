@@ -17,8 +17,8 @@ import "../protocol/libraries/math/WadRayMath.sol";
 import "../protocol/libraries/math/PercentageMath.sol";
 import "../interfaces/IACLManager.sol";
 import "../protocol/libraries/helpers/Errors.sol";
-import "./interfaces/IVoteDelegator.sol";
-import "./interfaces/IDelegation.sol";
+import "../interfaces/IVoteDelegator.sol";
+import "../interfaces/IDelegation.sol";
 
 contract AutoYieldApe is
     Initializable,
