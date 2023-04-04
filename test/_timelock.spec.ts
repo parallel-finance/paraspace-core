@@ -16,7 +16,14 @@ import {AutoCompoundApe, IPool, ITimeLock, TimeLock} from "../types";
 import {PromiseOrValue} from "../types/common";
 import {BigNumberish, Signer, utils} from "ethers";
 import {parseEther} from "ethers/lib/utils";
-import {almostEqual} from "./helpers/uniswapv3-helper";
+import {
+  almostEqual,
+  approveTo,
+  createNewPool,
+  fund,
+  mintNewPosition,
+} from "./helpers/uniswapv3-helper";
+import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 
 const agreementEventSig = utils.keccak256(
   utils.toUtf8Bytes(
@@ -145,6 +152,8 @@ describe("TimeLock functionality tests", () => {
       pool,
       mayc,
       moonbirds,
+      weth,
+      nftPositionManager,
       users: [user1, user2, , , user3],
       poolAdmin,
     } = testEnv;
@@ -196,6 +205,28 @@ describe("TimeLock functionality tests", () => {
 
     await supplyAndValidate(moonbirds, "10", user1, true);
 
+    //uniswap V3
+    const nft = nftPositionManager.connect(user1.signer);
+    await approveTo({
+      target: nftPositionManager.address,
+      token: dai,
+      user: user1,
+    });
+    await approveTo({
+      target: nftPositionManager.address,
+      token: weth,
+      user: user1,
+    });
+    const fee = 3000;
+    const initialPrice = encodeSqrtRatioX96(1, 1000);
+    await createNewPool({
+      positionManager: nft,
+      token0: dai,
+      token1: weth,
+      fee: fee,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
     const minThresholdNFT = 2;
@@ -240,6 +271,19 @@ describe("TimeLock functionality tests", () => {
       (24 * 3600).toString()
     );
 
+    const UniswapV3Strategy = await deployReserveTimeLockStrategy(
+      eContractid.DefaultTimeLockStrategy + "UniV3",
+      pool.address,
+      parseEther("1").toString(),
+      parseEther("10").toString(),
+      minTime.toString(),
+      midTime.toString(),
+      maxTime.toString(),
+      parseEther("100").toString(),
+      (12 * 3600).toString(),
+      (24 * 3600).toString()
+    );
+
     const poolConfigurator = await getPoolConfiguratorProxy();
     await waitForTx(
       await poolConfigurator
@@ -274,6 +318,14 @@ describe("TimeLock functionality tests", () => {
       await poolConfigurator
         .connect(poolAdmin.signer)
         .setReserveTimeLockStrategyAddress(cApe.address, cApeStrategy.address)
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(
+          nftPositionManager.address,
+          UniswapV3Strategy.address
+        )
     );
 
     return testEnv;
@@ -712,5 +764,145 @@ describe("TimeLock functionality tests", () => {
     const balance = await cApe.balanceOf(user1.address);
     // 1000 + 3600reward
     almostEqual(balance, parseEther("4600"));
+  });
+
+  it("withdraw UniswapV3 tokens below minThreshold should be time locked for 1 block only", async () => {
+    const {
+      pool,
+      users: [user1],
+      dai,
+      weth,
+      nftPositionManager,
+    } = await loadFixture(fixture);
+
+    const userDaiAmount = parseEther("1");
+    const userWethAmount = parseEther("0.1");
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+
+    const tickSpacing = 3000 / 50;
+    const lowerPrice = encodeSqrtRatioX96(1, 10000);
+    const upperPrice = encodeSqrtRatioX96(1, 100);
+    const nft = nftPositionManager.connect(user1.signer);
+    await mintNewPosition({
+      nft: nft,
+      token0: dai,
+      token1: weth,
+      fee: 3000,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userDaiAmount,
+      token1Amount: userWethAmount,
+    });
+    expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
+
+    await nft.setApprovalForAll(pool.address, true);
+
+    let uniswapV3Balance = await nftPositionManager.balanceOf(user1.address);
+    expect(uniswapV3Balance).to.be.eq(1);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supplyERC721(
+          nftPositionManager.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user1.address,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        )
+    );
+
+    const agreement = await wrapWithdrawERC721(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      nftPositionManager.address,
+      ["1"],
+      user1.address
+    );
+
+    await advanceTimeAndBlock(10);
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
+    uniswapV3Balance = await nftPositionManager.balanceOf(user1.address);
+    expect(uniswapV3Balance).to.be.eq(1);
+  });
+
+  it("withdraw UniswapV3 tokens above midThreshold should be time locked for 3600 seconds", async () => {
+    const {
+      pool,
+      users: [user1],
+      dai,
+      weth,
+      nftPositionManager,
+    } = await loadFixture(fixture);
+
+    const userDaiAmount = parseEther("10000");
+    const userWethAmount = parseEther("10");
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+
+    const tickSpacing = 3000 / 50;
+    const lowerPrice = encodeSqrtRatioX96(1, 10000);
+    const upperPrice = encodeSqrtRatioX96(1, 100);
+    const nft = nftPositionManager.connect(user1.signer);
+    await mintNewPosition({
+      nft: nft,
+      token0: dai,
+      token1: weth,
+      fee: 3000,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userDaiAmount,
+      token1Amount: userWethAmount,
+    });
+    expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
+
+    await nft.setApprovalForAll(pool.address, true);
+
+    let uniswapV3Balance = await nftPositionManager.balanceOf(user1.address);
+    expect(uniswapV3Balance).to.be.eq(1);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supplyERC721(
+          nftPositionManager.address,
+          [{tokenId: 1, useAsCollateral: true}],
+          user1.address,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        )
+    );
+
+    const agreement = await wrapWithdrawERC721(
+      pool,
+      user1.signer,
+      timeLockProxy,
+      nftPositionManager.address,
+      ["1"],
+      user1.address
+    );
+
+    await advanceTimeAndBlock(10);
+    await expect(timeLockProxy.connect(user1.signer).claim([agreement])).to.be
+      .reverted;
+
+    await advanceTimeAndBlock(4000);
+    await waitForTx(
+      await timeLockProxy.connect(user1.signer).claim([agreement])
+    );
+    uniswapV3Balance = await nftPositionManager.balanceOf(user1.address);
+    expect(uniswapV3Balance).to.be.eq(1);
   });
 });
