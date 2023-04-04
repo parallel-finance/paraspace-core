@@ -21,6 +21,7 @@ import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 
 /**
  * @title SupplyLogic library
@@ -429,13 +430,26 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
+        uint256 amount = 0;
+        INToken nToken = INToken(xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            uint256 tokenIdLength = params.tokenIds.length;
+            for (uint256 index = 0; index < tokenIdLength; index++) {
+                amount += IPriceOracleGetter(params.oracle).getTokenPrice(
+                    params.asset,
+                    params.tokenIds[index]
+                );
+            }
+        } else {
+            amount = params.tokenIds.length;
+        }
         DataTypes.TimeLockParams memory timeLockParams = GenericLogic
             .calculateTimeLockParams(
                 reserve,
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC721,
                     asset: params.asset,
-                    amount: params.tokenIds.length
+                    amount: amount
                 })
             );
         timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
