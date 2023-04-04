@@ -88,7 +88,8 @@ const releaseStakefish = async (verify = false) => {
     treasuryAddress,
     ZERO_ADDRESS,
     ZERO_ADDRESS,
-    verify
+    verify,
+    paraSpaceConfig.DelegationRegistry
   );
 
   console.log("configuring reserves");

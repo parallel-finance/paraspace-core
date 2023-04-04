@@ -21,7 +21,9 @@ contract NTokenStakefish is NToken, INTokenStakefish {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool) NToken(pool, true) {}
+    constructor(IPool pool, address delegateRegistry)
+        NToken(pool, true, delegateRegistry)
+    {}
 
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenStakefish;

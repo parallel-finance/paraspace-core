@@ -141,6 +141,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
   },
+  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
@@ -174,6 +175,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
     USDC: strategyUSDC,
   },
   Oracle: MoonbeamOracleConfig,
+  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
@@ -261,6 +263,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     SFVLDR: strategyStakefishValidator,
   },
   StakefishManager: "0x5b41ffb9c448c02ff3d0401b0374b67efcb73c7e",
+  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
@@ -393,6 +396,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   Oracle: MainnetOracleConfig,
   HotWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
   StakefishManager: "0xffff2d93c83d4c613ed68ca887f057651135e089",
+  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
 export const ParaSpaceConfigs: Partial<

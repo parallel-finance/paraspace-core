@@ -37,3 +37,4 @@ logs
 *.swp
 
 out/
+app/

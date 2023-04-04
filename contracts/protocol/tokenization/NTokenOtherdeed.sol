@@ -18,7 +18,11 @@ contract NTokenOtherdeed is NToken, IHotWalletProxy {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, IHotWalletProxy warmWallet) NToken(pool, false) {
+    constructor(
+        IPool pool,
+        IHotWalletProxy warmWallet,
+        address delegateRegistry
+    ) NToken(pool, false, delegateRegistry) {
         WARM_WALLET = warmWallet;
     }
 

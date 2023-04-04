@@ -91,6 +91,7 @@ import {
   NTokenOtherdeed__factory,
   StakefishNFTOracleWrapper__factory,
   NTokenStakefish__factory,
+  DelegationRegistry__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1277,6 +1278,17 @@ export const getStakefishNFTOracleWrapper = async (
               DRE.network.name
             }`
           )
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getDelegationRegistry = async (address?: tEthereumAddress) =>
+  await DelegationRegistry__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.DelegationRegistry}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
