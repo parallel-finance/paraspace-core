@@ -7,6 +7,7 @@ SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
 RUST_TOOLCHAIN           := nightly-2022-09-19
+ARTIFACTS_BASE_URL       := https://paraspace-static-files.s3.amazonaws.com/contracts
 
 .PHONY: init
 init: submodules
@@ -432,6 +433,10 @@ set-traits-multipliers:
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
+.PHONY: release-stakefish
+release-stakefish:
+	make SCRIPT_PATH=./scripts/dev/13.release-stakefish.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -689,6 +694,13 @@ shutdown:
 .PHONY: copy
 copy:
 	docker cp paraspace-core_node_1:/paraspace/deployed-contracts.json .
+
+
+.PHONY: download-artifacts
+download-artifacts:
+	rm deployed-contracts.json || true
+	wget https://paraspace-static-files.s3.amazonaws.com/contracts/${NETWORK}/v$(shell cat package.json | jq '.version' | tr -d '"')/deployed-contracts.json
+
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?' Makefile | cut -d: -f1 | sort

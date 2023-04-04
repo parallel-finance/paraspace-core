@@ -19,84 +19,84 @@ export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
 
   try {
-    const {
-      poolCore,
-      poolParameters,
-      poolMarketplace,
-      poolApeStaking,
-      poolCoreSelectors,
-      poolParametersSelectors,
-      poolMarketplaceSelectors,
-      poolApeStakingSelectors,
-    } = await deployPoolComponents(addressesProvider.address, verify);
+    // const {
+    //   poolCore,
+    //   poolParameters,
+    //   poolMarketplace,
+    //   poolApeStaking,
+    //   poolCoreSelectors,
+    //   poolParametersSelectors,
+    //   poolMarketplaceSelectors,
+    //   poolApeStakingSelectors,
+    // } = await deployPoolComponents(addressesProvider.address, verify);
     const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
       await deployPoolParaProxyInterfaces(verify);
 
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolParameters.address,
-            action: 0,
-            functionSelectors: poolParametersSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
+    // await waitForTx(
+    //   await addressesProvider.updatePoolImpl(
+    //     [
+    //       {
+    //         implAddress: poolParameters.address,
+    //         action: 0,
+    //         functionSelectors: poolParametersSelectors,
+    //       },
+    //     ],
+    //     ZERO_ADDRESS,
+    //     "0x",
+    //     GLOBAL_OVERRIDES
+    //   )
+    // );
 
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolMarketplace.address,
-            action: 0,
-            functionSelectors: poolMarketplaceSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
+    // await waitForTx(
+    //   await addressesProvider.updatePoolImpl(
+    //     [
+    //       {
+    //         implAddress: poolMarketplace.address,
+    //         action: 0,
+    //         functionSelectors: poolMarketplaceSelectors,
+    //       },
+    //     ],
+    //     ZERO_ADDRESS,
+    //     "0x",
+    //     GLOBAL_OVERRIDES
+    //   )
+    // );
 
-    if (poolApeStaking) {
-      await waitForTx(
-        await addressesProvider.updatePoolImpl(
-          [
-            {
-              implAddress: poolApeStaking.address,
-              action: 0,
-              functionSelectors: poolApeStakingSelectors,
-            },
-          ],
-          ZERO_ADDRESS,
-          "0x",
-          GLOBAL_OVERRIDES
-        )
-      );
-    }
+    // if (poolApeStaking) {
+    //   await waitForTx(
+    //     await addressesProvider.updatePoolImpl(
+    //       [
+    //         {
+    //           implAddress: poolApeStaking.address,
+    //           action: 0,
+    //           functionSelectors: poolApeStakingSelectors,
+    //         },
+    //       ],
+    //       ZERO_ADDRESS,
+    //       "0x",
+    //       GLOBAL_OVERRIDES
+    //     )
+    //   );
+    // }
 
     const poolAddress = await addressesProvider.getPool();
 
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolCore.address,
-            action: 0,
-            functionSelectors: poolCoreSelectors,
-          },
-        ],
-        poolAddress,
-        poolCore.interface.encodeFunctionData("initialize", [
-          addressesProvider.address,
-        ]),
-        GLOBAL_OVERRIDES
-      )
-    );
+    // await waitForTx(
+    //   await addressesProvider.updatePoolImpl(
+    //     [
+    //       {
+    //         implAddress: poolCore.address,
+    //         action: 0,
+    //         functionSelectors: poolCoreSelectors,
+    //       },
+    //     ],
+    //     poolAddress,
+    //     poolCore.interface.encodeFunctionData("initialize", [
+    //       addressesProvider.address,
+    //     ]),
+    //     GLOBAL_OVERRIDES
+    //   )
+    // );
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -118,24 +118,24 @@ export const step_06 = async (verify = false) => {
     const uniswapV3Router = await getUniswapV3SwapRouter();
     const allTokens = await getAllTokens();
 
-    if (allTokens[ERC20TokenContractId.APE]) {
-      await waitForTx(
-        await poolProxy.unlimitedApproveTo(
-          allTokens[ERC20TokenContractId.APE].address,
-          uniswapV3Router.address
-        )
-      );
-      await waitForTx(
-        await poolProxy.unlimitedApproveTo(
-          allTokens[ERC20TokenContractId.APE].address,
-          cAPE.address
-        )
-      );
-    }
-
-    await registerContractInDb(eContractid.PoolProxy, poolProxy, [
-      addressesProvider.address,
-    ]);
+    // if (allTokens[ERC20TokenContractId.APE]) {
+    //   await waitForTx(
+    //     await poolProxy.unlimitedApproveTo(
+    //       allTokens[ERC20TokenContractId.APE].address,
+    //       uniswapV3Router.address
+    //     )
+    //   );
+    //   await waitForTx(
+    //     await poolProxy.unlimitedApproveTo(
+    //       allTokens[ERC20TokenContractId.APE].address,
+    //       cAPE.address
+    //     )
+    //   );
+    // }
+    //
+    // await registerContractInDb(eContractid.PoolProxy, poolProxy, [
+    //   addressesProvider.address,
+    // ]);
   } catch (error) {
     console.error(error);
     process.exit(1);

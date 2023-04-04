@@ -26,6 +26,15 @@ interface IStakefishValidator {
 
     function pubkey() external view returns (bytes memory);
 
+    function withdrawnBalance() external view returns (uint256);
+
+    function feePoolAddress() external view returns (address);
+
+    function stateHistory(uint256 index)
+        external
+        view
+        returns (StateChange memory);
+
     /// @notice Inspect state of the change
     function lastStateChange() external view returns (StateChange memory);
 
@@ -43,18 +52,9 @@ interface IStakefishValidator {
     /// @notice claim fee pool and forward to nft owner
     function claimFeePool(uint256 amountRequested) external;
 
-    /// @notice get early access discount
-    function earlyAccessDiscount() external view returns (uint256);
-
-    /// @notice volume discount
-    function volumeDiscount() external view returns (uint256);
-
-    /// @notice calculates effect fee after discounts
-    function effectiveFee() external view returns (uint256);
-
     function getProtocolFee() external view returns (uint256);
 
-    function withdrawnBalance() external view returns (uint256);
+    function getNFTArtUrl() external view returns (string memory);
 
     /// @notice computes commission, useful for showing on UI
     function computeCommission(uint256 amount) external view returns (uint256);

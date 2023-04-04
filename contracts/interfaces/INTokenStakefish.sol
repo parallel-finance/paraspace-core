@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
+import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
+
 interface INTokenStakefish {
     // @param user The owner of validator NFT
     // @param tokenIds The list of token ID of validator NFT
@@ -42,4 +44,20 @@ interface INTokenStakefish {
         external
         view
         returns (uint256, uint256);
+
+    /**
+     * @dev Get the `StakefishNTokenData` struct associated with the given token ID
+     *
+     * @param tokenId The token ID of the validator NFT
+     *
+     * @return A `StakefishNTokenData` struct containing the metadata associated with the given NFT token ID
+     *
+     * @notice This function allows users to retrieve the `StakefishNTokenData` struct that contains the metadata
+     * associated with the specified validator NFT token ID. The metadata includes the token's name, symbol, asset address,
+     * and maximum supply. This function can be used to retrieve additional details about a particular validator NFT token.
+     */
+    function getNFTData(uint256 tokenId)
+        external
+        view
+        returns (DataTypes.StakefishNTokenData memory);
 }

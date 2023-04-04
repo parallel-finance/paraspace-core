@@ -89,6 +89,8 @@ import {
   TimeLock__factory,
   HotWalletProxy__factory,
   NTokenOtherdeed__factory,
+  StakefishNFTOracleWrapper__factory,
+  NTokenStakefish__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1241,12 +1243,40 @@ export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getNTokenStakefish = async (address?: tEthereumAddress) =>
+  await NTokenStakefish__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenStakefishImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getHotWalletProxy = async (address?: tEthereumAddress) =>
   await HotWalletProxy__factory.connect(
     address ||
       (
         await getDb()
           .get(`${eContractid.HotWalletProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getStakefishNFTOracleWrapper = async (
+  address?: tEthereumAddress
+) =>
+  await StakefishNFTOracleWrapper__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(
+            `${eContractid.Aggregator.concat(upperFirst(eContractid.SFVLDR))}.${
+              DRE.network.name
+            }`
+          )
           .value()
       ).address,
     await getFirstSigner()
