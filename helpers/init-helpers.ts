@@ -64,7 +64,6 @@ export const initReservesByHelper = async (
   treasuryAddress: tEthereumAddress,
   incentivesController: tEthereumAddress,
   hotWallet: tEthereumAddress,
-  stakefishManager: tEthereumAddress,
   verify: boolean,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
@@ -559,7 +558,7 @@ export const initReservesByHelper = async (
           xTokenToUse = nTokenOTHRImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.SFVLDR) {
           nTokenStakefishImplementationAddress = (
-            await deployStakefishNTokenImpl(pool.address, stakefishManager)
+            await deployStakefishNTokenImpl(pool.address)
           ).address;
 
           xTokenToUse = nTokenStakefishImplementationAddress;

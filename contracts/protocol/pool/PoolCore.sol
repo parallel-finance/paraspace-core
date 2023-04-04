@@ -238,7 +238,7 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function claimWithdrawals(
+    function claimStakefishWithdrawals(
         address asset,
         uint256[] calldata tokenIds,
         address to
@@ -246,11 +246,11 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
-            SupplyLogic.ExecuteClaimWithdrawals(
+            SupplyLogic.executeClaimStakefishWithdrawals(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
-                DataTypes.ExecuteClaimWithdrawalsParams({
+                DataTypes.ExecuteClaimStakefishWithdrawalsParams({
                     asset: asset,
                     tokenIds: tokenIds,
                     to: to,

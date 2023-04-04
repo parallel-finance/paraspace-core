@@ -50,8 +50,6 @@ export const step_11 = async (verify = false) => {
     let auctionStrategy: tEthereumAddress | undefined = undefined;
     let timeLockStrategy: tEthereumAddress | undefined = undefined;
     let hotWallet: tEthereumAddress | undefined = config.HotWallet;
-    const stakefishManager: tEthereumAddress | undefined =
-      config.StakefishManager;
 
     if (isLocalTestnet()) {
       incentivesController = (await deployMockIncentivesController(verify))
@@ -119,7 +117,6 @@ export const step_11 = async (verify = false) => {
         treasuryAddress,
         incentivesController,
         hotWallet || ZERO_ADDRESS,
-        stakefishManager!,
         verify,
         undefined,
         undefined,

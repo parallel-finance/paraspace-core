@@ -192,7 +192,7 @@ library DataTypes {
         address oracle;
     }
 
-    struct ExecuteClaimWithdrawalsParams {
+    struct ExecuteClaimStakefishWithdrawalsParams {
         address asset;
         uint256[] tokenIds;
         address to;

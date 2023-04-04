@@ -271,6 +271,8 @@ import {
   HotWalletProxy,
   NTokenStakefish__factory,
   NTokenStakefish,
+  StakefishNFTOracleWrapper__factory,
+  StakefishNFTOracleWrapper,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1937,6 +1939,17 @@ export const deployUniswapV3TwapOracleWrapper = async (
     verify
   ) as Promise<UniswapV3TwapOracleWrapper>;
 
+export const deployStakefishNFTOracleWrapper = async (
+  stakefishManager: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new StakefishNFTOracleWrapper__factory(await getFirstSigner()),
+    eContractid.Aggregator.concat(upperFirst(eContractid.SFVLDR)),
+    [stakefishManager],
+    verify
+  ) as Promise<StakefishNFTOracleWrapper>;
+
 export const deployNonfungiblePositionManager = async (
   args: [string, string, string],
   verify?: boolean
@@ -3111,7 +3124,6 @@ export const deployOtherdeedNTokenImpl = async (
 
 export const deployStakefishNTokenImpl = async (
   poolAddress: tEthereumAddress,
-  stakefishManager: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -3125,7 +3137,7 @@ export const deployStakefishNTokenImpl = async (
   return withSaveAndVerify(
     new NTokenStakefish__factory(libraries, await getFirstSigner()),
     eContractid.NTokenStakefishImpl,
-    [poolAddress, stakefishManager],
+    [poolAddress],
     verify,
     false,
     libraries

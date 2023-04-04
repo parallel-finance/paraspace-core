@@ -309,7 +309,7 @@ interface IPoolCore {
     @param to Address of the recipient that will receive the claimed funds
     @notice This function is used to claim funds that have been previously deposited into the Pool,
     */
-    function claimWithdrawals(
+    function claimStakefishWithdrawals(
         address asset,
         uint256[] calldata tokenIds,
         address to

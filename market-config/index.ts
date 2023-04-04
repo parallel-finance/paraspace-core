@@ -257,6 +257,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
   },
+  StakefishManager: "0x5b41ffb9c448c02ff3d0401b0374b67efcb73c7e",
 };
 
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {

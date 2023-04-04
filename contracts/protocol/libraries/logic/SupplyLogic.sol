@@ -212,7 +212,7 @@ library SupplyLogic {
                     memory lastState = IStakefishValidator(validatorAddr)
                         .lastStateChange();
                 // TODO: add error code
-                require(lastState.state == IStakefishValidator.State.Active);
+                require(lastState.state < IStakefishValidator.State.Withdrawn);
             }
         }
         if (
@@ -463,11 +463,11 @@ library SupplyLogic {
             );
     }
 
-    function ExecuteClaimWithdrawals(
+    function executeClaimStakefishWithdrawals(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
-        DataTypes.ExecuteClaimWithdrawalsParams memory params
+        DataTypes.ExecuteClaimStakefishWithdrawalsParams memory params
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();

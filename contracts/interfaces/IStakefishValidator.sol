@@ -52,6 +52,10 @@ interface IStakefishValidator {
     /// @notice calculates effect fee after discounts
     function effectiveFee() external view returns (uint256);
 
+    function getProtocolFee() external view returns (uint256);
+
+    function withdrawnBalance() external view returns (uint256);
+
     /// @notice computes commission, useful for showing on UI
     function computeCommission(uint256 amount) external view returns (uint256);
 

@@ -153,11 +153,7 @@ export const upgradeNToken = async (verify = false) => {
       if (!nTokenStakefishImplementationAddress) {
         console.log("deploy NTokenStakefish implementation");
         nTokenStakefishImplementationAddress = (
-          await deployStakefishNTokenImpl(
-            poolAddress,
-            paraSpaceConfig.StakefishManager || ZERO_ADDRESS,
-            verify
-          )
+          await deployStakefishNTokenImpl(poolAddress, verify)
         ).address;
       }
       newImpl = nTokenStakefishImplementationAddress;

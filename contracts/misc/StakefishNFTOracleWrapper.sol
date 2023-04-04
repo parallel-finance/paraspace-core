@@ -22,15 +22,39 @@ contract StakefishNFTOracleWrapper is IAtomicPriceAggregator {
         IStakefishValidator.StateChange memory lastState = IStakefishValidator(
             validatorAddr
         ).lastStateChange();
+        uint256 availableBalance = address(validatorAddr).balance;
+        uint256 withdrawnBalance = IStakefishValidator(validatorAddr)
+            .withdrawnBalance();
 
-        if (
-            lastState.state < IStakefishValidator.State.Active ||
-            lastState.state > IStakefishValidator.State.Exited
-        ) {
-            return 0;
+        if (lastState.state < IStakefishValidator.State.PostDeposit) {
+            return availableBalance;
         }
 
-        // TODO: which api to get the principal?
+        if (lastState.state <= IStakefishValidator.State.Exited) {
+            // 1. already withdrawn
+            if (withdrawnBalance >= 32 ether) {
+                uint256 commission = (availableBalance *
+                    IStakefishValidator(validatorAddr).getProtocolFee()) /
+                    10000;
+
+                return availableBalance - commission;
+            } else {
+                // 2. funds not arrive at the validator contract yet
+                if (withdrawnBalance + availableBalance <= 32 ether) {
+                    return 32 ether + availableBalance;
+                } else {
+                    // 3. funds arrived at the validator contract
+                    uint256 commissionApplyBalance = availableBalance +
+                        withdrawnBalance -
+                        32 ether;
+                    uint256 commission = (commissionApplyBalance *
+                        IStakefishValidator(validatorAddr).getProtocolFee()) /
+                        10000;
+                    return availableBalance + withdrawnBalance - commission;
+                }
+            }
+        }
+
         return 0;
     }
 }

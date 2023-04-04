@@ -16,17 +16,11 @@ import {Helpers} from "../libraries/helpers/Helpers.sol";
  * @notice Implementation of the NFT derivative token for the ParaSpace protocol
  */
 contract NTokenStakefish is NToken, INTokenStakefish {
-    IStakefishNFTManager private immutable STAKEFISH_NFT_MANAGER;
-
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, IStakefishNFTManager stakefishManager)
-        NToken(pool, false)
-    {
-        STAKEFISH_NFT_MANAGER = stakefishManager;
-    }
+    constructor(IPool pool) NToken(pool, true) {}
 
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenStakefish;
@@ -46,6 +40,31 @@ contract NTokenStakefish is NToken, INTokenStakefish {
             );
             address validatorAddr = _getValidatorAddr(tokenIds[index]);
             IStakefishValidator(validatorAddr).withdraw();
+        }
+        uint256 diff = address(this).balance - beforeBalance;
+        if (diff > 0) Helpers.safeTransferETH(to, diff);
+    }
+
+    // @inheritdoc INTokenStakefish
+    function claimFeePool(
+        uint256[] calldata tokenIds,
+        uint256[] calldata amountsRequested,
+        address to
+    ) external nonReentrant {
+        require(
+            tokenIds.length == amountsRequested.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
+        uint256 beforeBalance = address(this).balance;
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            require(
+                msg.sender == _ERC721Data.owners[tokenIds[index]],
+                Errors.NOT_THE_OWNER
+            );
+            address validatorAddr = _getValidatorAddr(tokenIds[index]);
+            IStakefishValidator(validatorAddr).claimFeePool(
+                amountsRequested[index]
+            );
         }
         uint256 diff = address(this).balance - beforeBalance;
         if (diff > 0) Helpers.safeTransferETH(to, diff);
@@ -86,6 +105,15 @@ contract NTokenStakefish is NToken, INTokenStakefish {
         // Ensure that the validator address is not zero
         require(validatorAddr != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         return validatorAddr;
+    }
+
+    function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
+        external
+        override
+        onlyPoolAdmin
+        nonReentrant
+    {
+        revert();
     }
 
     receive() external payable {}

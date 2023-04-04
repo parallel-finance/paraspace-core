@@ -14,6 +14,22 @@ interface INTokenStakefish {
         address to
     ) external;
 
+    /**
+     * @dev Claim the fee pool reward amount requested by the user for the given token IDs.
+     *
+     * @param tokenIds List of token IDs for which fee pool rewards are being claimed
+     * @param amountsRequested List of claim amounts requested by the user for each token
+     * @param to The recipient of claimed ETH
+     *
+     * @notice This function allows the user to claim the fee pool reward for the given set of validator NFT token IDs
+     * The amountsRequested list must be strictly ordered with respect to the tokenIds list
+     */
+    function claimFeePool(
+        uint256[] calldata tokenIds,
+        uint256[] calldata amountsRequested,
+        address to
+    ) external;
+
     // @param tokenId The token ID of validator NFT
     //
     // @notice allows validator to request withdrawal from the staking pool
