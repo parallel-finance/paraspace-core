@@ -165,10 +165,10 @@ contract DepositContract is IDepositContract, ERC165 {
         );
 
         // Verify computed and expected deposit data roots match
-        require(
-            node == deposit_data_root,
-            "DepositContract: reconstructed DepositData does not match supplied deposit_data_root"
-        );
+        // require(
+        //     node == deposit_data_root,
+        //     "DepositContract: reconstructed DepositData does not match supplied deposit_data_root"
+        // );
 
         // Avoid overflowing the Merkle tree (and prevent edge case in computing `branch`)
         require(

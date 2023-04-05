@@ -366,18 +366,44 @@ library GenericLogic {
         DataTypes.CalculateUserAccountDataParams memory params,
         CalculateUserAccountDataVars memory vars
     ) private view returns (uint256 totalValue) {
-        uint256 assetPrice = _getAssetPrice(
-            params.oracle,
-            vars.currentReserveAddress
-        );
+        INToken nToken = INToken(vars.xTokenAddress);
+        bool isAtomicPrice = IAtomicCollateralizableERC721(vars.xTokenAddress)
+            .isAtomicPricing();
+        if (isAtomicPrice) {
+            uint256 totalBalance = nToken.balanceOf(params.user);
 
-        uint256 collateralizedBalance = ICollateralizableERC721(
-            vars.xTokenAddress
-        ).collateralizedBalanceOf(params.user);
-        uint256 avgMultiplier = IAtomicCollateralizableERC721(
-            vars.xTokenAddress
-        ).avgMultiplierOf(params.user);
-        totalValue = (collateralizedBalance * avgMultiplier).wadMul(assetPrice);
+            for (uint256 index = 0; index < totalBalance; index++) {
+                uint256 tokenId = nToken.tokenOfOwnerByIndex(
+                    params.user,
+                    index
+                );
+                if (
+                    ICollateralizableERC721(vars.xTokenAddress)
+                        .isUsedAsCollateral(tokenId)
+                ) {
+                    totalValue += _getTokenPrice(
+                        params.oracle,
+                        vars.currentReserveAddress,
+                        tokenId
+                    );
+                }
+            }
+        } else {
+            uint256 assetPrice = _getAssetPrice(
+                params.oracle,
+                vars.currentReserveAddress
+            );
+
+            uint256 collateralizedBalance = ICollateralizableERC721(
+                vars.xTokenAddress
+            ).collateralizedBalanceOf(params.user);
+            uint256 avgMultiplier = IAtomicCollateralizableERC721(
+                vars.xTokenAddress
+            ).avgMultiplierOf(params.user);
+            totalValue = (collateralizedBalance * avgMultiplier).wadMul(
+                assetPrice
+            );
+        }
     }
 
     function getLtvAndLTForUniswapV3(

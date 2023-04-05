@@ -140,6 +140,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
+    SFVLDR: strategyStakefishValidator,
   },
   DelegationRegistry: ZERO_ADDRESS,
 };

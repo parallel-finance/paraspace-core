@@ -119,6 +119,10 @@ contract StakefishValidatorV1 is StakefishValidatorBase, IStakefishValidator, In
                 emit StakefishValidatorCommissionTransferred(pubkey, commission);
             }
         }
+
+        if(this.lastStateChange().state == State.PreDeposit) {
+            stateHistory.push(StateChange(State.Burnable, 0x0, uint128(block.timestamp)));
+        }
     }
 
     function validatorFeePoolChange(address _feePoolAddress) external nonReentrant override operatorOnly {

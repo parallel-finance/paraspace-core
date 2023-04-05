@@ -54,6 +54,7 @@ import {
   getMockCToken,
   getNTokenOtherdeed,
   getStakefishNFTManager,
+  getNTokenStakefish,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -80,6 +81,7 @@ import {
   NTokenMAYC,
   NTokenMoonBirds,
   NTokenOtherdeed,
+  NTokenStakefish,
   NTokenUniswapV3,
   PausableZone,
   PausableZoneController,
@@ -171,6 +173,7 @@ export interface TestEnv {
   nOTHR: NTokenOtherdeed;
   bayc: MintableERC721;
   sfvldr: StakefishNFTManager;
+  nSfvldr: NTokenStakefish;
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
   aclManager: ACLManager;
@@ -250,6 +253,7 @@ export async function initializeMakeSuite() {
     nBAKC: {} as NTokenBAKC,
     bayc: {} as MintableERC721,
     sfvldr: {} as StakefishNFTManager,
+    nSfvldr: {} as NTokenStakefish,
     addressesProvider: {} as PoolAddressesProvider,
     registry: {} as PoolAddressesProviderRegistry,
     aclManager: {} as ACLManager,
@@ -394,6 +398,10 @@ export async function initializeMakeSuite() {
     (xToken) => xToken.symbol === NTokenContractId.nBAKC
   )?.tokenAddress;
 
+  const nSfvldrAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nSFVLDR
+  )?.tokenAddress;
+
   const nWPunkAddress = allTokens.find(
     (xToken) => xToken.symbol === NTokenContractId.nWPUNKS
   )?.tokenAddress;
@@ -517,6 +525,7 @@ export async function initializeMakeSuite() {
   testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
   testEnv.nDOODLE = await getNToken(nDOODLEAddress);
   testEnv.nBAKC = await getNTokenBAKC(nBAKCAddress);
+  testEnv.nSfvldr = await getNTokenStakefish(nSfvldrAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);
 

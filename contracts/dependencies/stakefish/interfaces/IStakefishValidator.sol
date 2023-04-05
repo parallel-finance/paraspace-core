@@ -14,7 +14,7 @@ interface IStakefishValidator {
     event StakefishValidatorCommissionTransferred(bytes validatorPubKey, uint256 amount);
     event StakefishValidatorFeePoolChanged(bytes validatorPubKey, address feePoolAddress);
 
-    enum State { PreDeposit, PostDeposit, Active, ExitRequested, Exited, Withdrawn }
+    enum State { PreDeposit, PostDeposit, Active, ExitRequested, Exited, Withdrawn, Burnable }
 
     /// @dev aligns into 32 byte
     struct StateChange {

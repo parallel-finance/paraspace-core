@@ -303,6 +303,7 @@ import {
   getContractAddressInDb,
   getFunctionSignatures,
   getFunctionSignaturesFromDb,
+  getParaSpaceAdmins,
   insertContractAddressInDb,
   withSaveAndVerify,
 } from "./contracts-helpers";
@@ -1213,7 +1214,8 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
       | Land
       | Meebits
       | Moonbirds
-      | Contract;
+      | Contract
+      | StakefishNFTManager;
   } = {};
   const paraSpaceConfig = getParaSpaceConfig();
   const reservesConfig = paraSpaceConfig.ReservesConfig;
@@ -1398,6 +1400,30 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
             verify
           );
         tokens[tokenSymbol] = nonfungiblePositionManager;
+        continue;
+      }
+
+      if (tokenSymbol === ERC721TokenContractId.SFVLDR) {
+        const depositContract = await deployDepositContract(verify);
+        const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
+        const validatorImpl = await deployStakefishValidator(
+          depositContract.address,
+          verify
+        );
+
+        const factory = await deployStakefishValidatorFactory(
+          validatorImpl.address,
+          paraSpaceAdminAddress,
+          verify
+        );
+
+        const nftManager = await deployStakefishNFTManager(
+          factory.address,
+          verify
+        );
+        await waitForTx(await factory.setDeployer(nftManager.address, true));
+
+        tokens[tokenSymbol] = nftManager;
         continue;
       }
 
@@ -2937,7 +2963,7 @@ export const deployStakefishNFTManager = async (
 ) =>
   withSaveAndVerify(
     new StakefishNFTManager__factory(await getFirstSigner()),
-    eContractid.StakefishNFTManager,
+    eContractid.SFVLDR,
     [factory],
     verify
   ) as Promise<StakefishNFTManager>;

@@ -94,6 +94,7 @@ import {
   StakefishNFTManager__factory,
   StakefishValidatorV1__factory,
   StakefishValidatorFactory__factory,
+  NTokenStakefish__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1285,9 +1286,7 @@ export const getStakefishNFTManager = async (address?: tEthereumAddress) =>
   await StakefishNFTManager__factory.connect(
     address ||
       (
-        await getDb()
-          .get(`${eContractid.StakefishNFTManager}.${DRE.network.name}`)
-          .value()
+        await getDb().get(`${eContractid.SFVLDR}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );
@@ -1309,6 +1308,17 @@ export const getDepositContract = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.DepositContract}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenStakefish = async (address?: tEthereumAddress) =>
+  await NTokenStakefish__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenStakefishImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
