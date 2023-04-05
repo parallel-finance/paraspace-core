@@ -275,6 +275,14 @@ import {
   StakefishNFTOracleWrapper,
   DelegationRegistry,
   DelegationRegistry__factory,
+  StakefishNFTManager__factory,
+  StakefishNFTManager,
+  StakefishValidatorV1__factory,
+  StakefishValidatorV1,
+  DepositContract__factory,
+  DepositContract,
+  StakefishValidatorFactory__factory,
+  StakefishValidatorFactory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2848,6 +2856,111 @@ export const deployReserveTimeLockStrategy = async (
     verify
   ) as Promise<DefaultTimeLockStrategy>;
 
+export const deployOtherdeedNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  warmWallet: tEthereumAddress,
+  delegationRegistryAddress: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    new NTokenOtherdeed__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenOtherdeedImpl,
+    [poolAddress, warmWallet, delegationRegistryAddress],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenOtherdeed>;
+};
+
+export const deployStakefishNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  delegationRegistryAddress: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    new NTokenStakefish__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenStakefishImpl,
+    [poolAddress, delegationRegistryAddress],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenStakefish>;
+};
+
+export const deployHotWalletProxy = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new HotWalletProxy__factory(await getFirstSigner()),
+    eContractid.HotWalletProxy,
+    [],
+    verify
+  ) as Promise<HotWalletProxy>;
+
+export const deployDelegationRegistry = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new DelegationRegistry__factory(await getFirstSigner()),
+    eContractid.DelegationRegistry,
+    [],
+    verify
+  ) as Promise<DelegationRegistry>;
+
+export const deployStakefishValidatorFactory = async (
+  genesisImplementation: tEthereumAddress,
+  operator: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new StakefishValidatorFactory__factory(await getFirstSigner()),
+    eContractid.StakefishValidatorFactory,
+    [genesisImplementation, operator],
+    verify
+  ) as Promise<StakefishValidatorFactory>;
+
+export const deployStakefishNFTManager = async (
+  factory: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new StakefishNFTManager__factory(await getFirstSigner()),
+    eContractid.StakefishNFTManager,
+    [factory],
+    verify
+  ) as Promise<StakefishNFTManager>;
+
+export const deployDepositContract = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new DepositContract__factory(await getFirstSigner()),
+    eContractid.DepositContract,
+    [],
+    verify
+  ) as Promise<DepositContract>;
+
+export const deployStakefishValidator = async (
+  depositContract: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new StakefishValidatorV1__factory(await getFirstSigner()),
+    eContractid.StakefishValidator,
+    [depositContract],
+    verify
+  ) as Promise<StakefishValidatorV1>;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
 ////////////////////////////////////////////////////////////////////////////////
@@ -3106,65 +3219,6 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
-
-export const deployOtherdeedNTokenImpl = async (
-  poolAddress: tEthereumAddress,
-  warmWallet: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
-  verify?: boolean
-) => {
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    new NTokenOtherdeed__factory(libraries, await getFirstSigner()),
-    eContractid.NTokenOtherdeedImpl,
-    [poolAddress, warmWallet, delegationRegistryAddress],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenOtherdeed>;
-};
-
-export const deployStakefishNTokenImpl = async (
-  poolAddress: tEthereumAddress,
-  verify?: boolean
-) => {
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    new NTokenStakefish__factory(libraries, await getFirstSigner()),
-    eContractid.NTokenStakefishImpl,
-    [poolAddress],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenStakefish>;
-};
-
-export const deployHotWalletProxy = async (verify?: boolean) =>
-  withSaveAndVerify(
-    new HotWalletProxy__factory(await getFirstSigner()),
-    eContractid.HotWalletProxy,
-    [],
-    verify
-  ) as Promise<HotWalletProxy>;
-
-export const deployDelegationRegistry = async (verify?: boolean) =>
-  withSaveAndVerify(
-    new DelegationRegistry__factory(await getFirstSigner()),
-    eContractid.DelegationRegistry,
-    [],
-    verify
-  ) as Promise<DelegationRegistry>;
+////////////////////////////////////////////////////////////////////////////////
+//  PLS ONLY APPEND MOCK CONTRACTS HERE!
+////////////////////////////////////////////////////////////////////////////////

@@ -432,3 +432,15 @@ export const timeLockStrategyPenguins: ITimeLockStrategyParams = {
   poolPeriodLimit: "2",
   period: "86400",
 };
+
+export const timeLockStrategyStakefishValidator: ITimeLockStrategyParams = {
+  name: "timeLockStrategyStakefishValidator",
+  minThreshold: "4",
+  midThreshold: "12",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "2",
+  period: "86400",
+};

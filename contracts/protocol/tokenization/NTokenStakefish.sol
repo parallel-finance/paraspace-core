@@ -9,6 +9,7 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
  * @title  NTokenStakefish
@@ -92,6 +93,46 @@ contract NTokenStakefish is NToken, INTokenStakefish {
     {
         address validatorAddr = _getValidatorAddr(tokenId);
         return IStakefishValidator(validatorAddr).pendingFeePoolReward();
+    }
+
+    // @inheritdoc INTokenStakefish
+    function getNFTData(uint256 tokenId)
+        external
+        view
+        returns (DataTypes.StakefishNTokenData memory data)
+    {
+        address validatorAddr = _getValidatorAddr(tokenId);
+        data.validatorIndex = IStakefishValidator(validatorAddr)
+            .validatorIndex();
+        data.pubkey = IStakefishValidator(validatorAddr).pubkey();
+        data.withdrawnBalance = IStakefishValidator(validatorAddr)
+            .withdrawnBalance();
+        data.feePoolAddress = IStakefishValidator(validatorAddr)
+            .feePoolAddress();
+        data.nftArtUrl = IStakefishValidator(validatorAddr).getNFTArtUrl();
+        data.protocolFee = IStakefishValidator(validatorAddr).getProtocolFee();
+        IStakefishValidator.StateChange
+            memory lastStateChange = IStakefishValidator(validatorAddr)
+                .lastStateChange();
+
+        uint8 size = uint8(lastStateChange.state) + 1;
+        IStakefishValidator.StateChange[]
+            memory stateHistory = new IStakefishValidator.StateChange[](size);
+        for (uint256 i = 0; i < size; i++) {
+            stateHistory[i] = IStakefishValidator(validatorAddr).stateHistory(
+                i
+            );
+        }
+        data.stateHistory = stateHistory;
+
+        if (data.feePoolAddress != address(0)) {
+            (
+                uint256 pendingRewards,
+                uint256 collectedRewards
+            ) = IStakefishValidator(validatorAddr).pendingFeePoolReward();
+            data.pendingFeePoolReward[0] = pendingRewards;
+            data.pendingFeePoolReward[1] = collectedRewards;
+        }
     }
 
     // Internal function to get the validator contract address for the given tokenId

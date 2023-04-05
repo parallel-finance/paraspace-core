@@ -331,6 +331,7 @@ export const initReservesByHelper = async (
         eContractid.NTokenBAYCImpl,
         eContractid.NTokenMAYCImpl,
         eContractid.NTokenBAKCImpl,
+        eContractid.NTokenStakefishImpl,
       ].includes(xTokenImpl)
     ) {
       xTokenType[symbol] = "nft";
@@ -583,7 +584,11 @@ export const initReservesByHelper = async (
           xTokenToUse = nTokenOTHRImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.SFVLDR) {
           nTokenStakefishImplementationAddress = (
-            await deployStakefishNTokenImpl(pool.address)
+            await deployStakefishNTokenImpl(
+              pool.address,
+              delegationRegistryAddress,
+              verify
+            )
           ).address;
 
           xTokenToUse = nTokenStakefishImplementationAddress;

@@ -268,6 +268,10 @@ export enum eContractid {
   HotWalletProxy = "HotWalletProxy",
   SFVLDR = "SFVLDR",
   DelegationRegistry = "DelegationRegistry",
+  StakefishNFTManager = "StakefishNFTManager",
+  StakefishValidator = "StakefishValidator",
+  StakefishValidatorFactory = "StakefishValidatorFactory",
+  DepositContract = "DepositContract",
 }
 
 /*

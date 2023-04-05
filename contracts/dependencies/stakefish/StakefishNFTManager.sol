@@ -29,7 +29,7 @@ contract StakefishNFTManager is IStakefishNFTManager, ERC721Enumerable, Reentran
         _;
     }
 
-    constructor(address factory_) ERC721("Stakefish NFT Validator", "SF-NFT-VDR") {
+    constructor(address factory_) ERC721("Stakefish NFT Validator", "SFVLDR") {
         require(factory_ != address(0), "missing factory");
         factory = factory_;
     }

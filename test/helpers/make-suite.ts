@@ -53,6 +53,7 @@ import {
   getWstETH,
   getMockCToken,
   getNTokenOtherdeed,
+  getStakefishNFTManager,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -83,6 +84,7 @@ import {
   PausableZone,
   PausableZoneController,
   SeaportAdapter,
+  StakefishNFTManager,
   StETHDebtToken,
   UiPoolDataProvider,
   WstETHMocked,
@@ -168,6 +170,7 @@ export interface TestEnv {
   nBAYC: NTokenBAYC;
   nOTHR: NTokenOtherdeed;
   bayc: MintableERC721;
+  sfvldr: StakefishNFTManager;
   addressesProvider: PoolAddressesProvider;
   registry: PoolAddressesProviderRegistry;
   aclManager: ACLManager;
@@ -246,6 +249,7 @@ export async function initializeMakeSuite() {
     nMOONBIRD: {} as NTokenMoonBirds,
     nBAKC: {} as NTokenBAKC,
     bayc: {} as MintableERC721,
+    sfvldr: {} as StakefishNFTManager,
     addressesProvider: {} as PoolAddressesProvider,
     registry: {} as PoolAddressesProviderRegistry,
     aclManager: {} as ACLManager,
@@ -442,6 +446,9 @@ export async function initializeMakeSuite() {
   const baycAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.BAYC
   )?.tokenAddress;
+  const sfvldrAddress = reservesTokens.find(
+    (token) => token.symbol === ERC721TokenContractId.SFVLDR
+  )?.tokenAddress;
   const punksAddress = reservesTokens.find(
     (token) => token.symbol === eContractid.PUNKS
   )?.tokenAddress;
@@ -521,6 +528,8 @@ export async function initializeMakeSuite() {
   testEnv.weth = await getWETH(wethAddress);
 
   testEnv.bayc = await getMintableERC721(baycAddress);
+
+  testEnv.sfvldr = await getStakefishNFTManager(sfvldrAddress);
 
   testEnv.nWPunk = await getNToken(nWPunkAddress);
   testEnv.punks = await getPunks(punksAddress);

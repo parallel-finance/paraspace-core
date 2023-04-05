@@ -65,7 +65,7 @@ export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
 );
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");
-export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "24");
+export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "25");
 export const DEPLOY_INCREMENTAL =
   process.env.DEPLOY_INCREMENTAL == "true" ? true : false;
 
