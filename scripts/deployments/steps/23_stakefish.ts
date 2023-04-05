@@ -5,9 +5,9 @@
 //   deployStakefishValidator,
 // } from "../../../helpers/contracts-deployments";
 // import {getParaSpaceAdmins} from "../../../helpers/contracts-helpers";
-import {isLocalTestnet, waitForTx} from "../../../helpers/misc-utils";
+import {isLocalTestnet} from "../../../helpers/misc-utils";
 
-export const step_23 = async (verify = false) => {
+export const step_23 = async () => {
   try {
     if (!isLocalTestnet()) {
       return;
