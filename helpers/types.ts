@@ -267,6 +267,7 @@ export enum eContractid {
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
   SFVLDR = "SFVLDR",
+  DelegationRegistry = "DelegationRegistry",
 }
 
 /*
@@ -754,6 +755,7 @@ export interface ICommonConfiguration {
   Oracle: IOracleConfig;
   HotWallet: tEthereumAddress | undefined;
   StakefishManager: tEthereumAddress | undefined;
+  DelegationRegistry: tEthereumAddress;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

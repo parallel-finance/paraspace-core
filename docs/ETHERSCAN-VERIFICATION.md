@@ -10,10 +10,12 @@ export ETH_RPC_URL="https://eth-$NETWORK.alchemyapi.io/v2/$ALCHEMY_KEY"
 export ETHERSCAN_API_KEY="$ETHERSCAN_KEY"
 ```
 
+## Install proxychains
+
 ## Libraries
 
 ```
-forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
+proxychains forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
@@ -25,7 +27,7 @@ forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
 ### BorrowLogic
 
 ```
-forge verify-contract 0xF5474ceD4C3c9a256469947D18e3455aEc2E2344 \
+proxychains forge verify-contract 0xF5474ceD4C3c9a256469947D18e3455aEc2E2344 \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
@@ -36,7 +38,7 @@ forge verify-contract 0xF5474ceD4C3c9a256469947D18e3455aEc2E2344 \
 ### LiquidationLogic
 
 ```
-forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
+proxychains forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
@@ -48,7 +50,7 @@ forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
 ### FlashClaimlogic
 
 ```
-forge verify-contract 0x6280760c550b5424F4F25d627D4E52982d0C7905 \
+proxychains forge verify-contract 0x6280760c550b5424F4F25d627D4E52982d0C7905 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -59,7 +61,7 @@ forge verify-contract 0x6280760c550b5424F4F25d627D4E52982d0C7905 \
 ### ConfiguratorLogic
 
 ```
-forge verify-contract 0x7347FcFa8D44e495AFE71271e78247156E090C9f \
+proxychains forge verify-contract 0x7347FcFa8D44e495AFE71271e78247156E090C9f \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
@@ -70,7 +72,7 @@ forge verify-contract 0x7347FcFa8D44e495AFE71271e78247156E090C9f \
 ### AuctionLogic
 
 ```
-forge verify-contract 0x462FCbD3A16A9a09fE686CDf40d0c0b3E493a3aB \
+proxychains forge verify-contract 0x462FCbD3A16A9a09fE686CDf40d0c0b3E493a3aB \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -81,7 +83,7 @@ forge verify-contract 0x462FCbD3A16A9a09fE686CDf40d0c0b3E493a3aB \
 ### PoolLogic
 
 ```
-forge verify-contract 0xDA4b9E3D30A59eCF5AD669ADC591Ddd176fD80e8 \
+proxychains forge verify-contract 0xDA4b9E3D30A59eCF5AD669ADC591Ddd176fD80e8 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -92,7 +94,7 @@ forge verify-contract 0xDA4b9E3D30A59eCF5AD669ADC591Ddd176fD80e8 \
 ### MarketplaceLogic
 
 ```
-forge verify-contract 0xB4bD5f0ac344fae07633eD09D3Db5117e2aaBdBf \
+proxychains forge verify-contract 0xB4bD5f0ac344fae07633eD09D3Db5117e2aaBdBf \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -105,7 +107,7 @@ forge verify-contract 0xB4bD5f0ac344fae07633eD09D3Db5117e2aaBdBf \
 ### ApeStakingLogic
 
 ```
-forge verify-contract 0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
+proxychains forge verify-contract 0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -116,7 +118,7 @@ contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic \
 ### MintableERC721Logic
 
 ```
-forge verify-contract 0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+proxychains forge verify-contract 0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -127,7 +129,7 @@ forge verify-contract 0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
 ### PToken
 
 ```
-forge verify-contract 0x0139538b3513782E179ac96c690Bc1e378B42F8F \
+proxychains forge verify-contract 0x0139538b3513782E179ac96c690Bc1e378B42F8F \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -140,7 +142,7 @@ forge verify-contract 0x0139538b3513782E179ac96c690Bc1e378B42F8F \
 ### PTokenAToken
 
 ```
-forge verify-contract 0x2f34DD450924Aa9bE59422B40933eCaaD644D7Df \
+proxychains forge verify-contract 0x2f34DD450924Aa9bE59422B40933eCaaD644D7Df \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -153,7 +155,7 @@ forge verify-contract 0x2f34DD450924Aa9bE59422B40933eCaaD644D7Df \
 ### PTokenSApe
 
 ```
-forge verify-contract 0x540d448a1F6E79CF91902e47E1aE030F4F371265 \
+proxychains forge verify-contract 0x540d448a1F6E79CF91902e47E1aE030F4F371265 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -166,7 +168,7 @@ forge verify-contract 0x540d448a1F6E79CF91902e47E1aE030F4F371265 \
 ### PTokenCApe
 
 ```
-forge verify-contract 0x8c17beb69971E127e78C2e60F0408232F7d6340F \
+proxychains forge verify-contract 0x8c17beb69971E127e78C2e60F0408232F7d6340F \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -181,7 +183,7 @@ forge verify-contract 0x8c17beb69971E127e78C2e60F0408232F7d6340F \
 ### NTokenBAYC
 
 ```
-forge verify-contract 0xc4e1e2a4Ab406E73d1809016c91D11D50cEe6FAa \
+proxychains forge verify-contract 0xc4e1e2a4Ab406E73d1809016c91D11D50cEe6FAa \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -196,7 +198,7 @@ forge verify-contract 0xc4e1e2a4Ab406E73d1809016c91D11D50cEe6FAa \
 ### NTokenMAYC
 
 ```
-forge verify-contract 0xA43Ba33223e1449A6f901b3E3b75dC22fb29F0ed \
+proxychains forge verify-contract 0xA43Ba33223e1449A6f901b3E3b75dC22fb29F0ed \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -211,7 +213,7 @@ forge verify-contract 0xA43Ba33223e1449A6f901b3E3b75dC22fb29F0ed \
 ### NTokenBAKC
 
 ```
-forge verify-contract 0x6192C2FCF4e8eB97c51d6771aB6C39691F3fAf34 \
+proxychains forge verify-contract 0x6192C2FCF4e8eB97c51d6771aB6C39691F3fAf34 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -226,7 +228,7 @@ forge verify-contract 0x6192C2FCF4e8eB97c51d6771aB6C39691F3fAf34 \
 ### NTokenOtherdeed
 
 ```
-forge verify-contract 0x0ab07E037Aeae1af2fF991Af239855087939f05d \
+proxychains forge verify-contract 0x0ab07E037Aeae1af2fF991Af239855087939f05d \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -240,7 +242,7 @@ forge verify-contract 0x0ab07E037Aeae1af2fF991Af239855087939f05d \
 ### NTokenMoonbirds
 
 ```
-forge verify-contract 0x5962CA824E31992453BF1CD8569c6dEf6F89D0Db \
+proxychains forge verify-contract 0x5962CA824E31992453BF1CD8569c6dEf6F89D0Db \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -254,7 +256,7 @@ forge verify-contract 0x5962CA824E31992453BF1CD8569c6dEf6F89D0Db \
 ### NTokenUniswapV3
 
 ```
-forge verify-contract 0xE30968b619b2C34462ac63268f1CA35ad72Ce3F0 \
+proxychains forge verify-contract 0xE30968b619b2C34462ac63268f1CA35ad72Ce3F0 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -268,7 +270,7 @@ forge verify-contract 0xE30968b619b2C34462ac63268f1CA35ad72Ce3F0 \
 ### NToken
 
 ```
-forge verify-contract 0x64c79b88911e674458011E1d5795d41FfB74F358 \
+proxychains forge verify-contract 0x64c79b88911e674458011E1d5795d41FfB74F358 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -284,7 +286,7 @@ forge verify-contract 0x64c79b88911e674458011E1d5795d41FfB74F358 \
 ### ATokenDebtToken
 
 ```
-forge verify-contract 0xA00D612d9b2719e05eaB67602F8A72E88582c6Cf \
+proxychains forge verify-contract 0xA00D612d9b2719e05eaB67602F8A72E88582c6Cf \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -297,7 +299,7 @@ forge verify-contract 0xA00D612d9b2719e05eaB67602F8A72E88582c6Cf \
 ### VariableDebtToken
 
 ```
-forge verify-contract 0x3A0Bde0893A60D139d26C2E5C29799f923173341 \
+proxychains forge verify-contract 0x3A0Bde0893A60D139d26C2E5C29799f923173341 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -310,7 +312,7 @@ forge verify-contract 0x3A0Bde0893A60D139d26C2E5C29799f923173341 \
 ## PoolConfigurator
 
 ```
-forge verify-contract 0x21489e1D79f03aFf8119b1E93C18BFEA84A3D24C \
+proxychains forge verify-contract 0x21489e1D79f03aFf8119b1E93C18BFEA84A3D24C \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
@@ -324,7 +326,7 @@ forge verify-contract 0x21489e1D79f03aFf8119b1E93C18BFEA84A3D24C \
 ### PoolCore
 
 ```
-forge verify-contract 0x8e1f8B5c9ae49a9B13084c4BD071efC03a7c3Da8 \
+proxychains forge verify-contract 0x8e1f8B5c9ae49a9B13084c4BD071efC03a7c3Da8 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -342,7 +344,7 @@ forge verify-contract 0x8e1f8B5c9ae49a9B13084c4BD071efC03a7c3Da8 \
 ### PoolMarketplace
 
 ```
-forge verify-contract 0xB0A9B618c23c196C2cD51Da3d7A8CF176c353a5d \
+proxychains forge verify-contract 0xB0A9B618c23c196C2cD51Da3d7A8CF176c353a5d \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -356,7 +358,7 @@ forge verify-contract 0xB0A9B618c23c196C2cD51Da3d7A8CF176c353a5d \
 ### PoolApeStaking
 
 ```
-forge verify-contract 0xcB820d544513636a70dF9A42fC6Cc535730AA606 \
+proxychains forge verify-contract 0xcB820d544513636a70dF9A42fC6Cc535730AA606 \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
@@ -371,7 +373,7 @@ forge verify-contract 0xcB820d544513636a70dF9A42fC6Cc535730AA606 \
 ### cAPE
 
 ```
-forge verify-contract 0x1Ba6891D74b3B1f84b3EdFa6538D99eE979E8B63 \
+proxychains forge verify-contract 0x1Ba6891D74b3B1f84b3EdFa6538D99eE979E8B63 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -386,7 +388,7 @@ forge verify-contract 0x1Ba6891D74b3B1f84b3EdFa6538D99eE979E8B63 \
 ### CLBaseCurrencySynchronicityPriceAdapter
 
 ```
-forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
+proxychains forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -399,7 +401,7 @@ forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
 ### CLExchangeRateSynchronicityPriceAdapter
 
 ```
-forge verify-contract 0xFCbf6B66dED63D6a8231dB091c16a3481d2E8890 \
+proxychains forge verify-contract 0xFCbf6B66dED63D6a8231dB091c16a3481d2E8890 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -412,7 +414,7 @@ forge verify-contract 0xFCbf6B66dED63D6a8231dB091c16a3481d2E8890 \
 ### UniswapV3TwapOracleWrapper
 
 ```
-forge verify-contract 0x32A880E831814CfD55dC556645Ef06816fE9bE02 \
+proxychains forge verify-contract 0x32A880E831814CfD55dC556645Ef06816fE9bE02 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -433,7 +435,7 @@ TBD
 ### InitializableAdminUpgradeabilityProxy
 
 ```
-forge verify-contract 0xBAa0DaA4224d2eb4619FfDC8A50Ef50c754b55F3 \
+proxychains forge verify-contract 0xBAa0DaA4224d2eb4619FfDC8A50Ef50c754b55F3 \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
@@ -446,7 +448,7 @@ forge verify-contract 0xBAa0DaA4224d2eb4619FfDC8A50Ef50c754b55F3 \
 ### DefaultReserveInterestRateStrategy
 
 ```
-forge verify-contract 0xCC07D35c011d565F4089A86a2D08369439632125 \
+proxychains forge verify-contract 0xCC07D35c011d565F4089A86a2D08369439632125 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -459,7 +461,7 @@ forge verify-contract 0xCC07D35c011d565F4089A86a2D08369439632125 \
 ### DefaultReserveAuctionStrategy
 
 ```
-forge verify-contract 0x86FDEc54ec867bad1d0Ee47aa818948F6A1E5dB8 \
+proxychains forge verify-contract 0x86FDEc54ec867bad1d0Ee47aa818948F6A1E5dB8 \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -472,7 +474,7 @@ forge verify-contract 0x86FDEc54ec867bad1d0Ee47aa818948F6A1E5dB8 \
 ### DefaultReserveTimeLockStrategy
 
 ```
-forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
+proxychains forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
@@ -485,7 +487,7 @@ forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
 ## TimeLock
 
 ```
-forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
+proxychains forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
   --chain-id 1 \
   --num-of-optimizations 1000 \
   --watch \
