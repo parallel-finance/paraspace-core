@@ -11,6 +11,17 @@ contract StakefishNFTOracleWrapper is IAtomicPriceAggregator {
 
     IStakefishNFTManager immutable STAKEFISH_NFT_MANAGER;
 
+    // 28 ether is used to take slashes & penalties into account
+    // this is important since both withdrawnBalance, availableBalance and deposited 32 ether
+    // are quite dynamic & can be manipulated.
+    //
+    // the original 32 ether is either in:
+    //   - withdrawnBalance
+    //   - availableBalance
+    //   - deposit contract
+    // we use 28 ether to detect where it is
+    uint256 public constant MIN_FULL_WITHDRAWAL = 28 ether;
+
     constructor(address _stakefishNFTManager) {
         STAKEFISH_NFT_MANAGER = IStakefishNFTManager(_stakefishNFTManager);
     }
@@ -26,33 +37,38 @@ contract StakefishNFTOracleWrapper is IAtomicPriceAggregator {
         uint256 withdrawnBalance = IStakefishValidator(validatorAddr)
             .withdrawnBalance();
 
+        // funds are not deposited into deposit contract yet
         if (lastState.state < IStakefishValidator.State.PostDeposit) {
             return availableBalance;
         }
 
-        if (lastState.state <= IStakefishValidator.State.Exited) {
+        if (lastState.state < IStakefishValidator.State.Withdrawn) {
             // 1. already withdrawn
-            if (withdrawnBalance >= 32 ether) {
+            if (withdrawnBalance >= MIN_FULL_WITHDRAWAL) {
                 uint256 commission = (availableBalance *
                     IStakefishValidator(validatorAddr).getProtocolFee()) /
                     10000;
 
                 return availableBalance - commission;
-            } else {
-                // 2. funds not arrive at the validator contract yet
+            }
+
+            // 2. full withdrawal funds arrived via system operations
+            if (availableBalance >= MIN_FULL_WITHDRAWAL) {
                 if (withdrawnBalance + availableBalance <= 32 ether) {
-                    return 32 ether + availableBalance;
+                    return availableBalance;
                 } else {
-                    // 3. funds arrived at the validator contract
                     uint256 commissionApplyBalance = availableBalance +
                         withdrawnBalance -
                         32 ether;
                     uint256 commission = (commissionApplyBalance *
                         IStakefishValidator(validatorAddr).getProtocolFee()) /
                         10000;
-                    return availableBalance + withdrawnBalance - commission;
+                    return availableBalance - commission;
                 }
             }
+
+            // 3. funds are still in deposit contract and validator didn't exit
+            return 32 ether + availableBalance;
         }
 
         return 0;
