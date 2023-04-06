@@ -16,6 +16,7 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
+import {IWETH} from "./interfaces/IWETH.sol";
 
 contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
@@ -177,6 +178,35 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
                 );
             }
         }
+    }
+
+    function claimETH(uint256[] calldata agreementIds) external nonReentrant {
+        require(!frozen, "TimeLock is frozen");
+
+        IPoolAddressesProvider addressProvider = ACL_MANAGER
+            .ADDRESSES_PROVIDER();
+        address weth = addressProvider.getWETH();
+
+        uint256 totalAmount = 0;
+        for (uint256 index = 0; index < agreementIds.length; index++) {
+            Agreement memory agreement = _validateAndDeleteAgreement(
+                agreementIds[index]
+            );
+
+            require(agreement.asset == weth, "Wrong agreement asset");
+
+            totalAmount += agreement.tokenIdsOrAmounts[0];
+        }
+
+        IWETH(weth).withdraw(totalAmount);
+        _safeTransferETH(msg.sender, totalAmount);
+    }
+
+    receive() external payable {}
+
+    function _safeTransferETH(address to, uint256 value) internal {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        require(success, "ETH_TRANSFER_FAILED");
     }
 
     function freezeAgreement(uint256 agreementId)
