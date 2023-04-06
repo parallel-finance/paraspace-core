@@ -25,7 +25,7 @@ import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {eContractid} from "../../../helpers/types";
 
-export const step_24 = async (
+export const step_23 = async (
   // eslint-disable-next-line
   verify = false,
   admins?: {

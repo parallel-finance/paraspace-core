@@ -86,16 +86,6 @@ contract NTokenStakefish is NToken, INTokenStakefish {
     }
 
     // @inheritdoc INTokenStakefish
-    function pendingFeePoolReward(uint256 tokenId)
-        external
-        view
-        returns (uint256, uint256)
-    {
-        address validatorAddr = _getValidatorAddr(tokenId);
-        return IStakefishValidator(validatorAddr).pendingFeePoolReward();
-    }
-
-    // @inheritdoc INTokenStakefish
     function getNFTData(uint256 tokenId)
         external
         view

@@ -37,14 +37,6 @@ interface INTokenStakefish {
     // @notice allows validator to request withdrawal from the staking pool
     function requestExit(uint256[] calldata tokenIds) external;
 
-    // @param tokenId The token ID of validator NFT
-    //
-    // @notice Get the pending fee pool reward for the validator represented by tokenId.
-    function pendingFeePoolReward(uint256 tokenId)
-        external
-        view
-        returns (uint256, uint256);
-
     /**
      * @dev Get the `StakefishNTokenData` struct associated with the given token ID
      *

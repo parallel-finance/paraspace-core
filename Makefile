@@ -388,10 +388,6 @@ deploy-flashClaimRegistry:
 deploy-p2p-pair-staking:
 	make TASK_NAME=deploy:P2PPairStaking run-task
 
-.PHONY: deploy-stakefish
-deploy-stakefish:
-	make TASK_NAME=deploy:stakefish run-task
-
 .PHONY: deploy-timelock
 deploy-timelock:
 	make TASK_NAME=deploy:timelock run-task
