@@ -46,18 +46,25 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEthAsWeth If convert weth to ETH
+     * @return token0 The address of token0
+     * @return token1 The address of token1
      * @return amount0 The amount received back in token0
      * @return amount1 The amount returned back in token1
      */
     function _decreaseLiquidity(
-        address user,
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEthAsWeth
-    ) internal returns (uint256 amount0, uint256 amount1) {
+        uint256 amount1Min
+    )
+        internal
+        returns (
+            address token0,
+            address token1,
+            uint256 amount0,
+            uint256 amount1
+        )
+    {
         if (liquidityDecrease > 0) {
             // amount0Min and amount1Min are price slippage checks
             // if the amount received after burning is not greater than these minimums, transaction will fail
@@ -75,31 +82,14 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                 .decreaseLiquidity(params);
         }
 
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-
-        ) = INonfungiblePositionManager(_ERC721Data.underlyingAsset).positions(
-                tokenId
-            );
-
-        address weth = _addressesProvider.getWETH();
-        receiveEthAsWeth = (receiveEthAsWeth &&
-            (token0 == weth || token1 == weth));
+        (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
+            _ERC721Data.underlyingAsset
+        ).positions(tokenId);
 
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
-                recipient: receiveEthAsWeth ? address(this) : user,
+                recipient: address(POOL),
                 amount0Max: type(uint128).max,
                 amount1Max: type(uint128).max
             });
@@ -107,20 +97,6 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         (amount0, amount1) = INonfungiblePositionManager(
             _ERC721Data.underlyingAsset
         ).collect(collectParams);
-
-        if (receiveEthAsWeth) {
-            uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
-            if (balanceWeth > 0) {
-                IWETH(weth).withdraw(balanceWeth);
-                _safeTransferETH(user, balanceWeth);
-            }
-
-            address pairToken = (token0 == weth) ? token1 : token0;
-            uint256 balanceToken = IERC20(pairToken).balanceOf(address(this));
-            if (balanceToken > 0) {
-                IERC20(pairToken).safeTransfer(user, balanceToken);
-            }
-        }
     }
 
     /// @inheritdoc INTokenUniswapV3
@@ -129,20 +105,28 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEthAsWeth
-    ) external onlyPool nonReentrant {
+        uint256 amount1Min
+    )
+        external
+        onlyPool
+        nonReentrant
+        returns (
+            address token0,
+            address token1,
+            uint256 amount0,
+            uint256 amount1
+        )
+    {
         require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
         // interact with Uniswap V3
-        _decreaseLiquidity(
-            user,
-            tokenId,
-            liquidityDecrease,
-            amount0Min,
-            amount1Min,
-            receiveEthAsWeth
-        );
+        return
+            _decreaseLiquidity(
+                tokenId,
+                liquidityDecrease,
+                amount0Min,
+                amount1Min
+            );
     }
 
     function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
@@ -153,11 +137,4 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
     {
         revert();
     }
-
-    function _safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, "ETH_TRANSFER_FAILED");
-    }
-
-    receive() external payable {}
 }

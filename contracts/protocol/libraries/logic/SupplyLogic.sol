@@ -22,6 +22,7 @@ import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title SupplyLogic library
@@ -85,7 +86,7 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyParams memory params
-    ) external {
+    ) public {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
@@ -206,15 +207,12 @@ library SupplyLogic {
             tokenType == XTokenType.NTokenBAYC ||
             tokenType == XTokenType.NTokenMAYC
         ) {
-            uint16 sApeReserveId = reservesData[DataTypes.SApeAddress].id;
-            bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
-            if (!currentStatus) {
-                userConfig.setUsingAsCollateral(sApeReserveId, true);
-                emit ReserveUsedAsCollateralEnabled(
-                    DataTypes.SApeAddress,
-                    params.onBehalfOf
-                );
-            }
+            Helpers.setAssetUsedAsCollateral(
+                userConfig,
+                reservesData,
+                DataTypes.SApeAddress,
+                params.onBehalfOf
+            );
         }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
@@ -465,7 +463,6 @@ library SupplyLogic {
 
     function executeDecreaseUniswapV3Liquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteDecreaseUniswapV3LiquidityParams memory params
     ) external {
@@ -490,29 +487,61 @@ library SupplyLogic {
             tokenIds
         );
 
-        INTokenUniswapV3(reserveCache.xTokenAddress).decreaseUniswapV3Liquidity(
-                params.user,
-                params.tokenId,
-                params.liquidityDecrease,
-                params.amount0Min,
-                params.amount1Min,
-                params.receiveEthAsWeth
-            );
-
+        (
+            address token0,
+            address token1,
+            uint256 amount0,
+            uint256 amount1
+        ) = INTokenUniswapV3(reserveCache.xTokenAddress)
+                .decreaseUniswapV3Liquidity(
+                    params.user,
+                    params.tokenId,
+                    params.liquidityDecrease,
+                    params.amount0Min,
+                    params.amount1Min
+                );
         bool isUsedAsCollateral = ICollateralizableERC721(
             reserveCache.xTokenAddress
         ).isUsedAsCollateral(params.tokenId);
-        if (isUsedAsCollateral) {
-            if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtvERC721(
-                    reservesData,
-                    reservesList,
+        if (amount0 > 0) {
+            executeSupply(
+                reservesData,
+                userConfig,
+                DataTypes.ExecuteSupplyParams({
+                    asset: token0,
+                    amount: amount0,
+                    onBehalfOf: params.user,
+                    payer: address(this),
+                    referralCode: 0
+                })
+            );
+            if (isUsedAsCollateral) {
+                Helpers.setAssetUsedAsCollateral(
                     userConfig,
-                    params.asset,
-                    tokenIds,
-                    params.user,
-                    params.reservesCount,
-                    params.oracle
+                    reservesData,
+                    token0,
+                    params.user
+                );
+            }
+        }
+        if (amount1 > 0) {
+            executeSupply(
+                reservesData,
+                userConfig,
+                DataTypes.ExecuteSupplyParams({
+                    asset: token1,
+                    amount: amount1,
+                    onBehalfOf: params.user,
+                    payer: address(this),
+                    referralCode: 0
+                })
+            );
+            if (isUsedAsCollateral) {
+                Helpers.setAssetUsedAsCollateral(
+                    userConfig,
+                    reservesData,
+                    token1,
+                    params.user
                 );
             }
         }
