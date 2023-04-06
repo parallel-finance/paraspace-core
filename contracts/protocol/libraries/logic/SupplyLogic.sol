@@ -477,7 +477,7 @@ library SupplyLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         //currently don't need to update state for erc721
-        //reserve.uONLY_UNIV3_ALLOWEDCache);
+        //reserve.updateState(reserveCache);
         INToken nToken = INToken(reserveCache.xTokenAddress);
         require(
             nToken.getXTokenType() == XTokenType.NTokenUniswapV3,
