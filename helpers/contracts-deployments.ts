@@ -271,6 +271,7 @@ import {
   HotWalletProxy,
   DelegationRegistry,
   DelegationRegistry__factory,
+  TimeLock,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2750,13 +2751,17 @@ export const deployParaSpaceAirdrop = async (
 export const deployTimeLockImpl = async (
   provider: tEthereumAddress,
   verify?: boolean
-) =>
-  await withSaveAndVerify(
+) => {
+  const allTokens = await getAllTokens();
+  const wPunk = allTokens.WPUNKS.address;
+  const instance = await withSaveAndVerify(
     new TimeLock__factory(await getFirstSigner()),
     eContractid.TimeLockImpl,
-    [provider],
+    [provider, wPunk],
     verify
   );
+  return instance as TimeLock;
+};
 
 export const deployTimeLockProxy = async (verify?: boolean) => {
   const proxyInstance = await withSaveAndVerify(
