@@ -3,11 +3,9 @@ import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
 import {ZERO_ADDRESS} from "../helpers/constants";
 import {getStakefishValidator} from "../helpers/contracts-getters";
-import {
-  convertToCurrencyDecimals,
-  getCurrentTime,
-} from "../helpers/contracts-helpers";
-import {DRE, waitForTx} from "../helpers/misc-utils";
+import {getCurrentTime} from "../helpers/contracts-helpers";
+import {waitForTx} from "../helpers/misc-utils";
+import {ProtocolErrors} from "../helpers/types";
 import {StakefishValidatorV1} from "../types";
 import {SignerWithAddress} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -152,62 +150,50 @@ describe("Stakefish NFT", () => {
     return testEnv;
   };
 
-  it("TC-stakefish-nft-01: nft price is correct when nft state is PreDeposit", async () => {
-    const {paraspaceOracle, sfvldr} = await loadFixture(fixture);
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "1")).eq(
-      parseEther("32")
-    );
-  });
+  it("TC-stakefish-nft-01: only Active state can be supplied", async () => {
+    const {sfvldr, pool} = await loadFixture(fixture);
 
-  it("TC-stakefish-nft-02: nft price is correct when nft state is PostDeposit", async () => {
-    const {paraspaceOracle, sfvldr} = await loadFixture(fixture);
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "2")).eq(
-      parseEther("32")
-    );
-  });
+    await expect(
+      pool.connect(user1.signer).supplyERC721(
+        sfvldr.address,
+        [
+          {
+            tokenId: "1",
+            useAsCollateral: true,
+          },
+        ],
+        user1.address,
+        0
+      )
+    ).to.be.revertedWith(ProtocolErrors.INVALID_STATE);
 
-  it("TC-stakefish-nft-03: nft price is correct when nft state is Active", async () => {
-    const {paraspaceOracle, sfvldr} = await loadFixture(fixture);
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "3")).eq(
-      parseEther("32")
-    );
+    await expect(
+      pool.connect(user2.signer).supplyERC721(
+        sfvldr.address,
+        [
+          {
+            tokenId: "2",
+            useAsCollateral: true,
+          },
+        ],
+        user2.address,
+        0
+      )
+    ).to.be.revertedWith(ProtocolErrors.INVALID_STATE);
 
-    // simulate rewards
-    await user6.signer.sendTransaction({
-      to: validator3.address,
-      value: parseEther("1"),
-    });
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "3")).eq(
-      parseEther("33")
-    );
-
-    // withdraw rewards
-    await waitForTx(await validator3.connect(user3.signer).withdraw());
-    expect(await DRE.ethers.provider.getBalance(validator3.address)).eq(0);
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "3")).eq(
-      parseEther("32")
-    );
-  });
-
-  it("TC-stakefish-nft-04: nft price is correct when nft state is Exited", async () => {
-    const {paraspaceOracle, sfvldr} = await loadFixture(fixture);
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "4")).eq(
-      parseEther("32")
-    );
-  });
-
-  it("TC-stakefish-nft-05: nft price is correct when nft state is Burnable", async () => {
-    const {paraspaceOracle, sfvldr} = await loadFixture(fixture);
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "5")).eq(
-      parseEther("0")
-    );
-  });
-
-  it("TC-stakefish-nft-07: Burnable nft cannot be supplied", async () => {
-    const {paraspaceOracle, sfvldr, pool} = await loadFixture(fixture);
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "5")).eq(
-      parseEther("0")
-    );
+    await expect(
+      pool.connect(user4.signer).supplyERC721(
+        sfvldr.address,
+        [
+          {
+            tokenId: "4",
+            useAsCollateral: true,
+          },
+        ],
+        user4.address,
+        0
+      )
+    ).to.be.revertedWith(ProtocolErrors.INVALID_STATE);
 
     await expect(
       pool.connect(user5.signer).supplyERC721(
@@ -222,122 +208,10 @@ describe("Stakefish NFT", () => {
         0,
         {gasLimit: 5000000}
       )
-    ).to.be.reverted;
+    ).to.be.revertedWith(ProtocolErrors.INVALID_STATE);
   });
 
-  it("TC-stakefish-nft-08: Rewards can be claimed via pool", async () => {
-    const {paraspaceOracle, sfvldr, pool} = await loadFixture(fixture);
-
-    await waitForTx(
-      await pool.connect(user3.signer).supplyERC721(
-        sfvldr.address,
-        [
-          {
-            tokenId: "3",
-            useAsCollateral: true,
-          },
-        ],
-        user3.address,
-        0,
-        {gasLimit: 5000000}
-      )
-    );
-
-    // simulate rewards
-    await user6.signer.sendTransaction({
-      to: validator3.address,
-      value: parseEther("1"),
-    });
-    expect(await paraspaceOracle.getTokenPrice(sfvldr.address, "3")).eq(
-      parseEther("33")
-    );
-
-    const beforeBalance = await DRE.ethers.provider.getBalance(user6.address);
-    await waitForTx(
-      await pool
-        .connect(user3.signer)
-        .claimStakefishWithdrawals(sfvldr.address, ["3"], user6.address)
-    );
-    const afterBalance = await DRE.ethers.provider.getBalance(user6.address);
-
-    expect(afterBalance.sub(beforeBalance)).eq(parseEther("1"));
-  });
-
-  it("TC-stakefish-nft-09: Unable to claim full withdraw if there is borrow", async () => {
-    const {sfvldr, pool, usdc} = await loadFixture(fixture);
-
-    await waitForTx(
-      await pool.connect(user3.signer).supplyERC721(
-        sfvldr.address,
-        [
-          {
-            tokenId: "3",
-            useAsCollateral: true,
-          },
-        ],
-        user3.address,
-        0,
-        {gasLimit: 5000000}
-      )
-    );
-
-    await waitForTx(
-      await pool
-        .connect(user3.signer)
-        .borrow(
-          usdc.address,
-          await convertToCurrencyDecimals(usdc.address, "10000"),
-          0,
-          user3.address,
-          {gasLimit: 5000000}
-        )
-    );
-
-    // simulate full withdraw
-    await user6.signer.sendTransaction({
-      to: validator3.address,
-      value: parseEther("33"),
-    });
-
-    await expect(
-      pool
-        .connect(user3.signer)
-        .claimStakefishWithdrawals(sfvldr.address, ["3"], user6.address)
-    ).to.be.reverted;
-  });
-
-  it("TC-stakefish-nft-10: not owner error will be thrown if someone tries to claimWithdrawals of others", async () => {
-    const {sfvldr, pool} = await loadFixture(fixture);
-
-    await waitForTx(
-      await pool.connect(user3.signer).supplyERC721(
-        sfvldr.address,
-        [
-          {
-            tokenId: "3",
-            useAsCollateral: true,
-          },
-        ],
-        user3.address,
-        0,
-        {gasLimit: 5000000}
-      )
-    );
-
-    // simulate rewards
-    await user6.signer.sendTransaction({
-      to: validator3.address,
-      value: parseEther("1"),
-    });
-
-    await expect(
-      pool
-        .connect(user4.signer)
-        .claimStakefishWithdrawals(sfvldr.address, ["3"], user6.address)
-    ).to.be.reverted;
-  });
-
-  it("TC-stakefish-nft-11: nft owner can requestExit via nToken", async () => {
+  it("TC-stakefish-nft-02: Rewards cannot be claimed by others", async () => {
     const {sfvldr, pool, nSfvldr} = await loadFixture(fixture);
 
     await waitForTx(
@@ -355,8 +229,17 @@ describe("Stakefish NFT", () => {
       )
     );
 
-    await waitForTx(await nSfvldr.connect(user3.signer).requestExit(["3"]));
+    await expect(
+      nSfvldr
+        .connect(user4.signer)
+        .claimFeePool(["3"], ["0"], user6.address, {gasLimit: 3000000})
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
 
-    expect((await validator3.lastStateChange()).state).eq(3);
+  it("TC-stakefish-nft-03: Price is 32 ether", async () => {
+    const {sfvldr, paraspaceOracle} = await loadFixture(fixture);
+    await expect(await paraspaceOracle.getAssetPrice(sfvldr.address)).eq(
+      parseEther("32")
+    );
   });
 });

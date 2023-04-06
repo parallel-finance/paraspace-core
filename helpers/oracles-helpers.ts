@@ -109,7 +109,8 @@ export const deployAllAggregators = async (
     }
     if (tokenSymbol === ERC721TokenContractId.SFVLDR) {
       aggregators[tokenSymbol] = await deployStakefishNFTOracleWrapper(
-        tokens[tokenSymbol].address,
+        tokens[oracleConfig.BaseCurrency].address,
+        oracleConfig.BaseCurrencyUnit,
         verify
       );
       continue;

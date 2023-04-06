@@ -1979,13 +1979,14 @@ export const deployUniswapV3TwapOracleWrapper = async (
   ) as Promise<UniswapV3TwapOracleWrapper>;
 
 export const deployStakefishNFTOracleWrapper = async (
-  stakefishManager: tEthereumAddress,
+  baseCurrency: tEthereumAddress,
+  baseCurrencyUnit: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new StakefishNFTOracleWrapper__factory(await getFirstSigner()),
     eContractid.Aggregator.concat(upperFirst(eContractid.SFVLDR)),
-    [stakefishManager],
+    [baseCurrency, baseCurrencyUnit],
     verify
   ) as Promise<StakefishNFTOracleWrapper>;
 

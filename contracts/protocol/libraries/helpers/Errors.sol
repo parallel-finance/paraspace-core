@@ -126,4 +126,5 @@ library Errors {
     string public constant CALLER_NOT_EOA = "131"; //The caller of the function is not an EOA account
     string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
+    string public constant INVALID_STATE = "134"; //invalid token status
 }
