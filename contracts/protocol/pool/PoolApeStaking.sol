@@ -25,6 +25,7 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
+import {Helpers} from "../libraries/helpers/Helpers.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -373,18 +374,15 @@ contract PoolApeStaking is
         );
 
         //7 collateralize sAPE
-        uint16 sApeReserveId = ps._reserves[DataTypes.SApeAddress].id;
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
             msg.sender
         ];
-        bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
-        if (!currentStatus) {
-            userConfig.setUsingAsCollateral(sApeReserveId, true);
-            emit ReserveUsedAsCollateralEnabled(
-                DataTypes.SApeAddress,
-                msg.sender
-            );
-        }
+        Helpers.setAssetUsedAsCollateral(
+            userConfig,
+            ps._reserves,
+            DataTypes.SApeAddress,
+            msg.sender
+        );
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -788,12 +786,12 @@ contract PoolApeStaking is
                 referralCode: 0
             })
         );
-        DataTypes.ReserveData storage assetReserve = ps._reserves[asset];
-        uint16 reserveId = assetReserve.id;
-        if (!userConfig.isUsingAsCollateral(reserveId)) {
-            userConfig.setUsingAsCollateral(reserveId, true);
-            emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
-        }
+        Helpers.setAssetUsedAsCollateral(
+            userConfig,
+            ps._reserves,
+            asset,
+            onBehalfOf
+        );
     }
 
     function _repayForUser(

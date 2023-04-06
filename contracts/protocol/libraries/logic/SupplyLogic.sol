@@ -24,6 +24,7 @@ import {INTokenStakefish} from "../../../interfaces/INTokenStakefish.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {IStakefishNFTManager} from "../../../interfaces/IStakefishNFTManager.sol";
 import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title SupplyLogic library
@@ -223,15 +224,12 @@ library SupplyLogic {
             tokenType == XTokenType.NTokenBAYC ||
             tokenType == XTokenType.NTokenMAYC
         ) {
-            uint16 sApeReserveId = reservesData[DataTypes.SApeAddress].id;
-            bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
-            if (!currentStatus) {
-                userConfig.setUsingAsCollateral(sApeReserveId, true);
-                emit ReserveUsedAsCollateralEnabled(
-                    DataTypes.SApeAddress,
-                    params.onBehalfOf
-                );
-            }
+            Helpers.setAssetUsedAsCollateral(
+                userConfig,
+                reservesData,
+                DataTypes.SApeAddress,
+                params.onBehalfOf
+            );
         }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
