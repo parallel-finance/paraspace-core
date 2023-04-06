@@ -212,7 +212,9 @@ library SupplyLogic {
                     memory lastState = IStakefishValidator(validatorAddr)
                         .lastStateChange();
                 require(
-                    lastState.state == IStakefishValidator.State.Active,
+                    lastState.state == IStakefishValidator.State.Active ||
+                        lastState.state ==
+                        IStakefishValidator.State.PostDeposit,
                     Errors.INVALID_STATE
                 );
             }
