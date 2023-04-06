@@ -50,6 +50,7 @@ import {
   deployAutoYieldApe,
   deployReserveTimeLockStrategy,
   deployOtherdeedNTokenImpl,
+  deployStakefishNTokenImpl,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -138,6 +139,7 @@ export const initReservesByHelper = async (
   let PsApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
+  let nTokenStakefishImplementationAddress = "";
 
   if (genericPTokenImplAddress) {
     await insertContractAddressInDb(
@@ -329,6 +331,7 @@ export const initReservesByHelper = async (
         eContractid.NTokenBAYCImpl,
         eContractid.NTokenMAYCImpl,
         eContractid.NTokenBAKCImpl,
+        eContractid.NTokenStakefishImpl,
       ].includes(xTokenImpl)
     ) {
       xTokenType[symbol] = "nft";
@@ -579,6 +582,16 @@ export const initReservesByHelper = async (
           ).address;
 
           xTokenToUse = nTokenOTHRImplementationAddress;
+        } else if (reserveSymbol == ERC721TokenContractId.SFVLDR) {
+          nTokenStakefishImplementationAddress = (
+            await deployStakefishNTokenImpl(
+              pool.address,
+              delegationRegistryAddress,
+              verify
+            )
+          ).address;
+
+          xTokenToUse = nTokenStakefishImplementationAddress;
         }
 
         if (!xTokenToUse) {

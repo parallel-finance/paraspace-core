@@ -20,7 +20,10 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
+import {INTokenStakefish} from "../../../interfaces/INTokenStakefish.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import {IStakefishNFTManager} from "../../../interfaces/IStakefishNFTManager.sol";
+import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
 
 /**
  * @title SupplyLogic library
@@ -199,6 +202,17 @@ library SupplyLogic {
                     true,
                     true
                 );
+            }
+        }
+        if (tokenType == XTokenType.NTokenStakefish) {
+            for (uint256 index = 0; index < params.tokenData.length; index++) {
+                address validatorAddr = IStakefishNFTManager(params.asset)
+                    .validatorForTokenId(params.tokenData[index].tokenId);
+                IStakefishValidator.StateChange
+                    memory lastState = IStakefishValidator(validatorAddr)
+                        .lastStateChange();
+                // TODO: add error code
+                require(lastState.state < IStakefishValidator.State.Withdrawn);
             }
         }
         if (
@@ -449,6 +463,51 @@ library SupplyLogic {
             );
     }
 
+    function executeClaimStakefishWithdrawals(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        mapping(uint256 => address) storage reservesList,
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ExecuteClaimStakefishWithdrawalsParams memory params
+    ) external {
+        DataTypes.ReserveData storage reserve = reservesData[params.asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        //currently don't need to update state for erc721
+        //reserve.updateState(reserveCache);
+
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        require(
+            nToken.getXTokenType() == XTokenType.NTokenStakefish,
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
+        );
+
+        ValidationLogic.validateWithdrawERC721(
+            reservesData,
+            reserveCache,
+            params.asset,
+            params.tokenIds
+        );
+
+        INTokenStakefish(reserveCache.xTokenAddress).withdraw(
+            msg.sender,
+            params.tokenIds,
+            params.to
+        );
+
+        if (userConfig.isBorrowingAny()) {
+            ValidationLogic.validateHFAndLtvERC721(
+                reservesData,
+                reservesList,
+                userConfig,
+                params.asset,
+                params.tokenIds,
+                msg.sender,
+                params.reservesCount,
+                params.oracle
+            );
+        }
+    }
+
     function executeDecreaseUniswapV3Liquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
@@ -459,12 +518,11 @@ library SupplyLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         //currently don't need to update state for erc721
-        //reserve.updateState(reserveCache);
-
+        //reserve.uONLY_UNIV3_ALLOWEDCache);
         INToken nToken = INToken(reserveCache.xTokenAddress);
         require(
             nToken.getXTokenType() == XTokenType.NTokenUniswapV3,
-            Errors.ONLY_UNIV3_ALLOWED
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
         );
 
         uint256[] memory tokenIds = new uint256[](1);

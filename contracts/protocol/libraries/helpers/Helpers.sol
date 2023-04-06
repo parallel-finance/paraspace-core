@@ -36,4 +36,14 @@ library Helpers {
             .getTraitMultiplier(tokenId);
         return assetPrice.wadMul(multiplier);
     }
+
+    /**
+     * @dev transfer ETH to an address, revert if it fails.
+     * @param to recipient of the transfer
+     * @param value the amount to send
+     */
+    function safeTransferETH(address to, uint256 value) internal {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        require(success, "ETH_TRANSFER_FAILED");
+    }
 }

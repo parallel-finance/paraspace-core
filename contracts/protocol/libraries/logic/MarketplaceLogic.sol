@@ -546,7 +546,7 @@ library MarketplaceLogic {
             require(
                 INToken(vars.xTokenAddress).getXTokenType() !=
                     XTokenType.NTokenUniswapV3,
-                Errors.UNIV3_NOT_ALLOWED
+                Errors.XTOKEN_TYPE_NOT_ALLOWED
             );
 
             // item.token == underlyingAsset but supplied after listing/offering

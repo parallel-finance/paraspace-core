@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {OfferItem, ConsiderationItem} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
+import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
 
 library DataTypes {
     enum AssetType {
@@ -81,11 +82,23 @@ library DataTypes {
         bool useAsCollateral;
     }
 
+    struct StakefishNTokenData {
+        uint256 validatorIndex;
+        bytes pubkey;
+        uint256 withdrawnBalance;
+        address feePoolAddress;
+        string nftArtUrl;
+        uint256 protocolFee;
+        IStakefishValidator.StateChange[] stateHistory;
+        uint256[2] pendingFeePoolReward;
+    }
+
     struct NTokenData {
         uint256 tokenId;
         uint256 multiplier;
         bool useAsCollateral;
         bool isAuctioned;
+        StakefishNTokenData stakefishNTokenData;
     }
 
     struct ReserveCache {
@@ -189,6 +202,14 @@ library DataTypes {
         uint256 amount0Min;
         uint256 amount1Min;
         bool receiveEthAsWeth;
+        address oracle;
+    }
+
+    struct ExecuteClaimStakefishWithdrawalsParams {
+        address asset;
+        uint256[] tokenIds;
+        address to;
+        uint256 reservesCount;
         address oracle;
     }
 

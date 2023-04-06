@@ -59,6 +59,7 @@ export enum XTokenType {
   PYieldToken = 13,
   PTokenCApe = 14,
   NTokenOtherdeed = 15,
+  NTokenStakefish = 16,
 }
 
 export type ConstructorArgs = (
@@ -263,8 +264,13 @@ export enum eContractid {
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
+  SFVLDR = "SFVLDR",
   DelegationRegistry = "DelegationRegistry",
+  StakefishValidator = "StakefishValidator",
+  StakefishValidatorFactory = "StakefishValidatorFactory",
+  DepositContract = "DepositContract",
 }
 
 /*
@@ -531,6 +537,7 @@ export enum ERC721TokenContractId {
   BAKC = "BAKC",
   SEWER = "SEWER",
   PPG = "PPG",
+  SFVLDR = "SFVLDR",
 }
 
 export enum NTokenContractId {
@@ -544,6 +551,7 @@ export enum NTokenContractId {
   nSEWER = "nSEWER",
   nPPG = "nPPG",
   nOTHR = "nOTHR",
+  nSFVLDR = "nSFVLDR",
 }
 
 export enum PTokenContractId {
@@ -750,6 +758,7 @@ export interface ICommonConfiguration {
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
   HotWallet: tEthereumAddress | undefined;
+  StakefishManager: tEthereumAddress | undefined;
   DelegationRegistry: tEthereumAddress;
 }
 
