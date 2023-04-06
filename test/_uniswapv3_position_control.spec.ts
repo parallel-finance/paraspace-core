@@ -244,7 +244,6 @@ describe("Uniswap V3 NFT position control", () => {
       dai,
       pDai,
       weth,
-      pWETH,
       nftPositionManager,
       pool,
     } = testEnv;

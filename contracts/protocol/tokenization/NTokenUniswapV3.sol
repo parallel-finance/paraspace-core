@@ -52,7 +52,6 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @return amount1 The amount returned back in token1
      */
     function _decreaseLiquidity(
-        address user,
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
@@ -123,7 +122,6 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         // interact with Uniswap V3
         return
             _decreaseLiquidity(
-                user,
                 tokenId,
                 liquidityDecrease,
                 amount0Min,
