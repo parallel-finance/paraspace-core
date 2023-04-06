@@ -301,7 +301,7 @@ contract PoolInstantWithdraw is
         }
 
         // validate borrow asset can be borrowed from lending pool
-        ValidationLogic.validateInstantWithdrawBorrow(
+        ValidationLogic.validateFixedTermBorrow(
             reserveCache,
             borrowAsset,
             borrowAmount

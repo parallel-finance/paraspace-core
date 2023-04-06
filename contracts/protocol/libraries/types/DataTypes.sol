@@ -8,7 +8,8 @@ import {Counters} from "../../../dependencies/openzeppelin/contracts/Counters.so
 library DataTypes {
     enum AssetType {
         ERC20,
-        ERC721
+        ERC721,
+        ERC1155
     }
 
     address public constant SApeAddress = address(0x1);
@@ -409,7 +410,8 @@ library DataTypes {
         // The loan has been repaid by user, and the user will get the collateral. This is a terminal state.
         Repaid,
         // The loan has been repaid by system, and the collateral has redeemed to system asset
-        Settled
+        Settled,
+        Auctioned
     }
 
     struct TermLoanData {
@@ -433,6 +435,41 @@ library DataTypes {
         uint256 borrowAmount;
         //discount rate when created the loan
         uint256 discountRate;
+    }
+
+    struct FixedTermLoanParams {
+        address collateralAsset;
+        DataTypes.AssetType assetType;
+        uint256 collateralTokenId;
+        uint256 collateralAmount;
+        address borrowAsset;
+        uint256 borrowAmount;
+        uint256 maturityDate;
+        uint256 currentInterestRate;
+        uint256 interestRate;
+        uint256 loanId;
+    }
+
+    struct FixedTermLoanData {
+        LoanState state;
+        uint40 startTime;
+        address borrower;
+        address collateralAsset;
+        uint64 collateralTokenId;
+        uint128 collateralAmount;
+        address borrowAsset;
+        uint128 borrowAmount;
+        uint128 interestRate;
+        uint40 maturityDate;
+        uint128 repaidAmount;
+    }
+
+    struct FixedTermLoanStrategy {
+        uint128 loanCreationFeeRate; // move to a config state var
+        address loanParametersStrategyAddress;
+        address loanManagementAddress;
+        DataTypes.AssetType assetType; // move to a config state var
+        EnumerableSet.AddressSet borrowableAssets;
     }
 
     struct PoolStorage {
@@ -465,6 +502,8 @@ library DataTypes {
         mapping(uint256 => DataTypes.TermLoanData) _termLoans;
         // Reserve storage for ETH withdraw
         uint256[20] __ethWithdrawReserve;
+        address fTokenAddress; // this could be immutable
+        mapping(address => FixedTermLoanStrategy) _fixedTermLoanAssets;
     }
 
     struct ReserveConfigData {

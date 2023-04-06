@@ -293,7 +293,7 @@ library ValidationLogic {
         }
     }
 
-    function validateInstantWithdrawBorrow(
+    function validateFixedTermBorrow(
         DataTypes.ReserveCache memory reserveCache,
         address reserve,
         uint256 amount
