@@ -264,7 +264,7 @@ describe("Stakefish NFT", () => {
   });
 
   it("TC-stakefish-nft-09: Unable to claim full withdraw if there is borrow", async () => {
-    const {paraspaceOracle, sfvldr, pool, usdc} = await loadFixture(fixture);
+    const {sfvldr, pool, usdc} = await loadFixture(fixture);
 
     await waitForTx(
       await pool.connect(user3.signer).supplyERC721(
