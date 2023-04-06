@@ -85,7 +85,7 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyParams memory params
-    ) external {
+    ) public {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
@@ -472,7 +472,6 @@ library SupplyLogic {
 
     function executeDecreaseUniswapV3Liquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteDecreaseUniswapV3LiquidityParams memory params
     ) external {
@@ -497,31 +496,59 @@ library SupplyLogic {
             tokenIds
         );
 
-        INTokenUniswapV3(reserveCache.xTokenAddress).decreaseUniswapV3Liquidity(
-                params.user,
-                params.tokenId,
-                params.liquidityDecrease,
-                params.amount0Min,
-                params.amount1Min,
-                params.receiveEthAsWeth
-            );
-
-        bool isUsedAsCollateral = ICollateralizableERC721(
-            reserveCache.xTokenAddress
-        ).isUsedAsCollateral(params.tokenId);
-        if (isUsedAsCollateral) {
-            if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtvERC721(
-                    reservesData,
-                    reservesList,
-                    userConfig,
-                    params.asset,
-                    tokenIds,
+        (
+            address token0,
+            address token1,
+            uint256 amount0,
+            uint256 amount1
+        ) = INTokenUniswapV3(reserveCache.xTokenAddress)
+                .decreaseUniswapV3Liquidity(
                     params.user,
-                    params.reservesCount,
-                    params.oracle
+                    params.tokenId,
+                    params.liquidityDecrease,
+                    params.amount0Min,
+                    params.amount1Min
                 );
-            }
+        if (amount0 > 0) {
+            executeSupply(
+                reservesData,
+                userConfig,
+                DataTypes.ExecuteSupplyParams({
+                    asset: token0,
+                    amount: amount0,
+                    onBehalfOf: params.user,
+                    payer: address(this),
+                    referralCode: 0
+                })
+            );
+            _setAsCollateral(userConfig, reservesData, token0, params.user);
+        }
+        if (amount1 > 0) {
+            executeSupply(
+                reservesData,
+                userConfig,
+                DataTypes.ExecuteSupplyParams({
+                    asset: token1,
+                    amount: amount1,
+                    onBehalfOf: params.user,
+                    payer: address(this),
+                    referralCode: 0
+                })
+            );
+            _setAsCollateral(userConfig, reservesData, token1, params.user);
+        }
+    }
+
+    function _setAsCollateral(
+        DataTypes.UserConfigurationMap storage userConfig,
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        address token,
+        address user
+    ) internal {
+        uint16 reserveId = reservesData[token].id;
+        if (userConfig.isUsingAsCollateral(reserveId)) {
+            userConfig.setUsingAsCollateral(reserveId, true);
+            emit ReserveUsedAsCollateralEnabled(token, user);
         }
     }
 

@@ -242,15 +242,13 @@ contract PoolCore is
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEthAsWeth
+        uint256 amount1Min
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
             SupplyLogic.executeDecreaseUniswapV3Liquidity(
                 ps._reserves,
-                ps._reservesList,
                 ps._usersConfig[msg.sender],
                 DataTypes.ExecuteDecreaseUniswapV3LiquidityParams({
                     user: msg.sender,
@@ -259,9 +257,7 @@ contract PoolCore is
                     reservesCount: ps._reservesCount,
                     liquidityDecrease: liquidityDecrease,
                     amount0Min: amount0Min,
-                    amount1Min: amount1Min,
-                    receiveEthAsWeth: receiveEthAsWeth,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                    amount1Min: amount1Min
                 })
             );
     }
