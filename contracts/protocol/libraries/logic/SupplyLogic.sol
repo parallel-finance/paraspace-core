@@ -22,6 +22,7 @@ import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title SupplyLogic library
@@ -206,15 +207,12 @@ library SupplyLogic {
             tokenType == XTokenType.NTokenBAYC ||
             tokenType == XTokenType.NTokenMAYC
         ) {
-            uint16 sApeReserveId = reservesData[DataTypes.SApeAddress].id;
-            bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
-            if (!currentStatus) {
-                userConfig.setUsingAsCollateral(sApeReserveId, true);
-                emit ReserveUsedAsCollateralEnabled(
-                    DataTypes.SApeAddress,
-                    params.onBehalfOf
-                );
-            }
+            Helpers.setAssetUsedAsCollateral(
+                userConfig,
+                reservesData,
+                DataTypes.SApeAddress,
+                params.onBehalfOf
+            );
         }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
@@ -509,6 +507,9 @@ library SupplyLogic {
                     params.amount0Min,
                     params.amount1Min
                 );
+        bool isUsedAsCollateral = ICollateralizableERC721(
+            reserveCache.xTokenAddress
+        ).isUsedAsCollateral(params.tokenId);
         if (amount0 > 0) {
             executeSupply(
                 reservesData,
@@ -521,7 +522,14 @@ library SupplyLogic {
                     referralCode: 0
                 })
             );
-            _setAsCollateral(userConfig, reservesData, token0, params.user);
+            if (isUsedAsCollateral) {
+                Helpers.setAssetUsedAsCollateral(
+                    userConfig,
+                    reservesData,
+                    token0,
+                    params.user
+                );
+            }
         }
         if (amount1 > 0) {
             executeSupply(
@@ -535,20 +543,14 @@ library SupplyLogic {
                     referralCode: 0
                 })
             );
-            _setAsCollateral(userConfig, reservesData, token1, params.user);
-        }
-    }
-
-    function _setAsCollateral(
-        DataTypes.UserConfigurationMap storage userConfig,
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        address token,
-        address user
-    ) internal {
-        uint16 reserveId = reservesData[token].id;
-        if (userConfig.isUsingAsCollateral(reserveId)) {
-            userConfig.setUsingAsCollateral(reserveId, true);
-            emit ReserveUsedAsCollateralEnabled(token, user);
+            if (isUsedAsCollateral) {
+                Helpers.setAssetUsedAsCollateral(
+                    userConfig,
+                    reservesData,
+                    token1,
+                    params.user
+                );
+            }
         }
     }
 

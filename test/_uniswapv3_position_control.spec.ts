@@ -201,6 +201,7 @@ describe("Uniswap V3 NFT position control", () => {
       pWETH,
       nftPositionManager,
       pool,
+      protocolDataProvider,
     } = testEnv;
 
     const userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
@@ -209,6 +210,17 @@ describe("Uniswap V3 NFT position control", () => {
     const beforeDaiBalance = await dai.balanceOf(user1.address);
     const beforeEthBalance = await weth.balanceOf(user1.address);
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+
+    let userReserveData = await protocolDataProvider.getUserReserveData(
+      dai.address,
+      user1.address
+    );
+    expect(userReserveData.usageAsCollateralEnabled).to.be.false;
+    userReserveData = await protocolDataProvider.getUserReserveData(
+      weth.address,
+      user1.address
+    );
+    expect(userReserveData.usageAsCollateralEnabled).to.be.false;
 
     await waitForTx(
       await pool
@@ -236,6 +248,17 @@ describe("Uniswap V3 NFT position control", () => {
     almostEqual(afterDaiBalance.sub(beforeDaiBalance), userDaiAmount);
     almostEqual(afterEthBalance.sub(beforeEthBalance), userWethAmount);
     almostEqual(afterLiquidity, beforeLiquidity.div(3).mul(2));
+
+    userReserveData = await protocolDataProvider.getUserReserveData(
+      dai.address,
+      user1.address
+    );
+    expect(userReserveData.usageAsCollateralEnabled).to.be.true;
+    userReserveData = await protocolDataProvider.getUserReserveData(
+      weth.address,
+      user1.address
+    );
+    expect(userReserveData.usageAsCollateralEnabled).to.be.true;
   });
 
   it("collect fee by decreaseLiquidity by NTokenUniswapV3 [ @skip-on-coverage ]", async () => {
