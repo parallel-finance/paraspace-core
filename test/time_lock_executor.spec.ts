@@ -10,26 +10,28 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {getACLManager} from "../helpers/contracts-getters";
 import {ZERO_ADDRESS} from "../helpers/constants";
 import {deployTimeLockExecutor} from "../helpers/contracts-deployments";
+import {ProtocolErrors} from "../helpers/types";
 
 describe("ExecutorWithTimelock Test", () => {
   let testEnv: TestEnv;
   let timeLock;
   let dropReserveEncodedData;
+  let dropReserveSelector;
   let executionTimeStamp;
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
 
     const {users, weth, configurator} = testEnv;
 
+    const aclManager = await getACLManager();
+
     timeLock = await deployTimeLockExecutor([
-      users[0].address,
+      aclManager.address,
       "100",
       "100",
       "10",
       "1000",
     ]);
-
-    const aclManager = await getACLManager();
 
     expect(await aclManager.isPoolAdmin(timeLock.address)).to.be.eq(false);
 
@@ -38,15 +40,30 @@ describe("ExecutorWithTimelock Test", () => {
     );
     expect(await aclManager.isPoolAdmin(timeLock.address)).to.be.eq(true);
 
+    await waitForTx(
+      await aclManager
+        .connect(users[3].signer)
+        .addActionProposeAdmin(users[4].address)
+    );
+    await waitForTx(
+      await aclManager
+        .connect(users[3].signer)
+        .addActionApproveAdmin(users[5].address)
+    );
+
     dropReserveEncodedData = configurator.interface.encodeFunctionData(
       "dropReserve",
       [weth.address]
     );
 
+    dropReserveSelector = configurator.interface.getSighash(
+      "dropReserve(address)"
+    );
+
     executionTimeStamp = (await timeLatest()).add(110).toString();
   });
 
-  it("queueTransaction fails when user is not the owner", async () => {
+  it("queueTransaction fails when user is not action propose admin", async () => {
     const {users, configurator} = testEnv;
 
     await expect(
@@ -60,19 +77,16 @@ describe("ExecutorWithTimelock Test", () => {
           executionTimeStamp,
           false
         )
-    ).to.be.revertedWith("ONLY_BY_ADMIN");
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ACTION_PROPOSE_ADMIN);
   });
 
   it("queueTransaction fails when execution time wrong", async () => {
-    const {
-      users: [user1],
-      configurator,
-    } = testEnv;
+    const {users, configurator} = testEnv;
 
     const executionTimeStamp1 = (await timeLatest()).add(10).toString();
     await expect(
       timeLock
-        .connect(user1.signer)
+        .connect(users[4].signer)
         .queueTransaction(
           configurator.address,
           0,
@@ -85,14 +99,11 @@ describe("ExecutorWithTimelock Test", () => {
   });
 
   it("executeTransaction fails when action is not queued", async () => {
-    const {
-      users: [user1],
-      configurator,
-    } = testEnv;
+    const {users, configurator} = testEnv;
 
     await expect(
       timeLock
-        .connect(user1.signer)
+        .connect(users[4].signer)
         .executeTransaction(
           configurator.address,
           0,
@@ -105,14 +116,11 @@ describe("ExecutorWithTimelock Test", () => {
   });
 
   it("queueTransaction success", async () => {
-    const {
-      users: [user1],
-      configurator,
-    } = testEnv;
+    const {users, configurator} = testEnv;
 
     expect(
       await timeLock
-        .connect(user1.signer)
+        .connect(users[4].signer)
         .queueTransaction(
           configurator.address,
           0,
@@ -125,14 +133,11 @@ describe("ExecutorWithTimelock Test", () => {
   });
 
   it("executeTransaction fails when execution time not reach", async () => {
-    const {
-      users: [user1],
-      configurator,
-    } = testEnv;
+    const {users, configurator} = testEnv;
 
     await expect(
       timeLock
-        .connect(user1.signer)
+        .connect(users[4].signer)
         .executeTransaction(
           configurator.address,
           0,
@@ -144,21 +149,87 @@ describe("ExecutorWithTimelock Test", () => {
     ).to.be.revertedWith("TIMELOCK_NOT_FINISHED");
   });
 
-  it("executeTransaction success", async () => {
-    const {
-      users: [user1],
-      configurator,
-      pool,
-      weth,
-    } = testEnv;
+  it("setActionNeedApproval fails when user is not action approve admin", async () => {
+    const {users, configurator} = testEnv;
 
-    let config = await pool.getReserveData(weth.address);
-    expect(config.xTokenAddress).to.be.not.eq(ZERO_ADDRESS);
-    await advanceTimeAndBlock(110);
+    await expect(
+      timeLock
+        .connect(users[4].signer)
+        .setActionNeedApproval(configurator.address, dropReserveSelector, true)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ACTION_APPROVE_ADMIN);
+  });
+
+  it("setActionNeedApproval success", async () => {
+    const {users, configurator} = testEnv;
 
     expect(
       await timeLock
-        .connect(user1.signer)
+        .connect(users[5].signer)
+        .setActionNeedApproval(configurator.address, dropReserveSelector, true)
+    );
+  });
+
+  it("executeTransaction fails when action need approve", async () => {
+    const {users, configurator} = testEnv;
+
+    await advanceTimeAndBlock(110);
+    await expect(
+      timeLock
+        .connect(users[4].signer)
+        .executeTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp,
+          false
+        )
+    ).to.be.revertedWith("ACTION_NOT_APPROVED");
+  });
+
+  it("approveTransaction fails when user is not action approve admin", async () => {
+    const {users, configurator} = testEnv;
+
+    await expect(
+      timeLock
+        .connect(users[4].signer)
+        .approveTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp,
+          false
+        )
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ACTION_APPROVE_ADMIN);
+  });
+
+  it("approveTransaction success", async () => {
+    const {users, configurator} = testEnv;
+
+    expect(
+      await timeLock
+        .connect(users[5].signer)
+        .approveTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp,
+          false
+        )
+    );
+  });
+
+  it("executeTransaction success", async () => {
+    const {users, configurator, pool, weth} = testEnv;
+
+    let config = await pool.getReserveData(weth.address);
+    expect(config.xTokenAddress).to.be.not.eq(ZERO_ADDRESS);
+
+    expect(
+      await timeLock
+        .connect(users[4].signer)
         .executeTransaction(
           configurator.address,
           0,

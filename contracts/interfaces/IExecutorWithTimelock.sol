@@ -4,22 +4,22 @@ pragma abicoder v2;
 
 interface IExecutorWithTimelock {
     /**
-     * @dev emitted when a new pending admin is set
-     * @param newPendingAdmin address of the new pending admin
-     **/
-    event NewPendingAdmin(address newPendingAdmin);
-
-    /**
-     * @dev emitted when a new admin is set
-     * @param newAdmin address of the new admin
-     **/
-    event NewAdmin(address newAdmin);
-
-    /**
      * @dev emitted when a new delay (between queueing and execution) is set
      * @param delay new delay
      **/
     event NewDelay(uint256 delay);
+
+    /**
+     * @dev emitted when update if an action need approve before execution
+     * @param target target contract address
+     * @param selector action selector
+     * @param needApproval new status
+     **/
+    event UpdateActionApproveFilter(
+        address target,
+        bytes4 selector,
+        bool needApproval
+    );
 
     /**
      * @dev emitted when a new (trans)action is Queued.
@@ -32,6 +32,26 @@ interface IExecutorWithTimelock {
      * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
      **/
     event QueuedAction(
+        bytes32 actionHash,
+        address indexed target,
+        uint256 value,
+        string signature,
+        bytes data,
+        uint256 executionTime,
+        bool withDelegatecall
+    );
+
+    /**
+     * @dev emitted when an action is Approved
+     * @param actionHash hash of the action
+     * @param target address of the targeted contract
+     * @param value wei value of the transaction
+     * @param signature function signature of the transaction
+     * @param data function arguments of the transaction or callData if signature empty
+     * @param executionTime time at which to execute the transaction
+     * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
+     **/
+    event ApprovedAction(
         bytes32 actionHash,
         address indexed target,
         uint256 value,
@@ -84,18 +104,6 @@ interface IExecutorWithTimelock {
     );
 
     /**
-     * @dev Getter of the current admin address (should be governance)
-     * @return The address of the current admin
-     **/
-    function getAdmin() external view returns (address);
-
-    /**
-     * @dev Getter of the current pending admin address
-     * @return The address of the pending admin
-     **/
-    function getPendingAdmin() external view returns (address);
-
-    /**
      * @dev Getter of the delay between queuing and execution
      * @return The delay in seconds
      **/
@@ -137,6 +145,24 @@ interface IExecutorWithTimelock {
      * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
      **/
     function queueTransaction(
+        address target,
+        uint256 value,
+        string memory signature,
+        bytes memory data,
+        uint256 executionTime,
+        bool withDelegatecall
+    ) external returns (bytes32);
+
+    /**
+     * @dev Function, called by Governance, that approve a transaction, returns action hash
+     * @param target smart contract target
+     * @param value wei value of the transaction
+     * @param signature function signature of the transaction
+     * @param data function arguments of the transaction or callData if signature empty
+     * @param executionTime time at which to execute the transaction
+     * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
+     **/
+    function approveTransaction(
         address target,
         uint256 value,
         string memory signature,

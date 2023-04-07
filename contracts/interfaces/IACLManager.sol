@@ -31,6 +31,12 @@ interface IACLManager {
     function EMERGENCY_ADMIN_ROLE() external view returns (bytes32);
 
     /**
+     * @notice Returns the identifier of the EmergencyRecoveryAdmin role
+     * @return The id of the EmergencyRecoveryAdmin role
+     */
+    function EMERGENCY_RECOVERY_ADMIN_ROLE() external view returns (bytes32);
+
+    /**
      * @notice Returns the identifier of the RiskAdmin role
      * @return The id of the RiskAdmin role
      */
@@ -53,6 +59,18 @@ interface IACLManager {
      * @return The id of the AssetListingAdmin role
      */
     function ASSET_LISTING_ADMIN_ROLE() external view returns (bytes32);
+
+    /**
+     * @notice Returns the identifier of the ActionApproveAdmin role
+     * @return The id of the ActionApproveAdmin role
+     */
+    function ACTION_APPROVE_ADMIN_ROLE() external view returns (bytes32);
+
+    /**
+     * @notice Returns the identifier of the ActionProposeAdmin role
+     * @return The id of the ActionProposeAdmin role
+     */
+    function ACTION_PROPOSE_ADMIN_ROLE() external view returns (bytes32);
 
     /**
      * @notice Set the role as admin of a specific role.
@@ -99,6 +117,66 @@ interface IACLManager {
      * @return True if the given address is EmergencyAdmin, false otherwise
      */
     function isEmergencyAdmin(address admin) external view returns (bool);
+
+    /**
+     * @notice Adds a new admin as EmergencyRecoveryAdmin
+     * @param admin The address of the new admin
+     */
+    function addEmergencyRecoveryAdmin(address admin) external;
+
+    /**
+     * @notice Removes an admin as EmergencyRecoveryAdmin
+     * @param admin The address of the admin to remove
+     */
+    function removeEmergencyRecoveryAdmin(address admin) external;
+
+    /**
+     * @notice Returns true if the address is EmergencyRecoveryAdmin, false otherwise
+     * @param admin The address to check
+     * @return True if the given address is EmergencyRecoveryAdmin, false otherwise
+     */
+    function isEmergencyRecoveryAdmin(address admin)
+        external
+        view
+        returns (bool);
+
+    /**
+     * @notice Adds a new admin as ActionApproveAdmin
+     * @param admin The address of the new admin
+     */
+    function addActionApproveAdmin(address admin) external;
+
+    /**
+     * @notice Removes an admin as ActionApproveAdmin
+     * @param admin The address of the admin to remove
+     */
+    function removeActionApproveAdmin(address admin) external;
+
+    /**
+     * @notice Returns true if the address is ActionApproveAdmin, false otherwise
+     * @param admin The address to check
+     * @return True if the given address is UpgradeApproveAdmin, false otherwise
+     */
+    function isActionApproveAdmin(address admin) external view returns (bool);
+
+    /**
+     * @notice Adds a new admin as ActionProposeAdmin
+     * @param admin The address of the new admin
+     */
+    function addActionProposeAdmin(address admin) external;
+
+    /**
+     * @notice Removes an admin as ActionProposeAdmin
+     * @param admin The address of the admin to remove
+     */
+    function removeActionProposeAdmin(address admin) external;
+
+    /**
+     * @notice Returns true if the address is ActionProposeAdmin, false otherwise
+     * @param admin The address to check
+     * @return True if the given address is ActionProposeAdmin, false otherwise
+     */
+    function isActionProposeAdmin(address admin) external view returns (bool);
 
     /**
      * @notice Adds a new admin as RiskAdmin
