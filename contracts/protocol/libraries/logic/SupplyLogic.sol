@@ -389,12 +389,7 @@ library SupplyLogic {
         (
             uint64 oldCollateralizedBalance,
             uint64 newCollateralizedBalance
-        ) = _burnNToken(
-                reserveCache.xTokenAddress,
-                reserve,
-                reserveCache,
-                params
-            );
+        ) = _burnNToken(reserveCache.xTokenAddress, reserve, params);
 
         bool isWithdrawCollateral = (newCollateralizedBalance <
             oldCollateralizedBalance);
@@ -431,18 +426,16 @@ library SupplyLogic {
     function _burnNToken(
         address xTokenAddress,
         DataTypes.ReserveData storage reserve,
-        DataTypes.ReserveCache memory reserveCache,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
         uint256 amount = 0;
-        INToken nToken = INToken(reserveCache.xTokenAddress);
+        INToken nToken = INToken(xTokenAddress);
         if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
             uint256 tokenIdLength = params.tokenIds.length;
             for (uint256 index = 0; index < tokenIdLength; index++) {
-                uint256 tokenId = params.tokenIds[index];
                 amount += IPriceOracleGetter(params.oracle).getTokenPrice(
                     params.asset,
-                    tokenId
+                    params.tokenIds[index]
                 );
             }
         } else {
