@@ -327,13 +327,13 @@ export const timeLockStrategyDoodles: ITimeLockStrategyParams = {
 
 export const timeLockStrategyOTHR: ITimeLockStrategyParams = {
   name: "timeLockStrategyOTHR",
-  minThreshold: "5",
-  midThreshold: "20",
+  minThreshold: "10",
+  midThreshold: "30",
   minWaitTime: "12",
   midWaitTime: "7200",
   maxWaitTime: "43200",
   poolPeriodWaitTime: "600",
-  poolPeriodLimit: "125",
+  poolPeriodLimit: "230",
   period: "86400",
 };
 

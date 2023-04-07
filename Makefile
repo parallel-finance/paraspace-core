@@ -416,6 +416,10 @@ rate-strategy:
 auction-strategy:
 	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
 
+.PHONY: timelock-strategy
+timelock-strategy:
+	make SCRIPT_PATH=./scripts/dev/7.timelock-strategy.ts run
+
 .PHONY: set-interval-mining
 set-interval-mining:
 	make SCRIPT_PATH=./scripts/dev/8.set-interval-mining.ts run
@@ -435,6 +439,10 @@ set-traits-multipliers:
 .PHONY: set-timelock-strategy
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
+
+.PHONY: release-stakefish
+release-stakefish:
+	make SCRIPT_PATH=./scripts/dev/13.release-ntoken-stakefish.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
