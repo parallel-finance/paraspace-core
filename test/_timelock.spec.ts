@@ -431,18 +431,18 @@ describe("TimeLock functionality tests", () => {
       weth,
     } = await loadFixture(fixture);
     await waitForTx(
-        await weth.connect(deployer.signer).deposit({
-          value: parseEther("10"),
-        })
+      await weth.connect(deployer.signer).deposit({
+        value: parseEther("10"),
+      })
     );
     const balanceBefore = await user1.signer.getBalance();
 
     await waitForTx(
-        await pool
-            .connect(user1.signer)
-            .withdraw(weth.address, parseEther("1"), user1.address, {
-              gasLimit: 5000000,
-            })
+      await pool
+        .connect(user1.signer)
+        .withdraw(weth.address, parseEther("1"), user1.address, {
+          gasLimit: 5000000,
+        })
     );
 
     await advanceTimeAndBlock(36 * 3600);

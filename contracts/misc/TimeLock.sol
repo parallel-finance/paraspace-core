@@ -19,6 +19,7 @@ import {IACLManager} from "../interfaces/IACLManager.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {IWrappedPunks} from "./interfaces/IWrappedPunks.sol";
 import {IPunks} from "./interfaces/IPunks.sol";
+import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 
 contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
@@ -203,7 +204,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         }
 
         IWETH(weth).withdraw(totalAmount);
-        _safeTransferETH(msg.sender, totalAmount);
+        Helpers.safeTransferETH(msg.sender, totalAmount);
     }
 
     function claimPunk(uint256[] calldata agreementIds) external nonReentrant {
@@ -226,11 +227,6 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     }
 
     receive() external payable {}
-
-    function _safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, "ETH_TRANSFER_FAILED");
-    }
 
     function freezeAgreement(uint256 agreementId)
         external
