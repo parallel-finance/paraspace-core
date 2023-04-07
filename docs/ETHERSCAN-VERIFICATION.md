@@ -118,9 +118,9 @@ contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic \
 ### MintableERC721Logic
 
 ```
-proxychains forge verify-contract 0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+proxychains forge verify-contract 0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic \
   --compiler-version v0.8.10+commit.fc410830
@@ -183,59 +183,58 @@ proxychains forge verify-contract 0x8c17beb69971E127e78C2e60F0408232F7d6340F \
 ### NTokenBAYC
 
 ```
-proxychains forge verify-contract 0xc4e1e2a4Ab406E73d1809016c91D11D50cEe6FAa \
+proxychains forge verify-contract 0x73A613Bf41284C9721A4dEDce77E85C3444DdEBC \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenBAYC.sol:NTokenBAYC \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9") \
-  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x40266cFA6cD32485a24fE9913ed9dAa3E896b6D4 \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenMAYC
 
 ```
-proxychains forge verify-contract 0xA43Ba33223e1449A6f901b3E3b75dC22fb29F0ed \
+proxychains forge verify-contract 0x6f56Fc05852e5918DAa3DCfa38524dA589DEAF32 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenMAYC.sol:NTokenMAYC \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9") \
-  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x40266cFA6cD32485a24fE9913ed9dAa3E896b6D4 \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenBAKC
 
 ```
-proxychains forge verify-contract 0x6192C2FCF4e8eB97c51d6771aB6C39691F3fAf34 \
+proxychains forge verify-contract 0x10e6B156bfB1Dac6E1891545c0905C7025E0CEe2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenBAKC.sol:NTokenBAKC \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0xdb5485C85Bd95f38f9def0cA85499eF67dC581c0" "0xFA51cdc70c512c13eF1e4A3dbf1e99082b242896") \
-  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address,address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0xdb5485C85Bd95f38f9def0cA85499eF67dC581c0" "0xFA51cdc70c512c13eF1e4A3dbf1e99082b242896" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenOtherdeed
 
 ```
-proxychains forge verify-contract 0x0ab07E037Aeae1af2fF991Af239855087939f05d \
+proxychains forge verify-contract 0xF7452CbE6a2c87641D27fff5cf0Ae8f8547f9021 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenOtherdeed.sol:NTokenOtherdeed \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c") \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x8F3527276f7dB90F1F68d166Df366fA46fD70054 \
+  $(cast abi-encode "constructor(address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -256,41 +255,41 @@ proxychains forge verify-contract 0x0719E8D6acBDCECD1B6A4F32Cc7367c8969Ae352 \
 ### NTokenMoonbirds
 
 ```
-proxychains forge verify-contract 0x5962CA824E31992453BF1CD8569c6dEf6F89D0Db \
+proxychains forge verify-contract 0xec1aD73B834677f40f4121b8081abC7c64fF1460 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenMoonBirds.sol:NTokenMoonBirds \
   --constructor-args \
-  $(cast abi-encode "constructor(address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee") \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenUniswapV3
 
 ```
-proxychains forge verify-contract 0xE30968b619b2C34462ac63268f1CA35ad72Ce3F0 \
+proxychains forge verify-contract 0x8D7429dBeB0532048310DcBF06064d188FF9a5f2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenUniswapV3.sol:NTokenUniswapV3 \
   --constructor-args \
-  $(cast abi-encode "constructor(address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee") \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NToken
 
 ```
-proxychains forge verify-contract 0x64c79b88911e674458011E1d5795d41FfB74F358 \
+proxychains forge verify-contract 0x39E4c2Fc79D4C39749BaD41D09af4C8901066477 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NToken.sol:NToken \
   --constructor-args \
-  $(cast abi-encode "constructor(address,bool)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" false) \
+  $(cast abi-encode "constructor(address,bool,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" false "0x00000000000076A84feF008CDAbe6409d2FE638B") \
   --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
   --compiler-version v0.8.10+commit.fc410830
 ```
