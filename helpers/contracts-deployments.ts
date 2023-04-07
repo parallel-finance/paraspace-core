@@ -271,6 +271,8 @@ import {
   HotWalletProxy,
   DelegationRegistry,
   DelegationRegistry__factory,
+  ParaSpaceNFT__factory,
+  ParaSpaceNFT,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -3121,3 +3123,15 @@ export const deployDelegationRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<DelegationRegistry>;
+
+export const deployParaSpaceNFT = async (
+  name: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ParaSpaceNFT__factory(await getFirstSigner()),
+    eContractid.DelegationRegistry,
+    [name, symbol],
+    verify
+  ) as Promise<ParaSpaceNFT>;
