@@ -290,7 +290,7 @@ proxychains forge verify-contract 0x39E4c2Fc79D4C39749BaD41D09af4C8901066477 \
   contracts/protocol/tokenization/NToken.sol:NToken \
   --constructor-args \
   $(cast abi-encode "constructor(address,bool,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" false "0x00000000000076A84feF008CDAbe6409d2FE638B") \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
