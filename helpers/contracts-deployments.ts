@@ -283,6 +283,8 @@ import {
   DepositContract,
   StakefishValidatorFactory__factory,
   StakefishValidatorFactory,
+  MockFeePool,
+  MockFeePool__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -3246,6 +3248,14 @@ export const deployMockedDelegateRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<MockedDelegateRegistry>;
+
+export const deployMockFeePool = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new MockFeePool__factory(await getFirstSigner()),
+    eContractid.MockFeePool,
+    [],
+    verify
+  ) as Promise<MockFeePool>;
 ////////////////////////////////////////////////////////////////////////////////
 //  PLS ONLY APPEND MOCK CONTRACTS HERE!
 ////////////////////////////////////////////////////////////////////////////////

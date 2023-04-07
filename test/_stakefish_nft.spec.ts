@@ -2,11 +2,12 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {parseEther} from "ethers/lib/utils";
 import {ZERO_ADDRESS} from "../helpers/constants";
+import {deployMockFeePool} from "../helpers/contracts-deployments";
 import {getStakefishValidator} from "../helpers/contracts-getters";
 import {getCurrentTime} from "../helpers/contracts-helpers";
 import {waitForTx} from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
-import {StakefishValidatorV1} from "../types";
+import {MockFeePool, StakefishValidatorV1} from "../types";
 import {SignerWithAddress} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
@@ -22,6 +23,7 @@ describe("Stakefish NFT", () => {
   let validator3: StakefishValidatorV1;
   let validator4: StakefishValidatorV1;
   let validator5: StakefishValidatorV1;
+  let feePool: MockFeePool;
 
   const pubkey =
     "0x877d383705a1514c38060f2de4365b9b0a05c0de9aa5813f4effd412a9fa896ed938d761c2d0fef9422bb3992a01b4b7";
@@ -147,6 +149,19 @@ describe("Stakefish NFT", () => {
 
     await supplyAndValidate(testEnv.usdc, "100000", user6, true);
 
+    feePool = await deployMockFeePool();
+    await waitForTx(
+      await validator3
+        .connect(testEnv.poolAdmin.signer)
+        .validatorFeePoolChange(feePool.address)
+    );
+    await waitForTx(
+      await user6.signer.sendTransaction({
+        to: feePool.address,
+        value: parseEther("100"),
+      })
+    );
+
     return testEnv;
   };
 
@@ -179,7 +194,7 @@ describe("Stakefish NFT", () => {
         user2.address,
         0
       )
-    ).to.be.revertedWith(ProtocolErrors.INVALID_STATE);
+    );
 
     await expect(
       pool.connect(user4.signer).supplyERC721(
@@ -241,5 +256,33 @@ describe("Stakefish NFT", () => {
     await expect(await paraspaceOracle.getAssetPrice(sfvldr.address)).eq(
       parseEther("32")
     );
+  });
+
+  it("TC-stakefish-nft-04: claimed fees will be supplied to pool", async () => {
+    const {pWETH, pool, sfvldr, nSfvldr} = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool.connect(user3.signer).supplyERC721(
+        sfvldr.address,
+        [
+          {
+            tokenId: "3",
+            useAsCollateral: true,
+          },
+        ],
+        user3.address,
+        0,
+        {gasLimit: 5000000}
+      )
+    );
+
+    await waitForTx(
+      await nSfvldr
+        .connect(user3.signer)
+        .claimFeePool(["3"], [parseEther("2")], user3.address, {
+          gasLimit: 5000000,
+        })
+    );
+    expect(await pWETH.balanceOf(user3.address)).eq(parseEther("2"));
   });
 });

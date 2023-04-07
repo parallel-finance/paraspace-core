@@ -3,6 +3,8 @@ pragma solidity 0.8.10;
 
 import {IStakefishNFTManager} from "../../interfaces/IStakefishNFTManager.sol";
 import {IStakefishValidator} from "../../interfaces/IStakefishValidator.sol";
+import {IPool} from "../../interfaces/IPool.sol";
+import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {INTokenStakefish} from "../../interfaces/INTokenStakefish.sol";
 import {NToken} from "./NToken.sol";
 import {IPool} from "../../interfaces/IPool.sol";
@@ -10,6 +12,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {IRewardController} from "../../interfaces/IRewardController.sol";
 
 /**
  * @title  NTokenStakefish
@@ -17,13 +20,39 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  * @notice Implementation of the NFT derivative token for the ParaSpace protocol
  */
 contract NTokenStakefish is NToken, INTokenStakefish {
+    IWETH internal immutable WETH;
+
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool, address delegateRegistry)
         NToken(pool, false, delegateRegistry)
-    {}
+    {
+        WETH = IWETH(_addressesProvider.getWETH());
+    }
+
+    function initialize(
+        IPool initializingPool,
+        address underlyingAsset,
+        IRewardController incentivesController,
+        string calldata nTokenName,
+        string calldata nTokenSymbol,
+        bytes calldata params
+    ) public virtual override initializer {
+        super.initialize(
+            initializingPool,
+            underlyingAsset,
+            incentivesController,
+            nTokenName,
+            nTokenSymbol,
+            params
+        );
+        uint256 allowance = WETH.allowance(address(this), address(POOL));
+        if (allowance == 0) {
+            WETH.approve(address(POOL), type(uint256).max);
+        }
+    }
 
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenStakefish;
@@ -51,7 +80,10 @@ contract NTokenStakefish is NToken, INTokenStakefish {
             );
         }
         uint256 diff = address(this).balance - beforeBalance;
-        if (diff > 0) Helpers.safeTransferETH(to, diff);
+        if (diff > 0) {
+            WETH.deposit{value: diff}();
+            POOL.supply(address(WETH), diff, to, 0);
+        }
     }
 
     // @inheritdoc INTokenStakefish

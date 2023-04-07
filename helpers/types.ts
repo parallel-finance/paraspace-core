@@ -271,6 +271,7 @@ export enum eContractid {
   StakefishValidator = "StakefishValidator",
   StakefishValidatorFactory = "StakefishValidatorFactory",
   DepositContract = "DepositContract",
+  MockFeePool = "MockFeePool",
 }
 
 /*
