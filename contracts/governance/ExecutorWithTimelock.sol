@@ -78,6 +78,14 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         _;
     }
 
+    /**
+     * @dev Only propose admin can call functions marked by this modifier.
+     **/
+    modifier onlyProposeOrApproveAdmin() {
+        _onlyProposeOrApproveAdmin();
+        _;
+    }
+
     function _onlyProposeAdmin() internal view {
         require(
             aclManager.isActionProposeAdmin(msg.sender),
@@ -89,6 +97,14 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         require(
             aclManager.isActionApproveAdmin(msg.sender),
             Errors.CALLER_NOT_ACTION_APPROVE_ADMIN
+        );
+    }
+
+    function _onlyProposeOrApproveAdmin() internal view {
+        require(
+            aclManager.isActionProposeAdmin(msg.sender) ||
+                aclManager.isActionApproveAdmin(msg.sender),
+            Errors.CALLER_NOT_ACTION_PROPOSE_OR_APPROVE_ADMIN
         );
     }
 
@@ -279,7 +295,7 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         bytes memory data,
         uint256 executionTime,
         bool withDelegatecall
-    ) public override onlyProposeAdmin returns (bytes32) {
+    ) public override onlyProposeOrApproveAdmin returns (bytes32) {
         bytes32 actionHash = keccak256(
             abi.encode(
                 target,

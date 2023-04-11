@@ -2,6 +2,8 @@ import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
 import {
   advanceTimeAndBlock,
+  evmRevert,
+  evmSnapshot,
   timeLatest,
   waitForTx,
 } from "../helpers/misc-utils";
@@ -133,6 +135,25 @@ describe("ExecutorWithTimelock Test", () => {
     ).to.be.revertedWith("ACTION_NOT_QUEUED");
   });
 
+  it("cancelTransaction fails when caller is not propose or approve admin", async () => {
+    const {users, configurator} = testEnv;
+
+    await expect(
+      timeLock
+        .connect(users[3].signer)
+        .cancelTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp,
+          false
+        )
+    ).to.be.revertedWith(
+      ProtocolErrors.CALLER_NOT_ACTION_PROPOSE_OR_APPROVE_ADMIN
+    );
+  });
+
   it("cancelTransaction fails when action is not queued", async () => {
     const {users, configurator} = testEnv;
 
@@ -165,6 +186,46 @@ describe("ExecutorWithTimelock Test", () => {
           false
         )
     );
+  });
+
+  it("cancelTransaction success by propose admin", async () => {
+    const {users, configurator} = testEnv;
+    const snapId = await evmSnapshot();
+
+    expect(
+      await timeLock
+        .connect(users[4].signer)
+        .cancelTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp,
+          false
+        )
+    );
+
+    await evmRevert(snapId);
+  });
+
+  it("cancelTransaction success by approve admin", async () => {
+    const {users, configurator} = testEnv;
+    const snapId = await evmSnapshot();
+
+    expect(
+      await timeLock
+        .connect(users[5].signer)
+        .cancelTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp,
+          false
+        )
+    );
+
+    await evmRevert(snapId);
   });
 
   it("executeTransaction fails when execution time not reach", async () => {

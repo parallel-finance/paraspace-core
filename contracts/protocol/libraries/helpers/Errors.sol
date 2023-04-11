@@ -128,4 +128,5 @@ library Errors {
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
     string public constant CALLER_NOT_ACTION_PROPOSE_ADMIN = "134"; //The caller of the function is not action propose admin
     string public constant CALLER_NOT_ACTION_APPROVE_ADMIN = "135"; //The caller of the function is not action approve admin
+    string public constant CALLER_NOT_ACTION_PROPOSE_OR_APPROVE_ADMIN = "136"; //The caller of the function is not action propose or approve admin
 }
