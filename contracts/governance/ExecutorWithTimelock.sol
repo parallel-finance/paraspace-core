@@ -15,6 +15,13 @@ import {Errors} from "../protocol/libraries/helpers/Errors.sol";
  **/
 contract ExecutorWithTimelock is IExecutorWithTimelock {
     using SafeMath for uint256;
+    enum TransactionStatus {
+        Default,
+        Queued,
+        Approved,
+        Cancelled,
+        Executed
+    }
 
     IACLManager private immutable aclManager;
     uint256 public immutable override GRACE_PERIOD;
@@ -23,8 +30,8 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
 
     uint256 private _delay;
 
-    mapping(bytes32 => bool) private _queuedTransactions;
-    mapping(bytes32 => bool) private _approvedTransactions;
+    // Map of actionHash to status
+    mapping(bytes32 => TransactionStatus) public transactionStatus;
 
     // Map of contract selector need to be approved (contract address => selector => needApprove)
     mapping(address => mapping(bytes4 => bool)) private needApprovalFilter;
@@ -177,7 +184,11 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
                 withDelegatecall
             )
         );
-        _queuedTransactions[actionHash] = true;
+        require(
+            transactionStatus[actionHash] == TransactionStatus.Default,
+            "WRONG_ACTION_STATUS "
+        );
+        transactionStatus[actionHash] = TransactionStatus.Queued;
 
         emit QueuedAction(
             actionHash,
@@ -220,7 +231,10 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
             )
         );
 
-        require(_queuedTransactions[actionHash], "ACTION_NOT_QUEUED");
+        require(
+            transactionStatus[actionHash] == TransactionStatus.Queued,
+            "ACTION_NOT_QUEUED"
+        );
         bytes4 selector;
         if (bytes(signature).length == 0) {
             selector = bytes4(data);
@@ -229,13 +243,12 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         }
         bool isNeedApproval = needApprovalFilter[target][selector];
         require(isNeedApproval, "ACTION_NOT_NEED_APPROVAL");
-        require(!_approvedTransactions[actionHash], "ACTION_ALREADY_APPROVED");
         require(
             block.timestamp <= executionTime.add(GRACE_PERIOD),
             "GRACE_PERIOD_FINISHED"
         );
 
-        _approvedTransactions[actionHash] = true;
+        transactionStatus[actionHash] = TransactionStatus.Approved;
 
         emit ApprovedAction(
             actionHash,
@@ -277,8 +290,13 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
                 withDelegatecall
             )
         );
-        _queuedTransactions[actionHash] = false;
-        _approvedTransactions[actionHash] = false;
+        TransactionStatus status = transactionStatus[actionHash];
+        require(
+            status == TransactionStatus.Queued ||
+                status == TransactionStatus.Approved,
+            "WRONG_ACTION_STATUS "
+        );
+        transactionStatus[actionHash] = TransactionStatus.Cancelled;
 
         emit CancelledAction(
             actionHash,
@@ -320,7 +338,6 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
                 withDelegatecall
             )
         );
-        require(_queuedTransactions[actionHash], "ACTION_NOT_QUEUED");
         require(block.timestamp >= executionTime, "TIMELOCK_NOT_FINISHED");
         require(
             block.timestamp <= executionTime.add(GRACE_PERIOD),
@@ -337,11 +354,18 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
             callData = abi.encodePacked(selector, data);
         }
         if (needApprovalFilter[target][selector]) {
-            require(_approvedTransactions[actionHash], "ACTION_NOT_APPROVED");
-            _approvedTransactions[actionHash] = false;
+            require(
+                transactionStatus[actionHash] == TransactionStatus.Approved,
+                "ACTION_NOT_APPROVED"
+            );
+        } else {
+            require(
+                transactionStatus[actionHash] == TransactionStatus.Queued,
+                "ACTION_NOT_QUEUED"
+            );
         }
 
-        _queuedTransactions[actionHash] = false;
+        transactionStatus[actionHash] = TransactionStatus.Executed;
 
         bool success;
         bytes memory resultData;
@@ -390,7 +414,7 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         override
         returns (bool)
     {
-        return _queuedTransactions[actionHash];
+        return transactionStatus[actionHash] == TransactionStatus.Queued;
     }
 
     function _validateDelay(uint256 delay) internal view {

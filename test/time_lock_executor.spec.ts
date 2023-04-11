@@ -98,13 +98,13 @@ describe("ExecutorWithTimelock Test", () => {
     ).to.be.revertedWith("EXECUTION_TIME_UNDERESTIMATED");
   });
 
-  it("executeTransaction fails when action is not queued", async () => {
+  it("approveTransaction fails when action is not queued", async () => {
     const {users, configurator} = testEnv;
 
     await expect(
       timeLock
-        .connect(users[4].signer)
-        .executeTransaction(
+        .connect(users[5].signer)
+        .approveTransaction(
           configurator.address,
           0,
           "",
@@ -113,6 +113,41 @@ describe("ExecutorWithTimelock Test", () => {
           false
         )
     ).to.be.revertedWith("ACTION_NOT_QUEUED");
+  });
+
+  it("executeTransaction fails when action is not queued", async () => {
+    const {users, configurator} = testEnv;
+
+    const executionTimeStamp2 = (await timeLatest()).sub(50).toString();
+    await expect(
+      timeLock
+        .connect(users[4].signer)
+        .executeTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp2,
+          false
+        )
+    ).to.be.revertedWith("ACTION_NOT_QUEUED");
+  });
+
+  it("cancelTransaction fails when action is not queued", async () => {
+    const {users, configurator} = testEnv;
+
+    await expect(
+      timeLock
+        .connect(users[4].signer)
+        .cancelTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp,
+          false
+        )
+    ).to.be.revertedWith("WRONG_ACTION_STATUS");
   });
 
   it("queueTransaction success", async () => {
@@ -147,6 +182,24 @@ describe("ExecutorWithTimelock Test", () => {
           false
         )
     ).to.be.revertedWith("TIMELOCK_NOT_FINISHED");
+  });
+
+  it("executeTransaction fails when grace period finished", async () => {
+    const {users, configurator} = testEnv;
+
+    const executionTimeStamp3 = (await timeLatest()).sub(120).toString();
+    await expect(
+      timeLock
+        .connect(users[4].signer)
+        .executeTransaction(
+          configurator.address,
+          0,
+          "",
+          dropReserveEncodedData,
+          executionTimeStamp3,
+          false
+        )
+    ).to.be.revertedWith("GRACE_PERIOD_FINISHED");
   });
 
   it("setActionNeedApproval fails when user is not action approve admin", async () => {
