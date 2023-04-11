@@ -92,19 +92,44 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
 
     /**
      * @dev Set if an action need approval
-     * @param target the contract address for the action
-     * @param selector the function selector for the action
-     * @param needApproval identify if action need approval
+     * @param targets the contract addresses for the action
+     * @param selectors the function selectors for the action
+     * @param needApprovals identify if action need approval
      **/
     function setActionNeedApproval(
-        address target,
-        bytes4 selector,
-        bool needApproval
+        address[] calldata targets,
+        bytes4[][] calldata selectors,
+        bool[][] calldata needApprovals
     ) external onlyApproveAdmin {
-        bool currentStatus = needApprovalFilter[target][selector];
-        if (currentStatus != needApproval) {
-            needApprovalFilter[target][selector] = needApproval;
-            emit UpdateActionApproveFilter(target, selector, needApproval);
+        uint256 targetLength = targets.length;
+        require(
+            selectors.length == targetLength &&
+                needApprovals.length == targetLength,
+            "invalid params"
+        );
+        for (uint256 index = 0; index < targetLength; index++) {
+            address target = targets[index];
+            bytes4[] calldata targetSelectors = selectors[index];
+            bool[] calldata targetApprovals = needApprovals[index];
+            uint256 selectorLength = targetSelectors.length;
+            require(selectorLength == targetApprovals.length, "invalid params");
+            for (
+                uint256 selectorIndex = 0;
+                selectorIndex < selectorLength;
+                selectorIndex++
+            ) {
+                bytes4 selector = targetSelectors[selectorIndex];
+                bool needApproval = targetApprovals[selectorIndex];
+                bool currentStatus = needApprovalFilter[target][selector];
+                if (currentStatus != needApproval) {
+                    needApprovalFilter[target][selector] = needApproval;
+                    emit UpdateActionApproveFilter(
+                        target,
+                        selector,
+                        needApproval
+                    );
+                }
+            }
         }
     }
 

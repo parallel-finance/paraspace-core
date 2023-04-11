@@ -155,7 +155,11 @@ describe("ExecutorWithTimelock Test", () => {
     await expect(
       timeLock
         .connect(users[4].signer)
-        .setActionNeedApproval(configurator.address, dropReserveSelector, true)
+        .setActionNeedApproval(
+          [configurator.address],
+          [[dropReserveSelector]],
+          [[true]]
+        )
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ACTION_APPROVE_ADMIN);
   });
 
@@ -165,7 +169,11 @@ describe("ExecutorWithTimelock Test", () => {
     expect(
       await timeLock
         .connect(users[5].signer)
-        .setActionNeedApproval(configurator.address, dropReserveSelector, true)
+        .setActionNeedApproval(
+          [configurator.address],
+          [[dropReserveSelector]],
+          [[true]]
+        )
     );
   });
 
