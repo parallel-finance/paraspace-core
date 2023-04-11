@@ -3,7 +3,9 @@ pragma solidity 0.8.10;
 pragma abicoder v2;
 
 import {IExecutorWithTimelock} from "../interfaces/IExecutorWithTimelock.sol";
+import {IACLManager} from "../interfaces/IACLManager.sol";
 import {SafeMath} from "../dependencies/openzeppelin/contracts/SafeMath.sol";
+import {Errors} from "../protocol/libraries/helpers/Errors.sol";
 
 /**
  * @title Time Locked Executor Contract
@@ -13,48 +15,97 @@ import {SafeMath} from "../dependencies/openzeppelin/contracts/SafeMath.sol";
  **/
 contract ExecutorWithTimelock is IExecutorWithTimelock {
     using SafeMath for uint256;
+    enum TransactionStatus {
+        Default,
+        Queued,
+        Approved,
+        Cancelled,
+        Executed
+    }
 
+    IACLManager private immutable aclManager;
     uint256 public immutable override GRACE_PERIOD;
     uint256 public immutable override MINIMUM_DELAY;
     uint256 public immutable override MAXIMUM_DELAY;
 
-    address private _admin;
-    address private _pendingAdmin;
     uint256 private _delay;
 
-    mapping(bytes32 => bool) private _queuedTransactions;
+    // Map of actionHash to status
+    mapping(bytes32 => TransactionStatus) public transactionStatus;
+
+    // Map of contract selector need to be approved (contract address => selector => needApprove)
+    mapping(address => mapping(bytes4 => bool)) public needApprovalFilter;
 
     /**
      * @dev Constructor
-     * @param admin admin address, that can call the main functions, (Governance)
      * @param delay minimum time between queueing and execution of proposal
      * @param gracePeriod time after `delay` while a proposal can be executed
      * @param minimumDelay lower threshold of `delay`, in seconds
      * @param maximumDelay upper threshold of `delay`, in seconds
      **/
     constructor(
-        address admin,
+        address _aclManager,
         uint256 delay,
         uint256 gracePeriod,
         uint256 minimumDelay,
         uint256 maximumDelay
     ) {
+        aclManager = IACLManager(_aclManager);
         require(delay >= minimumDelay, "DELAY_SHORTER_THAN_MINIMUM");
         require(delay <= maximumDelay, "DELAY_LONGER_THAN_MAXIMUM");
         _delay = delay;
-        _admin = admin;
 
         GRACE_PERIOD = gracePeriod;
         MINIMUM_DELAY = minimumDelay;
         MAXIMUM_DELAY = maximumDelay;
 
         emit NewDelay(delay);
-        emit NewAdmin(admin);
     }
 
-    modifier onlyAdmin() {
-        require(msg.sender == _admin, "ONLY_BY_ADMIN");
+    /**
+     * @dev Only propose admin can call functions marked by this modifier.
+     **/
+    modifier onlyProposeAdmin() {
+        _onlyProposeAdmin();
         _;
+    }
+
+    /**
+     * @dev Only approve admin can call functions marked by this modifier.
+     **/
+    modifier onlyApproveAdmin() {
+        _onlyApproveAdmin();
+        _;
+    }
+
+    /**
+     * @dev Only propose admin can call functions marked by this modifier.
+     **/
+    modifier onlyProposeOrApproveAdmin() {
+        _onlyProposeOrApproveAdmin();
+        _;
+    }
+
+    function _onlyProposeAdmin() internal view {
+        require(
+            aclManager.isActionProposeAdmin(msg.sender),
+            Errors.CALLER_NOT_ACTION_PROPOSE_ADMIN
+        );
+    }
+
+    function _onlyApproveAdmin() internal view {
+        require(
+            aclManager.isActionApproveAdmin(msg.sender),
+            Errors.CALLER_NOT_ACTION_APPROVE_ADMIN
+        );
+    }
+
+    function _onlyProposeOrApproveAdmin() internal view {
+        require(
+            aclManager.isActionProposeAdmin(msg.sender) ||
+                aclManager.isActionApproveAdmin(msg.sender),
+            Errors.CALLER_NOT_ACTION_PROPOSE_OR_APPROVE_ADMIN
+        );
     }
 
     modifier onlyTimelock() {
@@ -62,9 +113,47 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         _;
     }
 
-    modifier onlyPendingAdmin() {
-        require(msg.sender == _pendingAdmin, "ONLY_BY_PENDING_ADMIN");
-        _;
+    /**
+     * @dev Set if an action need approval
+     * @param targets the contract addresses for the action
+     * @param selectors the function selectors for the action
+     * @param needApprovals identify if action need approval
+     **/
+    function setActionNeedApproval(
+        address[] calldata targets,
+        bytes4[][] calldata selectors,
+        bool[][] calldata needApprovals
+    ) external onlyApproveAdmin {
+        uint256 targetLength = targets.length;
+        require(
+            selectors.length == targetLength &&
+                needApprovals.length == targetLength,
+            "invalid params"
+        );
+        for (uint256 index = 0; index < targetLength; index++) {
+            address target = targets[index];
+            bytes4[] calldata targetSelectors = selectors[index];
+            bool[] calldata targetApprovals = needApprovals[index];
+            uint256 selectorLength = targetSelectors.length;
+            require(selectorLength == targetApprovals.length, "invalid params");
+            for (
+                uint256 selectorIndex = 0;
+                selectorIndex < selectorLength;
+                selectorIndex++
+            ) {
+                bytes4 selector = targetSelectors[selectorIndex];
+                bool needApproval = targetApprovals[selectorIndex];
+                bool currentStatus = needApprovalFilter[target][selector];
+                if (currentStatus != needApproval) {
+                    needApprovalFilter[target][selector] = needApproval;
+                    emit UpdateActionApproveFilter(
+                        target,
+                        selector,
+                        needApproval
+                    );
+                }
+            }
+        }
     }
 
     /**
@@ -76,27 +165,6 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         _delay = delay;
 
         emit NewDelay(delay);
-    }
-
-    /**
-     * @dev Function enabling pending admin to become admin
-     **/
-    function acceptAdmin() public onlyPendingAdmin {
-        _admin = msg.sender;
-        _pendingAdmin = address(0);
-
-        emit NewAdmin(msg.sender);
-    }
-
-    /**
-     * @dev Setting a new pending admin (that can then become admin)
-     * Can only be called by this executor (i.e via proposal)
-     * @param newPendingAdmin address of the new admin
-     **/
-    function setPendingAdmin(address newPendingAdmin) public onlyTimelock {
-        _pendingAdmin = newPendingAdmin;
-
-        emit NewPendingAdmin(newPendingAdmin);
     }
 
     /**
@@ -116,7 +184,7 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         bytes memory data,
         uint256 executionTime,
         bool withDelegatecall
-    ) public override onlyAdmin returns (bytes32) {
+    ) public override onlyProposeAdmin returns (bytes32) {
         require(
             executionTime >= block.timestamp.add(_delay),
             "EXECUTION_TIME_UNDERESTIMATED"
@@ -132,9 +200,73 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
                 withDelegatecall
             )
         );
-        _queuedTransactions[actionHash] = true;
+        require(
+            transactionStatus[actionHash] == TransactionStatus.Default,
+            "WRONG_ACTION_STATUS "
+        );
+        transactionStatus[actionHash] = TransactionStatus.Queued;
 
         emit QueuedAction(
+            actionHash,
+            target,
+            value,
+            signature,
+            data,
+            executionTime,
+            withDelegatecall
+        );
+        return actionHash;
+    }
+
+    /**
+     * @dev Function, called by Governance, that approve a transaction, returns action hash
+     * @param target smart contract target
+     * @param value wei value of the transaction
+     * @param signature function signature of the transaction
+     * @param data function arguments of the transaction or callData if signature empty
+     * @param executionTime time at which to execute the transaction
+     * @param withDelegatecall boolean, true = transaction delegatecalls the target, else calls the target
+     * @return the action Hash
+     **/
+    function approveTransaction(
+        address target,
+        uint256 value,
+        string memory signature,
+        bytes memory data,
+        uint256 executionTime,
+        bool withDelegatecall
+    ) public override onlyApproveAdmin returns (bytes32) {
+        bytes32 actionHash = keccak256(
+            abi.encode(
+                target,
+                value,
+                signature,
+                data,
+                executionTime,
+                withDelegatecall
+            )
+        );
+
+        require(
+            transactionStatus[actionHash] == TransactionStatus.Queued,
+            "ACTION_NOT_QUEUED"
+        );
+        bytes4 selector;
+        if (bytes(signature).length == 0) {
+            selector = bytes4(data);
+        } else {
+            selector = bytes4(keccak256(bytes(signature)));
+        }
+        bool isNeedApproval = needApprovalFilter[target][selector];
+        require(isNeedApproval, "ACTION_NOT_NEED_APPROVAL");
+        require(
+            block.timestamp <= executionTime.add(GRACE_PERIOD),
+            "GRACE_PERIOD_FINISHED"
+        );
+
+        transactionStatus[actionHash] = TransactionStatus.Approved;
+
+        emit ApprovedAction(
             actionHash,
             target,
             value,
@@ -163,7 +295,7 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         bytes memory data,
         uint256 executionTime,
         bool withDelegatecall
-    ) public override onlyAdmin returns (bytes32) {
+    ) public override onlyProposeOrApproveAdmin returns (bytes32) {
         bytes32 actionHash = keccak256(
             abi.encode(
                 target,
@@ -174,7 +306,13 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
                 withDelegatecall
             )
         );
-        _queuedTransactions[actionHash] = false;
+        TransactionStatus status = transactionStatus[actionHash];
+        require(
+            status == TransactionStatus.Queued ||
+                status == TransactionStatus.Approved,
+            "WRONG_ACTION_STATUS "
+        );
+        transactionStatus[actionHash] = TransactionStatus.Cancelled;
 
         emit CancelledAction(
             actionHash,
@@ -205,7 +343,7 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         bytes memory data,
         uint256 executionTime,
         bool withDelegatecall
-    ) public payable override onlyAdmin returns (bytes memory) {
+    ) public payable override onlyProposeAdmin returns (bytes memory) {
         bytes32 actionHash = keccak256(
             abi.encode(
                 target,
@@ -216,25 +354,34 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
                 withDelegatecall
             )
         );
-        require(_queuedTransactions[actionHash], "ACTION_NOT_QUEUED");
         require(block.timestamp >= executionTime, "TIMELOCK_NOT_FINISHED");
         require(
             block.timestamp <= executionTime.add(GRACE_PERIOD),
             "GRACE_PERIOD_FINISHED"
         );
 
-        _queuedTransactions[actionHash] = false;
-
+        bytes4 selector;
         bytes memory callData;
-
         if (bytes(signature).length == 0) {
+            selector = bytes4(data);
             callData = data;
         } else {
-            callData = abi.encodePacked(
-                bytes4(keccak256(bytes(signature))),
-                data
+            selector = bytes4(keccak256(bytes(signature)));
+            callData = abi.encodePacked(selector, data);
+        }
+        if (needApprovalFilter[target][selector]) {
+            require(
+                transactionStatus[actionHash] == TransactionStatus.Approved,
+                "ACTION_NOT_APPROVED"
+            );
+        } else {
+            require(
+                transactionStatus[actionHash] == TransactionStatus.Queued,
+                "ACTION_NOT_QUEUED"
             );
         }
+
+        transactionStatus[actionHash] = TransactionStatus.Executed;
 
         bool success;
         bytes memory resultData;
@@ -264,22 +411,6 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
     }
 
     /**
-     * @dev Getter of the current admin address (should be governance)
-     * @return The address of the current admin
-     **/
-    function getAdmin() external view override returns (address) {
-        return _admin;
-    }
-
-    /**
-     * @dev Getter of the current pending admin address
-     * @return The address of the pending admin
-     **/
-    function getPendingAdmin() external view override returns (address) {
-        return _pendingAdmin;
-    }
-
-    /**
      * @dev Getter of the delay between queuing and execution
      * @return The delay in seconds
      **/
@@ -299,7 +430,22 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         override
         returns (bool)
     {
-        return _queuedTransactions[actionHash];
+        return transactionStatus[actionHash] == TransactionStatus.Queued;
+    }
+
+    /**
+     * @dev Returns whether an action (via actionHash) is approved
+     * @param actionHash hash of the action to be checked
+     * keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall))
+     * @return true if underlying action of actionHash is approved
+     **/
+    function isActionApproved(bytes32 actionHash)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return transactionStatus[actionHash] == TransactionStatus.Approved;
     }
 
     function _validateDelay(uint256 delay) internal view {

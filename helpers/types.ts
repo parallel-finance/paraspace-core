@@ -382,6 +382,10 @@ export enum ProtocolErrors {
   SAPE_NOT_ALLOWED = "128", //operation is not allow for sApe.
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
+
+  CALLER_NOT_ACTION_PROPOSE_ADMIN = "134", //The caller of the function is not action propose admin.
+  CALLER_NOT_ACTION_APPROVE_ADMIN = "135", //The caller of the function is not action approve admin.
+  CALLER_NOT_ACTION_PROPOSE_OR_APPROVE_ADMIN = "136", //The caller of the function is not action propose or approve admin
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 

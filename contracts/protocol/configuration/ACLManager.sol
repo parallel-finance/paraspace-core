@@ -15,12 +15,18 @@ contract ACLManager is AccessControl, IACLManager {
     bytes32 public constant override POOL_ADMIN_ROLE = keccak256("POOL_ADMIN");
     bytes32 public constant override EMERGENCY_ADMIN_ROLE =
         keccak256("EMERGENCY_ADMIN");
+    bytes32 public constant override EMERGENCY_RECOVERY_ADMIN_ROLE =
+        keccak256("EMERGENCY_RECOVERY_ADMIN");
     bytes32 public constant override RISK_ADMIN_ROLE = keccak256("RISK_ADMIN");
     bytes32 public constant override FLASH_BORROWER_ROLE =
         keccak256("FLASH_BORROWER");
     bytes32 public constant override BRIDGE_ROLE = keccak256("BRIDGE");
     bytes32 public constant override ASSET_LISTING_ADMIN_ROLE =
         keccak256("ASSET_LISTING_ADMIN");
+    bytes32 public constant override ACTION_APPROVE_ADMIN_ROLE =
+        keccak256("ACTION_APPROVE_ADMIN");
+    bytes32 public constant override ACTION_PROPOSE_ADMIN_ROLE =
+        keccak256("ACTION_PROPOSE_ADMIN");
 
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
@@ -78,6 +84,66 @@ contract ACLManager is AccessControl, IACLManager {
         returns (bool)
     {
         return hasRole(EMERGENCY_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function addEmergencyRecoveryAdmin(address admin) external override {
+        grantRole(EMERGENCY_RECOVERY_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function removeEmergencyRecoveryAdmin(address admin) external override {
+        revokeRole(EMERGENCY_RECOVERY_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function isEmergencyRecoveryAdmin(address admin)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return hasRole(EMERGENCY_RECOVERY_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function addActionApproveAdmin(address admin) external override {
+        grantRole(ACTION_APPROVE_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function removeActionApproveAdmin(address admin) external override {
+        revokeRole(ACTION_APPROVE_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function isActionApproveAdmin(address admin)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return hasRole(ACTION_APPROVE_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function addActionProposeAdmin(address admin) external override {
+        grantRole(ACTION_PROPOSE_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function removeActionProposeAdmin(address admin) external override {
+        revokeRole(ACTION_PROPOSE_ADMIN_ROLE, admin);
+    }
+
+    /// @inheritdoc IACLManager
+    function isActionProposeAdmin(address admin)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return hasRole(ACTION_PROPOSE_ADMIN_ROLE, admin);
     }
 
     /// @inheritdoc IACLManager
