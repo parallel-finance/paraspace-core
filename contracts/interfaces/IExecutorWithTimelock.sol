@@ -118,6 +118,14 @@ interface IExecutorWithTimelock {
     function isActionQueued(bytes32 actionHash) external view returns (bool);
 
     /**
+     * @dev Returns whether an action (via actionHash) is approved
+     * @param actionHash hash of the action to be checked
+     * keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall))
+     * @return true if underlying action of actionHash is approved
+     **/
+    function isActionApproved(bytes32 actionHash) external view returns (bool);
+
+    /**
      * @dev Getter of grace period constant
      * @return grace period in seconds
      **/

@@ -34,7 +34,7 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
     mapping(bytes32 => TransactionStatus) public transactionStatus;
 
     // Map of contract selector need to be approved (contract address => selector => needApprove)
-    mapping(address => mapping(bytes4 => bool)) private needApprovalFilter;
+    mapping(address => mapping(bytes4 => bool)) public needApprovalFilter;
 
     /**
      * @dev Constructor
@@ -431,6 +431,21 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
         returns (bool)
     {
         return transactionStatus[actionHash] == TransactionStatus.Queued;
+    }
+
+    /**
+     * @dev Returns whether an action (via actionHash) is approved
+     * @param actionHash hash of the action to be checked
+     * keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall))
+     * @return true if underlying action of actionHash is approved
+     **/
+    function isActionApproved(bytes32 actionHash)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return transactionStatus[actionHash] == TransactionStatus.Approved;
     }
 
     function _validateDelay(uint256 delay) internal view {
