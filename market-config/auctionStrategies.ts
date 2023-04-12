@@ -154,8 +154,8 @@ export const auctionStrategyBEANZ: IAuctionStrategyParams = {
   tickLength: "900",
 };
 
-export const auctionStrategyDeGods: IAuctionStrategyParams = {
-  name: "auctionStrategyDeGods",
+export const auctionStrategyDEGODS: IAuctionStrategyParams = {
+  name: "auctionStrategyDEGODS",
   maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
   minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
   minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
@@ -194,8 +194,8 @@ export const auctionStrategyKODA: IAuctionStrategyParams = {
   tickLength: "900",
 };
 
-export const auctionStrategySQGL: IAuctionStrategyParams = {
-  name: "auctionStrategySQGL",
+export const auctionStrategyBLOCKS: IAuctionStrategyParams = {
+  name: "auctionStrategyBLOCKS",
   maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
   minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
   minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),

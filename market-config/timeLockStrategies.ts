@@ -457,8 +457,8 @@ export const timeLockStrategyBEANZ: ITimeLockStrategyParams = {
   period: "86400",
 };
 
-export const timeLockStrategyDeGods: ITimeLockStrategyParams = {
-  name: "timeLockStrategyDeGods",
+export const timeLockStrategyDEGODS: ITimeLockStrategyParams = {
+  name: "timeLockStrategyDEGODS",
   minThreshold: "4",
   midThreshold: "12",
   minWaitTime: "12",
@@ -505,8 +505,8 @@ export const timeLockStrategyKODA: ITimeLockStrategyParams = {
   period: "86400",
 };
 
-export const timeLockStrategySQGL: ITimeLockStrategyParams = {
-  name: "timeLockStrategySQGL",
+export const timeLockStrategyBLOCKS: ITimeLockStrategyParams = {
+  name: "timeLockStrategyBLOCKS",
   minThreshold: "4",
   midThreshold: "12",
   minWaitTime: "12",

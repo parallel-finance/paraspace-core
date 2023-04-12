@@ -5,7 +5,7 @@ import {
   auctionStrategyBAYC,
   auctionStrategyBEANZ,
   auctionStrategyCloneX,
-  auctionStrategyDeGods,
+  auctionStrategyDEGODS,
   auctionStrategyDoodles,
   auctionStrategyEXP,
   auctionStrategyKODA,
@@ -15,7 +15,7 @@ import {
   auctionStrategyOthr,
   auctionStrategyPudgyPenguins,
   auctionStrategySEWER,
-  auctionStrategySQGL,
+  auctionStrategyBLOCKS,
   auctionStrategyStakefishValidator,
   auctionStrategyUniswapV3,
   auctionStrategyVSL,
@@ -51,7 +51,7 @@ import {
   timeLockStrategyCETH,
   timeLockStrategyCloneX,
   timeLockStrategyDAI,
-  timeLockStrategyDeGods,
+  timeLockStrategyDEGODS,
   timeLockStrategyDoodles,
   timeLockStrategyEXP,
   timeLockStrategyFRAX,
@@ -65,7 +65,7 @@ import {
   timeLockStrategyRETH,
   timeLockStrategySAPE,
   timeLockStrategySEWER,
-  timeLockStrategySQGL,
+  timeLockStrategyBLOCKS,
   timeLockStrategyStakefishValidator,
   timeLockStrategyUniswapV3,
   timeLockStrategyUSDC,
@@ -515,10 +515,10 @@ export const strategyBEANZ: IReserveParams = {
   supplyCap: "0",
 };
 
-export const strategyDeGods: IReserveParams = {
+export const strategyDEGODS: IReserveParams = {
   strategy: rateStrategyNFT,
-  auctionStrategy: auctionStrategyDeGods,
-  timeLockStrategy: timeLockStrategyDeGods,
+  auctionStrategy: auctionStrategyDEGODS,
+  timeLockStrategy: timeLockStrategyDEGODS,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
@@ -579,10 +579,10 @@ export const strategyKODA: IReserveParams = {
   supplyCap: "0",
 };
 
-export const strategySQGL: IReserveParams = {
+export const strategyBLOCKS: IReserveParams = {
   strategy: rateStrategyNFT,
-  auctionStrategy: auctionStrategySQGL,
-  timeLockStrategy: timeLockStrategySQGL,
+  auctionStrategy: auctionStrategyBLOCKS,
+  timeLockStrategy: timeLockStrategyBLOCKS,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",

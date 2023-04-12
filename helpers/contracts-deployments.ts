@@ -1513,11 +1513,11 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
       if (
         [
           ERC721TokenContractId.BEANZ,
-          ERC721TokenContractId.DeGods,
+          ERC721TokenContractId.DEGODS,
           ERC721TokenContractId.EXP,
           ERC721TokenContractId.VSL,
           ERC721TokenContractId.KODA,
-          ERC721TokenContractId.SQGL,
+          ERC721TokenContractId.BLOCKS,
         ].includes(tokenSymbol as ERC721TokenContractId)
       ) {
         tokens[tokenSymbol] = await deployMintableNonEnumerableERC721(

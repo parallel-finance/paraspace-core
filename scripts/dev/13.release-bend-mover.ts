@@ -36,7 +36,7 @@ const releaseBendMover = async (verify = false) => {
       aggregator: "",
     },
     {
-      symbol: ERC721TokenContractId.DeGods,
+      symbol: ERC721TokenContractId.DEGODS,
       address: "",
       aggregator: "",
     },
@@ -56,7 +56,7 @@ const releaseBendMover = async (verify = false) => {
       aggregator: "",
     },
     {
-      symbol: ERC721TokenContractId.SQGL,
+      symbol: ERC721TokenContractId.BLOCKS,
       address: "",
       aggregator: "",
     },
