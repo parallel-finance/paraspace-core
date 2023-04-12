@@ -444,3 +444,75 @@ export const timeLockStrategyStakefishValidator: ITimeLockStrategyParams = {
   poolPeriodLimit: "2",
   period: "86400",
 };
+
+export const timeLockStrategyBEANZ: ITimeLockStrategyParams = {
+  name: "timeLockStrategyBEANZ",
+  minThreshold: "4",
+  midThreshold: "12",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "2",
+  period: "86400",
+};
+
+export const timeLockStrategyDeGods: ITimeLockStrategyParams = {
+  name: "timeLockStrategyDeGods",
+  minThreshold: "4",
+  midThreshold: "12",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "2",
+  period: "86400",
+};
+
+export const timeLockStrategyEXP: ITimeLockStrategyParams = {
+  name: "timeLockStrategyEXP",
+  minThreshold: "4",
+  midThreshold: "12",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "2",
+  period: "86400",
+};
+
+export const timeLockStrategyVSL: ITimeLockStrategyParams = {
+  name: "timeLockStrategyVSL",
+  minThreshold: "4",
+  midThreshold: "12",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "2",
+  period: "86400",
+};
+
+export const timeLockStrategyKODA: ITimeLockStrategyParams = {
+  name: "timeLockStrategyKODA",
+  minThreshold: "4",
+  midThreshold: "12",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "2",
+  period: "86400",
+};
+
+export const timeLockStrategySQGL: ITimeLockStrategyParams = {
+  name: "timeLockStrategySQGL",
+  minThreshold: "4",
+  midThreshold: "12",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "2",
+  period: "86400",
+};

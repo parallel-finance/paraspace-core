@@ -144,6 +144,66 @@ export const auctionStrategyStakefishValidator: IAuctionStrategyParams = {
   tickLength: "900",
 };
 
+export const auctionStrategyBEANZ: IAuctionStrategyParams = {
+  name: "auctionStrategyBEANZ",
+  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
+  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  stepExp: utils.parseUnits("0.0483", 18).toString(),
+  tickLength: "900",
+};
+
+export const auctionStrategyDeGods: IAuctionStrategyParams = {
+  name: "auctionStrategyDeGods",
+  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
+  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  stepExp: utils.parseUnits("0.0483", 18).toString(),
+  tickLength: "900",
+};
+
+export const auctionStrategyEXP: IAuctionStrategyParams = {
+  name: "auctionStrategyEXP",
+  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
+  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  stepExp: utils.parseUnits("0.0483", 18).toString(),
+  tickLength: "900",
+};
+
+export const auctionStrategyVSL: IAuctionStrategyParams = {
+  name: "auctionStrategyVSL",
+  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
+  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  stepExp: utils.parseUnits("0.0483", 18).toString(),
+  tickLength: "900",
+};
+
+export const auctionStrategyKODA: IAuctionStrategyParams = {
+  name: "auctionStrategyKODA",
+  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
+  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  stepExp: utils.parseUnits("0.0483", 18).toString(),
+  tickLength: "900",
+};
+
+export const auctionStrategySQGL: IAuctionStrategyParams = {
+  name: "auctionStrategySQGL",
+  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
+  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  stepExp: utils.parseUnits("0.0483", 18).toString(),
+  tickLength: "900",
+};
+
 ////////////////////////////////////////////////////////////
 // MOCK
 ////////////////////////////////////////////////////////////

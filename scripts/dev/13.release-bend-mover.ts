@@ -1,9 +1,9 @@
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
-import {deployStakefishNFTOracleWrapper} from "../../helpers/contracts-deployments";
 import {
-  getAllTokens,
+  getNFTFloorOracle,
   getParaSpaceOracle,
+  getPoolAddressesProvider,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
 import {
@@ -17,33 +17,70 @@ import {
 } from "../../helpers/init-helpers";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {ERC721TokenContractId, tEthereumAddress} from "../../helpers/types";
+import {
+  deployERC721OracleWrapper,
+  deployMintableNonEnumerableERC721,
+} from "../../helpers/contracts-deployments";
 
-const releaseStakefish = async (verify = false) => {
-  console.time("release-stakefish");
-  const allTokens = await getAllTokens();
+const releaseBendMover = async (verify = false) => {
+  console.time("release-bend-mover");
   const paraSpaceOracle = await getParaSpaceOracle();
   const paraSpaceConfig = await getParaSpaceConfig();
-  const oracleConfig = paraSpaceConfig.Oracle;
   const protocolDataProvider = await getProtocolDataProvider();
+  const addressesProvider = await getPoolAddressesProvider();
+  const nftFloorOracle = await getNFTFloorOracle();
   const projects = [
     {
-      symbol: ERC721TokenContractId.SFVLDR,
-      address: allTokens[ERC721TokenContractId.SFVLDR].address,
+      symbol: ERC721TokenContractId.BEANZ,
+      address: "",
+      aggregator: "",
+    },
+    {
+      symbol: ERC721TokenContractId.DeGods,
+      address: "",
+      aggregator: "",
+    },
+    {
+      symbol: ERC721TokenContractId.EXP,
+      address: "",
+      aggregator: "",
+    },
+    {
+      symbol: ERC721TokenContractId.VSL,
+      address: "",
+      aggregator: "",
+    },
+    {
+      symbol: ERC721TokenContractId.KODA,
+      address: "",
+      aggregator: "",
+    },
+    {
+      symbol: ERC721TokenContractId.SQGL,
+      address: "",
       aggregator: "",
     },
   ];
 
   for (const project of projects) {
+    if (!project.address) {
+      project.address = (
+        await deployMintableNonEnumerableERC721(
+          [project.symbol, project.symbol, ""],
+          false
+        )
+      ).address;
+    }
     if (!project.aggregator) {
-      if (project.symbol === ERC721TokenContractId.SFVLDR) {
-        project.aggregator = (
-          await deployStakefishNFTOracleWrapper(
-            allTokens[oracleConfig.BaseCurrency].address,
-            oracleConfig.BaseCurrencyUnit,
-            verify
-          )
-        ).address;
-      }
+      project.aggregator = (
+        await deployERC721OracleWrapper(
+          addressesProvider.address,
+          nftFloorOracle.address,
+          project.address,
+          project.symbol,
+          verify
+        )
+      ).address;
     }
   }
 
@@ -79,7 +116,6 @@ const releaseStakefish = async (verify = false) => {
   const treasuryAddress = paraSpaceConfig.Treasury;
 
   const reserves = Object.entries(reservesParams);
-  console.log(reserves[ERC721TokenContractId.SFVLDR]);
 
   await initReservesByHelper(
     reserves,
@@ -103,12 +139,12 @@ const releaseStakefish = async (verify = false) => {
     paraSpaceAdminAddress
   );
 
-  console.timeEnd("release-stakefish");
+  console.timeEnd("release-bend-mover");
 };
 
 async function main() {
   await rawBRE.run("set-DRE");
-  await releaseStakefish();
+  await releaseBendMover();
 }
 
 main()

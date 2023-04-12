@@ -277,6 +277,12 @@ export enum eContractid {
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
+  BEANZ = "BEANZ",
+  DeGods = "DeGods",
+  EXP = "EXP",
+  VSL = "VSL",
+  KODA = "KODA",
+  SQGL = "SQGL",
 }
 
 /*
@@ -463,6 +469,12 @@ export interface iAssetBase<T> {
   OTHR: T;
   CLONEX: T;
   BAKC: T;
+  BEANZ: T;
+  DeGods: T;
+  EXP: T;
+  VSL: T;
+  KODA: T;
+  SQGL: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -499,6 +511,12 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MEEBITS"
   | "OTHR"
   | "BAKC"
+  | "BEANZ"
+  | "DeGods"
+  | "EXP"
+  | "VSL"
+  | "KODA"
+  | "SQGL"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -546,6 +564,12 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
+  BEANZ = "BEANZ",
+  DeGods = "DeGods",
+  EXP = "EXP",
+  VSL = "VSL",
+  KODA = "KODA",
+  SQGL = "SQGL",
 }
 
 export enum NTokenContractId {
@@ -701,6 +725,12 @@ export interface IChainlinkConfig {
   CLONEX?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
   WGLMR?: tEthereumAddress;
+  BEANZ?: tEthereumAddress;
+  DeGods?: tEthereumAddress;
+  EXP?: tEthereumAddress;
+  VSL?: tEthereumAddress;
+  KODA?: tEthereumAddress;
+  SQGL?: tEthereumAddress;
 }
 
 export interface IYogaLabs {

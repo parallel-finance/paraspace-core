@@ -440,9 +440,9 @@ set-traits-multipliers:
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
-.PHONY: release-stakefish
-release-stakefish:
-	make SCRIPT_PATH=./scripts/dev/13.release-ntoken-stakefish.ts run
+.PHONY: release-bend-mover
+release-bend-mover:
+	make SCRIPT_PATH=./scripts/dev/13.release-bend-mover.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:

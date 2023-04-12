@@ -290,6 +290,8 @@ import {
   PoolPositionMover,
   PositionMoverLogic,
   PositionMoverLogic__factory,
+  MintableNonEnumerableERC721,
+  MintableNonEnumerableERC721__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -984,6 +986,17 @@ export const deployMintableERC721 = async (
     verify
   ) as Promise<MintableERC721>;
 
+export const deployMintableNonEnumerableERC721 = async (
+  args: [string, string, string],
+  verify?: boolean
+): Promise<MintableNonEnumerableERC721> =>
+  withSaveAndVerify(
+    new MintableNonEnumerableERC721__factory(await getFirstSigner()),
+    args[1],
+    [...args],
+    verify
+  ) as Promise<MintableNonEnumerableERC721>;
+
 export const deployMintableDelegationERC20 = async (
   args: [string, string, string],
   verify?: boolean
@@ -1273,6 +1286,7 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
     [symbol: string]:
       | MockContract
       | MintableERC721
+      | MintableNonEnumerableERC721
       | WPunk
       | CryptoPunksMarket
       | Doodles
@@ -1493,6 +1507,23 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         await waitForTx(await factory.setDeployer(nftManager.address, true));
 
         tokens[tokenSymbol] = nftManager;
+        continue;
+      }
+
+      if (
+        [
+          ERC721TokenContractId.BEANZ,
+          ERC721TokenContractId.DeGods,
+          ERC721TokenContractId.EXP,
+          ERC721TokenContractId.VSL,
+          ERC721TokenContractId.KODA,
+          ERC721TokenContractId.SQGL,
+        ].includes(tokenSymbol as ERC721TokenContractId)
+      ) {
+        tokens[tokenSymbol] = await deployMintableNonEnumerableERC721(
+          [tokenSymbol, tokenSymbol, ""],
+          verify
+        );
         continue;
       }
 
