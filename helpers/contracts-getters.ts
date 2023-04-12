@@ -95,6 +95,7 @@ import {
   StakefishValidatorV1__factory,
   StakefishValidatorFactory__factory,
   NTokenStakefish__factory,
+  MockLendPool__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1319,6 +1320,17 @@ export const getNTokenStakefish = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NTokenStakefishImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockBendDaoLendPool = async (address?: tEthereumAddress) =>
+  await MockLendPool__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockBendDaoLendPool}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
