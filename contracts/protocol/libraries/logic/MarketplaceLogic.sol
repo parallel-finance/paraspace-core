@@ -534,13 +534,24 @@ library MarketplaceLogic {
 
             // item.token == NToken
             if (vars.xTokenAddress == address(0)) {
-                address underlyingAsset = INToken(token)
-                    .UNDERLYING_ASSET_ADDRESS();
-                bool isNToken = ps._reserves[underlyingAsset].xTokenAddress ==
-                    token;
-                require(isNToken, Errors.ASSET_NOT_LISTED);
-                vars.xTokenAddress = token;
-                token = underlyingAsset;
+                try INToken(token).UNDERLYING_ASSET_ADDRESS() returns (
+                    address underlyingAsset
+                ) {
+                    bool isNToken = ps
+                        ._reserves[underlyingAsset]
+                        .xTokenAddress == token;
+                    require(isNToken, Errors.ASSET_NOT_LISTED);
+                    vars.xTokenAddress = token;
+                    token = underlyingAsset;
+                } catch {
+                    // token is not listed
+                    IERC721(token).safeTransferFrom(
+                        address(this),
+                        buyer,
+                        tokenId
+                    );
+                    continue;
+                }
             }
 
             require(
