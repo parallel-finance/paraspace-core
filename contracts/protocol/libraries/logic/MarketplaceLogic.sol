@@ -50,12 +50,6 @@ library MarketplaceLogic {
         uint16 indexed referralCode
     );
 
-    /**
-     * @dev Default percentage of listing price to be supplied on behalf of the seller in a marketplace exchange.
-     * Expressed in bps, a value of 0.9e4 results in 90.00%
-     */
-    uint256 internal constant DEFAULT_SUPPLY_RATIO = 0.9e4;
-
     event BuyWithCredit(
         bytes32 indexed marketplaceId,
         DataTypes.OrderInfo orderInfo,
@@ -158,7 +152,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(vars, params.orderInfo.maker);
+        _handleFlashSupplyRepayment(params, vars, address(this));
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
 
         emit BuyWithCredit(
@@ -356,7 +350,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(vars, params.orderInfo.taker);
+        _handleFlashSupplyRepayment(params, vars, address(this));
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.maker);
 
         emit AcceptBidWithCredit(
@@ -446,11 +440,11 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
-        if (vars.isETH) {
-            return; // impossible to supply ETH on behalf of the
+        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
+        if (reserve.xTokenAddress == address(0)) {
+            return;
         }
 
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         DataTypes.UserConfigurationMap storage sellerConfig = ps._usersConfig[
             seller
         ];
@@ -459,31 +453,25 @@ library MarketplaceLogic {
 
         reserve.updateState(reserveCache);
 
-        uint256 supplyAmount = Math.min(
-            IERC20(vars.creditToken).allowance(seller, address(this)),
-            vars.price.percentMul(DEFAULT_SUPPLY_RATIO)
-        );
-        if (supplyAmount == 0) {
-            return;
-        }
+        vars.supplyAmount = vars.price;
 
         ValidationLogic.validateSupply(
             reserveCache,
-            supplyAmount,
+            vars.supplyAmount,
             DataTypes.AssetType.ERC20
         );
 
         reserve.updateInterestRates(
             reserveCache,
             vars.creditToken,
-            supplyAmount,
+            vars.supplyAmount,
             0
         );
 
         bool isFirstSupply = IPToken(reserveCache.xTokenAddress).mint(
             msg.sender,
             seller,
-            supplyAmount,
+            vars.supplyAmount,
             reserveCache.nextLiquidityIndex
         );
 
@@ -496,12 +484,9 @@ library MarketplaceLogic {
             vars.creditToken,
             msg.sender,
             seller,
-            supplyAmount,
+            vars.supplyAmount,
             params.referralCode
         );
-
-        // set supplyAmount for future repayment
-        vars.supplyAmount = supplyAmount;
     }
 
     /**
@@ -608,19 +593,25 @@ library MarketplaceLogic {
     /**
      * @notice "Repay" minted pToken by transferring funds from the seller to xTokenAddress
      * @dev
+     * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
-     * @param seller The NFT seller
+     * @param recipient The ERC20 recipient
      */
     function _handleFlashSupplyRepayment(
+        DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
-        address seller
+        address recipient
     ) internal {
-        if (vars.isETH || vars.supplyAmount == 0) {
+        if (vars.supplyAmount == 0) {
             return;
         }
 
+        if (vars.isETH) {
+            IWETH(params.weth).deposit{value: vars.supplyAmount}();
+        }
+
         IERC20(vars.creditToken).safeTransferFrom(
-            seller,
+            recipient,
             vars.creditXTokenAddress,
             vars.supplyAmount
         );
@@ -702,7 +693,7 @@ library MarketplaceLogic {
     function _validateAndGetPrice(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
-    ) internal pure returns (uint256 price) {
+    ) internal view returns (uint256 price) {
         for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
             ConsiderationItem memory item = params.orderInfo.consideration[i];
             require(
@@ -718,7 +709,7 @@ library MarketplaceLogic {
                 item.token == params.credit.token,
                 Errors.CREDIT_DOES_NOT_MATCH_ORDER
             );
-            price += item.startAmount;
+            if (item.recipient == address(this)) price += item.startAmount;
         }
     }
 }
