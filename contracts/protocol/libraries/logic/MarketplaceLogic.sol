@@ -593,7 +593,7 @@ library MarketplaceLogic {
      * @dev
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
-     * @param recipient The ERC20 recipient
+     * @param recipient The supplyAmount recipient
      */
     function _handleFlashSupplyRepayment(
         DataTypes.ExecuteMarketplaceParams memory params,
@@ -635,6 +635,9 @@ library MarketplaceLogic {
         );
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         vars.creditXTokenAddress = reserve.xTokenAddress;
+        // either the buyer decided to not use any credit
+        // OR
+        // the creditToken must be listed since otherwise cannot borrow from the pool
         require(
             vars.creditAmount == 0 || vars.creditXTokenAddress != address(0),
             Errors.ASSET_NOT_LISTED
@@ -712,6 +715,11 @@ library MarketplaceLogic {
             );
             price += item.startAmount;
 
+            // supplyAmount is a **helper message** from the seller to the protocol
+            // to tell us the percentage of received funds to be supplied to be
+            // able to transfer NFT out
+            //
+            // This will only be useful for ParaSpace marketplace
             if (item.recipient == address(this)) {
                 supplyAmount += item.startAmount;
             }
