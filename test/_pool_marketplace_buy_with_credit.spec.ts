@@ -1511,7 +1511,8 @@ describe("Leveraged Buy - Positive tests", () => {
       creditAmount,
       nftId,
       maker,
-      taker
+      taker,
+      true
     );
 
     const usdcConfigData = BigNumber.from(

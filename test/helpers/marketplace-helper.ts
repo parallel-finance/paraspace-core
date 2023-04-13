@@ -304,7 +304,7 @@ export async function executeSeaportBuyWithCredit(
   nftId: number,
   maker: SignerWithAddress,
   taker: SignerWithAddress,
-  _sellOrderStartAmount = 1
+  isCollateralSwap = false
 ) {
   // approve
   await waitForTx(
@@ -316,13 +316,7 @@ export async function executeSeaportBuyWithCredit(
   const seaport = await getSeaport();
   const getSellOrder = async (): Promise<AdvancedOrder> => {
     const offers = [
-      getOfferOrConsiderationItem(
-        2,
-        tokenToBuy.address,
-        nftId,
-        _sellOrderStartAmount,
-        _sellOrderStartAmount
-      ),
+      getOfferOrConsiderationItem(2, tokenToBuy.address, nftId, 1, 1),
     ];
 
     const considerations = [
@@ -332,7 +326,7 @@ export async function executeSeaportBuyWithCredit(
         nftId,
         startAmount,
         endAmount,
-        maker.address
+        isCollateralSwap ? pool.address : maker.address
       ),
     ];
 
@@ -382,7 +376,8 @@ export async function executeAcceptBidWithCredit(
   payLaterAmount: BigNumberish,
   nftId: number,
   maker: SignerWithAddress,
-  taker: SignerWithAddress
+  taker: SignerWithAddress,
+  isCollateralSwap = false
 ) {
   const pool = await getPoolProxy();
   const seaport = await getSeaport();
@@ -451,7 +446,7 @@ export async function executeAcceptBidWithCredit(
         toBN(0),
         startAmount,
         endAmount,
-        taker.address
+        isCollateralSwap ? pool.address : taker.address
       ),
     ];
 

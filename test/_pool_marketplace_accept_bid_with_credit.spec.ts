@@ -1315,7 +1315,8 @@ describe("Leveraged Bid - unit tests", () => {
       creditAmount,
       nftId,
       maker,
-      taker
+      taker,
+      true
     );
     const usdcConfigData = BigNumber.from(
       (await pool.getUserConfiguration(taker.address)).data

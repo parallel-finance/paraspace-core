@@ -67,9 +67,9 @@ contract BlurAdapter is IMarketplace {
             itemType,
             token,
             0,
-            sell.order.price,
-            sell.order.price,
-            payable(buy.order.trader)
+            buy.order.price,
+            buy.order.price,
+            payable(sell.order.trader)
         );
         orderInfo.id = abi.encodePacked(sell.r, sell.s, sell.v);
         orderInfo.consideration = consideration;

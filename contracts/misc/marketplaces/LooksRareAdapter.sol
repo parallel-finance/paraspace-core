@@ -69,9 +69,9 @@ contract LooksRareAdapter is IMarketplace {
             itemType,
             token,
             0,
-            makerAsk.price, // TODO: take minPercentageToAsk into account
-            makerAsk.price,
-            payable(takerBid.taker)
+            takerBid.price, // TODO: take minPercentageToAsk into account
+            takerBid.price,
+            payable(makerAsk.signer)
         );
         orderInfo.id = abi.encodePacked(makerAsk.r, makerAsk.s, makerAsk.v);
         orderInfo.consideration = consideration;
