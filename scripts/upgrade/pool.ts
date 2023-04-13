@@ -16,7 +16,7 @@ import {waitForTx} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
-const upgradeProxyImplementations = async (
+export const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
 ) => {
   const addressesProvider = await getPoolAddressesProvider();

@@ -475,16 +475,16 @@ export const strategyStakefishValidator: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyStakefishValidator,
   timeLockStrategy: timeLockStrategyStakefishValidator,
-  baseLTVAsCollateral: "3000",
+  baseLTVAsCollateral: "7425",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "6500",
-  liquidationBonus: "10500",
+  liquidationThreshold: "7740",
+  liquidationBonus: "10450",
   borrowingEnabled: false,
   reserveDecimals: "0",
   xTokenImpl: eContractid.NTokenStakefishImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "20",
 };
 
 ////////////////////////////////////////////////////////////

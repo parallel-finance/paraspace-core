@@ -118,9 +118,9 @@ contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic \
 ### MintableERC721Logic
 
 ```
-proxychains forge verify-contract 0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+proxychains forge verify-contract 0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic \
   --compiler-version v0.8.10+commit.fc410830
@@ -183,58 +183,71 @@ proxychains forge verify-contract 0x8c17beb69971E127e78C2e60F0408232F7d6340F \
 ### NTokenBAYC
 
 ```
-proxychains forge verify-contract 0xc4e1e2a4Ab406E73d1809016c91D11D50cEe6FAa \
+proxychains forge verify-contract 0x73A613Bf41284C9721A4dEDce77E85C3444DdEBC \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenBAYC.sol:NTokenBAYC \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9") \
-  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x40266cFA6cD32485a24fE9913ed9dAa3E896b6D4 \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenMAYC
 
 ```
-proxychains forge verify-contract 0xA43Ba33223e1449A6f901b3E3b75dC22fb29F0ed \
+proxychains forge verify-contract 0x6f56Fc05852e5918DAa3DCfa38524dA589DEAF32 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenMAYC.sol:NTokenMAYC \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9") \
-  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x40266cFA6cD32485a24fE9913ed9dAa3E896b6D4 \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenBAKC
 
 ```
-proxychains forge verify-contract 0x6192C2FCF4e8eB97c51d6771aB6C39691F3fAf34 \
+proxychains forge verify-contract 0x10e6B156bfB1Dac6E1891545c0905C7025E0CEe2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenBAKC.sol:NTokenBAKC \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0xdb5485C85Bd95f38f9def0cA85499eF67dC581c0" "0xFA51cdc70c512c13eF1e4A3dbf1e99082b242896") \
-  --libraries contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic:0x0147154e1Be2E17b6d32D9589A2D8EA78a5cf35a \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address,address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9" "0xdb5485C85Bd95f38f9def0cA85499eF67dC581c0" "0xFA51cdc70c512c13eF1e4A3dbf1e99082b242896" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenOtherdeed
 
 ```
-proxychains forge verify-contract 0x0ab07E037Aeae1af2fF991Af239855087939f05d \
+proxychains forge verify-contract 0xF7452CbE6a2c87641D27fff5cf0Ae8f8547f9021 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenOtherdeed.sol:NTokenOtherdeed \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c") \
+  $(cast abi-encode "constructor(address,address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### NTokenStakefish
+
+```
+proxychains forge verify-contract 0x0719E8D6acBDCECD1B6A4F32Cc7367c8969Ae352 \
+  --chain-id 1 \
+  --num-of-optimizations 1 \
+  --watch \
+  contracts/protocol/tokenization/NTokenStakefish.sol:NTokenStakefish \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
   --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x8F3527276f7dB90F1F68d166Df366fA46fD70054 \
   --compiler-version v0.8.10+commit.fc410830
 ```
@@ -242,42 +255,42 @@ proxychains forge verify-contract 0x0ab07E037Aeae1af2fF991Af239855087939f05d \
 ### NTokenMoonbirds
 
 ```
-proxychains forge verify-contract 0x5962CA824E31992453BF1CD8569c6dEf6F89D0Db \
+proxychains forge verify-contract 0xec1aD73B834677f40f4121b8081abC7c64fF1460 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenMoonBirds.sol:NTokenMoonBirds \
   --constructor-args \
-  $(cast abi-encode "constructor(address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee") \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NTokenUniswapV3
 
 ```
-proxychains forge verify-contract 0xE30968b619b2C34462ac63268f1CA35ad72Ce3F0 \
+proxychains forge verify-contract 0x8D7429dBeB0532048310DcBF06064d188FF9a5f2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NTokenUniswapV3.sol:NTokenUniswapV3 \
   --constructor-args \
-  $(cast abi-encode "constructor(address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee") \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### NToken
 
 ```
-proxychains forge verify-contract 0x64c79b88911e674458011E1d5795d41FfB74F358 \
+proxychains forge verify-contract 0x39E4c2Fc79D4C39749BaD41D09af4C8901066477 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/NToken.sol:NToken \
   --constructor-args \
-  $(cast abi-encode "constructor(address,bool)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" false) \
-  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0xE47109F8dFBEb8af35b47374f6A91190D68F0680 \
+  $(cast abi-encode "constructor(address,bool,address)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" false "0x00000000000076A84feF008CDAbe6409d2FE638B") \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -299,9 +312,9 @@ proxychains forge verify-contract 0xA00D612d9b2719e05eaB67602F8A72E88582c6Cf \
 ### VariableDebtToken
 
 ```
-proxychains forge verify-contract 0x3A0Bde0893A60D139d26C2E5C29799f923173341 \
+proxychains forge verify-contract 0x0f59196757B5BEDb94c149FB20E43D0323c52eA2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   contracts/protocol/tokenization/VariableDebtToken.sol:VariableDebtToken \
   --constructor-args \
@@ -398,6 +411,19 @@ proxychains forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
+### StakefishNFTOracleWrapper
+
+```
+proxychains forge verify-contract 0x2d21Da8e041E82253e3cbE2012D4d59d46F3c1f2 \
+  --chain-id 1 \
+  --num-of-optimizations 1 \
+  --watch \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,uint256)" "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" 1000000000000000000) \
+  contracts/misc/StakefishNFTOracleWrapper.sol:StakefishNFTOracleWrapper \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
 ### CLExchangeRateSynchronicityPriceAdapter
 
 ```
@@ -448,12 +474,12 @@ proxychains forge verify-contract 0xBAa0DaA4224d2eb4619FfDC8A50Ef50c754b55F3 \
 ### DefaultReserveInterestRateStrategy
 
 ```
-proxychains forge verify-contract 0xCC07D35c011d565F4089A86a2D08369439632125 \
+proxychains forge verify-contract 0x41BE4a63035025d79dEbecCE8df682e507fC0A2f \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(address,uint256,uint256,uint256,uint256)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "850000000000000000000000000" "180000000000000000000000000" "80000000000000000000000000" "600000000000000000000000000") \
+  $(cast abi-encode "constructor(address,uint256,uint256,uint256,uint256)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "450000000000000000000000000" "0" "70000000000000000000000000" "3000000000000000000000000000") \
   contracts/protocol/pool/DefaultReserveInterestRateStrategy.sol:DefaultReserveInterestRateStrategy \
   --compiler-version v0.8.10+commit.fc410830
 ```
@@ -461,12 +487,12 @@ proxychains forge verify-contract 0xCC07D35c011d565F4089A86a2D08369439632125 \
 ### DefaultReserveAuctionStrategy
 
 ```
-proxychains forge verify-contract 0x86FDEc54ec867bad1d0Ee47aa818948F6A1E5dB8 \
+proxychains forge verify-contract 0x9488db7F4ee774372d8D43875e27E1E70E83441c \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(uint256,uint256,uint256,uint256,uint256,uint256)" "3000000000000000000" "1900000000000000000" "800000000000000000" "68750000000000000" "28547400155982200" "900") \
+  $(cast abi-encode "constructor(uint256,uint256,uint256,uint256,uint256,uint256)" "1000000000000000000" "1000000000000000000" "950000000000000000" "3645830000000" "48300000000000000" "900") \
   contracts/protocol/pool/DefaultReserveAuctionStrategy.sol:DefaultReserveAuctionStrategy \
   --compiler-version v0.8.10+commit.fc410830
 ```
@@ -474,13 +500,13 @@ proxychains forge verify-contract 0x86FDEc54ec867bad1d0Ee47aa818948F6A1E5dB8 \
 ### DefaultReserveTimeLockStrategy
 
 ```
-proxychains forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
+proxychains forge verify-contract 0x7be24c30545b4Cc88ddE718b5563E19466aDa2F2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 1 \
   --watch \
-  contracts/misc/contracts/misc/DefaultTimeLockStrategy.sol:DefaultTimeLockStrategy \
+  contracts/misc/DefaultTimeLockStrategy.sol:DefaultTimeLockStrategy \
   --constructor-args \
-  $(cast abi-encode "constructor(address,uint256,uint256,uint48,uint48,uint48,uint256,uint48,uint256)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d") \
+  $(cast abi-encode "constructor(address,uint256,uint256,uint48,uint48,uint48,uint256,uint48,uint256)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" 4 12 12 7200 43200 2 600 86400) \
   --compiler-version v0.8.10+commit.fc410830
 ```
 

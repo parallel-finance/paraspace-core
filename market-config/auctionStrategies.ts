@@ -136,10 +136,10 @@ export const auctionStrategyPudgyPenguins: IAuctionStrategyParams = {
 
 export const auctionStrategyStakefishValidator: IAuctionStrategyParams = {
   name: "auctionStrategyStakefishValidator",
-  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
-  minExpPriceMultiplier: utils.parseUnits("1.2", 18).toString(),
-  minPriceMultiplier: utils.parseUnits("0.8", 18).toString(),
-  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  maxPriceMultiplier: utils.parseUnits("1", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.95", 18).toString(),
+  stepLinear: utils.parseUnits("0.00000364583", 18).toString(),
   stepExp: utils.parseUnits("0.0483", 18).toString(),
   tickLength: "900",
 };
