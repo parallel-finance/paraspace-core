@@ -1,5 +1,6 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {PromiseOrValue} from "../types/common";
+
 import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
 import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
@@ -274,15 +275,15 @@ export enum eContractid {
   StakefishValidatorFactory = "StakefishValidatorFactory",
   DepositContract = "DepositContract",
   MockFeePool = "MockFeePool",
-  MockBendDaoLendPool = "MockBendDaoLendPool",
-  PositionMoverLogic = "PositionMoverLogic",
-  PoolPositionMoverImpl = "PoolPositionMoverImpl",
   BEANZ = "BEANZ",
   DEGODS = "DEGODS",
   EXP = "EXP",
   VSL = "VSL",
   KODA = "KODA",
   BLOCKS = "BLOCKS",
+  MockBendDaoLendPool = "MockBendDaoLendPool",
+  PositionMoverLogic = "PositionMoverLogic",
+  PoolPositionMoverImpl = "PoolPositionMoverImpl",
 }
 
 /*

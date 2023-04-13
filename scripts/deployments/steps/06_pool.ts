@@ -31,6 +31,7 @@ export const step_06 = async (verify = false) => {
       poolApeStakingSelectors,
       poolPositionMoverSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
+
     const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
       await deployPoolParaProxyInterfaces(verify);
 

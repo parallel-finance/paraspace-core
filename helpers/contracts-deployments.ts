@@ -323,17 +323,17 @@ import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/librar
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Address} from "hardhat-deploy/dist/types";
 import {Contract} from "ethers";
+
 import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
 import {MarketplaceLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/MarketplaceLogic__factory";
 import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
-
+import {PositionMoverLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/PositionMoverLogic__factory";
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {parseEther} from "ethers/lib/utils";
-import {PositionMoverLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/PositionMoverLogic__factory";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -786,7 +786,6 @@ export const deployPoolComponents = async (
     apeStakingLibraries,
     verify
   );
-
   const allTokens = await getAllTokens();
 
   const APE_WETH_FEE = 3000;
@@ -888,12 +887,11 @@ export const deployPoolComponents = async (
     : undefined;
 
   return {
-    poolCore: poolCore,
-    poolParameters: poolParameters,
-    poolMarketplace: poolMarketplace,
-    poolApeStaking: poolApeStaking,
-    poolParaProxyInterfaces: poolParaProxyInterfacesSelectors,
-    poolPositionMover: poolPositionMover,
+    poolCore,
+    poolParameters,
+    poolMarketplace,
+    poolApeStaking,
+    poolPositionMover,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
@@ -1507,23 +1505,6 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         await waitForTx(await factory.setDeployer(nftManager.address, true));
 
         tokens[tokenSymbol] = nftManager;
-        continue;
-      }
-
-      if (
-        [
-          ERC721TokenContractId.BEANZ,
-          ERC721TokenContractId.DEGODS,
-          ERC721TokenContractId.EXP,
-          ERC721TokenContractId.VSL,
-          ERC721TokenContractId.KODA,
-          ERC721TokenContractId.BLOCKS,
-        ].includes(tokenSymbol as ERC721TokenContractId)
-      ) {
-        tokens[tokenSymbol] = await deployMintableNonEnumerableERC721(
-          [tokenSymbol, tokenSymbol, ""],
-          verify
-        );
         continue;
       }
 
