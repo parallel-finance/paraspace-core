@@ -747,6 +747,10 @@ export interface IUniswapConfig {
   V3NFTPositionManager?: tEthereumAddress;
 }
 
+export interface IBendDAOConfig {
+  LendingPool?: tEthereumAddress;
+}
+
 export interface IOracleConfig {
   // ParaSpaceOracle
   BaseCurrency: ERC20TokenContractId;
@@ -790,6 +794,7 @@ export interface ICommonConfiguration {
   Tokens: iMultiPoolsAssets<tEthereumAddress>;
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
+  BendDAO: IBendDAOConfig;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;

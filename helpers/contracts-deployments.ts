@@ -769,6 +769,7 @@ export const deployPoolComponents = async (
   provider: string,
   verify?: boolean
 ) => {
+  const paraSpaceConfig = getParaSpaceConfig();
   const coreLibraries = await deployPoolCoreLibraries(verify);
   const marketplaceLibraries = await deployPoolMarketplaceLibraries(
     coreLibraries,
@@ -805,18 +806,16 @@ export const deployPoolComponents = async (
       positionMoverLogic.address,
   };
 
-  const bendDaoLendPool = await deployMockBendDaoLendPool(
-    (
-      await getWETH()
-    ).address
-  );
+  const bendDaoLendPool =
+    paraSpaceConfig.BendDAO.LendingPool ||
+    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
   const poolPositionMover = (await withSaveAndVerify(
     new PoolPositionMover__factory(
       positionMoverLibraries,
       await getFirstSigner()
     ),
     eContractid.PoolPositionMoverImpl,
-    [provider, bendDaoLendPool.address, bendDaoLendPool.address],
+    [provider, bendDaoLendPool, bendDaoLendPool],
     verify,
     false,
     positionMoverLibraries,

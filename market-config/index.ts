@@ -115,6 +115,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   Uniswap: {},
   Marketplace: {},
   Chainlink: {},
+  BendDAO: {},
   // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
   ReservesConfig: {
     DAI: strategyDAI,
@@ -170,6 +171,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   YogaLabs: {},
   Uniswap: {},
   Marketplace: {},
+  BendDAO: {},
   Chainlink: {
     WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
     xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
@@ -221,6 +223,9 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Marketplace: {
     Seaport: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+  },
+  BendDAO: {
+    LendingPool: "0x84a47EaEca69f8B521C21739224251c8c4566Bbc",
   },
   Chainlink: {
     WETH: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
@@ -332,6 +337,12 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     SEWER: "0x764AeebcF425d56800eF2c84F2578689415a2DAa",
     PPG: "0xbd3531da5cf5857e7cfaa92426877b022e612cf8",
     SFVLDR: "0xffff2d93c83d4c613ed68ca887f057651135e089",
+    BEANZ: "0x8821bee2ba0df28761afff119d66390d594cd280",
+    DEGODS: "0x1821363abc9E33f1bfbE3f96F7C68ECa7f6Af2BD",
+    EXP: "0x790b2cf29ed4f310bf7641f013c65d4560d28371",
+    VSL: "0x5b1085136a811e55b2bb2ca1ea456ba82126a376",
+    KODA: "0xe012baf811cf9c05c408e879c399960d1f305903",
+    BLOCKS: "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -345,6 +356,9 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Marketplace: {
     Seaport: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+  },
+  BendDAO: {
+    LendingPool: "0x70b97a0da65c15dfb0ffa02aee6fa36e507c2762",
   },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
@@ -368,12 +382,6 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     WPUNKS: "0x01B6710B01cF3dd8Ae64243097d91aFb03728Fdd",
     DOODLE: "0x027828052840a43Cc2D0187BcfA6e3D6AcE60336",
     MAYC: "0x1823C89715Fe3fB96A24d11c917aCA918894A090",
-    BEANZ: "0x306b1ea3ecdf94ab739f1910bbda052ed4a9f949",
-    DEGODS: "0x1821363abc9E33f1bfbE3f96F7C68ECa7f6Af2BD",
-    EXP: "0x790b2cf29ed4f310bf7641f013c65d4560d28371",
-    VSL: "0x5b1085136a811e55b2bb2ca1ea456ba82126a376",
-    KODA: "0xe012baf811cf9c05c408e879c399960d1f305903",
-    BLOCKS: "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a",
   },
   ReservesConfig: {
     DAI: strategyDAI,

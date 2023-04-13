@@ -10,7 +10,7 @@ export const step_04 = async (verify = false) => {
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
   const allTokens = await getAllTokens();
-  const paraSpaceConfig = await getParaSpaceConfig();
+  const paraSpaceConfig = getParaSpaceConfig();
 
   try {
     const addressesProviderRegistry = await deployPoolAddressesProviderRegistry(
