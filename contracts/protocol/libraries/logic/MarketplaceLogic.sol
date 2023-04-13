@@ -152,7 +152,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(params, vars, address(this));
+        _handleFlashSupplyRepayment(params, vars);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
 
         emit BuyWithCredit(
@@ -350,7 +350,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(params, vars, address(this));
+        _handleFlashSupplyRepayment(params, vars);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.maker);
 
         emit AcceptBidWithCredit(
@@ -593,12 +593,10 @@ library MarketplaceLogic {
      * @dev
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
-     * @param recipient The supplyAmount recipient
      */
     function _handleFlashSupplyRepayment(
         DataTypes.ExecuteMarketplaceParams memory params,
-        MarketplaceLocalVars memory vars,
-        address recipient
+        MarketplaceLocalVars memory vars
     ) internal {
         if (vars.supplyAmount == 0) {
             return;
@@ -608,8 +606,7 @@ library MarketplaceLogic {
             IWETH(params.weth).deposit{value: vars.supplyAmount}();
         }
 
-        IERC20(vars.creditToken).safeTransferFrom(
-            recipient,
+        IERC20(vars.creditToken).safeTransfer(
             vars.creditXTokenAddress,
             vars.supplyAmount
         );
