@@ -616,6 +616,10 @@ upgrade-pool-ape-staking:
 upgrade-pool-parameters:
 	make TASK_NAME=upgrade:pool-parameters run-task
 
+.PHONY: upgrade-pool-position-mover
+upgrade-pool-position-mover:
+	make TASK_NAME=upgrade:pool-position-mover run-task
+
 .PHONY: reset-pool
 reset-pool:
 	make TASK_NAME=reset:pool run-task

@@ -646,6 +646,50 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
   };
 };
 
+export const deployPoolPositionMover = async (
+  provider: tEthereumAddress,
+  bendDaoLendPoolLoan: tEthereumAddress,
+  bendDaoLendPool: tEthereumAddress,
+  verify?: boolean
+) => {
+  const supplyLogic = await deploySupplyLogic(verify);
+  const borrowLogic = await deployBorrowLogic(verify);
+  const positionMoverLibraries = {
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+      supplyLogic.address,
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+      borrowLogic.address,
+  };
+  const positionMoverLogic = await deployPositionMoverLogic(
+    positionMoverLibraries,
+    verify
+  );
+
+  const {poolPositionMoverSelectors} = await getPoolSignatures();
+  const poolPositionMover = (await withSaveAndVerify(
+    new PoolPositionMover__factory(
+      {
+        ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
+          positionMoverLogic.address,
+      },
+      await getFirstSigner()
+    ),
+    eContractid.PoolPositionMoverImpl,
+    [provider, bendDaoLendPoolLoan, bendDaoLendPool],
+    verify,
+    false,
+    undefined,
+    poolPositionMoverSelectors
+  )) as PoolPositionMover;
+
+  return {
+    poolPositionMover,
+    poolPositionMoverSelectors: poolPositionMoverSelectors.map(
+      (s) => s.signature
+    ),
+  };
+};
+
 export const deployPoolMarketplaceLibraries = async (
   coreLibraries: PoolCoreLibraryAddresses,
   verify?: boolean
@@ -806,16 +850,22 @@ export const deployPoolComponents = async (
       positionMoverLogic.address,
   };
 
+  const bendDaoLendPoolLoan =
+    paraSpaceConfig.BendDAO.LendingPoolLoan ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
+    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
   const bendDaoLendPool =
     paraSpaceConfig.BendDAO.LendingPool ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
     (await deployMockBendDaoLendPool((await getWETH()).address)).address;
+
   const poolPositionMover = (await withSaveAndVerify(
     new PoolPositionMover__factory(
       positionMoverLibraries,
       await getFirstSigner()
     ),
     eContractid.PoolPositionMoverImpl,
-    [provider, bendDaoLendPool, bendDaoLendPool],
+    [provider, bendDaoLendPoolLoan, bendDaoLendPool],
     verify,
     false,
     positionMoverLibraries,

@@ -749,6 +749,7 @@ export interface IUniswapConfig {
 
 export interface IBendDAOConfig {
   LendingPool?: tEthereumAddress;
+  LendingPoolLoan?: tEthereumAddress;
 }
 
 export interface IOracleConfig {

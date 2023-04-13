@@ -226,6 +226,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   },
   BendDAO: {
     LendingPool: "0x84a47EaEca69f8B521C21739224251c8c4566Bbc",
+    LendingPoolLoan: "0x7F64c32a3c13Bd245a7141a607A7E60DA585BA86",
   },
   Chainlink: {
     WETH: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
@@ -359,6 +360,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   },
   BendDAO: {
     LendingPool: "0x70b97a0da65c15dfb0ffa02aee6fa36e507c2762",
+    LendingPoolLoan: "0x5f6ac80CdB9E87f3Cfa6a90E5140B9a16A361d5C",
   },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
