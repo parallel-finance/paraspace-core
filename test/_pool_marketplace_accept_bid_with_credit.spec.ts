@@ -1326,12 +1326,8 @@ describe("Leveraged Bid - unit tests", () => {
     // taker bayc should reduce
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("1000").add(borrowAmount)
-    );
-    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("9000")
-    );
+    expect(await usdc.balanceOf(taker.address)).to.be.equal(borrowAmount);
+    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(startAmount);
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
 
     // after the swap offer's totalCollateralBase should be same as taker's before

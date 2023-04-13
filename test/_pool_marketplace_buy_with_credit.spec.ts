@@ -1523,15 +1523,11 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
     assertAlmostEqual(
       await pUsdc.balanceOf(maker.address),
-      startAmount
-        .percentMul("9000")
-        .add(await convertToCurrencyDecimals(usdc.address, "1")) // default supply ratio
+      startAmount.add(await convertToCurrencyDecimals(usdc.address, "1")) // default supply ratio
     );
     assertAlmostEqual(
       await usdc.balanceOf(maker.address),
-      startAmount
-        .percentMul("1000")
-        .add(await convertToCurrencyDecimals(usdc.address, borrowAmount))
+      await convertToCurrencyDecimals(usdc.address, borrowAmount)
     );
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
     expect(
