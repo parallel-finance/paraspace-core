@@ -635,11 +635,12 @@ library MarketplaceLogic {
         );
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         vars.creditXTokenAddress = reserve.xTokenAddress;
-        // either the buyer decided to not use any credit
+        // either the seller & buyer decided to not use any credit
         // OR
         // the creditToken must be listed since otherwise cannot borrow from the pool
         require(
-            vars.creditAmount == 0 || vars.creditXTokenAddress != address(0),
+            (vars.creditAmount == 0 && vars.supplyAmount == 0) ||
+                vars.creditXTokenAddress != address(0),
             Errors.ASSET_NOT_LISTED
         );
     }
