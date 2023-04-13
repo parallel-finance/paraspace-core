@@ -440,11 +440,11 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
-        if (reserve.xTokenAddress == address(0)) {
+        if (vars.supplyAmount == 0) {
             return;
         }
 
+        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         DataTypes.UserConfigurationMap storage sellerConfig = ps._usersConfig[
             seller
         ];
@@ -452,8 +452,6 @@ library MarketplaceLogic {
         uint16 reserveId = reserve.id; // cache to reduce one storage read
 
         reserve.updateState(reserveCache);
-
-        vars.supplyAmount = vars.price;
 
         ValidationLogic.validateSupply(
             reserveCache,
@@ -631,11 +629,14 @@ library MarketplaceLogic {
         vars.isETH = params.credit.token == address(0);
         vars.creditToken = vars.isETH ? params.weth : params.credit.token;
         vars.creditAmount = params.credit.amount;
-        vars.price = _validateAndGetPrice(params, vars);
+        (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
+            params,
+            vars
+        );
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         vars.creditXTokenAddress = reserve.xTokenAddress;
         require(
-            vars.creditXTokenAddress != address(0),
+            vars.creditAmount == 0 || vars.creditXTokenAddress != address(0),
             Errors.ASSET_NOT_LISTED
         );
     }
@@ -690,10 +691,10 @@ library MarketplaceLogic {
         );
     }
 
-    function _validateAndGetPrice(
+    function _validateAndGetPriceAndSupplyAmount(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
-    ) internal view returns (uint256 price) {
+    ) internal view returns (uint256 price, uint256 supplyAmount) {
         for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
             ConsiderationItem memory item = params.orderInfo.consideration[i];
             require(
@@ -709,7 +710,11 @@ library MarketplaceLogic {
                 item.token == params.credit.token,
                 Errors.CREDIT_DOES_NOT_MATCH_ORDER
             );
-            if (item.recipient == address(this)) price += item.startAmount;
+            price += item.startAmount;
+
+            if (item.recipient == address(this)) {
+                supplyAmount += item.startAmount;
+            }
         }
     }
 }

@@ -18,8 +18,6 @@ import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.so
 contract X2Y2Adapter is IMarketplace {
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
 
-    uint256 public constant RATE_BASE = 1e6;
-
     constructor(IPoolAddressesProvider provider) {
         ADDRESSES_PROVIDER = provider;
     }
@@ -68,14 +66,6 @@ contract X2Y2Adapter is IMarketplace {
 
         ConsiderationItem[] memory consideration = new ConsiderationItem[](1);
 
-        uint256 totalFee;
-        for (uint256 i = 0; i < detail.fees.length; i++) {
-            IX2Y2.Fee memory fee = detail.fees[i];
-            uint256 amount = (detail.price * fee.percentage) / RATE_BASE;
-            totalFee += amount;
-        }
-        detail.price -= totalFee;
-
         ItemType itemType = ItemType.ERC20;
         address token = order.currency;
         consideration[0] = ConsiderationItem(
@@ -86,7 +76,6 @@ contract X2Y2Adapter is IMarketplace {
             detail.price,
             payable(order.user)
         );
-
         orderInfo.id = abi.encodePacked(order.r, order.s, order.v);
         orderInfo.consideration = consideration;
     }
