@@ -141,8 +141,10 @@ const releaseBendMover = async (verify = false) => {
 
   const positionMoverLogic = await deployPositionMoverLogic(
     {
-      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic": "",
-      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic": "",
+      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+        "0x141E078b57f5D025AAaA165F03ea5B9e150181b5",
+      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+        "0x7D8B622a11A9F3ab2F9C4A9A3C761caBb3273081",
     },
     verify
   );
