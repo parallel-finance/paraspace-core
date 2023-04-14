@@ -554,13 +554,11 @@ export const deployPoolApeStaking = async (
   provider: string,
   verify?: boolean
 ) => {
-  const supplyLogic = await deploySupplyLogic(verify);
-  const borrowLogic = await deployBorrowLogic(verify);
   const apeStakingLibraries = {
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
-      supplyLogic.address,
+      "0x7dc12cCe38Fd20393d19d5E4d65b021B35093aAB",
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-      borrowLogic.address,
+      "0xBd25Aa1c423cD59662aD1C328f963ce90Afbd94B",
   };
 
   const APE_WETH_FEE = 3000;
@@ -575,10 +573,7 @@ export const deployPoolApeStaking = async (
     eContractid.PoolApeStakingImpl,
     [
       provider,
-      (await getContractAddressInDb(eContractid.cAPE)) ||
-        (
-          await deployAutoCompoundApe(verify)
-        ).address,
+      await getContractAddressInDb(eContractid.cAPE),
       allTokens.APE.address,
       allTokens.USDC.address,
       (await getUniswapV3SwapRouter()).address,
