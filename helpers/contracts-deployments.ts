@@ -271,6 +271,12 @@ import {
   HotWalletProxy,
   DelegationRegistry,
   DelegationRegistry__factory,
+  MockLendPool__factory,
+  PoolPositionMover__factory,
+  PoolPositionMover,
+  PositionMoverLogic,
+  PositionMoverLogic__factory,
+  ValidationLogic__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -301,11 +307,13 @@ import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/librar
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Address} from "hardhat-deploy/dist/types";
 import {Contract} from "ethers";
+
 import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
 import {MarketplaceLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/MarketplaceLogic__factory";
 import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
 import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
+import {PositionMoverLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/PositionMoverLogic__factory";
 
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
@@ -422,6 +430,17 @@ export const deployPoolLogic = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<PoolLogic>;
+
+export const deployPositionMoverLogic = async (
+  libraries: PositionMoverLogicLibraryAddresses,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new PositionMoverLogic__factory(libraries, await getFirstSigner()),
+    eContractid.PositionMoverLogic,
+    [],
+    verify
+  ) as Promise<PositionMoverLogic>;
 
 export const deployPoolCoreLibraries = async (
   verify?: boolean
@@ -654,6 +673,10 @@ export const getPoolSignatures = () => {
     PoolApeStaking__factory.abi
   );
 
+  const poolPositionMoverSelectors = getFunctionSignatures(
+    PoolPositionMover__factory.abi
+  );
+
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
   const poolParaProxyInterfacesSelectors = getFunctionSignatures(
@@ -668,6 +691,7 @@ export const getPoolSignatures = () => {
     ...poolApeStakingSelectors,
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
+    ...poolPositionMoverSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {
@@ -687,6 +711,7 @@ export const getPoolSignatures = () => {
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
     poolParaProxyInterfacesSelectors,
+    poolPositionMoverSelectors,
   };
 };
 
@@ -711,12 +736,17 @@ export const getPoolSignaturesFromDb = async () => {
     eContractid.ParaProxyInterfacesImpl
   );
 
+  const poolPositionMoverSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolPositionMoverImpl
+  );
+
   return {
     poolCoreSelectors,
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
     poolParaProxyInterfacesSelectors,
+    poolPositionMoverSelectors,
   };
 };
 
@@ -729,6 +759,7 @@ export const deployPoolComponents = async (
     coreLibraries,
     verify
   );
+
   const parametersLibraries = await deployPoolParametersLibraries(verify);
 
   const apeStakingLibraries = pick(coreLibraries, [
@@ -736,16 +767,31 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
 
+  const positionMoverLogic = await deployPositionMoverLogic(
+    apeStakingLibraries,
+    verify
+  );
   const allTokens = await getAllTokens();
 
   const APE_WETH_FEE = 3000;
   const WETH_USDC_FEE = 500;
 
+  const positionMoverLibrary = {
+    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
+      positionMoverLogic.address,
+  };
+
+  const bendDaoLendPool = await deployMockBendDaoLendPool(
+    (
+      await getWETH()
+    ).address
+  );
   const {
     poolCoreSelectors,
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolPositionMoverSelectors,
   } = getPoolSignatures();
 
   const poolCore = (await withSaveAndVerify(
@@ -811,15 +857,32 @@ export const deployPoolComponents = async (
       )) as PoolApeStaking)
     : undefined;
 
+  const poolPositionMover = (await withSaveAndVerify(
+    new PoolPositionMover__factory(
+      positionMoverLibrary,
+      await getFirstSigner()
+    ),
+    eContractid.PoolPositionMoverImpl,
+    [provider, bendDaoLendPool.address, bendDaoLendPool.address],
+    verify,
+    false,
+    positionMoverLibrary,
+    poolPositionMoverSelectors
+  )) as PoolPositionMover;
+
   return {
     poolCore,
     poolParameters,
     poolMarketplace,
     poolApeStaking,
+    poolPositionMover,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
+    poolPositionMoverSelectors: poolPositionMoverSelectors.map(
+      (s) => s.signature
+    ),
   };
 };
 
@@ -3121,3 +3184,11 @@ export const deployDelegationRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<DelegationRegistry>;
+
+export const deployMockBendDaoLendPool = async (weth, verify?: boolean) =>
+  withSaveAndVerify(
+    new MockLendPool__factory(await getFirstSigner()),
+    eContractid.MockBendDaoLendPool,
+    [weth],
+    verify
+  );
