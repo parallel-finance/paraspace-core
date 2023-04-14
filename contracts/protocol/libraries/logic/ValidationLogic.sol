@@ -1013,7 +1013,7 @@ library ValidationLogic {
         require(
             tokenType != XTokenType.NTokenUniswapV3 &&
                 tokenType != XTokenType.NTokenStakefish,
-            Errors.XTOKEN_TYPE_NOT_ALLOWED
+            Errors.FLASHCLAIM_NOT_ALLOWED
         );
 
         // need check sApe status when flash claim for bayc or mayc

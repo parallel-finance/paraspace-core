@@ -387,11 +387,12 @@ export enum ProtocolErrors {
   AUCTIONED_BALANCE_NOT_ZERO = "116", //auctioned balance not zero
 
   LIQUIDATOR_CAN_NOT_BE_SELF = "117", //user can not liquidate himself
-  UNIV3_NOT_ALLOWED = "119", //flash claim is not allowed for UniswapV3
+  FLASHCLAIM_NOT_ALLOWED = "119", //flash claim is not allowed for UniswapV3
   NTOKEN_BALANCE_EXCEEDED = "120", //ntoken balance exceed limit.
   ORACLE_PRICE_NOT_READY = "121", //oracle price not ready
   SET_ORACLE_SOURCE_NOT_ALLOWED = "122", //set oracle source not allowed
   RESERVE_NOT_ACTIVE_FOR_UNIV3 = "123", //reserve is not active for UniswapV3.
+  XTOKEN_TYPE_NOT_ALLOWED = "124", //the corresponding xTokenType not allowed in this action
   SAPE_NOT_ALLOWED = "128", //operation is not allow for sApe.
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
