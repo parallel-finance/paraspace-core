@@ -54,7 +54,7 @@ const releaseBendMover = async (verify = false) => {
 
   const encodedData2 = await configurator.interface.encodeFunctionData(
     "setSupplyCap",
-    ["0xfE2460E9A57B3a283c4EDAD2780A0205c14bdb43", "50"]
+    ["0x23581767a106ae21c074b2276d25e5c3e136a68b", "50"]
   );
   await dryRunEncodedData(configurator.address, encodedData2);
 
