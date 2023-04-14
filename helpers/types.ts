@@ -1,5 +1,6 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {PromiseOrValue} from "../types/common";
+
 import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
 import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
@@ -11,6 +12,7 @@ import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/
 import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
 import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
 import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
+import {PoolPositionMoverLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolPositionMover__factory";
 
 export enum AssetType {
   ERC20 = 0,
@@ -85,6 +87,7 @@ export type ParaSpaceLibraryAddresses =
   | NTokenLibraryAddresses
   | NTokenUniswapV3LibraryAddresses
   | NTokenMoonBirdsLibraryAddresses
+  | PoolPositionMoverLibraryAddresses
   | {["NFTDescriptor"]: string};
 
 export enum eEthereumNetwork {
@@ -272,6 +275,9 @@ export enum eContractid {
   StakefishValidatorFactory = "StakefishValidatorFactory",
   DepositContract = "DepositContract",
   MockFeePool = "MockFeePool",
+  MockBendDaoLendPool = "MockBendDaoLendPool",
+  PositionMoverLogic = "PositionMoverLogic",
+  PoolPositionMoverImpl = "PoolPositionMoverImpl",
 }
 
 /*
