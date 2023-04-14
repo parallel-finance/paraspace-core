@@ -47,6 +47,7 @@ import {
   strategyRETH,
   strategyBENDETH,
   strategyFRAX,
+  strategyStakefishValidator,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -69,6 +70,7 @@ export const CommonConfig: Pick<
   | "Mocks"
   | "Oracle"
   | "HotWallet"
+  | "StakefishManager"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -91,6 +93,7 @@ export const CommonConfig: Pick<
   // Oracle
   Oracle: TestnetOracleConfig,
   HotWallet: undefined,
+  StakefishManager: undefined,
 };
 
 export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
@@ -137,6 +140,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
+    SFVLDR: strategyStakefishValidator,
   },
   DelegationRegistry: ZERO_ADDRESS,
 };
@@ -196,6 +200,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
     PPG: "0xf140558cA4d4e10f63661504D4F3f74FADDDe3E8",
     SEWER: "0x3aa026cd539fa1f6ae58ae238a10e2f1cf831454",
+    SFVLDR: "0x5b41ffb9c448c02ff3d0401b0374b67efcb73c7e",
   },
   YogaLabs: {
     ApeCoinStaking: "0xeF37717B1807a253c6D140Aca0141404D23c26D4",
@@ -256,7 +261,9 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
+    SFVLDR: strategyStakefishValidator,
   },
+  StakefishManager: "0x5b41ffb9c448c02ff3d0401b0374b67efcb73c7e",
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
@@ -312,6 +319,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     cETH: "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
     SEWER: "0x764AeebcF425d56800eF2c84F2578689415a2DAa",
     PPG: "0xbd3531da5cf5857e7cfaa92426877b022e612cf8",
+    SFVLDR: "0xffff2d93c83d4c613ed68ca887f057651135e089",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -383,10 +391,12 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
+    SFVLDR: strategyStakefishValidator,
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
   HotWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
+  StakefishManager: "0xffff2d93c83d4c613ed68ca887f057651135e089",
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 

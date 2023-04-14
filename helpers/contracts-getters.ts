@@ -90,6 +90,11 @@ import {
   HotWalletProxy__factory,
   NTokenOtherdeed__factory,
   DelegationRegistry__factory,
+  DepositContract__factory,
+  StakefishNFTManager__factory,
+  StakefishValidatorV1__factory,
+  StakefishValidatorFactory__factory,
+  NTokenStakefish__factory,
   MockLendPool__factory,
 } from "../types";
 import {
@@ -1260,6 +1265,61 @@ export const getDelegationRegistry = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.DelegationRegistry}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getStakefishValidatorFactory = async (
+  address?: tEthereumAddress
+) =>
+  await StakefishValidatorFactory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.StakefishValidatorFactory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getStakefishNFTManager = async (address?: tEthereumAddress) =>
+  await StakefishNFTManager__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.SFVLDR}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getStakefishValidator = async (address?: tEthereumAddress) =>
+  await StakefishValidatorV1__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.StakefishValidator}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getDepositContract = async (address?: tEthereumAddress) =>
+  await DepositContract__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.DepositContract}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenStakefish = async (address?: tEthereumAddress) =>
+  await NTokenStakefish__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenStakefishImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

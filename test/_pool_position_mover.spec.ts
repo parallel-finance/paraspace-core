@@ -12,7 +12,6 @@ import {
   mintAndValidate,
   supplyAndValidate,
 } from "./helpers/validated-steps";
-import {GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
 import {deployMintableERC721} from "../helpers/contracts-deployments";
 
 describe("Pool: rescue tokens", () => {
@@ -25,7 +24,6 @@ describe("Pool: rescue tokens", () => {
       users: [user1, user2],
       bayc,
       pool,
-      weth,
     } = testEnv;
 
     bendDaoLendPool = await getMockBendDaoLendPool();
@@ -94,9 +92,7 @@ describe("Pool: rescue tokens", () => {
   it("moving position should fail for a non-active loan", async () => {
     const {
       users: [user1],
-      bayc,
       pool,
-      weth,
     } = testEnv;
 
     await expect(
@@ -152,7 +148,6 @@ describe("Pool: rescue tokens", () => {
   it("moving position should fail if the asset is not supported", async () => {
     const {
       users: [user1],
-      bayc,
       pool,
     } = testEnv;
 

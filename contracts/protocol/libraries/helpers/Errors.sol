@@ -111,12 +111,12 @@ library Errors {
     string public constant AUCTIONED_BALANCE_NOT_ZERO = "116"; //auctioned balance not zero.
     string public constant LIQUIDATOR_CAN_NOT_BE_SELF = "117"; //user can not liquidate himself.
     string public constant INVALID_RECIPIENT = "118"; //invalid recipient specified in order.
-    string public constant UNIV3_NOT_ALLOWED = "119"; //flash claim is not allowed for UniswapV3.
+    string public constant FLASHCLAIM_NOT_ALLOWED = "119"; //flash claim is not allowed for UniswapV3 & Stakefish
     string public constant NTOKEN_BALANCE_EXCEEDED = "120"; //ntoken balance exceed limit.
     string public constant ORACLE_PRICE_NOT_READY = "121"; //oracle price not ready.
     string public constant SET_ORACLE_SOURCE_NOT_ALLOWED = "122"; //source of oracle not allowed to set.
     string public constant INVALID_LIQUIDATION_ASSET = "123"; //invalid liquidation asset.
-    string public constant ONLY_UNIV3_ALLOWED = "124"; //only UniswapV3 allowed.
+    string public constant XTOKEN_TYPE_NOT_ALLOWED = "124"; //the corresponding xTokenType not allowed in this action
     string public constant GLOBAL_DEBT_IS_ZERO = "125"; //liquidation is not allowed when global debt is zero.
     string public constant ORACLE_PRICE_EXPIRED = "126"; //oracle price expired.
     string public constant APE_STAKING_POSITION_EXISTED = "127"; //ape staking position is existed.
@@ -126,4 +126,5 @@ library Errors {
     string public constant CALLER_NOT_EOA = "131"; //The caller of the function is not an EOA account
     string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
+    string public constant INVALID_STATE = "134"; //invalid token status
 }
