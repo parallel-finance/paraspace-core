@@ -1651,7 +1651,7 @@ describe("Leveraged Buy - Positive tests", () => {
       seaport,
       pausableZone,
       conduitKey,
-      users: [maker, taker, middleman],
+      users: [maker, taker],
     } = await loadFixture(testEnvFixture);
     const nft = await deployMintableERC721(
       ["test_TC_erc721_buy_28", "test_TC_erc721_buy_28", ""],
