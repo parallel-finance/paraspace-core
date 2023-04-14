@@ -528,7 +528,7 @@ export const strategyDEGODS: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "1000",
 };
 
 export const strategyEXP: IReserveParams = {
@@ -544,7 +544,7 @@ export const strategyEXP: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "1000",
 };
 
 export const strategyVSL: IReserveParams = {
@@ -560,7 +560,7 @@ export const strategyVSL: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "1000",
 };
 
 export const strategyKODA: IReserveParams = {
@@ -576,14 +576,14 @@ export const strategyKODA: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "1000",
 };
 
 export const strategyBLOCKS: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyBLOCKS,
   timeLockStrategy: timeLockStrategyBLOCKS,
-  baseLTVAsCollateral: "3000",
+  baseLTVAsCollateral: "2000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "6500",
   liquidationBonus: "10500",
