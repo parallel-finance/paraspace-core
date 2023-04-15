@@ -55,6 +55,44 @@ library ValidationLogic {
      */
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
+    function validateInitiateBlurExchangeRequest(
+        DataTypes.ReserveData storage nftReserve,
+        DataTypes.BlurBuyWithCreditRequest calldata request,
+        address weth,
+        address oracle
+    ) internal view {
+        require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+
+        require(
+            msg.value == 0 || msg.value == request.cashAmount,
+            Errors.INVALID_ETH_VALUE
+        );
+        require(
+            request.paymentToken == address(0) || request.paymentToken == weth,
+            Errors.INVALID_PAYMENT_TOKEN
+        );
+
+        uint256 listingPrice = request.cashAmount + request.borrowAmount;
+        uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
+            request.collection
+        );
+        DataTypes.ReserveConfigurationMap
+            memory nftReserveConfiguration = nftReserve.configuration;
+        (, uint256 liquidationThreshold, , , ) = nftReserveConfiguration
+            .getParams();
+        require(
+            listingPrice >= floorPrice.percentMul(liquidationThreshold),
+            Errors.INVALID_LISTING_PRICE
+        );
+
+        (, , , , DataTypes.AssetType assetType) = nftReserveConfiguration
+            .getFlags();
+        require(
+            assetType == DataTypes.AssetType.ERC721,
+            Errors.INVALID_ASSET_TYPE
+        );
+    }
+
     /**
      * @notice Validates a supply action.
      * @param reserveCache The cached data of the reserve

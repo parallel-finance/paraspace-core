@@ -146,4 +146,33 @@ contract PoolMarketplace is
             referralCode
         );
     }
+
+    function initiateBlurExchangeRequest(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        MarketplaceLogic.executeInitiateBlurExchangeRequest(
+            ps,
+            ADDRESSES_PROVIDER,
+            request
+        );
+    }
+
+    function fulfillBlurExchangeRequest(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        MarketplaceLogic.executeFulfillBlurExchangeRequest(ps, request);
+    }
+
+    function rejectBlurExchangeRequest(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external payable virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        MarketplaceLogic.executeRejectBlurExchangeRequest(
+            ps,
+            ADDRESSES_PROVIDER,
+            request
+        );
+    }
 }

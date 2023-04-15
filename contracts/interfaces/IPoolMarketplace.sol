@@ -91,4 +91,16 @@ interface IPoolMarketplace {
         address onBehalfOf,
         uint16 referralCode
     ) external;
+
+    function initiateBlurExchangeRequest(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external payable;
+
+    function fulfillBlurExchangeRequest(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external;
+
+    function rejectBlurExchangeRequest(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external payable;
 }

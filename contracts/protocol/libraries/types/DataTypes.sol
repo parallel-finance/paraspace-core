@@ -390,6 +390,12 @@ library DataTypes {
         uint16 _apeCompoundFee;
         // Map of user's ape compound strategies
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
+        //identified if blur exchange is enabled
+        bool _blurExchangeEnable;
+        //Blur exchange keeper
+        address _blurExchangeKeeper;
+        // Map of BuyWithCreditRequest status
+        mapping(bytes32 => BlurBuyWithCreditRequestStatus) _blurExchangeRequestStatus;
     }
 
     struct ReserveConfigData {
@@ -419,5 +425,21 @@ library DataTypes {
     enum TimeLockActionType {
         BORROW,
         WITHDRAW
+    }
+
+    enum BlurBuyWithCreditRequestStatus {
+        Default,
+        Initiated,
+        Fulfilled,
+        Rejected
+    }
+
+    struct BlurBuyWithCreditRequest {
+        address initiator;
+        address paymentToken;
+        uint256 cashAmount;
+        uint256 borrowAmount;
+        address collection;
+        uint256 tokenId;
     }
 }

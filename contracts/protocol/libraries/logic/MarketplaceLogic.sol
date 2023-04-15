@@ -50,6 +50,33 @@ library MarketplaceLogic {
         uint16 indexed referralCode
     );
 
+    event BlurExchangeRequestInitiated(
+        address indexed initiator,
+        address paymentToken,
+        uint256 cashAmount,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
+
+    event BlurExchangeRequestFulfilled(
+        address indexed initiator,
+        address paymentToken,
+        uint256 cashAmount,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
+
+    event BlurExchangeRequestRejected(
+        address indexed initiator,
+        address paymentToken,
+        uint256 cashAmount,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
+
     /**
      * @dev Default percentage of listing price to be supplied on behalf of the seller in a marketplace exchange.
      * Expressed in bps, a value of 0.9e4 results in 90.00%
@@ -122,6 +149,301 @@ library MarketplaceLogic {
         );
 
         _refundETH(vars.ethLeft);
+    }
+
+    function executeInitiateBlurExchangeRequest(
+        DataTypes.PoolStorage storage ps,
+        IPoolAddressesProvider poolAddressProvider,
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external {
+        bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
+        require(
+            ps._blurExchangeRequestStatus[requestHash] ==
+                DataTypes.BlurBuyWithCreditRequestStatus.Default,
+            Errors.INVALID_REQUEST_STATUS
+        );
+
+        bool isETH = request.paymentToken == address(0);
+        uint256 listingPrice = request.cashAmount + request.borrowAmount;
+        address weth = poolAddressProvider.getWETH();
+        address oracle = poolAddressProvider.getPriceOracle();
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            request.initiator
+        ];
+
+        ValidationLogic.validateInitiateBlurExchangeRequest(
+            ps._reserves[request.collection],
+            request,
+            weth,
+            oracle
+        );
+
+        //mint nToken to release credit value
+        {
+            DataTypes.ERC721SupplyParams[]
+                memory tokenData = new DataTypes.ERC721SupplyParams[](1);
+            tokenData[0] = DataTypes.ERC721SupplyParams(request.tokenId, true);
+            SupplyLogic.executeSupplyERC721(
+                ps._reserves,
+                userConfig,
+                DataTypes.ExecuteSupplyERC721Params({
+                    asset: request.collection,
+                    tokenData: tokenData,
+                    onBehalfOf: request.initiator,
+                    payer: address(0),
+                    referralCode: 0
+                })
+            );
+        }
+
+        //transfer currency to keeper
+        {
+            address keeper = ps._blurExchangeKeeper;
+            if (request.cashAmount > 0 && msg.value == 0) {
+                IWETH(weth).transferFrom(
+                    request.initiator,
+                    isETH ? address(this) : keeper,
+                    request.cashAmount
+                );
+            }
+            if (request.borrowAmount > 0) {
+                DataTypes.TimeLockParams memory timeLockParams;
+                IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
+                    isETH ? address(this) : keeper,
+                    request.borrowAmount,
+                    timeLockParams
+                );
+            }
+            if (isETH) {
+                uint256 withdrawAmount = (msg.value == 0)
+                    ? listingPrice
+                    : request.borrowAmount;
+                if (withdrawAmount > 0) {
+                    IWETH(weth).withdraw(withdrawAmount);
+                }
+                Address.sendValue(payable(keeper), listingPrice);
+            } else {
+                uint256 depositAmount = (msg.value == 0)
+                    ? 0
+                    : request.cashAmount;
+                if (depositAmount > 0) {
+                    IWETH(weth).deposit{value: depositAmount}();
+                    IWETH(weth).transferFrom(
+                        request.initiator,
+                        keeper,
+                        depositAmount
+                    );
+                }
+            }
+        }
+
+        //mint debt token
+        if (request.borrowAmount > 0) {
+            BorrowLogic.executeBorrow(
+                ps._reserves,
+                ps._reservesList,
+                userConfig,
+                DataTypes.ExecuteBorrowParams({
+                    asset: weth,
+                    user: request.initiator,
+                    onBehalfOf: request.initiator,
+                    amount: request.borrowAmount,
+                    referralCode: 0,
+                    releaseUnderlying: false,
+                    reservesCount: ps._reservesCount,
+                    oracle: oracle,
+                    priceOracleSentinel: poolAddressProvider
+                        .getPriceOracleSentinel()
+                })
+            );
+        }
+
+        //update status
+        ps._blurExchangeRequestStatus[requestHash] = DataTypes
+            .BlurBuyWithCreditRequestStatus
+            .Initiated;
+
+        //emit event
+        emit BlurExchangeRequestInitiated(
+            request.initiator,
+            request.paymentToken,
+            request.cashAmount,
+            request.borrowAmount,
+            request.collection,
+            request.tokenId
+        );
+    }
+
+    function executeFulfillBlurExchangeRequest(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external {
+        //1. check request status
+        bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
+        require(
+            ps._blurExchangeRequestStatus[requestHash] ==
+                DataTypes.BlurBuyWithCreditRequestStatus.Initiated,
+            Errors.INVALID_REQUEST_STATUS
+        );
+
+        address keeper = ps._blurExchangeKeeper;
+        require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
+        DataTypes.ReserveData storage reserve = ps._reserves[
+            request.collection
+        ];
+        IERC721(request.collection).safeTransferFrom(
+            keeper,
+            reserve.xTokenAddress,
+            request.tokenId
+        );
+        ps._blurExchangeRequestStatus[requestHash] = DataTypes
+            .BlurBuyWithCreditRequestStatus
+            .Fulfilled;
+
+        emit BlurExchangeRequestFulfilled(
+            request.initiator,
+            request.paymentToken,
+            request.cashAmount,
+            request.borrowAmount,
+            request.collection,
+            request.tokenId
+        );
+    }
+
+    function executeRejectBlurExchangeRequest(
+        DataTypes.PoolStorage storage ps,
+        IPoolAddressesProvider poolAddressProvider,
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external {
+        bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
+        require(
+            ps._blurExchangeRequestStatus[requestHash] ==
+                DataTypes.BlurBuyWithCreditRequestStatus.Initiated,
+            Errors.INVALID_REQUEST_STATUS
+        );
+
+        address keeper = ps._blurExchangeKeeper;
+        require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
+
+        address weth = poolAddressProvider.getWETH();
+        uint256 totalAmount = request.cashAmount + request.borrowAmount;
+        address payerForRepayAndSupply = keeper;
+        if (request.paymentToken == address(0)) {
+            require(msg.value == totalAmount, Errors.INVALID_ETH_VALUE);
+            IWETH(weth).deposit{value: totalAmount}();
+            payerForRepayAndSupply = address(this);
+        }
+
+        _repayAndSupplyForUser(
+            ps,
+            weth,
+            payerForRepayAndSupply,
+            request.initiator,
+            totalAmount
+        );
+
+        ps._blurExchangeRequestStatus[requestHash] = DataTypes
+            .BlurBuyWithCreditRequestStatus
+            .Rejected;
+
+        emit BlurExchangeRequestRejected(
+            request.initiator,
+            request.paymentToken,
+            request.cashAmount,
+            request.borrowAmount,
+            request.collection,
+            request.tokenId
+        );
+    }
+
+    function _calculateBlurExchangeRequestHash(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    request.initiator,
+                    request.paymentToken,
+                    request.cashAmount,
+                    request.borrowAmount,
+                    request.collection,
+                    request.tokenId
+                )
+            );
+    }
+
+    function _repayAndSupplyForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 totalAmount
+    ) internal {
+        address variableDebtTokenAddress = ps
+            ._reserves[asset]
+            .variableDebtTokenAddress;
+        uint256 repayAmount = Math.min(
+            IERC20(variableDebtTokenAddress).balanceOf(onBehalfOf),
+            totalAmount
+        );
+        _repayForUser(ps, asset, payer, onBehalfOf, repayAmount);
+        _supplyForUser(ps, asset, payer, onBehalfOf, totalAmount - repayAmount);
+    }
+
+    function _supplyForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 amount
+    ) internal {
+        if (amount == 0) {
+            return;
+        }
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            onBehalfOf
+        ];
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            userConfig,
+            DataTypes.ExecuteSupplyParams({
+                asset: asset,
+                amount: amount,
+                onBehalfOf: onBehalfOf,
+                payer: payer,
+                referralCode: 0
+            })
+        );
+        DataTypes.ReserveData storage assetReserve = ps._reserves[asset];
+        uint16 reserveId = assetReserve.id;
+        if (!userConfig.isUsingAsCollateral(reserveId)) {
+            userConfig.setUsingAsCollateral(reserveId, true);
+            emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
+        }
+    }
+
+    function _repayForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 amount
+    ) internal returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        return
+            BorrowLogic.executeRepay(
+                ps._reserves,
+                ps._usersConfig[onBehalfOf],
+                DataTypes.ExecuteRepayParams({
+                    asset: asset,
+                    amount: amount,
+                    onBehalfOf: onBehalfOf,
+                    payer: payer,
+                    usePTokens: false
+                })
+            );
     }
 
     /**

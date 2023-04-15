@@ -215,12 +215,14 @@ library SupplyLogic {
                 );
             }
         }
-        for (uint256 index = 0; index < params.tokenData.length; index++) {
-            IERC721(params.asset).safeTransferFrom(
-                params.payer,
-                reserveCache.xTokenAddress,
-                params.tokenData[index].tokenId
-            );
+        if (params.payer != address(0)) {
+            for (uint256 index = 0; index < params.tokenData.length; index++) {
+                IERC721(params.asset).safeTransferFrom(
+                    params.payer,
+                    reserveCache.xTokenAddress,
+                    params.tokenData[index].tokenId
+                );
+            }
         }
 
         executeSupplyERC721Base(

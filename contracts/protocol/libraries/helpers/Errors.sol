@@ -126,4 +126,11 @@ library Errors {
     string public constant CALLER_NOT_EOA = "131"; //The caller of the function is not an EOA account
     string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
+    string public constant CALLER_NOT_INITIATOR = "134"; //The caller of the function is not the request initiator
+    string public constant INVALID_REQUEST_STATUS = "135"; //The status of the request is invalid for this function
+    string public constant INVALID_ETH_VALUE = "136"; //the eth value with the transaction is invalid
+    string public constant INVALID_PAYMENT_TOKEN = "137"; //the invalid payment token for blur exchange request
+    string public constant INVALID_LISTING_PRICE = "138"; //the listing price for blur exchange request is invalid
+    string public constant CALLER_NOT_KEEPER = "139"; //The caller of the function is not keeper
+    string public constant NTOKEN_NOT_OWNS_UNDERLYING = "140"; //The ntoken does not owns the underlying nft
 }

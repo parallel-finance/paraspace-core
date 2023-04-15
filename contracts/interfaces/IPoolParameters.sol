@@ -32,6 +32,16 @@ interface IPoolParameters {
     event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
+     * @dev Emitted when the status of blur exchange enable status update
+     **/
+    event BlurExchangeEnableStatusUpdated(bool isEnbale);
+
+    /**
+     * @dev Emitted when the blur exchange keeper address update
+     **/
+    event BlurExchangeKeeperUpdated(address keeper);
+
+    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
@@ -199,4 +209,16 @@ interface IPoolParameters {
         external
         view
         returns (uint256 ltv, uint256 lt);
+
+    /**
+     * @notice update blur exchange enable status, only pool admin call this function
+     * @param isEnable The new status
+     **/
+    function enableBlurExchange(bool isEnable) external;
+
+    /**
+     * @notice update blur exchange enable status, only pool admin call this function
+     * @param keeper The new keeper address
+     **/
+    function setBlurExchangeKeeper(address keeper) external;
 }

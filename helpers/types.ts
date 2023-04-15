@@ -399,6 +399,12 @@ export enum ProtocolErrors {
   EMEGENCY_DISABLE_CALL = "emergency disable call",
 
   MAKER_SAME_AS_TAKER = "132",
+
+  CALLER_NOT_INITIATOR = "134", //The caller of the function is not the request initiator
+  INVALID_REQUEST_STATUS = "135", //The status of the request is invalid for this function
+  INVALID_ETH_VALUE = "136", //the eth value with the transaction is invalid
+  INVALID_PAYMENT_TOKEN = "137", //the invalid payment token for blur exchange request
+  INVALID_LISTING_PRICE = "138", //the listing price for blur exchange request is invalid
 }
 
 export type tEthereumAddress = string;

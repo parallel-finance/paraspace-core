@@ -467,6 +467,8 @@ abstract contract MintableIncentivizedERC721 is
         address to,
         uint256 tokenId
     ) internal virtual {
+        //ensure nToken owns the underlying asset
+        MintableERC721Logic.ensureOwnsUnderlying(_ERC721Data, tokenId);
         MintableERC721Logic.executeTransfer(
             _ERC721Data,
             POOL,

@@ -361,4 +361,21 @@ contract PoolParameters is
         );
         userConfig.auctionValidityTime = block.timestamp;
     }
+
+    /// @inheritdoc IPoolParameters
+    function enableBlurExchange(bool isEnable) external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (ps._blurExchangeEnable != isEnable) {
+            ps._blurExchangeEnable = isEnable;
+            emit BlurExchangeEnableStatusUpdated(isEnable);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setBlurExchangeKeeper(address keeper) external onlyPoolAdmin {
+        require(keeper != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._blurExchangeKeeper = keeper;
+        emit BlurExchangeKeeperUpdated(keeper);
+    }
 }
