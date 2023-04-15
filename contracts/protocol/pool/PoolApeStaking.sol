@@ -43,7 +43,7 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
-    uint256 internal constant POOL_REVISION = 147;
+    uint256 internal constant POOL_REVISION = 149;
     IERC20 internal immutable USDC;
     ISwapRouter internal immutable SWAP_ROUTER;
 
@@ -647,10 +647,12 @@ contract PoolApeStaking is
         ApeStakingLocalVars memory localVar,
         address[] calldata users
     ) internal {
-        APE_COMPOUND.deposit(
-            address(this),
-            localVar.totalAmount - localVar.totalNonDepositAmount
-        );
+        if (localVar.totalAmount != localVar.totalNonDepositAmount) {
+            APE_COMPOUND.deposit(
+                address(this),
+                localVar.totalAmount - localVar.totalNonDepositAmount
+            );
+        }
         uint256 compoundFee = localVar
             .totalAmount
             .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)

@@ -5,6 +5,7 @@ import {IPoolCore} from "./IPoolCore.sol";
 import {IPoolMarketplace} from "./IPoolMarketplace.sol";
 import {IPoolParameters} from "./IPoolParameters.sol";
 import {IParaProxyInterfaces} from "./IParaProxyInterfaces.sol";
+import {IPoolPositionMover} from "./IPoolPositionMover.sol";
 import "./IPoolApeStaking.sol";
 
 /**
@@ -17,7 +18,8 @@ interface IPool is
     IPoolMarketplace,
     IPoolParameters,
     IPoolApeStaking,
-    IParaProxyInterfaces
+    IParaProxyInterfaces,
+    IPoolPositionMover
 {
 
 }

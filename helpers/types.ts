@@ -1,5 +1,6 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {PromiseOrValue} from "../types/common";
+
 import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
 import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
@@ -11,6 +12,7 @@ import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/
 import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
 import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
 import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
+import {PoolPositionMoverLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolPositionMover__factory";
 
 export enum AssetType {
   ERC20 = 0,
@@ -59,6 +61,7 @@ export enum XTokenType {
   PYieldToken = 13,
   PTokenCApe = 14,
   NTokenOtherdeed = 15,
+  NTokenStakefish = 16,
 }
 
 export type ConstructorArgs = (
@@ -84,6 +87,7 @@ export type ParaSpaceLibraryAddresses =
   | NTokenLibraryAddresses
   | NTokenUniswapV3LibraryAddresses
   | NTokenMoonBirdsLibraryAddresses
+  | PoolPositionMoverLibraryAddresses
   | {["NFTDescriptor"]: string};
 
 export enum eEthereumNetwork {
@@ -263,8 +267,17 @@ export enum eContractid {
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
+  SFVLDR = "SFVLDR",
   DelegationRegistry = "DelegationRegistry",
+  StakefishValidator = "StakefishValidator",
+  StakefishValidatorFactory = "StakefishValidatorFactory",
+  DepositContract = "DepositContract",
+  MockFeePool = "MockFeePool",
+  MockBendDaoLendPool = "MockBendDaoLendPool",
+  PositionMoverLogic = "PositionMoverLogic",
+  PoolPositionMoverImpl = "PoolPositionMoverImpl",
 }
 
 /*
@@ -374,14 +387,17 @@ export enum ProtocolErrors {
   AUCTIONED_BALANCE_NOT_ZERO = "116", //auctioned balance not zero
 
   LIQUIDATOR_CAN_NOT_BE_SELF = "117", //user can not liquidate himself
-  UNIV3_NOT_ALLOWED = "119", //flash claim is not allowed for UniswapV3
+  FLASHCLAIM_NOT_ALLOWED = "119", //flash claim is not allowed for UniswapV3
   NTOKEN_BALANCE_EXCEEDED = "120", //ntoken balance exceed limit.
   ORACLE_PRICE_NOT_READY = "121", //oracle price not ready
   SET_ORACLE_SOURCE_NOT_ALLOWED = "122", //set oracle source not allowed
   RESERVE_NOT_ACTIVE_FOR_UNIV3 = "123", //reserve is not active for UniswapV3.
+  XTOKEN_TYPE_NOT_ALLOWED = "124", //the corresponding xTokenType not allowed in this action
   SAPE_NOT_ALLOWED = "128", //operation is not allow for sApe.
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
+  INVALID_STATE = "134", //invalid token status
+
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 
@@ -400,11 +416,11 @@ export enum ProtocolErrors {
 
   MAKER_SAME_AS_TAKER = "132",
 
-  CALLER_NOT_INITIATOR = "134", //The caller of the function is not the request initiator
   INVALID_REQUEST_STATUS = "135", //The status of the request is invalid for this function
   INVALID_ETH_VALUE = "136", //the eth value with the transaction is invalid
   INVALID_PAYMENT_TOKEN = "137", //the invalid payment token for blur exchange request
   INVALID_LISTING_PRICE = "138", //the listing price for blur exchange request is invalid
+  CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
 }
 
 export type tEthereumAddress = string;
@@ -537,6 +553,7 @@ export enum ERC721TokenContractId {
   BAKC = "BAKC",
   SEWER = "SEWER",
   PPG = "PPG",
+  SFVLDR = "SFVLDR",
 }
 
 export enum NTokenContractId {
@@ -550,6 +567,7 @@ export enum NTokenContractId {
   nSEWER = "nSEWER",
   nPPG = "nPPG",
   nOTHR = "nOTHR",
+  nSFVLDR = "nSFVLDR",
 }
 
 export enum PTokenContractId {
@@ -756,6 +774,7 @@ export interface ICommonConfiguration {
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
   HotWallet: tEthereumAddress | undefined;
+  StakefishManager: tEthereumAddress | undefined;
   DelegationRegistry: tEthereumAddress;
 }
 

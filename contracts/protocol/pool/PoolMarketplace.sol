@@ -53,7 +53,7 @@ contract PoolMarketplace is
     using SafeERC20 for IERC20;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 147;
+    uint256 internal constant POOL_REVISION = 149;
 
     /**
      * @dev Constructor.
@@ -146,6 +146,15 @@ contract PoolMarketplace is
             referralCode
         );
     }
+
+    // function movePositionFromBendDAO(uint256[] calldata loanIds) external nonReentrant {
+    //     DataTypes.PoolStorage storage ps = poolStorage();
+
+    //     PositionMoverLogic.executeMovePositionFromBendDAO(
+    //         ps,
+    //         ADDRESSES_PROVIDER
+    //     );
+    // }
 
     function initiateBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request

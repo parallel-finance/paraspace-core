@@ -38,7 +38,7 @@ contract PToken is
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
 
-    uint256 public constant PTOKEN_REVISION = 147;
+    uint256 public constant PTOKEN_REVISION = 149;
 
     address internal _treasury;
     address internal _underlyingAsset;
