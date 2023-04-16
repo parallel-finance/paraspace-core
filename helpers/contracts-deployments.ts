@@ -271,6 +271,8 @@ import {
   HotWalletProxy,
   DelegationRegistry,
   DelegationRegistry__factory,
+  ParaSpaceRaffle__factory,
+  ParaSpaceRaffle
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -3121,3 +3123,12 @@ export const deployDelegationRegistry = async (verify?: boolean) =>
     [],
     verify
   ) as Promise<DelegationRegistry>;
+
+
+  export const deployParaSapaceRaffle = async (_linkAddress, _wrapperAddress, numCandidates, tree, verify?: boolean) =>
+  withSaveAndVerify(
+    new ParaSpaceRaffle__factory(await getFirstSigner()),
+    eContractid.DelegationRegistry,
+    [_linkAddress, _wrapperAddress, numCandidates, tree],
+    verify
+  ) as Promise<ParaSpaceRaffle>;
