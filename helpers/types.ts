@@ -421,6 +421,8 @@ export enum ProtocolErrors {
   INVALID_ETH_VALUE = "136", //the eth value with the transaction is invalid
   INVALID_PAYMENT_TOKEN = "137", //the invalid payment token for blur exchange request
   INVALID_LISTING_PRICE = "138", //the listing price for blur exchange request is invalid
+  CALLER_NOT_KEEPER = "139", //The caller of the function is not keeper
+  NTOKEN_NOT_OWNS_UNDERLYING = "140", //The ntoken does not owns the underlying nft
   CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
 }
 

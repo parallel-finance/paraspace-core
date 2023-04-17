@@ -406,6 +406,58 @@ describe("BLUR integration tests", () => {
     expect(await weth.balanceOf(user2.address)).to.be.eq(parseEther("90"));
   });
 
+  it("only keeper can fulfill the request", async () => {
+    const {
+      pool,
+      users: [user1, , user3],
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(WETHExchangeRequest)
+    );
+
+    await expect(
+      pool.connect(user3.signer).fulfillBlurExchangeRequest(WETHExchangeRequest)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_KEEPER);
+  });
+
+  it("only keeper can reject the request", async () => {
+    const {
+      pool,
+      users: [user1, , user3],
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(WETHExchangeRequest)
+    );
+
+    await expect(
+      pool.connect(user3.signer).rejectBlurExchangeRequest(WETHExchangeRequest)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_KEEPER);
+  });
+
+  it("user can't transfer nToken before request is fulfilled", async () => {
+    const {
+      pool,
+      nBAYC,
+      users: [user1, user2],
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(WETHExchangeRequest)
+    );
+
+    await expect(
+      nBAYC.connect(user1.signer).transferFrom(user1.address, user2.address, 0)
+    ).to.be.revertedWith(ProtocolErrors.NTOKEN_NOT_OWNS_UNDERLYING);
+  });
+
   it("listing price must > floor price * ls when initiate request", async () => {
     const {
       pool,
