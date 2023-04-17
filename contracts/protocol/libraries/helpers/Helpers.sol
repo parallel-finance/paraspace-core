@@ -5,6 +5,7 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
+import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 
 /**
  * @title Helpers library
@@ -12,6 +13,13 @@ import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollater
  */
 library Helpers {
     using WadRayMath for uint256;
+    using UserConfiguration for DataTypes.UserConfigurationMap;
+
+    // See `IPool` for descriptions
+    event ReserveUsedAsCollateralEnabled(
+        address indexed reserve,
+        address indexed user
+    );
 
     /**
      * @notice Fetches the user current stable and variable debt balances
@@ -45,5 +53,26 @@ library Helpers {
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         require(success, "ETH_TRANSFER_FAILED");
+    }
+
+    /**
+     * @notice Set user's collateral status for specified asset, if current collateral status is true, skip it.
+     * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
+     * @param reservesData The state of all the reserves
+     * @param token The asset address
+     * @param user The user address
+     **/
+    function setAssetUsedAsCollateral(
+        DataTypes.UserConfigurationMap storage userConfig,
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        address token,
+        address user
+    ) internal {
+        uint16 reserveId = reservesData[token].id;
+        bool currentStatus = userConfig.isUsingAsCollateral(reserveId);
+        if (!currentStatus) {
+            userConfig.setUsingAsCollateral(reserveId, true);
+            emit ReserveUsedAsCollateralEnabled(token, user);
+        }
     }
 }

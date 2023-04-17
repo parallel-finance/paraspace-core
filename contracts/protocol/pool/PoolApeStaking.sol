@@ -26,6 +26,7 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
+import {Helpers} from "../libraries/helpers/Helpers.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -52,11 +53,6 @@ contract PoolApeStaking is
     uint24 internal immutable APE_WETH_FEE;
     uint24 internal immutable WETH_USDC_FEE;
     address internal immutable WETH;
-
-    event ReserveUsedAsCollateralEnabled(
-        address indexed reserve,
-        address indexed user
-    );
 
     struct ApeStakingLocalVars {
         address xTokenAddress;
@@ -374,18 +370,15 @@ contract PoolApeStaking is
         );
 
         //7 collateralize sAPE
-        uint16 sApeReserveId = ps._reserves[DataTypes.SApeAddress].id;
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
             msg.sender
         ];
-        bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
-        if (!currentStatus) {
-            userConfig.setUsingAsCollateral(sApeReserveId, true);
-            emit ReserveUsedAsCollateralEnabled(
-                DataTypes.SApeAddress,
-                msg.sender
-            );
-        }
+        Helpers.setAssetUsedAsCollateral(
+            userConfig,
+            ps._reserves,
+            DataTypes.SApeAddress,
+            msg.sender
+        );
     }
 
     /// @inheritdoc IPoolApeStaking

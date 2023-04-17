@@ -13,15 +13,11 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 library PoolExtendedLogic {
     using Math for uint256;
     using UserConfiguration for DataTypes.UserConfigurationMap;
-
-    event ReserveUsedAsCollateralEnabled(
-        address indexed reserve,
-        address indexed user
-    );
 
     function repayAndSupplyForUser(
         DataTypes.PoolStorage storage ps,
@@ -65,12 +61,12 @@ library PoolExtendedLogic {
                 referralCode: 0
             })
         );
-        DataTypes.ReserveData storage assetReserve = ps._reserves[asset];
-        uint16 reserveId = assetReserve.id;
-        if (!userConfig.isUsingAsCollateral(reserveId)) {
-            userConfig.setUsingAsCollateral(reserveId, true);
-            emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
-        }
+        Helpers.setAssetUsedAsCollateral(
+            userConfig,
+            ps._reserves,
+            asset,
+            onBehalfOf
+        );
     }
 
     function repayForUser(
