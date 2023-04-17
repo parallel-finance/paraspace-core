@@ -290,6 +290,8 @@ import {
   PoolPositionMover,
   PositionMoverLogic,
   PositionMoverLogic__factory,
+  PoolExtendedLogic,
+  PoolExtendedLogic__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -333,6 +335,7 @@ import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {parseEther} from "ethers/lib/utils";
+import {PoolExtendedLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/PoolExtendedLogic__factory";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -429,6 +432,19 @@ export const deployLiquidationLogic = async (
     libraries
   ) as Promise<LiquidationLogic>;
 
+export const deployPoolExtendedLogic = async (
+  libraries: PoolExtendedLogicLibraryAddresses,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new PoolExtendedLogic__factory(libraries, await getFirstSigner()),
+    eContractid.PoolExtendedLogic,
+    [],
+    verify,
+    false,
+    libraries
+  ) as Promise<PoolExtendedLogic>;
+
 export const deployAuctionLogic = async (verify?: boolean) =>
   withSaveAndVerify(
     new AuctionLogic__factory(await getFirstSigner()),
@@ -455,6 +471,55 @@ export const deployPositionMoverLogic = async (
     [],
     verify
   ) as Promise<PositionMoverLogic>;
+
+interface PoolLibraryAddresses {
+  ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]: string;
+  ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]: string;
+  ["contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic"]: string;
+  ["contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic"]: string;
+  ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]: string;
+  ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]: string;
+}
+
+export const deployPoolLibraries = async (
+  verify?: boolean
+): Promise<PoolLibraryAddresses> => {
+  const supplyLogic = await deploySupplyLogic(verify);
+  const borrowLogic = await deployBorrowLogic(verify);
+  const poolExtendedLogic = await deployPoolExtendedLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
+    },
+    verify
+  );
+  const auctionLogic = await deployAuctionLogic(verify);
+  const liquidationLogic = await deployLiquidationLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+    },
+    verify
+  );
+  const flashClaimLogic = await deployFlashClaimLogic(verify);
+
+  return {
+    ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]:
+      auctionLogic.address,
+    ["contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic"]:
+      liquidationLogic.address,
+    ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+      supplyLogic.address,
+    ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+      borrowLogic.address,
+    ["contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic"]:
+      poolExtendedLogic.address,
+    ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
+      flashClaimLogic.address,
+  };
+};
 
 export const deployPoolCoreLibraries = async (
   verify?: boolean
@@ -517,12 +582,23 @@ export const deployPoolMarketplace = async (
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
+  const poolExtendedLogic = await deployPoolExtendedLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
+    },
+    verify
+  );
   const marketplaceLogic = await deployMarketplaceLogic(
     {
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
         supplyLogic.address,
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
         borrowLogic.address,
+      "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic":
+        poolExtendedLogic.address,
     },
     verify
   );
@@ -555,11 +631,22 @@ export const deployPoolApeStaking = async (
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
+  const poolExtendedLogic = await deployPoolExtendedLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
+    },
+    verify
+  );
   const apeStakingLibraries = {
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
       supplyLogic.address,
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
       borrowLogic.address,
+    "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic":
+      poolExtendedLogic.address,
   };
 
   const APE_WETH_FEE = 3000;
@@ -646,13 +733,14 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
 };
 
 export const deployPoolMarketplaceLibraries = async (
-  coreLibraries: PoolCoreLibraryAddresses,
+  poolLibraries: PoolLibraryAddresses,
   verify?: boolean
 ): Promise<PoolMarketplaceLibraryAddresses> => {
   const marketplaceLogic = await deployMarketplaceLogic(
-    pick(coreLibraries, [
+    pick(poolLibraries, [
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
+      "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic",
     ]),
     verify
   );
@@ -768,21 +856,34 @@ export const deployPoolComponents = async (
   provider: string,
   verify?: boolean
 ) => {
-  const coreLibraries = await deployPoolCoreLibraries(verify);
+  const poolLibraries = await deployPoolLibraries(verify);
+  const coreLibraries = await pick(poolLibraries, [
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+    "contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic",
+    "contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic",
+    "contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic",
+  ]);
   const marketplaceLibraries = await deployPoolMarketplaceLibraries(
-    coreLibraries,
+    poolLibraries,
     verify
   );
 
   const parametersLibraries = await deployPoolParametersLibraries(verify);
 
-  const apeStakingLibraries = pick(coreLibraries, [
+  const apeStakingLibraries = pick(poolLibraries, [
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+    "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic",
+  ]);
+
+  const PositionMoverLibraries = pick(poolLibraries, [
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
 
   const positionMoverLogic = await deployPositionMoverLogic(
-    apeStakingLibraries,
+    PositionMoverLibraries,
     verify
   );
   const allTokens = await getAllTokens();

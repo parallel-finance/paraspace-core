@@ -118,6 +118,7 @@ export enum eContractid {
   GenericLogic = "GenericLogic",
   SupplyLogic = "SupplyLogic",
   BorrowLogic = "BorrowLogic",
+  PoolExtendedLogic = "PoolExtendedLogic",
   LiquidationLogic = "LiquidationLogic",
   AuctionLogic = "AuctionLogic",
   PoolLogic = "PoolLogic",

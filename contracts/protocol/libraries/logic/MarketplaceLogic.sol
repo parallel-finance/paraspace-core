@@ -10,6 +10,7 @@ import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
+import {PoolExtendedLogic} from "./PoolExtendedLogic.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
@@ -334,7 +335,7 @@ library MarketplaceLogic {
             payerForRepayAndSupply = address(this);
         }
 
-        _repayAndSupplyForUser(
+        PoolExtendedLogic.repayAndSupplyForUser(
             ps,
             weth,
             payerForRepayAndSupply,
@@ -369,80 +370,6 @@ library MarketplaceLogic {
                     request.collection,
                     request.tokenId
                 )
-            );
-    }
-
-    function _repayAndSupplyForUser(
-        DataTypes.PoolStorage storage ps,
-        address asset,
-        address payer,
-        address onBehalfOf,
-        uint256 totalAmount
-    ) internal {
-        address variableDebtTokenAddress = ps
-            ._reserves[asset]
-            .variableDebtTokenAddress;
-        uint256 repayAmount = Math.min(
-            IERC20(variableDebtTokenAddress).balanceOf(onBehalfOf),
-            totalAmount
-        );
-        _repayForUser(ps, asset, payer, onBehalfOf, repayAmount);
-        _supplyForUser(ps, asset, payer, onBehalfOf, totalAmount - repayAmount);
-    }
-
-    function _supplyForUser(
-        DataTypes.PoolStorage storage ps,
-        address asset,
-        address payer,
-        address onBehalfOf,
-        uint256 amount
-    ) internal {
-        if (amount == 0) {
-            return;
-        }
-        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            onBehalfOf
-        ];
-        SupplyLogic.executeSupply(
-            ps._reserves,
-            userConfig,
-            DataTypes.ExecuteSupplyParams({
-                asset: asset,
-                amount: amount,
-                onBehalfOf: onBehalfOf,
-                payer: payer,
-                referralCode: 0
-            })
-        );
-        DataTypes.ReserveData storage assetReserve = ps._reserves[asset];
-        uint16 reserveId = assetReserve.id;
-        if (!userConfig.isUsingAsCollateral(reserveId)) {
-            userConfig.setUsingAsCollateral(reserveId, true);
-            emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
-        }
-    }
-
-    function _repayForUser(
-        DataTypes.PoolStorage storage ps,
-        address asset,
-        address payer,
-        address onBehalfOf,
-        uint256 amount
-    ) internal returns (uint256) {
-        if (amount == 0) {
-            return 0;
-        }
-        return
-            BorrowLogic.executeRepay(
-                ps._reserves,
-                ps._usersConfig[onBehalfOf],
-                DataTypes.ExecuteRepayParams({
-                    asset: asset,
-                    amount: amount,
-                    onBehalfOf: onBehalfOf,
-                    payer: payer,
-                    usePTokens: false
-                })
             );
     }
 

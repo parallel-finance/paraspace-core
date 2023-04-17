@@ -1,0 +1,99 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.10;
+
+import {INToken} from "../../../interfaces/INToken.sol";
+import {DataTypes} from "../types/DataTypes.sol";
+import {IPToken} from "../../../interfaces/IPToken.sol";
+import {Errors} from "../helpers/Errors.sol";
+import {ValidationLogic} from "./ValidationLogic.sol";
+import {SupplyLogic} from "./SupplyLogic.sol";
+import {BorrowLogic} from "./BorrowLogic.sol";
+import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
+import {UserConfiguration} from "../configuration/UserConfiguration.sol";
+import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
+
+library PoolExtendedLogic {
+    using Math for uint256;
+    using UserConfiguration for DataTypes.UserConfigurationMap;
+
+    event ReserveUsedAsCollateralEnabled(
+        address indexed reserve,
+        address indexed user
+    );
+
+    function repayAndSupplyForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 totalAmount
+    ) external {
+        address variableDebtTokenAddress = ps
+            ._reserves[asset]
+            .variableDebtTokenAddress;
+        uint256 repayAmount = Math.min(
+            IERC20(variableDebtTokenAddress).balanceOf(onBehalfOf),
+            totalAmount
+        );
+        repayForUser(ps, asset, payer, onBehalfOf, repayAmount);
+        supplyForUser(ps, asset, payer, onBehalfOf, totalAmount - repayAmount);
+    }
+
+    function supplyForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 amount
+    ) public {
+        if (amount == 0) {
+            return;
+        }
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            onBehalfOf
+        ];
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            userConfig,
+            DataTypes.ExecuteSupplyParams({
+                asset: asset,
+                amount: amount,
+                onBehalfOf: onBehalfOf,
+                payer: payer,
+                referralCode: 0
+            })
+        );
+        DataTypes.ReserveData storage assetReserve = ps._reserves[asset];
+        uint16 reserveId = assetReserve.id;
+        if (!userConfig.isUsingAsCollateral(reserveId)) {
+            userConfig.setUsingAsCollateral(reserveId, true);
+            emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
+        }
+    }
+
+    function repayForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 amount
+    ) public returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        return
+            BorrowLogic.executeRepay(
+                ps._reserves,
+                ps._usersConfig[onBehalfOf],
+                DataTypes.ExecuteRepayParams({
+                    asset: asset,
+                    amount: amount,
+                    onBehalfOf: onBehalfOf,
+                    payer: payer,
+                    usePTokens: false
+                })
+            );
+    }
+}

@@ -18,6 +18,7 @@ import {UserConfiguration} from "../libraries/configuration/UserConfiguration.so
 import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
+import "../libraries/logic/PoolExtendedLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
@@ -726,7 +727,13 @@ contract PoolApeStaking is
                 amountOutMinimum: amountIn.wadMul(price)
             })
         );
-        _supplyForUser(ps, tokenOut, address(this), user, amountOut);
+        PoolExtendedLogic.supplyForUser(
+            ps,
+            tokenOut,
+            address(this),
+            user,
+            amountOut
+        );
     }
 
     function _getApeRelativePrice(address tokenOut, uint256 tokenOutUnit)
@@ -753,71 +760,13 @@ contract PoolApeStaking is
         address onBehalfOf,
         uint256 totalAmount
     ) internal {
-        address variableDebtTokenAddress = ps
-            ._reserves[asset]
-            .variableDebtTokenAddress;
-        uint256 repayAmount = Math.min(
-            IERC20(variableDebtTokenAddress).balanceOf(onBehalfOf),
+        PoolExtendedLogic.repayAndSupplyForUser(
+            ps,
+            asset,
+            payer,
+            onBehalfOf,
             totalAmount
         );
-        _repayForUser(ps, asset, payer, onBehalfOf, repayAmount);
-        _supplyForUser(ps, asset, payer, onBehalfOf, totalAmount - repayAmount);
-    }
-
-    function _supplyForUser(
-        DataTypes.PoolStorage storage ps,
-        address asset,
-        address payer,
-        address onBehalfOf,
-        uint256 amount
-    ) internal {
-        if (amount == 0) {
-            return;
-        }
-        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            onBehalfOf
-        ];
-        SupplyLogic.executeSupply(
-            ps._reserves,
-            userConfig,
-            DataTypes.ExecuteSupplyParams({
-                asset: asset,
-                amount: amount,
-                onBehalfOf: onBehalfOf,
-                payer: payer,
-                referralCode: 0
-            })
-        );
-        DataTypes.ReserveData storage assetReserve = ps._reserves[asset];
-        uint16 reserveId = assetReserve.id;
-        if (!userConfig.isUsingAsCollateral(reserveId)) {
-            userConfig.setUsingAsCollateral(reserveId, true);
-            emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
-        }
-    }
-
-    function _repayForUser(
-        DataTypes.PoolStorage storage ps,
-        address asset,
-        address payer,
-        address onBehalfOf,
-        uint256 amount
-    ) internal returns (uint256) {
-        if (amount == 0) {
-            return 0;
-        }
-        return
-            BorrowLogic.executeRepay(
-                ps._reserves,
-                ps._usersConfig[onBehalfOf],
-                DataTypes.ExecuteRepayParams({
-                    asset: asset,
-                    amount: amount,
-                    onBehalfOf: onBehalfOf,
-                    payer: payer,
-                    usePTokens: false
-                })
-            );
     }
 
     function _validateBAKCOwnerAndTransfer(
