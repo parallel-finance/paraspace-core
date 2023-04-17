@@ -92,14 +92,29 @@ interface IPoolMarketplace {
         uint16 referralCode
     ) external;
 
+    /**
+     * @notice Initiate a buyWithCredit request for Blur exchange listing order.
+     * @dev Only the request initiator can call this function
+     * @param request The detail info for the request
+     */
     function initiateBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external payable;
 
+    /**
+     * @notice Fulfill a buyWithCredit request for Blur exchange listing order if the blur transaction is successes.
+     * @dev Only keeper can call this function
+     * @param request The detail info for the request
+     */
     function fulfillBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external;
 
+    /**
+     * @notice Rejuct a buyWithCredit request for Blur exchange listing order if the blur transaction is failed.
+     * @dev Only keeper can call this function
+     * @param request The detail info for the request
+     */
     function rejectBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external payable;

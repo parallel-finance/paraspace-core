@@ -156,6 +156,7 @@ contract PoolMarketplace is
     //     );
     // }
 
+    /// @inheritdoc IPoolMarketplace
     function initiateBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external payable virtual override nonReentrant {
@@ -167,6 +168,7 @@ contract PoolMarketplace is
         );
     }
 
+    /// @inheritdoc IPoolMarketplace
     function fulfillBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external virtual override {
@@ -174,6 +176,7 @@ contract PoolMarketplace is
         MarketplaceLogic.executeFulfillBlurExchangeRequest(ps, request);
     }
 
+    /// @inheritdoc IPoolMarketplace
     function rejectBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external payable virtual override {

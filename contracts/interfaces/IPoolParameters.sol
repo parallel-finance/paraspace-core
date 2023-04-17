@@ -34,7 +34,7 @@ interface IPoolParameters {
     /**
      * @dev Emitted when the status of blur exchange enable status update
      **/
-    event BlurExchangeEnableStatusUpdated(bool isEnbale);
+    event BlurExchangeEnableStatusUpdated(bool isEnable);
 
     /**
      * @dev Emitted when the blur exchange keeper address update

@@ -448,11 +448,17 @@ library DataTypes {
     }
 
     struct BlurBuyWithCreditRequest {
+        // request initiator
         address initiator;
+        // currency token. address(0) means ETH
         address paymentToken;
+        // cash amount from user wallet
         uint256 cashAmount;
+        // borrow amount from lending pool
         uint256 borrowAmount;
+        // nft token address for the listing order
         address collection;
+        // nft token id for the listing order
         uint256 tokenId;
     }
 }
