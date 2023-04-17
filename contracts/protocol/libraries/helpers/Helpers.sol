@@ -46,6 +46,16 @@ library Helpers {
     }
 
     /**
+     * @dev transfer ETH to an address, revert if it fails.
+     * @param to recipient of the transfer
+     * @param value the amount to send
+     */
+    function safeTransferETH(address to, uint256 value) internal {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        require(success, "ETH_TRANSFER_FAILED");
+    }
+
+    /**
      * @notice Set user's collateral status for specified asset, if current collateral status is true, skip it.
      * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param reservesData The state of all the reserves

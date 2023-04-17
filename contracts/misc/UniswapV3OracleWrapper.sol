@@ -184,44 +184,6 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
                 10**oracleData.token1Decimal);
     }
 
-    /**
-     * @notice Returns the price for the specified tokenId array.
-     */
-    function getTokensPrices(uint256[] calldata tokenIds)
-        external
-        view
-        returns (uint256[] memory)
-    {
-        uint256[] memory prices = new uint256[](tokenIds.length);
-
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            prices[index] = getTokenPrice(tokenIds[index]);
-        }
-
-        return prices;
-    }
-
-    /**
-     * @notice Returns the total price for the specified tokenId array.
-     */
-    function getTokensPricesSum(uint256[] calldata tokenIds)
-        external
-        view
-        returns (uint256)
-    {
-        uint256 sum = 0;
-
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            sum += getTokenPrice(tokenIds[index]);
-        }
-
-        return sum;
-    }
-
-    function latestAnswer() external pure returns (int256) {
-        revert("unimplemented");
-    }
-
     function _getOracleData(UinswapV3PositionData memory positionData)
         internal
         view

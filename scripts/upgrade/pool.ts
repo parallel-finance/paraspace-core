@@ -16,7 +16,7 @@ import {waitForTx} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
-const upgradeProxyImplementations = async (
+export const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
 ) => {
   const addressesProvider = await getPoolAddressesProvider();
@@ -81,6 +81,7 @@ const resetSelectors = async () => {
   for (const facet of facets.filter(
     (x) =>
       x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" &&
+      x.implAddress !== "0x0b6717ED22Cfd5495E47804F3f6624E5f0Ea20Cb" &&
       x.implAddress !== "0xC85d346eB17B37b93B30a37603Ef9550Ab18aC83" // ParaProxyInterfaces
   )) {
     implementations.push({

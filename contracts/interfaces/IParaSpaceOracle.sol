@@ -80,26 +80,4 @@ interface IParaSpaceOracle is IPriceOracleGetter {
      * @return The address of the fallback oracle
      */
     function getFallbackOracle() external view returns (address);
-
-    /**
-     * @notice Returns a list of prices from a list of tokenIds
-     * @param asset the asset address
-     * @param tokenIds The list of token ids
-     * @return The prices of the given tokens
-     */
-    function getTokensPrices(address asset, uint256[] calldata tokenIds)
-        external
-        view
-        returns (uint256[] memory);
-
-    /**
-     * @notice Returns the sum of prices for list of tokenIds
-     * @param asset the asset address
-     * @param tokenIds The list of token ids
-     * @return The prices of the given tokens
-     */
-    function getTokensPricesSum(address asset, uint256[] calldata tokenIds)
-        external
-        view
-        returns (uint256);
 }

@@ -52,9 +52,9 @@ library MarketplaceLogic {
 
     /**
      * @dev Default percentage of listing price to be supplied on behalf of the seller in a marketplace exchange.
-     * Expressed in bps, a value of 0.9e4 results in 90.00%
+     * Expressed in bps, a value of 0.95e4 results in 95.00%
      */
-    uint256 internal constant DEFAULT_SUPPLY_RATIO = 0.9e4;
+    uint256 internal constant DEFAULT_SUPPLY_RATIO = 0.95e4;
 
     event BuyWithCredit(
         bytes32 indexed marketplaceId,
@@ -546,7 +546,7 @@ library MarketplaceLogic {
             require(
                 INToken(vars.xTokenAddress).getXTokenType() !=
                     XTokenType.NTokenUniswapV3,
-                Errors.UNIV3_NOT_ALLOWED
+                Errors.XTOKEN_TYPE_NOT_ALLOWED
             );
 
             // item.token == underlyingAsset but supplied after listing/offering
