@@ -152,40 +152,6 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         revert(Errors.ORACLE_PRICE_NOT_READY);
     }
 
-    function getTokensPrices(address asset, uint256[] calldata tokenIds)
-        external
-        view
-        override
-        returns (uint256[] memory)
-    {
-        IAtomicPriceAggregator source = IAtomicPriceAggregator(
-            assetsSources[asset]
-        );
-
-        if (address(source) != address(0)) {
-            return source.getTokensPrices(tokenIds);
-        }
-
-        revert(Errors.ORACLE_PRICE_NOT_READY);
-    }
-
-    function getTokensPricesSum(address asset, uint256[] calldata tokenIds)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        IAtomicPriceAggregator source = IAtomicPriceAggregator(
-            assetsSources[asset]
-        );
-
-        if (address(source) != address(0)) {
-            return source.getTokensPricesSum(tokenIds);
-        }
-
-        revert(Errors.ORACLE_PRICE_NOT_READY);
-    }
-
     /// @inheritdoc IParaSpaceOracle
     function getAssetsPrices(address[] calldata assets)
         external

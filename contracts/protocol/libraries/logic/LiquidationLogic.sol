@@ -29,6 +29,7 @@ import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
 import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider.sol";
 import {Errors} from "../../libraries/helpers/Errors.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title LiquidationLogic library
@@ -592,16 +593,12 @@ library LiquidationLogic {
             })
         );
 
-        if (!userConfig.isUsingAsCollateral(vars.liquidationAssetReserveId)) {
-            userConfig.setUsingAsCollateral(
-                vars.liquidationAssetReserveId,
-                true
-            );
-            emit ReserveUsedAsCollateralEnabled(
-                params.liquidationAsset,
-                params.borrower
-            );
-        }
+        Helpers.setAssetUsedAsCollateral(
+            userConfig,
+            reservesData,
+            params.liquidationAsset,
+            params.borrower
+        );
     }
 
     /**
