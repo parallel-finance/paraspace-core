@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {INToken} from "../../../interfaces/INToken.sol";
 import {DataTypes} from "../types/DataTypes.sol";
-import {IPToken} from "../../../interfaces/IPToken.sol";
 import {Errors} from "../helpers/Errors.sol";
-import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
-import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {Helpers} from "../helpers/Helpers.sol";
@@ -18,6 +13,11 @@ import {Helpers} from "../helpers/Helpers.sol";
 library PoolExtendedLogic {
     using Math for uint256;
     using UserConfiguration for DataTypes.UserConfigurationMap;
+
+    event ReserveUsedAsCollateralEnabled(
+        address indexed reserve,
+        address indexed user
+    );
 
     function repayAndSupplyForUser(
         DataTypes.PoolStorage storage ps,
