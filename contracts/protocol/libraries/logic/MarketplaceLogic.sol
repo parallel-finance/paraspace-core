@@ -283,9 +283,8 @@ library MarketplaceLogic {
             reserve.xTokenAddress,
             request.tokenId
         );
-        ps._blurExchangeRequestStatus[requestHash] = DataTypes
-            .BlurBuyWithCreditRequestStatus
-            .Fulfilled;
+
+        delete ps._blurExchangeRequestStatus[requestHash];
 
         emit BlurExchangeRequestFulfilled(
             request.initiator,
@@ -337,9 +336,7 @@ library MarketplaceLogic {
             request.initiator
         );
 
-        ps._blurExchangeRequestStatus[requestHash] = DataTypes
-            .BlurBuyWithCreditRequestStatus
-            .Rejected;
+        delete ps._blurExchangeRequestStatus[requestHash];
 
         emit BlurExchangeRequestRejected(
             request.initiator,

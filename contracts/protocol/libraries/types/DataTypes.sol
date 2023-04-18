@@ -448,9 +448,7 @@ library DataTypes {
 
     enum BlurBuyWithCreditRequestStatus {
         Default,
-        Initiated,
-        Fulfilled,
-        Rejected
+        Initiated
     }
 
     struct BlurBuyWithCreditRequest {
