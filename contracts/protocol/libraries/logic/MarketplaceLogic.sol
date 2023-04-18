@@ -197,6 +197,27 @@ library MarketplaceLogic {
             );
         }
 
+        //mint debt token
+        if (request.borrowAmount > 0) {
+            BorrowLogic.executeBorrow(
+                ps._reserves,
+                ps._reservesList,
+                userConfig,
+                DataTypes.ExecuteBorrowParams({
+            asset: weth,
+            user: request.initiator,
+            onBehalfOf: request.initiator,
+            amount: request.borrowAmount,
+            referralCode: 0,
+            releaseUnderlying: false,
+            reservesCount: ps._reservesCount,
+            oracle: oracle,
+            priceOracleSentinel: poolAddressProvider
+            .getPriceOracleSentinel()
+            })
+            );
+        }
+
         //transfer currency to keeper
         {
             address keeper = ps._blurExchangeKeeper;
@@ -236,27 +257,6 @@ library MarketplaceLogic {
                     );
                 }
             }
-        }
-
-        //mint debt token
-        if (request.borrowAmount > 0) {
-            BorrowLogic.executeBorrow(
-                ps._reserves,
-                ps._reservesList,
-                userConfig,
-                DataTypes.ExecuteBorrowParams({
-                    asset: weth,
-                    user: request.initiator,
-                    onBehalfOf: request.initiator,
-                    amount: request.borrowAmount,
-                    referralCode: 0,
-                    releaseUnderlying: false,
-                    reservesCount: ps._reservesCount,
-                    oracle: oracle,
-                    priceOracleSentinel: poolAddressProvider
-                        .getPriceOracleSentinel()
-                })
-            );
         }
 
         //update status
@@ -342,6 +342,8 @@ library MarketplaceLogic {
             request.initiator,
             totalAmount
         );
+
+        //burn nToken.
 
         ps._blurExchangeRequestStatus[requestHash] = DataTypes
             .BlurBuyWithCreditRequestStatus
