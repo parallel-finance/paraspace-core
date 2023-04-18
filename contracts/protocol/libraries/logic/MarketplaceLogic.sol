@@ -25,6 +25,7 @@ import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title Marketplace library
@@ -157,6 +158,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external {
+        //check request status
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         require(
             ps._blurExchangeRequestStatus[requestHash] ==
@@ -236,10 +238,7 @@ library MarketplaceLogic {
                 );
                 IWETH(weth).withdraw(request.borrowAmount);
             }
-            Address.sendValue(
-                payable(keeper),
-                request.listingPrice + requestFee
-            );
+            Helpers.safeTransferETH(keeper, request.listingPrice + requestFee);
         }
 
         //update status
@@ -262,7 +261,7 @@ library MarketplaceLogic {
         DataTypes.PoolStorage storage ps,
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external {
-        //1. check request status
+        // check request status
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         require(
             ps._blurExchangeRequestStatus[requestHash] ==
@@ -301,6 +300,7 @@ library MarketplaceLogic {
         IPoolAddressesProvider poolAddressProvider,
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external {
+        // check request status
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         require(
             ps._blurExchangeRequestStatus[requestHash] ==
