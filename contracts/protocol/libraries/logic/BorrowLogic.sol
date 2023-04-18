@@ -122,14 +122,21 @@ library BorrowLogic {
             } else {
                 DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
                     params.swapAdapter.adapter
-                ).getSwapInfo(params.payload);
-                ValidationLogic.validateSwap(swapInfo, params);
+                ).getSwapInfo(params.swapPayload);
+                ValidationLogic.validateSwap(
+                    swapInfo,
+                    DataTypes.ValidateSwapParams({
+                        swapAdapter: params.swapAdapter,
+                        amount: params.amount,
+                        dstReceiver: reserveCache.xTokenAddress
+                    })
+                );
                 IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
                     params.user,
                     params.amount,
                     timeLockParams,
                     params.swapAdapter,
-                    params.payload,
+                    params.swapPayload,
                     swapInfo
                 );
             }

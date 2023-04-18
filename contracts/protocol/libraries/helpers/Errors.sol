@@ -127,4 +127,6 @@ library Errors {
     string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
     string public constant CALL_SWAP_FAILED = "134"; //call swap failed.
+    string public constant INVALID_SWAP_PAYLOAD = "135"; //invalid swap payload.
+    string public constant SWAP_PROVIDER_PAUSED = "136"; //swap provider paused.
 }

@@ -239,9 +239,9 @@ contract PToken is
         uint256 amount,
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
-        bytes calldata payload,
+        bytes calldata swapPayload,
         DataTypes.SwapInfo calldata swapInfo
-    ) external virtual override onlyPool {
+    ) external virtual override onlyPool returns (uint256 amountOut) {
         uint256 beforeBalance = IERC20(swapInfo.dstToken).balanceOf(
             address(this)
         );
@@ -251,17 +251,14 @@ contract PToken is
             abi.encodeWithSelector(
                 ISwapAdapter.swap.selector,
                 swapAdapter.router,
-                payload
+                swapPayload
             )
         );
         uint256 afterBalance = IERC20(swapInfo.dstToken).balanceOf(
             address(this)
         );
-        uint256 diff = afterBalance - beforeBalance;
-        if (diff == 0) {
-            return;
-        }
-
+        amountOut = afterBalance - beforeBalance;
+        require(amountOut > 0, Errors.CALL_SWAP_FAILED);
         if (timeLockParams.releaseTime != 0) {
             ITimeLock timeLock = POOL.TIME_LOCK();
             _createAggrement(
@@ -269,11 +266,11 @@ contract PToken is
                 timeLock,
                 target,
                 swapInfo.dstToken,
-                diff
+                amountOut
             );
             target = address(timeLock);
         }
-        IERC20(swapInfo.dstToken).safeTransfer(target, diff);
+        IERC20(swapInfo.dstToken).safeTransfer(target, amountOut);
     }
 
     /// @inheritdoc IPToken

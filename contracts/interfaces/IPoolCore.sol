@@ -346,7 +346,7 @@ interface IPoolCore {
         uint16 referralCode,
         address onBehalfOf,
         bytes32 swapAdapterId,
-        bytes calldata payload
+        bytes calldata swapPayload
     ) external;
 
     /**

@@ -155,7 +155,7 @@ library DataTypes {
         address oracle;
         address priceOracleSentinel;
         SwapAdapter swapAdapter;
-        bytes payload;
+        bytes swapPayload;
     }
 
     struct ExecuteRepayParams {
@@ -233,6 +233,12 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+    }
+
+    struct ValidateSwapParams {
+        SwapAdapter swapAdapter;
+        uint256 amount;
+        address dstReceiver;
     }
 
     struct ValidateLiquidateERC20Params {

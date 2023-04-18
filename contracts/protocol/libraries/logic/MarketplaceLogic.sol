@@ -72,6 +72,7 @@ library MarketplaceLogic {
         address creditToken;
         address creditXTokenAddress;
         uint256 creditAmount;
+        uint256 creditAmountInListingToken;
         uint256 supplyAmount;
         address xTokenAddress;
         uint256 price;
@@ -404,9 +405,7 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars
     ) internal returns (uint256, uint256) {
         uint256 price = vars.price;
-        // TODO: dangerous
-        uint256 downpayment = price -
-            IERC20(vars.listingToken).balanceOf(address(this));
+        uint256 downpayment = price - vars.creditAmountInListingToken;
         if (!vars.isCreditTokenETH) {
             IERC20(vars.creditToken).safeTransferFrom(
                 params.orderInfo.taker,
@@ -449,6 +448,7 @@ library MarketplaceLogic {
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
+        vars.creditAmountInListingToken = vars.creditAmount;
 
         if (vars.listingToken == vars.creditToken) {
             IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
@@ -459,25 +459,29 @@ library MarketplaceLogic {
         } else {
             DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
                 params.swapAdapter.adapter
-            ).getSwapInfo(params.payload);
-
-            // TODO: ValidationLogic.validateSwap(swapInfo, params);
-            IPToken(vars.creditXTokenAddress).swapUnderlyingTo(
-                to,
-                vars.creditAmount,
-                timeLockParams,
-                params.swapAdapter,
-                params.swapPayload,
-                swapInfo
+            ).getSwapInfo(params.swapPayload);
+            ValidationLogic.validateSwap(
+                swapInfo,
+                DataTypes.ValidateSwapParams({
+                    swapAdapter: params.swapAdapter,
+                    amount: vars.creditAmount,
+                    dstReceiver: vars.creditXTokenAddress
+                })
             );
+            vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
+                .swapUnderlyingTo(
+                    to,
+                    vars.creditAmount,
+                    timeLockParams,
+                    params.swapAdapter,
+                    params.swapPayload,
+                    swapInfo
+                );
         }
 
-        if (vars.isCreditTokenETH) {
+        if (vars.isListingTokenETH) {
             // No re-entrancy because it sent to our contract address
-            // TODO: dangerous
-            IWETH(params.weth).withdraw(
-                IERC20(vars.listingToken).balanceOf(address(this))
-            );
+            IWETH(params.weth).withdraw(vars.creditAmountInListingToken);
         }
     }
 
@@ -645,7 +649,7 @@ library MarketplaceLogic {
                     address(0),
                     false
                 ),
-                payload: bytes("")
+                swapPayload: bytes("")
             })
         );
     }
@@ -684,8 +688,11 @@ library MarketplaceLogic {
             : params.credit.token;
         vars.creditAmount = params.credit.amount;
 
-        vars.listingToken = params.orderInfo.consideration[0].token;
-        vars.isListingTokenETH = vars.listingToken == address(0);
+        vars.isListingTokenETH =
+            params.orderInfo.consideration[0].token == address(0);
+        vars.listingToken = vars.isListingTokenETH
+            ? params.weth
+            : params.orderInfo.consideration[0].token;
 
         (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
             params,
@@ -695,9 +702,10 @@ library MarketplaceLogic {
         vars.listingXTokenAddress = ps
             ._reserves[vars.listingToken]
             .xTokenAddress;
+
         // either the seller & buyer decided to not use any credit
         // OR
-        // the creditToken must be listed since otherwise cannot borrow from the pool
+        // the creditToken/listingXToken must be listed since otherwise cannot borrow from the pool
         require(
             (vars.creditAmount == 0 ||
                 vars.creditXTokenAddress != address(0)) &&
@@ -774,12 +782,12 @@ library MarketplaceLogic {
                 Errors.INVALID_ASSET_TYPE
             );
             require(
-                item.token == vars.listingToken,
+                item.token == params.orderInfo.consideration[0].token,
                 Errors.CREDIT_DOES_NOT_MATCH_ORDER
             );
             price += item.startAmount;
 
-            // supplyAmount is a **helper message** from the seller to the protocol
+            // supplyAmount is a **message** from the seller to the protocol
             // to tell us the percentage of received funds to be supplied to be
             // able to transfer NFT out
             //

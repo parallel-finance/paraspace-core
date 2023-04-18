@@ -88,7 +88,7 @@ interface IPToken is
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata payload,
         DataTypes.SwapInfo calldata swapInfo
-    ) external;
+    ) external returns (uint256 amountOut);
 
     /**
      * @notice Handles the underlying received by the xToken after the transfer has been completed.

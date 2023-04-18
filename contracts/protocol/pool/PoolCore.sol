@@ -295,7 +295,7 @@ contract PoolCore is
                     address(0),
                     false
                 ),
-                payload: bytes("")
+                swapPayload: bytes("")
             })
         );
     }
@@ -307,7 +307,7 @@ contract PoolCore is
         uint16 referralCode,
         address onBehalfOf,
         bytes32 swapAdapterId,
-        bytes calldata payload
+        bytes calldata swapPayload
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -326,7 +326,7 @@ contract PoolCore is
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
                 swapAdapter: ps._swapAdapters[swapAdapterId],
-                payload: payload
+                swapPayload: swapPayload
             })
         );
     }

@@ -1216,11 +1216,17 @@ library ValidationLogic {
 
     function validateSwap(
         DataTypes.SwapInfo memory swapInfo,
-        DataTypes.ExecuteBorrowParams memory params
+        DataTypes.ValidateSwapParams memory params
     ) internal view {
-        // TODO: add error codes
-        require(swapInfo.srcToken != swapInfo.dstToken);
-        require(swapInfo.amount == params.amount);
-        require(!params.swapAdapter.paused);
+        require(
+            swapInfo.srcToken != swapInfo.dstToken,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(swapInfo.amount == params.amount, Errors.INVALID_SWAP_PAYLOAD);
+        require(!params.swapAdapter.paused, Errors.SWAP_PROVIDER_PAUSED);
+        require(
+            swapInfo.dstReceiver == params.dstReceiver,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
     }
 }
