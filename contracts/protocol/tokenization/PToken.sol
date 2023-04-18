@@ -19,6 +19,7 @@ import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../interfaces/ISwapAdapter.sol";
+import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -244,6 +245,7 @@ contract PToken is
         uint256 beforeBalance = IERC20(swapInfo.dstToken).balanceOf(
             address(this)
         );
+        Helpers.checkAllowance(swapInfo.dstToken, swapAdapter.router);
         Address.functionDelegateCall(
             swapAdapter.adapter,
             abi.encodeWithSelector(

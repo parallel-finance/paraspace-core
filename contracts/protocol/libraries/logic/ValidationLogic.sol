@@ -1218,6 +1218,7 @@ library ValidationLogic {
         DataTypes.SwapInfo memory swapInfo,
         DataTypes.ExecuteBorrowParams memory params
     ) internal view {
+        // TODO: add error codes
         require(swapInfo.srcToken != swapInfo.dstToken);
         require(swapInfo.amount == params.amount);
         require(!params.swapAdapter.paused);

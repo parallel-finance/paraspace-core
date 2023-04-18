@@ -123,7 +123,6 @@ library BorrowLogic {
                 DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
                     params.swapAdapter.adapter
                 ).getSwapInfo(params.payload);
-
                 ValidationLogic.validateSwap(swapInfo, params);
                 IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
                     params.user,

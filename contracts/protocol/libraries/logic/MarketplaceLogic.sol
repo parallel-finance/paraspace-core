@@ -24,6 +24,8 @@ import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
+import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
+import {Helpers} from "../../../protocol/libraries/helpers/Helpers.sol";
 
 /**
  * @title Marketplace library
@@ -101,6 +103,7 @@ library MarketplaceLogic {
 
         _depositETH(vars, orderInfo);
 
+        // TODO: swapPayload should come from Credit struct
         vars.ethLeft -= _buyWithCredit(
             ps,
             DataTypes.ExecuteMarketplaceParams({
@@ -401,14 +404,19 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars
     ) internal returns (uint256, uint256) {
         uint256 price = vars.price;
-        uint256 downpayment = price - vars.creditAmount;
+        // TODO: dangerous
+        uint256 downpayment = price -
+            IERC20(vars.listingToken).balanceOf(address(this));
         if (!vars.isCreditTokenETH) {
             IERC20(vars.creditToken).safeTransferFrom(
                 params.orderInfo.taker,
                 address(this),
                 downpayment
             );
-            _checkAllowance(vars.creditToken, params.marketplace.operator);
+            Helpers.checkAllowance(
+                vars.creditToken,
+                params.marketplace.operator
+            );
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -442,15 +450,34 @@ library MarketplaceLogic {
         ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
 
-        IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
-            to,
-            vars.creditAmount,
-            timeLockParams
-        );
+        if (vars.listingToken == vars.creditToken) {
+            IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
+                to,
+                vars.creditAmount,
+                timeLockParams
+            );
+        } else {
+            DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
+                params.swapAdapter.adapter
+            ).getSwapInfo(params.payload);
+
+            // TODO: ValidationLogic.validateSwap(swapInfo, params);
+            IPToken(vars.creditXTokenAddress).swapUnderlyingTo(
+                to,
+                vars.creditAmount,
+                timeLockParams,
+                params.swapAdapter,
+                params.swapPayload,
+                swapInfo
+            );
+        }
 
         if (vars.isCreditTokenETH) {
             // No re-entrancy because it sent to our contract address
-            IWETH(params.weth).withdraw(vars.creditAmount);
+            // TODO: dangerous
+            IWETH(params.weth).withdraw(
+                IERC20(vars.listingToken).balanceOf(address(this))
+            );
         }
     }
 
@@ -645,13 +672,6 @@ library MarketplaceLogic {
             vars.listingXTokenAddress,
             vars.supplyAmount
         );
-    }
-
-    function _checkAllowance(address token, address operator) internal {
-        uint256 allowance = IERC20(token).allowance(address(this), operator);
-        if (allowance == 0) {
-            IERC20(token).safeApprove(operator, type(uint256).max);
-        }
     }
 
     function _cache(

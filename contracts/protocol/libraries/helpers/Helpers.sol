@@ -5,6 +5,7 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
+import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 
 /**
  * @title Helpers library
@@ -12,6 +13,7 @@ import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollater
  */
 library Helpers {
     using WadRayMath for uint256;
+    using SafeERC20 for IERC20;
 
     /**
      * @notice Fetches the user current stable and variable debt balances
@@ -35,5 +37,12 @@ library Helpers {
         uint256 multiplier = IAtomicCollateralizableERC721(xTokenAddress)
             .getTraitMultiplier(tokenId);
         return assetPrice.wadMul(multiplier);
+    }
+
+    function checkAllowance(address token, address operator) internal {
+        uint256 allowance = IERC20(token).allowance(address(this), operator);
+        if (allowance == 0) {
+            IERC20(token).safeApprove(operator, type(uint256).max);
+        }
     }
 }
