@@ -58,17 +58,13 @@ library ValidationLogic {
     function validateInitiateBlurExchangeRequest(
         DataTypes.ReserveData storage nftReserve,
         DataTypes.BlurBuyWithCreditRequest calldata request,
-        address weth,
         address oracle
     ) internal view {
         require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
 
+        require(msg.value == request.cashAmount, Errors.INVALID_ETH_VALUE);
         require(
-            msg.value == 0 || msg.value == request.cashAmount,
-            Errors.INVALID_ETH_VALUE
-        );
-        require(
-            request.paymentToken == address(0) || request.paymentToken == weth,
+            request.paymentToken == address(0),
             Errors.INVALID_PAYMENT_TOKEN
         );
 

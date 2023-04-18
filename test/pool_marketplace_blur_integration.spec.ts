@@ -132,56 +132,6 @@ describe("BLUR integration tests", () => {
     almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
   });
 
-  it("eth request can be initiated by weth and fulfilled", async () => {
-    const {
-      pool,
-      users: [user1, user2],
-      weth,
-      bayc,
-      nBAYC,
-    } = await loadFixture(fixture);
-
-    const beforeInitiateBalance = await user1.signer.getBalance();
-    const beforeInitiateWETHBalance = await weth.balanceOf(user1.address);
-    expect(await wethDebtToken.balanceOf(user1.address)).to.be.eq(0);
-    const keeperBeforeInitiateBalance = await user2.signer.getBalance();
-
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .initiateBlurExchangeRequest(ETHExchangeRequest)
-    );
-
-    const afterInitiateBalance = await user1.signer.getBalance();
-    const afterInitiateWETHBalance = await weth.balanceOf(user1.address);
-    almostEqual(afterInitiateBalance, beforeInitiateBalance);
-    almostEqual(
-      beforeInitiateWETHBalance.sub(afterInitiateWETHBalance),
-      parseEther("50")
-    );
-    const keeperAfterInitiateBalance = await user2.signer.getBalance();
-    almostEqual(
-      keeperAfterInitiateBalance.sub(keeperBeforeInitiateBalance),
-      parseEther("90")
-    );
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
-
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .fulfillBlurExchangeRequest(ETHExchangeRequest)
-    );
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(0);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(1);
-    const afterFulfillBalance = await user1.signer.getBalance();
-    expect(afterFulfillBalance.sub(afterInitiateBalance)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
-  });
-
   it("eth request can be rejected", async () => {
     const {
       pool,
@@ -203,6 +153,7 @@ describe("BLUR integration tests", () => {
     expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
     expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
     almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
+    expect(await nBAYC.balanceOf(user1.address)).to.be.eq(1);
 
     await waitForTx(
       await pool
@@ -216,142 +167,32 @@ describe("BLUR integration tests", () => {
     expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
     expect(await wethDebtToken.balanceOf(user1.address)).to.be.eq(0);
     almostEqual(await pWETH.balanceOf(user1.address), parseEther("50"));
+    expect(await nBAYC.balanceOf(user1.address)).to.be.eq(0);
   });
 
-  it("weth request can be initiated by weth and fulfilled", async () => {
+  it("eth request can not be initiated by weth", async () => {
     const {
       pool,
-      users: [user1, user2],
-      weth,
-      bayc,
-      nBAYC,
-      pWETH,
+      users: [user1],
     } = await loadFixture(fixture);
-
-    const beforeInitiateBalance = await user1.signer.getBalance();
-    const beforeInitiateWETHBalance = await weth.balanceOf(user1.address);
-    expect(await wethDebtToken.balanceOf(user1.address)).to.be.eq(0);
-    const keeperBeforeInitiateWETHBalance = await weth.balanceOf(user2.address);
-
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
-    );
-
-    const afterInitiateBalance = await user1.signer.getBalance();
-    const afterInitiateWETHBalance = await weth.balanceOf(user1.address);
-    almostEqual(afterInitiateBalance, beforeInitiateBalance);
-    almostEqual(
-      beforeInitiateWETHBalance.sub(afterInitiateWETHBalance),
-      parseEther("50")
-    );
-    const keeperAfterInitiateWETHBalance = await weth.balanceOf(user2.address);
-    almostEqual(
-      keeperAfterInitiateWETHBalance.sub(keeperBeforeInitiateWETHBalance),
-      parseEther("90")
-    );
-    expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
-
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .fulfillBlurExchangeRequest(WETHExchangeRequest)
-    );
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(0);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(1);
-    expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
+    await expect(
+      pool.connect(user1.signer).initiateBlurExchangeRequest(ETHExchangeRequest)
+    ).to.be.revertedWith(ProtocolErrors.INVALID_ETH_VALUE);
   });
 
-  it("weth request can be initiated by eth and fulfilled", async () => {
+  it("weth request can not be initiated", async () => {
     const {
       pool,
-      users: [user1, user2],
-      weth,
-      bayc,
-      nBAYC,
-      pWETH,
+      users: [user1],
     } = await loadFixture(fixture);
 
-    const beforeInitiateBalance = await user1.signer.getBalance();
-    const beforeInitiateWETHBalance = await weth.balanceOf(user1.address);
-    expect(await wethDebtToken.balanceOf(user1.address)).to.be.eq(0);
-    const keeperBeforeInitiateWETHBalance = await weth.balanceOf(user2.address);
-
-    await waitForTx(
-      await pool
+    await expect(
+      pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest(WETHExchangeRequest, {
           value: parseEther("50"),
         })
-    );
-
-    const afterInitiateBalance = await user1.signer.getBalance();
-    const afterInitiateWETHBalance = await weth.balanceOf(user1.address);
-    almostEqual(
-      beforeInitiateBalance.sub(afterInitiateBalance),
-      parseEther("50")
-    );
-    almostEqual(beforeInitiateWETHBalance, afterInitiateWETHBalance);
-    const keeperAfterInitiateWETHBalance = await weth.balanceOf(user2.address);
-    almostEqual(
-      keeperAfterInitiateWETHBalance.sub(keeperBeforeInitiateWETHBalance),
-      parseEther("90")
-    );
-    expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
-
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .fulfillBlurExchangeRequest(WETHExchangeRequest)
-    );
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(0);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(1);
-    expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
-  });
-
-  it("weth request can be rejected", async () => {
-    const {
-      pool,
-      users: [user1, user2],
-      pWETH,
-      bayc,
-      nBAYC,
-    } = await loadFixture(fixture);
-
-    await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
-    );
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
-    expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
-
-    await waitForTx(
-      await pool
-        .connect(user2.signer)
-        .rejectBlurExchangeRequest(WETHExchangeRequest)
-    );
-
-    expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
-    expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
-    expect(await wethDebtToken.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await pWETH.balanceOf(user1.address), parseEther("50"));
+    ).to.be.revertedWith(ProtocolErrors.INVALID_PAYMENT_TOKEN);
   });
 
   it("only pool admin can enable blur exchange", async () => {
@@ -388,22 +229,24 @@ describe("BLUR integration tests", () => {
   it("only request initiator can initiate the request", async () => {
     const {
       pool,
-      weth,
       users: [user1, user2],
     } = await loadFixture(fixture);
 
     await expect(
       pool
         .connect(user2.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_INITIATOR);
 
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
     );
-    expect(await weth.balanceOf(user2.address)).to.be.eq(parseEther("90"));
   });
 
   it("only keeper can fulfill the request", async () => {
@@ -415,11 +258,13 @@ describe("BLUR integration tests", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
     );
 
     await expect(
-      pool.connect(user3.signer).fulfillBlurExchangeRequest(WETHExchangeRequest)
+      pool.connect(user3.signer).fulfillBlurExchangeRequest(ETHExchangeRequest)
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_KEEPER);
   });
 
@@ -432,11 +277,13 @@ describe("BLUR integration tests", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
     );
 
     await expect(
-      pool.connect(user3.signer).rejectBlurExchangeRequest(WETHExchangeRequest)
+      pool.connect(user3.signer).rejectBlurExchangeRequest(ETHExchangeRequest)
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_KEEPER);
   });
 
@@ -450,7 +297,9 @@ describe("BLUR integration tests", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
     );
 
     await expect(
@@ -461,14 +310,13 @@ describe("BLUR integration tests", () => {
   it("listing price must > floor price * ls when initiate request", async () => {
     const {
       pool,
-      weth,
       bayc,
       users: [user1],
     } = await loadFixture(fixture);
 
     const invalidRequest = {
       initiator: user1.address,
-      paymentToken: weth.address,
+      paymentToken: zeroAddress(),
       cashAmount: parseEther("40"),
       borrowAmount: parseEther("40"),
       collection: bayc.address,
@@ -476,7 +324,9 @@ describe("BLUR integration tests", () => {
     };
 
     await expect(
-      pool.connect(user1.signer).initiateBlurExchangeRequest(invalidRequest)
+      pool.connect(user1.signer).initiateBlurExchangeRequest(invalidRequest, {
+        value: parseEther("40"),
+      })
     ).to.be.revertedWith(ProtocolErrors.INVALID_LISTING_PRICE);
   });
 
@@ -504,12 +354,16 @@ describe("BLUR integration tests", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
     );
     await expect(
       pool
         .connect(user1.signer)
-        .initiateBlurExchangeRequest(WETHExchangeRequest)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
     ).to.be.revertedWith(ProtocolErrors.INVALID_REQUEST_STATUS);
   });
 
@@ -520,7 +374,7 @@ describe("BLUR integration tests", () => {
     } = await loadFixture(fixture);
 
     await expect(
-      pool.connect(user2.signer).fulfillBlurExchangeRequest(WETHExchangeRequest)
+      pool.connect(user2.signer).fulfillBlurExchangeRequest(ETHExchangeRequest)
     ).to.be.revertedWith(ProtocolErrors.INVALID_REQUEST_STATUS);
   });
 
@@ -531,7 +385,7 @@ describe("BLUR integration tests", () => {
     } = await loadFixture(fixture);
 
     await expect(
-      pool.connect(user2.signer).rejectBlurExchangeRequest(WETHExchangeRequest)
+      pool.connect(user2.signer).rejectBlurExchangeRequest(ETHExchangeRequest)
     ).to.be.revertedWith(ProtocolErrors.INVALID_REQUEST_STATUS);
   });
 });

@@ -6,6 +6,7 @@ import {Errors} from "../helpers/Errors.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {INToken} from "../../../interfaces/INToken.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {Helpers} from "../helpers/Helpers.sol";
@@ -14,7 +15,7 @@ library PoolExtendedLogic {
     using Math for uint256;
     using UserConfiguration for DataTypes.UserConfigurationMap;
 
-    event ReserveUsedAsCollateralEnabled(
+    event ReserveUsedAsCollateralDisabled(
         address indexed reserve,
         address indexed user
     );
@@ -91,5 +92,31 @@ library PoolExtendedLogic {
                     usePTokens: false
                 })
             );
+    }
+
+    function burnUserNToken(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        uint256[] memory tokenIds,
+        bool releaseUnderlying,
+        address user
+    ) external {
+        DataTypes.ReserveData storage nftReserve = ps._reserves[asset];
+        address nTokenAddress = nftReserve.xTokenAddress;
+        // no time lock needed here
+        DataTypes.TimeLockParams memory timeLockParams;
+        (, uint64 collateralizedBalance) = INToken(nTokenAddress).burn(
+            user,
+            releaseUnderlying ? user : nTokenAddress,
+            tokenIds,
+            timeLockParams
+        );
+        if (collateralizedBalance == 0) {
+            DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+                user
+            ];
+            userConfig.setUsingAsCollateral(nftReserve.id, false);
+            emit ReserveUsedAsCollateralDisabled(asset, user);
+        }
     }
 }

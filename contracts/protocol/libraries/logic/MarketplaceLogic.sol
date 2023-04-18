@@ -164,7 +164,6 @@ library MarketplaceLogic {
             Errors.INVALID_REQUEST_STATUS
         );
 
-        bool isETH = request.paymentToken == address(0);
         uint256 listingPrice = request.cashAmount + request.borrowAmount;
         address weth = poolAddressProvider.getWETH();
         address oracle = poolAddressProvider.getPriceOracle();
@@ -175,7 +174,6 @@ library MarketplaceLogic {
         ValidationLogic.validateInitiateBlurExchangeRequest(
             ps._reserves[request.collection],
             request,
-            weth,
             oracle
         );
 
@@ -204,59 +202,33 @@ library MarketplaceLogic {
                 ps._reservesList,
                 userConfig,
                 DataTypes.ExecuteBorrowParams({
-            asset: weth,
-            user: request.initiator,
-            onBehalfOf: request.initiator,
-            amount: request.borrowAmount,
-            referralCode: 0,
-            releaseUnderlying: false,
-            reservesCount: ps._reservesCount,
-            oracle: oracle,
-            priceOracleSentinel: poolAddressProvider
-            .getPriceOracleSentinel()
-            })
+                    asset: weth,
+                    user: request.initiator,
+                    onBehalfOf: request.initiator,
+                    amount: request.borrowAmount,
+                    referralCode: 0,
+                    releaseUnderlying: false,
+                    reservesCount: ps._reservesCount,
+                    oracle: oracle,
+                    priceOracleSentinel: poolAddressProvider
+                        .getPriceOracleSentinel()
+                })
             );
         }
 
         //transfer currency to keeper
         {
-            address keeper = ps._blurExchangeKeeper;
-            if (request.cashAmount > 0 && msg.value == 0) {
-                IWETH(weth).transferFrom(
-                    request.initiator,
-                    isETH ? address(this) : keeper,
-                    request.cashAmount
-                );
-            }
             if (request.borrowAmount > 0) {
                 DataTypes.TimeLockParams memory timeLockParams;
                 IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
-                    isETH ? address(this) : keeper,
+                    address(this),
                     request.borrowAmount,
                     timeLockParams
                 );
+                IWETH(weth).withdraw(request.borrowAmount);
             }
-            if (isETH) {
-                uint256 withdrawAmount = (msg.value == 0)
-                    ? listingPrice
-                    : request.borrowAmount;
-                if (withdrawAmount > 0) {
-                    IWETH(weth).withdraw(withdrawAmount);
-                }
-                Address.sendValue(payable(keeper), listingPrice);
-            } else {
-                uint256 depositAmount = (msg.value == 0)
-                    ? 0
-                    : request.cashAmount;
-                if (depositAmount > 0) {
-                    IWETH(weth).deposit{value: depositAmount}();
-                    IWETH(weth).transferFrom(
-                        request.initiator,
-                        keeper,
-                        depositAmount
-                    );
-                }
-            }
+            address keeper = ps._blurExchangeKeeper;
+            Address.sendValue(payable(keeper), listingPrice);
         }
 
         //update status
@@ -326,24 +298,29 @@ library MarketplaceLogic {
         address keeper = ps._blurExchangeKeeper;
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
 
+        //repay and supply weth for user
         address weth = poolAddressProvider.getWETH();
         uint256 totalAmount = request.cashAmount + request.borrowAmount;
-        address payerForRepayAndSupply = keeper;
-        if (request.paymentToken == address(0)) {
-            require(msg.value == totalAmount, Errors.INVALID_ETH_VALUE);
-            IWETH(weth).deposit{value: totalAmount}();
-            payerForRepayAndSupply = address(this);
-        }
-
+        require(msg.value == totalAmount, Errors.INVALID_ETH_VALUE);
+        IWETH(weth).deposit{value: totalAmount}();
         PoolExtendedLogic.repayAndSupplyForUser(
             ps,
             weth,
-            payerForRepayAndSupply,
+            address(this),
             request.initiator,
             totalAmount
         );
 
         //burn nToken.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = request.tokenId;
+        PoolExtendedLogic.burnUserNToken(
+            ps,
+            request.collection,
+            tokenIds,
+            false,
+            request.initiator
+        );
 
         ps._blurExchangeRequestStatus[requestHash] = DataTypes
             .BlurBuyWithCreditRequestStatus
