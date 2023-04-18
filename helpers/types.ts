@@ -425,6 +425,7 @@ export enum ProtocolErrors {
   NTOKEN_NOT_OWNS_UNDERLYING = "140", //The ntoken does not owns the underlying nft
   CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
   ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
+  BLUR_EXCHANGE_REQUEST_DISABLED = "144", //blur exchange request disabled
 }
 
 export type tEthereumAddress = string;

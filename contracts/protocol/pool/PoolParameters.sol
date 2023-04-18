@@ -68,6 +68,14 @@ contract PoolParameters is
         _;
     }
 
+    /**
+     * @dev Only emergency or pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyEmergencyOrPoolAdmin() {
+        _onlyPoolOrEmergencyAdmin();
+        _;
+    }
+
     function _onlyPoolConfigurator() internal view virtual {
         require(
             ADDRESSES_PROVIDER.getPoolConfigurator() == msg.sender,
@@ -81,6 +89,17 @@ contract PoolParameters is
                 msg.sender
             ),
             Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function _onlyPoolOrEmergencyAdmin() internal view {
+        IACLManager aclManager = IACLManager(
+            ADDRESSES_PROVIDER.getACLManager()
+        );
+        require(
+            aclManager.isPoolAdmin(msg.sender) ||
+                aclManager.isEmergencyAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
         );
     }
 
@@ -363,11 +382,20 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function enableBlurExchange(bool isEnable) external onlyPoolAdmin {
+    function enableBlurExchange() external onlyPoolAdmin {
         DataTypes.PoolStorage storage ps = poolStorage();
-        if (ps._blurExchangeEnable != isEnable) {
-            ps._blurExchangeEnable = isEnable;
-            emit BlurExchangeEnableStatusUpdated(isEnable);
+        if (!ps._blurExchangeEnable) {
+            ps._blurExchangeEnable = true;
+            emit BlurExchangeEnableStatusUpdated(true);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function disableBlurExchange() external onlyEmergencyOrPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (ps._blurExchangeEnable) {
+            ps._blurExchangeEnable = false;
+            emit BlurExchangeEnableStatusUpdated(false);
         }
     }
 

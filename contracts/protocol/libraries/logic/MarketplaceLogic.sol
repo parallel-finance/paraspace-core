@@ -178,6 +178,7 @@ library MarketplaceLogic {
         ValidationLogic.validateInitiateBlurExchangeRequest(
             ps._reserves[request.collection],
             request,
+            ps._blurExchangeEnable,
             keeper,
             requestFee,
             ps._blurOngoingRequestAmount,

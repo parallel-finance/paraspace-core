@@ -221,10 +221,14 @@ interface IPoolParameters {
         returns (uint256 ltv, uint256 lt);
 
     /**
-     * @notice update blur exchange enable status, only pool admin call this function
-     * @param isEnable The new status
+     * @notice enable blur exchange request, only pool admin call this function
      **/
-    function enableBlurExchange(bool isEnable) external;
+    function enableBlurExchange() external;
+
+    /**
+     * @notice disable blur exchange request, only pool admin or emergency admin call this function
+     **/
+    function disableBlurExchange() external;
 
     /**
      * @notice update blur ongoing request limit amount

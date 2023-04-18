@@ -28,9 +28,7 @@ describe("BLUR integration tests", () => {
       poolAdmin,
     } = testEnv;
 
-    await waitForTx(
-      await pool.connect(poolAdmin.signer).enableBlurExchange(true)
-    );
+    await waitForTx(await pool.connect(poolAdmin.signer).enableBlurExchange());
 
     await waitForTx(
       await pool.connect(poolAdmin.signer).setBlurOngoingRequestLimit(2)
@@ -209,19 +207,23 @@ describe("BLUR integration tests", () => {
     ).to.be.revertedWith(ProtocolErrors.INVALID_PAYMENT_TOKEN);
   });
 
-  it("only pool admin can enable blur exchange", async () => {
+  it("only pool admin can enable/disable blur exchange", async () => {
     const {
       pool,
       users: [user1],
       poolAdmin,
     } = await loadFixture(fixture);
     await expect(
-      pool.connect(user1.signer).enableBlurExchange(false)
+      pool.connect(user1.signer).enableBlurExchange()
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
 
-    await waitForTx(
-      await pool.connect(poolAdmin.signer).enableBlurExchange(false)
-    );
+    await waitForTx(await pool.connect(poolAdmin.signer).enableBlurExchange());
+
+    await expect(
+      pool.connect(user1.signer).disableBlurExchange()
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN);
+
+    await waitForTx(await pool.connect(poolAdmin.signer).disableBlurExchange());
   });
 
   it("only pool admin can update request limit", async () => {
@@ -235,7 +237,7 @@ describe("BLUR integration tests", () => {
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
 
     await waitForTx(
-      await pool.connect(poolAdmin.signer).enableBlurExchange(false)
+      await pool.connect(poolAdmin.signer).setBlurOngoingRequestLimit(5)
     );
   });
 
@@ -463,5 +465,23 @@ describe("BLUR integration tests", () => {
     await expect(
       pool.connect(user2.signer).rejectBlurExchangeRequest(ETHExchangeRequest)
     ).to.be.revertedWith(ProtocolErrors.INVALID_REQUEST_STATUS);
+  });
+
+  it("initiate request failed when blur exchange request disabled", async () => {
+    const {
+      pool,
+      users: [user1],
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await waitForTx(await pool.connect(poolAdmin.signer).disableBlurExchange());
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
+    ).to.be.revertedWith(ProtocolErrors.BLUR_EXCHANGE_REQUEST_DISABLED);
   });
 });

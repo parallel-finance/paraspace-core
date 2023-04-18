@@ -58,6 +58,7 @@ library ValidationLogic {
     function validateInitiateBlurExchangeRequest(
         DataTypes.ReserveData storage nftReserve,
         DataTypes.BlurBuyWithCreditRequest calldata request,
+        bool isEnable,
         address keeper,
         uint256 requestFee,
         uint8 ongoingRequestAmount,
@@ -65,6 +66,7 @@ library ValidationLogic {
         address oracle
     ) internal view {
         require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        require(isEnable, Errors.BLUR_EXCHANGE_REQUEST_DISABLED);
         require(keeper != address(0), Errors.INVALID_KEEPER_ADDRESS);
         require(
             ongoingRequestAmount <= ongoingRequestLimit,
