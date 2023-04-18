@@ -372,6 +372,16 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function setBlurOngoingRequestLimit(uint8 limit) external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint8 oldValue = ps._blurOngoingRequestLimit;
+        if (oldValue != limit) {
+            ps._blurOngoingRequestLimit = limit;
+            emit BlurOngoingRequestLimitUpdated(oldValue, limit);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
     function setBlurExchangeKeeper(address keeper) external onlyPoolAdmin {
         require(keeper != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         DataTypes.PoolStorage storage ps = poolStorage();

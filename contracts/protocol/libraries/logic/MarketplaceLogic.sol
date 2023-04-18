@@ -167,13 +167,18 @@ library MarketplaceLogic {
         uint256 listingPrice = request.cashAmount + request.borrowAmount;
         address weth = poolAddressProvider.getWETH();
         address oracle = poolAddressProvider.getPriceOracle();
+        address keeper = ps._blurExchangeKeeper;
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
             request.initiator
         ];
 
+        ps._blurOngoingRequestAmount += 1;
         ValidationLogic.validateInitiateBlurExchangeRequest(
             ps._reserves[request.collection],
             request,
+            keeper,
+            ps._blurOngoingRequestAmount,
+            ps._blurOngoingRequestLimit,
             oracle
         );
 
@@ -227,7 +232,6 @@ library MarketplaceLogic {
                 );
                 IWETH(weth).withdraw(request.borrowAmount);
             }
-            address keeper = ps._blurExchangeKeeper;
             Address.sendValue(payable(keeper), listingPrice);
         }
 
@@ -261,6 +265,9 @@ library MarketplaceLogic {
 
         address keeper = ps._blurExchangeKeeper;
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
+
+        ps._blurOngoingRequestAmount -= 1;
+
         DataTypes.ReserveData storage reserve = ps._reserves[
             request.collection
         ];
@@ -297,6 +304,8 @@ library MarketplaceLogic {
 
         address keeper = ps._blurExchangeKeeper;
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
+
+        ps._blurOngoingRequestAmount -= 1;
 
         //repay and supply weth for user
         address weth = poolAddressProvider.getWETH();

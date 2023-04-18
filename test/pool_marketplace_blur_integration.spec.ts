@@ -33,6 +33,10 @@ describe("BLUR integration tests", () => {
     );
 
     await waitForTx(
+      await pool.connect(poolAdmin.signer).setBlurOngoingRequestLimit(2)
+    );
+
+    await waitForTx(
       await pool.connect(poolAdmin.signer).setBlurExchangeKeeper(user2.address)
     );
 
@@ -210,6 +214,21 @@ describe("BLUR integration tests", () => {
     );
   });
 
+  it("only pool admin can update request limit", async () => {
+    const {
+      pool,
+      users: [user1],
+      poolAdmin,
+    } = await loadFixture(fixture);
+    await expect(
+      pool.connect(user1.signer).setBlurOngoingRequestLimit(5)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
+
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).enableBlurExchange(false)
+    );
+  });
+
   it("only pool admin can set blur exchange keeper", async () => {
     const {
       pool,
@@ -328,6 +347,38 @@ describe("BLUR integration tests", () => {
         value: parseEther("40"),
       })
     ).to.be.revertedWith(ProtocolErrors.INVALID_LISTING_PRICE);
+  });
+
+  it("ongoing request count must <= limit", async () => {
+    const {
+      pool,
+      users: [user1],
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setBlurOngoingRequestLimit(1)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
+    );
+
+    ETHExchangeRequest.tokenId = 1;
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
+    ).to.be.revertedWith(ProtocolErrors.ONGOING_REQUEST_AMOUNT_EXCEEDED);
+
+    ETHExchangeRequest.tokenId = 0;
   });
 
   it("eth request reverted when transaction value is not equal with cash value", async () => {

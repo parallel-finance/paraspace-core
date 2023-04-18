@@ -134,4 +134,6 @@ library Errors {
     string public constant CALLER_NOT_KEEPER = "139"; //The caller of the function is not keeper
     string public constant NTOKEN_NOT_OWNS_UNDERLYING = "140"; //The ntoken does not owns the underlying nft
     string public constant CALLER_NOT_INITIATOR = "141"; //The caller of the function is not the request initiator
+    string public constant INVALID_KEEPER_ADDRESS = "142"; //invalid keeper address to receive money
+    string public constant ONGOING_REQUEST_AMOUNT_EXCEEDED = "143"; //ongoing request amount exceeds limit
 }

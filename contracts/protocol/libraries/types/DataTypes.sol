@@ -405,6 +405,10 @@ library DataTypes {
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
         //identified if blur exchange is enabled
         bool _blurExchangeEnable;
+        // max amount of blur ongoing request, 0 means no limit.
+        uint8 _blurOngoingRequestLimit;
+        // the amount of blur ongoing request
+        uint8 _blurOngoingRequestAmount;
         //Blur exchange keeper
         address _blurExchangeKeeper;
         // Map of BuyWithCreditRequest status

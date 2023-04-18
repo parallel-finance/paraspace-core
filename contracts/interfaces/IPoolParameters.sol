@@ -37,6 +37,11 @@ interface IPoolParameters {
     event BlurExchangeEnableStatusUpdated(bool isEnable);
 
     /**
+     * @dev Emitted when the limit amount of blur ongoing request update
+     **/
+    event BlurOngoingRequestLimitUpdated(uint256 oldValue, uint256 newValue);
+
+    /**
      * @dev Emitted when the blur exchange keeper address update
      **/
     event BlurExchangeKeeperUpdated(address keeper);
@@ -215,6 +220,12 @@ interface IPoolParameters {
      * @param isEnable The new status
      **/
     function enableBlurExchange(bool isEnable) external;
+
+    /**
+     * @notice update blur ongoing request limit amount
+     * @param limit The new limit amount
+     **/
+    function setBlurOngoingRequestLimit(uint8 limit) external;
 
     /**
      * @notice update blur exchange enable status, only pool admin call this function

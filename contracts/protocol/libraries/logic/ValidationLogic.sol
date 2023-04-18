@@ -58,9 +58,17 @@ library ValidationLogic {
     function validateInitiateBlurExchangeRequest(
         DataTypes.ReserveData storage nftReserve,
         DataTypes.BlurBuyWithCreditRequest calldata request,
+        address keeper,
+        uint8 ongoingRequestAmount,
+        uint8 ongoingRequestLimit,
         address oracle
     ) internal view {
         require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        require(keeper != address(0), Errors.INVALID_KEEPER_ADDRESS);
+        require(
+            ongoingRequestAmount <= ongoingRequestLimit,
+            Errors.ONGOING_REQUEST_AMOUNT_EXCEEDED
+        );
 
         require(msg.value == request.cashAmount, Errors.INVALID_ETH_VALUE);
         require(

@@ -424,6 +424,7 @@ export enum ProtocolErrors {
   CALLER_NOT_KEEPER = "139", //The caller of the function is not keeper
   NTOKEN_NOT_OWNS_UNDERLYING = "140", //The ntoken does not owns the underlying nft
   CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
+  ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
 }
 
 export type tEthereumAddress = string;
