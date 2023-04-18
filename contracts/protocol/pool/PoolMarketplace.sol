@@ -81,6 +81,31 @@ contract PoolMarketplace is
             marketplaceId,
             payload,
             credit,
+            DataTypes.SwapAdapter(address(0), address(0), false),
+            bytes(""),
+            ADDRESSES_PROVIDER,
+            referralCode
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function buyAnyWithCredit(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        DataTypes.Credit calldata credit,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload,
+        uint16 referralCode
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBuyWithCredit(
+            ps,
+            marketplaceId,
+            payload,
+            credit,
+            ps._swapAdapters[swapAdapterId],
+            swapPayload,
             ADDRESSES_PROVIDER,
             referralCode
         );
@@ -91,6 +116,8 @@ contract PoolMarketplace is
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
+        DataTypes.SwapAdapter[] calldata swapAdapters,
+        bytes[] calldata swapPayloads,
         uint16 referralCode
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
@@ -100,6 +127,8 @@ contract PoolMarketplace is
             marketplaceIds,
             payloads,
             credits,
+            swapAdapters,
+            swapPayloads,
             ADDRESSES_PROVIDER,
             referralCode
         );

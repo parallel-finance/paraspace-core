@@ -38,6 +38,15 @@ interface IPoolMarketplace {
         uint16 referralCode
     ) external payable;
 
+    function buyAnyWithCredit(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        DataTypes.Credit calldata credit,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload,
+        uint16 referralCode
+    ) external payable;
+
     /**
      * @notice Implements the batchBuyWithCredit feature. BuyWithCredit allows users to buy NFT from various NFT marketplaces
      * including OpenSea, LooksRare, X2Y2 etc. Users can use NFT's credit and will need to pay at most (1 - LTV) * $NFT
@@ -51,6 +60,8 @@ interface IPoolMarketplace {
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
+        DataTypes.SwapAdapter[] calldata swapAdapters,
+        bytes[] calldata swapPayloads,
         uint16 referralCode
     ) external payable;
 

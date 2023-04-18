@@ -66,7 +66,6 @@ library MarketplaceLogic {
 
     struct MarketplaceLocalVars {
         bool isListingTokenETH;
-        bool isCreditTokenETH;
         address listingToken;
         address listingXTokenAddress;
         address creditToken;
@@ -80,6 +79,8 @@ library MarketplaceLogic {
         uint256 ethLeft;
         bytes32 marketplaceId;
         bytes payload;
+        DataTypes.SwapAdapter swapAdapter;
+        bytes swapPayload;
         DataTypes.Marketplace marketplace;
         DataTypes.OrderInfo orderInfo;
     }
@@ -89,20 +90,22 @@ library MarketplaceLogic {
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
         MarketplaceLocalVars memory vars;
 
         vars.weth = poolAddressProvider.getWETH();
-        DataTypes.Marketplace memory marketplace = poolAddressProvider
-            .getMarketplace(marketplaceId);
-        DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(payload);
-        orderInfo.taker = msg.sender;
+        vars.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
+        vars.orderInfo = IMarketplace(vars.marketplace.adapter).getAskOrderInfo(
+            payload
+        );
+        vars.orderInfo.taker = msg.sender;
         vars.ethLeft = msg.value;
 
-        _depositETH(vars, orderInfo);
+        _depositETH(vars, vars.orderInfo);
 
         // TODO: swapPayload should come from Credit struct
         vars.ethLeft -= _buyWithCredit(
@@ -112,20 +115,16 @@ library MarketplaceLogic {
                 payload: payload,
                 credit: credit,
                 ethLeft: vars.ethLeft,
-                marketplace: marketplace,
-                orderInfo: orderInfo,
+                marketplace: vars.marketplace,
+                orderInfo: vars.orderInfo,
                 weth: vars.weth,
                 referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
                 priceOracleSentinel: poolAddressProvider
                     .getPriceOracleSentinel(),
-                swapAdapter: DataTypes.SwapAdapter(
-                    address(0),
-                    address(0),
-                    false
-                ),
-                swapPayload: bytes("")
+                swapAdapter: swapAdapter,
+                swapPayload: swapPayload
             })
         );
 
@@ -183,6 +182,8 @@ library MarketplaceLogic {
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
+        DataTypes.SwapAdapter[] calldata swapAdapters,
+        bytes[] calldata swapPayloads,
         IPoolAddressesProvider poolAddressProvider,
         uint16 referralCode
     ) external {
@@ -191,7 +192,9 @@ library MarketplaceLogic {
         vars.weth = poolAddressProvider.getWETH();
         require(
             marketplaceIds.length == payloads.length &&
-                payloads.length == credits.length,
+                swapAdapters.length == payloads.length &&
+                swapPayloads.length == payloads.length &&
+                credits.length == payloads.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         vars.ethLeft = msg.value;
@@ -199,14 +202,16 @@ library MarketplaceLogic {
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
             vars.marketplaceId = marketplaceIds[i];
             vars.payload = payloads[i];
+            vars.swapAdapter = swapAdapters[i];
+            vars.swapPayload = swapPayloads[i];
             DataTypes.Credit memory credit = credits[i];
 
-            DataTypes.Marketplace memory marketplace = poolAddressProvider
-                .getMarketplace(vars.marketplaceId);
-            DataTypes.OrderInfo memory orderInfo = IMarketplace(
-                marketplace.adapter
-            ).getAskOrderInfo(vars.payload);
-            orderInfo.taker = msg.sender;
+            vars.marketplace = poolAddressProvider.getMarketplace(
+                vars.marketplaceId
+            );
+            vars.orderInfo = IMarketplace(vars.marketplace.adapter)
+                .getAskOrderInfo(vars.payload);
+            vars.orderInfo.taker = msg.sender;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
             // this also means that the parameters order is very important
@@ -222,7 +227,7 @@ library MarketplaceLogic {
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
-            _depositETH(vars, orderInfo);
+            _depositETH(vars, vars.orderInfo);
 
             vars.ethLeft -= _buyWithCredit(
                 ps,
@@ -231,20 +236,16 @@ library MarketplaceLogic {
                     payload: vars.payload,
                     credit: credit,
                     ethLeft: vars.ethLeft,
-                    marketplace: marketplace,
-                    orderInfo: orderInfo,
+                    marketplace: vars.marketplace,
+                    orderInfo: vars.orderInfo,
                     weth: vars.weth,
                     referralCode: referralCode,
                     reservesCount: reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
                     priceOracleSentinel: poolAddressProvider
                         .getPriceOracleSentinel(),
-                    swapAdapter: DataTypes.SwapAdapter(
-                        address(0),
-                        address(0),
-                        false
-                    ),
-                    swapPayload: bytes("")
+                    swapAdapter: vars.swapAdapter,
+                    swapPayload: vars.swapPayload
                 })
             );
         }
@@ -406,7 +407,7 @@ library MarketplaceLogic {
     ) internal returns (uint256, uint256) {
         uint256 price = vars.price;
         uint256 downpayment = price - vars.creditAmountInListingToken;
-        if (!vars.isCreditTokenETH) {
+        if (!vars.isListingTokenETH) {
             IERC20(vars.creditToken).safeTransferFrom(
                 params.orderInfo.taker,
                 address(this),
@@ -682,10 +683,7 @@ library MarketplaceLogic {
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view returns (MarketplaceLocalVars memory vars) {
-        vars.isCreditTokenETH = params.credit.token == address(0);
-        vars.creditToken = vars.isCreditTokenETH
-            ? params.weth
-            : params.credit.token;
+        vars.creditToken = params.credit.token;
         vars.creditAmount = params.credit.amount;
 
         vars.isListingTokenETH =
