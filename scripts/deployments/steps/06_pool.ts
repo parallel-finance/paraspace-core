@@ -24,11 +24,14 @@ export const step_06 = async (verify = false) => {
       poolParameters,
       poolMarketplace,
       poolApeStaking,
+      poolPositionMover,
       poolCoreSelectors,
       poolParametersSelectors,
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
+      poolPositionMoverSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
+
     const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
       await deployPoolParaProxyInterfaces(verify);
 
@@ -54,6 +57,21 @@ export const step_06 = async (verify = false) => {
             implAddress: poolMarketplace.address,
             action: 0,
             functionSelectors: poolMarketplaceSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
+
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        [
+          {
+            implAddress: poolPositionMover.address,
+            action: 0,
+            functionSelectors: poolPositionMoverSelectors,
           },
         ],
         ZERO_ADDRESS,

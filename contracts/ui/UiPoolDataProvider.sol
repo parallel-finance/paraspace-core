@@ -30,6 +30,8 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
 import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
+import {IStakefishValidator} from "../interfaces/IStakefishValidator.sol";
+import {INTokenStakefish} from "../interfaces/INTokenStakefish.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -299,6 +301,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             address asset = nTokenAddresses[i];
             uint256 size = tokenIds[i].length;
             tokenData[i] = new DataTypes.NTokenData[](size);
+            XTokenType xTokenType = IXTokenType(asset).getXTokenType();
 
             for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
@@ -309,6 +312,12 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 tokenData[i][j].multiplier = IAtomicCollateralizableERC721(
                     asset
                 ).getTraitMultiplier(tokenIds[i][j]);
+
+                if (xTokenType == XTokenType.NTokenStakefish) {
+                    tokenData[i][j].stakefishNTokenData = INTokenStakefish(
+                        asset
+                    ).getNFTData(tokenIds[i][j]);
+                }
             }
         }
 
