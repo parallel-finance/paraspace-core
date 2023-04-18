@@ -6,8 +6,6 @@ import {MerkleProof} from "../dependencies/openzeppelin/contracts/MerkleProof.so
 import {Ownable} from "../dependencies/openzeppelin/contracts/Ownable.sol";
 
 contract ParaSpaceRaffle is VRFV2WrapperConsumerBase, Ownable {
-    address immutable linkAddress;
-    address immutable wrapperAddress;
     bytes32 public immutable merkleRoot;
     uint256 immutable numCandidates;
 
@@ -24,8 +22,6 @@ contract ParaSpaceRaffle is VRFV2WrapperConsumerBase, Ownable {
         uint256 _numCandidates,
         bytes32 _merkleRoot
     ) VRFV2WrapperConsumerBase(_linkAddress, _wrapperAddress) {
-        linkAddress = _linkAddress;
-        wrapperAddress = _wrapperAddress;
         numCandidates = _numCandidates;
         merkleRoot = _merkleRoot;
     }
@@ -64,19 +60,20 @@ contract ParaSpaceRaffle is VRFV2WrapperConsumerBase, Ownable {
         );
     }
 
-    function verifyWinner(uint256 index, bytes32[] calldata merkleProof)
-        external
-        view
-        returns (bool)
-    {
-        bytes32 leaf = keccak256(abi.encode(msg.sender, index));
-        return MerkleProof.verify(merkleProof, merkleRoot, leaf);
+    function verifyWinner(
+        uint256 index,
+        address winner,
+        bytes32[] calldata merkleProof
+    ) external view returns (bool) {
+        bytes32 leaf = keccak256(abi.encode(index, winner));
+        return (MerkleProof.verify(merkleProof, merkleRoot, leaf) &&
+            winners[index]);
     }
 
     function withdrawLink() public onlyOwner {
-        LinkTokenInterface link = LinkTokenInterface(linkAddress);
+        // LinkTokenInterface link = LinkTokenInterface(linkAddress);
         require(
-            link.transfer(msg.sender, link.balanceOf(address(this))),
+            LINK.transfer(msg.sender, LINK.balanceOf(address(this))),
             "Unable to transfer"
         );
     }
