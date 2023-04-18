@@ -382,6 +382,19 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function setBlurExchangeRequestFeeRate(uint16 feeRate)
+        external
+        onlyPoolAdmin
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint16 oldValue = ps._blurExchangeRequestFeeRate;
+        if (oldValue != feeRate) {
+            ps._blurExchangeRequestFeeRate = feeRate;
+            emit BlurExchangeRequestFeeRateUpdated(oldValue, feeRate);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
     function setBlurExchangeKeeper(address keeper) external onlyPoolAdmin {
         require(keeper != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         DataTypes.PoolStorage storage ps = poolStorage();

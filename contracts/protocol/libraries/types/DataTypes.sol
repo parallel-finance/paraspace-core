@@ -409,6 +409,8 @@ library DataTypes {
         uint8 _blurOngoingRequestLimit;
         // the amount of blur ongoing request
         uint8 _blurOngoingRequestAmount;
+        // blur exchange request fee rate
+        uint16 _blurExchangeRequestFeeRate;
         //Blur exchange keeper
         address _blurExchangeKeeper;
         // Map of BuyWithCreditRequest status
@@ -457,7 +459,7 @@ library DataTypes {
         // currency token. address(0) means ETH
         address paymentToken;
         // cash amount from user wallet
-        uint256 cashAmount;
+        uint256 listingPrice;
         // borrow amount from lending pool
         uint256 borrowAmount;
         // nft token address for the listing order

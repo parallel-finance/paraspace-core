@@ -42,6 +42,11 @@ interface IPoolParameters {
     event BlurOngoingRequestLimitUpdated(uint256 oldValue, uint256 newValue);
 
     /**
+     * @dev Emitted when the fee rate of blur exchange request update
+     **/
+    event BlurExchangeRequestFeeRateUpdated(uint256 oldValue, uint256 newValue);
+
+    /**
      * @dev Emitted when the blur exchange keeper address update
      **/
     event BlurExchangeKeeperUpdated(address keeper);
@@ -226,6 +231,12 @@ interface IPoolParameters {
      * @param limit The new limit amount
      **/
     function setBlurOngoingRequestLimit(uint8 limit) external;
+
+    /**
+     * @notice update blur exchange request fee rate
+     * @param feeRate The new fee rate
+     **/
+    function setBlurExchangeRequestFeeRate(uint16 feeRate) external;
 
     /**
      * @notice update blur exchange enable status, only pool admin call this function

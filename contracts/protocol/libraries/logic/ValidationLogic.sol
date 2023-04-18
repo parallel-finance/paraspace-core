@@ -59,6 +59,7 @@ library ValidationLogic {
         DataTypes.ReserveData storage nftReserve,
         DataTypes.BlurBuyWithCreditRequest calldata request,
         address keeper,
+        uint256 requestFee,
         uint8 ongoingRequestAmount,
         uint8 ongoingRequestLimit,
         address oracle
@@ -70,13 +71,16 @@ library ValidationLogic {
             Errors.ONGOING_REQUEST_AMOUNT_EXCEEDED
         );
 
-        require(msg.value == request.cashAmount, Errors.INVALID_ETH_VALUE);
+        require(
+            msg.value + request.borrowAmount ==
+                request.listingPrice + requestFee,
+            Errors.INVALID_ETH_VALUE
+        );
         require(
             request.paymentToken == address(0),
             Errors.INVALID_PAYMENT_TOKEN
         );
 
-        uint256 listingPrice = request.cashAmount + request.borrowAmount;
         uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
             request.collection
         );
@@ -85,7 +89,7 @@ library ValidationLogic {
         (, uint256 liquidationThreshold, , , ) = nftReserveConfiguration
             .getParams();
         require(
-            listingPrice >= floorPrice.percentMul(liquidationThreshold),
+            request.listingPrice >= floorPrice.percentMul(liquidationThreshold),
             Errors.INVALID_LISTING_PRICE
         );
 

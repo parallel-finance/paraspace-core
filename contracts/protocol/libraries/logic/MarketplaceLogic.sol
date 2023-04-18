@@ -54,7 +54,7 @@ library MarketplaceLogic {
     event BlurExchangeRequestInitiated(
         address indexed initiator,
         address paymentToken,
-        uint256 cashAmount,
+        uint256 listingPrice,
         uint256 borrowAmount,
         address collection,
         uint256 tokenId
@@ -63,7 +63,7 @@ library MarketplaceLogic {
     event BlurExchangeRequestFulfilled(
         address indexed initiator,
         address paymentToken,
-        uint256 cashAmount,
+        uint256 listingPrice,
         uint256 borrowAmount,
         address collection,
         uint256 tokenId
@@ -72,7 +72,7 @@ library MarketplaceLogic {
     event BlurExchangeRequestRejected(
         address indexed initiator,
         address paymentToken,
-        uint256 cashAmount,
+        uint256 listingPrice,
         uint256 borrowAmount,
         address collection,
         uint256 tokenId
@@ -164,7 +164,6 @@ library MarketplaceLogic {
             Errors.INVALID_REQUEST_STATUS
         );
 
-        uint256 listingPrice = request.cashAmount + request.borrowAmount;
         address weth = poolAddressProvider.getWETH();
         address oracle = poolAddressProvider.getPriceOracle();
         address keeper = ps._blurExchangeKeeper;
@@ -173,10 +172,14 @@ library MarketplaceLogic {
         ];
 
         ps._blurOngoingRequestAmount += 1;
+        uint256 requestFee = request.listingPrice.percentMul(
+            ps._blurExchangeRequestFeeRate
+        );
         ValidationLogic.validateInitiateBlurExchangeRequest(
             ps._reserves[request.collection],
             request,
             keeper,
+            requestFee,
             ps._blurOngoingRequestAmount,
             ps._blurOngoingRequestLimit,
             oracle
@@ -232,7 +235,10 @@ library MarketplaceLogic {
                 );
                 IWETH(weth).withdraw(request.borrowAmount);
             }
-            Address.sendValue(payable(keeper), listingPrice);
+            Address.sendValue(
+                payable(keeper),
+                request.listingPrice + requestFee
+            );
         }
 
         //update status
@@ -244,7 +250,7 @@ library MarketplaceLogic {
         emit BlurExchangeRequestInitiated(
             request.initiator,
             request.paymentToken,
-            request.cashAmount,
+            request.listingPrice,
             request.borrowAmount,
             request.collection,
             request.tokenId
@@ -283,7 +289,7 @@ library MarketplaceLogic {
         emit BlurExchangeRequestFulfilled(
             request.initiator,
             request.paymentToken,
-            request.cashAmount,
+            request.listingPrice,
             request.borrowAmount,
             request.collection,
             request.tokenId
@@ -309,15 +315,14 @@ library MarketplaceLogic {
 
         //repay and supply weth for user
         address weth = poolAddressProvider.getWETH();
-        uint256 totalAmount = request.cashAmount + request.borrowAmount;
-        require(msg.value == totalAmount, Errors.INVALID_ETH_VALUE);
-        IWETH(weth).deposit{value: totalAmount}();
+        require(msg.value == request.listingPrice, Errors.INVALID_ETH_VALUE);
+        IWETH(weth).deposit{value: request.listingPrice}();
         PoolExtendedLogic.repayAndSupplyForUser(
             ps,
             weth,
             address(this),
             request.initiator,
-            totalAmount
+            request.listingPrice
         );
 
         //burn nToken.
@@ -338,7 +343,7 @@ library MarketplaceLogic {
         emit BlurExchangeRequestRejected(
             request.initiator,
             request.paymentToken,
-            request.cashAmount,
+            request.listingPrice,
             request.borrowAmount,
             request.collection,
             request.tokenId
@@ -353,7 +358,7 @@ library MarketplaceLogic {
                 abi.encode(
                     request.initiator,
                     request.paymentToken,
-                    request.cashAmount,
+                    request.listingPrice,
                     request.borrowAmount,
                     request.collection,
                     request.tokenId

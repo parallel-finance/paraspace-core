@@ -67,7 +67,7 @@ describe("BLUR integration tests", () => {
     WETHExchangeRequest = {
       initiator: user1.address,
       paymentToken: weth.address,
-      cashAmount: parseEther("50"),
+      listingPrice: parseEther("90"),
       borrowAmount: parseEther("40"),
       collection: bayc.address,
       tokenId: 0,
@@ -75,7 +75,7 @@ describe("BLUR integration tests", () => {
     ETHExchangeRequest = {
       initiator: user1.address,
       paymentToken: zeroAddress(),
-      cashAmount: parseEther("50"),
+      listingPrice: parseEther("90"),
       borrowAmount: parseEther("40"),
       collection: bayc.address,
       tokenId: 0,
@@ -91,7 +91,12 @@ describe("BLUR integration tests", () => {
       weth,
       bayc,
       nBAYC,
+      poolAdmin,
     } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setBlurExchangeRequestFeeRate(1000)
+    );
 
     const beforeInitiateBalance = await user1.signer.getBalance();
     const beforeInitiateWETHBalance = await weth.balanceOf(user1.address);
@@ -102,7 +107,7 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest(ETHExchangeRequest, {
-          value: parseEther("50"),
+          value: parseEther("59"),
         })
     );
 
@@ -110,13 +115,13 @@ describe("BLUR integration tests", () => {
     const afterInitiateWETHBalance = await weth.balanceOf(user1.address);
     almostEqual(
       beforeInitiateBalance.sub(afterInitiateBalance),
-      parseEther("50")
+      parseEther("59")
     );
     expect(afterInitiateWETHBalance).to.be.eq(beforeInitiateWETHBalance);
     const keeperAfterInitiateBalance = await user2.signer.getBalance();
     almostEqual(
       keeperAfterInitiateBalance.sub(keeperBeforeInitiateBalance),
-      parseEther("90")
+      parseEther("99")
     );
     almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
 
@@ -143,13 +148,18 @@ describe("BLUR integration tests", () => {
       pWETH,
       bayc,
       nBAYC,
+      poolAdmin,
     } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setBlurExchangeRequestFeeRate(1000)
+    );
 
     await waitForTx(
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest(ETHExchangeRequest, {
-          value: parseEther("50"),
+          value: parseEther("59"),
         })
     );
 
@@ -226,6 +236,21 @@ describe("BLUR integration tests", () => {
 
     await waitForTx(
       await pool.connect(poolAdmin.signer).enableBlurExchange(false)
+    );
+  });
+
+  it("only pool admin can update request fee rate", async () => {
+    const {
+      pool,
+      users: [user1],
+      poolAdmin,
+    } = await loadFixture(fixture);
+    await expect(
+      pool.connect(user1.signer).setBlurExchangeRequestFeeRate(100)
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
+
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setBlurExchangeRequestFeeRate(100)
     );
   });
 
@@ -336,7 +361,7 @@ describe("BLUR integration tests", () => {
     const invalidRequest = {
       initiator: user1.address,
       paymentToken: zeroAddress(),
-      cashAmount: parseEther("40"),
+      listingPrice: parseEther("80"),
       borrowAmount: parseEther("40"),
       collection: bayc.address,
       tokenId: 0,
