@@ -8,6 +8,7 @@ import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
+import {PoolExtendedLogic} from "../libraries/logic/PoolExtendedLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
@@ -161,7 +162,7 @@ contract PoolMarketplace is
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
-        MarketplaceLogic.executeInitiateBlurExchangeRequest(
+        PoolExtendedLogic.executeInitiateBlurExchangeRequest(
             ps,
             ADDRESSES_PROVIDER,
             request
@@ -173,7 +174,7 @@ contract PoolMarketplace is
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external virtual override {
         DataTypes.PoolStorage storage ps = poolStorage();
-        MarketplaceLogic.executeFulfillBlurExchangeRequest(ps, request);
+        PoolExtendedLogic.executeFulfillBlurExchangeRequest(ps, request);
     }
 
     /// @inheritdoc IPoolMarketplace
@@ -181,7 +182,7 @@ contract PoolMarketplace is
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external payable virtual override {
         DataTypes.PoolStorage storage ps = poolStorage();
-        MarketplaceLogic.executeRejectBlurExchangeRequest(
+        PoolExtendedLogic.executeRejectBlurExchangeRequest(
             ps,
             ADDRESSES_PROVIDER,
             request

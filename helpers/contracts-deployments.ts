@@ -327,7 +327,6 @@ import {Contract} from "ethers";
 import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
 import {MarketplaceLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/MarketplaceLogic__factory";
 import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
-import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
 import {PositionMoverLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/PositionMoverLogic__factory";
 
@@ -479,6 +478,7 @@ interface PoolLibraryAddresses {
   ["contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic"]: string;
   ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]: string;
   ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]: string;
+  ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]: string;
 }
 
 export const deployPoolLibraries = async (
@@ -505,6 +505,16 @@ export const deployPoolLibraries = async (
   );
   const flashClaimLogic = await deployFlashClaimLogic(verify);
 
+  const marketplaceLogic = await deployMarketplaceLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
+    },
+    verify
+  );
+
   return {
     ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]:
       auctionLogic.address,
@@ -518,6 +528,8 @@ export const deployPoolLibraries = async (
       poolExtendedLogic.address,
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
       flashClaimLogic.address,
+    ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]:
+      marketplaceLogic.address,
   };
 };
 
@@ -582,6 +594,15 @@ export const deployPoolMarketplace = async (
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
+  const marketplaceLogic = await deployMarketplaceLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
+    },
+    verify
+  );
   const poolExtendedLogic = await deployPoolExtendedLogic(
     {
       ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
@@ -591,20 +612,11 @@ export const deployPoolMarketplace = async (
     },
     verify
   );
-  const marketplaceLogic = await deployMarketplaceLogic(
-    {
-      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
-        supplyLogic.address,
-      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-        borrowLogic.address,
-      "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic":
-        poolExtendedLogic.address,
-    },
-    verify
-  );
   const marketplaceLibraries = {
     "contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic":
       marketplaceLogic.address,
+    "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic":
+      poolExtendedLogic.address,
   };
 
   const {poolMarketplaceSelectors} = getPoolSignatures();
@@ -732,24 +744,6 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
   };
 };
 
-export const deployPoolMarketplaceLibraries = async (
-  poolLibraries: PoolLibraryAddresses,
-  verify?: boolean
-): Promise<PoolMarketplaceLibraryAddresses> => {
-  const marketplaceLogic = await deployMarketplaceLogic(
-    pick(poolLibraries, [
-      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
-      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-      "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic",
-    ]),
-    verify
-  );
-  return {
-    ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]:
-      marketplaceLogic.address,
-  };
-};
-
 export const deployPoolParametersLibraries = async (
   verify?: boolean
 ): Promise<PoolParametersLibraryAddresses> => {
@@ -857,17 +851,17 @@ export const deployPoolComponents = async (
   verify?: boolean
 ) => {
   const poolLibraries = await deployPoolLibraries(verify);
-  const coreLibraries = await pick(poolLibraries, [
+  const coreLibraries = pick(poolLibraries, [
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
     "contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic",
     "contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic",
     "contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic",
   ]);
-  const marketplaceLibraries = await deployPoolMarketplaceLibraries(
-    poolLibraries,
-    verify
-  );
+  const marketplaceLibraries = pick(poolLibraries, [
+    "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic",
+    "contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic",
+  ]);
 
   const parametersLibraries = await deployPoolParametersLibraries(verify);
 

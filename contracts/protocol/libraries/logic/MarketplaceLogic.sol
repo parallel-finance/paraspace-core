@@ -10,7 +10,6 @@ import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
-import {PoolExtendedLogic} from "./PoolExtendedLogic.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
@@ -25,7 +24,6 @@ import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
-import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title Marketplace library
@@ -50,33 +48,6 @@ library MarketplaceLogic {
         address indexed onBehalfOf,
         uint256 amount,
         uint16 indexed referralCode
-    );
-
-    event BlurExchangeRequestInitiated(
-        address indexed initiator,
-        address paymentToken,
-        uint256 listingPrice,
-        uint256 borrowAmount,
-        address collection,
-        uint256 tokenId
-    );
-
-    event BlurExchangeRequestFulfilled(
-        address indexed initiator,
-        address paymentToken,
-        uint256 listingPrice,
-        uint256 borrowAmount,
-        address collection,
-        uint256 tokenId
-    );
-
-    event BlurExchangeRequestRejected(
-        address indexed initiator,
-        address paymentToken,
-        uint256 listingPrice,
-        uint256 borrowAmount,
-        address collection,
-        uint256 tokenId
     );
 
     /**
@@ -151,217 +122,6 @@ library MarketplaceLogic {
         );
 
         _refundETH(vars.ethLeft);
-    }
-
-    function executeInitiateBlurExchangeRequest(
-        DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider,
-        DataTypes.BlurBuyWithCreditRequest calldata request
-    ) external {
-        //check request status
-        bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
-        require(
-            ps._blurExchangeRequestStatus[requestHash] ==
-                DataTypes.BlurBuyWithCreditRequestStatus.Default,
-            Errors.INVALID_REQUEST_STATUS
-        );
-
-        address weth = poolAddressProvider.getWETH();
-        address oracle = poolAddressProvider.getPriceOracle();
-        address keeper = ps._blurExchangeKeeper;
-        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            request.initiator
-        ];
-
-        ps._blurOngoingRequestAmount += 1;
-        uint256 requestFee = request.listingPrice.percentMul(
-            ps._blurExchangeRequestFeeRate
-        );
-        ValidationLogic.validateInitiateBlurExchangeRequest(
-            ps._reserves[request.collection],
-            request,
-            ps._blurExchangeEnable,
-            keeper,
-            requestFee,
-            ps._blurOngoingRequestAmount,
-            ps._blurOngoingRequestLimit,
-            oracle
-        );
-
-        //mint nToken to release credit value
-        {
-            DataTypes.ERC721SupplyParams[]
-                memory tokenData = new DataTypes.ERC721SupplyParams[](1);
-            tokenData[0] = DataTypes.ERC721SupplyParams(request.tokenId, true);
-            SupplyLogic.executeSupplyERC721(
-                ps._reserves,
-                userConfig,
-                DataTypes.ExecuteSupplyERC721Params({
-                    asset: request.collection,
-                    tokenData: tokenData,
-                    onBehalfOf: request.initiator,
-                    payer: address(0),
-                    referralCode: 0
-                })
-            );
-        }
-
-        //mint debt token
-        if (request.borrowAmount > 0) {
-            BorrowLogic.executeBorrow(
-                ps._reserves,
-                ps._reservesList,
-                userConfig,
-                DataTypes.ExecuteBorrowParams({
-                    asset: weth,
-                    user: request.initiator,
-                    onBehalfOf: request.initiator,
-                    amount: request.borrowAmount,
-                    referralCode: 0,
-                    releaseUnderlying: false,
-                    reservesCount: ps._reservesCount,
-                    oracle: oracle,
-                    priceOracleSentinel: poolAddressProvider
-                        .getPriceOracleSentinel()
-                })
-            );
-        }
-
-        //transfer currency to keeper
-        {
-            if (request.borrowAmount > 0) {
-                DataTypes.TimeLockParams memory timeLockParams;
-                IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
-                    address(this),
-                    request.borrowAmount,
-                    timeLockParams
-                );
-                IWETH(weth).withdraw(request.borrowAmount);
-            }
-            Helpers.safeTransferETH(keeper, request.listingPrice + requestFee);
-        }
-
-        //update status
-        ps._blurExchangeRequestStatus[requestHash] = DataTypes
-            .BlurBuyWithCreditRequestStatus
-            .Initiated;
-
-        //emit event
-        emit BlurExchangeRequestInitiated(
-            request.initiator,
-            request.paymentToken,
-            request.listingPrice,
-            request.borrowAmount,
-            request.collection,
-            request.tokenId
-        );
-    }
-
-    function executeFulfillBlurExchangeRequest(
-        DataTypes.PoolStorage storage ps,
-        DataTypes.BlurBuyWithCreditRequest calldata request
-    ) external {
-        // check request status
-        bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
-        require(
-            ps._blurExchangeRequestStatus[requestHash] ==
-                DataTypes.BlurBuyWithCreditRequestStatus.Initiated,
-            Errors.INVALID_REQUEST_STATUS
-        );
-
-        address keeper = ps._blurExchangeKeeper;
-        require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
-
-        ps._blurOngoingRequestAmount -= 1;
-
-        DataTypes.ReserveData storage reserve = ps._reserves[
-            request.collection
-        ];
-        IERC721(request.collection).safeTransferFrom(
-            keeper,
-            reserve.xTokenAddress,
-            request.tokenId
-        );
-
-        delete ps._blurExchangeRequestStatus[requestHash];
-
-        emit BlurExchangeRequestFulfilled(
-            request.initiator,
-            request.paymentToken,
-            request.listingPrice,
-            request.borrowAmount,
-            request.collection,
-            request.tokenId
-        );
-    }
-
-    function executeRejectBlurExchangeRequest(
-        DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider,
-        DataTypes.BlurBuyWithCreditRequest calldata request
-    ) external {
-        // check request status
-        bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
-        require(
-            ps._blurExchangeRequestStatus[requestHash] ==
-                DataTypes.BlurBuyWithCreditRequestStatus.Initiated,
-            Errors.INVALID_REQUEST_STATUS
-        );
-
-        address keeper = ps._blurExchangeKeeper;
-        require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
-
-        ps._blurOngoingRequestAmount -= 1;
-
-        //repay and supply weth for user
-        address weth = poolAddressProvider.getWETH();
-        require(msg.value == request.listingPrice, Errors.INVALID_ETH_VALUE);
-        IWETH(weth).deposit{value: request.listingPrice}();
-        PoolExtendedLogic.repayAndSupplyForUser(
-            ps,
-            weth,
-            address(this),
-            request.initiator,
-            request.listingPrice
-        );
-
-        //burn nToken.
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = request.tokenId;
-        PoolExtendedLogic.burnUserNToken(
-            ps,
-            request.collection,
-            tokenIds,
-            false,
-            request.initiator
-        );
-
-        delete ps._blurExchangeRequestStatus[requestHash];
-
-        emit BlurExchangeRequestRejected(
-            request.initiator,
-            request.paymentToken,
-            request.listingPrice,
-            request.borrowAmount,
-            request.collection,
-            request.tokenId
-        );
-    }
-
-    function _calculateBlurExchangeRequestHash(
-        DataTypes.BlurBuyWithCreditRequest calldata request
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    request.initiator,
-                    request.paymentToken,
-                    request.listingPrice,
-                    request.borrowAmount,
-                    request.collection,
-                    request.tokenId
-                )
-            );
     }
 
     /**
