@@ -1213,4 +1213,13 @@ library ValidationLogic {
             );
         }
     }
+
+    function validateSwap(
+        DataTypes.SwapInfo memory swapInfo,
+        DataTypes.ExecuteBorrowParams memory params
+    ) internal view {
+        require(swapInfo.srcToken != swapInfo.dstToken);
+        require(swapInfo.amount == params.amount);
+        require(!params.swapAdapter.paused);
+    }
 }

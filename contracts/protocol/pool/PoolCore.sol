@@ -28,6 +28,7 @@ import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
+import {ISwapProvider} from "../../interfaces/ISwapProvider.sol";
 
 /**
  * @title Pool contract
@@ -288,7 +289,44 @@ contract PoolCore is
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                payload: bytes("")
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function borrowAny(
+        address asset,
+        uint256 amount,
+        uint16 referralCode,
+        address onBehalfOf,
+        bytes32 swapAdapterId,
+        bytes calldata payload
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        BorrowLogic.executeBorrow(
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteBorrowParams({
+                asset: asset,
+                user: msg.sender,
+                onBehalfOf: onBehalfOf,
+                amount: amount,
+                referralCode: referralCode,
+                releaseUnderlying: true,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: ps._swapAdapters[swapAdapterId],
+                payload: payload
             })
         );
     }

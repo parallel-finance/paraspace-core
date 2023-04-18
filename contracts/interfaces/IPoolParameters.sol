@@ -153,6 +153,16 @@ interface IPoolParameters {
         view
         returns (DataTypes.ApeCompoundStrategy memory);
 
+    function setSwapAdapter(
+        bytes32 swapAdapterId,
+        DataTypes.SwapAdapter calldata adapter
+    ) external;
+
+    function getSwapAdapter(bytes32 swapAdapterId)
+        external
+        view
+        returns (DataTypes.SwapAdapter memory);
+
     /**
      * @notice Set the auction recovery health factor
      * @param value The new auction health factor

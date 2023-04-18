@@ -14,6 +14,7 @@ import {DataTypes} from "../types/DataTypes.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 
 /**
  * @title BorrowLogic library
@@ -112,11 +113,27 @@ library BorrowLogic {
                 );
             timeLockParams.actionType = DataTypes.TimeLockActionType.BORROW;
 
-            IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
-                params.user,
-                params.amount,
-                timeLockParams
-            );
+            if (params.swapAdapter.router == address(0)) {
+                IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
+                    params.user,
+                    params.amount,
+                    timeLockParams
+                );
+            } else {
+                DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
+                    params.swapAdapter.adapter
+                ).getSwapInfo(params.payload);
+
+                ValidationLogic.validateSwap(swapInfo, params);
+                IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
+                    params.user,
+                    params.amount,
+                    timeLockParams,
+                    params.swapAdapter,
+                    params.payload,
+                    swapInfo
+                );
+            }
         }
 
         emit Borrow(

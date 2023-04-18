@@ -63,13 +63,16 @@ library MarketplaceLogic {
     );
 
     struct MarketplaceLocalVars {
-        bool isETH;
-        address xTokenAddress;
-        uint256 price;
+        bool isListingTokenETH;
+        bool isCreditTokenETH;
+        address listingToken;
+        address listingXTokenAddress;
         address creditToken;
         address creditXTokenAddress;
         uint256 creditAmount;
         uint256 supplyAmount;
+        address xTokenAddress;
+        uint256 price;
         address weth;
         uint256 ethLeft;
         bytes32 marketplaceId;
@@ -111,7 +114,14 @@ library MarketplaceLogic {
                 referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider
+                    .getPriceOracleSentinel(),
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                swapPayload: bytes("")
             })
         );
 
@@ -224,7 +234,13 @@ library MarketplaceLogic {
                     reservesCount: reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
                     priceOracleSentinel: poolAddressProvider
-                        .getPriceOracleSentinel()
+                        .getPriceOracleSentinel(),
+                    swapAdapter: DataTypes.SwapAdapter(
+                        address(0),
+                        address(0),
+                        false
+                    ),
+                    swapPayload: bytes("")
                 })
             );
         }
@@ -263,7 +279,14 @@ library MarketplaceLogic {
                 referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider
+                    .getPriceOracleSentinel(),
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                swapPayload: bytes("")
             })
         );
     }
@@ -315,7 +338,13 @@ library MarketplaceLogic {
                     reservesCount: reservesCount,
                     oracle: poolAddressProvider.getPriceOracle(),
                     priceOracleSentinel: poolAddressProvider
-                        .getPriceOracleSentinel()
+                        .getPriceOracleSentinel(),
+                    swapAdapter: DataTypes.SwapAdapter(
+                        address(0),
+                        address(0),
+                        false
+                    ),
+                    swapPayload: bytes("")
                 })
             );
         }
@@ -373,7 +402,7 @@ library MarketplaceLogic {
     ) internal returns (uint256, uint256) {
         uint256 price = vars.price;
         uint256 downpayment = price - vars.creditAmount;
-        if (!vars.isETH) {
+        if (!vars.isCreditTokenETH) {
             IERC20(vars.creditToken).safeTransferFrom(
                 params.orderInfo.taker,
                 address(this),
@@ -419,7 +448,7 @@ library MarketplaceLogic {
             timeLockParams
         );
 
-        if (vars.isETH) {
+        if (vars.isCreditTokenETH) {
             // No re-entrancy because it sent to our contract address
             IWETH(params.weth).withdraw(vars.creditAmount);
         }
@@ -444,7 +473,7 @@ library MarketplaceLogic {
             return;
         }
 
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
+        DataTypes.ReserveData storage reserve = ps._reserves[vars.listingToken];
         DataTypes.UserConfigurationMap storage sellerConfig = ps._usersConfig[
             seller
         ];
@@ -461,7 +490,7 @@ library MarketplaceLogic {
 
         reserve.updateInterestRates(
             reserveCache,
-            vars.creditToken,
+            vars.listingToken,
             vars.supplyAmount,
             0
         );
@@ -475,11 +504,11 @@ library MarketplaceLogic {
 
         if (isFirstSupply || !sellerConfig.isUsingAsCollateral(reserveId)) {
             sellerConfig.setUsingAsCollateral(reserveId, true);
-            emit ReserveUsedAsCollateralEnabled(vars.creditToken, seller);
+            emit ReserveUsedAsCollateralEnabled(vars.listingToken, seller);
         }
 
         emit Supply(
-            vars.creditToken,
+            vars.listingToken,
             msg.sender,
             seller,
             vars.supplyAmount,
@@ -583,7 +612,13 @@ library MarketplaceLogic {
                 releaseUnderlying: false,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
-                priceOracleSentinel: params.priceOracleSentinel
+                priceOracleSentinel: params.priceOracleSentinel,
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                payload: bytes("")
             })
         );
     }
@@ -602,12 +637,12 @@ library MarketplaceLogic {
             return;
         }
 
-        if (vars.isETH) {
+        if (vars.isListingTokenETH) {
             IWETH(params.weth).deposit{value: vars.supplyAmount}();
         }
 
-        IERC20(vars.creditToken).safeTransfer(
-            vars.creditXTokenAddress,
+        IERC20(vars.listingToken).safeTransfer(
+            vars.listingXTokenAddress,
             vars.supplyAmount
         );
     }
@@ -623,21 +658,31 @@ library MarketplaceLogic {
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view returns (MarketplaceLocalVars memory vars) {
-        vars.isETH = params.credit.token == address(0);
-        vars.creditToken = vars.isETH ? params.weth : params.credit.token;
+        vars.isCreditTokenETH = params.credit.token == address(0);
+        vars.creditToken = vars.isCreditTokenETH
+            ? params.weth
+            : params.credit.token;
         vars.creditAmount = params.credit.amount;
+
+        vars.listingToken = params.orderInfo.consideration[0].token;
+        vars.isListingTokenETH = vars.listingToken == address(0);
+
         (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
             params,
             vars
         );
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
-        vars.creditXTokenAddress = reserve.xTokenAddress;
+        vars.creditXTokenAddress = ps._reserves[vars.creditToken].xTokenAddress;
+        vars.listingXTokenAddress = ps
+            ._reserves[vars.listingToken]
+            .xTokenAddress;
         // either the seller & buyer decided to not use any credit
         // OR
         // the creditToken must be listed since otherwise cannot borrow from the pool
         require(
-            (vars.creditAmount == 0 && vars.supplyAmount == 0) ||
-                vars.creditXTokenAddress != address(0),
+            (vars.creditAmount == 0 ||
+                vars.creditXTokenAddress != address(0)) &&
+                (vars.supplyAmount == 0 ||
+                    vars.listingXTokenAddress != address(0)),
             Errors.ASSET_NOT_LISTED
         );
     }
@@ -704,11 +749,12 @@ library MarketplaceLogic {
             );
             require(
                 item.itemType == ItemType.ERC20 ||
-                    (vars.isETH && item.itemType == ItemType.NATIVE),
+                    (vars.isListingTokenETH &&
+                        item.itemType == ItemType.NATIVE),
                 Errors.INVALID_ASSET_TYPE
             );
             require(
-                item.token == params.credit.token,
+                item.token == vars.listingToken,
                 Errors.CREDIT_DOES_NOT_MATCH_ORDER
             );
             price += item.startAmount;

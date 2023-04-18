@@ -27,7 +27,7 @@ import {ParaReentrancyGuard} from "../../protocol/libraries/paraspace-upgradeabi
 import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
-
+import {ISwapProvider} from "../../interfaces/ISwapProvider.sol";
 import {IPoolCore} from "../../interfaces/IPoolCore.sol";
 import {PoolCore} from "../../protocol/pool/PoolCore.sol";
 

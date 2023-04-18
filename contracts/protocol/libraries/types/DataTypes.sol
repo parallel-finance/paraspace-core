@@ -154,6 +154,8 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+        SwapAdapter swapAdapter;
+        bytes payload;
     }
 
     struct ExecuteRepayParams {
@@ -320,6 +322,8 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+        SwapAdapter swapAdapter;
+        bytes swapPayload;
     }
 
     struct OrderInfo {
@@ -330,10 +334,25 @@ library DataTypes {
         ConsiderationItem[] consideration;
     }
 
+    struct SwapInfo {
+        address srcToken;
+        address dstToken;
+        address srcReceiver;
+        address dstReceiver;
+        uint256 amount;
+        uint256 minReturnAmount;
+    }
+
     struct Marketplace {
         address marketplace;
         address adapter;
         address operator;
+        bool paused;
+    }
+
+    struct SwapAdapter {
+        address adapter;
+        address router;
         bool paused;
     }
 
@@ -390,6 +409,8 @@ library DataTypes {
         uint16 _apeCompoundFee;
         // Map of user's ape compound strategies
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
+        // Map of swap adapters
+        mapping(bytes32 => DataTypes.SwapAdapter) _swapAdapters;
     }
 
     struct ReserveConfigData {

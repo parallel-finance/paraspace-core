@@ -81,6 +81,15 @@ interface IPToken is
         DataTypes.TimeLockParams calldata timeLockParams
     ) external;
 
+    function swapUnderlyingTo(
+        address user,
+        uint256 amount,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata payload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) external;
+
     /**
      * @notice Handles the underlying received by the xToken after the transfer has been completed.
      * @dev The default implementation is empty as with standard ERC20 tokens, nothing needs to be done after the

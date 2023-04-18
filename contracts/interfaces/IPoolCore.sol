@@ -340,6 +340,15 @@ interface IPoolCore {
         address onBehalfOf
     ) external;
 
+    function borrowAny(
+        address asset,
+        uint256 amount,
+        uint16 referralCode,
+        address onBehalfOf,
+        bytes32 swapAdapterId,
+        bytes calldata payload
+    ) external;
+
     /**
      * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
      * - E.g. User repays 100 USDC, burning 100 variable/stable debt tokens of the `onBehalfOf` address
