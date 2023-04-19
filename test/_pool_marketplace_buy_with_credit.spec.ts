@@ -1523,13 +1523,13 @@ describe("Leveraged Buy - Positive tests", () => {
     assertAlmostEqual(
       await pUsdc.balanceOf(maker.address),
       startAmount
-        .percentMul("9000")
+        .percentMul("9500")
         .add(await convertToCurrencyDecimals(usdc.address, "1")) // default supply ratio
     );
     assertAlmostEqual(
       await usdc.balanceOf(maker.address),
       startAmount
-        .percentMul("1000")
+        .percentMul("500")
         .add(await convertToCurrencyDecimals(usdc.address, borrowAmount))
     );
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
