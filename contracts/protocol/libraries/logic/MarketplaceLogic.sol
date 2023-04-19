@@ -340,13 +340,13 @@ library MarketplaceLogic {
         uint256 price = vars.price;
         uint256 downpayment = price - vars.creditAmountInListingToken;
         if (!vars.isListingTokenETH) {
-            IERC20(vars.creditToken).safeTransferFrom(
+            IERC20(vars.listingToken).safeTransferFrom(
                 params.orderInfo.taker,
                 address(this),
                 downpayment
             );
             Helpers.checkAllowance(
-                vars.creditToken,
+                vars.listingToken,
                 params.marketplace.operator
             );
             // convert to (priceEth, downpaymentEth)
