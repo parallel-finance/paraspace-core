@@ -8,7 +8,7 @@ import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 
-contract UniswapV3Adapter is ISwapAdapter {
+contract UniswapV3SwapAdapter is ISwapAdapter {
     using BytesLib for bytes;
 
     uint256 private constant ADDR_SIZE = 20;
@@ -26,13 +26,9 @@ contract UniswapV3Adapter is ISwapAdapter {
             (ISwapRouter.ExactInputParams)
         );
 
-        address srcToken = abi.decode(
-            params.path.slice(0, ADDR_SIZE),
-            (address)
-        );
-        address dstToken = abi.decode(
-            params.path.slice(params.path.length - ADDR_SIZE, ADDR_SIZE),
-            (address)
+        address srcToken = params.path.toAddress(0);
+        address dstToken = params.path.toAddress(
+            params.path.length - ADDR_SIZE
         );
 
         swapInfo.srcToken = srcToken;
