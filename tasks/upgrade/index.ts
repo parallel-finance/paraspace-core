@@ -72,6 +72,21 @@ task("upgrade:pool-parameters", "upgrade pool parameters")
     console.timeEnd("upgrade poolParameters");
   });
 
+task("upgrade:pool-position-mover", "upgrade pool position mover")
+  .addPositionalParam("oldPoolPositionMover", "old pool position mover")
+  .setAction(async ({oldPoolPositionMover}, DRE) => {
+    const {upgradePoolPositionMover} = await import(
+      "../../scripts/upgrade/pool"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade poolPositionMover");
+    await upgradePoolPositionMover(
+      oldPoolPositionMover,
+      ETHERSCAN_VERIFICATION
+    );
+    console.timeEnd("upgrade poolPositionMover");
+  });
+
 task("upgrade:configurator", "upgrade pool configurator").setAction(
   async (_, DRE) => {
     const {upgradeConfigurator} = await import(
