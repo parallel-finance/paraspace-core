@@ -28,7 +28,6 @@ import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
 import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
-import {ISwapProvider} from "../../interfaces/ISwapProvider.sol";
 
 /**
  * @title Pool contract

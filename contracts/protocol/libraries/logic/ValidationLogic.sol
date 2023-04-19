@@ -1224,7 +1224,7 @@ library ValidationLogic {
             Errors.INVALID_SWAP_PAYLOAD
         );
         require(swapInfo.amount == params.amount, Errors.INVALID_SWAP_PAYLOAD);
-        require(!params.swapAdapter.paused, Errors.SWAP_PROVIDER_PAUSED);
+        require(!params.swapAdapter.paused, Errors.SWAP_ADAPTER_PAUSED);
         require(
             swapInfo.dstReceiver == params.dstReceiver,
             Errors.INVALID_SWAP_PAYLOAD
