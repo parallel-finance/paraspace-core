@@ -841,7 +841,6 @@ export const deployPoolComponents = async (
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
-    poolParaProxyInterfacesSelectors,
     poolPositionMoverSelectors,
   } = getPoolSignatures();
 
