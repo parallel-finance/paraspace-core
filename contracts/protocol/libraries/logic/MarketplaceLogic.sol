@@ -105,6 +105,8 @@ library MarketplaceLogic {
             swapAdapter,
             swapPayload
         );
+        params.orderInfo = IMarketplace(params.marketplace.adapter)
+            .getAskOrderInfo(payload);
         params.ethLeft = vars.ethLeft;
         params.orderInfo.taker = msg.sender;
 
@@ -196,6 +198,8 @@ library MarketplaceLogic {
                 vars.swapAdapter,
                 vars.swapPayload
             );
+            params.orderInfo = IMarketplace(params.marketplace.adapter)
+                .getAskOrderInfo(vars.payload);
             params.orderInfo.taker = msg.sender;
             params.ethLeft = vars.ethLeft;
 
@@ -238,6 +242,8 @@ library MarketplaceLogic {
             DataTypes.SwapAdapter(address(0), address(0), false),
             bytes("")
         );
+        params.orderInfo = IMarketplace(params.marketplace.adapter)
+            .getBidOrderInfo(payload);
 
         require(
             params.orderInfo.taker == onBehalfOf,
@@ -270,6 +276,8 @@ library MarketplaceLogic {
                 DataTypes.SwapAdapter(address(0), address(0), false),
                 bytes("")
             );
+            params.orderInfo = IMarketplace(params.marketplace.adapter)
+                .getBidOrderInfo(payloads[i]);
             require(
                 params.orderInfo.taker == onBehalfOf,
                 Errors.INVALID_ORDER_TAKER
@@ -651,8 +659,6 @@ library MarketplaceLogic {
         params.credit = credit;
         params.swapAdapter = swapAdapter;
         params.swapPayload = swapPayload;
-        params.orderInfo = IMarketplace(params.marketplace.adapter)
-            .getAskOrderInfo(payload);
         params.reservesCount = ps._reservesCount;
         params.oracle = poolAddressProvider.getPriceOracle();
         params.priceOracleSentinel = poolAddressProvider
