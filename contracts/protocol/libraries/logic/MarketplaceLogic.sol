@@ -404,7 +404,6 @@ library MarketplaceLogic {
             vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
                 .swapUnderlyingTo(
                     to,
-                    vars.creditAmount,
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,

@@ -83,7 +83,6 @@ interface IPToken is
 
     function swapUnderlyingTo(
         address user,
-        uint256 amount,
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata payload,

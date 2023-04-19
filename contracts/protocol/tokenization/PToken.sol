@@ -236,7 +236,6 @@ contract PToken is
     /// @inheritdoc IPToken
     function swapUnderlyingTo(
         address target,
-        uint256,
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata swapPayload,

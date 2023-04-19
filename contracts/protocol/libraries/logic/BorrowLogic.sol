@@ -133,7 +133,6 @@ library BorrowLogic {
                 );
                 IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
                     params.user,
-                    params.amount,
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
