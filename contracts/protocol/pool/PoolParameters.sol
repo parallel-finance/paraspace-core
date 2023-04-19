@@ -285,6 +285,12 @@ contract PoolParameters is
     ) external {
         DataTypes.PoolStorage storage ps = poolStorage();
         ps._swapAdapters[swapAdapterId] = adapter;
+        emit SwapAdapterUpdated(
+            swapAdapterId,
+            adapter.adapter,
+            adapter.router,
+            adapter.paused
+        );
     }
 
     /// @inheritdoc IPoolParameters

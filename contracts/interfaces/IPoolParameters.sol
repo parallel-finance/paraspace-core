@@ -32,6 +32,16 @@ interface IPoolParameters {
     event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
+     * @dev Emitted when the swap adapter got updated
+     **/
+    event SwapAdapterUpdated(
+        bytes32 indexed swapAdapterId,
+        address adapter,
+        address router,
+        bool paused
+    );
+
+    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
