@@ -154,7 +154,6 @@ export const auctionStrategyHVMTL: IAuctionStrategyParams = {
   tickLength: "900",
 };
 
-
 export const auctionStrategyBEANZ: IAuctionStrategyParams = {
   name: "auctionStrategyBEANZ",
   maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
