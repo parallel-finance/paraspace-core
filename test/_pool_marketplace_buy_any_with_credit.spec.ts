@@ -13,13 +13,8 @@ import {
   PARASPACE_SEAPORT_ID,
   UNISWAP_V3_SWAP_ADAPTER_ID,
 } from "../helpers/constants";
-import {
-  mintAndValidate,
-  supplyAndValidate,
-  switchCollateralAndValidate,
-} from "./helpers/validated-steps";
+import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {getUniswapV3SwapRouter} from "../helpers/contracts-getters";
-import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {deployUniswapV3SwapAdapter} from "../helpers/contracts-deployments";
@@ -120,7 +115,6 @@ describe("Leveraged Buy Any - Positive tests", () => {
   it("TC-erc721-buy-01: ERC721 <=> ERC20 via paraspace (1% platform fee) - partial borrow and swap", async () => {
     const {
       mayc,
-      nMAYC,
       usdc,
       weth,
       pWETH,
