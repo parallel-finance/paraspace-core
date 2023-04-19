@@ -94,7 +94,6 @@ library PositionMoverLogic {
         (, borrowAmount) = lendPoolLoan.getLoanReserveBorrowAmount(loanId);
 
         DataTypes.TimeLockParams memory timeLockParams;
-
         IPToken(xTokenAddress).transferUnderlyingTo(
             address(this),
             borrowAmount,

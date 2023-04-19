@@ -553,13 +553,11 @@ export const deployPoolApeStaking = async (
   provider: string,
   verify?: boolean
 ) => {
-  const supplyLogic = await deploySupplyLogic(verify);
-  const borrowLogic = await deployBorrowLogic(verify);
   const apeStakingLibraries = {
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
-      supplyLogic.address,
+      "0x7dc12cCe38Fd20393d19d5E4d65b021B35093aAB",
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-      borrowLogic.address,
+      "0xBd25Aa1c423cD59662aD1C328f963ce90Afbd94B",
   };
 
   const APE_WETH_FEE = 3000;
@@ -574,10 +572,7 @@ export const deployPoolApeStaking = async (
     eContractid.PoolApeStakingImpl,
     [
       provider,
-      (await getContractAddressInDb(eContractid.cAPE)) ||
-        (
-          await deployAutoCompoundApe(verify)
-        ).address,
+      await getContractAddressInDb(eContractid.cAPE),
       allTokens.APE.address,
       allTokens.USDC.address,
       (await getUniswapV3SwapRouter()).address,
@@ -640,6 +635,50 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
   return {
     poolParaProxyInterfaces,
     poolParaProxyInterfacesSelectors: poolParaProxyInterfacesSelectors.map(
+      (s) => s.signature
+    ),
+  };
+};
+
+export const deployPoolPositionMover = async (
+  provider: tEthereumAddress,
+  bendDaoLendPoolLoan: tEthereumAddress,
+  bendDaoLendPool: tEthereumAddress,
+  verify?: boolean
+) => {
+  const supplyLogic = await deploySupplyLogic(verify);
+  const borrowLogic = await deployBorrowLogic(verify);
+  const positionMoverLibraries = {
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+      supplyLogic.address,
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+      borrowLogic.address,
+  };
+  const positionMoverLogic = await deployPositionMoverLogic(
+    positionMoverLibraries,
+    verify
+  );
+
+  const {poolPositionMoverSelectors} = await getPoolSignatures();
+  const poolPositionMover = (await withSaveAndVerify(
+    new PoolPositionMover__factory(
+      {
+        ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
+          positionMoverLogic.address,
+      },
+      await getFirstSigner()
+    ),
+    eContractid.PoolPositionMoverImpl,
+    [provider, bendDaoLendPoolLoan, bendDaoLendPool],
+    verify,
+    false,
+    undefined,
+    poolPositionMoverSelectors
+  )) as PoolPositionMover;
+
+  return {
+    poolPositionMover,
+    poolPositionMoverSelectors: poolPositionMoverSelectors.map(
       (s) => s.signature
     ),
   };
@@ -768,6 +807,7 @@ export const deployPoolComponents = async (
   provider: string,
   verify?: boolean
 ) => {
+  const paraSpaceConfig = getParaSpaceConfig();
   const coreLibraries = await deployPoolCoreLibraries(verify);
   const marketplaceLibraries = await deployPoolMarketplaceLibraries(
     coreLibraries,
@@ -790,23 +830,41 @@ export const deployPoolComponents = async (
   const APE_WETH_FEE = 3000;
   const WETH_USDC_FEE = 500;
 
-  const positionMoverLibrary = {
-    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
-      positionMoverLogic.address,
-  };
-
-  const bendDaoLendPool = await deployMockBendDaoLendPool(
-    (
-      await getWETH()
-    ).address
-  );
   const {
     poolCoreSelectors,
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
+    poolParaProxyInterfacesSelectors,
     poolPositionMoverSelectors,
   } = getPoolSignatures();
+
+  const positionMoverLibraries = {
+    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
+      positionMoverLogic.address,
+  };
+
+  const bendDaoLendPoolLoan =
+    paraSpaceConfig.BendDAO.LendingPoolLoan ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
+    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
+  const bendDaoLendPool =
+    paraSpaceConfig.BendDAO.LendingPool ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
+    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
+
+  const poolPositionMover = (await withSaveAndVerify(
+    new PoolPositionMover__factory(
+      positionMoverLibraries,
+      await getFirstSigner()
+    ),
+    eContractid.PoolPositionMoverImpl,
+    [provider, bendDaoLendPoolLoan, bendDaoLendPool],
+    verify,
+    false,
+    positionMoverLibraries,
+    poolPositionMoverSelectors
+  )) as PoolPositionMover;
 
   const poolCore = (await withSaveAndVerify(
     new PoolCore__factory(coreLibraries, await getFirstSigner()),
@@ -871,19 +929,6 @@ export const deployPoolComponents = async (
       )) as PoolApeStaking)
     : undefined;
 
-  const poolPositionMover = (await withSaveAndVerify(
-    new PoolPositionMover__factory(
-      positionMoverLibrary,
-      await getFirstSigner()
-    ),
-    eContractid.PoolPositionMoverImpl,
-    [provider, bendDaoLendPool.address, bendDaoLendPool.address],
-    verify,
-    false,
-    positionMoverLibrary,
-    poolPositionMoverSelectors
-  )) as PoolPositionMover;
-
   return {
     poolCore,
     poolParameters,
@@ -894,6 +939,9 @@ export const deployPoolComponents = async (
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
+    poolParaProxyInterfacesSelectors: poolParaProxyInterfacesSelectors.map(
+      (s) => s.signature
+    ),
     poolPositionMoverSelectors: poolPositionMoverSelectors.map(
       (s) => s.signature
     ),
