@@ -15,15 +15,10 @@ contract OneInchAdapter is ISwapAdapter {
         view
         returns (DataTypes.SwapInfo memory swapInfo)
     {
-        (
-            address executor,
-            IOneInch.SwapDescription memory desc,
-            bytes memory permit,
-            bytes memory data
-        ) = abi.decode(
-                bytes(payload),
-                (address, IOneInch.SwapDescription, bytes, bytes)
-            );
+        (, IOneInch.SwapDescription memory desc, , ) = abi.decode(
+            bytes(payload),
+            (address, IOneInch.SwapDescription, bytes, bytes)
+        );
 
         swapInfo.srcToken = desc.srcToken;
         swapInfo.dstToken = desc.dstToken;

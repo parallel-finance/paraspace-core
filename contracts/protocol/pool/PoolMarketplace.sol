@@ -111,6 +111,25 @@ contract PoolMarketplace is
     function batchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBatchBuyWithCredit(
+            ps,
+            marketplaceIds,
+            payloads,
+            credits,
+            new DataTypes.SwapAdapter[](credits.length),
+            new bytes[](credits.length),
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function batchBuyAnyWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         DataTypes.SwapAdapter[] calldata swapAdapters,
         bytes[] calldata swapPayloads

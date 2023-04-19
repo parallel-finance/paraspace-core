@@ -55,6 +55,12 @@ interface IPoolMarketplace {
     function batchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits
+    ) external payable;
+
+    function batchBuyAnyWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         DataTypes.SwapAdapter[] calldata swapAdapters,
         bytes[] calldata swapPayloads

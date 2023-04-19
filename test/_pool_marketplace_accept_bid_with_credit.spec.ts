@@ -613,7 +613,6 @@ describe("Leveraged Bid - unit tests", () => {
         },
       ],
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -798,7 +797,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -983,7 +981,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -1197,7 +1194,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -1816,7 +1812,6 @@ describe("Leveraged Bid - Negative tests", () => {
           ...vrs,
         },
         [nftId],
-        0,
         {
           gasLimit: 5000000,
         }

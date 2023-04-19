@@ -130,7 +130,7 @@ library MarketplaceLogic {
 
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
-        _flashSupplyFor(ps, params, vars, params.orderInfo.maker);
+        _flashSupplyFor(ps, vars, params.orderInfo.maker);
         _flashLoanTo(ps, params, vars, address(this));
 
         (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
@@ -229,7 +229,6 @@ library MarketplaceLogic {
         address onBehalfOf,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-        MarketplaceLocalVars memory vars;
         DataTypes.ExecuteMarketplaceParams memory params = _getParams(
             ps,
             poolAddressProvider,
@@ -256,8 +255,6 @@ library MarketplaceLogic {
         address onBehalfOf,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-        MarketplaceLocalVars memory vars;
-
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
@@ -298,7 +295,7 @@ library MarketplaceLogic {
 
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
-        _flashSupplyFor(ps, params, vars, params.orderInfo.taker);
+        _flashSupplyFor(ps, vars, params.orderInfo.taker);
         _flashLoanTo(ps, params, vars, params.orderInfo.maker);
 
         // delegateCall to avoid extra token transfer
@@ -418,13 +415,11 @@ library MarketplaceLogic {
      * Repayment needs to be done after the marketplace exchange by transferring funds to xTokenAddress
      * @dev
      * @param ps The pool storage pointer
-     * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param seller The NFT seller
      */
     function _flashSupplyFor(
         DataTypes.PoolStorage storage ps,
-        DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
