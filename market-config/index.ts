@@ -310,7 +310,6 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   Treasury: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
   Tokens: {
     WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-    wstETH: "0x5979D7b546E38E414F7E9822514be443A4800529",
     USDC: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
     DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
     USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
@@ -342,7 +341,6 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     USDT: strategyUSDT,
     FRAX: strategyFRAX,
     WETH: strategyWETH,
-    wstETH: strategyWSTETH,
     WBTC: strategyWBTC,
     UniswapV3: strategyUniswapV3,
   },

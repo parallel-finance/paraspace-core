@@ -6,11 +6,18 @@ import {
   getNTokenMAYC,
   getPoolProxy,
 } from "../../../helpers/contracts-getters";
-import {waitForTx} from "../../../helpers/misc-utils";
-import {ERC721TokenContractId} from "../../../helpers/types";
+import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
+import {
+  ERC20TokenContractId,
+  ERC721TokenContractId,
+} from "../../../helpers/types";
 
 export const step_20 = async (verify = false) => {
+  const paraSpaceConfig = getParaSpaceConfig();
   try {
+    if (!paraSpaceConfig.ReservesConfig[ERC20TokenContractId.APE]) {
+      return;
+    }
     // deploy P2PPairStaking
     const p2pPairStaking = await deployP2PPairStaking(verify);
     const allTokens = await getAllTokens();
