@@ -508,16 +508,20 @@ library MarketplaceLogic {
 
             // item.token == NToken
             if (vars.xTokenAddress == address(0)) {
+                bool isReserve = false;
                 try INToken(token).UNDERLYING_ASSET_ADDRESS() returns (
                     address underlyingAsset
                 ) {
                     bool isNToken = ps
                         ._reserves[underlyingAsset]
                         .xTokenAddress == token;
-                    require(isNToken, Errors.ASSET_NOT_LISTED);
-                    vars.xTokenAddress = token;
-                    token = underlyingAsset;
-                } catch {
+                    if (isNToken) {
+                        vars.xTokenAddress = token;
+                        token = underlyingAsset;
+                        isReserve = true;
+                    }
+                } catch {}
+                if (!isReserve) {
                     // token is not listed
                     IERC721(token).safeTransferFrom(
                         address(this),
