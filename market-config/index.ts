@@ -6,6 +6,7 @@ import {
 } from "../helpers/types";
 import {MocksConfig} from "./mocks";
 import {
+  ArbitrumOneOracleConfig,
   MainnetOracleConfig,
   MoonbeamOracleConfig,
   TestnetOracleConfig,
@@ -287,6 +288,70 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
+export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceAdmin: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  IncentivesController: ZERO_ADDRESS,
+  EmergencyAdmins: [
+    "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+    "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
+    "0xD65Fee206a4ea89eBBcF4694E745C597AB6F8325",
+    "0x755C1bd877788739dD002B98B093c4852AbfA6c4",
+    "0x3A6c796edffc057d789F7d4ffAd438B1D48f3075",
+    "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
+    "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
+    "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+    "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
+  ],
+  RiskAdmin: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  GatewayAdmin: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  ParaSpaceTeam: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  Treasury: "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+  Tokens: {
+    WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    wstETH: "0x5979D7b546E38E414F7E9822514be443A4800529",
+    USDC: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+    DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+    FRAX: "0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F",
+    WBTC: "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
+    UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+  },
+  YogaLabs: {},
+  Uniswap: {
+    V3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    V3Router: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+    V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+  },
+  Marketplace: {},
+  BendDAO: {},
+  Chainlink: {
+    WETH: "0x639fe6ab55c921f74e7fac1ee960c0b6293ba612",
+    DAI: "0xc5c8e77b397e531b8ec06bfb0048328b30e9ecfb",
+    USDC: "0x50834f3163758fcc1df9973b6e91f0f0f0434ad3",
+    USDT: "0x3f3f5df88dc9f13eac63df89ec16ef6e7e25dde7",
+    FRAX: "0x0809e3d38d1b4214958faf06d8b1b1a2b73f2ab8",
+    WBTC: "0xd0c7101eacbb49f3decccc166d238410d6d46d57",
+    ARB: "0x912CE59144191C1204E64559FE8253a0e49E6548",
+    GMX: "0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a",
+  },
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    wstETH: strategyWSTETH,
+    WBTC: strategyWBTC,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: undefined,
+  Oracle: ArbitrumOneOracleConfig,
+  HotWallet: ZERO_ADDRESS,
+  DelegationRegistry: ZERO_ADDRESS,
+};
+
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -447,4 +512,5 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
+  [eEthereumNetwork.arbitrumOne]: ArbitrumOneParaSpaceConfig,
 };

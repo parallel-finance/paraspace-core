@@ -27,6 +27,8 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   xcDOT: parseEther("0.0038333333333").toString(),
   WGLMR: parseEther("0.00027291666666").toString(),
   BLUR: parseEther("0.0005").toString(),
+  ARB: parseEther("0.00082").toString(),
+  GMX: parseEther("0.0435").toString(),
   // ERC721
   BAYC: parseEther("101").toString(),
   WPUNKS: parseEther("140").toString(),
