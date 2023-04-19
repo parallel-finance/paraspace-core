@@ -324,7 +324,6 @@ library DataTypes {
         DataTypes.Marketplace marketplace;
         OrderInfo orderInfo;
         address weth;
-        uint16 referralCode;
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;

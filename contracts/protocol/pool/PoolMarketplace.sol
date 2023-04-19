@@ -71,8 +71,7 @@ contract PoolMarketplace is
     function buyWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
-        DataTypes.Credit calldata credit,
-        uint16 referralCode
+        DataTypes.Credit calldata credit
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -83,8 +82,7 @@ contract PoolMarketplace is
             credit,
             DataTypes.SwapAdapter(address(0), address(0), false),
             bytes(""),
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -94,8 +92,7 @@ contract PoolMarketplace is
         bytes calldata payload,
         DataTypes.Credit calldata credit,
         bytes32 swapAdapterId,
-        bytes calldata swapPayload,
-        uint16 referralCode
+        bytes calldata swapPayload
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -106,8 +103,7 @@ contract PoolMarketplace is
             credit,
             ps._swapAdapters[swapAdapterId],
             swapPayload,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -117,8 +113,7 @@ contract PoolMarketplace is
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         DataTypes.SwapAdapter[] calldata swapAdapters,
-        bytes[] calldata swapPayloads,
-        uint16 referralCode
+        bytes[] calldata swapPayloads
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -129,8 +124,7 @@ contract PoolMarketplace is
             credits,
             swapAdapters,
             swapPayloads,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -139,8 +133,7 @@ contract PoolMarketplace is
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -150,8 +143,7 @@ contract PoolMarketplace is
             payload,
             credit,
             onBehalfOf,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -160,8 +152,7 @@ contract PoolMarketplace is
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -171,8 +162,7 @@ contract PoolMarketplace is
             payloads,
             credits,
             onBehalfOf,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 }

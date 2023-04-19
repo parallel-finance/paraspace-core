@@ -29,13 +29,11 @@ interface IPoolMarketplace {
      * @param marketplaceId The marketplace identifier
      * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credit The credit that user would like to use for this purchase
-     * @param referralCode The referral code used
      */
     function buyWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
-        DataTypes.Credit calldata credit,
-        uint16 referralCode
+        DataTypes.Credit calldata credit
     ) external payable;
 
     function buyAnyWithCredit(
@@ -43,8 +41,7 @@ interface IPoolMarketplace {
         bytes calldata payload,
         DataTypes.Credit calldata credit,
         bytes32 swapAdapterId,
-        bytes calldata swapPayload,
-        uint16 referralCode
+        bytes calldata swapPayload
     ) external payable;
 
     /**
@@ -54,15 +51,13 @@ interface IPoolMarketplace {
      * @param marketplaceIds The marketplace identifiers
      * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credits The credits that user would like to use for this purchase
-     * @param referralCode The referral code used
      */
     function batchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         DataTypes.SwapAdapter[] calldata swapAdapters,
-        bytes[] calldata swapPayloads,
-        uint16 referralCode
+        bytes[] calldata swapPayloads
     ) external payable;
 
     /**
@@ -74,14 +69,12 @@ interface IPoolMarketplace {
      * @param payload The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credit The credit that user would like to use for this purchase
      * @param onBehalfOf Address of the user who will sell the NFT
-     * @param referralCode The referral code used
      */
     function acceptBidWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external;
 
     /**
@@ -93,13 +86,11 @@ interface IPoolMarketplace {
      * @param payloads The encoded parameters to be passed to marketplace contract (selector eliminated)
      * @param credits The credits that the makers have approved to use for this purchase
      * @param onBehalfOf Address of the user who will sell the NFTs
-     * @param referralCode The referral code used
      */
     function batchAcceptBidWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external;
 }
