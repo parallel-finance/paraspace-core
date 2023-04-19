@@ -3,6 +3,7 @@ import {
   auctionStrategyAzuki,
   auctionStrategyBAKC,
   auctionStrategyBAYC,
+  auctionStrategyHVMTL,
   auctionStrategyBEANZ,
   auctionStrategyCloneX,
   auctionStrategyDEGODS,
@@ -44,6 +45,7 @@ import {
   timeLockStrategyAzuki,
   timeLockStrategyBAKC,
   timeLockStrategyBAYC,
+  timeLockStrategyHVMTL,
   timeLockStrategyBEANZ,
   timeLockStrategyBENDETH,
   timeLockStrategyBLUR,
@@ -497,6 +499,22 @@ export const strategyStakefishValidator: IReserveParams = {
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "20",
+};
+
+export const strategyHVMTL: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyHVMTL,
+  timeLockStrategy: timeLockStrategyHVMTL,
+  baseLTVAsCollateral: "3000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "6500",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 export const strategyBEANZ: IReserveParams = {
