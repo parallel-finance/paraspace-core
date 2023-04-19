@@ -176,6 +176,10 @@ test-moonbirds:
 test-marketplace-buy:
 	make TEST_TARGET=_pool_marketplace_buy_with_credit.spec.ts test
 
+.PHONY: test-marketplace-buy-any
+test-marketplace-buy-any:
+	make TEST_TARGET=_pool_marketplace_buy_any_with_credit.spec.ts test
+
 .PHONY: test-marketplace-accept-bid
 test-marketplace-accept-bid:
 	make TEST_TARGET=_pool_marketplace_accept_bid_with_credit.spec.ts test
