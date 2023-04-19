@@ -398,6 +398,7 @@ library MarketplaceLogic {
                 DataTypes.ValidateSwapParams({
                     swapAdapter: params.swapAdapter,
                     amount: vars.creditAmount,
+                    srcToken: vars.creditToken,
                     dstReceiver: vars.creditXTokenAddress
                 })
             );

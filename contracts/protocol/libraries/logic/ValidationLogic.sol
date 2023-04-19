@@ -1223,6 +1223,10 @@ library ValidationLogic {
             swapInfo.srcToken != swapInfo.dstToken,
             Errors.INVALID_SWAP_PAYLOAD
         );
+        require(
+            swapInfo.srcToken == params.srcToken,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
         require(swapInfo.amount == params.amount, Errors.INVALID_SWAP_PAYLOAD);
         require(!params.swapAdapter.paused, Errors.SWAP_ADAPTER_PAUSED);
         require(

@@ -244,7 +244,7 @@ contract PToken is
         uint256 beforeBalance = IERC20(swapInfo.dstToken).balanceOf(
             address(this)
         );
-        Helpers.checkAllowance(swapInfo.dstToken, swapAdapter.router);
+        Helpers.checkAllowance(swapInfo.srcToken, swapAdapter.router);
         Address.functionDelegateCall(
             swapAdapter.adapter,
             abi.encodeWithSelector(

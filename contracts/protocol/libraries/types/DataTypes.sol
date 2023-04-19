@@ -251,6 +251,7 @@ library DataTypes {
     struct ValidateSwapParams {
         SwapAdapter swapAdapter;
         uint256 amount;
+        address srcToken;
         address dstReceiver;
     }
 

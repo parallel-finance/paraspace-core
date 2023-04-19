@@ -128,6 +128,7 @@ library BorrowLogic {
                     DataTypes.ValidateSwapParams({
                         swapAdapter: params.swapAdapter,
                         amount: params.amount,
+                        srcToken: params.asset,
                         dstReceiver: reserveCache.xTokenAddress
                     })
                 );
