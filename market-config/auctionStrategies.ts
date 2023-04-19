@@ -144,6 +144,17 @@ export const auctionStrategyStakefishValidator: IAuctionStrategyParams = {
   tickLength: "900",
 };
 
+
+export const auctionStrategyHVMTL: IAuctionStrategyParams = {
+  name: "auctionStrategyHVMTL",
+  maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),
+  minExpPriceMultiplier: utils.parseUnits("1.1", 18).toString(),
+  minPriceMultiplier: utils.parseUnits("0.7", 18).toString(),
+  stepLinear: utils.parseUnits("0.025", 18).toString(),
+  stepExp: utils.parseUnits("0.0537625790764445", 18).toString(),
+  tickLength: "900",
+};
+
 export const auctionStrategyBEANZ: IAuctionStrategyParams = {
   name: "auctionStrategyBEANZ",
   maxPriceMultiplier: utils.parseUnits("2.6", 18).toString(),

@@ -275,6 +275,7 @@ export enum eContractid {
   StakefishValidatorFactory = "StakefishValidatorFactory",
   DepositContract = "DepositContract",
   MockFeePool = "MockFeePool",
+  HVMTL = 'HVMTL',
   BEANZ = "BEANZ",
   DEGODS = "DEGODS",
   EXP = "EXP",
@@ -470,6 +471,7 @@ export interface iAssetBase<T> {
   OTHR: T;
   CLONEX: T;
   BAKC: T;
+  HVMTL: T;
   BEANZ: T;
   DEGODS: T;
   EXP: T;
@@ -512,6 +514,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MEEBITS"
   | "OTHR"
   | "BAKC"
+  | "HVMTL"
   | "BEANZ"
   | "DEGODS"
   | "EXP"
@@ -565,6 +568,7 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
+  'HVMTL' = 'HVMTL',
   BEANZ = "BEANZ",
   DEGODS = "DEGODS",
   EXP = "EXP",
@@ -726,6 +730,7 @@ export interface IChainlinkConfig {
   CLONEX?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
   WGLMR?: tEthereumAddress;
+  HVMTL?: tEthereumAddress;
   BEANZ?: tEthereumAddress;
   DEGODS?: tEthereumAddress;
   EXP?: tEthereumAddress;

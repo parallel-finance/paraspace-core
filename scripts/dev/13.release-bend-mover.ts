@@ -73,6 +73,11 @@ const releaseBendMover = async (verify = false) => {
 
   const projects = [
     {
+      symbol: ERC721TokenContractId.HVMTL,
+      address: "0x4b15a9c28034dC83db40CD810001427d3BD7163D",
+      aggregator: "",
+    },
+    {
       symbol: ERC721TokenContractId.BEANZ,
       address: "0x306b1ea3ecdf94ab739f1910bbda052ed4a9f949",
       aggregator: "",
