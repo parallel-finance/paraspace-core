@@ -5,7 +5,6 @@ import {
   deploySeaportAdapter,
 } from "../../../helpers/contracts-deployments";
 import {
-  getAllTokens,
   getConduit,
   getFirstSigner,
   getPoolAddressesProvider,
@@ -29,7 +28,6 @@ export const step_15 = async (verify = false) => {
     const deployer = await getFirstSigner();
     const deployerAddress = await deployer.getAddress();
     const paraSpaceConfig = getParaSpaceConfig();
-    const allTokens = await getAllTokens();
     const addressesProvider = await getPoolAddressesProvider();
     const protocolDataProvider = await getProtocolDataProvider();
     const conduitController = await deployConduitController(verify);
@@ -88,12 +86,6 @@ export const step_15 = async (verify = false) => {
       );
     }
 
-    await waitForTx(
-      await addressesProvider.setWETH(
-        allTokens[paraSpaceConfig.WrappedNativeTokenId].address,
-        GLOBAL_OVERRIDES
-      )
-    );
     await insertContractAddressInDb(eContractid.ConduitKey, conduitKey, false);
     await insertContractAddressInDb(eContractid.Conduit, conduit);
     await insertContractAddressInDb(eContractid.PausableZone, zone);

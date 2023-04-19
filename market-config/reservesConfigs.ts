@@ -11,6 +11,7 @@ import {
   auctionStrategyOthr,
   auctionStrategyPudgyPenguins,
   auctionStrategySEWER,
+  auctionStrategyStakefishValidator,
   auctionStrategyUniswapV3,
   auctionStrategyWPunks,
   auctionStrategyZero,
@@ -54,6 +55,7 @@ import {
   timeLockStrategyRETH,
   timeLockStrategySAPE,
   timeLockStrategySEWER,
+  timeLockStrategyStakefishValidator,
   timeLockStrategyUniswapV3,
   timeLockStrategyUSDC,
   timeLockStrategyUSDT,
@@ -467,6 +469,22 @@ export const strategyPudgyPenguins: IReserveParams = {
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "0",
+};
+
+export const strategyStakefishValidator: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyStakefishValidator,
+  timeLockStrategy: timeLockStrategyStakefishValidator,
+  baseLTVAsCollateral: "7425",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "7740",
+  liquidationBonus: "10450",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenStakefishImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "20",
 };
 
 ////////////////////////////////////////////////////////////

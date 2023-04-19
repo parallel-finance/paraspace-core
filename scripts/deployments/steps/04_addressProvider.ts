@@ -2,13 +2,15 @@ import {
   deployPoolAddressesProvider,
   deployPoolAddressesProviderRegistry,
 } from "../../../helpers/contracts-deployments";
-import {getFirstSigner} from "../../../helpers/contracts-getters";
+import {getAllTokens, getFirstSigner} from "../../../helpers/contracts-getters";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 
 export const step_04 = async (verify = false) => {
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
+  const allTokens = await getAllTokens();
+  const paraSpaceConfig = await getParaSpaceConfig();
 
   try {
     const addressesProviderRegistry = await deployPoolAddressesProviderRegistry(
@@ -29,6 +31,12 @@ export const step_04 = async (verify = false) => {
     );
     await waitForTx(
       await addressesProvider.setACLAdmin(deployerAddress, GLOBAL_OVERRIDES)
+    );
+    await waitForTx(
+      await addressesProvider.setWETH(
+        allTokens[paraSpaceConfig.WrappedNativeTokenId].address,
+        GLOBAL_OVERRIDES
+      )
     );
   } catch (error) {
     console.error(error);

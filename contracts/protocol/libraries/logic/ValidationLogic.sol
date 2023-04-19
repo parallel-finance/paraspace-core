@@ -1011,8 +1011,9 @@ library ValidationLogic {
         INToken nToken = INToken(xTokenAddress);
         XTokenType tokenType = nToken.getXTokenType();
         require(
-            tokenType != XTokenType.NTokenUniswapV3,
-            Errors.UNIV3_NOT_ALLOWED
+            tokenType != XTokenType.NTokenUniswapV3 &&
+                tokenType != XTokenType.NTokenStakefish,
+            Errors.FLASHCLAIM_NOT_ALLOWED
         );
 
         // need check sApe status when flash claim for bayc or mayc

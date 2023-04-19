@@ -20,7 +20,11 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
+import {INTokenStakefish} from "../../../interfaces/INTokenStakefish.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import {IStakefishNFTManager} from "../../../interfaces/IStakefishNFTManager.sol";
+import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title SupplyLogic library
@@ -201,19 +205,31 @@ library SupplyLogic {
                 );
             }
         }
+        if (tokenType == XTokenType.NTokenStakefish) {
+            for (uint256 index = 0; index < params.tokenData.length; index++) {
+                address validatorAddr = IStakefishNFTManager(params.asset)
+                    .validatorForTokenId(params.tokenData[index].tokenId);
+                IStakefishValidator.StateChange
+                    memory lastState = IStakefishValidator(validatorAddr)
+                        .lastStateChange();
+                require(
+                    lastState.state == IStakefishValidator.State.Active ||
+                        lastState.state ==
+                        IStakefishValidator.State.PostDeposit,
+                    Errors.INVALID_STATE
+                );
+            }
+        }
         if (
             tokenType == XTokenType.NTokenBAYC ||
             tokenType == XTokenType.NTokenMAYC
         ) {
-            uint16 sApeReserveId = reservesData[DataTypes.SApeAddress].id;
-            bool currentStatus = userConfig.isUsingAsCollateral(sApeReserveId);
-            if (!currentStatus) {
-                userConfig.setUsingAsCollateral(sApeReserveId, true);
-                emit ReserveUsedAsCollateralEnabled(
-                    DataTypes.SApeAddress,
-                    params.onBehalfOf
-                );
-            }
+            Helpers.setAssetUsedAsCollateral(
+                userConfig,
+                reservesData,
+                DataTypes.SApeAddress,
+                params.onBehalfOf
+            );
         }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
@@ -460,11 +476,10 @@ library SupplyLogic {
 
         //currently don't need to update state for erc721
         //reserve.updateState(reserveCache);
-
         INToken nToken = INToken(reserveCache.xTokenAddress);
         require(
             nToken.getXTokenType() == XTokenType.NTokenUniswapV3,
-            Errors.ONLY_UNIV3_ALLOWED
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
         );
 
         uint256[] memory tokenIds = new uint256[](1);
