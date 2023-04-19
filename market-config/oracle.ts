@@ -24,3 +24,11 @@ export const MoonbeamOracleConfig: IOracleConfig = {
   DeviationRate: 1000,
   Nodes: [],
 };
+
+export const ArbitrumOneOracleConfig: IOracleConfig = {
+  BaseCurrency: ERC20TokenContractId.USDC,
+  BaseCurrencyUnit: BigNumber.from("100000000").toString(),
+  ExpirationPeriod: 600,
+  DeviationRate: 1000,
+  Nodes: [],
+};

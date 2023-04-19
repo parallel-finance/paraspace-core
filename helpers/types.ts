@@ -102,6 +102,7 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
+  arbitrumOne = "arbitrumOne",
 }
 
 export enum eContractid {
@@ -649,6 +650,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
+  [eEthereumNetwork.arbitrumOne]: T;
 }
 
 export enum RateMode {
@@ -703,6 +705,8 @@ export interface IChainlinkConfig {
   CLONEX?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
   WGLMR?: tEthereumAddress;
+  ARB?: tEthereumAddress;
+  GMX?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
