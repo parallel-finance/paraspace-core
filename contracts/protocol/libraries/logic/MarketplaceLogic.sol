@@ -76,7 +76,7 @@ library MarketplaceLogic {
         address xTokenAddress;
         uint256 price;
         uint256 ethLeft;
-        // stack too deep
+        // used to avoid stack too deep
         bytes32 marketplaceId;
         bytes payload;
         DataTypes.Credit credit;
