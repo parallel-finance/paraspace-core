@@ -290,6 +290,8 @@ import {
   PoolPositionMover,
   PositionMoverLogic,
   PositionMoverLogic__factory,
+  MockVessel__factory,
+  MockVessel,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -877,7 +879,15 @@ export const deployPoolComponents = async (
       await getFirstSigner()
     ),
     eContractid.PoolPositionMoverImpl,
-    [provider, bendDaoLendPool.address, bendDaoLendPool.address],
+    [
+      provider,
+      bendDaoLendPool.address,
+      bendDaoLendPool.address,
+      allTokens.OTHR.address,
+      allTokens.OTHREXP.address,
+      allTokens.KODA.address,
+      allTokens.VSL.address,
+    ],
     verify,
     false,
     positionMoverLibrary,
@@ -1424,6 +1434,22 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
           ],
           verify
         );
+
+        tokens[ERC721TokenContractId.OTHREXP] = await deployMintableERC721(
+          [ERC721TokenContractId.OTHREXP, ERC721TokenContractId.OTHREXP, ""],
+          verify
+        );
+        tokens[ERC721TokenContractId.KODA] = await deployMintableERC721(
+          [ERC721TokenContractId.KODA, ERC721TokenContractId.KODA, ""],
+          verify
+        );
+
+        tokens[ERC721TokenContractId.VSL] = await deployMockVessel(
+          tokens[tokenSymbol].address,
+          tokens[ERC721TokenContractId.KODA].address,
+          tokens[ERC721TokenContractId.OTHREXP].address
+        );
+
         continue;
       }
 
@@ -1488,6 +1514,14 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         await waitForTx(await factory.setDeployer(nftManager.address, true));
 
         tokens[tokenSymbol] = nftManager;
+        continue;
+      }
+
+      if (
+        tokenSymbol === ERC721TokenContractId.OTHREXP ||
+        tokenSymbol === ERC721TokenContractId.KODA ||
+        tokenSymbol === ERC721TokenContractId.VSL
+      ) {
         continue;
       }
 
@@ -3326,6 +3360,19 @@ export const deployMockBendDaoLendPool = async (weth, verify?: boolean) =>
     [weth],
     verify
   );
+
+export const deployMockVessel = async (
+  otherdeed: tEthereumAddress,
+  kodaAddress: tEthereumAddress,
+  otherdeedExpAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new MockVessel__factory(await getFirstSigner()),
+    "VSL",
+    [otherdeed, kodaAddress, otherdeedExpAddress],
+    verify
+  ) as Promise<MockVessel>;
 ////////////////////////////////////////////////////////////////////////////////
 //  PLS ONLY APPEND MOCK CONTRACTS HERE!
 ////////////////////////////////////////////////////////////////////////////////

@@ -171,6 +171,7 @@ export interface TestEnv {
   usdt: MintableERC20;
   nBAYC: NTokenBAYC;
   nOTHR: NTokenOtherdeed;
+  OTHR: MintableERC721;
   bayc: MintableERC721;
   sfvldr: StakefishNFTManager;
   nSfvldr: NTokenStakefish;
@@ -191,6 +192,12 @@ export interface TestEnv {
   doodles: MintableERC721;
   bakc: MintableERC721;
   nBAKC: NTokenBAKC;
+  nVSL: NToken;
+  nKODA: NToken;
+  nOTHREXP: NToken;
+  OTHREXP: MintableERC721;
+  VSL: MintableERC721;
+  KODA: MintableERC721;
   mockTokenFaucet: MockTokenFaucet;
   wPunkGateway: WPunkGateway;
   wETHGateway: WETHGateway;
@@ -268,6 +275,9 @@ export async function initializeMakeSuite() {
     mayc: {} as MintableERC721,
     doodles: {} as MintableERC721,
     bakc: {} as MintableERC721,
+    VSL: {} as MintableERC721,
+    KODA: {} as MintableERC721,
+    OTHREXP: {} as MintableERC721,
     mockTokenFaucet: {} as MockTokenFaucet,
     wPunkGateway: {} as WPunkGateway,
     wETHGateway: {} as WETHGateway,
@@ -330,8 +340,6 @@ export async function initializeMakeSuite() {
   testEnv.paraspaceOracle = (await getParaSpaceOracle()).connect(
     testEnv.poolAdmin.signer
   );
-
-  testEnv.nOTHR = await getNTokenOtherdeed();
 
   testEnv.protocolDataProvider = await getProtocolDataProvider();
 
@@ -396,6 +404,22 @@ export async function initializeMakeSuite() {
 
   const nBAKCAddress = allTokens.find(
     (xToken) => xToken.symbol === NTokenContractId.nBAKC
+  )?.tokenAddress;
+
+  const nOTHRAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nOTHR
+  )?.tokenAddress;
+
+  const nOTHREXPAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nOTHREXP
+  )?.tokenAddress;
+
+  const nVSLAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nVSL
+  )?.tokenAddress;
+
+  const nKODAAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nKODA
   )?.tokenAddress;
 
   const nSfvldrAddress = allTokens.find(
@@ -495,6 +519,22 @@ export async function initializeMakeSuite() {
     (token) => token.symbol === ERC721TokenContractId.MOONBIRD
   )?.tokenAddress;
 
+  const OTHRAddess = reservesTokens.find(
+    (token) => token.symbol === ERC721TokenContractId.OTHR
+  )?.tokenAddress;
+
+  const VSLAddess = reservesTokens.find(
+    (token) => token.symbol === ERC721TokenContractId.VSL
+  )?.tokenAddress;
+
+  const OTHREXPAddess = reservesTokens.find(
+    (token) => token.symbol === ERC721TokenContractId.OTHREXP
+  )?.tokenAddress;
+
+  const KODAddress = reservesTokens.find(
+    (token) => token.symbol === ERC721TokenContractId.KODA
+  )?.tokenAddress;
+
   if (!pDaiAddress || !pWEthAddress || !nBAYCAddress) {
     console.error("no pDAI|pWETH|nBAYC address");
     process.exit(1);
@@ -526,6 +566,10 @@ export async function initializeMakeSuite() {
   testEnv.nDOODLE = await getNToken(nDOODLEAddress);
   testEnv.nBAKC = await getNTokenBAKC(nBAKCAddress);
   testEnv.nSfvldr = await getNTokenStakefish(nSfvldrAddress);
+  testEnv.nOTHR = await getNTokenOtherdeed(nOTHRAddress);
+  testEnv.nOTHREXP = await getNToken(nOTHREXPAddress);
+  testEnv.nKODA = await getNToken(nKODAAddress);
+  testEnv.nVSL = await getNToken(nVSLAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);
 
@@ -554,6 +598,11 @@ export async function initializeMakeSuite() {
   testEnv.mayc = await getMintableERC721(maycAddress);
   testEnv.doodles = await getMintableERC721(doodlesAddress);
   testEnv.bakc = await getMintableERC721(bakcAddress);
+  testEnv.OTHR = await getMintableERC721(OTHRAddess);
+  testEnv.OTHREXP = await getMintableERC721(OTHREXPAddess);
+  testEnv.KODA = await getMintableERC721(KODAddress);
+  testEnv.VSL = await getMintableERC721(VSLAddess);
+
   testEnv.moonbirds = await getMoonBirds(moonbirdsAddress);
   testEnv.uniswapV3Factory = await getUniswapV3Factory();
   testEnv.nftPositionManager = await getNonfungiblePositionManager();

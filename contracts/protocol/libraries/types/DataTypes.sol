@@ -193,6 +193,19 @@ library DataTypes {
         address oracle;
     }
 
+    struct OtherdeedClaimParams {
+        address otherdeed;
+        address otherdeedExpanded;
+        address koda;
+        address vessel;
+        uint256[] otherdeedIds;
+        uint256[] kodaIds;
+        uint256[] kodaOtherdeedIds;
+        bytes32[][] merkleProofs;
+        uint256 reservesCount;
+        address oracle;
+    }
+
     struct ExecuteDecreaseUniswapV3LiquidityParams {
         address user;
         address asset;
