@@ -72,11 +72,13 @@ proxychains forge verify-contract 0x7347FcFa8D44e495AFE71271e78247156E090C9f \
 ### AuctionLogic
 
 ```
-proxychains forge verify-contract 0x462FCbD3A16A9a09fE686CDf40d0c0b3E493a3aB \
+proxychains forge verify-contract 0xa9b3f3EbD6aa58D541855cf8997Fb6ad839658a2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 200 \
   --watch \
-  contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic \
+  contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic \
+  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0x7dc12cCe38Fd20393d19d5E4d65b021B35093aAB \
+  --libraries contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic:0xBd25Aa1c423cD59662aD1C328f963ce90Afbd94B \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -371,15 +373,14 @@ proxychains forge verify-contract 0xB0A9B618c23c196C2cD51Da3d7A8CF176c353a5d \
 ### PoolApeStaking
 
 ```
-proxychains forge verify-contract 0xcB820d544513636a70dF9A42fC6Cc535730AA606 \
+proxychains forge verify-contract 0x10D89AAc6f133DeE5eE65FEE6C862228eC256eB7 \
   --chain-id 1 \
   --num-of-optimizations 200 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address,address,address,address,address,uint24,uint24)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0xC5c9fB6223A989208Df27dCEE33fC59ff5c26fFF" "0x4d224452801ACEd8B2F0aebE155379bb5D594381" "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" "0xE592427A0AEce92De3Edee1F18E0157C05861564" "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" 3000 500) \
-  contracts/protocol/pool/PoolApeStaking.sol:PoolApeStaking \
-  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0x3FDDCD604b5797D75D129CB6514792de60Bb1EF7 \
-  --libraries contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic:0xF5474ceD4C3c9a256469947D18e3455aEc2E2344 \
+  $(cast abi-encode "constructor(address,address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0x5f6ac80CdB9E87f3Cfa6a90E5140B9a16A361d5C" "0x70b97a0da65c15dfb0ffa02aee6fa36e507c2762") \
+  contracts/protocol/pool/PoolPositionMover.sol:PoolPositionMover \
+  --libraries contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic:0xa9b3f3EbD6aa58D541855cf8997Fb6ad839658a2 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -414,13 +415,13 @@ proxychains forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
 ### StakefishNFTOracleWrapper
 
 ```
-proxychains forge verify-contract 0x2d21Da8e041E82253e3cbE2012D4d59d46F3c1f2 \
+proxychains forge verify-contract 0x31f1595A53730a6129814159De583BFec8B971e0 \
   --chain-id 1 \
-  --num-of-optimizations 1 \
+  --num-of-optimizations 200 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(address,uint256)" "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" 1000000000000000000) \
-  contracts/misc/StakefishNFTOracleWrapper.sol:StakefishNFTOracleWrapper \
+  $(cast abi-encode "constructor(address,address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0xE7BD56364DedF1c5BeBEA9b77A748ab3C5F8c43E" "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a") \
+  contracts/misc/ERC721OracleWrapper.sol:ERC721OracleWrapper \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -487,12 +488,12 @@ proxychains forge verify-contract 0x41BE4a63035025d79dEbecCE8df682e507fC0A2f \
 ### DefaultReserveAuctionStrategy
 
 ```
-proxychains forge verify-contract 0x9488db7F4ee774372d8D43875e27E1E70E83441c \
+proxychains forge verify-contract 0xB1A4B17e33e164b826e213c8CeF448Bc82afdb5a \
   --chain-id 1 \
-  --num-of-optimizations 1 \
+  --num-of-optimizations 200 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(uint256,uint256,uint256,uint256,uint256,uint256)" "1000000000000000000" "1000000000000000000" "950000000000000000" "3645830000000" "48300000000000000" "900") \
+  $(cast abi-encode "constructor(uint256,uint256,uint256,uint256,uint256,uint256)" "10000000000000000000" "1100000000000000000" "800000000000000000" "6250000000000000" "45984894024785900" "900") \
   contracts/protocol/pool/DefaultReserveAuctionStrategy.sol:DefaultReserveAuctionStrategy \
   --compiler-version v0.8.10+commit.fc410830
 ```
@@ -500,13 +501,13 @@ proxychains forge verify-contract 0x9488db7F4ee774372d8D43875e27E1E70E83441c \
 ### DefaultReserveTimeLockStrategy
 
 ```
-proxychains forge verify-contract 0x7be24c30545b4Cc88ddE718b5563E19466aDa2F2 \
+proxychains forge verify-contract 0x0bCc9C5F95833F37317C4F3Fb62bB4e9A7e8C8aa \
   --chain-id 1 \
-  --num-of-optimizations 1 \
+  --num-of-optimizations 200 \
   --watch \
   contracts/misc/DefaultTimeLockStrategy.sol:DefaultTimeLockStrategy \
   --constructor-args \
-  $(cast abi-encode "constructor(address,uint256,uint256,uint48,uint48,uint48,uint256,uint48,uint256)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" 4 12 12 7200 43200 2 600 86400) \
+  $(cast abi-encode "constructor(address,uint256,uint256,uint48,uint48,uint48,uint256,uint48,uint256)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" 4 12 12 7200 43200 10 600 86400) \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
