@@ -70,7 +70,7 @@ export const mintAndValidate = async (
     : await convertToCurrencyDecimals(token.address, amount);
   if (isNFT) {
     for (const i in nftIdsToUse) {
-      const tx = await waitForTx(
+      await waitForTx(
         await token.connect(user.signer)["mint(address)"](user.address)
       );
       expect(await (token as ERC721).ownerOf(i)).to.be.equal(user.address);
