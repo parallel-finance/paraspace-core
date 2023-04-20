@@ -17,6 +17,7 @@ import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungib
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
+import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
 
 /**
  * @title UniswapV3 NToken
@@ -112,7 +113,7 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
             uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
             if (balanceWeth > 0) {
                 IWETH(weth).withdraw(balanceWeth);
-                _safeTransferETH(user, balanceWeth);
+                Helpers.safeTransferETH(user, balanceWeth);
             }
 
             address pairToken = (token0 == weth) ? token1 : token0;
@@ -152,11 +153,6 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         nonReentrant
     {
         revert();
-    }
-
-    function _safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, "ETH_TRANSFER_FAILED");
     }
 
     receive() external payable {}
