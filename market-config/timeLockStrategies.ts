@@ -447,13 +447,13 @@ export const timeLockStrategyStakefishValidator: ITimeLockStrategyParams = {
 
 export const timeLockStrategyHVMTL: ITimeLockStrategyParams = {
   name: "timeLockStrategyHVMTL",
-  minThreshold: "5",
-  midThreshold: "20",
+  minThreshold: "10",
+  midThreshold: "30",
   minWaitTime: "12",
   midWaitTime: "7200",
   maxWaitTime: "43200",
   poolPeriodWaitTime: "600",
-  poolPeriodLimit: "40",
+  poolPeriodLimit: "100",
   period: "86400",
 };
 

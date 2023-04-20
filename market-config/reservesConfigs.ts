@@ -514,7 +514,7 @@ export const strategyHVMTL: IReserveParams = {
   xTokenImpl: eContractid.NTokenImpl,
   reserveFactor: "0",
   borrowCap: "0",
-  supplyCap: "0",
+  supplyCap: "1000",
 };
 
 export const strategyBEANZ: IReserveParams = {
