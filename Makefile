@@ -440,6 +440,10 @@ set-traits-multipliers:
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
+.PHONY: release-collateral-swap-2
+release-collateral-swap-2:
+	make SCRIPT_PATH=./scripts/dev/13.release-collateral-swap-2.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
