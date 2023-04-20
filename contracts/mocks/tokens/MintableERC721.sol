@@ -88,6 +88,12 @@ contract MintableERC721 is Context, ERC721Enumerable {
         }
     }
 
+    function mintTokenId(address to, uint256 _tokenId) public virtual {
+        // We cannot just use balanceOf to create the new tokenId because tokens
+        // can be burned (destroyed), so we need a separate counter.
+        _mint(to, _tokenId);
+    }
+
     function setBaseURI(string memory baseTokenURI) external {
         _baseTokenURI = baseTokenURI;
     }

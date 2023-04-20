@@ -8,4 +8,11 @@ pragma solidity 0.8.10;
  **/
 interface IPoolPositionMover {
     function movePositionFromBendDAO(uint256[] calldata loanIds) external;
+
+    function claimOtherExpandedAndSupply(
+        uint256[] calldata otherdeedIds,
+        uint256[] calldata kodaIds,
+        uint256[] calldata kodaOtherdeedIds,
+        bytes32[][] calldata merkleProofs
+    ) external;
 }

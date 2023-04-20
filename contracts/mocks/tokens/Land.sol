@@ -1182,7 +1182,7 @@ contract Land is ERC721Enumerable, Ownable {
         MAX_FUTURE_LANDS = amount.future;
 
         betaNftIdCurrent = amount.alpha; //beta starts after alpha
-        mintIndexPublicSaleAndContributors = amount.alpha + amount.beta; //public sale starts after beta
+        mintIndexPublicSaleAndContributors = 0; //public sale starts after beta
 
         RESERVED_CONTRIBUTORS_AMOUNT = 10000;
 
@@ -1214,7 +1214,8 @@ contract Land is ERC721Enumerable, Ownable {
             totalSupply() + 1 <= collectionSize,
             "exceed collectionSize"
         );
-        _safeMint(_to, mintIndexPublicSaleAndContributors++);
+        _safeMint(_to, mintIndexPublicSaleAndContributors);
+        mintIndexPublicSaleAndContributors++;
     }
 
     function mint(uint256 count, address to) public virtual {
@@ -1223,8 +1224,9 @@ contract Land is ERC721Enumerable, Ownable {
             "exceed collectionSize"
         );
         for (uint256 i = 0; i < count; i++) {
-            mintIndexPublicSaleAndContributors++;
+            
             _safeMint(to, mintIndexPublicSaleAndContributors);
+            mintIndexPublicSaleAndContributors++;
         }
     }
 

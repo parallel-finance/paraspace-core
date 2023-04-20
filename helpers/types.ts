@@ -278,6 +278,7 @@ export enum eContractid {
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
+  MockVessel = "MockVessel",
 }
 
 /*
@@ -465,6 +466,9 @@ export interface iAssetBase<T> {
   OTHR: T;
   CLONEX: T;
   BAKC: T;
+  OTHREXP: T;
+  KODA: T;
+  VSL: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -500,6 +504,9 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MOONBIRD"
   | "MEEBITS"
   | "OTHR"
+  | "OTHREXP"
+  | "VSL"
+  | "KODA"
   | "BAKC"
 >;
 
@@ -548,6 +555,9 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
+  VSL = "VSL",
+  KODA = "KODA",
+  OTHREXP = "OTHREXP",
 }
 
 export enum NTokenContractId {
@@ -562,6 +572,9 @@ export enum NTokenContractId {
   nPPG = "nPPG",
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
+  nOTHREXP = "nOTHREXP",
+  nVSL = "nVSL",
+  nKODA = "nKODA",
 }
 
 export enum PTokenContractId {

@@ -26,14 +26,28 @@ contract PoolPositionMover is
     ILendPool internal immutable BENDDAO_LEND_POOL;
     uint256 internal constant POOL_REVISION = 149;
 
+    address immutable OTHERDEED;
+    address immutable OTHERDEED_EXPANDED;
+    address immutable KODA;
+    address immutable VESSEL;
+
     constructor(
         IPoolAddressesProvider addressProvider,
         ILendPoolLoan benddaoLendPoolLoan,
-        ILendPool benddaoLendPool
+        ILendPool benddaoLendPool,
+        address otherdeed,
+        address otherdeedExpanded,
+        address koda,
+        address vessel
     ) {
         ADDRESSES_PROVIDER = addressProvider;
         BENDDAO_LEND_POOL_LOAN = benddaoLendPoolLoan;
         BENDDAO_LEND_POOL = benddaoLendPool;
+
+        OTHERDEED = otherdeed;
+        OTHERDEED_EXPANDED = otherdeedExpanded;
+        KODA = koda;
+        VESSEL = vessel;
     }
 
     function movePositionFromBendDAO(uint256[] calldata loanIds)
@@ -48,6 +62,33 @@ contract PoolPositionMover is
             BENDDAO_LEND_POOL_LOAN,
             BENDDAO_LEND_POOL,
             loanIds
+        );
+    }
+
+    function claimOtherExpandedAndSupply(
+        uint256[] calldata otherdeedIds,
+        uint256[] calldata kodaIds,
+        uint256[] calldata kodaOtherdeedIds,
+        bytes32[][] calldata merkleProofs
+    ) external nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        PositionMoverLogic.executeClaimOtherdeedAndSupply(
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[msg.sender],
+            DataTypes.OtherdeedClaimParams({
+                otherdeed: OTHERDEED,
+                otherdeedExpanded: OTHERDEED_EXPANDED,
+                koda: KODA,
+                vessel: VESSEL,
+                otherdeedIds: otherdeedIds,
+                kodaIds: kodaIds,
+                kodaOtherdeedIds: kodaOtherdeedIds,
+                merkleProofs: merkleProofs,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle()
+            })
         );
     }
 
