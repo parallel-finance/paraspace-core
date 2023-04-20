@@ -519,15 +519,15 @@ export async function initializeMakeSuite() {
     (token) => token.symbol === ERC721TokenContractId.MOONBIRD
   )?.tokenAddress;
 
-  const OTHRAddess = reservesTokens.find(
+  const OTHRAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.OTHR
   )?.tokenAddress;
 
-  const VSLAddess = reservesTokens.find(
+  const VSLAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.VSL
   )?.tokenAddress;
 
-  const OTHREXPAddess = reservesTokens.find(
+  const OTHREXPAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.OTHREXP
   )?.tokenAddress;
 
@@ -598,10 +598,10 @@ export async function initializeMakeSuite() {
   testEnv.mayc = await getMintableERC721(maycAddress);
   testEnv.doodles = await getMintableERC721(doodlesAddress);
   testEnv.bakc = await getMintableERC721(bakcAddress);
-  testEnv.OTHR = await getMintableERC721(OTHRAddess);
-  testEnv.OTHREXP = await getMintableERC721(OTHREXPAddess);
+  testEnv.OTHR = await getMintableERC721(OTHRAddress);
+  testEnv.OTHREXP = await getMintableERC721(OTHREXPAddress);
   testEnv.KODA = await getMintableERC721(KODAddress);
-  testEnv.VSL = await getMintableERC721(VSLAddess);
+  testEnv.VSL = await getMintableERC721(VSLAddress);
 
   testEnv.moonbirds = await getMoonBirds(moonbirdsAddress);
   testEnv.uniswapV3Factory = await getUniswapV3Factory();
