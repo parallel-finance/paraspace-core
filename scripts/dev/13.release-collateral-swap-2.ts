@@ -58,11 +58,11 @@ const releaseCollateralSwapV2 = async (verify = false) => {
   }
 
   const assets = [...projects];
-  const encodedData5 = paraSpaceOracle.interface.encodeFunctionData(
+  const encodedData1 = paraSpaceOracle.interface.encodeFunctionData(
     "setAssetSources",
     [assets.map((x) => x.address), assets.map((x) => x.aggregator)]
   );
-  await dryRunEncodedData(paraSpaceOracle.address, encodedData5);
+  await dryRunEncodedData(paraSpaceOracle.address, encodedData1);
 
   console.log("init reserves");
   const reservesParams = paraSpaceConfig.ReservesConfig;
