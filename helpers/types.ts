@@ -102,6 +102,7 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
+  arbitrumOne = "arbitrumOne",
 }
 
 export enum eContractid {
@@ -275,6 +276,13 @@ export enum eContractid {
   StakefishValidatorFactory = "StakefishValidatorFactory",
   DepositContract = "DepositContract",
   MockFeePool = "MockFeePool",
+  HVMTL = "HVMTL",
+  BEANZ = "BEANZ",
+  DEGODS = "DEGODS",
+  EXP = "EXP",
+  VSL = "VSL",
+  KODA = "KODA",
+  BLOCKS = "BLOCKS",
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
@@ -466,6 +474,13 @@ export interface iAssetBase<T> {
   OTHR: T;
   CLONEX: T;
   BAKC: T;
+  HVMTL: T;
+  BEANZ: T;
+  DEGODS: T;
+  EXP: T;
+  VSL: T;
+  KODA: T;
+  BLOCKS: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -502,6 +517,13 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MEEBITS"
   | "OTHR"
   | "BAKC"
+  | "HVMTL"
+  | "BEANZ"
+  | "DEGODS"
+  | "EXP"
+  | "VSL"
+  | "KODA"
+  | "BLOCKS"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -549,6 +571,13 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
+  "HVMTL" = "HVMTL",
+  BEANZ = "BEANZ",
+  DEGODS = "DEGODS",
+  EXP = "EXP",
+  VSL = "VSL",
+  KODA = "KODA",
+  BLOCKS = "BLOCKS",
 }
 
 export enum NTokenContractId {
@@ -650,6 +679,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
+  [eEthereumNetwork.arbitrumOne]: T;
 }
 
 export enum RateMode {
@@ -704,6 +734,15 @@ export interface IChainlinkConfig {
   CLONEX?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
   WGLMR?: tEthereumAddress;
+  HVMTL?: tEthereumAddress;
+  ARB?: tEthereumAddress;
+  GMX?: tEthereumAddress;
+  BEANZ?: tEthereumAddress;
+  DEGODS?: tEthereumAddress;
+  EXP?: tEthereumAddress;
+  VSL?: tEthereumAddress;
+  KODA?: tEthereumAddress;
+  BLOCKS?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
@@ -717,6 +756,11 @@ export interface IUniswapConfig {
   V3Factory?: tEthereumAddress;
   V3Router?: tEthereumAddress;
   V3NFTPositionManager?: tEthereumAddress;
+}
+
+export interface IBendDAOConfig {
+  LendingPool?: tEthereumAddress;
+  LendingPoolLoan?: tEthereumAddress;
 }
 
 export interface IOracleConfig {
@@ -762,6 +806,7 @@ export interface ICommonConfiguration {
   Tokens: iMultiPoolsAssets<tEthereumAddress>;
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
+  BendDAO: IBendDAOConfig;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
