@@ -416,6 +416,10 @@ rate-strategy:
 auction-strategy:
 	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
 
+.PHONY: timelock-strategy
+timelock-strategy:
+	make SCRIPT_PATH=./scripts/dev/7.timelock-strategy.ts run
+
 .PHONY: set-interval-mining
 set-interval-mining:
 	make SCRIPT_PATH=./scripts/dev/8.set-interval-mining.ts run
@@ -607,6 +611,10 @@ upgrade-pool-ape-staking:
 .PHONY: upgrade-pool-parameters
 upgrade-pool-parameters:
 	make TASK_NAME=upgrade:pool-parameters run-task
+
+.PHONY: upgrade-pool-position-mover
+upgrade-pool-position-mover:
+	make TASK_NAME=upgrade:pool-position-mover run-task
 
 .PHONY: reset-pool
 reset-pool:

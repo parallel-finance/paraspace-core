@@ -132,11 +132,11 @@ export const step_06 = async (verify = false) => {
     );
 
     const poolProxy = await getPoolProxy(poolAddress);
-    const cAPE = await getAutoCompoundApe();
     const uniswapV3Router = await getUniswapV3SwapRouter();
     const allTokens = await getAllTokens();
 
     if (allTokens[ERC20TokenContractId.APE]) {
+      const cAPE = await getAutoCompoundApe();
       await waitForTx(
         await poolProxy.unlimitedApproveTo(
           allTokens[ERC20TokenContractId.APE].address,

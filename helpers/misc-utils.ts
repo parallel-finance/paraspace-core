@@ -9,6 +9,7 @@ import {verifyEtherscanContract} from "./etherscan";
 import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
 import {ParaSpaceConfigs} from "../market-config";
 import {
+  ARBITRUM_ONE_CHAINID,
   DB_PATH,
   FORK,
   FORK_CHAINID,
@@ -57,6 +58,14 @@ export const isMoonbeam = (): boolean => {
   return (
     [MOONBEAM_CHAINID].includes(DRE.network.config.chainId!) ||
     [eEthereumNetwork.moonbeam].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isArbitrumOne = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [ARBITRUM_ONE_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.arbitrumOne].includes(FORK as eEthereumNetwork)
   );
 };
 

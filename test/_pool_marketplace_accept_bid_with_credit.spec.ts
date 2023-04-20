@@ -1326,10 +1326,10 @@ describe("Leveraged Bid - unit tests", () => {
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
     expect(await usdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("1000").add(borrowAmount)
+      startAmount.percentMul("500").add(borrowAmount)
     );
     expect(await pUsdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("9000")
+      startAmount.percentMul("9500")
     );
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
 

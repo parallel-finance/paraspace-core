@@ -5,6 +5,7 @@ import {
   deployPoolCore,
   deployPoolMarketplace,
   deployPoolParameters,
+  deployPoolPositionMover,
 } from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
@@ -12,7 +13,7 @@ import {
 } from "../../helpers/contracts-getters";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {waitForTx} from "../../helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
@@ -295,6 +296,38 @@ export const upgradePoolParameters = async (
       poolParameters.address,
       newPoolParametersSelectors,
       oldPoolParametersSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
+};
+
+export const upgradePoolPositionMover = async (
+  oldPoolPositionMover: tEthereumAddress,
+  verify = false
+) => {
+  const addressesProvider = await getPoolAddressesProvider();
+  const pool = await getPoolProxy();
+  const paraSpaceConfig = getParaSpaceConfig();
+  const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
+    oldPoolPositionMover
+  );
+
+  const {
+    poolPositionMover,
+    poolPositionMoverSelectors: newPoolPositionMoverSelectors,
+  } = await deployPoolPositionMover(
+    addressesProvider.address,
+    paraSpaceConfig.BendDAO.LendingPoolLoan!,
+    paraSpaceConfig.BendDAO.LendingPool!,
+    verify
+  );
+
+  const implementations = [
+    [
+      poolPositionMover.address,
+      newPoolPositionMoverSelectors,
+      oldPoolPositionMoverSelectors,
     ],
   ] as [string, string[], string[]][];
 
