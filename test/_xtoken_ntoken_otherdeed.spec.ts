@@ -4,19 +4,18 @@ import {TestEnv} from "./helpers/make-suite";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {HotWalletProxy} from "../types";
-import {
-  getERC721,
-  getHotWalletProxy,
-  getMintableERC721,
-} from "../helpers/contracts-getters";
+import {getHotWalletProxy} from "../helpers/contracts-getters";
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {supplyAndValidate} from "./helpers/validated-steps";
+import {
+  borrowAndValidate,
+  changePriceAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
+import {ProtocolErrors} from "../helpers/types";
 
 describe("Otherdeed nToken warmwallet delegation", () => {
   let testEnv: TestEnv;
   let hotWallet: HotWalletProxy;
-
-  before(async () => {});
 
   beforeEach(async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -43,7 +42,6 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     const {
       users: [user1],
       nOTHR,
-      poolAdmin,
     } = testEnv;
 
     await expect(await hotWallet.getHotWallet(nOTHR.address)).to.be.eq(
@@ -190,5 +188,31 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     await expect(nOTHREXPBalanceAfter).to.be.eq(3);
     await expect(nVSLBalanceAfter).to.be.eq(3);
     await expect(nKODAPBalanceAfter).to.be.eq(2);
+  });
+
+  it("OTHR owner can't flashclaim if HF goes below 1'", async () => {
+    const {
+      users: [user1, user2],
+      pool,
+      VSL,
+      OTHREXP,
+      weth,
+    } = testEnv;
+    await supplyAndValidate(weth, "100000", user2, true);
+    await borrowAndValidate(weth, "3", user1); // can borrow 40% of total value (10)
+
+    await changePriceAndValidate(VSL, "0.000001");
+    await changePriceAndValidate(OTHREXP, "0.000001");
+
+    await expect(
+      pool.connect(user1.signer).claimOtherExpandedAndSupply(
+        ["0", "1", "2"],
+        [],
+        [],
+        [[]] //merkle proof
+      )
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
   });
 });
