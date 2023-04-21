@@ -1214,4 +1214,24 @@ library ValidationLogic {
             );
         }
     }
+
+    function validateSwap(
+        DataTypes.SwapInfo memory swapInfo,
+        DataTypes.ValidateSwapParams memory params
+    ) internal view {
+        require(
+            swapInfo.srcToken != swapInfo.dstToken,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(
+            swapInfo.srcToken == params.srcToken,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(swapInfo.amount == params.amount, Errors.INVALID_SWAP_PAYLOAD);
+        require(!params.swapAdapter.paused, Errors.SWAP_ADAPTER_PAUSED);
+        require(
+            swapInfo.dstReceiver == params.dstReceiver,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+    }
 }

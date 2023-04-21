@@ -24,6 +24,8 @@ import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
+import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
+import {Helpers} from "../../../protocol/libraries/helpers/Helpers.sol";
 
 /**
  * @title Marketplace library
@@ -63,19 +65,23 @@ library MarketplaceLogic {
     );
 
     struct MarketplaceLocalVars {
-        bool isETH;
-        address xTokenAddress;
-        uint256 price;
+        bool isListingTokenETH;
+        address listingToken;
+        address listingXTokenAddress;
         address creditToken;
         address creditXTokenAddress;
         uint256 creditAmount;
+        uint256 creditAmountInListingToken;
         uint256 supplyAmount;
-        address weth;
+        address xTokenAddress;
+        uint256 price;
         uint256 ethLeft;
+        // used to avoid stack too deep
         bytes32 marketplaceId;
         bytes payload;
-        DataTypes.Marketplace marketplace;
-        DataTypes.OrderInfo orderInfo;
+        DataTypes.Credit credit;
+        DataTypes.SwapAdapter swapAdapter;
+        bytes swapPayload;
     }
 
     function executeBuyWithCredit(
@@ -83,37 +89,30 @@ library MarketplaceLogic {
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        IPoolAddressesProvider poolAddressProvider,
-        uint16 referralCode
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        IPoolAddressesProvider poolAddressProvider
     ) external {
         MarketplaceLocalVars memory vars;
 
-        vars.weth = poolAddressProvider.getWETH();
-        DataTypes.Marketplace memory marketplace = poolAddressProvider
-            .getMarketplace(marketplaceId);
-        DataTypes.OrderInfo memory orderInfo = IMarketplace(marketplace.adapter)
-            .getAskOrderInfo(payload);
-        orderInfo.taker = msg.sender;
         vars.ethLeft = msg.value;
-
-        _depositETH(vars, orderInfo);
-
-        vars.ethLeft -= _buyWithCredit(
+        DataTypes.ExecuteMarketplaceParams memory params = _getParams(
             ps,
-            DataTypes.ExecuteMarketplaceParams({
-                marketplaceId: marketplaceId,
-                payload: payload,
-                credit: credit,
-                ethLeft: vars.ethLeft,
-                marketplace: marketplace,
-                orderInfo: orderInfo,
-                weth: vars.weth,
-                referralCode: referralCode,
-                reservesCount: ps._reservesCount,
-                oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
-            })
+            poolAddressProvider,
+            marketplaceId,
+            payload,
+            credit,
+            swapAdapter,
+            swapPayload
         );
+        params.orderInfo = IMarketplace(params.marketplace.adapter)
+            .getAskOrderInfo(payload);
+        params.ethLeft = vars.ethLeft;
+        params.orderInfo.taker = msg.sender;
+
+        _depositETH(vars, params);
+
+        vars.ethLeft -= _buyWithCredit(ps, params);
 
         _refundETH(vars.ethLeft);
     }
@@ -133,7 +132,7 @@ library MarketplaceLogic {
 
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
-        _flashSupplyFor(ps, params, vars, params.orderInfo.maker);
+        _flashSupplyFor(ps, vars, params.orderInfo.maker);
         _flashLoanTo(ps, params, vars, address(this));
 
         (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
@@ -169,30 +168,40 @@ library MarketplaceLogic {
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        IPoolAddressesProvider poolAddressProvider,
-        uint16 referralCode
+        DataTypes.SwapAdapter[] calldata swapAdapters,
+        bytes[] calldata swapPayloads,
+        IPoolAddressesProvider poolAddressProvider
     ) external {
         MarketplaceLocalVars memory vars;
 
-        vars.weth = poolAddressProvider.getWETH();
         require(
             marketplaceIds.length == payloads.length &&
-                payloads.length == credits.length,
+                swapAdapters.length == payloads.length &&
+                swapPayloads.length == payloads.length &&
+                credits.length == payloads.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         vars.ethLeft = msg.value;
-        uint256 reservesCount = ps._reservesCount;
+
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
             vars.marketplaceId = marketplaceIds[i];
             vars.payload = payloads[i];
-            DataTypes.Credit memory credit = credits[i];
-
-            DataTypes.Marketplace memory marketplace = poolAddressProvider
-                .getMarketplace(vars.marketplaceId);
-            DataTypes.OrderInfo memory orderInfo = IMarketplace(
-                marketplace.adapter
-            ).getAskOrderInfo(vars.payload);
-            orderInfo.taker = msg.sender;
+            vars.credit = credits[i];
+            vars.swapAdapter = swapAdapters[i];
+            vars.swapPayload = swapPayloads[i];
+            DataTypes.ExecuteMarketplaceParams memory params = _getParams(
+                ps,
+                poolAddressProvider,
+                vars.marketplaceId,
+                vars.payload,
+                vars.credit,
+                vars.swapAdapter,
+                vars.swapPayload
+            );
+            params.orderInfo = IMarketplace(params.marketplace.adapter)
+                .getAskOrderInfo(vars.payload);
+            params.orderInfo.taker = msg.sender;
+            params.ethLeft = vars.ethLeft;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
             // this also means that the parameters order is very important
@@ -208,25 +217,9 @@ library MarketplaceLogic {
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
-            _depositETH(vars, orderInfo);
+            _depositETH(vars, params);
 
-            vars.ethLeft -= _buyWithCredit(
-                ps,
-                DataTypes.ExecuteMarketplaceParams({
-                    marketplaceId: vars.marketplaceId,
-                    payload: vars.payload,
-                    credit: credit,
-                    ethLeft: vars.ethLeft,
-                    marketplace: marketplace,
-                    orderInfo: orderInfo,
-                    weth: vars.weth,
-                    referralCode: referralCode,
-                    reservesCount: reservesCount,
-                    oracle: poolAddressProvider.getPriceOracle(),
-                    priceOracleSentinel: poolAddressProvider
-                        .getPriceOracleSentinel()
-                })
-            );
+            vars.ethLeft -= _buyWithCredit(ps, params);
         }
 
         _refundETH(vars.ethLeft);
@@ -238,34 +231,26 @@ library MarketplaceLogic {
         bytes calldata payload,
         DataTypes.Credit calldata credit,
         address onBehalfOf,
-        IPoolAddressesProvider poolAddressProvider,
-        uint16 referralCode
+        IPoolAddressesProvider poolAddressProvider
     ) external {
-        MarketplaceLocalVars memory vars;
-
-        vars.weth = poolAddressProvider.getWETH();
-        vars.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
-        vars.orderInfo = IMarketplace(vars.marketplace.adapter).getBidOrderInfo(
-            payload
-        );
-        require(vars.orderInfo.taker == onBehalfOf, Errors.INVALID_ORDER_TAKER);
-
-        _acceptBidWithCredit(
+        DataTypes.ExecuteMarketplaceParams memory params = _getParams(
             ps,
-            DataTypes.ExecuteMarketplaceParams({
-                marketplaceId: marketplaceId,
-                payload: payload,
-                credit: credit,
-                ethLeft: 0,
-                marketplace: vars.marketplace,
-                orderInfo: vars.orderInfo,
-                weth: vars.weth,
-                referralCode: referralCode,
-                reservesCount: ps._reservesCount,
-                oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
-            })
+            poolAddressProvider,
+            marketplaceId,
+            payload,
+            credit,
+            DataTypes.SwapAdapter(address(0), address(0), false),
+            bytes("")
         );
+        params.orderInfo = IMarketplace(params.marketplace.adapter)
+            .getBidOrderInfo(payload);
+
+        require(
+            params.orderInfo.taker == onBehalfOf,
+            Errors.INVALID_ORDER_TAKER
+        );
+
+        _acceptBidWithCredit(ps, params);
     }
 
     function executeBatchAcceptBidWithCredit(
@@ -274,50 +259,31 @@ library MarketplaceLogic {
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
         address onBehalfOf,
-        IPoolAddressesProvider poolAddressProvider,
-        uint16 referralCode
+        IPoolAddressesProvider poolAddressProvider
     ) external {
-        MarketplaceLocalVars memory vars;
-
-        vars.weth = poolAddressProvider.getWETH();
         require(
             marketplaceIds.length == payloads.length &&
                 payloads.length == credits.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
-        uint256 reservesCount = ps._reservesCount;
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            vars.marketplaceId = marketplaceIds[i];
-            vars.payload = payloads[i];
-            DataTypes.Credit memory credit = credits[i];
-
-            vars.marketplace = poolAddressProvider.getMarketplace(
-                vars.marketplaceId
+            DataTypes.ExecuteMarketplaceParams memory params = _getParams(
+                ps,
+                poolAddressProvider,
+                marketplaceIds[i],
+                payloads[i],
+                credits[i],
+                DataTypes.SwapAdapter(address(0), address(0), false),
+                bytes("")
             );
-            vars.orderInfo = IMarketplace(vars.marketplace.adapter)
-                .getBidOrderInfo(vars.payload);
+            params.orderInfo = IMarketplace(params.marketplace.adapter)
+                .getBidOrderInfo(payloads[i]);
             require(
-                vars.orderInfo.taker == onBehalfOf,
+                params.orderInfo.taker == onBehalfOf,
                 Errors.INVALID_ORDER_TAKER
             );
 
-            _acceptBidWithCredit(
-                ps,
-                DataTypes.ExecuteMarketplaceParams({
-                    marketplaceId: vars.marketplaceId,
-                    payload: vars.payload,
-                    credit: credit,
-                    ethLeft: 0,
-                    marketplace: vars.marketplace,
-                    orderInfo: vars.orderInfo,
-                    weth: vars.weth,
-                    referralCode: referralCode,
-                    reservesCount: reservesCount,
-                    oracle: poolAddressProvider.getPriceOracle(),
-                    priceOracleSentinel: poolAddressProvider
-                        .getPriceOracleSentinel()
-                })
-            );
+            _acceptBidWithCredit(ps, params);
         }
     }
 
@@ -337,7 +303,7 @@ library MarketplaceLogic {
 
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
-        _flashSupplyFor(ps, params, vars, params.orderInfo.taker);
+        _flashSupplyFor(ps, vars, params.orderInfo.taker);
         _flashLoanTo(ps, params, vars, params.orderInfo.maker);
 
         // delegateCall to avoid extra token transfer
@@ -372,14 +338,17 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars
     ) internal returns (uint256, uint256) {
         uint256 price = vars.price;
-        uint256 downpayment = price - vars.creditAmount;
-        if (!vars.isETH) {
-            IERC20(vars.creditToken).safeTransferFrom(
+        uint256 downpayment = price - vars.creditAmountInListingToken;
+        if (!vars.isListingTokenETH) {
+            IERC20(vars.listingToken).safeTransferFrom(
                 params.orderInfo.taker,
                 address(this),
                 downpayment
             );
-            _checkAllowance(vars.creditToken, params.marketplace.operator);
+            Helpers.checkAllowance(
+                vars.listingToken,
+                params.marketplace.operator
+            );
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -412,16 +381,40 @@ library MarketplaceLogic {
         DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
         ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
+        vars.creditAmountInListingToken = vars.creditAmount;
 
-        IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
-            to,
-            vars.creditAmount,
-            timeLockParams
-        );
+        if (vars.listingToken == vars.creditToken) {
+            IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
+                to,
+                vars.creditAmount,
+                timeLockParams
+            );
+        } else {
+            DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
+                params.swapAdapter.adapter
+            ).getSwapInfo(params.swapPayload);
+            ValidationLogic.validateSwap(
+                swapInfo,
+                DataTypes.ValidateSwapParams({
+                    swapAdapter: params.swapAdapter,
+                    amount: vars.creditAmount,
+                    srcToken: vars.creditToken,
+                    dstReceiver: vars.creditXTokenAddress
+                })
+            );
+            vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
+                .swapUnderlyingTo(
+                    to,
+                    timeLockParams,
+                    params.swapAdapter,
+                    params.swapPayload,
+                    swapInfo
+                );
+        }
 
-        if (vars.isETH) {
+        if (vars.isListingTokenETH) {
             // No re-entrancy because it sent to our contract address
-            IWETH(params.weth).withdraw(vars.creditAmount);
+            IWETH(params.weth).withdraw(vars.creditAmountInListingToken);
         }
     }
 
@@ -430,13 +423,11 @@ library MarketplaceLogic {
      * Repayment needs to be done after the marketplace exchange by transferring funds to xTokenAddress
      * @dev
      * @param ps The pool storage pointer
-     * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param seller The NFT seller
      */
     function _flashSupplyFor(
         DataTypes.PoolStorage storage ps,
-        DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
@@ -444,7 +435,7 @@ library MarketplaceLogic {
             return;
         }
 
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
+        DataTypes.ReserveData storage reserve = ps._reserves[vars.listingToken];
         DataTypes.UserConfigurationMap storage sellerConfig = ps._usersConfig[
             seller
         ];
@@ -461,7 +452,7 @@ library MarketplaceLogic {
 
         reserve.updateInterestRates(
             reserveCache,
-            vars.creditToken,
+            vars.listingToken,
             vars.supplyAmount,
             0
         );
@@ -475,15 +466,15 @@ library MarketplaceLogic {
 
         if (isFirstSupply || !sellerConfig.isUsingAsCollateral(reserveId)) {
             sellerConfig.setUsingAsCollateral(reserveId, true);
-            emit ReserveUsedAsCollateralEnabled(vars.creditToken, seller);
+            emit ReserveUsedAsCollateralEnabled(vars.listingToken, seller);
         }
 
         emit Supply(
-            vars.creditToken,
+            vars.listingToken,
             msg.sender,
             seller,
             vars.supplyAmount,
-            params.referralCode
+            0
         );
     }
 
@@ -517,16 +508,20 @@ library MarketplaceLogic {
 
             // item.token == NToken
             if (vars.xTokenAddress == address(0)) {
+                bool isReserve = false;
                 try INToken(token).UNDERLYING_ASSET_ADDRESS() returns (
                     address underlyingAsset
                 ) {
                     bool isNToken = ps
                         ._reserves[underlyingAsset]
                         .xTokenAddress == token;
-                    require(isNToken, Errors.ASSET_NOT_LISTED);
-                    vars.xTokenAddress = token;
-                    token = underlyingAsset;
-                } catch {
+                    if (isNToken) {
+                        vars.xTokenAddress = token;
+                        token = underlyingAsset;
+                        isReserve = true;
+                    }
+                } catch {}
+                if (!isReserve) {
                     // token is not listed
                     IERC721(token).safeTransferFrom(
                         address(this),
@@ -560,7 +555,7 @@ library MarketplaceLogic {
                         tokenData: tokenData,
                         onBehalfOf: buyer,
                         payer: address(this),
-                        referralCode: params.referralCode
+                        referralCode: 0
                     })
                 );
             }
@@ -579,11 +574,17 @@ library MarketplaceLogic {
                 user: buyer,
                 onBehalfOf: buyer,
                 amount: vars.creditAmount,
-                referralCode: params.referralCode,
+                referralCode: 0,
                 releaseUnderlying: false,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
-                priceOracleSentinel: params.priceOracleSentinel
+                priceOracleSentinel: params.priceOracleSentinel,
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                swapPayload: bytes("")
             })
         );
     }
@@ -602,44 +603,70 @@ library MarketplaceLogic {
             return;
         }
 
-        if (vars.isETH) {
+        if (vars.isListingTokenETH) {
             IWETH(params.weth).deposit{value: vars.supplyAmount}();
         }
 
-        IERC20(vars.creditToken).safeTransfer(
-            vars.creditXTokenAddress,
+        IERC20(vars.listingToken).safeTransfer(
+            vars.listingXTokenAddress,
             vars.supplyAmount
         );
-    }
-
-    function _checkAllowance(address token, address operator) internal {
-        uint256 allowance = IERC20(token).allowance(address(this), operator);
-        if (allowance == 0) {
-            IERC20(token).safeApprove(operator, type(uint256).max);
-        }
     }
 
     function _cache(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view returns (MarketplaceLocalVars memory vars) {
-        vars.isETH = params.credit.token == address(0);
-        vars.creditToken = vars.isETH ? params.weth : params.credit.token;
+        vars.creditToken = params.credit.token;
         vars.creditAmount = params.credit.amount;
+
+        vars.isListingTokenETH =
+            params.orderInfo.consideration[0].token == address(0);
+        vars.listingToken = vars.isListingTokenETH
+            ? params.weth
+            : params.orderInfo.consideration[0].token;
+
         (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
             params,
             vars
         );
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
-        vars.creditXTokenAddress = reserve.xTokenAddress;
+        vars.creditXTokenAddress = ps._reserves[vars.creditToken].xTokenAddress;
+        vars.listingXTokenAddress = ps
+            ._reserves[vars.listingToken]
+            .xTokenAddress;
+
         // either the seller & buyer decided to not use any credit
         // OR
-        // the creditToken must be listed since otherwise cannot borrow from the pool
+        // the creditToken/listingXToken must be listed since otherwise cannot borrow from the pool
         require(
-            (vars.creditAmount == 0 && vars.supplyAmount == 0) ||
-                vars.creditXTokenAddress != address(0),
+            (vars.creditAmount == 0 ||
+                vars.creditXTokenAddress != address(0)) &&
+                (vars.supplyAmount == 0 ||
+                    vars.listingXTokenAddress != address(0)),
             Errors.ASSET_NOT_LISTED
         );
+    }
+
+    function _getParams(
+        DataTypes.PoolStorage storage ps,
+        IPoolAddressesProvider poolAddressProvider,
+        bytes32 marketplaceId,
+        bytes memory payload,
+        DataTypes.Credit memory credit,
+        DataTypes.SwapAdapter memory swapAdapter,
+        bytes memory swapPayload
+    ) internal returns (DataTypes.ExecuteMarketplaceParams memory params) {
+        params.marketplaceId = marketplaceId;
+        params.weth = poolAddressProvider.getWETH();
+        params.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
+        params.payload = payload;
+        params.credit = credit;
+        params.swapAdapter = swapAdapter;
+        params.swapPayload = swapPayload;
+        params.reservesCount = ps._reservesCount;
+        params.oracle = poolAddressProvider.getPriceOracle();
+        params.priceOracleSentinel = poolAddressProvider
+            .getPriceOracleSentinel();
     }
 
     function _refundETH(uint256 ethLeft) internal {
@@ -650,17 +677,17 @@ library MarketplaceLogic {
 
     function _depositETH(
         MarketplaceLocalVars memory vars,
-        DataTypes.OrderInfo memory orderInfo
+        DataTypes.ExecuteMarketplaceParams memory params
     ) internal {
         if (
             vars.ethLeft == 0 ||
-            orderInfo.consideration[0].itemType == ItemType.NATIVE
+            params.orderInfo.consideration[0].itemType == ItemType.NATIVE
         ) {
             return;
         }
 
-        IWETH(vars.weth).deposit{value: vars.ethLeft}();
-        IERC20(vars.weth).safeTransferFrom(
+        IWETH(params.weth).deposit{value: vars.ethLeft}();
+        IERC20(params.weth).safeTransferFrom(
             address(this),
             msg.sender,
             vars.ethLeft
@@ -704,16 +731,17 @@ library MarketplaceLogic {
             );
             require(
                 item.itemType == ItemType.ERC20 ||
-                    (vars.isETH && item.itemType == ItemType.NATIVE),
+                    (vars.isListingTokenETH &&
+                        item.itemType == ItemType.NATIVE),
                 Errors.INVALID_ASSET_TYPE
             );
             require(
-                item.token == params.credit.token,
+                item.token == params.orderInfo.consideration[0].token,
                 Errors.CREDIT_DOES_NOT_MATCH_ORDER
             );
             price += item.startAmount;
 
-            // supplyAmount is a **helper message** from the seller to the protocol
+            // supplyAmount is a **message** from the seller to the protocol
             // to tell us the percentage of received funds to be supplied to be
             // able to transfer NFT out
             //

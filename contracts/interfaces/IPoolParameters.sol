@@ -32,6 +32,16 @@ interface IPoolParameters {
     event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
+     * @dev Emitted when the swap adapter got updated
+     **/
+    event SwapAdapterUpdated(
+        bytes32 indexed swapAdapterId,
+        address adapter,
+        address router,
+        bool paused
+    );
+
+    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
@@ -152,6 +162,16 @@ interface IPoolParameters {
         external
         view
         returns (DataTypes.ApeCompoundStrategy memory);
+
+    function setSwapAdapter(
+        bytes32 swapAdapterId,
+        DataTypes.SwapAdapter calldata adapter
+    ) external;
+
+    function getSwapAdapter(bytes32 swapAdapterId)
+        external
+        view
+        returns (DataTypes.SwapAdapter memory);
 
     /**
      * @notice Set the auction recovery health factor

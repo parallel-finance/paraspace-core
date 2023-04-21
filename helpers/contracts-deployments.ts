@@ -290,6 +290,8 @@ import {
   PoolPositionMover,
   PositionMoverLogic,
   PositionMoverLogic__factory,
+  UniswapV3SwapAdapter__factory,
+  UniswapV3SwapAdapter,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -3101,6 +3103,14 @@ export const deployStakefishValidator = async (
     [depositContract],
     verify
   ) as Promise<StakefishValidatorV1>;
+
+export const deployUniswapV3SwapAdapter = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new UniswapV3SwapAdapter__factory(await getFirstSigner()),
+    eContractid.UniswapV3SwapAdapter,
+    [],
+    verify
+  ) as Promise<UniswapV3SwapAdapter>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

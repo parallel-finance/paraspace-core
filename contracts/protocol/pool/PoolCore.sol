@@ -288,7 +288,44 @@ contract PoolCore is
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                swapPayload: bytes("")
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function borrowAny(
+        address asset,
+        uint256 amount,
+        uint16 referralCode,
+        address onBehalfOf,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        BorrowLogic.executeBorrow(
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteBorrowParams({
+                asset: asset,
+                user: msg.sender,
+                onBehalfOf: onBehalfOf,
+                amount: amount,
+                referralCode: referralCode,
+                releaseUnderlying: true,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: ps._swapAdapters[swapAdapterId],
+                swapPayload: swapPayload
             })
         );
     }

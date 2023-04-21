@@ -17,6 +17,9 @@ import {EIP712Base} from "./base/EIP712Base.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
+import {ISwapAdapter} from "../../interfaces/ISwapAdapter.sol";
+import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -215,23 +218,58 @@ contract PToken is
         address target,
         uint256 amount,
         DataTypes.TimeLockParams calldata timeLockParams
-    ) external virtual override onlyPool {
+    ) public virtual override onlyPool {
         if (timeLockParams.releaseTime != 0) {
             ITimeLock timeLock = POOL.TIME_LOCK();
-            uint256[] memory amounts = new uint256[](1);
-            amounts[0] = amount;
-
-            timeLock.createAgreement(
-                DataTypes.AssetType.ERC20,
-                timeLockParams.actionType,
-                _underlyingAsset,
-                amounts,
+            _createAggrement(
+                timeLockParams,
+                timeLock,
                 target,
-                timeLockParams.releaseTime
+                _underlyingAsset,
+                amount
             );
             target = address(timeLock);
         }
         IERC20(_underlyingAsset).safeTransfer(target, amount);
+    }
+
+    /// @inheritdoc IPToken
+    function swapUnderlyingTo(
+        address target,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) external virtual override onlyPool returns (uint256 amountOut) {
+        uint256 beforeBalance = IERC20(swapInfo.dstToken).balanceOf(
+            address(this)
+        );
+        Helpers.checkAllowance(swapInfo.srcToken, swapAdapter.router);
+        Address.functionDelegateCall(
+            swapAdapter.adapter,
+            abi.encodeWithSelector(
+                ISwapAdapter.swap.selector,
+                swapAdapter.router,
+                swapPayload
+            )
+        );
+        uint256 afterBalance = IERC20(swapInfo.dstToken).balanceOf(
+            address(this)
+        );
+        amountOut = afterBalance - beforeBalance;
+        require(amountOut > 0, Errors.CALL_SWAP_FAILED);
+        if (timeLockParams.releaseTime != 0) {
+            ITimeLock timeLock = POOL.TIME_LOCK();
+            _createAggrement(
+                timeLockParams,
+                timeLock,
+                target,
+                swapInfo.dstToken,
+                amountOut
+            );
+            target = address(timeLock);
+        }
+        IERC20(swapInfo.dstToken).safeTransfer(target, amountOut);
     }
 
     /// @inheritdoc IPToken
@@ -380,5 +418,25 @@ contract PToken is
         returns (XTokenType)
     {
         return XTokenType.PToken;
+    }
+
+    function _createAggrement(
+        DataTypes.TimeLockParams calldata timeLockParams,
+        ITimeLock timeLock,
+        address target,
+        address asset,
+        uint256 amount
+    ) internal {
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        timeLock.createAgreement(
+            DataTypes.AssetType.ERC20,
+            timeLockParams.actionType,
+            asset,
+            amounts,
+            target,
+            timeLockParams.releaseTime
+        );
     }
 }

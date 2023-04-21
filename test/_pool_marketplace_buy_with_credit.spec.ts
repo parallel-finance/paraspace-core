@@ -218,7 +218,6 @@ describe("Leveraged Buy - Positive tests", () => {
           r: constants.HashZero,
           s: constants.HashZero,
         },
-        0,
         {
           gasLimit: 5000000,
         }
@@ -462,14 +461,13 @@ describe("Leveraged Buy - Positive tests", () => {
         PARASPACE_SEAPORT_ID,
         `0x${encodedData.slice(10)}`,
         {
-          token: constants.AddressZero,
+          token: weth.address,
           amount: creditAmount,
           orderId: constants.HashZero,
           v: 0,
           r: constants.HashZero,
           s: constants.HashZero,
         },
-        0,
         {
           gasLimit: 5000000,
           value: payNowAmount.add(refundAmount),
@@ -592,7 +590,6 @@ describe("Leveraged Buy - Positive tests", () => {
           r: constants.HashZero,
           s: constants.HashZero,
         },
-        0,
         {
           gasLimit: 5000000,
           value: payNowAmount,
@@ -712,17 +709,17 @@ describe("Leveraged Buy - Positive tests", () => {
     };
 
     const creditETH0 = {
-      token: constants.AddressZero,
+      token: weth.address,
       amount: creditAmount,
       ...emptySig,
     };
     const creditETH1 = {
-      token: constants.AddressZero,
+      token: weth.address,
       amount: creditAmount,
       ...emptySig,
     };
     const creditETH2 = {
-      token: constants.AddressZero,
+      token: weth.address,
       amount: creditAmount,
       ...emptySig,
     };
@@ -746,7 +743,6 @@ describe("Leveraged Buy - Positive tests", () => {
             getEncodedData(orderETH2),
           ],
           [creditETH0, creditETH1, creditETH2],
-          0,
           {
             gasLimit: 5000000,
             value: totalPayNowAmount,
@@ -887,12 +883,12 @@ describe("Leveraged Buy - Positive tests", () => {
     };
 
     const creditETH0 = {
-      token: constants.AddressZero,
+      token: weth.address,
       amount: creditAmount,
       ...emptySig,
     };
     const creditETH1 = {
-      token: constants.AddressZero,
+      token: weth.address,
       amount: creditAmount,
       ...emptySig,
     };
@@ -924,7 +920,6 @@ describe("Leveraged Buy - Positive tests", () => {
             getEncodedData(orderETH1),
           ],
           [creditETH0, creditWETH2, creditETH1],
-          0,
           {
             gasLimit: 5000000,
             value: totalPayNowAmount,
@@ -946,7 +941,6 @@ describe("Leveraged Buy - Positive tests", () => {
             getEncodedData(orderWETH2),
           ],
           [creditETH0, creditETH1, creditWETH2],
-          0,
           {
             gasLimit: 5000000,
             value: totalPayNowAmount,
@@ -1225,7 +1219,7 @@ describe("Leveraged Buy - Positive tests", () => {
         [`0x${encodedData.slice(10)}`, `0x${encodedDataX2Y2.slice(10)}`],
         [
           {
-            token: constants.AddressZero,
+            token: weth.address,
             amount: payLaterAmount,
             orderId: constants.HashZero,
             v: 0,
@@ -1241,7 +1235,6 @@ describe("Leveraged Buy - Positive tests", () => {
             s: constants.HashZero,
           },
         ],
-        0,
         {
           gasLimit: 5000000,
           value: payNowAmount,
@@ -1617,14 +1610,13 @@ describe("Leveraged Buy - Positive tests", () => {
         PARASPACE_SEAPORT_ID,
         `0x${encodedData.slice(10)}`,
         {
-          token: ZERO_ADDRESS,
+          token: weth.address,
           amount: creditAmount,
           orderId: constants.HashZero,
           v: 0,
           r: constants.HashZero,
           s: constants.HashZero,
         },
-        0,
         {
           value: payNowAmount,
           gasLimit: 5000000,
@@ -1715,7 +1707,6 @@ describe("Leveraged Buy - Positive tests", () => {
           r: constants.HashZero,
           s: constants.HashZero,
         },
-        0,
         {
           value: payNowAmount,
           gasLimit: 5000000,
