@@ -132,7 +132,11 @@ library MarketplaceLogic {
     ) internal returns (uint256) {
         ValidationLogic.validateBuyWithCredit(params);
 
-        MarketplaceLocalVars memory vars = _cache(ps, params);
+        MarketplaceLocalVars memory vars = _cache(
+            ps,
+            params,
+            params.orderInfo.maker
+        );
 
         _flashSupplyFor(ps, vars, params.orderInfo.maker);
         _flashLoanTo(ps, params, vars, address(this));
@@ -303,7 +307,11 @@ library MarketplaceLogic {
     ) internal {
         ValidationLogic.validateAcceptBidWithCredit(params);
 
-        MarketplaceLocalVars memory vars = _cache(ps, params);
+        MarketplaceLocalVars memory vars = _cache(
+            ps,
+            params,
+            params.orderInfo.taker
+        );
 
         _flashSupplyFor(ps, vars, params.orderInfo.taker);
         _flashLoanTo(ps, params, vars, params.orderInfo.maker);
@@ -648,7 +656,8 @@ library MarketplaceLogic {
 
     function _cache(
         DataTypes.PoolStorage storage ps,
-        DataTypes.ExecuteMarketplaceParams memory params
+        DataTypes.ExecuteMarketplaceParams memory params,
+        address seller
     ) internal view returns (MarketplaceLocalVars memory vars) {
         vars.creditToken = params.credit.token;
         vars.creditAmount = params.credit.amount;
@@ -659,10 +668,6 @@ library MarketplaceLogic {
             ? params.weth
             : params.orderInfo.consideration[0].token;
 
-        (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
-            params,
-            vars
-        );
         vars.creditXTokenAddress = ps._reserves[vars.creditToken].xTokenAddress;
         vars.listingXTokenAddress = ps
             ._reserves[vars.listingToken]
@@ -683,6 +688,12 @@ library MarketplaceLogic {
                 }
             } catch {}
         }
+
+        (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
+            params,
+            vars,
+            seller
+        );
 
         // either the seller & buyer decided to not use any credit
         // OR
@@ -770,7 +781,8 @@ library MarketplaceLogic {
 
     function _validateAndGetPriceAndSupplyAmount(
         DataTypes.ExecuteMarketplaceParams memory params,
-        MarketplaceLocalVars memory vars
+        MarketplaceLocalVars memory vars,
+        address seller
     ) internal view returns (uint256 price, uint256 supplyAmount) {
         for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
             ConsiderationItem memory item = params.orderInfo.consideration[i];
@@ -795,7 +807,7 @@ library MarketplaceLogic {
             // able to transfer NFT out
             //
             // This will only be useful for ParaSpace marketplace
-            if (item.recipient == address(this)) {
+            if (vars.isListingTokenPToken && item.recipient == seller) {
                 supplyAmount += item.startAmount;
             }
         }
