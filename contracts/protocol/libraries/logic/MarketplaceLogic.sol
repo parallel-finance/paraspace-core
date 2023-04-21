@@ -425,7 +425,7 @@ library MarketplaceLogic {
                 );
         }
 
-        if (vars.isListingTokenETH && to == address(this)) {
+        if (vars.isListingTokenETH && creditRecipient == address(this)) {
             // No re-entrancy because it sent to our contract address
             IWETH(params.weth).withdraw(vars.creditAmountInListingToken);
         } else if (vars.isListingTokenPToken) {
