@@ -66,6 +66,8 @@ library MarketplaceLogic {
 
     struct MarketplaceLocalVars {
         bool isListingTokenETH;
+        bool isListingTokenPToken;
+        uint256 listingTokenNextLiquidityIndex;
         address listingToken;
         address listingXTokenAddress;
         address creditToken;
@@ -382,10 +384,13 @@ library MarketplaceLogic {
         ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
         vars.creditAmountInListingToken = vars.creditAmount;
+        address creditRecipient = vars.isListingTokenPToken
+            ? address(this)
+            : to;
 
         if (vars.listingToken == vars.creditToken) {
             IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
-                to,
+                creditRecipient,
                 vars.creditAmount,
                 timeLockParams
             );
@@ -404,7 +409,7 @@ library MarketplaceLogic {
             );
             vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
                 .swapUnderlyingTo(
-                    to,
+                    creditRecipient,
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
@@ -412,9 +417,21 @@ library MarketplaceLogic {
                 );
         }
 
-        if (vars.isListingTokenETH) {
+        if (vars.isListingTokenETH && to == address(this)) {
             // No re-entrancy because it sent to our contract address
             IWETH(params.weth).withdraw(vars.creditAmountInListingToken);
+        } else if (vars.isListingTokenPToken) {
+            SupplyLogic.executeSupply(
+                ps._reserves,
+                ps._usersConfig[to],
+                DataTypes.ExecuteSupplyParams({
+                    asset: vars.listingToken,
+                    amount: vars.creditAmountInListingToken,
+                    onBehalfOf: to,
+                    payer: creditRecipient,
+                    referralCode: 0
+                })
+            );
         }
     }
 
@@ -450,12 +467,17 @@ library MarketplaceLogic {
             DataTypes.AssetType.ERC20
         );
 
-        reserve.updateInterestRates(
-            reserveCache,
-            vars.listingToken,
-            vars.supplyAmount,
-            0
-        );
+        if (!vars.isListingTokenPToken) {
+            reserve.updateInterestRates(
+                reserveCache,
+                vars.listingToken,
+                vars.supplyAmount,
+                0
+            );
+        } else {
+            vars.listingTokenNextLiquidityIndex = reserveCache
+                .nextLiquidityIndex;
+        }
 
         bool isFirstSupply = IPToken(reserveCache.xTokenAddress).mint(
             msg.sender,
@@ -607,10 +629,21 @@ library MarketplaceLogic {
             IWETH(params.weth).deposit{value: vars.supplyAmount}();
         }
 
-        IERC20(vars.listingToken).safeTransfer(
-            vars.listingXTokenAddress,
-            vars.supplyAmount
-        );
+        if (!vars.isListingTokenPToken) {
+            IERC20(vars.listingToken).safeTransfer(
+                vars.listingXTokenAddress,
+                vars.supplyAmount
+            );
+        } else {
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(vars.listingXTokenAddress).burn(
+                address(this),
+                vars.listingXTokenAddress,
+                vars.supplyAmount,
+                vars.listingTokenNextLiquidityIndex,
+                timeLockParams
+            );
+        }
     }
 
     function _cache(
@@ -634,6 +667,22 @@ library MarketplaceLogic {
         vars.listingXTokenAddress = ps
             ._reserves[vars.listingToken]
             .xTokenAddress;
+
+        if (
+            !vars.isListingTokenETH && vars.listingXTokenAddress == address(0)
+        ) {
+            try IPToken(vars.listingToken).UNDERLYING_ASSET_ADDRESS() returns (
+                address underlyingAsset
+            ) {
+                vars.isListingTokenPToken =
+                    ps._reserves[underlyingAsset].xTokenAddress ==
+                    vars.listingToken;
+                if (vars.isListingTokenPToken) {
+                    vars.listingXTokenAddress = vars.listingToken;
+                    vars.listingToken = underlyingAsset;
+                }
+            } catch {}
+        }
 
         // either the seller & buyer decided to not use any credit
         // OR
