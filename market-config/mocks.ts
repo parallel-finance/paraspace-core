@@ -27,6 +27,8 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   xcDOT: parseEther("0.0038333333333").toString(),
   WGLMR: parseEther("0.00027291666666").toString(),
   BLUR: parseEther("0.0005").toString(),
+  ARB: parseEther("0.00082").toString(),
+  GMX: parseEther("0.0435").toString(),
   // ERC721
   BAYC: parseEther("101").toString(),
   WPUNKS: parseEther("140").toString(),
@@ -41,6 +43,13 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   BAKC: parseEther("6").toString(),
   SEWER: parseEther("2").toString(),
   PPG: parseEther("5").toString(),
+  HVMTL: parseEther("1.5").toString(),
+  BEANZ: parseEther("1.365").toString(),
+  DEGODS: parseEther("3.2").toString(),
+  EXP: parseEther("0.9745").toString(),
+  VSL: parseEther("0.373").toString(),
+  KODA: parseEther("9.5").toString(),
+  BLOCKS: parseEther("9.54").toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {
@@ -72,6 +81,13 @@ export const MOCK_TOKEN_MINT_VALUE = {
   BAKC: 1,
   SEWER: 1,
   PPG: 1,
+  HVMTL: 1,
+  BEANZ: 1,
+  DEGODS: 1,
+  EXP: 1,
+  VSL: 1,
+  KODA: 1,
+  BLOCKS: 1,
 };
 
 export const MocksConfig: IMocksConfig = {

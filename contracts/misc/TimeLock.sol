@@ -16,6 +16,10 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {GPv2SafeERC20} from "../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Errors} from "./../protocol/libraries/helpers/Errors.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
+import {IWETH} from "./interfaces/IWETH.sol";
+import {IWrappedPunks} from "./interfaces/IWrappedPunks.sol";
+import {IPunks} from "./interfaces/IPunks.sol";
+import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 
 contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     using GPv2SafeERC20 for IERC20;
@@ -27,6 +31,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
 
     IPool private immutable POOL;
     IACLManager private immutable ACL_MANAGER;
+    address private immutable weth;
+    address private immutable wpunk;
+    IPunks private immutable Punk;
 
     modifier onlyXToken(address asset) {
         require(
@@ -53,9 +60,12 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         _;
     }
 
-    constructor(IPoolAddressesProvider provider) {
+    constructor(IPoolAddressesProvider provider, address _wpunk) {
         POOL = IPool(provider.getPool());
         ACL_MANAGER = IACLManager(provider.getACLManager());
+        wpunk = _wpunk;
+        Punk = IPunks(IWrappedPunks(_wpunk).punkContract());
+        weth = provider.getWETH();
     }
 
     function initialize() public initializer {
@@ -178,6 +188,45 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             }
         }
     }
+
+    function claimETH(uint256[] calldata agreementIds) external nonReentrant {
+        require(!frozen, "TimeLock is frozen");
+
+        uint256 totalAmount = 0;
+        for (uint256 index = 0; index < agreementIds.length; index++) {
+            Agreement memory agreement = _validateAndDeleteAgreement(
+                agreementIds[index]
+            );
+
+            require(agreement.asset == weth, "Wrong agreement asset");
+
+            totalAmount += agreement.tokenIdsOrAmounts[0];
+        }
+
+        IWETH(weth).withdraw(totalAmount);
+        Helpers.safeTransferETH(msg.sender, totalAmount);
+    }
+
+    function claimPunk(uint256[] calldata agreementIds) external nonReentrant {
+        require(!frozen, "TimeLock is frozen");
+
+        IWrappedPunks WPunk = IWrappedPunks(wpunk);
+        for (uint256 index = 0; index < agreementIds.length; index++) {
+            Agreement memory agreement = _validateAndDeleteAgreement(
+                agreementIds[index]
+            );
+
+            require(agreement.asset == wpunk, "Wrong agreement asset");
+            uint256 tokenIdLength = agreement.tokenIdsOrAmounts.length;
+            for (uint256 i = 0; i < tokenIdLength; i++) {
+                uint256 tokenId = agreement.tokenIdsOrAmounts[i];
+                WPunk.burn(tokenId);
+                Punk.transferPunk(agreement.beneficiary, tokenId);
+            }
+        }
+    }
+
+    receive() external payable {}
 
     function freezeAgreement(uint256 agreementId)
         external
