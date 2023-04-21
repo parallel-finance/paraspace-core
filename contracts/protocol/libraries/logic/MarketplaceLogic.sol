@@ -376,13 +376,13 @@ library MarketplaceLogic {
      * @param ps The pool storage pointer
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
-     * @param to The receiver of borrowed tokens
+     * @param originalCreditRecipient The origin receiver of borrowed tokens
      */
     function _flashLoanTo(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
-        address to
+        address originalCreditRecipient
     ) internal {
         if (vars.creditAmount == 0) {
             return;
@@ -392,13 +392,13 @@ library MarketplaceLogic {
         ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
         vars.creditAmountInListingToken = vars.creditAmount;
-        address creditRecipient = vars.isListingTokenPToken
+        address newCreditRecipient = vars.isListingTokenPToken
             ? address(this)
-            : to;
+            : originalCreditRecipient;
 
         if (vars.listingToken == vars.creditToken) {
             IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
-                creditRecipient,
+                newCreditRecipient,
                 vars.creditAmount,
                 timeLockParams
             );
@@ -417,7 +417,7 @@ library MarketplaceLogic {
             );
             vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
                 .swapUnderlyingTo(
-                    creditRecipient,
+                    newCreditRecipient,
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
@@ -425,18 +425,18 @@ library MarketplaceLogic {
                 );
         }
 
-        if (vars.isListingTokenETH && creditRecipient == address(this)) {
+        if (vars.isListingTokenETH && newCreditRecipient == address(this)) {
             // No re-entrancy because it sent to our contract address
             IWETH(params.weth).withdraw(vars.creditAmountInListingToken);
         } else if (vars.isListingTokenPToken) {
             SupplyLogic.executeSupply(
                 ps._reserves,
-                ps._usersConfig[to],
+                ps._usersConfig[originalCreditRecipient],
                 DataTypes.ExecuteSupplyParams({
                     asset: vars.listingToken,
                     amount: vars.creditAmountInListingToken,
-                    onBehalfOf: to,
-                    payer: creditRecipient,
+                    onBehalfOf: originalCreditRecipient,
+                    payer: newCreditRecipient,
                     referralCode: 0
                 })
             );
