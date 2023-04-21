@@ -11,6 +11,8 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {eContractid} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
+import {parseEther} from "ethers/lib/utils";
+import {almostEqual} from "./helpers/uniswapv3-helper";
 
 describe("TimeLock functionality tests", () => {
   const minTime = 5;
@@ -25,6 +27,8 @@ describe("TimeLock functionality tests", () => {
       usdc,
       pool,
       mayc,
+      weth,
+      wPunk,
       users: [user1, user2],
       poolAdmin,
     } = testEnv;
@@ -35,6 +39,8 @@ describe("TimeLock functionality tests", () => {
     await supplyAndValidate(usdc, "200000", user2, true);
 
     await supplyAndValidate(mayc, "10", user1, true);
+
+    await supplyAndValidate(weth, "1", user1, true);
 
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
@@ -80,6 +86,14 @@ describe("TimeLock functionality tests", () => {
       await poolConfigurator
         .connect(poolAdmin.signer)
         .setReserveTimeLockStrategyAddress(
+          weth.address,
+          defaultStrategy.address
+        )
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(
           mayc.address,
           defaultStrategyNFT.address
         )
@@ -88,6 +102,14 @@ describe("TimeLock functionality tests", () => {
       await poolConfigurator
         .connect(poolAdmin.signer)
         .setReserveTimeLockStrategyAddress(dai.address, defaultStrategy.address)
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(
+          wPunk.address,
+          defaultStrategyNFT.address
+        )
     );
 
     return testEnv;
@@ -399,5 +421,87 @@ describe("TimeLock functionality tests", () => {
     const balanceAfter = await mayc.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(10));
+  });
+
+  it("claimETH work as expected", async () => {
+    const {
+      pool,
+      users: [user1],
+      deployer,
+      weth,
+    } = await loadFixture(fixture);
+    await waitForTx(
+      await weth.connect(deployer.signer).deposit({
+        value: parseEther("10"),
+      })
+    );
+    const balanceBefore = await user1.signer.getBalance();
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdraw(weth.address, parseEther("1"), user1.address, {
+          gasLimit: 5000000,
+        })
+    );
+
+    await advanceTimeAndBlock(36 * 3600);
+    await waitForTx(await timeLockProxy.connect(user1.signer).claimETH(["0"]));
+    const balanceAfter = await user1.signer.getBalance();
+    const balanceDiff = balanceAfter.sub(balanceBefore);
+    almostEqual(balanceDiff, parseEther("1"));
+  });
+
+  it("claimPunk work as expected", async () => {
+    const {
+      pool,
+      users: [user1],
+      punks,
+      wPunk,
+      wPunkGateway,
+    } = await loadFixture(fixture);
+
+    const balanceBefore = await punks.balanceOf(user1.address);
+
+    for (let index = 0; index < 3; index++) {
+      await waitForTx(
+        await punks.connect(user1.signer)["getPunk(uint256)"](index)
+      );
+      await waitForTx(
+        await punks
+          .connect(user1.signer)
+          .offerPunkForSaleToAddress(index, 0, wPunkGateway.address)
+      );
+    }
+
+    await wPunkGateway.connect(user1.signer).supplyPunk(
+      [
+        {tokenId: 0, useAsCollateral: true},
+        {tokenId: 1, useAsCollateral: true},
+        {tokenId: 2, useAsCollateral: true},
+      ],
+      user1.address,
+      "0"
+    );
+
+    for (let index = 0; index < 3; index++) {
+      await waitForTx(
+        await pool
+          .connect(user1.signer)
+          .withdrawERC721(wPunk.address, [index], user1.address, {
+            gasLimit: 5000000,
+          })
+      );
+    }
+
+    await advanceTimeAndBlock(4000);
+    await waitForTx(
+      await timeLockProxy
+        .connect(user1.signer)
+        .claimPunk(Array.from(Array(3).keys()))
+    );
+    const balanceAfter = await punks.balanceOf(user1.address);
+
+    await expect(balanceAfter).to.be.eq(balanceBefore.add(3));
   });
 });

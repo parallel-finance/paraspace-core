@@ -292,6 +292,7 @@ import {
   PositionMoverLogic__factory,
   UniswapV3SwapAdapter__factory,
   UniswapV3SwapAdapter,
+  TimeLock,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -323,7 +324,6 @@ import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/librar
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Address} from "hardhat-deploy/dist/types";
 import {Contract} from "ethers";
-
 import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
 import {MarketplaceLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/MarketplaceLogic__factory";
 import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
@@ -2926,13 +2926,17 @@ export const deployParaSpaceAirdrop = async (
 export const deployTimeLockImpl = async (
   provider: tEthereumAddress,
   verify?: boolean
-) =>
-  await withSaveAndVerify(
+) => {
+  const allTokens = await getAllTokens();
+  const wPunk = allTokens.WPUNKS.address;
+  const instance = await withSaveAndVerify(
     new TimeLock__factory(await getFirstSigner()),
     eContractid.TimeLockImpl,
-    [provider],
+    [provider, wPunk],
     verify
   );
+  return instance as TimeLock;
+};
 
 export const deployTimeLockProxy = async (verify?: boolean) => {
   const proxyInstance = await withSaveAndVerify(
