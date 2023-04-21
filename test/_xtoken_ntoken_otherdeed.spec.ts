@@ -12,6 +12,8 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {ProtocolErrors} from "../helpers/types";
+import {ethers} from "hardhat";
+import {BigNumber} from "ethers";
 
 describe("Otherdeed nToken warmwallet delegation", () => {
   let testEnv: TestEnv;
@@ -190,6 +192,33 @@ describe("Otherdeed nToken warmwallet delegation", () => {
     await expect(nKODAPBalanceAfter).to.be.eq(2);
   });
 
+  it("OTHR owner can flashclaim if HF is above 1'", async () => {
+    const {
+      users: [user1, user2],
+      pool,
+      VSL,
+      OTHREXP,
+      weth,
+    } = testEnv;
+    await supplyAndValidate(weth, "100000", user2, true);
+    await borrowAndValidate(weth, "3", user1); // can borrow 30% of total value (10)
+
+    await pool.connect(user1.signer).claimOtherExpandedAndSupply(
+      ["0", "1", "2"],
+      [],
+      [],
+      [[]] //merkle proof
+    );
+
+    await expect(
+      BigNumber.from(
+        (
+          await pool.getUserAccountData(user1.address)
+        ).healthFactor
+      )
+    ).to.be.gt(BigNumber.from(10).pow(18));
+  });
+
   it("OTHR owner can't flashclaim if HF goes below 1'", async () => {
     const {
       users: [user1, user2],
@@ -199,7 +228,7 @@ describe("Otherdeed nToken warmwallet delegation", () => {
       weth,
     } = testEnv;
     await supplyAndValidate(weth, "100000", user2, true);
-    await borrowAndValidate(weth, "3", user1); // can borrow 40% of total value (10)
+    await borrowAndValidate(weth, "3", user1); // can borrow 30% of total value (10)
 
     await changePriceAndValidate(VSL, "0.000001");
     await changePriceAndValidate(OTHREXP, "0.000001");
