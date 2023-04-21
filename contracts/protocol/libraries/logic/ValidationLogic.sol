@@ -90,6 +90,7 @@ library ValidationLogic {
             memory nftReserveConfiguration = nftReserve.configuration;
         (, uint256 liquidationThreshold, , , ) = nftReserveConfiguration
             .getParams();
+        // ensure user can't borrow/withdraw with the new mint nToken
         require(
             request.listingPrice >= floorPrice.percentMul(liquidationThreshold),
             Errors.INVALID_LISTING_PRICE
