@@ -698,8 +698,13 @@ export interface IUniswapV3Config {
   NFTPositionManager: tEthereumAddress;
 }
 
+export interface ISeaportConfig {
+  V11?: tEthereumAddress;
+  V14?: tEthereumAddress;
+}
+
 export interface IMarketplaceConfig {
-  Seaport?: tEthereumAddress;
+  Seaport?: ISeaportConfig;
 }
 
 export interface IChainlinkConfig {
