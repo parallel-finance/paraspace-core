@@ -157,7 +157,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(params, vars);
+        _handleFlashSupplyRepayment(params, vars, params.orderInfo.maker);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
 
         emit BuyWithCredit(
@@ -326,7 +326,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(params, vars);
+        _handleFlashSupplyRepayment(params, vars, params.orderInfo.taker);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.maker);
 
         emit AcceptBidWithCredit(
@@ -350,15 +350,15 @@ library MarketplaceLogic {
         uint256 price = vars.price;
         uint256 downpayment = price - vars.creditAmountInListingToken;
         if (!vars.isListingTokenETH) {
-            IERC20(vars.listingToken).safeTransferFrom(
+            address transferToken = vars.isListingTokenPToken
+                ? vars.listingXTokenAddress
+                : vars.listingToken;
+            IERC20(transferToken).safeTransferFrom(
                 params.orderInfo.taker,
                 address(this),
                 downpayment
             );
-            Helpers.checkAllowance(
-                vars.listingToken,
-                params.marketplace.operator
-            );
+            Helpers.checkAllowance(transferToken, params.marketplace.operator);
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -376,13 +376,13 @@ library MarketplaceLogic {
      * @param ps The pool storage pointer
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
-     * @param originalCreditRecipient The origin receiver of borrowed tokens
+     * @param to The origin receiver of borrowed tokens
      */
     function _flashLoanTo(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
-        address originalCreditRecipient
+        address to
     ) internal {
         if (vars.creditAmount == 0) {
             return;
@@ -392,13 +392,11 @@ library MarketplaceLogic {
         ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
         vars.creditAmountInListingToken = vars.creditAmount;
-        address newCreditRecipient = vars.isListingTokenPToken
-            ? address(this)
-            : originalCreditRecipient;
+        address transit = vars.isListingTokenPToken ? address(this) : to;
 
         if (vars.listingToken == vars.creditToken) {
             IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
-                newCreditRecipient,
+                transit,
                 vars.creditAmount,
                 timeLockParams
             );
@@ -417,7 +415,7 @@ library MarketplaceLogic {
             );
             vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
                 .swapUnderlyingTo(
-                    newCreditRecipient,
+                    transit,
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
@@ -425,18 +423,18 @@ library MarketplaceLogic {
                 );
         }
 
-        if (vars.isListingTokenETH && newCreditRecipient == address(this)) {
+        if (vars.isListingTokenETH && transit == address(this)) {
             // No re-entrancy because it sent to our contract address
             IWETH(params.weth).withdraw(vars.creditAmountInListingToken);
         } else if (vars.isListingTokenPToken) {
             SupplyLogic.executeSupply(
                 ps._reserves,
-                ps._usersConfig[originalCreditRecipient],
+                ps._usersConfig[to],
                 DataTypes.ExecuteSupplyParams({
                     asset: vars.listingToken,
                     amount: vars.creditAmountInListingToken,
-                    onBehalfOf: originalCreditRecipient,
-                    payer: newCreditRecipient,
+                    onBehalfOf: to,
+                    payer: transit,
                     referralCode: 0
                 })
             );
@@ -444,7 +442,7 @@ library MarketplaceLogic {
     }
 
     /**
-     * @notice Flash mint 90% of listingPrice as pToken so that seller's NFT can be traded in advance.
+     * @notice Flash mint the supplyAmount of listingPrice as pToken so that seller's NFT can be traded in advance.
      * Repayment needs to be done after the marketplace exchange by transferring funds to xTokenAddress
      * @dev
      * @param ps The pool storage pointer
@@ -469,13 +467,13 @@ library MarketplaceLogic {
 
         reserve.updateState(reserveCache);
 
-        ValidationLogic.validateSupply(
-            reserveCache,
-            vars.supplyAmount,
-            DataTypes.AssetType.ERC20
-        );
-
         if (!vars.isListingTokenPToken) {
+            ValidationLogic.validateSupply(
+                reserveCache,
+                vars.supplyAmount,
+                DataTypes.AssetType.ERC20
+            );
+
             reserve.updateInterestRates(
                 reserveCache,
                 vars.listingToken,
@@ -499,13 +497,15 @@ library MarketplaceLogic {
             emit ReserveUsedAsCollateralEnabled(vars.listingToken, seller);
         }
 
-        emit Supply(
-            vars.listingToken,
-            msg.sender,
-            seller,
-            vars.supplyAmount,
-            0
-        );
+        if (!vars.isListingTokenPToken) {
+            emit Supply(
+                vars.listingToken,
+                msg.sender,
+                seller,
+                vars.supplyAmount,
+                0
+            );
+        }
     }
 
     /**
@@ -624,10 +624,12 @@ library MarketplaceLogic {
      * @dev
      * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
+     * @param seller The NFT seller
      */
     function _handleFlashSupplyRepayment(
         DataTypes.ExecuteMarketplaceParams memory params,
-        MarketplaceLocalVars memory vars
+        MarketplaceLocalVars memory vars,
+        address seller
     ) internal {
         if (vars.supplyAmount == 0) {
             return;
@@ -645,7 +647,7 @@ library MarketplaceLogic {
         } else {
             DataTypes.TimeLockParams memory timeLockParams;
             IPToken(vars.listingXTokenAddress).burn(
-                address(this),
+                seller,
                 vars.listingXTokenAddress,
                 vars.supplyAmount,
                 vars.listingTokenNextLiquidityIndex,

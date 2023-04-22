@@ -32,6 +32,7 @@ import {
   MintableERC20,
   MintableERC721,
   NToken,
+  PToken,
   WETH9,
   WETH9Mocked,
 } from "../../types";
@@ -294,7 +295,7 @@ export async function executeX2Y2BuyWithCredit(
 
 export async function executeSeaportBuyWithCredit(
   tokenToBuy: MintableERC721 | NToken,
-  tokenToPayWith: MintableERC20,
+  tokenToPayWith: MintableERC20 | PToken,
   startAmount: BigNumberish,
   endAmount: BigNumberish,
   payLaterAmount: BigNumberish,
@@ -323,7 +324,7 @@ export async function executeSeaportBuyWithCredit(
         nftId,
         startAmount,
         endAmount,
-        isCollateralSwap ? pool.address : maker.address
+        maker.address
       ),
     ];
 
@@ -349,7 +350,9 @@ export async function executeSeaportBuyWithCredit(
     PARASPACE_SEAPORT_ID,
     `0x${encodedData.slice(10)}`,
     {
-      token: tokenToPayWith.address,
+      token: isCollateralSwap
+        ? await (tokenToPayWith as PToken).UNDERLYING_ASSET_ADDRESS()
+        : tokenToPayWith.address,
       amount: payLaterAmount,
       orderId: constants.HashZero,
       v: 0,

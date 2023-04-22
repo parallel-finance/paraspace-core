@@ -1479,7 +1479,7 @@ describe("Leveraged Buy - Positive tests", () => {
     const nftId = 0;
 
     // mint USDC to taker and middleman
-    await mintAndValidate(usdc, payNowNumber, taker);
+    await supplyAndValidate(usdc, payNowNumber, taker, true);
     // middleman supplies USDC to pool to be borrowed by offer later
     await supplyAndValidate(usdc, creditNumber, middleman, true);
     await supplyAndValidate(usdc, borrowAmount, middleman, true);
@@ -1493,14 +1493,11 @@ describe("Leveraged Buy - Positive tests", () => {
     await borrowAndValidate(usdc, borrowAmount, maker);
 
     await waitForTx(
-      await usdc.connect(maker.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
-    await waitForTx(
-      await usdc.connect(taker.signer).approve(pool.address, startAmount)
+      await pUsdc.connect(taker.signer).approve(pool.address, startAmount)
     );
     await executeSeaportBuyWithCredit(
       nBAYC,
-      usdc,
+      pUsdc,
       startAmount,
       endAmount,
       creditAmount,
@@ -1518,15 +1515,12 @@ describe("Leveraged Buy - Positive tests", () => {
     expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
     assertAlmostEqual(
       await pUsdc.balanceOf(maker.address),
-      startAmount
-        .percentMul("9500")
-        .add(await convertToCurrencyDecimals(usdc.address, "1")) // default supply ratio
+      startAmount.add(await convertToCurrencyDecimals(usdc.address, "1"))
     );
     assertAlmostEqual(
       await usdc.balanceOf(maker.address),
-      startAmount
-        .percentMul("500")
-        .add(await convertToCurrencyDecimals(usdc.address, borrowAmount))
+
+      await convertToCurrencyDecimals(usdc.address, borrowAmount)
     );
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
     expect(
@@ -1563,7 +1557,7 @@ describe("Leveraged Buy - Positive tests", () => {
     const nftId = 0;
 
     // mint WETH to taker and middleman
-    await mintAndValidate(weth, payNowNumber, taker);
+    await supplyAndValidate(weth, payNowNumber, taker, true);
     // middleman supplies WETH to pool to be borrowed by offer later
     await supplyAndValidate(weth, creditNumber, middleman, true);
     await supplyAndValidate(weth, borrowNumber, middleman, true);
@@ -1581,13 +1575,25 @@ describe("Leveraged Buy - Positive tests", () => {
     await waitForTx(
       await nBAYC.connect(maker.signer).approve(conduit.address, nftId)
     );
+    await waitForTx(
+      await pWETH.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
 
     const getSellOrder = async (): Promise<AdvancedOrder> => {
       const offers = [
         getOfferOrConsiderationItem(2, bayc.address, nftId, 1, 1),
       ];
 
-      const considerations = [getItemETH(startAmount, endAmount, pool.address)];
+      const considerations = [
+        getOfferOrConsiderationItem(
+          1,
+          pWETH.address,
+          toBN(0),
+          startAmount,
+          endAmount,
+          maker.address
+        ),
+      ];
 
       return createSeaportOrder(
         seaport,
@@ -1606,22 +1612,16 @@ describe("Leveraged Buy - Positive tests", () => {
     );
 
     await waitForTx(
-      await pool.connect(taker.signer).buyWithCredit(
-        PARASPACE_SEAPORT_ID,
-        `0x${encodedData.slice(10)}`,
-        {
+      await pool
+        .connect(taker.signer)
+        .buyWithCredit(PARASPACE_SEAPORT_ID, `0x${encodedData.slice(10)}`, {
           token: weth.address,
           amount: creditAmount,
           orderId: constants.HashZero,
           v: 0,
           r: constants.HashZero,
           s: constants.HashZero,
-        },
-        {
-          value: payNowAmount,
-          gasLimit: 5000000,
-        }
-      )
+        })
     );
 
     const wethConfigData = BigNumber.from(
@@ -1714,13 +1714,7 @@ describe("Leveraged Buy - Positive tests", () => {
       )
     );
 
-    const wethConfigData = BigNumber.from(
-      (await pool.getUserConfiguration(maker.address)).data
-    );
-    const wethReserveData = await pool.getReserveData(weth.address);
     expect(await nft.ownerOf(nftId)).to.be.equal(taker.address);
-    assertAlmostEqual(await pWETH.balanceOf(maker.address), startAmount);
-    expect(isUsingAsCollateral(wethConfigData, wethReserveData.id)).to.be.true;
   });
 });
 
