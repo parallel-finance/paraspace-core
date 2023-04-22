@@ -1641,7 +1641,6 @@ describe("Leveraged Buy - Positive tests", () => {
   it("TC-erc721-buy-28: ETH <=> ANY NFT via ParaSpace - no borrow", async () => {
     const {
       weth,
-      pWETH,
       pool,
       conduit,
       seaport,
