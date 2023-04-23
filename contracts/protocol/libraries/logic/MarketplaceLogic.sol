@@ -467,23 +467,7 @@ library MarketplaceLogic {
 
         reserve.updateState(reserveCache);
 
-        if (!vars.isListingTokenPToken) {
-            ValidationLogic.validateSupply(
-                reserveCache,
-                vars.supplyAmount,
-                DataTypes.AssetType.ERC20
-            );
-
-            reserve.updateInterestRates(
-                reserveCache,
-                vars.listingToken,
-                vars.supplyAmount,
-                0
-            );
-        } else {
-            vars.listingTokenNextLiquidityIndex = reserveCache
-                .nextLiquidityIndex;
-        }
+        vars.listingTokenNextLiquidityIndex = reserveCache.nextLiquidityIndex;
 
         bool isFirstSupply = IPToken(reserveCache.xTokenAddress).mint(
             msg.sender,
@@ -495,16 +479,6 @@ library MarketplaceLogic {
         if (isFirstSupply || !sellerConfig.isUsingAsCollateral(reserveId)) {
             sellerConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(vars.listingToken, seller);
-        }
-
-        if (!vars.isListingTokenPToken) {
-            emit Supply(
-                vars.listingToken,
-                msg.sender,
-                seller,
-                vars.supplyAmount,
-                0
-            );
         }
     }
 
@@ -639,21 +613,14 @@ library MarketplaceLogic {
             IWETH(params.weth).deposit{value: vars.supplyAmount}();
         }
 
-        if (!vars.isListingTokenPToken) {
-            IERC20(vars.listingToken).safeTransfer(
-                vars.listingXTokenAddress,
-                vars.supplyAmount
-            );
-        } else {
-            DataTypes.TimeLockParams memory timeLockParams;
-            IPToken(vars.listingXTokenAddress).burn(
-                seller,
-                vars.listingXTokenAddress,
-                vars.supplyAmount,
-                vars.listingTokenNextLiquidityIndex,
-                timeLockParams
-            );
-        }
+        DataTypes.TimeLockParams memory timeLockParams;
+        IPToken(vars.listingXTokenAddress).burn(
+            seller,
+            vars.listingXTokenAddress,
+            vars.supplyAmount,
+            vars.listingTokenNextLiquidityIndex,
+            timeLockParams
+        );
     }
 
     function _cache(
