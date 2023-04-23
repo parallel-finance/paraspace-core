@@ -19,7 +19,7 @@ import {
   toBN,
   toFulfillment,
 } from "../helpers/seaport-helpers/encoding";
-import {MAX_UINT_AMOUNT, PARASPACE_SEAPORT_ID} from "../helpers/constants";
+import {PARASPACE_SEAPORT_ID} from "../helpers/constants";
 import {arrayify, splitSignature} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {
