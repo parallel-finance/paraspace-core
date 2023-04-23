@@ -684,7 +684,7 @@ library MarketplaceLogic {
         DataTypes.Credit memory credit,
         DataTypes.SwapAdapter memory swapAdapter,
         bytes memory swapPayload
-    ) internal returns (DataTypes.ExecuteMarketplaceParams memory params) {
+    ) internal view returns (DataTypes.ExecuteMarketplaceParams memory params) {
         params.marketplaceId = marketplaceId;
         params.weth = poolAddressProvider.getWETH();
         params.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
@@ -752,7 +752,7 @@ library MarketplaceLogic {
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address seller
-    ) internal view returns (uint256 price, uint256 supplyAmount) {
+    ) internal pure returns (uint256 price, uint256 supplyAmount) {
         for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
             ConsiderationItem memory item = params.orderInfo.consideration[i];
             require(
@@ -767,7 +767,7 @@ library MarketplaceLogic {
             );
             require(
                 item.token == params.orderInfo.consideration[0].token,
-                Errors.CREDIT_DOES_NOT_MATCH_ORDER
+                Errors.INVALID_MARKETPLACE_ORDER
             );
             price += item.startAmount;
 
