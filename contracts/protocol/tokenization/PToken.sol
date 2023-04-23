@@ -118,22 +118,13 @@ contract PToken is
     ) external virtual override onlyPool {
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
-            if (timeLockParams.releaseTime != 0) {
-                ITimeLock timeLock = POOL.TIME_LOCK();
-                uint256[] memory amounts = new uint256[](1);
-                amounts[0] = amount;
-
-                timeLock.createAgreement(
-                    DataTypes.AssetType.ERC20,
-                    timeLockParams.actionType,
-                    _underlyingAsset,
-                    amounts,
-                    receiverOfUnderlying,
-                    timeLockParams.releaseTime
-                );
-                receiverOfUnderlying = address(timeLock);
-            }
-            IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+            _sendToUserOrTimeLock(
+                timeLockParams,
+                POOL.TIME_LOCK(),
+                _underlyingAsset,
+                amount,
+                receiverOfUnderlying
+            );
         }
     }
 
@@ -219,18 +210,13 @@ contract PToken is
         uint256 amount,
         DataTypes.TimeLockParams calldata timeLockParams
     ) public virtual override onlyPool {
-        if (timeLockParams.releaseTime != 0) {
-            ITimeLock timeLock = POOL.TIME_LOCK();
-            _createAggrement(
-                timeLockParams,
-                timeLock,
-                target,
-                _underlyingAsset,
-                amount
-            );
-            target = address(timeLock);
-        }
-        IERC20(_underlyingAsset).safeTransfer(target, amount);
+        _sendToUserOrTimeLock(
+            timeLockParams,
+            POOL.TIME_LOCK(),
+            _underlyingAsset,
+            amount,
+            target
+        );
     }
 
     /// @inheritdoc IPToken
@@ -258,18 +244,14 @@ contract PToken is
         );
         amountOut = afterBalance - beforeBalance;
         require(amountOut > 0, Errors.CALL_SWAP_FAILED);
-        if (timeLockParams.releaseTime != 0) {
-            ITimeLock timeLock = POOL.TIME_LOCK();
-            _createAggrement(
-                timeLockParams,
-                timeLock,
-                target,
-                swapInfo.dstToken,
-                amountOut
-            );
-            target = address(timeLock);
-        }
-        IERC20(swapInfo.dstToken).safeTransfer(target, amountOut);
+
+        _sendToUserOrTimeLock(
+            timeLockParams,
+            POOL.TIME_LOCK(),
+            swapInfo.dstToken,
+            amountOut,
+            target
+        );
     }
 
     /// @inheritdoc IPToken
@@ -420,23 +402,28 @@ contract PToken is
         return XTokenType.PToken;
     }
 
-    function _createAggrement(
+    function _sendToUserOrTimeLock(
         DataTypes.TimeLockParams calldata timeLockParams,
         ITimeLock timeLock,
-        address target,
         address asset,
-        uint256 amount
+        uint256 amount,
+        address target
     ) internal {
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amount;
+        if (timeLockParams.releaseTime != 0) {
+            uint256[] memory amounts = new uint256[](1);
+            amounts[0] = amount;
 
-        timeLock.createAgreement(
-            DataTypes.AssetType.ERC20,
-            timeLockParams.actionType,
-            asset,
-            amounts,
-            target,
-            timeLockParams.releaseTime
-        );
+            timeLock.createAgreement(
+                DataTypes.AssetType.ERC20,
+                timeLockParams.actionType,
+                asset,
+                amounts,
+                target,
+                timeLockParams.releaseTime
+            );
+
+            target = address(timeLock);
+        }
+        IERC20(asset).safeTransfer(target, amount);
     }
 }
