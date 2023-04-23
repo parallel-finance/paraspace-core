@@ -31,8 +31,6 @@ jobs:
 
       - name: Run lint
         run: |
-          which touch
-          which make
           touch .env
           yarn
           make build
