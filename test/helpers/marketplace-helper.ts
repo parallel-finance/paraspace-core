@@ -369,7 +369,7 @@ export async function executeSeaportBuyWithCredit(
 
 export async function executeAcceptBidWithCredit(
   tokenToBuy: MintableERC721 | NToken,
-  tokenToPayWith: MintableERC20,
+  tokenToPayWith: MintableERC20 | PToken,
   startAmount: BigNumberish,
   endAmount: BigNumberish,
   payLaterAmount: BigNumberish,
@@ -445,7 +445,7 @@ export async function executeAcceptBidWithCredit(
         toBN(0),
         startAmount,
         endAmount,
-        isCollateralSwap ? pool.address : taker.address
+        taker.address
       ),
     ];
 
@@ -483,7 +483,9 @@ export async function executeAcceptBidWithCredit(
   };
 
   const payLater = {
-    token: tokenToPayWith.address,
+    token: isCollateralSwap
+      ? await (tokenToPayWith as PToken).UNDERLYING_ASSET_ADDRESS()
+      : tokenToPayWith.address,
     amount: payLaterAmount,
     orderId: DRE.ethers.utils.arrayify(sellOrder.signature),
   };

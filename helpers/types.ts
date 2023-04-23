@@ -405,7 +405,7 @@ export enum ProtocolErrors {
   SAPE_NOT_ALLOWED = "128", //operation is not allow for sApe.
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
-  INVALID_STATE = "134", //invalid token status
+  INVALID_STATE = "137", //invalid token status
 
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",

@@ -1270,26 +1270,14 @@ describe("Leveraged Bid - unit tests", () => {
     const nftId = 0;
 
     // mint USDC to maker
-    await mintAndValidate(usdc, makerInitialBalance, maker);
+    await supplyAndValidate(usdc, makerInitialBalance, maker, true);
 
     // middleman supplies USDC to pool to be borrowed by maker later
     await supplyAndValidate(usdc, middlemanInitialBalance, middleman, true);
     await supplyAndValidate(usdc, makerInitialDebt, middleman, true);
 
-    expect(
-      await usdc.balanceOf(
-        (
-          await pool.getReserveData(usdc.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount.add(borrowAmount));
-
     await supplyAndValidate(bayc, "1", taker, true);
     await borrowAndValidate(usdc, makerInitialDebt, taker);
-
-    await waitForTx(
-      await usdc.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
 
     // before acceptBidWithCredit totalCollateralBase for the taker
     // is just the bayc
@@ -1305,7 +1293,7 @@ describe("Leveraged Bid - unit tests", () => {
 
     await executeAcceptBidWithCredit(
       nBAYC,
-      usdc,
+      pUsdc,
       startAmount,
       endAmount,
       creditAmount,
@@ -1322,12 +1310,8 @@ describe("Leveraged Bid - unit tests", () => {
     // taker bayc should reduce
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("500").add(borrowAmount)
-    );
-    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("9500")
-    );
+    expect(await usdc.balanceOf(taker.address)).to.be.equal(borrowAmount);
+    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(startAmount);
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
 
     // after the swap offer's totalCollateralBase should be same as taker's before
