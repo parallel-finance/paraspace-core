@@ -62,6 +62,7 @@ export enum XTokenType {
   PTokenCApe = 14,
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
+  NTokenChromieSquiggle = 17,
 }
 
 export type ConstructorArgs = (
