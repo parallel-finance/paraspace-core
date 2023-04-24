@@ -118,4 +118,11 @@ interface IPoolMarketplace {
     function rejectBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external payable;
+
+    /**
+     * @notice Get a buyWithCredit request status for Blur exchange listing order.
+     */
+    function getBlurExchangeRequestStatus(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external view returns (DataTypes.BlurBuyWithCreditRequestStatus);
 }

@@ -249,6 +249,14 @@ library PoolExtendedLogic {
         );
     }
 
+    function executeGetBlurExchangeRequestStatus(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external view returns (DataTypes.BlurBuyWithCreditRequestStatus) {
+        bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
+        return ps._blurExchangeRequestStatus[requestHash];
+    }
+
     function _calculateBlurExchangeRequestHash(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) internal pure returns (bytes32) {

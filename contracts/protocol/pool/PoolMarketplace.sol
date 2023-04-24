@@ -188,4 +188,13 @@ contract PoolMarketplace is
             request
         );
     }
+
+    /// @inheritdoc IPoolMarketplace
+    function getBlurExchangeRequestStatus(
+        DataTypes.BlurBuyWithCreditRequest calldata request
+    ) external view returns (DataTypes.BlurBuyWithCreditRequestStatus) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return
+            PoolExtendedLogic.executeGetBlurExchangeRequestStatus(ps, request);
+    }
 }
