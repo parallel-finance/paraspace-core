@@ -20,6 +20,7 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../interfaces/ISwapAdapter.sol";
 import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
+import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -225,7 +226,8 @@ contract PToken is
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata swapPayload,
-        DataTypes.SwapInfo calldata swapInfo
+        DataTypes.SwapInfo calldata swapInfo,
+        uint256 max
     ) external virtual override onlyPool returns (uint256 amountOut) {
         uint256 beforeBalance = IERC20(swapInfo.dstToken).balanceOf(
             address(this)
@@ -242,7 +244,7 @@ contract PToken is
         uint256 afterBalance = IERC20(swapInfo.dstToken).balanceOf(
             address(this)
         );
-        amountOut = afterBalance - beforeBalance;
+        amountOut = Math.min(afterBalance - beforeBalance, max);
         require(amountOut > 0, Errors.CALL_SWAP_FAILED);
 
         _sendToUserOrTimeLock(

@@ -138,7 +138,8 @@ library BorrowLogic {
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
-                    swapInfo
+                    swapInfo,
+                    type(uint256).max
                 );
             }
         }

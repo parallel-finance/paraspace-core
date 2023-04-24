@@ -74,6 +74,7 @@ interface IPToken is
      * @dev Used by the Pool to transfer assets in borrow(), withdraw() and flashLoan()
      * @param user The recipient of the underlying
      * @param amount The amount getting transferred
+     * @param timeLockParams The timelock parameters determined by timelock strategy
      **/
     function transferUnderlyingTo(
         address user,
@@ -81,12 +82,22 @@ interface IPToken is
         DataTypes.TimeLockParams calldata timeLockParams
     ) external;
 
+    /**
+     * @notice Swap the underlying asset to `target`.
+     * @dev Used by the Pool to swap assets in borrow(), buyWithCredit() and acceptBidWithCredit()
+     * @param user The recipient of the swapped assets
+     * @param timeLockParams The timelock parameters determined by timelock strategy
+     * @param swapAdapter The swap adapter used for swapping. By default it'll be UniswapV3SwapAdapter
+     * @param swapPayload The swap payload
+     * @param swapInfo the swap info used for providing context information
+     **/
     function swapUnderlyingTo(
         address user,
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
-        bytes calldata payload,
-        DataTypes.SwapInfo calldata swapInfo
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo,
+        uint256 max
     ) external returns (uint256 amountOut);
 
     /**
@@ -153,9 +164,5 @@ interface IPToken is
      * @param to The address of the recipient
      * @param amount The amount of token to transfer
      */
-    function rescueTokens(
-        address token,
-        address to,
-        uint256 amount
-    ) external;
+    function rescueTokens(address token, address to, uint256 amount) external;
 }
