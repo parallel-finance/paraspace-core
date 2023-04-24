@@ -414,14 +414,16 @@ library MarketplaceLogic {
                     dstReceiver: vars.creditXTokenAddress
                 })
             );
-            vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
-                .swapUnderlyingTo(
+            vars.creditAmountInListingToken = Math.min(
+                IPToken(vars.creditXTokenAddress).swapUnderlyingTo(
                     transit,
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
                     swapInfo
-                );
+                ),
+                vars.price
+            );
         }
 
         if (vars.isListingTokenETH && transit == address(this)) {
