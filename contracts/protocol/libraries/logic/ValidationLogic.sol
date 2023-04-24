@@ -1218,13 +1218,15 @@ library ValidationLogic {
     function validateSwap(
         DataTypes.SwapInfo memory swapInfo,
         DataTypes.ValidateSwapParams memory params
-    ) internal view {
+    ) internal pure {
         require(
             swapInfo.srcToken != swapInfo.dstToken,
             Errors.INVALID_SWAP_PAYLOAD
         );
         require(
-            swapInfo.srcToken == params.srcToken,
+            (swapInfo.srcToken == params.srcToken &&
+                (params.dstToken == address(0) ||
+                    swapInfo.dstToken == params.dstToken)),
             Errors.INVALID_SWAP_PAYLOAD
         );
         require(swapInfo.amount == params.amount, Errors.INVALID_SWAP_PAYLOAD);

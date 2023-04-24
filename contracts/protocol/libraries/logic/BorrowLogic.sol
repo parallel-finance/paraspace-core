@@ -129,6 +129,7 @@ library BorrowLogic {
                         swapAdapter: params.swapAdapter,
                         amount: params.amount,
                         srcToken: params.asset,
+                        dstToken: address(0),
                         dstReceiver: reserveCache.xTokenAddress
                     })
                 );

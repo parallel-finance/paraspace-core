@@ -252,6 +252,7 @@ library DataTypes {
         SwapAdapter swapAdapter;
         uint256 amount;
         address srcToken;
+        address dstToken;
         address dstReceiver;
     }
 

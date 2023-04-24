@@ -410,6 +410,7 @@ library MarketplaceLogic {
                     swapAdapter: params.swapAdapter,
                     amount: vars.creditAmount,
                     srcToken: vars.creditToken,
+                    dstToken: vars.listingToken,
                     dstReceiver: vars.creditXTokenAddress
                 })
             );
