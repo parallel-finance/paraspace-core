@@ -121,10 +121,12 @@ export const resetPool = async (verify = false) => {
     poolParameters,
     poolMarketplace,
     poolApeStaking,
+    poolPositionMover,
     poolCoreSelectors: newPoolCoreSelectors,
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
     poolApeStakingSelectors: newPoolApeStakingSelectors,
+    poolPositionMoverSelectors,
   } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
@@ -132,6 +134,7 @@ export const resetPool = async (verify = false) => {
     [poolCore.address, newPoolCoreSelectors, []],
     [poolMarketplace.address, newPoolMarketplaceSelectors, []],
     [poolParameters.address, newPoolParametersSelectors, []],
+    [poolPositionMover.address, poolPositionMoverSelectors, []],
   ] as [string, string[], string[]][];
 
   if (poolApeStaking) {
