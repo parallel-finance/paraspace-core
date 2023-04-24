@@ -157,7 +157,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(params, vars, params.orderInfo.maker);
+        _handleFlashSupplyRepayment(vars, params.orderInfo.maker);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
 
         emit BuyWithCredit(
@@ -326,7 +326,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(params, vars, params.orderInfo.taker);
+        _handleFlashSupplyRepayment(vars, params.orderInfo.taker);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.maker);
 
         emit AcceptBidWithCredit(
@@ -596,21 +596,15 @@ library MarketplaceLogic {
     /**
      * @notice "Repay" minted pToken by transferring funds from the seller to xTokenAddress
      * @dev
-     * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
      * @param vars The marketplace local vars for caching storage values for future reads
      * @param seller The NFT seller
      */
     function _handleFlashSupplyRepayment(
-        DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
         if (vars.supplyAmount == 0) {
             return;
-        }
-
-        if (vars.isListingTokenETH) {
-            IWETH(params.weth).deposit{value: vars.supplyAmount}();
         }
 
         DataTypes.TimeLockParams memory timeLockParams;
