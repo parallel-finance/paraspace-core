@@ -282,7 +282,10 @@ task("execute-buffered-txs", "Execute buffered transactions").setAction(
         continue;
       }
       await waitForTx(
-        await timeLock.executeTransaction(...a.action, GLOBAL_OVERRIDES)
+        await timeLock.executeTransaction(...a.action, {
+          ...GLOBAL_OVERRIDES,
+          gasLimit: 5000000,
+        })
       );
     }
   }

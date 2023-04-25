@@ -173,7 +173,7 @@ export const initReservesByHelper = async (
   for (const [symbol, params] of reserves) {
     if (!tokenAddresses[symbol]) {
       if (symbol === ERC20TokenContractId.yAPE) {
-        await deployAutoYieldApe();
+        await deployAutoYieldApe(false);
         tokenAddresses[symbol] = (await getAutoYieldApe()).address;
       } else {
         console.log(
