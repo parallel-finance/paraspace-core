@@ -7,6 +7,7 @@ import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
+import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
 import {Helpers} from "../helpers/Helpers.sol";
@@ -227,13 +228,12 @@ library PoolExtendedLogic {
         );
 
         //burn nToken.
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = request.tokenId;
         burnUserNToken(
             ps,
             request.collection,
-            tokenIds,
+            request.tokenId,
             false,
+            true,
             request.initiator
         );
 
@@ -350,12 +350,21 @@ library PoolExtendedLogic {
     function burnUserNToken(
         DataTypes.PoolStorage storage ps,
         address asset,
-        uint256[] memory tokenIds,
+        uint256 tokenId,
         bool releaseUnderlying,
+        bool endStartedAuction,
         address user
     ) public {
         DataTypes.ReserveData storage nftReserve = ps._reserves[asset];
         address nTokenAddress = nftReserve.xTokenAddress;
+        if (
+            endStartedAuction &&
+            IAuctionableERC721(nTokenAddress).isAuctioned(tokenId)
+        ) {
+            IAuctionableERC721(nTokenAddress).endAuction(tokenId);
+        }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
         // no time lock needed here
         DataTypes.TimeLockParams memory timeLockParams;
         (, uint64 collateralizedBalance) = INToken(nTokenAddress).burn(
