@@ -1,6 +1,6 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {MAX_UINT_AMOUNT, WAD} from "../helpers/constants";
 import {
   getProtocolDataProvider,
   getVariableDebtToken,
@@ -12,6 +12,7 @@ import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {zeroAddress} from "ethereumjs-util";
+import {BigNumber} from "ethers";
 
 describe("BLUR integration tests", () => {
   let ETHExchangeRequest;
@@ -372,6 +373,37 @@ describe("BLUR integration tests", () => {
     await expect(
       pool.connect(user1.signer).initiateBlurExchangeRequest(invalidRequest, {
         value: parseEther("40"),
+      })
+    ).to.be.revertedWith(ProtocolErrors.INVALID_LISTING_PRICE);
+  });
+
+  it("listing price must > trait boosted price * ls when initiate request", async () => {
+    const {
+      pool,
+      bayc,
+      nBAYC,
+      poolAdmin,
+      users: [user1],
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await nBAYC
+        .connect(poolAdmin.signer)
+        .setTraitsMultipliers(["0"], [BigNumber.from(WAD).mul(2)])
+    );
+
+    const invalidRequest = {
+      initiator: user1.address,
+      paymentToken: zeroAddress(),
+      listingPrice: parseEther("100"),
+      borrowAmount: parseEther("40"),
+      collection: bayc.address,
+      tokenId: 0,
+    };
+
+    await expect(
+      pool.connect(user1.signer).initiateBlurExchangeRequest(invalidRequest, {
+        value: parseEther("60"),
       })
     ).to.be.revertedWith(ProtocolErrors.INVALID_LISTING_PRICE);
   });

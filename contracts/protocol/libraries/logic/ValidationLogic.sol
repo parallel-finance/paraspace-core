@@ -86,13 +86,19 @@ library ValidationLogic {
         uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
             request.collection
         );
+        uint256 collateralPrice = Helpers.getTraitBoostedTokenPrice(
+            nftReserve.xTokenAddress,
+            floorPrice,
+            request.tokenId
+        );
         DataTypes.ReserveConfigurationMap
             memory nftReserveConfiguration = nftReserve.configuration;
         (, uint256 liquidationThreshold, , , ) = nftReserveConfiguration
             .getParams();
         // ensure user can't borrow/withdraw with the new mint nToken
         require(
-            request.listingPrice >= floorPrice.percentMul(liquidationThreshold),
+            request.listingPrice >=
+                collateralPrice.percentMul(liquidationThreshold),
             Errors.INVALID_LISTING_PRICE
         );
 
