@@ -476,6 +476,18 @@ export const impersonateAddress = async (
       method: `${JSONRPC_VARIANT}_impersonateAccount`,
       params: [address],
     });
+    const balance = await (DRE as HardhatRuntimeEnvironment).ethers.provider.getBalance(address)
+    await (DRE as HardhatRuntimeEnvironment).network.provider.request({
+      method: `${JSONRPC_VARIANT}_setBalance`,
+      params: [
+        address,
+        ethers.utils
+          .parseEther("10000")
+          .add(balance)
+          .toHexString()
+          .replace("0x0", "0x")
+      ],
+    });
   }
 
   const signer = isLocalTestnet()

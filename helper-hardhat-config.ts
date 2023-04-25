@@ -72,7 +72,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.kovan]: undefined,
   [eEthereumNetwork.ropsten]: undefined,
   [eEthereumNetwork.goerli]: GOERLI_CHAINID,
-  [eEthereumNetwork.hardhat]: FORK ? FORK_CHAINID : HARDHAT_CHAINID,
+  [eEthereumNetwork.hardhat]: FORK ? 1 : HARDHAT_CHAINID,
   [eEthereumNetwork.anvil]: HARDHAT_CHAINID,
   [eEthereumNetwork.ganache]: undefined,
   [eEthereumNetwork.parallel]: PARALLEL_CHAINID,

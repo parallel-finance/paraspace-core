@@ -179,4 +179,31 @@ interface IPoolMarketplace {
     function getBlurExchangeRequestStatus(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external view returns (DataTypes.BlurBuyWithCreditRequestStatus);
+
+    event BlurExchangeRequestInitiated(
+        address indexed initiator,
+        address paymentToken,
+        uint256 listingPrice,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
+
+    event BlurExchangeRequestFulfilled(
+        address indexed initiator,
+        address paymentToken,
+        uint256 listingPrice,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
+
+    event BlurExchangeRequestRejected(
+        address indexed initiator,
+        address paymentToken,
+        uint256 listingPrice,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
 }
