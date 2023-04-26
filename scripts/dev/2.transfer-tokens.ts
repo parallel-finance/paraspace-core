@@ -196,6 +196,9 @@ const transferTokens = async () => {
         );
         const balance = await moonbirds.balanceOf(whaleAddress);
         console.log(`whale ${name} balance: ${balance.toString()}`);
+        if (balance.eq(0)) {
+          continue;
+        }
         let transferred = 0;
         for (
           let tokenId = 9999;

@@ -22,6 +22,8 @@ DRY_RUN=TimeLock
 RECEIVER=0xbF0135be6a39257c659fd1955324dc3CDb342f29
 ' > .env
 
+make build
+
 ## 2. sync contracts artifact
 curl -s -O https://paraspace-static-files.s3.amazonaws.com/contracts/mainnet/v1.4.8/deployed-contracts.json
 
@@ -31,13 +33,14 @@ make hardhat &
 sleep 5
 
 ## 4. upgrade hv-mtl
-npx hardhat run ./scripts/dev/14.release-hv-mtl.ts
+npx hardhat run ./scripts/dev/14.release-hv-mtl.ts --network localhost
 make RPC_URL=http://localhost:8545 queue-buffered-txs
 make increase-to-execution-time
-#make RPC_URL=http://localhost:8545 execute-buffered-txs
+make RPC_URL=http://localhost:8545 execute-buffered-txs
 
 ## 5. upgrade timelock
 DRY_RUN= make upgrade-timelock
 
 ## 6. money
-DRY_RUN="" npx hardhat run ./scripts/dev/2.transfer-tokens.ts
+DRY_RUN= npx hardhat run ./scripts/dev/2.transfer-tokens.ts --network localhost
+
