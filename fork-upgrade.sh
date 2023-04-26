@@ -19,6 +19,7 @@ FORK_BLOCK_NUMBER=17122998
 DRY_RUN=TimeLock
 #IMPERSONATE_ADDRESS=0xe965198731cddb2f06e91dd0cdff74b71e4b3714
 #RPC_URL=https://mainnet.infura.io/v3/87d194279ade4d20b8e7a0b881c47692
+RECEIVER=0xbF0135be6a39257c659fd1955324dc3CDb342f29
 ' > .env
 
 ## 2. sync contracts artifact
@@ -38,3 +39,5 @@ make increase-to-execution-time
 ## 5. upgrade timelock
 DRY_RUN= make upgrade-timelock
 
+## 6. money
+DRY_RUN="" npx hardhat run ./scripts/dev/2.transfer-tokens.ts

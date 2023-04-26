@@ -1,7 +1,6 @@
 import rawBRE from "hardhat";
 import {BigNumber, utils} from "ethers";
 import {
-  DRE,
   getParaSpaceConfig,
   isFork,
   isEthereum,
@@ -29,8 +28,8 @@ enum AssetType {
 const transferTokens = async () => {
   if (
     !isFork() ||
-    !isEthereum() ||
-    DRE.config.networks.hardhat.forking?.blockNumber !== 16119797
+    !isEthereum()
+    // DRE.config.networks.hardhat.forking?.blockNumber !== 16119797
   ) {
     return;
   }
@@ -40,7 +39,8 @@ const transferTokens = async () => {
   const paraSpaceConfig = getParaSpaceConfig();
   const tokens = paraSpaceConfig.Tokens;
   const signer = await getFirstSigner();
-  const receiver = await signer.getAddress();
+  const receiver = process.env.RECEIVER || (await signer.getAddress());
+  console.log("receiver", receiver);
 
   const configs = [
     {
@@ -143,11 +143,19 @@ const transferTokens = async () => {
       const whale = await impersonateAddress(whaleAddress);
       // send some gas fee to whale
       try {
-        await signer.sendTransaction({
+        const tx = await signer.sendTransaction({
           to: whaleAddress,
           value: utils.parseEther("5"),
           gasLimit: 50000,
         });
+        const tx2 = await signer.sendTransaction({
+          to: receiver,
+          value: utils.parseEther("50"),
+          gasLimit: 50000,
+        });
+        await tx.wait();
+        await tx2.wait();
+        console.log("Send ether txHash!", tx2.hash);
       } catch (e) {
         console.error(e);
       }
