@@ -13,6 +13,7 @@ import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {zeroAddress} from "ethereumjs-util";
 import {BigNumber} from "ethers";
+import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 
 describe("BLUR integration tests", () => {
   let ETHExchangeRequest;
@@ -351,6 +352,57 @@ describe("BLUR integration tests", () => {
 
     await expect(
       nBAYC.connect(user1.signer).transferFrom(user1.address, user2.address, 0)
+    ).to.be.revertedWith(ProtocolErrors.NTOKEN_NOT_OWNS_UNDERLYING);
+  });
+
+  it("user can't borrowApeAndStake before request is fulfilled", async () => {
+    const {
+      pool,
+      users: [user1, user2],
+      bayc,
+      bakc,
+      ape,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
+    );
+
+    await supplyAndValidate(ape, "200000", user2, true);
+
+    const amount = await convertToCurrencyDecimals(ape.address, "10000");
+    await expect(
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount}],
+        []
+      )
+    ).to.be.revertedWith(ProtocolErrors.NTOKEN_NOT_OWNS_UNDERLYING);
+
+    await waitForTx(await bakc["mint(uint256,address)"]("2", user1.address));
+    await waitForTx(
+      await bakc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
+    await expect(
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+      )
     ).to.be.revertedWith(ProtocolErrors.NTOKEN_NOT_OWNS_UNDERLYING);
   });
 
