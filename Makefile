@@ -400,6 +400,18 @@ deploy-renounceOwnership:
 ad-hoc:
 	make SCRIPT_PATH=./scripts/dev/1.ad-hoc.ts run
 
+.PHONY: init-blur-config
+init-blur-config:
+	make SCRIPT_PATH=./scripts/dev/13.init-blur-config.ts run
+
+.PHONY: get-blur-listings
+get-blur-listings:
+	make SCRIPT_PATH=./scripts/dev/14.get-listing-from-reservior.ts run
+
+.PHONY: init-blur-request
+init-blur-request:
+	make SCRIPT_PATH=./scripts/dev/15.init-blur-request.ts run
+
 .PHONY: info
 info:
 	make SCRIPT_PATH=./scripts/dev/3.info.ts run
