@@ -62,6 +62,7 @@ export enum XTokenType {
   PTokenCApe = 14,
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
+  NTokenChromieSquiggle = 17,
 }
 
 export type ConstructorArgs = (
@@ -268,6 +269,7 @@ export enum eContractid {
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  NTokenChromieSquiggleImpl = "NTokenChromieSquiggleImpl",
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
   SFVLDR = "SFVLDR",
@@ -405,6 +407,8 @@ export enum ProtocolErrors {
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
   INVALID_STATE = "134", //invalid token status
+
+  INVALID_TOKEN_ID = "135", //invalid token id
 
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",

@@ -32,7 +32,7 @@ contract P2PPairStaking is
     bytes32 internal constant MATCHED_ORDER_HASH =
         0x7db3dae7d89c86e6881a66a131841305c008b207e41ff86a804b4bb056652808;
 
-    //keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"1111111111111);
+    //keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     bytes32 internal constant EIP712_DOMAIN =
         0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 

@@ -51,6 +51,7 @@ import {
   deployReserveTimeLockStrategy,
   deployOtherdeedNTokenImpl,
   deployStakefishNTokenImpl,
+  deployChromieSquiggleNTokenImpl,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -592,6 +593,16 @@ export const initReservesByHelper = async (
           ).address;
 
           xTokenToUse = nTokenStakefishImplementationAddress;
+        } else if (reserveSymbol == ERC721TokenContractId.BLOCKS) {
+          xTokenToUse = (
+            await deployChromieSquiggleNTokenImpl(
+              pool.address,
+              delegationRegistryAddress,
+              0,
+              20, //set 20 in test environment for easy test. should be 9763 in mainnet
+              verify
+            )
+          ).address;
         }
 
         if (!xTokenToUse) {
