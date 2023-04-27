@@ -2,7 +2,7 @@ import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {
   deployChromieSquiggleNTokenImpl,
   deployGenericMoonbirdNTokenImpl,
-  deployGenericNTokenImpl,
+  // deployGenericNTokenImpl,
   deployNTokenBAKCImpl,
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
@@ -37,7 +37,7 @@ export const upgradeNToken = async (verify = false) => {
   const delegationRegistry = paraSpaceConfig.DelegationRegistry;
   const protocolDataProvider = await getProtocolDataProvider();
   const allXTokens = await protocolDataProvider.getAllXTokens();
-  let nTokenImplementationAddress = "";
+  // let nTokenImplementationAddress = "";
   let nTokenBAYCImplementationAddress = "";
   let nTokenMAYCImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
