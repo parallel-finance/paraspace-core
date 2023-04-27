@@ -14,22 +14,23 @@ export ETHERSCAN_API_KEY="$ETHERSCAN_KEY"
 
 ## Libraries
 
+### SupplyLogic
+
 ```
-proxychains forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
+proxychains forge verify-contract 0xedb95460bFD94Ea2Db15e72009C68c974a84c03e \
   --chain-id 1 \
-  --num-of-optimizations 200 \
+  --num-of-optimizations 800 \
   --watch \
-  contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic \
-  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0x8f4c4ECD4edE01453eac3ed2172C1C273A867812 \
+  contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### BorrowLogic
 
 ```
-proxychains forge verify-contract 0xF5474ceD4C3c9a256469947D18e3455aEc2E2344 \
+proxychains forge verify-contract 0x2463705ea7432D56387C2959C608c7b86e97cC85 \
   --chain-id 1 \
-  --num-of-optimizations 200 \
+  --num-of-optimizations 800 \
   --watch \
   contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic \
   --compiler-version v0.8.10+commit.fc410830
@@ -38,12 +39,12 @@ proxychains forge verify-contract 0xF5474ceD4C3c9a256469947D18e3455aEc2E2344 \
 ### LiquidationLogic
 
 ```
-proxychains forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
+proxychains forge verify-contract 0xb0F62362abDd3902c684A393045B6F90AdDafff3 \
   --chain-id 1 \
-  --num-of-optimizations 200 \
+  --num-of-optimizations 800 \
   --watch \
   contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic \
-  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0x8f4c4ECD4edE01453eac3ed2172C1C273A867812 \
+  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0xedb95460bFD94Ea2Db15e72009C68c974a84c03e \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -96,13 +97,13 @@ proxychains forge verify-contract 0xDA4b9E3D30A59eCF5AD669ADC591Ddd176fD80e8 \
 ### MarketplaceLogic
 
 ```
-proxychains forge verify-contract 0xB4bD5f0ac344fae07633eD09D3Db5117e2aaBdBf \
+proxychains forge verify-contract 0xfb0B010c7828e3D785996897c0c137345d3E5E00 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 800 \
   --watch \
   contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic \
-  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0x044a6b55DEf3BF4292697C02C3A6109520279794 \
-  --libraries contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic:0xe89b43deeE592bdd5940c82F8abc7ecF5fB72c96 \
+  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0xedb95460bFD94Ea2Db15e72009C68c974a84c03e \
+  --libraries contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic:0x2463705ea7432D56387C2959C608c7b86e97cC85 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -341,32 +342,32 @@ proxychains forge verify-contract 0x21489e1D79f03aFf8119b1E93C18BFEA84A3D24C \
 ### PoolCore
 
 ```
-proxychains forge verify-contract 0x8e1f8B5c9ae49a9B13084c4BD071efC03a7c3Da8 \
+proxychains forge verify-contract 0x3168B73fe11BC8589f5b851945F488ac3618a6A2 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 800 \
   --watch \
   --constructor-args \
   $(cast abi-encode "constructor(address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0x59B72FdB45B3182c8502cC297167FE4f821f332d") \
   contracts/protocol/pool/PoolCore.sol:PoolCore \
-  --libraries contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic:0xF82De5E02EEa885b7941Bd261504185845AB99E0 \
-  --libraries contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic:0xd4b1CCb7576e43e3856b72f063C4A9bD43194004 \
-  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0x044a6b55DEf3BF4292697C02C3A6109520279794 \
-  --libraries contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic:0xe89b43deeE592bdd5940c82F8abc7ecF5fB72c96 \
-  --libraries contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic:0x5AdE08EdcB5ea1f39e3D877f7065593E7D66cdaa \
+  --libraries contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic:0x8e70F553f3ADD2e8e2362e0b166725f9C20A0E1A \
+  --libraries contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic:0xb0F62362abDd3902c684A393045B6F90AdDafff3 \
+  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0xedb95460bFD94Ea2Db15e72009C68c974a84c03e \
+  --libraries contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic:0x2463705ea7432D56387C2959C608c7b86e97cC85 \
+  --libraries contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic:0x652256d4e10Bce0FeeBf857D41DB5fe3C6A0b113 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ### PoolMarketplace
 
 ```
-proxychains forge verify-contract 0xB0A9B618c23c196C2cD51Da3d7A8CF176c353a5d \
+proxychains forge verify-contract 0xaeF900f14710d067Ae96555486232C7189784F50 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 800 \
   --watch \
   --constructor-args \
   $(cast abi-encode "constructor(address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d") \
   contracts/protocol/pool/PoolMarketplace.sol:PoolMarketplace \
-  --libraries contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic:0x1fE34BF51E802Adba9b1cBc0E216EFAeb1FE226B \
+  --libraries contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic:0xfb0B010c7828e3D785996897c0c137345d3E5E00 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
@@ -415,12 +416,12 @@ proxychains forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
 ### StakefishNFTOracleWrapper
 
 ```
-proxychains forge verify-contract 0x31f1595A53730a6129814159De583BFec8B971e0 \
+proxychains forge verify-contract 0x38759b66f10B82b3180F384d1Ea277FD8d3E7Ee3 \
   --chain-id 1 \
-  --num-of-optimizations 200 \
+  --num-of-optimizations 800 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(address,address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0xE7BD56364DedF1c5BeBEA9b77A748ab3C5F8c43E" "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a") \
+  $(cast abi-encode "constructor(address,address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0xE7BD56364DedF1c5BeBEA9b77A748ab3C5F8c43E" "0x4b15a9c28034dc83db40cd810001427d3bd7163d") \
   contracts/misc/ERC721OracleWrapper.sol:ERC721OracleWrapper \
   --compiler-version v0.8.10+commit.fc410830
 ```
@@ -488,12 +489,12 @@ proxychains forge verify-contract 0x41BE4a63035025d79dEbecCE8df682e507fC0A2f \
 ### DefaultReserveAuctionStrategy
 
 ```
-proxychains forge verify-contract 0xB1A4B17e33e164b826e213c8CeF448Bc82afdb5a \
+proxychains forge verify-contract 0xF2Da9Ae8A6f8862AdFf0CaB54D657ED4144f8F83 \
   --chain-id 1 \
-  --num-of-optimizations 200 \
+  --num-of-optimizations 800 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(uint256,uint256,uint256,uint256,uint256,uint256)" "10000000000000000000" "1100000000000000000" "800000000000000000" "6250000000000000" "45984894024785900" "900") \
+  $(cast abi-encode "constructor(uint256,uint256,uint256,uint256,uint256,uint256)" "3000000000000000000" "1200000000000000000" "800000000000000000" "68750000000000000" "28547400155982200" "900") \
   contracts/protocol/pool/DefaultReserveAuctionStrategy.sol:DefaultReserveAuctionStrategy \
   --compiler-version v0.8.10+commit.fc410830
 ```
@@ -501,25 +502,25 @@ proxychains forge verify-contract 0xB1A4B17e33e164b826e213c8CeF448Bc82afdb5a \
 ### DefaultReserveTimeLockStrategy
 
 ```
-proxychains forge verify-contract 0x0bCc9C5F95833F37317C4F3Fb62bB4e9A7e8C8aa \
+proxychains forge verify-contract 0x02f484a201dDF04E0Af41842E6f2D63090Ba16c1 \
   --chain-id 1 \
-  --num-of-optimizations 200 \
+  --num-of-optimizations 800 \
   --watch \
   contracts/misc/DefaultTimeLockStrategy.sol:DefaultTimeLockStrategy \
   --constructor-args \
-  $(cast abi-encode "constructor(address,uint256,uint256,uint48,uint48,uint48,uint256,uint48,uint256)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" 4 12 12 7200 43200 10 600 86400) \
+  $(cast abi-encode "constructor(address,uint256,uint256,uint48,uint48,uint48,uint256,uint48,uint256)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" 10 30 12 7200 21600 100 600 86400) \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
 ## TimeLock
 
 ```
-proxychains forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
+proxychains forge verify-contract 0x9321de45f1057caF43d6Af611953976F271e6b42 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 800 \
   --watch \
   contracts/misc/TimeLock.sol:TimeLock \
   --constructor-args \
-  $(cast abi-encode "constructor(address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d") \
+  $(cast abi-encode "constructor(address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0xb7F7F6C52F2e2fdb1963Eab30438024864c313F6") \
   --compiler-version v0.8.10+commit.fc410830
 ```
