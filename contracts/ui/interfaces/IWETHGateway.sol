@@ -6,9 +6,10 @@ import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 interface IWETHGateway {
     event EmergencyTokenTransfer(address token, address to, uint256 amount);
 
-    function depositETH(address onBehalfOf, uint16 referralCode)
-        external
-        payable;
+    function depositETH(
+        address onBehalfOf,
+        uint16 referralCode
+    ) external payable;
 
     function withdrawETH(uint256 amount, address onBehalfOf) external;
 

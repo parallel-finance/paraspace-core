@@ -151,12 +151,9 @@ contract AutoYieldApe is
     }
 
     /// @inheritdoc IAutoYieldApe
-    function yieldAmount(address account)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function yieldAmount(
+        address account
+    ) external view override returns (uint256) {
         (uint256 freeYield, ) = _yieldAmount(account);
         if (freeYield > 0) {
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
@@ -238,11 +235,9 @@ contract AutoYieldApe is
         emit Redeem(msg.sender, amount);
     }
 
-    function _yieldAmount(address account)
-        internal
-        view
-        returns (uint256, uint256)
-    {
+    function _yieldAmount(
+        address account
+    ) internal view returns (uint256, uint256) {
         uint256 userBalance = balanceOf(account);
         //free_yield = pending_yield + accrued_yield - free_yield
         uint256 freeYield = _userPendingYield[account];

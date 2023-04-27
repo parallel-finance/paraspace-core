@@ -117,10 +117,9 @@ contract P2PPairStaking is
         }
     }
 
-    function cancelListing(ListingOrder calldata listingOrder)
-        external
-        nonReentrant
-    {
+    function cancelListing(
+        ListingOrder calldata listingOrder
+    ) external nonReentrant {
         require(msg.sender == listingOrder.offerer, "not order offerer");
         bytes32 orderHash = getListingOrderHash(listingOrder);
         require(
@@ -366,16 +365,15 @@ contract P2PPairStaking is
         emit PairStakingBreakUp(orderHash);
     }
 
-    function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
-        external
-        nonReentrant
-    {
+    function claimForMatchedOrderAndCompound(
+        bytes32[] calldata orderHashes
+    ) external nonReentrant {
         _claimForMatchedOrdersAndCompound(orderHashes);
     }
 
-    function _claimForMatchedOrdersAndCompound(bytes32[] memory orderHashes)
-        internal
-    {
+    function _claimForMatchedOrdersAndCompound(
+        bytes32[] memory orderHashes
+    ) internal {
         //ignore getShareByPooledApe return 0 case.
         uint256 cApeExchangeRate = ICApe(cApe).getPooledApeByShares(WAD);
         uint256 _compoundFee = compoundFee;
@@ -432,11 +430,9 @@ contract P2PPairStaking is
         return amount;
     }
 
-    function getApeCoinStakingCap(StakingType stakingType)
-        public
-        view
-        returns (uint256)
-    {
+    function getApeCoinStakingCap(
+        StakingType stakingType
+    ) public view returns (uint256) {
         if (stakingType == StakingType.BAYCStaking) {
             return baycMatchedCap;
         } else if (stakingType == StakingType.MAYCStaking) {
@@ -446,11 +442,9 @@ contract P2PPairStaking is
         }
     }
 
-    function getListingOrderHash(ListingOrder calldata order)
-        public
-        pure
-        returns (bytes32)
-    {
+    function getListingOrderHash(
+        ListingOrder calldata order
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -466,11 +460,9 @@ contract P2PPairStaking is
             );
     }
 
-    function getMatchedOrderHash(MatchedOrder memory order)
-        public
-        pure
-        returns (bytes32)
-    {
+    function getMatchedOrderHash(
+        MatchedOrder memory order
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -488,11 +480,9 @@ contract P2PPairStaking is
             );
     }
 
-    function _getApeNTokenAddress(address apeToken)
-        internal
-        view
-        returns (address)
-    {
+    function _getApeNTokenAddress(
+        address apeToken
+    ) internal view returns (address) {
         if (apeToken == bayc) {
             return nBayc;
         } else if (apeToken == mayc) {
@@ -579,10 +569,9 @@ contract P2PPairStaking is
         }
     }
 
-    function _handleCApeTransferAndConvert(ListingOrder calldata apeCoinOrder)
-        internal
-        returns (uint256)
-    {
+    function _handleCApeTransferAndConvert(
+        ListingOrder calldata apeCoinOrder
+    ) internal returns (uint256) {
         uint256 apeAmount = getApeCoinStakingCap(apeCoinOrder.stakingType);
         IERC20(cApe).safeTransferFrom(
             apeCoinOrder.offerer,
@@ -593,11 +582,9 @@ contract P2PPairStaking is
         return apeAmount;
     }
 
-    function _validateOrderBasicInfo(ListingOrder calldata listingOrder)
-        internal
-        view
-        returns (bytes32 orderHash)
-    {
+    function _validateOrderBasicInfo(
+        ListingOrder calldata listingOrder
+    ) internal view returns (bytes32 orderHash) {
         require(
             listingOrder.startTime <= block.timestamp,
             "ape order not start"
@@ -646,11 +633,9 @@ contract P2PPairStaking is
         );
     }
 
-    function _validateApeCoinOrder(ListingOrder calldata apeCoinOrder)
-        internal
-        view
-        returns (bytes32 orderHash)
-    {
+    function _validateApeCoinOrder(
+        ListingOrder calldata apeCoinOrder
+    ) internal view returns (bytes32 orderHash) {
         orderHash = _validateOrderBasicInfo(apeCoinOrder);
         require(apeCoinOrder.token == cApe, "ape coin order invalid token");
         require(

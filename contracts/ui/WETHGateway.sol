@@ -48,12 +48,10 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @param onBehalfOf address of the user who will receive the xTokens representing the deposit
      * @param referralCode integrators are assigned a referral code and can potentially receive rewards.
      **/
-    function depositETH(address onBehalfOf, uint16 referralCode)
-        external
-        payable
-        override
-        nonReentrant
-    {
+    function depositETH(
+        address onBehalfOf,
+        uint16 referralCode
+    ) external payable override nonReentrant {
         WETH.deposit{value: msg.value}();
         IPool(pool).supply(address(WETH), msg.value, onBehalfOf, referralCode);
     }
@@ -63,11 +61,10 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @param amount amount of pWETH to withdraw and receive native ETH
      * @param to address of the user who will receive native ETH
      */
-    function withdrawETH(uint256 amount, address to)
-        external
-        override
-        nonReentrant
-    {
+    function withdrawETH(
+        uint256 amount,
+        address to
+    ) external override nonReentrant {
         IPToken pWETH = IPToken(
             IPool(pool).getReserveData(address(WETH)).xTokenAddress
         );
@@ -89,12 +86,10 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @param amount the amount to repay, or uint256(-1) if the user wants to repay everything
      * @param onBehalfOf the address for which msg.sender is repaying
      */
-    function repayETH(uint256 amount, address onBehalfOf)
-        external
-        payable
-        override
-        nonReentrant
-    {
+    function repayETH(
+        uint256 amount,
+        address onBehalfOf
+    ) external payable override nonReentrant {
         uint256 variableDebt = Helpers.getUserCurrentDebt(
             onBehalfOf,
             IPool(pool).getReserveData(address(WETH)).variableDebtTokenAddress
@@ -122,11 +117,10 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @param amount the amount of ETH to borrow
      * @param referralCode integrators are assigned a referral code and can potentially receive rewards
      */
-    function borrowETH(uint256 amount, uint16 referralCode)
-        external
-        override
-        nonReentrant
-    {
+    function borrowETH(
+        uint256 amount,
+        uint16 referralCode
+    ) external override nonReentrant {
         IPool(pool).borrow(address(WETH), amount, referralCode, msg.sender);
         WETH.withdraw(amount);
         Helpers.safeTransferETH(msg.sender, amount);
@@ -197,10 +191,10 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
      * @param to recipient of the transfer
      * @param amount amount to send
      */
-    function emergencyEtherTransfer(address to, uint256 amount)
-        external
-        onlyOwner
-    {
+    function emergencyEtherTransfer(
+        address to,
+        uint256 amount
+    ) external onlyOwner {
         Helpers.safeTransferETH(to, amount);
     }
 

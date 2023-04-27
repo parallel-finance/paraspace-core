@@ -40,11 +40,7 @@ contract WPunkGateway is
      * @param _wpunk Address of the Wrapped Punk contract
      * @param _pool Address of the proxy pool of this contract
      **/
-    constructor(
-        address _punk,
-        address _wpunk,
-        address _pool
-    ) {
+    constructor(address _punk, address _wpunk, address _pool) {
         punk = _punk;
         wpunk = _wpunk;
         pool = _pool;
@@ -102,10 +98,10 @@ contract WPunkGateway is
      * @param punkIndexes indexes of nWPunks to withdraw and receive native WPunk
      * @param to address of the user who will receive native Punks
      */
-    function withdrawPunk(uint256[] calldata punkIndexes, address to)
-        external
-        nonReentrant
-    {
+    function withdrawPunk(
+        uint256[] calldata punkIndexes,
+        address to
+    ) external nonReentrant {
         INToken nWPunk = INToken(
             Pool.getReserveData(address(WPunk)).xTokenAddress
         );
@@ -223,10 +219,10 @@ contract WPunkGateway is
      * @param to recipient of the transfer
      * @param punkIndex punk to send
      */
-    function emergencyPunkTransfer(address to, uint256 punkIndex)
-        external
-        onlyOwner
-    {
+    function emergencyPunkTransfer(
+        address to,
+        uint256 punkIndex
+    ) external onlyOwner {
         Punk.transferPunk(to, punkIndex);
         emit EmergencyPunkTransfer(to, punkIndex);
     }

@@ -97,12 +97,9 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function mintToTreasury(address[] calldata assets)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function mintToTreasury(
+        address[] calldata assets
+    ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         PoolLogic.executeMintToTreasury(ps._reserves, assets);
@@ -140,12 +137,9 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function dropReserve(address asset)
-        external
-        virtual
-        override
-        onlyPoolConfigurator
-    {
+    function dropReserve(
+        address asset
+    ) external virtual override onlyPoolConfigurator {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         PoolLogic.executeDropReserve(ps._reserves, ps._reservesList, asset);
@@ -222,23 +216,19 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function unlimitedApproveTo(address token, address to)
-        external
-        virtual
-        override
-        onlyPoolAdmin
-    {
+    function unlimitedApproveTo(
+        address token,
+        address to
+    ) external virtual override onlyPoolAdmin {
         IERC20(token).approve(to, 0);
         IERC20(token).approve(to, type(uint256).max);
     }
 
     /// @inheritdoc IPoolParameters
-    function revokeUnlimitedApprove(address token, address to)
-        external
-        virtual
-        override
-        onlyPoolAdmin
-    {
+    function revokeUnlimitedApprove(
+        address token,
+        address to
+    ) external virtual override onlyPoolAdmin {
         IERC20(token).approve(to, 0);
     }
 
@@ -269,22 +259,17 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function getUserApeCompoundStrategy(address user)
-        external
-        view
-        returns (DataTypes.ApeCompoundStrategy memory strategy)
-    {
+    function getUserApeCompoundStrategy(
+        address user
+    ) external view returns (DataTypes.ApeCompoundStrategy memory strategy) {
         DataTypes.PoolStorage storage ps = poolStorage();
         strategy = ps._apeCompoundStrategies[user];
     }
 
     /// @inheritdoc IPoolParameters
-    function setAuctionRecoveryHealthFactor(uint64 value)
-        external
-        virtual
-        override
-        onlyPoolConfigurator
-    {
+    function setAuctionRecoveryHealthFactor(
+        uint64 value
+    ) external virtual override onlyPoolConfigurator {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         require(value != 0, Errors.INVALID_AMOUNT);
@@ -299,7 +284,9 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function getUserAccountData(address user)
+    function getUserAccountData(
+        address user
+    )
         external
         view
         virtual
@@ -324,24 +311,18 @@ contract PoolParameters is
             );
     }
 
-    function getAssetLtvAndLT(address asset, uint256 tokenId)
-        external
-        view
-        virtual
-        override
-        returns (uint256 ltv, uint256 lt)
-    {
+    function getAssetLtvAndLT(
+        address asset,
+        uint256 tokenId
+    ) external view virtual override returns (uint256 ltv, uint256 lt) {
         DataTypes.PoolStorage storage ps = poolStorage();
         return PoolLogic.executeGetAssetLtvAndLT(ps, asset, tokenId);
     }
 
     /// @inheritdoc IPoolParameters
-    function setAuctionValidityTime(address user)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function setAuctionValidityTime(
+        address user
+    ) external virtual override nonReentrant {
         require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         DataTypes.PoolStorage storage ps = poolStorage();
 

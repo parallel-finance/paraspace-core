@@ -293,12 +293,9 @@ contract ExecutorWithTimelock is IExecutorWithTimelock {
      * keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall))
      * @return true if underlying action of actionHash is queued
      **/
-    function isActionQueued(bytes32 actionHash)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isActionQueued(
+        bytes32 actionHash
+    ) external view override returns (bool) {
         return _queuedTransactions[actionHash];
     }
 

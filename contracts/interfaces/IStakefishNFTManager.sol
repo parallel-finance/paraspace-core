@@ -20,18 +20,16 @@ interface IStakefishNFTManager {
     /// @notice lookups the tokenId based on validator address
     /// @param validator address created by mint
     /// @return tokenId of the NFT
-    function tokenForValidatorAddr(address validator)
-        external
-        view
-        returns (uint256);
+    function tokenForValidatorAddr(
+        address validator
+    ) external view returns (uint256);
 
     /// @notice lookups the validator address based on tokenId
     /// @param tokenId of the NFT
     /// @return address of the validator contract
-    function validatorForTokenId(uint256 tokenId)
-        external
-        view
-        returns (address);
+    function validatorForTokenId(
+        uint256 tokenId
+    ) external view returns (address);
 
     /// @notice claim NFT from another NFT Manager, used for migration
     /// @param oldManager old nft manager
@@ -39,13 +37,14 @@ interface IStakefishNFTManager {
     function claim(address oldManager, uint256 tokenId) external;
 
     /// @notice multicall static
-    function multicallStatic(uint256[] calldata tokenIds, bytes[] calldata data)
-        external
-        view
-        returns (bytes[] memory results);
+    function multicallStatic(
+        uint256[] calldata tokenIds,
+        bytes[] calldata data
+    ) external view returns (bytes[] memory results);
 
     /// @notice multicall across multiple tokenIds
-    function multicall(uint256[] calldata tokenIds, bytes[] calldata data)
-        external
-        returns (bytes[] memory results);
+    function multicall(
+        uint256[] calldata tokenIds,
+        bytes[] calldata data
+    ) external returns (bytes[] memory results);
 }

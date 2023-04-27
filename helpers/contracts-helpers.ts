@@ -655,7 +655,7 @@ export const getParaSpaceAdmins = async (): Promise<{
 };
 
 export const getFunctionSignatures = (
-  abi: string | ReadonlyArray<Fragment | Fragment | string> | ABI
+  abi: string | ReadonlyArray<Fragment | Fragment | string> | Readonly<ABI>
 ): Array<iFunctionSignature> => {
   const i = new utils.Interface(abi);
   return Object.keys(i.functions).map((f) => {

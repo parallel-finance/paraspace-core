@@ -8,11 +8,13 @@ interface IVoteDelegator {
         address delegate
     ) external;
 
-    function clearVotingDelegate(address delegateContract, bytes32 spaceId)
-        external;
+    function clearVotingDelegate(
+        address delegateContract,
+        bytes32 spaceId
+    ) external;
 
-    function getDelegate(address delegateContract, bytes32 spaceId)
-        external
-        view
-        returns (address);
+    function getDelegate(
+        address delegateContract,
+        bytes32 spaceId
+    ) external view returns (address);
 }

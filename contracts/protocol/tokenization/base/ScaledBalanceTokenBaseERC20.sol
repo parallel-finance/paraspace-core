@@ -37,24 +37,16 @@ abstract contract ScaledBalanceTokenBaseERC20 is
     }
 
     /// @inheritdoc IScaledBalanceToken
-    function scaledBalanceOf(address user)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function scaledBalanceOf(
+        address user
+    ) public view virtual override returns (uint256) {
         return super.balanceOf(user);
     }
 
     /// @inheritdoc IScaledBalanceToken
-    function getScaledUserBalanceAndSupply(address user)
-        external
-        view
-        virtual
-        override
-        returns (uint256, uint256)
-    {
+    function getScaledUserBalanceAndSupply(
+        address user
+    ) external view virtual override returns (uint256, uint256) {
         return (super.balanceOf(user), super.totalSupply());
     }
 
@@ -70,13 +62,9 @@ abstract contract ScaledBalanceTokenBaseERC20 is
     }
 
     /// @inheritdoc IScaledBalanceToken
-    function getPreviousIndex(address user)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function getPreviousIndex(
+        address user
+    ) external view virtual override returns (uint256) {
         return _userState[user].additionalData;
     }
 

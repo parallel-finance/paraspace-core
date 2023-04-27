@@ -141,17 +141,17 @@ interface IP2PPairStaking {
      * @notice claim pending reward for matched pair staking orders and deposit as cApe for user to compound.
      * @param orderHashes the hash of the matched orders to be break up
      */
-    function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
-        external;
+    function claimForMatchedOrderAndCompound(
+        bytes32[] calldata orderHashes
+    ) external;
 
     /**
      * @param user The address of the user
      * @return amount Returns the amount of cApe owned by user
      */
-    function pendingCApeReward(address user)
-        external
-        view
-        returns (uint256 amount);
+    function pendingCApeReward(
+        address user
+    ) external view returns (uint256 amount);
 
     /**
      * @notice claim user compounded cApe
@@ -164,9 +164,9 @@ interface IP2PPairStaking {
      * @param stakingType the pair staking type
      * @return Ape Coin Staking cap
      */
-    function getApeCoinStakingCap(StakingType stakingType)
-        external
-        returns (uint256);
+    function getApeCoinStakingCap(
+        StakingType stakingType
+    ) external returns (uint256);
 
     /**
      * @notice set a new matching operator, only owner can call this function

@@ -66,13 +66,9 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function balanceOf(
+        address account
+    ) public view virtual override returns (uint256) {
         return getPooledApeByShares(_sharesOf(account));
     }
 
@@ -84,12 +80,10 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount)
-        public
-        virtual
-        override
-        returns (bool)
-    {
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
@@ -97,13 +91,10 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
     /**
      * @dev See {IERC20-allowance}.
      */
-    function allowance(address owner, address spender)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function allowance(
+        address owner,
+        address spender
+    ) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -114,12 +105,10 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      *
      * - `spender` cannot be the zero address.
      */
-    function approve(address spender, uint256 amount)
-        public
-        virtual
-        override
-        returns (bool)
-    {
+    function approve(
+        address spender,
+        uint256 amount
+    ) public virtual override returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
@@ -167,11 +156,10 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      *
      * - `spender` cannot be the zero address.
      */
-    function increaseAllowance(address spender, uint256 addedValue)
-        public
-        virtual
-        returns (bool)
-    {
+    function increaseAllowance(
+        address spender,
+        uint256 addedValue
+    ) public virtual returns (bool) {
         _approve(
             _msgSender(),
             spender,
@@ -194,11 +182,10 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      * - `spender` must have allowance for the caller of at least
      * `subtractedValue`.
      */
-    function decreaseAllowance(address spender, uint256 subtractedValue)
-        public
-        virtual
-        returns (bool)
-    {
+    function decreaseAllowance(
+        address spender,
+        uint256 subtractedValue
+    ) public virtual returns (bool) {
         _approve(
             _msgSender(),
             spender,
@@ -242,11 +229,9 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
     /**
      * @return the amount of ApeCoin that corresponds to `_sharesAmount` token shares.
      */
-    function getPooledApeByShares(uint256 sharesAmount)
-        public
-        view
-        returns (uint256)
-    {
+    function getPooledApeByShares(
+        uint256 sharesAmount
+    ) public view returns (uint256) {
         uint256 totalShares = _getTotalShares();
         if (totalShares == 0) {
             return 0;
@@ -364,11 +349,10 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      *
      * - `to` cannot be the zero address.
      */
-    function _mint(address account, uint256 sharesAmount)
-        internal
-        virtual
-        whenNotPaused
-    {
+    function _mint(
+        address account,
+        uint256 sharesAmount
+    ) internal virtual whenNotPaused {
         require(account != address(0), "mint to the zero address");
 
         _totalShare = _totalShare.add(sharesAmount);
@@ -386,11 +370,10 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
      */
-    function _burn(address account, uint256 sharesAmount)
-        internal
-        virtual
-        whenNotPaused
-    {
+    function _burn(
+        address account,
+        uint256 sharesAmount
+    ) internal virtual whenNotPaused {
         require(account != address(0), "burn from the zero address");
 
         shares[account] = shares[account].sub(

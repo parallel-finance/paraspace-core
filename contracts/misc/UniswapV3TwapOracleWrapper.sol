@@ -19,11 +19,7 @@ contract UniswapV3TwapOracleWrapper is ICLSynchronicityPriceAdapter {
     bool immutable IS_ASSET_RESERVE_ZERO;
     uint256 immutable MANTISSA;
 
-    constructor(
-        address _pool,
-        address _baseCurrency,
-        int32 twapWindow
-    ) {
+    constructor(address _pool, address _baseCurrency, int32 twapWindow) {
         UNISWAP_V3_POOL = _pool;
         TWAP_WINDOW = twapWindow;
 
@@ -53,11 +49,10 @@ contract UniswapV3TwapOracleWrapper is ICLSynchronicityPriceAdapter {
         }
     }
 
-    function _getTwapPriceX96(address pool, int32 twapWindow)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getTwapPriceX96(
+        address pool,
+        int32 twapWindow
+    ) internal view returns (uint256) {
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = uint32(twapWindow);
         secondsAgos[1] = 0;

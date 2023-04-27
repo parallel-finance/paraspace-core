@@ -41,11 +41,10 @@ contract WalletBalanceProvider {
     Returns the balance of the token for user. Avoids possible errors:
       - return 0 on non-contract address
     **/
-    function balanceOf(address user, address token)
-        public
-        view
-        returns (uint256)
-    {
+    function balanceOf(
+        address user,
+        address token
+    ) public view returns (uint256) {
         if (token == MOCK_ETH_ADDRESS) {
             return user.balance; // ETH balance
             // check if token is actually a contract
@@ -63,11 +62,10 @@ contract WalletBalanceProvider {
      * @param tokens The list of tokens
      * @return And array with the concatenation of, for each user, his/her balances
      **/
-    function batchBalanceOf(address[] calldata users, address[] calldata tokens)
-        external
-        view
-        returns (uint256[] memory)
-    {
+    function batchBalanceOf(
+        address[] calldata users,
+        address[] calldata tokens
+    ) external view returns (uint256[] memory) {
         uint256[] memory balances = new uint256[](users.length * tokens.length);
 
         for (uint256 i = 0; i < users.length; i++) {
@@ -85,11 +83,10 @@ contract WalletBalanceProvider {
     /**
     @dev provides balances of user wallet for all reserves available on the pool
     */
-    function getUserWalletBalances(address provider, address user)
-        external
-        view
-        returns (address[] memory, uint256[] memory)
-    {
+    function getUserWalletBalances(
+        address provider,
+        address user
+    ) external view returns (address[] memory, uint256[] memory) {
         IPool pool = IPool(IPoolAddressesProvider(provider).getPool());
 
         address[] memory reserves = pool.getReservesList();

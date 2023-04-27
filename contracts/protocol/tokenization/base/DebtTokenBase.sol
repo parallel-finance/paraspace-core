@@ -37,10 +37,10 @@ abstract contract DebtTokenBase is
     }
 
     /// @inheritdoc ICreditDelegationToken
-    function approveDelegation(address delegatee, uint256 amount)
-        external
-        override
-    {
+    function approveDelegation(
+        address delegatee,
+        uint256 amount
+    ) external override {
         _approveDelegation(_msgSender(), delegatee, amount);
     }
 
@@ -82,12 +82,10 @@ abstract contract DebtTokenBase is
     }
 
     /// @inheritdoc ICreditDelegationToken
-    function borrowAllowance(address fromUser, address toUser)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function borrowAllowance(
+        address fromUser,
+        address toUser
+    ) external view override returns (uint256) {
         return _borrowAllowances[fromUser][toUser];
     }
 

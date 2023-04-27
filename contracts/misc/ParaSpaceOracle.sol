@@ -71,11 +71,9 @@ contract ParaSpaceOracle is IParaSpaceOracle {
     }
 
     /// @inheritdoc IParaSpaceOracle
-    function setFallbackOracle(address fallbackOracle)
-        external
-        override
-        onlyAssetListingOrPoolAdmins
-    {
+    function setFallbackOracle(
+        address fallbackOracle
+    ) external override onlyAssetListingOrPoolAdmins {
         _setFallbackOracle(fallbackOracle);
     }
 
@@ -112,12 +110,9 @@ contract ParaSpaceOracle is IParaSpaceOracle {
     }
 
     /// @inheritdoc IPriceOracleGetter
-    function getAssetPrice(address asset)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function getAssetPrice(
+        address asset
+    ) public view override returns (uint256) {
         if (asset == BASE_CURRENCY) {
             return BASE_CURRENCY_UNIT;
         }
@@ -135,12 +130,10 @@ contract ParaSpaceOracle is IParaSpaceOracle {
         return uint256(price);
     }
 
-    function getTokenPrice(address asset, uint256 tokenId)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getTokenPrice(
+        address asset,
+        uint256 tokenId
+    ) external view override returns (uint256) {
         IAtomicPriceAggregator source = IAtomicPriceAggregator(
             assetsSources[asset]
         );
@@ -153,12 +146,9 @@ contract ParaSpaceOracle is IParaSpaceOracle {
     }
 
     /// @inheritdoc IParaSpaceOracle
-    function getAssetsPrices(address[] calldata assets)
-        external
-        view
-        override
-        returns (uint256[] memory)
-    {
+    function getAssetsPrices(
+        address[] calldata assets
+    ) external view override returns (uint256[] memory) {
         uint256[] memory prices = new uint256[](assets.length);
         for (uint256 i = 0; i < assets.length; i++) {
             prices[i] = getAssetPrice(assets[i]);
@@ -167,12 +157,9 @@ contract ParaSpaceOracle is IParaSpaceOracle {
     }
 
     /// @inheritdoc IParaSpaceOracle
-    function getSourceOfAsset(address asset)
-        external
-        view
-        override
-        returns (address)
-    {
+    function getSourceOfAsset(
+        address asset
+    ) external view override returns (address) {
         return assetsSources[asset];
     }
 

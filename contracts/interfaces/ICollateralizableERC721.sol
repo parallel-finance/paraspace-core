@@ -10,10 +10,9 @@ interface ICollateralizableERC721 {
     /**
      * @dev get the collateralized balance of a specific user
      */
-    function collateralizedBalanceOf(address user)
-        external
-        view
-        returns (uint256);
+    function collateralizedBalanceOf(
+        address user
+    ) external view returns (uint256);
 
     /**
      * @dev get the the collateral configuration of a specific token

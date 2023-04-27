@@ -53,11 +53,9 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setMarketId(string memory newMarketId)
-        external
-        override
-        onlyOwner
-    {
+    function setMarketId(
+        string memory newMarketId
+    ) external override onlyOwner {
         _setMarketId(newMarketId);
     }
 
@@ -67,22 +65,20 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setAddress(bytes32 id, address newAddress)
-        external
-        override
-        onlyOwner
-    {
+    function setAddress(
+        bytes32 id,
+        address newAddress
+    ) external override onlyOwner {
         address oldAddress = _addresses[id];
         _addresses[id] = newAddress;
         emit AddressSet(id, oldAddress, newAddress);
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setAddressAsProxy(bytes32 id, address newImplementationAddress)
-        external
-        override
-        onlyOwner
-    {
+    function setAddressAsProxy(
+        bytes32 id,
+        address newImplementationAddress
+    ) external override onlyOwner {
         require(id != POOL, Errors.INVALID_ADDRESSES_PROVIDER_ID);
 
         address proxyAddress = _addresses[id];
@@ -118,11 +114,9 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setPoolConfiguratorImpl(address newPoolConfiguratorImpl)
-        external
-        override
-        onlyOwner
-    {
+    function setPoolConfiguratorImpl(
+        address newPoolConfiguratorImpl
+    ) external override onlyOwner {
         address oldPoolConfiguratorImpl = _getProxyImplementation(
             POOL_CONFIGURATOR
         );
@@ -139,11 +133,9 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setPriceOracle(address newPriceOracle)
-        external
-        override
-        onlyOwner
-    {
+    function setPriceOracle(
+        address newPriceOracle
+    ) external override onlyOwner {
         address oldPriceOracle = _addresses[PRICE_ORACLE];
         _addresses[PRICE_ORACLE] = newPriceOracle;
         emit PriceOracleUpdated(oldPriceOracle, newPriceOracle);
@@ -179,11 +171,9 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setPriceOracleSentinel(address newPriceOracleSentinel)
-        external
-        override
-        onlyOwner
-    {
+    function setPriceOracleSentinel(
+        address newPriceOracleSentinel
+    ) external override onlyOwner {
         address oldPriceOracleSentinel = _addresses[PRICE_ORACLE_SENTINEL];
         _addresses[PRICE_ORACLE_SENTINEL] = newPriceOracleSentinel;
         emit PriceOracleSentinelUpdated(
@@ -203,12 +193,9 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function getMarketplace(bytes32 id)
-        external
-        view
-        override
-        returns (DataTypes.Marketplace memory)
-    {
+    function getMarketplace(
+        bytes32 id
+    ) external view override returns (DataTypes.Marketplace memory) {
         DataTypes.Marketplace memory marketplace = _marketplaces[id];
         if (
             marketplace.marketplace != address(0) &&
@@ -221,11 +208,9 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
     }
 
     /// @inheritdoc IPoolAddressesProvider
-    function setProtocolDataProvider(address newDataProvider)
-        external
-        override
-        onlyOwner
-    {
+    function setProtocolDataProvider(
+        address newDataProvider
+    ) external override onlyOwner {
         address oldDataProvider = _addresses[DATA_PROVIDER];
         _addresses[DATA_PROVIDER] = newDataProvider;
         emit ProtocolDataProviderUpdated(oldDataProvider, newDataProvider);

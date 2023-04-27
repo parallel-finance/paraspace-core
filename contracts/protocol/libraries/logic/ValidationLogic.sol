@@ -95,7 +95,7 @@ library ValidationLogic {
                         .scaledTotalSupply()
                         .rayMul(reserveCache.nextLiquidityIndex) + amount) <=
                     supplyCap *
-                        (10**reserveCache.reserveConfiguration.getDecimals()),
+                        (10 ** reserveCache.reserveConfiguration.getDecimals()),
                 Errors.SUPPLY_CAP_EXCEEDED
             );
         } else if (assetType == DataTypes.AssetType.ERC721) {
@@ -291,7 +291,7 @@ library ValidationLogic {
             .reserveConfiguration
             .getBorrowCap();
         unchecked {
-            vars.assetUnit = 10**vars.reserveDecimals;
+            vars.assetUnit = 10 ** vars.reserveDecimals;
         }
 
         if (vars.borrowCap != 0) {
@@ -936,10 +936,9 @@ library ValidationLogic {
      * @notice Validates a transfer action.
      * @param reserve The reserve object
      */
-    function validateTransferERC20(DataTypes.ReserveData storage reserve)
-        internal
-        view
-    {
+    function validateTransferERC20(
+        DataTypes.ReserveData storage reserve
+    ) internal view {
         require(!reserve.configuration.getPaused(), Errors.RESERVE_PAUSED);
     }
 
@@ -1046,10 +1045,9 @@ library ValidationLogic {
      * @notice Validates a flashloan action.
      * @param reserve The state of the reserve
      */
-    function validateFlashloanSimple(DataTypes.ReserveData storage reserve)
-        internal
-        view
-    {
+    function validateFlashloanSimple(
+        DataTypes.ReserveData storage reserve
+    ) internal view {
         (
             bool isActive,
             ,
@@ -1110,11 +1108,9 @@ library ValidationLogic {
             );
     }
 
-    function hashCredit(DataTypes.Credit memory credit)
-        private
-        pure
-        returns (bytes32)
-    {
+    function hashCredit(
+        DataTypes.Credit memory credit
+    ) private pure returns (bytes32) {
         bytes32 typeHash = keccak256(
             abi.encodePacked(
                 "Credit(address token,uint256 amount,bytes orderId)"

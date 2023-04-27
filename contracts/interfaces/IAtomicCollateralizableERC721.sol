@@ -20,8 +20,7 @@ interface IAtomicCollateralizableERC721 {
     /**
      * @dev get the trait multiplier of specific NFT
      */
-    function getTraitMultiplier(uint256 tokenId)
-        external
-        view
-        returns (uint256);
+    function getTraitMultiplier(
+        uint256 tokenId
+    ) external view returns (uint256);
 }

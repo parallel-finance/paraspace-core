@@ -98,11 +98,9 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
         return _calculateAuctionPriceMultiplierByTicks(ticks);
     }
 
-    function _calculateAuctionPriceMultiplierByTicks(uint256 ticks)
-        internal
-        view
-        returns (uint256)
-    {
+    function _calculateAuctionPriceMultiplierByTicks(
+        uint256 ticks
+    ) internal view returns (uint256) {
         if (ticks < PRBMath.SCALE) {
             return _maxPriceMultiplier;
         }

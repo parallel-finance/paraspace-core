@@ -14,18 +14,17 @@ contract VoteDelegator is OwnableUpgradeable, IVoteDelegator {
         IDelegation(delegateContract).setDelegate(spaceId, delegate);
     }
 
-    function clearVotingDelegate(address delegateContract, bytes32 spaceId)
-        external
-        onlyOwner
-    {
+    function clearVotingDelegate(
+        address delegateContract,
+        bytes32 spaceId
+    ) external onlyOwner {
         IDelegation(delegateContract).clearDelegate(spaceId);
     }
 
-    function getDelegate(address delegateContract, bytes32 spaceId)
-        external
-        view
-        returns (address)
-    {
+    function getDelegate(
+        address delegateContract,
+        bytes32 spaceId
+    ) external view returns (address) {
         return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 }

@@ -71,17 +71,16 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return interestRates;
     }
 
-    function getReservesList(IPoolAddressesProvider provider)
-        public
-        view
-        override
-        returns (address[] memory)
-    {
+    function getReservesList(
+        IPoolAddressesProvider provider
+    ) public view override returns (address[] memory) {
         IPool pool = IPool(provider.getPool());
         return pool.getReservesList();
     }
 
-    function getReservesData(IPoolAddressesProvider provider)
+    function getReservesData(
+        IPoolAddressesProvider provider
+    )
         public
         view
         override
@@ -252,9 +251,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                     baseCurrencyUnit
                 );
             }
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {
+        } catch (bytes memory /*lowLevelData*/) {
             baseCurrencyInfo.marketReferenceCurrencyUnit = ETH_CURRENCY_UNIT;
             baseCurrencyInfo
                 .marketReferenceCurrencyPriceInUsd = marketReferenceCurrencyPriceInUsdProxyAggregator
@@ -378,12 +375,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return lpTokenInfo;
     }
 
-    function getUserReservesData(IPoolAddressesProvider provider, address user)
-        external
-        view
-        override
-        returns (UserReserveData[] memory)
-    {
+    function getUserReservesData(
+        IPoolAddressesProvider provider,
+        address user
+    ) external view override returns (UserReserveData[] memory) {
         IPool pool = IPool(provider.getPool());
         address[] memory reserves = pool.getReservesList();
         DataTypes.UserConfigurationMap memory userConfig = pool
@@ -443,11 +438,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return userReservesData;
     }
 
-    function bytes32ToString(bytes32 _bytes32)
-        public
-        pure
-        returns (string memory)
-    {
+    function bytes32ToString(
+        bytes32 _bytes32
+    ) public pure returns (string memory) {
         uint8 i = 0;
         while (i < 32 && _bytes32[i] != 0) {
             i++;
@@ -558,11 +551,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return (userData, tokensData);
     }
 
-    function getDelegatesForTokens(address vault, uint256[] calldata tokenIds)
-        external
-        view
-        returns (DelegationData[] memory)
-    {
+    function getDelegatesForTokens(
+        address vault,
+        uint256[] calldata tokenIds
+    ) external view returns (DelegationData[] memory) {
         address contract_ = INToken(vault).UNDERLYING_ASSET_ADDRESS();
         address delegationRegistry = ITokenDelegation(vault)
             .DELEGATE_REGISTRY();

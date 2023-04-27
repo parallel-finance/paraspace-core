@@ -53,7 +53,9 @@ contract PToken is
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool)
+    constructor(
+        IPool pool
+    )
         ScaledBalanceTokenBaseERC20(pool, "PTOKEN_IMPL", "PTOKEN_IMPL", 0)
         EIP712Base()
     {
@@ -135,12 +137,10 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function mintToTreasury(uint256 amount, uint256 index)
-        external
-        virtual
-        override
-        onlyPool
-    {
+    function mintToTreasury(
+        uint256 amount,
+        uint256 index
+    ) external virtual override onlyPool {
         if (amount == 0) {
             return;
         }
@@ -157,7 +157,9 @@ contract PToken is
     }
 
     /// @inheritdoc IERC20
-    function balanceOf(address user)
+    function balanceOf(
+        address user
+    )
         public
         view
         virtual
@@ -235,12 +237,10 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function handleRepayment(address user, uint256 amount)
-        external
-        virtual
-        override
-        onlyPool
-    {
+    function handleRepayment(
+        address user,
+        uint256 amount
+    ) external virtual override onlyPool {
         // Intentionally left blank
     }
 
@@ -348,12 +348,9 @@ contract PToken is
      * @dev Overrides the base function to fully implement IPToken
      * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
      */
-    function nonces(address owner)
-        public
-        view
-        override(IPToken, EIP712Base)
-        returns (uint256)
-    {
+    function nonces(
+        address owner
+    ) public view override(IPToken, EIP712Base) returns (uint256) {
         return super.nonces(owner);
     }
 

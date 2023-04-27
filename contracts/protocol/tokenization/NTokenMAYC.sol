@@ -25,11 +25,9 @@ contract NTokenMAYC is NTokenApeStaking {
      * @dev Commits 1 or more MAYC NFTs, each with an ApeCoin amount to the MAYC pool.\
      * Each MAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the MAYC pool cap amount.
      */
-    function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
-        external
-        onlyPool
-        nonReentrant
-    {
+    function depositApeCoin(
+        ApeCoinStaking.SingleNft[] calldata _nfts
+    ) external onlyPool nonReentrant {
         _apeCoinStaking.depositMAYC(_nfts);
     }
 
@@ -38,11 +36,10 @@ contract NTokenMAYC is NTokenApeStaking {
      * @param _nfts Array of NFTs owned and committed by the msg.sender
      * @param _recipient Address to send claim reward to
      */
-    function claimApeCoin(uint256[] calldata _nfts, address _recipient)
-        external
-        onlyPool
-        nonReentrant
-    {
+    function claimApeCoin(
+        uint256[] calldata _nfts,
+        address _recipient
+    ) external onlyPool nonReentrant {
         _apeCoinStaking.claimMAYC(_nfts, _recipient);
     }
 

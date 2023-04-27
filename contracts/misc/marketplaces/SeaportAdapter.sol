@@ -22,12 +22,9 @@ contract SeaportAdapter is IMarketplace {
         ADDRESSES_PROVIDER = provider;
     }
 
-    function getAskOrderInfo(bytes memory params)
-        external
-        view
-        override
-        returns (DataTypes.OrderInfo memory orderInfo)
-    {
+    function getAskOrderInfo(
+        bytes memory params
+    ) external view override returns (DataTypes.OrderInfo memory orderInfo) {
         (
             AdvancedOrder memory advancedOrder,
             CriteriaResolver[] memory resolvers,
@@ -62,12 +59,9 @@ contract SeaportAdapter is IMarketplace {
         );
     }
 
-    function getBidOrderInfo(bytes memory params)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory orderInfo)
-    {
+    function getBidOrderInfo(
+        bytes memory params
+    ) external pure override returns (DataTypes.OrderInfo memory orderInfo) {
         (AdvancedOrder[] memory advancedOrders, , ) = abi.decode(
             params,
             (AdvancedOrder[], CriteriaResolver[], Fulfillment[])
@@ -116,11 +110,10 @@ contract SeaportAdapter is IMarketplace {
             );
     }
 
-    function matchBidWithTakerAsk(address marketplace, bytes calldata params)
-        external
-        override
-        returns (bytes memory)
-    {
+    function matchBidWithTakerAsk(
+        address marketplace,
+        bytes calldata params
+    ) external override returns (bytes memory) {
         bytes4 selector = SeaportInterface.matchAdvancedOrders.selector;
         bytes memory data = abi.encodePacked(selector, params);
         return
@@ -131,11 +124,9 @@ contract SeaportAdapter is IMarketplace {
             );
     }
 
-    function isBasicOrder(AdvancedOrder memory advancedOrder)
-        private
-        pure
-        returns (bool)
-    {
+    function isBasicOrder(
+        AdvancedOrder memory advancedOrder
+    ) private pure returns (bool) {
         return
             // FULL_OPEN || FULL_RESTRICTED
             (uint256(advancedOrder.parameters.orderType) == 0 ||

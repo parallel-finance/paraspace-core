@@ -80,8 +80,10 @@ interface IPoolApeStaking {
      * @param tokenId Token id of the ape staking position on
      * @dev Need check User health factor > 1.
      */
-    function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
-        external;
+    function unstakeApePositionAndRepay(
+        address nftAsset,
+        uint256 tokenId
+    ) external;
 
     /**
      * @notice repay asset and supply asset for user

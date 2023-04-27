@@ -29,8 +29,7 @@ interface IAuctionableERC721 {
      *
      * @dev get auction data
      */
-    function getAuctionData(uint256 tokenId)
-        external
-        view
-        returns (DataTypes.Auction memory);
+    function getAuctionData(
+        uint256 tokenId
+    ) external view returns (DataTypes.Auction memory);
 }
