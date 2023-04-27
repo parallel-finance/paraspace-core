@@ -538,3 +538,18 @@ proxychains forge verify-contract 0x9321de45f1057caF43d6Af611953976F271e6b42 \
   $(cast abi-encode "constructor(address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0xb7F7F6C52F2e2fdb1963Eab30438024864c313F6") \
   --compiler-version v0.8.10+commit.fc410830
 ```
+
+## Ui
+
+### UiPoolDataProvider
+
+```
+proxychains forge verify-contract 0x30E6C173Ff3958a6629258C71Bd161e70BEe0e6D \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/ui/UiPoolDataProvider.sol:UiPoolDataProvider \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,address)" "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419" "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419") \
+  --compiler-version v0.8.10+commit.fc410830
+```
