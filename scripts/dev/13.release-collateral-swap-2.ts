@@ -18,10 +18,7 @@ import {
 } from "../../helpers/init-helpers";
 import {getParaSpaceConfig} from "../../helpers/misc-utils";
 import {ERC721TokenContractId, tEthereumAddress} from "../../helpers/types";
-import {
-  deployERC721OracleWrapper,
-  deployMintableERC721,
-} from "../../helpers/contracts-deployments";
+import {deployERC721OracleWrapper} from "../../helpers/contracts-deployments";
 
 const releaseCollateralSwapV2 = async (verify = false) => {
   console.time("release-collateral-swap-v2");
