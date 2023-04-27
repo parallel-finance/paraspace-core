@@ -108,6 +108,7 @@ const TIME_LOCK_STRATEGY = {
   SewerPass: timeLockStrategySEWER,
   PPG: timeLockStrategyPenguins,
   "SF-STAKE-VLDR": timeLockStrategyStakefishValidator,
+  "SF-VLDR": timeLockStrategyStakefishValidator,
   HVMTL: timeLockStrategyHVMTL,
   BEANZ: timeLockStrategyBEANZ,
   DEGODS: timeLockStrategyDEGODS,

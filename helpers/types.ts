@@ -595,6 +595,7 @@ export enum NTokenContractId {
   nPPG = "nPPG",
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
+  nBLOCKS = "nBLOCKS",
 }
 
 export enum PTokenContractId {
