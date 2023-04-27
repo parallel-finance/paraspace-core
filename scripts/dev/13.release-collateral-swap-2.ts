@@ -29,7 +29,7 @@ import {
   deployERC721OracleWrapper,
   deployMarketplaceLogic,
   deployPoolCoreLibraries,
-  deployTimeLockImpl,
+  // deployTimeLockImpl,
   getPoolSignatures,
 } from "../../helpers/contracts-deployments";
 import {
@@ -123,7 +123,7 @@ const releaseCollateralSwapV2 = async (verify = false) => {
     paraSpaceAdminAddress
   );
 
-  await deployTimeLockImpl(addressesProvider.address, verify);
+  // await deployTimeLockImpl(addressesProvider.address, verify);
 
   ////////////////////////////////////////////////////////////////////////////////
 
