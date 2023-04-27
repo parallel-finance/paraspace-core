@@ -5,6 +5,7 @@ import {
   getNFTFloorOracle,
   getParaSpaceOracle,
   getPoolAddressesProvider,
+  getPoolConfiguratorProxy,
   getPoolProxy,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
@@ -49,6 +50,7 @@ const releaseCollateralSwapV2 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
   const nftFloorOracle = await getNFTFloorOracle();
   const pool = await getPoolProxy();
+  const configurator = await getPoolConfiguratorProxy();
 
   const projects = [
     {
@@ -188,6 +190,12 @@ const releaseCollateralSwapV2 = async (verify = false) => {
   ] as [string, string[], string[]][];
 
   await upgradeProxyImplementations(implementations);
+
+  const encodedData2 = configurator.interface.encodeFunctionData(
+    "unpauseReserve",
+    ["0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a"]
+  );
+  await dryRunEncodedData(configurator.address, encodedData2);
 
   console.timeEnd("release-collateral-swap-v2");
 };
