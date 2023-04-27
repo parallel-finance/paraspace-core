@@ -280,6 +280,10 @@ test-acl-manager:
 test-time-lock:
 	make TEST_TARGET=time_lock_executor.spec.ts test
 
+.PHONY: test-stakefish-nft
+test-stakefish-nft:
+	make TEST_TARGET=_stakefish_nft.spec.ts test
+
 .PHONY: run
 run:
 	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
@@ -380,17 +384,17 @@ deploy-blur-exchange:
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
 
-.PHONY: deploy-renounceOwnership
-deploy-renounceOwnership:
-	make TASK_NAME=deploy:renounce-ownership run-task
+.PHONY: deploy-p2p-pair-staking
+deploy-p2p-pair-staking:
+	make TASK_NAME=deploy:P2PPairStaking run-task
 
 .PHONY: deploy-timelock
 deploy-timelock:
 	make TASK_NAME=deploy:timelock run-task
 
-.PHONY: deploy-p2p-pair-staking
-deploy-p2p-pair-staking:
-	make TASK_NAME=deploy:P2PPairStaking run-task
+.PHONY: deploy-renounceOwnership
+deploy-renounceOwnership:
+	make TASK_NAME=deploy:renounce-ownership run-task
 
 .PHONY: ad-hoc
 ad-hoc:
@@ -411,6 +415,10 @@ rate-strategy:
 .PHONY: auction-strategy
 auction-strategy:
 	make SCRIPT_PATH=./scripts/dev/6.auction-strategy.ts run
+
+.PHONY: timelock-strategy
+timelock-strategy:
+	make SCRIPT_PATH=./scripts/dev/7.timelock-strategy.ts run
 
 .PHONY: set-interval-mining
 set-interval-mining:
@@ -603,6 +611,10 @@ upgrade-pool-ape-staking:
 .PHONY: upgrade-pool-parameters
 upgrade-pool-parameters:
 	make TASK_NAME=upgrade:pool-parameters run-task
+
+.PHONY: upgrade-pool-position-mover
+upgrade-pool-position-mover:
+	make TASK_NAME=upgrade:pool-position-mover run-task
 
 .PHONY: reset-pool
 reset-pool:

@@ -22,7 +22,9 @@ enum XTokenType {
     NTokenBAKC,
     PYieldToken,
     PTokenCAPE,
-    NTokenOtherdeed
+    NTokenOtherdeed,
+    NTokenStakefish,
+    NTokenChromieSquiggle
 }
 
 interface IXTokenType {

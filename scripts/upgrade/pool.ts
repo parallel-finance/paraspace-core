@@ -5,6 +5,7 @@ import {
   deployPoolCore,
   deployPoolMarketplace,
   deployPoolParameters,
+  deployPoolPositionMover,
 } from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
@@ -12,11 +13,11 @@ import {
 } from "../../helpers/contracts-getters";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {waitForTx} from "../../helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
-const upgradeProxyImplementations = async (
+export const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
 ) => {
   const addressesProvider = await getPoolAddressesProvider();
@@ -81,6 +82,7 @@ const resetSelectors = async () => {
   for (const facet of facets.filter(
     (x) =>
       x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" &&
+      x.implAddress !== "0x0b6717ED22Cfd5495E47804F3f6624E5f0Ea20Cb" &&
       x.implAddress !== "0xC85d346eB17B37b93B30a37603Ef9550Ab18aC83" // ParaProxyInterfaces
   )) {
     implementations.push({
@@ -294,6 +296,38 @@ export const upgradePoolParameters = async (
       poolParameters.address,
       newPoolParametersSelectors,
       oldPoolParametersSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
+};
+
+export const upgradePoolPositionMover = async (
+  oldPoolPositionMover: tEthereumAddress,
+  verify = false
+) => {
+  const addressesProvider = await getPoolAddressesProvider();
+  const pool = await getPoolProxy();
+  const paraSpaceConfig = getParaSpaceConfig();
+  const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
+    oldPoolPositionMover
+  );
+
+  const {
+    poolPositionMover,
+    poolPositionMoverSelectors: newPoolPositionMoverSelectors,
+  } = await deployPoolPositionMover(
+    addressesProvider.address,
+    paraSpaceConfig.BendDAO.LendingPoolLoan!,
+    paraSpaceConfig.BendDAO.LendingPool!,
+    verify
+  );
+
+  const implementations = [
+    [
+      poolPositionMover.address,
+      newPoolPositionMoverSelectors,
+      oldPoolPositionMoverSelectors,
     ],
   ] as [string, string[], string[]][];
 

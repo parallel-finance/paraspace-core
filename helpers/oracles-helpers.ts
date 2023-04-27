@@ -14,6 +14,7 @@ import {
   ERC721OracleWrapper,
   MockAggregator,
   PriceOracle,
+  StakefishNFTOracleWrapper,
   UniswapV3OracleWrapper,
 } from "../types";
 import {
@@ -24,6 +25,7 @@ import {
   deployBaseCurrencySynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
   deployCTokenSynchronicityPriceAdapter,
+  deployStakefishNFTOracleWrapper,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
@@ -69,7 +71,8 @@ export const deployAllAggregators = async (
       | ERC721OracleWrapper
       | CLExchangeRateSynchronicityPriceAdapter
       | CLBaseCurrencySynchronicityPriceAdapter
-      | CLCETHSynchronicityPriceAdapter;
+      | CLCETHSynchronicityPriceAdapter
+      | StakefishNFTOracleWrapper;
   } = {};
   const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
@@ -100,6 +103,14 @@ export const deployAllAggregators = async (
       aggregators[tokenSymbol] = await deployCTokenSynchronicityPriceAdapter(
         tokens[tokenSymbol].address,
         tokenSymbol,
+        verify
+      );
+      continue;
+    }
+    if (tokenSymbol === ERC721TokenContractId.SFVLDR) {
+      aggregators[tokenSymbol] = await deployStakefishNFTOracleWrapper(
+        tokens[oracleConfig.BaseCurrency].address,
+        oracleConfig.BaseCurrencyUnit,
         verify
       );
       continue;

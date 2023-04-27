@@ -359,7 +359,7 @@ describe("Flash Claim Test", () => {
           receiverEncodedData,
           {gasLimit: 12_450_000}
         )
-    ).to.be.revertedWith(ProtocolErrors.UNIV3_NOT_ALLOWED);
+    ).to.be.revertedWith(ProtocolErrors.FLASHCLAIM_NOT_ALLOWED);
   });
 
   it("TC-flash-claim-05:user can not flash claim with BAYC or MAYC when sApe is not active or paused[ @skip-on-coverage ]", async function () {

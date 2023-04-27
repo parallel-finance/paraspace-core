@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {IERC721Metadata} from "../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
+import {IDelegationRegistry} from "../dependencies/delegation/IDelegationRegistry.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IUiPoolDataProvider} from "./interfaces/IUiPoolDataProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
@@ -15,6 +16,7 @@ import {ITimeLockStrategy} from "../interfaces/ITimeLockStrategy.sol";
 import {XTokenType, IXTokenType} from "../interfaces/IXTokenType.sol";
 import {IAuctionableERC721} from "../interfaces/IAuctionableERC721.sol";
 import {INToken} from "../interfaces/INToken.sol";
+import {ITokenDelegation} from "../interfaces/ITokenDelegation.sol";
 import {IVariableDebtToken} from "../interfaces/IVariableDebtToken.sol";
 import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import {ReserveConfiguration} from "../protocol/libraries/configuration/ReserveConfiguration.sol";
@@ -28,6 +30,8 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
 import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
+import {IStakefishValidator} from "../interfaces/IStakefishValidator.sol";
+import {INTokenStakefish} from "../interfaces/INTokenStakefish.sol";
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
     using WadRayMath for uint256;
@@ -297,6 +301,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             address asset = nTokenAddresses[i];
             uint256 size = tokenIds[i].length;
             tokenData[i] = new DataTypes.NTokenData[](size);
+            XTokenType xTokenType = IXTokenType(asset).getXTokenType();
 
             for (uint256 j = 0; j < size; j++) {
                 tokenData[i][j].tokenId = tokenIds[i][j];
@@ -307,6 +312,12 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 tokenData[i][j].multiplier = IAtomicCollateralizableERC721(
                     asset
                 ).getTraitMultiplier(tokenIds[i][j]);
+
+                if (xTokenType == XTokenType.NTokenStakefish) {
+                    tokenData[i][j].stakefishNTokenData = INTokenStakefish(
+                        asset
+                    ).getNFTData(tokenIds[i][j]);
+                }
             }
         }
 
@@ -545,5 +556,27 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             }
         }
         return (userData, tokensData);
+    }
+
+    function getDelegatesForTokens(address vault, uint256[] calldata tokenIds)
+        external
+        view
+        returns (DelegationData[] memory)
+    {
+        address contract_ = INToken(vault).UNDERLYING_ASSET_ADDRESS();
+        address delegationRegistry = ITokenDelegation(vault)
+            .DELEGATE_REGISTRY();
+
+        DelegationData[] memory delegationData = new DelegationData[](
+            tokenIds.length
+        );
+
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            delegationData[index].delegations = IDelegationRegistry(
+                delegationRegistry
+            ).getDelegatesForToken(vault, contract_, tokenIds[index]);
+        }
+
+        return delegationData;
     }
 }

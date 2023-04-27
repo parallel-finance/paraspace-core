@@ -1,6 +1,7 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployHotWalletProxy,
+  deployDelegationRegistry,
   deployMockIncentivesController,
   deployMockReserveAuctionStrategy,
 } from "../../../helpers/contracts-deployments";
@@ -50,6 +51,7 @@ export const step_11 = async (verify = false) => {
     let auctionStrategy: tEthereumAddress | undefined = undefined;
     let timeLockStrategy: tEthereumAddress | undefined = undefined;
     let hotWallet: tEthereumAddress | undefined = config.HotWallet;
+    let delegationRegistry = config.DelegationRegistry;
 
     if (isLocalTestnet()) {
       incentivesController = (await deployMockIncentivesController(verify))
@@ -81,6 +83,8 @@ export const step_11 = async (verify = false) => {
         await proxy.initialize(paraSpaceAdminAddress, paraSpaceAdminAddress);
         hotWallet = proxy.address;
       }
+
+      delegationRegistry = (await deployDelegationRegistry()).address;
     }
 
     const reserves = Object.entries(reservesParams).filter(
@@ -97,7 +101,8 @@ export const step_11 = async (verify = false) => {
         xTokenImpl === eContractid.PTokenSApeImpl ||
         xTokenImpl === eContractid.PTokenCApeImpl ||
         xTokenImpl === eContractid.PYieldTokenImpl ||
-        xTokenImpl === eContractid.NTokenBAKCImpl
+        xTokenImpl === eContractid.NTokenBAKCImpl ||
+        xTokenImpl === eContractid.NTokenStakefishImpl
     ) as [string, IReserveParams][];
     const chunkedReserves = chunk(reserves, 20);
 
@@ -118,6 +123,7 @@ export const step_11 = async (verify = false) => {
         incentivesController,
         hotWallet || ZERO_ADDRESS,
         verify,
+        delegationRegistry,
         undefined,
         undefined,
         undefined,
