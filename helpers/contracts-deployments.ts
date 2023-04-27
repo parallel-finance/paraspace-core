@@ -293,6 +293,7 @@ import {
   PoolExtendedLogic,
   PoolExtendedLogic__factory,
   TimeLock,
+  NTokenChromieSquiggle__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -3117,6 +3118,32 @@ export const deployOtherdeedNTokenImpl = async (
     false,
     libraries
   ) as Promise<NTokenOtherdeed>;
+};
+
+export const deployChromieSquiggleNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  delegationRegistryAddress: tEthereumAddress,
+  startTokenId: number,
+  endTokenId: number,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+
+  return withSaveAndVerify(
+    new NTokenChromieSquiggle__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenChromieSquiggleImpl,
+    [poolAddress, delegationRegistryAddress, startTokenId, endTokenId],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenStakefish>;
 };
 
 export const deployStakefishNTokenImpl = async (

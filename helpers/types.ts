@@ -62,6 +62,7 @@ export enum XTokenType {
   PTokenCApe = 14,
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
+  NTokenChromieSquiggle = 17,
 }
 
 export type ConstructorArgs = (
@@ -269,6 +270,7 @@ export enum eContractid {
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  NTokenChromieSquiggleImpl = "NTokenChromieSquiggleImpl",
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
   SFVLDR = "SFVLDR",
@@ -407,6 +409,8 @@ export enum ProtocolErrors {
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
   INVALID_STATE = "134", //invalid token status
 
+  INVALID_TOKEN_ID = "135", //invalid token id
+
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 
@@ -425,7 +429,6 @@ export enum ProtocolErrors {
 
   MAKER_SAME_AS_TAKER = "132",
 
-  INVALID_REQUEST_STATUS = "135", //The status of the request is invalid for this function
   INVALID_ETH_VALUE = "136", //the eth value with the transaction is invalid
   INVALID_PAYMENT_TOKEN = "137", //the invalid payment token for blur exchange request
   INVALID_LISTING_PRICE = "138", //the listing price for blur exchange request is invalid
@@ -435,6 +438,7 @@ export enum ProtocolErrors {
   ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
   BLUR_EXCHANGE_REQUEST_DISABLED = "144", //blur exchange request disabled
   INVALID_ASSET = "145", // invalid asset.
+  INVALID_REQUEST_STATUS = "146", //The status of the request is invalid for this function
 }
 
 export type tEthereumAddress = string;

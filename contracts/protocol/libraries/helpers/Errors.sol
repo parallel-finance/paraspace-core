@@ -127,7 +127,7 @@ library Errors {
     string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
     string public constant INVALID_STATE = "134"; //invalid token status
-    string public constant INVALID_REQUEST_STATUS = "135"; //The status of the request is invalid for this function
+    string public constant INVALID_TOKEN_ID = "135"; //invalid token id
     string public constant INVALID_ETH_VALUE = "136"; //the eth value with the transaction is invalid
     string public constant INVALID_PAYMENT_TOKEN = "137"; //the invalid payment token for blur exchange request
     string public constant INVALID_LISTING_PRICE = "138"; //the listing price for blur exchange request is invalid
@@ -138,4 +138,5 @@ library Errors {
     string public constant ONGOING_REQUEST_AMOUNT_EXCEEDED = "143"; //ongoing request amount exceeds limit
     string public constant BLUR_EXCHANGE_REQUEST_DISABLED = "144"; //blur exchange request disabled
     string public constant INVALID_ASSET = "145"; // invalid asset.
+    string public constant INVALID_REQUEST_STATUS = "146"; //The status of the request is invalid for this function
 }

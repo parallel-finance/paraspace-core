@@ -96,6 +96,7 @@ import {
   StakefishValidatorFactory__factory,
   NTokenStakefish__factory,
   MockLendPool__factory,
+  NTokenChromieSquiggle__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1243,6 +1244,17 @@ export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenChromieSquiggle = async (address?: tEthereumAddress) =>
+  await NTokenChromieSquiggle__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenChromieSquiggleImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
