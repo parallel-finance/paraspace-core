@@ -1723,7 +1723,6 @@ const boost_JSON = {
         "9483",
         "8322",
       ],
-      total_ids: 10,
     },
     Golden_Fishing_Rod: {
       boost: 1.3,
