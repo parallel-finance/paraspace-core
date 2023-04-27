@@ -1,9 +1,11 @@
 import rawBRE from "hardhat";
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
+  getFirstSigner,
   getNFTFloorOracle,
   getParaSpaceOracle,
   getPoolAddressesProvider,
+  getPoolProxy,
   getProtocolDataProvider,
 } from "../../helpers/contracts-getters";
 import {
@@ -11,14 +13,33 @@ import {
   getContractAddressInDb,
   getParaSpaceAdmins,
   insertContractAddressInDb,
+  withSaveAndVerify,
 } from "../../helpers/contracts-helpers";
 import {
   configureReservesByHelper,
   initReservesByHelper,
 } from "../../helpers/init-helpers";
 import {getParaSpaceConfig} from "../../helpers/misc-utils";
-import {ERC721TokenContractId, tEthereumAddress} from "../../helpers/types";
-import {deployERC721OracleWrapper} from "../../helpers/contracts-deployments";
+import {
+  eContractid,
+  ERC721TokenContractId,
+  tEthereumAddress,
+} from "../../helpers/types";
+import {
+  deployERC721OracleWrapper,
+  deployMarketplaceLogic,
+  deployPoolCoreLibraries,
+  deployTimeLockImpl,
+  getPoolSignatures,
+} from "../../helpers/contracts-deployments";
+import {
+  PoolCore,
+  PoolCore__factory,
+  PoolMarketplace,
+  PoolMarketplace__factory,
+} from "../../types";
+import {pick} from "lodash";
+import {upgradeProxyImplementations} from "../upgrade/pool";
 
 const releaseCollateralSwapV2 = async (verify = false) => {
   console.time("release-collateral-swap-v2");
@@ -27,6 +48,7 @@ const releaseCollateralSwapV2 = async (verify = false) => {
   const protocolDataProvider = await getProtocolDataProvider();
   const addressesProvider = await getPoolAddressesProvider();
   const nftFloorOracle = await getNFTFloorOracle();
+  const pool = await getPoolProxy();
 
   const projects = [
     {
@@ -100,6 +122,72 @@ const releaseCollateralSwapV2 = async (verify = false) => {
     protocolDataProvider,
     paraSpaceAdminAddress
   );
+
+  await deployTimeLockImpl(addressesProvider.address, verify);
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  const coreLibraries = await deployPoolCoreLibraries(verify);
+  const {poolCoreSelectors} = getPoolSignatures();
+
+  const poolCore = (await withSaveAndVerify(
+    new PoolCore__factory(coreLibraries, await getFirstSigner()),
+    eContractid.PoolCoreImpl,
+    [
+      addressesProvider.address,
+      await getContractAddressInDb(eContractid.TimeLockProxy),
+    ],
+    verify,
+    false,
+    coreLibraries,
+    poolCoreSelectors
+  )) as PoolCore;
+
+  const marketplaceLogic = await deployMarketplaceLogic(
+    pick(coreLibraries, [
+      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
+    ]),
+    verify
+  );
+  const marketplaceLibraries = {
+    "contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic":
+      marketplaceLogic.address,
+  };
+
+  const {poolMarketplaceSelectors} = getPoolSignatures();
+
+  const poolMarketplace = (await withSaveAndVerify(
+    new PoolMarketplace__factory(marketplaceLibraries, await getFirstSigner()),
+    eContractid.PoolMarketplaceImpl,
+    [addressesProvider.address],
+    verify,
+    false,
+    marketplaceLibraries,
+    poolMarketplaceSelectors
+  )) as PoolMarketplace;
+
+  const oldPoolMarketplaceSelectors = await pool.facetFunctionSelectors(
+    "0x3B0dEE41aD8979948A3D576419648498390046D1"
+  );
+  const oldPoolCoreSelectors = await pool.facetFunctionSelectors(
+    "0x48dd30d66e31D143f75aBFCC7feD33E24F983E0f"
+  );
+  const newPoolCoreSelectors = poolCoreSelectors.map((s) => s.signature);
+  const newPoolMarketplaceSelectors = poolMarketplaceSelectors.map(
+    (s) => s.signature
+  );
+
+  const implementations = [
+    [poolCore.address, newPoolCoreSelectors, oldPoolCoreSelectors],
+    [
+      poolMarketplace.address,
+      newPoolMarketplaceSelectors,
+      oldPoolMarketplaceSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
 
   console.timeEnd("release-collateral-swap-v2");
 };

@@ -61,14 +61,14 @@ export const upgradeNToken = async (verify = false) => {
     if (
       ![
         XTokenType.NToken,
-        XTokenType.NTokenMoonBirds,
-        XTokenType.NTokenUniswapV3,
-        XTokenType.NTokenBAYC,
-        XTokenType.NTokenMAYC,
-        XTokenType.NTokenBAKC,
-        XTokenType.NTokenOtherdeed,
-        XTokenType.NTokenStakefish,
-        XTokenType.NTokenChromieSquiggle,
+        // XTokenType.NTokenMoonBirds,
+        // XTokenType.NTokenUniswapV3,
+        // XTokenType.NTokenBAYC,
+        // XTokenType.NTokenMAYC,
+        // XTokenType.NTokenBAKC,
+        // XTokenType.NTokenOtherdeed,
+        // XTokenType.NTokenStakefish,
+        // XTokenType.NTokenChromieSquiggle,
       ].includes(xTokenType)
     ) {
       continue;
@@ -190,20 +190,21 @@ export const upgradeNToken = async (verify = false) => {
       ).address;
     } else if (xTokenType == XTokenType.NToken) {
       // compatibility
-      if (symbol == NTokenContractId.nOTHR) {
-        if (!nTokenOTHRImplementationAddress) {
-          console.log("deploy NTokenOtherdeed implementation");
-          nTokenOTHRImplementationAddress = (
-            await deployOtherdeedNTokenImpl(
-              poolAddress,
-              paraSpaceConfig.HotWallet || ZERO_ADDRESS,
-              delegationRegistry,
-              verify
-            )
-          ).address;
-        }
-        newImpl = nTokenOTHRImplementationAddress;
-      } else if (symbol == NTokenContractId.nBLOCKS) {
+      // if (symbol == NTokenContractId.nOTHR) {
+      //   if (!nTokenOTHRImplementationAddress) {
+      //     console.log("deploy NTokenOtherdeed implementation");
+      //     nTokenOTHRImplementationAddress = (
+      //       await deployOtherdeedNTokenImpl(
+      //         poolAddress,
+      //         paraSpaceConfig.HotWallet || ZERO_ADDRESS,
+      //         delegationRegistry,
+      //         verify
+      //       )
+      //     ).address;
+      //   }
+      //   newImpl = nTokenOTHRImplementationAddress;
+      // } else
+      if (symbol == NTokenContractId.nBLOCKS) {
         if (!nTokenBlocksImplementationAddress) {
           console.log("deploy NTokenChromieSquiggle implementation");
           nTokenBlocksImplementationAddress = (
@@ -217,20 +218,21 @@ export const upgradeNToken = async (verify = false) => {
           ).address;
         }
         newImpl = nTokenBlocksImplementationAddress;
-      } else {
-        if (!nTokenImplementationAddress) {
-          console.log("deploy NToken implementation");
-          nTokenImplementationAddress = (
-            await deployGenericNTokenImpl(
-              poolAddress,
-              false,
-              delegationRegistry,
-              verify
-            )
-          ).address;
-        }
-        newImpl = nTokenImplementationAddress;
       }
+      // else {
+      //   if (!nTokenImplementationAddress) {
+      //     console.log("deploy NToken implementation");
+      //     nTokenImplementationAddress = (
+      //       await deployGenericNTokenImpl(
+      //         poolAddress,
+      //         false,
+      //         delegationRegistry,
+      //         verify
+      //       )
+      //     ).address;
+      //   }
+      //   newImpl = nTokenImplementationAddress;
+      // }
     } else {
       continue;
     }
