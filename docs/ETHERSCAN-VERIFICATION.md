@@ -86,9 +86,9 @@ proxychains forge verify-contract 0xa9b3f3EbD6aa58D541855cf8997Fb6ad839658a2 \
 ### PoolLogic
 
 ```
-proxychains forge verify-contract 0xDA4b9E3D30A59eCF5AD669ADC591Ddd176fD80e8 \
+proxychains forge verify-contract 0x9AAc8FF4De73f54eE6A2c460716A9DD590C3C281 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 800 \
   --watch \
   contracts/protocol/libraries/logic/PoolLogic.sol:PoolLogic \
   --compiler-version v0.8.10+commit.fc410830
@@ -386,6 +386,35 @@ proxychains forge verify-contract 0xaeF900f14710d067Ae96555486232C7189784F50 \
 ```
 
 ### PoolApeStaking
+
+```
+proxychains forge verify-contract 0xaeF900f14710d067Ae96555486232C7189784F50 \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,address,address,address,address,address,uint24,uint24)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d") \
+  contracts/protocol/pool/PoolApeStaking.sol:PoolApeStaking \
+  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0xedb95460bFD94Ea2Db15e72009C68c974a84c03e \
+  --libraries contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic:0x2463705ea7432D56387C2959C608c7b86e97cC85 \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### PoolParameters
+
+```
+proxychains forge verify-contract 0x64d0680889A1f6cFF8De6632e2C4B93957169E28 \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  --constructor-args \
+  $(cast abi-encode "constructor(address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d") \
+  contracts/protocol/pool/PoolParameters.sol:PoolParameters \
+  --libraries contracts/protocol/libraries/logic/PoolLogic.sol:PoolLogic:0x9AAc8FF4De73f54eE6A2c460716A9DD590C3C281 \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### PoolPositionMover
 
 ```
 proxychains forge verify-contract 0x10D89AAc6f133DeE5eE65FEE6C862228eC256eB7 \
