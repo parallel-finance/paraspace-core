@@ -5,7 +5,7 @@ import {IPoolAddressesProvider} from "./IPoolAddressesProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
- * @title IPool
+ * @title IPoolMarketplace
  *
  * @notice Defines the basic interface for an ParaSpace Pool.
  **/
@@ -20,6 +20,60 @@ interface IPoolMarketplace {
         bytes32 indexed marketplaceId,
         DataTypes.OrderInfo orderInfo,
         DataTypes.Credit credit
+    );
+
+    /**
+     * @dev Emitted on initiateBlurExchangeRequest()
+     * @param initiator The address of initiator of the request
+     * @param paymentToken The address of paymentToken of the request
+     * @param listingPrice The listing price of the request
+     * @param borrowAmount The borrow amount for the request
+     * @param collection the collection address of the erc721
+     * @param tokenId the tokenId address of the erc721
+     **/
+    event BlurExchangeRequestInitiated(
+        address indexed initiator,
+        address paymentToken,
+        uint256 listingPrice,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
+
+    /**
+     * @dev Emitted on fulfillBlurExchangeRequest()
+     * @param initiator The address of initiator of the request
+     * @param paymentToken The address of paymentToken of the request
+     * @param listingPrice The listing price of the request
+     * @param borrowAmount The borrow amount for the request
+     * @param collection the collection address of the erc721
+     * @param tokenId the tokenId address of the erc721
+     **/
+    event BlurExchangeRequestFulfilled(
+        address indexed initiator,
+        address paymentToken,
+        uint256 listingPrice,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
+    );
+
+    /**
+     * @dev Emitted on rejectBlurExchangeRequest()
+     * @param initiator The address of initiator of the request
+     * @param paymentToken The address of paymentToken of the request
+     * @param listingPrice The listing price of the request
+     * @param borrowAmount The borrow amount for the request
+     * @param collection the collection address of the erc721
+     * @param tokenId the tokenId address of the erc721
+     **/
+    event BlurExchangeRequestRejected(
+        address indexed initiator,
+        address paymentToken,
+        uint256 listingPrice,
+        uint256 borrowAmount,
+        address collection,
+        uint256 tokenId
     );
 
     /**
@@ -111,7 +165,7 @@ interface IPoolMarketplace {
     ) external;
 
     /**
-     * @notice Rejuct a buyWithCredit request for Blur exchange listing order if the blur transaction is failed.
+     * @notice Reject a buyWithCredit request for Blur exchange listing order if the blur transaction is failed.
      * @dev Only keeper can call this function
      * @param request The detail info for the request
      */
