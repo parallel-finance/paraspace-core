@@ -568,4 +568,28 @@ describe("BLUR integration tests", () => {
         })
     ).to.be.revertedWith(ProtocolErrors.BLUR_EXCHANGE_REQUEST_DISABLED);
   });
+
+  it("initiate request failed when asset liquidation threshold is 0", async () => {
+    const {
+      pool,
+      users: [user1],
+      poolAdmin,
+      bayc,
+      configurator,
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await configurator
+        .connect(poolAdmin.signer)
+        .configureReserveAsCollateral(bayc.address, 0, 0, 0)
+    );
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .initiateBlurExchangeRequest(ETHExchangeRequest, {
+          value: parseEther("50"),
+        })
+    ).to.be.revertedWith(ProtocolErrors.INVALID_ASSET);
+  });
 });

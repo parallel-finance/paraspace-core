@@ -434,6 +434,7 @@ export enum ProtocolErrors {
   CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
   ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
   BLUR_EXCHANGE_REQUEST_DISABLED = "144", //blur exchange request disabled
+  INVALID_ASSET = "145", // invalid asset.
 }
 
 export type tEthereumAddress = string;

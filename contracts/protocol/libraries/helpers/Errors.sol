@@ -137,4 +137,5 @@ library Errors {
     string public constant INVALID_KEEPER_ADDRESS = "142"; //invalid keeper address to receive money
     string public constant ONGOING_REQUEST_AMOUNT_EXCEEDED = "143"; //ongoing request amount exceeds limit
     string public constant BLUR_EXCHANGE_REQUEST_DISABLED = "144"; //blur exchange request disabled
+    string public constant INVALID_ASSET = "145"; // invalid asset.
 }
