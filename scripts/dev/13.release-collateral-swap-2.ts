@@ -8,6 +8,7 @@ import {
 } from "../../helpers/contracts-getters";
 import {
   dryRunEncodedData,
+  getContractAddressInDb,
   getParaSpaceAdmins,
   insertContractAddressInDb,
 } from "../../helpers/contracts-helpers";
@@ -33,15 +34,12 @@ const releaseCollateralSwapV2 = async (verify = false) => {
   const projects = [
     {
       symbol: ERC721TokenContractId.HVMTL,
-      address: "",
+      address: "0x4b15a9c28034dc83db40cd810001427d3bd7163d",
       aggregator: "",
     },
   ];
   for (const project of projects) {
-    if (!project.address) {
-      project.address = (
-        await deployMintableERC721([project.symbol, project.symbol, ""], verify)
-      ).address;
+    if (!(await getContractAddressInDb(project.address))) {
       await insertContractAddressInDb(project.symbol, project.address, false);
     }
     if (!project.aggregator) {
@@ -91,7 +89,11 @@ const releaseCollateralSwapV2 = async (verify = false) => {
     ZERO_ADDRESS,
     ZERO_ADDRESS,
     paraSpaceConfig.DelegationRegistry,
-    verify
+    verify,
+    "0xF2Daf76987eBae6e83C0e50E5e5C22290687C22C",
+    "0x39E4c2Fc79D4C39749BaD41D09af4C8901066477",
+    "0x0f59196757B5BEDb94c149FB20E43D0323c52eA2",
+    "0x41BE4a63035025d79dEbecCE8df682e507fC0A2f"
   );
 
   console.log("configuring reserves");
