@@ -198,6 +198,20 @@ proxychains forge verify-contract 0x73A613Bf41284C9721A4dEDce77E85C3444DdEBC \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
+### NTokenChromieSquiggle
+
+```
+proxychains forge verify-contract 0x3365A57751BE442A84c8d8A6A2995905cB85Da2E \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/protocol/tokenization/NTokenChromieSquiggle.sol:NTokenChromieSquiggle \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,address,uint256,uint256)" "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee" "0x00000000000076A84feF008CDAbe6409d2FE638B" 0 9763) \
+  --libraries contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic:0x03734D476Ed3e158c969780F58A7537Dc7cE7F13 \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
 ### NTokenMAYC
 
 ```
