@@ -91,6 +91,10 @@ contract PoolApeStaking is
         uint24 wethUsdcFee,
         address apeCompoundTreasury
     ) {
+        require(
+            apeCompoundTreasury != address(0),
+            Errors.ZERO_ADDRESS_NOT_VALID
+        );
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
