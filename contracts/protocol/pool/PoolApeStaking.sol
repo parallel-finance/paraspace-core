@@ -52,6 +52,7 @@ contract PoolApeStaking is
     uint24 internal immutable APE_WETH_FEE;
     uint24 internal immutable WETH_USDC_FEE;
     address internal immutable WETH;
+    address internal immutable APE_COMPOUND_TREASURY;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -87,7 +88,8 @@ contract PoolApeStaking is
         ISwapRouter uniswapV3SwapRouter,
         address weth,
         uint24 apeWethFee,
-        uint24 wethUsdcFee
+        uint24 wethUsdcFee,
+        address apeCompoundTreasury
     ) {
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
@@ -97,6 +99,7 @@ contract PoolApeStaking is
         WETH = weth;
         APE_WETH_FEE = apeWethFee;
         WETH_USDC_FEE = wethUsdcFee;
+        APE_COMPOUND_TREASURY = apeCompoundTreasury;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -656,7 +659,7 @@ contract PoolApeStaking is
             .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)
             .percentMul(localVar.compoundFee);
         if (compoundFee > 0) {
-            APE_COMPOUND.deposit(msg.sender, compoundFee);
+            APE_COMPOUND.deposit(APE_COMPOUND_TREASURY, compoundFee);
         }
 
         uint256 usdcPrice = _getApeRelativePrice(address(USDC), 1E6);
