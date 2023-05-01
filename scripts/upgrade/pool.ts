@@ -11,10 +11,13 @@ import {
   getPoolAddressesProvider,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {
+  dryRunEncodedData,
+  getContractAddressInDb,
+} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
-import {tEthereumAddress} from "../../helpers/types";
+import {eContractid, tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
 export const upgradeProxyImplementations = async (
@@ -313,13 +316,20 @@ export const upgradePoolPositionMover = async (
     oldPoolPositionMover
   );
 
+  const bendDaoLendPoolLoan =
+    paraSpaceConfig.BendDAO.LendingPoolLoan ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
+  const bendDaoLendPool =
+    paraSpaceConfig.BendDAO.LendingPool ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
+
   const {
     poolPositionMover,
     poolPositionMoverSelectors: newPoolPositionMoverSelectors,
   } = await deployPoolPositionMover(
     addressesProvider.address,
-    paraSpaceConfig.BendDAO.LendingPoolLoan!,
-    paraSpaceConfig.BendDAO.LendingPool!,
+    bendDaoLendPoolLoan,
+    bendDaoLendPool,
     verify
   );
 

@@ -43,12 +43,12 @@ export const step_19 = async (verify = false) => {
       return;
     }
 
-    const baycAddress = allTokens[ERC721TokenContractId.BAYC].address;
+    const baycAddress = allTokens[ERC721TokenContractId.BAYC]?.address;
     if (!baycAddress) {
       return;
     }
 
-    const maycAddress = allTokens[ERC721TokenContractId.MAYC].address;
+    const maycAddress = allTokens[ERC721TokenContractId.MAYC]?.address;
     if (!maycAddress) {
       return;
     }
@@ -56,12 +56,12 @@ export const step_19 = async (verify = false) => {
     await deployMockAirdropProject(baycAddress, verify);
     await deployMockMultiAssetAirdropProject(baycAddress, maycAddress, verify);
 
-    const bakcAddress = allTokens[ERC721TokenContractId.BAKC].address;
+    const bakcAddress = allTokens[ERC721TokenContractId.BAKC]?.address;
     if (!bakcAddress) {
       return;
     }
 
-    const sewerAddress = allTokens[ERC721TokenContractId.SEWER].address;
+    const sewerAddress = allTokens[ERC721TokenContractId.SEWER]?.address;
     if (!sewerAddress) {
       return;
     }

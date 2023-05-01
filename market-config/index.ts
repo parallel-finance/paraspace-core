@@ -56,6 +56,8 @@ import {
   strategyVSL,
   strategyKODA,
   strategyBLOCKS,
+  strategyGMX,
+  strategyARB,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -289,6 +291,40 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
+export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  IncentivesController: ZERO_ADDRESS,
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    GMX: strategyGMX,
+    ARB: strategyARB,
+    UniswapV3: strategyUniswapV3,
+  },
+  Oracle: TestnetOracleConfig,
+  HotWallet: ZERO_ADDRESS,
+  DelegationRegistry: ZERO_ADDRESS,
+};
+
 export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -512,4 +548,5 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
   [eEthereumNetwork.arbitrumOne]: ArbitrumOneParaSpaceConfig,
+  [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
 };

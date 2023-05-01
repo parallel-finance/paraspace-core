@@ -33,7 +33,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     IACLManager private immutable ACL_MANAGER;
     address private immutable weth;
     address private immutable wpunk;
-    IPunks private immutable Punk;
+    address private immutable Punk;
 
     modifier onlyXToken(address asset) {
         require(
@@ -64,7 +64,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         POOL = IPool(provider.getPool());
         ACL_MANAGER = IACLManager(provider.getACLManager());
         wpunk = _wpunk;
-        Punk = IPunks(IWrappedPunks(_wpunk).punkContract());
+        Punk = _wpunk != address(0)
+            ? IWrappedPunks(_wpunk).punkContract()
+            : address(0);
         weth = provider.getWETH();
     }
 
@@ -209,6 +211,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
 
     function claimPunk(uint256[] calldata agreementIds) external nonReentrant {
         require(!frozen, "TimeLock is frozen");
+        require(wpunk != address(0), "zero address");
 
         IWrappedPunks WPunk = IWrappedPunks(wpunk);
         for (uint256 index = 0; index < agreementIds.length; index++) {
@@ -221,7 +224,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             for (uint256 i = 0; i < tokenIdLength; i++) {
                 uint256 tokenId = agreement.tokenIdsOrAmounts[i];
                 WPunk.burn(tokenId);
-                Punk.transferPunk(agreement.beneficiary, tokenId);
+                IPunks(Punk).transferPunk(agreement.beneficiary, tokenId);
             }
         }
     }
