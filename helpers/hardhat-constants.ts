@@ -26,6 +26,7 @@ export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1592;
 export const MOONBEAM_CHAINID = 1284;
 export const ARBITRUM_ONE_CHAINID = 42161;
+export const ARBITRUM_GOERLI_CHAINID = 421613;
 
 export const INFURA_KEY = process.env.INFURA_KEY || "";
 export const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";

@@ -104,6 +104,7 @@ export enum eEthereumNetwork {
   anvil = "anvil",
   moonbeam = "moonbeam",
   arbitrumOne = "arbitrumOne",
+  arbitrumGoerli = "arbitrumGoerli",
 }
 
 export enum eContractid {
@@ -595,6 +596,7 @@ export enum NTokenContractId {
   nPPG = "nPPG",
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
+  nBLOCKS = "nBLOCKS",
 }
 
 export enum PTokenContractId {
@@ -683,6 +685,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
   [eEthereumNetwork.arbitrumOne]: T;
+  [eEthereumNetwork.arbitrumGoerli]: T;
 }
 
 export enum RateMode {

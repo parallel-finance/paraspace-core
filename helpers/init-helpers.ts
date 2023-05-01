@@ -15,7 +15,6 @@ import {
   getPoolConfiguratorProxy,
   getPoolProxy,
   getProtocolDataProvider,
-  getAutoYieldApe,
 } from "./contracts-getters";
 import {
   getContractAddressInDb,
@@ -47,11 +46,12 @@ import {
   deployPTokenAStETH,
   deployAStETHDebtToken,
   deployPYieldToken,
-  deployAutoYieldApe,
   deployReserveTimeLockStrategy,
   deployOtherdeedNTokenImpl,
   deployStakefishNTokenImpl,
   deployChromieSquiggleNTokenImpl,
+  deployAutoYieldApeImplAndAssignItToProxy,
+  deployAutoCompoundApeImplAndAssignItToProxy,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -173,15 +173,10 @@ export const initReservesByHelper = async (
 
   for (const [symbol, params] of reserves) {
     if (!tokenAddresses[symbol]) {
-      if (symbol === ERC20TokenContractId.yAPE) {
-        await deployAutoYieldApe();
-        tokenAddresses[symbol] = (await getAutoYieldApe()).address;
-      } else {
-        console.log(
-          `- Skipping init of ${symbol} due token address is not set at markets config`
-        );
-        continue;
-      }
+      console.log(
+        `- Skipping init of ${symbol} due token address is not set at markets config`
+      );
+      continue;
     }
     const {
       strategy,
@@ -216,7 +211,9 @@ export const initReservesByHelper = async (
     } = timeLockStrategy;
     if (!strategyAddresses[strategy.name]) {
       // Strategy does not exist, create a new one
-      if (defaultReserveInterestRateStrategyAddress) {
+      if (strategy.name == "rateStrategyZero") {
+        strategyAddresses[strategy.name] = ZERO_ADDRESS;
+      } else if (defaultReserveInterestRateStrategyAddress) {
         strategyAddresses[strategy.name] =
           defaultReserveInterestRateStrategyAddress;
         insertContractAddressInDb(
@@ -459,6 +456,7 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = pTokenSApeImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.cAPE) {
+          await deployAutoCompoundApeImplAndAssignItToProxy(verify);
           if (!pTokenPsApeImplementationAddress) {
             pTokenPsApeImplementationAddress = (
               await deployPTokenCApe(pool.address, verify)
@@ -472,6 +470,7 @@ export const initReservesByHelper = async (
           }
           variableDebtTokenToUse = PsApeVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.yAPE) {
+          await deployAutoYieldApeImplAndAssignItToProxy(verify);
           if (!pYieldTokenImplementationAddress) {
             pYieldTokenImplementationAddress = (
               await deployPYieldToken(pool.address, verify)
