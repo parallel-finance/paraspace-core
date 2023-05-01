@@ -179,13 +179,13 @@ export const upgradeNToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.NTokenChromieSquiggle) {
       console.log("deploy NTokenChromieSquiggle implementation");
       newImpl = (
-          await deployChromieSquiggleNTokenImpl(
-              poolAddress,
-              delegationRegistry,
-              0,
-              9763,
-              verify
-          )
+        await deployChromieSquiggleNTokenImpl(
+          poolAddress,
+          delegationRegistry,
+          0,
+          9763,
+          verify
+        )
       ).address;
     } else if (xTokenType == XTokenType.NToken) {
       // compatibility

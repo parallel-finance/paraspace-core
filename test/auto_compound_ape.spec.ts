@@ -19,7 +19,11 @@ import {
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
-import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {
+  advanceTimeAndBlock,
+  getParaSpaceConfig,
+  waitForTx,
+} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
@@ -561,7 +565,9 @@ describe("Auto Compound Ape Test", () => {
     );
 
     // 3600 * 0.003
-    const incentiveBalance = await cApe.balanceOf(user2.address);
+    const config = getParaSpaceConfig();
+    const treasuryAddress = config.Treasury;
+    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -645,7 +651,9 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const incentiveBalance = await cApe.balanceOf(user2.address);
+    const config = getParaSpaceConfig();
+    const treasuryAddress = config.Treasury;
+    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -815,7 +823,9 @@ describe("Auto Compound Ape Test", () => {
     );
 
     // 3600 * 0.003
-    const incentiveBalance = await cApe.balanceOf(user2.address);
+    const config = getParaSpaceConfig();
+    const treasuryAddress = config.Treasury;
+    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -930,7 +940,9 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const incentiveBalance = await cApe.balanceOf(user2.address);
+    const config = getParaSpaceConfig();
+    const treasuryAddress = config.Treasury;
+    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);

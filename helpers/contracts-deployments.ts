@@ -571,6 +571,8 @@ export const deployPoolApeStaking = async (
 
   const allTokens = await getAllTokens();
 
+  const config = getParaSpaceConfig();
+  const treasuryAddress = config.Treasury;
   const poolApeStaking = (await withSaveAndVerify(
     new PoolApeStaking__factory(apeStakingLibraries, await getFirstSigner()),
     eContractid.PoolApeStakingImpl,
@@ -586,6 +588,7 @@ export const deployPoolApeStaking = async (
       allTokens.WETH.address,
       APE_WETH_FEE,
       WETH_USDC_FEE,
+      treasuryAddress,
     ],
     verify,
     false,
@@ -908,6 +911,8 @@ export const deployPoolComponents = async (
     poolMarketplaceSelectors
   )) as PoolMarketplace;
 
+  const config = getParaSpaceConfig();
+  const treasuryAddress = config.Treasury;
   const poolApeStaking = allTokens.APE
     ? ((await withSaveAndVerify(
         new PoolApeStaking__factory(
@@ -927,6 +932,7 @@ export const deployPoolComponents = async (
           allTokens.WETH.address,
           APE_WETH_FEE,
           WETH_USDC_FEE,
+          treasuryAddress,
         ],
         verify,
         false,
