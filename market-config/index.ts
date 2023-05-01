@@ -517,7 +517,6 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: strategyClonex,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
-    yAPE: strategyYAPE,
     UniswapV3: strategyUniswapV3,
     BAKC: strategyBAKC,
     SEWER: strategySEWER,

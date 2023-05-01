@@ -558,14 +558,15 @@ export const deployPoolApeStaking = async (
   provider: string,
   verify?: boolean
 ) => {
-  const supplyLogic = await deploySupplyLogic(verify);
-  const borrowLogic = await deployBorrowLogic(verify);
+  // const supplyLogic = await deploySupplyLogic(verify);
+  // const borrowLogic = await deployBorrowLogic(verify);
+  const paraSpaceConfig = getParaSpaceConfig();
 
   const apeStakingLibraries = {
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
-      supplyLogic.address,
+      "0xedb95460bFD94Ea2Db15e72009C68c974a84c03e",
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-      borrowLogic.address,
+      "0x2463705ea7432D56387C2959C608c7b86e97cC85",
   };
 
   const APE_WETH_FEE = 3000;
@@ -587,6 +588,7 @@ export const deployPoolApeStaking = async (
       allTokens.WETH.address,
       APE_WETH_FEE,
       WETH_USDC_FEE,
+      paraSpaceConfig.Treasury,
     ],
     verify,
     false,
