@@ -56,6 +56,8 @@ import {
   strategyVSL,
   strategyKODA,
   strategyBLOCKS,
+  strategyGMX,
+  strategyARB,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -312,6 +314,10 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
     FRAX: strategyFRAX,
     WETH: strategyWETH,
     WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    GMX: strategyGMX,
+    ARB: strategyARB,
     UniswapV3: strategyUniswapV3,
   },
   Oracle: TestnetOracleConfig,
