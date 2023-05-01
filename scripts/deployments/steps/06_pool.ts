@@ -1,7 +1,9 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
+  deployMockBendDaoLendPool,
   deployPoolComponents,
   deployPoolParaProxyInterfaces,
+  deployPoolPositionMover,
 } from "../../../helpers/contracts-deployments";
 import {
   getPoolProxy,
@@ -9,14 +11,23 @@ import {
   getAutoCompoundApe,
   getAllTokens,
   getUniswapV3SwapRouter,
+  getWETH,
 } from "../../../helpers/contracts-getters";
-import {registerContractInDb} from "../../../helpers/contracts-helpers";
+import {
+  getContractAddressInDb,
+  registerContractInDb,
+} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
-import {waitForTx} from "../../../helpers/misc-utils";
+import {
+  getParaSpaceConfig,
+  isLocalTestnet,
+  waitForTx,
+} from "../../../helpers/misc-utils";
 import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
+  const paraSpaceConfig = getParaSpaceConfig();
 
   try {
     const {
@@ -24,12 +35,10 @@ export const step_06 = async (verify = false) => {
       poolParameters,
       poolMarketplace,
       poolApeStaking,
-      poolPositionMover,
       poolCoreSelectors,
       poolParametersSelectors,
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
-      poolPositionMoverSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
 
     const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
@@ -65,20 +74,38 @@ export const step_06 = async (verify = false) => {
       )
     );
 
-    await waitForTx(
-      await addressesProvider.updatePoolImpl(
-        [
-          {
-            implAddress: poolPositionMover.address,
-            action: 0,
-            functionSelectors: poolPositionMoverSelectors,
-          },
-        ],
-        ZERO_ADDRESS,
-        "0x",
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (paraSpaceConfig.BendDAO.LendingPoolLoan || isLocalTestnet()) {
+      const bendDaoLendPoolLoan =
+        paraSpaceConfig.BendDAO.LendingPoolLoan ||
+        (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
+        (await deployMockBendDaoLendPool((await getWETH()).address)).address;
+      const bendDaoLendPool =
+        paraSpaceConfig.BendDAO.LendingPool ||
+        (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
+        (await deployMockBendDaoLendPool((await getWETH()).address)).address;
+      const {poolPositionMover, poolPositionMoverSelectors} =
+        await deployPoolPositionMover(
+          addressesProvider.address,
+          bendDaoLendPoolLoan,
+          bendDaoLendPool,
+          verify
+        );
+
+      await waitForTx(
+        await addressesProvider.updatePoolImpl(
+          [
+            {
+              implAddress: poolPositionMover.address,
+              action: 0,
+              functionSelectors: poolPositionMoverSelectors,
+            },
+          ],
+          ZERO_ADDRESS,
+          "0x",
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
 
     if (poolApeStaking) {
       await waitForTx(

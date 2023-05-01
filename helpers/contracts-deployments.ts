@@ -815,7 +815,6 @@ export const deployPoolComponents = async (
   provider: string,
   verify?: boolean
 ) => {
-  const paraSpaceConfig = getParaSpaceConfig();
   const coreLibraries = await deployPoolCoreLibraries(verify);
   const marketplaceLibraries = await deployPoolMarketplaceLibraries(
     coreLibraries,
@@ -829,10 +828,6 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
 
-  const positionMoverLogic = await deployPositionMoverLogic(
-    apeStakingLibraries,
-    verify
-  );
   const allTokens = await getAllTokens();
 
   const APE_WETH_FEE = 3000;
@@ -843,35 +838,7 @@ export const deployPoolComponents = async (
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
-    poolPositionMoverSelectors,
   } = getPoolSignatures();
-
-  const positionMoverLibraries = {
-    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
-      positionMoverLogic.address,
-  };
-
-  const bendDaoLendPoolLoan =
-    paraSpaceConfig.BendDAO.LendingPoolLoan ||
-    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
-    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
-  const bendDaoLendPool =
-    paraSpaceConfig.BendDAO.LendingPool ||
-    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
-    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
-
-  const poolPositionMover = (await withSaveAndVerify(
-    new PoolPositionMover__factory(
-      positionMoverLibraries,
-      await getFirstSigner()
-    ),
-    eContractid.PoolPositionMoverImpl,
-    [provider, bendDaoLendPoolLoan, bendDaoLendPool],
-    verify,
-    false,
-    positionMoverLibraries,
-    poolPositionMoverSelectors
-  )) as PoolPositionMover;
 
   const poolCore = (await withSaveAndVerify(
     new PoolCore__factory(coreLibraries, await getFirstSigner()),
@@ -938,14 +905,10 @@ export const deployPoolComponents = async (
     poolParameters,
     poolMarketplace,
     poolApeStaking,
-    poolPositionMover,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
-    poolPositionMoverSelectors: poolPositionMoverSelectors.map(
-      (s) => s.signature
-    ),
   };
 };
 
