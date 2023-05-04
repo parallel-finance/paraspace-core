@@ -47,6 +47,13 @@ import {
   timeLockStrategyPenguins,
   timeLockStrategySTETH,
   timeLockStrategyStakefishValidator,
+  timeLockStrategyHVMTL,
+  timeLockStrategyBEANZ,
+  timeLockStrategyDEGODS,
+  timeLockStrategyEXP,
+  timeLockStrategyVSL,
+  timeLockStrategyKODA,
+  timeLockStrategyBLOCKS,
 } from "../../market-config/timeLockStrategies";
 
 const TIME_LOCK_STRATEGY = {
@@ -101,6 +108,14 @@ const TIME_LOCK_STRATEGY = {
   SewerPass: timeLockStrategySEWER,
   PPG: timeLockStrategyPenguins,
   "SF-STAKE-VLDR": timeLockStrategyStakefishValidator,
+  "SF-VLDR": timeLockStrategyStakefishValidator,
+  HVMTL: timeLockStrategyHVMTL,
+  BEANZ: timeLockStrategyBEANZ,
+  DEGODS: timeLockStrategyDEGODS,
+  EXP: timeLockStrategyEXP,
+  VSL: timeLockStrategyVSL,
+  KODA: timeLockStrategyKODA,
+  BLOCKS: timeLockStrategyBLOCKS,
 };
 
 const setTimeLockStrategy = async () => {
@@ -111,8 +126,6 @@ const setTimeLockStrategy = async () => {
   const configurator = await getPoolConfiguratorProxy();
   const reservesData = await ui.getAllReservesTokens();
   for (const x of reservesData) {
-    if (x.tokenAddress != "0x5B41FFB9C448C02Ff3D0401b0374b67EFcB73C7E")
-      continue;
     const strategy = TIME_LOCK_STRATEGY[x.symbol];
     if (!strategy) {
       console.log("no stratey found for", x.symbol);

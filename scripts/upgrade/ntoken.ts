@@ -45,6 +45,7 @@ export const upgradeNToken = async (verify = false) => {
   let nTokenUniSwapV3ImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
   let nTokenStakefishImplementationAddress = "";
+  let nTokenBlocksImplementationAddress = "";
   let newImpl = "";
 
   for (let i = 0; i < allXTokens.length; i++) {
@@ -202,6 +203,21 @@ export const upgradeNToken = async (verify = false) => {
           ).address;
         }
         newImpl = nTokenOTHRImplementationAddress;
+        // compatibility
+      } else if (symbol == NTokenContractId.nBLOCKS) {
+        if (!nTokenBlocksImplementationAddress) {
+          console.log("deploy NTokenBLOCKS implementation");
+          nTokenBlocksImplementationAddress = (
+            await deployChromieSquiggleNTokenImpl(
+              poolAddress,
+              delegationRegistry,
+              0,
+              9763,
+              verify
+            )
+          ).address;
+        }
+        newImpl = nTokenBlocksImplementationAddress;
       } else {
         if (!nTokenImplementationAddress) {
           console.log("deploy NToken implementation");

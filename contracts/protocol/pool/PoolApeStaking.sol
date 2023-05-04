@@ -52,6 +52,7 @@ contract PoolApeStaking is
     uint24 internal immutable APE_WETH_FEE;
     uint24 internal immutable WETH_USDC_FEE;
     address internal immutable WETH;
+    address internal immutable APE_COMPOUND_TREASURY;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -87,8 +88,13 @@ contract PoolApeStaking is
         ISwapRouter uniswapV3SwapRouter,
         address weth,
         uint24 apeWethFee,
-        uint24 wethUsdcFee
+        uint24 wethUsdcFee,
+        address apeCompoundTreasury
     ) {
+        require(
+            apeCompoundTreasury != address(0),
+            Errors.ZERO_ADDRESS_NOT_VALID
+        );
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
@@ -97,6 +103,7 @@ contract PoolApeStaking is
         WETH = weth;
         APE_WETH_FEE = apeWethFee;
         WETH_USDC_FEE = wethUsdcFee;
+        APE_COMPOUND_TREASURY = apeCompoundTreasury;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -276,7 +283,6 @@ contract PoolApeStaking is
         DataTypes.TimeLockParams memory timeLockParams;
         // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
-            ValidationLogic.validateFlashloanSimple(borrowAssetReserve);
             if (stakingInfo.borrowAsset == address(APE_COIN)) {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     localVar.xTokenAddress,
@@ -307,42 +313,55 @@ contract PoolApeStaking is
         }
 
         // 3, deposit bayc or mayc pool
-        for (uint256 index = 0; index < _nfts.length; index++) {
-            require(
-                INToken(localVar.xTokenAddress).ownerOf(_nfts[index].tokenId) ==
-                    msg.sender,
-                Errors.NOT_THE_OWNER
-            );
-        }
+        {
+            uint256 nftsLength = _nfts.length;
+            for (uint256 index = 0; index < nftsLength; index++) {
+                require(
+                    INToken(localVar.xTokenAddress).ownerOf(
+                        _nfts[index].tokenId
+                    ) == msg.sender,
+                    Errors.NOT_THE_OWNER
+                );
+            }
 
-        INTokenApeStaking(localVar.xTokenAddress).depositApeCoin(_nfts);
+            if (nftsLength > 0) {
+                INTokenApeStaking(localVar.xTokenAddress).depositApeCoin(_nfts);
+            }
+        }
 
         // 4, deposit bakc pool
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
-            require(
-                INToken(localVar.xTokenAddress).ownerOf(
-                    _nftPairs[index].mainTokenId
-                ) == msg.sender,
-                Errors.NOT_THE_OWNER
-            );
+        {
+            uint256 nftPairsLength = _nftPairs.length;
+            for (uint256 index = 0; index < nftPairsLength; index++) {
+                require(
+                    INToken(localVar.xTokenAddress).ownerOf(
+                        _nftPairs[index].mainTokenId
+                    ) == msg.sender,
+                    Errors.NOT_THE_OWNER
+                );
 
-            localVar.transferredTokenOwners[
-                index
-            ] = _validateBAKCOwnerAndTransfer(
-                localVar,
-                _nftPairs[index].bakcTokenId,
-                msg.sender
-            );
-        }
+                localVar.transferredTokenOwners[
+                        index
+                    ] = _validateBAKCOwnerAndTransfer(
+                    localVar,
+                    _nftPairs[index].bakcTokenId,
+                    msg.sender
+                );
+            }
 
-        INTokenApeStaking(localVar.xTokenAddress).depositBAKC(_nftPairs);
-        //transfer BAKC back for user
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
-            localVar.bakcContract.safeTransferFrom(
-                localVar.xTokenAddress,
-                localVar.transferredTokenOwners[index],
-                _nftPairs[index].bakcTokenId
-            );
+            if (nftPairsLength > 0) {
+                INTokenApeStaking(localVar.xTokenAddress).depositBAKC(
+                    _nftPairs
+                );
+            }
+            //transfer BAKC back for user
+            for (uint256 index = 0; index < nftPairsLength; index++) {
+                localVar.bakcContract.safeTransferFrom(
+                    localVar.xTokenAddress,
+                    localVar.transferredTokenOwners[index],
+                    _nftPairs[index].bakcTokenId
+                );
+            }
         }
 
         // 5 mint debt token
@@ -656,7 +675,7 @@ contract PoolApeStaking is
             .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)
             .percentMul(localVar.compoundFee);
         if (compoundFee > 0) {
-            APE_COMPOUND.deposit(msg.sender, compoundFee);
+            APE_COMPOUND.deposit(APE_COMPOUND_TREASURY, compoundFee);
         }
 
         uint256 usdcPrice = _getApeRelativePrice(address(USDC), 1E6);

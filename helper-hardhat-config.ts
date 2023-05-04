@@ -3,6 +3,7 @@ import {eEthereumNetwork, iParamsPerNetwork} from "./helpers/types";
 import dotenv from "dotenv";
 import {
   ALCHEMY_KEY,
+  ARBITRUM_GOERLI_CHAINID,
   ARBITRUM_ONE_CHAINID,
   FORK,
   FORK_BLOCK_NUMBER,
@@ -62,6 +63,8 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.moonbeam]: "https://rpc.api.moonbeam.network",
   [eEthereumNetwork.arbitrumOne]:
     RPC_URL || `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eEthereumNetwork.arbitrumGoerli]:
+    RPC_URL || `https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
@@ -76,6 +79,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.tenderlyMain]: undefined,
   [eEthereumNetwork.moonbeam]: MOONBEAM_CHAINID,
   [eEthereumNetwork.arbitrumOne]: ARBITRUM_ONE_CHAINID,
+  [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
 };
 
 export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
@@ -90,4 +94,5 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.tenderlyMain]: undefined,
   [eEthereumNetwork.moonbeam]: undefined,
   [eEthereumNetwork.arbitrumOne]: undefined,
+  [eEthereumNetwork.arbitrumGoerli]: undefined,
 };
