@@ -370,6 +370,7 @@ contract P2PPairStaking is
         external
         nonReentrant
     {
+        require(msg.sender == matchingOperator, "no permission to compound");
         _claimForMatchedOrdersAndCompound(orderHashes);
     }
 
@@ -380,24 +381,21 @@ contract P2PPairStaking is
         uint256 cApeExchangeRate = ICApe(cApe).getPooledApeByShares(WAD);
         uint256 _compoundFee = compoundFee;
         uint256 totalReward;
-        uint256 totalFeeShare;
+        uint256 totalFee;
         uint256 orderCounts = orderHashes.length;
         for (uint256 index = 0; index < orderCounts; index++) {
             bytes32 orderHash = orderHashes[index];
-            (
-                uint256 reward,
-                uint256 feeShare
-            ) = _claimForMatchedOrderAndCompound(
-                    orderHash,
-                    cApeExchangeRate,
-                    _compoundFee
-                );
+            (uint256 reward, uint256 fee) = _claimForMatchedOrderAndCompound(
+                orderHash,
+                cApeExchangeRate,
+                _compoundFee
+            );
             totalReward += reward;
-            totalFeeShare += feeShare;
+            totalFee += fee;
         }
         if (totalReward > 0) {
             IAutoCompoundApe(cApe).deposit(address(this), totalReward);
-            _depositCApeShareForUser(address(this), totalFeeShare);
+            IERC20(apeCoin).safeTransfer(matchingOperator, totalFee);
         }
     }
 
@@ -536,10 +534,9 @@ contract P2PPairStaking is
             return (0, 0);
         }
 
+        uint256 feeAmount = rewardAmount.percentMul(_compoundFee);
+        rewardAmount -= feeAmount;
         uint256 rewardShare = (rewardAmount * WAD) / cApeExchangeRate;
-        //compound fee
-        uint256 _compoundFeeShare = rewardShare.percentMul(_compoundFee);
-        rewardShare -= _compoundFeeShare;
 
         _depositCApeShareForUser(
             IERC721(_getApeNTokenAddress(order.apeToken)).ownerOf(
@@ -556,9 +553,9 @@ contract P2PPairStaking is
             rewardShare.percentMul(order.apeCoinShare)
         );
 
-        emit OrderClaimedAndCompounded(orderHash, rewardAmount);
+        emit OrderClaimedAndCompounded(orderHash, rewardAmount + feeAmount);
 
-        return (rewardAmount, _compoundFeeShare);
+        return (rewardAmount, feeAmount);
     }
 
     function _depositCApeShareForUser(address user, uint256 amount) internal {
@@ -705,10 +702,6 @@ contract P2PPairStaking is
             compoundFee = _compoundFee;
             emit CompoundFeeUpdated(oldValue, _compoundFee);
         }
-    }
-
-    function claimCompoundFee(address receiver) external onlyOwner {
-        this.claimCApeReward(receiver);
     }
 
     function rescueERC20(
