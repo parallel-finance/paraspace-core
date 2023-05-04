@@ -7,9 +7,9 @@ import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {IAutoCompoundApe} from "../interfaces/IAutoCompoundApe.sol";
-import {CApe} from "./CApe.sol";
-import {IVoteDelegator} from "./interfaces/IVoteDelegator.sol";
-import {IDelegation} from "./interfaces/IDelegation.sol";
+import {CApe} from "./base/CApe.sol";
+import {IVoteDelegator} from "../interfaces/IVoteDelegator.sol";
+import {IDelegation} from "../interfaces/IDelegation.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
 import {Errors} from "../protocol/libraries/helpers/Errors.sol";
 
