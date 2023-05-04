@@ -454,9 +454,7 @@ contract PoolApeStaking is
     function claimApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        uint256[][] calldata tokenIds,
-        uint256 minUsdcApePrice,
-        uint256 minWethApePrice
+        uint256[][] calldata tokenIds
     ) external nonReentrant {
         require(
             users.length == tokenIds.length,
@@ -471,8 +469,6 @@ contract PoolApeStaking is
             nftAsset,
             users.length
         );
-        localVar.minUsdcApePrice = minUsdcApePrice;
-        localVar.minWethApePrice = minWethApePrice;
 
         for (uint256 i = 0; i < users.length; i++) {
             for (uint256 j = 0; j < tokenIds[i].length; j++) {
@@ -498,9 +494,7 @@ contract PoolApeStaking is
     function claimPairedApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        ApeCoinStaking.PairNft[][] calldata _nftPairs,
-        uint256 minUsdcApePrice,
-        uint256 minWethApePrice
+        ApeCoinStaking.PairNft[][] calldata _nftPairs
     ) external nonReentrant {
         require(
             users.length == _nftPairs.length,
@@ -514,8 +508,6 @@ contract PoolApeStaking is
             nftAsset,
             users.length
         );
-        localVar.minUsdcApePrice = minUsdcApePrice;
-        localVar.minWethApePrice = minWethApePrice;
 
         for (uint256 i = 0; i < _nftPairs.length; i++) {
             localVar.transferredTokenOwners = new address[](
@@ -711,6 +703,7 @@ contract PoolApeStaking is
                 WETH_USDC_FEE,
                 USDC
             );
+            localVar.minUsdcApePrice = _getApeRelativePrice(address(USDC), 1E6);
             localVar.pUSDCAddress = IPool(ADDRESSES_PROVIDER.getPool())
                 .getReserveData(address(USDC))
                 .xTokenAddress;
@@ -729,6 +722,10 @@ contract PoolApeStaking is
                 APE_COIN,
                 APE_WETH_FEE,
                 WETH
+            );
+            localVar.minWethApePrice = _getApeRelativePrice(
+                address(WETH),
+                1E18
             );
             localVar.pWETHAddress = IPool(ADDRESSES_PROVIDER.getPool())
                 .getReserveData(address(WETH))

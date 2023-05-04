@@ -100,15 +100,11 @@ interface IPoolApeStaking {
      * @param nftAsset Contract address of BAYC/MAYC
      * @param users array of user address
      * @param tokenIds array of user tokenId array
-     * @param minUsdcApePrice minimum usdc/ape price
-     * @param minWethApePrice minimum weth/ape price
      */
     function claimApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        uint256[][] calldata tokenIds,
-        uint256 minUsdcApePrice,
-        uint256 minWethApePrice
+        uint256[][] calldata tokenIds
     ) external;
 
     /**
@@ -116,15 +112,11 @@ interface IPoolApeStaking {
      * @param nftAsset Contract address of BAYC/MAYC
      * @param users array of user address
      * @param _nftPairs Array of Paired BAYC/MAYC NFT's
-     * @param minUsdcApePrice minimum usdc/ape price
-     * @param minWethApePrice minimum weth/ape price
      */
     function claimPairedApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        ApeCoinStaking.PairNft[][] calldata _nftPairs,
-        uint256 minUsdcApePrice,
-        uint256 minWethApePrice
+        ApeCoinStaking.PairNft[][] calldata _nftPairs
     ) external;
 
     /**
