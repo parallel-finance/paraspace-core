@@ -301,9 +301,16 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  Tokens: {},
+  Tokens: {
+    WETH: "0xe39ab88f8a4777030a534146a9ca3b52bd5d43a3",
+    UniswapV3: "0x622e4726a167799826d1e1d150b076a7725f5d81",
+  },
   YogaLabs: {},
-  Uniswap: {},
+  Uniswap: {
+    V3Factory: "0x4893376342d5d7b3e31d4184c08b265e5ab2a3f6",
+    V3NFTPositionManager: "0x622e4726a167799826d1e1d150b076a7725f5d81",
+    V3Router: "0x4648a43B2C14Da09FdF82B161150d3F634f40491",
+  },
   Marketplace: {},
   BendDAO: {},
   Chainlink: {},
@@ -320,7 +327,7 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
     ARB: strategyARB,
     UniswapV3: strategyUniswapV3,
   },
-  Oracle: TestnetOracleConfig,
+  Oracle: ArbitrumOneOracleConfig,
   HotWallet: ZERO_ADDRESS,
   DelegationRegistry: ZERO_ADDRESS,
 };
