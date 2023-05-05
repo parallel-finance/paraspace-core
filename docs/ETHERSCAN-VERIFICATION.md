@@ -404,10 +404,10 @@ proxychains forge verify-contract 0x1Ba6891D74b3B1f84b3EdFa6538D99eE979E8B63 \
 ```
 proxychains forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 800 \
   --watch \
   --constructor-args \
-  $(cast abi-encode "constructor(address,uint256)" "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" 1000000000000000000) \
+  $(cast abi-encode "constructor(uint256)" 10000000000000000) \
   contracts/misc/CLFixedPriceSynchronicityPriceAdapter.sol:CLFixedPriceSynchronicityPriceAdapter \
   --compiler-version v0.8.10+commit.fc410830
 ```
