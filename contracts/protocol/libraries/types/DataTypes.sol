@@ -447,7 +447,9 @@ library DataTypes {
     }
 
     enum BlurBuyWithCreditRequestStatus {
+        //default status for value 0
         Default,
+        //initiated status
         Initiated
     }
 
