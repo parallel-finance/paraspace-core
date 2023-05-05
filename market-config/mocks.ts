@@ -1,4 +1,4 @@
-import {parseEther} from "ethers/lib/utils";
+import {parseEther, parseUnits} from "ethers/lib/utils";
 import "../helpers/types";
 import {IMocksConfig} from "../helpers/types";
 
@@ -52,6 +52,56 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   BLOCKS: parseEther("9.54").toString(),
 };
 
+export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
+  // ERC20
+  DAI: parseUnits("1", 6).toString(),
+  USDC: parseUnits("1", 6).toString(),
+  USDT: parseUnits("1", 6).toString(),
+  FRAX: parseUnits("1", 6).toString(),
+  WETH: parseUnits("1896", 6).toString(),
+  WBTC: parseUnits("29195", 6).toString(),
+  stETH: parseUnits("1896", 6).toString(),
+  wstETH: parseUnits("2116", 6).toString(),
+  APE: parseUnits("3.78", 6).toString(),
+  sAPE: parseUnits("3.78", 6).toString(),
+  cAPE: parseUnits("3.78", 6).toString(),
+  yAPE: parseUnits("3.78", 6).toString(),
+  aWETH: parseUnits("1896", 6).toString(),
+  cETH: parseUnits("30", 6).toString(),
+  bendETH: parseUnits("1896", 6).toString(),
+  cbETH: parseUnits("1950", 6).toString(),
+  astETH: parseUnits("1896", 6).toString(),
+  rETH: parseUnits("2027", 6).toString(),
+  awstETH: parseUnits("2116", 6).toString(),
+  PUNK: parseUnits("140", 6).toString(),
+  xcDOT: parseUnits("5.75", 6).toString(),
+  WGLMR: parseUnits("0.33", 6).toString(),
+  BLUR: parseUnits("0.57", 6).toString(),
+  ARB: parseUnits("1.32", 6).toString(),
+  GMX: parseUnits("69.2", 6).toString(),
+  // ERC721
+  BAYC: parseUnits("96239", 6).toString(),
+  WPUNKS: parseUnits("113896", 6).toString(),
+  PUNKS: parseUnits("113896", 6).toString(),
+  MAYC: parseUnits("21148", 6).toString(),
+  DOODLE: parseUnits("5190", 6).toString(),
+  MOONBIRD: parseUnits("4631", 6).toString(),
+  MEEBITS: parseUnits("4524", 6).toString(),
+  AZUKI: parseUnits("29104", 6).toString(),
+  OTHR: parseUnits("2293", 6).toString(),
+  CLONEX: parseUnits("6090", 6).toString(),
+  BAKC: parseUnits("8959", 6).toString(),
+  SEWER: parseUnits("170", 6).toString(),
+  PPG: parseUnits("8054", 6).toString(),
+  HVMTL: parseUnits("2271", 6).toString(),
+  BEANZ: parseUnits("2631", 6).toString(),
+  DEGODS: parseUnits("16522", 6).toString(),
+  EXP: parseUnits("1329", 6).toString(),
+  VSL: parseUnits("568", 6).toString(),
+  KODA: parseUnits("14154", 6).toString(),
+  BLOCKS: parseUnits("10800", 6).toString(),
+};
+
 export const MOCK_TOKEN_MINT_VALUE = {
   // ERC20
   DAI: 10000,
@@ -93,5 +143,11 @@ export const MOCK_TOKEN_MINT_VALUE = {
 export const MocksConfig: IMocksConfig = {
   USDPriceInWEI: "5848466240000000",
   AllAssetsInitialPrices: MOCK_CHAINLINK_AGGREGATORS_PRICES,
+  TokenFaucetMintValue: MOCK_TOKEN_MINT_VALUE,
+};
+
+export const MocksUSDConfig: IMocksConfig = {
+  USDPriceInWEI: "1896000000",
+  AllAssetsInitialPrices: MOCK_CHAINLINK_AGGREGATORS_USD_PRICES,
   TokenFaucetMintValue: MOCK_TOKEN_MINT_VALUE,
 };

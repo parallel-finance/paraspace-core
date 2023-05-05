@@ -4,7 +4,7 @@ import {
   ERC20TokenContractId,
   IParaSpaceConfiguration,
 } from "../helpers/types";
-import {MocksConfig} from "./mocks";
+import {MocksConfig, MocksUSDConfig} from "./mocks";
 import {
   ArbitrumOneOracleConfig,
   MainnetOracleConfig,
@@ -327,6 +327,7 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
     ARB: strategyARB,
     UniswapV3: strategyUniswapV3,
   },
+  Mocks: MocksUSDConfig,
   Oracle: ArbitrumOneOracleConfig,
   HotWallet: ZERO_ADDRESS,
   DelegationRegistry: ZERO_ADDRESS,

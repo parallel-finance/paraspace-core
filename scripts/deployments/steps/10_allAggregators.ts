@@ -110,9 +110,11 @@ export const step_10 = async (verify = false) => {
 
     await deployUiPoolDataProvider(
       (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
+        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
+        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
       (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
+        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
+        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
       verify
     );
     await deployWalletBalanceProvider(verify);

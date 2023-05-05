@@ -19,7 +19,7 @@ export const TestnetOracleConfig: IOracleConfig = {
 
 export const MoonbeamOracleConfig: IOracleConfig = {
   BaseCurrency: ERC20TokenContractId.USDC,
-  BaseCurrencyUnit: BigNumber.from("100000000").toString(),
+  BaseCurrencyUnit: BigNumber.from("1000000").toString(),
   ExpirationPeriod: 600,
   DeviationRate: 1000,
   Nodes: [],
@@ -27,7 +27,7 @@ export const MoonbeamOracleConfig: IOracleConfig = {
 
 export const ArbitrumOneOracleConfig: IOracleConfig = {
   BaseCurrency: ERC20TokenContractId.USDC,
-  BaseCurrencyUnit: BigNumber.from("100000000").toString(),
+  BaseCurrencyUnit: BigNumber.from("1000000").toString(),
   ExpirationPeriod: 600,
   DeviationRate: 1000,
   Nodes: [],
