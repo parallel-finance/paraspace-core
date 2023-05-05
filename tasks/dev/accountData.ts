@@ -1,5 +1,8 @@
+import {log10} from "@prb/math";
+import {BigNumber} from "ethers";
 import {fromBn} from "evm-bn";
 import {task} from "hardhat/config";
+import {WAD} from "../../helpers/constants";
 
 task("account-data", "Print account data")
   .addPositionalParam("user", "user address")
@@ -14,7 +17,11 @@ task("account-data", "Print account data")
     const provider = await getPoolAddressesProvider();
     const reservesData = await ui.getUserReservesData(provider.address, user);
     const paraSpaceConfig = await getParaSpaceConfig();
-    const baseDecimals = Math.log10(+paraSpaceConfig.Oracle.BaseCurrencyUnit);
+    const baseDecimals = log10(
+      BigNumber.from(paraSpaceConfig.Oracle.BaseCurrencyUnit).mul(WAD)
+    )
+      .div(WAD)
+      .toNumber();
 
     const accountData = await pool.getUserAccountData(user, {
       blockTag: blockHash,

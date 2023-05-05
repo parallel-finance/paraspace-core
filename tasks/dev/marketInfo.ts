@@ -1,6 +1,7 @@
 import {task} from "hardhat/config";
 import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
+import {log10} from "@prb/math";
 import {BigNumber} from "ethers";
 import {RAY, WAD} from "../../helpers/constants";
 
@@ -66,7 +67,9 @@ task("market-info", "Print markets info")
         " price:",
         fromBn(
           x.priceInMarketReferenceCurrency,
-          Math.log10(baseCurrencyInfo.marketReferenceCurrencyUnit.toNumber())
+          log10(baseCurrencyInfo.marketReferenceCurrencyUnit.mul(WAD))
+            .div(WAD)
+            .toNumber()
         )
       );
       console.log(
@@ -75,7 +78,9 @@ task("market-info", "Print markets info")
           x.priceInMarketReferenceCurrency
             .mul(baseCurrencyInfo.networkBaseTokenPriceInUsd)
             .div(10 ** baseCurrencyInfo.networkBaseTokenPriceDecimals),
-          Math.log10(baseCurrencyInfo.marketReferenceCurrencyUnit.toNumber())
+          log10(baseCurrencyInfo.marketReferenceCurrencyUnit.mul(WAD))
+            .div(WAD)
+            .toNumber()
         )
       );
       console.log(
