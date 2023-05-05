@@ -26,7 +26,7 @@ contract MockAggregator is IEACAggregatorProxy{
     }
 
     function decimals() external pure returns (uint8) {
-        return 6;
+        return 8;
     }
 
     function getTimestamp(uint256) external view override returns (uint256) {

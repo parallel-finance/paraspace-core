@@ -313,7 +313,13 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   },
   Marketplace: {},
   BendDAO: {},
-  Chainlink: {},
+  Chainlink: {
+    WETH: "0x62CAe0FA2da220f43a51F86Db2EDb36DcA9A5A08",
+    WBTC: "0x6550bc2301936011c1334555e62A87705A81C12C",
+    DAI: "0x103b53E977DA6E4Fa92f76369c8b7e20E7fb7fe1",
+    USDC: "0x1692Bdd32F31b831caAc1b0c9fAF68613682813b",
+    USDT: "0x0a023a3423D9b27A0BE48c768CCF2dD7877fEf5E",
+  },
   ReservesConfig: {
     DAI: strategyDAI,
     USDC: strategyUSDC,
