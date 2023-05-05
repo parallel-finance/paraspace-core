@@ -249,7 +249,6 @@ import {
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
   CLExchangeRateSynchronicityPriceAdapter,
-  CLBaseCurrencySynchronicityPriceAdapter__factory,
   PTokenAStETH__factory,
   PTokenAStETH,
   AStETHDebtToken__factory,
@@ -292,6 +291,8 @@ import {
   PositionMoverLogic__factory,
   TimeLock,
   NTokenChromieSquiggle__factory,
+  CLFixedPriceSynchronicityPriceAdapter,
+  CLFixedPriceSynchronicityPriceAdapter__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2897,20 +2898,17 @@ export const deployCTokenSynchronicityPriceAdapter = async (
     verify
   ) as Promise<CLCETHSynchronicityPriceAdapter>;
 
-export const deployBaseCurrencySynchronicityPriceAdapter = async (
-  baseCurrency: tEthereumAddress,
-  baseCurrencyUnit: string,
+export const deployFixedPriceSynchronicityPriceAdapter = async (
+  fixedPrice: string,
   symbol: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new CLBaseCurrencySynchronicityPriceAdapter__factory(
-      await getFirstSigner()
-    ),
+    new CLFixedPriceSynchronicityPriceAdapter__factory(await getFirstSigner()),
     eContractid.Aggregator.concat(upperFirst(symbol)),
-    [baseCurrency, baseCurrencyUnit],
+    [fixedPrice],
     verify
-  ) as Promise<CLExchangeRateSynchronicityPriceAdapter>;
+  ) as Promise<CLFixedPriceSynchronicityPriceAdapter>;
 
 export const deployParaSpaceAirdrop = async (
   token: tEthereumAddress,

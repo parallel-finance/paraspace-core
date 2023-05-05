@@ -7,9 +7,9 @@ import {
   eContractid,
 } from "./types";
 import {
-  CLBaseCurrencySynchronicityPriceAdapter,
   CLCETHSynchronicityPriceAdapter,
   CLExchangeRateSynchronicityPriceAdapter,
+  CLFixedPriceSynchronicityPriceAdapter,
   CLwstETHSynchronicityPriceAdapter,
   ERC721OracleWrapper,
   MockAggregator,
@@ -22,7 +22,7 @@ import {
   deployAggregator,
   deployUniswapV3OracleWrapper,
   deployCLwstETHSynchronicityPriceAdapter,
-  deployBaseCurrencySynchronicityPriceAdapter,
+  deployFixedPriceSynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
   deployCTokenSynchronicityPriceAdapter,
   deployStakefishNFTOracleWrapper,
@@ -70,7 +70,7 @@ export const deployAllAggregators = async (
       | CLwstETHSynchronicityPriceAdapter
       | ERC721OracleWrapper
       | CLExchangeRateSynchronicityPriceAdapter
-      | CLBaseCurrencySynchronicityPriceAdapter
+      | CLFixedPriceSynchronicityPriceAdapter
       | CLCETHSynchronicityPriceAdapter
       | StakefishNFTOracleWrapper;
   } = {};
@@ -91,8 +91,7 @@ export const deployAllAggregators = async (
       )
     ) {
       aggregators[tokenSymbol] =
-        await deployBaseCurrencySynchronicityPriceAdapter(
-          tokens[oracleConfig.BaseCurrency].address,
+        await deployFixedPriceSynchronicityPriceAdapter(
           oracleConfig.BaseCurrencyUnit,
           tokenSymbol,
           verify

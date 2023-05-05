@@ -3,18 +3,14 @@ pragma solidity 0.8.10;
 
 import {ICLSynchronicityPriceAdapter} from "../dependencies/chainlink/ICLSynchronicityPriceAdapter.sol";
 
-contract CLBaseCurrencySynchronicityPriceAdapter is
-    ICLSynchronicityPriceAdapter
-{
-    address public immutable BASE_CURRENCY;
-    uint256 public immutable BASE_CURRENCY_UNIT;
+contract CLFixedPriceSynchronicityPriceAdapter is ICLSynchronicityPriceAdapter {
+    uint256 public immutable FIXED_PRICE;
 
-    constructor(address baseCurrency, uint256 baseCurrencyUnit) {
-        BASE_CURRENCY = baseCurrency;
-        BASE_CURRENCY_UNIT = baseCurrencyUnit;
+    constructor(uint256 fixedPrice) {
+        FIXED_PRICE = fixedPrice;
     }
 
     function latestAnswer() external view override returns (int256) {
-        return int256(BASE_CURRENCY_UNIT);
+        return int256(FIXED_PRICE);
     }
 }
