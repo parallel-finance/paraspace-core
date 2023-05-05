@@ -305,9 +305,13 @@ import {
   getPunks,
   getUniswapV3SwapRouter,
   getWETH,
+  getACLManager,
   getTimeLockProxy,
   getInitializableAdminUpgradeabilityProxy,
-  getACLManager,
+  getAutoCompoundApe,
+  getP2PPairStaking,
+  getAutoYieldApe,
+  getHelperContract,
 } from "./contracts-getters";
 import {
   convertToCurrencyDecimals,
@@ -669,21 +673,21 @@ export const deployPoolApeStaking = async (
 
   const allTokens = await getAllTokens();
 
+  const config = getParaSpaceConfig();
+  const treasuryAddress = config.Treasury;
   const poolApeStaking = (await withSaveAndVerify(
     new PoolApeStaking__factory(apeStakingLibraries, await getFirstSigner()),
     eContractid.PoolApeStakingImpl,
     [
       provider,
-      (await getContractAddressInDb(eContractid.cAPE)) ||
-        (
-          await deployAutoCompoundApe(verify)
-        ).address,
+      (await getAutoCompoundApe()).address,
       allTokens.APE.address,
       allTokens.USDC.address,
       (await getUniswapV3SwapRouter()).address,
       allTokens.WETH.address,
       APE_WETH_FEE,
       WETH_USDC_FEE,
+      treasuryAddress,
     ],
     verify,
     false,
@@ -895,7 +899,6 @@ export const deployPoolComponents = async (
   provider: string,
   verify?: boolean
 ) => {
-  const paraSpaceConfig = getParaSpaceConfig();
   const poolLibraries = await deployPoolLibraries(verify);
   const coreLibraries = pick(poolLibraries, [
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
@@ -917,15 +920,6 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic",
   ]);
 
-  const PositionMoverLibraries = pick(poolLibraries, [
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
-  ]);
-
-  const positionMoverLogic = await deployPositionMoverLogic(
-    PositionMoverLibraries,
-    verify
-  );
   const allTokens = await getAllTokens();
 
   const APE_WETH_FEE = 3000;
@@ -936,35 +930,7 @@ export const deployPoolComponents = async (
     poolParametersSelectors,
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
-    poolPositionMoverSelectors,
   } = getPoolSignatures();
-
-  const positionMoverLibraries = {
-    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
-      positionMoverLogic.address,
-  };
-
-  const bendDaoLendPoolLoan =
-    paraSpaceConfig.BendDAO.LendingPoolLoan ||
-    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
-    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
-  const bendDaoLendPool =
-    paraSpaceConfig.BendDAO.LendingPool ||
-    (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
-    (await deployMockBendDaoLendPool((await getWETH()).address)).address;
-
-  const poolPositionMover = (await withSaveAndVerify(
-    new PoolPositionMover__factory(
-      positionMoverLibraries,
-      await getFirstSigner()
-    ),
-    eContractid.PoolPositionMoverImpl,
-    [provider, bendDaoLendPoolLoan, bendDaoLendPool],
-    verify,
-    false,
-    positionMoverLibraries,
-    poolPositionMoverSelectors
-  )) as PoolPositionMover;
 
   const poolCore = (await withSaveAndVerify(
     new PoolCore__factory(coreLibraries, await getFirstSigner()),
@@ -1002,6 +968,8 @@ export const deployPoolComponents = async (
     poolMarketplaceSelectors
   )) as PoolMarketplace;
 
+  const config = getParaSpaceConfig();
+  const treasuryAddress = config.Treasury;
   const poolApeStaking = allTokens.APE
     ? ((await withSaveAndVerify(
         new PoolApeStaking__factory(
@@ -1011,16 +979,14 @@ export const deployPoolComponents = async (
         eContractid.PoolApeStakingImpl,
         [
           provider,
-          (await getContractAddressInDb(eContractid.cAPE)) ||
-            (
-              await deployAutoCompoundApe(verify)
-            ).address,
+          (await getAutoCompoundApe()).address,
           allTokens.APE.address,
           allTokens.USDC.address,
           (await getUniswapV3SwapRouter()).address,
           allTokens.WETH.address,
           APE_WETH_FEE,
           WETH_USDC_FEE,
+          treasuryAddress,
         ],
         verify,
         false,
@@ -1034,14 +1000,10 @@ export const deployPoolComponents = async (
     poolParameters,
     poolMarketplace,
     poolApeStaking,
-    poolPositionMover,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
-    poolPositionMoverSelectors: poolPositionMoverSelectors.map(
-      (s) => s.signature
-    ),
   };
 };
 
@@ -1282,6 +1244,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | StETHMocked
       | WstETHMocked
       | MockAToken
+      | AutoYieldApe
       | AutoCompoundApe;
   } = {};
 
@@ -1333,7 +1296,7 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       }
       continue;
     } else {
-      console.log("deploying now ", tokenSymbol);
+      console.log("deploying now", tokenSymbol);
       if (tokenSymbol === ERC20TokenContractId.WETH) {
         tokens[tokenSymbol] = await deployWETH(verify);
         continue;
@@ -1388,13 +1351,19 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       }
 
       if (tokenSymbol === ERC20TokenContractId.cAPE) {
-        //cAPE need to deploy later because it has a dependency for ApeCoinStaking address
-        console.log("cAPE deploy later....");
+        tokens[tokenSymbol] = await getAutoCompoundApe(
+          (
+            await deployAutoCompoundApeProxy(verify)
+          ).address
+        );
         continue;
       }
       if (tokenSymbol === ERC20TokenContractId.yAPE) {
-        //yAPE need to deploy later because it has a dependency for ApeCoinStaking address
-        console.log("yAPE deploy later....");
+        tokens[tokenSymbol] = await getAutoYieldApe(
+          (
+            await deployAutoYieldApeProxy(verify)
+          ).address
+        );
         continue;
       }
 
@@ -2739,7 +2708,20 @@ export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
   ) as Promise<AutoCompoundApe>;
 };
 
-export const deployAutoCompoundApe = async (verify?: boolean) => {
+export const deployAutoCompoundApeProxy = async (verify?: boolean) => {
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.cAPE,
+    [],
+    verify
+  );
+
+  return proxyInstance as InitializableAdminUpgradeabilityProxy;
+};
+
+export const deployAutoCompoundApeImplAndAssignItToProxy = async (
+  verify?: boolean
+) => {
   const cApeImplementation = await deployAutoCompoundApeImpl(verify);
 
   const deployer = await getFirstSigner();
@@ -2748,20 +2730,20 @@ export const deployAutoCompoundApe = async (verify?: boolean) => {
   const initData =
     cApeImplementation.interface.encodeFunctionData("initialize");
 
-  const proxyInstance = await withSaveAndVerify(
-    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
-    eContractid.cAPE,
-    [],
-    verify
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await getAutoCompoundApe()
+    ).address
   );
 
   await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](cApeImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+    await proxyInstance["initialize(address,address,bytes)"](
+      cApeImplementation.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
   );
-
-  return proxyInstance as AutoCompoundApe;
 };
 
 export const deployP2PPairStakingImpl = async (verify?: boolean) => {
@@ -2820,7 +2802,7 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
     ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as P2PPairStaking;
+  return await getP2PPairStaking(proxyInstance.address);
 };
 
 export const deployAutoYieldApeImpl = async (verify?: boolean) => {
@@ -2830,12 +2812,14 @@ export const deployAutoYieldApeImpl = async (verify?: boolean) => {
     (await deployApeCoinStaking(verify)).address;
   const pool = await getPoolProxy();
   const swapRouter = await getUniswapV3SwapRouter();
+  const aclManager = await getACLManager();
   const args = [
     apeCoinStaking,
     allTokens.APE.address,
     allTokens.USDC.address,
     pool.address,
     swapRouter.address,
+    aclManager.address,
   ];
 
   return withSaveAndVerify(
@@ -2846,7 +2830,20 @@ export const deployAutoYieldApeImpl = async (verify?: boolean) => {
   ) as Promise<AutoYieldApe>;
 };
 
-export const deployAutoYieldApe = async (verify?: boolean) => {
+export const deployAutoYieldApeProxy = async (verify?: boolean) => {
+  const proxyInstance = await withSaveAndVerify(
+    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
+    eContractid.yAPE,
+    [],
+    verify
+  );
+
+  return proxyInstance as InitializableAdminUpgradeabilityProxy;
+};
+
+export const deployAutoYieldApeImplAndAssignItToProxy = async (
+  verify?: boolean
+) => {
   const yApeImplementation = await deployAutoYieldApeImpl(verify);
 
   const deployer = await getFirstSigner();
@@ -2855,20 +2852,20 @@ export const deployAutoYieldApe = async (verify?: boolean) => {
   const initData =
     yApeImplementation.interface.encodeFunctionData("initialize");
 
-  const proxyInstance = await withSaveAndVerify(
-    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
-    eContractid.yAPE,
-    [],
-    verify
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await getAutoYieldApe()
+    ).address
   );
 
   await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](yApeImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+    await proxyInstance["initialize(address,address,bytes)"](
+      yApeImplementation.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
   );
-
-  return proxyInstance as AutoYieldApe;
 };
 
 export const deployHelperContractImpl = async (verify?: boolean) => {
@@ -2915,7 +2912,7 @@ export const deployHelperContract = async (verify?: boolean) => {
     ](helperImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
   );
 
-  return proxyInstance as HelperContract;
+  return await getHelperContract(proxyInstance.address);
 };
 
 export const deployPTokenCApe = async (
@@ -3021,11 +3018,11 @@ export const deployTimeLockImpl = async (
   verify?: boolean
 ) => {
   const allTokens = await getAllTokens();
-  const wPunk = allTokens.WPUNKS.address;
+  const wPunks = allTokens.WPUNKS?.address || ZERO_ADDRESS;
   const instance = await withSaveAndVerify(
     new TimeLock__factory(await getFirstSigner()),
     eContractid.TimeLockImpl,
-    [provider, wPunk],
+    [provider, wPunks],
     verify
   );
   return instance as TimeLock;
@@ -3060,9 +3057,12 @@ export const deployTimeLockImplAndAssignItToProxy = async (
   const initData = impl.interface.encodeFunctionData("initialize");
 
   await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](impl.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
   );
 };
 

@@ -328,25 +328,16 @@ export const step_23 = async (
       if (DRY_RUN) {
         const encodedData1 = yApeProxy.interface.encodeFunctionData(
           "changeAdmin",
-          [paraSpaceAdminAddress]
+          [emergencyAdminAddresses[0]]
         );
         await dryRunEncodedData(yApeProxy.address, encodedData1);
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          const encodedData2 = yApe.interface.encodeFunctionData(
-            "transferOwnership",
-            [gatewayAdminAddress]
-          );
-          await dryRunEncodedData(yApe.address, encodedData2);
-        }
       } else {
         await waitForTx(
-          await yApeProxy.changeAdmin(paraSpaceAdminAddress, GLOBAL_OVERRIDES)
+          await yApeProxy.changeAdmin(
+            emergencyAdminAddresses[0],
+            GLOBAL_OVERRIDES
+          )
         );
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          await waitForTx(
-            await yApe.transferOwnership(gatewayAdminAddress, GLOBAL_OVERRIDES)
-          );
-        }
       }
       console.timeEnd("transferring yAPE ownership...");
       console.log();

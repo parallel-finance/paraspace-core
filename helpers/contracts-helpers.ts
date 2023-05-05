@@ -80,7 +80,11 @@ import {
   TimeLock__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
+import {
+  getFirstSigner,
+  getProtocolDataProvider,
+  getTimeLockExecutor,
+} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -123,6 +127,8 @@ import {
   FlashbotsBundleRawTransaction,
   FlashbotsBundleTransaction,
 } from "@flashbots/ethers-provider-bundle";
+import {ZERO_ADDRESS} from "./constants";
+import {configureReservesByHelper, initReservesByHelper} from "./init-helpers";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -1042,4 +1048,52 @@ export const sendPrivateTransactions = async (
 
     await sleep(3000);
   }
+};
+
+export const initAndConfigureReserves = async (
+  assets: {
+    symbol: string;
+    address: tEthereumAddress;
+    aggregator: tEthereumAddress;
+  }[],
+  verify = false
+) => {
+  const paraSpaceConfig = getParaSpaceConfig();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const reservesParams = paraSpaceConfig.ReservesConfig;
+  const allTokenAddresses = assets.reduce(
+    (accum: {[name: string]: tEthereumAddress}, {symbol, address}) => ({
+      ...accum,
+      [symbol]: address,
+    }),
+    {}
+  );
+  const {PTokenNamePrefix, VariableDebtTokenNamePrefix, SymbolPrefix} =
+    paraSpaceConfig;
+  const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
+  const treasuryAddress = paraSpaceConfig.Treasury;
+
+  const reserves = Object.entries(reservesParams);
+
+  await initReservesByHelper(
+    reserves,
+    allTokenAddresses,
+    PTokenNamePrefix,
+    VariableDebtTokenNamePrefix,
+    SymbolPrefix,
+    paraSpaceAdminAddress,
+    treasuryAddress,
+    ZERO_ADDRESS,
+    ZERO_ADDRESS,
+    verify,
+    paraSpaceConfig.DelegationRegistry
+  );
+
+  console.log("configuring reserves");
+  await configureReservesByHelper(
+    reserves,
+    allTokenAddresses,
+    protocolDataProvider,
+    paraSpaceAdminAddress
+  );
 };

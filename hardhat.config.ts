@@ -175,6 +175,11 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumOne],
       accounts: DEPLOYER,
     },
+    arbitrumGoerli: {
+      chainId: CHAINS_ID[eEthereumNetwork.arbitrumGoerli],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumGoerli],
+      accounts: DEPLOYER,
+    },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],

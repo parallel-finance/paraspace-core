@@ -1,12 +1,11 @@
-import {getAllTokens, getPunks} from "../../../helpers/contracts-getters";
 import {deployFaucet} from "../token_faucet";
+import {isLocalTestnet, isPublicTestnet} from "../../../helpers/misc-utils";
 import {
-  DRE,
-  getDb,
-  isLocalTestnet,
-  isPublicTestnet,
-} from "../../../helpers/misc-utils";
-import {eContractid} from "../../../helpers/types";
+  eContractid,
+  ERC20TokenContractId,
+  ERC721TokenContractId,
+} from "../../../helpers/types";
+import {getContractAddressInDb} from "../../../helpers/contracts-helpers";
 
 export const step_03 = async (verify = false) => {
   try {
@@ -14,39 +13,32 @@ export const step_03 = async (verify = false) => {
       return;
     }
 
-    const mockTokens = await getAllTokens();
-    const punks = await getPunks();
-    const tokens = {
+    const tokens = Object.entries({
       // ERC20
-      DAI: mockTokens.DAI.address,
-      USDC: mockTokens.USDC.address,
-      USDT: mockTokens.USDT.address,
-      WBTC: mockTokens.WBTC.address,
-      APE: mockTokens.APE.address,
-      stETH: mockTokens.stETH.address,
-      PUNK: mockTokens.PUNK.address,
-      aWETH: mockTokens.aWETH.address,
-      cWETH: mockTokens.cETH.address,
+      DAI: await getContractAddressInDb(ERC20TokenContractId.DAI),
+      USDC: await getContractAddressInDb(ERC20TokenContractId.USDC),
+      USDT: await getContractAddressInDb(ERC20TokenContractId.USDT),
+      WBTC: await getContractAddressInDb(ERC20TokenContractId.WBTC),
+      APE: await getContractAddressInDb(ERC20TokenContractId.APE),
+      stETH: await getContractAddressInDb(ERC20TokenContractId.stETH),
+      PUNK: await getContractAddressInDb(ERC20TokenContractId.PUNK),
+      aWETH: await getContractAddressInDb(ERC20TokenContractId.aWETH),
+      cWETH: await getContractAddressInDb(ERC20TokenContractId.cETH),
       // ERC721
-      MAYC: mockTokens.MAYC.address,
-      BAYC: mockTokens.BAYC.address,
-      PUNKS: punks.address,
-      DOODLE: mockTokens.DOODLE.address,
-      MOONBIRD: mockTokens.MOONBIRD.address,
-      MEEBITS: mockTokens.MEEBITS.address,
-      AZUKI: mockTokens.AZUKI.address,
-      OTHR: mockTokens.OTHR.address,
-      CLONEX: mockTokens.CLONEX.address,
-    };
-
-    const bakc = await getDb()
-      .get(`${eContractid.BAKC}.${DRE.network.name}`)
-      .value();
-    if (bakc) {
-      Object.assign(tokens, {
-        BAKC: bakc.address,
-      });
-    }
+      MAYC: await getContractAddressInDb(ERC721TokenContractId.MAYC),
+      BAYC: await getContractAddressInDb(ERC721TokenContractId.BAYC),
+      PUNKS: await getContractAddressInDb(eContractid.PUNKS),
+      DOODLE: await getContractAddressInDb(ERC721TokenContractId.DOODLE),
+      MOONBIRD: await getContractAddressInDb(ERC721TokenContractId.MOONBIRD),
+      MEEBITS: await getContractAddressInDb(ERC721TokenContractId.MEEBITS),
+      AZUKI: await getContractAddressInDb(ERC721TokenContractId.AZUKI),
+      OTHR: await getContractAddressInDb(ERC721TokenContractId.OTHR),
+      CLONEX: await getContractAddressInDb(ERC721TokenContractId.CLONEX),
+      BAKC: await getContractAddressInDb(ERC721TokenContractId.BAKC),
+    }).reduce((ite, [k, v]) => {
+      if (v) ite[k] = v;
+      return ite;
+    }, {});
 
     await deployFaucet(tokens, verify);
   } catch (error) {

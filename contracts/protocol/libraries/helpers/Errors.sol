@@ -128,15 +128,20 @@ library Errors {
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
     string public constant INVALID_STATE = "134"; //invalid token status
     string public constant INVALID_TOKEN_ID = "135"; //invalid token id
-    string public constant INVALID_ETH_VALUE = "136"; //the eth value with the transaction is invalid
-    string public constant INVALID_PAYMENT_TOKEN = "137"; //the invalid payment token for blur exchange request
-    string public constant INVALID_LISTING_PRICE = "138"; //the listing price for blur exchange request is invalid
-    string public constant CALLER_NOT_KEEPER = "139"; //The caller of the function is not keeper
-    string public constant NTOKEN_NOT_OWNS_UNDERLYING = "140"; //The ntoken does not owns the underlying nft
+    string public constant SENDER_SAME_AS_RECEIVER = "136"; //sender and receiver shouldn't be the same address
+    string public constant INVALID_YIELD_UNDERLYING_TOKEN = "137"; //invalid yield underlying token
+    string public constant CALLER_NOT_OPERATOR = "138"; // The caller of the function is not operator
+    string public constant INVALID_FEE_VALUE = "139"; // invalid fee rate value
+    string public constant TOKEN_NOT_ALLOW_RESCUE = "140"; // token is not allow rescue
     string public constant CALLER_NOT_INITIATOR = "141"; //The caller of the function is not the request initiator
     string public constant INVALID_KEEPER_ADDRESS = "142"; //invalid keeper address to receive money
     string public constant ONGOING_REQUEST_AMOUNT_EXCEEDED = "143"; //ongoing request amount exceeds limit
     string public constant BLUR_EXCHANGE_REQUEST_DISABLED = "144"; //blur exchange request disabled
     string public constant INVALID_ASSET = "145"; // invalid asset.
-    string public constant INVALID_REQUEST_STATUS = "146"; //The status of the request is invalid for this function
+    string public constant INVALID_ETH_VALUE = "146"; //the eth value with the transaction is invalid
+    string public constant INVALID_REQUEST_STATUS = "147"; //The status of the request is invalid for this function
+    string public constant INVALID_PAYMENT_TOKEN = "148"; //the invalid payment token for blur exchange request
+    string public constant INVALID_LISTING_PRICE = "149"; //the listing price for blur exchange request is invalid
+    string public constant CALLER_NOT_KEEPER = "150"; //The caller of the function is not keeper
+    string public constant NTOKEN_NOT_OWNS_UNDERLYING = "151"; //The ntoken does not owns the underlying nft
 }

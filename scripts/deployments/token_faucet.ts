@@ -1,3 +1,4 @@
+import {ZERO_ADDRESS} from "../../helpers/constants";
 import {deployMockTokenFaucet} from "../../helpers/contracts-deployments";
 import {getParaSpaceConfig} from "../../helpers/misc-utils";
 
@@ -49,7 +50,7 @@ export const deployFaucet = async (mockTokens, verify?: boolean) => {
       addr: mockTokens.PUNK,
       mintValue: tokenFaucetMintValue.PUNK,
     },
-  ];
+  ].filter((x) => x.addr);
 
   const erc721configs = [
     {
@@ -92,19 +93,16 @@ export const deployFaucet = async (mockTokens, verify?: boolean) => {
       addr: mockTokens.CLONEX,
       mintValue: tokenFaucetMintValue.CLONEX,
     },
-  ];
-
-  if (mockTokens.BAKC) {
-    erc721configs.push({
+    {
       name: "BAKC",
       addr: mockTokens.BAKC,
       mintValue: tokenFaucetMintValue.BAKC,
-    });
-  }
+    },
+  ].filter((x) => x.addr);
 
   const punkConfig = {
     name: "PUNKS",
-    addr: mockTokens.PUNKS,
+    addr: mockTokens.PUNKS || ZERO_ADDRESS,
     mintValue: tokenFaucetMintValue.PUNKS,
   };
 

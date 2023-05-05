@@ -273,7 +273,7 @@ library PoolExtendedLogic {
             address currentOwner = INToken(nTokenAddress).ownerOf(
                 request.tokenId
             );
-            //repay and supply weth for currentOwner
+            //here we repay and supply weth for currentOwner in case nToken has been liquidated
             repayAndSupplyForUser(
                 ps,
                 weth,
