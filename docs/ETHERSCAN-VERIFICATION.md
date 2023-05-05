@@ -402,7 +402,7 @@ proxychains forge verify-contract 0x1Ba6891D74b3B1f84b3EdFa6538D99eE979E8B63 \
 ### CLFixedPriceSynchronicityPriceAdapter
 
 ```
-proxychains forge verify-contract 0x549945De284a8cc102D49cE28683ee9E87edE3E3 \
+proxychains forge verify-contract 0x6D09f55aae5489D664203Fb8aD72A8d520A87470 \
   --chain-id 1 \
   --num-of-optimizations 800 \
   --watch \
