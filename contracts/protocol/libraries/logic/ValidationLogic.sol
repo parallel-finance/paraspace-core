@@ -55,34 +55,42 @@ library ValidationLogic {
      */
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
-    function validateInitiateBlurExchangeRequest(
-        DataTypes.ReserveData storage nftReserve,
-        DataTypes.BlurBuyWithCreditRequest calldata request,
+    function validateStatusForBlurExchangeRequest(
         bool isEnable,
         address keeper,
-        uint256 requestFee,
-        uint8 ongoingRequestAmount,
-        uint8 ongoingRequestLimit,
-        address oracle
-    ) internal view {
-        require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        uint256 ongoingRequestAmount,
+        uint256 ongoingRequestLimit
+    ) internal pure {
         require(isEnable, Errors.BLUR_EXCHANGE_REQUEST_DISABLED);
         require(keeper != address(0), Errors.INVALID_KEEPER_ADDRESS);
         require(
             ongoingRequestAmount <= ongoingRequestLimit,
             Errors.ONGOING_REQUEST_AMOUNT_EXCEEDED
         );
+    }
 
+    function validateInitiateBlurExchangeRequest(
+        DataTypes.ReserveData storage nftReserve,
+        DataTypes.BlurBuyWithCreditRequest calldata request,
+        DataTypes.BlurBuyWithCreditRequestStatus requestStatus,
+        uint256 remainingETH,
+        uint256 requestFee,
+        address oracle
+    ) internal view {
         require(
-            msg.value + request.borrowAmount ==
-                request.listingPrice + requestFee,
+            requestStatus == DataTypes.BlurBuyWithCreditRequestStatus.Default,
+            Errors.INVALID_REQUEST_STATUS
+        );
+        require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        require(
+            remainingETH >=
+                request.listingPrice + requestFee - request.borrowAmount,
             Errors.INVALID_ETH_VALUE
         );
         require(
             request.paymentToken == address(0),
             Errors.INVALID_PAYMENT_TOKEN
         );
-
         uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
             request.collection
         );

@@ -149,28 +149,28 @@ interface IPoolMarketplace {
     /**
      * @notice Initiate a buyWithCredit request for Blur exchange listing order.
      * @dev Only the request initiator can call this function
-     * @param request The detail info for the request
+     * @param requests The request array
      */
     function initiateBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest calldata request
+        DataTypes.BlurBuyWithCreditRequest[] calldata requests
     ) external payable;
 
     /**
      * @notice Fulfill a buyWithCredit request for Blur exchange listing order if the blur transaction is successes.
      * @dev Only keeper can call this function
-     * @param request The detail info for the request
+     * @param requests The request array
      */
     function fulfillBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest calldata request
+        DataTypes.BlurBuyWithCreditRequest[] calldata requests
     ) external;
 
     /**
      * @notice Reject a buyWithCredit request for Blur exchange listing order if the blur transaction is failed.
      * @dev Only keeper can call this function
-     * @param request The detail info for the request
+     * @param requests The request array
      */
     function rejectBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest calldata request
+        DataTypes.BlurBuyWithCreditRequest[] calldata requests
     ) external payable;
 
     /**

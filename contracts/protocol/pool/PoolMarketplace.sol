@@ -159,33 +159,33 @@ contract PoolMarketplace is
 
     /// @inheritdoc IPoolMarketplace
     function initiateBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest calldata request
+        DataTypes.BlurBuyWithCreditRequest[] calldata requests
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         PoolExtendedLogic.executeInitiateBlurExchangeRequest(
             ps,
             ADDRESSES_PROVIDER,
-            request
+            requests
         );
     }
 
     /// @inheritdoc IPoolMarketplace
     function fulfillBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest calldata request
+        DataTypes.BlurBuyWithCreditRequest[] calldata requests
     ) external virtual override {
         DataTypes.PoolStorage storage ps = poolStorage();
-        PoolExtendedLogic.executeFulfillBlurExchangeRequest(ps, request);
+        PoolExtendedLogic.executeFulfillBlurExchangeRequest(ps, requests);
     }
 
     /// @inheritdoc IPoolMarketplace
     function rejectBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest calldata request
+        DataTypes.BlurBuyWithCreditRequest[] calldata requests
     ) external payable virtual override {
         DataTypes.PoolStorage storage ps = poolStorage();
         PoolExtendedLogic.executeRejectBlurExchangeRequest(
             ps,
             ADDRESSES_PROVIDER,
-            request
+            requests
         );
     }
 
