@@ -227,7 +227,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   Marketplace: {
-    Seaport: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+    Seaport: "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC",
   },
   BendDAO: {
     LendingPool: "0x84a47EaEca69f8B521C21739224251c8c4566Bbc",
@@ -473,7 +473,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   Marketplace: {
-    Seaport: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+    Seaport: "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC",
   },
   BendDAO: {
     LendingPool: "0x70b97a0da65c15dfb0ffa02aee6fa36e507c2762",
