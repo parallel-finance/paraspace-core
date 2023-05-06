@@ -18,7 +18,6 @@ import {
   auctionStrategySEWER,
   auctionStrategyBLOCKS,
   auctionStrategyStakefishValidator,
-  auctionStrategyUniswapV3,
   auctionStrategyVSL,
   auctionStrategyWPunks,
   auctionStrategyZero,
@@ -443,7 +442,7 @@ export const strategyWPunks: IReserveParams = {
 
 export const strategyUniswapV3: IReserveParams = {
   strategy: rateStrategyNFT,
-  auctionStrategy: auctionStrategyUniswapV3,
+  auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyUniswapV3,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
