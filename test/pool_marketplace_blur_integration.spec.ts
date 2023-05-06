@@ -170,9 +170,20 @@ describe("BLUR integration tests", () => {
       users: [user1, user2],
       pWETH,
       bayc,
+      mayc,
       nBAYC,
+      nMAYC,
       poolAdmin,
     } = await loadFixture(fixture);
+
+    const ETHExchangeRequest1 = {
+      initiator: user1.address,
+      paymentToken: zeroAddress(),
+      listingPrice: parseEther("50"),
+      borrowAmount: parseEther("15"),
+      collection: mayc.address,
+      tokenId: 0,
+    };
 
     await waitForTx(
       await pool.connect(poolAdmin.signer).setBlurExchangeRequestFeeRate(1000)
@@ -181,30 +192,37 @@ describe("BLUR integration tests", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("59"),
-        })
+        .initiateBlurExchangeRequest(
+          [ETHExchangeRequest, ETHExchangeRequest1],
+          {
+            value: parseEther("99"),
+          }
+        )
     );
 
     expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
     expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
+    expect(await mayc.balanceOf(user2.address)).to.be.eq(1);
+    expect(await mayc.balanceOf(nMAYC.address)).to.be.eq(0);
     expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("40"));
+    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("55"));
     expect(await nBAYC.balanceOf(user1.address)).to.be.eq(1);
+    expect(await nMAYC.balanceOf(user1.address)).to.be.eq(1);
 
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .rejectBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("90"),
+        .rejectBlurExchangeRequest([ETHExchangeRequest, ETHExchangeRequest1], {
+          value: parseEther("140"),
         })
     );
 
     expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
     expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
     expect(await wethDebtToken.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await pWETH.balanceOf(user1.address), parseEther("50"));
+    almostEqual(await pWETH.balanceOf(user1.address), parseEther("85"));
     expect(await nBAYC.balanceOf(user1.address)).to.be.eq(0);
+    expect(await nMAYC.balanceOf(user1.address)).to.be.eq(0);
   });
 
   it("eth request can not be initiated by weth", async () => {

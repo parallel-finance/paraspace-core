@@ -63,14 +63,18 @@ library PoolExtendedLogic {
         DataTypes.BlurBuyWithCreditRequest[] calldata requests
     ) external {
         address keeper = ps._blurExchangeKeeper;
-        ValidationLogic.validateStatusForBlurExchangeRequest(
-            ps._blurExchangeEnable,
-            keeper,
-            ps._blurOngoingRequestAmount + requests.length,
-            ps._blurOngoingRequestLimit
-        );
-
-        ps._blurOngoingRequestAmount += requests.length.toUint8();
+        //check and update overall status
+        {
+            uint256 ongoingRequestAmount = ps._blurOngoingRequestAmount +
+                requests.length;
+            ValidationLogic.validateStatusForBlurExchangeRequest(
+                ps._blurExchangeEnable,
+                keeper,
+                ongoingRequestAmount,
+                ps._blurOngoingRequestLimit
+            );
+            ps._blurOngoingRequestAmount = ongoingRequestAmount.toUint8();
+        }
 
         uint256 totalBorrow = 0;
         address weth = poolAddressProvider.getWETH();
@@ -79,7 +83,7 @@ library PoolExtendedLogic {
             msg.sender
         ];
 
-        //validate request and mint nToken
+        //validate request and mint nToken for every single request
         {
             uint256 remainingETH = msg.value;
             uint256 requestFeeRate = ps._blurExchangeRequestFeeRate;
@@ -123,18 +127,16 @@ library PoolExtendedLogic {
         }
 
         //transfer currency to keeper
-        {
-            if (totalBorrow > 0) {
-                DataTypes.TimeLockParams memory timeLockParams;
-                IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
-                    address(this),
-                    totalBorrow,
-                    timeLockParams
-                );
-                IWETH(weth).withdraw(totalBorrow);
-            }
-            Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
+        if (totalBorrow > 0) {
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
+                address(this),
+                totalBorrow,
+                timeLockParams
+            );
+            IWETH(weth).withdraw(totalBorrow);
         }
+        Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
     }
 
     function initiateBlurExchangeRequest(
@@ -172,8 +174,7 @@ library PoolExtendedLogic {
             })
         );
 
-        // we update status here to prevent consuming gas for saving requestHash or calculating requestHash twice
-        //update status
+        //update status here to prevent consuming gas for saving requestHash or calculating requestHash twice
         ps._blurExchangeRequestStatus[requestHash] = DataTypes
             .BlurBuyWithCreditRequestStatus
             .Initiated;
@@ -273,7 +274,7 @@ library PoolExtendedLogic {
             address currentOwner = INToken(nTokenAddress).ownerOf(
                 request.tokenId
             );
-            //here we repay and supply weth for currentOwner in case nToken has been liquidated
+            //here we repay and supply weth for currentOwner in case nToken has been liquidated from request initiator
             repayAndSupplyForUser(
                 ps,
                 weth,
