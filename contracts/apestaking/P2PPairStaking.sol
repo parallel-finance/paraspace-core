@@ -396,7 +396,7 @@ contract P2PPairStaking is
         }
         if (totalReward > 0) {
             IAutoCompoundApe(cApe).deposit(address(this), totalReward);
-            IERC20(apeCoin).safeTransfer(matchingOperator, totalFee);
+            IERC20(apeCoin).safeTransfer(compoundBot, totalFee);
         }
     }
 
