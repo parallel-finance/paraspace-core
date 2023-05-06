@@ -2863,12 +2863,13 @@ export const deployPYieldToken = async (
 export const deployCLwstETHSynchronicityPriceAdapter = async (
   stETHAggregator: tEthereumAddress,
   stETH: tEthereumAddress,
+  decimals: number,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new CLwstETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
     eContractid.Aggregator.concat(upperFirst(eContractid.WStETH)),
-    [stETHAggregator, stETH, 18],
+    [stETHAggregator, stETH, decimals],
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 

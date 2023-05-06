@@ -40,6 +40,9 @@ import {
 } from "./contracts-helpers";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {upperFirst} from "lodash";
+import {log10} from "@prb/math";
+import {BigNumber} from "ethers";
+import {WAD} from "./constants";
 
 export const setInitialAssetPricesInOracle = async (
   prices: Partial<iAssetBase<tEthereumAddress>>,
@@ -118,6 +121,9 @@ export const deployAllAggregators = async (
       aggregators[tokenSymbol] = await deployCLwstETHSynchronicityPriceAdapter(
         aggregators[ERC20TokenContractId.stETH].address,
         tokens[ERC20TokenContractId.stETH].address,
+        log10(BigNumber.from(oracleConfig.BaseCurrencyUnit).mul(WAD))
+          .div(WAD)
+          .toNumber(),
         verify
       );
       continue;
