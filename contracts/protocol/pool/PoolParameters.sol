@@ -254,6 +254,16 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function setClaimApeForCompoundBot(address bot) external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        address oldValue = ps._apeCompoundBot;
+        if (oldValue != bot) {
+            ps._apeCompoundBot = bot;
+            emit ClaimApeForYieldIncentiveBotUpdated(oldValue, bot);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
     function setApeCompoundStrategy(
         DataTypes.ApeCompoundStrategy calldata strategy
     ) external {

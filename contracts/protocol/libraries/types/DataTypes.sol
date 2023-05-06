@@ -403,6 +403,8 @@ library DataTypes {
         uint16 _apeCompoundFee;
         // Map of user's ape compound strategies
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
+        // Address of ape compound bot
+        address _apeCompoundBot;
     }
 
     struct ReserveConfigData {

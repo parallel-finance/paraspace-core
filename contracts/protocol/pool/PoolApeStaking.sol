@@ -49,11 +49,9 @@ contract PoolApeStaking is
     IERC20 internal immutable USDC;
     ISwapRouter internal immutable SWAP_ROUTER;
 
-    uint256 internal constant DEFAULT_MAX_SLIPPAGE = 300; // 3%
     uint24 internal immutable APE_WETH_FEE;
     uint24 internal immutable WETH_USDC_FEE;
     address internal immutable WETH;
-    address internal immutable APE_COMPOUND_BOT;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -104,7 +102,6 @@ contract PoolApeStaking is
         WETH = weth;
         APE_WETH_FEE = apeWethFee;
         WETH_USDC_FEE = wethUsdcFee;
-        APE_COMPOUND_BOT = apeCompoundBot;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -454,20 +451,24 @@ contract PoolApeStaking is
     function claimApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        uint256[][] calldata tokenIds
+        uint256[][] calldata tokenIds,
+        uint256 minUsdcApePrice,
+        uint256 minWethApePrice
     ) external nonReentrant {
         require(
             users.length == tokenIds.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
-        require(msg.sender == APE_COMPOUND_BOT, Errors.CALLER_NOT_OPERATOR);
         DataTypes.PoolStorage storage ps = poolStorage();
+        require(msg.sender == ps._apeCompoundBot, Errors.CALLER_NOT_OPERATOR);
         _checkSApeIsNotPaused(ps);
 
         ApeStakingLocalVars memory localVar = _compoundCache(
             ps,
             nftAsset,
-            users.length
+            users.length,
+            minUsdcApePrice,
+            minWethApePrice
         );
 
         for (uint256 i = 0; i < users.length; i++) {
@@ -494,19 +495,23 @@ contract PoolApeStaking is
     function claimPairedApeAndCompound(
         address nftAsset,
         address[] calldata users,
-        ApeCoinStaking.PairNft[][] calldata _nftPairs
+        ApeCoinStaking.PairNft[][] calldata _nftPairs,
+        uint256 minUsdcApePrice,
+        uint256 minWethApePrice
     ) external nonReentrant {
         require(
             users.length == _nftPairs.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
-        require(msg.sender == APE_COMPOUND_BOT, Errors.CALLER_NOT_OPERATOR);
         DataTypes.PoolStorage storage ps = poolStorage();
+        require(msg.sender == ps._apeCompoundBot, Errors.CALLER_NOT_OPERATOR);
 
         ApeStakingLocalVars memory localVar = _compoundCache(
             ps,
             nftAsset,
-            users.length
+            users.length,
+            minUsdcApePrice,
+            minWethApePrice
         );
 
         for (uint256 i = 0; i < _nftPairs.length; i++) {
@@ -566,7 +571,9 @@ contract PoolApeStaking is
     function _compoundCache(
         DataTypes.PoolStorage storage ps,
         address nftAsset,
-        uint256 numUsers
+        uint256 numUsers,
+        uint256 minUsdcApePrice,
+        uint256 minWethApePrice
     ) internal view returns (ApeStakingLocalVars memory localVar) {
         localVar = _generalCache(ps, nftAsset);
         localVar.balanceBefore = APE_COIN.balanceOf(address(this));
@@ -574,6 +581,8 @@ contract PoolApeStaking is
         localVar.swapAmounts = new uint256[](numUsers);
         localVar.options = new DataTypes.ApeCompoundStrategy[](numUsers);
         localVar.compoundFee = ps._apeCompoundFee;
+        localVar.minUsdcApePrice = minUsdcApePrice;
+        localVar.minWethApePrice = minWethApePrice;
     }
 
     function _addUserToCompoundCache(
@@ -691,7 +700,7 @@ contract PoolApeStaking is
                 )
                 .percentMul(localVar.compoundFee);
             if (compoundFee > 0) {
-                APE_COIN.safeTransfer(APE_COMPOUND_BOT, compoundFee);
+                APE_COIN.safeTransfer(ps._apeCompoundBot, compoundFee);
             }
         }
 
@@ -703,7 +712,6 @@ contract PoolApeStaking is
                 WETH_USDC_FEE,
                 USDC
             );
-            localVar.minUsdcApePrice = _getApeRelativePrice(address(USDC), 1E6);
             localVar.pUSDCAddress = IPool(ADDRESSES_PROVIDER.getPool())
                 .getReserveData(address(USDC))
                 .xTokenAddress;
@@ -722,10 +730,6 @@ contract PoolApeStaking is
                 APE_COIN,
                 APE_WETH_FEE,
                 WETH
-            );
-            localVar.minWethApePrice = _getApeRelativePrice(
-                address(WETH),
-                1E18
             );
             localVar.pWETHAddress = IPool(ADDRESSES_PROVIDER.getPool())
                 .getReserveData(address(WETH))
@@ -786,23 +790,6 @@ contract PoolApeStaking is
             })
         );
         _supplyForUser(ps, tokenOut, address(this), user, amountOut);
-    }
-
-    function _getApeRelativePrice(address tokenOut, uint256 tokenOutUnit)
-        internal
-        view
-        returns (uint256)
-    {
-        IPriceOracleGetter oracle = IPriceOracleGetter(
-            ADDRESSES_PROVIDER.getPriceOracle()
-        );
-        uint256 apePrice = oracle.getAssetPrice(address(APE_COIN));
-        uint256 tokenOutPrice = oracle.getAssetPrice(tokenOut);
-
-        return
-            ((apePrice * tokenOutUnit).wadDiv(tokenOutPrice * 1E18)).percentMul(
-                PercentageMath.PERCENTAGE_FACTOR - DEFAULT_MAX_SLIPPAGE
-            );
     }
 
     function _repayAndSupplyForUser(
