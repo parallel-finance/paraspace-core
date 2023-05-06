@@ -58,6 +58,7 @@ contract P2PPairStaking is
     uint256 private baycMatchedCap;
     uint256 private maycMatchedCap;
     uint256 private bakcMatchedCap;
+    address public compoundBot;
 
     constructor(
         address _bayc,
@@ -370,7 +371,7 @@ contract P2PPairStaking is
         external
         nonReentrant
     {
-        require(msg.sender == matchingOperator, "no permission to compound");
+        require(msg.sender == compoundBot, "no permission to compound");
         _claimForMatchedOrdersAndCompound(orderHashes);
     }
 
@@ -701,6 +702,14 @@ contract P2PPairStaking is
         if (oldValue != _compoundFee) {
             compoundFee = _compoundFee;
             emit CompoundFeeUpdated(oldValue, _compoundFee);
+        }
+    }
+
+    function setCompoundBot(address _compoundBot) external onlyOwner {
+        address oldValue = compoundBot;
+        if (oldValue != _compoundBot) {
+            compoundBot = _compoundBot;
+            emit CompoundBotUpdated(oldValue, _compoundBot);
         }
     }
 
