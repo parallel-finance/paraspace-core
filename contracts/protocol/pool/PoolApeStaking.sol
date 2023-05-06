@@ -70,6 +70,7 @@ contract PoolApeStaking is
         DataTypes.ApeCompoundStrategy[] options;
         uint256 totalAmount;
         uint256 compoundFee;
+        address compoundBot;
         uint256 totalUsdcSwapAmount;
         uint256 totalWethSwapAmount;
         uint256 minUsdcApePrice;
@@ -460,9 +461,6 @@ contract PoolApeStaking is
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         DataTypes.PoolStorage storage ps = poolStorage();
-        require(msg.sender == ps._apeCompoundBot, Errors.CALLER_NOT_OPERATOR);
-        _checkSApeIsNotPaused(ps);
-
         ApeStakingLocalVars memory localVar = _compoundCache(
             ps,
             nftAsset,
@@ -470,6 +468,7 @@ contract PoolApeStaking is
             minUsdcApePrice,
             minWethApePrice
         );
+        require(msg.sender == localVar.compoundBot, Errors.CALLER_NOT_OPERATOR);
 
         for (uint256 i = 0; i < users.length; i++) {
             for (uint256 j = 0; j < tokenIds[i].length; j++) {
@@ -504,8 +503,6 @@ contract PoolApeStaking is
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         DataTypes.PoolStorage storage ps = poolStorage();
-        require(msg.sender == ps._apeCompoundBot, Errors.CALLER_NOT_OPERATOR);
-
         ApeStakingLocalVars memory localVar = _compoundCache(
             ps,
             nftAsset,
@@ -513,6 +510,7 @@ contract PoolApeStaking is
             minUsdcApePrice,
             minWethApePrice
         );
+        require(msg.sender == localVar.compoundBot, Errors.CALLER_NOT_OPERATOR);
 
         for (uint256 i = 0; i < _nftPairs.length; i++) {
             localVar.transferredTokenOwners = new address[](
@@ -581,6 +579,7 @@ contract PoolApeStaking is
         localVar.swapAmounts = new uint256[](numUsers);
         localVar.options = new DataTypes.ApeCompoundStrategy[](numUsers);
         localVar.compoundFee = ps._apeCompoundFee;
+        localVar.compoundBot = ps._apeCompoundBot;
         localVar.minUsdcApePrice = minUsdcApePrice;
         localVar.minWethApePrice = minWethApePrice;
     }
@@ -681,27 +680,21 @@ contract PoolApeStaking is
         ApeStakingLocalVars memory localVar,
         address[] calldata users
     ) internal {
-        {
-            uint256 totalSwapAmount = localVar.totalUsdcSwapAmount +
-                localVar.totalWethSwapAmount;
-            if (localVar.totalAmount > totalSwapAmount) {
-                APE_COMPOUND.deposit(
-                    address(this),
-                    localVar.totalAmount - totalSwapAmount
-                );
-            }
+        uint256 totalSwapAmount = localVar.totalUsdcSwapAmount +
+            localVar.totalWethSwapAmount;
+        if (localVar.totalAmount > totalSwapAmount) {
+            APE_COMPOUND.deposit(
+                address(this),
+                localVar.totalAmount - totalSwapAmount
+            );
         }
 
-        {
-            uint256 compoundFee = localVar
-                .totalAmount
-                .percentDiv(
-                    PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee
-                )
-                .percentMul(localVar.compoundFee);
-            if (compoundFee > 0) {
-                APE_COIN.safeTransfer(ps._apeCompoundBot, compoundFee);
-            }
+        uint256 compoundFee = localVar
+            .totalAmount
+            .percentDiv(PercentageMath.PERCENTAGE_FACTOR - localVar.compoundFee)
+            .percentMul(localVar.compoundFee);
+        if (compoundFee > 0) {
+            APE_COIN.safeTransfer(localVar.compoundBot, compoundFee);
         }
 
         if (localVar.totalUsdcSwapAmount > 0) {
