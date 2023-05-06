@@ -1046,6 +1046,11 @@ describe("P2P Pair Staking Test", () => {
     await waitForTx(
       await p2pPairStaking.connect(gatewayAdmin.signer).setCompoundFee(50)
     );
+    await waitForTx(
+      await p2pPairStaking
+        .connect(gatewayAdmin.signer)
+        .setCompoundBot(user1.address)
+    );
 
     await supplyAndValidate(bayc, "1", user3, true);
     await mintAndValidate(ape, "1000000", user2);
@@ -1116,13 +1121,7 @@ describe("P2P Pair Staking Test", () => {
       parseEther("2865.6")
     );
 
-    await waitForTx(
-      await p2pPairStaking
-        .connect(gatewayAdmin.signer)
-        .claimCompoundFee(gatewayAdmin.address)
-    );
-
-    almostEqual(await cApe.balanceOf(gatewayAdmin.address), parseEther("18"));
+    almostEqual(await ape.balanceOf(user1.address), parseEther("18"));
   });
 
   it("check ape token can be matched twice", async () => {

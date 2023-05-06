@@ -543,6 +543,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          0,
+          0,
           {gasLimit: 5000000}
         )
     );
@@ -579,6 +581,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          0,
+          0,
           {gasLimit: 5000000}
         )
     );
@@ -641,7 +645,7 @@ describe("Auto Compound Ape Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], {
+        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], 0, 0, {
           gasLimit: 5000000,
         })
     );
@@ -661,7 +665,7 @@ describe("Auto Compound Ape Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], {
+        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], 0, 0, {
           gasLimit: 5000000,
         })
     );
@@ -801,6 +805,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          0,
+          0,
           {gasLimit: 5000000}
         )
     );
@@ -837,6 +843,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          0,
+          0,
           {gasLimit: 5000000}
         )
     );
@@ -931,7 +939,9 @@ describe("Auto Compound Ape Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ]
+        ],
+        0,
+        0
       )
     );
 
@@ -957,7 +967,9 @@ describe("Auto Compound Ape Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ]
+        ],
+        0,
+        0
       )
     );
   });
