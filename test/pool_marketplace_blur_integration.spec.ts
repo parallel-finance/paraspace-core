@@ -8,7 +8,11 @@ import {
 import {waitForTx} from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
-import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {
+  changePriceAndValidate,
+  mintAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {zeroAddress} from "ethereumjs-util";
@@ -72,16 +76,16 @@ describe("BLUR integration tests", () => {
     WETHExchangeRequest = {
       initiator: user1.address,
       paymentToken: weth.address,
-      listingPrice: parseEther("90"),
-      borrowAmount: parseEther("40"),
+      listingPrice: parseEther("110"),
+      borrowAmount: parseEther("30"),
       collection: bayc.address,
       tokenId: 0,
     };
     ETHExchangeRequest = {
       initiator: user1.address,
       paymentToken: zeroAddress(),
-      listingPrice: parseEther("90"),
-      borrowAmount: parseEther("40"),
+      listingPrice: parseEther("110"),
+      borrowAmount: parseEther("30"),
       collection: bayc.address,
       tokenId: 0,
     };
@@ -104,7 +108,7 @@ describe("BLUR integration tests", () => {
     const ETHExchangeRequest1 = {
       initiator: user1.address,
       paymentToken: zeroAddress(),
-      listingPrice: parseEther("50"),
+      listingPrice: parseEther("60"),
       borrowAmount: parseEther("15"),
       collection: mayc.address,
       tokenId: 0,
@@ -125,7 +129,7 @@ describe("BLUR integration tests", () => {
         .initiateBlurExchangeRequest(
           [ETHExchangeRequest, ETHExchangeRequest1],
           {
-            value: parseEther("99"),
+            value: parseEther("142"),
           }
         )
     );
@@ -134,15 +138,15 @@ describe("BLUR integration tests", () => {
     const afterInitiateWETHBalance = await weth.balanceOf(user1.address);
     almostEqual(
       beforeInitiateBalance.sub(afterInitiateBalance),
-      parseEther("99")
+      parseEther("142")
     );
     expect(afterInitiateWETHBalance).to.be.eq(beforeInitiateWETHBalance);
     const keeperAfterInitiateBalance = await user2.signer.getBalance();
     almostEqual(
       keeperAfterInitiateBalance.sub(keeperBeforeInitiateBalance),
-      parseEther("154")
+      parseEther("187")
     );
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("55"));
+    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("45"));
 
     expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
     expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
@@ -161,7 +165,7 @@ describe("BLUR integration tests", () => {
     expect(await mayc.balanceOf(nMAYC.address)).to.be.eq(1);
     const afterFulfillBalance = await user1.signer.getBalance();
     expect(afterFulfillBalance.sub(afterInitiateBalance)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("55"));
+    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("45"));
   });
 
   it("eth request can be rejected", async () => {
@@ -179,7 +183,7 @@ describe("BLUR integration tests", () => {
     const ETHExchangeRequest1 = {
       initiator: user1.address,
       paymentToken: zeroAddress(),
-      listingPrice: parseEther("50"),
+      listingPrice: parseEther("60"),
       borrowAmount: parseEther("15"),
       collection: mayc.address,
       tokenId: 0,
@@ -195,7 +199,7 @@ describe("BLUR integration tests", () => {
         .initiateBlurExchangeRequest(
           [ETHExchangeRequest, ETHExchangeRequest1],
           {
-            value: parseEther("99"),
+            value: parseEther("142"),
           }
         )
     );
@@ -205,7 +209,7 @@ describe("BLUR integration tests", () => {
     expect(await mayc.balanceOf(user2.address)).to.be.eq(1);
     expect(await mayc.balanceOf(nMAYC.address)).to.be.eq(0);
     expect(await pWETH.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("55"));
+    almostEqual(await wethDebtToken.balanceOf(user1.address), parseEther("45"));
     expect(await nBAYC.balanceOf(user1.address)).to.be.eq(1);
     expect(await nMAYC.balanceOf(user1.address)).to.be.eq(1);
 
@@ -213,14 +217,14 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user2.signer)
         .rejectBlurExchangeRequest([ETHExchangeRequest, ETHExchangeRequest1], {
-          value: parseEther("140"),
+          value: parseEther("170"),
         })
     );
 
     expect(await bayc.balanceOf(user2.address)).to.be.eq(1);
     expect(await bayc.balanceOf(nBAYC.address)).to.be.eq(0);
     expect(await wethDebtToken.balanceOf(user1.address)).to.be.eq(0);
-    almostEqual(await pWETH.balanceOf(user1.address), parseEther("85"));
+    almostEqual(await pWETH.balanceOf(user1.address), parseEther("125"));
     expect(await nBAYC.balanceOf(user1.address)).to.be.eq(0);
     expect(await nMAYC.balanceOf(user1.address)).to.be.eq(0);
   });
@@ -247,7 +251,7 @@ describe("BLUR integration tests", () => {
       pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([WETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     ).to.be.revertedWith(ProtocolErrors.INVALID_PAYMENT_TOKEN);
   });
@@ -327,7 +331,7 @@ describe("BLUR integration tests", () => {
       pool
         .connect(user2.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_INITIATOR);
 
@@ -335,7 +339,7 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     );
   });
@@ -350,7 +354,7 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     );
 
@@ -371,7 +375,7 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     );
 
@@ -391,7 +395,7 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     );
 
@@ -413,7 +417,7 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     );
 
@@ -461,15 +465,15 @@ describe("BLUR integration tests", () => {
     const invalidRequest = {
       initiator: user1.address,
       paymentToken: zeroAddress(),
-      listingPrice: parseEther("80"),
-      borrowAmount: parseEther("40"),
+      listingPrice: parseEther("100"),
+      borrowAmount: parseEther("20"),
       collection: bayc.address,
       tokenId: 0,
     };
 
     await expect(
       pool.connect(user1.signer).initiateBlurExchangeRequest([invalidRequest], {
-        value: parseEther("40"),
+        value: parseEther("80"),
       })
     ).to.be.revertedWith(ProtocolErrors.INVALID_LISTING_PRICE);
   });
@@ -492,7 +496,7 @@ describe("BLUR integration tests", () => {
     const invalidRequest = {
       initiator: user1.address,
       paymentToken: zeroAddress(),
-      listingPrice: parseEther("100"),
+      listingPrice: parseEther("150"),
       borrowAmount: parseEther("40"),
       collection: bayc.address,
       tokenId: 0,
@@ -500,7 +504,7 @@ describe("BLUR integration tests", () => {
 
     await expect(
       pool.connect(user1.signer).initiateBlurExchangeRequest([invalidRequest], {
-        value: parseEther("60"),
+        value: parseEther("110"),
       })
     ).to.be.revertedWith(ProtocolErrors.INVALID_LISTING_PRICE);
   });
@@ -520,7 +524,7 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     );
 
@@ -530,7 +534,7 @@ describe("BLUR integration tests", () => {
       pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     ).to.be.revertedWith(ProtocolErrors.ONGOING_REQUEST_AMOUNT_EXCEEDED);
 
@@ -562,14 +566,14 @@ describe("BLUR integration tests", () => {
       await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     );
     await expect(
       pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     ).to.be.revertedWith(ProtocolErrors.INVALID_REQUEST_STATUS);
   });
@@ -611,32 +615,93 @@ describe("BLUR integration tests", () => {
       pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
     ).to.be.revertedWith(ProtocolErrors.BLUR_EXCHANGE_REQUEST_DISABLED);
   });
 
-  it("initiate request failed when asset liquidation threshold is 0", async () => {
+  it("should repay and supply for new owner when reject request if the nToken is liquidated", async () => {
     const {
       pool,
-      users: [user1],
-      poolAdmin,
       bayc,
-      configurator,
+      nBAYC,
+      weth,
+      pWETH,
+      users: [user1, user2, user3],
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await configurator
-        .connect(poolAdmin.signer)
-        .configureReserveAsCollateral(bayc.address, 0, 0, 0)
-    );
-
-    await expect(
-      pool
+      await pool
         .connect(user1.signer)
         .initiateBlurExchangeRequest([ETHExchangeRequest], {
-          value: parseEther("50"),
+          value: parseEther("80"),
         })
-    ).to.be.revertedWith(ProtocolErrors.INVALID_ASSET);
+    );
+
+    await changePriceAndValidate(bayc, "10");
+
+    // start auction
+    await waitForTx(
+      await pool
+        .connect(user3.signer)
+        .startAuction(user1.address, bayc.address, 0)
+    );
+
+    expect(await nBAYC.balanceOf(user1.address)).to.be.eq(1);
+    expect(await nBAYC.balanceOf(user3.address)).to.be.eq(0);
+
+    await waitForTx(
+      await pool
+        .connect(user3.signer)
+        .liquidateERC721(
+          bayc.address,
+          user1.address,
+          0,
+          await convertToCurrencyDecimals(weth.address, "100"),
+          true,
+          {gasLimit: 5000000, value: parseEther("100")}
+        )
+    );
+
+    expect(await nBAYC.balanceOf(user1.address)).to.be.eq(0);
+    expect(await nBAYC.balanceOf(user3.address)).to.be.eq(1);
+    const beforePWethBalance = await pWETH.balanceOf(user3.address);
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .rejectBlurExchangeRequest([ETHExchangeRequest], {
+          value: parseEther("110"),
+        })
+    );
+
+    expect(await nBAYC.balanceOf(user1.address)).to.be.eq(0);
+    expect(await nBAYC.balanceOf(user3.address)).to.be.eq(0);
+    const afterPWethBalance = await pWETH.balanceOf(user3.address);
+    almostEqual(afterPWethBalance.sub(beforePWethBalance), parseEther("110"));
   });
+
+  // it("initiate request failed when asset liquidation threshold is 0", async () => {
+  //   const {
+  //     pool,
+  //     users: [user1],
+  //     poolAdmin,
+  //     bayc,
+  //     configurator,
+  //   } = await loadFixture(fixture);
+  //
+  //   await waitForTx(
+  //     await configurator
+  //       .connect(poolAdmin.signer)
+  //       .configureReserveAsCollateral(bayc.address, 0, 0, 0)
+  //   );
+  //
+  //   await expect(
+  //     pool
+  //       .connect(user1.signer)
+  //       .initiateBlurExchangeRequest([ETHExchangeRequest], {
+  //         value: parseEther("80"),
+  //       })
+  //   ).to.be.revertedWith(ProtocolErrors.INVALID_ASSET);
+  // });
 });

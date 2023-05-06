@@ -99,26 +99,10 @@ library ValidationLogic {
             floorPrice,
             request.tokenId
         );
-        DataTypes.ReserveConfigurationMap
-            memory nftReserveConfiguration = nftReserve.configuration;
-        (, uint256 liquidationThreshold, , , ) = nftReserveConfiguration
-            .getParams();
-        require(
-            floorPrice != 0 && liquidationThreshold != 0,
-            Errors.INVALID_ASSET
-        );
         // ensure user can't borrow/withdraw with the new mint nToken
         require(
-            request.listingPrice >=
-                collateralPrice.percentMul(liquidationThreshold),
+            request.listingPrice >= collateralPrice,
             Errors.INVALID_LISTING_PRICE
-        );
-
-        (, , , , DataTypes.AssetType assetType) = nftReserveConfiguration
-            .getFlags();
-        require(
-            assetType == DataTypes.AssetType.ERC721,
-            Errors.INVALID_ASSET_TYPE
         );
     }
 
