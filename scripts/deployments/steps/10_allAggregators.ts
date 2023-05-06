@@ -1,3 +1,4 @@
+import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployNFTFloorPriceOracle,
   deployParaSpaceOracle,
@@ -87,7 +88,9 @@ export const step_10 = async (verify = false) => {
         tokens,
         aggregators,
         fallbackOracle.address,
-        allTokens[oracleConfig.BaseCurrency].address,
+        oracleConfig.BaseCurrency == ZERO_ADDRESS
+          ? oracleConfig.BaseCurrency
+          : allTokens[oracleConfig.BaseCurrency].address,
         oracleConfig.BaseCurrencyUnit,
       ],
       verify

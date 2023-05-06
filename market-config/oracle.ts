@@ -1,4 +1,5 @@
 import {BigNumber, constants} from "ethers";
+import {ZERO_ADDRESS} from "../helpers/constants";
 import {ERC20TokenContractId, IOracleConfig} from "../helpers/types";
 
 export const MainnetOracleConfig: IOracleConfig = {
@@ -26,7 +27,7 @@ export const MoonbeamOracleConfig: IOracleConfig = {
 };
 
 export const ArbitrumOneOracleConfig: IOracleConfig = {
-  BaseCurrency: ERC20TokenContractId.USDC,
+  BaseCurrency: ZERO_ADDRESS,
   BaseCurrencyUnit: BigNumber.from("100000000").toString(),
   ExpirationPeriod: 600,
   DeviationRate: 1000,

@@ -771,7 +771,7 @@ export interface IBendDAOConfig {
 
 export interface IOracleConfig {
   // ParaSpaceOracle
-  BaseCurrency: ERC20TokenContractId;
+  BaseCurrency: ERC20TokenContractId | string;
   BaseCurrencyUnit: string;
   // NFTFloorOracle
   ExpirationPeriod: number;

@@ -79,7 +79,6 @@ export const deployAllAggregators = async (
   } = {};
   const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
-  paraSpaceConfig.Oracle.BaseCurrency;
   const oracleConfig = paraSpaceConfig.Oracle;
   const chainlinkConfig = paraSpaceConfig.Chainlink;
   for (const tokenSymbol of Object.keys(tokens)) {
