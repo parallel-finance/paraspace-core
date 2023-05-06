@@ -705,9 +705,7 @@ contract PoolApeStaking is
                 WETH_USDC_FEE,
                 USDC
             );
-            localVar.pUSDCAddress = IPool(ADDRESSES_PROVIDER.getPool())
-                .getReserveData(address(USDC))
-                .xTokenAddress;
+            localVar.pUSDCAddress = ps._reserves[address(USDC)].xTokenAddress;
             _swapAndSupplyForUser(
                 ps,
                 address(USDC),
@@ -724,9 +722,7 @@ contract PoolApeStaking is
                 APE_WETH_FEE,
                 WETH
             );
-            localVar.pWETHAddress = IPool(ADDRESSES_PROVIDER.getPool())
-                .getReserveData(address(WETH))
-                .xTokenAddress;
+            localVar.pWETHAddress = ps._reserves[address(WETH)].xTokenAddress;
             _swapAndSupplyForUser(
                 ps,
                 address(WETH),
