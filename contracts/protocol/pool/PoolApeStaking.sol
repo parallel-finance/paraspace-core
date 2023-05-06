@@ -734,20 +734,21 @@ contract PoolApeStaking is
         }
 
         for (uint256 i = 0; i < users.length; i++) {
-            address swapTokenOut;
-            if (
-                localVar.options[i].swapTokenOut ==
-                DataTypes.ApeCompoundTokenOut.USDC
-            ) {
-                swapTokenOut = localVar.pUSDCAddress;
-            } else {
-                swapTokenOut = localVar.pWETHAddress;
+            if (localVar.swapAmounts[i] > 0) {
+                address swapTokenOut;
+                if (
+                    localVar.options[i].swapTokenOut ==
+                    DataTypes.ApeCompoundTokenOut.USDC
+                ) {
+                    swapTokenOut = localVar.pUSDCAddress;
+                } else {
+                    swapTokenOut = localVar.pWETHAddress;
+                }
+                IERC20(swapTokenOut).safeTransfer(
+                    users[i],
+                    localVar.swapAmounts[i]
+                );
             }
-
-            IERC20(swapTokenOut).safeTransfer(
-                users[i],
-                localVar.swapAmounts[i]
-            );
             _repayAndSupplyForUser(
                 ps,
                 address(APE_COMPOUND),
