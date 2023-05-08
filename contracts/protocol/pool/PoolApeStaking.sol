@@ -464,9 +464,7 @@ contract PoolApeStaking is
         ApeStakingLocalVars memory localVar = _compoundCache(
             ps,
             nftAsset,
-            users.length,
-            minUsdcApePrice,
-            minWethApePrice
+            users.length
         );
         require(msg.sender == localVar.compoundBot, Errors.CALLER_NOT_OPERATOR);
 
@@ -487,7 +485,13 @@ contract PoolApeStaking is
             _addUserToCompoundCache(ps, localVar, i, users[i]);
         }
 
-        _compoundForUsers(ps, localVar, users);
+        _compoundForUsers(
+            ps,
+            localVar,
+            users,
+            minUsdcApePrice,
+            minWethApePrice
+        );
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -506,9 +510,7 @@ contract PoolApeStaking is
         ApeStakingLocalVars memory localVar = _compoundCache(
             ps,
             nftAsset,
-            users.length,
-            minUsdcApePrice,
-            minWethApePrice
+            users.length
         );
         require(msg.sender == localVar.compoundBot, Errors.CALLER_NOT_OPERATOR);
 
@@ -550,7 +552,13 @@ contract PoolApeStaking is
             _addUserToCompoundCache(ps, localVar, i, users[i]);
         }
 
-        _compoundForUsers(ps, localVar, users);
+        _compoundForUsers(
+            ps,
+            localVar,
+            users,
+            minUsdcApePrice,
+            minWethApePrice
+        );
     }
 
     function _generalCache(DataTypes.PoolStorage storage ps, address nftAsset)
@@ -569,9 +577,7 @@ contract PoolApeStaking is
     function _compoundCache(
         DataTypes.PoolStorage storage ps,
         address nftAsset,
-        uint256 numUsers,
-        uint256 minUsdcApePrice,
-        uint256 minWethApePrice
+        uint256 numUsers
     ) internal view returns (ApeStakingLocalVars memory localVar) {
         localVar = _generalCache(ps, nftAsset);
         localVar.balanceBefore = APE_COIN.balanceOf(address(this));
@@ -580,8 +586,6 @@ contract PoolApeStaking is
         localVar.options = new DataTypes.ApeCompoundStrategy[](numUsers);
         localVar.compoundFee = ps._apeCompoundFee;
         localVar.compoundBot = ps._apeCompoundBot;
-        localVar.usdcApePrice = minUsdcApePrice;
-        localVar.wethApePrice = minWethApePrice;
     }
 
     function _addUserToCompoundCache(
@@ -678,7 +682,9 @@ contract PoolApeStaking is
     function _compoundForUsers(
         DataTypes.PoolStorage storage ps,
         ApeStakingLocalVars memory localVar,
-        address[] calldata users
+        address[] calldata users,
+        uint256 minUsdcApePrice,
+        uint256 minWethApePrice
     ) internal {
         uint256 totalSwapAmount = localVar.totalUsdcSwapAmount +
             localVar.totalWethSwapAmount;
@@ -712,7 +718,7 @@ contract PoolApeStaking is
                 localVar.totalUsdcSwapAmount,
                 usdcSwapPath,
                 address(this),
-                localVar.usdcApePrice
+                minUsdcApePrice
             );
         }
 
@@ -729,7 +735,7 @@ contract PoolApeStaking is
                 localVar.totalWethSwapAmount,
                 wethSwapPath,
                 address(this),
-                localVar.wethApePrice
+                minWethApePrice
             );
         }
 
