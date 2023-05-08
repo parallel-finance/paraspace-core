@@ -48,7 +48,6 @@ library PositionMoverLogic {
         tmpVar.weth = poolAddressProvider.getWETH();
         DataTypes.ReserveData storage reserve = ps._reserves[tmpVar.weth];
         tmpVar.xTokenAddress = reserve.xTokenAddress;
-        ValidationLogic.validateFlashloanSimple(reserve);
 
         for (uint256 index = 0; index < loandIds.length; index++) {
             (
@@ -94,7 +93,6 @@ library PositionMoverLogic {
         (, borrowAmount) = lendPoolLoan.getLoanReserveBorrowAmount(loanId);
 
         DataTypes.TimeLockParams memory timeLockParams;
-
         IPToken(xTokenAddress).transferUnderlyingTo(
             address(this),
             borrowAmount,

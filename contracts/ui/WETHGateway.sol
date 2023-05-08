@@ -81,7 +81,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         pWETH.transferFrom(msg.sender, address(this), amountToWithdraw);
         IPool(pool).withdraw(address(WETH), amountToWithdraw, address(this));
         WETH.withdraw(amountToWithdraw);
-        _safeTransferETH(to, amountToWithdraw);
+        Helpers.safeTransferETH(to, amountToWithdraw);
     }
 
     /**
@@ -114,7 +114,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
 
         // refund remaining dust eth
         if (msg.value > paybackAmount)
-            _safeTransferETH(msg.sender, msg.value - paybackAmount);
+            Helpers.safeTransferETH(msg.sender, msg.value - paybackAmount);
     }
 
     /**
@@ -129,7 +129,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
     {
         IPool(pool).borrow(address(WETH), amount, referralCode, msg.sender);
         WETH.withdraw(amount);
-        _safeTransferETH(msg.sender, amount);
+        Helpers.safeTransferETH(msg.sender, amount);
     }
 
     /**
@@ -172,17 +172,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         pWETH.transferFrom(msg.sender, address(this), amountToWithdraw);
         IPool(pool).withdraw(address(WETH), amountToWithdraw, address(this));
         WETH.withdraw(amountToWithdraw);
-        _safeTransferETH(to, amountToWithdraw);
-    }
-
-    /**
-     * @dev transfer ETH to an address, revert if it fails.
-     * @param to recipient of the transfer
-     * @param value the amount to send
-     */
-    function _safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, "ETH_TRANSFER_FAILED");
+        Helpers.safeTransferETH(to, amountToWithdraw);
     }
 
     /**
@@ -211,7 +201,7 @@ contract WETHGateway is ReentrancyGuard, IWETHGateway, OwnableUpgradeable {
         external
         onlyOwner
     {
-        _safeTransferETH(to, amount);
+        Helpers.safeTransferETH(to, amount);
     }
 
     /**

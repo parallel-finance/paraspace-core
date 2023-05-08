@@ -1,5 +1,6 @@
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {
+  deployChromieSquiggleNTokenImpl,
   deployGenericMoonbirdNTokenImpl,
   deployGenericNTokenImpl,
   deployNTokenBAKCImpl,
@@ -44,6 +45,7 @@ export const upgradeNToken = async (verify = false) => {
   let nTokenUniSwapV3ImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
   let nTokenStakefishImplementationAddress = "";
+  let nTokenBlocksImplementationAddress = "";
   let newImpl = "";
 
   for (let i = 0; i < allXTokens.length; i++) {
@@ -66,6 +68,7 @@ export const upgradeNToken = async (verify = false) => {
         XTokenType.NTokenBAKC,
         XTokenType.NTokenOtherdeed,
         XTokenType.NTokenStakefish,
+        XTokenType.NTokenChromieSquiggle,
       ].includes(xTokenType)
     ) {
       continue;
@@ -174,6 +177,17 @@ export const upgradeNToken = async (verify = false) => {
         ).address;
       }
       newImpl = nTokenStakefishImplementationAddress;
+    } else if (xTokenType == XTokenType.NTokenChromieSquiggle) {
+      console.log("deploy NTokenChromieSquiggle implementation");
+      newImpl = (
+        await deployChromieSquiggleNTokenImpl(
+          poolAddress,
+          delegationRegistry,
+          0,
+          9763,
+          verify
+        )
+      ).address;
     } else if (xTokenType == XTokenType.NToken) {
       // compatibility
       if (symbol == NTokenContractId.nOTHR) {
@@ -189,6 +203,21 @@ export const upgradeNToken = async (verify = false) => {
           ).address;
         }
         newImpl = nTokenOTHRImplementationAddress;
+        // compatibility
+      } else if (symbol == NTokenContractId.nBLOCKS) {
+        if (!nTokenBlocksImplementationAddress) {
+          console.log("deploy NTokenBLOCKS implementation");
+          nTokenBlocksImplementationAddress = (
+            await deployChromieSquiggleNTokenImpl(
+              poolAddress,
+              delegationRegistry,
+              0,
+              9763,
+              verify
+            )
+          ).address;
+        }
+        newImpl = nTokenBlocksImplementationAddress;
       } else {
         if (!nTokenImplementationAddress) {
           console.log("deploy NToken implementation");

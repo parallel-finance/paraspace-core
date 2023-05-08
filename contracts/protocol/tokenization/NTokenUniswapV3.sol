@@ -17,6 +17,7 @@ import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungib
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
+import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
 
 /**
  * @title UniswapV3 NToken

@@ -5,15 +5,19 @@ import {
   deployPoolCore,
   deployPoolMarketplace,
   deployPoolParameters,
+  deployPoolPositionMover,
 } from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {
+  dryRunEncodedData,
+  getContractAddressInDb,
+} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {waitForTx} from "../../helpers/misc-utils";
-import {tEthereumAddress} from "../../helpers/types";
+import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
+import {eContractid, tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
 export const upgradeProxyImplementations = async (
@@ -295,6 +299,45 @@ export const upgradePoolParameters = async (
       poolParameters.address,
       newPoolParametersSelectors,
       oldPoolParametersSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
+};
+
+export const upgradePoolPositionMover = async (
+  oldPoolPositionMover: tEthereumAddress,
+  verify = false
+) => {
+  const addressesProvider = await getPoolAddressesProvider();
+  const pool = await getPoolProxy();
+  const paraSpaceConfig = getParaSpaceConfig();
+  const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
+    oldPoolPositionMover
+  );
+
+  const bendDaoLendPoolLoan =
+    paraSpaceConfig.BendDAO.LendingPoolLoan ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
+  const bendDaoLendPool =
+    paraSpaceConfig.BendDAO.LendingPool ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
+
+  const {
+    poolPositionMover,
+    poolPositionMoverSelectors: newPoolPositionMoverSelectors,
+  } = await deployPoolPositionMover(
+    addressesProvider.address,
+    bendDaoLendPoolLoan,
+    bendDaoLendPool,
+    verify
+  );
+
+  const implementations = [
+    [
+      poolPositionMover.address,
+      newPoolPositionMoverSelectors,
+      oldPoolPositionMoverSelectors,
     ],
   ] as [string, string[], string[]][];
 

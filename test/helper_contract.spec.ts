@@ -13,7 +13,7 @@ import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {waitForTx} from "../helpers/misc-utils";
 
-describe("P2P Pair Staking Test", () => {
+describe("Helper contract Test", () => {
   let testEnv: TestEnv;
   let helperContract: HelperContract;
   let cApe: AutoCompoundApe;

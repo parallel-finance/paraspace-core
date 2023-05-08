@@ -96,6 +96,7 @@ import {
   StakefishValidatorFactory__factory,
   NTokenStakefish__factory,
   MockLendPool__factory,
+  NTokenChromieSquiggle__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -416,12 +417,6 @@ export const getAllERC20Tokens = async () => {
         accumulator[tokenSymbol] = await getMintableERC20(address);
         return Promise.resolve(accumulator);
       } else {
-        if (
-          tokenSymbol === ERC20TokenContractId.cAPE ||
-          tokenSymbol === ERC20TokenContractId.yAPE
-        ) {
-          return Promise.resolve(accumulator);
-        }
         return Promise.reject(`${tokenSymbol} is not in db`);
       }
     }, Promise.resolve({}));
@@ -1243,6 +1238,17 @@ export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenChromieSquiggle = async (address?: tEthereumAddress) =>
+  await NTokenChromieSquiggle__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenChromieSquiggleImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

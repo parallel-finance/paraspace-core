@@ -62,6 +62,7 @@ export enum XTokenType {
   PTokenCApe = 14,
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
+  NTokenChromieSquiggle = 17,
 }
 
 export type ConstructorArgs = (
@@ -102,6 +103,8 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
+  arbitrumOne = "arbitrumOne",
+  arbitrumGoerli = "arbitrumGoerli",
 }
 
 export enum eContractid {
@@ -267,6 +270,7 @@ export enum eContractid {
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  NTokenChromieSquiggleImpl = "NTokenChromieSquiggleImpl",
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
   SFVLDR = "SFVLDR",
@@ -275,6 +279,13 @@ export enum eContractid {
   StakefishValidatorFactory = "StakefishValidatorFactory",
   DepositContract = "DepositContract",
   MockFeePool = "MockFeePool",
+  HVMTL = "HVMTL",
+  BEANZ = "BEANZ",
+  DEGODS = "DEGODS",
+  EXP = "EXP",
+  VSL = "VSL",
+  KODA = "KODA",
+  BLOCKS = "BLOCKS",
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
@@ -398,6 +409,8 @@ export enum ProtocolErrors {
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
   INVALID_STATE = "134", //invalid token status
 
+  INVALID_TOKEN_ID = "135", //invalid token id
+
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 
@@ -465,6 +478,13 @@ export interface iAssetBase<T> {
   OTHR: T;
   CLONEX: T;
   BAKC: T;
+  HVMTL: T;
+  BEANZ: T;
+  DEGODS: T;
+  EXP: T;
+  VSL: T;
+  KODA: T;
+  BLOCKS: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -501,6 +521,13 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "MEEBITS"
   | "OTHR"
   | "BAKC"
+  | "HVMTL"
+  | "BEANZ"
+  | "DEGODS"
+  | "EXP"
+  | "VSL"
+  | "KODA"
+  | "BLOCKS"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -548,6 +575,13 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
+  "HVMTL" = "HVMTL",
+  BEANZ = "BEANZ",
+  DEGODS = "DEGODS",
+  EXP = "EXP",
+  VSL = "VSL",
+  KODA = "KODA",
+  BLOCKS = "BLOCKS",
 }
 
 export enum NTokenContractId {
@@ -562,6 +596,7 @@ export enum NTokenContractId {
   nPPG = "nPPG",
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
+  nBLOCKS = "nBLOCKS",
 }
 
 export enum PTokenContractId {
@@ -649,6 +684,8 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
+  [eEthereumNetwork.arbitrumOne]: T;
+  [eEthereumNetwork.arbitrumGoerli]: T;
 }
 
 export enum RateMode {
@@ -703,6 +740,15 @@ export interface IChainlinkConfig {
   CLONEX?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
   WGLMR?: tEthereumAddress;
+  HVMTL?: tEthereumAddress;
+  ARB?: tEthereumAddress;
+  GMX?: tEthereumAddress;
+  BEANZ?: tEthereumAddress;
+  DEGODS?: tEthereumAddress;
+  EXP?: tEthereumAddress;
+  VSL?: tEthereumAddress;
+  KODA?: tEthereumAddress;
+  BLOCKS?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
@@ -716,6 +762,11 @@ export interface IUniswapConfig {
   V3Factory?: tEthereumAddress;
   V3Router?: tEthereumAddress;
   V3NFTPositionManager?: tEthereumAddress;
+}
+
+export interface IBendDAOConfig {
+  LendingPool?: tEthereumAddress;
+  LendingPoolLoan?: tEthereumAddress;
 }
 
 export interface IOracleConfig {
@@ -761,6 +812,7 @@ export interface ICommonConfiguration {
   Tokens: iMultiPoolsAssets<tEthereumAddress>;
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
+  BendDAO: IBendDAOConfig;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;

@@ -140,7 +140,7 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
         _flashSupplyFor(ps, params, vars, params.orderInfo.maker);
-        _flashLoanTo(ps, params, vars, address(this));
+        _flashLoanTo(params, vars, address(this));
 
         (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
             params,
@@ -344,7 +344,7 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars = _cache(ps, params);
 
         _flashSupplyFor(ps, params, vars, params.orderInfo.taker);
-        _flashLoanTo(ps, params, vars, params.orderInfo.maker);
+        _flashLoanTo(params, vars, params.orderInfo.maker);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -406,7 +406,6 @@ library MarketplaceLogic {
      * @param to The receiver of borrowed tokens
      */
     function _flashLoanTo(
-        DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address to
@@ -415,10 +414,7 @@ library MarketplaceLogic {
             return;
         }
 
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
-        ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
-
         IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
             to,
             vars.creditAmount,
