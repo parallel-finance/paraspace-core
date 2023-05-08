@@ -603,7 +603,7 @@ contract PoolApeStaking is
             localVar.totalAmount += localVar.amounts[i];
         }
 
-        if (localVar.options[i].ty == DataTypes.ApeCompoundType.SwapAndSupply) {
+        if (localVar.options[i].swapPercent > 0) {
             localVar.swapAmounts[i] = localVar.amounts[i].percentMul(
                 localVar.options[i].swapPercent
             );
