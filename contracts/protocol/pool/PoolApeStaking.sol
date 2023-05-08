@@ -783,7 +783,7 @@ contract PoolApeStaking is
             })
         );
         _supplyForUser(ps, tokenOut, address(this), user, amountOut);
-        return amountOut.wadDiv(amountIn);
+        return (amountOut.wadDiv(amountIn) / 10000) * 10000;
     }
 
     function _repayAndSupplyForUser(

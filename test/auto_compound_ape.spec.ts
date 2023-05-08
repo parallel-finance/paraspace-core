@@ -537,6 +537,7 @@ describe("Auto Compound Ape Test", () => {
         swapPercent: 5000,
       })
     );
+    const beforeBalance = await ape.balanceOf(user2.address);
 
     await waitForTx(
       await pool
@@ -565,12 +566,14 @@ describe("Auto Compound Ape Test", () => {
 
     almostEqual(
       await pUsdc.balanceOf(user3.address),
-      await convertToCurrencyDecimals(usdc.address, "4059.235923")
+      await convertToCurrencyDecimals(usdc.address, "4050.668571")
     );
 
     // 3600 * 0.003
-    const incentiveBalance = await ape.balanceOf(user2.address);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
@@ -642,6 +645,7 @@ describe("Auto Compound Ape Test", () => {
 
     await advanceTimeAndBlock(3600);
 
+    const beforeBalance = await ape.balanceOf(user2.address);
     await waitForTx(
       await pool
         .connect(user2.signer)
@@ -655,8 +659,10 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const incentiveBalance = await ape.balanceOf(user2.address);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
@@ -796,6 +802,7 @@ describe("Auto Compound Ape Test", () => {
       })
     );
 
+    const beforeBalance = await ape.balanceOf(user2.address);
     await waitForTx(
       await pool
         .connect(user2.signer)
@@ -827,8 +834,10 @@ describe("Auto Compound Ape Test", () => {
     );
 
     // 3600 * 0.003
-    const incentiveBalance = await ape.balanceOf(user2.address);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
@@ -925,6 +934,7 @@ describe("Auto Compound Ape Test", () => {
 
     await advanceTimeAndBlock(3600);
 
+    const beforeBalance = await ape.balanceOf(user2.address);
     await waitForTx(
       await pool.connect(user2.signer).claimPairedApeAndCompound(
         mayc.address,
@@ -946,8 +956,10 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const incentiveBalance = await ape.balanceOf(user2.address);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
