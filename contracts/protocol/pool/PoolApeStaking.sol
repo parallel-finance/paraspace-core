@@ -91,10 +91,8 @@ contract PoolApeStaking is
         ISwapRouter uniswapV3SwapRouter,
         address weth,
         uint24 apeWethFee,
-        uint24 wethUsdcFee,
-        address apeCompoundBot
+        uint24 wethUsdcFee
     ) {
-        require(apeCompoundBot != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
         APE_COIN = apeCoin;
