@@ -546,8 +546,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
-          0,
-          0,
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
@@ -584,8 +584,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
-          0,
-          0,
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
@@ -649,9 +649,16 @@ describe("Auto Compound Ape Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], 0, 0, {
-          gasLimit: 5000000,
-        })
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address],
+          [[0, 1, 2]],
+          3827874,
+          3506149922170000,
+          {
+            gasLimit: 5000000,
+          }
+        )
     );
 
     //3600 * 0.997 = 3589.2
@@ -669,9 +676,16 @@ describe("Auto Compound Ape Test", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], 0, 0, {
-          gasLimit: 5000000,
-        })
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address],
+          [[0, 1, 2]],
+          3827874,
+          3506149922170000,
+          {
+            gasLimit: 5000000,
+          }
+        )
     );
   });
 
@@ -810,8 +824,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
-          0,
-          0,
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
@@ -848,8 +862,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
-          0,
-          0,
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
