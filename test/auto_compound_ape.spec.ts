@@ -19,11 +19,7 @@ import {
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
-import {
-  advanceTimeAndBlock,
-  getParaSpaceConfig,
-  waitForTx,
-} from "../helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
@@ -110,6 +106,12 @@ describe("Auto Compound Ape Test", () => {
 
     await waitForTx(
       await pool.connect(poolAdmin.signer).setClaimApeForCompoundFee(30)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .setClaimApeForCompoundBot(user2.address)
     );
 
     // send extra tokens to the apestaking contract for rewards
@@ -567,9 +569,7 @@ describe("Auto Compound Ape Test", () => {
     );
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
+    const incentiveBalance = await ape.balanceOf(user2.address);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -655,9 +655,7 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
+    const incentiveBalance = await ape.balanceOf(user2.address);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -829,9 +827,7 @@ describe("Auto Compound Ape Test", () => {
     );
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
+    const incentiveBalance = await ape.balanceOf(user2.address);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);
@@ -950,9 +946,7 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
+    const incentiveBalance = await ape.balanceOf(user2.address);
     almostEqual(incentiveBalance, parseEther("10.8"));
 
     await advanceTimeAndBlock(3600);

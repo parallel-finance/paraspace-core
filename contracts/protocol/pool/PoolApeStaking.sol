@@ -73,8 +73,8 @@ contract PoolApeStaking is
         address compoundBot;
         uint256 totalUsdcSwapAmount;
         uint256 totalWethSwapAmount;
-        uint256 minUsdcApePrice;
-        uint256 minWethApePrice;
+        uint256 usdcApePrice;
+        uint256 wethApePrice;
         address pUSDCAddress;
         address pWETHAddress;
     }
@@ -580,8 +580,8 @@ contract PoolApeStaking is
         localVar.options = new DataTypes.ApeCompoundStrategy[](numUsers);
         localVar.compoundFee = ps._apeCompoundFee;
         localVar.compoundBot = ps._apeCompoundBot;
-        localVar.minUsdcApePrice = minUsdcApePrice;
-        localVar.minWethApePrice = minWethApePrice;
+        localVar.usdcApePrice = minUsdcApePrice;
+        localVar.wethApePrice = minWethApePrice;
     }
 
     function _addUserToCompoundCache(
@@ -706,13 +706,13 @@ contract PoolApeStaking is
                 USDC
             );
             localVar.pUSDCAddress = ps._reserves[address(USDC)].xTokenAddress;
-            _swapAndSupplyForUser(
+            localVar.usdcApePrice = _swapAndSupplyForUser(
                 ps,
                 address(USDC),
                 localVar.totalUsdcSwapAmount,
                 usdcSwapPath,
                 address(this),
-                localVar.minUsdcApePrice
+                localVar.usdcApePrice
             );
         }
 
@@ -723,30 +723,33 @@ contract PoolApeStaking is
                 WETH
             );
             localVar.pWETHAddress = ps._reserves[address(WETH)].xTokenAddress;
-            _swapAndSupplyForUser(
+            localVar.wethApePrice = _swapAndSupplyForUser(
                 ps,
                 address(WETH),
                 localVar.totalWethSwapAmount,
                 wethSwapPath,
                 address(this),
-                localVar.minWethApePrice
+                localVar.wethApePrice
             );
         }
 
         for (uint256 i = 0; i < users.length; i++) {
             if (localVar.swapAmounts[i] > 0) {
                 address swapTokenOut;
+                uint256 price;
                 if (
                     localVar.options[i].swapTokenOut ==
                     DataTypes.ApeCompoundTokenOut.USDC
                 ) {
                     swapTokenOut = localVar.pUSDCAddress;
+                    price = localVar.usdcApePrice;
                 } else {
                     swapTokenOut = localVar.pWETHAddress;
+                    price = localVar.wethApePrice;
                 }
                 IERC20(swapTokenOut).safeTransfer(
                     users[i],
-                    localVar.swapAmounts[i]
+                    localVar.swapAmounts[i].wadMul(price)
                 );
             }
             _repayAndSupplyForUser(
@@ -766,9 +769,9 @@ contract PoolApeStaking is
         bytes memory swapPath,
         address user,
         uint256 price
-    ) internal {
+    ) internal returns (uint256) {
         if (amountIn == 0) {
-            return;
+            return price;
         }
         uint256 amountOut = SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
@@ -780,6 +783,7 @@ contract PoolApeStaking is
             })
         );
         _supplyForUser(ps, tokenOut, address(this), user, amountOut);
+        return amountOut.wadDiv(amountIn);
     }
 
     function _repayAndSupplyForUser(
