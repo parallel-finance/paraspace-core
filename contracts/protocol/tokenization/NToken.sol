@@ -117,27 +117,11 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         );
 
         if (receiverOfUnderlying != address(this)) {
-            address underlyingAsset = _ERC721Data.underlyingAsset;
-            if (timeLockParams.releaseTime != 0) {
-                ITimeLock timeLock = POOL.TIME_LOCK();
-                timeLock.createAgreement(
-                    DataTypes.AssetType.ERC721,
-                    timeLockParams.actionType,
-                    underlyingAsset,
-                    tokenIds,
-                    receiverOfUnderlying,
-                    timeLockParams.releaseTime
-                );
-                receiverOfUnderlying = address(timeLock);
-            }
-
-            for (uint256 index = 0; index < tokenIds.length; index++) {
-                IERC721(underlyingAsset).safeTransferFrom(
-                    address(this),
-                    receiverOfUnderlying,
-                    tokenIds[index]
-                );
-            }
+            _transferUnderlyingTo(
+                receiverOfUnderlying,
+                tokenIds,
+                timeLockParams
+            );
         }
 
         return (oldCollateralizedBalance, newCollateralizedBalance);
@@ -166,11 +150,19 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         uint256 tokenId,
         DataTypes.TimeLockParams calldata timeLockParams
     ) external virtual override onlyPool nonReentrant {
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        _transferUnderlyingTo(target, tokenIds, timeLockParams);
+    }
+
+    function _transferUnderlyingTo(
+        address target,
+        uint256[] memory tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
+    ) internal virtual {
         address underlyingAsset = _ERC721Data.underlyingAsset;
         if (timeLockParams.releaseTime != 0) {
             ITimeLock timeLock = POOL.TIME_LOCK();
-            uint256[] memory tokenIds = new uint256[](1);
-            tokenIds[0] = tokenId;
             timeLock.createAgreement(
                 DataTypes.AssetType.ERC721,
                 timeLockParams.actionType,
@@ -182,11 +174,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             target = address(timeLock);
         }
 
-        IERC721(underlyingAsset).safeTransferFrom(
-            address(this),
-            target,
-            tokenId
-        );
+        for (uint256 index = 0; index < tokenIds.length; index++) {
+            IERC721(underlyingAsset).safeTransferFrom(
+                address(this),
+                target,
+                tokenIds[index]
+            );
+        }
     }
 
     /**

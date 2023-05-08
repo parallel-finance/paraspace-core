@@ -1335,10 +1335,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts-upgradeable@npm:4.2.0":
-  version: 4.2.0
-  resolution: "@openzeppelin/contracts-upgradeable@npm:4.2.0"
-  checksum: 76f0105f162e3fe96fbb894c7cb9ed5fa1da2b3015a642bd22c6d177ce6795ef3caddee41675cc2c62e5aef900c122b67e561bba31e143c03087b1fe519364e5
+"@openzeppelin/contracts-upgradeable@npm:4.8.3":
+  version: 4.8.3
+  resolution: "@openzeppelin/contracts-upgradeable@npm:4.8.3"
+  checksum: 022c99bac4828980e771ddf3426a58b5a6f27932a1b1ec93dd2ed3f11c89d8e407867b845bedd0660bdd11c683971d566737c10504db8a1f144f61daec8b5ed6
   languageName: node
   linkType: hard
 
@@ -1413,7 +1413,7 @@ __metadata:
     "@nomiclabs/hardhat-etherscan": ^3.1.0
     "@nomiclabs/hardhat-waffle": 2.0.3
     "@openzeppelin/contracts": 4.2.0
-    "@openzeppelin/contracts-upgradeable": 4.2.0
+    "@openzeppelin/contracts-upgradeable": 4.8.3
     "@openzeppelin/hardhat-upgrades": ^1.21.0
     "@prb/math": ^2.5.0
     "@safe-global/safe-core-sdk": ^3.2.0

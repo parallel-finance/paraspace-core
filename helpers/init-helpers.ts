@@ -52,6 +52,8 @@ import {
   deployChromieSquiggleNTokenImpl,
   deployAutoYieldApeImplAndAssignItToProxy,
   deployAutoCompoundApeImplAndAssignItToProxy,
+  deployDeGodsNTokenImpl,
+  deployERC721PointsStaking,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -330,6 +332,7 @@ export const initReservesByHelper = async (
         eContractid.NTokenMAYCImpl,
         eContractid.NTokenBAKCImpl,
         eContractid.NTokenStakefishImpl,
+        eContractid.NTokenDeGodsImpl,
       ].includes(xTokenImpl)
     ) {
       xTokenType[symbol] = "nft";
@@ -599,6 +602,18 @@ export const initReservesByHelper = async (
               delegationRegistryAddress,
               0,
               20, //set 20 in test environment for easy test. should be 9763 in mainnet
+              verify
+            )
+          ).address;
+        } else if (reserveSymbol == ERC721TokenContractId.DEGODS) {
+          const pointStakingAddress =
+            (await getContractAddressInDb(eContractid.ERC721PointsStakingV2)) ||
+            (await deployERC721PointsStaking(verify)).address;
+          xTokenToUse = (
+            await deployDeGodsNTokenImpl(
+              pool.address,
+              delegationRegistryAddress,
+              pointStakingAddress,
               verify
             )
           ).address;

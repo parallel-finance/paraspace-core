@@ -63,6 +63,7 @@ export enum XTokenType {
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
   NTokenChromieSquiggle = 17,
+  NTokenDeGods = 18,
 }
 
 export type ConstructorArgs = (
@@ -238,6 +239,7 @@ export enum eContractid {
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   ApeCoinStaking = "ApeCoinStaking",
+  ERC721PointsStakingV2 = "ERC721PointsStakingV2",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
   CApeDebtToken = "CApeDebtToken",
@@ -271,6 +273,7 @@ export enum eContractid {
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
   NTokenChromieSquiggleImpl = "NTokenChromieSquiggleImpl",
+  NTokenDeGodsImpl = "NTokenDeGodsImpl",
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
   SFVLDR = "SFVLDR",
@@ -410,6 +413,8 @@ export enum ProtocolErrors {
   INVALID_STATE = "134", //invalid token status
 
   INVALID_TOKEN_ID = "135", //invalid token id
+
+  CALLER_NOT_ALLOWED = "141", // The caller of the function is not allowed
 
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
@@ -597,6 +602,7 @@ export enum NTokenContractId {
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
   nBLOCKS = "nBLOCKS",
+  nDEGODS = "nDEGODS",
 }
 
 export enum PTokenContractId {
@@ -769,6 +775,10 @@ export interface IBendDAOConfig {
   LendingPoolLoan?: tEthereumAddress;
 }
 
+export interface IDeGodsStakingConfig {
+  ERC721PointsStaking?: tEthereumAddress;
+}
+
 export interface IOracleConfig {
   // ParaSpaceOracle
   BaseCurrency: ERC20TokenContractId;
@@ -813,6 +823,7 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  DeGodsStaking: IDeGodsStakingConfig;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;

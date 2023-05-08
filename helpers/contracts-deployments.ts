@@ -292,6 +292,12 @@ import {
   PositionMoverLogic__factory,
   TimeLock,
   NTokenChromieSquiggle__factory,
+  NTokenDeGods,
+  ERC721PointsStakingV2__factory,
+  NTokenDeGods__factory,
+  NTokenChromieSquiggle,
+  DeGodsV2,
+  DeGodsV2__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -335,9 +341,10 @@ import {PoolParametersLibraryAddresses} from "../types/factories/contracts/proto
 import {PositionMoverLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/PositionMoverLogic__factory";
 
 import {pick, upperFirst} from "lodash";
-import {ZERO_ADDRESS} from "./constants";
+import {ONE_ADDRESS, ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
-import {parseEther} from "ethers/lib/utils";
+import {parseEther, solidityKeccak256} from "ethers/lib/utils";
+import {zeroAddress} from "ethereumjs-util";
 
 export const deployPoolAddressesProvider = async (
   marketId: string,
@@ -1304,6 +1311,7 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
       | Meebits
       | Moonbirds
       | Contract
+      | DeGodsV2
       | StakefishNFTManager;
   } = {};
   const paraSpaceConfig = getParaSpaceConfig();
@@ -1492,6 +1500,11 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
         continue;
       }
 
+      if (tokenSymbol === ERC721TokenContractId.DEGODS) {
+        tokens[tokenSymbol] = await deployDeGods(verify);
+        continue;
+      }
+
       if (tokenSymbol === ERC721TokenContractId.SFVLDR) {
         const depositContract = await deployDepositContract(verify);
         const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
@@ -1536,6 +1549,19 @@ export const deployMoonbirds = async (
     [...args],
     verify
   ) as Promise<Moonbirds>;
+
+export const deployDeGods = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new DeGodsV2__factory(await getFirstSigner()),
+    eContractid.DEGODS,
+    [
+      zeroAddress(),
+      zeroAddress(),
+      solidityKeccak256(["string"], ["DeGodsTest"]),
+      DRE.ethers.utils.solidityPack(["uint256"], [10000]),
+    ],
+    verify
+  ) as Promise<DeGodsV2>;
 
 export const deployReservesSetupHelper = async (verify?: boolean) =>
   withSaveAndVerify(
@@ -2316,6 +2342,32 @@ export const deployMockMultiAssetAirdropProject = async (
     verify
   ) as Promise<MockMultiAssetAirdropProject>;
 
+export const deployERC721PointsStaking = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+
+  const pointStaking = await withSaveAndVerify(
+    new ERC721PointsStakingV2__factory(await getFirstSigner()),
+    eContractid.ERC721PointsStakingV2,
+    [],
+    verify
+  );
+
+  const DUST = await deployMintableERC20(["DUST", "DUST", "9"], verify);
+
+  await waitForTx(
+    await pointStaking.initialize(
+      allTokens.DEGODS.address,
+      DUST.address,
+      "1000000000",
+      DUST.address,
+      "3000000000",
+      ONE_ADDRESS
+    )
+  );
+
+  return pointStaking;
+};
+
 export const deployApeCoinStaking = async (verify?: boolean) => {
   const allTokens = await getAllTokens();
   const args = [
@@ -3054,7 +3106,32 @@ export const deployChromieSquiggleNTokenImpl = async (
     verify,
     false,
     libraries
-  ) as Promise<NTokenStakefish>;
+  ) as Promise<NTokenChromieSquiggle>;
+};
+
+export const deployDeGodsNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  delegationRegistryAddress: tEthereumAddress,
+  pointStakingAddress: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+
+  return withSaveAndVerify(
+    new NTokenDeGods__factory(libraries, await getFirstSigner()),
+    eContractid.NTokenDeGodsImpl,
+    [poolAddress, delegationRegistryAddress, pointStakingAddress],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenDeGods>;
 };
 
 export const deployStakefishNTokenImpl = async (

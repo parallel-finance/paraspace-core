@@ -97,6 +97,9 @@ import {
   NTokenStakefish__factory,
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
+  NTokenDeGods__factory,
+  ERC721PointsStakingV2__factory,
+  DeGodsV2__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -653,6 +656,15 @@ export const getMoonBirds = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getDeGods = async (address?: tEthereumAddress) =>
+  await DeGodsV2__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.DEGODS}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getNTokenMoonBirds = async (address?: tEthereumAddress) =>
   await NTokenMoonBirds__factory.connect(
     address ||
@@ -1032,6 +1044,17 @@ export const getNTokenBAKC = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getERC721PointsStaking = async (address?: tEthereumAddress) =>
+  await ERC721PointsStakingV2__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ERC721PointsStakingV2}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getApeCoinStaking = async (address?: tEthereumAddress) =>
   await ApeCoinStaking__factory.connect(
     address ||
@@ -1249,6 +1272,17 @@ export const getNTokenChromieSquiggle = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NTokenChromieSquiggleImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenDeGods = async (address?: tEthereumAddress) =>
+  await NTokenDeGods__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenDeGodsImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
