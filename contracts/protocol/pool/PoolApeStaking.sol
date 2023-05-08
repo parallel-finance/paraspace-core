@@ -713,6 +713,7 @@ contract PoolApeStaking is
             localVar.usdcApePrice = _swapAndSupplyForUser(
                 ps,
                 address(USDC),
+                localVar.pUSDCAddress,
                 localVar.totalUsdcSwapAmount,
                 usdcSwapPath,
                 address(this),
@@ -730,6 +731,7 @@ contract PoolApeStaking is
             localVar.wethApePrice = _swapAndSupplyForUser(
                 ps,
                 address(WETH),
+                localVar.pWETHAddress,
                 localVar.totalWethSwapAmount,
                 wethSwapPath,
                 address(this),
@@ -753,7 +755,7 @@ contract PoolApeStaking is
                 }
                 IERC20(swapTokenOut).safeTransfer(
                     users[i],
-                    localVar.swapAmounts[i].wadMul(price)
+                    (localVar.swapAmounts[i] * price) / 1e18
                 );
             }
             _repayAndSupplyForUser(
@@ -769,6 +771,7 @@ contract PoolApeStaking is
     function _swapAndSupplyForUser(
         DataTypes.PoolStorage storage ps,
         address tokenOut,
+        address xTokenAddress,
         uint256 amountIn,
         bytes memory swapPath,
         address user,
@@ -786,8 +789,11 @@ contract PoolApeStaking is
                 amountOutMinimum: amountIn.wadMul(price)
             })
         );
+        uint256 beforeBalance = IERC20(xTokenAddress).balanceOf(address(this));
         _supplyForUser(ps, tokenOut, address(this), user, amountOut);
-        return (amountOut.wadDiv(amountIn) / 10000) * 10000;
+        return
+            ((IERC20(xTokenAddress).balanceOf(address(this)) - beforeBalance) *
+                1e18) / amountIn;
     }
 
     function _repayAndSupplyForUser(

@@ -566,7 +566,7 @@ describe("Auto Compound Ape Test", () => {
 
     almostEqual(
       await pUsdc.balanceOf(user3.address),
-      await convertToCurrencyDecimals(usdc.address, "4050.668571")
+      await convertToCurrencyDecimals(usdc.address, "4059.235479")
     );
 
     // 3600 * 0.003
