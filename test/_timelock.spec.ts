@@ -11,7 +11,6 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {eContractid} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
-import {parseEther} from "ethers/lib/utils";
 import {
   approveTo,
   createNewPool,
