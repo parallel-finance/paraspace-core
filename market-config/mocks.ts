@@ -33,6 +33,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   UNI: parseEther("0.0025").toString(),
   BAL: parseEther("0.0028").toString(),
   AAVE: parseEther("0.032").toString(),
+  RDNT: parseEther("0.00015").toString(),
   // ERC721
   BAYC: parseEther("101").toString(),
   WPUNKS: parseEther("140").toString(),
@@ -83,10 +84,11 @@ export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
   BLUR: parseUnits("0.57", 8).toString(),
   ARB: parseUnits("1.32", 8).toString(),
   GMX: parseUnits("69.2", 8).toString(),
-  LINK: parseEther("6.59").toString(),
-  UNI: parseEther("5").toString(),
-  BAL: parseEther("5.72").toString(),
-  AAVE: parseEther("64").toString(),
+  LINK: parseUnits("6.59", 8).toString(),
+  UNI: parseUnits("5", 8).toString(),
+  BAL: parseUnits("5.72", 8).toString(),
+  AAVE: parseUnits("64", 8).toString(),
+  RDNT: parseUnits("0.3", 8).toString(),
   // ERC721
   BAYC: parseUnits("96239", 8).toString(),
   WPUNKS: parseUnits("113896", 8).toString(),

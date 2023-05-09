@@ -33,6 +33,7 @@ import {
   rateStrategyGMX,
   rateStrategyLINK,
   rateStrategyNFT,
+  rateStrategyRDNT,
   rateStrategyUNI,
   rateStrategyUSDC,
   rateStrategyUSDT,
@@ -91,6 +92,7 @@ import {
   timeLockStrategyLINK,
   timeLockStrategyAAVE,
   timeLockStrategyUNI,
+  timeLockStrategyRDNT,
 } from "./timeLockStrategies";
 
 export const strategyDAI: IReserveParams = {
@@ -881,6 +883,22 @@ export const strategyUNI: IReserveParams = {
   strategy: rateStrategyUNI,
   auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyUNI,
+  baseLTVAsCollateral: "2500",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "3500",
+  liquidationBonus: "11000",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "5000000",
+  supplyCap: "5000000",
+};
+
+export const strategyRDNT: IReserveParams = {
+  strategy: rateStrategyRDNT,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyRDNT,
   baseLTVAsCollateral: "2500",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "3500",

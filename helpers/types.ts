@@ -474,6 +474,7 @@ export interface iAssetBase<T> {
   UNI: T;
   BAL: T;
   AAVE: T;
+  RDNT: T;
   BAYC: T;
   WPUNKS: T;
   PUNKS: T;
@@ -529,6 +530,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "UNI"
   | "BAL"
   | "AAVE"
+  | "RDNT"
   | "BAYC"
   | "PUNKS"
   | "WPUNKS"
@@ -583,6 +585,7 @@ export enum ERC20TokenContractId {
   UNI = "UNI",
   BAL = "BAL",
   AAVE = "AAVE",
+  RDNT = "RDNT",
 }
 
 export enum ERC721TokenContractId {
@@ -763,6 +766,7 @@ export interface IChainlinkConfig {
   UNI?: tEthereumAddress;
   AAVE?: tEthereumAddress;
   BAL?: tEthereumAddress;
+  RDNT?: tEthereumAddress;
   // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;

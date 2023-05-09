@@ -62,6 +62,7 @@ import {
   strategyLINK,
   strategyAAVE,
   strategyUNI,
+  strategyRDNT,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -339,6 +340,7 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
     LINK: strategyLINK,
     AAVE: strategyAAVE,
     UNI: strategyUNI,
+    RDNT: strategyRDNT,
     UniswapV3: strategyUniswapV3,
   },
   Mocks: MocksUSDConfig,
@@ -381,6 +383,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     AAVE: "0xba5ddd1f9d7f570dc94a51479a000e3bce967196",
     LINK: "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
     UNI: "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0",
+    RDNT: "0x3082cc23568ea640225c2467653db90e9250aaa0",
     UniswapV3: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
   YogaLabs: {},
@@ -405,6 +408,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     UNI: "0x9c917083fdb403ab5adbec26ee294f6ecada2720",
     AAVE: "0xad1d5344aade45f43e596773bcc4c423eabdd034",
     BAL: "0xbe5ea816870d11239c543f84b71439511d70b94f",
+    RDNT: "0x20d0fcab0ecfd078b036b6caf1fac69a6453b352",
   },
   ReservesConfig: {
     DAI: strategyDAI,
@@ -418,6 +422,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     LINK: strategyLINK,
     AAVE: strategyAAVE,
     UNI: strategyUNI,
+    RDNT: strategyRDNT,
     UniswapV3: strategyUniswapV3,
   },
   Mocks: undefined,

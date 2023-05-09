@@ -313,6 +313,18 @@ export const timeLockStrategyBAL: ITimeLockStrategyParams = {
   period: "86400",
 };
 
+export const timeLockStrategyRDNT: ITimeLockStrategyParams = {
+  name: "timeLockStrategyRDNT",
+  minThreshold: parseUnits("71500", 18).toString(),
+  midThreshold: parseUnits("118750", 18).toString(),
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "43200",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: parseUnits("200000", 18).toString(),
+  period: "86400",
+};
+
 export const timeLockStrategyLINK: ITimeLockStrategyParams = {
   name: "timeLockStrategyLINK",
   minThreshold: parseUnits("71500", 18).toString(),
