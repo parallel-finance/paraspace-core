@@ -412,19 +412,6 @@ proxychains forge verify-contract 0x6D09f55aae5489D664203Fb8aD72A8d520A87470 \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
-### StakefishNFTOracleWrapper
-
-```
-proxychains forge verify-contract 0x31f1595A53730a6129814159De583BFec8B971e0 \
-  --chain-id 1 \
-  --num-of-optimizations 200 \
-  --watch \
-  --constructor-args \
-  $(cast abi-encode "constructor(address,address,address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d" "0xE7BD56364DedF1c5BeBEA9b77A748ab3C5F8c43E" "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a") \
-  contracts/misc/ERC721OracleWrapper.sol:ERC721OracleWrapper \
-  --compiler-version v0.8.10+commit.fc410830
-```
-
 ### CLExchangeRateSynchronicityPriceAdapter
 
 ```
