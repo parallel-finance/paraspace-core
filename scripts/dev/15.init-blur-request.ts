@@ -67,7 +67,7 @@ const initBlurRequest = async () => {
 
   // send initiateBlurExchangeRequest transaction.
   await waitForTx(
-    await pool.connect(signer).initiateBlurExchangeRequest(blurRequest, {
+    await pool.connect(signer).initiateBlurExchangeRequest([blurRequest], {
       value: toBN(blurRequest.listingPrice).sub(blurRequest.borrowAmount),
     })
   );

@@ -564,7 +564,7 @@ export enum ERC20TokenContractId {
   APE = "APE",
   sAPE = "sAPE",
   cAPE = "cAPE",
-  yAPE = "yAPE",
+  // yAPE = "yAPE",
   cETH = "cETH",
   PUNK = "PUNK",
   xcDOT = "xcDOT",
