@@ -859,7 +859,7 @@ export interface ICommonConfiguration {
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
-  HotWallet: tEthereumAddress | undefined;
+  HotWallet: tEthereumAddress;
   DelegationRegistry: tEthereumAddress;
 }
 

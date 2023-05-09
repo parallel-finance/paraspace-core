@@ -158,7 +158,7 @@ export const upgradeNToken = async (verify = false) => {
         nTokenOTHRImplementationAddress = (
           await deployOtherdeedNTokenImpl(
             poolAddress,
-            paraSpaceConfig.HotWallet || ZERO_ADDRESS,
+            paraSpaceConfig.HotWallet,
             delegationRegistry,
             verify
           )
@@ -196,7 +196,7 @@ export const upgradeNToken = async (verify = false) => {
           nTokenOTHRImplementationAddress = (
             await deployOtherdeedNTokenImpl(
               poolAddress,
-              paraSpaceConfig.HotWallet || ZERO_ADDRESS,
+              paraSpaceConfig.HotWallet,
               delegationRegistry,
               verify
             )

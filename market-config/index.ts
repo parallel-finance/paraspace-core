@@ -85,6 +85,8 @@ export const CommonConfig: Pick<
   | "Mocks"
   | "Oracle"
   | "HotWallet"
+  | "DelegationRegistry"
+  | "IncentivesController"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -106,7 +108,9 @@ export const CommonConfig: Pick<
   Mocks: MocksConfig,
   // Oracle
   Oracle: TestnetOracleConfig,
-  HotWallet: undefined,
+  HotWallet: ZERO_ADDRESS,
+  DelegationRegistry: ZERO_ADDRESS,
+  IncentivesController: ZERO_ADDRESS,
 };
 
 export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
@@ -114,7 +118,6 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   ...CommonConfig,
   ParaSpaceTeam: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
   Treasury: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
-  IncentivesController: ZERO_ADDRESS,
   Tokens: {
     sAPE: "0x0000000000000000000000000000000000000001",
   },
@@ -158,7 +161,6 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     PPG: strategyPudgyPenguins,
     SFVLDR: strategyStakefishValidator,
   },
-  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
@@ -167,7 +169,6 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  IncentivesController: ZERO_ADDRESS,
   ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -194,7 +195,6 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
     USDC: strategyUSDC,
   },
   Oracle: MoonbeamOracleConfig,
-  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
@@ -202,7 +202,6 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   ...CommonConfig,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  IncentivesController: ZERO_ADDRESS,
   ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -303,7 +302,6 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   ...CommonConfig,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  IncentivesController: ZERO_ADDRESS,
   ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -348,15 +346,12 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   },
   Mocks: MocksUSDConfig,
   Oracle: ArbitrumOneOracleConfig,
-  HotWallet: ZERO_ADDRESS,
-  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceAdmin: "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
-  IncentivesController: ZERO_ADDRESS,
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
@@ -431,15 +426,12 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Mocks: undefined,
   Oracle: ArbitrumOneOracleConfig,
-  HotWallet: ZERO_ADDRESS,
-  DelegationRegistry: ZERO_ADDRESS,
 };
 
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  IncentivesController: ZERO_ADDRESS,
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",

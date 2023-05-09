@@ -81,11 +81,7 @@ import {
   P2PPairStaking__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {
-  getFirstSigner,
-  getProtocolDataProvider,
-  getTimeLockExecutor,
-} from "./contracts-getters";
+import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -1061,7 +1057,6 @@ export const initAndConfigureReserves = async (
   verify = false
 ) => {
   const paraSpaceConfig = getParaSpaceConfig();
-  const protocolDataProvider = await getProtocolDataProvider();
   const reservesParams = paraSpaceConfig.ReservesConfig;
   const allTokenAddresses = assets.reduce(
     (accum: {[name: string]: tEthereumAddress}, {symbol, address}) => ({
@@ -1087,15 +1082,10 @@ export const initAndConfigureReserves = async (
     treasuryAddress,
     ZERO_ADDRESS,
     ZERO_ADDRESS,
-    verify,
-    paraSpaceConfig.DelegationRegistry
+    paraSpaceConfig.DelegationRegistry,
+    verify
   );
 
   console.log("configuring reserves");
-  await configureReservesByHelper(
-    reserves,
-    allTokenAddresses,
-    protocolDataProvider,
-    paraSpaceAdminAddress
-  );
+  await configureReservesByHelper(reserves, allTokenAddresses);
 };
