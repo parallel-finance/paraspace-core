@@ -441,7 +441,14 @@ proxychains forge verify-contract 0x32A880E831814CfD55dC556645Ef06816fE9bE02 \
 ### UniswapV3OracleWrapper
 
 ```
-TBD
+proxychains forge verify-contract 0xc0A1AACb2D3B98b5d1050A14de60725D46D4404f \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,address,address)" "0x4893376342d5d7b3e31d4184c08b265e5ab2a3f6" "0x622e4726a167799826d1e1d150b076a7725f5d81" "0x5419C015B2D3f1e4600204eD7A67b8A97Fdf0429") \
+  contracts/misc/UniswapV3OracleWrapper.sol:UniswapV3OracleWrapper \
+  --compiler-version v0.8.10+commit.fc410830
 ```
 
 ## Proxy
