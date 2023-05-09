@@ -445,31 +445,38 @@ export interface iAssetCommon<T> {
   [key: string]: T;
 }
 export interface iAssetBase<T> {
+  DAI: T;
   WETH: T;
-  aWETH: T;
-  cETH: T;
+  USDC: T;
+  USDT: T;
+  FRAX: T;
+  WBTC: T;
+  stETH: T;
+  wstETH: T;
   bendETH: T;
   cbETH: T;
   rETH: T;
   astETH: T;
   awstETH: T;
-  DAI: T;
-  USDC: T;
-  USDT: T;
-  FRAX: T;
-  BAYC: T;
-  WPUNKS: T;
-  PUNKS: T;
-  PUNK: T;
-  WBTC: T;
-  stETH: T;
-  wstETH: T;
+  aWETH: T;
   APE: T;
   sAPE: T;
   cAPE: T;
   yAPE: T;
+  cETH: T;
+  PUNK: T;
   xcDOT: T;
   WGLMR: T;
+  BLUR: T;
+  ARB: T;
+  GMX: T;
+  LINK: T;
+  UNI: T;
+  BAL: T;
+  AAVE: T;
+  BAYC: T;
+  WPUNKS: T;
+  PUNKS: T;
   MAYC: T;
   DOODLE: T;
   MOONBIRD: T;
@@ -494,10 +501,10 @@ export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, "USD">;
 export type iParaSpacePoolAssets<T> = Pick<
   iAssetsWithoutUSD<T>,
   | "DAI"
+  | "WETH"
   | "USDC"
   | "USDT"
   | "FRAX"
-  | "WETH"
   | "WBTC"
   | "stETH"
   | "wstETH"
@@ -506,10 +513,22 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "rETH"
   | "astETH"
   | "awstETH"
-  | "xcDOT"
-  | "WGLMR"
+  | "aWETH"
   | "APE"
   | "sAPE"
+  | "cAPE"
+  | "yAPE"
+  | "cETH"
+  | "PUNK"
+  | "xcDOT"
+  | "WGLMR"
+  | "BLUR"
+  | "ARB"
+  | "GMX"
+  | "LINK"
+  | "UNI"
+  | "BAL"
+  | "AAVE"
   | "BAYC"
   | "PUNKS"
   | "WPUNKS"
@@ -558,6 +577,12 @@ export enum ERC20TokenContractId {
   xcDOT = "xcDOT",
   WGLMR = "WGLMR",
   BLUR = "BLUR",
+  ARB = "ARB",
+  GMX = "GMX",
+  LINK = "LINK",
+  UNI = "UNI",
+  BAL = "BAL",
+  AAVE = "AAVE",
 }
 
 export enum ERC721TokenContractId {
@@ -575,7 +600,7 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
-  "HVMTL" = "HVMTL",
+  HVMTL = "HVMTL",
   BEANZ = "BEANZ",
   DEGODS = "DEGODS",
   EXP = "EXP",
@@ -709,6 +734,7 @@ export interface IMarketplaceConfig {
 }
 
 export interface IChainlinkConfig {
+  // ERC20
   WETH?: tEthereumAddress;
   aWETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
@@ -729,6 +755,15 @@ export interface IChainlinkConfig {
   sAPE?: tEthereumAddress;
   cAPE?: tEthereumAddress;
   yAPE?: tEthereumAddress;
+  xcDOT?: tEthereumAddress;
+  WGLMR?: tEthereumAddress;
+  ARB?: tEthereumAddress;
+  GMX?: tEthereumAddress;
+  LINK?: tEthereumAddress;
+  UNI?: tEthereumAddress;
+  AAVE?: tEthereumAddress;
+  BAL?: tEthereumAddress;
+  // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
   MAYC?: tEthereumAddress;
@@ -738,11 +773,7 @@ export interface IChainlinkConfig {
   AZUKI?: tEthereumAddress;
   OTHR?: tEthereumAddress;
   CLONEX?: tEthereumAddress;
-  xcDOT?: tEthereumAddress;
-  WGLMR?: tEthereumAddress;
   HVMTL?: tEthereumAddress;
-  ARB?: tEthereumAddress;
-  GMX?: tEthereumAddress;
   BEANZ?: tEthereumAddress;
   DEGODS?: tEthereumAddress;
   EXP?: tEthereumAddress;
