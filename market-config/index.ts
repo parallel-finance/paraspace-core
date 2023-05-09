@@ -369,6 +369,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   Treasury: "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
   Tokens: {
     WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    wstETH: "0x5979d7b546e38e414f7e9822514be443a4800529",
     USDC: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
     DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
     USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
@@ -392,6 +393,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   BendDAO: {},
   Chainlink: {
     WETH: "0x639fe6ab55c921f74e7fac1ee960c0b6293ba612",
+    wstETH: "0x230E0321Cf38F09e247e50Afc7801EA2351fe56F",
     DAI: "0xc5c8e77b397e531b8ec06bfb0048328b30e9ecfb",
     USDC: "0x50834f3163758fcc1df9973b6e91f0f0f0434ad3",
     USDT: "0x3f3f5df88dc9f13eac63df89ec16ef6e7e25dde7",
@@ -410,6 +412,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     USDT: strategyUSDT,
     FRAX: strategyFRAX,
     WETH: strategyWETH,
+    wstETH: strategyWSTETH,
     WBTC: strategyWBTC,
     BAL: strategyBAL,
     LINK: strategyLINK,
