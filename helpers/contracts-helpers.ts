@@ -99,9 +99,7 @@ import {
   DRY_RUN,
   TIME_LOCK_BUFFERING_TIME,
   VERBOSE,
-  MULTI_SIG,
   FORK,
-  MULTI_SEND,
   TIME_LOCK_DEFAULT_OPERATION,
   VERSION,
   FLASHBOTS_RELAY_RPC,
@@ -124,7 +122,6 @@ import {
   FlashbotsBundleRawTransaction,
   FlashbotsBundleTransaction,
 } from "@flashbots/ethers-provider-bundle";
-import {ZERO_ADDRESS} from "./constants";
 import {configureReservesByHelper, initReservesByHelper} from "./init-helpers";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
@@ -931,6 +928,7 @@ export const proposeSafeTransaction = async (
     ethers,
     signerOrProvider: signer,
   });
+  const MULTI_SIG = getParaSpaceConfig().Governance.Multisig;
 
   const safeSdk: Safe = await Safe.create({
     ethAdapter,
@@ -989,7 +987,8 @@ export const proposeMultiSafeTransactions = async (
   operation = OperationType.DelegateCall,
   nonce?: number
 ) => {
-  const newTarget = MULTI_SEND;
+  const paraSpaceConfig = getParaSpaceConfig();
+  const newTarget = paraSpaceConfig.Governance.Multisend;
   const chunks = chunk(transactions, MULTI_SEND_CHUNK_SIZE);
   for (const [i, c] of chunks.entries()) {
     const {data: newData} = encodeMulti(c);
@@ -1080,8 +1079,8 @@ export const initAndConfigureReserves = async (
     SymbolPrefix,
     paraSpaceAdminAddress,
     treasuryAddress,
-    ZERO_ADDRESS,
-    ZERO_ADDRESS,
+    paraSpaceConfig.IncentivesController,
+    paraSpaceConfig.HotWallet,
     paraSpaceConfig.DelegationRegistry,
     verify
   );

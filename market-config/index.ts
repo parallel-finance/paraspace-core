@@ -1,4 +1,5 @@
 import {ZERO_ADDRESS} from "../helpers/constants";
+import {MULTI_SEND, MULTI_SIG} from "../helpers/hardhat-constants";
 import {
   eEthereumNetwork,
   ERC20TokenContractId,
@@ -87,6 +88,7 @@ export const CommonConfig: Pick<
   | "HotWallet"
   | "DelegationRegistry"
   | "IncentivesController"
+  | "Governance"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -108,9 +110,15 @@ export const CommonConfig: Pick<
   Mocks: MocksConfig,
   // Oracle
   Oracle: TestnetOracleConfig,
+  // 3rd party services
   HotWallet: ZERO_ADDRESS,
   DelegationRegistry: ZERO_ADDRESS,
   IncentivesController: ZERO_ADDRESS,
+  // Governance
+  Governance: {
+    Multisend: MULTI_SEND || ZERO_ADDRESS,
+    Multisig: MULTI_SIG || ZERO_ADDRESS,
+  },
 };
 
 export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
@@ -426,6 +434,10 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Mocks: undefined,
   Oracle: ArbitrumOneOracleConfig,
+  Governance: {
+    Multisend: MULTI_SEND || ZERO_ADDRESS,
+    Multisig: MULTI_SIG || "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
+  },
 };
 
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
@@ -578,6 +590,10 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   Oracle: MainnetOracleConfig,
   HotWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
+  Governance: {
+    Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+    Multisig: MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  },
 };
 
 export const ParaSpaceConfigs: Partial<
@@ -589,6 +605,6 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
-  [eEthereumNetwork.arbitrumOne]: ArbitrumOneParaSpaceConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
+  [eEthereumNetwork.arbitrumOne]: ArbitrumOneParaSpaceConfig,
 };

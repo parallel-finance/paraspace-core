@@ -818,6 +818,11 @@ export interface IOracleConfig {
   Nodes: tEthereumAddress[];
 }
 
+export interface IGovernanceConfig {
+  Multisend: tEthereumAddress;
+  Multisig: tEthereumAddress;
+}
+
 export interface IMocksConfig {
   USDPriceInWEI: string;
   AllAssetsInitialPrices: iAssetBase<string>;
@@ -861,6 +866,8 @@ export interface ICommonConfiguration {
   Oracle: IOracleConfig;
   HotWallet: tEthereumAddress;
   DelegationRegistry: tEthereumAddress;
+
+  Governance: IGovernanceConfig;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {
