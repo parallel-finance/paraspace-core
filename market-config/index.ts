@@ -430,6 +430,8 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     AAVE: strategyAAVE,
     UNI: strategyUNI,
     RDNT: strategyRDNT,
+    GMX: strategyGMX,
+    ARB: strategyARB,
     UniswapV3: strategyUniswapV3,
   },
   Mocks: undefined,
