@@ -1364,11 +1364,11 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
       }
       if (
         tokenSymbol === ERC721TokenContractId.SFVLDR &&
-        paraSpaceConfig.StakefishManager
+        paraSpaceConfig.Stakefish.StakefishManager
       ) {
         await insertContractAddressInDb(
           eContractid.SFVLDR,
-          paraSpaceConfig.StakefishManager,
+          paraSpaceConfig.Stakefish.StakefishManager,
           false
         );
       }

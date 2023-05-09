@@ -804,6 +804,10 @@ export interface IBendDAOConfig {
   LendingPoolLoan?: tEthereumAddress;
 }
 
+export interface IStakefish {
+  StakefishManager?: tEthereumAddress;
+}
+
 export interface IOracleConfig {
   // ParaSpaceOracle
   BaseCurrency: ERC20TokenContractId | string;
@@ -848,6 +852,7 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  Stakefish: IStakefish;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
@@ -855,7 +860,6 @@ export interface ICommonConfiguration {
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
   HotWallet: tEthereumAddress | undefined;
-  StakefishManager: tEthereumAddress | undefined;
   DelegationRegistry: tEthereumAddress;
 }
 

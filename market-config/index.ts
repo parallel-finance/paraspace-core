@@ -85,7 +85,6 @@ export const CommonConfig: Pick<
   | "Mocks"
   | "Oracle"
   | "HotWallet"
-  | "StakefishManager"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -108,7 +107,6 @@ export const CommonConfig: Pick<
   // Oracle
   Oracle: TestnetOracleConfig,
   HotWallet: undefined,
-  StakefishManager: undefined,
 };
 
 export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
@@ -125,6 +123,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   Marketplace: {},
   Chainlink: {},
   BendDAO: {},
+  Stakefish: {},
   // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
   ReservesConfig: {
     DAI: strategyDAI,
@@ -182,6 +181,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   Uniswap: {},
   Marketplace: {},
   BendDAO: {},
+  Stakefish: {},
   Chainlink: {
     WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
     xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
@@ -238,6 +238,9 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     LendingPool: "0x84a47EaEca69f8B521C21739224251c8c4566Bbc",
     LendingPoolLoan: "0x7F64c32a3c13Bd245a7141a607A7E60DA585BA86",
   },
+  Stakefish: {
+    StakefishManager: "0x5b41ffb9c448c02ff3d0401b0374b67efcb73c7e",
+  },
   Chainlink: {
     WETH: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
     BAYC: "0xB677bfBc9B09a3469695f40477d05bc9BcB15F50",
@@ -292,7 +295,6 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     KODA: strategyKODA,
     BLOCKS: strategyBLOCKS,
   },
-  StakefishManager: "0x5b41ffb9c448c02ff3d0401b0374b67efcb73c7e",
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
@@ -318,6 +320,7 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   },
   Marketplace: {},
   BendDAO: {},
+  Stakefish: {},
   Chainlink: {
     WETH: "0x62CAe0FA2da220f43a51F86Db2EDb36DcA9A5A08",
     WBTC: "0x6550bc2301936011c1334555e62A87705A81C12C",
@@ -394,6 +397,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Marketplace: {},
   BendDAO: {},
+  Stakefish: {},
   Chainlink: {
     WETH: "0x639fe6ab55c921f74e7fac1ee960c0b6293ba612",
     wstETH: "0x230E0321Cf38F09e247e50Afc7801EA2351fe56F",
@@ -509,6 +513,9 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     LendingPool: "0x70b97a0da65c15dfb0ffa02aee6fa36e507c2762",
     LendingPoolLoan: "0x5f6ac80CdB9E87f3Cfa6a90E5140B9a16A361d5C",
   },
+  Stakefish: {
+    StakefishManager: "0xffff2d93c83d4c613ed68ca887f057651135e089",
+  },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
     stETH: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
@@ -578,7 +585,6 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
   HotWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
-  StakefishManager: "0xffff2d93c83d4c613ed68ca887f057651135e089",
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
