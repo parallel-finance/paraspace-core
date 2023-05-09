@@ -93,9 +93,6 @@ import {
   timeLockStrategyUNI,
 } from "./timeLockStrategies";
 
-////////////////////////////////////////////////////////////
-// V1
-////////////////////////////////////////////////////////////
 export const strategyDAI: IReserveParams = {
   strategy: rateStrategyDAI,
   auctionStrategy: auctionStrategyZero,
@@ -624,9 +621,6 @@ export const strategyBLOCKS: IReserveParams = {
   supplyCap: "0",
 };
 
-////////////////////////////////////////////////////////////
-// V2
-////////////////////////////////////////////////////////////
 export const strategyCBETH: IReserveParams = {
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
@@ -772,7 +766,6 @@ export const strategyRETH: IReserveParams = {
 };
 
 export const strategyPUNK: IReserveParams = {
-  // address: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
   strategy: rateStrategyXETH,
   auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyPUNK,

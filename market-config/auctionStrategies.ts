@@ -1,9 +1,6 @@
 import {utils} from "ethers";
 import {IAuctionStrategyParams} from "../helpers/types";
 
-////////////////////////////////////////////////////////////
-// V1
-////////////////////////////////////////////////////////////
 export const auctionStrategyBAYC: IAuctionStrategyParams = {
   name: "auctionStrategyBAYC",
   maxPriceMultiplier: utils.parseUnits("2.5", 18).toString(),
@@ -214,9 +211,6 @@ export const auctionStrategyBLOCKS: IAuctionStrategyParams = {
   tickLength: "900",
 };
 
-////////////////////////////////////////////////////////////
-// MOCK
-////////////////////////////////////////////////////////////
 export const auctionStrategyExp: IAuctionStrategyParams = {
   name: "auctionStrategyExp",
   maxPriceMultiplier: utils.parseUnits("3", 18).toString(),

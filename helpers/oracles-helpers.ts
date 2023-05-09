@@ -14,7 +14,6 @@ import {
   ERC721OracleWrapper,
   MockAggregator,
   PriceOracle,
-  StakefishNFTOracleWrapper,
   UniswapV3OracleWrapper,
 } from "../types";
 import {
@@ -25,7 +24,6 @@ import {
   deployFixedPriceSynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
   deployCTokenSynchronicityPriceAdapter,
-  deployStakefishNFTOracleWrapper,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
@@ -74,8 +72,7 @@ export const deployAllAggregators = async (
       | ERC721OracleWrapper
       | CLExchangeRateSynchronicityPriceAdapter
       | CLFixedPriceSynchronicityPriceAdapter
-      | CLCETHSynchronicityPriceAdapter
-      | StakefishNFTOracleWrapper;
+      | CLCETHSynchronicityPriceAdapter;
   } = {};
   const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
@@ -85,6 +82,16 @@ export const deployAllAggregators = async (
     if (tokenSymbol === ERC20TokenContractId[oracleConfig.BaseCurrency]) {
       continue;
     }
+    if (chainlinkConfig[tokenSymbol]) {
+      await insertContractAddressInDb(
+        eContractid.Aggregator.concat(upperFirst(tokenSymbol)),
+        chainlinkConfig[tokenSymbol],
+        false
+      );
+      aggregators[tokenSymbol] = await getAggregator(undefined, tokenSymbol);
+      continue;
+    }
+
     if (
       ERC20TokenContractId[oracleConfig.BaseCurrency] ==
         ERC20TokenContractId.WETH &&
@@ -98,25 +105,20 @@ export const deployAllAggregators = async (
           tokenSymbol,
           verify
         );
-      continue;
-    }
-    if (tokenSymbol === ERC20TokenContractId.cETH) {
+    } else if (tokenSymbol === ERC20TokenContractId.cETH) {
       aggregators[tokenSymbol] = await deployCTokenSynchronicityPriceAdapter(
         tokens[tokenSymbol].address,
         tokenSymbol,
         verify
       );
-      continue;
-    }
-    if (tokenSymbol === ERC721TokenContractId.SFVLDR) {
-      aggregators[tokenSymbol] = await deployStakefishNFTOracleWrapper(
-        tokens[oracleConfig.BaseCurrency].address,
-        oracleConfig.BaseCurrencyUnit,
-        verify
-      );
-      continue;
-    }
-    if (tokenSymbol === ERC20TokenContractId.wstETH) {
+    } else if (tokenSymbol === ERC721TokenContractId.SFVLDR) {
+      aggregators[tokenSymbol] =
+        await deployFixedPriceSynchronicityPriceAdapter(
+          BigNumber.from(oracleConfig.BaseCurrencyUnit).mul(32).toString(),
+          tokenSymbol,
+          verify
+        );
+    } else if (tokenSymbol === ERC20TokenContractId.wstETH) {
       aggregators[tokenSymbol] = await deployCLwstETHSynchronicityPriceAdapter(
         aggregators[ERC20TokenContractId.stETH].address,
         tokens[ERC20TokenContractId.stETH].address,
@@ -125,26 +127,18 @@ export const deployAllAggregators = async (
           .toNumber(),
         verify
       );
-      continue;
-    }
-    if (tokenSymbol === ERC20TokenContractId.awstETH) {
+    } else if (tokenSymbol === ERC20TokenContractId.awstETH) {
       aggregators[tokenSymbol] = aggregators[ERC20TokenContractId.wstETH];
-      continue;
-    }
-    if (tokenSymbol === ERC20TokenContractId.astETH) {
+    } else if (tokenSymbol === ERC20TokenContractId.astETH) {
       aggregators[tokenSymbol] = aggregators[ERC20TokenContractId.stETH];
-      continue;
-    }
-    if (tokenSymbol === ERC20TokenContractId.rETH) {
+    } else if (tokenSymbol === ERC20TokenContractId.rETH) {
       aggregators[tokenSymbol] =
         await deployExchangeRateSynchronicityPriceAdapter(
           tokens[ERC20TokenContractId.rETH].address,
           tokenSymbol,
           verify
         );
-      continue;
-    }
-    if (tokenSymbol === ERC721TokenContractId.UniswapV3) {
+    } else if (tokenSymbol === ERC721TokenContractId.UniswapV3) {
       const univ3Factory = await getUniswapV3Factory();
       const univ3Token = tokens[ERC721TokenContractId.UniswapV3];
       aggregators[tokenSymbol] = await deployUniswapV3OracleWrapper(
@@ -153,15 +147,6 @@ export const deployAllAggregators = async (
         addressesProvider.address,
         verify
       );
-      continue;
-    }
-    if (chainlinkConfig[tokenSymbol]) {
-      await insertContractAddressInDb(
-        eContractid.Aggregator.concat(upperFirst(tokenSymbol)),
-        chainlinkConfig[tokenSymbol],
-        false
-      );
-      aggregators[tokenSymbol] = await getAggregator(undefined, tokenSymbol);
     } else if (!initialPrices) {
       aggregators[tokenSymbol] = await deployERC721OracleWrapper(
         addressesProvider.address,

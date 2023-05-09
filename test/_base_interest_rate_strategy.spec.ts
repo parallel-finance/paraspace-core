@@ -21,10 +21,13 @@ import {
   PToken__factory,
 } from "../types";
 import {strategyDAI} from "../market-config/reservesConfigs";
-import {rateStrategyStableTwo} from "../market-config/rateStrategies";
 import {TestEnv} from "./helpers/make-suite";
 import "./helpers/utils/wadraymath";
-import {eContractid, ProtocolErrors} from "../helpers/types";
+import {
+  eContractid,
+  IInterestRateStrategyParams,
+  ProtocolErrors,
+} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {getFirstSigner, getAggregator} from "../helpers/contracts-getters";
@@ -37,6 +40,14 @@ import {increaseTime} from "../helpers/misc-utils";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {ConfiguratorInputTypes} from "../types/contracts/interfaces/IPoolConfigurator";
+
+const rateStrategyStableTwo: IInterestRateStrategyParams = {
+  name: "rateStrategyStableTwo",
+  optimalUsageRatio: utils.parseUnits("0.8", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.04", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.75", 27).toString(),
+};
 
 type CalculateInterestRatesParams = {
   liquidityAdded: BigNumberish;

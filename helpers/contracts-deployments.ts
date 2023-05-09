@@ -270,8 +270,6 @@ import {
   HotWalletProxy,
   NTokenStakefish__factory,
   NTokenStakefish,
-  StakefishNFTOracleWrapper__factory,
-  StakefishNFTOracleWrapper,
   DelegationRegistry,
   DelegationRegistry__factory,
   StakefishNFTManager__factory,
@@ -2067,18 +2065,6 @@ export const deployUniswapV3TwapOracleWrapper = async (
     [pool, baseCurrency, twapWindow],
     verify
   ) as Promise<UniswapV3TwapOracleWrapper>;
-
-export const deployStakefishNFTOracleWrapper = async (
-  baseCurrency: tEthereumAddress,
-  baseCurrencyUnit: tEthereumAddress,
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    new StakefishNFTOracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(upperFirst(eContractid.SFVLDR)),
-    [baseCurrency, baseCurrencyUnit],
-    verify
-  ) as Promise<StakefishNFTOracleWrapper>;
 
 export const deployNonfungiblePositionManager = async (
   args: [string, string, string],

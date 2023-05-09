@@ -10,14 +10,6 @@ export const MainnetOracleConfig: IOracleConfig = {
   Nodes: [],
 };
 
-export const TestnetOracleConfig: IOracleConfig = {
-  BaseCurrency: ERC20TokenContractId.WETH,
-  BaseCurrencyUnit: constants.WeiPerEther.toString(),
-  ExpirationPeriod: 600,
-  DeviationRate: 1000,
-  Nodes: [],
-};
-
 export const MoonbeamOracleConfig: IOracleConfig = {
   BaseCurrency: ERC20TokenContractId.USDC,
   BaseCurrencyUnit: BigNumber.from("100000000").toString(),
@@ -29,6 +21,17 @@ export const MoonbeamOracleConfig: IOracleConfig = {
 export const ArbitrumOneOracleConfig: IOracleConfig = {
   BaseCurrency: ZERO_ADDRESS,
   BaseCurrencyUnit: BigNumber.from("100000000").toString(),
+  ExpirationPeriod: 600,
+  DeviationRate: 1000,
+  Nodes: [],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Testnet
+////////////////////////////////////////////////////////////////////////////////
+export const TestnetOracleConfig: IOracleConfig = {
+  BaseCurrency: ERC20TokenContractId.WETH,
+  BaseCurrencyUnit: constants.WeiPerEther.toString(),
   ExpirationPeriod: 600,
   DeviationRate: 1000,
   Nodes: [],
