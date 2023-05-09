@@ -811,8 +811,8 @@ export const strategyGMX: IReserveParams = {
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "5000000",
-  supplyCap: "5000000",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 export const strategyARB: IReserveParams = {
@@ -827,8 +827,8 @@ export const strategyARB: IReserveParams = {
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "5000000",
-  supplyCap: "5000000",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 export const strategyBAL: IReserveParams = {
@@ -843,40 +843,40 @@ export const strategyBAL: IReserveParams = {
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "5000000",
-  supplyCap: "5000000",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 export const strategyLINK: IReserveParams = {
   strategy: rateStrategyLINK,
   auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyLINK,
-  baseLTVAsCollateral: "2500",
+  baseLTVAsCollateral: "7000",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "3500",
+  liquidationThreshold: "7500",
   liquidationBonus: "11000",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
-  reserveFactor: "1000",
-  borrowCap: "5000000",
-  supplyCap: "5000000",
+  reserveFactor: "2000",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 export const strategyAAVE: IReserveParams = {
   strategy: rateStrategyAAVE,
   auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyAAVE,
-  baseLTVAsCollateral: "2500",
+  baseLTVAsCollateral: "5000",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "3500",
+  liquidationThreshold: "6500",
   liquidationBonus: "11000",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "5000000",
-  supplyCap: "5000000",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 export const strategyUNI: IReserveParams = {
@@ -891,8 +891,8 @@ export const strategyUNI: IReserveParams = {
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "5000000",
-  supplyCap: "5000000",
+  borrowCap: "0",
+  supplyCap: "0",
 };
 
 export const strategyRDNT: IReserveParams = {
@@ -907,6 +907,6 @@ export const strategyRDNT: IReserveParams = {
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
-  borrowCap: "5000000",
-  supplyCap: "5000000",
+  borrowCap: "0",
+  supplyCap: "0",
 };
