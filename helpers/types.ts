@@ -103,7 +103,7 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
-  arbitrumOne = "arbitrumOne",
+  arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
 }
 
@@ -712,7 +712,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
-  [eEthereumNetwork.arbitrumOne]: T;
+  [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
 }
 

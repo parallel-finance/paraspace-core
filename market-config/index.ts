@@ -608,5 +608,5 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
-  [eEthereumNetwork.arbitrumOne]: ArbitrumOneParaSpaceConfig,
+  [eEthereumNetwork.arbitrum]: ArbitrumOneParaSpaceConfig,
 };

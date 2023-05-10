@@ -170,9 +170,9 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
       accounts: DEPLOYER,
     },
-    arbitrumOne: {
-      chainId: CHAINS_ID[eEthereumNetwork.arbitrumOne],
-      url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumOne],
+    arbitrum: {
+      chainId: CHAINS_ID[eEthereumNetwork.arbitrum],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrum],
       accounts: DEPLOYER,
     },
     arbitrumGoerli: {
