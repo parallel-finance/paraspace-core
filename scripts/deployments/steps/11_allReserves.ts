@@ -5,10 +5,7 @@ import {
   deployMockIncentivesController,
   deployMockReserveAuctionStrategy,
 } from "../../../helpers/contracts-deployments";
-import {
-  getAllTokens,
-  getProtocolDataProvider,
-} from "../../../helpers/contracts-getters";
+import {getAllTokens} from "../../../helpers/contracts-getters";
 import {
   getContractAddresses,
   getParaSpaceAdmins,
@@ -34,7 +31,6 @@ export const step_11 = async (verify = false) => {
     const allTokens = await getAllTokens();
     const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
     const reservesParams = getParaSpaceConfig().ReservesConfig;
-    const protocolDataProvider = await getProtocolDataProvider();
 
     const allTokenAddresses = getContractAddresses(allTokens);
 
@@ -50,7 +46,7 @@ export const step_11 = async (verify = false) => {
     let incentivesController = config.IncentivesController;
     let auctionStrategy: tEthereumAddress | undefined = undefined;
     let timeLockStrategy: tEthereumAddress | undefined = undefined;
-    let hotWallet: tEthereumAddress | undefined = config.HotWallet;
+    let hotWallet = config.HotWallet;
     let delegationRegistry = config.DelegationRegistry;
 
     if (isLocalTestnet()) {
@@ -78,12 +74,9 @@ export const step_11 = async (verify = false) => {
         )
       ).address;
       timeLockStrategy = ZERO_ADDRESS;
-      if (!hotWallet) {
-        const proxy = await deployHotWalletProxy();
-        await proxy.initialize(paraSpaceAdminAddress, paraSpaceAdminAddress);
-        hotWallet = proxy.address;
-      }
-
+      const proxy = await deployHotWalletProxy();
+      await proxy.initialize(paraSpaceAdminAddress, paraSpaceAdminAddress);
+      hotWallet = proxy.address;
       delegationRegistry = (await deployDelegationRegistry()).address;
     }
 
@@ -122,8 +115,8 @@ export const step_11 = async (verify = false) => {
         treasuryAddress,
         incentivesController,
         hotWallet || ZERO_ADDRESS,
-        verify,
         delegationRegistry,
+        verify,
         undefined,
         undefined,
         undefined,
@@ -132,12 +125,7 @@ export const step_11 = async (verify = false) => {
         timeLockStrategy
       );
 
-      await configureReservesByHelper(
-        reserves,
-        allTokenAddresses,
-        protocolDataProvider,
-        paraSpaceAdminAddress
-      );
+      await configureReservesByHelper(reserves, allTokenAddresses);
     }
   } catch (error) {
     console.error(error);

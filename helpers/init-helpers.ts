@@ -6,7 +6,6 @@ import {
   NTokenContractId,
   tEthereumAddress,
 } from "./types";
-import {ProtocolDataProvider} from "../types";
 import {chunk, waitForTx} from "./misc-utils";
 import {
   getACLManager,
@@ -65,25 +64,20 @@ export const initReservesByHelper = async (
   treasuryAddress: tEthereumAddress,
   incentivesController: tEthereumAddress,
   hotWallet: tEthereumAddress,
-  verify: boolean,
   delegationRegistryAddress: tEthereumAddress,
+  verify: boolean,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
   genericVariableDebtTokenAddress?: tEthereumAddress,
   defaultReserveInterestRateStrategyAddress?: tEthereumAddress,
   defaultReserveAuctionStrategyAddress?: tEthereumAddress,
   defaultReserveTimeLockStrategyAddress?: tEthereumAddress,
-  genericDelegationAwarePTokenImplAddress?: tEthereumAddress,
-  poolAddressesProviderProxy?: tEthereumAddress,
-  poolProxy?: tEthereumAddress,
-  poolConfiguratorProxyAddress?: tEthereumAddress
+  genericDelegationAwarePTokenImplAddress?: tEthereumAddress
 ): Promise<BigNumber> => {
   const gasUsage = BigNumber.from("0");
 
-  const addressProvider = await getPoolAddressesProvider(
-    poolAddressesProviderProxy
-  );
-  const pool = await getPoolProxy(poolProxy);
+  const addressProvider = await getPoolAddressesProvider();
+  const pool = await getPoolProxy();
   // CHUNK CONFIGURATION
   const initChunks = 4;
 
@@ -137,7 +131,7 @@ export const initReservesByHelper = async (
   let stETHVariableDebtTokenImplementationAddress = "";
   let astETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
-  let PsApeVariableDebtTokenImplementationAddress = "";
+  let psApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
   let nTokenStakefishImplementationAddress = "";
@@ -372,9 +366,7 @@ export const initReservesByHelper = async (
   const chunkedSymbols = chunk(reserveSymbols, initChunks);
   const chunkedInitInputParams = chunk(initInputParams, initChunks);
 
-  const configurator = await getPoolConfiguratorProxy(
-    poolConfiguratorProxyAddress
-  );
+  const configurator = await getPoolConfiguratorProxy();
   //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
   console.log(
@@ -463,12 +455,12 @@ export const initReservesByHelper = async (
             ).address;
           }
           xTokenToUse = pTokenPsApeImplementationAddress;
-          if (!PsApeVariableDebtTokenImplementationAddress) {
-            PsApeVariableDebtTokenImplementationAddress = (
+          if (!psApeVariableDebtTokenImplementationAddress) {
+            psApeVariableDebtTokenImplementationAddress = (
               await deployCApeDebtToken(pool.address, verify)
             ).address;
           }
-          variableDebtTokenToUse = PsApeVariableDebtTokenImplementationAddress;
+          variableDebtTokenToUse = psApeVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.yAPE) {
           await deployAutoYieldApeImplAndAssignItToProxy(verify);
           if (!pYieldTokenImplementationAddress) {
@@ -663,20 +655,12 @@ export const initReservesByHelper = async (
 
 export const configureReservesByHelper = async (
   reserves: [string, IReserveParams][],
-  tokenAddresses: {[symbol: string]: tEthereumAddress},
-  helpers: ProtocolDataProvider,
-  admin: tEthereumAddress,
-  poolAddressesProviderProxyAddress?: tEthereumAddress,
-  aclManagerAddress?: tEthereumAddress,
-  reservesSetupHelperAddress?: tEthereumAddress
+  tokenAddresses: {[symbol: string]: tEthereumAddress}
 ) => {
-  const addressProvider = await getPoolAddressesProvider(
-    poolAddressesProviderProxyAddress
-  );
-  const aclManager = await getACLManager(aclManagerAddress);
-  const reservesSetupHelper = await getReservesSetupHelper(
-    reservesSetupHelperAddress
-  );
+  const addressProvider = await getPoolAddressesProvider();
+  const aclManager = await getACLManager();
+  const reservesSetupHelper = await getReservesSetupHelper();
+  const helpers = await getProtocolDataProvider();
 
   const tokens: string[] = [];
   const symbols: string[] = [];
