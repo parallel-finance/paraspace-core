@@ -521,12 +521,12 @@ proxychains forge verify-contract 0x0bCc9C5F95833F37317C4F3Fb62bB4e9A7e8C8aa \
 ## TimeLock
 
 ```
-proxychains forge verify-contract 0x27046296E0fB79100FC9Efd6Be95C8422DBCE78C \
+proxychains forge verify-contract 0x3F736F58F3c51a7C92d8b6996B77Df19a0b5394F \
   --chain-id 1 \
-  --num-of-optimizations 1000 \
+  --num-of-optimizations 800 \
   --watch \
   contracts/misc/TimeLock.sol:TimeLock \
   --constructor-args \
-  $(cast abi-encode "constructor(address)" "0x6cD30e716ADbE47dADf7319f6F2FB83d507c857d") \
+  $(cast abi-encode "constructor(address,address)" "0x45a35124749B061a29f91cc8ddf85606586dcf24" "0x0000000000000000000000000000000000000000") \
   --compiler-version v0.8.10+commit.fc410830
 ```
