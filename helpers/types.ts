@@ -811,7 +811,8 @@ export interface IStakefish {
 export interface IOracleConfig {
   // ParaSpaceOracle
   BaseCurrency: ERC20TokenContractId | string;
-  BaseCurrencyUnit: string;
+  BaseCurrencyUnit: BigNumber;
+  BaseCurrencyDecimals: number;
   // NFTFloorOracle
   ExpirationPeriod: number;
   DeviationRate: number;

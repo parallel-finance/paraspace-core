@@ -38,9 +38,6 @@ import {
 } from "./contracts-helpers";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {upperFirst} from "lodash";
-import {log10} from "@prb/math";
-import {BigNumber} from "ethers";
-import {WAD} from "./constants";
 
 export const setInitialAssetPricesInOracle = async (
   prices: Partial<iAssetBase<tEthereumAddress>>,
@@ -101,7 +98,7 @@ export const deployAllAggregators = async (
     ) {
       aggregators[tokenSymbol] =
         await deployFixedPriceSynchronicityPriceAdapter(
-          oracleConfig.BaseCurrencyUnit,
+          oracleConfig.BaseCurrencyUnit.toString(),
           tokenSymbol,
           verify
         );
@@ -114,7 +111,7 @@ export const deployAllAggregators = async (
     } else if (tokenSymbol === ERC721TokenContractId.SFVLDR) {
       aggregators[tokenSymbol] =
         await deployFixedPriceSynchronicityPriceAdapter(
-          BigNumber.from(oracleConfig.BaseCurrencyUnit).mul(32).toString(),
+          oracleConfig.BaseCurrencyUnit.mul(32).toString(),
           tokenSymbol,
           verify
         );
@@ -122,9 +119,7 @@ export const deployAllAggregators = async (
       aggregators[tokenSymbol] = await deployCLwstETHSynchronicityPriceAdapter(
         aggregators[ERC20TokenContractId.stETH].address,
         tokens[ERC20TokenContractId.stETH].address,
-        log10(BigNumber.from(oracleConfig.BaseCurrencyUnit).mul(WAD))
-          .div(WAD)
-          .toNumber(),
+        oracleConfig.BaseCurrencyDecimals,
         verify
       );
     } else if (tokenSymbol === ERC20TokenContractId.awstETH) {

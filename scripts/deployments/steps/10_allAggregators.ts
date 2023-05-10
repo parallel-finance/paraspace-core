@@ -91,7 +91,7 @@ export const step_10 = async (verify = false) => {
         oracleConfig.BaseCurrency == ZERO_ADDRESS
           ? oracleConfig.BaseCurrency
           : allTokens[oracleConfig.BaseCurrency].address,
-        oracleConfig.BaseCurrencyUnit,
+        oracleConfig.BaseCurrencyUnit.toString(),
       ],
       verify
     );
