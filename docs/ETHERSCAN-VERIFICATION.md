@@ -14,13 +14,14 @@ export ETHERSCAN_API_KEY="$ETHERSCAN_KEY"
 
 ## Libraries
 
+### SupplyLogic
+
 ```
-proxychains forge verify-contract 0xB52b7C8Ad64d6aF115d730c5E016c0Ea0fDf5125 \
+proxychains forge verify-contract 0xC0fe2dbe75B8908073B14BF19Af71B1B181f8984 \
   --chain-id 1 \
-  --num-of-optimizations 200 \
+  --num-of-optimizations 800 \
   --watch \
-  contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic \
-  --libraries contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic:0x8f4c4ECD4edE01453eac3ed2172C1C273A867812 \
+  contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic \
   --compiler-version v0.8.10+commit.fc410830
 ```
 
