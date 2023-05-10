@@ -359,7 +359,7 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
 export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
-  ParaSpaceAdmin: "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
+  ParaSpaceAdmin: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
@@ -371,10 +371,10 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
     "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
   ],
-  RiskAdmin: "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
-  GatewayAdmin: "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
-  ParaSpaceTeam: "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
-  Treasury: "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
+  RiskAdmin: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
+  GatewayAdmin: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
+  ParaSpaceTeam: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
+  Treasury: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
   Tokens: {
     WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
     wstETH: "0x5979d7b546e38e414f7e9822514be443a4800529",
@@ -438,7 +438,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   Oracle: ArbitrumOneOracleConfig,
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
-    Multisig: MULTI_SIG || "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
+    Multisig: MULTI_SIG || "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
   },
 };
 
