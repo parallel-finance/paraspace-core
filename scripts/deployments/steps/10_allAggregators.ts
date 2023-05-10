@@ -37,10 +37,11 @@ export const deployNftOracle = async (verify = false) => {
   const feeders =
     oracleConfig.Nodes.length > 0
       ? oracleConfig.Nodes
-      : [oracle1, oracle2, oracle3];
+      : [oracle1, oracle2, oracle3].filter((x) => x);
   const projects = Object.entries(erc721Tokens)
     .filter(([symbol]) => !Object.keys(chainlinkConfig).includes(symbol))
-    .map(([, nft]) => nft.address);
+    .map(([, nft]) => nft.address)
+    .filter((x) => x);
   const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
   await waitForTx(
     await nftFloorOracle.initialize(
