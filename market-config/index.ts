@@ -437,7 +437,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   Mocks: undefined,
   Oracle: ArbitrumOneOracleConfig,
   Governance: {
-    Multisend: MULTI_SEND || ZERO_ADDRESS,
+    Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
     Multisig: MULTI_SIG || "0x1f2cfB63e68fB3bEF0BB643994048BEB725dcd6e",
   },
 };
