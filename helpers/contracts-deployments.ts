@@ -249,7 +249,6 @@ import {
   ParaSpaceAirdrop__factory,
   ParaSpaceAirdrop,
   CLExchangeRateSynchronicityPriceAdapter,
-  CLBaseCurrencySynchronicityPriceAdapter__factory,
   PTokenAStETH__factory,
   PTokenAStETH,
   AStETHDebtToken__factory,
@@ -271,8 +270,6 @@ import {
   HotWalletProxy,
   NTokenStakefish__factory,
   NTokenStakefish,
-  StakefishNFTOracleWrapper__factory,
-  StakefishNFTOracleWrapper,
   DelegationRegistry,
   DelegationRegistry__factory,
   StakefishNFTManager__factory,
@@ -292,6 +289,8 @@ import {
   PositionMoverLogic__factory,
   TimeLock,
   NTokenChromieSquiggle__factory,
+  CLFixedPriceSynchronicityPriceAdapter,
+  CLFixedPriceSynchronicityPriceAdapter__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -1365,11 +1364,11 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
       }
       if (
         tokenSymbol === ERC721TokenContractId.SFVLDR &&
-        paraSpaceConfig.StakefishManager
+        paraSpaceConfig.Stakefish.StakefishManager
       ) {
         await insertContractAddressInDb(
           eContractid.SFVLDR,
-          paraSpaceConfig.StakefishManager,
+          paraSpaceConfig.Stakefish.StakefishManager,
           false
         );
       }
@@ -2066,18 +2065,6 @@ export const deployUniswapV3TwapOracleWrapper = async (
     [pool, baseCurrency, twapWindow],
     verify
   ) as Promise<UniswapV3TwapOracleWrapper>;
-
-export const deployStakefishNFTOracleWrapper = async (
-  baseCurrency: tEthereumAddress,
-  baseCurrencyUnit: tEthereumAddress,
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    new StakefishNFTOracleWrapper__factory(await getFirstSigner()),
-    eContractid.Aggregator.concat(upperFirst(eContractid.SFVLDR)),
-    [baseCurrency, baseCurrencyUnit],
-    verify
-  ) as Promise<StakefishNFTOracleWrapper>;
 
 export const deployNonfungiblePositionManager = async (
   args: [string, string, string],
@@ -2862,12 +2849,13 @@ export const deployPYieldToken = async (
 export const deployCLwstETHSynchronicityPriceAdapter = async (
   stETHAggregator: tEthereumAddress,
   stETH: tEthereumAddress,
+  decimals: number,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new CLwstETHSynchronicityPriceAdapter__factory(await getFirstSigner()),
     eContractid.Aggregator.concat(upperFirst(eContractid.WStETH)),
-    [stETHAggregator, stETH, 18],
+    [stETHAggregator, stETH, decimals],
     verify
   ) as Promise<CLwstETHSynchronicityPriceAdapter>;
 
@@ -2897,20 +2885,17 @@ export const deployCTokenSynchronicityPriceAdapter = async (
     verify
   ) as Promise<CLCETHSynchronicityPriceAdapter>;
 
-export const deployBaseCurrencySynchronicityPriceAdapter = async (
-  baseCurrency: tEthereumAddress,
-  baseCurrencyUnit: string,
+export const deployFixedPriceSynchronicityPriceAdapter = async (
+  fixedPrice: string,
   symbol: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new CLBaseCurrencySynchronicityPriceAdapter__factory(
-      await getFirstSigner()
-    ),
+    new CLFixedPriceSynchronicityPriceAdapter__factory(await getFirstSigner()),
     eContractid.Aggregator.concat(upperFirst(symbol)),
-    [baseCurrency, baseCurrencyUnit],
+    [fixedPrice],
     verify
-  ) as Promise<CLExchangeRateSynchronicityPriceAdapter>;
+  ) as Promise<CLFixedPriceSynchronicityPriceAdapter>;
 
 export const deployParaSpaceAirdrop = async (
   token: tEthereumAddress,

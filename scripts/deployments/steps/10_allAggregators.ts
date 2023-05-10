@@ -1,3 +1,4 @@
+import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployNFTFloorPriceOracle,
   deployParaSpaceOracle,
@@ -36,10 +37,11 @@ export const deployNftOracle = async (verify = false) => {
   const feeders =
     oracleConfig.Nodes.length > 0
       ? oracleConfig.Nodes
-      : [oracle1, oracle2, oracle3];
+      : [oracle1, oracle2, oracle3].filter((x) => x);
   const projects = Object.entries(erc721Tokens)
     .filter(([symbol]) => !Object.keys(chainlinkConfig).includes(symbol))
-    .map(([, nft]) => nft.address);
+    .map(([, nft]) => nft.address)
+    .filter((x) => x);
   const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
   await waitForTx(
     await nftFloorOracle.initialize(
@@ -87,8 +89,10 @@ export const step_10 = async (verify = false) => {
         tokens,
         aggregators,
         fallbackOracle.address,
-        allTokens[oracleConfig.BaseCurrency].address,
-        oracleConfig.BaseCurrencyUnit,
+        oracleConfig.BaseCurrency == ZERO_ADDRESS
+          ? oracleConfig.BaseCurrency
+          : allTokens[oracleConfig.BaseCurrency].address,
+        oracleConfig.BaseCurrencyUnit.toString(),
       ],
       verify
     );
@@ -110,9 +114,11 @@ export const step_10 = async (verify = false) => {
 
     await deployUiPoolDataProvider(
       (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
+        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
+        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
       (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC])!,
+        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
+        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
       verify
     );
     await deployWalletBalanceProvider(verify);

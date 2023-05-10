@@ -31,7 +31,7 @@ export const SAPE_ADDRESS = ONE_ADDRESS;
 // ----------------
 export const OPENSEA_SEAPORT_ID = solidityKeccak256(
   ["string"],
-  ["Opensea/seaport/v1.1"]
+  ["Opensea/seaport/v1.5"]
 );
 
 export const PARASPACE_SEAPORT_ID = solidityKeccak256(

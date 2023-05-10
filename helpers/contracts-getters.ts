@@ -544,39 +544,6 @@ export const getWPunkGatewayProxy = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getMockVariableDebtToken = async (address?: tEthereumAddress) =>
-  await MockVariableDebtToken__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockVariableDebtToken}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getMockInitializableImple = async (address?: tEthereumAddress) =>
-  await MockInitializableImple__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockInitializableImple}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getMockInitializableImpleV2 = async (address?: tEthereumAddress) =>
-  await MockInitializableImpleV2__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockInitializableImpleV2}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getAggregator = async (
   address?: tEthereumAddress,
   symbol?: string
@@ -594,33 +561,6 @@ export const getAggregator = async (
       ).address,
     await getFirstSigner()
   );
-
-// export const getParaSpaceToken = async (address?: tEthereumAddress) =>
-//   await ParaSpaceToken__factory.connect(
-//     address ||
-//       (
-//         await getDb().get(`${eContractid.ParaSpace}.${DRE.network.name}`).value()
-//       ).address,
-//     await getFirstSigner()
-//   );
-
-// export const getStakedParaSpaceToken = async (address?: tEthereumAddress) =>
-//   await StakedParaSpaceV3__factory.connect(
-//     address ||
-//       (
-//         await getDb().get(`${eContractid.sParaSpace}.${DRE.network.name}`).value()
-//       ).address,
-//     await getFirstSigner()
-//   );
-
-// export const getPCV = async (address?: tEthereumAddress) =>
-//   await PCV__factory.connect(
-//     address ||
-//       (
-//         await getDb().get(`${eContractid.PCV}.${DRE.network.name}`).value()
-//       ).address,
-//     await getFirstSigner()
-//   );
 
 export const getERC20 = async (address?: tEthereumAddress) =>
   await ERC20__factory.connect(
@@ -854,17 +794,6 @@ export const getERC721Delegate = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getMockIncentivesController = async (address?: tEthereumAddress) =>
-  await MockIncentivesController__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockIncentivesController}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getStETH = async (address?: tEthereumAddress) =>
   await StETHMocked__factory.connect(
     address ||
@@ -905,28 +834,6 @@ export const getPTokenSApe = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getMockAToken = async (address?: tEthereumAddress) =>
-  await MockAToken__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockAToken}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getMockCToken = async (address?: tEthereumAddress) =>
-  await MockCToken__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockCToken}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getPTokenAToken = async (address?: tEthereumAddress) =>
   await PTokenAToken__factory.connect(
     address ||
@@ -955,45 +862,6 @@ export const getUserFlashClaimRegistry = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.UserFlashClaimRegistryProxy}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getMockAirdropProject = async (address?: tEthereumAddress) =>
-  await MockAirdropProject__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockAirdropProject}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getMockMultiAssetAirdropProject = async (
-  address?: tEthereumAddress
-) =>
-  await MockMultiAssetAirdropProject__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(
-            `${eContractid.MockMultiAssetAirdropProject}.${DRE.network.name}`
-          )
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getMockReserveAuctionStrategy = async (
-  address?: tEthereumAddress
-) =>
-  await MockReserveAuctionStrategy__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.MockReserveAuctionStrategy}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
@@ -1331,6 +1199,115 @@ export const getNTokenStakefish = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+////////////////////////////////////////////////////////////////////////////////
+//  MOCK
+////////////////////////////////////////////////////////////////////////////////
+
+export const getMockVariableDebtToken = async (address?: tEthereumAddress) =>
+  await MockVariableDebtToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockVariableDebtToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockInitializableImple = async (address?: tEthereumAddress) =>
+  await MockInitializableImple__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockInitializableImple}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockInitializableImpleV2 = async (address?: tEthereumAddress) =>
+  await MockInitializableImpleV2__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockInitializableImpleV2}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockIncentivesController = async (address?: tEthereumAddress) =>
+  await MockIncentivesController__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockIncentivesController}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockAToken = async (address?: tEthereumAddress) =>
+  await MockAToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockAToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockCToken = async (address?: tEthereumAddress) =>
+  await MockCToken__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockCToken}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockAirdropProject = async (address?: tEthereumAddress) =>
+  await MockAirdropProject__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockAirdropProject}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockMultiAssetAirdropProject = async (
+  address?: tEthereumAddress
+) =>
+  await MockMultiAssetAirdropProject__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(
+            `${eContractid.MockMultiAssetAirdropProject}.${DRE.network.name}`
+          )
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getMockReserveAuctionStrategy = async (
+  address?: tEthereumAddress
+) =>
+  await MockReserveAuctionStrategy__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.MockReserveAuctionStrategy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getMockBendDaoLendPool = async (address?: tEthereumAddress) =>
   await MockLendPool__factory.connect(
     address ||
@@ -1341,3 +1318,6 @@ export const getMockBendDaoLendPool = async (address?: tEthereumAddress) =>
       ).address,
     await getFirstSigner()
   );
+////////////////////////////////////////////////////////////////////////////////
+//  PLS ONLY APPEND MOCK CONTRACTS HERE!
+////////////////////////////////////////////////////////////////////////////////

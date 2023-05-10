@@ -54,9 +54,15 @@ import {
   timeLockStrategyVSL,
   timeLockStrategyKODA,
   timeLockStrategyBLOCKS,
+  timeLockStrategyARB,
+  timeLockStrategyGMX,
+  timeLockStrategyLINK,
+  timeLockStrategyAAVE,
+  timeLockStrategyUNI,
 } from "../../market-config/timeLockStrategies";
 
 const TIME_LOCK_STRATEGY = {
+  // ERC20
   USDC: timeLockStrategyUSDC,
   USDT: timeLockStrategyUSDT,
   DAI: timeLockStrategyDAI,
@@ -85,6 +91,12 @@ const TIME_LOCK_STRATEGY = {
   xcDOT: timeLockStrategyXCDOT,
   WGLMR: timeLockStrategyWGLMR,
   BLUR: timeLockStrategyBLUR,
+  ARB: timeLockStrategyARB,
+  GMX: timeLockStrategyGMX,
+  LINK: timeLockStrategyLINK,
+  AAVE: timeLockStrategyAAVE,
+  UNI: timeLockStrategyUNI,
+  // ERC721
   BAYC: timeLockStrategyBAYC,
   ATK: timeLockStrategyBAYC,
   MAYC: timeLockStrategyMAYC,
