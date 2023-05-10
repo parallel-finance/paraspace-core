@@ -191,6 +191,7 @@ const hardhatConfig: HardhatUserConfig = {
       mainnet: ETHERSCAN_KEY,
       goerli: ETHERSCAN_KEY,
       localhost: ETHERSCAN_KEY,
+      arbitrumOne: ETHERSCAN_KEY,
     },
     customChains: [
       {
@@ -199,6 +200,14 @@ const hardhatConfig: HardhatUserConfig = {
         urls: {
           apiURL: "http://localhost:4000/api",
           browserURL: "http://localhost:4000",
+        },
+      },
+      {
+        network: eEthereumNetwork.arbitrum,
+        chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
+        urls: {
+          apiURL: "https://api.arbiscan.io/api",
+          browserURL: "https://arbiscan.io",
         },
       },
     ],
