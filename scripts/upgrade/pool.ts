@@ -83,12 +83,10 @@ const resetSelectors = async () => {
   const addressesProvider = await getPoolAddressesProvider();
   const pool = await getPoolProxy();
   const facets = await pool.facets();
+  const paraProxyInterfacesImpl = await pool.facetAddress("0x7a0ed627");
 
   for (const facet of facets.filter(
-    (x) =>
-      x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" && // ParaProxyInterfaces mainnet
-      x.implAddress !== "0xf20f5A9e9aBb0CfB66Fc2bBEaE0E0cA54eb31D0f" && // ParaProxyInterfaces goerli staging
-      x.implAddress !== "0xef4A8d73D5Bd23fEc57c31d6B231cB05ABA2A95D" // ParaProxyInterfaces goerli dev
+    (x) => x.implAddress !== paraProxyInterfacesImpl
   )) {
     implementations.push({
       implAddress: ZERO_ADDRESS,

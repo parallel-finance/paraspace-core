@@ -78,13 +78,10 @@ import {
   Seaport__factory,
   NTokenOtherdeed__factory,
   TimeLock__factory,
+  P2PPairStaking__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {
-  getFirstSigner,
-  getProtocolDataProvider,
-  getTimeLockExecutor,
-} from "./contracts-getters";
+import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -102,9 +99,7 @@ import {
   DRY_RUN,
   TIME_LOCK_BUFFERING_TIME,
   VERBOSE,
-  MULTI_SIG,
   FORK,
-  MULTI_SEND,
   TIME_LOCK_DEFAULT_OPERATION,
   VERSION,
   FLASHBOTS_RELAY_RPC,
@@ -127,7 +122,6 @@ import {
   FlashbotsBundleRawTransaction,
   FlashbotsBundleTransaction,
 } from "@flashbots/ethers-provider-bundle";
-import {ZERO_ADDRESS} from "./constants";
 import {configureReservesByHelper, initReservesByHelper} from "./init-helpers";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
@@ -910,6 +904,7 @@ export const decodeInputData = (data: string) => {
     ...ICurve__factory.abi,
     ...NTokenOtherdeed__factory.abi,
     ...TimeLock__factory.abi,
+    ...P2PPairStaking__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
@@ -933,6 +928,7 @@ export const proposeSafeTransaction = async (
     ethers,
     signerOrProvider: signer,
   });
+  const MULTI_SIG = getParaSpaceConfig().Governance.Multisig;
 
   const safeSdk: Safe = await Safe.create({
     ethAdapter,
@@ -991,7 +987,8 @@ export const proposeMultiSafeTransactions = async (
   operation = OperationType.DelegateCall,
   nonce?: number
 ) => {
-  const newTarget = MULTI_SEND;
+  const paraSpaceConfig = getParaSpaceConfig();
+  const newTarget = paraSpaceConfig.Governance.Multisend;
   const chunks = chunk(transactions, MULTI_SEND_CHUNK_SIZE);
   for (const [i, c] of chunks.entries()) {
     const {data: newData} = encodeMulti(c);
@@ -1059,7 +1056,6 @@ export const initAndConfigureReserves = async (
   verify = false
 ) => {
   const paraSpaceConfig = getParaSpaceConfig();
-  const protocolDataProvider = await getProtocolDataProvider();
   const reservesParams = paraSpaceConfig.ReservesConfig;
   const allTokenAddresses = assets.reduce(
     (accum: {[name: string]: tEthereumAddress}, {symbol, address}) => ({
@@ -1083,17 +1079,12 @@ export const initAndConfigureReserves = async (
     SymbolPrefix,
     paraSpaceAdminAddress,
     treasuryAddress,
-    ZERO_ADDRESS,
-    ZERO_ADDRESS,
-    verify,
-    paraSpaceConfig.DelegationRegistry
+    paraSpaceConfig.IncentivesController,
+    paraSpaceConfig.HotWallet,
+    paraSpaceConfig.DelegationRegistry,
+    verify
   );
 
   console.log("configuring reserves");
-  await configureReservesByHelper(
-    reserves,
-    allTokenAddresses,
-    protocolDataProvider,
-    paraSpaceAdminAddress
-  );
+  await configureReservesByHelper(reserves, allTokenAddresses);
 };

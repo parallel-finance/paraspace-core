@@ -1,10 +1,5 @@
 import {task} from "hardhat/config";
-import {
-  FORK,
-  MULTI_SEND,
-  MULTI_SIG,
-  TIME_LOCK_SIGS,
-} from "../../helpers/hardhat-constants";
+import {FORK, TIME_LOCK_SIGS} from "../../helpers/hardhat-constants";
 import {ethers} from "ethers";
 import {decodeMulti, MetaTransaction} from "ethers-multisend";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
@@ -16,6 +11,7 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   const {getFirstSigner, getTimeLockExecutor} = await import(
     "../../helpers/contracts-getters"
   );
+  const {getParaSpaceConfig} = await import("../../helpers/misc-utils");
   const {decodeInputData} = await import("../../helpers/contracts-helpers");
   const timeLock = await getTimeLockExecutor();
   const signer = await getFirstSigner();
@@ -23,6 +19,7 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
     ethers,
     signerOrProvider: signer,
   });
+  const paraSpaceConfig = getParaSpaceConfig();
 
   const safeService = new SafeServiceClient({
     txServiceUrl: `https://safe-transaction-${
@@ -31,7 +28,9 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
     ethAdapter,
   });
   const res = (
-    await safeService.getPendingTransactions(MULTI_SIG)
+    await safeService.getPendingTransactions(
+      paraSpaceConfig.Governance.Multisig
+    )
   ).results.sort((a, b) =>
     a.nonce > b.nonce
       ? 1
@@ -50,7 +49,7 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
       }
 
       const toConcatenate = (
-        cur.to === MULTI_SEND
+        cur.to === paraSpaceConfig.Governance.Multisend
           ? decodeMulti(cur.data).map((x) => ({to: x.to, data: x.data}))
           : [{to: cur.to, data: cur.data}]
       ).map(({to, data}) => {

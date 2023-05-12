@@ -7,7 +7,7 @@ artifacts
 state.json
 /types
 .env
-deployed-contracts.json
+deployed-contracts.json*
 coverage.json
 /coverage
 dist
