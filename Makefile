@@ -612,6 +612,10 @@ upgrade:
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
 
+.PHONY: add-para-proxy-interfaces
+add-para-proxy-interfaces:
+	make TASK_NAME=upgrade:add-para-proxy-interfaces run-task
+
 .PHONY: upgrade-pool-core
 upgrade-pool-core:
 	make TASK_NAME=upgrade:pool-core run-task

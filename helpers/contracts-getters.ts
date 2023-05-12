@@ -97,6 +97,7 @@ import {
   NTokenStakefish__factory,
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
+  ParaProxyInterfaces__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -590,6 +591,17 @@ export const getAggregator = async (
               DRE.network.name
             }`
           )
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getPoolParaProxyInterfaces = async (address?: tEthereumAddress) =>
+  await ParaProxyInterfaces__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ParaProxyInterfacesImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

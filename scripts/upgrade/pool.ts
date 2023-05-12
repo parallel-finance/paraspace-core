@@ -6,9 +6,11 @@ import {
   deployPoolMarketplace,
   deployPoolParameters,
   deployPoolPositionMover,
+  getPoolSignatures,
 } from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
+  getPoolParaProxyInterfaces,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
 import {
@@ -84,9 +86,9 @@ const resetSelectors = async () => {
 
   for (const facet of facets.filter(
     (x) =>
-      x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" &&
-      x.implAddress !== "0x0b6717ED22Cfd5495E47804F3f6624E5f0Ea20Cb" &&
-      x.implAddress !== "0xC85d346eB17B37b93B30a37603Ef9550Ab18aC83" // ParaProxyInterfaces
+      x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" && // ParaProxyInterfaces mainnet
+      x.implAddress !== "0xf20f5A9e9aBb0CfB66Fc2bBEaE0E0cA54eb31D0f" && // ParaProxyInterfaces goerli staging
+      x.implAddress !== "0xef4A8d73D5Bd23fEc57c31d6B231cB05ABA2A95D" // ParaProxyInterfaces goerli dev
   )) {
     implementations.push({
       implAddress: ZERO_ADDRESS,
@@ -111,6 +113,20 @@ const resetSelectors = async () => {
       )
     );
   }
+};
+
+export const addParaProxyInterfacesSelectors = async () => {
+  const {poolParaProxyInterfacesSelectors} = getPoolSignatures();
+
+  const selectors = poolParaProxyInterfacesSelectors.map((s) => s.signature);
+
+  const poolParaProxyInterfaces = await getPoolParaProxyInterfaces();
+
+  const implementations = [
+    [poolParaProxyInterfaces.address, selectors, []],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
 };
 
 export const resetPool = async (verify = false) => {
