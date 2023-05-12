@@ -70,7 +70,7 @@ export const isArbitrumOne = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
     [ARBITRUM_ONE_CHAINID].includes(DRE.network.config.chainId!) ||
-    [eEthereumNetwork.arbitrumOne].includes(FORK as eEthereumNetwork)
+    [eEthereumNetwork.arbitrum].includes(FORK as eEthereumNetwork)
   );
 };
 

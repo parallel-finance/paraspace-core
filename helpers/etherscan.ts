@@ -38,7 +38,7 @@ export const ETHERSCAN_NETWORKS = [
   "rinkeby",
   "goerli",
   "localhost",
-  "arbitrumOne",
+  "arbitrum",
 ];
 
 export const ETHERSCAN_APIS = {
@@ -47,7 +47,7 @@ export const ETHERSCAN_APIS = {
   kovan: "api-kovan.etherscan.io",
   rinkeby: "api-rinkeby.etherscan.io",
   goerli: "api-goerli.etherscan.io",
-  arbitrumOne: "api.arbiscan.io",
+  arbitrum: "api.arbiscan.io",
 };
 
 const getIsVerified = async (contractId: string, address: string) => {

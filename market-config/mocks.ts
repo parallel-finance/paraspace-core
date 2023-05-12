@@ -1,4 +1,4 @@
-import {parseEther} from "ethers/lib/utils";
+import {parseEther, parseUnits} from "ethers/lib/utils";
 import "../helpers/types";
 import {IMocksConfig} from "../helpers/types";
 
@@ -29,6 +29,11 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   BLUR: parseEther("0.0005").toString(),
   ARB: parseEther("0.00082").toString(),
   GMX: parseEther("0.0435").toString(),
+  LINK: parseEther("0.0035").toString(),
+  UNI: parseEther("0.0025").toString(),
+  BAL: parseEther("0.0028").toString(),
+  AAVE: parseEther("0.032").toString(),
+  RDNT: parseEther("0.00015").toString(),
   // ERC721
   BAYC: parseEther("101").toString(),
   WPUNKS: parseEther("140").toString(),
@@ -50,6 +55,61 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   VSL: parseEther("0.373").toString(),
   KODA: parseEther("9.5").toString(),
   BLOCKS: parseEther("9.54").toString(),
+};
+
+export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
+  // ERC20
+  DAI: parseUnits("1", 8).toString(),
+  USDC: parseUnits("1", 8).toString(),
+  USDT: parseUnits("1", 8).toString(),
+  FRAX: parseUnits("1", 8).toString(),
+  WETH: parseUnits("1896", 8).toString(),
+  WBTC: parseUnits("29195", 8).toString(),
+  stETH: parseUnits("1896", 8).toString(),
+  wstETH: parseUnits("2116", 8).toString(),
+  APE: parseUnits("3.78", 8).toString(),
+  sAPE: parseUnits("3.78", 8).toString(),
+  cAPE: parseUnits("3.78", 8).toString(),
+  yAPE: parseUnits("3.78", 8).toString(),
+  aWETH: parseUnits("1896", 8).toString(),
+  cETH: parseUnits("30", 8).toString(),
+  bendETH: parseUnits("1896", 8).toString(),
+  cbETH: parseUnits("1950", 8).toString(),
+  astETH: parseUnits("1896", 8).toString(),
+  rETH: parseUnits("2027", 8).toString(),
+  awstETH: parseUnits("2116", 8).toString(),
+  PUNK: parseUnits("140", 8).toString(),
+  xcDOT: parseUnits("5.75", 8).toString(),
+  WGLMR: parseUnits("0.33", 8).toString(),
+  BLUR: parseUnits("0.57", 8).toString(),
+  ARB: parseUnits("1.32", 8).toString(),
+  GMX: parseUnits("69.2", 8).toString(),
+  LINK: parseUnits("6.59", 8).toString(),
+  UNI: parseUnits("5", 8).toString(),
+  BAL: parseUnits("5.72", 8).toString(),
+  AAVE: parseUnits("64", 8).toString(),
+  RDNT: parseUnits("0.3", 8).toString(),
+  // ERC721
+  BAYC: parseUnits("96239", 8).toString(),
+  WPUNKS: parseUnits("113896", 8).toString(),
+  PUNKS: parseUnits("113896", 8).toString(),
+  MAYC: parseUnits("21148", 8).toString(),
+  DOODLE: parseUnits("5190", 8).toString(),
+  MOONBIRD: parseUnits("4631", 8).toString(),
+  MEEBITS: parseUnits("4524", 8).toString(),
+  AZUKI: parseUnits("29104", 8).toString(),
+  OTHR: parseUnits("2293", 8).toString(),
+  CLONEX: parseUnits("6090", 8).toString(),
+  BAKC: parseUnits("8959", 8).toString(),
+  SEWER: parseUnits("170", 8).toString(),
+  PPG: parseUnits("8054", 8).toString(),
+  HVMTL: parseUnits("2271", 8).toString(),
+  BEANZ: parseUnits("2631", 8).toString(),
+  DEGODS: parseUnits("16522", 8).toString(),
+  EXP: parseUnits("1329", 8).toString(),
+  VSL: parseUnits("568", 8).toString(),
+  KODA: parseUnits("14154", 8).toString(),
+  BLOCKS: parseUnits("10800", 8).toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {
@@ -93,5 +153,11 @@ export const MOCK_TOKEN_MINT_VALUE = {
 export const MocksConfig: IMocksConfig = {
   USDPriceInWEI: "5848466240000000",
   AllAssetsInitialPrices: MOCK_CHAINLINK_AGGREGATORS_PRICES,
+  TokenFaucetMintValue: MOCK_TOKEN_MINT_VALUE,
+};
+
+export const MocksUSDConfig: IMocksConfig = {
+  USDPriceInWEI: "1896000000",
+  AllAssetsInitialPrices: MOCK_CHAINLINK_AGGREGATORS_USD_PRICES,
   TokenFaucetMintValue: MOCK_TOKEN_MINT_VALUE,
 };

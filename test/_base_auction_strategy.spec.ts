@@ -7,16 +7,16 @@ import {
   DefaultReserveAuctionStrategy,
   MockReserveAuctionStrategy,
 } from "../types";
-import {
-  auctionStrategyExp,
-  auctionStrategyLinear,
-} from "../market-config/auctionStrategies";
 import "./helpers/utils/wadraymath";
 import {utils} from "ethers";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {eContractid} from "../helpers/types";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
+import {
+  auctionStrategyExp,
+  auctionStrategyLinear,
+} from "../market-config/auctionStrategies";
 
 describe("AuctionStrategy", () => {
   let strategyInstanceExp: DefaultReserveAuctionStrategy;

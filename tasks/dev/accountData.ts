@@ -8,10 +8,14 @@ task("account-data", "Print account data")
     await DRE.run("set-DRE");
     const {getPoolProxy, getUiPoolDataProvider, getPoolAddressesProvider} =
       await import("../../helpers/contracts-getters");
+    const {getParaSpaceConfig} = await import("../../helpers/misc-utils");
     const pool = await getPoolProxy();
     const ui = await getUiPoolDataProvider();
     const provider = await getPoolAddressesProvider();
     const reservesData = await ui.getUserReservesData(provider.address, user);
+    const paraSpaceConfig = await getParaSpaceConfig();
+    const baseDecimals = paraSpaceConfig.Oracle.BaseCurrencyDecimals;
+
     const accountData = await pool.getUserAccountData(user, {
       blockTag: blockHash,
     });
@@ -24,15 +28,15 @@ task("account-data", "Print account data")
     );
     console.log(
       " availableBorrowsBase:",
-      fromBn(accountData.availableBorrowsBase).toString()
+      fromBn(accountData.availableBorrowsBase, baseDecimals).toString()
     );
     console.log(
       " totalCollateralBase:",
-      fromBn(accountData.totalCollateralBase).toString()
+      fromBn(accountData.totalCollateralBase, baseDecimals).toString()
     );
     console.log(
       " totalDebtBase:",
-      fromBn(accountData.totalDebtBase).toString()
+      fromBn(accountData.totalDebtBase, baseDecimals).toString()
     );
     console.log();
 
