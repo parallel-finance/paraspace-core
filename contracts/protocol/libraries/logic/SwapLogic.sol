@@ -33,7 +33,6 @@ library SwapLogic {
         address indexed srcReserve,
         address indexed dstReserve,
         address indexed user,
-        address to,
         uint256 srcAmount,
         uint256 dstAmount
     );
@@ -138,6 +137,14 @@ library SwapLogic {
             }
         }
 
+        emit Swap(
+            params.srcAsset,
+            params.dstAsset,
+            params.user,
+            amountToSwap,
+            amountOut
+        );
+
         return amountToSwap;
     }
 
@@ -150,21 +157,6 @@ library SwapLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         reserve.updateState(reserveCache);
-
-        ValidationLogic.validateBorrow(
-            ps._reserves,
-            ps._reservesList,
-            DataTypes.ValidateBorrowParams({
-                reserveCache: reserveCache,
-                userConfig: userConfig,
-                asset: params.dstAsset,
-                userAddress: params.user,
-                amount: params.amount,
-                reservesCount: params.reservesCount,
-                oracle: params.oracle,
-                priceOracleSentinel: params.priceOracleSentinel
-            })
-        );
 
         bool isFirstBorrowing = false;
         (
@@ -185,43 +177,64 @@ library SwapLogic {
             reserveCache,
             params.dstAsset,
             0,
-            params.releaseUnderlying ? params.amount : 0
+            params.amount
         );
 
-        if (params.releaseUnderlying) {
-            DataTypes.TimeLockParams memory timeLockParams;
-            DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
-                params.swapAdapter.adapter
-            ).getSwapInfo(params.swapPayload, true);
-            ValidationLogic.validateSwap(
-                swapInfo,
-                DataTypes.ValidateSwapParams({
-                    swapAdapter: params.swapAdapter,
-                    amount: params.amount,
-                    srcToken: params.srcAsset,
-                    dstToken: params.dstAsset,
-                    dstReceiver: reserveCache.xTokenAddress
-                })
-            );
-            amount = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
-                params.user,
-                timeLockParams,
-                params.swapAdapter,
-                params.swapPayload,
-                swapInfo
-            );
+        DataTypes.TimeLockParams memory timeLockParams;
+        DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
+            params.swapAdapter.adapter
+        ).getSwapInfo(params.swapPayload, false);
+        ValidationLogic.validateSwap(
+            swapInfo,
+            DataTypes.ValidateSwapParams({
+                swapAdapter: params.swapAdapter,
+                amount: params.amount,
+                srcToken: params.srcAsset,
+                dstToken: params.dstAsset,
+                dstReceiver: reserveCache.xTokenAddress
+            })
+        );
+        amount = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
+            address(this),
+            timeLockParams,
+            params.swapAdapter,
+            params.swapPayload,
+            swapInfo
+        );
 
-            BorrowLogic.executeRepay(
-                ps._reserves,
-                ps._usersConfig[params.user],
-                DataTypes.ExecuteRepayParams({
-                    asset: params.srcAsset,
-                    amount: amount,
-                    onBehalfOf: params.user,
-                    payer: address(this),
-                    usePTokens: false
-                })
-            );
-        }
+        BorrowLogic.executeRepay(
+            ps._reserves,
+            ps._usersConfig[params.user],
+            DataTypes.ExecuteRepayParams({
+                asset: params.srcAsset,
+                amount: amount,
+                onBehalfOf: params.user,
+                payer: address(this),
+                usePTokens: false
+            })
+        );
+
+        ValidationLogic.validateBorrow(
+            ps._reserves,
+            ps._reservesList,
+            DataTypes.ValidateBorrowParams({
+                reserveCache: reserveCache,
+                userConfig: userConfig,
+                asset: params.dstAsset,
+                userAddress: params.user,
+                amount: params.amount,
+                reservesCount: params.reservesCount,
+                oracle: params.oracle,
+                priceOracleSentinel: params.priceOracleSentinel
+            })
+        );
+
+        emit Swap(
+            params.srcAsset,
+            params.dstAsset,
+            params.user,
+            amount,
+            params.amount
+        );
     }
 }

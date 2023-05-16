@@ -336,7 +336,6 @@ library DataTypes {
         address dstAsset;
         uint256 amount;
         address user;
-        bool releaseUnderlying;
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
