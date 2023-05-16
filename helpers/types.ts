@@ -62,6 +62,7 @@ export enum XTokenType {
   PTokenCApe = 14,
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
+  NTokenChromieSquiggle = 17,
 }
 
 export type ConstructorArgs = (
@@ -102,7 +103,8 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
-  arbitrumOne = "arbitrumOne",
+  arbitrum = "arbitrum",
+  arbitrumGoerli = "arbitrumGoerli",
 }
 
 export enum eContractid {
@@ -268,6 +270,7 @@ export enum eContractid {
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
   NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
+  NTokenChromieSquiggleImpl = "NTokenChromieSquiggleImpl",
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
   SFVLDR = "SFVLDR",
@@ -407,6 +410,8 @@ export enum ProtocolErrors {
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
   INVALID_STATE = "137", //invalid token status
 
+  INVALID_TOKEN_ID = "135", //invalid token id
+
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 
@@ -441,31 +446,39 @@ export interface iAssetCommon<T> {
   [key: string]: T;
 }
 export interface iAssetBase<T> {
+  DAI: T;
   WETH: T;
-  aWETH: T;
-  cETH: T;
+  USDC: T;
+  USDT: T;
+  FRAX: T;
+  WBTC: T;
+  stETH: T;
+  wstETH: T;
   bendETH: T;
   cbETH: T;
   rETH: T;
   astETH: T;
   awstETH: T;
-  DAI: T;
-  USDC: T;
-  USDT: T;
-  FRAX: T;
-  BAYC: T;
-  WPUNKS: T;
-  PUNKS: T;
-  PUNK: T;
-  WBTC: T;
-  stETH: T;
-  wstETH: T;
+  aWETH: T;
   APE: T;
   sAPE: T;
   cAPE: T;
   yAPE: T;
+  cETH: T;
+  PUNK: T;
   xcDOT: T;
   WGLMR: T;
+  BLUR: T;
+  ARB: T;
+  GMX: T;
+  LINK: T;
+  UNI: T;
+  BAL: T;
+  AAVE: T;
+  RDNT: T;
+  BAYC: T;
+  WPUNKS: T;
+  PUNKS: T;
   MAYC: T;
   DOODLE: T;
   MOONBIRD: T;
@@ -490,10 +503,10 @@ export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, "USD">;
 export type iParaSpacePoolAssets<T> = Pick<
   iAssetsWithoutUSD<T>,
   | "DAI"
+  | "WETH"
   | "USDC"
   | "USDT"
   | "FRAX"
-  | "WETH"
   | "WBTC"
   | "stETH"
   | "wstETH"
@@ -502,10 +515,23 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "rETH"
   | "astETH"
   | "awstETH"
-  | "xcDOT"
-  | "WGLMR"
+  | "aWETH"
   | "APE"
   | "sAPE"
+  | "cAPE"
+  | "yAPE"
+  | "cETH"
+  | "PUNK"
+  | "xcDOT"
+  | "WGLMR"
+  | "BLUR"
+  | "ARB"
+  | "GMX"
+  | "LINK"
+  | "UNI"
+  | "BAL"
+  | "AAVE"
+  | "RDNT"
   | "BAYC"
   | "PUNKS"
   | "WPUNKS"
@@ -554,6 +580,13 @@ export enum ERC20TokenContractId {
   xcDOT = "xcDOT",
   WGLMR = "WGLMR",
   BLUR = "BLUR",
+  ARB = "ARB",
+  GMX = "GMX",
+  LINK = "LINK",
+  UNI = "UNI",
+  BAL = "BAL",
+  AAVE = "AAVE",
+  RDNT = "RDNT",
 }
 
 export enum ERC721TokenContractId {
@@ -571,7 +604,7 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
-  "HVMTL" = "HVMTL",
+  HVMTL = "HVMTL",
   BEANZ = "BEANZ",
   DEGODS = "DEGODS",
   EXP = "EXP",
@@ -592,6 +625,7 @@ export enum NTokenContractId {
   nPPG = "nPPG",
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
+  nBLOCKS = "nBLOCKS",
 }
 
 export enum PTokenContractId {
@@ -679,7 +713,8 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
-  [eEthereumNetwork.arbitrumOne]: T;
+  [eEthereumNetwork.arbitrum]: T;
+  [eEthereumNetwork.arbitrumGoerli]: T;
 }
 
 export enum RateMode {
@@ -701,6 +736,7 @@ export interface IUniswapV3Config {
 export interface ISeaportConfig {
   V11?: tEthereumAddress;
   V14?: tEthereumAddress;
+  V15?: tEthereumAddress;
 }
 
 export interface IMarketplaceConfig {
@@ -708,6 +744,7 @@ export interface IMarketplaceConfig {
 }
 
 export interface IChainlinkConfig {
+  // ERC20
   WETH?: tEthereumAddress;
   aWETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
@@ -728,6 +765,16 @@ export interface IChainlinkConfig {
   sAPE?: tEthereumAddress;
   cAPE?: tEthereumAddress;
   yAPE?: tEthereumAddress;
+  xcDOT?: tEthereumAddress;
+  WGLMR?: tEthereumAddress;
+  ARB?: tEthereumAddress;
+  GMX?: tEthereumAddress;
+  LINK?: tEthereumAddress;
+  UNI?: tEthereumAddress;
+  AAVE?: tEthereumAddress;
+  BAL?: tEthereumAddress;
+  RDNT?: tEthereumAddress;
+  // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
   MAYC?: tEthereumAddress;
@@ -737,11 +784,7 @@ export interface IChainlinkConfig {
   AZUKI?: tEthereumAddress;
   OTHR?: tEthereumAddress;
   CLONEX?: tEthereumAddress;
-  xcDOT?: tEthereumAddress;
-  WGLMR?: tEthereumAddress;
   HVMTL?: tEthereumAddress;
-  ARB?: tEthereumAddress;
-  GMX?: tEthereumAddress;
   BEANZ?: tEthereumAddress;
   DEGODS?: tEthereumAddress;
   EXP?: tEthereumAddress;
@@ -768,14 +811,24 @@ export interface IBendDAOConfig {
   LendingPoolLoan?: tEthereumAddress;
 }
 
+export interface IStakefish {
+  StakefishManager?: tEthereumAddress;
+}
+
 export interface IOracleConfig {
   // ParaSpaceOracle
-  BaseCurrency: ERC20TokenContractId;
-  BaseCurrencyUnit: string;
+  BaseCurrency: ERC20TokenContractId | string;
+  BaseCurrencyUnit: BigNumber;
+  BaseCurrencyDecimals: number;
   // NFTFloorOracle
   ExpirationPeriod: number;
   DeviationRate: number;
   Nodes: tEthereumAddress[];
+}
+
+export interface IGovernanceConfig {
+  Multisend: tEthereumAddress;
+  Multisig: tEthereumAddress;
 }
 
 export interface IMocksConfig {
@@ -812,15 +865,17 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  Stakefish: IStakefish;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
-  HotWallet: tEthereumAddress | undefined;
-  StakefishManager: tEthereumAddress | undefined;
+  HotWallet: tEthereumAddress;
   DelegationRegistry: tEthereumAddress;
+
+  Governance: IGovernanceConfig;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

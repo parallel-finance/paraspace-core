@@ -6,7 +6,6 @@ import {
   NTokenContractId,
   tEthereumAddress,
 } from "./types";
-import {ProtocolDataProvider} from "../types";
 import {chunk, waitForTx} from "./misc-utils";
 import {
   getACLManager,
@@ -15,7 +14,6 @@ import {
   getPoolConfiguratorProxy,
   getPoolProxy,
   getProtocolDataProvider,
-  getAutoYieldApe,
 } from "./contracts-getters";
 import {
   getContractAddressInDb,
@@ -47,10 +45,12 @@ import {
   deployPTokenAStETH,
   deployAStETHDebtToken,
   deployPYieldToken,
-  deployAutoYieldApe,
   deployReserveTimeLockStrategy,
   deployOtherdeedNTokenImpl,
   deployStakefishNTokenImpl,
+  deployChromieSquiggleNTokenImpl,
+  deployAutoYieldApeImplAndAssignItToProxy,
+  deployAutoCompoundApeImplAndAssignItToProxy,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -64,25 +64,20 @@ export const initReservesByHelper = async (
   treasuryAddress: tEthereumAddress,
   incentivesController: tEthereumAddress,
   hotWallet: tEthereumAddress,
-  verify: boolean,
   delegationRegistryAddress: tEthereumAddress,
+  verify: boolean,
   genericPTokenImplAddress?: tEthereumAddress,
   genericNTokenImplAddress?: tEthereumAddress,
   genericVariableDebtTokenAddress?: tEthereumAddress,
   defaultReserveInterestRateStrategyAddress?: tEthereumAddress,
   defaultReserveAuctionStrategyAddress?: tEthereumAddress,
   defaultReserveTimeLockStrategyAddress?: tEthereumAddress,
-  genericDelegationAwarePTokenImplAddress?: tEthereumAddress,
-  poolAddressesProviderProxy?: tEthereumAddress,
-  poolProxy?: tEthereumAddress,
-  poolConfiguratorProxyAddress?: tEthereumAddress
+  genericDelegationAwarePTokenImplAddress?: tEthereumAddress
 ): Promise<BigNumber> => {
   const gasUsage = BigNumber.from("0");
 
-  const addressProvider = await getPoolAddressesProvider(
-    poolAddressesProviderProxy
-  );
-  const pool = await getPoolProxy(poolProxy);
+  const addressProvider = await getPoolAddressesProvider();
+  const pool = await getPoolProxy();
   // CHUNK CONFIGURATION
   const initChunks = 4;
 
@@ -136,7 +131,7 @@ export const initReservesByHelper = async (
   let stETHVariableDebtTokenImplementationAddress = "";
   let astETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
-  let PsApeVariableDebtTokenImplementationAddress = "";
+  let psApeVariableDebtTokenImplementationAddress = "";
   let nTokenBAKCImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
   let nTokenStakefishImplementationAddress = "";
@@ -172,15 +167,10 @@ export const initReservesByHelper = async (
 
   for (const [symbol, params] of reserves) {
     if (!tokenAddresses[symbol]) {
-      if (symbol === ERC20TokenContractId.yAPE) {
-        await deployAutoYieldApe(verify);
-        tokenAddresses[symbol] = (await getAutoYieldApe()).address;
-      } else {
-        console.log(
-          `- Skipping init of ${symbol} due token address is not set at markets config`
-        );
-        continue;
-      }
+      console.log(
+        `- Skipping init of ${symbol} due token address is not set at markets config`
+      );
+      continue;
     }
     const {
       strategy,
@@ -215,7 +205,9 @@ export const initReservesByHelper = async (
     } = timeLockStrategy;
     if (!strategyAddresses[strategy.name]) {
       // Strategy does not exist, create a new one
-      if (defaultReserveInterestRateStrategyAddress) {
+      if (strategy.name == "rateStrategyZero") {
+        strategyAddresses[strategy.name] = ZERO_ADDRESS;
+      } else if (defaultReserveInterestRateStrategyAddress) {
         strategyAddresses[strategy.name] =
           defaultReserveInterestRateStrategyAddress;
         insertContractAddressInDb(
@@ -374,9 +366,7 @@ export const initReservesByHelper = async (
   const chunkedSymbols = chunk(reserveSymbols, initChunks);
   const chunkedInitInputParams = chunk(initInputParams, initChunks);
 
-  const configurator = await getPoolConfiguratorProxy(
-    poolConfiguratorProxyAddress
-  );
+  const configurator = await getPoolConfiguratorProxy();
   //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
   console.log(
@@ -458,19 +448,21 @@ export const initReservesByHelper = async (
           }
           xTokenToUse = pTokenSApeImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.cAPE) {
+          await deployAutoCompoundApeImplAndAssignItToProxy(verify);
           if (!pTokenPsApeImplementationAddress) {
             pTokenPsApeImplementationAddress = (
               await deployPTokenCApe(pool.address, verify)
             ).address;
           }
           xTokenToUse = pTokenPsApeImplementationAddress;
-          if (!PsApeVariableDebtTokenImplementationAddress) {
-            PsApeVariableDebtTokenImplementationAddress = (
+          if (!psApeVariableDebtTokenImplementationAddress) {
+            psApeVariableDebtTokenImplementationAddress = (
               await deployCApeDebtToken(pool.address, verify)
             ).address;
           }
-          variableDebtTokenToUse = PsApeVariableDebtTokenImplementationAddress;
+          variableDebtTokenToUse = psApeVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.yAPE) {
+          await deployAutoYieldApeImplAndAssignItToProxy(verify);
           if (!pYieldTokenImplementationAddress) {
             pYieldTokenImplementationAddress = (
               await deployPYieldToken(pool.address, verify)
@@ -592,6 +584,16 @@ export const initReservesByHelper = async (
           ).address;
 
           xTokenToUse = nTokenStakefishImplementationAddress;
+        } else if (reserveSymbol == ERC721TokenContractId.BLOCKS) {
+          xTokenToUse = (
+            await deployChromieSquiggleNTokenImpl(
+              pool.address,
+              delegationRegistryAddress,
+              0,
+              20, //set 20 in test environment for easy test. should be 9763 in mainnet
+              verify
+            )
+          ).address;
         }
 
         if (!xTokenToUse) {
@@ -653,20 +655,12 @@ export const initReservesByHelper = async (
 
 export const configureReservesByHelper = async (
   reserves: [string, IReserveParams][],
-  tokenAddresses: {[symbol: string]: tEthereumAddress},
-  helpers: ProtocolDataProvider,
-  admin: tEthereumAddress,
-  poolAddressesProviderProxyAddress?: tEthereumAddress,
-  aclManagerAddress?: tEthereumAddress,
-  reservesSetupHelperAddress?: tEthereumAddress
+  tokenAddresses: {[symbol: string]: tEthereumAddress}
 ) => {
-  const addressProvider = await getPoolAddressesProvider(
-    poolAddressesProviderProxyAddress
-  );
-  const aclManager = await getACLManager(aclManagerAddress);
-  const reservesSetupHelper = await getReservesSetupHelper(
-    reservesSetupHelperAddress
-  );
+  const addressProvider = await getPoolAddressesProvider();
+  const aclManager = await getACLManager();
+  const reservesSetupHelper = await getReservesSetupHelper();
+  const helpers = await getProtocolDataProvider();
 
   const tokens: string[] = [];
   const symbols: string[] = [];

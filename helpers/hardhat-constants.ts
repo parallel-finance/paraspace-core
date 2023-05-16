@@ -26,6 +26,7 @@ export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1592;
 export const MOONBEAM_CHAINID = 1284;
 export const ARBITRUM_ONE_CHAINID = 42161;
+export const ARBITRUM_GOERLI_CHAINID = 421613;
 
 export const INFURA_KEY = process.env.INFURA_KEY || "";
 export const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";
@@ -107,10 +108,8 @@ export const TIME_LOCK_DEFAULT_OPERATION =
   process.env.TIME_LOCK_DEFAULT_OPERATION || "queue";
 
 export const IMPERSONATE_ADDRESS = process.env.IMPERSONATE_ADDRESS || "";
-export const MULTI_SIG =
-  process.env.MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714";
-export const MULTI_SEND =
-  process.env.MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D";
+export const MULTI_SIG = process.env.MULTI_SIG || "";
+export const MULTI_SEND = process.env.MULTI_SEND || "";
 export const MULTI_SIG_NONCE = process.env.MULTI_SIG_NONCE
   ? parseInt(process.env.MULTI_SIG_NONCE)
   : undefined;

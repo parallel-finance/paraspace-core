@@ -175,6 +175,30 @@ interface IPoolCore {
     );
 
     /**
+     * @dev Event triggered when a new auction is started for a collateral asset.
+     * @param user The address of the user who started the auction.
+     * @param collateralAsset The address of the collateral asset for the auction.
+     * @param collateralTokenId The ID of the collateral token for the auction.
+     */
+    event AuctionStarted(
+        address indexed user,
+        address indexed collateralAsset,
+        uint256 indexed collateralTokenId
+    );
+
+    /**
+     * @dev Event triggered when an auction for a collateral asset ends.
+     * @param user The address of the user who owns the collateral asset.
+     * @param collateralAsset The address of the collateral asset for the auction.
+     * @param collateralTokenId The ID of the collateral token for the auction.
+     */
+    event AuctionEnded(
+        address indexed user,
+        address indexed collateralAsset,
+        uint256 indexed collateralTokenId
+    );
+
+    /**
      * @dev Allows smart contracts to access the tokens within one transaction, as long as the tokens taken is returned.
      *
      * Requirements:

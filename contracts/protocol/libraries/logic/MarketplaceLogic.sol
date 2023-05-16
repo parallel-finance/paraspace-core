@@ -388,8 +388,6 @@ library MarketplaceLogic {
             return;
         }
 
-        DataTypes.ReserveData storage reserve = ps._reserves[vars.creditToken];
-        ValidationLogic.validateFlashloanSimple(reserve);
         DataTypes.TimeLockParams memory timeLockParams;
         vars.creditAmountInListingToken = vars.creditAmount;
         address transit = vars.isListingTokenPToken ? address(this) : to;

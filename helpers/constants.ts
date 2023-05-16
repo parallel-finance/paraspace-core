@@ -29,9 +29,14 @@ export const SAPE_ADDRESS = ONE_ADDRESS;
 // ----------------
 // MARKETPLACE
 // ----------------
-export const OPENSEA_SEAPORT_ID = solidityKeccak256(
+export const OPENSEA_SEAPORT_ID_V11 = solidityKeccak256(
   ["string"],
   ["Opensea/seaport/v1.1"]
+);
+
+export const OPENSEA_SEAPORT_ID_V15 = solidityKeccak256(
+  ["string"],
+  ["Opensea/seaport/v1.5"]
 );
 
 export const OPENSEA_SEAPORT_ID_V14 = solidityKeccak256(

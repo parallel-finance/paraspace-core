@@ -22,6 +22,7 @@ import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 contract PYieldToken is PToken {
     using WadRayMath for uint256;
     using SafeCast for uint256;
+    using SafeCast for int256;
     using GPv2SafeERC20 for IERC20;
 
     uint256 internal constant RAY = 1e27;
@@ -42,7 +43,7 @@ contract PYieldToken is PToken {
         uint256 amount,
         uint256 index
     ) external override onlyPool returns (bool) {
-        _updateUserIndex(onBehalfOf, int256(amount));
+        _updateUserIndex(onBehalfOf, amount.toInt256());
 
         return _mintScaled(caller, onBehalfOf, amount, index);
     }
@@ -54,7 +55,7 @@ contract PYieldToken is PToken {
         uint256 index,
         DataTypes.TimeLockParams calldata timeLockParams
     ) external override onlyPool {
-        _updateUserIndex(from, -int256(amount));
+        _updateUserIndex(from, -(amount.toInt256()));
 
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
@@ -83,8 +84,9 @@ contract PYieldToken is PToken {
         uint256 amount,
         bool validate
     ) internal override {
-        _updateUserIndex(from, -int256(amount));
-        _updateUserIndex(to, int256(amount));
+        require(from != to, Errors.SENDER_SAME_AS_RECEIVER);
+        _updateUserIndex(from, -(amount.toInt256()));
+        _updateUserIndex(to, amount.toInt256());
 
         super._transfer(from, to, amount, validate);
     }
@@ -177,7 +179,7 @@ contract PYieldToken is PToken {
 
         //if it's the withdraw or transfer balance out case
         if (balanceDiff < 0) {
-            uint256 leftBalance = userBalance - (uint256(-balanceDiff));
+            uint256 leftBalance = userBalance - ((-balanceDiff).toUint256());
             uint256 userLockFeeBalance = _userLockFeeAmount[account];
             //here we only need to update lock fee amount and charge fee when reduce user lock fee amount
             if (leftBalance < userLockFeeBalance) {

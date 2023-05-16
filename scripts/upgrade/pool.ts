@@ -11,10 +11,13 @@ import {
   getPoolAddressesProvider,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {
+  dryRunEncodedData,
+  getContractAddressInDb,
+} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
-import {tEthereumAddress} from "../../helpers/types";
+import {eContractid, tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
 export const upgradeProxyImplementations = async (
@@ -78,12 +81,10 @@ const resetSelectors = async () => {
   const addressesProvider = await getPoolAddressesProvider();
   const pool = await getPoolProxy();
   const facets = await pool.facets();
+  const paraProxyInterfacesImpl = await pool.facetAddress("0x7a0ed627");
 
   for (const facet of facets.filter(
-    (x) =>
-      x.implAddress !== "0x0874eBaad20aE4a6F1623a3bf6f914355B7258dB" &&
-      x.implAddress !== "0x0b6717ED22Cfd5495E47804F3f6624E5f0Ea20Cb" &&
-      x.implAddress !== "0xC85d346eB17B37b93B30a37603Ef9550Ab18aC83" // ParaProxyInterfaces
+    (x) => x.implAddress !== paraProxyInterfacesImpl
   )) {
     implementations.push({
       implAddress: ZERO_ADDRESS,
@@ -313,13 +314,20 @@ export const upgradePoolPositionMover = async (
     oldPoolPositionMover
   );
 
+  const bendDaoLendPoolLoan =
+    paraSpaceConfig.BendDAO.LendingPoolLoan ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
+  const bendDaoLendPool =
+    paraSpaceConfig.BendDAO.LendingPool ||
+    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
+
   const {
     poolPositionMover,
     poolPositionMoverSelectors: newPoolPositionMoverSelectors,
   } = await deployPoolPositionMover(
     addressesProvider.address,
-    paraSpaceConfig.BendDAO.LendingPoolLoan!,
-    paraSpaceConfig.BendDAO.LendingPool!,
+    bendDaoLendPoolLoan,
+    bendDaoLendPool,
     verify
   );
 

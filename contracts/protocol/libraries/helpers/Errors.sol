@@ -126,8 +126,14 @@ library Errors {
     string public constant CALLER_NOT_EOA = "131"; //The caller of the function is not an EOA account
     string public constant MAKER_SAME_AS_TAKER = "132"; //maker and taker shouldn't be the same address
     string public constant TOKEN_ALREADY_DELEGATED = "133"; //token is already delegted
-    string public constant CALL_SWAP_FAILED = "134"; //call swap failed.
-    string public constant INVALID_SWAP_PAYLOAD = "135"; //invalid swap payload.
-    string public constant SWAP_ADAPTER_PAUSED = "136"; //swap adapter paused.
-    string public constant INVALID_STATE = "137"; //invalid token status
+    string public constant INVALID_STATE = "134"; //invalid token status
+    string public constant INVALID_TOKEN_ID = "135"; //invalid token id
+    string public constant SENDER_SAME_AS_RECEIVER = "136"; //sender and receiver shouldn't be the same address
+    string public constant INVALID_YIELD_UNDERLYING_TOKEN = "137"; //invalid yield underlying token
+    string public constant CALLER_NOT_OPERATOR = "138"; // The caller of the function is not operator
+    string public constant INVALID_FEE_VALUE = "139"; // invalid fee rate value
+    string public constant TOKEN_NOT_ALLOW_RESCUE = "140"; // token is not allow rescue
+    string public constant CALL_SWAP_FAILED = "141"; //call swap failed.
+    string public constant INVALID_SWAP_PAYLOAD = "142"; //invalid swap payload.
+    string public constant SWAP_ADAPTER_PAUSED = "143"; //swap adapter paused.
 }

@@ -22,7 +22,7 @@ import {
   getPYieldToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
-import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
+import {advanceTimeAndBlock, DRE, waitForTx} from "../helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {BigNumber, BigNumberish} from "ethers";
@@ -31,6 +31,7 @@ import {
   deployMockedDelegateRegistry,
 } from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
+import {ProtocolErrors} from "../helpers/types";
 
 function almostEqual(value0: BigNumberish, value1: BigNumberish) {
   const maxDiff = BigNumber.from(value0.toString()).mul(4).div("1000").abs();
@@ -46,19 +47,21 @@ describe("Auto Yield Ape Test", () => {
   let yApe: AutoYieldApe;
   let yApePToken: PYieldToken;
   let yUSDC: PToken;
+  const {CALLER_NOT_POOL_ADMIN, CALLER_NOT_POOL_OR_EMERGENCY_ADMIN} =
+    ProtocolErrors;
+  let swapPath;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       ape,
-      users: [user1, user2, user3, , , , user7],
+      users: [user1, user2, , , user3, user4],
       apeCoinStaking,
       pool,
       protocolDataProvider,
       usdc,
       nftPositionManager,
       poolAdmin,
-      gatewayAdmin,
     } = testEnv;
 
     yApe = await getAutoYieldApe();
@@ -90,7 +93,7 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await waitForTx(
-      await yApe.connect(gatewayAdmin.signer).setHarvestOperator(user3.address)
+      await yApe.connect(poolAdmin.signer).setHarvestOperator(user3.address)
     );
 
     // send extra tokens to the apestaking contract for rewards
@@ -120,6 +123,11 @@ describe("Auto Yield Ape Test", () => {
     ////////////////////////////////////////////////////////////////////////////////
     // Uniswap
     ////////////////////////////////////////////////////////////////////////////////
+    swapPath = DRE.ethers.utils.solidityPack(
+      ["address", "uint24", "address"],
+      [ape.address, 3000, usdc.address]
+    );
+
     const userApeAmount = await convertToCurrencyDecimals(
       ape.address,
       "10000000000"
@@ -128,18 +136,18 @@ describe("Auto Yield Ape Test", () => {
       usdc.address,
       "10000000000"
     );
-    await fund({token: ape, user: user7, amount: userApeAmount});
-    await fund({token: usdc, user: user7, amount: userUsdcAmount});
-    const nft = nftPositionManager.connect(user7.signer);
+    await fund({token: ape, user: user4, amount: userApeAmount});
+    await fund({token: usdc, user: user4, amount: userUsdcAmount});
+    const nft = nftPositionManager.connect(user4.signer);
     await approveTo({
       target: nftPositionManager.address,
       token: ape,
-      user: user7,
+      user: user4,
     });
     await approveTo({
       target: nftPositionManager.address,
       token: usdc,
-      user: user7,
+      user: user4,
     });
     const fee = 3000;
     const tickSpacing = fee / 50;
@@ -158,7 +166,7 @@ describe("Auto Yield Ape Test", () => {
       token0: usdc,
       token1: ape,
       fee: fee,
-      user: user7,
+      user: user4,
       tickSpacing: tickSpacing,
       lowerPrice,
       upperPrice,
@@ -171,11 +179,10 @@ describe("Auto Yield Ape Test", () => {
 
   it("yApe yield reward calculation as expected 0", async () => {
     const {
-      users: [user1, user2, user3, , user5],
+      users: [user1, user2, , , user3, user4],
       ape,
       usdc,
       apeCoinStaking,
-      gatewayAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(ape, "200", user2);
@@ -203,7 +210,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     expect(await yApe.yieldAmount(user2.address)).to.be.equal(0);
     expect(await yApe.yieldAmount(user3.address)).to.be.equal(0);
@@ -224,7 +233,7 @@ describe("Auto Yield Ape Test", () => {
     );
     //owner got withdraw fee +1800
     almostEqual(
-      await yApe.yieldAmount(gatewayAdmin.address),
+      await yApe.yieldAmount(yApe.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
     await waitForTx(
@@ -232,7 +241,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
     expect(await yApe.yieldAmount(user2.address)).to.be.equal(0);
     almostEqual(
       await yApe.yieldAmount(user3.address),
@@ -253,11 +264,13 @@ describe("Auto Yield Ape Test", () => {
     await waitForTx(
       await yApe
         .connect(user2.signer)
-        .transfer(user5.address, parseEther("100"))
+        .transfer(user4.address, parseEther("100"))
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -268,12 +281,12 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
     almostEqual(
-      await yApe.yieldAmount(user5.address),
+      await yApe.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "0")
     );
     await waitForTx(await yApe.connect(user1.signer).claimFor(user2.address));
     await waitForTx(await yApe.connect(user1.signer).claimFor(user3.address));
-    await waitForTx(await yApe.connect(user1.signer).claimFor(user5.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user4.address));
     almostEqual(
       await yUSDC.balanceOf(user2.address),
       await convertToCurrencyDecimals(usdc.address, "900")
@@ -283,7 +296,7 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "3600")
     );
     almostEqual(
-      await yUSDC.balanceOf(user5.address),
+      await yUSDC.balanceOf(user4.address),
       await convertToCurrencyDecimals(usdc.address, "0")
     );
 
@@ -291,11 +304,13 @@ describe("Auto Yield Ape Test", () => {
     await waitForTx(
       await yApe
         .connect(user3.signer)
-        .transfer(user5.address, parseEther("100"))
+        .transfer(user4.address, parseEther("100"))
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -306,12 +321,12 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "900")
     );
     almostEqual(
-      await yApe.yieldAmount(user5.address),
+      await yApe.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "900")
     );
     await waitForTx(await yApe.connect(user1.signer).claimFor(user2.address));
     await waitForTx(await yApe.connect(user1.signer).claimFor(user3.address));
-    await waitForTx(await yApe.connect(user1.signer).claimFor(user5.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user4.address));
     almostEqual(
       await yUSDC.balanceOf(user2.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
@@ -321,12 +336,14 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "4500")
     );
     almostEqual(
-      await yUSDC.balanceOf(user5.address),
+      await yUSDC.balanceOf(user4.address),
       await convertToCurrencyDecimals(usdc.address, "900")
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -337,12 +354,12 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "900")
     );
     almostEqual(
-      await yApe.yieldAmount(user5.address),
+      await yApe.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
     await waitForTx(await yApe.connect(user1.signer).claimFor(user2.address));
     await waitForTx(await yApe.connect(user1.signer).claimFor(user3.address));
-    await waitForTx(await yApe.connect(user1.signer).claimFor(user5.address));
+    await waitForTx(await yApe.connect(user1.signer).claimFor(user4.address));
     almostEqual(
       await yUSDC.balanceOf(user2.address),
       await convertToCurrencyDecimals(usdc.address, "2700")
@@ -352,7 +369,7 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "5400")
     );
     almostEqual(
-      await yUSDC.balanceOf(user5.address),
+      await yUSDC.balanceOf(user4.address),
       await convertToCurrencyDecimals(usdc.address, "2700")
     );
 
@@ -361,13 +378,15 @@ describe("Auto Yield Ape Test", () => {
     //owner got withdraw fee +900
     await waitForTx(await yApe.connect(user3.signer).exit());
     //owner got withdraw fee +1800
-    await waitForTx(await yApe.connect(user5.signer).exit());
+    await waitForTx(await yApe.connect(user4.signer).exit());
     expect(await yApe.balanceOf(user2.address)).to.be.equal(0);
     expect(await yApe.balanceOf(user3.address)).to.be.equal(0);
-    expect(await yApe.balanceOf(user5.address)).to.be.equal(0);
+    expect(await yApe.balanceOf(user4.address)).to.be.equal(0);
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApe.yieldAmount(user2.address),
@@ -378,22 +397,21 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "0")
     );
     almostEqual(
-      await yApe.yieldAmount(user5.address),
+      await yApe.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "0")
     );
 
     almostEqual(
-      await yApe.yieldAmount(gatewayAdmin.address),
+      await yApe.yieldAmount(yApe.address),
       await convertToCurrencyDecimals(usdc.address, "7200")
     );
   });
 
   it("yApe yield reward calculation as expected 1", async () => {
     const {
-      users: [, user2, user3],
+      users: [, user2, , , user3],
       ape,
       usdc,
-      gatewayAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(ape, "1000", user2);
@@ -403,7 +421,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     await waitForTx(
       await yApe.connect(user2.signer).deposit(user2.address, parseEther("200"))
@@ -414,17 +434,16 @@ describe("Auto Yield Ape Test", () => {
     );
 
     almostEqual(
-      await yApe.yieldAmount(gatewayAdmin.address),
+      await yApe.yieldAmount(yApe.address),
       await convertToCurrencyDecimals(usdc.address, "0")
     );
   });
 
   it("yApe yield reward calculation as expected 2", async () => {
     const {
-      users: [, user2, user3],
+      users: [, user2, , , user3],
       ape,
       usdc,
-      gatewayAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(ape, "1000", user2);
@@ -434,7 +453,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     await waitForTx(
       await yApe.connect(user2.signer).deposit(user2.address, parseEther("400"))
@@ -444,14 +465,14 @@ describe("Auto Yield Ape Test", () => {
       await yApe.connect(user2.signer).withdraw(parseEther("600"))
     );
     almostEqual(
-      await yApe.yieldAmount(gatewayAdmin.address),
+      await yApe.yieldAmount(yApe.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
   });
 
   it("lending pool support for yApe work as expected", async () => {
     const {
-      users: [user1, user2, user3, , user5],
+      users: [user1, user2, , , user3, user4],
       ape,
       usdc,
       pool,
@@ -491,7 +512,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     expect(await yApePToken.yieldAmount(user2.address)).to.be.equal(0);
     expect(await yApePToken.yieldAmount(user3.address)).to.be.equal(0);
@@ -524,7 +547,9 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
     expect(await yApePToken.yieldAmount(user2.address)).to.be.equal(0);
     almostEqual(
       await yApePToken.yieldAmount(user3.address),
@@ -548,11 +573,13 @@ describe("Auto Yield Ape Test", () => {
     await waitForTx(
       await yApePToken
         .connect(user2.signer)
-        .transfer(user5.address, parseEther("100"))
+        .transfer(user4.address, parseEther("100"))
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -563,7 +590,7 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
     almostEqual(
-      await yApePToken.yieldAmount(user5.address),
+      await yApePToken.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "0")
     );
     await waitForTx(
@@ -573,7 +600,7 @@ describe("Auto Yield Ape Test", () => {
       await yApePToken.connect(user1.signer).claimFor(user3.address)
     );
     await waitForTx(
-      await yApePToken.connect(user1.signer).claimFor(user5.address)
+      await yApePToken.connect(user1.signer).claimFor(user4.address)
     );
     almostEqual(
       await yUSDC.balanceOf(user2.address),
@@ -584,18 +611,20 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "3600")
     );
     almostEqual(
-      await yUSDC.balanceOf(user5.address),
+      await yUSDC.balanceOf(user4.address),
       await convertToCurrencyDecimals(usdc.address, "0")
     );
 
     await waitForTx(
       await yApePToken
         .connect(user3.signer)
-        .transfer(user5.address, parseEther("100"))
+        .transfer(user4.address, parseEther("100"))
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -606,7 +635,7 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "900")
     );
     almostEqual(
-      await yApePToken.yieldAmount(user5.address),
+      await yApePToken.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "900")
     );
     await waitForTx(
@@ -616,7 +645,7 @@ describe("Auto Yield Ape Test", () => {
       await yApePToken.connect(user1.signer).claimFor(user3.address)
     );
     await waitForTx(
-      await yApePToken.connect(user1.signer).claimFor(user5.address)
+      await yApePToken.connect(user1.signer).claimFor(user4.address)
     );
     //1800 + 900
     almostEqual(
@@ -628,12 +657,14 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "4500")
     );
     almostEqual(
-      await yUSDC.balanceOf(user5.address),
+      await yUSDC.balanceOf(user4.address),
       await convertToCurrencyDecimals(usdc.address, "900")
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -644,7 +675,7 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "900")
     );
     almostEqual(
-      await yApePToken.yieldAmount(user5.address),
+      await yApePToken.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "1800")
     );
     await waitForTx(
@@ -654,7 +685,7 @@ describe("Auto Yield Ape Test", () => {
       await yApePToken.connect(user1.signer).claimFor(user3.address)
     );
     await waitForTx(
-      await yApePToken.connect(user1.signer).claimFor(user5.address)
+      await yApePToken.connect(user1.signer).claimFor(user4.address)
     );
     almostEqual(
       await yUSDC.balanceOf(user2.address),
@@ -665,7 +696,7 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "5400")
     );
     almostEqual(
-      await yUSDC.balanceOf(user5.address),
+      await yUSDC.balanceOf(user4.address),
       await convertToCurrencyDecimals(usdc.address, "2700")
     );
 
@@ -681,15 +712,17 @@ describe("Auto Yield Ape Test", () => {
     );
     await waitForTx(
       await pool
-        .connect(user5.signer)
-        .withdraw(yApe.address, parseEther("200"), user5.address)
+        .connect(user4.signer)
+        .withdraw(yApe.address, parseEther("200"), user4.address)
     );
     expect(await yApePToken.balanceOf(user2.address)).to.be.equal(0);
     expect(await yApePToken.balanceOf(user3.address)).to.be.equal(0);
-    expect(await yApePToken.balanceOf(user5.address)).to.be.equal(0);
+    expect(await yApePToken.balanceOf(user4.address)).to.be.equal(0);
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yApePToken.yieldAmount(user2.address),
@@ -700,14 +733,14 @@ describe("Auto Yield Ape Test", () => {
       await convertToCurrencyDecimals(usdc.address, "0")
     );
     almostEqual(
-      await yApePToken.yieldAmount(user5.address),
+      await yApePToken.yieldAmount(user4.address),
       await convertToCurrencyDecimals(usdc.address, "0")
     );
   });
 
   it("yApe can be liquidated as expected", async () => {
     const {
-      users: [user1, user2, user3],
+      users: [user1, user2, , , user3],
       ape,
       usdc,
       weth,
@@ -741,10 +774,14 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user3.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user3.signer).harvest(swapPath, "990000")
+    );
 
     almostEqual(
       await yUSDC.balanceOf(yApe.address),
@@ -784,23 +821,23 @@ describe("Auto Yield Ape Test", () => {
 
   it("harvest fee calculation as expected", async () => {
     const {
-      users: [user1, user2, user3],
+      users: [, user2, , , user3],
       ape,
       usdc,
-      gatewayAdmin,
+      poolAdmin,
     } = await loadFixture(fixture);
 
     await expect(
       yApe.connect(user2.signer).setHarvestOperator(user2.address)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
     await expect(
       yApe.connect(user2.signer).setHarvestFeeRate(1000)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
     await waitForTx(
-      await yApe.connect(gatewayAdmin.signer).setHarvestOperator(user2.address)
+      await yApe.connect(poolAdmin.signer).setHarvestOperator(user2.address)
     );
     await waitForTx(
-      await yApe.connect(gatewayAdmin.signer).setHarvestFeeRate(1000)
+      await yApe.connect(poolAdmin.signer).setHarvestFeeRate(1000)
     );
 
     await mintAndValidate(ape, "200", user2);
@@ -814,14 +851,18 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user2.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user2.signer).harvest(swapPath, "990000")
+    );
 
     await advanceTimeAndBlock(3600);
-    await waitForTx(await yApe.connect(user2.signer).harvest("990000"));
+    await waitForTx(
+      await yApe.connect(user2.signer).harvest(swapPath, "990000")
+    );
 
-    //user1 is owner, so total yield is 360 + 360 = 720
+    //harvest fee = 3600 * 0.1 * 2
     almostEqual(
-      await yApe.yieldAmount(user1.address),
+      await yApe.yieldAmount(yApe.address),
       await convertToCurrencyDecimals(usdc.address, "720")
     );
     almostEqual(
@@ -834,20 +875,72 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await waitForTx(
-      await yApe.connect(gatewayAdmin.signer).claimFor(gatewayAdmin.address)
+      await yApe.connect(poolAdmin.signer).claimHarvestFee(poolAdmin.address)
     );
 
     almostEqual(
-      await yUSDC.balanceOf(gatewayAdmin.address),
+      await yUSDC.balanceOf(poolAdmin.address),
       await convertToCurrencyDecimals(usdc.address, "720")
     );
+
+    expect(await yApe.yieldAmount(yApe.address)).to.be.eq(0);
+  });
+
+  it("pause function as expected", async () => {
+    const {
+      users: [user1],
+      ape,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(ape, "400", user1);
+
+    await expect(yApe.connect(user1.signer).pause()).to.be.revertedWith(
+      CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).pause());
+
+    await expect(
+      yApe.connect(user1.signer).deposit(user1.address, parseEther("400"))
+    ).to.be.revertedWith("Pausable: paused");
+
+    await expect(yApe.connect(user1.signer).unpause()).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).unpause());
+
+    await waitForTx(
+      await yApe.connect(user1.signer).deposit(user1.address, parseEther("400"))
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).pause());
+
+    await advanceTimeAndBlock(3600);
+
+    await expect(
+      yApe.connect(user1.signer).withdraw(parseEther("400"))
+    ).to.be.revertedWith("Pausable: paused");
+
+    await expect(
+      yApe.connect(user1.signer).claimFor(user1.address)
+    ).to.be.revertedWith("Pausable: paused");
+
+    await expect(yApe.connect(user1.signer).exit()).to.be.revertedWith(
+      "Pausable: paused"
+    );
+
+    await waitForTx(await yApe.connect(poolAdmin.signer).unpause());
+
+    await waitForTx(await yApe.connect(user1.signer).exit());
   });
 
   it("check rescueERC20", async () => {
     const {
       users: [user1, user2],
       weth,
-      gatewayAdmin,
+      poolAdmin,
     } = await loadFixture(fixture);
 
     await mintAndValidate(weth, "1", user1);
@@ -859,11 +952,11 @@ describe("Auto Yield Ape Test", () => {
       yApe
         .connect(user2.signer)
         .rescueERC20(weth.address, user2.address, parseEther("1"))
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
 
     await waitForTx(
       await yApe
-        .connect(gatewayAdmin.signer)
+        .connect(poolAdmin.signer)
         .rescueERC20(weth.address, user1.address, parseEther("1"))
     );
 
@@ -873,7 +966,7 @@ describe("Auto Yield Ape Test", () => {
   it("test vote delegation", async () => {
     const {
       users: [user1],
-      gatewayAdmin,
+      poolAdmin,
     } = await loadFixture(fixture);
 
     const delegateRegistry = await deployMockedDelegateRegistry(
@@ -881,7 +974,7 @@ describe("Auto Yield Ape Test", () => {
     );
 
     await yApe
-      .connect(gatewayAdmin.signer)
+      .connect(poolAdmin.signer)
       .setVotingDelegate(
         delegateRegistry.address,
         solidityKeccak256(["string"], ["test"]),
