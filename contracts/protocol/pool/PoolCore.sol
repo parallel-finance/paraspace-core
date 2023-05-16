@@ -10,6 +10,7 @@ import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
+import {SwapLogic} from "../libraries/logic/SwapLogic.sol";
 import {AuctionLogic} from "../libraries/logic/AuctionLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
@@ -527,6 +528,47 @@ contract PoolCore is
             })
         );
     }
+
+    /// @inheritdoc IPoolCore
+    function swapPToken(
+        address srcAsset,
+        uint256 srcAmount,
+        address dstAsset,
+        address to,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        SwapLogic.executeSwap(
+            ps,
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[msg.sender],
+            DataTypes.ExecuteSwapParams({
+                srcAsset: srcAsset,
+                srcAmount: srcAmount,
+                dstAsset: dstAsset,
+                to: to,
+                releaseUnderlying: true,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: ps._swapAdapters[swapAdapterId],
+                swapPayload: swapPayload
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function swapDebt(
+        address srcAsset,
+        uint256 srcAmount,
+        address dstAsset,
+        address to,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external {}
 
     /// @inheritdoc IPoolCore
     function startAuction(
