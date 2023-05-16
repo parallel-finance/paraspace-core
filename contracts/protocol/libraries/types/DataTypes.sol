@@ -333,9 +333,9 @@ library DataTypes {
 
     struct ExecuteSwapParams {
         address srcAsset;
-        uint256 srcAmount;
         address dstAsset;
-        address to;
+        uint256 amount;
+        address user;
         bool releaseUnderlying;
         uint256 reservesCount;
         address oracle;

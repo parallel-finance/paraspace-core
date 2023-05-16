@@ -11,6 +11,8 @@ import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
+import {BorrowLogic} from "./BorrowLogic.sol";
+import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
 
 /**
  * @title SwapLogic library
@@ -42,20 +44,16 @@ library SwapLogic {
      * @dev Emits the `Swap()` event.
      * @dev If the user swap everything, `ReserveUsedAsCollateralDisabled()` is emitted.
      * @param ps The pool storage pointer
-     * @param reservesData The state of all the reserves
-     * @param reservesList The addresses of all the active reserves
      * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the swap function
      * @return The actual amount swapped
      */
-    function executeSwap(
+    function executeSwapPToken(
         DataTypes.PoolStorage storage ps,
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSwapParams memory params
     ) external returns (uint256) {
-        DataTypes.ReserveData storage reserve = reservesData[params.srcAsset];
+        DataTypes.ReserveData storage reserve = ps._reserves[params.srcAsset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
         reserve.updateState(reserveCache);
@@ -64,9 +62,9 @@ library SwapLogic {
             .scaledBalanceOf(msg.sender)
             .rayMul(reserveCache.nextLiquidityIndex);
 
-        uint256 amountToSwap = params.srcAmount;
+        uint256 amountToSwap = params.amount;
 
-        if (params.srcAmount == type(uint256).max) {
+        if (params.amount == type(uint256).max) {
             amountToSwap = userBalance;
         }
 
@@ -86,12 +84,12 @@ library SwapLogic {
         DataTypes.TimeLockParams memory timeLockParams;
         DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
             params.swapAdapter.adapter
-        ).getSwapInfo(params.swapPayload);
+        ).getSwapInfo(params.swapPayload, true);
         ValidationLogic.validateSwap(
             swapInfo,
             DataTypes.ValidateSwapParams({
                 swapAdapter: params.swapAdapter,
-                amount: params.srcAmount,
+                amount: amountToSwap,
                 srcToken: params.srcAsset,
                 dstToken: params.dstAsset,
                 dstReceiver: reserveCache.xTokenAddress
@@ -103,17 +101,16 @@ library SwapLogic {
                 timeLockParams,
                 params.swapAdapter,
                 params.swapPayload,
-                swapInfo,
-                type(uint256).max
+                swapInfo
             );
 
         SupplyLogic.executeSupply(
-            reservesData,
-            ps._usersConfig[params.to],
+            ps._reserves,
+            ps._usersConfig[params.user],
             DataTypes.ExecuteSupplyParams({
                 asset: params.dstAsset,
                 amount: amountOut,
-                onBehalfOf: params.to,
+                onBehalfOf: params.user,
                 payer: address(this),
                 referralCode: 0
             })
@@ -122,8 +119,8 @@ library SwapLogic {
         if (userConfig.isUsingAsCollateral(reserve.id)) {
             if (userConfig.isBorrowingAny()) {
                 ValidationLogic.validateHFAndLtvERC20(
-                    reservesData,
-                    reservesList,
+                    ps._reserves,
+                    ps._reservesList,
                     userConfig,
                     params.srcAsset,
                     msg.sender,
@@ -142,5 +139,89 @@ library SwapLogic {
         }
 
         return amountToSwap;
+    }
+
+    function executeSwapDebt(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.UserConfigurationMap storage userConfig,
+        DataTypes.ExecuteSwapParams memory params
+    ) external returns (uint256 amount) {
+        DataTypes.ReserveData storage reserve = ps._reserves[params.dstAsset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        reserve.updateState(reserveCache);
+
+        ValidationLogic.validateBorrow(
+            ps._reserves,
+            ps._reservesList,
+            DataTypes.ValidateBorrowParams({
+                reserveCache: reserveCache,
+                userConfig: userConfig,
+                asset: params.dstAsset,
+                userAddress: params.user,
+                amount: params.amount,
+                reservesCount: params.reservesCount,
+                oracle: params.oracle,
+                priceOracleSentinel: params.priceOracleSentinel
+            })
+        );
+
+        bool isFirstBorrowing = false;
+        (
+            isFirstBorrowing,
+            reserveCache.nextScaledVariableDebt
+        ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
+            params.user,
+            params.user,
+            params.amount,
+            reserveCache.nextVariableBorrowIndex
+        );
+
+        if (isFirstBorrowing) {
+            userConfig.setBorrowing(reserve.id, true);
+        }
+
+        reserve.updateInterestRates(
+            reserveCache,
+            params.dstAsset,
+            0,
+            params.releaseUnderlying ? params.amount : 0
+        );
+
+        if (params.releaseUnderlying) {
+            DataTypes.TimeLockParams memory timeLockParams;
+            DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
+                params.swapAdapter.adapter
+            ).getSwapInfo(params.swapPayload, true);
+            ValidationLogic.validateSwap(
+                swapInfo,
+                DataTypes.ValidateSwapParams({
+                    swapAdapter: params.swapAdapter,
+                    amount: params.amount,
+                    srcToken: params.srcAsset,
+                    dstToken: params.dstAsset,
+                    dstReceiver: reserveCache.xTokenAddress
+                })
+            );
+            amount = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
+                params.user,
+                timeLockParams,
+                params.swapAdapter,
+                params.swapPayload,
+                swapInfo
+            );
+
+            BorrowLogic.executeRepay(
+                ps._reserves,
+                ps._usersConfig[params.user],
+                DataTypes.ExecuteRepayParams({
+                    asset: params.srcAsset,
+                    amount: amount,
+                    onBehalfOf: params.user,
+                    payer: address(this),
+                    usePTokens: false
+                })
+            );
+        }
     }
 }

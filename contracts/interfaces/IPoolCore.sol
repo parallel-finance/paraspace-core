@@ -518,11 +518,20 @@ interface IPoolCore {
         bytes calldata swapPayload
     ) external;
 
+    /**
+     * @notice Swaps a specified amount of debt from one asset to another using a specified adapter.
+     * @dev The user must have approved this contract to spend `srcAsset` tokens on their behalf.
+     * @dev The swap is executed using the `swapAdapterId` and `swapPayload` parameters to identify the specific adapter and its configuration.
+     * @param srcAsset The address of the asset to be swapped from.
+     * @param dstAsset The address of the asset to be swapped to (which represents the debt).
+     * @param dstAmount The amount of `dstAsset` tokens to be received after the swap is completed.
+     * @param swapAdapterId The ID of the adapter to be used for the swap.
+     * @param swapPayload Additional data to be passed to the adapter to configure the swap.
+     */
     function swapDebt(
         address srcAsset,
-        uint256 srcAmount,
         address dstAsset,
-        address to,
+        uint256 dstAmount,
         bytes32 swapAdapterId,
         bytes calldata swapPayload
     ) external;

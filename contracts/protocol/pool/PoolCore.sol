@@ -540,16 +540,14 @@ contract PoolCore is
     ) external {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        SwapLogic.executeSwap(
+        SwapLogic.executeSwapPToken(
             ps,
-            ps._reserves,
-            ps._reservesList,
             ps._usersConfig[msg.sender],
             DataTypes.ExecuteSwapParams({
                 srcAsset: srcAsset,
-                srcAmount: srcAmount,
                 dstAsset: dstAsset,
-                to: to,
+                amount: srcAmount,
+                user: to,
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
@@ -563,12 +561,30 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function swapDebt(
         address srcAsset,
-        uint256 srcAmount,
         address dstAsset,
-        address to,
+        uint256 dstAmount,
         bytes32 swapAdapterId,
         bytes calldata swapPayload
-    ) external {}
+    ) external {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        SwapLogic.executeSwapDebt(
+            ps,
+            ps._usersConfig[msg.sender],
+            DataTypes.ExecuteSwapParams({
+                srcAsset: srcAsset,
+                dstAsset: dstAsset,
+                amount: dstAmount,
+                user: msg.sender,
+                releaseUnderlying: true,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: ps._swapAdapters[swapAdapterId],
+                swapPayload: swapPayload
+            })
+        );
+    }
 
     /// @inheritdoc IPoolCore
     function startAuction(
