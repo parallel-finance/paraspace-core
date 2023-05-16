@@ -1229,7 +1229,12 @@ library ValidationLogic {
                     swapInfo.dstToken == params.dstToken)),
             Errors.INVALID_SWAP_PAYLOAD
         );
-        require(swapInfo.amount == params.amount, Errors.INVALID_SWAP_PAYLOAD);
+        require(
+            (swapInfo.exactInput && swapInfo.maxAmountIn == params.amount) ||
+                (!swapInfo.exactInput &&
+                    swapInfo.minAmountOut == params.amount),
+            Errors.INVALID_SWAP_PAYLOAD
+        );
         require(!params.swapAdapter.paused, Errors.SWAP_ADAPTER_PAUSED);
         require(
             swapInfo.dstReceiver == params.dstReceiver,

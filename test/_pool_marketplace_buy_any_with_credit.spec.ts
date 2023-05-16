@@ -196,9 +196,7 @@ describe("Leveraged Buy Any - Positive tests", () => {
       [await getSellOrder(), [], conduitKey, pool.address]
     );
 
-    const creditAmountInListingToken = creditAmount
-      .div("800")
-      .mul("1000000000000");
+    const creditAmountInListingToken = creditAmount;
 
     const swapRouter = await getUniswapV3SwapRouter();
     const swapPayload = swapRouter.interface.encodeFunctionData("exactInput", [

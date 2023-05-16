@@ -96,8 +96,7 @@ interface IPToken is
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata swapPayload,
-        DataTypes.SwapInfo calldata swapInfo,
-        uint256 max
+        DataTypes.SwapInfo calldata swapInfo
     ) external returns (uint256 amountOut);
 
     /**

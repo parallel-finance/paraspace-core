@@ -16,9 +16,33 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
 
     constructor() {}
 
-    function getSwapInfo(bytes memory payload)
+    function getSwapInfo(bytes memory payload, bool exactInput)
         external
-        view
+        pure
+        returns (DataTypes.SwapInfo memory)
+    {
+        if (exactInput) {
+            return _getExactInputParams(payload);
+        } else {
+            return _getExactOutputParams(payload);
+        }
+    }
+
+    function swap(
+        address router,
+        bytes memory payload,
+        bool exactInput
+    ) external returns (bytes memory) {
+        bytes4 selector = exactInput
+            ? ISwapRouter.exactInput.selector
+            : ISwapRouter.exactOutput.selector;
+        bytes memory data = abi.encodePacked(selector, payload);
+        return Address.functionCall(router, data, Errors.CALL_SWAP_FAILED);
+    }
+
+    function _getExactInputParams(bytes memory payload)
+        internal
+        pure
         returns (DataTypes.SwapInfo memory swapInfo)
     {
         ISwapRouter.ExactInputParams memory params = abi.decode(
@@ -33,18 +57,34 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
 
         swapInfo.srcToken = srcToken;
         swapInfo.dstToken = dstToken;
-        swapInfo.amount = params.amountIn;
-        swapInfo.minReturnAmount = params.amountOutMinimum;
+        swapInfo.maxAmountIn = params.amountIn;
+        swapInfo.minAmountOut = params.amountOutMinimum;
         swapInfo.srcReceiver = address(0);
         swapInfo.dstReceiver = params.recipient;
+        swapInfo.exactInput = true;
     }
 
-    function swap(address router, bytes memory payload)
-        external
-        returns (bytes memory)
+    function _getExactOutputParams(bytes memory payload)
+        internal
+        pure
+        returns (DataTypes.SwapInfo memory swapInfo)
     {
-        bytes4 selector = ISwapRouter.exactInput.selector;
-        bytes memory data = abi.encodePacked(selector, payload);
-        return Address.functionCall(router, data, Errors.CALL_SWAP_FAILED);
+        ISwapRouter.ExactOutputParams memory params = abi.decode(
+            bytes(payload),
+            (ISwapRouter.ExactOutputParams)
+        );
+
+        address srcToken = params.path.toAddress(0);
+        address dstToken = params.path.toAddress(
+            params.path.length - ADDR_SIZE
+        );
+
+        swapInfo.srcToken = srcToken;
+        swapInfo.dstToken = dstToken;
+        swapInfo.maxAmountIn = params.amountInMaximum;
+        swapInfo.minAmountOut = params.amountOut;
+        swapInfo.srcReceiver = address(0);
+        swapInfo.dstReceiver = params.recipient;
+        swapInfo.exactInput = false;
     }
 }

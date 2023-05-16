@@ -73,7 +73,7 @@ library MarketplaceLogic {
         address creditToken;
         address creditXTokenAddress;
         uint256 creditAmount;
-        uint256 creditAmountInListingToken;
+        uint256 borrowAmount;
         uint256 supplyAmount;
         address xTokenAddress;
         uint256 price;
@@ -348,7 +348,7 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars
     ) internal returns (uint256, uint256) {
         uint256 price = vars.price;
-        uint256 downpayment = price - vars.creditAmountInListingToken;
+        uint256 downpayment = price - vars.creditAmount;
         if (!vars.isListingTokenETH) {
             address transferToken = vars.isListingTokenPToken
                 ? vars.listingXTokenAddress
@@ -358,7 +358,10 @@ library MarketplaceLogic {
                 address(this),
                 downpayment
             );
-            Helpers.checkAllowance(transferToken, params.marketplace.operator);
+            Helpers.checkMaxAllowance(
+                transferToken,
+                params.marketplace.operator
+            );
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -389,7 +392,7 @@ library MarketplaceLogic {
         }
 
         DataTypes.TimeLockParams memory timeLockParams;
-        vars.creditAmountInListingToken = vars.creditAmount;
+        vars.borrowAmount = vars.creditAmount;
         address transit = vars.isListingTokenPToken ? address(this) : to;
 
         if (vars.listingToken == vars.creditToken) {
@@ -401,7 +404,7 @@ library MarketplaceLogic {
         } else {
             DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
                 params.swapAdapter.adapter
-            ).getSwapInfo(params.swapPayload);
+            ).getSwapInfo(params.swapPayload, false);
             ValidationLogic.validateSwap(
                 swapInfo,
                 DataTypes.ValidateSwapParams({
@@ -412,27 +415,26 @@ library MarketplaceLogic {
                     dstReceiver: vars.creditXTokenAddress
                 })
             );
-            vars.creditAmountInListingToken = IPToken(vars.creditXTokenAddress)
+            vars.borrowAmount = IPToken(vars.creditXTokenAddress)
                 .swapUnderlyingTo(
                     transit,
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
-                    swapInfo,
-                    vars.price
+                    swapInfo
                 );
         }
 
         if (vars.isListingTokenETH && transit == address(this)) {
             // No re-entrancy because it sent to our contract address
-            IWETH(params.weth).withdraw(vars.creditAmountInListingToken);
+            IWETH(params.weth).withdraw(vars.creditAmount);
         } else if (vars.isListingTokenPToken) {
             SupplyLogic.executeSupply(
                 ps._reserves,
                 ps._usersConfig[to],
                 DataTypes.ExecuteSupplyParams({
                     asset: vars.listingToken,
-                    amount: vars.creditAmountInListingToken,
+                    amount: vars.creditAmount,
                     onBehalfOf: to,
                     payer: transit,
                     referralCode: 0
@@ -577,7 +579,7 @@ library MarketplaceLogic {
                 asset: vars.creditToken,
                 user: buyer,
                 onBehalfOf: buyer,
-                amount: vars.creditAmount,
+                amount: vars.borrowAmount,
                 referralCode: 0,
                 releaseUnderlying: false,
                 reservesCount: params.reservesCount,
