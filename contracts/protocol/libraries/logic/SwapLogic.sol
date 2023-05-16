@@ -45,13 +45,12 @@ library SwapLogic {
      * @param ps The pool storage pointer
      * @param userConfig The user configuration mapping that tracks the supplied/borrowed assets
      * @param params The additional parameters needed to execute the swap function
-     * @return The actual amount swapped
      */
     function executeSwapPToken(
         DataTypes.PoolStorage storage ps,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSwapParams memory params
-    ) external returns (uint256) {
+    ) external {
         DataTypes.ReserveData storage reserve = ps._reserves[params.srcAsset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
@@ -144,15 +143,13 @@ library SwapLogic {
             amountToSwap,
             amountOut
         );
-
-        return amountToSwap;
     }
 
     function executeSwapDebt(
         DataTypes.PoolStorage storage ps,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSwapParams memory params
-    ) external returns (uint256 amount) {
+    ) external {
         DataTypes.ReserveData storage reserve = ps._reserves[params.dstAsset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
@@ -172,7 +169,7 @@ library SwapLogic {
                 dstReceiver: reserveCache.xTokenAddress
             })
         );
-        amount = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
+        uint256 amountIn = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
             address(this),
             timeLockParams,
             params.swapAdapter,
@@ -187,7 +184,7 @@ library SwapLogic {
         ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
             params.user,
             params.user,
-            amount,
+            amountIn,
             reserveCache.nextVariableBorrowIndex
         );
 
@@ -195,7 +192,7 @@ library SwapLogic {
             userConfig.setBorrowing(reserve.id, true);
         }
 
-        reserve.updateInterestRates(reserveCache, params.dstAsset, 0, amount);
+        reserve.updateInterestRates(reserveCache, params.dstAsset, 0, amountIn);
 
         BorrowLogic.executeRepay(
             ps._reserves,
@@ -217,7 +214,7 @@ library SwapLogic {
                 userConfig: userConfig,
                 asset: params.dstAsset,
                 userAddress: params.user,
-                amount: amount,
+                amount: amountIn,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
                 priceOracleSentinel: params.priceOracleSentinel
@@ -229,7 +226,7 @@ library SwapLogic {
             params.dstAsset,
             params.user,
             params.amount,
-            amount
+            amountIn
         );
     }
 }
