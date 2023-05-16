@@ -79,6 +79,7 @@ import {
   NTokenOtherdeed__factory,
   TimeLock__factory,
   P2PPairStaking__factory,
+  ISafe__factory,
 } from "../types";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
 import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
@@ -906,6 +907,7 @@ export const decodeInputData = (data: string) => {
     ...NTokenOtherdeed__factory.abi,
     ...TimeLock__factory.abi,
     ...P2PPairStaking__factory.abi,
+    ...ISafe__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
