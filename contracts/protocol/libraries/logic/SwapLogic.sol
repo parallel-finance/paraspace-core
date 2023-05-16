@@ -158,28 +158,6 @@ library SwapLogic {
 
         reserve.updateState(reserveCache);
 
-        bool isFirstBorrowing = false;
-        (
-            isFirstBorrowing,
-            reserveCache.nextScaledVariableDebt
-        ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
-            params.user,
-            params.user,
-            params.amount,
-            reserveCache.nextVariableBorrowIndex
-        );
-
-        if (isFirstBorrowing) {
-            userConfig.setBorrowing(reserve.id, true);
-        }
-
-        reserve.updateInterestRates(
-            reserveCache,
-            params.dstAsset,
-            0,
-            params.amount
-        );
-
         DataTypes.TimeLockParams memory timeLockParams;
         DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
             params.swapAdapter.adapter
@@ -189,8 +167,8 @@ library SwapLogic {
             DataTypes.ValidateSwapParams({
                 swapAdapter: params.swapAdapter,
                 amount: params.amount,
-                srcToken: params.srcAsset,
-                dstToken: params.dstAsset,
+                srcToken: params.dstAsset,
+                dstToken: params.srcAsset,
                 dstReceiver: reserveCache.xTokenAddress
             })
         );
@@ -202,12 +180,29 @@ library SwapLogic {
             swapInfo
         );
 
+        bool isFirstBorrowing = false;
+        (
+            isFirstBorrowing,
+            reserveCache.nextScaledVariableDebt
+        ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
+            params.user,
+            params.user,
+            amount,
+            reserveCache.nextVariableBorrowIndex
+        );
+
+        if (isFirstBorrowing) {
+            userConfig.setBorrowing(reserve.id, true);
+        }
+
+        reserve.updateInterestRates(reserveCache, params.dstAsset, 0, amount);
+
         BorrowLogic.executeRepay(
             ps._reserves,
             ps._usersConfig[params.user],
             DataTypes.ExecuteRepayParams({
                 asset: params.srcAsset,
-                amount: amount,
+                amount: params.amount,
                 onBehalfOf: params.user,
                 payer: address(this),
                 usePTokens: false
@@ -222,7 +217,7 @@ library SwapLogic {
                 userConfig: userConfig,
                 asset: params.dstAsset,
                 userAddress: params.user,
-                amount: params.amount,
+                amount: amount,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
                 priceOracleSentinel: params.priceOracleSentinel
@@ -233,8 +228,8 @@ library SwapLogic {
             params.srcAsset,
             params.dstAsset,
             params.user,
-            amount,
-            params.amount
+            params.amount,
+            amount
         );
     }
 }

@@ -548,7 +548,6 @@ contract PoolCore is
                 dstAsset: dstAsset,
                 amount: srcAmount,
                 user: to,
-                releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
@@ -561,8 +560,8 @@ contract PoolCore is
     /// @inheritdoc IPoolCore
     function swapDebt(
         address srcAsset,
+        uint256 srcAmount,
         address dstAsset,
-        uint256 dstAmount,
         bytes32 swapAdapterId,
         bytes calldata swapPayload
     ) external {
@@ -574,9 +573,8 @@ contract PoolCore is
             DataTypes.ExecuteSwapParams({
                 srcAsset: srcAsset,
                 dstAsset: dstAsset,
-                amount: dstAmount,
+                amount: srcAmount,
                 user: msg.sender,
-                releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
