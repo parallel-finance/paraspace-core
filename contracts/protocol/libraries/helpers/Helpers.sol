@@ -47,10 +47,21 @@ library Helpers {
         return assetPrice.wadMul(multiplier);
     }
 
-    function checkAllowance(address token, address operator) internal {
+    function checkMaxAllowance(address token, address operator) internal {
         uint256 allowance = IERC20(token).allowance(address(this), operator);
         if (allowance == 0) {
             IERC20(token).safeApprove(operator, type(uint256).max);
+        }
+    }
+
+    function checkExactAllowance(
+        address token,
+        address operator,
+        uint256 allowance
+    ) internal {
+        if (IERC20(token).allowance(address(this), operator) < allowance) {
+            IERC20(token).safeApprove(operator, 0);
+            IERC20(token).safeApprove(operator, allowance);
         }
     }
 

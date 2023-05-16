@@ -372,8 +372,9 @@ library DataTypes {
         address dstToken;
         address srcReceiver;
         address dstReceiver;
-        uint256 amount;
-        uint256 minReturnAmount;
+        uint256 maxAmountIn;
+        uint256 minAmountOut;
+        bool exactInput;
     }
 
     struct Marketplace {

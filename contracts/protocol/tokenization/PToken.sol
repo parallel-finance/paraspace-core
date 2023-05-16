@@ -226,25 +226,33 @@ contract PToken is
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata swapPayload,
-        DataTypes.SwapInfo calldata swapInfo,
-        uint256 max
-    ) external virtual override onlyPool returns (uint256 amountOut) {
-        uint256 beforeBalance = IERC20(swapInfo.dstToken).balanceOf(
-            address(this)
+        DataTypes.SwapInfo calldata swapInfo
+    ) external virtual override onlyPool returns (uint256 amount) {
+        uint256 beforeBalance;
+        if (swapInfo.exactInput) {
+            beforeBalance = IERC20(swapInfo.dstToken).balanceOf(address(this));
+        }
+
+        Helpers.checkExactAllowance(
+            swapInfo.srcToken,
+            swapAdapter.router,
+            swapInfo.maxAmountIn
         );
-        Helpers.checkAllowance(swapInfo.srcToken, swapAdapter.router);
-        Address.functionDelegateCall(
+        bytes memory returndata = Address.functionDelegateCall(
             swapAdapter.adapter,
             abi.encodeWithSelector(
                 ISwapAdapter.swap.selector,
                 swapAdapter.router,
-                swapPayload
+                swapPayload,
+                swapInfo.exactInput
             )
         );
-        uint256 afterBalance = IERC20(swapInfo.dstToken).balanceOf(
-            address(this)
-        );
-        amountOut = Math.min(afterBalance - beforeBalance, max);
+        amount = abi.decode(returndata, (uint256));
+
+        uint256 amountOut = swapInfo.exactInput
+            ? IERC20(swapInfo.dstToken).balanceOf(address(this)) - beforeBalance
+            : amount;
+
         require(amountOut > 0, Errors.CALL_SWAP_FAILED);
 
         _sendToUserOrTimeLock(

@@ -122,7 +122,7 @@ library BorrowLogic {
             } else {
                 DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
                     params.swapAdapter.adapter
-                ).getSwapInfo(params.swapPayload);
+                ).getSwapInfo(params.swapPayload, true);
                 ValidationLogic.validateSwap(
                     swapInfo,
                     DataTypes.ValidateSwapParams({
@@ -138,8 +138,7 @@ library BorrowLogic {
                     timeLockParams,
                     params.swapAdapter,
                     params.swapPayload,
-                    swapInfo,
-                    type(uint256).max
+                    swapInfo
                 );
             }
         }
