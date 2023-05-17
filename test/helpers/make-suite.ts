@@ -162,6 +162,7 @@ export interface TestEnv {
   pcETH: PToken;
   dai: MintableERC20;
   pDai: PToken;
+  variableDebtUsdc: VariableDebtToken;
   variableDebtDai: VariableDebtToken;
   variableDebtStETH: StETHDebtToken;
   variableDebtAWeth: ATokenDebtToken;
@@ -243,6 +244,7 @@ export async function initializeMakeSuite() {
     pcETH: {} as PToken,
     dai: {} as MintableERC20,
     pDai: {} as PToken,
+    variableDebtUsdc: {} as VariableDebtToken,
     variableDebtDai: {} as VariableDebtToken,
     variableDebtWeth: {} as VariableDebtToken,
     pUsdc: {} as PToken,
@@ -443,7 +445,11 @@ export async function initializeMakeSuite() {
     await testEnv.protocolDataProvider.getReserveTokensAddresses(
       wethAddress || ""
     );
-
+  const {variableDebtTokenAddress: variableDebtUsdcAddress} =
+    await testEnv.protocolDataProvider.getReserveTokensAddresses(
+      usdcAddress || ""
+    );
+  console.log(variableDebtUsdcAddress);
   const aWETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.aWETH
   )?.tokenAddress;
@@ -460,7 +466,6 @@ export async function initializeMakeSuite() {
   const punksAddress = reservesTokens.find(
     (token) => token.symbol === eContractid.PUNKS
   )?.tokenAddress;
-
   const wpunkAddress = reservesTokens.find(
     (token) => token.symbol === ERC721TokenContractId.WPUNKS
   )?.tokenAddress;
@@ -505,6 +510,9 @@ export async function initializeMakeSuite() {
   }
 
   testEnv.pDai = await getPToken(pDaiAddress);
+  testEnv.variableDebtUsdc = await getVariableDebtToken(
+    variableDebtUsdcAddress
+  );
   testEnv.variableDebtDai = await getVariableDebtToken(variableDebtDaiAddress);
   testEnv.variableDebtWeth = await getVariableDebtToken(
     variableDebtWethAddress

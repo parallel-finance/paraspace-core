@@ -206,6 +206,7 @@ export enum eContractid {
   PausableZone = "PausableZone",
   Seaport = "Seaport",
   MarketplaceLogic = "MarketplaceLogic",
+  SwapLogic = "SwapLogic",
   SeaportAdapter = "SeaportAdapter",
   LooksRareAdapter = "LooksRareAdapter",
   X2Y2Adapter = "X2Y2Adapter",

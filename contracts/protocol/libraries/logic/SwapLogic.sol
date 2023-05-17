@@ -90,7 +90,7 @@ library SwapLogic {
                 amount: amountToSwap,
                 srcToken: params.srcAsset,
                 dstToken: params.dstAsset,
-                dstReceiver: reserveCache.xTokenAddress
+                dstReceiver: address(this)
             })
         );
         uint256 amountOut = IPToken(reserveCache.xTokenAddress)
@@ -166,7 +166,7 @@ library SwapLogic {
                 amount: params.amount,
                 srcToken: params.dstAsset,
                 dstToken: params.srcAsset,
-                dstReceiver: reserveCache.xTokenAddress
+                dstReceiver: address(this)
             })
         );
         uint256 amountIn = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(

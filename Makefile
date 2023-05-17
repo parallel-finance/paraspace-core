@@ -108,6 +108,14 @@ test-erc20-borrow:
 test-erc20-borrow-swap:
 	make TEST_TARGET=_pool_core_erc20_borrow_swap.spec.ts test
 
+.PHONY: test-erc20-ptoken-swap
+test-erc20-ptoken-swap:
+	make TEST_TARGET=_pool_core_erc20_ptoken_swap.spec.ts test
+
+.PHONY: test-erc20-debt-swap
+test-erc20-debt-swap:
+	make TEST_TARGET=_pool_core_erc20_debt_swap.spec.ts test
+
 .PHONY: test-erc20-supply
 test-erc20-supply:
 	make TEST_TARGET=_pool_core_erc20_supply.spec.ts test
