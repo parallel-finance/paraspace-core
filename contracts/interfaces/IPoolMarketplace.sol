@@ -36,6 +36,17 @@ interface IPoolMarketplace {
         DataTypes.Credit calldata credit
     ) external payable;
 
+    /**
+     * @notice Purchase an asset through a specified marketplace using the user's available credit.
+     * @dev The credit must have been previously approved for use by the user, and the marketplace must support the `marketplaceId`.
+     * @dev The payment for the asset is deducted from the user's available credit, and any remaining credit is returned to the user.
+     * @dev The purchase is executed using the `swapAdapterId` and `swapPayload` parameters to identify the specific adapter and its configuration.
+     * @param marketplaceId The ID of the marketplace to purchase the asset from.
+     * @param payload Additional data to be passed to the marketplace to configure the purchase.
+     * @param credit A `DataTypes.Credit` struct specifying the credit to be used for the purchase.
+     * @param swapAdapterId The ID of the adapter to be used for the swap.
+     * @param swapPayload Additional data to be passed to the adapter to configure the swap.
+     */
     function buyAnyWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
@@ -58,6 +69,17 @@ interface IPoolMarketplace {
         DataTypes.Credit[] calldata credits
     ) external payable;
 
+    /**
+     * @notice Purchase multiple assets through multiple marketplaces using the user's available credit.
+     * @dev The credit must have been previously approved for use by the user, and the marketplaces must support the specified `marketplaceIds`.
+     * @dev The payment for each asset is deducted from the user's available credit, and any remaining credit is returned to the user.
+     * @dev The purchase for each asset is executed using the corresponding `swapAdapters` and `swapPayloads` in the same order as the `marketplaceIds`.
+     * @param marketplaceIds An array of marketplace IDs to purchase assets from.
+     * @param payloads An array of additional data to be passed to each marketplace to configure the respective purchases.
+     * @param credits An array of `DataTypes.Credit` structs specifying the credits to be used for each purchase.
+     * @param swapAdapters An array of `DataTypes.SwapAdapter` structs specifying the adapter to be used for each purchase.
+     * @param swapPayloads An array of additional data to be passed to each adapter to configure the respective swaps.
+     */
     function batchBuyAnyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,

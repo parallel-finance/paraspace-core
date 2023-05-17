@@ -405,6 +405,18 @@ interface IPoolCore {
         address onBehalfOf
     ) external;
 
+    /**
+     * @notice Borrow a specified amount of an asset from Aave V2 using any compatible adapter.
+     * @dev The user's account must already have a sufficient amount of collateral deposited in the protocol.
+     * @dev The `asset` must be an ERC20 token with allowance granted to this contract.
+     * @dev The borrow is executed using the `swapAdapterId` and `swapPayload` parameters to identify the specific adapter and its configuration.
+     * @param asset The address of the asset to be borrowed.
+     * @param amount The amount of the asset to be borrowed.
+     * @param referralCode An optional referral code to be used for rewarding the referrer, if any.
+     * @param onBehalfOf The address of the user to borrow on behalf of (if specified).
+     * @param swapAdapterId The ID of the adapter to be used for the borrow.
+     * @param swapPayload Additional data to be passed to the adapter to configure the borrow.
+     */
     function borrowAny(
         address asset,
         uint256 amount,
