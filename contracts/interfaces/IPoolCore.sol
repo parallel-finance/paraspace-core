@@ -654,6 +654,11 @@ interface IPoolCore {
         view
         returns (DataTypes.ReserveData memory);
 
+    /**
+     * @notice Returns the corresponding xToken address for a given reserve asset.
+     * @param asset The address of the reserve asset to check.
+     * @return The address of the corresponding xToken for the specified reserve asset, or zero if not available.
+     */
     function getReserveXToken(address asset) external view returns (address);
 
     /**
@@ -729,6 +734,10 @@ interface IPoolCore {
         view
         returns (IPoolAddressesProvider);
 
+    /**
+     * @notice Returns the time-lock contract used by the protocol.
+     * @return A contract implementing the `ITimeLock` interface.
+     */
     function TIME_LOCK() external view returns (ITimeLock);
 
     /**
