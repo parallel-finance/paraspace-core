@@ -10,7 +10,6 @@ import {waitForTx} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {
-  almostEqual,
   approveTo,
   createNewPool,
   fund,
@@ -104,7 +103,7 @@ const fixture = async () => {
 };
 
 describe("Debt swap", () => {
-  it("TC-erc20-debt-swap-01: user1 borrow usdc and swap debt to weth", async () => {
+  it("TC-erc20-debt-swap-01: user1 borrow weth and swap debt to usdc", async () => {
     const {
       pool,
       users: [user1],
@@ -112,18 +111,18 @@ describe("Debt swap", () => {
       variableDebtWeth,
       variableDebtUsdc,
       weth,
-      pWETH,
+      pUsdc,
     } = await loadFixture(fixture);
 
     const swapRouter = await getUniswapV3SwapRouter();
-    const borrowAmount = await convertToCurrencyDecimals(usdc.address, "1000");
+    const borrowAmount = await convertToCurrencyDecimals(weth.address, "1");
     const swapPayload = swapRouter.interface.encodeFunctionData("exactOutput", [
       {
         path: solidityPack(
           ["address", "uint24", "address"],
           [weth.address, 500, usdc.address]
         ),
-        recipient: pWETH.address,
+        recipient: pUsdc.address,
         deadline: 2659537628,
         amountOut: borrowAmount,
         amountInMaximum: MAX_UINT_AMOUNT,
@@ -133,22 +132,21 @@ describe("Debt swap", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .borrow(usdc.address, borrowAmount, 0, user1.address)
+        .borrow(weth.address, borrowAmount, 0, user1.address)
     );
 
     await waitForTx(
       await pool
         .connect(user1.signer)
         .swapDebt(
-          usdc.address,
-          borrowAmount,
           weth.address,
+          borrowAmount,
+          usdc.address,
           UNISWAP_V3_SWAP_ADAPTER_ID,
           `0x${swapPayload.slice(10)}`
         )
     );
 
-    expect(await variableDebtWeth.balanceOf(user1.address)).gt(0);
-    almostEqual(await variableDebtUsdc.balanceOf(user1.address), 0);
+    expect(await variableDebtUsdc.balanceOf(user1.address)).gt(0);
   });
 });

@@ -74,8 +74,8 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
             (ISwapRouter.ExactOutputParams)
         );
 
-        address srcToken = params.path.toAddress(0);
-        address dstToken = params.path.toAddress(
+        address dstToken = params.path.toAddress(0);
+        address srcToken = params.path.toAddress(
             params.path.length - ADDR_SIZE
         );
 
