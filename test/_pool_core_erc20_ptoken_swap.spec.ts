@@ -1,10 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {solidityPack} from "ethers/lib/utils";
-import {
-  MAX_UINT_AMOUNT,
-  UNISWAP_V3_SWAP_ADAPTER_ID,
-} from "../helpers/constants";
+import {UNISWAP_V3_SWAP_ADAPTER_ID} from "../helpers/constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {waitForTx} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
