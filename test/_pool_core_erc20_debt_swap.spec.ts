@@ -112,6 +112,7 @@ describe("Debt swap", () => {
       variableDebtWeth,
       variableDebtUsdc,
       weth,
+      pWETH,
     } = await loadFixture(fixture);
 
     const swapRouter = await getUniswapV3SwapRouter();
@@ -122,7 +123,7 @@ describe("Debt swap", () => {
           ["address", "uint24", "address"],
           [weth.address, 500, usdc.address]
         ),
-        recipient: pool.address,
+        recipient: pWETH.address,
         deadline: 2659537628,
         amountOut: borrowAmount,
         amountInMaximum: MAX_UINT_AMOUNT,

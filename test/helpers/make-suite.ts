@@ -449,7 +449,6 @@ export async function initializeMakeSuite() {
     await testEnv.protocolDataProvider.getReserveTokensAddresses(
       usdcAddress || ""
     );
-  console.log(variableDebtUsdcAddress);
   const aWETHAddress = reservesTokens.find(
     (token) => token.symbol === ERC20TokenContractId.aWETH
   )?.tokenAddress;

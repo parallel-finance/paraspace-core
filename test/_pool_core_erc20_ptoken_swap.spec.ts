@@ -117,7 +117,7 @@ describe("PToken swap", () => {
           ["address", "uint24", "address"],
           [usdc.address, 500, weth.address]
         ),
-        recipient: pool.address,
+        recipient: pUsdc.address,
         deadline: 2659537628,
         amountIn: swapAmount,
         amountOutMinimum: 0,
@@ -129,7 +129,7 @@ describe("PToken swap", () => {
         .connect(user1.signer)
         .swapPToken(
           usdc.address,
-          (await pUsdc.balanceOf(user1.address)).toString(),
+          swapAmount,
           weth.address,
           user1.address,
           UNISWAP_V3_SWAP_ADAPTER_ID,
