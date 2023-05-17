@@ -108,7 +108,6 @@ describe("Debt swap", () => {
       pool,
       users: [user1],
       usdc,
-      variableDebtWeth,
       variableDebtUsdc,
       weth,
       pUsdc,
