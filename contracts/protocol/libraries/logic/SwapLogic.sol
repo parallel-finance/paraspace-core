@@ -29,7 +29,14 @@ library SwapLogic {
         address indexed reserve,
         address indexed user
     );
-    event Swap(
+    event SwapPToken(
+        address indexed srcReserve,
+        address indexed dstReserve,
+        address indexed user,
+        uint256 srcAmount,
+        uint256 dstAmount
+    );
+    event SwapDebt(
         address indexed srcReserve,
         address indexed dstReserve,
         address indexed user,
@@ -136,7 +143,7 @@ library SwapLogic {
             }
         }
 
-        emit Swap(
+        emit SwapPToken(
             params.srcAsset,
             params.dstAsset,
             params.user,
@@ -221,7 +228,7 @@ library SwapLogic {
             })
         );
 
-        emit Swap(
+        emit SwapDebt(
             params.srcAsset,
             params.dstAsset,
             params.user,

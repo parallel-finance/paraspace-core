@@ -208,6 +208,38 @@ interface IPoolCore {
     );
 
     /**
+     * @notice Fired when a specified amount of pToken is swapped for another asset.
+     * @param srcReserve The address of the source reserve asset.
+     * @param dstReserve The address of the destination reserve asset.
+     * @param user The address of the user who initiated the swap.
+     * @param srcAmount The amount of pToken that was swapped.
+     * @param dstAmount The amount of the asset received after the swap was completed.
+     */
+    event SwapPToken(
+        address indexed srcReserve,
+        address indexed dstReserve,
+        address indexed user,
+        uint256 srcAmount,
+        uint256 dstAmount
+    );
+
+    /**
+     * @notice Fired when a specified amount of debt from one asset is swapped for another.
+     * @param srcReserve The address of the asset that was swapped.
+     * @param dstReserve The address of the asset that was received in exchange.
+     * @param user The address of the user who initiated the swap.
+     * @param srcAmount The amount of `srcReserve` asset that was swapped.
+     * @param dstAmount The amount of `dstReserve` asset received after the swap was completed.
+     */
+    event SwapDebt(
+        address indexed srcReserve,
+        address indexed dstReserve,
+        address indexed user,
+        uint256 srcAmount,
+        uint256 dstAmount
+    );
+
+    /**
      * @dev Allows smart contracts to access the tokens within one transaction, as long as the tokens taken is returned.
      *
      * Requirements:
