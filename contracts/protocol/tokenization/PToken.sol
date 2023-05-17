@@ -228,11 +228,6 @@ contract PToken is
         bytes calldata swapPayload,
         DataTypes.SwapInfo calldata swapInfo
     ) external virtual override onlyPool returns (uint256 amount) {
-        uint256 beforeBalance;
-        if (swapInfo.exactInput) {
-            beforeBalance = IERC20(swapInfo.dstToken).balanceOf(address(this));
-        }
-
         Helpers.checkExactAllowance(
             swapInfo.srcToken,
             swapAdapter.router,
@@ -249,8 +244,8 @@ contract PToken is
         );
         amount = abi.decode(returndata, (uint256));
 
-        uint256 amountOut = swapInfo.exactInput
-            ? IERC20(swapInfo.dstToken).balanceOf(address(this)) - beforeBalance
+        uint256 amountOut = !swapInfo.exactInput
+            ? swapInfo.minAmountOut
             : amount;
 
         require(amountOut > 0, Errors.CALL_SWAP_FAILED);
