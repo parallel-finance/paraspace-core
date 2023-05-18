@@ -1226,7 +1226,8 @@ library ValidationLogic {
         );
         require(
             (swapInfo.srcToken == params.srcToken &&
-                swapInfo.dstToken == params.dstToken),
+                (params.dstToken == address(0) ||
+                    swapInfo.dstToken == params.dstToken)),
             Errors.INVALID_SWAP_PAYLOAD
         );
         require(
