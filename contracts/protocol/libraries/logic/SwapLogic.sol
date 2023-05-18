@@ -109,6 +109,13 @@ library SwapLogic {
                 params.swapPayload,
                 swapInfo
             );
+        IPToken(reserveCache.xTokenAddress).burn(
+            msg.sender,
+            reserveCache.xTokenAddress,
+            amountToSwap,
+            reserveCache.nextLiquidityIndex,
+            timeLockParams
+        );
 
         SupplyLogic.executeSupply(
             ps._reserves,
