@@ -100,16 +100,6 @@ interface IPToken is
     ) external returns (uint256 amountOut);
 
     /**
-     * @notice Handles the underlying received by the xToken after the transfer has been completed.
-     * @dev The default implementation is empty as with standard ERC20 tokens, nothing needs to be done after the
-     * transfer is concluded. However in the future there may be xTokens that allow for example to stake the underlying
-     * to receive LM rewards. In that case, `handleRepayment()` would perform the staking of the underlying asset.
-     * @param user The user executing the repayment
-     * @param amount The amount getting repaid
-     **/
-    function handleRepayment(address user, uint256 amount) external;
-
-    /**
      * @notice Allow passing a signed message to approve spending
      * @dev implements the permit function as for
      * https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md

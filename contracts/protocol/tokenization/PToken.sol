@@ -260,16 +260,6 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function handleRepayment(address user, uint256 amount)
-        external
-        virtual
-        override
-        onlyPool
-    {
-        // Intentionally left blank
-    }
-
-    /// @inheritdoc IPToken
     function permit(
         address owner,
         address spender,

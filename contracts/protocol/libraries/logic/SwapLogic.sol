@@ -207,8 +207,6 @@ library SwapLogic {
             swapInfo
         );
 
-        reserve.updateInterestRates(reserveCache, params.dstAsset, 0, 0);
-
         bool isFirstBorrowing = false;
         (
             isFirstBorrowing,
@@ -219,6 +217,8 @@ library SwapLogic {
             amountIn,
             reserveCache.nextVariableBorrowIndex
         );
+
+        reserve.updateInterestRates(reserveCache, params.dstAsset, 0, 0);
 
         if (isFirstBorrowing) {
             userConfig.setBorrowing(reserve.id, true);
