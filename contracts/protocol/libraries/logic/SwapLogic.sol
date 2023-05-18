@@ -13,6 +13,7 @@ import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
 import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
+import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title SwapLogic library
@@ -122,6 +123,13 @@ library SwapLogic {
         );
 
         if (userConfig.isUsingAsCollateral(reserve.id)) {
+            Helpers.setAssetUsedAsCollateral(
+                ps._usersConfig[params.user],
+                ps._reserves,
+                params.dstAsset,
+                params.user
+            );
+
             if (userConfig.isBorrowingAny()) {
                 ValidationLogic.validateHFAndLtvERC20(
                     ps._reserves,
@@ -141,14 +149,12 @@ library SwapLogic {
                     msg.sender
                 );
             }
-
-            // TODO: set dstAsset as collateral
         }
 
         emit SwapPToken(
             params.srcAsset,
             params.dstAsset,
-            params.user,
+            msg.sender,
             amountToSwap,
             amountOut
         );
@@ -164,6 +170,16 @@ library SwapLogic {
 
         reserve.updateState(reserveCache);
 
+        uint256 userDebt = IVariableDebtToken(
+            ps._reserves[params.srcAsset].xTokenAddress
+        ).balanceOf(params.user);
+
+        uint256 amountToSwap = params.amount;
+
+        if (params.amount == type(uint256).max) {
+            amountToSwap = userDebt;
+        }
+
         DataTypes.TimeLockParams memory timeLockParams;
         DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
             params.swapAdapter.adapter
@@ -172,13 +188,12 @@ library SwapLogic {
             swapInfo,
             DataTypes.ValidateSwapParams({
                 swapAdapter: params.swapAdapter,
-                amount: params.amount,
+                amount: amountToSwap,
                 srcToken: params.dstAsset,
                 dstToken: params.srcAsset,
                 dstReceiver: reserveCache.xTokenAddress
             })
         );
-        // TODO: handle repay all edge case
         uint256 amountIn = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
             address(this),
             timeLockParams,
@@ -209,7 +224,7 @@ library SwapLogic {
             ps._usersConfig[params.user],
             DataTypes.ExecuteRepayParams({
                 asset: params.srcAsset,
-                amount: params.amount,
+                amount: amountToSwap,
                 onBehalfOf: params.user,
                 payer: address(this),
                 usePTokens: false
@@ -235,7 +250,7 @@ library SwapLogic {
             params.srcAsset,
             params.dstAsset,
             params.user,
-            params.amount,
+            amountToSwap,
             amountIn
         );
     }
