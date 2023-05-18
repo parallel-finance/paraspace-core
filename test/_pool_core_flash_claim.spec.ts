@@ -258,7 +258,7 @@ describe("Flash Claim Test", () => {
     ).to.be.equal(await airdrop_project.erc1155Bonus());
   });
 
-  it("TC-flash-claim-03: non-owner can't flash claim airdrop", async function () {
+  it("TC-flash-claim-04: non-owner can't flash claim airdrop", async function () {
     const {
       bayc,
       users: [user1, user2],
@@ -282,7 +282,7 @@ describe("Flash Claim Test", () => {
     ).to.be.revertedWith("not contract owner");
   });
 
-  it("TC-flash-claim-04:user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {
+  it("TC-flash-claim-05:user can not flash claim with uniswapV3 [ @skip-on-coverage ]", async function () {
     const {
       users: [user1],
       pool,
@@ -362,7 +362,7 @@ describe("Flash Claim Test", () => {
     ).to.be.revertedWith(ProtocolErrors.FLASHCLAIM_NOT_ALLOWED);
   });
 
-  it("TC-flash-claim-05:user can not flash claim with BAYC or MAYC when sApe is not active or paused[ @skip-on-coverage ]", async function () {
+  it("TC-flash-claim-06:user can not flash claim with BAYC or MAYC when sApe is not active or paused[ @skip-on-coverage ]", async function () {
     const {
       users: [user1],
       bayc,
@@ -405,7 +405,7 @@ describe("Flash Claim Test", () => {
     ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
   });
 
-  it("TC-flash-claim-06:user can not flash claim when HF < 1", async function () {
+  it("TC-flash-claim-07:user can not flash claim when HF < 1", async function () {
     const {
       users: [user1, depositor],
       bayc,
@@ -441,7 +441,7 @@ describe("Flash Claim Test", () => {
     );
   });
 
-  it("TC-flash-claim-06:user can flash claim with multiple assets", async function () {
+  it("TC-flash-claim-08:user can flash claim with multiple assets", async function () {
     const {
       users: [user1],
       bayc,
@@ -487,7 +487,7 @@ describe("Flash Claim Test", () => {
     ).to.be.equal(await multi_asset_airdrop_project.erc721Bonus());
   });
 
-  it("TC-flash-claim-06:user can flash claim with multiple assets for BAYC Sewer Pass", async function () {
+  it("TC-flash-claim-09:user can flash claim with multiple assets for BAYC Sewer Pass", async function () {
     const {
       users: [user1],
       bayc,

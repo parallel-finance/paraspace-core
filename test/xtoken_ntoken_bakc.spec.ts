@@ -14,7 +14,7 @@ import {
 import {parseEther} from "ethers/lib/utils";
 import {getAutoCompoundApe} from "../helpers/contracts-getters";
 
-describe("APE Coin Staking Test", () => {
+describe("NToken BAKC Test", () => {
   let testEnv: TestEnv;
   const sApeAddress = ONE_ADDRESS;
 

@@ -553,7 +553,7 @@ export const strategyDEGODS: IReserveParams = {
   liquidationBonus: "10500",
   borrowingEnabled: false,
   reserveDecimals: "0",
-  xTokenImpl: eContractid.NTokenImpl,
+  xTokenImpl: eContractid.NTokenDeGodsImpl,
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "1000",

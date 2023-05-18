@@ -24,7 +24,8 @@ enum XTokenType {
     PTokenCAPE,
     NTokenOtherdeed,
     NTokenStakefish,
-    NTokenChromieSquiggle
+    NTokenChromieSquiggle,
+    NTokenDeGods
 }
 
 interface IXTokenType {

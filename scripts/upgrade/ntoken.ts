@@ -1,6 +1,7 @@
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
 import {
   deployChromieSquiggleNTokenImpl,
+  deployDeGodsNTokenImpl,
   deployGenericMoonbirdNTokenImpl,
   deployGenericNTokenImpl,
   deployNTokenBAKCImpl,
@@ -17,6 +18,7 @@ import {
   getNToken,
   getApeCoinStaking,
   getPoolProxy,
+  getERC721PointsStaking,
 } from "../../helpers/contracts-getters";
 import {NTokenContractId, XTokenType} from "../../helpers/types";
 
@@ -187,6 +189,17 @@ export const upgradeNToken = async (verify = false) => {
           verify
         )
       ).address;
+    } else if (xTokenType == XTokenType.NTokenDeGods) {
+      console.log("deploy NTokenDeGods implementation");
+      const pointStaking = await getERC721PointsStaking();
+      newImpl = (
+        await deployDeGodsNTokenImpl(
+          poolAddress,
+          delegationRegistry,
+          pointStaking.address,
+          verify
+        )
+      ).address;
     } else if (xTokenType == XTokenType.NToken) {
       // compatibility
       if (symbol == NTokenContractId.nOTHR) {
@@ -212,6 +225,21 @@ export const upgradeNToken = async (verify = false) => {
               delegationRegistry,
               0,
               9763,
+              verify
+            )
+          ).address;
+        }
+        newImpl = nTokenBlocksImplementationAddress;
+        // compatibility
+      } else if (symbol == NTokenContractId.nDEGODS) {
+        if (!nTokenBlocksImplementationAddress) {
+          console.log("deploy NTokenDeGods implementation");
+          const pointStaking = await getERC721PointsStaking();
+          newImpl = (
+            await deployDeGodsNTokenImpl(
+              poolAddress,
+              delegationRegistry,
+              pointStaking.address,
               verify
             )
           ).address;

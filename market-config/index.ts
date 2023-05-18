@@ -134,6 +134,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   Marketplace: {},
   Chainlink: {},
   BendDAO: {},
+  DeGodsStaking: {},
   Stakefish: {},
   // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
   ReservesConfig: {
@@ -168,6 +169,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
     SFVLDR: strategyStakefishValidator,
+    DEGODS: strategyDEGODS,
   },
 };
 
@@ -190,6 +192,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   Uniswap: {},
   Marketplace: {},
   BendDAO: {},
+  DeGodsStaking: {},
   Stakefish: {},
   Chainlink: {
     WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
@@ -245,6 +248,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     LendingPool: "0x84a47EaEca69f8B521C21739224251c8c4566Bbc",
     LendingPoolLoan: "0x7F64c32a3c13Bd245a7141a607A7E60DA585BA86",
   },
+  DeGodsStaking: {},
   Stakefish: {
     StakefishManager: "0x5b41ffb9c448c02ff3d0401b0374b67efcb73c7e",
   },
@@ -326,6 +330,7 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   },
   Marketplace: {},
   BendDAO: {},
+  DeGodsStaking: {},
   Stakefish: {},
   Chainlink: {
     WETH: "0x62CAe0FA2da220f43a51F86Db2EDb36DcA9A5A08",
@@ -400,6 +405,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Marketplace: {},
   BendDAO: {},
+  DeGodsStaking: {},
   Stakefish: {},
   Chainlink: {
     WETH: "0x639fe6ab55c921f74e7fac1ee960c0b6293ba612",
@@ -518,6 +524,9 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   BendDAO: {
     LendingPool: "0x70b97a0da65c15dfb0ffa02aee6fa36e507c2762",
     LendingPoolLoan: "0x5f6ac80CdB9E87f3Cfa6a90E5140B9a16A361d5C",
+  },
+  DeGodsStaking: {
+    ERC721PointsStaking: "0xfa3ce71036dd4564d7d8de19d2b90fb856c5be82",
   },
   Stakefish: {
     StakefishManager: "0xffff2d93c83d4c613ed68ca887f057651135e089",
