@@ -359,4 +359,37 @@ describe("NToken DeGods Test", () => {
     );
     expect(await PointStaking.numStakedTokens(nDeGods.address)).to.be.equal(0);
   });
+
+  it("check fee for point staking", async () => {
+    const {
+      users: [user1],
+      pool,
+    } = await loadFixture(fixture);
+    await mintAndValidate(DeGods, "3", user1);
+
+    await waitForTx(
+      await pool.connect(user1.signer).supplyERC721(
+        DeGods.address,
+        [
+          {tokenId: 0, useAsCollateral: true},
+          {tokenId: 1, useAsCollateral: true},
+          {tokenId: 2, useAsCollateral: true},
+        ],
+        user1.address,
+        "0"
+      )
+    );
+    expect(await PointStaking.numStakedTokens(nDeGods.address)).to.be.equal(0);
+
+    await mintAndValidate(DUST, "12", user1);
+
+    await waitForTx(
+      await nDeGods.connect(user1.signer).pointStaking([0, 1, 2])
+    );
+    expect(await PointStaking.numStakedTokens(nDeGods.address)).to.be.equal(3);
+
+    expect(await DUST.balanceOf(ONE_ADDRESS)).to.be.equal(
+      await convertToCurrencyDecimals(DUST.address, "3")
+    );
+  });
 });

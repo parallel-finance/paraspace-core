@@ -81,7 +81,11 @@ contract NTokenDeGods is NToken {
         require(_isPoolAdminOrOwner(tokenIds), Errors.CALLER_NOT_ALLOWED);
         uint256 totalFee = _getStakingFee();
         if (totalFee > 0) {
-            stakeFeeToken.safeTransferFrom(msg.sender, address(this), totalFee);
+            stakeFeeToken.safeTransferFrom(
+                msg.sender,
+                address(this),
+                totalFee * tokenIds.length
+            );
         }
         _pointStaking(tokenIds);
     }
@@ -127,10 +131,10 @@ contract NTokenDeGods is NToken {
                         address(this),
                         totalFee
                     );
-                    uint256[] memory tokenIds = new uint256[](1);
-                    tokenIds[0] = tokenId;
-                    _pointStaking(tokenIds);
+                    _singlePointStaking(tokenId);
                 }
+            } else {
+                _singlePointStaking(tokenId);
             }
         }
 
@@ -165,11 +169,13 @@ contract NTokenDeGods is NToken {
 
     function _checkIfInStaking(uint256 tokenId) internal view returns (bool) {
         (address stakingAddress, , , ) = deGodsStaking.stakingMetadata(tokenId);
-        if (stakingAddress == address(this)) {
-            return true;
-        } else {
-            return false;
-        }
+        return stakingAddress == address(this);
+    }
+
+    function _singlePointStaking(uint256 tokenId) internal {
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        deGodsStaking.stake(tokenIds);
     }
 
     function _pointStaking(uint256[] memory tokenIds) internal {
