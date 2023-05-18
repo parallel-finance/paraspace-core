@@ -141,6 +141,8 @@ library SwapLogic {
                     msg.sender
                 );
             }
+
+            // TODO: set dstAsset as collateral
         }
 
         emit SwapPToken(
