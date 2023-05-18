@@ -170,14 +170,12 @@ library SwapLogic {
 
         reserve.updateState(reserveCache);
 
-        uint256 userDebt = IVariableDebtToken(
-            ps._reserves[params.srcAsset].xTokenAddress
-        ).balanceOf(params.user);
-
         uint256 amountToSwap = params.amount;
 
         if (params.amount == type(uint256).max) {
-            amountToSwap = userDebt;
+            amountToSwap = IVariableDebtToken(
+                ps._reserves[params.srcAsset].xTokenAddress
+            ).balanceOf(params.user);
         }
 
         DataTypes.TimeLockParams memory timeLockParams;
