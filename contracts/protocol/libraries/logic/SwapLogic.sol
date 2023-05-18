@@ -174,7 +174,7 @@ library SwapLogic {
 
         if (params.amount == type(uint256).max) {
             amountToSwap = IVariableDebtToken(
-                ps._reserves[params.srcAsset].xTokenAddress
+                ps._reserves[params.srcAsset].variableDebtTokenAddress
             ).balanceOf(params.user);
         }
 
