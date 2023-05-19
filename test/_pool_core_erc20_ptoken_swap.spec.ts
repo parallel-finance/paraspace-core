@@ -1,12 +1,13 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {solidityPack} from "ethers/lib/utils";
+import {parseEther, solidityPack} from "ethers/lib/utils";
 import {UNISWAP_V3_SWAP_ADAPTER_ID} from "../helpers/constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {waitForTx} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {
+  almostEqual,
   approveTo,
   createNewPool,
   fund,
@@ -111,6 +112,8 @@ describe("PToken swap", () => {
     } = await loadFixture(fixture);
     const swapRouter = await getUniswapV3SwapRouter();
     const swapAmount = await convertToCurrencyDecimals(usdc.address, "1000");
+    const beforePusdc = await pUsdc.balanceOf(user1.address);
+    const beforePweth = await pWETH.balanceOf(user1.address);
     const swapPayload = swapRouter.interface.encodeFunctionData("exactInput", [
       {
         path: solidityPack(
@@ -138,5 +141,12 @@ describe("PToken swap", () => {
     );
 
     expect(await pWETH.balanceOf(user1.address)).gt(0);
+    expect(beforePusdc.sub(await pUsdc.balanceOf(user1.address))).eq(
+      swapAmount
+    );
+    almostEqual(
+      (await pWETH.balanceOf(user1.address)).sub(beforePweth),
+      parseEther("0.914712")
+    );
   });
 });

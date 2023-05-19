@@ -13,5 +13,5 @@ interface ISwapAdapter {
         address exchange,
         bytes memory payload,
         bool exactInput
-    ) external returns (bytes memory);
+    ) external returns (uint256);
 }

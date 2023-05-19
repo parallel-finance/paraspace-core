@@ -14,8 +14,6 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
     uint256 private constant ADDR_SIZE = 20;
     uint256 private constant FEE_SIZE = 3;
 
-    constructor() {}
-
     function getSwapInfo(bytes memory payload, bool exactInput)
         external
         pure
@@ -32,12 +30,18 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
         address router,
         bytes memory payload,
         bool exactInput
-    ) external returns (bytes memory) {
+    ) external returns (uint256) {
         bytes4 selector = exactInput
             ? ISwapRouter.exactInput.selector
             : ISwapRouter.exactOutput.selector;
         bytes memory data = abi.encodePacked(selector, payload);
-        return Address.functionCall(router, data, Errors.CALL_SWAP_FAILED);
+        bytes memory res = Address.functionCall(
+            router,
+            data,
+            Errors.CALL_SWAP_FAILED
+        );
+        // TODO: remove this decode
+        return abi.decode(res, (uint256));
     }
 
     function _getExactInputParams(bytes memory payload)

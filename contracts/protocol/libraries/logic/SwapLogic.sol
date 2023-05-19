@@ -70,10 +70,6 @@ library SwapLogic {
 
         uint256 amountToSwap = params.amount;
 
-        // if (params.amount == type(uint256).max) {
-        //     amountToSwap = userBalance;
-        // }
-
         ValidationLogic.validateWithdraw(
             reserveCache,
             amountToSwap,
@@ -178,12 +174,6 @@ library SwapLogic {
         reserve.updateState(reserveCache);
 
         uint256 amountToSwap = params.amount;
-
-        // if (params.amount == type(uint256).max) {
-        //     amountToSwap = IVariableDebtToken(
-        //         ps._reserves[params.srcAsset].variableDebtTokenAddress
-        //     ).balanceOf(params.user);
-        // }
 
         DataTypes.TimeLockParams memory timeLockParams;
         DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
