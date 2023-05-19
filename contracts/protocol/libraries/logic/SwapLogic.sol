@@ -105,6 +105,8 @@ library SwapLogic {
                 params.swapPayload,
                 swapInfo
             );
+        // TODO: rename swapUnderlyingTo -> swapAndTransferUnderlyingTo
+        // add missing swapAndBurn
         IPToken(reserveCache.xTokenAddress).burn(
             msg.sender,
             reserveCache.xTokenAddress,
