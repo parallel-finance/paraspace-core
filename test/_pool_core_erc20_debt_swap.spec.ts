@@ -5,11 +5,15 @@ import {
   MAX_UINT_AMOUNT,
   UNISWAP_V3_SWAP_ADAPTER_ID,
 } from "../helpers/constants";
-import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {
+  convertToCurrencyDecimals,
+  isBorrowing,
+} from "../helpers/contracts-helpers";
 import {waitForTx} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {
+  almostEqual,
   approveTo,
   createNewPool,
   fund,
@@ -109,8 +113,10 @@ describe("Debt swap", () => {
       users: [user1],
       usdc,
       variableDebtUsdc,
+      variableDebtWeth,
       weth,
       pUsdc,
+      pWETH,
     } = await loadFixture(fixture);
 
     const swapRouter = await getUniswapV3SwapRouter();
@@ -134,6 +140,9 @@ describe("Debt swap", () => {
         .borrow(weth.address, borrowAmount, 0, user1.address)
     );
 
+    const beforeUsdcDebt = await variableDebtUsdc.balanceOf(user1.address);
+    const beforeWethDebt = await variableDebtWeth.balanceOf(user1.address);
+
     await waitForTx(
       await pool
         .connect(user1.signer)
@@ -146,6 +155,21 @@ describe("Debt swap", () => {
         )
     );
 
-    expect(await variableDebtUsdc.balanceOf(user1.address)).gt(0);
+    const afterConfigData = await pool.getUserConfiguration(user1.address);
+    almostEqual(
+      beforeWethDebt.sub(await variableDebtWeth.balanceOf(user1.address)),
+      borrowAmount
+    );
+    expect(
+      isBorrowing(
+        afterConfigData.data,
+        (await pool.getReserveData(usdc.address)).id
+      )
+    );
+
+    almostEqual(
+      (await variableDebtUsdc.balanceOf(user1.address)).sub(beforeUsdcDebt),
+      await convertToCurrencyDecimals(usdc.address, "1093")
+    );
   });
 });
