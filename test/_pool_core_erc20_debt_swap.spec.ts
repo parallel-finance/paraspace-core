@@ -116,7 +116,6 @@ describe("Debt swap", () => {
       variableDebtWeth,
       weth,
       pUsdc,
-      pWETH,
     } = await loadFixture(fixture);
 
     const swapRouter = await getUniswapV3SwapRouter();
