@@ -22,6 +22,7 @@ import {
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {deployUniswapV3SwapAdapter} from "../helpers/contracts-deployments";
 import {getUniswapV3SwapRouter} from "../helpers/contracts-getters";
+import {ProtocolErrors} from "../helpers/types";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -170,5 +171,51 @@ describe("Debt swap", () => {
       (await variableDebtUsdc.balanceOf(user1.address)).sub(beforeUsdcDebt),
       await convertToCurrencyDecimals(usdc.address, "1093")
     );
+  });
+
+  it("TC-erc20-debt-swap-02: user1 borrow maximum of eth and swap debt to usdc (reverted expected)", async () => {
+    const {
+      pool,
+      users: [user1],
+      usdc,
+      weth,
+      pUsdc,
+    } = await loadFixture(fixture);
+
+    const swapRouter = await getUniswapV3SwapRouter();
+    const borrowAmount = await convertToCurrencyDecimals(
+      weth.address,
+      "15.937568696"
+    );
+    const swapPayload = swapRouter.interface.encodeFunctionData("exactOutput", [
+      {
+        path: solidityPack(
+          ["address", "uint24", "address"],
+          [weth.address, 500, usdc.address]
+        ),
+        recipient: pUsdc.address,
+        deadline: 2659537628,
+        amountOut: borrowAmount,
+        amountInMaximum: MAX_UINT_AMOUNT,
+      },
+    ]);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .borrow(weth.address, borrowAmount, 0, user1.address)
+    );
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .swapDebt(
+          weth.address,
+          borrowAmount,
+          usdc.address,
+          UNISWAP_V3_SWAP_ADAPTER_ID,
+          `0x${swapPayload.slice(10)}`
+        )
+    ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
   });
 });
