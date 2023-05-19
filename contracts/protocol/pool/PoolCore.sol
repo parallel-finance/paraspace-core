@@ -537,7 +537,7 @@ contract PoolCore is
         address to,
         bytes32 swapAdapterId,
         bytes calldata swapPayload
-    ) external {
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         SwapLogic.executeSwapPToken(
@@ -564,7 +564,7 @@ contract PoolCore is
         address dstAsset,
         bytes32 swapAdapterId,
         bytes calldata swapPayload
-    ) external {
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         SwapLogic.executeSwapDebt(
