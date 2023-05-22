@@ -233,10 +233,6 @@ library BorrowLogic {
                 reserveCache.xTokenAddress,
                 paybackAmount
             );
-            IPToken(reserveCache.xTokenAddress).handleRepayment(
-                params.payer,
-                paybackAmount
-            );
         }
 
         emit Repay(

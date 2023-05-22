@@ -331,6 +331,18 @@ library DataTypes {
         bytes32 s;
     }
 
+    struct ExecuteSwapParams {
+        address srcAsset;
+        address dstAsset;
+        uint256 amount;
+        address user;
+        uint256 reservesCount;
+        address oracle;
+        address priceOracleSentinel;
+        SwapAdapter swapAdapter;
+        bytes swapPayload;
+    }
+
     struct ExecuteMarketplaceParams {
         bytes32 marketplaceId;
         bytes payload;
