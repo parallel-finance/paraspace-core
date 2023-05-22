@@ -199,23 +199,6 @@ library SwapLogic {
             swapInfo
         );
 
-        bool isFirstBorrowing = false;
-        (
-            isFirstBorrowing,
-            reserveCache.nextScaledVariableDebt
-        ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
-            params.user,
-            params.user,
-            amountIn,
-            reserveCache.nextVariableBorrowIndex
-        );
-
-        reserve.updateInterestRates(reserveCache, params.dstAsset, 0, 0);
-
-        if (isFirstBorrowing) {
-            userConfig.setBorrowing(reserve.id, true);
-        }
-
         BorrowLogic.executeRepay(
             ps._reserves,
             ps._usersConfig[params.user],
@@ -242,6 +225,23 @@ library SwapLogic {
                 priceOracleSentinel: params.priceOracleSentinel
             })
         );
+
+        bool isFirstBorrowing = false;
+        (
+            isFirstBorrowing,
+            reserveCache.nextScaledVariableDebt
+        ) = IVariableDebtToken(reserveCache.variableDebtTokenAddress).mint(
+            params.user,
+            params.user,
+            amountIn,
+            reserveCache.nextVariableBorrowIndex
+        );
+
+        reserve.updateInterestRates(reserveCache, params.dstAsset, 0, 0);
+
+        if (isFirstBorrowing) {
+            userConfig.setBorrowing(reserve.id, true);
+        }
 
         emit SwapDebt(
             params.srcAsset,
