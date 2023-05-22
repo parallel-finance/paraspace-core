@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
@@ -35,6 +36,7 @@ contract PToken is
 {
     using WadRayMath for uint256;
     using SafeCast for uint256;
+    using SafeERC20 for IERC20;
     using GPv2SafeERC20 for IERC20;
 
     bytes32 public constant PERMIT_TYPEHASH =
@@ -228,11 +230,11 @@ contract PToken is
         bytes calldata swapPayload,
         DataTypes.SwapInfo calldata swapInfo
     ) external virtual override onlyPool returns (uint256 amount) {
-        Helpers.checkExactAllowance(
-            swapInfo.srcToken,
+        IERC20(swapInfo.srcToken).safeApprove(
             swapAdapter.router,
             swapInfo.maxAmountIn
         );
+
         bytes memory returndata = Address.functionDelegateCall(
             swapAdapter.adapter,
             abi.encodeWithSelector(
@@ -257,6 +259,8 @@ contract PToken is
             amountOut,
             target
         );
+
+        IERC20(swapInfo.srcToken).safeApprove(swapAdapter.router, 0);
     }
 
     /// @inheritdoc IPToken
