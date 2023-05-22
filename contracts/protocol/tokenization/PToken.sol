@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
@@ -37,7 +36,6 @@ contract PToken is
     using WadRayMath for uint256;
     using SafeCast for uint256;
     using SafeERC20 for IERC20;
-    using GPv2SafeERC20 for IERC20;
 
     bytes32 public constant PERMIT_TYPEHASH =
         keccak256(

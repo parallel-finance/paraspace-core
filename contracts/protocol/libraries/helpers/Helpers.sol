@@ -54,17 +54,6 @@ library Helpers {
         }
     }
 
-    function checkExactAllowance(
-        address token,
-        address operator,
-        uint256 allowance
-    ) internal {
-        if (IERC20(token).allowance(address(this), operator) < allowance) {
-            IERC20(token).safeApprove(operator, 0);
-            IERC20(token).safeApprove(operator, allowance);
-        }
-    }
-
     /**
      * @dev transfer ETH to an address, revert if it fails.
      * @param to recipient of the transfer
