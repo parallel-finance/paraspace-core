@@ -168,6 +168,14 @@ library SwapLogic {
         reserve.updateState(reserveCache);
 
         uint256 amountToSwap = params.amount;
+        uint256 variableDebt = Helpers.getUserCurrentDebt(
+            params.user,
+            ps._reserves[params.srcAsset].variableDebtTokenAddress
+        );
+
+        if (amountToSwap > variableDebt) {
+            amountToSwap = variableDebt;
+        }
 
         DataTypes.TimeLockParams memory timeLockParams;
         DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
