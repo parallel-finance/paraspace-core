@@ -30,18 +30,12 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
         address router,
         bytes memory payload,
         bool exactInput
-    ) external returns (uint256) {
+    ) external returns (bytes memory) {
         bytes4 selector = exactInput
             ? ISwapRouter.exactInput.selector
             : ISwapRouter.exactOutput.selector;
         bytes memory data = abi.encodePacked(selector, payload);
-        bytes memory res = Address.functionCall(
-            router,
-            data,
-            Errors.CALL_SWAP_FAILED
-        );
-        // TODO: remove this decode
-        return abi.decode(res, (uint256));
+        return Address.functionCall(router, data, Errors.CALL_SWAP_FAILED);
     }
 
     function _getExactInputParams(bytes memory payload)

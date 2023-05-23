@@ -267,6 +267,9 @@ contract PToken is
                 swapInfo.exactInput
             )
         );
+        assembly {
+            returndata := add(returndata, 0x40)
+        }
         amount = abi.decode(returndata, (uint256));
 
         uint256 amountOut = !swapInfo.exactInput
