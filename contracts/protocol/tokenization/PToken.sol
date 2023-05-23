@@ -129,6 +129,31 @@ contract PToken is
         }
     }
 
+    function swapAndBurnFrom(
+        address from,
+        address receiverOfUnderlying,
+        uint256 index,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) external virtual override onlyPool returns (uint256 amount) {
+        require(receiverOfUnderlying != address(this));
+        amount = swapAndTransferUnderlyingTo(
+            receiverOfUnderlying,
+            timeLockParams,
+            swapAdapter,
+            swapPayload,
+            swapInfo
+        );
+        _burnScaled(
+            from,
+            receiverOfUnderlying,
+            !swapInfo.exactInput ? amount : swapInfo.maxAmountIn,
+            index
+        );
+    }
+
     /// @inheritdoc IPToken
     function mintToTreasury(uint256 amount, uint256 index)
         external
@@ -221,13 +246,13 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function swapUnderlyingTo(
+    function swapAndTransferUnderlyingTo(
         address target,
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata swapPayload,
         DataTypes.SwapInfo calldata swapInfo
-    ) external virtual override onlyPool returns (uint256 amount) {
+    ) public virtual override onlyPool returns (uint256 amount) {
         IERC20(swapInfo.srcToken).safeApprove(
             swapAdapter.router,
             swapInfo.maxAmountIn

@@ -416,7 +416,7 @@ library MarketplaceLogic {
                 })
             );
             vars.borrowAmount = IPToken(vars.creditXTokenAddress)
-                .swapUnderlyingTo(
+                .swapAndTransferUnderlyingTo(
                     transit,
                     timeLockParams,
                     params.swapAdapter,

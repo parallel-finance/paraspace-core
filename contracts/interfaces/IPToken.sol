@@ -51,6 +51,27 @@ interface IPToken is
     ) external;
 
     /**
+     * @notice Swap some tokens from another address, and then burn them
+     * @param from The address to swap the tokens from
+     * @param receiverOfUnderlying The address that will receive the underlying tokens after redemption
+     * @param index The index of the option that is being exercised
+     * @param timeLockParams The timelock parameters that determine when the tokens will be redeemed
+     * @param swapAdapter The address of the adapter contract that should be used for the swap
+     * @param swapPayload The payload data to pass to the swap adapter contract
+     * @param swapInfo The swap information that includes the details of the expected token swap
+     * @return The number of tokens that have been burned
+     */
+    function swapAndBurnFrom(
+        address from,
+        address receiverOfUnderlying,
+        uint256 index,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) external returns (uint256);
+
+    /**
      * @notice Mints xTokens to the reserve treasury
      * @param amount The amount of tokens getting minted
      * @param index The next liquidity index of the reserve
@@ -91,13 +112,13 @@ interface IPToken is
      * @param swapPayload The swap payload
      * @param swapInfo the swap info used for providing context information
      **/
-    function swapUnderlyingTo(
+    function swapAndTransferUnderlyingTo(
         address user,
         DataTypes.TimeLockParams calldata timeLockParams,
         DataTypes.SwapAdapter calldata swapAdapter,
         bytes calldata swapPayload,
         DataTypes.SwapInfo calldata swapInfo
-    ) external returns (uint256 amountOut);
+    ) external returns (uint256 amount);
 
     /**
      * @notice Allow passing a signed message to approve spending

@@ -133,13 +133,13 @@ library BorrowLogic {
                         dstReceiver: reserveCache.xTokenAddress
                     })
                 );
-                IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
-                    params.user,
-                    timeLockParams,
-                    params.swapAdapter,
-                    params.swapPayload,
-                    swapInfo
-                );
+                IPToken(reserveCache.xTokenAddress).swapAndTransferUnderlyingTo(
+                        params.user,
+                        timeLockParams,
+                        params.swapAdapter,
+                        params.swapPayload,
+                        swapInfo
+                    );
             }
         }
 

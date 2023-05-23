@@ -97,22 +97,14 @@ library SwapLogic {
                 dstReceiver: reserveCache.xTokenAddress
             })
         );
-        uint256 amountOut = IPToken(reserveCache.xTokenAddress)
-            .swapUnderlyingTo(
-                address(this),
-                timeLockParams,
-                params.swapAdapter,
-                params.swapPayload,
-                swapInfo
-            );
-        // TODO: rename swapUnderlyingTo -> swapAndTransferUnderlyingTo
-        // add missing swapAndBurn
-        IPToken(reserveCache.xTokenAddress).burn(
+        uint256 amountOut = IPToken(reserveCache.xTokenAddress).swapAndBurnFrom(
             msg.sender,
-            reserveCache.xTokenAddress,
-            amountToSwap,
+            address(this),
             reserveCache.nextLiquidityIndex,
-            timeLockParams
+            timeLockParams,
+            params.swapAdapter,
+            params.swapPayload,
+            swapInfo
         );
 
         SupplyLogic.executeSupply(
@@ -191,13 +183,14 @@ library SwapLogic {
                 dstReceiver: reserveCache.xTokenAddress
             })
         );
-        uint256 amountIn = IPToken(reserveCache.xTokenAddress).swapUnderlyingTo(
-            address(this),
-            timeLockParams,
-            params.swapAdapter,
-            params.swapPayload,
-            swapInfo
-        );
+        uint256 amountIn = IPToken(reserveCache.xTokenAddress)
+            .swapAndTransferUnderlyingTo(
+                address(this),
+                timeLockParams,
+                params.swapAdapter,
+                params.swapPayload,
+                swapInfo
+            );
 
         BorrowLogic.executeRepay(
             ps._reserves,
