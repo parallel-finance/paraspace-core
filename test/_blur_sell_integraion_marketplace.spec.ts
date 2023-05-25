@@ -203,7 +203,7 @@ describe("BLUR Sell Integration Tests", () => {
     ).to.be.revertedWith(ProtocolErrors.INVALID_PAYMENT_TOKEN);
   });
 
-  it("only pool admin can enable/disable acdept blur bids", async () => {
+  it("only pool admin can enable/disable accept blur bids", async () => {
     const {
       pool,
       users: [user1],
