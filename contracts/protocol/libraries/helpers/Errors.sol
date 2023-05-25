@@ -136,12 +136,14 @@ library Errors {
     string public constant CALLER_NOT_INITIATOR = "141"; //The caller of the function is not the request initiator
     string public constant INVALID_KEEPER_ADDRESS = "142"; //invalid keeper address to receive money
     string public constant ONGOING_REQUEST_AMOUNT_EXCEEDED = "143"; //ongoing request amount exceeds limit
-    string public constant BLUR_EXCHANGE_REQUEST_DISABLED = "144"; //blur exchange request disabled
+    string public constant REQUEST_DISABLED = "144"; //blur exchange request disabled
     string public constant INVALID_ASSET = "145"; // invalid asset.
     string public constant INVALID_ETH_VALUE = "146"; //the eth value with the transaction is invalid
     string public constant INVALID_REQUEST_STATUS = "147"; //The status of the request is invalid for this function
     string public constant INVALID_PAYMENT_TOKEN = "148"; //the invalid payment token for blur exchange request
-    string public constant INVALID_LISTING_PRICE = "149"; //the listing price for blur exchange request is invalid
+    string public constant INVALID_REQUEST_PRICE = "149"; //the listing price for blur exchange request is invalid
     string public constant CALLER_NOT_KEEPER = "150"; //The caller of the function is not keeper
     string public constant NTOKEN_NOT_OWNS_UNDERLYING = "151"; //The ntoken does not owns the underlying nft
+    string public constant EXISTING_APE_STAKING = "152"; // Ape coin staking position existed
+    string public constant NOT_SAME_NTOKEN_OWNER = "153"; // ntoken have different owner
 }

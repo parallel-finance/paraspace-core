@@ -432,14 +432,16 @@ export enum ProtocolErrors {
 
   CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
   ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
-  BLUR_EXCHANGE_REQUEST_DISABLED = "144", //blur exchange request disabled
+  REQUEST_DISABLED = "144", //blur exchange request disabled
   INVALID_ASSET = "145", // invalid asset.
   INVALID_ETH_VALUE = "146", //The status of the request is invalid for this function
   INVALID_REQUEST_STATUS = "147", //the eth value with the transaction is invalid
   INVALID_PAYMENT_TOKEN = "148", //the invalid payment token for blur exchange request
-  INVALID_LISTING_PRICE = "149", //the listing price for blur exchange request is invalid
+  INVALID_REQUEST_PRICE = "149", //the listing price for blur exchange request is invalid
   CALLER_NOT_KEEPER = "150", //The caller of the function is not keeper
   NTOKEN_NOT_OWNS_UNDERLYING = "151", //The ntoken does not owns the underlying nft
+  EXISTING_APE_STAKING = "152", // Ape coin staking position existed
+  NOT_SAME_NTOKEN_OWNER = "153", // ntoken have different owner
 }
 
 export type tEthereumAddress = string;

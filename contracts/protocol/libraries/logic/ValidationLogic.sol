@@ -55,13 +55,55 @@ library ValidationLogic {
      */
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
-    function validateStatusForBlurExchangeRequest(
+    function validateInitiateAcceptBlurBidsRequest(
+        DataTypes.PoolStorage storage ps,
+        address nTokenAddress,
+        DataTypes.AcceptBlurBidsRequest calldata request,
+        bytes32 requestHash,
+        address weth,
+        address oracle
+    ) internal view {
+        require(
+            ps._acceptBlurBidsRequestStatus[requestHash] ==
+                DataTypes.AcceptBlurBidsRequestStatus.Default,
+            Errors.INVALID_REQUEST_STATUS
+        );
+        require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        require(request.paymentToken == weth, Errors.INVALID_PAYMENT_TOKEN);
+        uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
+            request.collection
+        );
+        uint256 collateralPrice = Helpers.getTraitBoostedTokenPrice(
+            nTokenAddress,
+            floorPrice,
+            request.tokenId
+        );
+        DataTypes.ReserveConfigurationMap memory nftReserveConfiguration = ps
+            ._reserves[request.collection]
+            .configuration;
+        (, uint256 nftLiquidationThreshold, , , ) = nftReserveConfiguration
+            .getParams();
+        DataTypes.ReserveConfigurationMap memory wethReserveConfiguration = ps
+            ._reserves[weth]
+            .configuration;
+        (, uint256 wethLiquidationThreshold, , , ) = wethReserveConfiguration
+            .getParams();
+        uint256 userReceivedCurrency = request.bidingPrice -
+            request.marketPlaceFee;
+        require(
+            userReceivedCurrency.percentMul(wethLiquidationThreshold) >=
+                collateralPrice.percentMul(nftLiquidationThreshold),
+            Errors.INVALID_REQUEST_PRICE
+        );
+    }
+
+    function validateStatusForRequest(
         bool isEnable,
         address keeper,
         uint256 ongoingRequestAmount,
         uint256 ongoingRequestLimit
     ) internal pure {
-        require(isEnable, Errors.BLUR_EXCHANGE_REQUEST_DISABLED);
+        require(isEnable, Errors.REQUEST_DISABLED);
         require(keeper != address(0), Errors.INVALID_KEEPER_ADDRESS);
         require(
             ongoingRequestAmount <= ongoingRequestLimit,
@@ -102,7 +144,7 @@ library ValidationLogic {
         // ensure user can't borrow/withdraw with the new mint nToken
         require(
             request.listingPrice >= collateralPrice,
-            Errors.INVALID_LISTING_PRICE
+            Errors.INVALID_REQUEST_PRICE
         );
     }
 
