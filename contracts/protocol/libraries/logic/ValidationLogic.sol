@@ -61,7 +61,8 @@ library ValidationLogic {
         DataTypes.AcceptBlurBidsRequest calldata request,
         bytes32 requestHash,
         address weth,
-        address oracle
+        address oracle,
+        uint256 wethLiquidationThreshold
     ) internal view {
         require(
             ps._acceptBlurBidsRequestStatus[requestHash] ==
@@ -82,11 +83,6 @@ library ValidationLogic {
             ._reserves[request.collection]
             .configuration;
         (, uint256 nftLiquidationThreshold, , , ) = nftReserveConfiguration
-            .getParams();
-        DataTypes.ReserveConfigurationMap memory wethReserveConfiguration = ps
-            ._reserves[weth]
-            .configuration;
-        (, uint256 wethLiquidationThreshold, , , ) = wethReserveConfiguration
             .getParams();
         uint256 userReceivedCurrency = request.bidingPrice -
             request.marketPlaceFee;

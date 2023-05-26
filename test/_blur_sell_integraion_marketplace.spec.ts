@@ -452,6 +452,41 @@ describe("BLUR Sell Integration Tests", () => {
     ).to.be.revertedWith(ProtocolErrors.EXISTING_APE_STAKING);
   });
 
+  it("user can't initiate request if ape have paired staking position", async () => {
+    const {
+      pool,
+      users: [user1],
+      bayc,
+      bakc,
+      ape,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bakc, "1", user1, true);
+    await mintAndValidate(ape, "20000", user1);
+    await waitForTx(
+      await ape.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: parseEther("10000"),
+        },
+        [],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: parseEther("10000")}]
+      )
+    );
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .initiateAcceptBlurBidsRequest([AcceptBaycBidsRequest])
+    ).to.be.revertedWith(ProtocolErrors.EXISTING_APE_STAKING);
+  });
+
   it("biding price * ls must > floor price * ls when initiate request", async () => {
     const {
       pool,

@@ -205,8 +205,9 @@ contract PoolMarketplace is
         DataTypes.PoolStorage storage ps = poolStorage();
         PoolExtendedLogic.executeInitiateAcceptBlurBidsRequest(
             ps,
-            ADDRESSES_PROVIDER,
-            requests
+            requests,
+            ADDRESSES_PROVIDER.getPriceOracle(),
+            ADDRESSES_PROVIDER.getWETH()
         );
     }
 

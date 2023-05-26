@@ -22,9 +22,11 @@ import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol
 import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {NTokenBAKC} from "../../tokenization/NTokenBAKC.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
+import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 
 library PoolExtendedLogic {
     using Math for uint256;
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using PercentageMath for uint256;
     using SafeCast for uint256;
@@ -362,8 +364,9 @@ library PoolExtendedLogic {
 
     function executeInitiateAcceptBlurBidsRequest(
         DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider,
-        DataTypes.AcceptBlurBidsRequest[] calldata requests
+        DataTypes.AcceptBlurBidsRequest[] calldata requests,
+        address oracle,
+        address weth
     ) external {
         address keeper = ps._acceptBlurBidsKeeper;
         //check and update overall status
@@ -381,7 +384,6 @@ library PoolExtendedLogic {
         }
 
         // validate user's health factor, if HF drops below 1 before keeper finalize the request, nToken can be liquidated.
-        address oracle = poolAddressProvider.getPriceOracle();
         ValidationLogic.validateHealthFactor(
             ps._reserves,
             ps._reservesList,
@@ -392,8 +394,11 @@ library PoolExtendedLogic {
         );
 
         //validate and handle every single request
-        address weth = poolAddressProvider.getWETH();
         uint256 requestFeeRate = ps._acceptBlurBidsRequestFeeRate;
+        uint256 wethLiquidationThreshold = _getWETHLiquidationThreashold(
+            ps,
+            weth
+        );
         uint256 totalFee = 0;
         for (uint256 index = 0; index < requests.length; index++) {
             DataTypes.AcceptBlurBidsRequest calldata request = requests[index];
@@ -411,21 +416,38 @@ library PoolExtendedLogic {
                 request,
                 requestHash,
                 weth,
-                oracle
+                oracle,
+                wethLiquidationThreshold
             );
 
             //check if any ape coin position exist on the Ape
             {
                 XTokenType tokenType = INToken(nTokenAddress).getXTokenType();
                 if (tokenType == XTokenType.NTokenBAYC) {
+                    ApeCoinStaking apeCoinStaking = INTokenApeStaking(
+                        nTokenAddress
+                    ).getApeStaking();
                     _ensureApeCoinPositionNotExistedOn(
-                        INTokenApeStaking(nTokenAddress).getApeStaking(),
+                        apeCoinStaking,
+                        1,
+                        request.tokenId
+                    );
+                    _ensureApeIsNotPairedStaking(
+                        apeCoinStaking,
                         1,
                         request.tokenId
                     );
                 } else if (tokenType == XTokenType.NTokenMAYC) {
+                    ApeCoinStaking apeCoinStaking = INTokenApeStaking(
+                        nTokenAddress
+                    ).getApeStaking();
                     _ensureApeCoinPositionNotExistedOn(
-                        INTokenApeStaking(nTokenAddress).getApeStaking(),
+                        apeCoinStaking,
+                        2,
+                        request.tokenId
+                    );
+                    _ensureApeIsNotPairedStaking(
+                        apeCoinStaking,
                         2,
                         request.tokenId
                     );
@@ -754,5 +776,26 @@ library PoolExtendedLogic {
     ) internal view {
         (uint256 stakedAmount, ) = apeStaking.nftPosition(poolId, tokenId);
         require(stakedAmount == 0, Errors.EXISTING_APE_STAKING);
+    }
+
+    function _ensureApeIsNotPairedStaking(
+        ApeCoinStaking apeStaking,
+        uint256 mainPoolId,
+        uint256 tokenId
+    ) internal view {
+        (, bool isPaired) = apeStaking.mainToBakc(mainPoolId, tokenId);
+        require(!isPaired, Errors.EXISTING_APE_STAKING);
+    }
+
+    function _getWETHLiquidationThreashold(
+        DataTypes.PoolStorage storage ps,
+        address weth
+    ) internal view returns (uint256) {
+        DataTypes.ReserveConfigurationMap memory wethReserveConfiguration = ps
+            ._reserves[weth]
+            .configuration;
+        (, uint256 wethLiquidationThreshold, , , ) = wethReserveConfiguration
+            .getParams();
+        return wethLiquidationThreshold;
     }
 }
