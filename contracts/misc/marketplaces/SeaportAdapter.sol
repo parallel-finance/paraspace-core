@@ -32,7 +32,7 @@ contract SeaportAdapter is IMarketplace {
             AdvancedOrder memory advancedOrder,
             CriteriaResolver[] memory resolvers,
             ,
-            address recipient
+
         ) = abi.decode(
                 params,
                 (AdvancedOrder, CriteriaResolver[], bytes32, address)
@@ -45,10 +45,10 @@ contract SeaportAdapter is IMarketplace {
         );
         // the person who listed NFT to sell
         orderInfo.maker = advancedOrder.parameters.offerer;
-        require(
-            recipient == ADDRESSES_PROVIDER.getPool(),
-            Errors.INVALID_ORDER_TAKER
-        );
+        // require(
+        //     recipient == ADDRESSES_PROVIDER.getPool(),
+        //     Errors.INVALID_ORDER_TAKER
+        // );
 
         orderInfo.id = advancedOrder.signature;
         // NFT, items will be checked inside MarketplaceLogic

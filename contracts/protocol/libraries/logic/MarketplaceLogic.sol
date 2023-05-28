@@ -135,7 +135,7 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars = _cache(
             ps,
             params,
-            params.orderInfo.maker
+            params.orderInfo.taker
         );
 
         _flashSupplyFor(ps, vars, params.orderInfo.maker);
@@ -310,7 +310,7 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars = _cache(
             ps,
             params,
-            params.orderInfo.taker
+            params.orderInfo.maker
         );
 
         _flashSupplyFor(ps, vars, params.orderInfo.taker);
@@ -469,6 +469,17 @@ library MarketplaceLogic {
 
         reserve.updateState(reserveCache);
 
+        bool willUpdateRateLater = vars.listingToken == vars.creditToken &&
+            vars.creditAmount != 0;
+        if (!willUpdateRateLater) {
+            reserve.updateInterestRates(
+                reserveCache,
+                vars.listingToken,
+                0,
+                vars.isListingTokenPToken ? 0 : vars.supplyAmount
+            );
+        }
+
         vars.listingTokenNextLiquidityIndex = reserveCache.nextLiquidityIndex;
 
         bool isFirstSupply = IPToken(reserveCache.xTokenAddress).mint(
@@ -511,10 +522,10 @@ library MarketplaceLogic {
             uint256 tokenId = item.identifierOrCriteria;
             // NToken
             vars.xTokenAddress = ps._reserves[token].xTokenAddress;
+            bool isReserve = vars.xTokenAddress != address(0);
 
             // item.token == NToken
-            if (vars.xTokenAddress == address(0)) {
-                bool isReserve = false;
+            if (!isReserve) {
                 try INToken(token).UNDERLYING_ASSET_ADDRESS() returns (
                     address underlyingAsset
                 ) {
@@ -527,44 +538,23 @@ library MarketplaceLogic {
                         isReserve = true;
                     }
                 } catch {}
-                if (!isReserve) {
-                    // token is not listed
-                    IERC721(token).safeTransferFrom(
-                        address(this),
-                        buyer,
-                        tokenId
-                    );
-                    continue;
-                }
             }
 
             require(
-                INToken(vars.xTokenAddress).getXTokenType() !=
+                !isReserve ||
+                    INToken(vars.xTokenAddress).getXTokenType() !=
                     XTokenType.NTokenUniswapV3,
                 Errors.XTOKEN_TYPE_NOT_ALLOWED
             );
 
-            // item.token == underlyingAsset but supplied after listing/offering
-            // so NToken is transferred instead
-            if (INToken(vars.xTokenAddress).ownerOf(tokenId) == address(this)) {
-                _transferAndCollateralize(ps, vars, buyer, token, tokenId);
-                // item.token == underlyingAsset and underlyingAsset stays in wallet
-            } else {
-                DataTypes.ERC721SupplyParams[]
-                    memory tokenData = new DataTypes.ERC721SupplyParams[](1);
-                tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
-                SupplyLogic.executeSupplyERC721(
-                    ps._reserves,
-                    ps._usersConfig[buyer],
-                    DataTypes.ExecuteSupplyERC721Params({
-                        asset: token,
-                        tokenData: tokenData,
-                        onBehalfOf: buyer,
-                        payer: address(this),
-                        referralCode: 0
-                    })
-                );
-            }
+            _transferOrCollateralize(
+                ps,
+                vars,
+                buyer,
+                token,
+                tokenId,
+                isReserve
+            );
         }
 
         if (vars.creditAmount == 0) {
@@ -609,20 +599,27 @@ library MarketplaceLogic {
             return;
         }
 
-        DataTypes.TimeLockParams memory timeLockParams;
-        IPToken(vars.listingXTokenAddress).burn(
-            seller,
-            vars.listingXTokenAddress,
-            vars.supplyAmount,
-            vars.listingTokenNextLiquidityIndex,
-            timeLockParams
-        );
+        if (vars.isListingTokenPToken) {
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(vars.listingXTokenAddress).burn(
+                seller,
+                vars.listingXTokenAddress,
+                vars.supplyAmount,
+                vars.listingTokenNextLiquidityIndex,
+                timeLockParams
+            );
+        } else {
+            IERC20(vars.listingToken).safeTransfer(
+                vars.listingXTokenAddress,
+                vars.supplyAmount
+            );
+        }
     }
 
     function _cache(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params,
-        address seller
+        address buyer
     ) internal view returns (MarketplaceLocalVars memory vars) {
         vars.creditToken = params.credit.token;
         vars.creditAmount = params.credit.amount;
@@ -657,7 +654,7 @@ library MarketplaceLogic {
         (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
             params,
             vars,
-            seller
+            buyer
         );
 
         // either the seller & buyer decided to not use any credit
@@ -720,36 +717,87 @@ library MarketplaceLogic {
         vars.ethLeft = 0;
     }
 
-    function _transferAndCollateralize(
+    function _transferOrCollateralize(
         DataTypes.PoolStorage storage ps,
         MarketplaceLocalVars memory vars,
         address buyer,
         address token,
-        uint256 tokenId
+        uint256 tokenId,
+        bool isReserve
     ) internal {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
+        bool isNToken = isReserve &&
+            IERC721(vars.xTokenAddress).ownerOf(tokenId) != address(0);
 
-        IERC721(vars.xTokenAddress).safeTransferFrom(
-            address(this),
-            buyer,
-            tokenId
-        );
-        SupplyLogic.executeCollateralizeERC721(
-            ps._reserves,
-            ps._usersConfig[buyer],
-            token,
-            tokenIds,
-            buyer
-        );
+        if (isNToken) {
+            address nTokenOwner = IERC721(vars.xTokenAddress).ownerOf(tokenId);
+            require(nTokenOwner == address(this) || nTokenOwner == buyer);
+
+            if (nTokenOwner == address(this)) {
+                IERC721(vars.xTokenAddress).safeTransferFrom(
+                    address(this),
+                    buyer,
+                    tokenId
+                );
+            }
+
+            SupplyLogic.executeCollateralizeERC721(
+                ps._reserves,
+                ps._usersConfig[buyer],
+                token,
+                tokenIds,
+                buyer
+            );
+        } else {
+            address owner = IERC721(token).ownerOf(tokenId);
+            require(owner == address(this) || owner == buyer);
+
+            if (!isReserve) {
+                if (owner == address(this)) {
+                    IERC721(token).safeTransferFrom(
+                        address(this),
+                        buyer,
+                        tokenId
+                    );
+                }
+            } else {
+                DataTypes.ERC721SupplyParams[]
+                    memory tokenData = new DataTypes.ERC721SupplyParams[](1);
+                tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
+                SupplyLogic.executeSupplyERC721(
+                    ps._reserves,
+                    ps._usersConfig[buyer],
+                    DataTypes.ExecuteSupplyERC721Params({
+                        asset: token,
+                        tokenData: tokenData,
+                        onBehalfOf: buyer,
+                        payer: owner,
+                        referralCode: 0
+                    })
+                );
+            }
+        }
     }
 
     function _validateAndGetPriceAndSupplyAmount(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
-        address seller
-    ) internal pure returns (uint256 price, uint256 supplyAmount) {
-        for (uint256 i = 0; i < params.orderInfo.consideration.length; i++) {
+        address buyer
+    ) internal view returns (uint256 price, uint256 supplyAmount) {
+        uint256 size = params.orderInfo.consideration.length;
+        ConsiderationItem memory lastItem = params.orderInfo.consideration[
+            size - 1
+        ];
+
+        if (lastItem.itemType == ItemType.ERC721) {
+            require(
+                lastItem.recipient == buyer && --size > 0,
+                Errors.INVALID_MARKETPLACE_ORDER
+            );
+        }
+
+        for (uint256 i = 0; i < size; i++) {
             ConsiderationItem memory item = params.orderInfo.consideration[i];
             require(
                 item.startAmount == item.endAmount,
@@ -770,9 +818,7 @@ library MarketplaceLogic {
             // supplyAmount is a **message** from the seller to the protocol
             // to tell us the percentage of received funds to be supplied to be
             // able to transfer NFT out
-            //
-            // This will only be useful for ParaSpace marketplace
-            if (vars.isListingTokenPToken && item.recipient == seller) {
+            if (item.recipient == address(this)) {
                 supplyAmount += item.startAmount;
             }
         }
