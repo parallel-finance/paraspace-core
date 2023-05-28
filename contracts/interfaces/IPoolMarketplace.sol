@@ -106,6 +106,18 @@ interface IPoolMarketplace {
     ) external;
 
     /**
+     * @notice Accepts an OpenSea bid
+     * @param marketplaceId The unique identifier of the marketplace where the bid is made
+     * @param payload The bytes data of the bid payload
+     * @param onBehalfOf The address of the account (the bidder, or the seller with the OpenSea account authorized) that will execute the transaction
+     */
+    function acceptOpenSeaBid(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        address onBehalfOf
+    ) external;
+
+    /**
      * @notice Implements the batchAcceptBidWithCredit feature. AcceptBidWithCredit allows users to
      * accept a leveraged bid on ParaSpace NFT marketplace. Users can submit leveraged bid and pay
      * at most (1 - LTV) * $NFT

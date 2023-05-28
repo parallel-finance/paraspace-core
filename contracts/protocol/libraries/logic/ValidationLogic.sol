@@ -1081,13 +1081,14 @@ library ValidationLogic {
             Errors.CREDIT_DOES_NOT_MATCH_ORDER
         );
         require(
-            verifyCreditSignature(
-                params.credit,
-                params.orderInfo.maker,
-                params.credit.v,
-                params.credit.r,
-                params.credit.s
-            ),
+            params.credit.amount == 0 ||
+                verifyCreditSignature(
+                    params.credit,
+                    params.orderInfo.maker,
+                    params.credit.v,
+                    params.credit.r,
+                    params.credit.s
+                ),
             Errors.INVALID_CREDIT_SIGNATURE
         );
     }

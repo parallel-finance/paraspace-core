@@ -193,6 +193,7 @@ library DataTypes {
         address to;
         uint256 reservesCount;
         address oracle;
+        bool timeLock;
     }
 
     struct ExecuteDecreaseUniswapV3LiquidityParams {

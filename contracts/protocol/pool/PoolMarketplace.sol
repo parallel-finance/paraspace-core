@@ -167,6 +167,23 @@ contract PoolMarketplace is
     }
 
     /// @inheritdoc IPoolMarketplace
+    function acceptOpenSeaBid(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        address onBehalfOf
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeAcceptOpenSeaBid(
+            ps,
+            marketplaceId,
+            payload,
+            onBehalfOf,
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
     function batchAcceptBidWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,

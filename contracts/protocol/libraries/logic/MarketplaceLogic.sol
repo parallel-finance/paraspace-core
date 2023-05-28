@@ -259,6 +259,40 @@ library MarketplaceLogic {
         _acceptBidWithCredit(ps, params);
     }
 
+    function executeAcceptOpenSeaBid(
+        DataTypes.PoolStorage storage ps,
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        address onBehalfOf,
+        IPoolAddressesProvider poolAddressProvider
+    ) external {
+        DataTypes.ExecuteMarketplaceParams memory params = _getParams(
+            ps,
+            poolAddressProvider,
+            marketplaceId,
+            payload,
+            DataTypes.Credit(
+                address(0),
+                0,
+                bytes(""),
+                0,
+                bytes32(""),
+                bytes32("")
+            ),
+            DataTypes.SwapAdapter(address(0), address(0), false),
+            bytes("")
+        );
+        params.orderInfo = IMarketplace(params.marketplace.adapter)
+            .getBidOrderInfo(payload);
+
+        require(
+            params.orderInfo.taker == onBehalfOf,
+            Errors.INVALID_ORDER_TAKER
+        );
+
+        _acceptOpenSeaBid(ps, params);
+    }
+
     function executeBatchAcceptBidWithCredit(
         DataTypes.PoolStorage storage ps,
         bytes32[] calldata marketplaceIds,
@@ -328,6 +362,40 @@ library MarketplaceLogic {
 
         _handleFlashSupplyRepayment(vars, params.orderInfo.taker);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.maker);
+
+        emit AcceptBidWithCredit(
+            params.marketplaceId,
+            params.orderInfo,
+            params.credit
+        );
+    }
+
+    function _acceptOpenSeaBid(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.ExecuteMarketplaceParams memory params
+    ) internal {
+        ValidationLogic.validateAcceptBidWithCredit(params);
+
+        MarketplaceLocalVars memory vars = _cache(
+            ps,
+            params,
+            params.orderInfo.maker
+        );
+
+        _flashSupplyFor(ps, vars, params.orderInfo.taker);
+        _handleWithdrawERC721(ps, params, vars, params.orderInfo.maker);
+
+        // delegateCall to avoid extra token transfer
+        Address.functionDelegateCall(
+            params.marketplace.adapter,
+            abi.encodeWithSelector(
+                IMarketplace.matchBidWithTakerAsk.selector,
+                params.marketplace.marketplace,
+                params.payload
+            )
+        );
+
+        _handleFlashSupplyRepayment(vars, params.orderInfo.taker);
 
         emit AcceptBidWithCredit(
             params.marketplaceId,
@@ -492,6 +560,47 @@ library MarketplaceLogic {
         if (isFirstSupply || !sellerConfig.isUsingAsCollateral(reserveId)) {
             sellerConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(vars.listingToken, seller);
+        }
+    }
+
+    function _handleWithdrawERC721(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.ExecuteMarketplaceParams memory params,
+        MarketplaceLocalVars memory vars,
+        address seller
+    ) internal {
+        for (uint256 i = 0; i < params.orderInfo.offer.length; i++) {
+            OfferItem memory item = params.orderInfo.offer[i];
+            require(
+                item.itemType == ItemType.ERC721,
+                Errors.INVALID_ASSET_TYPE
+            );
+
+            address token = item.token;
+            uint256 tokenId = item.identifierOrCriteria;
+            vars.xTokenAddress = ps._reserves[token].xTokenAddress;
+
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = tokenId;
+
+            if (
+                vars.xTokenAddress != address(0) &&
+                IERC721(vars.xTokenAddress).ownerOf(tokenId) != address(0)
+            ) {
+                SupplyLogic.executeWithdrawERC721(
+                    ps._reserves,
+                    ps._reservesList,
+                    ps._usersConfig[seller],
+                    DataTypes.ExecuteWithdrawERC721Params({
+                        asset: token,
+                        tokenIds: tokenIds,
+                        to: seller,
+                        reservesCount: params.reservesCount,
+                        oracle: params.oracle,
+                        timeLock: false
+                    })
+                );
+            }
         }
     }
 
