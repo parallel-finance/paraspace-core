@@ -374,7 +374,7 @@ library MarketplaceLogic {
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal {
-        ValidationLogic.validateAcceptBidWithCredit(params);
+        ValidationLogic.validateAcceptOpenSeaBid(params);
 
         MarketplaceLocalVars memory vars = _cache(
             ps,
@@ -633,7 +633,6 @@ library MarketplaceLogic {
             vars.xTokenAddress = ps._reserves[token].xTokenAddress;
             bool isReserve = vars.xTokenAddress != address(0);
 
-            // item.token == NToken
             if (!isReserve) {
                 try INToken(token).UNDERLYING_ASSET_ADDRESS() returns (
                     address underlyingAsset

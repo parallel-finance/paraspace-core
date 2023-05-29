@@ -448,7 +448,7 @@ library SupplyLogic {
         DataTypes.TimeLockParams memory timeLockParams;
 
         if (params.timeLock) {
-            GenericLogic.calculateTimeLockParams(
+            timeLockParams = GenericLogic.calculateTimeLockParams(
                 reserve,
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC721,

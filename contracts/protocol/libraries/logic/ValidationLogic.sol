@@ -1081,16 +1081,22 @@ library ValidationLogic {
             Errors.CREDIT_DOES_NOT_MATCH_ORDER
         );
         require(
-            params.credit.amount == 0 ||
-                verifyCreditSignature(
-                    params.credit,
-                    params.orderInfo.maker,
-                    params.credit.v,
-                    params.credit.r,
-                    params.credit.s
-                ),
+            verifyCreditSignature(
+                params.credit,
+                params.orderInfo.maker,
+                params.credit.v,
+                params.credit.r,
+                params.credit.s
+            ),
             Errors.INVALID_CREDIT_SIGNATURE
         );
+    }
+
+    function validateAcceptOpenSeaBid(
+        DataTypes.ExecuteMarketplaceParams memory params
+    ) internal view {
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
+        require(params.credit.amount == 0);
     }
 
     function verifyCreditSignature(
