@@ -87,6 +87,8 @@ library PositionMoverLogic {
 
             tmpVar.totalBorrowAmount += tmpVar.borrowAmounts[index];
 
+            tmpVar.nftAssets[index] = loanData.nftAsset;
+            tmpVar.tokenIds[index] = loanData.nftTokenId;
             emit PositionMoved(
                 loanData.nftAsset,
                 loanData.nftTokenId,
@@ -146,6 +148,7 @@ library PositionMoverLogic {
                     tokensToSupply,
                     supplySize
                 );
+
                 if (index + 1 < tmpVar.tokenIds.length) {
                     currentSupplyAsset = tmpVar.nftAssets[index + 1];
                     tokensToSupply = tokensToSupply = new DataTypes.ERC721SupplyParams[](
