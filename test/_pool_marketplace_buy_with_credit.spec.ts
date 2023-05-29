@@ -1591,7 +1591,7 @@ describe("Leveraged Buy - Positive tests", () => {
           toBN(0),
           startAmount,
           endAmount,
-          maker.address
+          pool.address
         ),
       ];
 

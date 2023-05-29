@@ -10,6 +10,7 @@ import {
   toBN,
 } from "../helpers/seaport-helpers/encoding";
 import {
+  MAX_UINT_AMOUNT,
   PARASPACE_SEAPORT_ID,
   UNISWAP_V3_SWAP_ADAPTER_ID,
 } from "../helpers/constants";
@@ -199,16 +200,16 @@ describe("Leveraged Buy Any - Positive tests", () => {
     const creditAmountInListingToken = creditAmount;
 
     const swapRouter = await getUniswapV3SwapRouter();
-    const swapPayload = swapRouter.interface.encodeFunctionData("exactInput", [
+    const swapPayload = swapRouter.interface.encodeFunctionData("exactOutput", [
       {
         path: solidityPack(
           ["address", "uint24", "address"],
-          [weth.address, 500, usdc.address]
+          [usdc.address, 500, weth.address]
         ),
         recipient: pWETH.address,
         deadline: 2659537628,
-        amountIn: creditAmountInListingToken,
-        amountOutMinimum: 0,
+        amountOut: creditAmountInListingToken,
+        amountInMaximum: MAX_UINT_AMOUNT,
       },
     ]);
 

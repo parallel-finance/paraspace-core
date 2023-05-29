@@ -304,6 +304,7 @@ export async function executeSeaportBuyWithCredit(
   taker: SignerWithAddress,
   isCollateralSwap = false
 ) {
+  const pool = await getPoolProxy();
   // approve
   await waitForTx(
     await tokenToBuy
@@ -324,7 +325,7 @@ export async function executeSeaportBuyWithCredit(
         nftId,
         startAmount,
         endAmount,
-        maker.address
+        isCollateralSwap ? pool.address : maker.address
       ),
     ];
 
@@ -338,8 +339,6 @@ export async function executeSeaportBuyWithCredit(
       await getConduitKey()
     );
   };
-
-  const pool = await getPoolProxy();
 
   const encodedData = seaport.interface.encodeFunctionData(
     "fulfillAdvancedOrder",
@@ -445,7 +444,7 @@ export async function executeAcceptBidWithCredit(
         toBN(0),
         startAmount,
         endAmount,
-        taker.address
+        isCollateralSwap ? pool.address : taker.address
       ),
     ];
 

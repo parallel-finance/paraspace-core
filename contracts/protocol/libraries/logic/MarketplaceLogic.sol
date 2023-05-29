@@ -26,6 +26,7 @@ import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 import {Helpers} from "../../../protocol/libraries/helpers/Helpers.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Marketplace library
@@ -157,7 +158,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(vars, params.orderInfo.maker);
+        _handleFlashSupplyRepayment(vars, params);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
 
         emit BuyWithCredit(
@@ -360,7 +361,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(vars, params.orderInfo.taker);
+        _handleFlashSupplyRepayment(vars, params);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.maker);
 
         emit AcceptBidWithCredit(
@@ -395,7 +396,7 @@ library MarketplaceLogic {
             )
         );
 
-        _handleFlashSupplyRepayment(vars, params.orderInfo.taker);
+        _handleFlashSupplyRepayment(vars, params);
 
         emit AcceptBidWithCredit(
             params.marketplaceId,
@@ -697,11 +698,11 @@ library MarketplaceLogic {
      * @notice "Repay" minted pToken by transferring funds from the seller to xTokenAddress
      * @dev
      * @param vars The marketplace local vars for caching storage values for future reads
-     * @param seller The NFT seller
+     * @param params The additional parameters needed to execute the buyWithCredit function
      */
     function _handleFlashSupplyRepayment(
         MarketplaceLocalVars memory vars,
-        address seller
+        DataTypes.ExecuteMarketplaceParams memory params
     ) internal {
         if (vars.supplyAmount == 0) {
             return;
@@ -710,13 +711,17 @@ library MarketplaceLogic {
         if (vars.isListingTokenPToken) {
             DataTypes.TimeLockParams memory timeLockParams;
             IPToken(vars.listingXTokenAddress).burn(
-                seller,
+                address(this),
                 vars.listingXTokenAddress,
                 vars.supplyAmount,
                 vars.listingTokenNextLiquidityIndex,
                 timeLockParams
             );
         } else {
+            if (vars.isListingTokenETH) {
+                IWETH(params.weth).deposit{value: vars.supplyAmount}();
+            }
+
             IERC20(vars.listingToken).safeTransfer(
                 vars.listingXTokenAddress,
                 vars.supplyAmount
@@ -835,12 +840,16 @@ library MarketplaceLogic {
     ) internal {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = tokenId;
-        bool isNToken = isReserve &&
-            IERC721(vars.xTokenAddress).ownerOf(tokenId) != address(0);
+        address nTokenOwner = isReserve
+            ? IERC721(vars.xTokenAddress).ownerOf(tokenId)
+            : address(0);
+        bool isNToken = nTokenOwner != address(0);
 
         if (isNToken) {
-            address nTokenOwner = IERC721(vars.xTokenAddress).ownerOf(tokenId);
-            require(nTokenOwner == address(this) || nTokenOwner == buyer);
+            require(
+                nTokenOwner == address(this) || nTokenOwner == buyer,
+                Errors.INVALID_MARKETPLACE_ORDER
+            );
 
             if (nTokenOwner == address(this)) {
                 IERC721(vars.xTokenAddress).safeTransferFrom(
@@ -859,7 +868,10 @@ library MarketplaceLogic {
             );
         } else {
             address owner = IERC721(token).ownerOf(tokenId);
-            require(owner == address(this) || owner == buyer);
+            require(
+                owner == address(this) || owner == buyer,
+                Errors.INVALID_MARKETPLACE_ORDER
+            );
 
             if (!isReserve) {
                 if (owner == address(this)) {
