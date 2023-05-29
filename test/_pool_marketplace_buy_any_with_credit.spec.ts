@@ -124,6 +124,7 @@ describe("Leveraged Buy Any - Positive tests", () => {
       pausableZone,
       seaport,
       pool,
+      variableDebtWeth,
       users: [maker, taker, middleman, platform],
     } = await loadFixture(fixture);
     const payNowNumber = "800";
@@ -213,6 +214,8 @@ describe("Leveraged Buy Any - Positive tests", () => {
       },
     ]);
 
+    const debtBefore = await variableDebtWeth.balanceOf(taker.address);
+
     await waitForTx(
       await pool.connect(taker.signer).buyAnyWithCredit(
         PARASPACE_SEAPORT_ID,
@@ -237,5 +240,9 @@ describe("Leveraged Buy Any - Positive tests", () => {
     expect(await mayc.ownerOf(nftId)).to.be.equal(
       (await pool.getReserveData(mayc.address)).xTokenAddress
     );
+
+    expect(
+      (await variableDebtWeth.balanceOf(taker.address)).sub(debtBefore)
+    ).eq("183313420582917789");
   });
 });
