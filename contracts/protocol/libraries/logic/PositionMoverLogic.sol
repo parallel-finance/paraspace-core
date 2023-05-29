@@ -27,11 +27,10 @@ library PositionMoverLogic {
     using ReserveLogic for DataTypes.ReserveData;
 
     struct PositionMoverVars {
-        address weth;
-        address xTokenAddress;
-        address nftAsset;
-        uint256 tokenId;
-        uint256 borrowAmount;
+        address[] nftAssets;
+        uint256[] tokenIds;
+        uint256[] borrowAmounts;
+        uint256 totalBorrowAmount;
     }
 
     event PositionMoved(address asset, uint256 tokenId, address user);
@@ -41,103 +40,169 @@ library PositionMoverLogic {
         IPoolAddressesProvider poolAddressProvider,
         ILendPoolLoan lendPoolLoan,
         ILendPool lendPool,
-        uint256[] calldata loandIds
+        uint256[] calldata loanIds
     ) external {
-        PositionMoverVars memory tmpVar;
+        address weth = poolAddressProvider.getWETH();
+        DataTypes.ReserveData storage reserve = ps._reserves[weth];
+        address xTokenAddress = reserve.xTokenAddress;
 
-        tmpVar.weth = poolAddressProvider.getWETH();
-        DataTypes.ReserveData storage reserve = ps._reserves[tmpVar.weth];
-        tmpVar.xTokenAddress = reserve.xTokenAddress;
+        uint256 borrowAmount = _repayBendDAOPositionLoanAndSupply(
+            ps,
+            lendPoolLoan,
+            lendPool,
+            weth,
+            xTokenAddress,
+            loanIds
+        );
 
-        for (uint256 index = 0; index < loandIds.length; index++) {
-            (
-                tmpVar.nftAsset,
-                tmpVar.tokenId,
-                tmpVar.borrowAmount
-            ) = _repayBendDAOPositionLoan(
-                lendPoolLoan,
-                lendPool,
-                tmpVar.weth,
-                tmpVar.xTokenAddress,
-                loandIds[index]
-            );
-
-            supplyNFTandBorrowWETH(ps, poolAddressProvider, tmpVar);
-
-            emit PositionMoved(tmpVar.nftAsset, tmpVar.tokenId, msg.sender);
-        }
+        borrowWETH(ps, poolAddressProvider, weth, borrowAmount);
     }
 
-    function _repayBendDAOPositionLoan(
+    function _repayBendDAOPositionLoanAndSupply(
+        DataTypes.PoolStorage storage ps,
         ILendPoolLoan lendPoolLoan,
         ILendPool lendPool,
         address weth,
         address xTokenAddress,
-        uint256 loanId
-    )
-        internal
-        returns (
-            address nftAsset,
-            uint256 tokenId,
-            uint256 borrowAmount
-        )
-    {
-        BDaoDataTypes.LoanData memory loanData = lendPoolLoan.getLoan(loanId);
+        uint256[] calldata loanIds
+    ) internal returns (uint256 borrowAmount) {
+        BDaoDataTypes.LoanData memory loanData;
+        PositionMoverVars memory tmpVar;
 
-        require(
-            loanData.state == BDaoDataTypes.LoanState.Active,
-            "Loan not active"
-        );
-        require(loanData.borrower == msg.sender, Errors.NOT_THE_OWNER);
+        tmpVar.borrowAmounts = new uint256[](loanIds.length);
+        tmpVar.nftAssets = new address[](loanIds.length);
+        tmpVar.tokenIds = new uint256[](loanIds.length);
 
-        (, borrowAmount) = lendPoolLoan.getLoanReserveBorrowAmount(loanId);
+        for (uint256 index = 0; index < loanIds.length; index++) {
+            loanData = lendPoolLoan.getLoan(loanIds[index]);
+
+            require(
+                loanData.state == BDaoDataTypes.LoanState.Active,
+                "Loan not active"
+            );
+            require(loanData.borrower == msg.sender, Errors.NOT_THE_OWNER);
+
+            (, tmpVar.borrowAmounts[index]) = lendPoolLoan
+                .getLoanReserveBorrowAmount(loanIds[index]);
+
+            tmpVar.totalBorrowAmount += tmpVar.borrowAmounts[index];
+
+            emit PositionMoved(
+                loanData.nftAsset,
+                loanData.nftTokenId,
+                msg.sender
+            );
+        }
 
         DataTypes.TimeLockParams memory timeLockParams;
         IPToken(xTokenAddress).transferUnderlyingTo(
             address(this),
-            borrowAmount,
+            tmpVar.totalBorrowAmount,
             timeLockParams
         );
-        IERC20(weth).approve(address(lendPool), borrowAmount);
+        IERC20(weth).approve(address(lendPool), tmpVar.totalBorrowAmount);
 
-        lendPool.repay(loanData.nftAsset, loanData.nftTokenId, borrowAmount);
+        lendPool.batchRepay(
+            tmpVar.nftAssets,
+            tmpVar.tokenIds,
+            tmpVar.borrowAmounts
+        );
 
-        (nftAsset, tokenId) = (loanData.nftAsset, loanData.nftTokenId);
+        supplyAssets(ps, tmpVar);
+
+        borrowAmount = tmpVar.totalBorrowAmount;
     }
 
-    function supplyNFTandBorrowWETH(
+    function supplyAssets(
         DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider,
         PositionMoverVars memory tmpVar
     ) internal {
         DataTypes.ERC721SupplyParams[]
-            memory tokenData = new DataTypes.ERC721SupplyParams[](1);
-        tokenData[0] = DataTypes.ERC721SupplyParams({
-            tokenId: tmpVar.tokenId,
+            memory tokensToSupply = new DataTypes.ERC721SupplyParams[](
+                tmpVar.tokenIds.length
+            );
+
+        address currentSupplyAsset = tmpVar.nftAssets[0];
+        uint256 supplySize = 1;
+        tokensToSupply[0] = DataTypes.ERC721SupplyParams({
+            tokenId: tmpVar.tokenIds[0],
             useAsCollateral: true
         });
 
+        for (uint256 index = 0; index < tmpVar.tokenIds.length; index++) {
+            if (
+                index + 1 < tmpVar.tokenIds.length &&
+                tmpVar.nftAssets[index] == tmpVar.nftAssets[index + 1]
+            ) {
+                tokensToSupply[supplySize] = DataTypes.ERC721SupplyParams({
+                    tokenId: tmpVar.tokenIds[index + 1],
+                    useAsCollateral: true
+                });
+                supplySize++;
+            } else {
+                reduceArrayAndSupply(
+                    ps,
+                    currentSupplyAsset,
+                    tokensToSupply,
+                    supplySize
+                );
+                if (index + 1 < tmpVar.tokenIds.length) {
+                    currentSupplyAsset = tmpVar.nftAssets[index + 1];
+                    tokensToSupply = tokensToSupply = new DataTypes.ERC721SupplyParams[](
+                        tmpVar.tokenIds.length
+                    );
+                    tokensToSupply[0] = DataTypes.ERC721SupplyParams({
+                        tokenId: tmpVar.tokenIds[index + 1],
+                        useAsCollateral: true
+                    });
+                    supplySize = 1;
+                }
+            }
+        }
+    }
+
+    function reduceArrayAndSupply(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        DataTypes.ERC721SupplyParams[] memory tokensToSupply,
+        uint256 subArraySize
+    ) internal {
+        subArraySize = tokensToSupply.length - subArraySize;
+        if (subArraySize > 0 && tokensToSupply.length - subArraySize > 0) {
+            assembly {
+                mstore(tokensToSupply, sub(mload(tokensToSupply), subArraySize))
+            }
+        }
+
+        // supply the current asset and tokens
         SupplyLogic.executeSupplyERC721(
             ps._reserves,
             ps._usersConfig[msg.sender],
             DataTypes.ExecuteSupplyERC721Params({
-                asset: tmpVar.nftAsset,
-                tokenData: tokenData,
+                asset: asset,
+                tokenData: tokensToSupply,
                 onBehalfOf: msg.sender,
                 payer: msg.sender,
                 referralCode: 0x0
             })
         );
+    }
 
+    function borrowWETH(
+        DataTypes.PoolStorage storage ps,
+        IPoolAddressesProvider poolAddressProvider,
+        address weth,
+        uint256 borrowAmount
+    ) internal {
         BorrowLogic.executeBorrow(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig[msg.sender],
             DataTypes.ExecuteBorrowParams({
-                asset: tmpVar.weth,
+                asset: weth,
                 user: msg.sender,
                 onBehalfOf: msg.sender,
-                amount: tmpVar.borrowAmount,
+                amount: borrowAmount,
                 referralCode: 0x0,
                 releaseUnderlying: false,
                 reservesCount: ps._reservesCount,
