@@ -14,6 +14,7 @@ import {
   isMoonbeam,
   isPublicTestnet,
   isArbitrum,
+  isPolygon,
 } from "../../../helpers/misc-utils";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {setInitialAssetPricesInOracle} from "../../../helpers/oracles-helpers";
@@ -24,7 +25,7 @@ export const step_09 = async (verify = false) => {
     const allTokens = await getAllTokens();
     const paraSpaceConfig = getParaSpaceConfig();
 
-    if (isEthereum() || isMoonbeam() || isArbitrum()) {
+    if (isEthereum() || isMoonbeam() || isArbitrum() || isPolygon()) {
       insertContractAddressInDb(eContractid.PriceOracle, ZERO_ADDRESS, false);
     }
 

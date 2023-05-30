@@ -4,6 +4,7 @@ import {
   isArbitrum,
   isEthereum,
   isMoonbeam,
+  isPolygon,
   isPublicTestnet,
   setDRE,
 } from "../../helpers/misc-utils";
@@ -65,7 +66,13 @@ task(
 
   setDRE(_DRE);
 
-  if (isPublicTestnet() || isEthereum() || isMoonbeam() || isArbitrum()) {
+  if (
+    isPublicTestnet() ||
+    isEthereum() ||
+    isMoonbeam() ||
+    isArbitrum() ||
+    isPolygon()
+  ) {
     const feeData = await _DRE.ethers.provider.getFeeData();
     if (feeData.maxFeePerGas) {
       GLOBAL_OVERRIDES.maxFeePerGas = feeData.maxFeePerGas;
