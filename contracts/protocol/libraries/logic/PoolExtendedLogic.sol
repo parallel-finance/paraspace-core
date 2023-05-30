@@ -141,6 +141,18 @@ library PoolExtendedLogic {
             require(remainingETH == 0, Errors.INVALID_ETH_VALUE);
         }
 
+        //transfer currency to keeper
+        if (totalBorrow > 0) {
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
+                address(this),
+                totalBorrow,
+                timeLockParams
+            );
+            IWETH(weth).withdraw(totalBorrow);
+        }
+        Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
+
         //mint debt token
         if (totalBorrow > 0) {
             BorrowLogic.executeBorrow(
@@ -161,18 +173,6 @@ library PoolExtendedLogic {
                 })
             );
         }
-
-        //transfer currency to keeper
-        if (totalBorrow > 0) {
-            DataTypes.TimeLockParams memory timeLockParams;
-            IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
-                address(this),
-                totalBorrow,
-                timeLockParams
-            );
-            IWETH(weth).withdraw(totalBorrow);
-        }
-        Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
     }
 
     function initiateBlurExchangeRequest(
@@ -185,14 +185,15 @@ library PoolExtendedLogic {
     ) internal returns (uint256) {
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         uint256 requestFee = request.listingPrice.percentMul(requestFeeRate);
-        ValidationLogic.validateInitiateBlurExchangeRequest(
-            ps._reserves[request.collection],
-            request,
-            ps._blurExchangeRequestStatus[requestHash],
-            remainingETH,
-            requestFee,
-            oracle
-        );
+        uint256 needCashETH = ValidationLogic
+            .validateInitiateBlurExchangeRequest(
+                ps._reserves[request.collection],
+                request,
+                ps._blurExchangeRequestStatus[requestHash],
+                remainingETH,
+                requestFee,
+                oracle
+            );
 
         //mint nToken to release credit value
         DataTypes.ERC721SupplyParams[]
@@ -225,7 +226,7 @@ library PoolExtendedLogic {
             request.tokenId
         );
 
-        return request.listingPrice + requestFee - request.borrowAmount;
+        return needCashETH;
     }
 
     function executeFulfillBlurExchangeRequest(

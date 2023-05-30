@@ -761,4 +761,29 @@ describe("BLUR Sell Integration Tests", () => {
         ])
     ).to.be.revertedWith(ProtocolErrors.NOT_SAME_NTOKEN_OWNER);
   });
+
+  it("initiate request failed when accept blur bids request disabled", async () => {
+    const {
+      pool,
+      weth,
+      bayc,
+      users: [, , user3],
+    } = await loadFixture(fixture);
+
+    const InvalidAcceptBaycBidsRequest = {
+      initiator: user3.address,
+      paymentToken: weth.address,
+      bidingPrice: parseEther("110"),
+      marketPlaceFee: parseEther("1"),
+      collection: bayc.address,
+      tokenId: 0,
+      bidOrderHash: solidityKeccak256(["uint256"], [0]),
+    };
+
+    await expect(
+      pool
+        .connect(user3.signer)
+        .initiateAcceptBlurBidsRequest([InvalidAcceptBaycBidsRequest])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
 });
