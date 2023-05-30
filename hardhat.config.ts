@@ -180,6 +180,11 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumGoerli],
       accounts: DEPLOYER,
     },
+    polygon: {
+      chainId: CHAINS_ID[eEthereumNetwork.polygon],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.polygon],
+      accounts: DEPLOYER,
+    },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
@@ -191,7 +196,7 @@ const hardhatConfig: HardhatUserConfig = {
       mainnet: ETHERSCAN_KEY,
       goerli: ETHERSCAN_KEY,
       localhost: ETHERSCAN_KEY,
-      arbitrumOne: ETHERSCAN_KEY,
+      arbitrum: ETHERSCAN_KEY,
     },
     customChains: [
       {

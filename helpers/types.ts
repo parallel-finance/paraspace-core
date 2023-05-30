@@ -105,6 +105,7 @@ export enum eEthereumNetwork {
   moonbeam = "moonbeam",
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
+  polygon = "polygon",
 }
 
 export enum eContractid {
@@ -714,6 +715,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.moonbeam]: T;
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
+  [eEthereumNetwork.polygon]: T;
 }
 
 export enum RateMode {

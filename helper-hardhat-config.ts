@@ -14,6 +14,7 @@ import {
   MAINNET_CHAINID,
   MOONBEAM_CHAINID,
   PARALLEL_CHAINID,
+  POLYGON_CHAINID,
   RPC_URL,
   TENDERLY_FORK_ID,
 } from "./helpers/hardhat-constants";
@@ -65,6 +66,8 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     RPC_URL || `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.arbitrumGoerli]:
     RPC_URL || `https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eEthereumNetwork.polygon]:
+    RPC_URL || `https://polygonzkevm-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
@@ -80,6 +83,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.moonbeam]: MOONBEAM_CHAINID,
   [eEthereumNetwork.arbitrum]: ARBITRUM_ONE_CHAINID,
   [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
+  [eEthereumNetwork.polygon]: POLYGON_CHAINID,
 };
 
 export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
@@ -95,4 +99,5 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.moonbeam]: undefined,
   [eEthereumNetwork.arbitrum]: undefined,
   [eEthereumNetwork.arbitrumGoerli]: undefined,
+  [eEthereumNetwork.polygon]: undefined,
 };

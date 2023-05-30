@@ -7,7 +7,7 @@ import {
 } from "../helpers/types";
 import {MocksConfig, MocksUSDConfig} from "./mocks";
 import {
-  ArbitrumOneOracleConfig,
+  ArbitrumOracleConfig,
   MainnetOracleConfig,
   MoonbeamOracleConfig,
   TestnetOracleConfig,
@@ -305,6 +305,37 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
+export const PolygonConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: ArbitrumOracleConfig,
+};
+
 export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -353,10 +384,10 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
   },
   Mocks: MocksUSDConfig,
-  Oracle: ArbitrumOneOracleConfig,
+  Oracle: ArbitrumOracleConfig,
 };
 
-export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
+export const ArbitrumParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceAdmin: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
@@ -435,7 +466,7 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
   },
   Mocks: undefined,
-  Oracle: ArbitrumOneOracleConfig,
+  Oracle: ArbitrumOracleConfig,
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
     Multisig: MULTI_SIG || "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
@@ -608,5 +639,6 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
-  [eEthereumNetwork.arbitrum]: ArbitrumOneParaSpaceConfig,
+  [eEthereumNetwork.arbitrum]: ArbitrumParaSpaceConfig,
+  [eEthereumNetwork.polygon]: PolygonConfig,
 };

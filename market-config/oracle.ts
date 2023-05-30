@@ -20,7 +20,7 @@ export const MoonbeamOracleConfig: IOracleConfig = {
   Nodes: [],
 };
 
-export const ArbitrumOneOracleConfig: IOracleConfig = {
+export const ArbitrumOracleConfig: IOracleConfig = {
   BaseCurrency: ZERO_ADDRESS,
   BaseCurrencyUnit: BigNumber.from("100000000"),
   BaseCurrencyDecimals: 8,

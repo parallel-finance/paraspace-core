@@ -66,7 +66,7 @@ export const isMoonbeam = (): boolean => {
   );
 };
 
-export const isArbitrumOne = (): boolean => {
+export const isArbitrum = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
     [ARBITRUM_ONE_CHAINID].includes(DRE.network.config.chainId!) ||

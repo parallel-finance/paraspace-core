@@ -1,7 +1,7 @@
 import {task} from "hardhat/config";
 import {
   DRE,
-  isArbitrumOne,
+  isArbitrum,
   isEthereum,
   isMoonbeam,
   isPublicTestnet,
@@ -65,7 +65,7 @@ task(
 
   setDRE(_DRE);
 
-  if (isPublicTestnet() || isEthereum() || isMoonbeam() || isArbitrumOne()) {
+  if (isPublicTestnet() || isEthereum() || isMoonbeam() || isArbitrum()) {
     const feeData = await _DRE.ethers.provider.getFeeData();
     if (feeData.maxFeePerGas) {
       GLOBAL_OVERRIDES.maxFeePerGas = feeData.maxFeePerGas;
