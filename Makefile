@@ -408,9 +408,17 @@ init-blur-config:
 get-blur-listings:
 	make SCRIPT_PATH=./scripts/dev/14.get-listing-from-reservior.ts run
 
+.PHONY: get-blur-bids
+get-blur-bids:
+	make SCRIPT_PATH=./scripts/dev/16.get-bids-from-reservior.ts run
+
 .PHONY: init-blur-request
 init-blur-request:
 	make SCRIPT_PATH=./scripts/dev/15.init-blur-request.ts run
+
+.PHONY: init-blur-accept-bid-request
+init-blur-accept-bid-request:
+	make SCRIPT_PATH=./scripts/dev/17.init-blur-accept-bid-request.ts run
 
 .PHONY: info
 info:

@@ -21,9 +21,12 @@ const initBlurConfig = async () => {
   
   // initialize blur config
   await pool.enableBlurExchange();
+  await pool.enableAcceptBlurBids();
   await pool.setBlurOngoingRequestLimit(limit);
+  await pool.setAcceptBlurBidsOngoingRequestLimit(limit);
   if (keeperAddress) {
     await pool.setBlurExchangeKeeper(keeperAddress);
+    await pool.setAcceptBlurBidsKeeper(keeperAddress);
     await impersonateAddress(keeperAddress);
   }
 
