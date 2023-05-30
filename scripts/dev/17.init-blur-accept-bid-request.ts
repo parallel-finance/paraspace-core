@@ -55,7 +55,8 @@ const initBlurAcceptBidRequest = async () => {
   });
 
   const bid = orders[0];
-  const tokenId = 28169;
+  // you can get the token id from https://etherscan.io/token/0x5b1085136a811e55b2bb2ca1ea456ba82126a376?a=0x5cfA0f9744899d1b6943D57688C594Cb9759EAeC#inventory
+  const tokenId = 81995;
 
   const { xTokenAddress } = await pool.getReserveData(contract);
   const nToken = await getERC721(xTokenAddress);

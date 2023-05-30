@@ -69,6 +69,10 @@ const initBlurConfig = async () => {
     allTokens.BAKC.address,
     await oracle.getAssetPrice(allTokens.BAKC.address)
   );
+  await fallbackOracle.setAssetPrice(
+    allTokens.HVMTL.address,
+    await oracle.getAssetPrice(allTokens.HVMTL.address)
+  );
 
   await oracle.setAssetSources(
     [
@@ -80,8 +84,10 @@ const initBlurConfig = async () => {
       allTokens.MEEBITS.address,
       allTokens.BAKC.address,
       allTokens.SEWER.address,
+      allTokens.HVMTL.address,
     ],
     [
+      ethers.constants.AddressZero,
       ethers.constants.AddressZero,
       ethers.constants.AddressZero,
       ethers.constants.AddressZero,

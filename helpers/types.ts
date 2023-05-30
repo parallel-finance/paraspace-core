@@ -617,7 +617,7 @@ export enum ERC721TokenContractId {
   SEWER = "SEWER",
   PPG = "PPG",
   SFVLDR = "SFVLDR",
-  // "HVMTL" = "HVMTL",
+  HVMTL = "HVMTL",
   BEANZ = "BEANZ",
   DEGODS = "DEGODS",
   EXP = "EXP",
