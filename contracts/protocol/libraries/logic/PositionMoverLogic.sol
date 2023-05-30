@@ -119,9 +119,10 @@ library PositionMoverLogic {
         DataTypes.PoolStorage storage ps,
         PositionMoverVars memory tmpVar
     ) internal {
+        uint256 tokenIdsLength = tmpVar.tokenIds.length;
         DataTypes.ERC721SupplyParams[]
             memory tokensToSupply = new DataTypes.ERC721SupplyParams[](
-                tmpVar.tokenIds.length
+                tokenIdsLength
             );
 
         address currentSupplyAsset = tmpVar.nftAssets[0];
@@ -130,14 +131,16 @@ library PositionMoverLogic {
             tokenId: tmpVar.tokenIds[0],
             useAsCollateral: true
         });
+        uint256 nextIndex;
 
-        for (uint256 index = 0; index < tmpVar.tokenIds.length; index++) {
+        for (uint256 index = 0; index < tokenIdsLength; index++) {
+            nextIndex = index + 1;
             if (
-                index + 1 < tmpVar.tokenIds.length &&
-                tmpVar.nftAssets[index] == tmpVar.nftAssets[index + 1]
+                nextIndex < tokenIdsLength &&
+                tmpVar.nftAssets[index] == tmpVar.nftAssets[nextIndex]
             ) {
                 tokensToSupply[supplySize] = DataTypes.ERC721SupplyParams({
-                    tokenId: tmpVar.tokenIds[index + 1],
+                    tokenId: tmpVar.tokenIds[nextIndex],
                     useAsCollateral: true
                 });
                 supplySize++;
@@ -149,13 +152,13 @@ library PositionMoverLogic {
                     supplySize
                 );
 
-                if (index + 1 < tmpVar.tokenIds.length) {
-                    currentSupplyAsset = tmpVar.nftAssets[index + 1];
+                if (nextIndex < tokenIdsLength) {
+                    currentSupplyAsset = tmpVar.nftAssets[nextIndex];
                     tokensToSupply = tokensToSupply = new DataTypes.ERC721SupplyParams[](
-                        tmpVar.tokenIds.length
+                        tokenIdsLength
                     );
                     tokensToSupply[0] = DataTypes.ERC721SupplyParams({
-                        tokenId: tmpVar.tokenIds[index + 1],
+                        tokenId: tmpVar.tokenIds[nextIndex],
                         useAsCollateral: true
                     });
                     supplySize = 1;
@@ -170,10 +173,11 @@ library PositionMoverLogic {
         DataTypes.ERC721SupplyParams[] memory tokensToSupply,
         uint256 subArraySize
     ) internal {
-        subArraySize = tokensToSupply.length - subArraySize;
-        if (subArraySize > 0 && tokensToSupply.length - subArraySize > 0) {
+        uint256 itemsToTrim = tokensToSupply.length - subArraySize;
+
+        if (itemsToTrim != 0 && subArraySize != 0) {
             assembly {
-                mstore(tokensToSupply, sub(mload(tokensToSupply), subArraySize))
+                mstore(tokensToSupply, sub(mload(tokensToSupply), itemsToTrim))
             }
         }
 
