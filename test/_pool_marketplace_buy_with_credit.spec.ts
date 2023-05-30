@@ -2025,6 +2025,155 @@ describe("Leveraged Buy - Positive tests", () => {
 
     expect(await nft.ownerOf(nftId)).to.be.equal(taker.address);
   });
+
+  it("TC-erc721-buy-29: ETH <=> NToken via ParaSpace - partial borrow & pToken minted & private listing", async () => {
+    const {
+      bayc,
+      nBAYC,
+      weth,
+      pWETH,
+      pool,
+      conduit,
+      seaport,
+      pausableZone,
+      conduitKey,
+      users: [maker, taker, middleman],
+    } = await loadFixture(testEnvFixture);
+    const payNowNumber = "80";
+    const creditNumber = "20";
+    const payNowAmount = await convertToCurrencyDecimals(
+      weth.address,
+      payNowNumber
+    );
+    const creditAmount = await convertToCurrencyDecimals(
+      weth.address,
+      creditNumber
+    );
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount;
+    const borrowNumber = "20";
+    const nftId = 0;
+
+    // mint WETH to taker and middleman
+    await supplyAndValidate(weth, payNowNumber, taker, true);
+    // middleman supplies WETH to pool to be borrowed by offer later
+    await supplyAndValidate(weth, creditNumber, middleman, true);
+    await supplyAndValidate(weth, borrowNumber, middleman, true);
+
+    await waitForTx(
+      await middleman.signer.sendTransaction({
+        to: weth.address,
+        value: creditAmount.add(borrowNumber),
+      })
+    );
+
+    await supplyAndValidate(bayc, "1", maker, true);
+    await borrowAndValidate(weth, borrowNumber, maker);
+
+    await waitForTx(
+      await nBAYC.connect(maker.signer).approve(conduit.address, nftId)
+    );
+    await waitForTx(
+      await pWETH.connect(taker.signer).approve(conduit.address, startAmount)
+    );
+
+    const getSellOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(2, bayc.address, nftId, 1, 1),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          1,
+          pWETH.address,
+          toBN(0),
+          startAmount,
+          endAmount,
+          pool.address
+        ),
+        getOfferOrConsiderationItem(
+          2,
+          bayc.address,
+          nftId,
+          1,
+          1,
+          taker.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        maker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          pWETH.address,
+          toBN(0),
+          startAmount,
+          endAmount
+        ),
+      ];
+
+      const considerations = [];
+
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[0, 1]]],
+      [[[1, 0]], [[0, 0]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
+    const encodedData = seaport.interface.encodeFunctionData(
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
+    );
+
+    await waitForTx(
+      await pool
+        .connect(taker.signer)
+        .buyWithCredit(PARASPACE_SEAPORT_ID, `0x${encodedData.slice(10)}`, {
+          token: weth.address,
+          amount: creditAmount,
+          orderId: constants.HashZero,
+          v: 0,
+          r: constants.HashZero,
+          s: constants.HashZero,
+        })
+    );
+
+    const wethConfigData = BigNumber.from(
+      (await pool.getUserConfiguration(maker.address)).data
+    );
+    const wethReserveData = await pool.getReserveData(weth.address);
+    expect(await nBAYC.ownerOf(nftId)).to.be.equal(taker.address);
+    expect(await nBAYC.collateralizedBalanceOf(taker.address)).to.be.equal(1);
+    assertAlmostEqual(await pWETH.balanceOf(maker.address), startAmount);
+    assertAlmostEqual(
+      await weth.balanceOf(maker.address),
+      await convertToCurrencyDecimals(weth.address, borrowNumber)
+    );
+    expect(isUsingAsCollateral(wethConfigData, wethReserveData.id)).to.be.true;
+  });
 });
 
 describe("Leveraged Buy - Negative tests", () => {
