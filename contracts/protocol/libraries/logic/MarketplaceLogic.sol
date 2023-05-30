@@ -26,7 +26,6 @@ import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 import {Helpers} from "../../../protocol/libraries/helpers/Helpers.sol";
-import "hardhat/console.sol";
 
 /**
  * @title Marketplace library
@@ -133,7 +132,6 @@ library MarketplaceLogic {
     ) internal returns (uint256) {
         ValidationLogic.validateBuyWithCredit(params);
 
-        console.log(1);
         MarketplaceLocalVars memory vars = _cache(
             ps,
             params,
@@ -142,21 +140,17 @@ library MarketplaceLogic {
 
         bool noDelegate = !vars.isListingTokenETH && params.orderInfo.isOpensea;
 
-        console.log(2);
         _flashSupplyFor(ps, vars, params.orderInfo.maker);
-        console.log(3);
         _flashLoanTo(
             ps,
             params,
             vars,
             noDelegate ? params.orderInfo.taker : address(this)
         );
-        console.log(4);
 
         (uint256 priceEth, uint256 downpaymentEth) = noDelegate
             ? _getDownpaymentETH(params, vars)
             : _delegateToPool(params, vars);
-        console.log(5);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -168,12 +162,9 @@ library MarketplaceLogic {
                 priceEth
             )
         );
-        console.log(6);
 
         _handleFlashSupplyRepayment(vars, params);
-        console.log(7);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
-        console.log(0);
 
         emit BuyWithCredit(
             params.marketplaceId,
@@ -870,15 +861,12 @@ library MarketplaceLogic {
             : address(0);
         bool isNToken = nTokenOwner != address(0);
 
-        console.log(8);
         if (isNToken) {
-            console.log(9);
             require(
                 nTokenOwner == address(this) || nTokenOwner == buyer,
                 Errors.INVALID_MARKETPLACE_ORDER
             );
 
-            console.log(10);
             if (nTokenOwner == address(this)) {
                 IERC721(vars.xTokenAddress).safeTransferFrom(
                     address(this),
@@ -887,7 +875,6 @@ library MarketplaceLogic {
                 );
             }
 
-            console.log(11);
             SupplyLogic.executeCollateralizeERC721(
                 ps._reserves,
                 ps._usersConfig[buyer],
@@ -896,7 +883,6 @@ library MarketplaceLogic {
                 buyer
             );
         } else {
-            console.log(12);
             address owner = IERC721(token).ownerOf(tokenId);
             require(
                 owner == address(this) || owner == buyer,
@@ -904,7 +890,6 @@ library MarketplaceLogic {
             );
 
             if (!isReserve) {
-                console.log(13);
                 if (owner == address(this)) {
                     IERC721(token).safeTransferFrom(
                         address(this),
@@ -913,7 +898,6 @@ library MarketplaceLogic {
                     );
                 }
             } else {
-                console.log(14);
                 DataTypes.ERC721SupplyParams[]
                     memory tokenData = new DataTypes.ERC721SupplyParams[](1);
                 tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);

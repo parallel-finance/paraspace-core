@@ -23,7 +23,6 @@ import {
 } from "@looksrare/sdk";
 import {
   LOOKSRARE_ID,
-  MAX_UINT_AMOUNT,
   PARASPACE_SEAPORT_ID,
   X2Y2_ID,
   ZERO_ADDRESS,

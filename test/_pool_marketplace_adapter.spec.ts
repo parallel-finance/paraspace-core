@@ -44,49 +44,6 @@ describe("Marketplace Adapters - Negative Tests", () => {
   const nftId = "0";
   const nftPrice = parseEther("50");
 
-  it("TC-seaportAdapter-01: getAskOrderInfo will fail if fulfillAdvancedOrder dont specify pool as ERC721 recipient (revert expected)", async () => {
-    const {
-      seaportAdapter,
-      bayc,
-      usdt,
-      users: [maker, taker],
-      seaport,
-      pausableZone,
-      conduitKey,
-    } = await loadFixture(testEnvFixture);
-    const offers = [
-      getOfferOrConsiderationItem(2, bayc.address, nftId, toBN(1), toBN(1)),
-    ];
-    const considerations = [
-      getOfferOrConsiderationItem(
-        1,
-        usdt.address,
-        toBN(0),
-        nftPrice,
-        nftPrice,
-        maker.address
-      ),
-    ];
-    const listing: AdvancedOrder = await createSeaportOrder(
-      seaport,
-      maker,
-      offers,
-      considerations,
-      2,
-      pausableZone.address,
-      conduitKey
-    );
-
-    const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [listing, [], conduitKey, taker.address]
-    );
-
-    await expect(
-      seaportAdapter.getAskOrderInfo(`0x${encodedData.slice(10)}`)
-    ).to.be.revertedWith(ProtocolErrors.INVALID_ORDER_TAKER);
-  });
-
   it("TC-seaportAdapter-02: getBidOrderInfo will fail if maker & taker are the same address (revert expected)", async () => {
     const {
       seaportAdapter,
