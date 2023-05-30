@@ -1829,7 +1829,7 @@ describe("Leveraged Buy - Positive tests", () => {
       await nBAYC.connect(maker.signer).approve(conduit.address, nftId)
     );
     await waitForTx(
-      await pWETH.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
+      await pWETH.connect(taker.signer).approve(conduit.address, startAmount)
     );
 
     const getSellOrder = async (): Promise<AdvancedOrder> => {
