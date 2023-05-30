@@ -452,6 +452,10 @@ set-traits-multipliers:
 set-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
+.PHONY: acl
+acl:
+	make SCRIPT_PATH=./scripts/dev/13.acl.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -623,6 +627,10 @@ upgrade:
 .PHONY: upgrade-pool
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
+
+.PHONY: add-para-proxy-interfaces
+add-para-proxy-interfaces:
+	make TASK_NAME=upgrade:add-para-proxy-interfaces run-task
 
 .PHONY: upgrade-pool-core
 upgrade-pool-core:

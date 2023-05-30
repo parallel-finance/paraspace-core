@@ -32,6 +32,19 @@ task("upgrade:pool", "upgrade pool components")
     console.timeEnd("upgrade pool");
   });
 
+task(
+  "upgrade:add-para-proxy-interfaces",
+  "add para proxy interfaces"
+).setAction(async (_, DRE) => {
+  const {addParaProxyInterfacesSelectors} = await import(
+    "../../scripts/upgrade/pool"
+  );
+  await DRE.run("set-DRE");
+  console.time("add ParaProxyInterfaces");
+  await addParaProxyInterfacesSelectors();
+  console.timeEnd("add ParaProxyInterfaces");
+});
+
 task("upgrade:pool-core", "upgrade pool core")
   .addPositionalParam("oldPoolCore", "old pool core")
   .setAction(async ({oldPoolCore}, DRE) => {

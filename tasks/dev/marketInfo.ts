@@ -1,8 +1,9 @@
 import {task} from "hardhat/config";
 import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
+import {log10} from "@prb/math";
 import {BigNumber} from "ethers";
-import {WAD} from "../../helpers/constants";
+import {RAY, WAD} from "../../helpers/constants";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
@@ -62,19 +63,34 @@ task("market-info", "Print markets info")
       );
       console.log(" auctionStrategyAddress:", x.auctionStrategyAddress);
       console.log(" timeLockStrategyAddress:", x.timeLockStrategyAddress);
-      console.log(" price:", fromBn(x.priceInMarketReferenceCurrency));
+      console.log(
+        " price:",
+        fromBn(
+          x.priceInMarketReferenceCurrency,
+          log10(baseCurrencyInfo.marketReferenceCurrencyUnit.mul(WAD))
+            .div(WAD)
+            .toNumber()
+        )
+      );
       console.log(
         " price($):",
         fromBn(
           x.priceInMarketReferenceCurrency
             .mul(baseCurrencyInfo.networkBaseTokenPriceInUsd)
-            .div(10 ** baseCurrencyInfo.networkBaseTokenPriceDecimals)
+            .div(10 ** baseCurrencyInfo.networkBaseTokenPriceDecimals),
+          log10(baseCurrencyInfo.marketReferenceCurrencyUnit.mul(WAD))
+            .div(WAD)
+            .toNumber()
         )
       );
       console.log(
         " accruedToTreasury:",
         fromBn(
-          x.accruedToTreasury.mul(WAD).div(BigNumber.from(10).pow(x.decimals))
+          x.accruedToTreasury
+            .mul(WAD)
+            .div(BigNumber.from(10).pow(x.decimals))
+            .mul(x.liquidityIndex)
+            .div(RAY)
         )
       );
       console.log(" liquidityIndex:", fromBn(x.liquidityIndex, 27));

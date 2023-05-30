@@ -103,7 +103,7 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
-  arbitrumOne = "arbitrumOne",
+  arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
 }
 
@@ -432,14 +432,16 @@ export enum ProtocolErrors {
 
   CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
   ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
-  BLUR_EXCHANGE_REQUEST_DISABLED = "144", //blur exchange request disabled
+  REQUEST_DISABLED = "144", //blur exchange request disabled
   INVALID_ASSET = "145", // invalid asset.
   INVALID_ETH_VALUE = "146", //The status of the request is invalid for this function
   INVALID_REQUEST_STATUS = "147", //the eth value with the transaction is invalid
   INVALID_PAYMENT_TOKEN = "148", //the invalid payment token for blur exchange request
-  INVALID_LISTING_PRICE = "149", //the listing price for blur exchange request is invalid
+  INVALID_REQUEST_PRICE = "149", //the listing price for blur exchange request is invalid
   CALLER_NOT_KEEPER = "150", //The caller of the function is not keeper
   NTOKEN_NOT_OWNS_UNDERLYING = "151", //The ntoken does not owns the underlying nft
+  EXISTING_APE_STAKING = "152", // Ape coin staking position existed
+  NOT_SAME_NTOKEN_OWNER = "153", // ntoken have different owner
 }
 
 export type tEthereumAddress = string;
@@ -457,31 +459,39 @@ export interface iAssetCommon<T> {
   [key: string]: T;
 }
 export interface iAssetBase<T> {
+  DAI: T;
   WETH: T;
-  aWETH: T;
-  cETH: T;
+  USDC: T;
+  USDT: T;
+  FRAX: T;
+  WBTC: T;
+  stETH: T;
+  wstETH: T;
   bendETH: T;
   cbETH: T;
   rETH: T;
   astETH: T;
   awstETH: T;
-  DAI: T;
-  USDC: T;
-  USDT: T;
-  FRAX: T;
-  BAYC: T;
-  WPUNKS: T;
-  PUNKS: T;
-  PUNK: T;
-  WBTC: T;
-  stETH: T;
-  wstETH: T;
+  aWETH: T;
   APE: T;
   sAPE: T;
   cAPE: T;
   yAPE: T;
+  cETH: T;
+  PUNK: T;
   xcDOT: T;
   WGLMR: T;
+  BLUR: T;
+  ARB: T;
+  GMX: T;
+  LINK: T;
+  UNI: T;
+  BAL: T;
+  AAVE: T;
+  RDNT: T;
+  BAYC: T;
+  WPUNKS: T;
+  PUNKS: T;
   MAYC: T;
   DOODLE: T;
   MOONBIRD: T;
@@ -506,10 +516,10 @@ export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, "USD">;
 export type iParaSpacePoolAssets<T> = Pick<
   iAssetsWithoutUSD<T>,
   | "DAI"
+  | "WETH"
   | "USDC"
   | "USDT"
   | "FRAX"
-  | "WETH"
   | "WBTC"
   | "stETH"
   | "wstETH"
@@ -518,10 +528,23 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "rETH"
   | "astETH"
   | "awstETH"
-  | "xcDOT"
-  | "WGLMR"
+  | "aWETH"
   | "APE"
   | "sAPE"
+  | "cAPE"
+  | "yAPE"
+  | "cETH"
+  | "PUNK"
+  | "xcDOT"
+  | "WGLMR"
+  | "BLUR"
+  | "ARB"
+  | "GMX"
+  | "LINK"
+  | "UNI"
+  | "BAL"
+  | "AAVE"
+  | "RDNT"
   | "BAYC"
   | "PUNKS"
   | "WPUNKS"
@@ -570,6 +593,13 @@ export enum ERC20TokenContractId {
   xcDOT = "xcDOT",
   WGLMR = "WGLMR",
   BLUR = "BLUR",
+  ARB = "ARB",
+  GMX = "GMX",
+  LINK = "LINK",
+  UNI = "UNI",
+  BAL = "BAL",
+  AAVE = "AAVE",
+  RDNT = "RDNT",
 }
 
 export enum ERC721TokenContractId {
@@ -696,7 +726,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
-  [eEthereumNetwork.arbitrumOne]: T;
+  [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
 }
 
@@ -721,6 +751,7 @@ export interface IMarketplaceConfig {
 }
 
 export interface IChainlinkConfig {
+  // ERC20
   WETH?: tEthereumAddress;
   aWETH?: tEthereumAddress;
   stETH?: tEthereumAddress;
@@ -741,6 +772,16 @@ export interface IChainlinkConfig {
   sAPE?: tEthereumAddress;
   cAPE?: tEthereumAddress;
   yAPE?: tEthereumAddress;
+  xcDOT?: tEthereumAddress;
+  WGLMR?: tEthereumAddress;
+  ARB?: tEthereumAddress;
+  GMX?: tEthereumAddress;
+  LINK?: tEthereumAddress;
+  UNI?: tEthereumAddress;
+  AAVE?: tEthereumAddress;
+  BAL?: tEthereumAddress;
+  RDNT?: tEthereumAddress;
+  // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
   MAYC?: tEthereumAddress;
@@ -750,11 +791,7 @@ export interface IChainlinkConfig {
   AZUKI?: tEthereumAddress;
   OTHR?: tEthereumAddress;
   CLONEX?: tEthereumAddress;
-  xcDOT?: tEthereumAddress;
-  WGLMR?: tEthereumAddress;
   HVMTL?: tEthereumAddress;
-  ARB?: tEthereumAddress;
-  GMX?: tEthereumAddress;
   BEANZ?: tEthereumAddress;
   DEGODS?: tEthereumAddress;
   EXP?: tEthereumAddress;
@@ -781,14 +818,24 @@ export interface IBendDAOConfig {
   LendingPoolLoan?: tEthereumAddress;
 }
 
+export interface IStakefish {
+  StakefishManager?: tEthereumAddress;
+}
+
 export interface IOracleConfig {
   // ParaSpaceOracle
-  BaseCurrency: ERC20TokenContractId;
-  BaseCurrencyUnit: string;
+  BaseCurrency: ERC20TokenContractId | string;
+  BaseCurrencyUnit: BigNumber;
+  BaseCurrencyDecimals: number;
   // NFTFloorOracle
   ExpirationPeriod: number;
   DeviationRate: number;
   Nodes: tEthereumAddress[];
+}
+
+export interface IGovernanceConfig {
+  Multisend: tEthereumAddress;
+  Multisig: tEthereumAddress;
 }
 
 export interface IMocksConfig {
@@ -825,15 +872,17 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  Stakefish: IStakefish;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
   Treasury: tEthereumAddress;
   IncentivesController: tEthereumAddress;
   Oracle: IOracleConfig;
-  HotWallet: tEthereumAddress | undefined;
-  StakefishManager: tEthereumAddress | undefined;
+  HotWallet: tEthereumAddress;
   DelegationRegistry: tEthereumAddress;
+
+  Governance: IGovernanceConfig;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {
