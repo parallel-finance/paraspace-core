@@ -133,19 +133,30 @@ library MarketplaceLogic {
     ) internal returns (uint256) {
         ValidationLogic.validateBuyWithCredit(params);
 
+        console.log(1);
         MarketplaceLocalVars memory vars = _cache(
             ps,
             params,
             params.orderInfo.taker
         );
 
-        _flashSupplyFor(ps, vars, params.orderInfo.maker);
-        _flashLoanTo(ps, params, vars, address(this));
+        bool noDelegate = !vars.isListingTokenETH && params.orderInfo.isOpensea;
 
-        (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
+        console.log(2);
+        _flashSupplyFor(ps, vars, params.orderInfo.maker);
+        console.log(3);
+        _flashLoanTo(
+            ps,
             params,
-            vars
+            vars,
+            noDelegate ? params.orderInfo.taker : address(this)
         );
+        console.log(4);
+
+        (uint256 priceEth, uint256 downpaymentEth) = noDelegate
+            ? _getDownpaymentETH(params, vars)
+            : _delegateToPool(params, vars);
+        console.log(5);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -157,9 +168,12 @@ library MarketplaceLogic {
                 priceEth
             )
         );
+        console.log(6);
 
         _handleFlashSupplyRepayment(vars, params);
+        console.log(7);
         _handleFlashLoanRepayment(ps, params, vars, params.orderInfo.taker);
+        console.log(0);
 
         emit BuyWithCredit(
             params.marketplaceId,
@@ -260,7 +274,7 @@ library MarketplaceLogic {
         _acceptBidWithCredit(ps, params);
     }
 
-    function executeAcceptOpenSeaBid(
+    function executeAcceptOpenseaBid(
         DataTypes.PoolStorage storage ps,
         bytes32 marketplaceId,
         bytes calldata payload,
@@ -291,7 +305,7 @@ library MarketplaceLogic {
             Errors.INVALID_ORDER_TAKER
         );
 
-        _acceptOpenSeaBid(ps, params);
+        _acceptOpenseaBid(ps, params);
     }
 
     function executeBatchAcceptBidWithCredit(
@@ -371,11 +385,11 @@ library MarketplaceLogic {
         );
     }
 
-    function _acceptOpenSeaBid(
+    function _acceptOpenseaBid(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal {
-        ValidationLogic.validateAcceptOpenSeaBid(params);
+        ValidationLogic.validateAcceptOpenseaBid(params);
 
         MarketplaceLocalVars memory vars = _cache(
             ps,
@@ -405,13 +419,23 @@ library MarketplaceLogic {
         );
     }
 
-    /**
-     * @notice Transfer payNow portion from taker to this contract. This is only useful
-     * in buyWithCredit.
-     * @dev
-     * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
-     * @param vars The marketplace local vars for caching storage values for future reads
-     */
+    function _getDownpaymentETH(
+        DataTypes.ExecuteMarketplaceParams memory params,
+        MarketplaceLocalVars memory vars
+    ) internal pure returns (uint256, uint256) {
+        uint256 price = vars.price;
+        uint256 downpayment = price - vars.creditAmount;
+        if (!vars.isListingTokenETH) {
+            // convert to (priceEth, downpaymentEth)
+            price = 0;
+            downpayment = 0;
+        } else {
+            require(params.ethLeft >= downpayment, Errors.PAYNOW_NOT_ENOUGH);
+        }
+
+        return (price, downpayment);
+    }
+
     function _delegateToPool(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
@@ -431,6 +455,7 @@ library MarketplaceLogic {
                 transferToken,
                 params.marketplace.operator
             );
+
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -845,12 +870,15 @@ library MarketplaceLogic {
             : address(0);
         bool isNToken = nTokenOwner != address(0);
 
+        console.log(8);
         if (isNToken) {
+            console.log(9);
             require(
                 nTokenOwner == address(this) || nTokenOwner == buyer,
                 Errors.INVALID_MARKETPLACE_ORDER
             );
 
+            console.log(10);
             if (nTokenOwner == address(this)) {
                 IERC721(vars.xTokenAddress).safeTransferFrom(
                     address(this),
@@ -859,6 +887,7 @@ library MarketplaceLogic {
                 );
             }
 
+            console.log(11);
             SupplyLogic.executeCollateralizeERC721(
                 ps._reserves,
                 ps._usersConfig[buyer],
@@ -867,6 +896,7 @@ library MarketplaceLogic {
                 buyer
             );
         } else {
+            console.log(12);
             address owner = IERC721(token).ownerOf(tokenId);
             require(
                 owner == address(this) || owner == buyer,
@@ -874,6 +904,7 @@ library MarketplaceLogic {
             );
 
             if (!isReserve) {
+                console.log(13);
                 if (owner == address(this)) {
                     IERC721(token).safeTransferFrom(
                         address(this),
@@ -882,6 +913,7 @@ library MarketplaceLogic {
                     );
                 }
             } else {
+                console.log(14);
                 DataTypes.ERC721SupplyParams[]
                     memory tokenData = new DataTypes.ERC721SupplyParams[](1);
                 tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);

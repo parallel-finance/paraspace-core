@@ -167,14 +167,14 @@ contract PoolMarketplace is
     }
 
     /// @inheritdoc IPoolMarketplace
-    function acceptOpenSeaBid(
+    function acceptOpenseaBid(
         bytes32 marketplaceId,
         bytes calldata payload,
         address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        MarketplaceLogic.executeAcceptOpenSeaBid(
+        MarketplaceLogic.executeAcceptOpenseaBid(
             ps,
             marketplaceId,
             payload,

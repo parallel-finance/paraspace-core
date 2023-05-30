@@ -365,6 +365,7 @@ library DataTypes {
         bytes id;
         OfferItem[] offer;
         ConsiderationItem[] consideration;
+        bool isOpensea;
     }
 
     struct SwapInfo {

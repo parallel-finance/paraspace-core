@@ -1092,7 +1092,7 @@ library ValidationLogic {
         );
     }
 
-    function validateAcceptOpenSeaBid(
+    function validateAcceptOpenseaBid(
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);

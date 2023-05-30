@@ -11,6 +11,7 @@ import {
   getItemETH,
   getOfferOrConsiderationItem,
   toBN,
+  toFulfillment,
 } from "../helpers/seaport-helpers/encoding";
 import {createX2Y2Order, createRunput} from "../helpers/x2y2-helpers";
 import {
@@ -160,7 +161,7 @@ describe("Leveraged Buy - Positive tests", () => {
       await mayc.connect(maker.signer).approve(conduit.address, nftId)
     );
     await waitForTx(
-      await usdc.connect(taker.signer).approve(pool.address, payNowAmount)
+      await usdc.connect(taker.signer).approve(conduit.address, startAmount)
     );
 
     //before buyWithCredit there is no collateral
@@ -191,6 +192,7 @@ describe("Leveraged Buy - Positive tests", () => {
           platform.address
         ),
       ];
+
       return createSeaportOrder(
         seaport,
         maker,
@@ -201,9 +203,50 @@ describe("Leveraged Buy - Positive tests", () => {
         conduitKey
       );
     };
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          usdc.address,
+          toBN(0),
+          startAmount,
+          endAmount
+        ),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          mayc.address,
+          nftId,
+          toBN(1),
+          toBN(1),
+          pool.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+      [[[1, 0]], [[0, 1]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
     const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
     );
 
     await waitForTx(
@@ -451,10 +494,42 @@ describe("Leveraged Buy - Positive tests", () => {
       );
     };
 
-    const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [getItemETH(startAmount, startAmount)];
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          mayc.address,
+          nftId,
+          toBN(1),
+          toBN(1),
+          pool.address
+        ),
+      ];
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+      [[[1, 0]], [[0, 1]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
     );
+
+    const encodedData = seaport.interface.encodeFunctionData(
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
+    );
+
     const offerBeforeBalance = await taker.signer.getBalance();
     const txReceipt = await waitForTx(
       await pool.connect(taker.signer).buyWithCredit(
@@ -535,7 +610,7 @@ describe("Leveraged Buy - Positive tests", () => {
       await mayc.connect(maker.signer).approve(conduit.address, nftId)
     );
     await waitForTx(
-      await weth.connect(taker.signer).approve(pool.address, payNowAmount)
+      await weth.connect(taker.signer).approve(conduit.address, startAmount)
     );
     const oldOfferBalance = await weth.balanceOf(maker.address);
     const oldPlatformBalance = await weth.balanceOf(platform.address);
@@ -573,10 +648,50 @@ describe("Leveraged Buy - Positive tests", () => {
       );
     };
 
-    const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          weth.address,
+          toBN(0),
+          startAmount,
+          startAmount
+        ),
+      ];
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          mayc.address,
+          nftId,
+          toBN(1),
+          toBN(1),
+          pool.address
+        ),
+      ];
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+      [[[1, 0]], [[0, 1]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
     );
+
+    const encodedData = seaport.interface.encodeFunctionData(
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
+    );
+
     const offerBeforeBalance = await taker.signer.getBalance();
     const txReceipt = await waitForTx(
       await pool.connect(taker.signer).buyWithCredit(
@@ -687,19 +802,83 @@ describe("Leveraged Buy - Positive tests", () => {
       );
     };
 
-    const getEncodedData = (order: AdvancedOrderStruct): string =>
+    const getBuyOrder = async (
+      token: string,
+      nftId: BigNumberish,
+      listPrice: BigNumberish
+    ): Promise<AdvancedOrder> => {
+      const offers = [getItemETH(listPrice, listPrice)];
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          token,
+          nftId,
+          toBN(1),
+          toBN(1),
+          pool.address
+        ),
+      ];
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
+    const getEncodedData = (
+      sellOrder: AdvancedOrderStruct,
+      buyOrder: AdvancedOrderStruct
+    ): string =>
       `0x${seaport.interface
-        .encodeFunctionData("fulfillAdvancedOrder", [
-          order,
+        .encodeFunctionData("matchAdvancedOrders", [
+          [sellOrder, buyOrder],
           [],
-          conduitKey,
-          pool.address,
+          fulfillment,
         ])
         .slice(10)}`;
 
-    const orderETH0 = await getSellOrder(mayc.address, nftIds[0], startAmount);
-    const orderETH1 = await getSellOrder(mayc.address, nftIds[1], startAmount);
-    const orderETH2 = await getSellOrder(mayc.address, nftIds[2], startAmount);
+    const sellOrderETH0 = await getSellOrder(
+      mayc.address,
+      nftIds[0],
+      startAmount
+    );
+    const sellOrderETH1 = await getSellOrder(
+      mayc.address,
+      nftIds[1],
+      startAmount
+    );
+    const sellOrderETH2 = await getSellOrder(
+      mayc.address,
+      nftIds[2],
+      startAmount
+    );
+
+    const buyOrderETH0 = await getBuyOrder(
+      mayc.address,
+      nftIds[0],
+      startAmount
+    );
+    const buyOrderETH1 = await getBuyOrder(
+      mayc.address,
+      nftIds[1],
+      startAmount
+    );
+    const buyOrderETH2 = await getBuyOrder(
+      mayc.address,
+      nftIds[2],
+      startAmount
+    );
 
     const emptySig = {
       orderId: constants.HashZero,
@@ -738,9 +917,9 @@ describe("Leveraged Buy - Positive tests", () => {
         .batchBuyWithCredit(
           [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
           [
-            getEncodedData(orderETH0),
-            getEncodedData(orderETH1),
-            getEncodedData(orderETH2),
+            getEncodedData(sellOrderETH0, buyOrderETH0),
+            getEncodedData(sellOrderETH1, buyOrderETH1),
+            getEncodedData(sellOrderETH2, buyOrderETH2),
           ],
           [creditETH0, creditETH1, creditETH2],
           {
@@ -856,19 +1035,93 @@ describe("Leveraged Buy - Positive tests", () => {
       );
     };
 
-    const getEncodedData = (order: AdvancedOrderStruct): string =>
+    const getBuyOrder = async (
+      token: string,
+      nftId: BigNumberish,
+      listPrice: BigNumberish,
+      listInETH = true
+    ): Promise<AdvancedOrder> => {
+      const offers = [
+        listInETH
+          ? getItemETH(listPrice, listPrice)
+          : getOfferOrConsiderationItem(
+              1,
+              weth.address,
+              toBN(0),
+              listPrice,
+              listPrice
+            ),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          token,
+          nftId,
+          toBN(1),
+          toBN(1),
+          pool.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
+    const getEncodedData = (
+      sellOrder: AdvancedOrderStruct,
+      buyOrder: AdvancedOrderStruct
+    ): string =>
       `0x${seaport.interface
-        .encodeFunctionData("fulfillAdvancedOrder", [
-          order,
+        .encodeFunctionData("matchAdvancedOrders", [
+          [sellOrder, buyOrder],
           [],
-          conduitKey,
-          pool.address,
+          fulfillment,
         ])
         .slice(10)}`;
 
-    const orderETH0 = await getSellOrder(mayc.address, nftIds[0], startAmount);
-    const orderETH1 = await getSellOrder(mayc.address, nftIds[1], startAmount);
-    const orderWETH2 = await getSellOrder(
+    const sellOrderETH0 = await getSellOrder(
+      mayc.address,
+      nftIds[0],
+      startAmount
+    );
+    const sellOrderETH1 = await getSellOrder(
+      mayc.address,
+      nftIds[1],
+      startAmount
+    );
+    const sellOrderWETH2 = await getSellOrder(
+      mayc.address,
+      nftIds[2],
+      startAmount,
+      false
+    );
+
+    const buyOrderETH0 = await getBuyOrder(
+      mayc.address,
+      nftIds[0],
+      startAmount
+    );
+    const buyOrderETH1 = await getBuyOrder(
+      mayc.address,
+      nftIds[1],
+      startAmount
+    );
+    const buyOrderWETH2 = await getBuyOrder(
       mayc.address,
       nftIds[2],
       startAmount,
@@ -905,7 +1158,7 @@ describe("Leveraged Buy - Positive tests", () => {
     await waitForTx(
       await weth
         .connect(taker.signer)
-        .approve(pool.address, totalPayNowAmountInWETH)
+        .approve(conduit.address, totalPayNowAmountInWETH.add(creditAmount))
     );
 
     // batchBuyWithCredit([ETH, WETH, ETH]) will fail
@@ -915,14 +1168,14 @@ describe("Leveraged Buy - Positive tests", () => {
         .batchBuyWithCredit(
           [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
           [
-            getEncodedData(orderETH0),
-            getEncodedData(orderWETH2),
-            getEncodedData(orderETH1),
+            getEncodedData(sellOrderETH0, buyOrderETH0),
+            getEncodedData(sellOrderWETH2, buyOrderWETH2),
+            getEncodedData(sellOrderETH1, buyOrderETH1),
           ],
           [creditETH0, creditWETH2, creditETH1],
           {
             gasLimit: 5000000,
-            value: totalPayNowAmount,
+            value: totalPayNowAmountInETH,
           }
         )
     ).to.revertedWith(ProtocolErrors.PAYNOW_NOT_ENOUGH);
@@ -936,9 +1189,9 @@ describe("Leveraged Buy - Positive tests", () => {
         .batchBuyWithCredit(
           [PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID, PARASPACE_SEAPORT_ID],
           [
-            getEncodedData(orderETH0),
-            getEncodedData(orderETH1),
-            getEncodedData(orderWETH2),
+            getEncodedData(sellOrderETH0, buyOrderETH0),
+            getEncodedData(sellOrderETH1, buyOrderETH1),
+            getEncodedData(sellOrderWETH2, buyOrderWETH2),
           ],
           [creditETH0, creditETH1, creditWETH2],
           {
@@ -1606,9 +1859,42 @@ describe("Leveraged Buy - Positive tests", () => {
       );
     };
 
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          pWETH.address,
+          toBN(0),
+          startAmount,
+          endAmount
+        ),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(2, bayc.address, nftId, 1, 1, pool.address),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
     const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
     );
 
     await waitForTx(
@@ -1689,9 +1975,34 @@ describe("Leveraged Buy - Positive tests", () => {
       );
     };
 
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [getItemETH(startAmount, endAmount)];
+
+      const considerations = [
+        getOfferOrConsiderationItem(2, nft.address, nftId, 1, 1, pool.address),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
     const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
     );
 
     await waitForTx(
