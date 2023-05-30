@@ -105,6 +105,8 @@ export enum eEthereumNetwork {
   moonbeam = "moonbeam",
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
+  zksync = "zksync",
+  zksyncGoerli = "zksyncGoerli",
 }
 
 export enum eContractid {
@@ -714,6 +716,8 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.moonbeam]: T;
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
+  [eEthereumNetwork.zksync]: T;
+  [eEthereumNetwork.zksyncGoerli]: T;
 }
 
 export enum RateMode {

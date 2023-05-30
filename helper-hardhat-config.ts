@@ -16,6 +16,8 @@ import {
   PARALLEL_CHAINID,
   RPC_URL,
   TENDERLY_FORK_ID,
+  ZKSYNC_CHAINID,
+  ZKSYNC_GOERLI_CHAINID,
 } from "./helpers/hardhat-constants";
 
 dotenv.config();
@@ -65,6 +67,9 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     RPC_URL || `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.arbitrumGoerli]:
     RPC_URL || `https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eEthereumNetwork.zksync]: RPC_URL || `https://zksync2-mainnet.zksync.io`,
+  [eEthereumNetwork.zksyncGoerli]:
+    RPC_URL || `https://zksync2-testnet.zksync.dev`,
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
@@ -80,6 +85,8 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.moonbeam]: MOONBEAM_CHAINID,
   [eEthereumNetwork.arbitrum]: ARBITRUM_ONE_CHAINID,
   [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
+  [eEthereumNetwork.zksync]: ZKSYNC_CHAINID,
+  [eEthereumNetwork.zksyncGoerli]: ZKSYNC_GOERLI_CHAINID,
 };
 
 export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
@@ -95,4 +102,6 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.moonbeam]: undefined,
   [eEthereumNetwork.arbitrum]: undefined,
   [eEthereumNetwork.arbitrumGoerli]: undefined,
+  [eEthereumNetwork.zksync]: undefined,
+  [eEthereumNetwork.zksyncGoerli]: undefined,
 };

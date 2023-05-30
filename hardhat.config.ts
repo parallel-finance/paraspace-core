@@ -34,6 +34,8 @@ import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
 import {eEthereumNetwork} from "./helpers/types";
 
 require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
@@ -48,6 +50,16 @@ require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
 });
 
 const hardhatConfig: HardhatUserConfig = {
+  zksolc: {
+    version: "1.3.9",
+    compilerSource: "binary",
+    settings: {
+      optimizer: {
+        enabled: true,
+      },
+      compilerPath: "usr/local/bin/zksolc-linux-amd64-musl-v1.3.9",
+    },
+  },
   contractSizer: {
     alphaSort: true,
     runOnCompile: false,
@@ -180,6 +192,18 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumGoerli],
       accounts: DEPLOYER,
     },
+    zksync: {
+      chainId: CHAINS_ID[eEthereumNetwork.zksync],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.zksync],
+      accounts: DEPLOYER,
+      zksync: true,
+    },
+    zksyncGoerli: {
+      chainId: CHAINS_ID[eEthereumNetwork.zksyncGoerli],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.zksyncGoerli],
+      accounts: DEPLOYER,
+      zksync: true,
+    },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
@@ -191,7 +215,7 @@ const hardhatConfig: HardhatUserConfig = {
       mainnet: ETHERSCAN_KEY,
       goerli: ETHERSCAN_KEY,
       localhost: ETHERSCAN_KEY,
-      arbitrumOne: ETHERSCAN_KEY,
+      arbitrum: ETHERSCAN_KEY,
     },
     customChains: [
       {

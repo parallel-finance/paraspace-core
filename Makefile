@@ -286,7 +286,7 @@ test-stakefish-nft:
 
 .PHONY: run
 run:
-	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
+	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK) --show-stack-traces
 
 .PHONY: run-task
 run-task:
