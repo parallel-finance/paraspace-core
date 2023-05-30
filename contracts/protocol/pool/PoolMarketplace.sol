@@ -54,7 +54,7 @@ contract PoolMarketplace is
     using SafeERC20 for IERC20;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 150;
+    uint256 internal constant POOL_REVISION = 151;
 
     /**
      * @dev Constructor.

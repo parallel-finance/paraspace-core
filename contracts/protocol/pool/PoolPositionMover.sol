@@ -24,7 +24,7 @@ contract PoolPositionMover is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     ILendPoolLoan internal immutable BENDDAO_LEND_POOL_LOAN;
     ILendPool internal immutable BENDDAO_LEND_POOL;
-    uint256 internal constant POOL_REVISION = 150;
+    uint256 internal constant POOL_REVISION = 151;
 
     constructor(
         IPoolAddressesProvider addressProvider,
