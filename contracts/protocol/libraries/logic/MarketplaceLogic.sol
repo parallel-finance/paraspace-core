@@ -389,7 +389,7 @@ library MarketplaceLogic {
         );
 
         _flashSupplyFor(ps, vars, params.orderInfo.taker);
-        _handleWithdrawERC721(ps, params, vars, params.orderInfo.maker);
+        _withdrawERC721For(ps, params, vars, params.orderInfo.taker);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -580,44 +580,59 @@ library MarketplaceLogic {
         }
     }
 
-    function _handleWithdrawERC721(
+    function _withdrawERC721For(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
-        for (uint256 i = 0; i < params.orderInfo.offer.length; i++) {
+        uint256 size = params.orderInfo.offer.length;
+        uint256[] memory tokenIds = new uint256[](size);
+
+        address token = params.orderInfo.offer[0].token;
+        vars.xTokenAddress = ps._reserves[token].xTokenAddress;
+        uint256 amountToWithdraw;
+
+        if (vars.xTokenAddress == address(0)) {
+            return;
+        }
+
+        for (uint256 i = 0; i < size; i++) {
             OfferItem memory item = params.orderInfo.offer[i];
             require(
                 item.itemType == ItemType.ERC721,
                 Errors.INVALID_ASSET_TYPE
             );
 
-            address token = item.token;
-            uint256 tokenId = item.identifierOrCriteria;
-            vars.xTokenAddress = ps._reserves[token].xTokenAddress;
-
-            uint256[] memory tokenIds = new uint256[](1);
-            tokenIds[0] = tokenId;
+            require(item.token == token, Errors.INVALID_MARKETPLACE_ORDER);
 
             if (
-                vars.xTokenAddress != address(0) &&
-                IERC721(vars.xTokenAddress).ownerOf(tokenId) != address(0)
+                IERC721(vars.xTokenAddress).ownerOf(
+                    item.identifierOrCriteria
+                ) != address(0)
             ) {
-                SupplyLogic.executeWithdrawERC721(
-                    ps._reserves,
-                    ps._reservesList,
-                    ps._usersConfig[seller],
-                    DataTypes.ExecuteWithdrawERC721Params({
-                        asset: token,
-                        tokenIds: tokenIds,
-                        to: seller,
-                        reservesCount: params.reservesCount,
-                        oracle: params.oracle,
-                        timeLock: false
-                    })
-                );
+                tokenIds[amountToWithdraw++] = item.identifierOrCriteria;
             }
+        }
+
+        assembly {
+            mstore(tokenIds, amountToWithdraw)
+        }
+
+        if (amountToWithdraw > 0) {
+            SupplyLogic.executeWithdrawERC721(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[seller],
+                DataTypes.ExecuteWithdrawERC721Params({
+                    asset: token,
+                    tokenIds: tokenIds,
+                    to: seller,
+                    reservesCount: params.reservesCount,
+                    oracle: params.oracle,
+                    timeLock: false
+                })
+            );
         }
     }
 

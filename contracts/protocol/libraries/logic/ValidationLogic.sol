@@ -1094,9 +1094,9 @@ library ValidationLogic {
 
     function validateAcceptOpenseaBid(
         DataTypes.ExecuteMarketplaceParams memory params
-    ) internal view {
+    ) internal pure {
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
-        require(params.credit.amount == 0);
+        require(params.credit.amount == 0, Errors.INVALID_AMOUNT);
     }
 
     function verifyCreditSignature(
