@@ -125,10 +125,12 @@ describe("BLUR Sell Integration Tests", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .fulfillAcceptBlurBidsRequest([
-          AcceptBaycBidsRequest,
-          AcceptMaycBidsRequest,
-        ])
+        .fulfillAcceptBlurBidsRequest(
+          [AcceptBaycBidsRequest, AcceptMaycBidsRequest],
+          {
+            value: parseEther("168"),
+          }
+        )
     );
 
     almostEqual(await pWETH.balanceOf(user1.address), parseEther("168"));
@@ -698,7 +700,9 @@ describe("BLUR Sell Integration Tests", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .fulfillAcceptBlurBidsRequest([AcceptBaycBidsRequest])
+        .fulfillAcceptBlurBidsRequest([AcceptBaycBidsRequest], {
+          value: parseEther("109"),
+        })
     );
 
     expect(await nBAYC.balanceOf(user1.address)).to.be.eq(0);
@@ -785,5 +789,32 @@ describe("BLUR Sell Integration Tests", () => {
         .connect(user3.signer)
         .initiateAcceptBlurBidsRequest([InvalidAcceptBaycBidsRequest])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
+
+  it("fulfill requests failed if transaction value is wrong", async () => {
+    const {
+      pool,
+      users: [user1, user2],
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .initiateAcceptBlurBidsRequest([
+          AcceptBaycBidsRequest,
+          AcceptMaycBidsRequest,
+        ])
+    );
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .fulfillAcceptBlurBidsRequest(
+          [AcceptBaycBidsRequest, AcceptMaycBidsRequest],
+          {
+            value: parseEther("100"),
+          }
+        )
+    ).to.be.revertedWith(ProtocolErrors.INVALID_ETH_VALUE);
   });
 });

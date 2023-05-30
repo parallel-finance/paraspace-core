@@ -502,7 +502,7 @@ library PoolExtendedLogic {
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
 
         uint256 requestLength = requests.length;
-        uint256 totalWETH = 0;
+        uint256 totalETH = 0;
         address currentOwner;
         for (uint256 index = 0; index < requestLength; index++) {
             DataTypes.AcceptBlurBidsRequest calldata request = requests[index];
@@ -533,7 +533,7 @@ library PoolExtendedLogic {
             }
 
             // calculate and accumulate weth
-            totalWETH += (request.bidingPrice - request.marketPlaceFee);
+            totalETH += (request.bidingPrice - request.marketPlaceFee);
 
             // update request status
             delete ps._blurExchangeRequestStatus[requestHash];
@@ -561,11 +561,13 @@ library PoolExtendedLogic {
                 request.bidOrderHash
             );
         }
+        require(msg.value == totalETH, Errors.INVALID_ETH_VALUE);
 
         //supply eth for current ntoken owner
-        if (totalWETH > 0) {
+        if (totalETH > 0) {
             address weth = poolAddressProvider.getWETH();
-            supplyForUser(ps, weth, keeper, currentOwner, totalWETH);
+            IWETH(weth).deposit{value: msg.value}();
+            supplyForUser(ps, weth, address(this), currentOwner, totalETH);
         }
 
         // update ongoing request amount
