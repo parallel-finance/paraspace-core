@@ -149,7 +149,7 @@ library MarketplaceLogic {
         );
 
         (uint256 priceEth, uint256 downpaymentEth) = noDelegate
-            ? _getDownpaymentETH(params, vars)
+            ? (0, 0)
             : _delegateToPool(params, vars);
 
         // delegateCall to avoid extra token transfer
@@ -410,23 +410,6 @@ library MarketplaceLogic {
         );
     }
 
-    function _getDownpaymentETH(
-        DataTypes.ExecuteMarketplaceParams memory params,
-        MarketplaceLocalVars memory vars
-    ) internal pure returns (uint256, uint256) {
-        uint256 price = vars.price;
-        uint256 downpayment = price - vars.creditAmount;
-        if (!vars.isListingTokenETH) {
-            // convert to (priceEth, downpaymentEth)
-            price = 0;
-            downpayment = 0;
-        } else {
-            require(params.ethLeft >= downpayment, Errors.PAYNOW_NOT_ENOUGH);
-        }
-
-        return (price, downpayment);
-    }
-
     function _delegateToPool(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
@@ -599,6 +582,7 @@ library MarketplaceLogic {
 
         for (uint256 i = 0; i < size; i++) {
             OfferItem memory item = params.orderInfo.offer[i];
+            uint256 tokenId = item.identifierOrCriteria;
             require(
                 item.itemType == ItemType.ERC721,
                 Errors.INVALID_ASSET_TYPE
@@ -606,12 +590,8 @@ library MarketplaceLogic {
 
             require(item.token == token, Errors.INVALID_MARKETPLACE_ORDER);
 
-            if (
-                IERC721(vars.xTokenAddress).ownerOf(
-                    item.identifierOrCriteria
-                ) != address(0)
-            ) {
-                tokenIds[amountToWithdraw++] = item.identifierOrCriteria;
+            if (IERC721(vars.xTokenAddress).ownerOf(tokenId) != address(0)) {
+                tokenIds[amountToWithdraw++] = tokenId;
             }
         }
 
