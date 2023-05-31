@@ -587,10 +587,9 @@ library MarketplaceLogic {
                 item.itemType == ItemType.ERC721,
                 Errors.INVALID_ASSET_TYPE
             );
-
             require(item.token == token, Errors.INVALID_MARKETPLACE_ORDER);
 
-            if (IERC721(vars.xTokenAddress).ownerOf(tokenId) != address(0)) {
+            if (IERC721(vars.xTokenAddress).ownerOf(tokenId) == seller) {
                 tokenIds[amountToWithdraw++] = tokenId;
             }
         }
