@@ -256,7 +256,7 @@ interface IPoolMarketplace {
      */
     function fulfillAcceptBlurBidsRequest(
         DataTypes.AcceptBlurBidsRequest[] calldata requests
-    ) external;
+    ) external payable;
 
     /**
      * @notice Reject accept blur bids for underlying request if the blur selling transaction is failed.
