@@ -536,7 +536,7 @@ library PoolExtendedLogic {
             totalETH += (request.bidingPrice - request.marketPlaceFee);
 
             // update request status
-            delete ps._blurExchangeRequestStatus[requestHash];
+            delete ps._acceptBlurBidsRequestStatus[requestHash];
 
             //burn ntoken
             burnUserNToken(
@@ -593,7 +593,7 @@ library PoolExtendedLogic {
             );
 
             // update request status
-            delete ps._blurExchangeRequestStatus[requestHash];
+            delete ps._acceptBlurBidsRequestStatus[requestHash];
 
             //transfer underlying nft back to nToken
             DataTypes.ReserveData storage nftReserve = ps._reserves[
