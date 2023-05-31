@@ -269,12 +269,6 @@ library ApeStakingLogic {
             tokenId
         );
 
-        uint256 apeReward = _apeCoinStaking.pendingRewards(
-            poolId,
-            address(this),
-            tokenId
-        );
-
         (uint256 bakcTokenId, bool isPaired) = _apeCoinStaking.mainToBakc(
             poolId,
             tokenId
@@ -288,6 +282,6 @@ library ApeStakingLogic {
             apeStakedAmount += bakcStakedAmount;
         }
 
-        return apeStakedAmount + apeReward;
+        return apeStakedAmount;
     }
 }

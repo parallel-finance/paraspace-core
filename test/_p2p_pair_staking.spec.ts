@@ -22,7 +22,7 @@ describe("P2P Pair Staking Test", () => {
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {ape, users, apeCoinStaking} = testEnv;
+    const {ape, users, apeCoinStaking, gatewayAdmin} = testEnv;
 
     const user1 = users[0];
     const user2 = users[1];
@@ -59,6 +59,11 @@ describe("P2P Pair Staking Test", () => {
       await cApe
         .connect(user2.signer)
         .approve(p2pPairStaking.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await p2pPairStaking
+        .connect(gatewayAdmin.signer)
+        .setCompoundBot(user1.address)
     );
 
     return testEnv;
@@ -1103,10 +1108,7 @@ describe("P2P Pair Staking Test", () => {
         .claimForMatchedOrderAndCompound([orderHash])
     );
 
-    almostEqual(
-      await p2pPairStaking.pendingCApeReward(p2pPairStaking.address),
-      parseEther("18")
-    );
+    almostEqual(await ape.balanceOf(user1.address), parseEther("18"));
     almostEqual(
       await p2pPairStaking.pendingCApeReward(user3.address),
       parseEther("716.4")
@@ -1116,13 +1118,7 @@ describe("P2P Pair Staking Test", () => {
       parseEther("2865.6")
     );
 
-    await waitForTx(
-      await p2pPairStaking
-        .connect(gatewayAdmin.signer)
-        .claimCompoundFee(gatewayAdmin.address)
-    );
-
-    almostEqual(await cApe.balanceOf(gatewayAdmin.address), parseEther("18"));
+    almostEqual(await ape.balanceOf(user1.address), parseEther("18"));
   });
 
   it("check ape token can be matched twice", async () => {

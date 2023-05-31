@@ -102,6 +102,13 @@ interface IP2PPairStaking {
     event CompoundFeeUpdated(uint256 oldFee, uint256 newFee);
 
     /**
+     * @dev Emitted during setCompoundBot()
+     * @param oldBot The address of the old compound bot
+     * @param newBot The address of the new compound bot
+     **/
+    event CompoundBotUpdated(address oldBot, address newBot);
+
+    /**
      * @notice Cancel a listing order, order canceled cannot be matched.
      * @param listingOrder the detail info of the order to be canceled
      */

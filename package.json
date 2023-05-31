@@ -81,6 +81,7 @@
     "prettier-plugin-solidity": "^1.0.0-alpha.53",
     "pretty-quick": "^3.1.1",
     "prompt-sync": "^4.2.0",
+    "shelljs": "^0.8.5",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.8.2",
     "solidity-docgen-forked": "^0.6.0-beta.29",

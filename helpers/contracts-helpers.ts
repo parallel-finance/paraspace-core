@@ -123,6 +123,7 @@ import {
   FlashbotsBundleTransaction,
 } from "@flashbots/ethers-provider-bundle";
 import {configureReservesByHelper, initReservesByHelper} from "./init-helpers";
+import shell from "shelljs";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -1087,4 +1088,23 @@ export const initAndConfigureReserves = async (
 
   console.log("configuring reserves");
   await configureReservesByHelper(reserves, allTokenAddresses);
+};
+
+export const exec = (
+  cmd: string,
+  options: {fatal: boolean; silent: boolean} = {fatal: true, silent: true}
+) => {
+  console.log(`$ ${cmd}`);
+  const res = shell.exec(cmd, options);
+  if (res.code !== 0) {
+    console.error("Error: Command failed with code", res.code);
+    console.log(res);
+    if (options.fatal) {
+      process.exit(1);
+    }
+  }
+  if (!options.silent) {
+    console.log(res.stdout.trim());
+  }
+  return res;
 };

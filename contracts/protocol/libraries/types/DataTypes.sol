@@ -427,6 +427,8 @@ library DataTypes {
         address _acceptBlurBidsKeeper;
         // Map of AcceptBlurBidsRequest status
         mapping(bytes32 => AcceptBlurBidsRequestStatus) _acceptBlurBidsRequestStatus;
+        // Address of ape compound bot
+        address _apeCompoundBot;
     }
 
     struct ReserveConfigData {

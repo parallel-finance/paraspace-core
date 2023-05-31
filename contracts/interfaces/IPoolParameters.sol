@@ -77,6 +77,14 @@ interface IPoolParameters {
     event AcceptBlurBidsKeeperUpdated(address keeper);
 
     /**
+     * @dev Emitted when the address of claim for yield incentive bot update
+     **/
+    event ClaimApeForYieldIncentiveBotUpdated(
+        address oldValue,
+        address newValue
+    );
+
+    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
@@ -180,6 +188,12 @@ interface IPoolParameters {
      * @param fee new fee percentage
      */
     function setClaimApeForCompoundFee(uint256 fee) external;
+
+    /**
+     * @notice undate compound bot for claim ape for compound
+     * @param bot new compound bot
+     */
+    function setClaimApeForCompoundBot(address bot) external;
 
     /**
      * @notice undate ape compound strategy

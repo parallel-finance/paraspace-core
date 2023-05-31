@@ -132,18 +132,6 @@ library PositionMoverLogic {
             useAsCollateral: true
         });
         uint256 nextIndex;
-        /**
-            The following logic divides the array of tokenIds into sub-arrays based on the asset in a greedy logic.
-            Then uses the sub-arrays as an inout to the supply logic to reduce the number of supplies.
-            Example1:
-            input: [BAYCToken1, BAYCToken2, MAYCToken1, MAYCToken1, BAKCToken1]
-            output: [BAYCToken1, BAYCToken2] [MAYCToken1, MAYCToken1] [BAKCToken1] (3 supply calls)
-
-            Example2:
-            input: [BAYCToken1, MAYCToken1, BAYCToken2, MAYCToken1, BAKCToken1]
-            output: [BAYCToken1] [MAYCToken1] [BAYCToken2] [MAYCToken1] [BAKCToken1] (5 supply calls)
-            Note: To optimi
-         */
         for (uint256 index = 0; index < tokenIdsLength; index++) {
             nextIndex = index + 1;
             if (

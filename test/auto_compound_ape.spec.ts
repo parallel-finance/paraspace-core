@@ -19,11 +19,7 @@ import {
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
-import {
-  advanceTimeAndBlock,
-  getParaSpaceConfig,
-  waitForTx,
-} from "../helpers/misc-utils";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
@@ -110,6 +106,12 @@ describe("Auto Compound Ape Test", () => {
 
     await waitForTx(
       await pool.connect(poolAdmin.signer).setClaimApeForCompoundFee(30)
+    );
+
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .setClaimApeForCompoundBot(user2.address)
     );
 
     // send extra tokens to the apestaking contract for rewards
@@ -535,6 +537,7 @@ describe("Auto Compound Ape Test", () => {
         swapPercent: 5000,
       })
     );
+    const beforeBalance = await ape.balanceOf(user2.address);
 
     await waitForTx(
       await pool
@@ -543,6 +546,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
@@ -561,14 +566,14 @@ describe("Auto Compound Ape Test", () => {
 
     almostEqual(
       await pUsdc.balanceOf(user3.address),
-      await convertToCurrencyDecimals(usdc.address, "4059.235923")
+      await convertToCurrencyDecimals(usdc.address, "4059.235479")
     );
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
@@ -579,6 +584,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
@@ -638,12 +645,20 @@ describe("Auto Compound Ape Test", () => {
 
     await advanceTimeAndBlock(3600);
 
+    const beforeBalance = await ape.balanceOf(user2.address);
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], {
-          gasLimit: 5000000,
-        })
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address],
+          [[0, 1, 2]],
+          3827874,
+          3506149922170000,
+          {
+            gasLimit: 5000000,
+          }
+        )
     );
 
     //3600 * 0.997 = 3589.2
@@ -651,19 +666,26 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .claimApeAndCompound(mayc.address, [user1.address], [[0, 1, 2]], {
-          gasLimit: 5000000,
-        })
+        .claimApeAndCompound(
+          mayc.address,
+          [user1.address],
+          [[0, 1, 2]],
+          3827874,
+          3506149922170000,
+          {
+            gasLimit: 5000000,
+          }
+        )
     );
   });
 
@@ -794,6 +816,7 @@ describe("Auto Compound Ape Test", () => {
       })
     );
 
+    const beforeBalance = await ape.balanceOf(user2.address);
     await waitForTx(
       await pool
         .connect(user2.signer)
@@ -801,6 +824,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
@@ -823,10 +848,10 @@ describe("Auto Compound Ape Test", () => {
     );
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
@@ -837,6 +862,8 @@ describe("Auto Compound Ape Test", () => {
           mayc.address,
           [user1.address, user2.address, user3.address],
           [[0], [1], [2]],
+          3827874,
+          3506149922170000,
           {gasLimit: 5000000}
         )
     );
@@ -921,6 +948,7 @@ describe("Auto Compound Ape Test", () => {
 
     await advanceTimeAndBlock(3600);
 
+    const beforeBalance = await ape.balanceOf(user2.address);
     await waitForTx(
       await pool.connect(user2.signer).claimPairedApeAndCompound(
         mayc.address,
@@ -931,7 +959,9 @@ describe("Auto Compound Ape Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ]
+        ],
+        0,
+        0
       )
     );
 
@@ -940,10 +970,10 @@ describe("Auto Compound Ape Test", () => {
     almostEqual(user1Balance, parseEther("3589.2"));
 
     // 3600 * 0.003
-    const config = getParaSpaceConfig();
-    const treasuryAddress = config.Treasury;
-    const incentiveBalance = await cApe.balanceOf(treasuryAddress);
-    almostEqual(incentiveBalance, parseEther("10.8"));
+    almostEqual(
+      (await ape.balanceOf(user2.address)).sub(beforeBalance),
+      parseEther("10.8")
+    );
 
     await advanceTimeAndBlock(3600);
 
@@ -957,7 +987,9 @@ describe("Auto Compound Ape Test", () => {
             {mainTokenId: 1, bakcTokenId: 1},
             {mainTokenId: 2, bakcTokenId: 2},
           ],
-        ]
+        ],
+        0,
+        0
       )
     );
   });
