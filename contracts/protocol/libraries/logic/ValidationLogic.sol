@@ -125,6 +125,13 @@ library ValidationLogic {
             Errors.INVALID_REQUEST_STATUS
         );
         require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        address nTokenAddress = nftReserve.xTokenAddress;
+        XTokenType tokenType = INToken(nTokenAddress).getXTokenType();
+        require(
+            tokenType != XTokenType.NTokenUniswapV3 &&
+                tokenType != XTokenType.NTokenStakefish,
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
+        );
         uint256 needCashETH = request.listingPrice +
             requestFee -
             request.borrowAmount;
@@ -137,7 +144,7 @@ library ValidationLogic {
             request.collection
         );
         uint256 collateralPrice = Helpers.getTraitBoostedTokenPrice(
-            nftReserve.xTokenAddress,
+            nTokenAddress,
             floorPrice,
             request.tokenId
         );

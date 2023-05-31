@@ -740,4 +740,27 @@ describe("BLUR Buy Integration Tests", () => {
         })
     ).to.be.revertedWith(ProtocolErrors.NOT_SAME_NTOKEN_OWNER);
   });
+
+  it("can't initiate request for uniswap V3", async () => {
+    const {
+      pool,
+      users: [user1],
+      nftPositionManager,
+    } = await loadFixture(fixture);
+
+    const invalidRequest = {
+      initiator: user1.address,
+      paymentToken: zeroAddress(),
+      listingPrice: parseEther("100"),
+      borrowAmount: parseEther("20"),
+      collection: nftPositionManager.address,
+      tokenId: 0,
+    };
+
+    await expect(
+      pool.connect(user1.signer).initiateBlurExchangeRequest([invalidRequest], {
+        value: parseEther("80"),
+      })
+    ).to.be.revertedWith(ProtocolErrors.XTOKEN_TYPE_NOT_ALLOWED);
+  });
 });
