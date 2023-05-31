@@ -70,6 +70,11 @@ library ValidationLogic {
             Errors.INVALID_REQUEST_STATUS
         );
         require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        require(
+            INToken(nTokenAddress).ownerOf(request.tokenId) ==
+                request.initiator,
+            Errors.NOT_THE_OWNER
+        );
         require(request.paymentToken == weth, Errors.INVALID_PAYMENT_TOKEN);
         uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
             request.collection
@@ -114,17 +119,23 @@ library ValidationLogic {
         uint256 remainingETH,
         uint256 requestFee,
         address oracle
-    ) internal view {
+    ) internal view returns (uint256) {
         require(
             requestStatus == DataTypes.BlurBuyWithCreditRequestStatus.Default,
             Errors.INVALID_REQUEST_STATUS
         );
         require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        address nTokenAddress = nftReserve.xTokenAddress;
+        XTokenType tokenType = INToken(nTokenAddress).getXTokenType();
         require(
-            remainingETH >=
-                request.listingPrice + requestFee - request.borrowAmount,
-            Errors.INVALID_ETH_VALUE
+            tokenType != XTokenType.NTokenUniswapV3 &&
+                tokenType != XTokenType.NTokenStakefish,
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
         );
+        uint256 needCashETH = request.listingPrice +
+            requestFee -
+            request.borrowAmount;
+        require(remainingETH >= needCashETH, Errors.INVALID_ETH_VALUE);
         require(
             request.paymentToken == address(0),
             Errors.INVALID_PAYMENT_TOKEN
@@ -133,7 +144,7 @@ library ValidationLogic {
             request.collection
         );
         uint256 collateralPrice = Helpers.getTraitBoostedTokenPrice(
-            nftReserve.xTokenAddress,
+            nTokenAddress,
             floorPrice,
             request.tokenId
         );
@@ -142,6 +153,7 @@ library ValidationLogic {
             request.listingPrice >= collateralPrice,
             Errors.INVALID_REQUEST_PRICE
         );
+        return needCashETH;
     }
 
     /**

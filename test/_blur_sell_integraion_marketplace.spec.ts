@@ -125,10 +125,12 @@ describe("BLUR Sell Integration Tests", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .fulfillAcceptBlurBidsRequest([
-          AcceptBaycBidsRequest,
-          AcceptMaycBidsRequest,
-        ])
+        .fulfillAcceptBlurBidsRequest(
+          [AcceptBaycBidsRequest, AcceptMaycBidsRequest],
+          {
+            value: parseEther("168"),
+          }
+        )
     );
 
     almostEqual(await pWETH.balanceOf(user1.address), parseEther("168"));
@@ -698,7 +700,9 @@ describe("BLUR Sell Integration Tests", () => {
     await waitForTx(
       await pool
         .connect(user2.signer)
-        .fulfillAcceptBlurBidsRequest([AcceptBaycBidsRequest])
+        .fulfillAcceptBlurBidsRequest([AcceptBaycBidsRequest], {
+          value: parseEther("109"),
+        })
     );
 
     expect(await nBAYC.balanceOf(user1.address)).to.be.eq(0);
@@ -760,5 +764,57 @@ describe("BLUR Sell Integration Tests", () => {
           AcceptMaycBidsRequest,
         ])
     ).to.be.revertedWith(ProtocolErrors.NOT_SAME_NTOKEN_OWNER);
+  });
+
+  it("initiate request failed when accept blur bids request disabled", async () => {
+    const {
+      pool,
+      weth,
+      bayc,
+      users: [, , user3],
+    } = await loadFixture(fixture);
+
+    const InvalidAcceptBaycBidsRequest = {
+      initiator: user3.address,
+      paymentToken: weth.address,
+      bidingPrice: parseEther("110"),
+      marketPlaceFee: parseEther("1"),
+      collection: bayc.address,
+      tokenId: 0,
+      bidOrderHash: solidityKeccak256(["uint256"], [0]),
+    };
+
+    await expect(
+      pool
+        .connect(user3.signer)
+        .initiateAcceptBlurBidsRequest([InvalidAcceptBaycBidsRequest])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+  });
+
+  it("fulfill requests failed if transaction value is wrong", async () => {
+    const {
+      pool,
+      users: [user1, user2],
+    } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .initiateAcceptBlurBidsRequest([
+          AcceptBaycBidsRequest,
+          AcceptMaycBidsRequest,
+        ])
+    );
+
+    await expect(
+      pool
+        .connect(user2.signer)
+        .fulfillAcceptBlurBidsRequest(
+          [AcceptBaycBidsRequest, AcceptMaycBidsRequest],
+          {
+            value: parseEther("100"),
+          }
+        )
+    ).to.be.revertedWith(ProtocolErrors.INVALID_ETH_VALUE);
   });
 });

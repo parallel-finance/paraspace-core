@@ -141,6 +141,18 @@ library PoolExtendedLogic {
             require(remainingETH == 0, Errors.INVALID_ETH_VALUE);
         }
 
+        //transfer currency to keeper
+        if (totalBorrow > 0) {
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
+                address(this),
+                totalBorrow,
+                timeLockParams
+            );
+            IWETH(weth).withdraw(totalBorrow);
+        }
+        Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
+
         //mint debt token
         if (totalBorrow > 0) {
             BorrowLogic.executeBorrow(
@@ -161,18 +173,6 @@ library PoolExtendedLogic {
                 })
             );
         }
-
-        //transfer currency to keeper
-        if (totalBorrow > 0) {
-            DataTypes.TimeLockParams memory timeLockParams;
-            IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
-                address(this),
-                totalBorrow,
-                timeLockParams
-            );
-            IWETH(weth).withdraw(totalBorrow);
-        }
-        Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
     }
 
     function initiateBlurExchangeRequest(
@@ -185,14 +185,15 @@ library PoolExtendedLogic {
     ) internal returns (uint256) {
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         uint256 requestFee = request.listingPrice.percentMul(requestFeeRate);
-        ValidationLogic.validateInitiateBlurExchangeRequest(
-            ps._reserves[request.collection],
-            request,
-            ps._blurExchangeRequestStatus[requestHash],
-            remainingETH,
-            requestFee,
-            oracle
-        );
+        uint256 needCashETH = ValidationLogic
+            .validateInitiateBlurExchangeRequest(
+                ps._reserves[request.collection],
+                request,
+                ps._blurExchangeRequestStatus[requestHash],
+                remainingETH,
+                requestFee,
+                oracle
+            );
 
         //mint nToken to release credit value
         DataTypes.ERC721SupplyParams[]
@@ -225,7 +226,7 @@ library PoolExtendedLogic {
             request.tokenId
         );
 
-        return request.listingPrice + requestFee - request.borrowAmount;
+        return needCashETH;
     }
 
     function executeFulfillBlurExchangeRequest(
@@ -501,7 +502,7 @@ library PoolExtendedLogic {
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
 
         uint256 requestLength = requests.length;
-        uint256 totalWETH = 0;
+        uint256 totalETH = 0;
         address currentOwner;
         for (uint256 index = 0; index < requestLength; index++) {
             DataTypes.AcceptBlurBidsRequest calldata request = requests[index];
@@ -532,10 +533,10 @@ library PoolExtendedLogic {
             }
 
             // calculate and accumulate weth
-            totalWETH += (request.bidingPrice - request.marketPlaceFee);
+            totalETH += (request.bidingPrice - request.marketPlaceFee);
 
             // update request status
-            delete ps._blurExchangeRequestStatus[requestHash];
+            delete ps._acceptBlurBidsRequestStatus[requestHash];
 
             //burn ntoken
             burnUserNToken(
@@ -560,11 +561,13 @@ library PoolExtendedLogic {
                 request.bidOrderHash
             );
         }
+        require(msg.value == totalETH, Errors.INVALID_ETH_VALUE);
 
         //supply eth for current ntoken owner
-        if (totalWETH > 0) {
+        if (totalETH > 0) {
             address weth = poolAddressProvider.getWETH();
-            supplyForUser(ps, weth, keeper, currentOwner, totalWETH);
+            IWETH(weth).deposit{value: msg.value}();
+            supplyForUser(ps, weth, address(this), currentOwner, totalETH);
         }
 
         // update ongoing request amount
@@ -590,7 +593,7 @@ library PoolExtendedLogic {
             );
 
             // update request status
-            delete ps._blurExchangeRequestStatus[requestHash];
+            delete ps._acceptBlurBidsRequestStatus[requestHash];
 
             //transfer underlying nft back to nToken
             DataTypes.ReserveData storage nftReserve = ps._reserves[

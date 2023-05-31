@@ -214,7 +214,7 @@ contract PoolMarketplace is
     /// @inheritdoc IPoolMarketplace
     function fulfillAcceptBlurBidsRequest(
         DataTypes.AcceptBlurBidsRequest[] calldata requests
-    ) external virtual override {
+    ) external payable override {
         DataTypes.PoolStorage storage ps = poolStorage();
         PoolExtendedLogic.executeFulfillAcceptBlurBidsRequest(
             ps,
