@@ -543,8 +543,8 @@ library MarketplaceLogic {
             reserve.updateInterestRates(
                 reserveCache,
                 vars.listingToken,
-                0,
-                vars.isListingTokenPToken ? 0 : vars.supplyAmount
+                vars.isListingTokenPToken ? 0 : vars.supplyAmount,
+                0
             );
         }
 
