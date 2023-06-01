@@ -45,6 +45,7 @@ const initBlurAcceptBidRequest = async () => {
 
   // get Vessls listing from Reservior
   const contract = "0x5b1085136a811e55b2bb2ca1ea456ba82126a376";
+  // const keeperAddress = "0x01b007e74987ace65c44eaf311c5e8cad3ea5441"
   const url = `https://api.reservoir.tools/orders/bids/v5?source=blur.io&sortBy=price&status=active&contracts=${contract}&includeRawData=true`;
   const {
     data: {orders},
@@ -56,12 +57,37 @@ const initBlurAcceptBidRequest = async () => {
 
   const bid = orders[0];
   // you can get the token id from https://etherscan.io/token/0x5b1085136a811e55b2bb2ca1ea456ba82126a376?a=0x5cfA0f9744899d1b6943D57688C594Cb9759EAeC#inventory
-  const tokenId = 81995;
+  const tokenId = 22523; // this id is hardcode.
 
-  const { xTokenAddress } = await pool.getReserveData(contract);
+  const {xTokenAddress} = await pool.getReserveData(contract);
   const nToken = await getERC721(xTokenAddress);
+  const nft = await getERC721(contract);
+  let initiatorSigner = await impersonateAddress(await nft.ownerOf(tokenId));
+
+  if ((await nToken.ownerOf(tokenId)) === ethers.constants.AddressZero) {
+    console.log("this nft is not supplied, need supply it");
+    await waitForTx(
+      await nft
+        .connect(initiatorSigner.signer)
+        .setApprovalForAll(pool.address, true)
+    );
+    await waitForTx(
+      await pool.connect(initiatorSigner.signer).supplyERC721(
+        nft.address,
+        [
+          {
+            tokenId,
+            useAsCollateral: true,
+          },
+        ],
+        initiatorSigner.address,
+        "0"
+      )
+    );
+    console.log("has supplied this nft.");
+  }
   const initiator = await nToken.ownerOf(tokenId);
-  const initiatorSigner = await impersonateAddress(initiator);
+  initiatorSigner = await impersonateAddress(initiator);
 
   const blurRequest = {
     initiator,
@@ -78,9 +104,11 @@ const initBlurAcceptBidRequest = async () => {
 
   // send initiateBlurExchangeRequest transaction.
   const tx = await waitForTx(
-    await pool.connect(initiatorSigner.signer).initiateAcceptBlurBidsRequest([blurRequest])
+    await pool
+      .connect(initiatorSigner.signer)
+      .initiateAcceptBlurBidsRequest([blurRequest])
   );
-  console.log(tx)
+  console.log(tx);
   console.log("init blur request done.");
 };
 
