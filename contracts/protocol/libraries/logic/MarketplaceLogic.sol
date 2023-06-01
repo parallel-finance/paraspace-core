@@ -594,11 +594,10 @@ library MarketplaceLogic {
             }
         }
 
-        assembly {
-            mstore(tokenIds, amountToWithdraw)
-        }
-
         if (amountToWithdraw > 0) {
+            assembly {
+                mstore(tokenIds, amountToWithdraw)
+            }
             SupplyLogic.executeWithdrawERC721(
                 ps._reserves,
                 ps._reservesList,
