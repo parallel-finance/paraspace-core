@@ -55,11 +55,6 @@ contract X2Y2Adapter is IMarketplace {
         require(nfts.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
 
         orderInfo.maker = order.user;
-        orderInfo.taker = shared.user;
-        require(
-            orderInfo.taker == ADDRESSES_PROVIDER.getPool(),
-            Errors.INVALID_ORDER_TAKER
-        );
 
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem(

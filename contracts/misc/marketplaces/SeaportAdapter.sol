@@ -44,8 +44,6 @@ contract SeaportAdapter is IMarketplace {
         orderInfo.maker = advancedOrders[0].parameters.offerer;
         // the person who takes listing to buy NFT
         orderInfo.taker = advancedOrders[1].parameters.offerer;
-        // maker & taker must be different addresses
-        require(orderInfo.maker != orderInfo.taker, Errors.MAKER_SAME_AS_TAKER);
 
         orderInfo.id = advancedOrders[0].signature;
 

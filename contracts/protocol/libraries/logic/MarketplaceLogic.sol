@@ -111,6 +111,10 @@ library MarketplaceLogic {
             .getAskOrderInfo(payload);
         params.ethLeft = vars.ethLeft;
         params.orderInfo.taker = msg.sender;
+        require(
+            params.orderInfo.maker != params.orderInfo.taker,
+            Errors.MAKER_SAME_AS_TAKER
+        );
 
         _depositETH(vars, params);
 
@@ -213,6 +217,10 @@ library MarketplaceLogic {
             params.orderInfo = IMarketplace(params.marketplace.adapter)
                 .getAskOrderInfo(vars.payload);
             params.orderInfo.taker = msg.sender;
+            require(
+                params.orderInfo.maker != params.orderInfo.taker,
+                Errors.MAKER_SAME_AS_TAKER
+            );
             params.ethLeft = vars.ethLeft;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
@@ -324,6 +332,7 @@ library MarketplaceLogic {
             );
             params.orderInfo = IMarketplace(params.marketplace.adapter)
                 .getBidOrderInfo(payloads[i]);
+
             require(
                 params.orderInfo.taker == onBehalfOf,
                 Errors.INVALID_ORDER_TAKER
