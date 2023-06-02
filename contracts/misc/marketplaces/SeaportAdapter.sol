@@ -28,9 +28,9 @@ contract SeaportAdapter is IMarketplace {
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
-        (AdvancedOrder[] memory advancedOrders, , ) = abi.decode(
+        AdvancedOrder[] memory advancedOrders = abi.decode(
             params,
-            (AdvancedOrder[], CriteriaResolver[], Fulfillment[])
+            (AdvancedOrder[])
         );
         // support advanced order in the future
         require(
@@ -67,9 +67,9 @@ contract SeaportAdapter is IMarketplace {
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
-        (AdvancedOrder[] memory advancedOrders, , ) = abi.decode(
+        AdvancedOrder[] memory advancedOrders = abi.decode(
             params,
-            (AdvancedOrder[], CriteriaResolver[], Fulfillment[])
+            (AdvancedOrder[])
         );
         // support advanced order in the future
         require(

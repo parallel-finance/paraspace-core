@@ -847,8 +847,6 @@ library MarketplaceLogic {
         uint256 tokenId,
         bool isReserve
     ) internal {
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = tokenId;
         address nTokenOwner = isReserve
             ? IERC721(vars.xTokenAddress).ownerOf(tokenId)
             : address(0);
@@ -868,6 +866,8 @@ library MarketplaceLogic {
                 );
             }
 
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = tokenId;
             SupplyLogic.executeCollateralizeERC721(
                 ps._reserves,
                 ps._usersConfig[buyer],
