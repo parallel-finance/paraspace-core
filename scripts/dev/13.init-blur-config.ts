@@ -1,33 +1,35 @@
 import { ethers } from "ethers";
 import rawBRE from "hardhat";
-import {DRE} from "../../helpers/misc-utils";
+import { DRE } from "../../helpers/misc-utils";
 import { deployPriceOracle } from "../../helpers/contracts-deployments";
 import { getAllTokens } from "../../helpers/contracts-getters";
 
 const initBlurConfig = async () => {
 
   await DRE.run("set-DRE");
-  const {getPoolProxy, getBlurExchangeProxy, getParaSpaceOracle} = await import(
+  const { getPoolProxy, getBlurExchangeProxy, getParaSpaceOracle } = await import(
     "../../helpers/contracts-getters"
   );
-  const {impersonateAddress} = await import("../../helpers/contracts-helpers");
+  const { impersonateAddress } = await import("../../helpers/contracts-helpers");
   const pool = await getPoolProxy();
   const oracle = await getParaSpaceOracle();
-  
+
   // the maximum number of ongoing valid requests
   const limit = 5;
   // keeper must have enough eth balance on mainnet.
-  const keeperAddress = process.env.KEEPER_ADDRESS;
-  
+  const blurExchangeKeeper = process.env.KEEPER_ADDRESS_1;
+  const acceptBlurBidsKeeper = process.env.KEEPER_ADDRESS_2;
+
   // initialize blur config
   await pool.enableBlurExchange();
   await pool.enableAcceptBlurBids();
   await pool.setBlurOngoingRequestLimit(limit);
   await pool.setAcceptBlurBidsOngoingRequestLimit(limit);
-  if (keeperAddress) {
-    await pool.setBlurExchangeKeeper(keeperAddress);
-    await pool.setAcceptBlurBidsKeeper(keeperAddress);
-    await impersonateAddress(keeperAddress);
+  if (blurExchangeKeeper && acceptBlurBidsKeeper) {
+    await pool.setBlurExchangeKeeper(blurExchangeKeeper);
+    await pool.setAcceptBlurBidsKeeper(acceptBlurBidsKeeper);
+    await impersonateAddress(blurExchangeKeeper);
+    await impersonateAddress(acceptBlurBidsKeeper);
   }
 
   const blurOwner = await impersonateAddress(
