@@ -92,6 +92,9 @@ const hardhatConfig: HardhatUserConfig = {
         "contracts/protocol/libraries/logic/ConfiguratorLogic.sol": {
           ConfiguratorLogic: ZERO_ADDRESS,
         },
+        "contracts/dependencies/blur-exchange/MerkleVerifier.sol": {
+          MerkleVerifier: ZERO_ADDRESS,
+        },
       },
     },
   },
@@ -231,12 +234,14 @@ const hardhatConfig: HardhatUserConfig = {
       chainId: CHAINS_ID[eEthereumNetwork.zksync],
       url: NETWORKS_RPC_URL[eEthereumNetwork.zksync],
       accounts: DEPLOYER,
+      ethNetwork: "mainnet",
       zksync: true,
     },
     zksyncGoerli: {
       chainId: CHAINS_ID[eEthereumNetwork.zksyncGoerli],
       url: NETWORKS_RPC_URL[eEthereumNetwork.zksyncGoerli],
       accounts: DEPLOYER,
+      ethNetwork: "goerli",
       zksync: true,
     },
     mainnet: {

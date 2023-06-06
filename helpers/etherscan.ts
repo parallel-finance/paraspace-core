@@ -27,6 +27,7 @@ type VerificationArgs = {
   constructorArguments: ConstructorArgs;
   relatedSources?: true;
   libraries?: LibraryAddresses;
+  noCompile: boolean;
 };
 
 export const ETHERSCAN_NETWORKS = [
@@ -119,6 +120,7 @@ export const verifyEtherscanContract = async (
       constructorArguments,
       relatedSources: true,
       libraries,
+      noCompile: true,
     };
     await runTaskWithRetry("verify:verify", params, times, msDelay);
     isVerified = true;

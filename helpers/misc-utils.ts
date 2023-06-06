@@ -86,13 +86,16 @@ export const isEthereum = (): boolean => {
   );
 };
 
-export const isZKSync = (): boolean => {
+export const isZkSync = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
     [ZKSYNC_CHAINID].includes(DRE.network.config.chainId!) ||
     [eEthereumNetwork.zksync].includes(FORK as eEthereumNetwork)
   );
 };
+
+export const isMainnet = (): boolean =>
+  isEthereum() || isMoonbeam() || isArbitrum() || isZkSync();
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));

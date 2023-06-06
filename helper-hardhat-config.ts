@@ -41,21 +41,25 @@ export const buildForkConfig = ():
 
 export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.kovan]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://kovan.infura.io/v3/${INFURA_KEY}`,
+      : `https://kovan.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.ropsten]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-ropsten.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://ropsten.infura.io/v3/${INFURA_KEY}`,
+      : `https://ropsten.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.goerli]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-goerli.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://goerli.infura.io/v3/${INFURA_KEY}`,
+      : `https://goerli.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.mainnet]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://mainnet.infura.io/v3/${INFURA_KEY}`,
+      : `https://mainnet.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.hardhat]: RPC_URL || "http://localhost:8545",
   [eEthereumNetwork.anvil]: RPC_URL || "http://localhost:8545",
   [eEthereumNetwork.ganache]: RPC_URL || "http://localhost:8545",

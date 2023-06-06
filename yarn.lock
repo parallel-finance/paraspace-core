@@ -799,7 +799,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/wallet@npm:5.7.0":
+"@ethersproject/wallet@npm:5.7.0, @ethersproject/wallet@npm:^5.7.0":
   version: 5.7.0
   resolution: "@ethersproject/wallet@npm:5.7.0"
   dependencies:
@@ -1467,7 +1467,7 @@ __metadata:
     "@safe-global/safe-ethers-lib": ^1.7.0
     "@safe-global/safe-service-client": ^1.5.0
     "@tenderly/hardhat-tenderly": 1.1.0-beta.5
-    "@typechain/ethers-v5": ^10.1.0
+    "@typechain/ethers-v5": ^11.0.0
     "@typechain/hardhat": ^6.1.2
     "@types/chai": ^4.2.11
     "@types/lowdb": 1.0.9
@@ -1497,7 +1497,7 @@ __metadata:
     git-rev-sync: ^3.0.2
     hardhat: ^2.13.0
     hardhat-contract-sizer: ^2.0.3
-    hardhat-deploy: ^0.11.4
+    hardhat-deploy: ^0.11.30
     hardhat-gas-reporter: ^1.0.9
     hardhat-typechain: ^0.3.3
     husky: ^8.0.1
@@ -1855,20 +1855,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typechain/ethers-v5@npm:^10.1.0":
-  version: 10.1.0
-  resolution: "@typechain/ethers-v5@npm:10.1.0"
+"@typechain/ethers-v5@npm:^11.0.0":
+  version: 11.0.0
+  resolution: "@typechain/ethers-v5@npm:11.0.0"
   dependencies:
     lodash: ^4.17.15
     ts-essentials: ^7.0.1
   peerDependencies:
     "@ethersproject/abi": ^5.0.0
-    "@ethersproject/bytes": ^5.0.0
     "@ethersproject/providers": ^5.0.0
     ethers: ^5.1.3
-    typechain: ^8.1.0
+    typechain: ^8.2.0
     typescript: ">=4.3.0"
-  checksum: 452ad685ce792ddefebdcb8ae72f4343ed1411f91701250e273c1a0dd79753d0d40f311cff19ec0c4fd6a9b9cf23e55eb9ae1b94cb388fbc54c122ae4d0e6f47
+  checksum: 4f2986070b3e4492e64db308e437b887d73b689c9ddbf52c6f0874f3a7467b39fa53352172d8cd649568f9d44cb5393c92bdfc05f26cb917db1aa45fc0d5fe85
   languageName: node
   linkType: hard
 
@@ -8428,10 +8427,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat-deploy@npm:^0.11.4":
-  version: 0.11.16
-  resolution: "hardhat-deploy@npm:0.11.16"
+"hardhat-deploy@npm:^0.11.30":
+  version: 0.11.30
+  resolution: "hardhat-deploy@npm:0.11.30"
   dependencies:
+    "@ethersproject/abi": ^5.7.0
+    "@ethersproject/abstract-signer": ^5.7.0
+    "@ethersproject/address": ^5.7.0
+    "@ethersproject/bignumber": ^5.7.0
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/constants": ^5.7.0
+    "@ethersproject/contracts": ^5.7.0
+    "@ethersproject/providers": ^5.7.2
+    "@ethersproject/solidity": ^5.7.0
+    "@ethersproject/transactions": ^5.7.0
+    "@ethersproject/wallet": ^5.7.0
     "@types/qs": ^6.9.7
     axios: ^0.21.1
     chalk: ^4.1.2
@@ -8444,8 +8454,8 @@ __metadata:
     match-all: ^1.2.6
     murmur-128: ^0.2.1
     qs: ^6.9.4
-    zksync-web3: ^0.8.1
-  checksum: 531ea02eef28cfecb4518fa3769c6bdfcf7c51095ff1c1fb4a1ac481fd3ea21252b32109b7f96975ee075ab31ce69604ad429f44cc5eaab05de6b5d761200612
+    zksync-web3: ^0.14.3
+  checksum: 7b9ac9d856097be1df88ed86cbec88e5bdeb6258c7167c097d6ad4e80a1131b9288fc7704ff6457253f293f57c9992d83383f15ce8f22190d94966b8bb05d832
   languageName: node
   linkType: hard
 
@@ -16553,14 +16563,5 @@ __metadata:
   peerDependencies:
     ethers: ^5.7.0
   checksum: f702a3437f48a8d42c4bb35b8dd13671a168aadfc4e23ce723d62959220ccb6bf9c529c60331fe5b91afaa622147c6a37490551474fe3e35c06ac476524b5160
-  languageName: node
-  linkType: hard
-
-"zksync-web3@npm:^0.8.1":
-  version: 0.8.1
-  resolution: "zksync-web3@npm:0.8.1"
-  peerDependencies:
-    ethers: ~5.7.0
-  checksum: 613ebe822df1bef0af4d62386f3aaf65917d45dd80932b0ddf5b81eba6b0a46376f3e74263d153915dcfb8be954f730ded2e34d7806b6b199bbc74e0f124a0fb
   languageName: node
   linkType: hard
