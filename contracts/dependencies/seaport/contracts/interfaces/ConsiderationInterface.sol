@@ -14,17 +14,18 @@ import {
 } from "../lib/ConsiderationStructs.sol";
 
 /**
- * @title SeaportInterface
+ * @title ConsiderationInterface
  * @author 0age
  * @custom:version 1.1
- * @notice Seaport is a generalized ETH/ERC20/ERC721/ERC1155 marketplace. It
- *         minimizes external calls to the greatest extent possible and provides
- *         lightweight methods for common routes as well as more flexible
- *         methods for composing advanced orders.
+ * @notice Consideration is a generalized ETH/ERC20/ERC721/ERC1155 marketplace.
+ *         It minimizes external calls to the greatest extent possible and
+ *         provides lightweight methods for common routes as well as more
+ *         flexible methods for composing advanced orders.
  *
- * @dev SeaportInterface contains all external function interfaces for Seaport.
+ * @dev ConsiderationInterface contains all external function interfaces for
+ *      Consideration.
  */
-interface SeaportInterface {
+interface ConsiderationInterface {
     /**
      * @notice Fulfill an order offering an ERC721 token by supplying Ether (or
      *         the native token for the given chain) as consideration for the
@@ -62,7 +63,7 @@ interface SeaportInterface {
      *                            any, to source the fulfiller's token approvals
      *                            from. The zero hash signifies that no conduit
      *                            should be used, with direct approvals set on
-     *                            Seaport.
+     *                            Consideration.
      *
      * @return fulfilled A boolean indicating whether the order has been
      *                   successfully fulfilled.
@@ -104,7 +105,7 @@ interface SeaportInterface {
      *                            any, to source the fulfiller's token approvals
      *                            from. The zero hash signifies that no conduit
      *                            should be used, with direct approvals set on
-     *                            Seaport.
+     *                            Consideration.
      * @param recipient           The intended recipient for all received items,
      *                            with `address(0)` indicating that the caller
      *                            should receive the items.
