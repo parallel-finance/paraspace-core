@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 import "./dependencies/ERC721A.sol";
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
@@ -498,7 +498,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
 //
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 /**
  * @dev This implements an optional extension of {ERC721} defined in the EIP that adds
@@ -688,7 +688,7 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
 
 //
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 /**
  * @dev ERC721 token with storage based token URI management.
@@ -770,7 +770,7 @@ abstract contract ERC721URIStorage is ERC721 {
 
 //
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -848,7 +848,7 @@ abstract contract Ownable is Context {
 
 //
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 /**
  * @title Counters
@@ -911,7 +911,7 @@ library Counters {
     A. Murakami Short Verbiage – User Experience Notice [Document #X-1, https://rtfkt.com/legal-X1]
 */
 
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.0;
 
 abstract contract CloneXRandomizer {
     function getTokenId(uint256 tokenId)

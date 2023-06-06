@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.4;
+pragma solidity ^0.8.0;
 
 /// @notice Emitted when the result overflows uint256.
 error PRBMath__MulDivFixedPointOverflow(uint256 prod1);

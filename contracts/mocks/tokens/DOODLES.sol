@@ -3,7 +3,7 @@
 
 // File contracts/Mimetics/IMimeticMetadata.sol
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 interface IMimeticMetadata {
     struct Generation {
@@ -767,7 +767,7 @@ interface IERC721Metadata is IERC721 {
 
 // OpenZeppelin Contracts (last updated v4.5.0) (utils/Address.sol)
 
-pragma solidity ^0.8.1;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Collection of functions related to the address type
@@ -1800,7 +1800,7 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
     }
 }
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.0;
 
 contract Doodles is ERC721, ERC721Enumerable, Ownable {
     string public PROVENANCE;
