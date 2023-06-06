@@ -13,6 +13,7 @@ coverage.json
 dist
 
 artifacts-zk/
+cache-zk/
 
 keystore/
 

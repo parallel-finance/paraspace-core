@@ -26,7 +26,7 @@ import fs from "fs";
 
 dotenv.config();
 
-import "solidity-docgen-forked";
+import "solidity-docgen";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
@@ -37,6 +37,7 @@ import "hardhat-contract-sizer";
 import "@matterlabs/hardhat-zksync-deploy";
 import "@matterlabs/hardhat-zksync-solc";
 import {eEthereumNetwork} from "./helpers/types";
+import {ZERO_ADDRESS} from "./helpers/constants";
 
 require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
 
@@ -54,10 +55,44 @@ const hardhatConfig: HardhatUserConfig = {
     version: "1.3.9",
     compilerSource: "binary",
     settings: {
-      optimizer: {
-        enabled: true,
+      libraries: {
+        "contracts/protocol/libraries/logic/BorrowLogic.sol": {
+          BorrowLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/SupplyLogic.sol": {
+          SupplyLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/LiquidationLogic.sol": {
+          LiquidationLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/AuctionLogic.sol": {
+          AuctionLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/PositionMoverLogic.sol": {
+          PositionMoverLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/ReserveLogic.sol": {
+          ReserveLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/PoolLogic.sol": {
+          PoolLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/MarketplaceLogic.sol": {
+          MarketplaceLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/FlashClaimLogic.sol": {
+          FlashClaimLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/tokenization/libraries/ApeStakingLogic.sol": {
+          ApeStakingLogic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/tokenization/libraries/MintableERC721Logic.sol": {
+          MintableERC721Logic: ZERO_ADDRESS,
+        },
+        "contracts/protocol/libraries/logic/ConfiguratorLogic.sol": {
+          ConfiguratorLogic: ZERO_ADDRESS,
+        },
       },
-      compilerPath: "usr/local/bin/zksolc-linux-amd64-musl-v1.3.9",
     },
   },
   contractSizer: {

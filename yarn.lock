@@ -1495,7 +1495,7 @@ __metadata:
     ethers-multisend: ^2.4.0
     evm-bn: ^1.1.2
     git-rev-sync: ^3.0.2
-    hardhat: ^2.12.2
+    hardhat: ^2.13.0
     hardhat-contract-sizer: ^2.0.3
     hardhat-deploy: ^0.11.4
     hardhat-gas-reporter: ^1.0.9
@@ -1511,6 +1511,7 @@ __metadata:
     prompt-sync: ^4.2.0
     solhint: ^3.3.6
     solidity-coverage: ^0.8.2
+    solidity-docgen: ^0.6.0-beta.35
     solidity-docgen-forked: ^0.6.0-beta.29
     ts-generator: ^0.1.1
     ts-node: ^10.9.1
@@ -8484,9 +8485,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat@npm:^2.12.2":
-  version: 2.14.0
-  resolution: "hardhat@npm:2.14.0"
+"hardhat@npm:^2.13.0":
+  version: 2.14.1
+  resolution: "hardhat@npm:2.14.1"
   dependencies:
     "@ethersproject/abi": ^5.1.2
     "@metamask/eth-sig-util": ^4.0.0
@@ -8548,7 +8549,7 @@ __metadata:
       optional: true
   bin:
     hardhat: internal/cli/bootstrap.js
-  checksum: 7a11ad4650759851306d65c30252ccffa2aca9cb461c66f3fcef5f29d38fe66402d6bc295d293670fa0a72bf3572cc95029c5cd0b0fd45f45edd99d6eb5b7586
+  checksum: 151fda00b4cbc049c29af4249755ee28af7a588d66fed1ff308b2b19e260462649798a13acbc758e24fbfdc8a90fd43809c9cf2d3383fbab3eea0d0e0b00bb22
   languageName: node
   linkType: hard
 
@@ -13891,6 +13892,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"solidity-ast@npm:^0.4.38":
+  version: 0.4.49
+  resolution: "solidity-ast@npm:0.4.49"
+  checksum: f5b0354ddfa882346cf12d33f79c6123796a07637b248ceb9cfeec9f81540e270407f6fca660cf75666e1ba1866270319ab3fbe54b01491dbd35adffd1405243
+  languageName: node
+  linkType: hard
+
 "solidity-comments-extractor@npm:^0.0.7":
   version: 0.0.7
   resolution: "solidity-comments-extractor@npm:0.0.7"
@@ -13939,6 +13947,18 @@ __metadata:
   peerDependencies:
     hardhat: ^2.8.0
   checksum: 809f18952718aa68d76f6420b3ea13e896c542eaabeabdc10211b3aa91cff068ca35a0fcb02d9a63c02212d2ae1884940adb943c9c546258319a44a4abfb9ebc
+  languageName: node
+  linkType: hard
+
+"solidity-docgen@npm:^0.6.0-beta.35":
+  version: 0.6.0-beta.35
+  resolution: "solidity-docgen@npm:0.6.0-beta.35"
+  dependencies:
+    handlebars: ^4.7.7
+    solidity-ast: ^0.4.38
+  peerDependencies:
+    hardhat: ^2.8.0
+  checksum: 5b773b8b2959109efca409ebd6eaa9eaa535989b52de7653bed75ad9195a145653c6436c258eb78cc819e220d79ecb4ed0efe9fcb8f9aed56e5b5d386149349d
   languageName: node
   linkType: hard
 

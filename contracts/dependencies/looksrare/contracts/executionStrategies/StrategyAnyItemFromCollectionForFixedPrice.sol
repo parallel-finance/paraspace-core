@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import {OrderTypes} from "../libraries/OrderTypes.sol";
 import {IExecutionStrategy} from "../interfaces/IExecutionStrategy.sol";

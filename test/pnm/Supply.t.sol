@@ -1,4 +1,4 @@
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.17;
 
 import "./ParaTest.sol";
 import "../../contracts/mocks/tokens/MintableERC20.sol";

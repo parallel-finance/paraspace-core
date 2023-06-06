@@ -3,7 +3,7 @@
 
 // File contracts/Mimetics/IMimeticMetadata.sol
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.17;
 
 interface IMimeticMetadata {
     struct Generation {
@@ -1800,7 +1800,7 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
     }
 }
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 contract Doodles is ERC721, ERC721Enumerable, Ownable {
     string public PROVENANCE;

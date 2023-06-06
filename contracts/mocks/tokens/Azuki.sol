@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 import "./dependencies/ERC721A.sol";
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -84,7 +84,7 @@ abstract contract Ownable is Context {
 
 //
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.

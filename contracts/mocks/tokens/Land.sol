@@ -4,7 +4,7 @@ import "./dependencies/ERC721A.sol";
 
 //
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
@@ -500,7 +500,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
 //
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 /**
  * @dev This implements an optional extension of {ERC721} defined in the EIP that adds
@@ -690,7 +690,7 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
 
 //
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -783,7 +783,7 @@ interface IERC20 {
 
 //
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 /**
  * @title SafeERC20
@@ -913,7 +913,7 @@ library SafeERC20 {
 
 //
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -990,7 +990,7 @@ abstract contract Ownable is Context {
 // File @chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol@v0.3.1
 
 //
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 interface LinkTokenInterface {
     function allowance(address owner, address spender)
@@ -1045,7 +1045,7 @@ interface LinkTokenInterface {
 // File contracts/mocks/tokens/Land.sol
 
 //
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 contract Land is ERC721Enumerable, Ownable {
     using SafeERC20 for IERC20;

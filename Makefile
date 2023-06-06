@@ -39,7 +39,7 @@ size:
 
 .PHONY: build
 build: clean
-	yarn build
+	yarn build --network ${NETWORK}
 
 .PHONY: doc
 doc:

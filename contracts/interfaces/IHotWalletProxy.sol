@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity 0.8.17;
 
 interface IHotWalletProxy {
     function setHotWallet(

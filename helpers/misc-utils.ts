@@ -18,6 +18,8 @@ import {
   HARDHAT_CHAINID,
   MAINNET_CHAINID,
   MOONBEAM_CHAINID,
+  ZKSYNC_CHAINID,
+  ZKSYNC_GOERLI_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -44,12 +46,14 @@ export const isLocalTestnet = (): boolean => {
 export const isPublicTestnet = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
-    [GOERLI_CHAINID, ARBITRUM_GOERLI_CHAINID].includes(
+    [GOERLI_CHAINID, ARBITRUM_GOERLI_CHAINID, ZKSYNC_GOERLI_CHAINID].includes(
       DRE.network.config.chainId!
     ) ||
-    [eEthereumNetwork.goerli, eEthereumNetwork.arbitrumGoerli].includes(
-      FORK as eEthereumNetwork
-    )
+    [
+      eEthereumNetwork.goerli,
+      eEthereumNetwork.arbitrumGoerli,
+      eEthereumNetwork.zksyncGoerli,
+    ].includes(FORK as eEthereumNetwork)
   );
 };
 
@@ -79,6 +83,14 @@ export const isEthereum = (): boolean => {
   return (
     [MAINNET_CHAINID].includes(DRE.network.config.chainId!) ||
     [eEthereumNetwork.mainnet].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isZKSync = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [ZKSYNC_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.zksync].includes(FORK as eEthereumNetwork)
   );
 };
 
