@@ -11,6 +11,7 @@ import {
   MainnetOracleConfig,
   MoonbeamOracleConfig,
   TestnetOracleConfig,
+  ZkSyncOracleConfig,
 } from "./oracle";
 import {
   strategyDAI,
@@ -384,7 +385,7 @@ export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
   },
   Mocks: MocksUSDConfig,
-  Oracle: ArbitrumOracleConfig,
+  Oracle: ZkSyncOracleConfig,
 };
 
 export const ArbitrumParaSpaceConfig: IParaSpaceConfiguration = {
@@ -552,7 +553,7 @@ export const ZkSyncParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
   },
   Mocks: undefined,
-  Oracle: ArbitrumOracleConfig,
+  Oracle: ZkSyncOracleConfig,
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
     Multisig: MULTI_SIG || "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
