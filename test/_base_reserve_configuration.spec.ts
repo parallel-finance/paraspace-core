@@ -12,7 +12,6 @@ import {
   MintableERC20__factory,
   MockReserveConfiguration,
   MockReserveInterestRateStrategy__factory,
-  PoolCore__factory,
   PToken__factory,
   VariableDebtToken__factory,
 } from "../types";
@@ -21,7 +20,11 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {getFirstSigner, getTimeLockProxy} from "../helpers/contracts-getters";
+import {
+  getContractFactory,
+  getFirstSigner,
+  getTimeLockProxy,
+} from "../helpers/contracts-getters";
 import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {BigNumberish, utils} from "ethers";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
@@ -667,9 +670,8 @@ describe("ReserveConfiguration", async () => {
     const coreLibraries = await deployPoolCoreLibraries(false);
     const timeLock = await getTimeLockProxy();
 
-    const NEW_POOL_IMPL_ARTIFACT = await new PoolCore__factory(
-      coreLibraries,
-      await getFirstSigner()
+    const NEW_POOL_IMPL_ARTIFACT = await (
+      await getContractFactory("PoolCore")
     ).deploy(addressesProvider.address, timeLock.address);
 
     const xTokenImp = await new PToken__factory(await getFirstSigner()).deploy(

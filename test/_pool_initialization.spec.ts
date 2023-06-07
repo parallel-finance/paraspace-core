@@ -3,9 +3,11 @@ import {utils} from "ethers";
 import {ZERO_ADDRESS} from "../helpers/constants";
 import {deployPoolCoreLibraries} from "../helpers/contracts-deployments";
 import {ProtocolErrors} from "../helpers/types";
-import {PoolCore__factory} from "../types";
 import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {getFirstSigner, getTimeLockProxy} from "../helpers/contracts-getters";
+import {
+  getContractFactory,
+  getTimeLockProxy,
+} from "../helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 import {impersonateAddress} from "../helpers/contracts-helpers";
@@ -33,9 +35,8 @@ describe("Pool: Initialization", () => {
     const coreLibraries = await deployPoolCoreLibraries(false);
     const timeLock = await getTimeLockProxy();
 
-    const poolCore = await new PoolCore__factory(
-      coreLibraries,
-      await getFirstSigner()
+    const poolCore = await (
+      await getContractFactory("PoolCore")
     ).deploy(addressesProvider.address, timeLock.address);
 
     await expect(poolCore.initialize(deployer.address)).to.be.revertedWith(
