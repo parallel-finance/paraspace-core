@@ -1,11 +1,11 @@
-import {Overrides} from "@ethersproject/contracts";
 import dotenv from "dotenv";
-import {ethers} from "ethers";
+import {BigNumberish, ethers} from "ethers";
 import fs from "fs";
 import {HttpNetworkAccountsUserConfig} from "hardhat/types";
 import {input} from "./wallet-helpers";
 import {version} from "../package.json";
 import git from "git-rev-sync";
+import {AccessListish} from "ethers/lib/utils";
 
 dotenv.config();
 
@@ -90,6 +90,18 @@ export const DEPLOYER: HttpNetworkAccountsUserConfig = DEPLOYER_PRIVATE_KEY
 
 export const BLOCKSCOUT_DISABLE_INDEXER =
   process.env.BLOCKSCOUT_DISABLE_INDEXER == "false" ? false : true;
+
+export interface Overrides {
+  gasLimit?: BigNumberish;
+  gasPrice?: BigNumberish;
+  maxFeePerGas?: BigNumberish;
+  maxPriorityFeePerGas?: BigNumberish;
+  nonce?: BigNumberish;
+  type?: number;
+  accessList?: AccessListish;
+  customData?: Record<string, any>;
+  ccipReadEnabled?: boolean;
+}
 
 export const GLOBAL_OVERRIDES: Overrides = {
   // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
