@@ -395,6 +395,10 @@ deploy-timelock:
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
 
+.PHONY: deploy-all-libraries
+deploy-all-libraries:
+	make TASK_NAME=deploy:all-libraries run-task
+
 .PHONY: ad-hoc
 ad-hoc:
 	make SCRIPT_PATH=./scripts/dev/1.ad-hoc.ts run

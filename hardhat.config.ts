@@ -71,9 +71,6 @@ const hardhatConfig: HardhatUserConfig = {
         "contracts/protocol/libraries/logic/PositionMoverLogic.sol": {
           PositionMoverLogic: ZERO_ADDRESS,
         },
-        "contracts/protocol/libraries/logic/ReserveLogic.sol": {
-          ReserveLogic: ZERO_ADDRESS,
-        },
         "contracts/protocol/libraries/logic/PoolLogic.sol": {
           PoolLogic: ZERO_ADDRESS,
         },
