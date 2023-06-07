@@ -1,4 +1,5 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
+import {Libraries} from "hardhat/types";
 
 export enum AssetType {
   ERC20 = 0,
@@ -60,9 +61,9 @@ export type ConstructorArgs = (
   | boolean[]
 )[];
 
-export type LibraryAddresses = {[key: string]: string};
+export type LibraryAddresses = Libraries;
 
-export type ParaSpaceLibraryAddresses = any;
+export type ParaSpaceLibraryAddresses = Libraries;
 
 export enum eEthereumNetwork {
   kovan = "kovan",

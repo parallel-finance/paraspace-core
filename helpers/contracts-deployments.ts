@@ -192,7 +192,7 @@ import * as nonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/con
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import * as uniSwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
 import {Contract} from "ethers";
-import {Address} from "hardhat-deploy/dist/types";
+import {Address, Libraries} from "hardhat-deploy/dist/types";
 
 import {parseEther} from "ethers/lib/utils";
 import {pick, upperFirst} from "lodash";
@@ -248,7 +248,7 @@ export const deployPoolConfigurator = async (verify?: boolean) => {
       configuratorLogic.address,
   };
   return withSaveAndVerify(
-    await getContractFactory("PoolConfigurator"),
+    await getContractFactory("PoolConfigurator", libraries),
     eContractid.PoolConfiguratorImpl,
     [],
     verify,
@@ -282,11 +282,11 @@ export const deployBorrowLogic = async (verify?: boolean) =>
   ) as Promise<BorrowLogic>;
 
 export const deployLiquidationLogic = async (
-  libraries: any,
+  libraries: Libraries,
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await getContractFactory("LiquidationLogic"),
+    await getContractFactory("LiquidationLogic", libraries),
     eContractid.LiquidationLogic,
     [],
     verify,
@@ -311,19 +311,21 @@ export const deployPoolLogic = async (verify?: boolean) =>
   ) as Promise<PoolLogic>;
 
 export const deployPositionMoverLogic = async (
-  libraries: any,
+  libraries: Libraries,
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await getContractFactory("PositionMoverLogic"),
+    await getContractFactory("PositionMoverLogic", libraries),
     eContractid.PositionMoverLogic,
     [],
-    verify
+    verify,
+    false,
+    libraries
   ) as Promise<PositionMoverLogic>;
 
 export const deployPoolCoreLibraries = async (
   verify?: boolean
-): Promise<any> => {
+): Promise<Libraries> => {
   const supplyLogic = await deploySupplyLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
@@ -355,7 +357,7 @@ export const deployPoolCore = async (provider: string, verify?: boolean) => {
   const {poolCoreSelectors} = getPoolSignatures();
 
   const poolCore = (await withSaveAndVerify(
-    await getContractFactory("PoolCore"),
+    await getContractFactory("PoolCore", coreLibraries),
     eContractid.PoolCoreImpl,
     [
       provider,
@@ -399,7 +401,7 @@ export const deployPoolMarketplace = async (
   const {poolMarketplaceSelectors} = getPoolSignatures();
 
   const poolMarketplace = (await withSaveAndVerify(
-    await getContractFactory("PoolMarketplace"),
+    await getContractFactory("PoolMarketplace", marketplaceLibraries),
     eContractid.PoolMarketplaceImpl,
     [provider],
     verify,
@@ -438,7 +440,7 @@ export const deployPoolApeStaking = async (
   const config = getParaSpaceConfig();
   const treasuryAddress = config.Treasury;
   const poolApeStaking = (await withSaveAndVerify(
-    await getContractFactory("PoolApeStaking"),
+    await getContractFactory("PoolApeStaking", apeStakingLibraries),
     eContractid.PoolApeStakingImpl,
     [
       provider,
@@ -476,7 +478,7 @@ export const deployPoolParameters = async (
   };
 
   const poolParameters = (await withSaveAndVerify(
-    await getContractFactory("PoolParameters"),
+    await getContractFactory("PoolParameters", parametersLibraries),
     eContractid.PoolParametersImpl,
     [provider],
     verify,
@@ -519,25 +521,29 @@ export const deployPoolPositionMover = async (
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
-  const positionMoverLibraries = {
+  const positionMoverLogicLibraries = {
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
       supplyLogic.address,
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
       borrowLogic.address,
   };
   const positionMoverLogic = await deployPositionMoverLogic(
-    positionMoverLibraries,
+    positionMoverLogicLibraries,
     verify
   );
 
+  const positionMoverLibraries = {
+    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
+      positionMoverLogic.address,
+  };
   const {poolPositionMoverSelectors} = await getPoolSignatures();
   const poolPositionMover = (await withSaveAndVerify(
-    await getContractFactory("PoolPositionMover"),
+    await getContractFactory("PoolPositionMover", positionMoverLibraries),
     eContractid.PoolPositionMoverImpl,
     [provider, bendDaoLendPoolLoan, bendDaoLendPool],
     verify,
     false,
-    undefined,
+    positionMoverLibraries,
     poolPositionMoverSelectors
   )) as PoolPositionMover;
 
@@ -550,9 +556,9 @@ export const deployPoolPositionMover = async (
 };
 
 export const deployPoolMarketplaceLibraries = async (
-  coreLibraries: any,
+  coreLibraries: Libraries,
   verify?: boolean
-): Promise<any> => {
+): Promise<Libraries> => {
   const marketplaceLogic = await deployMarketplaceLogic(
     pick(coreLibraries, [
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
@@ -568,7 +574,7 @@ export const deployPoolMarketplaceLibraries = async (
 
 export const deployPoolParametersLibraries = async (
   verify?: boolean
-): Promise<any> => {
+): Promise<Libraries> => {
   const poolLogic = await deployPoolLogic(verify);
   return {
     ["contracts/protocol/libraries/logic/PoolLogic.sol:PoolLogic"]:
@@ -698,7 +704,7 @@ export const deployPoolComponents = async (
   } = getPoolSignatures();
 
   const poolCore = (await withSaveAndVerify(
-    await getContractFactory("PoolCore"),
+    await getContractFactory("PoolCore", coreLibraries),
     eContractid.PoolCoreImpl,
     [
       provider,
@@ -714,7 +720,7 @@ export const deployPoolComponents = async (
   )) as PoolCore;
 
   const poolParameters = (await withSaveAndVerify(
-    await getContractFactory("PoolParameters"),
+    await getContractFactory("PoolParameters", parametersLibraries),
     eContractid.PoolParametersImpl,
     [provider],
     verify,
@@ -724,7 +730,7 @@ export const deployPoolComponents = async (
   )) as PoolParameters;
 
   const poolMarketplace = (await withSaveAndVerify(
-    await getContractFactory("PoolMarketplace"),
+    await getContractFactory("PoolMarketplace", marketplaceLibraries),
     eContractid.PoolMarketplaceImpl,
     [provider],
     verify,
@@ -737,7 +743,7 @@ export const deployPoolComponents = async (
   const treasuryAddress = config.Treasury;
   const poolApeStaking = allTokens.APE
     ? ((await withSaveAndVerify(
-        await getContractFactory("PoolApeStaking"),
+        await getContractFactory("PoolApeStaking", apeStakingLibraries),
         eContractid.PoolApeStakingImpl,
         [
           provider,
@@ -931,7 +937,7 @@ export const deployGenericNTokenImpl = async (
       mintableERC721Logic,
   };
   return withSaveAndVerify(
-    await getContractFactory("NToken"),
+    await getContractFactory("NToken", libraries),
     eContractid.NTokenImpl,
     [poolAddress, atomicPricing, delegationRegistry],
     verify,
@@ -954,7 +960,7 @@ export const deployUniswapV3NTokenImpl = async (
       mintableERC721Logic,
   };
   return withSaveAndVerify(
-    await getContractFactory("NTokenUniswapV3"),
+    await getContractFactory("NTokenUniswapV3", libraries),
     eContractid.NTokenUniswapV3Impl,
     [poolAddress, delegationRegistry],
     verify,
@@ -977,7 +983,7 @@ export const deployGenericMoonbirdNTokenImpl = async (
       mintableERC721Logic,
   };
   return withSaveAndVerify(
-    await getContractFactory("NTokenMoonBirds"),
+    await getContractFactory("NTokenMoonBirds", libraries),
     eContractid.NTokenMoonBirdsImpl,
     [poolAddress, delegationRegistry],
     verify,
@@ -1675,10 +1681,13 @@ export const deployX2Y2Adapter = async (
 };
 
 export const deployMarketplaceLogic = async (
-  libraries: any,
+  libraries: Libraries,
   verify?: boolean
 ) => {
-  const marketplaceLogic = await getContractFactory("MarketplaceLogic");
+  const marketplaceLogic = await getContractFactory(
+    "MarketplaceLogic",
+    libraries
+  );
 
   return withSaveAndVerify(
     marketplaceLogic,
@@ -2237,7 +2246,7 @@ export const deployNTokenBAYCImpl = async (
   };
 
   return withSaveAndVerify(
-    await getContractFactory("NTokenBAYC"),
+    await getContractFactory("NTokenBAYC", libraries),
     eContractid.NTokenBAYCImpl,
     [poolAddress, apeCoinStaking, delegationRegistry],
     verify,
@@ -2266,7 +2275,7 @@ export const deployNTokenMAYCImpl = async (
       mintableERC721Logic,
   };
   return withSaveAndVerify(
-    await getContractFactory("NTokenMAYC"),
+    await getContractFactory("NTokenMAYC", libraries),
     eContractid.NTokenMAYCImpl,
     [poolAddress, apeCoinStaking, delegationRegistry],
     verify,
@@ -2291,7 +2300,7 @@ export const deployNTokenBAKCImpl = async (
       mintableERC721Logic,
   };
   return withSaveAndVerify(
-    await getContractFactory("NTokenBAKC"),
+    await getContractFactory("NTokenBAKC", libraries),
     eContractid.NTokenBAKCImpl,
     [poolAddress, apeCoinStaking, nBAYC, nMAYC, delegationRegistry],
     verify,
@@ -2380,7 +2389,10 @@ export const deployBlurExchangeImpl = async (verify?: boolean) => {
     ["contracts/dependencies/blur-exchange/MerkleVerifier.sol:MerkleVerifier"]:
       merkleVerifier.address,
   };
-  const blurExchange = await getContractFactory("BlurExchange");
+  const blurExchange = await getContractFactory(
+    "BlurExchange",
+    blurExchangeLibraries
+  );
 
   return withSaveAndVerify(
     blurExchange,
@@ -2853,7 +2865,7 @@ export const deployOtherdeedNTokenImpl = async (
       mintableERC721Logic,
   };
   return withSaveAndVerify(
-    await getContractFactory("NTokenOtherdeed"),
+    await getContractFactory("NTokenOtherdeed", libraries),
     eContractid.NTokenOtherdeedImpl,
     [poolAddress, warmWallet, delegationRegistryAddress],
     verify,
@@ -2879,7 +2891,7 @@ export const deployChromieSquiggleNTokenImpl = async (
   };
 
   return withSaveAndVerify(
-    await getContractFactory("NTokenChromieSquiggle"),
+    await getContractFactory("NTokenChromieSquiggle", libraries),
     eContractid.NTokenChromieSquiggleImpl,
     [poolAddress, delegationRegistryAddress, startTokenId, endTokenId],
     verify,
@@ -2902,7 +2914,7 @@ export const deployStakefishNTokenImpl = async (
       mintableERC721Logic,
   };
   return withSaveAndVerify(
-    await getContractFactory("NTokenStakefish"),
+    await getContractFactory("NTokenStakefish", libraries),
     eContractid.NTokenStakefishImpl,
     [poolAddress, delegationRegistryAddress],
     verify,
@@ -3103,7 +3115,7 @@ export const deployMockNToken = async (
   };
 
   const instance = (await withSaveAndVerify(
-    await getContractFactory("MockNToken"),
+    await getContractFactory("MockNToken", libraries),
     eContractid.MockNToken,
     [args[0], ZERO_ADDRESS, false],
     verify

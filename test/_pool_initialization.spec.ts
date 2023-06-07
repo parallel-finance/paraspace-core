@@ -36,7 +36,7 @@ describe("Pool: Initialization", () => {
     const timeLock = await getTimeLockProxy();
 
     const poolCore = await (
-      await getContractFactory("PoolCore")
+      await getContractFactory("PoolCore", coreLibraries)
     ).deploy(addressesProvider.address, timeLock.address);
 
     await expect(poolCore.initialize(deployer.address)).to.be.revertedWith(

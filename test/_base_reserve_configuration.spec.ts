@@ -671,7 +671,7 @@ describe("ReserveConfiguration", async () => {
     const timeLock = await getTimeLockProxy();
 
     const NEW_POOL_IMPL_ARTIFACT = await (
-      await getContractFactory("PoolCore")
+      await getContractFactory("PoolCore", coreLibraries)
     ).deploy(addressesProvider.address, timeLock.address);
 
     const xTokenImp = await new PToken__factory(await getFirstSigner()).deploy(

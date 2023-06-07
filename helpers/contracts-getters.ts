@@ -104,6 +104,7 @@ import {
   ERC721TokenMap,
   impersonateAddress,
   getParaSpaceAdmins,
+  normalizeLibraryAddresses,
 } from "./contracts-helpers";
 import {DRE, getDb, getParaSpaceConfig} from "./misc-utils";
 import {
@@ -123,6 +124,8 @@ import * as zk from "zksync-web3";
 import {Deployer} from "@matterlabs/hardhat-zksync-deploy";
 import {Artifact} from "hardhat/types";
 import {ContractFactory} from "ethers";
+import {solidityKeccak256} from "ethers/lib/utils";
+import {Libraries} from "hardhat-deploy/dist/types";
 
 export const getFirstSigner = async () => {
   if (DRE.network.zksync) {
@@ -142,7 +145,85 @@ export const getFirstSigner = async () => {
   }
 };
 
-export const getContractFactory = async (name: string) => {
+function linkRawLibrary(
+  bytecode: string,
+  libraryName: string,
+  libraryAddress: string
+): string {
+  const address = libraryAddress.replace("0x", "");
+  let encodedLibraryName;
+  if (libraryName.startsWith("$") && libraryName.endsWith("$")) {
+    encodedLibraryName = libraryName.slice(1, libraryName.length - 1);
+  } else {
+    encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
+      2,
+      36
+    );
+  }
+  const pattern = new RegExp(`_+\\$${encodedLibraryName}\\$_+`, "g");
+  if (!pattern.exec(bytecode)) {
+    throw new Error(
+      `Can't link '${libraryName}' (${encodedLibraryName}) in \n----\n ${bytecode}\n----\n`
+    );
+  }
+  return bytecode.replace(pattern, address);
+}
+
+function linkRawLibraries(bytecode: string, libraries: Libraries): string {
+  for (const libName of Object.keys(libraries)) {
+    const libAddress = libraries[libName];
+    bytecode = linkRawLibrary(bytecode, libName, libAddress);
+  }
+  return bytecode;
+}
+
+function linkLibraries(
+  artifact: {
+    bytecode: string;
+    linkReferences?: {
+      [libraryFileName: string]: {
+        [libraryName: string]: Array<{length: number; start: number}>;
+      };
+    };
+  },
+  libraries?: Libraries
+) {
+  let bytecode = artifact.bytecode;
+
+  if (libraries) {
+    if (artifact.linkReferences) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for (const [, fileReferences] of Object.entries(
+        artifact.linkReferences
+      )) {
+        for (const [libName, fixups] of Object.entries(fileReferences)) {
+          const addr = libraries[libName];
+          if (addr === undefined) {
+            continue;
+          }
+
+          for (const fixup of fixups) {
+            bytecode =
+              bytecode.substr(0, 2 + fixup.start * 2) +
+              addr.substr(2) +
+              bytecode.substr(2 + (fixup.start + fixup.length) * 2);
+          }
+        }
+      }
+    } else {
+      bytecode = linkRawLibraries(bytecode, libraries);
+    }
+  }
+
+  // TODO return libraries object with path name <filepath.sol>:<name> for names
+
+  return bytecode;
+}
+
+export const getContractFactory = async (
+  name: string,
+  libraries?: Libraries
+) => {
   let artifact: Artifact;
   const signer = await getFirstSigner();
   if (DRE.network.zksync) {
@@ -150,7 +231,14 @@ export const getContractFactory = async (name: string) => {
     artifact = await deployer.loadArtifact(name);
   } else {
     artifact = await DRE.artifacts.readArtifact(name);
+    if (libraries) {
+      artifact.bytecode = linkLibraries(
+        artifact,
+        normalizeLibraryAddresses(libraries)
+      );
+    }
   }
+
   if (DRE.network.zksync) {
     return new zk.ContractFactory(
       artifact.abi,

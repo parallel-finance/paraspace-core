@@ -735,7 +735,7 @@ describe("Upgradeability", () => {
       const timeLock = await getTimeLockProxy();
 
       const poolCoreV2 = await (
-        await getContractFactory("PoolCoreV2")
+        await getContractFactory("PoolCoreV2", coreLibraries)
       ).deploy(addressesProvider.address, timeLock.address);
 
       await waitForTx(
