@@ -37,7 +37,7 @@ describe("Pool: Initialization", () => {
 
     const poolCore = await (
       await getContractFactory("PoolCore", coreLibraries)
-    ).deploy(addressesProvider.address, timeLock.address);
+    ).factory.deploy(addressesProvider.address, timeLock.address);
 
     await expect(poolCore.initialize(deployer.address)).to.be.revertedWith(
       INVALID_ADDRESSES_PROVIDER

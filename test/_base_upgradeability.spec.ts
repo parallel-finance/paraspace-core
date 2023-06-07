@@ -736,7 +736,7 @@ describe("Upgradeability", () => {
 
       const poolCoreV2 = await (
         await getContractFactory("PoolCoreV2", coreLibraries)
-      ).deploy(addressesProvider.address, timeLock.address);
+      ).factory.deploy(addressesProvider.address, timeLock.address);
 
       await waitForTx(
         await addressesProvider.updatePoolImpl(

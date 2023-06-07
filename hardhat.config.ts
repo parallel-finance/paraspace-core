@@ -120,7 +120,7 @@ const hardhatConfig: HardhatUserConfig = {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
     compilers: [
       {
-        version: COMPILER_VERSION,
+        version: COMPILER_VERSION.split("+")[0],
         settings: {
           optimizer: {
             enabled: true,

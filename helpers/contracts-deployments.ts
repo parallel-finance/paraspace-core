@@ -17,7 +17,6 @@ import {
   CApeDebtToken,
   CLCETHSynchronicityPriceAdapter,
   CLExchangeRateSynchronicityPriceAdapter,
-  CLExchangeRateSynchronicityPriceAdapter__factory,
   CLFixedPriceSynchronicityPriceAdapter,
   CloneX,
   CLwstETHSynchronicityPriceAdapter,
@@ -42,11 +41,9 @@ import {
   HotWalletProxy,
   InitializableAdminUpgradeabilityProxy,
   InitializableImmutableAdminUpgradeabilityProxy,
-  InitializableImmutableAdminUpgradeabilityProxy__factory,
   Land,
   LiquidationLogic,
   LooksRareAdapter,
-  LooksRareAdapter__factory,
   LooksRareExchange,
   MarketplaceLogic,
   Meebits,
@@ -137,7 +134,6 @@ import {
   UiIncentiveDataProvider,
   UiPoolDataProvider,
   UniswapV3Factory,
-  UniswapV3Factory__factory,
   UniswapV3OracleWrapper,
   UniswapV3TwapOracleWrapper,
   UserFlashclaimRegistry,
@@ -188,9 +184,7 @@ import {
 } from "./types";
 
 import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json";
-import * as nonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
-import * as uniSwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
 import {Contract} from "ethers";
 import {Address, Libraries} from "hardhat-deploy/dist/types";
 
@@ -1484,9 +1478,7 @@ export const deployInitializableImmutableAdminUpgradeabilityProxy = async (
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new InitializableImmutableAdminUpgradeabilityProxy__factory(
-      await getFirstSigner()
-    ),
+    await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.InitializableImmutableAdminUpgradeabilityProxy,
     [...args],
     verify
@@ -1545,19 +1537,14 @@ export const deployWETHGatewayProxy = async (
   wethGateway: string,
   initData: string,
   verify?: boolean
-) => {
-  const wethGatewayProxy =
-    new InitializableImmutableAdminUpgradeabilityProxy__factory(
-      await getFirstSigner()
-    );
-  return withSaveAndVerify(
-    wethGatewayProxy,
+) =>
+  withSaveAndVerify(
+    await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.WETHGatewayProxy,
     [admin, wethGateway, initData],
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
-};
 
 export const deployMeebits = async (
   args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
@@ -1698,19 +1685,14 @@ export const deployPunkGatewayProxy = async (
   punkGateway: string,
   initData: string,
   verify?: boolean
-) => {
-  const punkGatewayProxy =
-    new InitializableImmutableAdminUpgradeabilityProxy__factory(
-      await getFirstSigner()
-    );
-  return withSaveAndVerify(
-    punkGatewayProxy,
+) =>
+  withSaveAndVerify(
+    await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.WPunkGatewayProxy,
     [admin, punkGateway, initData],
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
-};
 
 export const deploySeaportAdapter = async (
   provider: tEthereumAddress,
@@ -1730,18 +1712,13 @@ export const deployLooksRareAdapter = async (
   provider: tEthereumAddress,
   strategy: tEthereumAddress,
   verify?: boolean
-) => {
-  const looksRareAdapter = new LooksRareAdapter__factory(
-    await getFirstSigner()
-  );
-
-  return withSaveAndVerify(
-    looksRareAdapter,
+) =>
+  withSaveAndVerify(
+    await getContractFactory("LooksRareAdapter"),
     eContractid.LooksRareAdapter,
     [provider, strategy],
     verify
   ) as Promise<LooksRareAdapter>;
-};
 
 export const deployX2Y2Adapter = async (
   provider: tEthereumAddress,
@@ -1926,28 +1903,25 @@ export const deployERC721Delegate = async (verify?: boolean) =>
     verify
   ) as Promise<ERC721Delegate>;
 
-export const deployUniswapV3Factory = async (args: [], verify?: boolean) => {
-  const uniswapV3Factory = new UniswapV3Factory__factory(
-    await getFirstSigner()
-  );
-  return withSaveAndVerify(
-    uniswapV3Factory,
+export const deployUniswapV3Factory = async (args: [], verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("UniswapV3Factory"),
     eContractid.UniswapV3Factory,
     [...args],
     verify
   ) as Promise<UniswapV3Factory>;
-};
 
 export const deployNonfungibleTokenPositionDescriptor = async (
   args: [string, string],
   verify?: boolean
 ) => {
-  const nFTDescriptorFactory = (
-    await DRE.ethers.getContractFactoryFromArtifact(nFTDescriptor)
-  ).connect(await getFirstSigner());
-
   const nftDescriptorLibraryContract = await withSaveAndVerify(
-    nFTDescriptorFactory,
+    {
+      artifact: nFTDescriptor,
+      factory: (
+        await DRE.ethers.getContractFactoryFromArtifact(nFTDescriptor)
+      ).connect(await getFirstSigner()),
+    },
     eContractid.NFTDescriptor,
     [],
     verify
@@ -1955,17 +1929,19 @@ export const deployNonfungibleTokenPositionDescriptor = async (
   const libraries = {
     NFTDescriptor: nftDescriptorLibraryContract.address,
   };
-  const nonfungibleTokenPositionDescriptorFactory = (
-    await DRE.ethers.getContractFactoryFromArtifact(
-      nonfungibleTokenPositionDescriptor,
-      {
-        libraries,
-      }
-    )
-  ).connect(await getFirstSigner());
 
   return withSaveAndVerify(
-    nonfungibleTokenPositionDescriptorFactory,
+    {
+      artifact: nonfungibleTokenPositionDescriptor,
+      factory: (
+        await DRE.ethers.getContractFactoryFromArtifact(
+          nonfungibleTokenPositionDescriptor,
+          {
+            libraries,
+          }
+        )
+      ).connect(await getFirstSigner()),
+    },
     eContractid.NonfungibleTokenPositionDescriptor,
     [...args],
     verify,
@@ -2004,34 +1980,24 @@ export const deployUniswapV3TwapOracleWrapper = async (
 export const deployNonfungiblePositionManager = async (
   args: [string, string, string],
   verify?: boolean
-) => {
-  const nonfungiblePositionManagerFactory = (
-    await DRE.ethers.getContractFactoryFromArtifact(nonfungiblePositionManager)
-  ).connect(await getFirstSigner());
-
-  return withSaveAndVerify(
-    nonfungiblePositionManagerFactory,
+) =>
+  withSaveAndVerify(
+    await getContractFactory("NonfungiblePositionManager"),
     eContractid.UniswapV3,
     [...args],
     verify
   );
-};
 
 export const deployUniswapSwapRouter = async (
   args: [string, string],
   verify?: boolean
-) => {
-  const swapRouter = (
-    await DRE.ethers.getContractFactoryFromArtifact(uniSwapRouter)
-  ).connect(await getFirstSigner());
-
-  return withSaveAndVerify(
-    swapRouter,
+) =>
+  withSaveAndVerify(
+    await getContractFactory("SwapRouter"),
     eContractid.UniswapV3SwapRouter,
     [...args],
     verify
   );
-};
 
 export const deployStETH = async (verify?: boolean): Promise<StETHMocked> =>
   withSaveAndVerify(
@@ -2160,18 +2126,14 @@ export const deployUserFlashClaimRegistryProxy = async (
   // eslint-disable-next-line
   initData: any,
   verify?: boolean
-) => {
-  const proxy = new InitializableImmutableAdminUpgradeabilityProxy__factory(
-    await getFirstSigner()
-  );
-  return withSaveAndVerify(
-    proxy,
+) =>
+  withSaveAndVerify(
+    await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.UserFlashClaimRegistryProxy,
     [admin, registryImpl, initData],
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
-};
 
 export const deployBAYCSewerPassClaim = async (
   bayc: string,
@@ -2487,12 +2449,8 @@ export const deployBlurExchangeProxy = async (
   initData: string,
   verify?: boolean
 ) => {
-  const blurExchangeProxy =
-    new InitializableImmutableAdminUpgradeabilityProxy__factory(
-      await getFirstSigner()
-    );
   return withSaveAndVerify(
-    blurExchangeProxy,
+    await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.BlurExchangeProxy,
     [admin, blurExchange, initData],
     verify,
@@ -2800,9 +2758,7 @@ export const deployExchangeRateSynchronicityPriceAdapter = async (
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new CLExchangeRateSynchronicityPriceAdapter__factory(
-      await getFirstSigner()
-    ),
+    await getContractFactory("CLExchangeRateSynchronicityPriceAdapter"),
     eContractid.Aggregator.concat(upperFirst(symbol)),
     [asset],
     verify
