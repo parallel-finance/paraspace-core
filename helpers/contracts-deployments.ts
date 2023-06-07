@@ -203,14 +203,13 @@ export const deployPoolAddressesProvider = async (
   marketId: string,
   owner: string,
   verify?: boolean
-) => {
+) =>
   withSaveAndVerify(
     await getContractFactory("PoolAddressesProvider"),
     eContractid.PoolAddressesProvider,
     [marketId, owner],
     verify
   ) as Promise<PoolAddressesProvider>;
-};
 
 export const deployPoolAddressesProviderRegistry = async (
   owner: string,
