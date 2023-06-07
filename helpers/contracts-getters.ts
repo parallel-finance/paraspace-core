@@ -118,19 +118,26 @@ import {
   ISwapRouter__factory,
 } from "../types";
 import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
+import {accounts} from "../wallets";
+import * as zk from "zksync-web3";
 
 export const getFirstSigner = async () => {
-  if (!RPC_URL) {
-    return first(await getEthersSigners())!;
+  if (DRE.network.zksync) {
+    return new zk.Wallet(
+      last(accounts)!.privateKey,
+      DRE.ethers.provider as zk.Provider
+    );
+  } else {
+    if (!RPC_URL) {
+      return first(await getEthersSigners())!;
+    }
+
+    const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
+    return (
+      await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
+    ).signer;
   }
-
-  const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
-  return (
-    await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
-  ).signer;
 };
-
-export const getLastSigner = async () => last(await getEthersSigners())!;
 
 export const getPoolAddressesProvider = async (address?: tEthereumAddress) => {
   return await PoolAddressesProvider__factory.connect(

@@ -19,19 +19,18 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
-
+	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} --no-compile
 .PHONY: local-test
 local-test:
 	make MOCHA_JOBS=0 DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} --no-compile
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} --no-compile
 
 .PHONY: size
 size:
@@ -52,7 +51,7 @@ lint:
 
 .PHONY: coverage
 coverage:
-	yarn coverage
+	yarn coverage --no-compile
 
 .PHONY: format
 format:
@@ -286,11 +285,11 @@ test-stakefish-nft:
 
 .PHONY: run
 run:
-	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK) --show-stack-traces
+	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK) --show-stack-traces --no-compile
 
 .PHONY: run-task
 run-task:
-	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARG0) ${ARG1} ${ARG2} ${ARG3} --network $(NETWORK)
+	DB_PATH=deployed-contracts.json npx hardhat $(TASK_NAME) $(ARG0) ${ARG1} ${ARG2} ${ARG3} --network $(NETWORK) --no-compile
 
 .PHONY: print
 print:
