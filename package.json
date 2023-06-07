@@ -28,6 +28,7 @@
     "@looksrare/sdk": "^0.7.4",
     "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
     "@matterlabs/hardhat-zksync-solc": "^0.3.17",
+    "@matterlabs/hardhat-zksync-verify": "^0.1.7",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-etherscan": "^3.1.0",

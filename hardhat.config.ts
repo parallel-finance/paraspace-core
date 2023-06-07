@@ -37,6 +37,7 @@ import "solidity-coverage";
 import "hardhat-contract-sizer";
 import "@matterlabs/hardhat-zksync-deploy";
 import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-verify";
 import {eEthereumNetwork} from "./helpers/types";
 
 require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
@@ -184,6 +185,8 @@ const hardhatConfig: HardhatUserConfig = {
       accounts: DEPLOYER,
       ethNetwork: "mainnet",
       zksync: true,
+      verifyURL:
+        "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
     },
     zksyncGoerli: {
       chainId: CHAINS_ID[eEthereumNetwork.zksyncGoerli],
@@ -191,6 +194,8 @@ const hardhatConfig: HardhatUserConfig = {
       accounts: DEPLOYER,
       ethNetwork: "goerli",
       zksync: true,
+      verifyURL:
+        "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
     },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],
