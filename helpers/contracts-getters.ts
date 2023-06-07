@@ -120,6 +120,9 @@ import {
 import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
 import {accounts} from "../wallets";
 import * as zk from "zksync-web3";
+import {Deployer} from "@matterlabs/hardhat-zksync-deploy";
+import {Artifact} from "hardhat/types";
+import {ContractFactory} from "ethers";
 
 export const getFirstSigner = async () => {
   if (DRE.network.zksync) {
@@ -136,6 +139,26 @@ export const getFirstSigner = async () => {
     return (
       await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
     ).signer;
+  }
+};
+
+export const getContractFactory = async (name: string) => {
+  let artifact: Artifact;
+  const signer = await getFirstSigner();
+  if (DRE.network.zksync) {
+    const deployer = new Deployer(DRE, signer as zk.Wallet);
+    artifact = await deployer.loadArtifact(name);
+  } else {
+    artifact = await DRE.artifacts.readArtifact(name);
+  }
+  if (DRE.network.zksync) {
+    return new zk.ContractFactory(
+      artifact.abi,
+      artifact.bytecode,
+      signer as zk.Signer
+    );
+  } else {
+    return new ContractFactory(artifact.abi, artifact.bytecode, signer);
   }
 };
 
