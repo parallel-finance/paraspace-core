@@ -343,7 +343,7 @@ ${
   libraries
     ? Object.entries(libraries)
         .map(([k, v]) => `--libraries ${k}:${v}`)
-        .join(" \\")
+        .join(" \\ ")
     : ""
 } \
   --compiler-version v${COMPILER_VERSION}`
