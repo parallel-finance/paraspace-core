@@ -6,6 +6,7 @@ import {input} from "./wallet-helpers";
 import {version} from "../package.json";
 import git from "git-rev-sync";
 import {AccessListish} from "ethers/lib/utils";
+import {ZERO_ADDRESS} from "./constants";
 
 dotenv.config();
 
@@ -134,7 +135,7 @@ export const MULTI_SEND_CHUNK_SIZE = parseInt(
 export const VERSION = version;
 export const COMMIT = git.short();
 export const COMPILER_OPTIMIZER_RUNS = 800;
-export const COMPILER_VERSION = "v0.8.17+commit.8df45f5f";
+export const COMPILER_VERSION = "0.8.17+commit.8df45f5f";
 export const PKG_DATA = {
   version: VERSION,
   git: {
@@ -165,3 +166,45 @@ export const TIME_LOCK_SIGS = {
   "0xe177246e": "setDelay(uint256)",
   "0x4dd18bf5": "setPendingAdmin(address)",
 };
+
+export const ZK_LIBRARIES_PATH = "zk-libraries.json";
+export const ZK_LIBRARIES = fs.existsSync(ZK_LIBRARIES_PATH)
+  ? JSON.parse(fs.readFileSync(ZK_LIBRARIES_PATH, "utf8"))
+  : {
+      "contracts/protocol/libraries/logic/BorrowLogic.sol": {
+        BorrowLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/SupplyLogic.sol": {
+        SupplyLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/LiquidationLogic.sol": {
+        LiquidationLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/AuctionLogic.sol": {
+        AuctionLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/PositionMoverLogic.sol": {
+        PositionMoverLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/PoolLogic.sol": {
+        PoolLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/MarketplaceLogic.sol": {
+        MarketplaceLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/FlashClaimLogic.sol": {
+        FlashClaimLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/tokenization/libraries/ApeStakingLogic.sol": {
+        ApeStakingLogic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/tokenization/libraries/MintableERC721Logic.sol": {
+        MintableERC721Logic: ZERO_ADDRESS,
+      },
+      "contracts/protocol/libraries/logic/ConfiguratorLogic.sol": {
+        ConfiguratorLogic: ZERO_ADDRESS,
+      },
+      "contracts/dependencies/blur-exchange/MerkleVerifier.sol": {
+        MerkleVerifier: ZERO_ADDRESS,
+      },
+    };

@@ -346,7 +346,7 @@ ${
         .join(" \\")
     : ""
 } \
-  --compiler-version ${COMPILER_VERSION}`
+  --compiler-version v${COMPILER_VERSION}`
     );
   }
 

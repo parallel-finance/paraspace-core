@@ -1,5 +1,9 @@
 import {task} from "hardhat/config";
-import {ETHERSCAN_VERIFICATION} from "../../helpers/hardhat-constants";
+import {
+  ETHERSCAN_VERIFICATION,
+  ZK_LIBRARIES_PATH,
+} from "../../helpers/hardhat-constants";
+import fs from "fs";
 
 task("deploy:all-libraries", "Deploy All Libraries").setAction(
   async (_, DRE) => {
@@ -8,6 +12,6 @@ task("deploy:all-libraries", "Deploy All Libraries").setAction(
       "../../helpers/contracts-deployments"
     );
     const allLibraries = await deployAllLibraries(ETHERSCAN_VERIFICATION);
-    console.log(JSON.stringify(allLibraries, null, 2));
+    fs.writeFileSync(ZK_LIBRARIES_PATH, JSON.stringify(allLibraries));
   }
 );
