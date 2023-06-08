@@ -490,6 +490,7 @@ interface PoolLibraryAddresses {
   ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]: string;
   ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]: string;
   ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]: string;
+  ["contracts/protocol/libraries/logic/SwapLogic.sol:SwapLogic"]: string;
 }
 
 export const deployPoolLibraries = async (
@@ -511,6 +512,15 @@ export const deployPoolLibraries = async (
     {
       ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
         supplyLogic.address,
+    },
+    verify
+  );
+  const swapLogic = await deploySwapLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
     },
     verify
   );
@@ -541,6 +551,8 @@ export const deployPoolLibraries = async (
       flashClaimLogic.address,
     ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]:
       marketplaceLogic.address,
+    ["contracts/protocol/libraries/logic/SwapLogic.sol:SwapLogic"]:
+      swapLogic.address,
   };
 };
 
@@ -920,6 +932,7 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic",
     "contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic",
     "contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic",
+    "contracts/protocol/libraries/logic/SwapLogic.sol:SwapLogic",
   ]);
   const marketplaceLibraries = pick(poolLibraries, [
     "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic",
