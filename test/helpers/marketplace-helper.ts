@@ -304,11 +304,17 @@ export async function executeSeaportBuyWithCredit(
   taker: SignerWithAddress,
   isCollateralSwap = false
 ) {
+  const pool = await getPoolProxy();
   // approve
   await waitForTx(
     await tokenToBuy
       .connect(maker.signer)
       .approve((await getConduit()).address, nftId)
+  );
+  await waitForTx(
+    await tokenToPayWith
+      .connect(taker.signer)
+      .approve((await getConduit()).address, startAmount)
   );
 
   const seaport = await getSeaport();
@@ -321,10 +327,10 @@ export async function executeSeaportBuyWithCredit(
       getOfferOrConsiderationItem(
         1,
         tokenToPayWith.address,
-        nftId,
+        0,
         startAmount,
         endAmount,
-        maker.address
+        isCollateralSwap ? pool.address : maker.address
       ),
     ];
 
@@ -339,11 +345,49 @@ export async function executeSeaportBuyWithCredit(
     );
   };
 
-  const pool = await getPoolProxy();
+  const getBuyOrder = async (): Promise<AdvancedOrder> => {
+    const offers = [
+      getOfferOrConsiderationItem(
+        1,
+        tokenToPayWith.address,
+        0,
+        startAmount,
+        endAmount
+      ),
+    ];
+
+    const considerations = [
+      getOfferOrConsiderationItem(
+        2,
+        tokenToBuy.address,
+        nftId,
+        1,
+        1,
+        pool.address
+      ),
+    ];
+
+    return createSeaportOrder(
+      seaport,
+      taker,
+      offers,
+      considerations,
+      2,
+      (await getPausableZone()).address,
+      await getConduitKey()
+    );
+  };
+
+  const fulfillment = [
+    [[[0, 0]], [[1, 0]]],
+    [[[1, 0]], [[0, 0]]],
+  ].map(([makerArr, considerationArr]) =>
+    toFulfillment(makerArr, considerationArr)
+  );
 
   const encodedData = seaport.interface.encodeFunctionData(
-    "fulfillAdvancedOrder",
-    [await getSellOrder(), [], await getConduitKey(), pool.address]
+    "matchAdvancedOrders",
+    [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
   );
 
   const tx = (await getPoolProxy()).connect(taker.signer).buyWithCredit(
@@ -445,7 +489,7 @@ export async function executeAcceptBidWithCredit(
         toBN(0),
         startAmount,
         endAmount,
-        taker.address
+        isCollateralSwap ? pool.address : taker.address
       ),
     ];
 

@@ -193,6 +193,7 @@ library DataTypes {
         address to;
         uint256 reservesCount;
         address oracle;
+        bool timeLock;
     }
 
     struct ExecuteDecreaseUniswapV3LiquidityParams {
@@ -364,6 +365,7 @@ library DataTypes {
         bytes id;
         OfferItem[] offer;
         ConsiderationItem[] consideration;
+        bool isOpensea;
     }
 
     struct SwapInfo {

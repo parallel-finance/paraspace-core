@@ -27,7 +27,6 @@ import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
-import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
  * @title ReserveLogic library
@@ -1090,6 +1089,13 @@ library ValidationLogic {
             ),
             Errors.INVALID_CREDIT_SIGNATURE
         );
+    }
+
+    function validateAcceptOpenseaBid(
+        DataTypes.ExecuteMarketplaceParams memory params
+    ) internal pure {
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
+        require(params.credit.amount == 0, Errors.INVALID_AMOUNT);
     }
 
     function verifyCreditSignature(

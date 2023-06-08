@@ -35,15 +35,10 @@ contract BlurAdapter is IMarketplace {
             (Input, Input)
         );
         orderInfo.maker = sell.order.trader;
-        orderInfo.taker = buy.order.trader;
 
         require(
             sell.order.matchingPolicy == POLICY_ALLOWED, // must be StandardSaleForFixedPrice matching policy
             Errors.INVALID_MARKETPLACE_ORDER
-        );
-        require(
-            orderInfo.taker == ADDRESSES_PROVIDER.getPool(),
-            Errors.INVALID_ORDER_TAKER
         );
 
         OfferItem[] memory offer = new OfferItem[](1);

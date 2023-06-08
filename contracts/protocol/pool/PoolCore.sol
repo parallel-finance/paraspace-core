@@ -233,7 +233,8 @@ contract PoolCore is
                     tokenIds: tokenIds,
                     to: to,
                     reservesCount: ps._reservesCount,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                    timeLock: true
                 })
             );
     }

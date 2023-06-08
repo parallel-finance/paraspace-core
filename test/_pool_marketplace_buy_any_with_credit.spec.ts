@@ -8,8 +8,10 @@ import {AdvancedOrder} from "../helpers/seaport-helpers/types";
 import {
   getOfferOrConsiderationItem,
   toBN,
+  toFulfillment,
 } from "../helpers/seaport-helpers/encoding";
 import {
+  MAX_UINT_AMOUNT,
   PARASPACE_SEAPORT_ID,
   UNISWAP_V3_SWAP_ADAPTER_ID,
 } from "../helpers/constants";
@@ -123,6 +125,7 @@ describe("Leveraged Buy Any - Positive tests", () => {
       pausableZone,
       seaport,
       pool,
+      variableDebtWeth,
       users: [maker, taker, middleman, platform],
     } = await loadFixture(fixture);
     const payNowNumber = "800";
@@ -150,7 +153,7 @@ describe("Leveraged Buy Any - Positive tests", () => {
       await mayc.connect(maker.signer).approve(conduit.address, nftId)
     );
     await waitForTx(
-      await usdc.connect(taker.signer).approve(pool.address, payNowAmount)
+      await usdc.connect(taker.signer).approve(conduit.address, startAmount)
     );
 
     //before buyWithCredit there is no collateral
@@ -191,26 +194,68 @@ describe("Leveraged Buy Any - Positive tests", () => {
         conduitKey
       );
     };
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          usdc.address,
+          toBN(0),
+          startAmount,
+          endAmount
+        ),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          mayc.address,
+          nftId,
+          toBN(1),
+          toBN(1),
+          pool.address
+        ),
+      ];
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+      [[[1, 0]], [[0, 1]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
     const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
     );
 
     const creditAmountInListingToken = creditAmount;
 
     const swapRouter = await getUniswapV3SwapRouter();
-    const swapPayload = swapRouter.interface.encodeFunctionData("exactInput", [
+    const swapPayload = swapRouter.interface.encodeFunctionData("exactOutput", [
       {
         path: solidityPack(
           ["address", "uint24", "address"],
-          [weth.address, 500, usdc.address]
+          [usdc.address, 500, weth.address]
         ),
         recipient: pWETH.address,
         deadline: 2659537628,
-        amountIn: creditAmountInListingToken,
-        amountOutMinimum: 0,
+        amountOut: creditAmountInListingToken,
+        amountInMaximum: MAX_UINT_AMOUNT,
       },
     ]);
+
+    const debtBefore = await variableDebtWeth.balanceOf(taker.address);
 
     await waitForTx(
       await pool.connect(taker.signer).buyAnyWithCredit(
@@ -236,5 +281,9 @@ describe("Leveraged Buy Any - Positive tests", () => {
     expect(await mayc.ownerOf(nftId)).to.be.equal(
       (await pool.getReserveData(mayc.address)).xTokenAddress
     );
+
+    expect(
+      (await variableDebtWeth.balanceOf(taker.address)).sub(debtBefore)
+    ).eq("183313420582917789");
   });
 });

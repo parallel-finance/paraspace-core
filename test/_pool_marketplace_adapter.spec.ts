@@ -16,10 +16,6 @@ import {
 } from "../helpers/blur-helpers/types";
 import {ZERO_ADDRESS} from "../helpers/constants";
 import {
-  getStandardPolicyERC721,
-  getStrategyStandardSaleForFixedPrice,
-} from "../helpers/contracts-getters";
-import {
   createBlurOrder,
   createSeaportOrder,
 } from "../helpers/contracts-helpers";
@@ -43,49 +39,6 @@ import {InputStruct} from "../types/contracts/dependencies/blur-exchange/BlurExc
 describe("Marketplace Adapters - Negative Tests", () => {
   const nftId = "0";
   const nftPrice = parseEther("50");
-
-  it("TC-seaportAdapter-01: getAskOrderInfo will fail if fulfillAdvancedOrder dont specify pool as ERC721 recipient (revert expected)", async () => {
-    const {
-      seaportAdapter,
-      bayc,
-      usdt,
-      users: [maker, taker],
-      seaport,
-      pausableZone,
-      conduitKey,
-    } = await loadFixture(testEnvFixture);
-    const offers = [
-      getOfferOrConsiderationItem(2, bayc.address, nftId, toBN(1), toBN(1)),
-    ];
-    const considerations = [
-      getOfferOrConsiderationItem(
-        1,
-        usdt.address,
-        toBN(0),
-        nftPrice,
-        nftPrice,
-        maker.address
-      ),
-    ];
-    const listing: AdvancedOrder = await createSeaportOrder(
-      seaport,
-      maker,
-      offers,
-      considerations,
-      2,
-      pausableZone.address,
-      conduitKey
-    );
-
-    const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [listing, [], conduitKey, taker.address]
-    );
-
-    await expect(
-      seaportAdapter.getAskOrderInfo(`0x${encodedData.slice(10)}`)
-    ).to.be.revertedWith(ProtocolErrors.INVALID_ORDER_TAKER);
-  });
 
   it("TC-seaportAdapter-02: getBidOrderInfo will fail if maker & taker are the same address (revert expected)", async () => {
     const {
@@ -173,78 +126,6 @@ describe("Marketplace Adapters - Negative Tests", () => {
     await expect(
       seaportAdapter.getBidOrderInfo(`0x${encodedData.slice(10)}`)
     ).to.be.revertedWith(ProtocolErrors.MAKER_SAME_AS_TAKER);
-  });
-
-  it("TC-looksRareAdapter-01: getAskOrderInfo will fail if taker isn't pool (revert expected)", async () => {
-    const {
-      looksRareAdapter,
-      looksRareExchange,
-      users: [maker],
-      bayc,
-      usdt,
-    } = await loadFixture(testEnvFixture);
-
-    const now = Math.floor(Date.now() / 1000);
-    const chainId = await maker.signer.getChainId();
-    const paramsValue = [];
-    const makerOrder: MakerOrder = {
-      isOrderAsk: true,
-      signer: maker.address,
-      collection: bayc.address,
-      price: nftPrice,
-      tokenId: nftId,
-      amount: "1",
-      strategy: (await getStrategyStandardSaleForFixedPrice()).address,
-      currency: usdt.address,
-      nonce: await maker.signer.getTransactionCount(),
-      startTime: now - 86400,
-      endTime: now + 86400, // 2 days validity
-      minPercentageToAsk: 7500,
-      params: paramsValue,
-    };
-
-    const {domain, value, type} = generateMakerOrderTypedData(
-      maker.address,
-      chainId,
-      makerOrder,
-      looksRareExchange.address
-    );
-
-    const signatureHash = await DRE.ethers.provider
-      .getSigner(maker.address)
-      ._signTypedData(domain, type, value);
-
-    const makerOrderWithSignature: MakerOrderWithSignature = {
-      ...makerOrder,
-      signature: signatureHash,
-    };
-
-    const vrs = DRE.ethers.utils.splitSignature(
-      makerOrderWithSignature.signature
-    );
-
-    const makerOrderWithVRS: MakerOrderWithVRS = {
-      ...makerOrderWithSignature,
-      ...vrs,
-    };
-
-    const takerOrder: TakerOrder = {
-      isOrderAsk: false,
-      taker: maker.address,
-      price: makerOrderWithSignature.price,
-      tokenId: makerOrderWithSignature.tokenId,
-      minPercentageToAsk: 7500,
-      params: paramsValue,
-    };
-
-    const encodedData = looksRareExchange.interface.encodeFunctionData(
-      "matchAskWithTakerBid",
-      [takerOrder, makerOrderWithVRS]
-    );
-
-    await expect(
-      looksRareAdapter.getAskOrderInfo(`0x${encodedData.slice(10)}`)
-    ).to.be.revertedWith(ProtocolErrors.INVALID_ORDER_TAKER);
   });
 
   it("TC-looksRareAdapter-02: getAskOrderInfo will fail if matching strategy isn't StandardSaleForFixedPrice (revert expected)", async () => {
@@ -460,67 +341,5 @@ describe("Marketplace Adapters - Negative Tests", () => {
     await expect(
       blurAdapter.getAskOrderInfo(`0x${encodedData.slice(10)}`)
     ).to.be.revertedWith(ProtocolErrors.INVALID_MARKETPLACE_ORDER);
-  });
-
-  it("TC-blurAdapter-02: getAskOrderInfo will fail if taker isn't pool (revert expected)", async () => {
-    const {
-      blurAdapter,
-      blurExchange,
-      users: [maker],
-      bayc,
-      usdt,
-    } = await loadFixture(testEnvFixture);
-
-    const now = Math.floor(Date.now() / 1000);
-    const makerOrder: BlurOrder = {
-      trader: maker.address,
-      side: Side.Sell,
-      matchingPolicy: (await getStandardPolicyERC721()).address,
-      collection: bayc.address,
-      tokenId: nftId,
-      amount: "1",
-      paymentToken: usdt.address,
-      price: nftPrice,
-      listingTime: now - 86400,
-      expirationTime: now + 86400,
-      fees: [],
-      salt: randomHex(),
-      extraParams: "0x",
-    };
-    const takerOrder: BlurOrder = {
-      trader: maker.address,
-      side: Side.Buy,
-      matchingPolicy: (await getStandardPolicyERC721()).address,
-      collection: bayc.address,
-      tokenId: nftId,
-      amount: "1",
-      paymentToken: usdt.address,
-      price: nftPrice,
-      listingTime: now - 86400,
-      expirationTime: now + 86400,
-      fees: [],
-      salt: randomHex(),
-      extraParams: "0x",
-    };
-
-    const makerInput = await createBlurOrder(blurExchange, maker, makerOrder);
-    const takerInput = {
-      order: takerOrder,
-      v: 0,
-      r: constants.HashZero,
-      s: constants.HashZero,
-      extraSignature: "0x",
-      signatureVersion: SignatureVersion.Single,
-      blockNumber: 0,
-    };
-
-    const encodedData = blurExchange.interface.encodeFunctionData("execute", [
-      makerInput as InputStruct,
-      takerInput as InputStruct,
-    ]);
-
-    await expect(
-      blurAdapter.getAskOrderInfo(`0x${encodedData.slice(10)}`)
-    ).to.be.revertedWith(ProtocolErrors.INVALID_ORDER_TAKER);
   });
 });

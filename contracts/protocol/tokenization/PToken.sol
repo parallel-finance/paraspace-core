@@ -138,7 +138,10 @@ contract PToken is
         bytes calldata swapPayload,
         DataTypes.SwapInfo calldata swapInfo
     ) external virtual override onlyPool returns (uint256 amount) {
-        require(receiverOfUnderlying != address(this));
+        require(
+            receiverOfUnderlying != address(this),
+            Errors.INVALID_RECIPIENT
+        );
         amount = swapAndTransferUnderlyingTo(
             receiverOfUnderlying,
             timeLockParams,
@@ -267,9 +270,6 @@ contract PToken is
                 swapInfo.exactInput
             )
         );
-        assembly {
-            returndata := add(returndata, 0x40)
-        }
         amount = abi.decode(returndata, (uint256));
 
         uint256 amountOut = !swapInfo.exactInput
