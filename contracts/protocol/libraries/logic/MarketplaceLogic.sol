@@ -26,7 +26,6 @@ import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 import {Helpers} from "../../../protocol/libraries/helpers/Helpers.sol";
-import "hardhat/console.sol";
 
 /**
  * @title Marketplace library
@@ -112,6 +111,10 @@ library MarketplaceLogic {
             .getAskOrderInfo(payload);
         params.ethLeft = vars.ethLeft;
         params.orderInfo.taker = msg.sender;
+        require(
+            params.orderInfo.maker != params.orderInfo.taker,
+            Errors.MAKER_SAME_AS_TAKER
+        );
 
         _depositETH(vars, params);
 
@@ -139,13 +142,19 @@ library MarketplaceLogic {
             params.orderInfo.taker
         );
 
-        _flashSupplyFor(ps, vars, params.orderInfo.maker);
-        _flashLoanTo(ps, params, vars, address(this));
+        bool noDelegate = !vars.isListingTokenETH && params.orderInfo.isOpensea;
 
-        (uint256 priceEth, uint256 downpaymentEth) = _delegateToPool(
+        _flashSupplyFor(ps, vars, params.orderInfo.maker);
+        _flashLoanTo(
+            ps,
             params,
-            vars
+            vars,
+            noDelegate ? params.orderInfo.taker : address(this)
         );
+
+        (uint256 priceEth, uint256 downpaymentEth) = noDelegate
+            ? (0, 0)
+            : _delegateToPool(params, vars);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -208,6 +217,10 @@ library MarketplaceLogic {
             params.orderInfo = IMarketplace(params.marketplace.adapter)
                 .getAskOrderInfo(vars.payload);
             params.orderInfo.taker = msg.sender;
+            require(
+                params.orderInfo.maker != params.orderInfo.taker,
+                Errors.MAKER_SAME_AS_TAKER
+            );
             params.ethLeft = vars.ethLeft;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
@@ -260,7 +273,7 @@ library MarketplaceLogic {
         _acceptBidWithCredit(ps, params);
     }
 
-    function executeAcceptOpenSeaBid(
+    function executeAcceptOpenseaBid(
         DataTypes.PoolStorage storage ps,
         bytes32 marketplaceId,
         bytes calldata payload,
@@ -291,7 +304,7 @@ library MarketplaceLogic {
             Errors.INVALID_ORDER_TAKER
         );
 
-        _acceptOpenSeaBid(ps, params);
+        _acceptOpenseaBid(ps, params);
     }
 
     function executeBatchAcceptBidWithCredit(
@@ -319,6 +332,7 @@ library MarketplaceLogic {
             );
             params.orderInfo = IMarketplace(params.marketplace.adapter)
                 .getBidOrderInfo(payloads[i]);
+
             require(
                 params.orderInfo.taker == onBehalfOf,
                 Errors.INVALID_ORDER_TAKER
@@ -371,11 +385,11 @@ library MarketplaceLogic {
         );
     }
 
-    function _acceptOpenSeaBid(
+    function _acceptOpenseaBid(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal {
-        ValidationLogic.validateAcceptOpenSeaBid(params);
+        ValidationLogic.validateAcceptOpenseaBid(params);
 
         MarketplaceLocalVars memory vars = _cache(
             ps,
@@ -384,7 +398,7 @@ library MarketplaceLogic {
         );
 
         _flashSupplyFor(ps, vars, params.orderInfo.taker);
-        _handleWithdrawERC721(ps, params, vars, params.orderInfo.maker);
+        _withdrawERC721For(ps, params, vars, params.orderInfo.taker);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -405,13 +419,6 @@ library MarketplaceLogic {
         );
     }
 
-    /**
-     * @notice Transfer payNow portion from taker to this contract. This is only useful
-     * in buyWithCredit.
-     * @dev
-     * @param params The additional parameters needed to execute the buyWithCredit/acceptBidWithCredit function
-     * @param vars The marketplace local vars for caching storage values for future reads
-     */
     function _delegateToPool(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
@@ -431,6 +438,7 @@ library MarketplaceLogic {
                 transferToken,
                 params.marketplace.operator
             );
+
             // convert to (priceEth, downpaymentEth)
             price = 0;
             downpayment = 0;
@@ -544,8 +552,8 @@ library MarketplaceLogic {
             reserve.updateInterestRates(
                 reserveCache,
                 vars.listingToken,
-                0,
-                vars.isListingTokenPToken ? 0 : vars.supplyAmount
+                vars.isListingTokenPToken ? 0 : vars.supplyAmount,
+                0
             );
         }
 
@@ -564,44 +572,54 @@ library MarketplaceLogic {
         }
     }
 
-    function _handleWithdrawERC721(
+    function _withdrawERC721For(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
-        for (uint256 i = 0; i < params.orderInfo.offer.length; i++) {
+        uint256 size = params.orderInfo.offer.length;
+        uint256[] memory tokenIds = new uint256[](size);
+
+        address token = params.orderInfo.offer[0].token;
+        vars.xTokenAddress = ps._reserves[token].xTokenAddress;
+        uint256 amountToWithdraw;
+
+        if (vars.xTokenAddress == address(0)) {
+            return;
+        }
+
+        for (uint256 i = 0; i < size; i++) {
             OfferItem memory item = params.orderInfo.offer[i];
+            uint256 tokenId = item.identifierOrCriteria;
             require(
                 item.itemType == ItemType.ERC721,
                 Errors.INVALID_ASSET_TYPE
             );
+            require(item.token == token, Errors.INVALID_MARKETPLACE_ORDER);
 
-            address token = item.token;
-            uint256 tokenId = item.identifierOrCriteria;
-            vars.xTokenAddress = ps._reserves[token].xTokenAddress;
-
-            uint256[] memory tokenIds = new uint256[](1);
-            tokenIds[0] = tokenId;
-
-            if (
-                vars.xTokenAddress != address(0) &&
-                IERC721(vars.xTokenAddress).ownerOf(tokenId) != address(0)
-            ) {
-                SupplyLogic.executeWithdrawERC721(
-                    ps._reserves,
-                    ps._reservesList,
-                    ps._usersConfig[seller],
-                    DataTypes.ExecuteWithdrawERC721Params({
-                        asset: token,
-                        tokenIds: tokenIds,
-                        to: seller,
-                        reservesCount: params.reservesCount,
-                        oracle: params.oracle,
-                        timeLock: false
-                    })
-                );
+            if (IERC721(vars.xTokenAddress).ownerOf(tokenId) == seller) {
+                tokenIds[amountToWithdraw++] = tokenId;
             }
+        }
+
+        if (amountToWithdraw > 0) {
+            assembly {
+                mstore(tokenIds, amountToWithdraw)
+            }
+            SupplyLogic.executeWithdrawERC721(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[seller],
+                DataTypes.ExecuteWithdrawERC721Params({
+                    asset: token,
+                    tokenIds: tokenIds,
+                    to: seller,
+                    reservesCount: params.reservesCount,
+                    oracle: params.oracle,
+                    timeLock: false
+                })
+            );
         }
     }
 
@@ -838,8 +856,6 @@ library MarketplaceLogic {
         uint256 tokenId,
         bool isReserve
     ) internal {
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = tokenId;
         address nTokenOwner = isReserve
             ? IERC721(vars.xTokenAddress).ownerOf(tokenId)
             : address(0);
@@ -859,6 +875,8 @@ library MarketplaceLogic {
                 );
             }
 
+            uint256[] memory tokenIds = new uint256[](1);
+            tokenIds[0] = tokenId;
             SupplyLogic.executeCollateralizeERC721(
                 ps._reserves,
                 ps._usersConfig[buyer],

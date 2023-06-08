@@ -225,7 +225,7 @@ interface IPoolMarketplace {
      * @param payload The bytes data of the bid payload
      * @param onBehalfOf The address of the account (the bidder, or the seller with the OpenSea account authorized) that will execute the transaction
      */
-    function acceptOpenSeaBid(
+    function acceptOpenseaBid(
         bytes32 marketplaceId,
         bytes calldata payload,
         address onBehalfOf

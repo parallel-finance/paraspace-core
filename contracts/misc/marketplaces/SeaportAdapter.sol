@@ -24,42 +24,39 @@ contract SeaportAdapter is IMarketplace {
 
     function getAskOrderInfo(bytes memory params)
         external
-        view
+        pure
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
-        (
-            AdvancedOrder memory advancedOrder,
-            CriteriaResolver[] memory resolvers,
-            ,
-
-        ) = abi.decode(
-                params,
-                (AdvancedOrder, CriteriaResolver[], bytes32, address)
-            );
+        AdvancedOrder[] memory advancedOrders = abi.decode(
+            params,
+            (AdvancedOrder[])
+        );
         // support advanced order in the future
         require(
             // NOT criteria based and must be basic order
-            resolvers.length == 0 && isBasicOrder(advancedOrder),
+            advancedOrders.length == 2 &&
+                isBasicOrder(advancedOrders[0]) &&
+                isBasicOrder(advancedOrders[1]),
             Errors.INVALID_MARKETPLACE_ORDER
         );
-        // the person who listed NFT to sell
-        orderInfo.maker = advancedOrder.parameters.offerer;
-        // require(
-        //     recipient == ADDRESSES_PROVIDER.getPool(),
-        //     Errors.INVALID_ORDER_TAKER
-        // );
+        // the person who creates listing to sell NFT
+        orderInfo.maker = advancedOrders[0].parameters.offerer;
+        // the person who takes listing to buy NFT
+        orderInfo.taker = advancedOrders[1].parameters.offerer;
 
-        orderInfo.id = advancedOrder.signature;
+        orderInfo.id = advancedOrders[0].signature;
+
         // NFT, items will be checked inside MarketplaceLogic
-        orderInfo.offer = advancedOrder.parameters.offer;
+        orderInfo.offer = advancedOrders[0].parameters.offer;
         require(orderInfo.offer.length > 0, Errors.INVALID_MARKETPLACE_ORDER);
         // ERC20, items will be checked inside MarketplaceLogic
-        orderInfo.consideration = advancedOrder.parameters.consideration;
+        orderInfo.consideration = advancedOrders[0].parameters.consideration;
         require(
             orderInfo.consideration.length > 0,
             Errors.INVALID_MARKETPLACE_ORDER
         );
+        orderInfo.isOpensea = true;
     }
 
     function getBidOrderInfo(bytes memory params)
@@ -68,9 +65,9 @@ contract SeaportAdapter is IMarketplace {
         override
         returns (DataTypes.OrderInfo memory orderInfo)
     {
-        (AdvancedOrder[] memory advancedOrders, , ) = abi.decode(
+        AdvancedOrder[] memory advancedOrders = abi.decode(
             params,
-            (AdvancedOrder[], CriteriaResolver[], Fulfillment[])
+            (AdvancedOrder[])
         );
         // support advanced order in the future
         require(
@@ -98,6 +95,7 @@ contract SeaportAdapter is IMarketplace {
             orderInfo.consideration.length > 0,
             Errors.INVALID_MARKETPLACE_ORDER
         );
+        orderInfo.isOpensea = true;
     }
 
     function matchAskWithTakerBid(
@@ -105,7 +103,7 @@ contract SeaportAdapter is IMarketplace {
         bytes calldata params,
         uint256 value
     ) external payable override returns (bytes memory) {
-        bytes4 selector = SeaportInterface.fulfillAdvancedOrder.selector;
+        bytes4 selector = SeaportInterface.matchAdvancedOrders.selector;
         bytes memory data = abi.encodePacked(selector, params);
         return
             Address.functionCallWithValue(

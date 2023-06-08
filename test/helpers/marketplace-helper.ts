@@ -311,6 +311,11 @@ export async function executeSeaportBuyWithCredit(
       .connect(maker.signer)
       .approve((await getConduit()).address, nftId)
   );
+  await waitForTx(
+    await tokenToPayWith
+      .connect(taker.signer)
+      .approve((await getConduit()).address, startAmount)
+  );
 
   const seaport = await getSeaport();
   const getSellOrder = async (): Promise<AdvancedOrder> => {
@@ -322,7 +327,7 @@ export async function executeSeaportBuyWithCredit(
       getOfferOrConsiderationItem(
         1,
         tokenToPayWith.address,
-        nftId,
+        0,
         startAmount,
         endAmount,
         isCollateralSwap ? pool.address : maker.address
@@ -340,9 +345,49 @@ export async function executeSeaportBuyWithCredit(
     );
   };
 
+  const getBuyOrder = async (): Promise<AdvancedOrder> => {
+    const offers = [
+      getOfferOrConsiderationItem(
+        1,
+        tokenToPayWith.address,
+        0,
+        startAmount,
+        endAmount
+      ),
+    ];
+
+    const considerations = [
+      getOfferOrConsiderationItem(
+        2,
+        tokenToBuy.address,
+        nftId,
+        1,
+        1,
+        pool.address
+      ),
+    ];
+
+    return createSeaportOrder(
+      seaport,
+      taker,
+      offers,
+      considerations,
+      2,
+      (await getPausableZone()).address,
+      await getConduitKey()
+    );
+  };
+
+  const fulfillment = [
+    [[[0, 0]], [[1, 0]]],
+    [[[1, 0]], [[0, 0]]],
+  ].map(([makerArr, considerationArr]) =>
+    toFulfillment(makerArr, considerationArr)
+  );
+
   const encodedData = seaport.interface.encodeFunctionData(
-    "fulfillAdvancedOrder",
-    [await getSellOrder(), [], await getConduitKey(), pool.address]
+    "matchAdvancedOrders",
+    [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
   );
 
   const tx = (await getPoolProxy()).connect(taker.signer).buyWithCredit(

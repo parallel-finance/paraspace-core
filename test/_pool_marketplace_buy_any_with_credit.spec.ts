@@ -8,6 +8,7 @@ import {AdvancedOrder} from "../helpers/seaport-helpers/types";
 import {
   getOfferOrConsiderationItem,
   toBN,
+  toFulfillment,
 } from "../helpers/seaport-helpers/encoding";
 import {
   MAX_UINT_AMOUNT,
@@ -152,7 +153,7 @@ describe("Leveraged Buy Any - Positive tests", () => {
       await mayc.connect(maker.signer).approve(conduit.address, nftId)
     );
     await waitForTx(
-      await usdc.connect(taker.signer).approve(pool.address, payNowAmount)
+      await usdc.connect(taker.signer).approve(conduit.address, startAmount)
     );
 
     //before buyWithCredit there is no collateral
@@ -193,9 +194,49 @@ describe("Leveraged Buy Any - Positive tests", () => {
         conduitKey
       );
     };
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          usdc.address,
+          toBN(0),
+          startAmount,
+          endAmount
+        ),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          mayc.address,
+          nftId,
+          toBN(1),
+          toBN(1),
+          pool.address
+        ),
+      ];
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+      [[[1, 0]], [[0, 1]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
     const encodedData = seaport.interface.encodeFunctionData(
-      "fulfillAdvancedOrder",
-      [await getSellOrder(), [], conduitKey, pool.address]
+      "matchAdvancedOrders",
+      [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
     );
 
     const creditAmountInListingToken = creditAmount;
