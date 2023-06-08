@@ -447,8 +447,10 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
-        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
-            .calculateTimeLockParams(
+        DataTypes.TimeLockParams memory timeLockParams;
+
+        if (params.timeLock) {
+            timeLockParams = GenericLogic.calculateTimeLockParams(
                 reserve,
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC721,
@@ -456,7 +458,8 @@ library SupplyLogic {
                     amount: params.tokenIds.length
                 })
             );
-        timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
+            timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
+        }
 
         return
             INToken(xTokenAddress).burn(

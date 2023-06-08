@@ -10,6 +10,7 @@ import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
+import {SwapLogic} from "../libraries/logic/SwapLogic.sol";
 import {AuctionLogic} from "../libraries/logic/AuctionLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
@@ -232,7 +233,8 @@ contract PoolCore is
                     tokenIds: tokenIds,
                     to: to,
                     reservesCount: ps._reservesCount,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                    timeLock: true
                 })
             );
     }
@@ -288,7 +290,44 @@ contract PoolCore is
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                swapPayload: bytes("")
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function borrowAny(
+        address asset,
+        uint256 amount,
+        uint16 referralCode,
+        address onBehalfOf,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        BorrowLogic.executeBorrow(
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[onBehalfOf],
+            DataTypes.ExecuteBorrowParams({
+                asset: asset,
+                user: msg.sender,
+                onBehalfOf: onBehalfOf,
+                amount: amount,
+                referralCode: referralCode,
+                releaseUnderlying: true,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: ps._swapAdapters[swapAdapterId],
+                swapPayload: swapPayload
             })
         );
     }
@@ -487,6 +526,61 @@ contract PoolCore is
                 receiveXToken: receiveNToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function swapPToken(
+        address srcAsset,
+        uint256 srcAmount,
+        address dstAsset,
+        address to,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        SwapLogic.executeSwapPToken(
+            ps,
+            ps._usersConfig[msg.sender],
+            DataTypes.ExecuteSwapParams({
+                srcAsset: srcAsset,
+                dstAsset: dstAsset,
+                amount: srcAmount,
+                user: to,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: ps._swapAdapters[swapAdapterId],
+                swapPayload: swapPayload
+            })
+        );
+    }
+
+    /// @inheritdoc IPoolCore
+    function swapDebt(
+        address srcAsset,
+        uint256 srcAmount,
+        address dstAsset,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        SwapLogic.executeSwapDebt(
+            ps,
+            ps._usersConfig[msg.sender],
+            DataTypes.ExecuteSwapParams({
+                srcAsset: srcAsset,
+                dstAsset: dstAsset,
+                amount: srcAmount,
+                user: msg.sender,
+                reservesCount: ps._reservesCount,
+                oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                swapAdapter: ps._swapAdapters[swapAdapterId],
+                swapPayload: swapPayload
             })
         );
     }

@@ -72,8 +72,7 @@ contract PoolMarketplace is
     function buyWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
-        DataTypes.Credit calldata credit,
-        uint16 referralCode
+        DataTypes.Credit calldata credit
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -82,8 +81,30 @@ contract PoolMarketplace is
             marketplaceId,
             payload,
             credit,
-            ADDRESSES_PROVIDER,
-            referralCode
+            DataTypes.SwapAdapter(address(0), address(0), false),
+            bytes(""),
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function buyAnyWithCredit(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        DataTypes.Credit calldata credit,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBuyWithCredit(
+            ps,
+            marketplaceId,
+            payload,
+            credit,
+            ps._swapAdapters[swapAdapterId],
+            swapPayload,
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -91,8 +112,7 @@ contract PoolMarketplace is
     function batchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
-        DataTypes.Credit[] calldata credits,
-        uint16 referralCode
+        DataTypes.Credit[] calldata credits
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -101,8 +121,30 @@ contract PoolMarketplace is
             marketplaceIds,
             payloads,
             credits,
-            ADDRESSES_PROVIDER,
-            referralCode
+            new DataTypes.SwapAdapter[](credits.length),
+            new bytes[](credits.length),
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function batchBuyAnyWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        DataTypes.SwapAdapter[] calldata swapAdapters,
+        bytes[] calldata swapPayloads
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBatchBuyWithCredit(
+            ps,
+            marketplaceIds,
+            payloads,
+            credits,
+            swapAdapters,
+            swapPayloads,
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -111,8 +153,7 @@ contract PoolMarketplace is
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -122,8 +163,24 @@ contract PoolMarketplace is
             payload,
             credit,
             onBehalfOf,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function acceptOpenSeaBid(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        address onBehalfOf
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeAcceptOpenSeaBid(
+            ps,
+            marketplaceId,
+            payload,
+            onBehalfOf,
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -132,8 +189,7 @@ contract PoolMarketplace is
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -143,8 +199,7 @@ contract PoolMarketplace is
             payloads,
             credits,
             onBehalfOf,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 

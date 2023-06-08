@@ -1193,6 +1193,13 @@ library ValidationLogic {
         );
     }
 
+    function validateAcceptOpenSeaBid(
+        DataTypes.ExecuteMarketplaceParams memory params
+    ) internal view {
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
+        require(params.credit.amount == 0);
+    }
+
     function verifyCreditSignature(
         DataTypes.Credit memory credit,
         address signer,
@@ -1314,5 +1321,32 @@ library ValidationLogic {
                 Errors.RESERVE_FROZEN
             );
         }
+    }
+
+    function validateSwap(
+        DataTypes.SwapInfo memory swapInfo,
+        DataTypes.ValidateSwapParams memory params
+    ) internal pure {
+        require(!params.swapAdapter.paused, Errors.SWAP_ADAPTER_PAUSED);
+        require(
+            swapInfo.srcToken != swapInfo.dstToken,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(
+            (swapInfo.srcToken == params.srcToken &&
+                (params.dstToken == address(0) ||
+                    swapInfo.dstToken == params.dstToken)),
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(
+            (swapInfo.exactInput && swapInfo.maxAmountIn == params.amount) ||
+                (!swapInfo.exactInput &&
+                    swapInfo.minAmountOut == params.amount),
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(
+            swapInfo.dstReceiver == params.dstReceiver,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
     }
 }

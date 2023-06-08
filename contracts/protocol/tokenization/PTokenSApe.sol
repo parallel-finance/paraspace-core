@@ -73,7 +73,7 @@ contract PTokenSApe is PToken {
         address,
         uint256,
         DataTypes.TimeLockParams calldata
-    ) external virtual override onlyPool {
+    ) public virtual override onlyPool {
         revert("not allowed");
     }
 

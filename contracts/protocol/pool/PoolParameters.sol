@@ -308,6 +308,31 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
+    function setSwapAdapter(
+        bytes32 swapAdapterId,
+        DataTypes.SwapAdapter calldata adapter
+    ) external {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._swapAdapters[swapAdapterId] = adapter;
+        emit SwapAdapterUpdated(
+            swapAdapterId,
+            adapter.adapter,
+            adapter.router,
+            adapter.paused
+        );
+    }
+
+    /// @inheritdoc IPoolParameters
+    function getSwapAdapter(bytes32 swapAdapterId)
+        external
+        view
+        returns (DataTypes.SwapAdapter memory adapter)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        adapter = ps._swapAdapters[swapAdapterId];
+    }
+
+    /// @inheritdoc IPoolParameters
     function setAuctionRecoveryHealthFactor(uint64 value)
         external
         virtual

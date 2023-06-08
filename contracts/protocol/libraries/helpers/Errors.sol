@@ -146,4 +146,7 @@ library Errors {
     string public constant NTOKEN_NOT_OWNS_UNDERLYING = "151"; //The ntoken does not owns the underlying nft
     string public constant EXISTING_APE_STAKING = "152"; // Ape coin staking position existed
     string public constant NOT_SAME_NTOKEN_OWNER = "153"; // ntoken have different owner
+    string public constant CALL_SWAP_FAILED = "154"; //call swap failed.
+    string public constant INVALID_SWAP_PAYLOAD = "155"; //invalid swap payload.
+    string public constant SWAP_ADAPTER_PAUSED = "156"; //swap adapter paused.
 }

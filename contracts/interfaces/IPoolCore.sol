@@ -27,6 +27,15 @@ interface IPoolCore {
         uint16 indexed referralCode
     );
 
+    /**
+     * @dev Emitted on supplyERC721()
+     * @param reserve The address of the underlying asset of the reserve
+     * @param user The address initiating the supply
+     * @param onBehalfOf The beneficiary of the supply, receiving the xTokens
+     * @param tokenData The info of supplied tokens
+     * @param referralCode The referral code used
+     * @param fromNToken whether the supply call comes from NToken
+     **/
     event SupplyERC721(
         address indexed reserve,
         address user,
@@ -199,6 +208,38 @@ interface IPoolCore {
     );
 
     /**
+     * @notice Fired when a specified amount of pToken is swapped for another asset.
+     * @param srcReserve The address of the source reserve asset.
+     * @param dstReserve The address of the destination reserve asset.
+     * @param user The address of the user who initiated the swap.
+     * @param srcAmount The amount of pToken that was swapped.
+     * @param dstAmount The amount of the asset received after the swap was completed.
+     */
+    event SwapPToken(
+        address indexed srcReserve,
+        address indexed dstReserve,
+        address indexed user,
+        uint256 srcAmount,
+        uint256 dstAmount
+    );
+
+    /**
+     * @notice Fired when a specified amount of debt from one asset is swapped for another.
+     * @param srcReserve The address of the asset that was swapped.
+     * @param dstReserve The address of the asset that was received in exchange.
+     * @param user The address of the user who initiated the swap.
+     * @param srcAmount The amount of `srcReserve` asset that was swapped.
+     * @param dstAmount The amount of `dstReserve` asset received after the swap was completed.
+     */
+    event SwapDebt(
+        address indexed srcReserve,
+        address indexed dstReserve,
+        address indexed user,
+        uint256 srcAmount,
+        uint256 dstAmount
+    );
+
+    /**
      * @dev Allows smart contracts to access the tokens within one transaction, as long as the tokens taken is returned.
      *
      * Requirements:
@@ -365,6 +406,27 @@ interface IPoolCore {
     ) external;
 
     /**
+     * @notice Borrow a specified amount of an asset from Aave V2 using any compatible adapter.
+     * @dev The user's account must already have a sufficient amount of collateral deposited in the protocol.
+     * @dev The `asset` must be an ERC20 token with allowance granted to this contract.
+     * @dev The borrow is executed using the `swapAdapterId` and `swapPayload` parameters to identify the specific adapter and its configuration.
+     * @param asset The address of the asset to be borrowed.
+     * @param amount The amount of the asset to be borrowed.
+     * @param referralCode An optional referral code to be used for rewarding the referrer, if any.
+     * @param onBehalfOf The address of the user to borrow on behalf of (if specified).
+     * @param swapAdapterId The ID of the adapter to be used for the borrow.
+     * @param swapPayload Additional data to be passed to the adapter to configure the borrow.
+     */
+    function borrowAny(
+        address asset,
+        uint256 amount,
+        uint16 referralCode,
+        address onBehalfOf,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external;
+
+    /**
      * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
      * - E.g. User repays 100 USDC, burning 100 variable/stable debt tokens of the `onBehalfOf` address
      * @param asset The address of the borrowed underlying asset previously borrowed
@@ -460,13 +522,63 @@ interface IPoolCore {
         bool receivePToken
     ) external payable;
 
+    /**
+     * @notice Function to liquidate a non-healthy position collateral-wise, with ERC721 Health Factor below 1
+     * - The caller (liquidator) covers `liquidationAmount` amount of debt of the user getting liquidated, and receives
+     *   a token of the `collateralAsset` plus a bonus to cover market risk
+     * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
+     * @param user The address of the borrower getting liquidated
+     * @param collateralTokenId Then tokenId of the underlying asset used as collateral, to receive as result of the liquidation
+     * @param maxLiquidationAmount The max debt amount of borrowed `asset` the liquidator wants to cover
+     * @param receiveNToken True if the liquidators wants to receive the collateral xTokens, `false` if he wants
+     * to receive the underlying collateral asset directly
+     **/
     function liquidateERC721(
         address collateralAsset,
         address user,
         uint256 collateralTokenId,
-        uint256 liquidationAmount,
+        uint256 maxLiquidationAmount,
         bool receiveNToken
     ) external payable;
+
+    /**
+     * @notice Swaps a specified amount of pToken for another asset using a specified adapter.
+     * @dev The user must have approved this contract to spend `srcAsset` tokens on their behalf.
+     * @dev The caller will receive `dstAsset` tokens after the swap is completed.
+     * @dev The swap is executed using the `swapAdapterId` and `swapPayload` parameters to identify the specific adapter and its configuration.
+     * @param srcAsset The address of the pToken to be swapped.
+     * @param srcAmount The amount of pToken to be swapped.
+     * @param dstAsset The address of the asset to be received after the swap is completed.
+     * @param to The address of the recipient of the `dstAsset` tokens.
+     * @param swapAdapterId The ID of the adapter to be used for the swap.
+     * @param swapPayload Additional data to be passed to the adapter to configure the swap.
+     */
+    function swapPToken(
+        address srcAsset,
+        uint256 srcAmount,
+        address dstAsset,
+        address to,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external;
+
+    /**
+     * @notice Swaps a specified amount of debt from one asset to another using a specified adapter.
+     * @dev The user must have approved this contract to spend `srcAsset` tokens on their behalf.
+     * @dev The swap is executed using the `swapAdapterId` and `swapPayload` parameters to identify the specific adapter and its configuration.
+     * @param srcAsset The address of the asset to be swapped from.
+     * @param srcAmount The amount of debt to be swapped.
+     * @param dstAsset The address of the asset to be swapped to (which represents the debt).
+     * @param swapAdapterId The ID of the adapter to be used for the swap.
+     * @param swapPayload Additional data to be passed to the adapter to configure the swap.
+     */
+    function swapDebt(
+        address srcAsset,
+        uint256 srcAmount,
+        address dstAsset,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external;
 
     /**
      * @notice Start the auction on user's specific NFT collateral
@@ -542,6 +654,11 @@ interface IPoolCore {
         view
         returns (DataTypes.ReserveData memory);
 
+    /**
+     * @notice Returns the corresponding xToken address for a given reserve asset.
+     * @param asset The address of the reserve asset to check.
+     * @return The address of the corresponding xToken for the specified reserve asset, or zero if not available.
+     */
     function getReserveXToken(address asset) external view returns (address);
 
     /**
@@ -617,6 +734,10 @@ interface IPoolCore {
         view
         returns (IPoolAddressesProvider);
 
+    /**
+     * @notice Returns the time-lock contract used by the protocol.
+     * @return A contract implementing the `ITimeLock` interface.
+     */
     function TIME_LOCK() external view returns (ITimeLock);
 
     /**

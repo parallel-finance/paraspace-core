@@ -289,10 +289,13 @@ import {
   PositionMoverLogic__factory,
   PoolExtendedLogic,
   PoolExtendedLogic__factory,
+  UniswapV3SwapAdapter__factory,
+  UniswapV3SwapAdapter,
   TimeLock,
   NTokenChromieSquiggle__factory,
   CLFixedPriceSynchronicityPriceAdapter,
   CLFixedPriceSynchronicityPriceAdapter__factory,
+  SwapLogic,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -333,6 +336,10 @@ import {MarketplaceLogicLibraryAddresses} from "../types/factories/contracts/pro
 import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
 import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
 import {PositionMoverLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/PositionMoverLogic__factory";
+import {
+  SwapLogicLibraryAddresses,
+  SwapLogic__factory,
+} from "../types/factories/contracts/protocol/libraries/logic/SwapLogic__factory";
 
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
@@ -551,6 +558,15 @@ export const deployPoolCoreLibraries = async (
     verify
   );
   const flashClaimLogic = await deployFlashClaimLogic(verify);
+  const swapLogic = await deploySwapLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
+    },
+    verify
+  );
 
   return {
     ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]:
@@ -563,6 +579,8 @@ export const deployPoolCoreLibraries = async (
       borrowLogic.address,
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
       flashClaimLogic.address,
+    ["contracts/protocol/libraries/logic/SwapLogic.sol:SwapLogic"]:
+      swapLogic.address,
   };
 };
 
@@ -1924,6 +1942,22 @@ export const deployMarketplaceLogic = async (
   ) as Promise<MarketplaceLogic>;
 };
 
+export const deploySwapLogic = async (
+  libraries: SwapLogicLibraryAddresses,
+  verify?: boolean
+) => {
+  const swapLogic = new SwapLogic__factory(libraries, await getFirstSigner());
+
+  return withSaveAndVerify(
+    swapLogic,
+    eContractid.SwapLogic,
+    [],
+    verify,
+    false,
+    libraries
+  ) as Promise<SwapLogic>;
+};
+
 export const deployConduitController = async (verify?: boolean) =>
   withSaveAndVerify(
     new ConduitController__factory(await getFirstSigner()),
@@ -3205,6 +3239,14 @@ export const deployStakefishValidator = async (
     [depositContract],
     verify
   ) as Promise<StakefishValidatorV1>;
+
+export const deployUniswapV3SwapAdapter = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new UniswapV3SwapAdapter__factory(await getFirstSigner()),
+    eContractid.UniswapV3SwapAdapter,
+    [],
+    verify
+  ) as Promise<UniswapV3SwapAdapter>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

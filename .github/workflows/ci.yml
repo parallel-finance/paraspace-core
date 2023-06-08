@@ -31,13 +31,12 @@ jobs:
 
       - name: Run lint
         run: |
-          yarn cache clean --all
-          YARN_CHECKSUM_BEHAVIOR=update yarn
+          touch .env
           yarn
-          yarn build
-          yarn doc
-          yarn lint
-          yarn size
+          make build
+          make doc
+          make lint
+          make size
 
   tests:
     name: Unit Tests
@@ -65,11 +64,10 @@ jobs:
 
       - name: Run unit tests
         run: |
-          yarn cache clean --all
-          YARN_CHECKSUM_BEHAVIOR=update yarn
+          touch .env
           yarn
-          yarn build
-          yarn test
+          make build
+          make test
 
   coverage:
     name: Coverage Check
@@ -95,11 +93,10 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: |
-          yarn cache clean --all
-          YARN_CHECKSUM_BEHAVIOR=update yarn
+          touch .env
           yarn
-          yarn build
-          yarn coverage
+          make build
+          make coverage
         env:
           NODE_OPTIONS: --max_old_space_size=8192
       - name: Publish coverage

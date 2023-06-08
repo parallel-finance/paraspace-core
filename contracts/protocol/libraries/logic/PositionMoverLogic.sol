@@ -211,7 +211,14 @@ library PositionMoverLogic {
                 releaseUnderlying: false,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider
+                    .getPriceOracleSentinel(),
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                swapPayload: bytes("")
             })
         );
     }

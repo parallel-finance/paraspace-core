@@ -169,7 +169,13 @@ library PoolExtendedLogic {
                     reservesCount: ps._reservesCount,
                     oracle: oracle,
                     priceOracleSentinel: poolAddressProvider
-                        .getPriceOracleSentinel()
+                        .getPriceOracleSentinel(),
+                    swapAdapter: DataTypes.SwapAdapter(
+                        address(0),
+                        address(0),
+                        false
+                    ),
+                    swapPayload: bytes("")
                 })
             );
         }

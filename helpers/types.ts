@@ -207,6 +207,7 @@ export enum eContractid {
   PausableZone = "PausableZone",
   Seaport = "Seaport",
   MarketplaceLogic = "MarketplaceLogic",
+  SwapLogic = "SwapLogic",
   SeaportAdapter = "SeaportAdapter",
   LooksRareAdapter = "LooksRareAdapter",
   X2Y2Adapter = "X2Y2Adapter",
@@ -290,10 +291,13 @@ export enum eContractid {
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
+  UniswapV3SwapAdapter = "UniswapV3SwapAdapter",
 }
 
 /*
  * Error messages
+ *
+ * generated using vim regex: :s/string public constant \(.*\) = "\(.*\)";/ \1 = "\2",
  */
 export enum ProtocolErrors {
   CALLER_NOT_POOL_ADMIN = "1", // 'The caller of the function is not a pool admin'
@@ -306,7 +310,7 @@ export enum ProtocolErrors {
   INVALID_ADDRESSES_PROVIDER_ID = "8", // 'Invalid id for the pool addresses provider'
   NOT_CONTRACT = "9", // 'Address is not a contract'
   CALLER_NOT_POOL_CONFIGURATOR = "10", // 'The caller of the function is not the pool configurator'
-  CALLER_NOT_XTOKEN = "11", // 'The caller of the function is not an PToken'
+  CALLER_NOT_XTOKEN = "11", // 'The caller of the function is not an PToken or NToken'
   INVALID_ADDRESSES_PROVIDER = "12", // 'The address of the pool addresses provider is invalid'
   RESERVE_ALREADY_ADDED = "14", // 'Reserve has already been added to reserve list'
   NO_MORE_RESERVES_ALLOWED = "15", // 'Maximum amount of reserves in the pool reached'
@@ -396,21 +400,46 @@ export enum ProtocolErrors {
   AUCTION_NOT_ENABLED = "113", //auction not enabled on the reserve.
   ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD = "114", //ERC721 Health factor is not above the threshold.
   TOKEN_IN_AUCTION = "115", //tokenId is in auction.
-  AUCTIONED_BALANCE_NOT_ZERO = "116", //auctioned balance not zero
-
-  LIQUIDATOR_CAN_NOT_BE_SELF = "117", //user can not liquidate himself
-  FLASHCLAIM_NOT_ALLOWED = "119", //flash claim is not allowed for UniswapV3
+  AUCTIONED_BALANCE_NOT_ZERO = "116", //auctioned balance not zero.
+  LIQUIDATOR_CAN_NOT_BE_SELF = "117", //user can not liquidate himself.
+  INVALID_RECIPIENT = "118", //invalid recipient specified in order.
+  FLASHCLAIM_NOT_ALLOWED = "119", //flash claim is not allowed for UniswapV3 & Stakefish
   NTOKEN_BALANCE_EXCEEDED = "120", //ntoken balance exceed limit.
-  ORACLE_PRICE_NOT_READY = "121", //oracle price not ready
-  SET_ORACLE_SOURCE_NOT_ALLOWED = "122", //set oracle source not allowed
-  RESERVE_NOT_ACTIVE_FOR_UNIV3 = "123", //reserve is not active for UniswapV3.
+  ORACLE_PRICE_NOT_READY = "121", //oracle price not ready.
+  SET_ORACLE_SOURCE_NOT_ALLOWED = "122", //source of oracle not allowed to set.
+  INVALID_LIQUIDATION_ASSET = "123", //invalid liquidation asset.
   XTOKEN_TYPE_NOT_ALLOWED = "124", //the corresponding xTokenType not allowed in this action
+  GLOBAL_DEBT_IS_ZERO = "125", //liquidation is not allowed when global debt is zero.
+  ORACLE_PRICE_EXPIRED = "126", //oracle price expired.
+  APE_STAKING_POSITION_EXISTED = "127", //ape staking position is existed.
   SAPE_NOT_ALLOWED = "128", //operation is not allow for sApe.
   TOTAL_STAKING_AMOUNT_WRONG = "129", //cash plus borrow amount not equal to total staking amount.
   NOT_THE_BAKC_OWNER = "130", //user is not the bakc owner.
+  CALLER_NOT_EOA = "131", //The caller of the function is not an EOA account
+  MAKER_SAME_AS_TAKER = "132", //maker and taker shouldn't be the same address
+  TOKEN_ALREADY_DELEGATED = "133", //token is already delegted
   INVALID_STATE = "134", //invalid token status
-
   INVALID_TOKEN_ID = "135", //invalid token id
+  SENDER_SAME_AS_RECEIVER = "136", //sender and receiver shouldn't be the same address
+  INVALID_YIELD_UNDERLYING_TOKEN = "137", //invalid yield underlying token
+  CALLER_NOT_OPERATOR = "138", // The caller of the function is not operator
+  INVALID_FEE_VALUE = "139", // invalid fee rate value
+  TOKEN_NOT_ALLOW_RESCUE = "140", // token is not allow rescue
+  CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
+  ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
+  REQUEST_DISABLED = "144", //blur exchange request disabled
+  INVALID_ASSET = "145", // invalid asset.
+  INVALID_ETH_VALUE = "146", //The status of the request is invalid for this function
+  INVALID_REQUEST_STATUS = "147", //the eth value with the transaction is invalid
+  INVALID_PAYMENT_TOKEN = "148", //the invalid payment token for blur exchange request
+  INVALID_REQUEST_PRICE = "149", //the listing price for blur exchange request is invalid
+  CALLER_NOT_KEEPER = "150", //The caller of the function is not keeper
+  NTOKEN_NOT_OWNS_UNDERLYING = "151", //The ntoken does not owns the underlying nft
+  EXISTING_APE_STAKING = "152", // Ape coin staking position existed
+  NOT_SAME_NTOKEN_OWNER = "153", // ntoken have different owner
+  CALL_SWAP_FAILED = "154", //call swap failed.
+  INVALID_SWAP_PAYLOAD = "155", //invalid swap payload.
+  SWAP_ADAPTER_PAUSED = "156", //swap adapter paused.
 
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
@@ -427,21 +456,6 @@ export enum ProtocolErrors {
   INVALID_HF = "Invalid health factor",
   //disable calls
   EMEGENCY_DISABLE_CALL = "emergency disable call",
-
-  MAKER_SAME_AS_TAKER = "132",
-
-  CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
-  ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
-  REQUEST_DISABLED = "144", //blur exchange request disabled
-  INVALID_ASSET = "145", // invalid asset.
-  INVALID_ETH_VALUE = "146", //The status of the request is invalid for this function
-  INVALID_REQUEST_STATUS = "147", //the eth value with the transaction is invalid
-  INVALID_PAYMENT_TOKEN = "148", //the invalid payment token for blur exchange request
-  INVALID_REQUEST_PRICE = "149", //the listing price for blur exchange request is invalid
-  CALLER_NOT_KEEPER = "150", //The caller of the function is not keeper
-  NTOKEN_NOT_OWNS_UNDERLYING = "151", //The ntoken does not owns the underlying nft
-  EXISTING_APE_STAKING = "152", // Ape coin staking position existed
-  NOT_SAME_NTOKEN_OWNER = "153", // ntoken have different owner
 }
 
 export type tEthereumAddress = string;
@@ -746,8 +760,14 @@ export interface IUniswapV3Config {
   NFTPositionManager: tEthereumAddress;
 }
 
+export interface ISeaportConfig {
+  V11?: tEthereumAddress;
+  V14?: tEthereumAddress;
+  V15?: tEthereumAddress;
+}
+
 export interface IMarketplaceConfig {
-  Seaport?: tEthereumAddress;
+  Seaport?: ISeaportConfig;
 }
 
 export interface IChainlinkConfig {

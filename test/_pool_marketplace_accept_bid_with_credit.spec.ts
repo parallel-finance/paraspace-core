@@ -19,7 +19,7 @@ import {
   toBN,
   toFulfillment,
 } from "../helpers/seaport-helpers/encoding";
-import {MAX_UINT_AMOUNT, PARASPACE_SEAPORT_ID} from "../helpers/constants";
+import {PARASPACE_SEAPORT_ID} from "../helpers/constants";
 import {arrayify, splitSignature} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {
@@ -613,7 +613,6 @@ describe("Leveraged Bid - unit tests", () => {
         },
       ],
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -798,7 +797,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -983,7 +981,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -1197,7 +1194,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -1274,26 +1270,14 @@ describe("Leveraged Bid - unit tests", () => {
     const nftId = 0;
 
     // mint USDC to maker
-    await mintAndValidate(usdc, makerInitialBalance, maker);
+    await supplyAndValidate(usdc, makerInitialBalance, maker, true);
 
     // middleman supplies USDC to pool to be borrowed by maker later
     await supplyAndValidate(usdc, middlemanInitialBalance, middleman, true);
     await supplyAndValidate(usdc, makerInitialDebt, middleman, true);
 
-    expect(
-      await usdc.balanceOf(
-        (
-          await pool.getReserveData(usdc.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount.add(borrowAmount));
-
     await supplyAndValidate(bayc, "1", taker, true);
     await borrowAndValidate(usdc, makerInitialDebt, taker);
-
-    await waitForTx(
-      await usdc.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
 
     // before acceptBidWithCredit totalCollateralBase for the taker
     // is just the bayc
@@ -1309,13 +1293,14 @@ describe("Leveraged Bid - unit tests", () => {
 
     await executeAcceptBidWithCredit(
       nBAYC,
-      usdc,
+      pUsdc,
       startAmount,
       endAmount,
       creditAmount,
       nftId,
       maker,
-      taker
+      taker,
+      true
     );
     const usdcConfigData = BigNumber.from(
       (await pool.getUserConfiguration(taker.address)).data
@@ -1325,12 +1310,8 @@ describe("Leveraged Bid - unit tests", () => {
     // taker bayc should reduce
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("500").add(borrowAmount)
-    );
-    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("9500")
-    );
+    expect(await usdc.balanceOf(taker.address)).to.be.equal(borrowAmount);
+    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(startAmount);
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
 
     // after the swap offer's totalCollateralBase should be same as taker's before
@@ -1819,7 +1800,6 @@ describe("Leveraged Bid - Negative tests", () => {
           ...vrs,
         },
         [nftId],
-        0,
         {
           gasLimit: 5000000,
         }
