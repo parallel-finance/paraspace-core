@@ -293,7 +293,6 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
-    yAPE: strategyYAPE,
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
