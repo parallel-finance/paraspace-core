@@ -444,6 +444,10 @@ library DataTypes {
         uint16 _apeCompoundFee;
         // Map of user's ape compound strategies
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
+        // Map of swap adapters
+        mapping(bytes32 => DataTypes.SwapAdapter) _swapAdapters;
+        // Address of ape compound bot
+        address _apeCompoundBot;
         //identified if blur exchange is enabled
         bool _blurExchangeEnable;
         // max amount of blur ongoing request, 0 means no limit.
@@ -468,10 +472,6 @@ library DataTypes {
         address _acceptBlurBidsKeeper;
         // Map of AcceptBlurBidsRequest status
         mapping(bytes32 => AcceptBlurBidsRequestStatus) _acceptBlurBidsRequestStatus;
-        // Address of ape compound bot
-        address _apeCompoundBot;
-        // Map of swap adapters
-        mapping(bytes32 => DataTypes.SwapAdapter) _swapAdapters;
     }
 
     struct ReserveConfigData {
