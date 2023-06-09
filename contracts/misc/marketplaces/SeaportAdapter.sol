@@ -42,8 +42,6 @@ contract SeaportAdapter is IMarketplace {
         );
         // the person who creates listing to sell NFT
         orderInfo.maker = advancedOrders[0].parameters.offerer;
-        // the person who takes listing to buy NFT
-        orderInfo.taker = advancedOrders[1].parameters.offerer;
 
         orderInfo.id = advancedOrders[0].signature;
 
