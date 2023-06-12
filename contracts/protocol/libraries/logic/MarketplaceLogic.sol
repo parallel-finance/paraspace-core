@@ -150,19 +150,19 @@ library MarketplaceLogic {
             params.orderInfo.taker
         );
 
-        bool noDelegate = !vars.isListingTokenETH && params.orderInfo.isSeaport;
+        bool delegate = !params.orderInfo.isSeaport || vars.isListingTokenETH;
 
         _flashSupplyFor(ps, vars, params.orderInfo.maker);
         _flashLoanTo(
             ps,
             params,
             vars,
-            noDelegate ? params.orderInfo.taker : address(this)
+            delegate ? address(this) : params.orderInfo.taker
         );
 
-        (uint256 priceEth, uint256 downpaymentEth) = noDelegate
-            ? (0, 0)
-            : _delegateToPool(params, vars);
+        (uint256 priceEth, uint256 downpaymentEth) = delegate
+            ? _delegateToPool(params, vars)
+            : (0, 0);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
