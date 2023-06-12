@@ -109,14 +109,22 @@ library MarketplaceLogic {
         );
         params.orderInfo = IMarketplace(params.marketplace.adapter)
             .getAskOrderInfo(payload);
-        params.ethLeft = vars.ethLeft;
-        params.orderInfo.taker = msg.sender;
+        if (params.orderInfo.isSeaport) {
+            require(
+                msg.sender == params.orderInfo.taker,
+                Errors.INVALID_ORDER_TAKER
+            );
+        } else {
+            params.orderInfo.taker = msg.sender;
+        }
         require(
             params.orderInfo.maker != params.orderInfo.taker,
             Errors.MAKER_SAME_AS_TAKER
         );
 
         _depositETH(vars, params);
+
+        params.ethLeft = vars.ethLeft;
 
         vars.ethLeft -= _buyWithCredit(ps, params);
 
@@ -142,7 +150,7 @@ library MarketplaceLogic {
             params.orderInfo.taker
         );
 
-        bool noDelegate = !vars.isListingTokenETH && params.orderInfo.isOpensea;
+        bool noDelegate = !vars.isListingTokenETH && params.orderInfo.isSeaport;
 
         _flashSupplyFor(ps, vars, params.orderInfo.maker);
         _flashLoanTo(
@@ -216,12 +224,18 @@ library MarketplaceLogic {
             );
             params.orderInfo = IMarketplace(params.marketplace.adapter)
                 .getAskOrderInfo(vars.payload);
-            params.orderInfo.taker = msg.sender;
+            if (params.orderInfo.isSeaport) {
+                require(
+                    msg.sender == params.orderInfo.taker,
+                    Errors.INVALID_ORDER_TAKER
+                );
+            } else {
+                params.orderInfo.taker = msg.sender;
+            }
             require(
                 params.orderInfo.maker != params.orderInfo.taker,
                 Errors.MAKER_SAME_AS_TAKER
             );
-            params.ethLeft = vars.ethLeft;
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
             // this also means that the parameters order is very important
@@ -238,6 +252,8 @@ library MarketplaceLogic {
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
             _depositETH(vars, params);
+
+            params.ethLeft = vars.ethLeft;
 
             vars.ethLeft -= _buyWithCredit(ps, params);
         }

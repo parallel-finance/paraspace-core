@@ -42,6 +42,8 @@ contract SeaportAdapter is IMarketplace {
         );
         // the person who creates listing to sell NFT
         orderInfo.maker = advancedOrders[0].parameters.offerer;
+        // the person who takes listing to buy NFT
+        orderInfo.taker = advancedOrders[1].parameters.offerer;
 
         orderInfo.id = advancedOrders[0].signature;
 
@@ -54,7 +56,7 @@ contract SeaportAdapter is IMarketplace {
             orderInfo.consideration.length > 0,
             Errors.INVALID_MARKETPLACE_ORDER
         );
-        orderInfo.isOpensea = true;
+        orderInfo.isSeaport = true;
     }
 
     function getBidOrderInfo(bytes memory params)
@@ -93,7 +95,7 @@ contract SeaportAdapter is IMarketplace {
             orderInfo.consideration.length > 0,
             Errors.INVALID_MARKETPLACE_ORDER
         );
-        orderInfo.isOpensea = true;
+        orderInfo.isSeaport = true;
     }
 
     function matchAskWithTakerBid(
