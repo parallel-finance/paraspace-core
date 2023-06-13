@@ -361,6 +361,46 @@ export const timeLockStrategyUNI: ITimeLockStrategyParams = {
   period: "86400",
 };
 
+export const timeLockStrategyMATIC: ITimeLockStrategyParams = {
+  name: "timeLockStrategyMATIC",
+  minThreshold: parseUnits("80000", 18).toString(),
+  midThreshold: parseUnits("120000", 18).toString(),
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: parseUnits("240000", 18).toString(),
+  period: "86400",
+};
+
+export const timeLockStrategySTMATIC: ITimeLockStrategyParams = {
+  name: "timeLockStrategySTMATIC",
+  minThreshold: parseUnits("80000", 18).toString(),
+  midThreshold: parseUnits("120000", 18).toString(),
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: parseUnits("240000", 18).toString(),
+  period: "86400",
+};
+
+export const timeLockStrategyCRV: ITimeLockStrategyParams = {
+  name: "timeLockStrategyCRV",
+  minThreshold: parseUnits("80000", 18).toString(),
+  midThreshold: parseUnits("120000", 18).toString(),
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: parseUnits("240000", 18).toString(),
+  period: "86400",
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// ERC721
+////////////////////////////////////////////////////////////////////////////////
+
 export const timeLockStrategyBAYC: ITimeLockStrategyParams = {
   name: "timeLockStrategyBAYC",
   minThreshold: "2",

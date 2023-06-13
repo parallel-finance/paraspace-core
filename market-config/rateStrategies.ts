@@ -145,6 +145,34 @@ export const rateStrategyRDNT: IInterestRateStrategyParams = {
   variableRateSlope2: utils.parseUnits("0.60", 27).toString(),
 };
 
+export const rateStrategyMATIC: IInterestRateStrategyParams = {
+  name: "rateStrategyMATIC",
+  optimalUsageRatio: utils.parseUnits("0.9", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.04", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.60", 27).toString(),
+};
+
+export const rateStrategySTMATIC: IInterestRateStrategyParams = {
+  name: "rateStrategySTMATIC",
+  optimalUsageRatio: utils.parseUnits("0.9", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.04", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.60", 27).toString(),
+};
+
+export const rateStrategyCRV: IInterestRateStrategyParams = {
+  name: "rateStrategyCRV",
+  optimalUsageRatio: utils.parseUnits("0.9", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.04", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.60", 27).toString(),
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// ERC721
+////////////////////////////////////////////////////////////////////////////////
+
 export const rateStrategyNFT: IInterestRateStrategyParams = {
   name: "rateStrategyNFT",
   optimalUsageRatio: utils.parseUnits("0.45", 27).toString(),

@@ -66,6 +66,9 @@ import {
   strategyAAVE,
   strategyUNI,
   strategyRDNT,
+  strategyMATIC,
+  strategySTMATIC,
+  strategyCRV,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -123,7 +126,7 @@ export const CommonConfig: Pick<
   },
 };
 
-export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
+export const HardhatConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceTeam: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
@@ -173,7 +176,7 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   },
 };
 
-export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
+export const MoonbeamConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
@@ -207,7 +210,7 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   Oracle: MoonbeamOracleConfig,
 };
 
-export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
+export const GoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -332,6 +335,111 @@ export const PolygonConfig: IParaSpaceConfiguration = {
     WBTC: strategyWBTC,
     stETH: strategySTETH,
     wstETH: strategyWSTETH,
+    MATIC: strategyMATIC,
+    stMATIC: strategySTMATIC,
+    CRV: strategyCRV,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: PolygonOracleConfig,
+};
+
+export const PolygonZkevmConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    MATIC: strategyMATIC,
+    stMATIC: strategySTMATIC,
+    CRV: strategyCRV,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: PolygonOracleConfig,
+};
+
+export const PolygonMumbaiConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    MATIC: strategyMATIC,
+    stMATIC: strategySTMATIC,
+    CRV: strategyCRV,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: PolygonOracleConfig,
+};
+
+export const PolygonZkevmGoerliConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    MATIC: strategyMATIC,
+    stMATIC: strategySTMATIC,
+    CRV: strategyCRV,
     UniswapV3: strategyUniswapV3,
   },
   Mocks: MocksUSDConfig,
@@ -419,7 +527,7 @@ export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
   Oracle: ZkSyncOracleConfig,
 };
 
-export const ArbitrumParaSpaceConfig: IParaSpaceConfiguration = {
+export const ArbitrumConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceAdmin: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
@@ -505,7 +613,7 @@ export const ArbitrumParaSpaceConfig: IParaSpaceConfiguration = {
   },
 };
 
-export const ZkSyncParaSpaceConfig: IParaSpaceConfiguration = {
+export const ZkSyncConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -535,7 +643,7 @@ export const ZkSyncParaSpaceConfig: IParaSpaceConfiguration = {
   Oracle: ZkSyncOracleConfig,
 };
 
-export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
+export const MainnetConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
@@ -694,18 +802,18 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
 export const ParaSpaceConfigs: Partial<
   Record<eEthereumNetwork, IParaSpaceConfiguration>
 > = {
-  [eEthereumNetwork.hardhat]: HardhatParaSpaceConfig,
-  [eEthereumNetwork.anvil]: HardhatParaSpaceConfig,
-  [eEthereumNetwork.localhost]: HardhatParaSpaceConfig,
-  [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
-  [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
-  [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
+  [eEthereumNetwork.hardhat]: HardhatConfig,
+  [eEthereumNetwork.anvil]: HardhatConfig,
+  [eEthereumNetwork.localhost]: HardhatConfig,
+  [eEthereumNetwork.moonbeam]: MoonbeamConfig,
+  [eEthereumNetwork.goerli]: GoerliConfig,
+  [eEthereumNetwork.mainnet]: MainnetConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
-  [eEthereumNetwork.arbitrum]: ArbitrumParaSpaceConfig,
+  [eEthereumNetwork.arbitrum]: ArbitrumConfig,
   [eEthereumNetwork.polygon]: PolygonConfig,
-  [eEthereumNetwork.polygonMumbai]: PolygonConfig,
-  [eEthereumNetwork.polygonZkevm]: PolygonConfig,
-  [eEthereumNetwork.polygonZkevmGoerli]: PolygonConfig,
-  [eEthereumNetwork.zksync]: ZkSyncParaSpaceConfig,
+  [eEthereumNetwork.polygonMumbai]: PolygonMumbaiConfig,
+  [eEthereumNetwork.polygonZkevm]: PolygonZkevmConfig,
+  [eEthereumNetwork.polygonZkevmGoerli]: PolygonZkevmGoerliConfig,
+  [eEthereumNetwork.zksync]: ZkSyncConfig,
   [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
 };
