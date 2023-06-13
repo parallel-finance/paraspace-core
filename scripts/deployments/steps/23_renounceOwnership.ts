@@ -381,31 +381,16 @@ export const step_23 = async (
       if (DRY_RUN) {
         const encodedData1 = p2pPairStakingProxy.interface.encodeFunctionData(
           "changeAdmin",
-          [paraSpaceAdminAddress]
+          [emergencyAdminAddresses[0]]
         );
         await dryRunEncodedData(p2pPairStakingProxy.address, encodedData1);
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          const encodedData2 = p2pPairStaking.interface.encodeFunctionData(
-            "transferOwnership",
-            [gatewayAdminAddress]
-          );
-          await dryRunEncodedData(p2pPairStaking.address, encodedData2);
-        }
       } else {
         await waitForTx(
           await p2pPairStakingProxy.changeAdmin(
-            paraSpaceAdminAddress,
+            emergencyAdminAddresses[0],
             GLOBAL_OVERRIDES
           )
         );
-        if (gatewayAdminAddress !== paraSpaceAdminAddress) {
-          await waitForTx(
-            await p2pPairStaking.transferOwnership(
-              gatewayAdminAddress,
-              GLOBAL_OVERRIDES
-            )
-          );
-        }
       }
       console.timeEnd("transferring P2PPairStaking ownership...");
       console.log();

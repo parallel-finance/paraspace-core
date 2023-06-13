@@ -4,6 +4,16 @@ pragma solidity 0.8.10;
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
 
 interface IP2PPairStaking {
+    /**
+     * @dev Emitted when the pause is triggered by `account`.
+     */
+    event Paused(address account);
+
+    /**
+     * @dev Emitted when the pause is lifted by `account`.
+     */
+    event Unpaused(address account);
+
     enum StakingType {
         BAYCStaking,
         MAYCStaking,

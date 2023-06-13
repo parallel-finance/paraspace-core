@@ -13,6 +13,8 @@ import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC20, SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {PercentageMath} from "../protocol/libraries/math/PercentageMath.sol";
 import {SignatureChecker} from "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
+import "../protocol/libraries/helpers/Errors.sol";
+import "../interfaces/IACLManager.sol";
 
 contract P2PPairStaking is
     Initializable,
@@ -59,6 +61,8 @@ contract P2PPairStaking is
     uint256 private maycMatchedCap;
     uint256 private bakcMatchedCap;
     address public compoundBot;
+    bool private paused;
+    IACLManager private immutable aclManager;
 
     constructor(
         address _bayc,
@@ -69,7 +73,8 @@ contract P2PPairStaking is
         address _nBakc,
         address _apeCoin,
         address _cApe,
-        address _apeCoinStaking
+        address _apeCoinStaking,
+        address _aclManager
     ) {
         bayc = _bayc;
         mayc = _mayc;
@@ -80,6 +85,7 @@ contract P2PPairStaking is
         apeCoin = _apeCoin;
         cApe = _cApe;
         apeCoinStaking = ApeCoinStaking(_apeCoinStaking);
+        aclManager = IACLManager(_aclManager);
     }
 
     function initialize() public initializer {
@@ -681,7 +687,7 @@ contract P2PPairStaking is
         return this.onERC721Received.selector;
     }
 
-    function setCompoundFee(uint256 _compoundFee) external onlyOwner {
+    function setCompoundFee(uint256 _compoundFee) external onlyPoolAdmin {
         require(
             _compoundFee < PercentageMath.HALF_PERCENTAGE_FACTOR,
             "Fee Too High"
@@ -699,14 +705,73 @@ contract P2PPairStaking is
             compoundBot = _compoundBot;
             emit CompoundBotUpdated(oldValue, _compoundBot);
         }
+    function claimCompoundFee(address receiver) external onlyPoolAdmin {
+        this.claimCApeReward(receiver);
+    }
+
+    /**
+     * @notice Pauses the contract. Only pool admin or emergency admin can call this function
+     **/
+    function pause() external onlyEmergencyOrPoolAdmin {
+        paused = true;
+        emit Paused(_msgSender());
+    }
+
+    /**
+     * @notice Unpause the contract. Only pool admin can call this function
+     **/
+    function unpause() external onlyPoolAdmin {
+        paused = false;
+        emit Unpaused(_msgSender());
     }
 
     function rescueERC20(
         address token,
         address to,
         uint256 amount
-    ) external onlyOwner {
+    ) external onlyPoolAdmin {
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
+    }
+
+    modifier whenNotPaused() {
+        require(!paused, "paused");
+        _;
+    }
+
+    modifier whenPaused() {
+        require(paused, "not paused");
+        _;
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
+        _;
+    }
+
+    /**
+     * @dev Only emergency or pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyEmergencyOrPoolAdmin() {
+        _onlyPoolOrEmergencyAdmin();
+        _;
+    }
+
+    function _onlyPoolAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function _onlyPoolOrEmergencyAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender) ||
+                aclManager.isEmergencyAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
     }
 }

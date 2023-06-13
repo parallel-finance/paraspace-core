@@ -956,13 +956,13 @@ describe("P2P Pair Staking Test", () => {
   it("compound fee work as expected", async () => {
     const {
       users: [user1, user2, user3],
-      gatewayAdmin,
+      poolAdmin,
       bayc,
       ape,
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await p2pPairStaking.connect(gatewayAdmin.signer).setCompoundFee(50)
+      await p2pPairStaking.connect(poolAdmin.signer).setCompoundFee(50)
     );
 
     await supplyAndValidate(bayc, "1", user3, true);
