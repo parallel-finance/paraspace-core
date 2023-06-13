@@ -14,6 +14,7 @@ import {
   VERBOSE,
   COMPILER_VERSION,
   COMPILER_OPTIMIZER_RUNS,
+  ZK_LIBRARIES,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -26,7 +27,7 @@ import fs from "fs";
 
 dotenv.config();
 
-import "solidity-docgen-forked";
+import "solidity-docgen";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
@@ -34,6 +35,9 @@ import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-verify";
 import {eEthereumNetwork} from "./helpers/types";
 
 require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
@@ -48,6 +52,13 @@ require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
 });
 
 const hardhatConfig: HardhatUserConfig = {
+  zksolc: {
+    version: "1.3.9",
+    compilerSource: "binary",
+    settings: {
+      libraries: ZK_LIBRARIES,
+    },
+  },
   contractSizer: {
     alphaSort: true,
     runOnCompile: false,
@@ -73,25 +84,13 @@ const hardhatConfig: HardhatUserConfig = {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
     compilers: [
       {
-        version: COMPILER_VERSION,
+        version: COMPILER_VERSION.split("+")[0],
         settings: {
           optimizer: {
             enabled: true,
             runs: COMPILER_OPTIMIZER_RUNS,
           },
           evmVersion: "london",
-        },
-      },
-      {
-        version: "0.7.6",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 800,
-          },
-          metadata: {
-            bytecodeHash: "none",
-          },
         },
       },
     ],
@@ -184,6 +183,24 @@ const hardhatConfig: HardhatUserConfig = {
       chainId: CHAINS_ID[eEthereumNetwork.polygon],
       url: NETWORKS_RPC_URL[eEthereumNetwork.polygon],
       accounts: DEPLOYER,
+    },
+    zksync: {
+      chainId: CHAINS_ID[eEthereumNetwork.zksync],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.zksync],
+      accounts: DEPLOYER,
+      ethNetwork: "mainnet",
+      zksync: true,
+      verifyURL:
+        "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
+    },
+    zksyncGoerli: {
+      chainId: CHAINS_ID[eEthereumNetwork.zksyncGoerli],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.zksyncGoerli],
+      accounts: DEPLOYER,
+      ethNetwork: "goerli",
+      zksync: true,
+      verifyURL:
+        "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
     },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],

@@ -11,6 +11,7 @@ import {
   MainnetOracleConfig,
   MoonbeamOracleConfig,
   TestnetOracleConfig,
+  ZkSyncOracleConfig,
 } from "./oracle";
 import {
   strategyDAI,
@@ -387,6 +388,36 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   Oracle: ArbitrumOracleConfig,
 };
 
+export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: ZkSyncOracleConfig,
+};
+
 export const ArbitrumParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -471,6 +502,36 @@ export const ArbitrumParaSpaceConfig: IParaSpaceConfiguration = {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
     Multisig: MULTI_SIG || "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
   },
+};
+
+export const ZkSyncParaSpaceConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: ZkSyncOracleConfig,
 };
 
 export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
@@ -641,4 +702,6 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumParaSpaceConfig,
   [eEthereumNetwork.polygon]: PolygonConfig,
+  [eEthereumNetwork.zksync]: ZkSyncParaSpaceConfig,
+  [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
 };

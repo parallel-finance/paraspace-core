@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2020 Lido <info@lido.fi>
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {SafeCast} from '../../dependencies/openzeppelin/contracts/SafeCast.sol';

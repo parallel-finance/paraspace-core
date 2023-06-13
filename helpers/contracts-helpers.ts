@@ -80,7 +80,11 @@ import {
   TimeLock__factory,
   P2PPairStaking__factory,
 } from "../types";
-import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
+import {
+  Artifact,
+  HardhatRuntimeEnvironment,
+  HttpNetworkConfig,
+} from "hardhat/types";
 import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
@@ -90,7 +94,7 @@ import {InitializableImmutableAdminUpgradeabilityProxy} from "../types";
 import {decodeEvents} from "./seaport-helpers/events";
 import {Order, SignatureVersion} from "./blur-helpers/types";
 import {expect} from "chai";
-import {ABI} from "hardhat-deploy/dist/types";
+import {ABI, Libraries} from "hardhat-deploy/dist/types";
 import {ethers} from "ethers";
 import {
   GLOBAL_OVERRIDES,
@@ -106,8 +110,10 @@ import {
   MULTI_SIG_NONCE,
   MULTI_SEND_CHUNK_SIZE,
   PKG_DATA,
+  COMPILER_VERSION,
+  COMPILER_OPTIMIZER_RUNS,
 } from "./hardhat-constants";
-import {chunk, pick} from "lodash";
+import {chunk, first, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import {
   OperationType,
@@ -276,8 +282,8 @@ export const normalizeLibraryAddresses = (
   }
 };
 
-export const withSaveAndVerify = async <C extends ContractFactory>(
-  factory: C,
+export const withSaveAndVerify = async (
+  {artifact, factory}: {artifact: Artifact; factory: ContractFactory},
   id: string,
   args: ConstructorArgs,
   verify = true,
@@ -315,6 +321,32 @@ export const withSaveAndVerify = async <C extends ContractFactory>(
       await (
         instance as InitializableImmutableAdminUpgradeabilityProxy
       ).initialize(impl, initData, GLOBAL_OVERRIDES)
+    );
+  }
+
+  if (VERBOSE) {
+    console.log(
+      `forge verify-contract ${instance.address} \
+  --chain-id ${DRE.network.config.chainId} \
+  --num-of-optimizations ${COMPILER_OPTIMIZER_RUNS} \
+  --watch \
+  ${artifact.sourceName}:${artifact.contractName} \
+${
+  deployArgs.length
+    ? `--constructor-args \
+  $(cast abi-encode "constructor(${first(artifact.abi)
+    .inputs.map((x) => x.type)
+    .join(",")})" ${deployArgs.map((x) => `"${x}"`).join(" ")})`
+    : ""
+} \
+${
+  libraries
+    ? Object.entries(libraries)
+        .map(([k, v]) => `--libraries ${k}:${v}`)
+        .join(" \\ ")
+    : ""
+} \
+  --compiler-version v${COMPILER_VERSION}`
     );
   }
 
@@ -655,7 +687,7 @@ export const getParaSpaceAdmins = async (): Promise<{
 };
 
 export const getFunctionSignatures = (
-  abi: string | ReadonlyArray<Fragment | Fragment | string> | ABI
+  abi: string | ReadonlyArray<Fragment | Fragment | string> | Readonly<ABI>
 ): Array<iFunctionSignature> => {
   const i = new utils.Interface(abi);
   return Object.keys(i.functions).map((f) => {
@@ -1087,4 +1119,82 @@ export const initAndConfigureReserves = async (
 
   console.log("configuring reserves");
   await configureReservesByHelper(reserves, allTokenAddresses);
+};
+
+export const linkRawLibrary = (
+  bytecode: string,
+  libraryName: string,
+  libraryAddress: string
+): string => {
+  const address = libraryAddress.replace("0x", "");
+  let encodedLibraryName;
+  if (libraryName.startsWith("$") && libraryName.endsWith("$")) {
+    encodedLibraryName = libraryName.slice(1, libraryName.length - 1);
+  } else {
+    encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
+      2,
+      36
+    );
+  }
+  const pattern = new RegExp(`_+\\$${encodedLibraryName}\\$_+`, "g");
+  if (!pattern.exec(bytecode)) {
+    throw new Error(
+      `Can't link '${libraryName}' (${encodedLibraryName}) in \n----\n ${bytecode}\n----\n`
+    );
+  }
+  return bytecode.replace(pattern, address);
+};
+
+export const linkRawLibraries = (
+  bytecode: string,
+  libraries: Libraries
+): string => {
+  for (const libName of Object.keys(libraries)) {
+    const libAddress = libraries[libName];
+    bytecode = linkRawLibrary(bytecode, libName, libAddress);
+  }
+  return bytecode;
+};
+
+export const linkLibraries = (
+  artifact: {
+    bytecode: string;
+    linkReferences?: {
+      [libraryFileName: string]: {
+        [libraryName: string]: Array<{length: number; start: number}>;
+      };
+    };
+  },
+  libraries?: Libraries
+) => {
+  let bytecode = artifact.bytecode;
+
+  if (libraries) {
+    if (artifact.linkReferences) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for (const [, fileReferences] of Object.entries(
+        artifact.linkReferences
+      )) {
+        for (const [libName, fixups] of Object.entries(fileReferences)) {
+          const addr = libraries[libName];
+          if (addr === undefined) {
+            continue;
+          }
+
+          for (const fixup of fixups) {
+            bytecode =
+              bytecode.substr(0, 2 + fixup.start * 2) +
+              addr.substr(2) +
+              bytecode.substr(2 + (fixup.start + fixup.length) * 2);
+          }
+        }
+      }
+    } else {
+      bytecode = linkRawLibraries(bytecode, libraries);
+    }
+  }
+
+  // TODO return libraries object with path name <filepath.sol>:<name> for names
+
+  return bytecode;
 };

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../dependencies/openzeppelin/upgradeability/ERC20Upgradeable.sol";
@@ -8,7 +8,7 @@ import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "../dependencies/openzeppelin/contracts/Address.sol";
-import "../dependencies/univ3/interfaces/ISwapRouter.sol";
+import "../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../interfaces/IAutoYieldApe.sol";
 import "../interfaces/IYieldInfo.sol";

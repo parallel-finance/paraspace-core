@@ -10,11 +10,8 @@ import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {
   getParaSpaceConfig,
   isLocalTestnet,
-  isEthereum,
-  isMoonbeam,
   isPublicTestnet,
-  isArbitrum,
-  isPolygon,
+  isMainnet,
 } from "../../../helpers/misc-utils";
 import {waitForTx} from "../../../helpers/misc-utils";
 import {setInitialAssetPricesInOracle} from "../../../helpers/oracles-helpers";
@@ -25,7 +22,7 @@ export const step_09 = async (verify = false) => {
     const allTokens = await getAllTokens();
     const paraSpaceConfig = getParaSpaceConfig();
 
-    if (isEthereum() || isMoonbeam() || isArbitrum() || isPolygon()) {
+    if (isMainnet()) {
       insertContractAddressInDb(eContractid.PriceOracle, ZERO_ADDRESS, false);
     }
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../../dependencies/openzeppelin/upgradeability/ContextUpgradeable.sol";
 import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";

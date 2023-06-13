@@ -29,6 +29,15 @@ export const ArbitrumOracleConfig: IOracleConfig = {
   Nodes: [],
 };
 
+export const ZkSyncOracleConfig: IOracleConfig = {
+  BaseCurrency: ZERO_ADDRESS,
+  BaseCurrencyUnit: BigNumber.from("100000000"),
+  BaseCurrencyDecimals: 8,
+  ExpirationPeriod: 600,
+  DeviationRate: 1000,
+  Nodes: [],
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Testnet
 ////////////////////////////////////////////////////////////////////////////////

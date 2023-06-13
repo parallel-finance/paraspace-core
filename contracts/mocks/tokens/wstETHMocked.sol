@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2020 Lido <info@lido.fi>
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
 import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';

@@ -1,34 +1,34 @@
+import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
+import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {expect} from "chai";
+import {ethers} from "ethers";
 import {ZERO_ADDRESS} from "../helpers/constants";
 import {
-  convertToCurrencyDecimals,
-  withSaveAndVerify,
-} from "../helpers/contracts-helpers";
-import {WalletBalanceProvider, WalletBalanceProvider__factory} from "../types";
-import {
-  borrowAndValidate,
-  changePriceAndValidate,
-  mintAndValidate,
-  supplyAndValidate,
-} from "./helpers/validated-steps";
-import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import {testEnvFixture} from "./helpers/setup-env";
-import {
-  getFirstSigner,
+  getContractFactory,
   getMockIncentivesController,
   getUiIncentiveDataProviderV3,
   getUniswapV3OracleWrapper,
 } from "../helpers/contracts-getters";
-import {ethers} from "ethers";
+import {
+  convertToCurrencyDecimals,
+  withSaveAndVerify,
+} from "../helpers/contracts-helpers";
 import {waitForTx} from "../helpers/misc-utils";
+import {ERC20TokenContractId} from "../helpers/types";
+import {WalletBalanceProvider} from "../types";
+import {testEnvFixture} from "./helpers/setup-env";
 import {
   approveTo,
   createNewPool,
   fund,
   mintNewPosition,
 } from "./helpers/uniswapv3-helper";
-import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {ERC20TokenContractId} from "../helpers/types";
+import {
+  borrowAndValidate,
+  changePriceAndValidate,
+  mintAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
 
 const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -40,7 +40,7 @@ describe("UI Contracts Tests", () => {
       const testEnv = await loadFixture(testEnvFixture);
 
       walletBalanceProvider = (await withSaveAndVerify(
-        new WalletBalanceProvider__factory(await getFirstSigner()),
+        await getContractFactory("WalletBalanceProvider"),
         "WalletBalanceProvider",
         [],
         false

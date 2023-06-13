@@ -17,6 +17,8 @@ import {
   POLYGON_CHAINID,
   RPC_URL,
   TENDERLY_FORK_ID,
+  ZKSYNC_CHAINID,
+  ZKSYNC_GOERLI_CHAINID,
 } from "./helpers/hardhat-constants";
 
 dotenv.config();
@@ -40,21 +42,25 @@ export const buildForkConfig = ():
 
 export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.kovan]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-kovan.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://kovan.infura.io/v3/${INFURA_KEY}`,
+      : `https://kovan.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.ropsten]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-ropsten.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://ropsten.infura.io/v3/${INFURA_KEY}`,
+      : `https://ropsten.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.goerli]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-goerli.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://goerli.infura.io/v3/${INFURA_KEY}`,
+      : `https://goerli.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.mainnet]:
-    RPC_URL || ALCHEMY_KEY
+    RPC_URL ||
+    (ALCHEMY_KEY
       ? `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      : `https://mainnet.infura.io/v3/${INFURA_KEY}`,
+      : `https://mainnet.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.hardhat]: RPC_URL || "http://localhost:8545",
   [eEthereumNetwork.anvil]: RPC_URL || "http://localhost:8545",
   [eEthereumNetwork.ganache]: RPC_URL || "http://localhost:8545",
@@ -68,6 +74,9 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     RPC_URL || `https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygon]:
     RPC_URL || `https://polygonzkevm-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eEthereumNetwork.zksync]: RPC_URL || `https://zksync2-mainnet.zksync.io`,
+  [eEthereumNetwork.zksyncGoerli]:
+    RPC_URL || `https://zksync2-testnet.zksync.dev`,
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
@@ -84,6 +93,8 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.arbitrum]: ARBITRUM_ONE_CHAINID,
   [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
   [eEthereumNetwork.polygon]: POLYGON_CHAINID,
+  [eEthereumNetwork.zksync]: ZKSYNC_CHAINID,
+  [eEthereumNetwork.zksyncGoerli]: ZKSYNC_GOERLI_CHAINID,
 };
 
 export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
@@ -100,4 +111,6 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.arbitrum]: undefined,
   [eEthereumNetwork.arbitrumGoerli]: undefined,
   [eEthereumNetwork.polygon]: undefined,
+  [eEthereumNetwork.zksync]: undefined,
+  [eEthereumNetwork.zksyncGoerli]: undefined,
 };

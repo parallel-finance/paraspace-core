@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IHotWalletProxy} from "../../interfaces/IHotWalletProxy.sol";
 import {NToken} from "./NToken.sol";

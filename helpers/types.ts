@@ -1,18 +1,5 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
-import {PromiseOrValue} from "../types/common";
-
-import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
-import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
-import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
-import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
-import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
-import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
-import {NTokenBAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenBAYC__factory";
-import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMAYC__factory";
-import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
-import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
-import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
-import {PoolPositionMoverLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolPositionMover__factory";
+import {Libraries} from "hardhat/types";
 
 export enum AssetType {
   ERC20 = 0,
@@ -74,22 +61,9 @@ export type ConstructorArgs = (
   | boolean[]
 )[];
 
-export type LibraryAddresses = {[key: string]: string};
+export type LibraryAddresses = Libraries;
 
-export type ParaSpaceLibraryAddresses =
-  | LiquidationLogicLibraryAddresses
-  | PoolCoreLibraryAddresses
-  | PoolMarketplaceLibraryAddresses
-  | PoolParametersLibraryAddresses
-  | PoolConfiguratorLibraryAddresses
-  | BlurExchangeLibraryAddresses
-  | NTokenBAYCLibraryAddresses
-  | NTokenMAYCLibraryAddresses
-  | NTokenLibraryAddresses
-  | NTokenUniswapV3LibraryAddresses
-  | NTokenMoonBirdsLibraryAddresses
-  | PoolPositionMoverLibraryAddresses
-  | {["NFTDescriptor"]: string};
+export type ParaSpaceLibraryAddresses = Libraries;
 
 export enum eEthereumNetwork {
   kovan = "kovan",
@@ -106,6 +80,8 @@ export enum eEthereumNetwork {
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
   polygon = "polygon",
+  zksync = "zksync",
+  zksyncGoerli = "zksyncGoerli",
 }
 
 export enum eContractid {
@@ -716,6 +692,8 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
   [eEthereumNetwork.polygon]: T;
+  [eEthereumNetwork.zksync]: T;
+  [eEthereumNetwork.zksyncGoerli]: T;
 }
 
 export enum RateMode {
@@ -880,10 +858,10 @@ export interface IParaSpaceConfiguration extends ICommonConfiguration {
 export type PoolConfiguration = ICommonConfiguration | IParaSpaceConfiguration;
 
 export type Action = [
-  PromiseOrValue<string>, // target
-  PromiseOrValue<BigNumberish>, // value
-  PromiseOrValue<string>, // signature
-  PromiseOrValue<BytesLike>, // data
-  PromiseOrValue<BigNumberish>, // executeTime
-  PromiseOrValue<boolean> // withDelegatecall
+  string, // target
+  BigNumberish, // value
+  string, // signature
+  BytesLike, // data
+  BigNumberish, // executeTime
+  boolean // withDelegatecall
 ];

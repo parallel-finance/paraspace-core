@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IPriceOracleGetter} from "../interfaces/IPriceOracleGetter.sol";
-import {IUniswapV3Factory} from "../dependencies/uniswap/IUniswapV3Factory.sol";
-import {IUniswapV3PoolState} from "../dependencies/uniswap/IUniswapV3PoolState.sol";
-import {INonfungiblePositionManager} from "../dependencies/uniswap/INonfungiblePositionManager.sol";
-import {LiquidityAmounts} from "../dependencies/uniswap/LiquidityAmounts.sol";
-import {TickMath} from "../dependencies/uniswap/libraries/TickMath.sol";
+import {IUniswapV3Factory} from "../dependencies/uniswapv3-core/interfaces/IUniswapV3Factory.sol";
+import {IUniswapV3PoolState} from "../dependencies/uniswapv3-core/interfaces/pool/IUniswapV3PoolState.sol";
+import {INonfungiblePositionManager} from "../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
+import {LiquidityAmounts} from "../dependencies/uniswapv3-periphery/libraries/LiquidityAmounts.sol";
+import {TickMath} from "../dependencies/uniswapv3-core/libraries/TickMath.sol";
 import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
-import {FullMath} from "../dependencies/uniswap/libraries/FullMath.sol";
+import {FullMath} from "../dependencies/uniswapv3-core/libraries/FullMath.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
-import {SafeCast} from "../dependencies/univ3/libraries/SafeCast.sol";
-import {FixedPoint96} from "../dependencies/univ3/libraries/FixedPoint96.sol";
+import {SafeCast} from "../dependencies/uniswapv3-core/libraries/SafeCast.sol";
+import {FixedPoint96} from "../dependencies/uniswapv3-core/libraries/FixedPoint96.sol";
 
 contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     using SafeCast for uint256;

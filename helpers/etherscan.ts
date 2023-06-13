@@ -27,6 +27,7 @@ type VerificationArgs = {
   constructorArguments: ConstructorArgs;
   relatedSources?: true;
   libraries?: LibraryAddresses;
+  noCompile: boolean;
 };
 
 export const ETHERSCAN_NETWORKS = [
@@ -39,6 +40,8 @@ export const ETHERSCAN_NETWORKS = [
   "goerli",
   "localhost",
   "arbitrum",
+  "zksync",
+  "zksyncGoerli",
 ];
 
 export const ETHERSCAN_APIS = {
@@ -48,6 +51,8 @@ export const ETHERSCAN_APIS = {
   rinkeby: "api-rinkeby.etherscan.io",
   goerli: "api-goerli.etherscan.io",
   arbitrum: "api.arbiscan.io",
+  zksync: "zksync2-mainnet-explorer.zksync.io/contract_verification",
+  zksyncGoerli: "zksync2-testnet-explorer.zksync.dev/contract_verification",
 };
 
 const getIsVerified = async (contractId: string, address: string) => {
@@ -119,6 +124,7 @@ export const verifyEtherscanContract = async (
       constructorArguments,
       relatedSources: true,
       libraries,
+      noCompile: true,
     };
     await runTaskWithRetry("verify:verify", params, times, msDelay);
     isVerified = true;

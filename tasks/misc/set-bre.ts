@@ -1,14 +1,11 @@
 import {task} from "hardhat/config";
 import {
   DRE,
-  isArbitrum,
-  isEthereum,
-  isMoonbeam,
-  isPolygon,
+  isMainnet,
   isPublicTestnet,
   setDRE,
 } from "../../helpers/misc-utils";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
 import {
   FORK,
   GLOBAL_OVERRIDES,
@@ -17,6 +14,7 @@ import {
   TENDERLY_HEAD_ID,
 } from "../../helpers/hardhat-constants";
 import {utils} from "ethers";
+import {Provider} from "zksync-web3";
 
 task(
   `set-DRE`,
@@ -45,6 +43,10 @@ task(
     console.log("- Initialized Tenderly fork:");
     console.log("  - Fork: ", net.getFork());
     console.log("  - Head: ", net.getHead());
+  } else if (_DRE.network.config.zksync) {
+    _DRE.ethers.provider = new Provider(
+      (_DRE.network.config as HttpNetworkConfig).url
+    );
   }
 
   console.log("- Environment");
@@ -66,13 +68,7 @@ task(
 
   setDRE(_DRE);
 
-  if (
-    isPublicTestnet() ||
-    isEthereum() ||
-    isMoonbeam() ||
-    isArbitrum() ||
-    isPolygon()
-  ) {
+  if (isPublicTestnet() || isMainnet()) {
     const feeData = await _DRE.ethers.provider.getFeeData();
     if (feeData.maxFeePerGas) {
       GLOBAL_OVERRIDES.maxFeePerGas = feeData.maxFeePerGas;

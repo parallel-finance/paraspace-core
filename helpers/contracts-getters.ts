@@ -104,6 +104,8 @@ import {
   ERC721TokenMap,
   impersonateAddress,
   getParaSpaceAdmins,
+  normalizeLibraryAddresses,
+  linkLibraries,
 } from "./contracts-helpers";
 import {DRE, getDb, getParaSpaceConfig} from "./misc-utils";
 import {
@@ -118,19 +120,66 @@ import {
   ISwapRouter__factory,
 } from "../types";
 import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
+import {accounts} from "../wallets";
+import * as zk from "zksync-web3";
+import {Deployer} from "@matterlabs/hardhat-zksync-deploy";
+import {Artifact} from "hardhat/types";
+import {ContractFactory} from "ethers";
+import {Libraries} from "hardhat-deploy/dist/types";
 
 export const getFirstSigner = async () => {
-  if (!RPC_URL) {
-    return first(await getEthersSigners())!;
-  }
+  if (DRE.network.zksync) {
+    return new zk.Wallet(
+      last(accounts)!.privateKey,
+      DRE.ethers.provider as zk.Provider
+    );
+  } else {
+    if (!RPC_URL) {
+      return first(await getEthersSigners())!;
+    }
 
-  const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
-  return (
-    await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
-  ).signer;
+    const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
+    return (
+      await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
+    ).signer;
+  }
 };
 
-export const getLastSigner = async () => last(await getEthersSigners())!;
+export const getContractFactory = async (
+  name: string,
+  libraries?: Libraries
+) => {
+  let artifact: Artifact;
+  const signer = await getFirstSigner();
+  if (DRE.network.zksync) {
+    const deployer = new Deployer(DRE, signer as zk.Wallet);
+    artifact = await deployer.loadArtifact(name);
+  } else {
+    artifact = await DRE.artifacts.readArtifact(name);
+    if (libraries) {
+      artifact.bytecode = linkLibraries(
+        artifact,
+        normalizeLibraryAddresses(libraries)
+      );
+    }
+  }
+
+  if (DRE.network.zksync) {
+    return {
+      artifact,
+      factory: new zk.ContractFactory(
+        artifact.abi,
+        artifact.bytecode,
+        signer as zk.Signer
+      ),
+    };
+  } else {
+    return {
+      artifact,
+      factory: new ContractFactory(artifact.abi, artifact.bytecode, signer),
+    };
+  }
+};
 
 export const getPoolAddressesProvider = async (address?: tEthereumAddress) => {
   return await PoolAddressesProvider__factory.connect(
