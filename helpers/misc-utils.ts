@@ -91,7 +91,7 @@ export const isPolygon = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
     [POLYGON_CHAINID].includes(DRE.network.config.chainId!) ||
-    [eEthereumNetwork.polygon].includes(FORK as eEthereumNetwork)
+    [eEthereumNetwork.polygonMumbai].includes(FORK as eEthereumNetwork)
   );
 };
 

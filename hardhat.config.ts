@@ -179,9 +179,9 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumGoerli],
       accounts: DEPLOYER,
     },
-    polygon: {
-      chainId: CHAINS_ID[eEthereumNetwork.polygon],
-      url: NETWORKS_RPC_URL[eEthereumNetwork.polygon],
+    polygonMumbai: {
+      chainId: CHAINS_ID[eEthereumNetwork.polygonMumbai],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.polygonMumbai],
       accounts: DEPLOYER,
     },
     zksync: {

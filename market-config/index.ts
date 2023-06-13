@@ -10,6 +10,7 @@ import {
   ArbitrumOracleConfig,
   MainnetOracleConfig,
   MoonbeamOracleConfig,
+  PolygonOracleConfig,
   TestnetOracleConfig,
   ZkSyncOracleConfig,
 } from "./oracle";
@@ -334,7 +335,7 @@ export const PolygonConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
   },
   Mocks: MocksUSDConfig,
-  Oracle: ArbitrumOracleConfig,
+  Oracle: PolygonOracleConfig,
 };
 
 export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
@@ -701,7 +702,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumParaSpaceConfig,
-  [eEthereumNetwork.polygon]: PolygonConfig,
+  [eEthereumNetwork.polygonMumbai]: PolygonConfig,
   [eEthereumNetwork.zksync]: ZkSyncParaSpaceConfig,
   [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
 };

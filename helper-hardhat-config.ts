@@ -14,7 +14,7 @@ import {
   MAINNET_CHAINID,
   MOONBEAM_CHAINID,
   PARALLEL_CHAINID,
-  POLYGON_CHAINID,
+  POLYGON_MUMBAI_CHAINID,
   RPC_URL,
   TENDERLY_FORK_ID,
   ZKSYNC_CHAINID,
@@ -72,8 +72,8 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     RPC_URL || `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.arbitrumGoerli]:
     RPC_URL || `https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [eEthereumNetwork.polygon]:
-    RPC_URL || `https://polygonzkevm-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eEthereumNetwork.polygonMumbai]:
+    RPC_URL || `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.zksync]: RPC_URL || `https://zksync2-mainnet.zksync.io`,
   [eEthereumNetwork.zksyncGoerli]:
     RPC_URL || `https://zksync2-testnet.zksync.dev`,
@@ -92,7 +92,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.moonbeam]: MOONBEAM_CHAINID,
   [eEthereumNetwork.arbitrum]: ARBITRUM_ONE_CHAINID,
   [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
-  [eEthereumNetwork.polygon]: POLYGON_CHAINID,
+  [eEthereumNetwork.polygonMumbai]: POLYGON_MUMBAI_CHAINID,
   [eEthereumNetwork.zksync]: ZKSYNC_CHAINID,
   [eEthereumNetwork.zksyncGoerli]: ZKSYNC_GOERLI_CHAINID,
 };
@@ -110,7 +110,7 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.moonbeam]: undefined,
   [eEthereumNetwork.arbitrum]: undefined,
   [eEthereumNetwork.arbitrumGoerli]: undefined,
-  [eEthereumNetwork.polygon]: undefined,
+  [eEthereumNetwork.polygonMumbai]: undefined,
   [eEthereumNetwork.zksync]: undefined,
   [eEthereumNetwork.zksyncGoerli]: undefined,
 };
