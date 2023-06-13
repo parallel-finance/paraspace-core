@@ -36,7 +36,8 @@ export const step_19 = async (verify = false) => {
     await deployUserFlashClaimRegistryProxy(
       deployerAddress,
       registry.address,
-      []
+      [],
+      verify
     );
 
     if (!isLocalTestnet() && !isPublicTestnet()) {
