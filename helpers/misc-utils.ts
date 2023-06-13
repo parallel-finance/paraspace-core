@@ -18,6 +18,7 @@ import {
   HARDHAT_CHAINID,
   MAINNET_CHAINID,
   MOONBEAM_CHAINID,
+  POLYGON_CHAINID,
   ZKSYNC_CHAINID,
   ZKSYNC_GOERLI_CHAINID,
 } from "./hardhat-constants";
@@ -83,6 +84,14 @@ export const isEthereum = (): boolean => {
   return (
     [MAINNET_CHAINID].includes(DRE.network.config.chainId!) ||
     [eEthereumNetwork.mainnet].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isPolygon = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [POLYGON_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.polygon].includes(FORK as eEthereumNetwork)
   );
 };
 

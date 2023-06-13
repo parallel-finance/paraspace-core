@@ -306,6 +306,37 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
+export const PolygonConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: ArbitrumOracleConfig,
+};
+
 export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -670,6 +701,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumParaSpaceConfig,
+  [eEthereumNetwork.polygon]: PolygonConfig,
   [eEthereumNetwork.zksync]: ZkSyncParaSpaceConfig,
   [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
 };
