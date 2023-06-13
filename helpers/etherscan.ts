@@ -3,7 +3,9 @@ import {ConstructorArgs, LibraryAddresses, tEthereumAddress} from "./types";
 import axios from "axios";
 import minimatch from "minimatch";
 import {
+  ETHERSCAN_APIS,
   ETHERSCAN_KEY,
+  ETHERSCAN_NETWORKS,
   ETHERSCAN_VERIFICATION_CONTRACTS,
   ETHERSCAN_VERIFICATION_MAX_RETRIES,
 } from "./hardhat-constants";
@@ -28,31 +30,6 @@ type VerificationArgs = {
   relatedSources?: true;
   libraries?: LibraryAddresses;
   noCompile: boolean;
-};
-
-export const ETHERSCAN_NETWORKS = [
-  "mainnet",
-  "ropsten",
-  "kovan",
-  "matic",
-  "mumbai",
-  "rinkeby",
-  "goerli",
-  "localhost",
-  "arbitrum",
-  "zksync",
-  "zksyncGoerli",
-];
-
-export const ETHERSCAN_APIS = {
-  mainnet: "api.etherscan.io",
-  ropsten: "api-ropsten.etherscan.io",
-  kovan: "api-kovan.etherscan.io",
-  rinkeby: "api-rinkeby.etherscan.io",
-  goerli: "api-goerli.etherscan.io",
-  arbitrum: "api.arbiscan.io",
-  zksync: "zksync2-mainnet-explorer.zksync.io/contract_verification",
-  zksyncGoerli: "zksync2-testnet-explorer.zksync.dev/contract_verification",
 };
 
 const getIsVerified = async (contractId: string, address: string) => {
@@ -197,9 +174,9 @@ const hasVerifiedSourceCode = async (
 ): Promise<boolean> => {
   try {
     const {data} = await axios.get(
-      `https://${
+      `${
         ETHERSCAN_APIS[DRE.network.name]
-      }/api?module=contract&action=getsourcecode&address=${address}&apikey=${ETHERSCAN_KEY}`
+      }?module=contract&action=getsourcecode&address=${address}&apikey=${ETHERSCAN_KEY}`
     );
     return (
       data.status === "1" &&

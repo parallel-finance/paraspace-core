@@ -15,6 +15,7 @@ import {
   COMPILER_VERSION,
   COMPILER_OPTIMIZER_RUNS,
   ZK_LIBRARIES,
+  ETHERSCAN_APIS,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -203,19 +204,17 @@ const hardhatConfig: HardhatUserConfig = {
       chainId: CHAINS_ID[eEthereumNetwork.zksync],
       url: NETWORKS_RPC_URL[eEthereumNetwork.zksync],
       accounts: DEPLOYER,
-      ethNetwork: "mainnet",
+      ethNetwork: eEthereumNetwork.mainnet,
       zksync: true,
-      verifyURL:
-        "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
+      verifyURL: ETHERSCAN_APIS[eEthereumNetwork.zksync],
     },
     zksyncGoerli: {
       chainId: CHAINS_ID[eEthereumNetwork.zksyncGoerli],
       url: NETWORKS_RPC_URL[eEthereumNetwork.zksyncGoerli],
       accounts: DEPLOYER,
-      ethNetwork: "goerli",
+      ethNetwork: eEthereumNetwork.goerli,
       zksync: true,
-      verifyURL:
-        "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
+      verifyURL: ETHERSCAN_APIS[eEthereumNetwork.zksyncGoerli],
     },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],

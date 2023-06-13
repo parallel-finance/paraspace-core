@@ -72,6 +72,49 @@ export const ETHERSCAN_VERIFICATION_JOBS = parseInt(
 export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
   process.env.ETHERSCAN_VERIFICATION_MAX_RETRIES || "3"
 );
+export const ETHERSCAN_NETWORKS = [
+  "mainnet",
+  "ropsten",
+  "kovan",
+  "matic",
+  "mumbai",
+  "rinkeby",
+  "goerli",
+  "localhost",
+  "arbitrum",
+  "polygon",
+  "polygonMumbai",
+  "polygonZkevm",
+  "polygonZkevmGoerli",
+  "zksync",
+  "zksyncGoerli",
+];
+export const ETHERSCAN_APIS = {
+  localhost: "http://localhost:4000/api",
+  mainnet: "https://api.etherscan.io/api",
+  ropsten: "https://api-ropsten.etherscan.io/api",
+  kovan: "https://api-kovan.etherscan.io/api",
+  rinkeby: "https://api-rinkeby.etherscan.io/api",
+  goerli: "https://api-goerli.etherscan.io/api",
+  arbitrum: "https://api.arbiscan.io/api",
+  polygon: "https://api.polygonscan.com/api",
+  polygonMumbai: "https://api-mumbai.polygonscan.com/api",
+  polygonZkevm: "https://api-zkevm.polygonscan.com/api",
+  polygonZkevmGoerli: "https://api-testnet-zkevm.polygonscan.com/api",
+  zksync: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
+  zksyncGoerli:
+    "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
+};
+export const BROWSER_URLS = {
+  localhost: "http://localhost:4000",
+  arbitrum: "https://arbiscan.io",
+  polygonZkevm: "https://zkevm.polygonscan.com",
+  polygonZkevmGoerli: "https://testnet-zkevm.polygonscan.com",
+  polygon: "https://polygonscan.com",
+  polygonMumbai: "https://mumbai.polygonscan.com",
+  zksync: "https://zksync2-mainnet-explorer.zksync.io",
+  zksyncGoerli: "https://zksync2-testnet-explorer.zksync.dev",
+};
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");
 export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "24");
@@ -112,7 +155,7 @@ export const GLOBAL_OVERRIDES: Overrides = {
   // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
   // maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
   // type: 2,
-  // gasLimit: 12_450_000,
+  gasLimit: 12_450_000,
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
