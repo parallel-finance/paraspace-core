@@ -229,6 +229,11 @@ const hardhatConfig: HardhatUserConfig = {
       goerli: ETHERSCAN_KEY,
       localhost: ETHERSCAN_KEY,
       arbitrum: ETHERSCAN_KEY,
+      arbitrumGoerli: ETHERSCAN_KEY,
+      polygon: ETHERSCAN_KEY,
+      polygonMumbai: ETHERSCAN_KEY,
+      polygonZkevm: ETHERSCAN_KEY,
+      polygonZkevmGoerli: ETHERSCAN_KEY,
     },
     customChains: [
       {
