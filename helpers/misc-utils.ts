@@ -18,7 +18,10 @@ import {
   HARDHAT_CHAINID,
   MAINNET_CHAINID,
   MOONBEAM_CHAINID,
+  POLYGON_MUMBAI_CHAINID,
   POLYGON_CHAINID,
+  POLYGON_ZKEVM_CHAINID,
+  POLYGON_ZKEVM_GOERLI_CHAINID,
   ZKSYNC_CHAINID,
   ZKSYNC_GOERLI_CHAINID,
 } from "./hardhat-constants";
@@ -47,13 +50,19 @@ export const isLocalTestnet = (): boolean => {
 export const isPublicTestnet = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
-    [GOERLI_CHAINID, ARBITRUM_GOERLI_CHAINID, ZKSYNC_GOERLI_CHAINID].includes(
-      DRE.network.config.chainId!
-    ) ||
+    [
+      GOERLI_CHAINID,
+      ARBITRUM_GOERLI_CHAINID,
+      ZKSYNC_GOERLI_CHAINID,
+      POLYGON_ZKEVM_GOERLI_CHAINID,
+      POLYGON_MUMBAI_CHAINID,
+    ].includes(DRE.network.config.chainId!) ||
     [
       eEthereumNetwork.goerli,
       eEthereumNetwork.arbitrumGoerli,
       eEthereumNetwork.zksyncGoerli,
+      eEthereumNetwork.polygonZkevmGoerli,
+      eEthereumNetwork.polygonMumbai,
     ].includes(FORK as eEthereumNetwork)
   );
 };
@@ -90,8 +99,12 @@ export const isEthereum = (): boolean => {
 export const isPolygon = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
-    [POLYGON_CHAINID].includes(DRE.network.config.chainId!) ||
-    [eEthereumNetwork.polygonMumbai].includes(FORK as eEthereumNetwork)
+    [POLYGON_CHAINID, POLYGON_ZKEVM_CHAINID].includes(
+      DRE.network.config.chainId!
+    ) ||
+    [eEthereumNetwork.polygon, eEthereumNetwork.polygonZkevm].includes(
+      FORK as eEthereumNetwork
+    )
   );
 };
 
@@ -104,7 +117,7 @@ export const isZkSync = (): boolean => {
 };
 
 export const isMainnet = (): boolean =>
-  isEthereum() || isMoonbeam() || isArbitrum() || isZkSync();
+  isEthereum() || isMoonbeam() || isArbitrum() || isZkSync() || isPolygon();
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));

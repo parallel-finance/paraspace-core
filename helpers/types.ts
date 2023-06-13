@@ -79,7 +79,10 @@ export enum eEthereumNetwork {
   moonbeam = "moonbeam",
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
+  polygon = "polygon",
   polygonMumbai = "polygonMumbai",
+  polygonZkevm = "polygonZkevm",
+  polygonZkevmGoerli = "polygonZkevmGoerli",
   zksync = "zksync",
   zksyncGoerli = "zksyncGoerli",
 }
@@ -691,7 +694,10 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.moonbeam]: T;
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
+  [eEthereumNetwork.polygon]: T;
   [eEthereumNetwork.polygonMumbai]: T;
+  [eEthereumNetwork.polygonZkevm]: T;
+  [eEthereumNetwork.polygonZkevmGoerli]: T;
   [eEthereumNetwork.zksync]: T;
   [eEthereumNetwork.zksyncGoerli]: T;
 }

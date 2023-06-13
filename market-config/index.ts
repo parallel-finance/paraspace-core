@@ -702,7 +702,10 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumParaSpaceConfig,
+  [eEthereumNetwork.polygon]: PolygonConfig,
   [eEthereumNetwork.polygonMumbai]: PolygonConfig,
+  [eEthereumNetwork.polygonZkevm]: PolygonConfig,
+  [eEthereumNetwork.polygonZkevmGoerli]: PolygonConfig,
   [eEthereumNetwork.zksync]: ZkSyncParaSpaceConfig,
   [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
 };
