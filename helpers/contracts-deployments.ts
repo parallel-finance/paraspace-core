@@ -2659,6 +2659,7 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
+  const aclManager = await getACLManager();
   const args = [
     allTokens.BAYC.address,
     allTokens.MAYC.address,
@@ -2669,6 +2670,7 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
     allTokens.APE.address,
     allTokens.cAPE.address,
     apeCoinStaking,
+    aclManager.address,
   ];
 
   return withSaveAndVerify(

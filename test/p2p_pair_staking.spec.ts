@@ -951,13 +951,13 @@ describe("P2P Pair Staking Test", () => {
   it("compound fee work as expected", async () => {
     const {
       users: [user1, user2, user3],
-      gatewayAdmin,
+      poolAdmin,
       bayc,
       ape,
     } = await loadFixture(fixture);
 
     await waitForTx(
-      await p2pPairStaking.connect(gatewayAdmin.signer).setCompoundFee(50)
+      await p2pPairStaking.connect(poolAdmin.signer).setCompoundFee(50)
     );
 
     await supplyAndValidate(bayc, "1", user3, true);
@@ -1031,11 +1031,11 @@ describe("P2P Pair Staking Test", () => {
 
     await waitForTx(
       await p2pPairStaking
-        .connect(gatewayAdmin.signer)
-        .claimCompoundFee(gatewayAdmin.address)
+        .connect(poolAdmin.signer)
+        .claimCompoundFee(poolAdmin.address)
     );
 
-    almostEqual(await cApe.balanceOf(gatewayAdmin.address), parseEther("18"));
+    almostEqual(await cApe.balanceOf(poolAdmin.address), parseEther("18"));
   });
 
   it("check ape token can be matched twice", async () => {
