@@ -16,6 +16,7 @@ import {
   COMPILER_OPTIMIZER_RUNS,
   ZK_LIBRARIES,
   ETHERSCAN_APIS,
+  BROWSER_URLS,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -234,16 +235,48 @@ const hardhatConfig: HardhatUserConfig = {
         network: eEthereumNetwork.localhost,
         chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
         urls: {
-          apiURL: "http://localhost:4000/api",
-          browserURL: "http://localhost:4000",
+          apiURL: ETHERSCAN_APIS[eEthereumNetwork.localhost],
+          browserURL: BROWSER_URLS[eEthereumNetwork.localhost],
         },
       },
       {
         network: eEthereumNetwork.arbitrum,
-        chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
+        chainId: CHAINS_ID[eEthereumNetwork.arbitrum]!,
         urls: {
-          apiURL: "https://api.arbiscan.io/api",
-          browserURL: "https://arbiscan.io",
+          apiURL: ETHERSCAN_APIS[eEthereumNetwork.arbitrum],
+          browserURL: BROWSER_URLS[eEthereumNetwork.arbitrum],
+        },
+      },
+      {
+        network: eEthereumNetwork.polygonZkevm,
+        chainId: CHAINS_ID[eEthereumNetwork.polygonZkevm]!,
+        urls: {
+          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygonZkevm],
+          browserURL: BROWSER_URLS[eEthereumNetwork.polygonZkevm],
+        },
+      },
+      {
+        network: eEthereumNetwork.polygonZkevmGoerli,
+        chainId: CHAINS_ID[eEthereumNetwork.polygonZkevmGoerli]!,
+        urls: {
+          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygonZkevmGoerli],
+          browserURL: BROWSER_URLS[eEthereumNetwork.polygonZkevmGoerli],
+        },
+      },
+      {
+        network: eEthereumNetwork.polygon,
+        chainId: CHAINS_ID[eEthereumNetwork.polygon]!,
+        urls: {
+          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygon],
+          browserURL: BROWSER_URLS[eEthereumNetwork.polygon],
+        },
+      },
+      {
+        network: eEthereumNetwork.polygonMumbai,
+        chainId: CHAINS_ID[eEthereumNetwork.polygonMumbai]!,
+        urls: {
+          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygonMumbai],
+          browserURL: BROWSER_URLS[eEthereumNetwork.polygonMumbai],
         },
       },
     ],
