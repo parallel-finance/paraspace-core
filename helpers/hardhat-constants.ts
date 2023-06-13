@@ -74,11 +74,6 @@ export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
 );
 export const ETHERSCAN_NETWORKS = [
   "mainnet",
-  "ropsten",
-  "kovan",
-  "matic",
-  "mumbai",
-  "rinkeby",
   "goerli",
   "localhost",
   "arbitrum",
@@ -92,9 +87,6 @@ export const ETHERSCAN_NETWORKS = [
 export const ETHERSCAN_APIS = {
   localhost: "http://localhost:4000/api",
   mainnet: "https://api.etherscan.io/api",
-  ropsten: "https://api-ropsten.etherscan.io/api",
-  kovan: "https://api-kovan.etherscan.io/api",
-  rinkeby: "https://api-rinkeby.etherscan.io/api",
   goerli: "https://api-goerli.etherscan.io/api",
   arbitrum: "https://api.arbiscan.io/api",
   arbitrumGoerli: "https://api-goerli.arbiscan.io/api",
@@ -108,6 +100,7 @@ export const ETHERSCAN_APIS = {
 };
 export const BROWSER_URLS = {
   localhost: "http://localhost:4000",
+  goerli: "https://goerli.etherscan.io",
   arbitrum: "https://arbiscan.io",
   arbitrumGoerli: "https://goerli.arbiscan.io",
   polygonZkevm: "https://zkevm.polygonscan.com",

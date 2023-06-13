@@ -66,7 +66,6 @@ export type LibraryAddresses = Libraries;
 export type ParaSpaceLibraryAddresses = Libraries;
 
 export enum eEthereumNetwork {
-  kovan = "kovan",
   ropsten = "ropsten",
   goerli = "goerli",
   mainnet = "mainnet",
@@ -682,8 +681,6 @@ export type iParamsPerNetwork<T> = iEthereumParamsPerNetwork<T>;
 export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 
 export interface iEthereumParamsPerNetwork<T> {
-  [eEthereumNetwork.kovan]: T;
-  [eEthereumNetwork.ropsten]: T;
   [eEthereumNetwork.goerli]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;
