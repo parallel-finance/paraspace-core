@@ -509,9 +509,10 @@ contract AutoYieldApe is
         address recipient,
         uint256 amount
     ) internal override {
-        require(sender != recipient, Errors.SENDER_SAME_AS_RECEIVER);
-        _updateYieldIndex(sender, -(amount.toInt256()));
-        _updateYieldIndex(recipient, amount.toInt256());
+        if (sender != recipient) {
+            _updateYieldIndex(sender, -(amount.toInt256()));
+            _updateYieldIndex(recipient, amount.toInt256());
+        }
         super._transfer(sender, recipient, amount);
     }
 }
