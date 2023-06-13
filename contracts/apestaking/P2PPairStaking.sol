@@ -53,7 +53,7 @@ contract P2PPairStaking is
     mapping(bytes32 => MatchedOrder) public matchedOrders;
     mapping(address => mapping(uint32 => uint256)) private apeMatchedCount;
     mapping(address => uint256) private cApeShareBalance;
-    address public matchingOperator;
+    address public __matchingOperator;
     uint256 public compoundFee;
     uint256 private baycMatchedCap;
     uint256 private maycMatchedCap;
@@ -282,8 +282,7 @@ contract P2PPairStaking is
         address apeNTokenOwner = IERC721(apeNToken).ownerOf(order.apeTokenId);
         address nBakcOwner = IERC721(nBakc).ownerOf(order.bakcTokenId);
         require(
-            msg.sender == matchingOperator ||
-                msg.sender == apeNTokenOwner ||
+            msg.sender == apeNTokenOwner ||
                 msg.sender == order.apeCoinOfferer ||
                 (msg.sender == nBakcOwner &&
                     order.stakingType == StakingType.BAKCPairStaking),
@@ -608,9 +607,7 @@ contract P2PPairStaking is
             "order already cancelled"
         );
 
-        if (
-            msg.sender != listingOrder.offerer && msg.sender != matchingOperator
-        ) {
+        if (msg.sender != listingOrder.offerer) {
             require(
                 validateOrderSignature(
                     listingOrder.offerer,
@@ -682,15 +679,6 @@ contract P2PPairStaking is
         bytes memory
     ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
-    }
-
-    function setMatchingOperator(address _matchingOperator) external onlyOwner {
-        require(_matchingOperator != address(0), "zero address");
-        address oldOperator = matchingOperator;
-        if (oldOperator != _matchingOperator) {
-            matchingOperator = _matchingOperator;
-            emit MatchingOperatorUpdated(oldOperator, _matchingOperator);
-        }
     }
 
     function setCompoundFee(uint256 _compoundFee) external onlyOwner {

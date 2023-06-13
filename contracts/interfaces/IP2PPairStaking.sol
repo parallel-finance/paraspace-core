@@ -88,13 +88,6 @@ interface IP2PPairStaking {
     );
 
     /**
-     * @dev Emitted during setMatchingOperator()
-     * @param oldOperator The address of the old matching operator
-     * @param newOperator The address of the new matching operator
-     **/
-    event MatchingOperatorUpdated(address oldOperator, address newOperator);
-
-    /**
      * @dev Emitted during setCompoundFee()
      * @param oldFee The value of the old compound fee
      * @param newFee The value of the new compound fee
@@ -174,10 +167,4 @@ interface IP2PPairStaking {
     function getApeCoinStakingCap(StakingType stakingType)
         external
         returns (uint256);
-
-    /**
-     * @notice set a new matching operator, only owner can call this function
-     * @param _matchingOperator The address of the new matching operator
-     */
-    function setMatchingOperator(address _matchingOperator) external;
 }
