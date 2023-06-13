@@ -97,6 +97,7 @@ export const ETHERSCAN_APIS = {
   rinkeby: "https://api-rinkeby.etherscan.io/api",
   goerli: "https://api-goerli.etherscan.io/api",
   arbitrum: "https://api.arbiscan.io/api",
+  arbitrumGoerli: "https://api-goerli.arbiscan.io/api",
   polygon: "https://api.polygonscan.com/api",
   polygonMumbai: "https://api-mumbai.polygonscan.com/api",
   polygonZkevm: "https://api-zkevm.polygonscan.com/api",
@@ -108,6 +109,7 @@ export const ETHERSCAN_APIS = {
 export const BROWSER_URLS = {
   localhost: "http://localhost:4000",
   arbitrum: "https://arbiscan.io",
+  arbitrumGoerli: "https://goerli.arbiscan.io",
   polygonZkevm: "https://zkevm.polygonscan.com",
   polygonZkevmGoerli: "https://testnet-zkevm.polygonscan.com",
   polygon: "https://polygonscan.com",
