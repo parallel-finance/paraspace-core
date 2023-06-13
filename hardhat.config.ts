@@ -253,6 +253,14 @@ const hardhatConfig: HardhatUserConfig = {
         },
       },
       {
+        network: eEthereumNetwork.arbitrumGoerli,
+        chainId: CHAINS_ID[eEthereumNetwork.arbitrumGoerli]!,
+        urls: {
+          apiURL: ETHERSCAN_APIS[eEthereumNetwork.arbitrumGoerli],
+          browserURL: BROWSER_URLS[eEthereumNetwork.arbitrumGoerli],
+        },
+      },
+      {
         network: eEthereumNetwork.polygonZkevm,
         chainId: CHAINS_ID[eEthereumNetwork.polygonZkevm]!,
         urls: {
