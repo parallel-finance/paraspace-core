@@ -236,71 +236,22 @@ const hardhatConfig: HardhatUserConfig = {
       polygonZkevmGoerli: ETHERSCAN_KEY,
     },
     customChains: [
-      {
-        network: eEthereumNetwork.localhost,
-        chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.localhost],
-          browserURL: BROWSER_URLS[eEthereumNetwork.localhost],
-        },
+      eEthereumNetwork.localhost,
+      eEthereumNetwork.goerli,
+      eEthereumNetwork.arbitrum,
+      eEthereumNetwork.arbitrumGoerli,
+      eEthereumNetwork.polygon,
+      eEthereumNetwork.polygonZkevm,
+      eEthereumNetwork.polygonMumbai,
+      eEthereumNetwork.polygonZkevmGoerli,
+    ].map((network) => ({
+      network,
+      chainId: CHAINS_ID[network]!,
+      urls: {
+        apiURL: ETHERSCAN_APIS[network],
+        browserURL: BROWSER_URLS[network],
       },
-      {
-        network: eEthereumNetwork.goerli,
-        chainId: CHAINS_ID[eEthereumNetwork.goerli]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.goerli],
-          browserURL: BROWSER_URLS[eEthereumNetwork.goerli],
-        },
-      },
-      {
-        network: eEthereumNetwork.arbitrum,
-        chainId: CHAINS_ID[eEthereumNetwork.arbitrum]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.arbitrum],
-          browserURL: BROWSER_URLS[eEthereumNetwork.arbitrum],
-        },
-      },
-      {
-        network: eEthereumNetwork.arbitrumGoerli,
-        chainId: CHAINS_ID[eEthereumNetwork.arbitrumGoerli]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.arbitrumGoerli],
-          browserURL: BROWSER_URLS[eEthereumNetwork.arbitrumGoerli],
-        },
-      },
-      {
-        network: eEthereumNetwork.polygonZkevm,
-        chainId: CHAINS_ID[eEthereumNetwork.polygonZkevm]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygonZkevm],
-          browserURL: BROWSER_URLS[eEthereumNetwork.polygonZkevm],
-        },
-      },
-      {
-        network: eEthereumNetwork.polygonZkevmGoerli,
-        chainId: CHAINS_ID[eEthereumNetwork.polygonZkevmGoerli]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygonZkevmGoerli],
-          browserURL: BROWSER_URLS[eEthereumNetwork.polygonZkevmGoerli],
-        },
-      },
-      {
-        network: eEthereumNetwork.polygon,
-        chainId: CHAINS_ID[eEthereumNetwork.polygon]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygon],
-          browserURL: BROWSER_URLS[eEthereumNetwork.polygon],
-        },
-      },
-      {
-        network: eEthereumNetwork.polygonMumbai,
-        chainId: CHAINS_ID[eEthereumNetwork.polygonMumbai]!,
-        urls: {
-          apiURL: ETHERSCAN_APIS[eEthereumNetwork.polygonMumbai],
-          browserURL: BROWSER_URLS[eEthereumNetwork.polygonMumbai],
-        },
-      },
-    ],
+    })),
   },
 };
 
