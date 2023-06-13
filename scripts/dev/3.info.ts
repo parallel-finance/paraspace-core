@@ -6,7 +6,6 @@ import {
 } from "../../helpers/contracts-helpers";
 import {DRE} from "../../helpers/misc-utils";
 import * as envs from "../../helpers/hardhat-constants";
-import {accounts} from "../../wallets";
 
 const info = async () => {
   console.time("info");
@@ -18,7 +17,6 @@ const info = async () => {
   console.log(await DRE.ethers.provider.getFeeData());
   console.log(envs);
   console.log(await getParaSpaceAdmins());
-  console.log(accounts);
   console.log(signerAddress);
   console.log(await signer.getTransactionCount());
   console.log(

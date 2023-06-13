@@ -70,23 +70,22 @@ task(
 
   if (isPublicTestnet() || isMainnet()) {
     const feeData = await _DRE.ethers.provider.getFeeData();
-    if (feeData.maxFeePerGas) {
+    if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+      GLOBAL_OVERRIDES.type = 2;
       GLOBAL_OVERRIDES.maxFeePerGas = feeData.maxFeePerGas;
-      console.log(
-        "  - MaxFeePerGas:",
-        utils.formatUnits(feeData.maxFeePerGas, "gwei")
-      );
-    }
-    if (feeData.maxPriorityFeePerGas) {
       GLOBAL_OVERRIDES.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
       console.log(
         "  - MaxPriorityFeePerGas:",
         utils.formatUnits(GLOBAL_OVERRIDES.maxPriorityFeePerGas, "gwei")
       );
-    }
-
-    if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
-      GLOBAL_OVERRIDES.type = 2;
+      console.log(
+        "  - MaxFeePerGas:",
+        utils.formatUnits(feeData.maxFeePerGas, "gwei")
+      );
+    } else if (feeData.gasPrice) {
+      GLOBAL_OVERRIDES.gasPrice = feeData.gasPrice;
+      GLOBAL_OVERRIDES.type = 1;
+      console.log("  - GasPrice:", utils.formatUnits(feeData.gasPrice, "gwei"));
     }
   }
 
