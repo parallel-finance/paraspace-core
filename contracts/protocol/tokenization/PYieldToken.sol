@@ -84,9 +84,10 @@ contract PYieldToken is PToken {
         uint256 amount,
         bool validate
     ) internal override {
-        require(from != to, Errors.SENDER_SAME_AS_RECEIVER);
-        _updateUserIndex(from, -(amount.toInt256()));
-        _updateUserIndex(to, amount.toInt256());
+        if (from != to) {
+            _updateUserIndex(from, -(amount.toInt256()));
+            _updateUserIndex(to, amount.toInt256());
+        }
 
         super._transfer(from, to, amount, validate);
     }
