@@ -16,6 +16,28 @@ contract Airdropper is Ownable {
         transferOwnership(owner);
     }
 
+    event AirdroppedERC20(
+        address indexed token,
+        address indexed to,
+        uint256 amount
+    );
+
+    event AirdroppedERC721(
+        address indexed token,
+        address indexed to,
+        uint256[] tokenIds
+    );
+
+    event AirdroppedERC1155(
+        address indexed token,
+        address indexed to,
+        uint256[] tokenIds,
+        uint256[] amounts,
+        bytes payload
+    );
+
+    event AirdroppedETH(address indexed to, uint256 amount);
+
     function airdropERC20(
         address[] calldata tokens,
         address[] calldata tos,
@@ -27,6 +49,7 @@ contract Airdropper is Ownable {
         );
         for (uint256 i = 0; i < tos.length; i++) {
             IERC20(tokens[i]).safeTransfer(tos[i], amounts[i]);
+            emit AirdroppedERC20(tokens[i], tos[i], amounts[i]);
         }
     }
 
@@ -46,6 +69,7 @@ contract Airdropper is Ownable {
                     tos[i],
                     idss[i][j]
                 );
+                emit AirdroppedERC721(tokens[i], tos[i], idss[i]);
             }
         }
     }
@@ -72,6 +96,13 @@ contract Airdropper is Ownable {
                 amountss[i],
                 payloads[i]
             );
+            emit AirdroppedERC1155(
+                tokens[i],
+                tos[i],
+                idss[i],
+                amountss[i],
+                payloads[i]
+            );
         }
     }
 
@@ -86,6 +117,7 @@ contract Airdropper is Ownable {
 
         for (uint256 i = 0; i < tos.length; i++) {
             Helpers.safeTransferETH(tos[i], amounts[i]);
+            emit AirdroppedETH(tos[i], amounts[i]);
         }
     }
 }
