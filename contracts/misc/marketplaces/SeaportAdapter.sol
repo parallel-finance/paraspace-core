@@ -45,8 +45,6 @@ contract SeaportAdapter is IMarketplace {
         // the person who takes listing to buy NFT
         orderInfo.taker = advancedOrders[1].parameters.offerer;
 
-        orderInfo.id = advancedOrders[0].signature;
-
         // NFT, items will be checked inside MarketplaceLogic
         orderInfo.offer = advancedOrders[0].parameters.offer;
         require(orderInfo.offer.length > 0, Errors.INVALID_MARKETPLACE_ORDER);
