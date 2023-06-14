@@ -252,5 +252,5 @@ export const ZK_LIBRARIES = fs.existsSync(ZK_LIBRARIES_PATH)
     };
 
 export const DEPLOY_MAX_RETRIES = parseInt(
-  process.env.DEPLOY_MAX_RETRIES || "3"
+  process.env.DEPLOY_MAX_RETRIES || "6"
 );
