@@ -84,7 +84,7 @@ task(
       );
     } else if (feeData.gasPrice) {
       GLOBAL_OVERRIDES.gasPrice = feeData.gasPrice;
-      GLOBAL_OVERRIDES.type = 1;
+      GLOBAL_OVERRIDES.type = 0;
       console.log("  - GasPrice:", utils.formatUnits(feeData.gasPrice, "gwei"));
     }
   }
