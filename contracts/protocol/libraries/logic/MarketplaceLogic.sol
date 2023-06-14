@@ -872,50 +872,42 @@ library MarketplaceLogic {
         uint256 tokenId,
         bool isReserve
     ) internal {
-        address nTokenOwner = isReserve
-            ? IERC721(vars.xTokenAddress).ownerOf(tokenId)
-            : address(0);
-        bool isNToken = nTokenOwner != address(0);
-
-        if (isNToken) {
-            require(
-                nTokenOwner == address(this) || nTokenOwner == buyer,
-                Errors.INVALID_MARKETPLACE_ORDER
-            );
-
-            if (nTokenOwner == address(this)) {
-                IERC721(vars.xTokenAddress).safeTransferFrom(
-                    address(this),
-                    buyer,
-                    tokenId
-                );
+        address owner = IERC721(token).ownerOf(tokenId);
+        if (!isReserve) {
+            if (owner == address(this)) {
+                IERC721(token).safeTransferFrom(address(this), buyer, tokenId);
+            } else {
+                require(owner == buyer, Errors.INVALID_MARKETPLACE_ORDER);
             }
-
-            uint256[] memory tokenIds = new uint256[](1);
-            tokenIds[0] = tokenId;
-            SupplyLogic.executeCollateralizeERC721(
-                ps._reserves,
-                ps._usersConfig[buyer],
-                token,
-                tokenIds,
-                buyer
-            );
         } else {
-            address owner = IERC721(token).ownerOf(tokenId);
-            require(
-                owner == address(this) || owner == buyer,
-                Errors.INVALID_MARKETPLACE_ORDER
-            );
-
-            if (!isReserve) {
-                if (owner == address(this)) {
-                    IERC721(token).safeTransferFrom(
+            address nTokenOwner = IERC721(vars.xTokenAddress).ownerOf(tokenId);
+            if (nTokenOwner != address(0)) {
+                if (nTokenOwner == address(this)) {
+                    IERC721(vars.xTokenAddress).safeTransferFrom(
                         address(this),
                         buyer,
                         tokenId
                     );
+                } else {
+                    require(
+                        nTokenOwner == buyer,
+                        Errors.INVALID_MARKETPLACE_ORDER
+                    );
                 }
+                uint256[] memory tokenIds = new uint256[](1);
+                tokenIds[0] = tokenId;
+                SupplyLogic.executeCollateralizeERC721(
+                    ps._reserves,
+                    ps._usersConfig[buyer],
+                    token,
+                    tokenIds,
+                    buyer
+                );
             } else {
+                require(
+                    owner == buyer || owner == address(this),
+                    Errors.INVALID_MARKETPLACE_ORDER
+                );
                 DataTypes.ERC721SupplyParams[]
                     memory tokenData = new DataTypes.ERC721SupplyParams[](1);
                 tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
