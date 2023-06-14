@@ -289,6 +289,7 @@ export enum eContractid {
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
+  Airdropper = "Airdropper",
 }
 
 /*

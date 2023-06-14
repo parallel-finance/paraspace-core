@@ -291,6 +291,8 @@ import {
   NTokenChromieSquiggle__factory,
   CLFixedPriceSynchronicityPriceAdapter,
   CLFixedPriceSynchronicityPriceAdapter__factory,
+  Airdropper__factory,
+  Airdropper,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -337,6 +339,14 @@ import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {parseEther} from "ethers/lib/utils";
+
+export const deployAirdropper = async (owner: string, verify?: boolean) =>
+  withSaveAndVerify(
+    new Airdropper__factory(await getFirstSigner()),
+    eContractid.Airdropper,
+    [owner],
+    verify
+  ) as Promise<Airdropper>;
 
 export const deployPoolAddressesProvider = async (
   marketId: string,

@@ -151,3 +151,6 @@ export const TIME_LOCK_SIGS = {
   "0xe177246e": "setDelay(uint256)",
   "0x4dd18bf5": "setPendingAdmin(address)",
 };
+
+export const AIRDROP_CONTRACT = process.env.AIRDROP_CONTRACT || "";
+export const AIRDROP_CONFIG_FILE = process.env.AIRDROP_CONFIG_FILE || "";
