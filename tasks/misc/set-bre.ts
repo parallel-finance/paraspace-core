@@ -74,6 +74,7 @@ task(
       GLOBAL_OVERRIDES.type = 2;
       GLOBAL_OVERRIDES.maxFeePerGas = feeData.maxFeePerGas;
       GLOBAL_OVERRIDES.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      console.log("  - Type:", GLOBAL_OVERRIDES.type);
       console.log(
         "  - MaxPriorityFeePerGas:",
         utils.formatUnits(GLOBAL_OVERRIDES.maxPriorityFeePerGas, "gwei")
@@ -85,6 +86,7 @@ task(
     } else if (feeData.gasPrice) {
       GLOBAL_OVERRIDES.gasPrice = feeData.gasPrice;
       GLOBAL_OVERRIDES.type = 0;
+      console.log("  - Type:", GLOBAL_OVERRIDES.type);
       console.log("  - GasPrice:", utils.formatUnits(feeData.gasPrice, "gwei"));
     }
   }

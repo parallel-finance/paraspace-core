@@ -112,6 +112,7 @@ import {
   PKG_DATA,
   COMPILER_VERSION,
   COMPILER_OPTIMIZER_RUNS,
+  DEPLOY_MAX_RETRIES,
 } from "./hardhat-constants";
 import {chunk, first, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
@@ -282,6 +283,18 @@ export const normalizeLibraryAddresses = (
   }
 };
 
+export const retry = async (fn: any, retries = 0) => {
+  try {
+    return await fn();
+  } catch (e) {
+    if (++retries < DEPLOY_MAX_RETRIES) {
+      return await retry(fn, retries);
+    } else {
+      throw e;
+    }
+  }
+};
+
 export const withSaveAndVerify = async (
   {artifact, factory}: {artifact: Artifact; factory: ContractFactory},
   id: string,
@@ -290,43 +303,44 @@ export const withSaveAndVerify = async (
   proxy = false,
   libraries?: ParaSpaceLibraryAddresses,
   signatures?: iFunctionSignature[]
-) => {
-  const addressInDb = await getContractAddressInDb(id);
-  if (DEPLOY_INCREMENTAL && isNotFalsyOrZeroAddress(addressInDb)) {
-    console.log("contract address is already in db ", id);
-    return await factory.attach(addressInDb);
-  }
+) =>
+  retry(async () => {
+    const addressInDb = await getContractAddressInDb(id);
+    if (DEPLOY_INCREMENTAL && isNotFalsyOrZeroAddress(addressInDb)) {
+      console.log("contract address is already in db ", id);
+      return await factory.attach(addressInDb);
+    }
 
-  const normalizedLibraries = normalizeLibraryAddresses(libraries);
-  const deployArgs = proxy ? args.slice(0, args.length - 2) : args;
-  const [impl, initData] = (
-    proxy ? args.slice(args.length - 2) : []
-  ) as string[];
-  const instance = await factory.deploy(...deployArgs, GLOBAL_OVERRIDES);
-  await waitForTx(instance.deployTransaction);
-  await registerContractInDb(
-    id,
-    instance,
-    deployArgs,
-    normalizedLibraries,
-    signatures
-  );
-
-  if (verify) {
-    await verifyContract(id, instance, deployArgs, normalizedLibraries);
-  }
-
-  if (proxy) {
-    await waitForTx(
-      await (
-        instance as InitializableImmutableAdminUpgradeabilityProxy
-      ).initialize(impl, initData, GLOBAL_OVERRIDES)
+    const normalizedLibraries = normalizeLibraryAddresses(libraries);
+    const deployArgs = proxy ? args.slice(0, args.length - 2) : args;
+    const [impl, initData] = (
+      proxy ? args.slice(args.length - 2) : []
+    ) as string[];
+    const instance = await factory.deploy(...deployArgs, GLOBAL_OVERRIDES);
+    await waitForTx(instance.deployTransaction);
+    await registerContractInDb(
+      id,
+      instance,
+      deployArgs,
+      normalizedLibraries,
+      signatures
     );
-  }
 
-  if (VERBOSE) {
-    console.log(
-      `forge verify-contract ${instance.address} \
+    if (verify) {
+      await verifyContract(id, instance, deployArgs, normalizedLibraries);
+    }
+
+    if (proxy) {
+      await waitForTx(
+        await (
+          instance as InitializableImmutableAdminUpgradeabilityProxy
+        ).initialize(impl, initData, GLOBAL_OVERRIDES)
+      );
+    }
+
+    if (VERBOSE) {
+      console.log(
+        `forge verify-contract ${instance.address} \
   --chain-id ${DRE.network.config.chainId} \
   --num-of-optimizations ${COMPILER_OPTIMIZER_RUNS} \
   --watch \
@@ -347,11 +361,11 @@ ${
     : ""
 } \
   --compiler-version v${COMPILER_VERSION}`
-    );
-  }
+      );
+    }
 
-  return instance;
-};
+    return instance;
+  });
 
 export const convertToCurrencyDecimals = async (
   tokenAddress: tEthereumAddress,

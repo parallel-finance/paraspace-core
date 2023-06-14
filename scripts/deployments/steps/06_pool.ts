@@ -12,6 +12,7 @@ import {
   getAllTokens,
   getUniswapV3SwapRouter,
   getWETH,
+  recordByteCodeOnL1,
 } from "../../../helpers/contracts-getters";
 import {
   getContractAddressInDb,
@@ -19,6 +20,7 @@ import {
 } from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {
+  DRE,
   getParaSpaceConfig,
   isLocalTestnet,
   waitForTx,
@@ -43,6 +45,10 @@ export const step_06 = async (verify = false) => {
 
     const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
       await deployPoolParaProxyInterfaces(verify);
+
+    if (DRE.network.config.zksync) {
+      await recordByteCodeOnL1("ParaProxy");
+    }
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -159,10 +165,13 @@ export const step_06 = async (verify = false) => {
     );
 
     const poolProxy = await getPoolProxy(poolAddress);
-    const uniswapV3Router = await getUniswapV3SwapRouter();
     const allTokens = await getAllTokens();
 
-    if (allTokens[ERC20TokenContractId.APE]) {
+    if (
+      allTokens[ERC20TokenContractId.APE] &&
+      (await getContractAddressInDb(eContractid.UniswapV3SwapRouter))
+    ) {
+      const uniswapV3Router = await getUniswapV3SwapRouter();
       const cAPE = await getAutoCompoundApe();
       await waitForTx(
         await poolProxy.unlimitedApproveTo(

@@ -184,7 +184,7 @@ export const PKG_DATA = {
     commit: COMMIT,
   },
   compiler: {
-    version: COMPILER_VERSION,
+    version: "v" + COMPILER_VERSION,
     optimizer: {
       runs: COMPILER_OPTIMIZER_RUNS,
     },
@@ -250,3 +250,7 @@ export const ZK_LIBRARIES = fs.existsSync(ZK_LIBRARIES_PATH)
         MerkleVerifier: ZERO_ADDRESS,
       },
     };
+
+export const DEPLOY_MAX_RETRIES = parseInt(
+  process.env.DEPLOY_MAX_RETRIES || "3"
+);

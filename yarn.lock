@@ -978,6 +978,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@matterlabs/zksync-contracts@npm:^0.6.1":
+  version: 0.6.1
+  resolution: "@matterlabs/zksync-contracts@npm:0.6.1"
+  peerDependencies:
+    "@openzeppelin/contracts": 4.6.0
+    "@openzeppelin/contracts-upgradeable": 4.6.0
+  checksum: 736215697fb7529de2bfbb1d73f2a2656d4d048cd2b6fa46e67deceb6c0cbe7ceebc1c6dcb762c7522f527f7bfcd335bf4421061e85d9779c36602f967da4f25
+  languageName: node
+  linkType: hard
+
 "@metamask/eth-sig-util@npm:^4.0.0":
   version: 4.0.1
   resolution: "@metamask/eth-sig-util@npm:4.0.1"
@@ -1338,23 +1348,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomiclabs/hardhat-etherscan@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@nomiclabs/hardhat-etherscan@npm:3.1.0"
+"@nomiclabs/hardhat-etherscan@npm:^3.1.7":
+  version: 3.1.7
+  resolution: "@nomiclabs/hardhat-etherscan@npm:3.1.7"
   dependencies:
     "@ethersproject/abi": ^5.1.2
     "@ethersproject/address": ^5.0.2
-    cbor: ^5.0.2
+    cbor: ^8.1.0
     chalk: ^2.4.2
     debug: ^4.1.1
     fs-extra: ^7.0.1
     lodash: ^4.17.11
     semver: ^6.3.0
     table: ^6.8.0
-    undici: ^5.4.0
+    undici: ^5.14.0
   peerDependencies:
     hardhat: ^2.0.4
-  checksum: 3f28abc39edce2936226b6d0087c3be78bffcba68b6935f3f60767f0e10233e940ddc74803dff91f7ddf9464a7199aab00fba08d8b3865dbc2f8936f53a7a5a5
+  checksum: 32d74e567e78a940a79cbe49c5dee0eb5cda0a4c0c34a9badfaf13d45e6054d9e717c28b8d2b0b20f29721a484af15a52d391fb60768222c4b13de92ef0f72b3
   languageName: node
   linkType: hard
 
@@ -1469,9 +1479,10 @@ __metadata:
     "@matterlabs/hardhat-zksync-deploy": ^0.6.3
     "@matterlabs/hardhat-zksync-solc": ^0.3.17
     "@matterlabs/hardhat-zksync-verify": ^0.1.7
+    "@matterlabs/zksync-contracts": ^0.6.1
     "@nomicfoundation/hardhat-network-helpers": ^1.0.6
     "@nomiclabs/hardhat-ethers": ^2.0.0
-    "@nomiclabs/hardhat-etherscan": ^3.1.0
+    "@nomiclabs/hardhat-etherscan": ^3.1.7
     "@nomiclabs/hardhat-waffle": 2.0.3
     "@openzeppelin/contracts": 4.2.0
     "@openzeppelin/contracts-upgradeable": 4.2.0
@@ -3927,7 +3938,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bignumber.js@npm:^9.0.0, bignumber.js@npm:^9.0.1":
+"bignumber.js@npm:^9.0.0":
   version: 9.1.0
   resolution: "bignumber.js@npm:9.1.0"
   checksum: 52ec2bb5a3874d7dc1a1018f28f8f7aff4683515ffd09d6c2d93191343c76567ae0ee32cc45149d53afb2b904bc62ed471a307b35764beea7e9db78e56bef6c6
@@ -4534,17 +4545,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cbor@npm:^5.0.2":
-  version: 5.2.0
-  resolution: "cbor@npm:5.2.0"
-  dependencies:
-    bignumber.js: ^9.0.1
-    nofilter: ^1.0.4
-  checksum: b3c39dae64370f361526dbec88f51d0f1b47027224cdd21dbd64c228f0fe7eaa945932d349ec5324068a6c6dcdbb1e3b46242852524fd53c526d14cb60514bdc
-  languageName: node
-  linkType: hard
-
-"cbor@npm:^8.0.0":
+"cbor@npm:^8.0.0, cbor@npm:^8.1.0":
   version: 8.1.0
   resolution: "cbor@npm:8.1.0"
   dependencies:
@@ -11499,13 +11500,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nofilter@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "nofilter@npm:1.0.4"
-  checksum: 54d864f745de5c3312994e880cf2d4f55e34830d6adc8275dce3731507ca380d21040336e4a277a4901551c07f04c452fbeffd57fad1dc8f68a2943eaf894a04
-  languageName: node
-  linkType: hard
-
 "nofilter@npm:^3.1.0":
   version: 3.1.0
   resolution: "nofilter@npm:3.1.0"
@@ -15333,15 +15327,6 @@ __metadata:
   dependencies:
     busboy: ^1.6.0
   checksum: baceaa9e610966631e86ad2869b657556dd465438eed55e8079cec2a306ecbeecfde2d6e37e43baf96a4c59588ebef50476131e96e018dcc0a7f5db7e6a06c85
-  languageName: node
-  linkType: hard
-
-"undici@npm:^5.4.0":
-  version: 5.11.0
-  resolution: "undici@npm:5.11.0"
-  dependencies:
-    busboy: ^1.6.0
-  checksum: 20669ef4023d24a75e81ed8142829f525f16af14d61f833b5f19cfc6bed7c706adde343a190d764dcceb227eba3211222d2b194010462a2ca221a7da0487f563
   languageName: node
   linkType: hard
 

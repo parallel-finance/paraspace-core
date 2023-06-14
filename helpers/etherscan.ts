@@ -29,7 +29,6 @@ type VerificationArgs = {
   constructorArguments: ConstructorArgs;
   relatedSources?: true;
   libraries?: LibraryAddresses;
-  noCompile: boolean;
 };
 
 const getIsVerified = async (contractId: string, address: string) => {
@@ -101,7 +100,6 @@ export const verifyEtherscanContract = async (
       constructorArguments,
       relatedSources: true,
       libraries,
-      noCompile: true,
     };
     await runTaskWithRetry("verify:verify", params, times, msDelay);
     isVerified = true;
@@ -197,9 +195,9 @@ const verifyProxyContract = async (
       "Content-Type": "application/x-www-form-urlencoded",
     };
     const {data} = await axios.post(
-      `https://${
+      `${
         ETHERSCAN_APIS[DRE.network.name]
-      }/api?module=contract&action=verifyproxycontract&apikey=${ETHERSCAN_KEY}`,
+      }?module=contract&action=verifyproxycontract&apikey=${ETHERSCAN_KEY}`,
       `address=${address}`,
       {
         headers,

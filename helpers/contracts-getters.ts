@@ -119,19 +119,27 @@ import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
 } from "../types";
-import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
+import {
+  GLOBAL_OVERRIDES,
+  IMPERSONATE_ADDRESS,
+  RPC_URL,
+} from "./hardhat-constants";
 import {accounts} from "../wallets";
 import * as zk from "zksync-web3";
 import {Deployer} from "@matterlabs/hardhat-zksync-deploy";
-import {Artifact} from "hardhat/types";
-import {ContractFactory} from "ethers";
+import {Artifact, HttpNetworkConfig} from "hardhat/types";
+import {ContractFactory, ethers} from "ethers";
 import {Libraries} from "hardhat-deploy/dist/types";
+import {ZERO_ADDRESS} from "./constants";
 
 export const getFirstSigner = async () => {
   if (DRE.network.zksync) {
     return new zk.Wallet(
       last(accounts)!.privateKey,
-      DRE.ethers.provider as zk.Provider
+      DRE.ethers.provider as zk.Provider,
+      new ethers.providers.JsonRpcProvider(
+        (DRE.network.config as HttpNetworkConfig).ethNetwork
+      )
     );
   } else {
     if (!RPC_URL) {
@@ -179,6 +187,33 @@ export const getContractFactory = async (
       factory: new ContractFactory(artifact.abi, artifact.bytecode, signer),
     };
   }
+};
+
+export const recordByteCodeOnL1 = async (
+  name: string,
+  libraries?: Libraries
+) => {
+  let artifact: Artifact;
+  const signer = (await getFirstSigner()) as zk.Wallet;
+  if (DRE.network.zksync) {
+    const deployer = new Deployer(DRE, signer as zk.Wallet);
+    artifact = await deployer.loadArtifact(name);
+  } else {
+    artifact = await DRE.artifacts.readArtifact(name);
+    if (libraries) {
+      artifact.bytecode = linkLibraries(
+        artifact,
+        normalizeLibraryAddresses(libraries)
+      );
+    }
+  }
+  await signer.requestExecute({
+    contractAddress: ZERO_ADDRESS,
+    calldata: "0x",
+    l2GasLimit: GLOBAL_OVERRIDES.gasLimit,
+    l2Value: "0",
+    factoryDeps: [artifact.bytecode],
+  });
 };
 
 export const getPoolAddressesProvider = async (address?: tEthereumAddress) => {
