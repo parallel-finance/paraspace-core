@@ -189,25 +189,15 @@ export const getContractFactory = async (
   }
 };
 
-export const recordByteCodeOnL1 = async (
-  name: string,
-  libraries?: Libraries
-) => {
-  let artifact: Artifact;
-  const signer = (await getFirstSigner()) as zk.Wallet;
-  if (DRE.network.zksync) {
-    const deployer = new Deployer(DRE, signer as zk.Wallet);
-    artifact = await deployer.loadArtifact(name);
-  } else {
-    artifact = await DRE.artifacts.readArtifact(name);
-    if (libraries) {
-      artifact.bytecode = linkLibraries(
-        artifact,
-        normalizeLibraryAddresses(libraries)
-      );
-    }
+export const recordByteCodeOnL1 = async (name: string) => {
+  if (!DRE.network.zksync) {
+    return;
   }
-  await signer.requestExecute({
+
+  const signer = await getFirstSigner();
+  const deployer = new Deployer(DRE, signer as zk.Wallet);
+  const artifact = await deployer.loadArtifact(name);
+  await (signer as zk.Wallet).requestExecute({
     contractAddress: ZERO_ADDRESS,
     calldata: "0x",
     l2GasLimit: GLOBAL_OVERRIDES.gasLimit,
