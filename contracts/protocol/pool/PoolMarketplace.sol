@@ -2,11 +2,8 @@
 pragma solidity 0.8.10;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
-import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
-import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPoolMarketplace} from "../../interfaces/IPoolMarketplace.sol";
 import {PoolStorage} from "./PoolStorage.sol";
@@ -32,9 +29,6 @@ contract PoolMarketplace is
     PoolStorage,
     IPoolMarketplace
 {
-    using ReserveLogic for DataTypes.ReserveData;
-    using SafeERC20 for IERC20;
-
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 149;
 
