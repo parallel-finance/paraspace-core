@@ -4,6 +4,7 @@ import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {ITimeLock} from "../../../interfaces/ITimeLock.sol";
 import "../../../interfaces/IPool.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
@@ -31,6 +32,72 @@ library ApeStakingLogic {
     event UnstakeApeIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
+     * @notice Withdraw staked ApeCoin from the BAYC pool.  If withdraw is total staked amount, performs an automatic claim.
+     * @param _nfts Array of BAYC NFT's with staked amounts
+     * @param _recipient Address to send withdraw amount and claim to
+     */
+    function executeWithdrawBAYC(
+        IPool POOL,
+        address underlyingAsset,
+        ApeCoinStaking _apeCoinStaking,
+        ApeCoinStaking.SingleNft[] calldata _nfts,
+        address _recipient,
+        DataTypes.TimeLockParams memory _timeLockParams
+    ) external {
+        if (_timeLockParams.releaseTime != 0) {
+            IERC20 ApeCoin = _apeCoinStaking.apeCoin();
+            uint256 beforeBalance = ApeCoin.balanceOf(address(this));
+            _apeCoinStaking.withdrawBAYC(_nfts, address(this));
+            uint256 afterBalance = ApeCoin.balanceOf(address(this));
+
+            uint256 totalAmount = afterBalance - beforeBalance;
+            createApeCoinAgreement(
+                POOL,
+                underlyingAsset,
+                ApeCoin,
+                totalAmount,
+                _recipient,
+                _timeLockParams
+            );
+        } else {
+            _apeCoinStaking.withdrawBAYC(_nfts, _recipient);
+        }
+    }
+
+    /**
+     * @notice Withdraw staked ApeCoin from the MAYC pool.  If withdraw is total staked amount, performs an automatic claim.
+     * @param _nfts Array of MAYC NFT's with staked amounts
+     * @param _recipient Address to send withdraw amount and claim to
+     */
+    function executeWithdrawMAYC(
+        IPool POOL,
+        address underlyingAsset,
+        ApeCoinStaking _apeCoinStaking,
+        ApeCoinStaking.SingleNft[] calldata _nfts,
+        address _recipient,
+        DataTypes.TimeLockParams memory _timeLockParams
+    ) external {
+        if (_timeLockParams.releaseTime != 0) {
+            IERC20 ApeCoin = _apeCoinStaking.apeCoin();
+            uint256 beforeBalance = ApeCoin.balanceOf(address(this));
+            _apeCoinStaking.withdrawMAYC(_nfts, address(this));
+            uint256 afterBalance = ApeCoin.balanceOf(address(this));
+
+            uint256 totalAmount = afterBalance - beforeBalance;
+            createApeCoinAgreement(
+                POOL,
+                underlyingAsset,
+                ApeCoin,
+                totalAmount,
+                _recipient,
+                _timeLockParams
+            );
+        } else {
+            _apeCoinStaking.withdrawMAYC(_nfts, _recipient);
+        }
+    }
+
+    /**
      * @notice withdraw Ape coin staking position from ApeCoinStaking
      * @param _apeCoinStaking ApeCoinStaking contract address
      * @param poolId identify whether BAYC or MAYC paired with BAKC
@@ -38,32 +105,65 @@ library ApeStakingLogic {
      * @param _apeRecipient the receiver of ape coin
      */
     function withdrawBAKC(
+        IPool POOL,
+        address underlyingAsset,
         ApeCoinStaking _apeCoinStaking,
         uint256 poolId,
         ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs,
-        address _apeRecipient
+        address _apeRecipient,
+        DataTypes.TimeLockParams memory _timeLockParams
     ) external {
         ApeCoinStaking.PairNftWithdrawWithAmount[]
             memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                 0
             );
 
-        uint256 beforeBalance = _apeCoinStaking.apeCoin().balanceOf(
-            address(this)
-        );
+        IERC20 ApeCoin = _apeCoinStaking.apeCoin();
+        uint256 beforeBalance = ApeCoin.balanceOf(address(this));
         if (poolId == BAYC_POOL_ID) {
             _apeCoinStaking.withdrawBAKC(_nftPairs, _otherPairs);
         } else {
             _apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
         }
-        uint256 afterBalance = _apeCoinStaking.apeCoin().balanceOf(
-            address(this)
-        );
+        uint256 afterBalance = ApeCoin.balanceOf(address(this));
 
-        _apeCoinStaking.apeCoin().safeTransfer(
-            _apeRecipient,
-            afterBalance - beforeBalance
+        uint256 totalAmount = afterBalance - beforeBalance;
+        if (_timeLockParams.releaseTime != 0) {
+            createApeCoinAgreement(
+                POOL,
+                underlyingAsset,
+                ApeCoin,
+                totalAmount,
+                _apeRecipient,
+                _timeLockParams
+            );
+        } else {
+            ApeCoin.safeTransfer(_apeRecipient, totalAmount);
+        }
+    }
+
+    function createApeCoinAgreement(
+        IPool POOL,
+        address underlyingAsset,
+        IERC20 ApeCoin,
+        uint256 amount,
+        address recipient,
+        DataTypes.TimeLockParams memory timeLockParams
+    ) internal {
+        ITimeLock timeLock = POOL.TIME_LOCK();
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        timeLock.createAgreement(
+            DataTypes.AssetType.ERC20,
+            timeLockParams.actionType,
+            underlyingAsset,
+            address(ApeCoin),
+            amounts,
+            recipient,
+            timeLockParams.releaseTime
         );
+        ApeCoin.safeTransfer(address(timeLock), amount);
     }
 
     /**

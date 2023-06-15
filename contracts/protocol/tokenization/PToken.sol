@@ -124,6 +124,7 @@ contract PToken is
                     DataTypes.AssetType.ERC20,
                     timeLockParams.actionType,
                     _underlyingAsset,
+                    _underlyingAsset,
                     amounts,
                     receiverOfUnderlying,
                     timeLockParams.releaseTime
@@ -224,6 +225,7 @@ contract PToken is
             timeLock.createAgreement(
                 DataTypes.AssetType.ERC20,
                 timeLockParams.actionType,
+                _underlyingAsset,
                 _underlyingAsset,
                 amounts,
                 target,

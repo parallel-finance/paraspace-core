@@ -16,7 +16,8 @@ interface INTokenApeStaking {
 
     function withdrawApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts,
-        address _recipient
+        address _recipient,
+        DataTypes.TimeLockParams memory _timeLockParams
     ) external;
 
     function depositBAKC(
@@ -30,7 +31,8 @@ interface INTokenApeStaking {
 
     function withdrawBAKC(
         ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs,
-        address _apeRecipient
+        address _apeRecipient,
+        DataTypes.TimeLockParams memory _timeLockParams
     ) external;
 
     function unstakePositionAndRepay(uint256 tokenId, address unstaker)

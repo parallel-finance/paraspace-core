@@ -124,6 +124,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
                     DataTypes.AssetType.ERC721,
                     timeLockParams.actionType,
                     underlyingAsset,
+                    underlyingAsset,
                     tokenIds,
                     receiverOfUnderlying,
                     timeLockParams.releaseTime
@@ -174,6 +175,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
             timeLock.createAgreement(
                 DataTypes.AssetType.ERC721,
                 timeLockParams.actionType,
+                underlyingAsset,
                 underlyingAsset,
                 tokenIds,
                 target,
