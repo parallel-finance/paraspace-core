@@ -20,6 +20,7 @@ import {
   getContractAddressInDb,
   getParaSpaceAdmins,
   dryRunEncodedData,
+  getEthersSigners,
 } from "../../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {waitForTx} from "../../../helpers/misc-utils";
@@ -378,18 +379,17 @@ export const step_23 = async (
       const p2pPairStaking = await getP2PPairStaking();
       const p2pPairStakingProxy =
         await getInitializableAdminUpgradeabilityProxy(p2pPairStaking.address);
+      const signers = await getEthersSigners();
+      const adminAddress = signers[5].getAddress();
       if (DRY_RUN) {
         const encodedData1 = p2pPairStakingProxy.interface.encodeFunctionData(
           "changeAdmin",
-          [emergencyAdminAddresses[0]]
+          adminAddress
         );
         await dryRunEncodedData(p2pPairStakingProxy.address, encodedData1);
       } else {
         await waitForTx(
-          await p2pPairStakingProxy.changeAdmin(
-            emergencyAdminAddresses[0],
-            GLOBAL_OVERRIDES
-          )
+          await p2pPairStakingProxy.changeAdmin(adminAddress, GLOBAL_OVERRIDES)
         );
       }
       console.timeEnd("transferring P2PPairStaking ownership...");

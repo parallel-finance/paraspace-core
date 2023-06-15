@@ -118,13 +118,29 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
+        uint256 totalWithdrawAmount = 0;
         for (uint256 index = 0; index < _nfts.length; index++) {
             require(
                 nToken.ownerOf(_nfts[index].tokenId) == msg.sender,
                 Errors.NOT_THE_OWNER
             );
+            totalWithdrawAmount += _nfts[index].amount;
         }
-        INTokenApeStaking(xTokenAddress).withdrawApeCoin(_nfts, msg.sender);
+
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+            .calculateTimeLockParams(
+                ps._reserves[address(APE_COIN)],
+                DataTypes.TimeLockFactorParams({
+                    assetType: DataTypes.AssetType.ERC20,
+                    asset: address(APE_COIN),
+                    amount: totalWithdrawAmount
+                })
+            );
+        INTokenApeStaking(xTokenAddress).withdrawApeCoin(
+            _nfts,
+            msg.sender,
+            timeLockParams
+        );
 
         _checkUserHf(ps, msg.sender, true);
     }
@@ -162,6 +178,7 @@ contract PoolApeStaking is
 
         uint256[] memory transferredTokenIds = new uint256[](_nftPairs.length);
         uint256 actualTransferAmount = 0;
+        uint256 totalWithdrawAmount = 0;
 
         for (uint256 index = 0; index < _nftPairs.length; index++) {
             require(
@@ -187,11 +204,24 @@ contract PoolApeStaking is
                     .bakcTokenId;
                 actualTransferAmount++;
             }
+
+            totalWithdrawAmount += _nftPairs[index].amount;
         }
+
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+            .calculateTimeLockParams(
+                ps._reserves[address(APE_COIN)],
+                DataTypes.TimeLockFactorParams({
+                    assetType: DataTypes.AssetType.ERC20,
+                    asset: address(APE_COIN),
+                    amount: totalWithdrawAmount
+                })
+            );
 
         INTokenApeStaking(localVar.xTokenAddress).withdrawBAKC(
             _nftPairs,
-            msg.sender
+            msg.sender,
+            timeLockParams
         );
 
         ////transfer BAKC back for user

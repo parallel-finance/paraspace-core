@@ -35,10 +35,14 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     address private immutable wpunk;
     address private immutable Punk;
 
-    modifier onlyXToken(address asset) {
+    /**
+     * @dev Only POOL or callerTag asset's xToken can call functions marked by this modifier.
+     **/
+    modifier onlyValidCaller(address callerUnderlyingAsset) {
         require(
-            msg.sender == POOL.getReserveXToken(asset),
-            Errors.CALLER_NOT_XTOKEN
+            msg.sender == address(POOL) ||
+                msg.sender == POOL.getReserveXToken(callerUnderlyingAsset),
+            Errors.CALLER_NOT_ALLOWED
         );
         _;
     }
@@ -77,11 +81,12 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     function createAgreement(
         DataTypes.AssetType assetType,
         DataTypes.TimeLockActionType actionType,
+        address callerUnderlyingAsset,
         address asset,
         uint256[] calldata tokenIdsOrAmounts,
         address beneficiary,
         uint48 releaseTime
-    ) external onlyXToken(asset) returns (uint256) {
+    ) external onlyValidCaller(callerUnderlyingAsset) returns (uint256) {
         require(beneficiary != address(0), "Beneficiary cant be zero address");
         require(releaseTime > block.timestamp, "Release time not valid");
 

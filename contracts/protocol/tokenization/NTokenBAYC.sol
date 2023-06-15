@@ -6,6 +6,7 @@ import {NTokenApeStaking} from "./NTokenApeStaking.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
  * @title BAYC NToken
@@ -53,9 +54,17 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function withdrawApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts,
-        address _recipient
+        address _recipient,
+        DataTypes.TimeLockParams memory _timeLockParams
     ) external onlyPool nonReentrant {
-        _apeCoinStaking.withdrawBAYC(_nfts, _recipient);
+        ApeStakingLogic.executeWithdrawBAYC(
+            POOL,
+            _ERC721Data.underlyingAsset,
+            _apeCoinStaking,
+            _nfts,
+            _recipient,
+            _timeLockParams
+        );
     }
 
     /**
@@ -97,13 +106,17 @@ contract NTokenBAYC is NTokenApeStaking {
      */
     function withdrawBAKC(
         ApeCoinStaking.PairNftWithdrawWithAmount[] calldata _nftPairs,
-        address _apeRecipient
+        address _apeRecipient,
+        DataTypes.TimeLockParams memory _timeLockParams
     ) external onlyPool nonReentrant {
         ApeStakingLogic.withdrawBAKC(
+            POOL,
+            _ERC721Data.underlyingAsset,
             _apeCoinStaking,
             POOL_ID(),
             _nftPairs,
-            _apeRecipient
+            _apeRecipient,
+            _timeLockParams
         );
     }
 

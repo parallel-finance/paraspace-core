@@ -400,16 +400,6 @@ describe("P2P Pair Staking Test", () => {
     await supplyAndValidate(bakc, "1", user3, true);
     await mintAndValidate(ape, "1000000", user2);
 
-    await waitForTx(
-      await mayc
-        .connect(user1.signer)
-        .setApprovalForAll(p2pPairStaking.address, true)
-    );
-    await waitForTx(
-      await bakc
-        .connect(user3.signer)
-        .setApprovalForAll(p2pPairStaking.address, true)
-    );
     const apeAmount = await p2pPairStaking.getApeCoinStakingCap(2);
     await waitForTx(
       await cApe.connect(user2.signer).deposit(user2.address, apeAmount)

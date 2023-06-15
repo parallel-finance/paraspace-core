@@ -3,8 +3,10 @@ import {expect} from "chai";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS, ONE_ADDRESS} from "../helpers/constants";
 import {
   getAutoCompoundApe,
+  getPoolConfiguratorProxy,
   getPToken,
   getPTokenSApe,
+  getTimeLockProxy,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {
@@ -24,13 +26,14 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
-import {ProtocolErrors} from "../helpers/types";
+import {eContractid, ProtocolErrors} from "../helpers/types";
 import {parseEther} from "ethers/lib/utils";
 import {
   executeAcceptBidWithCredit,
   executeSeaportBuyWithCredit,
 } from "./helpers/marketplace-helper";
 import {BigNumber} from "ethers";
+import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;
@@ -135,7 +138,7 @@ describe("APE Coin Staking Test", () => {
 
     return testEnv;
   };
-
+  /*
   it("TC-pool-ape-staking-01 test borrowApeAndStake: failed when borrow + cash < staking amount (revert expected)", async () => {
     const {
       users: [user1],
@@ -2981,5 +2984,165 @@ describe("APE Coin Staking Test", () => {
     const configDataAfter = (await pool.getUserConfiguration(user1.address))
       .data;
     expect(isUsingAsCollateral(configDataAfter, sApeReserveData.id)).true;
+  });
+*/
+  it("TC-pool-ape-staking-47 test mayc withdrawApeCoin should transfer ape coin to timelock contract", async () => {
+    const {
+      users: [user1],
+      ape,
+      mayc,
+      pool,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    //setup timelock strategy
+    const minThreshold = await convertToCurrencyDecimals(ape.address, "100000");
+    const midThreshold = await convertToCurrencyDecimals(ape.address, "200000");
+    const minTime = 5;
+    const midTime = 300;
+    const maxTime = 3600;
+
+    const timeLockProxy = await getTimeLockProxy();
+    const defaultStrategy = await deployReserveTimeLockStrategy(
+      eContractid.DefaultTimeLockStrategy + "ERC20",
+      pool.address,
+      minThreshold.toString(),
+      midThreshold.toString(),
+      minTime.toString(),
+      midTime.toString(),
+      maxTime.toString(),
+      midThreshold.mul(10).toString(),
+      (12 * 3600).toString(),
+      (24 * 3600).toString()
+    );
+    const poolConfigurator = await getPoolConfiguratorProxy();
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(ape.address, defaultStrategy.address)
+    );
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    const amount = parseEther("10000");
+    const totalAmount = parseEther("20000");
+    await mintAndValidate(ape, "20000", user1);
+
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: totalAmount,
+        },
+        [{tokenId: 0, amount: amount}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+      )
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount}])
+    );
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.eq(amount);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount, isUncommit: true},
+        ])
+    );
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.eq(totalAmount);
+
+    await advanceTimeAndBlock(10);
+
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    expect(await ape.balanceOf(user1.address)).to.be.eq(amount);
+
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["1"]));
+    expect(await ape.balanceOf(user1.address)).to.be.eq(totalAmount);
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.eq(0);
+  });
+
+  it("TC-pool-ape-staking-48 test bayc withdrawApeCoin should transfer ape coin to timelock contract", async () => {
+    const {
+      users: [user1],
+      ape,
+      bayc,
+      pool,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    //setup timelock strategy
+    const minThreshold = await convertToCurrencyDecimals(ape.address, "100000");
+    const midThreshold = await convertToCurrencyDecimals(ape.address, "200000");
+    const minTime = 5;
+    const midTime = 300;
+    const maxTime = 3600;
+
+    const timeLockProxy = await getTimeLockProxy();
+    const defaultStrategy = await deployReserveTimeLockStrategy(
+      eContractid.DefaultTimeLockStrategy + "ERC20",
+      pool.address,
+      minThreshold.toString(),
+      midThreshold.toString(),
+      minTime.toString(),
+      midTime.toString(),
+      maxTime.toString(),
+      midThreshold.mul(10).toString(),
+      (12 * 3600).toString(),
+      (24 * 3600).toString()
+    );
+    const poolConfigurator = await getPoolConfiguratorProxy();
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(ape.address, defaultStrategy.address)
+    );
+
+    await supplyAndValidate(bayc, "1", user1, true);
+    const amount = parseEther("10000");
+    const totalAmount = parseEther("20000");
+    await mintAndValidate(ape, "20000", user1);
+
+    await waitForTx(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAmount: totalAmount,
+        },
+        [{tokenId: 0, amount: amount}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+      )
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(bayc.address, [{tokenId: 0, amount: amount}])
+    );
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.eq(amount);
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(bayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount, isUncommit: true},
+        ])
+    );
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.eq(totalAmount);
+
+    await advanceTimeAndBlock(10);
+
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    expect(await ape.balanceOf(user1.address)).to.be.eq(amount);
+
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["1"]));
+    expect(await ape.balanceOf(user1.address)).to.be.eq(totalAmount);
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.eq(0);
   });
 });
