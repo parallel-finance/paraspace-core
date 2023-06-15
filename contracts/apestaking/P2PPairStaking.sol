@@ -105,22 +105,9 @@ contract P2PPairStaking is
         updateApeCoinStakingCap();
 
         //approve ApeCoin for apeCoinStaking
-        uint256 allowance = IERC20(apeCoin).allowance(
-            address(this),
-            address(apeCoinStaking)
-        );
-        if (allowance == 0) {
-            IERC20(apeCoin).safeApprove(
-                address(apeCoinStaking),
-                type(uint256).max
-            );
-        }
-
+        IERC20(apeCoin).safeApprove(address(apeCoinStaking), type(uint256).max);
         //approve ApeCoin for cApe
-        allowance = IERC20(apeCoin).allowance(address(this), cApe);
-        if (allowance == 0) {
-            IERC20(apeCoin).safeApprove(cApe, type(uint256).max);
-        }
+        IERC20(apeCoin).safeApprove(cApe, type(uint256).max);
     }
 
     function cancelListing(ListingOrder calldata listingOrder)
@@ -148,7 +135,8 @@ contract P2PPairStaking is
 
         //2 check if orders can match
         require(
-            apeOrder.stakingType <= StakingType.MAYCStaking,
+            apeOrder.stakingType == StakingType.MAYCStaking ||
+                apeOrder.stakingType == StakingType.BAYCStaking,
             "invalid stake type"
         );
         require(
@@ -514,7 +502,10 @@ contract P2PPairStaking is
     ) internal returns (uint256, uint256) {
         MatchedOrder memory order = matchedOrders[orderHash];
         uint256 balanceBefore = IERC20(apeCoin).balanceOf(address(this));
-        if (order.stakingType < StakingType.BAKCPairStaking) {
+        if (
+            order.stakingType == StakingType.BAYCStaking ||
+            order.stakingType == StakingType.MAYCStaking
+        ) {
             uint256[] memory _nfts = new uint256[](1);
             _nfts[0] = order.apeTokenId;
             if (order.stakingType == StakingType.BAYCStaking) {
