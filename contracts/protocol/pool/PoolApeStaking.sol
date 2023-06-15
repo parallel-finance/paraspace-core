@@ -875,7 +875,9 @@ contract PoolApeStaking is
         bakcOwner = localVar.bakcContract.ownerOf(tokenId);
         require(
             (userAddress == bakcOwner) ||
-                (userAddress == INToken(localVar.bakcNToken).ownerOf(tokenId)),
+                (bakcOwner == localVar.bakcNToken &&
+                    userAddress ==
+                    INToken(localVar.bakcNToken).ownerOf(tokenId)),
             Errors.NOT_THE_BAKC_OWNER
         );
         localVar.bakcContract.safeTransferFrom(
