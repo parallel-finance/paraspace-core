@@ -309,7 +309,7 @@ export const withSaveAndVerify = async (
   retry(async () => {
     const addressInDb = await getContractAddressInDb(id);
     if (DEPLOY_INCREMENTAL && isNotFalsyOrZeroAddress(addressInDb)) {
-      console.log("contract address is already in db ", id);
+      console.log("contract address is already in db", id);
       return await factory.attach(addressInDb);
     }
 
