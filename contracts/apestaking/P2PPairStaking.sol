@@ -553,13 +553,15 @@ contract P2PPairStaking is
             rewardShare.percentMul(order.apeShare)
         );
         _depositCApeShareForUser(
-            IERC721(nBakc).ownerOf(order.bakcTokenId),
-            rewardShare.percentMul(order.bakcShare)
-        );
-        _depositCApeShareForUser(
             order.apeCoinOfferer,
             rewardShare.percentMul(order.apeCoinShare)
         );
+        if (order.stakingType == StakingType.BAKCPairStaking) {
+            _depositCApeShareForUser(
+                IERC721(nBakc).ownerOf(order.bakcTokenId),
+                rewardShare.percentMul(order.bakcShare)
+            );
+        }
 
         emit OrderClaimedAndCompounded(orderHash, rewardAmount);
 
