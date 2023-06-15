@@ -444,6 +444,10 @@ set-timelock-strategy:
 acl:
 	make SCRIPT_PATH=./scripts/dev/13.acl.ts run
 
+.PHONY: airdrop
+airdrop:
+	make SCRIPT_PATH=./scripts/dev/14.airdrop.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run

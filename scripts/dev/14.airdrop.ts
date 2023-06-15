@@ -8,7 +8,8 @@ import {
   AIRDROP_CONTRACT,
   GLOBAL_OVERRIDES,
 } from "../../helpers/hardhat-constants";
-import {waitForTx} from "../../helpers/misc-utils";
+import {DRE, waitForTx} from "../../helpers/misc-utils";
+import {BigNumber} from "ethers";
 
 dotenv.config();
 
@@ -54,6 +55,14 @@ const airdrop = async () => {
   const airdropConfig: AirdropConfig = JSON.parse(
     fs.readFileSync(AIRDROP_CONFIG_FILE, "utf8")
   );
+  console.log(
+    (airdropConfig.items as AirdropItemETH[])
+      .reduce((ite, cur) => {
+        ite = ite.add(BigNumber.from(cur.amount));
+        return ite;
+      }, BigNumber.from("0"))
+      .toString()
+  );
 
   if (airdropConfig.type == "ERC721") {
     const items = airdropConfig.items as AirdropItemERC721[];
@@ -75,9 +84,12 @@ const airdrop = async () => {
     const items = airdropConfig.items as AirdropItemETH[];
     const tos = items.map((x) => x.to);
     const amounts = items.map((x) => x.amount);
+    console.log(tos, amounts);
+    console.log(await DRE.ethers.provider.getBalance(airdropper.address));
     await waitForTx(
       await airdropper.airdropETH(tos, amounts, GLOBAL_OVERRIDES)
     );
+    console.log(await DRE.ethers.provider.getBalance(airdropper.address));
   } else if (airdropConfig.type == "ERC1155") {
     const items = airdropConfig.items as AirdropItemERC1155[];
     const tokens = items.map((x) => x.token);

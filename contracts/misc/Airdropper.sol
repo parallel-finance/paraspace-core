@@ -120,4 +120,25 @@ contract Airdropper is Ownable {
             emit AirdroppedETH(tos[i], amounts[i]);
         }
     }
+
+    receive() external payable {}
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external virtual returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external pure returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
 }

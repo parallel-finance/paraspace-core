@@ -2,6 +2,7 @@ import {utils} from "ethers";
 import rawBRE from "hardhat";
 import {getFirstSigner} from "../../helpers/contracts-getters";
 import {getParaSpaceAdmins} from "../../helpers/contracts-helpers";
+import {AIRDROP_CONTRACT} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
 const sendETH = async () => {
@@ -10,7 +11,7 @@ const sendETH = async () => {
   const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
   await waitForTx(
     await signer.sendTransaction({
-      to: paraSpaceAdminAddress,
+      to: AIRDROP_CONTRACT,
       value: utils.parseEther("10").toString(),
     })
   );
