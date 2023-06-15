@@ -2644,7 +2644,10 @@ export const deployAutoCompoundApeImplAndAssignItToProxy = async (
   );
 };
 
-export const deployP2PPairStakingImpl = async (verify?: boolean) => {
+export const deployP2PPairStakingImpl = async (
+  compoundFee: number,
+  verify?: boolean
+) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
   const nBAYC = (
@@ -2671,6 +2674,7 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
     allTokens.cAPE.address,
     apeCoinStaking,
     aclManager.address,
+    compoundFee,
   ];
 
   return withSaveAndVerify(
@@ -2682,7 +2686,7 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
 };
 
 export const deployP2PPairStaking = async (verify?: boolean) => {
-  const p2pImplementation = await deployP2PPairStakingImpl(verify);
+  const p2pImplementation = await deployP2PPairStakingImpl(0, verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
