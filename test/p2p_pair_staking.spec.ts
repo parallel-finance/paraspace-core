@@ -6,6 +6,7 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
+  getInitializableAdminUpgradeabilityProxy,
   getP2PPairStaking,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
@@ -13,6 +14,12 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {getSignedListingOrder} from "./helpers/p2ppairstaking-helper";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
+import {deployP2PPairStakingImpl} from "../helpers/contracts-deployments";
+import {DRY_RUN, GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
+import {
+  dryRunEncodedData,
+  getEthersSigners,
+} from "../helpers/contracts-helpers";
 
 describe("P2P Pair Staking Test", () => {
   let testEnv: TestEnv;
@@ -945,14 +952,21 @@ describe("P2P Pair Staking Test", () => {
 
   it("compound fee work as expected", async () => {
     const {
-      users: [user1, user2, user3],
+      users: [user1, user2, user3, , user5],
       poolAdmin,
       bayc,
       ape,
     } = await loadFixture(fixture);
 
+    const p2pPairStakingImpl = await deployP2PPairStakingImpl(50);
+    const p2pPairStaking = await getP2PPairStaking();
+    const p2pPairStakingProxy = await getInitializableAdminUpgradeabilityProxy(
+      p2pPairStaking.address
+    );
     await waitForTx(
-      await p2pPairStaking.connect(poolAdmin.signer).setCompoundFee(50)
+      await p2pPairStakingProxy
+        .connect(user5.signer)
+        .upgradeTo(p2pPairStakingImpl.address, GLOBAL_OVERRIDES)
     );
 
     await supplyAndValidate(bayc, "1", user3, true);

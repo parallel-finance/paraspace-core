@@ -7,9 +7,15 @@ import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
-export const upgradeP2PPairStaking = async (verify = false) => {
+export const upgradeP2PPairStaking = async (
+  compoundFee: number,
+  verify = false
+) => {
   console.time("deploy P2PPairStaking");
-  const p2pPairStakingImpl = await deployP2PPairStakingImpl(verify);
+  const p2pPairStakingImpl = await deployP2PPairStakingImpl(
+    compoundFee,
+    verify
+  );
   const p2pPairStaking = await getP2PPairStaking();
   const p2pPairStakingProxy = await getInitializableAdminUpgradeabilityProxy(
     p2pPairStaking.address

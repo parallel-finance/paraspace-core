@@ -49,6 +49,10 @@ contract P2PPairStaking is
     address internal immutable apeCoin;
     address internal immutable cApe;
     ApeCoinStaking internal immutable apeCoinStaking;
+    uint256 public immutable compoundFee;
+    uint256 private immutable baycMatchedCap;
+    uint256 private immutable maycMatchedCap;
+    uint256 private immutable bakcMatchedCap;
 
     bytes32 internal DOMAIN_SEPARATOR;
     mapping(bytes32 => ListingOrderStatus) public listingOrderStatus;
@@ -56,10 +60,10 @@ contract P2PPairStaking is
     mapping(address => mapping(uint32 => uint256)) private apeMatchedCount;
     mapping(address => uint256) private cApeShareBalance;
     address public __matchingOperator;
-    uint256 public compoundFee;
-    uint256 private baycMatchedCap;
-    uint256 private maycMatchedCap;
-    uint256 private bakcMatchedCap;
+    uint256 public __compoundFee;
+    uint256 private __baycMatchedCap;
+    uint256 private __maycMatchedCap;
+    uint256 private __bakcMatchedCap;
     address public compoundBot;
     bool private paused;
     IACLManager private immutable aclManager;
@@ -74,7 +78,8 @@ contract P2PPairStaking is
         address _apeCoin,
         address _cApe,
         address _apeCoinStaking,
-        address _aclManager
+        address _aclManager,
+        uint256 _compoundFee
     ) {
         bayc = _bayc;
         mayc = _mayc;
@@ -86,6 +91,18 @@ contract P2PPairStaking is
         cApe = _cApe;
         apeCoinStaking = ApeCoinStaking(_apeCoinStaking);
         aclManager = IACLManager(_aclManager);
+        compoundFee = _compoundFee;
+
+        (
+            ,
+            ApeCoinStaking.PoolUI memory baycPool,
+            ApeCoinStaking.PoolUI memory maycPool,
+            ApeCoinStaking.PoolUI memory bakcPool
+        ) = apeCoinStaking.getPoolsUI();
+
+        baycMatchedCap = baycPool.currentTimeRange.capPerPosition;
+        maycMatchedCap = maycPool.currentTimeRange.capPerPosition;
+        bakcMatchedCap = bakcPool.currentTimeRange.capPerPosition;
     }
 
     function initialize() public initializer {
@@ -103,7 +120,6 @@ contract P2PPairStaking is
                 address(this)
             )
         );
-        updateApeCoinStakingCap();
 
         //approve ApeCoin for apeCoinStaking
         IERC20(apeCoin).safeApprove(address(apeCoinStaking), type(uint256).max);
@@ -402,19 +418,6 @@ contract P2PPairStaking is
         }
     }
 
-    function updateApeCoinStakingCap() public {
-        (
-            ,
-            ApeCoinStaking.PoolUI memory baycPool,
-            ApeCoinStaking.PoolUI memory maycPool,
-            ApeCoinStaking.PoolUI memory bakcPool
-        ) = apeCoinStaking.getPoolsUI();
-
-        baycMatchedCap = baycPool.currentTimeRange.capPerPosition;
-        maycMatchedCap = maycPool.currentTimeRange.capPerPosition;
-        bakcMatchedCap = bakcPool.currentTimeRange.capPerPosition;
-    }
-
     function pendingCApeReward(address user) public view returns (uint256) {
         uint256 amount = 0;
         uint256 shareBalance = cApeShareBalance[user];
@@ -680,24 +683,14 @@ contract P2PPairStaking is
         return this.onERC721Received.selector;
     }
 
-    function setCompoundFee(uint256 _compoundFee) external onlyPoolAdmin {
-        require(
-            _compoundFee < PercentageMath.HALF_PERCENTAGE_FACTOR,
-            "Fee Too High"
-        );
-        uint256 oldValue = compoundFee;
-        if (oldValue != _compoundFee) {
-            compoundFee = _compoundFee;
-            emit CompoundFeeUpdated(oldValue, _compoundFee);
-        }
-    }
-
     function setCompoundBot(address _compoundBot) external onlyOwner {
         address oldValue = compoundBot;
         if (oldValue != _compoundBot) {
             compoundBot = _compoundBot;
             emit CompoundBotUpdated(oldValue, _compoundBot);
         }
+    }
+
     function claimCompoundFee(address receiver) external onlyPoolAdmin {
         this.claimCApeReward(receiver);
     }
