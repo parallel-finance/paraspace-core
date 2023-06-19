@@ -51,7 +51,7 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      * @dev See {IERC20-totalSupply}.
      */
     function totalSupply() public view virtual override returns (uint256) {
-        return _getTotalPooledApeBalance();
+        return _getTotalPooledApeBalance(_getRewardApeBalance());
     }
 
     /**
@@ -60,7 +60,7 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      * @dev The sum of all APE balances in the protocol, equals to the total supply of PsAPE.
      */
     function getTotalPooledApeBalance() public view returns (uint256) {
-        return _getTotalPooledApeBalance();
+        return _getTotalPooledApeBalance(_getRewardApeBalance());
     }
 
     /**
@@ -231,7 +231,32 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
      * @return the amount of shares that corresponds to `amount` protocol-controlled Ape.
      */
     function getShareByPooledApe(uint256 amount) public view returns (uint256) {
-        uint256 totalPooledApe = _getTotalPooledApeBalance();
+        uint256 totalPooledApe = _getTotalPooledApeBalance(
+            _getRewardApeBalance()
+        );
+        return _calculateShareByPooledApe(amount, totalPooledApe);
+    }
+
+    /**
+     * @return the amount of shares that corresponds to `amount` protocol-controlled Ape.
+     */
+    function _getShareByPooledApe(uint256 amount, uint256 rewardAmount)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 totalPooledApe = _getTotalPooledApeBalance(rewardAmount);
+        return _calculateShareByPooledApe(amount, totalPooledApe);
+    }
+
+    /**
+     * @return the amount of shares that corresponds to `amount` protocol-controlled Ape.
+     */
+    function _calculateShareByPooledApe(uint256 amount, uint256 totalPooledApe)
+        internal
+        view
+        returns (uint256)
+    {
         if (totalPooledApe == 0) {
             return 0;
         } else {
@@ -252,16 +277,24 @@ abstract contract CApe is ContextUpgradeable, ICApe, PausableUpgradeable {
             return 0;
         } else {
             return
-                sharesAmount.mul(_getTotalPooledApeBalance()).div(totalShares);
+                sharesAmount
+                    .mul(_getTotalPooledApeBalance(_getRewardApeBalance()))
+                    .div(totalShares);
         }
     }
+
+    /**
+     * @return the amount of reward ApeCoin
+     * @dev This function is required to be implemented in a derived contract.
+     */
+    function _getRewardApeBalance() internal view virtual returns (uint256);
 
     /**
      * @return the total amount (in wei) of APE controlled by the protocol.
      * @dev This is used for calculating tokens from shares and vice versa.
      * @dev This function is required to be implemented in a derived contract.
      */
-    function _getTotalPooledApeBalance()
+    function _getTotalPooledApeBalance(uint256 rewardAmount)
         internal
         view
         virtual

@@ -54,7 +54,9 @@ contract AutoCompoundApe is
     /// @inheritdoc IAutoCompoundApe
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
-        uint256 amountShare = getShareByPooledApe(amount);
+
+        uint256 rewardAmount = _getRewardApeBalance();
+        uint256 amountShare = _getShareByPooledApe(amount, rewardAmount);
         if (amountShare == 0) {
             amountShare = amount;
             // permanently lock the first MINIMUM_LIQUIDITY tokens to prevent getPooledApeByShares return 0
@@ -64,7 +66,7 @@ contract AutoCompoundApe is
         _mint(onBehalf, amountShare);
 
         _transferTokenIn(msg.sender, amount);
-        _harvest();
+        _harvest(rewardAmount);
         _compound();
 
         emit Transfer(address(0), onBehalf, amount);
@@ -75,10 +77,11 @@ contract AutoCompoundApe is
     function withdraw(uint256 amount) external override {
         require(amount > 0, "zero amount");
 
-        uint256 amountShare = getShareByPooledApe(amount);
+        uint256 rewardAmount = _getRewardApeBalance();
+        uint256 amountShare = _getShareByPooledApe(amount, rewardAmount);
         _burn(msg.sender, amountShare);
 
-        _harvest();
+        _harvest(rewardAmount);
         uint256 _bufferBalance = bufferBalance;
         if (amount > _bufferBalance) {
             _withdrawFromApeCoinStaking(amount - _bufferBalance);
@@ -93,21 +96,25 @@ contract AutoCompoundApe is
 
     /// @inheritdoc IAutoCompoundApe
     function harvestAndCompound() external {
-        _harvest();
+        _harvest(_getRewardApeBalance());
         _compound();
     }
 
-    function _getTotalPooledApeBalance()
-        internal
-        view
-        override
-        returns (uint256)
-    {
+    function _getRewardApeBalance() internal view override returns (uint256) {
         uint256 rewardAmount = apeStaking.pendingRewards(
             APE_COIN_POOL_ID,
             address(this),
             0
         );
+        return rewardAmount;
+    }
+
+    function _getTotalPooledApeBalance(uint256 rewardAmount)
+        internal
+        view
+        override
+        returns (uint256)
+    {
         return stakingBalance + rewardAmount + bufferBalance;
     }
 
@@ -139,12 +146,7 @@ contract AutoCompoundApe is
         }
     }
 
-    function _harvest() internal {
-        uint256 rewardAmount = apeStaking.pendingRewards(
-            APE_COIN_POOL_ID,
-            address(this),
-            0
-        );
+    function _harvest(uint256 rewardAmount) internal {
         if (rewardAmount > 0) {
             uint256 balanceBefore = apeCoin.balanceOf(address(this));
             apeStaking.claimSelfApeCoin();
