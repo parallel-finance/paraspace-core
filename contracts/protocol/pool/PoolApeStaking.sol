@@ -122,7 +122,8 @@ contract PoolApeStaking is
         address xTokenAddress = nftReserve.xTokenAddress;
         INToken nToken = INToken(xTokenAddress);
         uint256 totalWithdrawAmount = 0;
-        for (uint256 index = 0; index < _nfts.length; index++) {
+        uint256 arrayLength = _nfts.length;
+        for (uint256 index = 0; index < arrayLength; index++) {
             require(
                 nToken.ownerOf(_nfts[index].tokenId) == msg.sender,
                 Errors.NOT_THE_OWNER
@@ -145,7 +146,15 @@ contract PoolApeStaking is
             timeLockParams
         );
 
-        _checkUserHf(ps, msg.sender, true);
+        DataTypes.UserConfigurationMap memory userConfig = ps._usersConfig[
+            msg.sender
+        ];
+        DataTypes.ReserveData storage reserve = ps._reserves[
+            DataTypes.SApeAddress
+        ];
+        if (userConfig.isUsingAsCollateral(reserve.id)) {
+            _checkUserHf(ps, userConfig, msg.sender, true);
+        }
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -166,8 +175,6 @@ contract PoolApeStaking is
             );
         }
         INTokenApeStaking(xTokenAddress).claimApeCoin(_nfts, msg.sender);
-
-        _checkUserHf(ps, msg.sender, true);
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -238,7 +245,15 @@ contract PoolApeStaking is
             );
         }
 
-        _checkUserHf(ps, msg.sender, true);
+        DataTypes.UserConfigurationMap memory userConfig = ps._usersConfig[
+            msg.sender
+        ];
+        DataTypes.ReserveData storage reserve = ps._reserves[
+            DataTypes.SApeAddress
+        ];
+        if (userConfig.isUsingAsCollateral(reserve.id)) {
+            _checkUserHf(ps, userConfig, msg.sender, true);
+        }
     }
 
     /// @inheritdoc IPoolApeStaking
@@ -448,7 +463,10 @@ contract PoolApeStaking is
         address incentiveReceiver = address(0);
         address positionOwner = INToken(xTokenAddress).ownerOf(tokenId);
         if (msg.sender != positionOwner) {
-            _checkUserHf(ps, positionOwner, false);
+            DataTypes.UserConfigurationMap memory userConfig = ps._usersConfig[
+                positionOwner
+            ];
+            _checkUserHf(ps, userConfig, positionOwner, false);
             incentiveReceiver = msg.sender;
         }
 
@@ -641,13 +659,10 @@ contract PoolApeStaking is
 
     function _checkUserHf(
         DataTypes.PoolStorage storage ps,
+        DataTypes.UserConfigurationMap memory userConfig,
         address user,
         bool checkAbove
     ) private view {
-        DataTypes.UserConfigurationMap memory userConfig = ps._usersConfig[
-            user
-        ];
-
         uint256 healthFactor;
         if (!userConfig.isBorrowingAny()) {
             healthFactor = type(uint256).max;
