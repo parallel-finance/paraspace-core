@@ -77,7 +77,8 @@ describe("SApe Pool Operation Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -127,7 +128,8 @@ describe("SApe Pool Operation Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -158,37 +160,38 @@ describe("SApe Pool Operation Test", () => {
     ).to.be.revertedWith(ProtocolErrors.SAPE_NOT_ALLOWED);
   });
 
-  it("set sApe not as collateral is not allowed", async () => {
-    const {
-      users: [user1],
-      ape,
-      mayc,
-      pool,
-    } = await loadFixture(fixture);
-
-    await supplyAndValidate(mayc, "1", user1, true);
-    await mintAndValidate(ape, "10000", user1);
-
-    const amount = await convertToCurrencyDecimals(ape.address, "5000");
-    expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
-        {
-          nftAsset: mayc.address,
-          borrowAsset: ape.address,
-          borrowAmount: amount,
-          cashAmount: 0,
-        },
-        [{tokenId: 0, amount: amount}],
-        []
-      )
-    );
-
-    await expect(
-      pool
-        .connect(user1.signer)
-        .setUserUseERC20AsCollateral(sApeAddress, false, {
-          gasLimit: 12_450_000,
-        })
-    ).to.be.revertedWith(ProtocolErrors.SAPE_NOT_ALLOWED);
-  });
+  // it("set sApe not as collateral is not allowed", async () => {
+  //   const {
+  //     users: [user1],
+  //     ape,
+  //     mayc,
+  //     pool,
+  //   } = await loadFixture(fixture);
+  //
+  //   await supplyAndValidate(mayc, "1", user1, true);
+  //   await mintAndValidate(ape, "10000", user1);
+  //
+  //   const amount = await convertToCurrencyDecimals(ape.address, "5000");
+  //   expect(
+  //     await pool.connect(user1.signer).borrowApeAndStake(
+  //       {
+  //         nftAsset: mayc.address,
+  //         borrowAsset: ape.address,
+  //         borrowAmount: amount,
+  //         cashAmount: 0,
+  //       },
+  //       [{tokenId: 0, amount: amount}],
+  //       [],
+  //       true
+  //     )
+  //   );
+  //
+  //   await expect(
+  //     pool
+  //       .connect(user1.signer)
+  //       .setUserUseERC20AsCollateral(sApeAddress, false, {
+  //         gasLimit: 12_450_000,
+  //       })
+  //   ).to.be.revertedWith(ProtocolErrors.SAPE_NOT_ALLOWED);
+  // });
 });

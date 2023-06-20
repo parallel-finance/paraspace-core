@@ -138,7 +138,7 @@ describe("APE Coin Staking Test", () => {
 
     return testEnv;
   };
-  /*
+
   it("TC-pool-ape-staking-01 test borrowApeAndStake: failed when borrow + cash < staking amount (revert expected)", async () => {
     const {
       users: [user1],
@@ -162,7 +162,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     ).to.be.revertedWith(ProtocolErrors.TOTAL_STAKING_AMOUNT_WRONG);
   });
@@ -190,7 +191,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     ).to.be.revertedWith(ProtocolErrors.TOTAL_STAKING_AMOUNT_WRONG);
   });
@@ -221,7 +223,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -278,7 +281,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -335,7 +339,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -391,7 +396,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -463,7 +469,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -545,7 +552,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -580,7 +588,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -616,7 +625,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 1, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 1, amount: amount2}],
+        true
       )
     );
 
@@ -697,7 +707,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 1, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 1, amount: amount2}],
+        true
       )
     );
 
@@ -777,7 +788,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -841,7 +853,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -912,7 +925,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -975,7 +989,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        []
+        [],
+        true
       )
     );
     expect(
@@ -987,7 +1002,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1039,7 +1055,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1092,7 +1109,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1142,7 +1160,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1218,7 +1237,8 @@ describe("APE Coin Staking Test", () => {
           {tokenId: 0, amount: amount},
           {tokenId: 1, amount: amount},
         ],
-        [{mainTokenId: 1, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 1, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
 
@@ -1234,7 +1254,8 @@ describe("APE Coin Staking Test", () => {
           {tokenId: 0, amount: amount},
           {tokenId: 1, amount: amount},
         ],
-        [{mainTokenId: 1, bakcTokenId: 1, amount: amount}]
+        [{mainTokenId: 1, bakcTokenId: 1, amount: amount}],
+        true
       )
     );
 
@@ -1343,7 +1364,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1421,7 +1443,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
   });
@@ -1451,7 +1474,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1518,7 +1542,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1587,7 +1612,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1652,7 +1678,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1691,7 +1718,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
   });
@@ -1719,7 +1747,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     ).to.be.revertedWith("DepositMoreThanOneAPE()");
   });
@@ -1751,7 +1780,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
 
@@ -1818,7 +1848,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        []
+        [],
+        true
       )
     );
 
@@ -1831,7 +1862,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -1897,7 +1929,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        []
+        [],
+        true
       )
     );
 
@@ -1910,7 +1943,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
     // User 1 - totalStake should increased in Stake amount
@@ -1973,7 +2007,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount2,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
   });
@@ -2017,7 +2052,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
     const healthFactorAfter = (await pool.getUserAccountData(user1.address))
@@ -2081,7 +2117,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2154,7 +2191,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
     await waitForTx(
@@ -2206,7 +2244,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
     await waitForTx(
@@ -2258,7 +2297,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2316,7 +2356,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount1,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2363,7 +2404,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2440,7 +2482,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2506,7 +2549,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2566,7 +2610,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2641,7 +2686,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2737,7 +2783,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2820,7 +2867,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -2888,7 +2936,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2977,7 +3026,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [{tokenId: 0, amount: amount1}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        true
       )
     );
 
@@ -2985,7 +3035,7 @@ describe("APE Coin Staking Test", () => {
       .data;
     expect(isUsingAsCollateral(configDataAfter, sApeReserveData.id)).true;
   });
-*/
+
   it("TC-pool-ape-staking-47 test mayc withdrawApeCoin should transfer ape coin to timelock contract", async () => {
     const {
       users: [user1],
@@ -3036,7 +3086,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: totalAmount,
         },
         [{tokenId: 0, amount: amount}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
 
@@ -3116,7 +3167,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: totalAmount,
         },
         [{tokenId: 0, amount: amount}],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
 
@@ -3144,5 +3196,61 @@ describe("APE Coin Staking Test", () => {
     await waitForTx(await timeLockProxy.connect(user1.signer).claim(["1"]));
     expect(await ape.balanceOf(user1.address)).to.be.eq(totalAmount);
     expect(await ape.balanceOf(timeLockProxy.address)).to.be.eq(0);
+  });
+
+  it("TC-pool-ape-staking-49 test borrowApeAndStake with 100% debt failed if don't use sape as collateral", async () => {
+    const {
+      users: [user1],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+
+    await changePriceAndValidate(ape, "0.003");
+
+    await expect(
+      pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        false
+      )
+    ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
+
+    await changePriceAndValidate(ape, "0.0001");
+
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        false
+      )
+    );
+
+    const pSApeBalance = await pSApeCoin.balanceOf(user1.address);
+    expect(pSApeBalance).equal(amount);
+
+    const userConfig = BigNumber.from(
+      (await pool.getUserConfiguration(user1.address)).data
+    );
+    const apeData = await pool.getReserveData(ape.address);
+    expect(isUsingAsCollateral(userConfig, apeData.id)).to.be.false;
   });
 });

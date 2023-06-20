@@ -417,12 +417,6 @@ library ValidationLogic {
     ) internal pure {
         require(userBalance != 0, Errors.UNDERLYING_BALANCE_ZERO);
 
-        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
-        require(
-            xToken.getXTokenType() != XTokenType.PTokenSApe,
-            Errors.SAPE_NOT_ALLOWED
-        );
-
         (
             bool isActive,
             ,

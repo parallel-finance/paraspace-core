@@ -95,7 +95,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
 
@@ -181,7 +182,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
 
@@ -221,7 +223,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
 
@@ -267,7 +270,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
     let totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -334,7 +338,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: amount,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
     let totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
@@ -384,7 +389,8 @@ describe("APE Coin Staking Test", () => {
           cashAmount: 0,
         },
         [],
-        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}]
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount}],
+        true
       )
     );
     let totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
