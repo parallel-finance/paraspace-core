@@ -477,7 +477,8 @@ describe("Auto Compound Ape Test", () => {
           cashAmount: user1Amount,
         },
         [{tokenId: 0, amount: user1Amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -490,7 +491,8 @@ describe("Auto Compound Ape Test", () => {
           cashAmount: user2Amount,
         },
         [{tokenId: 1, amount: user2Amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -503,7 +505,8 @@ describe("Auto Compound Ape Test", () => {
           cashAmount: user3Amount,
         },
         [{tokenId: 2, amount: user3Amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -632,7 +635,8 @@ describe("Auto Compound Ape Test", () => {
           {tokenId: 1, amount: userAmount},
           {tokenId: 2, amount: userAmount},
         ],
-        []
+        [],
+        true
       )
     );
 
@@ -735,7 +739,8 @@ describe("Auto Compound Ape Test", () => {
           cashAmount: user1Amount,
         },
         [{tokenId: 0, amount: user1Amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -748,7 +753,8 @@ describe("Auto Compound Ape Test", () => {
           cashAmount: user2Amount,
         },
         [{tokenId: 1, amount: user2Amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -761,7 +767,8 @@ describe("Auto Compound Ape Test", () => {
           cashAmount: user3Amount,
         },
         [{tokenId: 2, amount: user3Amount}],
-        []
+        [],
+        true
       )
     );
 
@@ -915,7 +922,8 @@ describe("Auto Compound Ape Test", () => {
           {mainTokenId: 0, bakcTokenId: 0, amount: userAmount},
           {mainTokenId: 1, bakcTokenId: 1, amount: userAmount},
           {mainTokenId: 2, bakcTokenId: 2, amount: userAmount},
-        ]
+        ],
+        true
       )
     );
 
@@ -1088,7 +1096,8 @@ describe("Auto Compound Ape Test", () => {
           cashAmount: 0,
         },
         [{tokenId: 0, amount: user1Amount}],
-        []
+        [],
+        true
       )
     );
 

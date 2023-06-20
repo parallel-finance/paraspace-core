@@ -384,7 +384,7 @@ export const step_23 = async (
       if (DRY_RUN) {
         const encodedData1 = p2pPairStakingProxy.interface.encodeFunctionData(
           "changeAdmin",
-          adminAddress
+          [adminAddress]
         );
         await dryRunEncodedData(p2pPairStakingProxy.address, encodedData1);
       } else {

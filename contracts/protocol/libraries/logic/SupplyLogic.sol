@@ -220,17 +220,6 @@ library SupplyLogic {
                 );
             }
         }
-        if (
-            tokenType == XTokenType.NTokenBAYC ||
-            tokenType == XTokenType.NTokenMAYC
-        ) {
-            Helpers.setAssetUsedAsCollateral(
-                userConfig,
-                reservesData,
-                DataTypes.SApeAddress,
-                params.onBehalfOf
-            );
-        }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(
                 params.payer,

@@ -288,7 +288,8 @@ contract PoolApeStaking is
     function borrowApeAndStake(
         StakingInfo calldata stakingInfo,
         ApeCoinStaking.SingleNft[] calldata _nfts,
-        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
+        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs,
+        bool _openSApeCollateralFlag
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         _checkSApeIsNotPaused(ps);
@@ -309,10 +310,10 @@ contract PoolApeStaking is
         DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
             stakingInfo.borrowAsset
         ];
-        // no time lock needed here
-        DataTypes.TimeLockParams memory timeLockParams;
         // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
+            // no time lock needed here
+            DataTypes.TimeLockParams memory timeLockParams;
             if (stakingInfo.borrowAsset == address(APE_COIN)) {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     localVar.xTokenAddress,
@@ -394,7 +395,20 @@ contract PoolApeStaking is
             }
         }
 
-        // 5 mint debt token
+        //5 check if need to collateralize sAPE
+        if (_openSApeCollateralFlag) {
+            DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+                msg.sender
+            ];
+            Helpers.setAssetUsedAsCollateral(
+                userConfig,
+                ps._reserves,
+                DataTypes.SApeAddress,
+                msg.sender
+            );
+        }
+
+        // 6 mint debt token
         if (stakingInfo.borrowAmount > 0) {
             BorrowLogic.executeBorrow(
                 ps._reserves,
@@ -415,22 +429,11 @@ contract PoolApeStaking is
             );
         }
 
-        //6 checkout ape balance
+        //7 checkout ape balance
         require(
             APE_COIN.balanceOf(localVar.xTokenAddress) ==
                 localVar.balanceBefore,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
-        );
-
-        //7 collateralize sAPE
-        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            msg.sender
-        ];
-        Helpers.setAssetUsedAsCollateral(
-            userConfig,
-            ps._reserves,
-            DataTypes.SApeAddress,
-            msg.sender
         );
     }
 
