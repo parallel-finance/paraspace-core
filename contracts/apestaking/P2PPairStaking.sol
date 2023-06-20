@@ -145,7 +145,7 @@ contract P2PPairStaking is
     function matchPairStakingList(
         ListingOrder calldata apeOrder,
         ListingOrder calldata apeCoinOrder
-    ) external nonReentrant returns (bytes32 orderHash) {
+    ) external nonReentrant whenNotPaused returns (bytes32 orderHash) {
         //1 validate all order
         _validateApeOrder(apeOrder);
         bytes32 apeCoinListingOrderHash = _validateApeCoinOrder(apeCoinOrder);
@@ -212,7 +212,7 @@ contract P2PPairStaking is
         ListingOrder calldata apeOrder,
         ListingOrder calldata bakcOrder,
         ListingOrder calldata apeCoinOrder
-    ) external nonReentrant returns (bytes32 orderHash) {
+    ) external nonReentrant whenNotPaused returns (bytes32 orderHash) {
         //1 validate all order
         _validateApeOrder(apeOrder);
         _validateBakcOrder(bakcOrder);
@@ -284,7 +284,11 @@ contract P2PPairStaking is
         return orderHash;
     }
 
-    function breakUpMatchedOrder(bytes32 orderHash) external nonReentrant {
+    function breakUpMatchedOrder(bytes32 orderHash)
+        external
+        nonReentrant
+        whenNotPaused
+    {
         MatchedOrder memory order = matchedOrders[orderHash];
 
         //1 check if have permission to break up
@@ -379,6 +383,7 @@ contract P2PPairStaking is
     function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
         external
         nonReentrant
+        whenNotPaused
     {
         require(msg.sender == compoundBot, "no permission to compound");
         _claimForMatchedOrdersAndCompound(orderHashes);
@@ -409,7 +414,11 @@ contract P2PPairStaking is
         }
     }
 
-    function claimCApeReward(address receiver) external nonReentrant {
+    function claimCApeReward(address receiver)
+        external
+        nonReentrant
+        whenNotPaused
+    {
         uint256 cApeAmount = pendingCApeReward(msg.sender);
         if (cApeAmount > 0) {
             IERC20(cApe).safeTransfer(receiver, cApeAmount);
@@ -698,7 +707,7 @@ contract P2PPairStaking is
     /**
      * @notice Pauses the contract. Only pool admin or emergency admin can call this function
      **/
-    function pause() external onlyEmergencyOrPoolAdmin {
+    function pause() external onlyEmergencyOrPoolAdmin whenNotPaused {
         paused = true;
         emit Paused(_msgSender());
     }
@@ -706,7 +715,7 @@ contract P2PPairStaking is
     /**
      * @notice Unpause the contract. Only pool admin can call this function
      **/
-    function unpause() external onlyPoolAdmin {
+    function unpause() external onlyPoolAdmin whenPaused {
         paused = false;
         emit Unpaused(_msgSender());
     }
