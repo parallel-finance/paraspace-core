@@ -16,6 +16,7 @@ import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {deployP2PPairStakingImpl} from "../helpers/contracts-deployments";
 import {GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
+import {ProtocolErrors} from "../helpers/types";
 
 describe("P2P Pair Staking Test", () => {
   let testEnv: TestEnv;
@@ -1207,6 +1208,92 @@ describe("P2P Pair Staking Test", () => {
       await p2pPairStaking
         .connect(user1.signer)
         .matchPairStakingList(user1SignedOrder1, user2SignedOrder)
+    );
+  });
+
+  it("pause work as expected", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      mayc,
+      poolAdmin,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+    await mintAndValidate(ape, "1000000", user2);
+
+    const apeAmount = await p2pPairStaking.getApeCoinStakingCap(1);
+    await waitForTx(
+      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+    );
+
+    const user1SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      1,
+      mayc,
+      0,
+      2000,
+      user1
+    );
+    const user2SignedOrder = await getSignedListingOrder(
+      p2pPairStaking,
+      1,
+      cApe,
+      0,
+      8000,
+      user2
+    );
+
+    await expect(
+      p2pPairStaking.connect(user1.signer).pause()
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN);
+
+    await waitForTx(await p2pPairStaking.connect(poolAdmin.signer).pause());
+
+    await expect(
+      p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder, user2SignedOrder)
+    ).to.be.revertedWith("paused");
+
+    await waitForTx(await p2pPairStaking.connect(poolAdmin.signer).unpause());
+
+    const txReceipt = await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder, user2SignedOrder)
+    );
+    const logLength = txReceipt.logs.length;
+    const orderHash = txReceipt.logs[logLength - 1].data;
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(await p2pPairStaking.connect(poolAdmin.signer).pause());
+
+    await expect(
+      p2pPairStaking
+        .connect(user1.signer)
+        .claimForMatchedOrderAndCompound([orderHash])
+    ).to.be.revertedWith("paused");
+
+    await waitForTx(await p2pPairStaking.connect(poolAdmin.signer).unpause());
+
+    await waitForTx(
+      await p2pPairStaking
+        .connect(user1.signer)
+        .claimForMatchedOrderAndCompound([orderHash])
+    );
+
+    await waitForTx(await p2pPairStaking.connect(poolAdmin.signer).pause());
+
+    await expect(
+      p2pPairStaking.connect(user1.signer).claimCApeReward(user1.address)
+    ).to.be.revertedWith("paused");
+
+    await waitForTx(await p2pPairStaking.connect(poolAdmin.signer).unpause());
+
+    await waitForTx(
+      await p2pPairStaking.connect(user1.signer).claimCApeReward(user1.address)
     );
   });
 });
