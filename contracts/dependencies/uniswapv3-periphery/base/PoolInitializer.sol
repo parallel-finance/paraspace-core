@@ -6,7 +6,6 @@ import '../../uniswapv3-core/interfaces/IUniswapV3Pool.sol';
 
 import './PeripheryImmutableState.sol';
 import '../interfaces/IPoolInitializer.sol';
-import 'hardhat/console.sol';
 
 /// @title Creates and initializes V3 Pools
 abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
@@ -23,9 +22,6 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
         if (pool == address(0)) {
             pool = IUniswapV3Factory(factory).createPool(token0, token1, fee);
             IUniswapV3Pool(pool).initialize(sqrtPriceX96);
-                        (uint160 sqrtPriceX96temp, , , , , , ) = IUniswapV3Pool(pool).slot0();
-
-            console.log("new pool addy", pool);
         } else {
             (uint160 sqrtPriceX96Existing, , , , , , ) = IUniswapV3Pool(pool).slot0();
             if (sqrtPriceX96Existing == 0) {
