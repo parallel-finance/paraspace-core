@@ -672,7 +672,8 @@ describe("APE Coin Staking Test", () => {
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
-    expect(totalStake).equal(amount.add(pendingRewardsPool2));
+    //reward is not as collateral
+    expect(totalStake).equal(amount);
 
     expect(await ape.balanceOf(user1.address)).to.be.eq(
       userBalance.add(pendingRewardsPool3)
@@ -756,7 +757,8 @@ describe("APE Coin Staking Test", () => {
     );
 
     const totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
-    expect(totalStake).equal(amount.add(pendingRewardsPool2));
+    //reward is not as collateral
+    expect(totalStake).equal(amount);
 
     expect(await ape.balanceOf(user1.address)).to.be.eq(
       userBalance.add(pendingRewardsPool3)
@@ -830,7 +832,7 @@ describe("APE Coin Staking Test", () => {
     );
   });
 
-  it("TC-pool-ape-staking-13 test claimApeCoin fails when hf < 1 (revert expected)", async () => {
+  it("TC-pool-ape-staking-13 test claimApeCoin should success when hf < 1", async () => {
     const {
       users: [user1],
       ape,
@@ -877,11 +879,8 @@ describe("APE Coin Staking Test", () => {
     // drop HF to liquidation levels
     await changePriceAndValidate(mayc, "3");
 
-    await expect(
-      pool.connect(user1.signer).claimApeCoin(mayc.address, [0])
-    ).to.be.revertedWith(
-      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
-    );
+    //ape coin reward is not used as collateral
+    expect(await pool.connect(user1.signer).claimApeCoin(mayc.address, [0]));
   });
 
   it("TC-pool-ape-staking-14 test unstakeApePositionAndRepay repays cape debt - no excess", async () => {
@@ -2717,11 +2716,11 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(parseInt("86400"));
 
     // bayc rewards
-    const pendingRewardsPool2 = await apeCoinStaking.pendingRewards(
-      2,
-      nMAYC.address,
-      "0"
-    );
+    // const pendingRewardsPool2 = await apeCoinStaking.pendingRewards(
+    //   2,
+    //   nMAYC.address,
+    //   "0"
+    // );
     // bakc rewards
     const pendingRewardsPool3 = await apeCoinStaking.pendingRewards(
       3,
@@ -2754,8 +2753,8 @@ describe("APE Coin Staking Test", () => {
     // User 3 - ape balance should increased pendingRewardsPool3
     expect(await ape.balanceOf(user3.address)).eq(pendingRewardsPool3);
     totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
-    // User1 - total stake should increased amount1 + pendingRewardsPool2
-    expect(totalStake).equal(amount1.add(pendingRewardsPool2));
+    // User1 - total stake should increased amount1
+    expect(totalStake).equal(amount1);
   });
 
   it("TC-pool-ape-staking-43 test withdrawBAKC success when withdraw amount == bakc staking amount, and the sender is not the BAKC owner, it will automatically claim and transfer the reward to the BACK owner", async () => {
@@ -2814,11 +2813,11 @@ describe("APE Coin Staking Test", () => {
     await advanceTimeAndBlock(parseInt("86400"));
 
     // bayc rewards
-    const pendingRewardsPool2 = await apeCoinStaking.pendingRewards(
-      2,
-      nMAYC.address,
-      "0"
-    );
+    // const pendingRewardsPool2 = await apeCoinStaking.pendingRewards(
+    //   2,
+    //   nMAYC.address,
+    //   "0"
+    // );
     // bakc rewards
     const pendingRewardsPool3 = await apeCoinStaking.pendingRewards(
       3,
@@ -2839,8 +2838,8 @@ describe("APE Coin Staking Test", () => {
       amount2.add(pendingRewardsPool3)
     );
     totalStake = await nMAYC.getUserApeStakingAmount(user1.address);
-    // User1 - total stake should increased amount1 + pendingRewardsPool2
-    expect(totalStake).equal(amount1.add(pendingRewardsPool2));
+    // User1 - total stake should increased amount1
+    expect(totalStake).equal(amount1);
   });
 
   it("TC-pool-ape-staking-44 test withdrawApeCoin fails when the sender is not the NFT owner(revert expected)", async () => {

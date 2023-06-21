@@ -183,13 +183,12 @@ contract PoolApeStaking is
         _checkSApeIsNotPaused(ps);
 
         ApeStakingLocalVars memory localVar = _generalCache(ps, nftAsset);
-        localVar.transferredTokenOwners = new address[](_nftPairs.length);
-
-        uint256[] memory transferredTokenIds = new uint256[](_nftPairs.length);
+        uint256 arrayLength = _nftPairs.length;
+        localVar.transferredTokenOwners = new address[](arrayLength);
+        uint256[] memory transferredTokenIds = new uint256[](arrayLength);
         uint256 actualTransferAmount = 0;
         uint256 totalWithdrawAmount = 0;
-
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
+        for (uint256 index = 0; index < arrayLength; index++) {
             require(
                 INToken(localVar.xTokenAddress).ownerOf(
                     _nftPairs[index].mainTokenId
@@ -226,7 +225,6 @@ contract PoolApeStaking is
                     amount: totalWithdrawAmount
                 })
             );
-
         INTokenApeStaking(localVar.xTokenAddress).withdrawBAKC(
             _nftPairs,
             msg.sender,
@@ -262,9 +260,10 @@ contract PoolApeStaking is
         _checkSApeIsNotPaused(ps);
 
         ApeStakingLocalVars memory localVar = _generalCache(ps, nftAsset);
-        localVar.transferredTokenOwners = new address[](_nftPairs.length);
+        uint256 arrayLength = _nftPairs.length;
+        localVar.transferredTokenOwners = new address[](arrayLength);
 
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
+        for (uint256 index = 0; index < arrayLength; index++) {
             require(
                 INToken(localVar.xTokenAddress).ownerOf(
                     _nftPairs[index].mainTokenId
@@ -287,7 +286,7 @@ contract PoolApeStaking is
         );
 
         //transfer BAKC back for user
-        for (uint256 index = 0; index < _nftPairs.length; index++) {
+        for (uint256 index = 0; index < arrayLength; index++) {
             localVar.bakcContract.safeTransferFrom(
                 localVar.xTokenAddress,
                 localVar.transferredTokenOwners[index],

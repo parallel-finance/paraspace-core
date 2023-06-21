@@ -26,7 +26,7 @@ describe("P2P Pair Staking Test", () => {
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
-    const {ape, users, apeCoinStaking, gatewayAdmin} = testEnv;
+    const {ape, users, apeCoinStaking, poolAdmin} = testEnv;
 
     const user1 = users[0];
     const user2 = users[1];
@@ -66,7 +66,7 @@ describe("P2P Pair Staking Test", () => {
     );
     await waitForTx(
       await p2pPairStaking
-        .connect(gatewayAdmin.signer)
+        .connect(poolAdmin.signer)
         .setCompoundBot(user1.address)
     );
 

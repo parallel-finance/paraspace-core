@@ -692,7 +692,7 @@ contract P2PPairStaking is
         return this.onERC721Received.selector;
     }
 
-    function setCompoundBot(address _compoundBot) external onlyOwner {
+    function setCompoundBot(address _compoundBot) external onlyPoolAdmin {
         address oldValue = compoundBot;
         if (oldValue != _compoundBot) {
             compoundBot = _compoundBot;
