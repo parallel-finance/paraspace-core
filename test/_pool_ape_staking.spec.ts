@@ -3252,4 +3252,56 @@ describe("APE Coin Staking Test", () => {
     const apeData = await pool.getReserveData(ape.address);
     expect(isUsingAsCollateral(userConfig, apeData.id)).to.be.false;
   });
+
+  it("TC-pool-ape-staking-50 test withdrawApeCoin should success when hf < 1 and sApe is not used as collateral", async () => {
+    const {
+      users: [user1],
+      ape,
+      mayc,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(mayc, "1", user1, true);
+
+    const amount1 = await convertToCurrencyDecimals(ape.address, "7000");
+    const amount2 = await convertToCurrencyDecimals(ape.address, "8000");
+    const amount = await convertToCurrencyDecimals(ape.address, "15000");
+    await changePriceAndValidate(mayc, "100");
+    await changePriceAndValidate(ape, "0.001");
+    expect(
+      await pool.connect(user1.signer).borrowApeAndStake(
+        {
+          nftAsset: mayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: amount,
+          cashAmount: 0,
+        },
+        [{tokenId: 0, amount: amount1}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: amount2}],
+        false
+      )
+    );
+
+    await changePriceAndValidate(mayc, "40");
+    await changePriceAndValidate(ape, "0.002");
+    await changeSApePriceAndValidate(sApeAddress, "0.002");
+
+    const healthFactor = (await pool.getUserAccountData(user1.address))
+      .healthFactor;
+    expect(healthFactor.lt(parseEther("1"))).to.be.true;
+
+    expect(
+      await pool
+        .connect(user1.signer)
+        .withdrawApeCoin(mayc.address, [{tokenId: 0, amount: amount1}])
+    );
+
+    expect(
+      await pool
+        .connect(user1.signer)
+        .withdrawBAKC(mayc.address, [
+          {mainTokenId: 0, bakcTokenId: 0, amount: amount2, isUncommit: true},
+        ])
+    );
+  });
 });

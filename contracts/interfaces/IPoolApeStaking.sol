@@ -25,7 +25,7 @@ interface IPoolApeStaking {
      * @param stakingInfo Detail info of the staking
      * @param _nfts Array of BAYC/MAYC NFT's with staked amounts
      * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
-     * @param _openSApeCollateralFlag if true and when user sApe collateral flag is false, we will open it. Should call setUserUseERC20AsCollateral to turn off the flag.
+     * @param _openSApeCollateralFlag if true and when user current sApe collateral flag is false, we will open it. We don't close the flag here, user should call setUserUseERC20AsCollateral to turn off the flag.
      * @dev Need check User health factor > 1.
      */
     function borrowApeAndStake(
