@@ -215,6 +215,7 @@ describe("Pool: rescue tokens", () => {
     await expect(await variableDebtWeth.balanceOf(user1.address)).to.be.eq(
       "600020"
     );
+    
     await expect(await nBAYC.balanceOf(user1.address)).to.be.eq(3);
   });
 });
