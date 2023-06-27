@@ -191,69 +191,36 @@ import {Address, Libraries} from "hardhat-deploy/dist/types";
 import {parseEther} from "ethers/lib/utils";
 import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
-import {GLOBAL_OVERRIDES} from "./hardhat-constants";
+import {GLOBAL_OVERRIDES, ZK_LIBRARIES_PATH} from "./hardhat-constants";
+import fs from "fs";
+import shell from "shelljs";
 
 export const deployAllLibraries = async (verify?: boolean) => {
-  const coreLibraries = await deployPoolCoreLibraries(verify);
-  const positionMoverLogic = await deployPositionMoverLogic(
-    pick(coreLibraries, [
-      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
-      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-    ]),
-    verify
-  );
-  const marketplaceLibraries = await deployPoolMarketplaceLibraries(
-    coreLibraries,
-    verify
-  );
+  const supplyLogic = await deploySupplyLogic(verify);
+  const borrowLogic = await deployBorrowLogic(verify);
+  const auctionLogic = await deployAuctionLogic(verify);
+  const flashClaimLogic = await deployFlashClaimLogic(verify);
   const poolLogic = await deployPoolLogic(verify);
   const configuratorLogic = await deployConfiguratorLogic(verify);
   const mintableERC721Logic = await deployMintableERC721Logic(verify);
   const apeStakingLogic = await deployApeStakingLogic(verify);
   const merkleVerifier = await deployMerkleVerifier(verify);
 
-  return {
-    "contracts/protocol/libraries/logic/BorrowLogic.sol": {
-      BorrowLogic:
-        coreLibraries[
-          "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"
-        ],
+  const libraries = {
+    ["contracts/protocol/libraries/logic/AuctionLogic.sol"]: {
+      AuctionLogic: auctionLogic.address,
     },
-    "contracts/protocol/libraries/logic/SupplyLogic.sol": {
-      SupplyLogic:
-        coreLibraries[
-          "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"
-        ],
+    ["contracts/protocol/libraries/logic/SupplyLogic.sol"]: {
+      SupplyLogic: supplyLogic.address,
     },
-    "contracts/protocol/libraries/logic/LiquidationLogic.sol": {
-      LiquidationLogic:
-        coreLibraries[
-          "contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic"
-        ],
+    ["contracts/protocol/libraries/logic/BorrowLogic.sol"]: {
+      BorrowLogic: borrowLogic.address,
     },
-    "contracts/protocol/libraries/logic/AuctionLogic.sol": {
-      AuctionLogic:
-        coreLibraries[
-          "contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"
-        ],
-    },
-    "contracts/protocol/libraries/logic/PositionMoverLogic.sol": {
-      PositionMoverLogic: positionMoverLogic.address,
+    ["contracts/protocol/libraries/logic/FlashClaimLogic.sol"]: {
+      FlashClaimLogic: flashClaimLogic.address,
     },
     "contracts/protocol/libraries/logic/PoolLogic.sol": {
       PoolLogic: poolLogic.address,
-    },
-    "contracts/protocol/libraries/logic/MarketplaceLogic.sol": {
-      MarketplaceLogic:
-        marketplaceLibraries[
-          "contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"
-        ],
-    },
-    "contracts/protocol/libraries/logic/FlashClaimLogic.sol": {
-      FlashClaimLogic:
-        coreLibraries[
-          "contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"
-        ],
     },
     "contracts/protocol/tokenization/libraries/ApeStakingLogic.sol": {
       ApeStakingLogic: apeStakingLogic.address,
@@ -267,7 +234,56 @@ export const deployAllLibraries = async (verify?: boolean) => {
     "contracts/dependencies/blur-exchange/MerkleVerifier.sol": {
       MerkleVerifier: merkleVerifier.address,
     },
+    "contracts/protocol/libraries/logic/LiquidationLogic.sol": {
+      LiquidationLogic: ZERO_ADDRESS,
+    },
+    "contracts/protocol/libraries/logic/PositionMoverLogic.sol": {
+      PositionMoverLogic: ZERO_ADDRESS,
+    },
+    "contracts/protocol/libraries/logic/MarketplaceLogic.sol": {
+      MarketplaceLogic: ZERO_ADDRESS,
+    },
   };
+
+  fs.writeFileSync(ZK_LIBRARIES_PATH, JSON.stringify(libraries));
+  shell.exec("make build");
+
+  const liquidationLogic = await deployLiquidationLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+    },
+    verify
+  );
+  const positionMoverLogic = await deployPositionMoverLogic(
+    {
+      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+        supplyLogic.address,
+      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+        borrowLogic.address,
+    },
+    verify
+  );
+  const marketplaceLogic = await deployMarketplaceLogic(
+    {
+      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+        supplyLogic.address,
+      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
+        borrowLogic.address,
+    },
+    verify
+  );
+  libraries["contracts/protocol/libraries/logic/PositionMoverLogic.sol"] = {
+    PositionMoverLogic: positionMoverLogic.address,
+  };
+  libraries["contracts/protocol/libraries/logic/LiquidationLogic.sol"] = {
+    LiquidationLogic: liquidationLogic.address,
+  };
+  libraries["contracts/protocol/libraries/logic/MarketplaceLogic.sol"] = {
+    MarketplaceLogic: marketplaceLogic.address,
+  };
+
+  fs.writeFileSync(ZK_LIBRARIES_PATH, JSON.stringify(libraries));
 };
 
 export const deployPoolAddressesProvider = async (

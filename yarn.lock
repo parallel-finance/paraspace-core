@@ -1535,6 +1535,7 @@ __metadata:
     prettier-plugin-solidity: ^1.0.0-alpha.53
     pretty-quick: ^3.1.1
     prompt-sync: ^4.2.0
+    shelljs: ^0.8.5
     solhint: ^3.3.6
     solidity-coverage: ^0.8.2
     solidity-docgen: ^0.6.0-beta.35
@@ -13685,7 +13686,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shelljs@npm:0.8.5, shelljs@npm:^0.8.3":
+"shelljs@npm:0.8.5, shelljs@npm:^0.8.3, shelljs@npm:^0.8.5":
   version: 0.8.5
   resolution: "shelljs@npm:0.8.5"
   dependencies:

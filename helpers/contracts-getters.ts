@@ -136,7 +136,7 @@ export const getFirstSigner = async () => {
   if (DRE.network.zksync) {
     return new zk.Wallet(
       last(accounts)!.privateKey,
-      DRE.ethers.provider as zk.Provider,
+      new zk.Provider((DRE.network.config as HttpNetworkConfig).url),
       new ethers.providers.JsonRpcProvider(
         (DRE.network.config as HttpNetworkConfig).ethNetwork
       )

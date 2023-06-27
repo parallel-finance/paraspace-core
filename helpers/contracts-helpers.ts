@@ -288,7 +288,7 @@ export const retry = async (fn: any, retries = 0) => {
     return await fn();
   } catch (e) {
     if (++retries < DEPLOY_MAX_RETRIES) {
-      console.log("retrying...");
+      console.log("retrying..., error code:", e?.code);
       await sleep(1500);
       return await retry(fn, retries);
     } else {
