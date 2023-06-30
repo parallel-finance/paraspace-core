@@ -87,10 +87,6 @@ contract AirdropFlashClaimReceiver is
         );
 
         require(
-            vars.airdropTokenTypes.length > 0,
-            "invalid airdrop token type"
-        );
-        require(
             vars.airdropTokenAddresses.length == vars.airdropTokenTypes.length,
             "invalid airdrop token address length"
         );
