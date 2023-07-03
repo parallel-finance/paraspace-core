@@ -52,6 +52,7 @@ contract PoolApeStaking is
     uint24 internal immutable APE_WETH_FEE;
     uint24 internal immutable WETH_USDC_FEE;
     address internal immutable WETH;
+    address internal immutable APE_STAKING_VAULT;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -91,7 +92,8 @@ contract PoolApeStaking is
         ISwapRouter uniswapV3SwapRouter,
         address weth,
         uint24 apeWethFee,
-        uint24 wethUsdcFee
+        uint24 wethUsdcFee,
+        address apeStakingVault
     ) {
         ADDRESSES_PROVIDER = provider;
         APE_COMPOUND = apeCompound;
@@ -101,10 +103,29 @@ contract PoolApeStaking is
         WETH = weth;
         APE_WETH_FEE = apeWethFee;
         WETH_USDC_FEE = wethUsdcFee;
+        APE_STAKING_VAULT = apeStakingVault;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
         return POOL_REVISION;
+    }
+
+    function borrowPoolCApe(uint256 amount)
+        external
+        nonReentrant
+        returns (uint256)
+    {
+        require(msg.sender == APE_STAKING_VAULT);
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        uint256 latestBorrowIndex = BorrowLogic.executeBorrowWithoutCollateral(
+            ps._reserves,
+            APE_STAKING_VAULT,
+            address(APE_COMPOUND),
+            amount
+        );
+
+        return latestBorrowIndex;
     }
 
     /// @inheritdoc IPoolApeStaking

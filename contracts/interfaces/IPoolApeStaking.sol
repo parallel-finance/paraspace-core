@@ -20,6 +20,8 @@ interface IPoolApeStaking {
         uint256 cashAmount;
     }
 
+    function borrowPoolCApe(uint256 amount) external returns (uint256);
+
     /**
      * @notice Deposit ape coin to BAYC/MAYC pool or BAKC pool
      * @param stakingInfo Detail info of the staking

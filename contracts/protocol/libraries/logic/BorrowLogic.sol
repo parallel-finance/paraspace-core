@@ -130,6 +130,57 @@ library BorrowLogic {
     }
 
     /**
+     * @notice Implements the borrow without collateral feature.
+     * @dev  Emits the `Borrow()` event
+     * @param reservesData The state of all the reserves
+     * @param borrowFor The address borrow the asset
+     * @param asset The address of the borrow asset
+     * @param amount The borrow amount
+     */
+    function executeBorrowWithoutCollateral(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        address borrowFor,
+        address asset,
+        uint256 amount
+    ) external returns (uint256) {
+        DataTypes.ReserveData storage reserve = reservesData[asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        reserve.updateState(reserveCache);
+
+        ValidationLogic.validateBorrowWithoutCollateral(reserveCache, amount);
+
+        (, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
+            reserveCache.variableDebtTokenAddress
+        ).mint(
+                borrowFor,
+                borrowFor,
+                amount,
+                reserveCache.nextVariableBorrowIndex
+            );
+
+        reserve.updateInterestRates(reserveCache, asset, 0, amount);
+
+        DataTypes.TimeLockParams memory timeLockParams;
+        IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
+            borrowFor,
+            amount,
+            timeLockParams
+        );
+
+        emit Borrow(
+            asset,
+            borrowFor,
+            borrowFor,
+            amount,
+            reserve.currentVariableBorrowRate,
+            0
+        );
+
+        return reserveCache.nextVariableBorrowIndex;
+    }
+
+    /**
      * @notice Implements the repay feature. Repaying transfers the underlying back to the xToken and clears the
      * equivalent amount of debt for the user by burning the corresponding debt token.
      * @dev  Emits the `Repay()` event
