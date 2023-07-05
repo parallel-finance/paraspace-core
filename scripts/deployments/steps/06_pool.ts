@@ -1,6 +1,7 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployMockBendDaoLendPool,
+  deployParaApeStaking,
   deployPoolComponents,
   deployPoolParaProxyInterfaces,
   deployPoolPositionMover,
@@ -30,6 +31,8 @@ export const step_06 = async (verify = false) => {
   const paraSpaceConfig = getParaSpaceConfig();
 
   try {
+    await deployParaApeStaking(true);
+
     const {
       poolCore,
       poolParameters,

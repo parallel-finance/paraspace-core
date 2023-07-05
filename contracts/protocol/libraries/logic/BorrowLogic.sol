@@ -14,6 +14,7 @@ import {DataTypes} from "../types/DataTypes.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import "hardhat/console.sol";
 
 /**
  * @title BorrowLogic library
@@ -143,6 +144,7 @@ library BorrowLogic {
         address asset,
         uint256 amount
     ) external returns (uint256) {
+        console.log("---------------------2");
         DataTypes.ReserveData storage reserve = reservesData[asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
@@ -150,6 +152,9 @@ library BorrowLogic {
 
         ValidationLogic.validateBorrowWithoutCollateral(reserveCache, amount);
 
+        console.log("variableDebtTokenAddress:", reserveCache.variableDebtTokenAddress);
+        console.log("borrowFor:", borrowFor);
+        console.log("borrow asset:", asset);
         (, reserveCache.nextScaledVariableDebt) = IVariableDebtToken(
             reserveCache.variableDebtTokenAddress
         ).mint(

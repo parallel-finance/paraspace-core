@@ -8,6 +8,7 @@ import {
   getInitializableAdminUpgradeabilityProxy,
   getNFTFloorOracle,
   getP2PPairStaking,
+  getParaApeStaking,
   getPausableZoneController,
   getPoolAddressesProvider,
   getPoolAddressesProviderRegistry,
@@ -393,6 +394,31 @@ export const step_23 = async (
         );
       }
       console.timeEnd("transferring P2PPairStaking ownership...");
+      console.log();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // ParaApeStaking
+    ////////////////////////////////////////////////////////////////////////////////
+    if (await getContractAddressInDb(eContractid.ParaApeStaking)) {
+      console.time("transferring ParaApeStaking ownership...");
+      const paraApeStaking = await getParaApeStaking();
+      const paraApeStakingProxy =
+        await getInitializableAdminUpgradeabilityProxy(paraApeStaking.address);
+      const signers = await getEthersSigners();
+      const adminAddress = signers[5].getAddress();
+      if (DRY_RUN) {
+        const encodedData1 = paraApeStakingProxy.interface.encodeFunctionData(
+          "changeAdmin",
+          [adminAddress]
+        );
+        await dryRunEncodedData(paraApeStakingProxy.address, encodedData1);
+      } else {
+        await waitForTx(
+          await paraApeStakingProxy.changeAdmin(adminAddress, GLOBAL_OVERRIDES)
+        );
+      }
+      console.timeEnd("transferring ParaApeStaking ownership...");
       console.log();
     }
 

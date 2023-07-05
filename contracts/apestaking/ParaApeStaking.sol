@@ -15,6 +15,7 @@ import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import "./logic/ApeStakingP2PLogic.sol";
 import "./logic/ApeStakingVaultLogic.sol";
 import "./logic/ApeStakingCommonLogic.sol";
+import "hardhat/console.sol";
 
 contract ParaApeStaking is
     Initializable,
@@ -239,6 +240,12 @@ contract ParaApeStaking is
         return ApeStakingP2PLogic.getApeCoinStakingCap(stakingType, vars);
     }
 
+    uint256 constant BAYC_BAKC_PAIR_POOL_ID = 1;
+    uint256 constant MAYC_BAKC_PAIR_POOL_ID = 2;
+    uint256 constant BAYC_SINGLE_POOL_ID = 3;
+    uint256 constant MAYC_SINGLE_POOL_ID = 4;
+    uint256 constant BAKC_SINGLE_POOL_ID = 5;
+
     mapping(uint256 => PoolState) public poolStates;
 
     //address public vaultBot;
@@ -248,9 +255,13 @@ contract ParaApeStaking is
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external {
+        console.log("depositPairNFT---------------------0");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+        ? BAYC_BAKC_PAIR_POOL_ID
+        : MAYC_BAKC_PAIR_POOL_ID;
         ApeStakingVaultLogic.depositPairNFT(
-            poolStates,
+            poolStates[poolId],
             vars,
             isBAYC,
             apeTokenIds,
@@ -263,9 +274,13 @@ contract ParaApeStaking is
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external {
+        console.log("stakingPairNFT---------------------0");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+        ? BAYC_BAKC_PAIR_POOL_ID
+        : MAYC_BAKC_PAIR_POOL_ID;
         ApeStakingVaultLogic.stakingPairNFT(
-            poolStates,
+            poolStates[poolId],
             vars,
             isBAYC,
             apeTokenIds,
@@ -279,8 +294,11 @@ contract ParaApeStaking is
         uint32[] calldata bakcTokenIds
     ) external {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+        ? BAYC_BAKC_PAIR_POOL_ID
+        : MAYC_BAKC_PAIR_POOL_ID;
         ApeStakingVaultLogic.withdrawPairNFT(
-            poolStates,
+            poolStates[poolId],
             vars,
             isBAYC,
             apeTokenIds,
@@ -295,8 +313,11 @@ contract ParaApeStaking is
         uint32[] calldata bakcTokenIds
     ) external {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+        ? BAYC_BAKC_PAIR_POOL_ID
+        : MAYC_BAKC_PAIR_POOL_ID;
         ApeStakingVaultLogic.claimPairNFT(
-            poolStates,
+            poolStates[poolId],
             vars,
             isBAYC,
             apeTokenIds,
@@ -310,8 +331,11 @@ contract ParaApeStaking is
         uint32[] calldata bakcTokenIds
     ) external {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+        ? BAYC_BAKC_PAIR_POOL_ID
+        : MAYC_BAKC_PAIR_POOL_ID;
         ApeStakingVaultLogic.compoundPairNFT(
-            poolStates,
+            poolStates[poolId],
             vars,
             isBAYC,
             apeTokenIds,
@@ -346,5 +370,14 @@ contract ParaApeStaking is
         vars.maycMatchedCap = maycMatchedCap;
         vars.bakcMatchedCap = bakcMatchedCap;
         return vars;
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

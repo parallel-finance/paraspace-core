@@ -69,6 +69,9 @@ contract NTokenBAKC is NToken {
             ape.approve(nMAYC, type(uint256).max);
         }
         IERC721(underlyingAsset).setApprovalForAll(address(POOL), true);
+
+        address paraApeStaking = POOL.paraApeStaking();
+        IERC721(underlyingAsset).setApprovalForAll(paraApeStaking, true);
     }
 
     function _transfer(

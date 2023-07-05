@@ -20,6 +20,8 @@ interface IPoolApeStaking {
         uint256 cashAmount;
     }
 
+    function paraApeStaking() external view returns (address);
+
     function borrowPoolCApe(uint256 amount) external returns (uint256);
 
     /**

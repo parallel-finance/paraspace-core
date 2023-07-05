@@ -27,6 +27,7 @@ import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
+import "hardhat/console.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -52,7 +53,7 @@ contract PoolApeStaking is
     uint24 internal immutable APE_WETH_FEE;
     uint24 internal immutable WETH_USDC_FEE;
     address internal immutable WETH;
-    address internal immutable APE_STAKING_VAULT;
+    address internal immutable PARA_APE_STAKING;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -103,11 +104,15 @@ contract PoolApeStaking is
         WETH = weth;
         APE_WETH_FEE = apeWethFee;
         WETH_USDC_FEE = wethUsdcFee;
-        APE_STAKING_VAULT = apeStakingVault;
+        PARA_APE_STAKING = apeStakingVault;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
         return POOL_REVISION;
+    }
+
+    function paraApeStaking() external view returns (address) {
+        return PARA_APE_STAKING;
     }
 
     function borrowPoolCApe(uint256 amount)
@@ -115,12 +120,13 @@ contract PoolApeStaking is
         nonReentrant
         returns (uint256)
     {
-        require(msg.sender == APE_STAKING_VAULT);
+        require(msg.sender == PARA_APE_STAKING);
         DataTypes.PoolStorage storage ps = poolStorage();
 
+        console.log("---------------------1");
         uint256 latestBorrowIndex = BorrowLogic.executeBorrowWithoutCollateral(
             ps._reserves,
-            APE_STAKING_VAULT,
+            PARA_APE_STAKING,
             address(APE_COMPOUND),
             amount
         );

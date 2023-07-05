@@ -11,6 +11,7 @@ import "../../interfaces/ICApe.sol";
 import {SignatureChecker} from "../../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
+import "hardhat/console.sol";
 
 /**
  * @title ApeStakingVaultLogic library
@@ -26,12 +27,7 @@ library ApeStakingVaultLogic {
     uint256 constant BAYC_POOL_ID = 1;
     uint256 constant MAYC_POOL_ID = 2;
     uint256 constant BAKC_POOL_ID = 3;
-    uint256 constant BAYC_BAKC_PAIR_POOL_ID = 1;
-    uint256 constant MAYC_BAKC_PAIR_POOL_ID = 2;
-    uint256 constant BAYC_SINGLE_POOL_ID = 3;
-    uint256 constant MAYC_SINGLE_POOL_ID = 4;
-    uint256 constant BAKC_SINGLE_POOL_ID = 5;
-    uint256 internal constant WAD = 1e18;
+
     event PairNFTDeposited(
         bool isBAYC,
         uint256 apeTokenId,
@@ -47,7 +43,7 @@ library ApeStakingVaultLogic {
     );
 
     function depositPairNFT(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -59,13 +55,6 @@ library ApeStakingVaultLogic {
             "wrong param"
         );
 
-        IParaApeStaking.PoolState storage poolState;
-        {
-            uint256 poolId = isBAYC
-                ? BAYC_BAKC_PAIR_POOL_ID
-                : MAYC_BAKC_PAIR_POOL_ID;
-            poolState = poolStates[poolId];
-        }
         vars.apeStakingPoolId = isBAYC ? BAYC_POOL_ID : MAYC_POOL_ID;
         vars.apeToken = isBAYC ? vars.bayc : vars.mayc;
         vars.nApe = isBAYC ? vars.nBayc : vars.nMayc;
@@ -127,25 +116,19 @@ library ApeStakingVaultLogic {
     }
 
     function stakingPairNFT(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external {
+        console.log("stakingPairNFT---------------------1");
         uint256 arrayLength = apeTokenIds.length;
         require(
             arrayLength == bakcTokenIds.length && arrayLength > 0,
             "wrong param"
         );
 
-        IParaApeStaking.PoolState storage poolState;
-        {
-            uint256 poolId = isBAYC
-                ? BAYC_BAKC_PAIR_POOL_ID
-                : MAYC_BAKC_PAIR_POOL_ID;
-            poolState = poolStates[poolId];
-        }
         ApeCoinStaking.SingleNft[]
             memory _nfts = new ApeCoinStaking.SingleNft[](arrayLength);
         ApeCoinStaking.PairNftDepositWithAmount[]
@@ -188,10 +171,19 @@ library ApeStakingVaultLogic {
         }
 
         // prepare Ape coin
-        uint256 totalNeed = (vars.positionCap + vars.bakcMatchedCap) *
+        console.log("---------------------0");
+        uint256 totalBorrow = (vars.positionCap + vars.bakcMatchedCap) *
             arrayLength;
-        IPool(vars.pool).borrowPoolCApe(totalNeed);
-        IAutoCompoundApe(vars.cApe).withdraw(totalNeed);
+        uint256 latestBorrowIndex = IPool(vars.pool).borrowPoolCApe(
+            totalBorrow
+        );
+        IAutoCompoundApe(vars.cApe).withdraw(totalBorrow);
+        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+            WadRayMath.RAY
+        );
+        poolState.cApeDebtShare += totalBorrow.rayDiv(latestBorrowIndex).rayDiv(
+            cApeExchangeRate
+        );
 
         //stake in ApeCoinStaking
         ApeCoinStaking.PairNftDepositWithAmount[]
@@ -211,7 +203,7 @@ library ApeStakingVaultLogic {
     }
 
     function withdrawPairNFT(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -223,15 +215,8 @@ library ApeStakingVaultLogic {
             "wrong param"
         );
 
-        _claimPairNFT(poolStates, vars, isBAYC, apeTokenIds, bakcTokenIds);
+        _claimPairNFT(poolState, vars, isBAYC, apeTokenIds, bakcTokenIds);
 
-        IParaApeStaking.PoolState storage poolState;
-        {
-            uint256 poolId = isBAYC
-                ? BAYC_BAKC_PAIR_POOL_ID
-                : MAYC_BAKC_PAIR_POOL_ID;
-            poolState = poolStates[poolId];
-        }
         vars.apeStakingPoolId = isBAYC ? BAYC_POOL_ID : MAYC_POOL_ID;
         vars.apeToken = isBAYC ? vars.bayc : vars.mayc;
         vars.nApe = isBAYC ? vars.nBayc : vars.nMayc;
@@ -319,14 +304,14 @@ library ApeStakingVaultLogic {
             }
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
             uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
-
-            //update reward index
             IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
-            uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-                WAD
+
+            _reayAndCompound(
+                poolState,
+                vars,
+                balanceDiff,
+                vars.positionCap + vars.bakcMatchedCap
             );
-            uint256 shareAmount = balanceDiff.wadDiv(cApeExchangeRate);
-            poolState.accumulatedRewardsPerNft += shareAmount / totalPosition;
         }
 
         //transfer ape and BAKC bakc to nToken
@@ -351,7 +336,7 @@ library ApeStakingVaultLogic {
     }
 
     function claimPairNFT(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -363,11 +348,11 @@ library ApeStakingVaultLogic {
             "wrong param"
         );
 
-        _claimPairNFT(poolStates, vars, isBAYC, apeTokenIds, bakcTokenIds);
+        _claimPairNFT(poolState, vars, isBAYC, apeTokenIds, bakcTokenIds);
     }
 
     function compoundPairNFT(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -379,13 +364,6 @@ library ApeStakingVaultLogic {
             "wrong param"
         );
 
-        IParaApeStaking.PoolState storage poolState;
-        {
-            uint256 poolId = isBAYC
-                ? BAYC_BAKC_PAIR_POOL_ID
-                : MAYC_BAKC_PAIR_POOL_ID;
-            poolState = poolStates[poolId];
-        }
         uint256[] memory _nfts = new uint256[](arrayLength);
         ApeCoinStaking.PairNft[]
             memory _nftPairs = new ApeCoinStaking.PairNft[](arrayLength);
@@ -416,41 +394,39 @@ library ApeStakingVaultLogic {
         vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
 
         //claim from ApeCoinStaking
-        ApeCoinStaking.PairNft[]
+        {
+            ApeCoinStaking.PairNft[]
             memory _otherPairs = new ApeCoinStaking.PairNft[](0);
-        if (isBAYC) {
-            vars.apeCoinStaking.claimSelfBAYC(_nfts);
-            vars.apeCoinStaking.claimSelfBAKC(_nftPairs, _otherPairs);
-        } else {
-            vars.apeCoinStaking.claimSelfMAYC(_nfts);
-            vars.apeCoinStaking.claimSelfBAKC(_otherPairs, _nftPairs);
+            if (isBAYC) {
+                vars.apeCoinStaking.claimSelfBAYC(_nfts);
+                vars.apeCoinStaking.claimSelfBAKC(_nftPairs, _otherPairs);
+            } else {
+                vars.apeCoinStaking.claimSelfMAYC(_nfts);
+                vars.apeCoinStaking.claimSelfBAKC(_otherPairs, _nftPairs);
+            }
         }
+
         vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
         uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
-
-        //update reward index
         IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
-        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WAD);
-        uint256 shareAmount = balanceDiff.wadDiv(cApeExchangeRate);
-        poolState.accumulatedRewardsPerNft +=
-            shareAmount /
-            poolState.totalPosition;
+
+        //repay and compound
+        vars.positionCap = isBAYC ? vars.baycMatchedCap : vars.maycMatchedCap;
+        _reayAndCompound(
+            poolState,
+            vars,
+            balanceDiff,
+            vars.positionCap + vars.bakcMatchedCap
+        );
     }
 
     function _claimPairNFT(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) internal {
-        IParaApeStaking.PoolState storage poolState;
-        {
-            uint256 poolId = isBAYC
-                ? BAYC_BAKC_PAIR_POOL_ID
-                : MAYC_BAKC_PAIR_POOL_ID;
-            poolState = poolStates[poolId];
-        }
         vars.apeStakingPoolId = isBAYC ? BAYC_POOL_ID : MAYC_POOL_ID;
         vars.accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         uint256 rewardShares;
@@ -497,5 +473,65 @@ library ApeStakingVaultLogic {
         if (rewardShares > 0) {
             IERC20(vars.cApe).safeTransfer(claimFor, rewardShares);
         }
+    }
+
+    function _reayAndCompound(
+        IParaApeStaking.PoolState storage poolState,
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        uint256 totalAmount,
+        uint256 positionCap
+    ) internal {
+        console.log("_reayAndCompound---------------------------0");
+        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+            WadRayMath.RAY
+        );
+        uint256 latestBorrowIndex = IPool(vars.pool)
+            .getReserveNormalizedVariableDebt(vars.cApe);
+        uint256 cApeDebtShare = poolState.cApeDebtShare;
+        uint256 debtInterest = _calculateCurrentPositionDebtInterest(
+            cApeDebtShare,
+            poolState.totalPosition,
+            positionCap,
+            cApeExchangeRate,
+            latestBorrowIndex
+        );
+        console.log("_reayAndCompound---------------------------totalAmount:", totalAmount);
+        console.log("_reayAndCompound---------------------------debtInterest:", debtInterest);
+        if (debtInterest >= totalAmount) {
+            console.log("_reayAndCompound---------------------------1");
+            IERC20(vars.cApe).safeApprove(vars.pool, totalAmount);
+            IPool(vars.pool).repay(vars.cApe, totalAmount, address(this));
+            cApeDebtShare -= totalAmount.rayDiv(latestBorrowIndex).rayDiv(
+                cApeExchangeRate
+            );
+        } else {
+            //update reward index
+            console.log("_reayAndCompound---------------------------2");
+            IERC20(vars.cApe).safeApprove(vars.pool, debtInterest);
+            IPool(vars.pool).repay(vars.cApe, debtInterest, address(this));
+            uint256 remainingReward = totalAmount - debtInterest;
+            uint256 shareAmount = remainingReward.rayDiv(cApeExchangeRate);
+            poolState.accumulatedRewardsPerNft +=
+                shareAmount /
+                poolState.totalPosition;
+            cApeDebtShare -= debtInterest.rayDiv(latestBorrowIndex).rayDiv(
+                cApeExchangeRate
+            );
+        }
+        console.log("_reayAndCompound---------------------------3");
+        poolState.cApeDebtShare = cApeDebtShare;
+    }
+
+    function _calculateCurrentPositionDebtInterest(
+        uint256 cApeDebtShare,
+        uint256 totalPosition,
+        uint256 perPositionCap,
+        uint256 cApeExchangeRate,
+        uint256 latestBorrowIndex
+    ) internal pure returns (uint256) {
+        uint256 currentDebt = cApeDebtShare.rayMul(cApeExchangeRate).rayMul(
+            latestBorrowIndex
+        );
+        return (currentDebt - perPositionCap * totalPosition);
     }
 }

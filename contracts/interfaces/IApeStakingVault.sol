@@ -16,5 +16,6 @@ interface IApeStakingVault {
         mapping(uint256 => uint256) rewardsDebt;
         //apeTokenId => PairingStatus
         mapping(uint256 => PairingStatus) pairStatus;
+        uint256 cApeDebtShare;
     }
 }

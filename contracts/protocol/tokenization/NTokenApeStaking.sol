@@ -70,6 +70,9 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         }
         getBAKC().setApprovalForAll(address(POOL), true);
 
+        address paraApeStaking = POOL.paraApeStaking();
+        IERC721(underlyingAsset).setApprovalForAll(paraApeStaking, true);
+
         super.initialize(
             initializingPool,
             underlyingAsset,
