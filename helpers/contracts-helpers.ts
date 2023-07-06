@@ -286,7 +286,7 @@ export const normalizeLibraryAddresses = (
 export const retry = async (fn: any, retries = 0) => {
   try {
     return await fn();
-  } catch (e) {
+  } catch (e: any) {
     if (++retries < DEPLOY_MAX_RETRIES) {
       console.log("retrying..., error code:", e?.code);
       await sleep(1500);

@@ -6,6 +6,7 @@ import {
 } from "../../helpers/contracts-helpers";
 import {DRE} from "../../helpers/misc-utils";
 import * as envs from "../../helpers/hardhat-constants";
+import {fromBn} from "evm-bn";
 
 const info = async () => {
   console.time("info");
@@ -19,6 +20,7 @@ const info = async () => {
   console.log(await getParaSpaceAdmins());
   console.log(signerAddress);
   console.log(await signer.getTransactionCount());
+  console.log(fromBn(await DRE.ethers.provider.getBalance(signerAddress)));
   console.log(
     await Promise.all((await getEthersSigners()).map((x) => x.getAddress()))
   );
