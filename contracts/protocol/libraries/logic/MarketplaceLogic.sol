@@ -77,13 +77,6 @@ library MarketplaceLogic {
         uint256 supplyAmount;
         address xTokenAddress;
         uint256 price;
-        uint256 ethLeft;
-        // used to avoid stack too deep
-        bytes32 marketplaceId;
-        bytes payload;
-        DataTypes.Credit credit;
-        DataTypes.SwapAdapter swapAdapter;
-        bytes swapPayload;
     }
 
     function executeBuyWithCredit(
@@ -95,11 +88,12 @@ library MarketplaceLogic {
         bytes calldata swapPayload,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-        MarketplaceLocalVars memory vars;
-
-        vars.ethLeft = msg.value;
-        DataTypes.ExecuteMarketplaceParams memory params = _getParams(
+        DataTypes.ExecuteMarketplaceParams memory params = _initParams(
             ps,
+            poolAddressProvider
+        );
+        _updateParams(
+            params,
             poolAddressProvider,
             marketplaceId,
             payload,
@@ -107,6 +101,7 @@ library MarketplaceLogic {
             swapAdapter,
             swapPayload
         );
+        params.ethLeft = msg.value;
         params.orderInfo = IMarketplace(params.marketplace.adapter)
             .getAskOrderInfo(payload);
         if (params.orderInfo.isSeaport) {
@@ -115,6 +110,9 @@ library MarketplaceLogic {
                 Errors.INVALID_ORDER_TAKER
             );
         } else {
+            // in LooksRare, X2Y2 we dont match orders between buyer and seller
+            // the protocol just works like an agent so taker cannot be read
+            // from orders
             params.orderInfo.taker = msg.sender;
         }
         require(
@@ -122,13 +120,11 @@ library MarketplaceLogic {
             Errors.MAKER_SAME_AS_TAKER
         );
 
-        _depositETH(vars, params);
+        _depositETH(params);
 
-        params.ethLeft = vars.ethLeft;
+        params.ethLeft -= _buyWithCredit(ps, params);
 
-        vars.ethLeft -= _buyWithCredit(ps, params);
-
-        _refundETH(vars.ethLeft);
+        _refundETH(params.ethLeft);
     }
 
     /**
@@ -196,8 +192,6 @@ library MarketplaceLogic {
         bytes[] calldata swapPayloads,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-        MarketplaceLocalVars memory vars;
-
         require(
             marketplaceIds.length == payloads.length &&
                 swapAdapters.length == payloads.length &&
@@ -205,25 +199,25 @@ library MarketplaceLogic {
                 credits.length == payloads.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
-        vars.ethLeft = msg.value;
+
+        DataTypes.ExecuteMarketplaceParams memory params = _initParams(
+            ps,
+            poolAddressProvider
+        );
+        params.ethLeft = msg.value;
 
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            vars.marketplaceId = marketplaceIds[i];
-            vars.payload = payloads[i];
-            vars.credit = credits[i];
-            vars.swapAdapter = swapAdapters[i];
-            vars.swapPayload = swapPayloads[i];
-            DataTypes.ExecuteMarketplaceParams memory params = _getParams(
-                ps,
+            _updateParams(
+                params,
                 poolAddressProvider,
-                vars.marketplaceId,
-                vars.payload,
-                vars.credit,
-                vars.swapAdapter,
-                vars.swapPayload
+                marketplaceIds[i],
+                payloads[i],
+                credits[i],
+                swapAdapters[i],
+                swapPayloads[i]
             );
             params.orderInfo = IMarketplace(params.marketplace.adapter)
-                .getAskOrderInfo(vars.payload);
+                .getAskOrderInfo(payloads[i]);
             if (params.orderInfo.isSeaport) {
                 require(
                     msg.sender == params.orderInfo.taker,
@@ -251,14 +245,12 @@ library MarketplaceLogic {
             // batchBuyWithCredit([ETH, ETH, ETH]) => ok
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
-            _depositETH(vars, params);
+            _depositETH(params);
 
-            params.ethLeft = vars.ethLeft;
-
-            vars.ethLeft -= _buyWithCredit(ps, params);
+            params.ethLeft -= _buyWithCredit(ps, params);
         }
 
-        _refundETH(vars.ethLeft);
+        _refundETH(params.ethLeft);
     }
 
     function executeAcceptBidWithCredit(
@@ -269,8 +261,12 @@ library MarketplaceLogic {
         address onBehalfOf,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-        DataTypes.ExecuteMarketplaceParams memory params = _getParams(
+        DataTypes.ExecuteMarketplaceParams memory params = _initParams(
             ps,
+            poolAddressProvider
+        );
+        _updateParams(
+            params,
             poolAddressProvider,
             marketplaceId,
             payload,
@@ -296,8 +292,12 @@ library MarketplaceLogic {
         address onBehalfOf,
         IPoolAddressesProvider poolAddressProvider
     ) external {
-        DataTypes.ExecuteMarketplaceParams memory params = _getParams(
+        DataTypes.ExecuteMarketplaceParams memory params = _initParams(
             ps,
+            poolAddressProvider
+        );
+        _updateParams(
+            params,
             poolAddressProvider,
             marketplaceId,
             payload,
@@ -337,8 +337,12 @@ library MarketplaceLogic {
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            DataTypes.ExecuteMarketplaceParams memory params = _getParams(
+            DataTypes.ExecuteMarketplaceParams memory params = _initParams(
                 ps,
+                poolAddressProvider
+            );
+            _updateParams(
+                params,
                 poolAddressProvider,
                 marketplaceIds[i],
                 payloads[i],
@@ -818,26 +822,32 @@ library MarketplaceLogic {
         );
     }
 
-    function _getParams(
+    function _initParams(
         DataTypes.PoolStorage storage ps,
+        IPoolAddressesProvider poolAddressProvider
+    ) internal view returns (DataTypes.ExecuteMarketplaceParams memory params) {
+        params.weth = poolAddressProvider.getWETH();
+        params.reservesCount = ps._reservesCount;
+        params.oracle = poolAddressProvider.getPriceOracle();
+        params.priceOracleSentinel = poolAddressProvider
+            .getPriceOracleSentinel();
+    }
+
+    function _updateParams(
+        DataTypes.ExecuteMarketplaceParams memory params,
         IPoolAddressesProvider poolAddressProvider,
         bytes32 marketplaceId,
         bytes memory payload,
         DataTypes.Credit memory credit,
         DataTypes.SwapAdapter memory swapAdapter,
         bytes memory swapPayload
-    ) internal view returns (DataTypes.ExecuteMarketplaceParams memory params) {
+    ) internal {
         params.marketplaceId = marketplaceId;
-        params.weth = poolAddressProvider.getWETH();
         params.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
         params.payload = payload;
         params.credit = credit;
         params.swapAdapter = swapAdapter;
         params.swapPayload = swapPayload;
-        params.reservesCount = ps._reservesCount;
-        params.oracle = poolAddressProvider.getPriceOracle();
-        params.priceOracleSentinel = poolAddressProvider
-            .getPriceOracleSentinel();
     }
 
     function _refundETH(uint256 ethLeft) internal {
@@ -846,24 +856,23 @@ library MarketplaceLogic {
         }
     }
 
-    function _depositETH(
-        MarketplaceLocalVars memory vars,
-        DataTypes.ExecuteMarketplaceParams memory params
-    ) internal {
+    function _depositETH(DataTypes.ExecuteMarketplaceParams memory params)
+        internal
+    {
         if (
-            vars.ethLeft == 0 ||
+            params.ethLeft == 0 ||
             params.orderInfo.consideration[0].itemType == ItemType.NATIVE
         ) {
             return;
         }
 
-        IWETH(params.weth).deposit{value: vars.ethLeft}();
+        IWETH(params.weth).deposit{value: params.ethLeft}();
         IERC20(params.weth).safeTransferFrom(
             address(this),
             msg.sender,
-            vars.ethLeft
+            params.ethLeft
         );
-        vars.ethLeft = 0;
+        params.ethLeft = 0;
     }
 
     function _transferOrCollateralize(
