@@ -13,7 +13,6 @@ import '../libraries/LiquidityAmounts.sol';
 
 import './PeripheryPayments.sol';
 import './PeripheryImmutableState.sol';
-import 'hardhat/console.sol';
 
 /// @title Liquidity management functions
 /// @notice Internal functions for safely managing liquidity in Uniswap V3
@@ -81,7 +80,6 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmuta
                 params.amount1Desired
             );
         }
-        
 
         (amount0, amount1) = pool.mint(
             params.recipient,
