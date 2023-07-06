@@ -1074,6 +1074,9 @@ library ValidationLogic {
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
+        if (params.credit.amount == 0) {
+            return;
+        }
         require(
             keccak256(abi.encodePacked(params.orderInfo.id)) ==
                 keccak256(abi.encodePacked(params.credit.orderId)),
