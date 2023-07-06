@@ -2125,14 +2125,13 @@ export const deployPTokenSApe = async (
   ) as Promise<PTokenSApe>;
 
 export const deployUserFlashClaimRegistry = async (
-  poolAddress: tEthereumAddress,
   receiverImpl: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("UserFlashclaimRegistry"),
     eContractid.FlashClaimRegistry,
-    [poolAddress, receiverImpl],
+    [receiverImpl],
     verify
   ) as Promise<UserFlashclaimRegistry>;
 

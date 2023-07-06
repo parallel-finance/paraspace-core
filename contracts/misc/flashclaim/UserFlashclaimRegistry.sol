@@ -6,13 +6,11 @@ import "../interfaces/IUserFlashclaimRegistry.sol";
 import "../../dependencies/openzeppelin/upgradeability/Clones.sol";
 
 contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
-    address public immutable pool;
     mapping(address => address) public userReceivers;
 
     address public immutable receiverImplementation;
 
-    constructor(address pool_, address receiverImplementation_) {
-        pool = pool_;
+    constructor(address receiverImplementation_) {
         receiverImplementation = receiverImplementation_;
     }
 

@@ -28,7 +28,6 @@ export const step_19 = async (verify = false) => {
     );
 
     const registry = await deployUserFlashClaimRegistry(
-      poolAddress,
       receiverImpl.address,
       verify
     );
