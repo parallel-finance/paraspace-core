@@ -285,7 +285,7 @@ test-stakefish-nft:
 
 .PHONY: run
 run:
-	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK) --show-stack-traces --no-compile
+	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK) --no-compile
 
 .PHONY: run-task
 run-task:
@@ -674,15 +674,16 @@ hardhat:
 .PHONY: anvil
 anvil:
 	anvil \
-		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
-		$(if $(FORK),--chain-id 522,--chain-id 31337) \
-		--tracing \
+		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --chain-id 522 --no-rate-limit,--chain-id 31337) \
+		$(if $(FORK_BLOCK_NUMBER),--fork-block-number $(FORK_BLOCK_NUMBER),) \
+		$(if $(DEPLOYER_MNEMONIC),--mnemonic "${DEPLOYER_MNEMONIC}",--mnemonic "test test test test test test test test test test test junk") \
 		--host 0.0.0.0 \
 		--state-interval 60 \
 		--dump-state state.json \
 		$(if $(wildcard state.json),--load-state state.json,) \
 		--disable-block-gas-limit \
 		--code-size-limit 100000 \
+		--timeout 9000000
 
 .PHONY: image
 image:
@@ -704,7 +705,7 @@ shutdown:
 	docker-compose \
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
-	docker volume prune -f
+	docker volume prune -f || true
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
 	sudo rm -fr state.json || true
