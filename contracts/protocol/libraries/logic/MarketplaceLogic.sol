@@ -92,7 +92,8 @@ library MarketplaceLogic {
             ps,
             poolAddressProvider
         );
-        _updateParams(
+        params.ethLeft = msg.value;
+        _updateBuyParams(
             params,
             poolAddressProvider,
             marketplaceId,
@@ -100,24 +101,6 @@ library MarketplaceLogic {
             credit,
             swapAdapter,
             swapPayload
-        );
-        params.ethLeft = msg.value;
-        params.orderInfo = IMarketplace(params.marketplace.adapter)
-            .getAskOrderInfo(payload);
-        if (params.orderInfo.isSeaport) {
-            require(
-                msg.sender == params.orderInfo.taker,
-                Errors.INVALID_ORDER_TAKER
-            );
-        } else {
-            // in LooksRare, X2Y2 we dont match orders between buyer and seller
-            // the protocol just works like an agent so taker cannot be read
-            // from orders
-            params.orderInfo.taker = msg.sender;
-        }
-        require(
-            params.orderInfo.maker != params.orderInfo.taker,
-            Errors.MAKER_SAME_AS_TAKER
         );
 
         _depositETH(params);
@@ -207,7 +190,7 @@ library MarketplaceLogic {
         params.ethLeft = msg.value;
 
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            _updateParams(
+            _updateBuyParams(
                 params,
                 poolAddressProvider,
                 marketplaceIds[i],
@@ -215,20 +198,6 @@ library MarketplaceLogic {
                 credits[i],
                 swapAdapters[i],
                 swapPayloads[i]
-            );
-            params.orderInfo = IMarketplace(params.marketplace.adapter)
-                .getAskOrderInfo(payloads[i]);
-            if (params.orderInfo.isSeaport) {
-                require(
-                    msg.sender == params.orderInfo.taker,
-                    Errors.INVALID_ORDER_TAKER
-                );
-            } else {
-                params.orderInfo.taker = msg.sender;
-            }
-            require(
-                params.orderInfo.maker != params.orderInfo.taker,
-                Errors.MAKER_SAME_AS_TAKER
             );
 
             // Once we encounter a listing using WETH, then we convert all our ethLeft to WETH
@@ -265,21 +234,13 @@ library MarketplaceLogic {
             ps,
             poolAddressProvider
         );
-        _updateParams(
+        _updateAcceptBidParams(
             params,
             poolAddressProvider,
             marketplaceId,
             payload,
             credit,
-            DataTypes.SwapAdapter(address(0), address(0), false),
-            bytes("")
-        );
-        params.orderInfo = IMarketplace(params.marketplace.adapter)
-            .getBidOrderInfo(payload);
-
-        require(
-            params.orderInfo.taker == onBehalfOf,
-            Errors.INVALID_ORDER_TAKER
+            onBehalfOf
         );
 
         _acceptBidWithCredit(ps, params);
@@ -296,7 +257,7 @@ library MarketplaceLogic {
             ps,
             poolAddressProvider
         );
-        _updateParams(
+        _updateAcceptBidParams(
             params,
             poolAddressProvider,
             marketplaceId,
@@ -309,15 +270,7 @@ library MarketplaceLogic {
                 bytes32(""),
                 bytes32("")
             ),
-            DataTypes.SwapAdapter(address(0), address(0), false),
-            bytes("")
-        );
-        params.orderInfo = IMarketplace(params.marketplace.adapter)
-            .getBidOrderInfo(payload);
-
-        require(
-            params.orderInfo.taker == onBehalfOf,
-            Errors.INVALID_ORDER_TAKER
+            onBehalfOf
         );
 
         _acceptOpenseaBid(ps, params);
@@ -341,21 +294,13 @@ library MarketplaceLogic {
                 ps,
                 poolAddressProvider
             );
-            _updateParams(
+            _updateAcceptBidParams(
                 params,
                 poolAddressProvider,
                 marketplaceIds[i],
                 payloads[i],
                 credits[i],
-                DataTypes.SwapAdapter(address(0), address(0), false),
-                bytes("")
-            );
-            params.orderInfo = IMarketplace(params.marketplace.adapter)
-                .getBidOrderInfo(payloads[i]);
-
-            require(
-                params.orderInfo.taker == onBehalfOf,
-                Errors.INVALID_ORDER_TAKER
+                onBehalfOf
             );
 
             _acceptBidWithCredit(ps, params);
@@ -833,7 +778,7 @@ library MarketplaceLogic {
             .getPriceOracleSentinel();
     }
 
-    function _updateParams(
+    function _updateBuyParams(
         DataTypes.ExecuteMarketplaceParams memory params,
         IPoolAddressesProvider poolAddressProvider,
         bytes32 marketplaceId,
@@ -841,13 +786,51 @@ library MarketplaceLogic {
         DataTypes.Credit memory credit,
         DataTypes.SwapAdapter memory swapAdapter,
         bytes memory swapPayload
-    ) internal {
+    ) internal view {
         params.marketplaceId = marketplaceId;
         params.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
         params.payload = payload;
         params.credit = credit;
         params.swapAdapter = swapAdapter;
         params.swapPayload = swapPayload;
+        params.orderInfo = IMarketplace(params.marketplace.adapter)
+            .getAskOrderInfo(payload);
+        if (params.orderInfo.isSeaport) {
+            require(
+                msg.sender == params.orderInfo.taker,
+                Errors.INVALID_ORDER_TAKER
+            );
+        } else {
+            // in LooksRare, X2Y2 we dont match orders between buyer and seller
+            // the protocol just works like an agent so taker cannot be read
+            // from orders
+            params.orderInfo.taker = msg.sender;
+        }
+        require(
+            params.orderInfo.maker != params.orderInfo.taker,
+            Errors.MAKER_SAME_AS_TAKER
+        );
+    }
+
+    function _updateAcceptBidParams(
+        DataTypes.ExecuteMarketplaceParams memory params,
+        IPoolAddressesProvider poolAddressProvider,
+        bytes32 marketplaceId,
+        bytes memory payload,
+        DataTypes.Credit memory credit,
+        address onBehalfOf
+    ) internal view {
+        params.marketplaceId = marketplaceId;
+        params.marketplace = poolAddressProvider.getMarketplace(marketplaceId);
+        params.payload = payload;
+        params.credit = credit;
+
+        params.orderInfo = IMarketplace(params.marketplace.adapter)
+            .getBidOrderInfo(payload);
+        require(
+            params.orderInfo.taker == onBehalfOf,
+            Errors.INVALID_ORDER_TAKER
+        );
     }
 
     function _refundETH(uint256 ethLeft) internal {
