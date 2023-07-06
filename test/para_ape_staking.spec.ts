@@ -43,6 +43,8 @@ describe("Para Ape Staking Test", () => {
       apeCoinStaking,
       pool,
       protocolDataProvider,
+      configurator,
+      poolAdmin,
     } = testEnv;
 
     //upgrade to non-fake implementation
@@ -65,8 +67,6 @@ describe("Para Ape Staking Test", () => {
     variableDebtCApeCoin = await getVariableDebtToken(
       variableDebtCApeCoinAddress
     );
-    console.log("paraApeStaking address:", paraApeStaking.address);
-    console.log("variableDebtCApeCoinAddress:", variableDebtCApeCoinAddress);
 
     // send extra tokens to the apestaking contract for rewards
     await waitForTx(
@@ -87,15 +87,20 @@ describe("Para Ape Staking Test", () => {
       await cApe.connect(user6.signer).deposit(user6.address, MINIMUM_LIQUIDITY)
     );
 
-    // user3 deposit and supply cApe to MM
-    await mintAndValidate(ape, "10000000", user4);
+    // user4 deposit and supply cApe to MM
+    expect(
+      await configurator
+        .connect(poolAdmin.signer)
+        .setSupplyCap(cApe.address, "200000000")
+    );
+    await mintAndValidate(ape, "100000000", user4);
     await waitForTx(
       await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
       await cApe
         .connect(user4.signer)
-        .deposit(user4.address, parseEther("10000000"))
+        .deposit(user4.address, parseEther("100000000"))
     );
     await waitForTx(
       await cApe.connect(user4.signer).approve(pool.address, MAX_UINT_AMOUNT)
@@ -103,7 +108,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user4.signer)
-        .supply(cApe.address, parseEther("10000000"), user4.address, 0)
+        .supply(cApe.address, parseEther("100000000"), user4.address, 0)
     );
 
     return testEnv;
@@ -141,66 +146,74 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositPairNFT(true, [2], [2])
     );
-    expect (await bayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
-    expect (await bayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
-    expect (await bayc.ownerOf(2)).to.be.equal(paraApeStaking.address);
-    expect (await bakc.ownerOf(0)).to.be.equal(paraApeStaking.address);
-    expect (await bakc.ownerOf(1)).to.be.equal(paraApeStaking.address);
-    expect (await bakc.ownerOf(2)).to.be.equal(paraApeStaking.address);
+    expect(await bayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
+    expect(await bayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
+    expect(await bayc.ownerOf(2)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(0)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(1)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(2)).to.be.equal(paraApeStaking.address);
 
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
         .stakingPairNFT(true, [0, 1, 2], [0, 1, 2])
     );
-    expect((await apeCoinStaking.nftPosition(1, 0)).stakedAmount).to.be.eq(parseEther("200000"));
-    expect((await apeCoinStaking.nftPosition(1, 1)).stakedAmount).to.be.eq(parseEther("200000"));
-    expect((await apeCoinStaking.nftPosition(1, 2)).stakedAmount).to.be.eq(parseEther("200000"));
-    expect((await apeCoinStaking.nftPosition(3, 0)).stakedAmount).to.be.eq(parseEther("50000"));
-    expect((await apeCoinStaking.nftPosition(3, 1)).stakedAmount).to.be.eq(parseEther("50000"));
-    expect((await apeCoinStaking.nftPosition(3, 2)).stakedAmount).to.be.eq(parseEther("50000"));
+    expect((await apeCoinStaking.nftPosition(1, 0)).stakedAmount).to.be.eq(
+      parseEther("200000")
+    );
+    expect((await apeCoinStaking.nftPosition(1, 1)).stakedAmount).to.be.eq(
+      parseEther("200000")
+    );
+    expect((await apeCoinStaking.nftPosition(1, 2)).stakedAmount).to.be.eq(
+      parseEther("200000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 0)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 1)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 2)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
     expect(
-        await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
+      await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
     ).to.be.closeTo(parseEther("750000"), parseEther("10"));
 
     await advanceTimeAndBlock(parseInt("3600"));
 
     await waitForTx(
-        await paraApeStaking
-            .connect(user3.signer)
-            .compoundPairNFT(true, [0, 1, 2], [0, 1, 2])
+      await paraApeStaking
+        .connect(user3.signer)
+        .compoundPairNFT(true, [0, 1, 2], [0, 1, 2])
     );
 
     await waitForTx(
-        await paraApeStaking
-            .connect(user1.signer)
-            .claimPairNFT(true, [0, 1], [0, 1])
+      await paraApeStaking
+        .connect(user1.signer)
+        .claimPairNFT(true, [0, 1], [0, 1])
     );
     await waitForTx(
-        await paraApeStaking
-            .connect(user2.signer)
-            .claimPairNFT(true, [2], [2])
+      await paraApeStaking.connect(user2.signer).claimPairNFT(true, [2], [2])
     );
     const user1Balance = await cApe.balanceOf(user1.address);
     const user2Balance = await cApe.balanceOf(user2.address);
     expect(user1Balance).to.be.closeTo(user2Balance.mul(2), parseEther("10"));
 
     await waitForTx(
-        await paraApeStaking
-            .connect(user1.signer)
-            .withdrawPairNFT(true, [0, 1], [0, 1])
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawPairNFT(true, [0, 1], [0, 1])
     );
     await waitForTx(
-        await paraApeStaking
-            .connect(user2.signer)
-            .withdrawPairNFT(true, [2], [2])
+      await paraApeStaking.connect(user2.signer).withdrawPairNFT(true, [2], [2])
     );
-    expect (await bayc.ownerOf(0)).to.be.equal(nBAYC.address);
-    expect (await bayc.ownerOf(1)).to.be.equal(nBAYC.address);
-    expect (await bayc.ownerOf(2)).to.be.equal(nBAYC.address);
-    expect (await bakc.ownerOf(0)).to.be.equal(nBAKC.address);
-    expect (await bakc.ownerOf(1)).to.be.equal(nBAKC.address);
-    expect (await bakc.ownerOf(2)).to.be.equal(nBAKC.address);
+    expect(await bayc.ownerOf(0)).to.be.equal(nBAYC.address);
+    expect(await bayc.ownerOf(1)).to.be.equal(nBAYC.address);
+    expect(await bayc.ownerOf(2)).to.be.equal(nBAYC.address);
+    expect(await bakc.ownerOf(0)).to.be.equal(nBAKC.address);
+    expect(await bakc.ownerOf(1)).to.be.equal(nBAKC.address);
+    expect(await bakc.ownerOf(2)).to.be.equal(nBAKC.address);
   });
 
   it("test MAYC + BAKC pool logic", async () => {
@@ -235,65 +248,250 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositPairNFT(false, [2], [2])
     );
-    expect (await mayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
-    expect (await mayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
-    expect (await mayc.ownerOf(2)).to.be.equal(paraApeStaking.address);
-    expect (await bakc.ownerOf(0)).to.be.equal(paraApeStaking.address);
-    expect (await bakc.ownerOf(1)).to.be.equal(paraApeStaking.address);
-    expect (await bakc.ownerOf(2)).to.be.equal(paraApeStaking.address);
+    expect(await mayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
+    expect(await mayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
+    expect(await mayc.ownerOf(2)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(0)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(1)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(2)).to.be.equal(paraApeStaking.address);
 
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
         .stakingPairNFT(false, [0, 1, 2], [0, 1, 2])
     );
-    expect((await apeCoinStaking.nftPosition(2, 0)).stakedAmount).to.be.eq(parseEther("100000"));
-    expect((await apeCoinStaking.nftPosition(2, 1)).stakedAmount).to.be.eq(parseEther("100000"));
-    expect((await apeCoinStaking.nftPosition(2, 2)).stakedAmount).to.be.eq(parseEther("100000"));
-    expect((await apeCoinStaking.nftPosition(3, 0)).stakedAmount).to.be.eq(parseEther("50000"));
-    expect((await apeCoinStaking.nftPosition(3, 1)).stakedAmount).to.be.eq(parseEther("50000"));
-    expect((await apeCoinStaking.nftPosition(3, 2)).stakedAmount).to.be.eq(parseEther("50000"));
+    expect((await apeCoinStaking.nftPosition(2, 0)).stakedAmount).to.be.eq(
+      parseEther("100000")
+    );
+    expect((await apeCoinStaking.nftPosition(2, 1)).stakedAmount).to.be.eq(
+      parseEther("100000")
+    );
+    expect((await apeCoinStaking.nftPosition(2, 2)).stakedAmount).to.be.eq(
+      parseEther("100000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 0)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 1)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 2)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
     expect(
-        await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
+      await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
     ).to.be.closeTo(parseEther("450000"), parseEther("10"));
 
     await advanceTimeAndBlock(parseInt("3600"));
 
     await waitForTx(
-        await paraApeStaking
-            .connect(user3.signer)
-            .compoundPairNFT(false, [0, 1, 2], [0, 1, 2])
+      await paraApeStaking
+        .connect(user3.signer)
+        .compoundPairNFT(false, [0, 1, 2], [0, 1, 2])
     );
 
     await waitForTx(
-        await paraApeStaking
-            .connect(user1.signer)
-            .claimPairNFT(false, [0, 1], [0, 1])
+      await paraApeStaking
+        .connect(user1.signer)
+        .claimPairNFT(false, [0, 1], [0, 1])
     );
     await waitForTx(
-        await paraApeStaking
-            .connect(user2.signer)
-            .claimPairNFT(false, [2], [2])
+      await paraApeStaking.connect(user2.signer).claimPairNFT(false, [2], [2])
     );
     const user1Balance = await cApe.balanceOf(user1.address);
     const user2Balance = await cApe.balanceOf(user2.address);
     expect(user1Balance).to.be.closeTo(user2Balance.mul(2), parseEther("10"));
 
     await waitForTx(
-        await paraApeStaking
-            .connect(user1.signer)
-            .withdrawPairNFT(false, [0, 1], [0, 1])
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawPairNFT(false, [0, 1], [0, 1])
     );
     await waitForTx(
-        await paraApeStaking
-            .connect(user2.signer)
-            .withdrawPairNFT(false, [2], [2])
+      await paraApeStaking
+        .connect(user2.signer)
+        .withdrawPairNFT(false, [2], [2])
     );
-    expect (await mayc.ownerOf(0)).to.be.equal(nMAYC.address);
-    expect (await mayc.ownerOf(1)).to.be.equal(nMAYC.address);
-    expect (await mayc.ownerOf(2)).to.be.equal(nMAYC.address);
-    expect (await bakc.ownerOf(0)).to.be.equal(nBAKC.address);
-    expect (await bakc.ownerOf(1)).to.be.equal(nBAKC.address);
-    expect (await bakc.ownerOf(2)).to.be.equal(nBAKC.address);
+    expect(await mayc.ownerOf(0)).to.be.equal(nMAYC.address);
+    expect(await mayc.ownerOf(1)).to.be.equal(nMAYC.address);
+    expect(await mayc.ownerOf(2)).to.be.equal(nMAYC.address);
+    expect(await bakc.ownerOf(0)).to.be.equal(nBAKC.address);
+    expect(await bakc.ownerOf(1)).to.be.equal(nBAKC.address);
+    expect(await bakc.ownerOf(2)).to.be.equal(nBAKC.address);
   });
+
+  it("test single pool logic", async () => {
+    const {
+      users: [user1, user2, user3, user4],
+      bayc,
+      mayc,
+      bakc,
+      nBAYC,
+      nMAYC,
+      nBAKC,
+      apeCoinStaking,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(mayc, "3", user2, true);
+    await supplyAndValidate(bakc, "3", user3, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositNFT(mayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user3.signer)
+        .depositNFT(bakc.address, [0, 1, 2])
+    );
+    expect(await bayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
+    expect(await bayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
+    expect(await bayc.ownerOf(2)).to.be.equal(paraApeStaking.address);
+    expect(await mayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
+    expect(await mayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
+    expect(await mayc.ownerOf(2)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(0)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(1)).to.be.equal(paraApeStaking.address);
+    expect(await bakc.ownerOf(2)).to.be.equal(paraApeStaking.address);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .stakingApe(bayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .stakingApe(mayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .stakingBAKC(bayc.address, [0, 1], [0, 1])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .stakingBAKC(mayc.address, [2], [2])
+    );
+    expect((await apeCoinStaking.nftPosition(1, 0)).stakedAmount).to.be.eq(
+      parseEther("200000")
+    );
+    expect((await apeCoinStaking.nftPosition(1, 1)).stakedAmount).to.be.eq(
+      parseEther("200000")
+    );
+    expect((await apeCoinStaking.nftPosition(1, 2)).stakedAmount).to.be.eq(
+      parseEther("200000")
+    );
+    expect((await apeCoinStaking.nftPosition(2, 0)).stakedAmount).to.be.eq(
+      parseEther("100000")
+    );
+    expect((await apeCoinStaking.nftPosition(2, 1)).stakedAmount).to.be.eq(
+      parseEther("100000")
+    );
+    expect((await apeCoinStaking.nftPosition(2, 2)).stakedAmount).to.be.eq(
+      parseEther("100000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 0)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 1)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 2)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect(
+      await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
+    ).to.be.closeTo(parseEther("1050000"), parseEther("10"));
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .compoundApe(bayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .compoundApe(mayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .compoundBAKC(bayc.address, [0, 1], [0, 1])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .compoundBAKC(mayc.address, [2], [2])
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .claimNFT(bayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user2.signer)
+        .claimNFT(mayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user2.signer)
+        .claimNFT(bakc.address, [0, 1, 2])
+    );
+    const user1Balance = await cApe.balanceOf(user1.address);
+    const user2Balance = await cApe.balanceOf(user2.address);
+    const user3Balance = await cApe.balanceOf(user3.address);
+    //base on both baycPairStakingRewardRatio and maycPairStakingRewardRatio are 0
+    expect(user1Balance).to.be.closeTo(user2Balance, parseEther("100"));
+    expect(user1Balance).to.be.closeTo(user3Balance, parseEther("100"));
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawNFT(bayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user2.signer)
+        .withdrawNFT(mayc.address, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user3.signer)
+        .withdrawNFT(bakc.address, [0, 1, 2])
+    );
+    expect(await bayc.ownerOf(0)).to.be.equal(nBAYC.address);
+    expect(await bayc.ownerOf(1)).to.be.equal(nBAYC.address);
+    expect(await bayc.ownerOf(2)).to.be.equal(nBAYC.address);
+    expect(await mayc.ownerOf(0)).to.be.equal(nMAYC.address);
+    expect(await mayc.ownerOf(1)).to.be.equal(nMAYC.address);
+    expect(await mayc.ownerOf(2)).to.be.equal(nMAYC.address);
+    expect(await bakc.ownerOf(0)).to.be.equal(nBAKC.address);
+    expect(await bakc.ownerOf(1)).to.be.equal(nBAKC.address);
+    expect(await bakc.ownerOf(2)).to.be.equal(nBAKC.address);
+  });
+
+  it("stakingPairNFT cannot stake single pool nft", async () => {});
+
+  it("stakingApe cannot stake pair pool ape", async () => {});
+
+  it("stakingBAKC cannot stake pair pool nft", async () => {});
+
+  it("compoundPairNFT cannot stake single pool nft", async () => {});
+
+  it("compoundNFT cannot compound pair pool nft", async () => {});
+
+  it("compoundBAKC cannot compound pair pool nft", async () => {});
 });

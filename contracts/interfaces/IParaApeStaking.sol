@@ -28,11 +28,12 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P {
         address nApe;
         uint256 apeStakingPoolId;
         uint256 positionCap;
-        uint256 accumulatedRewardsPerNft;
+        uint128 accumulatedRewardsPerNft;
         uint256 balanceBefore;
         uint256 balanceAfter;
         ApeCoinStaking.SingleNft[] _nfts;
         ApeCoinStaking.PairNftWithdrawWithAmount[] _nftPairs;
-        uint256 stakingPair;
+        uint128 stakingPair;
+        uint256 apeRewardRatio;
     }
 }

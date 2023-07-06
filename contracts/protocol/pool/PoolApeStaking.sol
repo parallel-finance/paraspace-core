@@ -27,7 +27,6 @@ import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
-import "hardhat/console.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -123,7 +122,6 @@ contract PoolApeStaking is
         require(msg.sender == PARA_APE_STAKING);
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        console.log("---------------------1");
         uint256 latestBorrowIndex = BorrowLogic.executeBorrowWithoutCollateral(
             ps._reserves,
             PARA_APE_STAKING,
