@@ -397,6 +397,18 @@ export const timeLockStrategyCRV: ITimeLockStrategyParams = {
   period: "86400",
 };
 
+export const timeLockStrategyWMATIC: ITimeLockStrategyParams = {
+  name: "timeLockStrategyWMATIC",
+  minThreshold: parseUnits("51.5", 18).toString(),
+  midThreshold: parseUnits("155", 18).toString(),
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: parseUnits("1900", 18).toString(),
+  period: "86400",
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // ERC721
 ////////////////////////////////////////////////////////////////////////////////

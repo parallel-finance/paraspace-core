@@ -43,6 +43,7 @@ import {
   rateStrategyWBTC,
   rateStrategyWETH,
   rateStrategyWGLMR,
+  rateStrategyWMATIC,
   rateStrategyXCDOT,
   rateStrategyXETH,
 } from "./rateStrategies";
@@ -99,6 +100,7 @@ import {
   timeLockStrategyMATIC,
   timeLockStrategySTMATIC,
   timeLockStrategyCRV,
+  timeLockStrategyWMATIC,
 } from "./timeLockStrategies";
 
 export const strategyDAI: IReserveParams = {
@@ -621,6 +623,22 @@ export const strategyCRV: IReserveParams = {
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "3500",
   liquidationBonus: "11000",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyWMATIC: IReserveParams = {
+  strategy: rateStrategyWMATIC,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWMATIC,
+  baseLTVAsCollateral: "8250",
+  liquidationThreshold: "8600",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10450",
   borrowingEnabled: true,
   reserveDecimals: "18",
   xTokenImpl: eContractid.PTokenImpl,

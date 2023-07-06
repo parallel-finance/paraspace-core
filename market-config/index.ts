@@ -69,6 +69,7 @@ import {
   strategyMATIC,
   strategySTMATIC,
   strategyCRV,
+  strategyWMATIC,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -381,15 +382,24 @@ export const PolygonZkevmConfig: IParaSpaceConfiguration = {
 export const PolygonMumbaiConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WMATIC,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  Tokens: {},
+  Tokens: {
+    WETH: "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
+    WMATIC: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
+    UniswapV3: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+  },
   YogaLabs: {},
-  Uniswap: {},
+  Uniswap: {
+    V3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    V3NFTPositionManager: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+    V3Router: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+  },
   Marketplace: {},
   BendDAO: {},
   Stakefish: {},
@@ -405,6 +415,7 @@ export const PolygonMumbaiConfig: IParaSpaceConfiguration = {
     wstETH: strategyWSTETH,
     MATIC: strategyMATIC,
     stMATIC: strategySTMATIC,
+    WMATIC: strategyWMATIC,
     CRV: strategyCRV,
     UniswapV3: strategyUniswapV3,
   },

@@ -169,6 +169,14 @@ export const rateStrategyCRV: IInterestRateStrategyParams = {
   variableRateSlope2: utils.parseUnits("0.60", 27).toString(),
 };
 
+export const rateStrategyWMATIC: IInterestRateStrategyParams = {
+  name: "rateStrategyWMATIC",
+  optimalUsageRatio: utils.parseUnits("0.7", 27).toString(),
+  baseVariableBorrowRate: utils.parseUnits("0.025", 27).toString(),
+  variableRateSlope1: utils.parseUnits("0.08", 27).toString(),
+  variableRateSlope2: utils.parseUnits("0.9", 27).toString(),
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // ERC721
 ////////////////////////////////////////////////////////////////////////////////
