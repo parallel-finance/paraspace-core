@@ -966,6 +966,12 @@ library MarketplaceLogic {
             // supplyAmount is a **message** from the seller to the protocol
             // to tell us the percentage of received funds to be supplied to be
             // able to transfer NFT out
+            //
+            // NOTE:
+            // 1. this will only be useful in ParaSpace because listing on other platform
+            // will not be able to specify paraspace pool
+            // 2. paraspace pool as ERC20 recipient can avoid extra approval from seller
+            // side
             if (item.recipient == address(this)) {
                 supplyAmount += item.startAmount;
             }
