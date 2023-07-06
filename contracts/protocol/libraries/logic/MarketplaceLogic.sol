@@ -770,32 +770,34 @@ library MarketplaceLogic {
     ) internal view returns (MarketplaceLocalVars memory vars) {
         vars.creditToken = params.credit.token;
         vars.creditAmount = params.credit.amount;
+        vars.creditXTokenAddress = ps._reserves[vars.creditToken].xTokenAddress;
 
         vars.isListingTokenETH =
             params.orderInfo.consideration[0].token == address(0);
-        vars.listingToken = vars.isListingTokenETH
-            ? params.weth
-            : params.orderInfo.consideration[0].token;
 
-        vars.creditXTokenAddress = ps._reserves[vars.creditToken].xTokenAddress;
-        vars.listingXTokenAddress = ps
-            ._reserves[vars.listingToken]
-            .xTokenAddress;
-
-        if (
-            !vars.isListingTokenETH && vars.listingXTokenAddress == address(0)
-        ) {
-            try IPToken(vars.listingToken).UNDERLYING_ASSET_ADDRESS() returns (
-                address underlyingAsset
-            ) {
-                vars.isListingTokenPToken =
-                    ps._reserves[underlyingAsset].xTokenAddress ==
-                    vars.listingToken;
-                if (vars.isListingTokenPToken) {
-                    vars.listingXTokenAddress = vars.listingToken;
-                    vars.listingToken = underlyingAsset;
-                }
-            } catch {}
+        if (vars.isListingTokenETH) {
+            vars.listingToken = params.weth;
+            vars.listingXTokenAddress = ps
+                ._reserves[vars.listingToken]
+                .xTokenAddress;
+        } else {
+            vars.listingToken = params.orderInfo.consideration[0].token;
+            vars.listingXTokenAddress = ps
+                ._reserves[vars.listingToken]
+                .xTokenAddress;
+            if (vars.listingXTokenAddress == address(0)) {
+                try
+                    IPToken(vars.listingToken).UNDERLYING_ASSET_ADDRESS()
+                returns (address underlyingAsset) {
+                    vars.isListingTokenPToken =
+                        ps._reserves[underlyingAsset].xTokenAddress ==
+                        vars.listingToken;
+                    if (vars.isListingTokenPToken) {
+                        vars.listingXTokenAddress = vars.listingToken;
+                        vars.listingToken = underlyingAsset;
+                    }
+                } catch {}
+            }
         }
 
         (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
