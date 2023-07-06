@@ -413,7 +413,6 @@ export const PolygonMumbaiConfig: IParaSpaceConfiguration = {
     WBTC: strategyWBTC,
     stETH: strategySTETH,
     wstETH: strategyWSTETH,
-    MATIC: strategyMATIC,
     stMATIC: strategySTMATIC,
     WMATIC: strategyWMATIC,
     CRV: strategyCRV,
