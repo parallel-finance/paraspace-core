@@ -793,6 +793,7 @@ library MarketplaceLogic {
         params.credit = credit;
         params.swapAdapter = swapAdapter;
         params.swapPayload = swapPayload;
+
         params.orderInfo = IMarketplace(params.marketplace.adapter)
             .getAskOrderInfo(payload);
         if (params.orderInfo.isSeaport) {
@@ -855,6 +856,7 @@ library MarketplaceLogic {
             msg.sender,
             params.ethLeft
         );
+
         params.ethLeft = 0;
     }
 
