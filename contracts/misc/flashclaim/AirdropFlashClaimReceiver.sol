@@ -87,10 +87,6 @@ contract AirdropFlashClaimReceiver is
         );
 
         require(
-            vars.airdropTokenTypes.length > 0,
-            "invalid airdrop token type"
-        );
-        require(
             vars.airdropTokenAddresses.length == vars.airdropTokenTypes.length,
             "invalid airdrop token address length"
         );
@@ -219,6 +215,25 @@ contract AirdropFlashClaimReceiver is
     }
 
     /**
+     * @notice batch transfer ERC721 Tokens.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The tokenId being transfer
+     **/
+    function batchTransferERC721(
+        address token,
+        address to,
+        uint256[] calldata ids
+    ) external nonReentrant onlyOwner {
+        for (uint256 index = 0; index < ids.length; ) {
+            IERC721(token).safeTransferFrom(address(this), to, ids[index]);
+            unchecked {
+                index++;
+            }
+        }
+    }
+
+    /**
      * @notice transfer ERC1155 Token.
      * @param token The address of the token
      * @param to The address of the recipient
@@ -245,11 +260,10 @@ contract AirdropFlashClaimReceiver is
      * @param to The address of the recipient
      * @param amount The amount being transfer
      **/
-    function transferEther(address to, uint256 amount)
-        external
-        nonReentrant
-        onlyOwner
-    {
+    function transferEther(
+        address to,
+        uint256 amount
+    ) external nonReentrant onlyOwner {
         (bool success, ) = to.call{value: amount}(new bytes(0));
         require(success, "ETH_TRANSFER_FAILED");
     }
