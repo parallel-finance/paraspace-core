@@ -67,15 +67,15 @@ library MarketplaceLogic {
     struct MarketplaceLocalVars {
         bool isListingTokenETH;
         bool isListingTokenPToken;
-        uint256 listingTokenNextLiquidityIndex;
         address listingToken;
         address listingXTokenAddress;
         address creditToken;
         address creditXTokenAddress;
+        address xTokenAddress;
+        uint256 listingTokenNextLiquidityIndex;
         uint256 creditAmount;
         uint256 borrowAmount;
         uint256 supplyAmount;
-        address xTokenAddress;
         uint256 price;
     }
 

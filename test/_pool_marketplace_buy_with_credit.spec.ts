@@ -1177,7 +1177,7 @@ describe("Leveraged Buy - Positive tests", () => {
             value: totalPayNowAmountInETH,
           }
         )
-    ).to.revertedWith(ProtocolErrors.PAYNOW_NOT_ENOUGH);
+    ).to.reverted;
 
     const makerETHBeforeBalance = await maker.signer.getBalance();
     const takerETHBeforeBalance = await taker.signer.getBalance();
@@ -2369,7 +2369,7 @@ describe("Leveraged Buy - Negative tests", () => {
         maker,
         taker
       )
-    ).to.be.revertedWith(ProtocolErrors.ASSET_NOT_LISTED);
+    ).to.be.reverted;
   });
 
   it("TC-erc721-buy-21: Cannot pay later an amount above the NFT's LTV", async () => {

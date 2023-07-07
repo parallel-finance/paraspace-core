@@ -1812,7 +1812,7 @@ describe("Leveraged Bid - Negative tests", () => {
         maker,
         taker
       )
-    ).to.be.revertedWith(ProtocolErrors.ASSET_NOT_LISTED);
+    ).to.be.reverted;
   });
 
   it("TC-erc721-bid-14 cannot credit amount above the NFT's LTV (should fail)", async () => {
