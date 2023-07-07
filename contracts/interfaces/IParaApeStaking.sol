@@ -18,11 +18,11 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P {
         address apeCoin;
         address cApe;
         ApeCoinStaking apeCoinStaking;
-        uint256 compoundFee;
         uint256 baycMatchedCap;
         uint256 maycMatchedCap;
         uint256 bakcMatchedCap;
         //optional
+        uint256 compoundFee;
         bytes32 DOMAIN_SEPARATOR;
         address apeToken;
         address nApe;
@@ -31,10 +31,13 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P {
         uint128 accumulatedRewardsPerNft;
         uint256 balanceBefore;
         uint256 balanceAfter;
+        uint256 totalClaimedApe;
         ApeCoinStaking.SingleNft[] _nfts;
         ApeCoinStaking.PairNftWithdrawWithAmount[] _nftPairs;
         uint128 stakingPair;
         uint256 apeRewardRatio;
+        uint256 totalRepay;
+        uint256 totalCompoundFee;
     }
 
     /**

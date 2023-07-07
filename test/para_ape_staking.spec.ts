@@ -59,6 +59,12 @@ describe("Para Ape Staking Test", () => {
         .upgradeTo(paraApeStakingImpl.address, GLOBAL_OVERRIDES)
     );
 
+    await waitForTx(
+      await paraApeStaking
+        .connect(poolAdmin.signer)
+        .setApeStakingBot(user4.address)
+    );
+
     cApe = await getAutoCompoundApe();
     MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
 
@@ -91,16 +97,16 @@ describe("Para Ape Staking Test", () => {
     expect(
       await configurator
         .connect(poolAdmin.signer)
-        .setSupplyCap(cApe.address, "200000000")
+        .setSupplyCap(cApe.address, "20000000000")
     );
-    await mintAndValidate(ape, "100000000", user4);
+    await mintAndValidate(ape, "10000000000", user4);
     await waitForTx(
       await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
     );
     await waitForTx(
       await cApe
         .connect(user4.signer)
-        .deposit(user4.address, parseEther("100000000"))
+        .deposit(user4.address, parseEther("10000000000"))
     );
     await waitForTx(
       await cApe.connect(user4.signer).approve(pool.address, MAX_UINT_AMOUNT)
@@ -108,7 +114,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await pool
         .connect(user4.signer)
-        .supply(cApe.address, parseEther("100000000"), user4.address, 0)
+        .supply(cApe.address, parseEther("10000000000"), user4.address, 0)
     );
 
     return testEnv;
@@ -116,13 +122,18 @@ describe("Para Ape Staking Test", () => {
 
   it("test BAYC + BAKC pool logic", async () => {
     const {
-      users: [user1, user2, user3],
+      users: [user1, user2, , user4],
       bayc,
       bakc,
       nBAYC,
       nBAKC,
+        poolAdmin,
       apeCoinStaking,
     } = await loadFixture(fixture);
+
+    await waitForTx(
+      await  paraApeStaking.connect(poolAdmin.signer).setCompoundFee(1000)
+    );
 
     await supplyAndValidate(bayc, "3", user1, true);
     await supplyAndValidate(bakc, "3", user1, true);
@@ -155,7 +166,7 @@ describe("Para Ape Staking Test", () => {
 
     await waitForTx(
       await paraApeStaking
-        .connect(user3.signer)
+        .connect(user4.signer)
         .stakingPairNFT(true, [0, 1, 2], [0, 1, 2])
     );
     expect((await apeCoinStaking.nftPosition(1, 0)).stakedAmount).to.be.eq(
@@ -184,9 +195,12 @@ describe("Para Ape Staking Test", () => {
 
     await waitForTx(
       await paraApeStaking
-        .connect(user3.signer)
+        .connect(user4.signer)
         .compoundPairNFT(true, [0, 1, 2], [0, 1, 2])
     );
+
+    const compoundFee = await paraApeStaking.pendingCApeReward(paraApeStaking.address);
+    expect(compoundFee).to.be.closeTo(parseEther("1080"), parseEther("10"));
 
     await waitForTx(
       await paraApeStaking
@@ -214,11 +228,17 @@ describe("Para Ape Staking Test", () => {
     expect(await bakc.ownerOf(0)).to.be.equal(nBAKC.address);
     expect(await bakc.ownerOf(1)).to.be.equal(nBAKC.address);
     expect(await bakc.ownerOf(2)).to.be.equal(nBAKC.address);
+
+    await waitForTx(
+        await paraApeStaking.connect(user4.signer).claimCompoundFee(user4.address)
+    );
+    const compoundFeeBalance = await cApe.balanceOf(user4.address);
+    expect(compoundFeeBalance).to.be.equal(compoundFee);
   });
 
   it("test MAYC + BAKC pool logic", async () => {
     const {
-      users: [user1, user2, user3],
+      users: [user1, user2, , user4],
       mayc,
       bakc,
       nMAYC,
@@ -257,7 +277,7 @@ describe("Para Ape Staking Test", () => {
 
     await waitForTx(
       await paraApeStaking
-        .connect(user3.signer)
+        .connect(user4.signer)
         .stakingPairNFT(false, [0, 1, 2], [0, 1, 2])
     );
     expect((await apeCoinStaking.nftPosition(2, 0)).stakedAmount).to.be.eq(
@@ -286,7 +306,7 @@ describe("Para Ape Staking Test", () => {
 
     await waitForTx(
       await paraApeStaking
-        .connect(user3.signer)
+        .connect(user4.signer)
         .compoundPairNFT(false, [0, 1, 2], [0, 1, 2])
     );
 

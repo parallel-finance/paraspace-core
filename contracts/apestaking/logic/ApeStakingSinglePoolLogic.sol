@@ -252,20 +252,19 @@ library ApeStakingSinglePoolLogic {
             vars.positionCap = vars.maycMatchedCap;
         }
         vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
-        uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
-        IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
-
-        //repay and compound
-        uint256 totalRepay = ApeStakingCommonLogic.calculateRepayAndCompound(
-            poolState,
-            vars,
-            balanceDiff,
-            vars.positionCap
+        vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
+        IAutoCompoundApe(vars.cApe).deposit(
+            address(this),
+            vars.totalClaimedApe
         );
 
-        if (totalRepay > 0) {
-            IERC20(vars.cApe).safeApprove(vars.pool, totalRepay);
-            IPool(vars.pool).repay(vars.cApe, totalRepay, address(this));
+        //repay and compound
+        (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
+            .calculateRepayAndCompound(poolState, vars, vars.positionCap);
+
+        if (vars.totalRepay > 0) {
+            IERC20(vars.cApe).safeApprove(vars.pool, vars.totalRepay);
+            IPool(vars.pool).repay(vars.cApe, vars.totalRepay, address(this));
         }
     }
 
@@ -293,7 +292,6 @@ library ApeStakingSinglePoolLogic {
         IParaApeStaking.PoolState storage bakcPoolState = vaultStorage
             .poolStates[BAKC_SINGLE_POOL_ID];
 
-        uint256 totalReward;
         {
             ApeCoinStaking.PairNft[]
                 memory _nftPairs = new ApeCoinStaking.PairNft[](arrayLength);
@@ -332,21 +330,22 @@ library ApeStakingSinglePoolLogic {
                 }
             }
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
-            totalReward = vars.balanceAfter - vars.balanceBefore;
-            IAutoCompoundApe(vars.cApe).deposit(address(this), totalReward);
+            vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
+            IAutoCompoundApe(vars.cApe).deposit(
+                address(this),
+                vars.totalClaimedApe
+            );
         }
 
         //repay and compound
-        uint256 totalRepay = _calculateRepayAndCompoundBAKC(
-            apePoolState,
-            bakcPoolState,
-            vars,
-            totalReward
-        );
+        (
+            vars.totalRepay,
+            vars.totalCompoundFee
+        ) = _calculateRepayAndCompoundBAKC(apePoolState, bakcPoolState, vars);
 
-        if (totalRepay > 0) {
-            IERC20(vars.cApe).safeApprove(vars.pool, totalRepay);
-            IPool(vars.pool).repay(vars.cApe, totalRepay, address(this));
+        if (vars.totalRepay > 0) {
+            IERC20(vars.cApe).safeApprove(vars.pool, vars.totalRepay);
+            IPool(vars.pool).repay(vars.cApe, vars.totalRepay, address(this));
         }
     }
 
@@ -477,7 +476,6 @@ library ApeStakingSinglePoolLogic {
             }
         }
 
-        uint256 totalRepay = 0;
         if (singleStakingCount > 0) {
             ApeCoinStaking.SingleNft[] memory _nfts = vars._nfts;
             assembly {
@@ -491,15 +489,18 @@ library ApeStakingSinglePoolLogic {
                 vars.apeCoinStaking.withdrawMAYC(vars._nfts, address(this));
             }
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
-            uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
-            IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
-
-            totalRepay += ApeStakingCommonLogic.calculateRepayAndCompound(
-                apePoolState,
-                vars,
-                balanceDiff,
-                vars.positionCap
+            vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
+            IAutoCompoundApe(vars.cApe).deposit(
+                address(this),
+                vars.totalClaimedApe
             );
+
+            (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
+                .calculateRepayAndCompound(
+                    apePoolState,
+                    vars,
+                    vars.positionCap
+                );
         }
 
         if (pairStakingCount > 0) {
@@ -520,20 +521,27 @@ library ApeStakingSinglePoolLogic {
                 vars.apeCoinStaking.withdrawBAKC(_otherPairs, vars._nftPairs);
             }
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
-            uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
-            IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
-
-            totalRepay += _calculateRepayAndCompoundBAKC(
-                apePoolState,
-                bakcPoolState,
-                vars,
-                balanceDiff
+            vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
+            IAutoCompoundApe(vars.cApe).deposit(
+                address(this),
+                vars.totalClaimedApe
             );
+
+            (
+                uint256 bakcTotalRepay,
+                uint256 bakcCompoundFee
+            ) = _calculateRepayAndCompoundBAKC(
+                    apePoolState,
+                    bakcPoolState,
+                    vars
+                );
+            vars.totalRepay += bakcTotalRepay;
+            vars.totalCompoundFee += bakcCompoundFee;
         }
 
-        if (totalRepay > 0) {
-            IERC20(vars.cApe).safeApprove(vars.pool, totalRepay);
-            IPool(vars.pool).repay(vars.cApe, totalRepay, address(this));
+        if (vars.totalRepay > 0) {
+            IERC20(vars.cApe).safeApprove(vars.pool, vars.totalRepay);
+            IPool(vars.pool).repay(vars.cApe, vars.totalRepay, address(this));
         }
     }
 
@@ -600,41 +608,52 @@ library ApeStakingSinglePoolLogic {
                 0
             );
 
-        uint256 totalRepay = 0;
         if (baycPairCount > 0) {
             vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
             vars.apeCoinStaking.withdrawBAKC(baycPair, _otherPairs);
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
-            uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
-            IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
+            vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
+            IAutoCompoundApe(vars.cApe).deposit(
+                address(this),
+                vars.totalClaimedApe
+            );
 
             vars.apeRewardRatio = vaultStorage.baycPairStakingRewardRatio;
-            totalRepay += _calculateRepayAndCompoundBAKC(
+            (
+                vars.totalRepay,
+                vars.totalCompoundFee
+            ) = _calculateRepayAndCompoundBAKC(
                 vaultStorage.poolStates[BAYC_SINGLE_POOL_ID],
                 vaultStorage.poolStates[BAKC_SINGLE_POOL_ID],
-                vars,
-                balanceDiff
+                vars
             );
         }
         if (maycPairCount > 0) {
             vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
             vars.apeCoinStaking.withdrawBAKC(baycPair, maycPair);
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
-            uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
-            IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
+            vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
+            IAutoCompoundApe(vars.cApe).deposit(
+                address(this),
+                vars.totalClaimedApe
+            );
 
             vars.apeRewardRatio = vaultStorage.maycPairStakingRewardRatio;
-            totalRepay += _calculateRepayAndCompoundBAKC(
-                vaultStorage.poolStates[MAYC_SINGLE_POOL_ID],
-                vaultStorage.poolStates[BAKC_SINGLE_POOL_ID],
-                vars,
-                balanceDiff
-            );
+            (
+                uint256 maycTotalRepay,
+                uint256 maycCompoundFee
+            ) = _calculateRepayAndCompoundBAKC(
+                    vaultStorage.poolStates[MAYC_SINGLE_POOL_ID],
+                    vaultStorage.poolStates[BAKC_SINGLE_POOL_ID],
+                    vars
+                );
+            vars.totalRepay += maycTotalRepay;
+            vars.totalCompoundFee += maycCompoundFee;
         }
 
-        if (totalRepay > 0) {
-            IERC20(vars.cApe).safeApprove(vars.pool, totalRepay);
-            IPool(vars.pool).repay(vars.cApe, totalRepay, address(this));
+        if (vars.totalRepay > 0) {
+            IERC20(vars.cApe).safeApprove(vars.pool, vars.totalRepay);
+            IPool(vars.pool).repay(vars.cApe, vars.totalRepay, address(this));
         }
     }
 
@@ -687,9 +706,8 @@ library ApeStakingSinglePoolLogic {
     function _calculateRepayAndCompoundBAKC(
         IParaApeStaking.PoolState storage apePoolState,
         IParaApeStaking.PoolState storage bakcPoolState,
-        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        uint256 totalAmount
-    ) internal returns (uint256) {
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars
+    ) internal returns (uint256, uint256) {
         uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
             WadRayMath.RAY
         );
@@ -706,12 +724,13 @@ library ApeStakingSinglePoolLogic {
                 cApeExchangeRate,
                 latestBorrowIndex
             );
-        if (debtInterest >= totalAmount) {
-            cApeDebtShare -= totalAmount.rayDiv(latestBorrowIndex).rayDiv(
-                cApeExchangeRate
-            );
+        if (debtInterest >= vars.totalClaimedApe) {
+            cApeDebtShare -= vars
+                .totalClaimedApe
+                .rayDiv(latestBorrowIndex)
+                .rayDiv(cApeExchangeRate);
             bakcPoolState.cApeDebtShare = cApeDebtShare;
-            return totalAmount;
+            return (vars.totalClaimedApe, 0);
         } else {
             //repay debt
             cApeDebtShare -= debtInterest.rayDiv(latestBorrowIndex).rayDiv(
@@ -719,9 +738,13 @@ library ApeStakingSinglePoolLogic {
             );
 
             //update reward index
-            uint256 remainingReward = totalAmount - debtInterest;
-            uint256 shareAmount = remainingReward.rayDiv(cApeExchangeRate);
-            uint256 apeShareAmount = shareAmount.percentMul(
+            uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
+                .rayDiv(cApeExchangeRate);
+            uint256 compoundFee = shareRewardAmount.percentMul(
+                vars.compoundFee
+            );
+            shareRewardAmount = shareRewardAmount - compoundFee;
+            uint256 apeShareAmount = shareRewardAmount.percentMul(
                 vars.apeRewardRatio
             );
 
@@ -732,11 +755,11 @@ library ApeStakingSinglePoolLogic {
             }
             if (bakcTotalPosition != 0) {
                 bakcPoolState.accumulatedRewardsPerNft +=
-                    (shareAmount - apeShareAmount).toUint128() /
+                    (shareRewardAmount - apeShareAmount).toUint128() /
                     bakcTotalPosition;
             }
             bakcPoolState.cApeDebtShare = cApeDebtShare;
-            return debtInterest;
+            return (debtInterest, compoundFee);
         }
     }
 }

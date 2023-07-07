@@ -36,9 +36,8 @@ library ApeStakingCommonLogic {
     function calculateRepayAndCompound(
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        uint256 totalAmount,
         uint256 positionCap
-    ) internal returns (uint256) {
+    ) internal returns (uint256, uint256) {
         uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
             WadRayMath.RAY
         );
@@ -53,28 +52,33 @@ library ApeStakingCommonLogic {
             cApeExchangeRate,
             latestBorrowIndex
         );
-        if (debtInterest >= totalAmount) {
-            cApeDebtShare -= totalAmount.rayDiv(latestBorrowIndex).rayDiv(
-                cApeExchangeRate
-            );
+        if (debtInterest >= vars.totalClaimedApe) {
+            cApeDebtShare -= vars
+                .totalClaimedApe
+                .rayDiv(latestBorrowIndex)
+                .rayDiv(cApeExchangeRate);
             poolState.cApeDebtShare = cApeDebtShare;
-            return totalAmount;
+            return (vars.totalClaimedApe, 0);
         } else {
             //repay debt
             cApeDebtShare -= debtInterest.rayDiv(latestBorrowIndex).rayDiv(
                 cApeExchangeRate
             );
 
+            uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
+                .rayDiv(cApeExchangeRate);
+            uint256 compoundFee = shareRewardAmount.percentMul(
+                vars.compoundFee
+            );
+            shareRewardAmount = shareRewardAmount - compoundFee;
             //update reward index
             if (currentTotalPosition != 0) {
-                uint256 remainingReward = totalAmount - debtInterest;
-                uint256 shareAmount = remainingReward.rayDiv(cApeExchangeRate);
                 poolState.accumulatedRewardsPerNft +=
-                    shareAmount.toUint128() /
+                    shareRewardAmount.toUint128() /
                     currentTotalPosition;
             }
             poolState.cApeDebtShare = cApeDebtShare;
-            return debtInterest;
+            return (debtInterest, compoundFee);
         }
     }
 
