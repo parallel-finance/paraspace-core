@@ -745,17 +745,6 @@ library MarketplaceLogic {
             vars,
             buyer
         );
-
-        // either the seller & buyer decided to not use any credit
-        // OR
-        // the creditToken/listingXToken must be listed since otherwise cannot borrow from the pool
-        require(
-            (vars.creditAmount == 0 ||
-                vars.creditXTokenAddress != address(0)) &&
-                (vars.supplyAmount == 0 ||
-                    vars.listingXTokenAddress != address(0)),
-            Errors.ASSET_NOT_LISTED
-        );
     }
 
     function _initParams(
