@@ -43,7 +43,6 @@ contract ParaApeStaking is
     address internal immutable apeCoin;
     address internal immutable cApe;
     ApeCoinStaking internal immutable apeCoinStaking;
-    uint256 public immutable compoundFee;
     uint256 private immutable baycMatchedCap;
     uint256 private immutable maycMatchedCap;
     uint256 private immutable bakcMatchedCap;
@@ -57,6 +56,9 @@ contract ParaApeStaking is
         private positionCApeShareDebt;
     mapping(address => uint256) private cApeShareBalance;
 
+    address public apeStakingBot;
+    uint64 public compoundFee;
+
     constructor(
         address _pool,
         address _bayc,
@@ -68,8 +70,7 @@ contract ParaApeStaking is
         address _apeCoin,
         address _cApe,
         address _apeCoinStaking,
-        address _aclManager,
-        uint256 _compoundFee
+        address _aclManager
     ) {
         pool = _pool;
         bayc = _bayc;
@@ -82,7 +83,6 @@ contract ParaApeStaking is
         cApe = _cApe;
         apeCoinStaking = ApeCoinStaking(_apeCoinStaking);
         aclManager = IACLManager(_aclManager);
-        compoundFee = _compoundFee;
 
         (
             ,
@@ -134,6 +134,11 @@ contract ParaApeStaking is
         _;
     }
 
+    modifier onlyApeStakingBot() {
+        require(apeStakingBot == msg.sender, "not ape staking bot");
+        _;
+    }
+
     function _onlyPoolAdmin() internal view {
         require(
             aclManager.isPoolAdmin(msg.sender),
@@ -144,13 +149,29 @@ contract ParaApeStaking is
     function _onlyPoolOrEmergencyAdmin() internal view {
         require(
             aclManager.isPoolAdmin(msg.sender) ||
-            aclManager.isEmergencyAdmin(msg.sender),
+                aclManager.isEmergencyAdmin(msg.sender),
             Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
         );
     }
 
+    function setApeStakingBot(address _apeStakingBot) external onlyPoolAdmin {
+        address oldValue = apeStakingBot;
+        if (oldValue != _apeStakingBot) {
+            apeStakingBot = _apeStakingBot;
+            emit ApeStakingBotUpdated(oldValue, _apeStakingBot);
+        }
+    }
+
+    function setCompoundFee(uint64 _compoundFee) external onlyPoolAdmin {
+        uint64 oldValue = compoundFee;
+        if (oldValue != _compoundFee) {
+            compoundFee = _compoundFee;
+            emit CompoundFeeUpdated(oldValue, _compoundFee);
+        }
+    }
+
     /**
-    * @notice Pauses the contract. Only pool admin or emergency admin can call this function
+     * @notice Pauses the contract. Only pool admin or emergency admin can call this function
      **/
     function pause() external onlyEmergencyOrPoolAdmin {
         _pause();
@@ -173,8 +194,8 @@ contract ParaApeStaking is
     }
 
     /*
-
-    */
+     * P2P Pair Staking Logic
+     */
 
     function cancelListing(ListingOrder calldata listingOrder)
         external
@@ -299,7 +320,27 @@ contract ParaApeStaking is
         return ApeStakingP2PLogic.getApeCoinStakingCap(stakingType, vars);
     }
 
+    /*
+     * Ape Staking Vault Logic
+     */
+
     VaultStorage internal vaultStorage;
+
+    function setSinglePoolApeRewardRatio(
+        uint128 baycRewardRatio,
+        uint128 maycRewardRatio
+    ) external onlyPoolAdmin {
+        uint128 oldValue = vaultStorage.baycPairStakingRewardRatio;
+        if (oldValue != baycRewardRatio) {
+            vaultStorage.baycPairStakingRewardRatio = baycRewardRatio;
+            emit BaycPairStakingRewardRatioUpdated(oldValue, baycRewardRatio);
+        }
+        oldValue = vaultStorage.maycPairStakingRewardRatio;
+        if (oldValue != maycRewardRatio) {
+            vaultStorage.maycPairStakingRewardRatio = maycRewardRatio;
+            emit MaycPairStakingRewardRatioUpdated(oldValue, maycRewardRatio);
+        }
+    }
 
     function depositPairNFT(
         bool isBAYC,
@@ -378,7 +419,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused {
+    ) external whenNotPaused onlyApeStakingBot {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_BAKC_PAIR_POOL_ID
@@ -392,7 +433,10 @@ contract ParaApeStaking is
         );
     }
 
-    function depositNFT(address nft, uint32[] calldata tokenIds) external whenNotPaused {
+    function depositNFT(address nft, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+    {
         require(nft == bayc || nft == mayc || nft == bakc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = (nft == bayc)
@@ -408,7 +452,10 @@ contract ParaApeStaking is
         );
     }
 
-    function stakingApe(address nft, uint32[] calldata tokenIds) external whenNotPaused {
+    function stakingApe(address nft, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+    {
         require(nft == bayc || nft == mayc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = (nft == bayc)
@@ -433,7 +480,9 @@ contract ParaApeStaking is
             : ApeStakingPairPoolLogic.MAYC_SINGLE_POOL_ID;
         ApeStakingSinglePoolLogic.stakingBAKC(
             vaultStorage.poolStates[poolId],
-            vaultStorage.poolStates[ApeStakingPairPoolLogic.BAKC_SINGLE_POOL_ID],
+            vaultStorage.poolStates[
+                ApeStakingPairPoolLogic.BAKC_SINGLE_POOL_ID
+            ],
             vars,
             nft,
             apeTokenIds,
@@ -441,7 +490,11 @@ contract ParaApeStaking is
         );
     }
 
-    function compoundApe(address nft, uint32[] calldata tokenIds) external whenNotPaused {
+    function compoundApe(address nft, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+    onlyApeStakingBot
+    {
         require(nft == bayc || nft == mayc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = (nft == bayc)
@@ -459,7 +512,7 @@ contract ParaApeStaking is
         address nft,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused {
+    ) external whenNotPaused onlyApeStakingBot {
         require(nft == bayc || nft == mayc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         ApeStakingSinglePoolLogic.compoundBAKC(
@@ -471,7 +524,10 @@ contract ParaApeStaking is
         );
     }
 
-    function claimNFT(address nft, uint32[] calldata tokenIds) external whenNotPaused {
+    function claimNFT(address nft, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+    {
         require(nft == bayc || nft == mayc || nft == bakc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = (nft == bayc)
@@ -487,10 +543,18 @@ contract ParaApeStaking is
         );
     }
 
-    function withdrawNFT(address nft, uint32[] calldata tokenIds) external whenNotPaused {
+    function withdrawNFT(address nft, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+    {
         require(nft == bayc || nft == mayc || nft == bakc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        ApeStakingSinglePoolLogic.withdrawNFT(vaultStorage, vars, nft, tokenIds);
+        ApeStakingSinglePoolLogic.withdrawNFT(
+            vaultStorage,
+            vars,
+            nft,
+            tokenIds
+        );
     }
 
     function _createCacheVars()

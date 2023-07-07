@@ -30,8 +30,21 @@ interface IApeStakingVault {
 
     struct VaultStorage {
         mapping(uint256 => PoolState) poolStates;
-        address vaultBot;
-        uint256 baycPairStakingRewardRatio;
-        uint256 maycPairStakingRewardRatio;
+        uint128 baycPairStakingRewardRatio;
+        uint128 maycPairStakingRewardRatio;
     }
+
+    /**
+     * @dev Emitted during setSinglePoolApeRewardRatio()
+     * @param oldRatio The value of the old baycPairStakingRewardRatio
+     * @param newRatio The value of the new baycPairStakingRewardRatio
+     **/
+    event BaycPairStakingRewardRatioUpdated(uint128 oldRatio, uint128 newRatio);
+
+    /**
+     * @dev Emitted during setSinglePoolApeRewardRatio()
+     * @param oldRatio The value of the old maycPairStakingRewardRatio
+     * @param newRatio The value of the new maycPairStakingRewardRatio
+     **/
+    event MaycPairStakingRewardRatioUpdated(uint128 oldRatio, uint128 newRatio);
 }

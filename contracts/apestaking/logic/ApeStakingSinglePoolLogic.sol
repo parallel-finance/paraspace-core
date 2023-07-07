@@ -41,7 +41,6 @@ library ApeStakingSinglePoolLogic {
     event NFTClaimed(address nft, uint256 tokenId);
     event NFTWithdrawn(address nft, uint256 tokenId);
 
-
     function depositNFT(
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
@@ -74,8 +73,8 @@ library ApeStakingSinglePoolLogic {
             } else {
                 vars.nApe = (nft == vars.bayc) ? vars.nBayc : vars.nMayc;
                 vars.apeStakingPoolId = (nft == vars.bayc)
-                ? BAYC_POOL_ID
-                : MAYC_POOL_ID;
+                    ? BAYC_POOL_ID
+                    : MAYC_POOL_ID;
 
                 address nApeOwner = IERC721(vars.nApe).ownerOf(tokenId);
                 require(msgSender == nApeOwner, "not ape owner");
@@ -101,8 +100,8 @@ library ApeStakingSinglePoolLogic {
 
             //update token status
             poolState.tokenStatus[tokenId] = IApeStakingVault.TokenStatus({
-            rewardsDebt: vars.accumulatedRewardsPerNft,
-            isInPool: true
+                rewardsDebt: vars.accumulatedRewardsPerNft,
+                isInPool: true
             });
 
             //emit event
@@ -122,10 +121,10 @@ library ApeStakingSinglePoolLogic {
         require(arrayLength > 0, "wrong param");
 
         ApeCoinStaking.SingleNft[]
-        memory _nfts = new ApeCoinStaking.SingleNft[](arrayLength);
+            memory _nfts = new ApeCoinStaking.SingleNft[](arrayLength);
         vars.positionCap = (nft == vars.bayc)
-        ? vars.baycMatchedCap
-        : vars.maycMatchedCap;
+            ? vars.baycMatchedCap
+            : vars.maycMatchedCap;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = tokenIds[index];
 
@@ -136,8 +135,8 @@ library ApeStakingSinglePoolLogic {
 
             // construct staking data
             _nfts[index] = ApeCoinStaking.SingleNft({
-            tokenId: tokenId,
-            amount: vars.positionCap.toUint224()
+                tokenId: tokenId,
+                amount: vars.positionCap.toUint224()
             });
 
             //emit event
@@ -171,9 +170,9 @@ library ApeStakingSinglePoolLogic {
         );
 
         ApeCoinStaking.PairNftDepositWithAmount[]
-        memory _nftPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
-            arrayLength
-        );
+            memory _nftPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
+                arrayLength
+            );
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 apeTokenId = apeTokenIds[index];
             uint32 bakcTokenId = bakcTokenIds[index];
@@ -189,9 +188,9 @@ library ApeStakingSinglePoolLogic {
 
             // construct staking data
             _nftPairs[index] = ApeCoinStaking.PairNftDepositWithAmount({
-            mainTokenId: apeTokenId,
-            bakcTokenId: bakcTokenId,
-            amount: vars.bakcMatchedCap.toUint184()
+                mainTokenId: apeTokenId,
+                bakcTokenId: bakcTokenId,
+                amount: vars.bakcMatchedCap.toUint184()
             });
 
             //emit event
@@ -200,13 +199,17 @@ library ApeStakingSinglePoolLogic {
 
         // prepare Ape coin
         uint256 totalBorrow = vars.bakcMatchedCap * arrayLength;
-        ApeStakingCommonLogic.borrowCApeFromPool(bakcPoolState, vars, totalBorrow);
+        ApeStakingCommonLogic.borrowCApeFromPool(
+            bakcPoolState,
+            vars,
+            totalBorrow
+        );
 
         //stake in ApeCoinStaking
         ApeCoinStaking.PairNftDepositWithAmount[]
-        memory _otherPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
-            0
-        );
+            memory _otherPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
+                0
+            );
         if (nft == vars.bayc) {
             vars.apeCoinStaking.depositBAKC(_nftPairs, _otherPairs);
         } else {
@@ -281,23 +284,19 @@ library ApeStakingSinglePoolLogic {
 
         IParaApeStaking.PoolState storage apePoolState;
         if (nft == vars.bayc) {
-            apePoolState = vaultStorage.poolStates[
-            BAYC_SINGLE_POOL_ID
-            ];
+            apePoolState = vaultStorage.poolStates[BAYC_SINGLE_POOL_ID];
             vars.apeRewardRatio = vaultStorage.baycPairStakingRewardRatio;
         } else {
-            apePoolState = vaultStorage.poolStates[
-            MAYC_SINGLE_POOL_ID
-            ];
+            apePoolState = vaultStorage.poolStates[MAYC_SINGLE_POOL_ID];
             vars.apeRewardRatio = vaultStorage.maycPairStakingRewardRatio;
         }
         IParaApeStaking.PoolState storage bakcPoolState = vaultStorage
-        .poolStates[BAKC_SINGLE_POOL_ID];
+            .poolStates[BAKC_SINGLE_POOL_ID];
 
         uint256 totalReward;
         {
             ApeCoinStaking.PairNft[]
-            memory _nftPairs = new ApeCoinStaking.PairNft[](arrayLength);
+                memory _nftPairs = new ApeCoinStaking.PairNft[](arrayLength);
             for (uint256 index = 0; index < arrayLength; index++) {
                 uint32 apeTokenId = apeTokenIds[index];
                 uint32 bakcTokenId = bakcTokenIds[index];
@@ -313,8 +312,8 @@ library ApeStakingSinglePoolLogic {
 
                 // construct staking data
                 _nftPairs[index] = ApeCoinStaking.PairNft({
-                mainTokenId: apeTokenId,
-                bakcTokenId: bakcTokenId
+                    mainTokenId: apeTokenId,
+                    bakcTokenId: bakcTokenId
                 });
 
                 //emit event
@@ -325,7 +324,7 @@ library ApeStakingSinglePoolLogic {
             //claim from ApeCoinStaking
             {
                 ApeCoinStaking.PairNft[]
-                memory _otherPairs = new ApeCoinStaking.PairNft[](0);
+                    memory _otherPairs = new ApeCoinStaking.PairNft[](0);
                 if (nft == vars.bayc) {
                     vars.apeCoinStaking.claimSelfBAKC(_nftPairs, _otherPairs);
                 } else {
@@ -424,7 +423,7 @@ library ApeStakingSinglePoolLogic {
 
         IParaApeStaking.PoolState storage apePoolState;
         IParaApeStaking.PoolState storage bakcPoolState = vaultStorage
-        .poolStates[BAKC_SINGLE_POOL_ID];
+            .poolStates[BAKC_SINGLE_POOL_ID];
         if (nft == vars.bayc) {
             vars.apeStakingPoolId = BAYC_POOL_ID;
             vars.positionCap = vars.baycMatchedCap;
@@ -453,8 +452,8 @@ library ApeStakingSinglePoolLogic {
                 );
                 if (stakedAmount > 0) {
                     vars._nfts[singleStakingCount] = ApeCoinStaking.SingleNft({
-                    tokenId: tokenId,
-                    amount: vars.positionCap.toUint224()
+                        tokenId: tokenId,
+                        amount: vars.positionCap.toUint224()
                     });
                     singleStakingCount++;
                 }
@@ -463,16 +462,16 @@ library ApeStakingSinglePoolLogic {
             //check bakc position
             {
                 (uint256 bakcTokenId, bool isPaired) = vars
-                .apeCoinStaking
-                .mainToBakc(vars.apeStakingPoolId, tokenId);
+                    .apeCoinStaking
+                    .mainToBakc(vars.apeStakingPoolId, tokenId);
                 if (isPaired) {
                     vars._nftPairs[pairStakingCount] = ApeCoinStaking
-                    .PairNftWithdrawWithAmount({
-                    mainTokenId: tokenId,
-                    bakcTokenId: bakcTokenId.toUint32(),
-                    amount: vars.bakcMatchedCap.toUint184(),
-                    isUncommit: true
-                    });
+                        .PairNftWithdrawWithAmount({
+                            mainTokenId: tokenId,
+                            bakcTokenId: bakcTokenId.toUint32(),
+                            amount: vars.bakcMatchedCap.toUint184(),
+                            isUncommit: true
+                        });
                     pairStakingCount++;
                 }
             }
@@ -505,16 +504,16 @@ library ApeStakingSinglePoolLogic {
 
         if (pairStakingCount > 0) {
             ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs = vars
-            ._nftPairs;
+                ._nftPairs;
             assembly {
                 mstore(_nftPairs, pairStakingCount)
             }
 
             vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
             ApeCoinStaking.PairNftWithdrawWithAmount[]
-            memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
-                0
-            );
+                memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
+                    0
+                );
             if (nft == vars.bayc) {
                 vars.apeCoinStaking.withdrawBAKC(vars._nftPairs, _otherPairs);
             } else {
@@ -545,29 +544,29 @@ library ApeStakingSinglePoolLogic {
     ) internal {
         uint256 arrayLength = tokenIds.length;
         ApeCoinStaking.PairNftWithdrawWithAmount[]
-        memory baycPair = new ApeCoinStaking.PairNftWithdrawWithAmount[](
-            arrayLength
-        );
+            memory baycPair = new ApeCoinStaking.PairNftWithdrawWithAmount[](
+                arrayLength
+            );
         ApeCoinStaking.PairNftWithdrawWithAmount[]
-        memory maycPair = new ApeCoinStaking.PairNftWithdrawWithAmount[](
-            arrayLength
-        );
+            memory maycPair = new ApeCoinStaking.PairNftWithdrawWithAmount[](
+                arrayLength
+            );
         uint256 baycPairCount;
         uint256 maycPairCount;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = tokenIds[index];
 
             (uint256 mainTokenId, bool isPaired) = vars
-            .apeCoinStaking
-            .bakcToMain(tokenId, BAYC_POOL_ID);
+                .apeCoinStaking
+                .bakcToMain(tokenId, BAYC_POOL_ID);
             if (isPaired) {
                 baycPair[baycPairCount] = ApeCoinStaking
-                .PairNftWithdrawWithAmount({
-                mainTokenId: mainTokenId.toUint32(),
-                bakcTokenId: tokenId,
-                amount: vars.bakcMatchedCap.toUint184(),
-                isUncommit: true
-                });
+                    .PairNftWithdrawWithAmount({
+                        mainTokenId: mainTokenId.toUint32(),
+                        bakcTokenId: tokenId,
+                        amount: vars.bakcMatchedCap.toUint184(),
+                        isUncommit: true
+                    });
                 baycPairCount++;
                 continue;
             }
@@ -578,12 +577,12 @@ library ApeStakingSinglePoolLogic {
             );
             if (isPaired) {
                 maycPair[maycPairCount] = ApeCoinStaking
-                .PairNftWithdrawWithAmount({
-                mainTokenId: mainTokenId.toUint32(),
-                bakcTokenId: tokenId,
-                amount: vars.bakcMatchedCap.toUint184(),
-                isUncommit: true
-                });
+                    .PairNftWithdrawWithAmount({
+                        mainTokenId: mainTokenId.toUint32(),
+                        bakcTokenId: tokenId,
+                        amount: vars.bakcMatchedCap.toUint184(),
+                        isUncommit: true
+                    });
                 maycPairCount++;
                 continue;
             }
@@ -597,9 +596,9 @@ library ApeStakingSinglePoolLogic {
         }
 
         ApeCoinStaking.PairNftWithdrawWithAmount[]
-        memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
-            0
-        );
+            memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
+                0
+            );
 
         uint256 totalRepay = 0;
         if (baycPairCount > 0) {
@@ -655,10 +654,10 @@ library ApeStakingSinglePoolLogic {
             //just need to check ape ntoken owner
             {
                 address nToken = (nft == vars.bayc)
-                ? vars.nBayc
-                : (nft == vars.mayc)
-                ? vars.nMayc
-                : vars.nBakc;
+                    ? vars.nBayc
+                    : (nft == vars.mayc)
+                    ? vars.nMayc
+                    : vars.nBakc;
                 address nTokenOwner = IERC721(nToken).ownerOf(tokenId);
                 if (claimFor == address(0)) {
                     claimFor = nTokenOwner;
@@ -672,9 +671,9 @@ library ApeStakingSinglePoolLogic {
 
             //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
             rewardShares += (vars.accumulatedRewardsPerNft -
-            poolState.tokenStatus[tokenId].rewardsDebt);
+                poolState.tokenStatus[tokenId].rewardsDebt);
             poolState.tokenStatus[tokenId].rewardsDebt = vars
-            .accumulatedRewardsPerNft;
+                .accumulatedRewardsPerNft;
 
             //emit event
             emit NFTClaimed(nft, tokenId);
@@ -695,17 +694,18 @@ library ApeStakingSinglePoolLogic {
             WadRayMath.RAY
         );
         uint256 latestBorrowIndex = IPool(vars.pool)
-        .getReserveNormalizedVariableDebt(vars.cApe);
+            .getReserveNormalizedVariableDebt(vars.cApe);
         uint256 cApeDebtShare = bakcPoolState.cApeDebtShare;
         uint128 apeTotalPosition = apePoolState.totalPosition;
         uint128 bakcTotalPosition = bakcPoolState.totalPosition;
-        uint256 debtInterest = ApeStakingCommonLogic.calculateCurrentPositionDebtInterest(
-            cApeDebtShare,
-            bakcTotalPosition,
-            vars.bakcMatchedCap,
-            cApeExchangeRate,
-            latestBorrowIndex
-        );
+        uint256 debtInterest = ApeStakingCommonLogic
+            .calculateCurrentPositionDebtInterest(
+                cApeDebtShare,
+                bakcTotalPosition,
+                vars.bakcMatchedCap,
+                cApeExchangeRate,
+                latestBorrowIndex
+            );
         if (debtInterest >= totalAmount) {
             cApeDebtShare -= totalAmount.rayDiv(latestBorrowIndex).rayDiv(
                 cApeExchangeRate
@@ -727,17 +727,16 @@ library ApeStakingSinglePoolLogic {
 
             if (apeTotalPosition != 0) {
                 apePoolState.accumulatedRewardsPerNft +=
-                apeShareAmount.toUint128() /
-                apeTotalPosition;
+                    apeShareAmount.toUint128() /
+                    apeTotalPosition;
             }
             if (bakcTotalPosition != 0) {
                 bakcPoolState.accumulatedRewardsPerNft +=
-                (shareAmount - apeShareAmount).toUint128() /
-                bakcTotalPosition;
+                    (shareAmount - apeShareAmount).toUint128() /
+                    bakcTotalPosition;
             }
             bakcPoolState.cApeDebtShare = cApeDebtShare;
             return debtInterest;
         }
     }
-
 }

@@ -61,11 +61,17 @@ library ApeStakingPairPoolLogic {
             "wrong param"
         );
 
-        vars.apeStakingPoolId = isBAYC ? BAYC_POOL_ID : MAYC_POOL_ID;
-        vars.apeToken = isBAYC ? vars.bayc : vars.mayc;
-        vars.nApe = isBAYC ? vars.nBayc : vars.nMayc;
+        if (isBAYC) {
+            vars.apeStakingPoolId = BAYC_POOL_ID;
+            vars.apeToken = vars.bayc;
+            vars.nApe = vars.nBayc;
+        } else {
+            vars.apeStakingPoolId = MAYC_POOL_ID;
+            vars.apeToken = vars.mayc;
+            vars.nApe = vars.nMayc;
+        }
         address msgSender = msg.sender;
-        vars.accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
+        uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 apeTokenId = apeTokenIds[index];
             uint32 bakcTokenId = bakcTokenIds[index];
@@ -107,7 +113,7 @@ library ApeStakingPairPoolLogic {
 
             //update token status
             poolState.tokenStatus[apeTokenId] = IApeStakingVault.TokenStatus({
-                rewardsDebt: vars.accumulatedRewardsPerNft,
+                rewardsDebt: accumulatedRewardsPerNft,
                 isInPool: true
             });
 
@@ -214,10 +220,17 @@ library ApeStakingPairPoolLogic {
 
         _claimPairNFT(poolState, vars, isBAYC, apeTokenIds, bakcTokenIds);
 
-        vars.apeStakingPoolId = isBAYC ? BAYC_POOL_ID : MAYC_POOL_ID;
-        vars.apeToken = isBAYC ? vars.bayc : vars.mayc;
-        vars.nApe = isBAYC ? vars.nBayc : vars.nMayc;
-        vars.positionCap = isBAYC ? vars.baycMatchedCap : vars.maycMatchedCap;
+        if (isBAYC) {
+            vars.apeStakingPoolId = BAYC_POOL_ID;
+            vars.apeToken = vars.bayc;
+            vars.nApe = vars.nBayc;
+            vars.positionCap = vars.baycMatchedCap;
+        } else {
+            vars.apeStakingPoolId = MAYC_POOL_ID;
+            vars.apeToken = vars.mayc;
+            vars.nApe = vars.nMayc;
+            vars.positionCap = vars.maycMatchedCap;
+        }
         vars._nfts = new ApeCoinStaking.SingleNft[](arrayLength);
         vars._nftPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
             arrayLength
@@ -303,12 +316,13 @@ library ApeStakingPairPoolLogic {
             uint256 balanceDiff = vars.balanceAfter - vars.balanceBefore;
             IAutoCompoundApe(vars.cApe).deposit(address(this), balanceDiff);
 
-            uint256 totalRepay = ApeStakingCommonLogic.calculateRepayAndCompound(
-                poolState,
-                vars,
-                balanceDiff,
-                vars.positionCap + vars.bakcMatchedCap
-            );
+            uint256 totalRepay = ApeStakingCommonLogic
+                .calculateRepayAndCompound(
+                    poolState,
+                    vars,
+                    balanceDiff,
+                    vars.positionCap + vars.bakcMatchedCap
+                );
 
             if (totalRepay > 0) {
                 IERC20(vars.cApe).safeApprove(vars.pool, totalRepay);
@@ -434,10 +448,10 @@ library ApeStakingPairPoolLogic {
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) internal {
-        vars.accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         uint256 rewardShares;
         address claimFor;
         uint256 arrayLength = apeTokenIds.length;
+        uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 apeTokenId = apeTokenIds[index];
             uint32 bakcTokenId = bakcTokenIds[index];
@@ -460,10 +474,11 @@ library ApeStakingPairPoolLogic {
             );
 
             //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
-            rewardShares += (vars.accumulatedRewardsPerNft -
+            rewardShares += (accumulatedRewardsPerNft -
                 poolState.tokenStatus[apeTokenId].rewardsDebt);
-            poolState.tokenStatus[apeTokenId].rewardsDebt = vars
-                .accumulatedRewardsPerNft;
+            poolState
+                .tokenStatus[apeTokenId]
+                .rewardsDebt = accumulatedRewardsPerNft;
 
             //emit event
             emit PairNFTClaimed(isBAYC, apeTokenId, bakcTokenId);
@@ -473,8 +488,4 @@ library ApeStakingPairPoolLogic {
             IERC20(vars.cApe).safeTransfer(claimFor, rewardShares);
         }
     }
-
-
-
-
 }
