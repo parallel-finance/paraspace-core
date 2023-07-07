@@ -104,9 +104,7 @@ library MarketplaceLogic {
         );
 
         _depositETH(params);
-
-        params.ethLeft -= _buyWithCredit(ps, params);
-
+        _buyWithCredit(ps, params);
         _refundETH(params.ethLeft);
     }
 
@@ -120,7 +118,7 @@ library MarketplaceLogic {
     function _buyWithCredit(
         DataTypes.PoolStorage storage ps,
         DataTypes.ExecuteMarketplaceParams memory params
-    ) internal returns (uint256) {
+    ) internal {
         ValidationLogic.validateBuyWithCredit(params);
 
         MarketplaceLocalVars memory vars = _cache(
@@ -139,9 +137,7 @@ library MarketplaceLogic {
             delegate ? address(this) : params.orderInfo.taker
         );
 
-        (uint256 priceEth, uint256 downpaymentEth) = delegate
-            ? _delegateToPool(params, vars)
-            : (0, 0);
+        uint256 priceEth = delegate ? _delegateToPool(params, vars) : 0;
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -162,8 +158,6 @@ library MarketplaceLogic {
             params.orderInfo,
             params.credit
         );
-
-        return downpaymentEth;
     }
 
     function executeBatchBuyWithCredit(
@@ -215,8 +209,7 @@ library MarketplaceLogic {
             // batchBuyWithCredit([ETH, ETH, WETH]) => ok
             //
             _depositETH(params);
-
-            params.ethLeft -= _buyWithCredit(ps, params);
+            _buyWithCredit(ps, params);
         }
 
         _refundETH(params.ethLeft);
@@ -387,7 +380,7 @@ library MarketplaceLogic {
     function _delegateToPool(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
-    ) internal returns (uint256, uint256) {
+    ) internal returns (uint256) {
         uint256 price = vars.price;
         uint256 downpayment = price - vars.creditAmount;
         if (!vars.isListingTokenETH) {
@@ -403,15 +396,13 @@ library MarketplaceLogic {
                 transferToken,
                 params.marketplace.operator
             );
-
-            // convert to (priceEth, downpaymentEth)
+            // convert to priceEth
             price = 0;
-            downpayment = 0;
         } else {
-            require(params.ethLeft >= downpayment, Errors.PAYNOW_NOT_ENOUGH);
+            params.ethLeft -= downpayment;
         }
 
-        return (price, downpayment);
+        return price;
     }
 
     /**
