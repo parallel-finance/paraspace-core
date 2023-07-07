@@ -67,11 +67,13 @@ library MarketplaceLogic {
     struct MarketplaceLocalVars {
         bool isListingTokenETH;
         bool isListingTokenPToken;
+        bool isCollectionListed;
         address listingToken;
         address listingXTokenAddress;
         address creditToken;
         address creditXTokenAddress;
-        address xTokenAddress;
+        address collectionToken;
+        address collectionXTokenAddress;
         uint256 listingTokenNextLiquidityIndex;
         uint256 creditAmount;
         uint256 borrowAmount;
@@ -534,17 +536,13 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars,
         address seller
     ) internal {
-        uint256 size = params.orderInfo.offer.length;
-        uint256[] memory tokenIds = new uint256[](size);
-
-        address token = params.orderInfo.offer[0].token;
-        vars.xTokenAddress = ps._reserves[token].xTokenAddress;
-        uint256 amountToWithdraw;
-
-        if (vars.xTokenAddress == address(0)) {
+        if (vars.collectionXTokenAddress == address(0)) {
             return;
         }
 
+        uint256 size = params.orderInfo.offer.length;
+        uint256[] memory tokenIds = new uint256[](size);
+        uint256 amountToWithdraw;
         for (uint256 i = 0; i < size; i++) {
             OfferItem memory item = params.orderInfo.offer[i];
             uint256 tokenId = item.identifierOrCriteria;
@@ -552,9 +550,14 @@ library MarketplaceLogic {
                 item.itemType == ItemType.ERC721,
                 Errors.INVALID_ASSET_TYPE
             );
-            require(item.token == token, Errors.INVALID_MARKETPLACE_ORDER);
+            require(
+                item.token == vars.collectionToken,
+                Errors.INVALID_MARKETPLACE_ORDER
+            );
 
-            if (IERC721(vars.xTokenAddress).ownerOf(tokenId) == seller) {
+            if (
+                IERC721(vars.collectionXTokenAddress).ownerOf(tokenId) == seller
+            ) {
                 tokenIds[amountToWithdraw++] = tokenId;
             }
         }
@@ -568,7 +571,7 @@ library MarketplaceLogic {
                 ps._reservesList,
                 ps._usersConfig[seller],
                 DataTypes.ExecuteWithdrawERC721Params({
-                    asset: token,
+                    asset: vars.collectionToken,
                     tokenIds: tokenIds,
                     to: seller,
                     reservesCount: params.reservesCount,
@@ -600,43 +603,15 @@ library MarketplaceLogic {
                 item.itemType == ItemType.ERC721,
                 Errors.INVALID_ASSET_TYPE
             );
-
-            // underlyingAsset
-            address token = item.token;
-            uint256 tokenId = item.identifierOrCriteria;
-            // NToken
-            vars.xTokenAddress = ps._reserves[token].xTokenAddress;
-            bool isReserve = vars.xTokenAddress != address(0);
-
-            if (!isReserve) {
-                try INToken(token).UNDERLYING_ASSET_ADDRESS() returns (
-                    address underlyingAsset
-                ) {
-                    bool isNToken = ps
-                        ._reserves[underlyingAsset]
-                        .xTokenAddress == token;
-                    if (isNToken) {
-                        vars.xTokenAddress = token;
-                        token = underlyingAsset;
-                        isReserve = true;
-                    }
-                } catch {}
-            }
-
             require(
-                !isReserve ||
-                    INToken(vars.xTokenAddress).getXTokenType() !=
-                    XTokenType.NTokenUniswapV3,
-                Errors.XTOKEN_TYPE_NOT_ALLOWED
+                item.token == vars.collectionToken,
+                Errors.INVALID_MARKETPLACE_ORDER
             );
-
             _transferOrCollateralize(
                 ps,
                 vars,
                 buyer,
-                token,
-                tokenId,
-                isReserve
+                item.identifierOrCriteria
             );
         }
 
@@ -740,11 +715,13 @@ library MarketplaceLogic {
             }
         }
 
-        (vars.price, vars.supplyAmount) = _validateAndGetPriceAndSupplyAmount(
+        (vars.price, vars.supplyAmount) = _validateConsideration(
             params,
             vars,
             buyer
         );
+
+        _validateOffer(ps, params, vars);
     }
 
     function _initParams(
@@ -844,22 +821,26 @@ library MarketplaceLogic {
         DataTypes.PoolStorage storage ps,
         MarketplaceLocalVars memory vars,
         address buyer,
-        address token,
-        uint256 tokenId,
-        bool isReserve
+        uint256 tokenId
     ) internal {
-        address owner = IERC721(token).ownerOf(tokenId);
-        if (!isReserve) {
+        address owner = IERC721(vars.collectionToken).ownerOf(tokenId);
+        if (!vars.isCollectionListed) {
             if (owner == address(this)) {
-                IERC721(token).safeTransferFrom(address(this), buyer, tokenId);
+                IERC721(vars.collectionToken).safeTransferFrom(
+                    address(this),
+                    buyer,
+                    tokenId
+                );
             } else {
                 require(owner == buyer, Errors.INVALID_MARKETPLACE_ORDER);
             }
         } else {
-            address nTokenOwner = IERC721(vars.xTokenAddress).ownerOf(tokenId);
+            address nTokenOwner = IERC721(vars.collectionXTokenAddress).ownerOf(
+                tokenId
+            );
             if (nTokenOwner != address(0)) {
                 if (nTokenOwner == address(this)) {
-                    IERC721(vars.xTokenAddress).safeTransferFrom(
+                    IERC721(vars.collectionXTokenAddress).safeTransferFrom(
                         address(this),
                         buyer,
                         tokenId
@@ -875,7 +856,7 @@ library MarketplaceLogic {
                 SupplyLogic.executeCollateralizeERC721(
                     ps._reserves,
                     ps._usersConfig[buyer],
-                    token,
+                    vars.collectionToken,
                     tokenIds,
                     buyer
                 );
@@ -891,7 +872,7 @@ library MarketplaceLogic {
                     ps._reserves,
                     ps._usersConfig[buyer],
                     DataTypes.ExecuteSupplyERC721Params({
-                        asset: token,
+                        asset: vars.collectionToken,
                         tokenData: tokenData,
                         onBehalfOf: buyer,
                         payer: owner,
@@ -902,7 +883,7 @@ library MarketplaceLogic {
         }
     }
 
-    function _validateAndGetPriceAndSupplyAmount(
+    function _validateConsideration(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
         address buyer
@@ -950,5 +931,38 @@ library MarketplaceLogic {
                 supplyAmount += item.startAmount;
             }
         }
+    }
+
+    function _validateOffer(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.ExecuteMarketplaceParams memory params,
+        MarketplaceLocalVars memory vars
+    ) internal view {
+        vars.collectionToken = params.orderInfo.offer[0].token;
+        vars.collectionXTokenAddress = ps
+            ._reserves[vars.collectionToken]
+            .xTokenAddress;
+        vars.isCollectionListed = vars.collectionXTokenAddress != address(0);
+
+        if (!vars.isCollectionListed) {
+            try
+                INToken(vars.collectionToken).UNDERLYING_ASSET_ADDRESS()
+            returns (address underlyingAsset) {
+                bool isNToken = ps._reserves[underlyingAsset].xTokenAddress ==
+                    vars.collectionToken;
+                if (isNToken) {
+                    vars.collectionXTokenAddress = vars.collectionToken;
+                    vars.collectionToken = underlyingAsset;
+                    vars.isCollectionListed = true;
+                }
+            } catch {}
+        }
+
+        require(
+            !vars.isCollectionListed ||
+                INToken(vars.collectionXTokenAddress).getXTokenType() !=
+                XTokenType.NTokenUniswapV3,
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
+        );
     }
 }
