@@ -297,6 +297,9 @@ import {
   ApeStakingP2PLogic,
   ApeStakingVaultLogic,
   ApeStakingVaultLogic__factory,
+  ApeStakingPairPoolLogic__factory,
+  ApeStakingPairPoolLogic,
+  ApeStakingSinglePoolLogic__factory, ApeStakingSinglePoolLogic,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2721,25 +2724,36 @@ export const deployApeStakingP2PLogic = async (verify?: boolean) =>
     verify
   ) as Promise<ApeStakingP2PLogic>;
 
-export const deployApeStakingVaultLogic = async (verify?: boolean) =>
+export const deployApeStakingPairPoolLogic = async (verify?: boolean) =>
   withSaveAndVerify(
-    new ApeStakingVaultLogic__factory(await getFirstSigner()),
-    eContractid.ApeStakingVaultLogic,
+    new ApeStakingPairPoolLogic__factory(await getFirstSigner()),
+    eContractid.ApeStakingPairPoolLogic,
     [],
     verify
-  ) as Promise<ApeStakingVaultLogic>;
+  ) as Promise<ApeStakingPairPoolLogic>;
+
+export const deployApeStakingSinglePoolLogic = async (verify?: boolean) =>
+    withSaveAndVerify(
+        new ApeStakingSinglePoolLogic__factory(await getFirstSigner()),
+        eContractid.ApeStakingSinglePoolLogic,
+        [],
+        verify
+    ) as Promise<ApeStakingSinglePoolLogic>;
 
 export const deployParaApeStakingLibraries = async (
   verify?: boolean
 ): Promise<ParaApeStakingLibraryAddresses> => {
   const p2pLogic = await deployApeStakingP2PLogic(verify);
-  const vaultLogic = await deployApeStakingVaultLogic(verify);
+  const pairPoolLogic = await deployApeStakingPairPoolLogic(verify);
+  const singlePoolLogic = await deployApeStakingSinglePoolLogic(verify);
 
   return {
     ["contracts/apestaking/logic/ApeStakingP2PLogic.sol:ApeStakingP2PLogic"]:
       p2pLogic.address,
-    ["contracts/apestaking/logic/ApeStakingVaultLogic.sol:ApeStakingVaultLogic"]:
-      vaultLogic.address,
+    ["contracts/apestaking/logic/ApeStakingPairPoolLogic.sol:ApeStakingPairPoolLogic"]:
+    pairPoolLogic.address,
+    ["contracts/apestaking/logic/ApeStakingSinglePoolLogic.sol:ApeStakingSinglePoolLogic"]:
+    singlePoolLogic.address,
   };
 };
 
