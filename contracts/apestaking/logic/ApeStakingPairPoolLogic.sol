@@ -133,7 +133,7 @@ library ApeStakingPairPoolLogic {
             emit PairNFTDeposited(isBAYC, apeTokenId, bakcTokenId);
         }
 
-        poolState.totalPosition += arrayLength.toUint128();
+        poolState.totalPosition += arrayLength.toUint64();
     }
 
     function stakingPairNFT(
@@ -203,10 +203,13 @@ library ApeStakingPairPoolLogic {
             vars.apeCoinStaking.depositMAYC(_nfts);
             vars.apeCoinStaking.depositBAKC(_otherPairs, _nftPairs);
         }
+
+        poolState.stakingPosition += arrayLength.toUint64();
     }
 
     function withdrawPairNFT(
         IParaApeStaking.PoolState storage poolState,
+        mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -283,7 +286,8 @@ library ApeStakingPairPoolLogic {
         }
 
         //update state
-        poolState.totalPosition -= arrayLength.toUint128();
+        poolState.totalPosition -= arrayLength.toUint64();
+        poolState.stakingPosition -= vars.stakingPair;
 
         //withdraw from ApeCoinStaking and compound
         if (vars.stakingPair > 0) {
@@ -334,6 +338,9 @@ library ApeStakingPairPoolLogic {
                     address(this)
                 );
             }
+            if (vars.totalCompoundFee > 0) {
+                cApeShareBalance[address(this)] += vars.totalCompoundFee;
+            }
         }
 
         //transfer ape and BAKC back to nToken
@@ -375,6 +382,7 @@ library ApeStakingPairPoolLogic {
 
     function compoundPairNFT(
         IParaApeStaking.PoolState storage poolState,
+        mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -447,6 +455,9 @@ library ApeStakingPairPoolLogic {
         if (vars.totalRepay > 0) {
             IERC20(vars.cApe).safeApprove(vars.pool, vars.totalRepay);
             IPool(vars.pool).repay(vars.cApe, vars.totalRepay, address(this));
+        }
+        if (vars.totalCompoundFee > 0) {
+            cApeShareBalance[address(this)] += vars.totalCompoundFee;
         }
     }
 

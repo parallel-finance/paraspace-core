@@ -11,6 +11,7 @@ import {SignatureChecker} from "../../dependencies/looksrare/contracts/libraries
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
+import "hardhat/console.sol";
 
 /**
  * @title ApeStakingVaultLogic library
@@ -44,13 +45,20 @@ library ApeStakingCommonLogic {
         uint256 latestBorrowIndex = IPool(vars.pool)
             .getReserveNormalizedVariableDebt(vars.cApe);
         uint256 cApeDebtShare = poolState.cApeDebtShare;
-        uint128 currentTotalPosition = poolState.totalPosition;
         uint256 debtInterest = calculateCurrentPositionDebtInterest(
             cApeDebtShare,
-            currentTotalPosition,
+            poolState.stakingPosition,
             positionCap,
             cApeExchangeRate,
             latestBorrowIndex
+        );
+        console.log(
+            "calculateRepayAndCompound-----------vars.totalClaimedApe:",
+            vars.totalClaimedApe
+        );
+        console.log(
+            "calculateRepayAndCompound-----------debtInterest:",
+            debtInterest
         );
         if (debtInterest >= vars.totalClaimedApe) {
             cApeDebtShare -= vars
@@ -64,20 +72,29 @@ library ApeStakingCommonLogic {
             cApeDebtShare -= debtInterest.rayDiv(latestBorrowIndex).rayDiv(
                 cApeExchangeRate
             );
+            poolState.cApeDebtShare = cApeDebtShare;
 
             uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
                 .rayDiv(cApeExchangeRate);
             uint256 compoundFee = shareRewardAmount.percentMul(
                 vars.compoundFee
             );
+            console.log(
+                "calculateRepayAndCompound-----------vars.compoundFee:",
+                vars.compoundFee
+            );
+            console.log(
+                "calculateRepayAndCompound-----------compoundFee:",
+                compoundFee
+            );
             shareRewardAmount = shareRewardAmount - compoundFee;
             //update reward index
+            uint128 currentTotalPosition = poolState.totalPosition;
             if (currentTotalPosition != 0) {
                 poolState.accumulatedRewardsPerNft +=
                     shareRewardAmount.toUint128() /
                     currentTotalPosition;
             }
-            poolState.cApeDebtShare = cApeDebtShare;
             return (debtInterest, compoundFee);
         }
     }
@@ -101,7 +118,7 @@ library ApeStakingCommonLogic {
 
     function calculateCurrentPositionDebtInterest(
         uint256 cApeDebtShare,
-        uint256 totalPosition,
+        uint256 currentStakingPosition,
         uint256 perPositionCap,
         uint256 cApeExchangeRate,
         uint256 latestBorrowIndex
@@ -109,6 +126,6 @@ library ApeStakingCommonLogic {
         uint256 currentDebt = cApeDebtShare.rayMul(cApeExchangeRate).rayMul(
             latestBorrowIndex
         );
-        return (currentDebt - perPositionCap * totalPosition);
+        return (currentDebt - perPositionCap * currentStakingPosition);
     }
 }

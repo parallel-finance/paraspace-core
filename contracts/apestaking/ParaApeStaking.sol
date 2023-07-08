@@ -17,6 +17,7 @@ import "./logic/ApeStakingPairPoolLogic.sol";
 import "./logic/ApeStakingSinglePoolLogic.sol";
 import "./logic/ApeStakingCommonLogic.sol";
 import "../protocol/libraries/helpers/Errors.sol";
+import "hardhat/console.sol";
 
 contract ParaApeStaking is
     Initializable,
@@ -394,15 +395,12 @@ contract ParaApeStaking is
             : ApeStakingPairPoolLogic.MAYC_BAKC_PAIR_POOL_ID;
         ApeStakingPairPoolLogic.compoundPairNFT(
             vaultStorage.poolStates[poolId],
+            cApeShareBalance,
             vars,
             isBAYC,
             apeTokenIds,
             bakcTokenIds
         );
-
-        if (vars.totalCompoundFee > 0) {
-            cApeShareBalance[address(this)] += vars.totalCompoundFee;
-        }
     }
 
     // to save gas we don't claim pending reward in ApeCoinStaking.
@@ -436,15 +434,12 @@ contract ParaApeStaking is
             : ApeStakingPairPoolLogic.MAYC_BAKC_PAIR_POOL_ID;
         ApeStakingPairPoolLogic.withdrawPairNFT(
             vaultStorage.poolStates[poolId],
+            cApeShareBalance,
             vars,
             isBAYC,
             apeTokenIds,
             bakcTokenIds
         );
-
-        if (vars.totalCompoundFee > 0) {
-            cApeShareBalance[address(this)] += vars.totalCompoundFee;
-        }
     }
 
     function depositNFT(address nft, uint32[] calldata tokenIds)
@@ -517,14 +512,11 @@ contract ParaApeStaking is
             : ApeStakingPairPoolLogic.MAYC_SINGLE_POOL_ID;
         ApeStakingSinglePoolLogic.compoundApe(
             vaultStorage.poolStates[poolId],
+            cApeShareBalance,
             vars,
             nft,
             tokenIds
         );
-
-        if (vars.totalCompoundFee > 0) {
-            cApeShareBalance[address(this)] += vars.totalCompoundFee;
-        }
     }
 
     function compoundBAKC(
@@ -537,15 +529,12 @@ contract ParaApeStaking is
         vars.compoundFee = compoundFee;
         ApeStakingSinglePoolLogic.compoundBAKC(
             vaultStorage,
+            cApeShareBalance,
             vars,
             nft,
             apeTokenIds,
             bakcTokenIds
         );
-
-        if (vars.totalCompoundFee > 0) {
-            cApeShareBalance[address(this)] += vars.totalCompoundFee;
-        }
     }
 
     function claimNFT(address nft, uint32[] calldata tokenIds)
@@ -576,14 +565,11 @@ contract ParaApeStaking is
         vars.compoundFee = compoundFee;
         ApeStakingSinglePoolLogic.withdrawNFT(
             vaultStorage,
+            cApeShareBalance,
             vars,
             nft,
             tokenIds
         );
-
-        if (vars.totalCompoundFee > 0) {
-            cApeShareBalance[address(this)] += vars.totalCompoundFee;
-        }
     }
 
     function _createCacheVars()

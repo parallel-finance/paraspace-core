@@ -19,7 +19,9 @@ interface IApeStakingVault {
         // accumulated cApe reward for per NFT position
         uint128 accumulatedRewardsPerNft;
         // total NFT position count
-        uint128 totalPosition;
+        uint64 totalPosition;
+        // total staking position
+        uint64 stakingPosition;
         //tokenId => reward debt position
         mapping(uint256 => TokenStatus) tokenStatus;
         //for pair pool, apeTokenId => PairingStatus

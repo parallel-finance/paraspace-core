@@ -34,7 +34,7 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P {
         uint256 totalClaimedApe;
         ApeCoinStaking.SingleNft[] _nfts;
         ApeCoinStaking.PairNftWithdrawWithAmount[] _nftPairs;
-        uint128 stakingPair;
+        uint64 stakingPair;
         uint256 apeRewardRatio;
         uint256 totalRepay;
         uint256 totalCompoundFee;
