@@ -593,23 +593,7 @@ library MarketplaceLogic {
         MarketplaceLocalVars memory vars,
         address buyer
     ) internal {
-        for (uint256 i = 0; i < params.orderInfo.offer.length; i++) {
-            OfferItem memory item = params.orderInfo.offer[i];
-            require(
-                item.itemType == ItemType.ERC721,
-                Errors.INVALID_ASSET_TYPE
-            );
-            require(
-                item.token == params.orderInfo.offer[0].token,
-                Errors.INVALID_MARKETPLACE_ORDER
-            );
-            _transferOrCollateralize(
-                ps,
-                vars,
-                buyer,
-                item.identifierOrCriteria
-            );
-        }
+        _transferOrCollateralize(ps, params, vars, buyer);
 
         if (vars.creditAmount == 0) {
             return;
@@ -815,67 +799,101 @@ library MarketplaceLogic {
 
     function _transferOrCollateralize(
         DataTypes.PoolStorage storage ps,
+        DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars,
-        address buyer,
-        uint256 tokenId
+        address buyer
     ) internal {
-        address owner = IERC721(vars.collectionToken).ownerOf(tokenId);
-        if (!vars.isCollectionListed) {
-            if (owner == address(this)) {
-                IERC721(vars.collectionToken).safeTransferFrom(
-                    address(this),
-                    buyer,
-                    tokenId
-                );
-            } else {
-                require(owner == buyer, Errors.INVALID_MARKETPLACE_ORDER);
-            }
-        } else {
-            address nTokenOwner = IERC721(vars.collectionXTokenAddress).ownerOf(
-                tokenId
+        DataTypes.ERC721SupplyParams[]
+            memory tokenData = new DataTypes.ERC721SupplyParams[](
+                params.orderInfo.offer.length
             );
-            if (nTokenOwner != address(0)) {
-                if (nTokenOwner == address(this)) {
-                    IERC721(vars.collectionXTokenAddress).safeTransferFrom(
+        uint256 amountToSupply;
+        address payer;
+
+        for (uint256 i = 0; i < params.orderInfo.offer.length; i++) {
+            OfferItem memory item = params.orderInfo.offer[i];
+            require(
+                item.itemType == ItemType.ERC721,
+                Errors.INVALID_ASSET_TYPE
+            );
+            require(
+                item.token == params.orderInfo.offer[0].token,
+                Errors.INVALID_MARKETPLACE_ORDER
+            );
+            address owner = IERC721(vars.collectionToken).ownerOf(
+                item.identifierOrCriteria
+            );
+            if (!vars.isCollectionListed) {
+                if (owner == address(this)) {
+                    IERC721(vars.collectionToken).safeTransferFrom(
                         address(this),
                         buyer,
-                        tokenId
+                        item.identifierOrCriteria
+                    );
+                } else {
+                    require(owner == buyer, Errors.INVALID_MARKETPLACE_ORDER);
+                }
+            } else {
+                address nTokenOwner = IERC721(vars.collectionXTokenAddress)
+                    .ownerOf(item.identifierOrCriteria);
+                if (nTokenOwner != address(0)) {
+                    if (nTokenOwner == address(this)) {
+                        IERC721(vars.collectionXTokenAddress).safeTransferFrom(
+                            address(this),
+                            buyer,
+                            item.identifierOrCriteria
+                        );
+                    } else {
+                        require(
+                            nTokenOwner == buyer,
+                            Errors.INVALID_MARKETPLACE_ORDER
+                        );
+                    }
+                    uint256[] memory tokenIds = new uint256[](1);
+                    tokenIds[0] = item.identifierOrCriteria;
+                    SupplyLogic.executeCollateralizeERC721(
+                        ps._reserves,
+                        ps._usersConfig[buyer],
+                        vars.collectionToken,
+                        tokenIds,
+                        buyer
                     );
                 } else {
                     require(
-                        nTokenOwner == buyer,
+                        owner == buyer || owner == address(this),
                         Errors.INVALID_MARKETPLACE_ORDER
                     );
+                    if (payer == address(0)) {
+                        payer = owner;
+                    } else {
+                        require(
+                            payer == owner,
+                            Errors.INVALID_MARKETPLACE_ORDER
+                        );
+                    }
+                    tokenData[amountToSupply++] = DataTypes.ERC721SupplyParams(
+                        item.identifierOrCriteria,
+                        true
+                    );
                 }
-                uint256[] memory tokenIds = new uint256[](1);
-                tokenIds[0] = tokenId;
-                SupplyLogic.executeCollateralizeERC721(
-                    ps._reserves,
-                    ps._usersConfig[buyer],
-                    vars.collectionToken,
-                    tokenIds,
-                    buyer
-                );
-            } else {
-                require(
-                    owner == buyer || owner == address(this),
-                    Errors.INVALID_MARKETPLACE_ORDER
-                );
-                DataTypes.ERC721SupplyParams[]
-                    memory tokenData = new DataTypes.ERC721SupplyParams[](1);
-                tokenData[0] = DataTypes.ERC721SupplyParams(tokenId, true);
-                SupplyLogic.executeSupplyERC721(
-                    ps._reserves,
-                    ps._usersConfig[buyer],
-                    DataTypes.ExecuteSupplyERC721Params({
-                        asset: vars.collectionToken,
-                        tokenData: tokenData,
-                        onBehalfOf: buyer,
-                        payer: owner,
-                        referralCode: 0
-                    })
-                );
             }
+        }
+
+        if (amountToSupply > 0) {
+            assembly {
+                mstore(tokenData, amountToSupply)
+            }
+            SupplyLogic.executeSupplyERC721(
+                ps._reserves,
+                ps._usersConfig[buyer],
+                DataTypes.ExecuteSupplyERC721Params({
+                    asset: vars.collectionToken,
+                    tokenData: tokenData,
+                    onBehalfOf: buyer,
+                    payer: payer,
+                    referralCode: 0
+                })
+            );
         }
     }
 
