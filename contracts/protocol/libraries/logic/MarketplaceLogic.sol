@@ -130,16 +130,12 @@ library MarketplaceLogic {
         );
 
         bool delegate = !params.orderInfo.isSeaport || vars.isListingTokenETH;
+        (address recipient, uint256 value) = delegate
+            ? (address(this), _delegateToPool(params, vars))
+            : (params.orderInfo.taker, 0);
 
         _flashSupplyFor(ps, vars, params.orderInfo.maker);
-        _flashLoanTo(
-            ps,
-            params,
-            vars,
-            delegate ? address(this) : params.orderInfo.taker
-        );
-
-        uint256 priceEth = delegate ? _delegateToPool(params, vars) : 0;
+        _flashLoanTo(ps, params, vars, recipient);
 
         // delegateCall to avoid extra token transfer
         Address.functionDelegateCall(
@@ -148,7 +144,7 @@ library MarketplaceLogic {
                 IMarketplace.matchAskWithTakerBid.selector,
                 params.marketplace.marketplace,
                 params.payload,
-                priceEth
+                value
             )
         );
 
