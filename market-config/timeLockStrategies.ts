@@ -399,13 +399,13 @@ export const timeLockStrategyCRV: ITimeLockStrategyParams = {
 
 export const timeLockStrategyWMATIC: ITimeLockStrategyParams = {
   name: "timeLockStrategyWMATIC",
-  minThreshold: parseUnits("51.5", 18).toString(),
-  midThreshold: parseUnits("155", 18).toString(),
+  minThreshold: parseUnits("80000", 18).toString(),
+  midThreshold: parseUnits("120000", 18).toString(),
   minWaitTime: "12",
   midWaitTime: "7200",
   maxWaitTime: "21600",
   poolPeriodWaitTime: "600",
-  poolPeriodLimit: parseUnits("1900", 18).toString(),
+  poolPeriodLimit: parseUnits("240000", 18).toString(),
   period: "86400",
 };
 

@@ -59,6 +59,8 @@ import {
   timeLockStrategyLINK,
   timeLockStrategyAAVE,
   timeLockStrategyUNI,
+  timeLockStrategyWMATIC,
+  timeLockStrategySTMATIC,
 } from "../../market-config/timeLockStrategies";
 
 const TIME_LOCK_STRATEGY = {
@@ -128,6 +130,8 @@ const TIME_LOCK_STRATEGY = {
   VSL: timeLockStrategyVSL,
   KODA: timeLockStrategyKODA,
   BLOCKS: timeLockStrategyBLOCKS,
+  WMATIC: timeLockStrategyWMATIC,
+  stMATIC: timeLockStrategySTMATIC,
 };
 
 const setTimeLockStrategy = async () => {
