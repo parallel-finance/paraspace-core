@@ -347,7 +347,9 @@ export const PolygonConfig: IParaSpaceConfiguration = {
     V3NFTPositionManager: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
     V3Router: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
   },
-  Marketplace: {},
+  Marketplace: {
+    Seaport: "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC",
+  },
   BendDAO: {},
   Stakefish: {},
   Chainlink: {
@@ -618,7 +620,9 @@ export const ArbitrumConfig: IParaSpaceConfiguration = {
     V3Router: "0x4c60051384bd2d3c01bfc845cf5f4b44bcbe9de5",
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
-  Marketplace: {},
+  Marketplace: {
+    Seaport: "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC",
+  },
   BendDAO: {},
   Stakefish: {},
   Chainlink: {
