@@ -134,4 +134,14 @@ library Errors {
     string public constant INVALID_FEE_VALUE = "139"; // invalid fee rate value
     string public constant TOKEN_NOT_ALLOW_RESCUE = "140"; // token is not allow rescue
     string public constant CALLER_NOT_ALLOWED = "141"; //The caller of the function is not allowed
+
+    string public constant INVALID_PARAMETER = "170"; //invalid parameter
+    string public constant APE_POSITION_EXISTED = "171"; //ape staking position already existed
+    string public constant BAKC_POSITION_EXISTED = "172"; //bakc staking position already existed
+    string public constant PAIR_POSITION_EXISTED = "173"; //pair staking position already existed
+    string public constant NOT_PAIRED_APE_AND_BAKC = "174"; //not paired ape and bakc
+    string public constant NOT_APE_STAKING_BOT = "175"; //not ape staking bot
+    string public constant NOT_THE_SAME_OWNER = "176"; //not the same owner
+    string public constant NFT_NOT_ALLOWED = "177"; //nft now allowed
+    string public constant NFT_NOT_IN_SINGLE_POOL = "178"; //nft not in single pool
 }

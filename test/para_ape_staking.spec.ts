@@ -1,30 +1,19 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {
-  AutoCompoundApe,
-  P2PPairStaking,
-  ParaApeStaking,
-  VariableDebtToken,
-} from "../types";
+import {AutoCompoundApe, ParaApeStaking, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
   getInitializableAdminUpgradeabilityProxy,
-  getP2PPairStaking,
   getParaApeStaking,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
-import {getSignedListingOrder} from "./helpers/p2ppairstaking-helper";
 import {parseEther} from "ethers/lib/utils";
-import {almostEqual} from "./helpers/uniswapv3-helper";
-import {
-  deployP2PPairStakingImpl,
-  deployParaApeStakingImpl,
-} from "../helpers/contracts-deployments";
+import {deployParaApeStakingImpl} from "../helpers/contracts-deployments";
 import {GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
 import {ProtocolErrors} from "../helpers/types";
 
@@ -425,24 +414,18 @@ describe("Para Ape Staking Test", () => {
     expect(await bakc.ownerOf(2)).to.be.equal(paraApeStaking.address);
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingApe(bayc.address, [0, 1, 2])
+      await paraApeStaking.connect(user4.signer).stakingApe(true, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking.connect(user4.signer).stakingApe(false, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user4.signer)
-        .stakingApe(mayc.address, [0, 1, 2])
+        .stakingBAKC(true, [0, 1], [0, 1])
     );
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(bayc.address, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(mayc.address, [2], [2])
+      await paraApeStaking.connect(user4.signer).stakingBAKC(false, [2], [2])
     );
     expect((await apeCoinStaking.nftPosition(1, 0)).stakedAmount).to.be.eq(
       parseEther("200000")
@@ -478,24 +461,18 @@ describe("Para Ape Staking Test", () => {
     await advanceTimeAndBlock(parseInt("3600"));
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundApe(bayc.address, [0, 1, 2])
+      await paraApeStaking.connect(user4.signer).compoundApe(true, [0, 1, 2])
+    );
+    await waitForTx(
+      await paraApeStaking.connect(user4.signer).compoundApe(false, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user4.signer)
-        .compoundApe(mayc.address, [0, 1, 2])
+        .compoundBAKC(true, [0, 1], [0, 1])
     );
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(bayc.address, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(mayc.address, [2], [2])
+      await paraApeStaking.connect(user4.signer).compoundBAKC(false, [2], [2])
     );
     let compoundFee = await paraApeStaking.pendingCApeReward(
       paraApeStaking.address
@@ -567,15 +544,559 @@ describe("Para Ape Staking Test", () => {
     ).to.be.equal(0);
   });
 
-  it("stakingPairNFT cannot stake single pool nft", async () => {});
+  it("depositPairNFT revert test", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      bayc,
+      bakc,
+      apeCoinStaking,
+    } = await loadFixture(fixture);
 
-  it("stakingApe cannot stake pair pool ape", async () => {});
+    await mintAndValidate(bayc, "3", user1);
+    await mintAndValidate(bakc, "3", user1);
+    await mintAndValidate(ape, "1000000", user1);
 
-  it("stakingBAKC cannot stake pair pool nft", async () => {});
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        .approve(apeCoinStaking.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await apeCoinStaking
+        .connect(user1.signer)
+        .depositBAYC([{tokenId: 0, amount: parseEther("10")}])
+    );
+    await waitForTx(
+      await apeCoinStaking
+        .connect(user1.signer)
+        .depositBAKC(
+          [{mainTokenId: 1, bakcTokenId: 1, amount: parseEther("10")}],
+          []
+        )
+    );
 
-  it("compoundPairNFT cannot stake single pool nft", async () => {});
+    await supplyAndValidate(bayc, "3", user1, false);
+    await supplyAndValidate(bakc, "3", user1, false);
 
-  it("compoundNFT cannot compound pair pool nft", async () => {});
+    await expect(
+      paraApeStaking.connect(user2.signer).depositPairNFT(true, [0, 1], [0, 1])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
 
-  it("compoundBAKC cannot compound pair pool nft", async () => {});
+    await expect(
+      paraApeStaking.connect(user1.signer).depositPairNFT(true, [0], [0])
+    ).to.be.revertedWith(ProtocolErrors.APE_POSITION_EXISTED);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).depositPairNFT(true, [2], [1])
+    ).to.be.revertedWith(ProtocolErrors.BAKC_POSITION_EXISTED);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).depositPairNFT(true, [1], [0])
+    ).to.be.revertedWith(ProtocolErrors.PAIR_POSITION_EXISTED);
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).depositPairNFT(true, [2], [2])
+    );
+  });
+
+  it("stakingPairNFT revert test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+    );
+
+    await expect(
+      paraApeStaking.connect(user4.signer).stakingPairNFT(true, [1], [0])
+    ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
+  });
+
+  it("compoundPairNFT revert test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+    );
+
+    await expect(
+      paraApeStaking
+        .connect(user1.signer)
+        .compoundPairNFT(true, [0, 1, 2], [0, 1, 2])
+    ).to.be.revertedWith(ProtocolErrors.NOT_APE_STAKING_BOT);
+
+    await expect(
+      paraApeStaking.connect(user4.signer).compoundPairNFT(true, [1], [0])
+    ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
+  });
+
+  it("claimPairNFT revert test", async () => {
+    const {
+      users: [user1, user2, , user4],
+      bayc,
+      bakc,
+      nBAYC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .stakingPairNFT(true, [0, 1, 2], [0, 1, 2])
+    );
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .compoundPairNFT(true, [0, 1, 2], [0, 1, 2])
+    );
+
+    await waitForTx(
+      await nBAYC
+        .connect(user1.signer)
+        .transferFrom(user1.address, user2.address, 2)
+    );
+
+    await expect(
+      paraApeStaking
+        .connect(user1.signer)
+        .claimPairNFT(true, [0, 1, 2], [0, 1, 2])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).claimPairNFT(true, [1], [0])
+    ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
+  });
+
+  it("withdrawPairNFT revert test", async () => {
+    const {
+      users: [user1, user2],
+      bayc,
+      bakc,
+      nBAYC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .stakingPairNFT(true, [0, 1], [0, 1])
+    );
+
+    await waitForTx(
+      await nBAYC
+        .connect(user1.signer)
+        .transferFrom(user1.address, user2.address, 2)
+    );
+
+    await expect(
+      paraApeStaking.connect(user1.signer).withdrawPairNFT(true, [0, 1], [1, 0])
+    ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
+
+    await expect(
+      paraApeStaking
+        .connect(user1.signer)
+        .withdrawPairNFT(true, [0, 1, 2], [0, 1, 2])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawPairNFT(true, [0, 1], [0, 1])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).withdrawPairNFT(true, [2], [2])
+    );
+  });
+
+  it("depositNFT revert test", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      bayc,
+      bakc,
+      apeCoinStaking,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(bayc, "3", user1);
+    await mintAndValidate(bakc, "3", user1);
+    await mintAndValidate(ape, "1000000", user1);
+
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        .approve(apeCoinStaking.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await apeCoinStaking
+        .connect(user1.signer)
+        .depositBAYC([{tokenId: 0, amount: parseEther("10")}])
+    );
+    await waitForTx(
+      await apeCoinStaking
+        .connect(user1.signer)
+        .depositBAKC(
+          [{mainTokenId: 1, bakcTokenId: 1, amount: parseEther("10")}],
+          []
+        )
+    );
+
+    await supplyAndValidate(bayc, "3", user1, false);
+    await supplyAndValidate(bakc, "3", user1, false);
+
+    await expect(
+      paraApeStaking.connect(user2.signer).depositNFT(bayc.address, [0])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).depositNFT(bayc.address, [0])
+    ).to.be.revertedWith(ProtocolErrors.APE_POSITION_EXISTED);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).depositNFT(bayc.address, [1])
+    ).to.be.revertedWith(ProtocolErrors.PAIR_POSITION_EXISTED);
+
+    await expect(
+      paraApeStaking.connect(user2.signer).depositNFT(bakc.address, [0])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).depositNFT(bakc.address, [1])
+    ).to.be.revertedWith(ProtocolErrors.APE_POSITION_EXISTED);
+  });
+
+  it("stakingApe revert test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bayc.address, [0, 1])
+    );
+
+    await expect(
+      paraApeStaking.connect(user4.signer).stakingApe(true, [2])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).stakingApe(true, [0, 1])
+    );
+  });
+
+  it("stakingBAKC revert test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bayc.address, [0, 1])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bakc.address, [0, 1])
+    );
+
+    await expect(
+      paraApeStaking.connect(user4.signer).stakingBAKC(true, [2], [0])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await expect(
+      paraApeStaking.connect(user4.signer).stakingBAKC(true, [0], [2])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .stakingBAKC(true, [0, 1], [0, 1])
+    );
+  });
+
+  it("compoundApe revert test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bayc.address, [0, 1])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).stakingApe(true, [0, 1])
+    );
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await expect(
+      paraApeStaking.connect(user4.signer).compoundApe(true, [2])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await waitForTx(
+      await paraApeStaking.connect(user4.signer).compoundApe(true, [0, 1])
+    );
+  });
+
+  it("compoundBAKC revert test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bayc.address, [0, 1])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bakc.address, [0, 1])
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .stakingBAKC(true, [0, 1], [0, 1])
+    );
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await expect(
+      paraApeStaking.connect(user4.signer).compoundBAKC(true, [2], [1])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await expect(
+      paraApeStaking.connect(user4.signer).compoundBAKC(true, [1], [2])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .compoundBAKC(true, [0, 1], [0, 1])
+    );
+  });
+
+  it("claimNFT revert test", async () => {
+    const {
+      users: [user1, user2, , user4],
+      bayc,
+      bakc,
+      nBAYC,
+      nBAKC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bayc.address, [0, 1])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bakc.address, [0, 1])
+    );
+
+    await waitForTx(
+      await nBAYC
+        .connect(user1.signer)
+        .transferFrom(user1.address, user2.address, 1)
+    );
+    await waitForTx(
+      await nBAKC
+        .connect(user1.signer)
+        .transferFrom(user1.address, user2.address, 1)
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).stakingApe(true, [0, 1])
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .stakingBAKC(true, [0, 1], [0, 1])
+    );
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+      await paraApeStaking.connect(user4.signer).compoundApe(true, [0, 1])
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user4.signer)
+        .compoundBAKC(true, [0, 1], [0, 1])
+    );
+
+    await expect(
+      paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [0, 1])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [2])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [0, 1])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [2])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [0])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [0])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user2.signer).claimNFT(bayc.address, [1])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user2.signer).claimNFT(bakc.address, [1])
+    );
+  });
+
+  it("withdrawNFT revert test", async () => {
+    const {
+      users: [user1, user2],
+      bayc,
+      bakc,
+      nBAYC,
+      nBAKC,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bakc, "3", user1, true);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bayc.address, [0, 1])
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(bakc.address, [0, 1])
+    );
+
+    await waitForTx(
+      await nBAYC
+        .connect(user1.signer)
+        .transferFrom(user1.address, user2.address, 1)
+    );
+    await waitForTx(
+      await nBAKC
+        .connect(user1.signer)
+        .transferFrom(user1.address, user2.address, 1)
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).stakingApe(true, [0, 1])
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .stakingBAKC(true, [0, 1], [0, 1])
+    );
+
+    await expect(
+      paraApeStaking.connect(user1.signer).withdrawNFT(bayc.address, [0, 1])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).withdrawNFT(bayc.address, [1])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).withdrawNFT(bakc.address, [0, 1])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
+
+    await expect(
+      paraApeStaking.connect(user1.signer).withdrawNFT(bakc.address, [1])
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).withdrawNFT(bayc.address, [0])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).withdrawNFT(bakc.address, [0])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user2.signer).withdrawNFT(bayc.address, [1])
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user2.signer).withdrawNFT(bakc.address, [1])
+    );
+  });
 });

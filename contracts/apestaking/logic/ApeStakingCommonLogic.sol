@@ -11,7 +11,6 @@ import {SignatureChecker} from "../../dependencies/looksrare/contracts/libraries
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
-import "hardhat/console.sol";
 
 /**
  * @title ApeStakingVaultLogic library
@@ -52,14 +51,6 @@ library ApeStakingCommonLogic {
             cApeExchangeRate,
             latestBorrowIndex
         );
-        console.log(
-            "calculateRepayAndCompound-----------vars.totalClaimedApe:",
-            vars.totalClaimedApe
-        );
-        console.log(
-            "calculateRepayAndCompound-----------debtInterest:",
-            debtInterest
-        );
         if (debtInterest >= vars.totalClaimedApe) {
             cApeDebtShare -= vars
                 .totalClaimedApe
@@ -78,14 +69,6 @@ library ApeStakingCommonLogic {
                 .rayDiv(cApeExchangeRate);
             uint256 compoundFee = shareRewardAmount.percentMul(
                 vars.compoundFee
-            );
-            console.log(
-                "calculateRepayAndCompound-----------vars.compoundFee:",
-                vars.compoundFee
-            );
-            console.log(
-                "calculateRepayAndCompound-----------compoundFee:",
-                compoundFee
             );
             shareRewardAmount = shareRewardAmount - compoundFee;
             //update reward index

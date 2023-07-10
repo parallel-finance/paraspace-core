@@ -416,6 +416,15 @@ export enum ProtocolErrors {
 
   INVALID_TOKEN_ID = "135", //invalid token id
 
+  INVALID_PARAMETER = "170", //invalid parameter
+  APE_POSITION_EXISTED = "171", //ape staking position already existed
+  BAKC_POSITION_EXISTED = "172", //bakc staking position already existed
+  PAIR_POSITION_EXISTED = "173", //pair staking position already existed
+  NOT_PAIRED_APE_AND_BAKC = "174", //not paired ape and bakc
+  NOT_APE_STAKING_BOT = "175", //not ape staking bot
+  NOT_THE_SAME_OWNER = "176", //not the same owner
+  NFT_NOT_IN_SINGLE_POOL = "178", //nft not in single pool
+
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",
 

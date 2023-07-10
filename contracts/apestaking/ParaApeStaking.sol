@@ -17,7 +17,6 @@ import "./logic/ApeStakingPairPoolLogic.sol";
 import "./logic/ApeStakingSinglePoolLogic.sol";
 import "./logic/ApeStakingCommonLogic.sol";
 import "../protocol/libraries/helpers/Errors.sol";
-import "hardhat/console.sol";
 
 contract ParaApeStaking is
     Initializable,
@@ -136,7 +135,7 @@ contract ParaApeStaking is
     }
 
     modifier onlyApeStakingBot() {
-        require(apeStakingBot == msg.sender, "not ape staking bot");
+        require(apeStakingBot == msg.sender, Errors.NOT_APE_STAKING_BOT);
         _;
     }
 
@@ -446,7 +445,10 @@ contract ParaApeStaking is
         external
         whenNotPaused
     {
-        require(nft == bayc || nft == mayc || nft == bakc, "wrong nft");
+        require(
+            nft == bayc || nft == mayc || nft == bakc,
+            Errors.NFT_NOT_ALLOWED
+        );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = (nft == bayc)
             ? ApeStakingPairPoolLogic.BAYC_SINGLE_POOL_ID
@@ -461,30 +463,29 @@ contract ParaApeStaking is
         );
     }
 
-    function stakingApe(address nft, uint32[] calldata tokenIds)
+    function stakingApe(bool isBAYC, uint32[] calldata tokenIds)
         external
         whenNotPaused
     {
-        require(nft == bayc || nft == mayc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 poolId = (nft == bayc)
+        uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_SINGLE_POOL_ID
             : ApeStakingPairPoolLogic.MAYC_SINGLE_POOL_ID;
         ApeStakingSinglePoolLogic.stakingApe(
             vaultStorage.poolStates[poolId],
             vars,
-            nft,
+            isBAYC,
             tokenIds
         );
     }
 
     function stakingBAKC(
-        address nft,
+        bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external whenNotPaused {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 poolId = (nft == bayc)
+        uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_SINGLE_POOL_ID
             : ApeStakingPairPoolLogic.MAYC_SINGLE_POOL_ID;
         ApeStakingSinglePoolLogic.stakingBAKC(
@@ -493,45 +494,43 @@ contract ParaApeStaking is
                 ApeStakingPairPoolLogic.BAKC_SINGLE_POOL_ID
             ],
             vars,
-            nft,
+            isBAYC,
             apeTokenIds,
             bakcTokenIds
         );
     }
 
-    function compoundApe(address nft, uint32[] calldata tokenIds)
+    function compoundApe(bool isBAYC, uint32[] calldata tokenIds)
         external
         whenNotPaused
         onlyApeStakingBot
     {
-        require(nft == bayc || nft == mayc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
-        uint256 poolId = (nft == bayc)
+        uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_SINGLE_POOL_ID
             : ApeStakingPairPoolLogic.MAYC_SINGLE_POOL_ID;
         ApeStakingSinglePoolLogic.compoundApe(
             vaultStorage.poolStates[poolId],
             cApeShareBalance,
             vars,
-            nft,
+            isBAYC,
             tokenIds
         );
     }
 
     function compoundBAKC(
-        address nft,
+        bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external whenNotPaused onlyApeStakingBot {
-        require(nft == bayc || nft == mayc, "wrong nft");
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         ApeStakingSinglePoolLogic.compoundBAKC(
             vaultStorage,
             cApeShareBalance,
             vars,
-            nft,
+            isBAYC,
             apeTokenIds,
             bakcTokenIds
         );
@@ -541,7 +540,10 @@ contract ParaApeStaking is
         external
         whenNotPaused
     {
-        require(nft == bayc || nft == mayc || nft == bakc, "wrong nft");
+        require(
+            nft == bayc || nft == mayc || nft == bakc,
+            Errors.NFT_NOT_ALLOWED
+        );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = (nft == bayc)
             ? ApeStakingPairPoolLogic.BAYC_SINGLE_POOL_ID
@@ -560,7 +562,10 @@ contract ParaApeStaking is
         external
         whenNotPaused
     {
-        require(nft == bayc || nft == mayc || nft == bakc, "wrong nft");
+        require(
+            nft == bayc || nft == mayc || nft == bakc,
+            Errors.NFT_NOT_ALLOWED
+        );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         ApeStakingSinglePoolLogic.withdrawNFT(
