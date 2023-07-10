@@ -361,6 +361,8 @@ export const PolygonConfig: IParaSpaceConfiguration = {
     UNI: "0xdf0fb4e4f928d2dcb76f438575fdd8682386e13c",
     AAVE: "0x72484b12719e23115761d5da1646945632979bb6",
     BAL: "0xd106b538f2a868c28ca1ec7e298c3325e0251d66",
+    CRV: "0x336584C8E6Dc19637A5b36206B1c79923111b405",
+    stMATIC: "0xEe96b77129cF54581B5a8FECCcC50A6A067034a1",
   },
   ReservesConfig: {
     DAI: strategyDAI,
