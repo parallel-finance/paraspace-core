@@ -1119,10 +1119,10 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
 
     // if contract address is already in db, then skip to next tokenSymbol
     if (contractAddress) {
-      console.log("contract address is already in db ", tokenSymbol);
+      console.log("contract address is already in db", tokenSymbol);
       continue;
     } else if (tokensConfig[tokenSymbol]) {
-      console.log("contract address is already in db ", tokenSymbol);
+      console.log("contract address is already in db", tokenSymbol);
       await insertContractAddressInDb(
         tokenSymbol,
         tokensConfig[tokenSymbol],
