@@ -152,7 +152,7 @@ contract PToken is
         _burnScaled(
             from,
             receiverOfUnderlying,
-            !swapInfo.exactInput ? amount : swapInfo.maxAmountIn,
+            swapInfo.exactInput ? swapInfo.maxAmountIn : amount,
             index
         );
     }
@@ -272,9 +272,9 @@ contract PToken is
         );
         amount = abi.decode(returndata, (uint256));
 
-        uint256 amountOut = !swapInfo.exactInput
-            ? swapInfo.minAmountOut
-            : amount;
+        uint256 amountOut = swapInfo.exactInput
+            ? amount
+            : swapInfo.minAmountOut;
 
         require(amountOut > 0, Errors.CALL_SWAP_FAILED);
 
