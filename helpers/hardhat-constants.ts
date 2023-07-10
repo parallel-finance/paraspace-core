@@ -176,7 +176,7 @@ export const MULTI_SEND_CHUNK_SIZE = parseInt(
 
 export const VERSION = version;
 export const COMMIT = git.short();
-export const COMPILER_OPTIMIZER_RUNS = 600;
+export const COMPILER_OPTIMIZER_RUNS = 200;
 export const COMPILER_VERSION = "0.8.17+commit.8df45f5f";
 export const PKG_DATA = {
   version: VERSION,
