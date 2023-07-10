@@ -130,7 +130,7 @@ library MarketplaceLogic {
         );
 
         bool delegate = !params.orderInfo.isSeaport || vars.isListingTokenETH;
-        (address recipient, uint256 value) = delegate
+        (address recipient, uint256 priceEth) = delegate
             ? (address(this), _delegateToPool(params, vars))
             : (params.orderInfo.taker, 0);
 
@@ -144,7 +144,7 @@ library MarketplaceLogic {
                 IMarketplace.matchAskWithTakerBid.selector,
                 params.marketplace.marketplace,
                 params.payload,
-                value
+                priceEth
             )
         );
 
@@ -378,9 +378,8 @@ library MarketplaceLogic {
     function _delegateToPool(
         DataTypes.ExecuteMarketplaceParams memory params,
         MarketplaceLocalVars memory vars
-    ) internal returns (uint256) {
-        uint256 price = vars.price;
-        uint256 downpayment = price - vars.creditAmount;
+    ) internal returns (uint256 priceEth) {
+        uint256 downpayment = vars.price - vars.creditAmount;
         if (!vars.isListingTokenETH) {
             address transferToken = vars.isListingTokenPToken
                 ? vars.listingXTokenAddress
@@ -394,13 +393,10 @@ library MarketplaceLogic {
                 transferToken,
                 params.marketplace.operator
             );
-            // convert to priceEth
-            price = 0;
         } else {
             params.ethLeft -= downpayment;
+            priceEth = vars.price;
         }
-
-        return price;
     }
 
     /**
