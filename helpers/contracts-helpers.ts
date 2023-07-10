@@ -352,18 +352,22 @@ ${
     ? `--constructor-args \
   $(cast abi-encode "constructor(${first(artifact.abi)
     .inputs.map((x) => x.type)
-    .join(",")})" ${deployArgs.map((x) => `"${x}"`).join(" ")})`
+    .join(",")})" ${deployArgs
+        .map((x) => (Array.isArray(x) ? `"[${x}"]` : `"${x}"`))
+        .join(" ")})`
     : ""
 } \
 ${
   libraries
     ? Object.entries(libraries)
         .map(([k, v]) => `--libraries ${k}:${v}`)
-        .join(" \\ ")
+        .join(" ")
     : ""
 } \
-  --compiler-version v${COMPILER_VERSION}`
-      );
+  --compiler-version v${COMPILER_VERSION}`;
+
+    if (VERBOSE) {
+      console.log(forgeVerifyContractCmd);
     }
 
     return instance;
