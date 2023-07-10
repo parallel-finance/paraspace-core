@@ -547,7 +547,7 @@ library MarketplaceLogic {
                 Errors.INVALID_ASSET_TYPE
             );
             require(
-                item.token == vars.collectionToken,
+                item.token == params.orderInfo.offer[0].token,
                 Errors.INVALID_MARKETPLACE_ORDER
             );
 
