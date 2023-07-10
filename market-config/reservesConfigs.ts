@@ -583,22 +583,6 @@ export const strategyRDNT: IReserveParams = {
   supplyCap: "0",
 };
 
-export const strategyMATIC: IReserveParams = {
-  strategy: rateStrategyMATIC,
-  auctionStrategy: auctionStrategyZero,
-  timeLockStrategy: timeLockStrategyMATIC,
-  baseLTVAsCollateral: "2500",
-  liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "3500",
-  liquidationBonus: "11000",
-  borrowingEnabled: true,
-  reserveDecimals: "18",
-  xTokenImpl: eContractid.PTokenImpl,
-  reserveFactor: "1000",
-  borrowCap: "0",
-  supplyCap: "0",
-};
-
 export const strategySTMATIC: IReserveParams = {
   strategy: rateStrategySTMATIC,
   auctionStrategy: auctionStrategyZero,

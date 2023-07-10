@@ -760,7 +760,7 @@ export interface IChainlinkConfig {
   AAVE?: tEthereumAddress;
   BAL?: tEthereumAddress;
   RDNT?: tEthereumAddress;
-  MATIC?: tEthereumAddress;
+  WMATIC?: tEthereumAddress;
   stMATIC?: tEthereumAddress;
   CRV?: tEthereumAddress;
   // ERC721
