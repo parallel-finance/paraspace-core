@@ -313,6 +313,7 @@ export const GoerliConfig: IParaSpaceConfiguration = {
 export const PolygonConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WMATIC,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -356,8 +357,8 @@ export const PolygonConfig: IParaSpaceConfiguration = {
   },
   ReservesConfig: {
     DAI: strategyDAI,
-    USDC: strategyUSDC,
     USDT: strategyUSDT,
+    USDC: strategyUSDC,
     WETH: strategyWETH,
     WBTC: strategyWBTC,
     WMATIC: strategyWMATIC,
@@ -369,8 +370,12 @@ export const PolygonConfig: IParaSpaceConfiguration = {
     CRV: strategyCRV,
     UniswapV3: strategyUniswapV3,
   },
-  Mocks: MocksUSDConfig,
+  Mocks: undefined,
   Oracle: PolygonOracleConfig,
+  Governance: {
+    Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+    Multisig: MULTI_SIG || "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+  },
 };
 
 export const PolygonZkevmConfig: IParaSpaceConfiguration = {
