@@ -295,8 +295,6 @@ import {
   ParaApeStaking__factory,
   ApeStakingP2PLogic__factory,
   ApeStakingP2PLogic,
-  ApeStakingVaultLogic,
-  ApeStakingVaultLogic__factory,
   ApeStakingPairPoolLogic__factory,
   ApeStakingPairPoolLogic,
   ApeStakingSinglePoolLogic__factory,

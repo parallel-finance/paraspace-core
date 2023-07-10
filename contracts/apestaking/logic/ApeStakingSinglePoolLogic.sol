@@ -696,16 +696,23 @@ library ApeStakingSinglePoolLogic {
         }
     }
 
-    function _claimNFT(
+    function calculatePendingReward(
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         address nft,
         uint32[] calldata tokenIds
-    ) internal {
+    )
+        public
+        view
+        returns (
+            address claimFor,
+            uint256 pendingReward,
+            uint128 accumulatedRewardsPerNft
+        )
+    {
         uint256 rewardShares;
-        address claimFor;
         uint256 arrayLength = tokenIds.length;
-        uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
+        accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         address nToken = (nft == vars.bayc) ? vars.nBayc : (nft == vars.mayc)
             ? vars.nMayc
             : vars.nBakc;
@@ -730,16 +737,38 @@ library ApeStakingSinglePoolLogic {
             //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
             rewardShares += (accumulatedRewardsPerNft -
                 poolState.tokenStatus[tokenId].rewardsDebt);
-            poolState
-                .tokenStatus[tokenId]
-                .rewardsDebt = accumulatedRewardsPerNft;
-
-            //emit event
-            emit NFTClaimed(nft, tokenId);
         }
+        pendingReward = ICApe(vars.cApe).getPooledApeByShares(rewardShares);
 
-        if (rewardShares > 0) {
-            IERC20(vars.cApe).safeTransfer(claimFor, rewardShares);
+        return (claimFor, pendingReward, accumulatedRewardsPerNft);
+    }
+
+    function _claimNFT(
+        IParaApeStaking.PoolState storage poolState,
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        address nft,
+        uint32[] calldata tokenIds
+    ) internal {
+        (
+            address owner,
+            uint256 pendingReward,
+            uint128 accumulatedRewardsPerNft
+        ) = calculatePendingReward(poolState, vars, nft, tokenIds);
+
+        if (pendingReward > 0) {
+            uint256 arrayLength = tokenIds.length;
+            for (uint256 index = 0; index < arrayLength; index++) {
+                uint32 tokenId = tokenIds[index];
+
+                poolState
+                    .tokenStatus[tokenId]
+                    .rewardsDebt = accumulatedRewardsPerNft;
+
+                //emit event
+                emit NFTClaimed(nft, tokenId);
+            }
+
+            IERC20(vars.cApe).safeTransfer(owner, pendingReward);
         }
     }
 
@@ -792,12 +821,16 @@ library ApeStakingSinglePoolLogic {
                 apePoolState.accumulatedRewardsPerNft +=
                     apeShareAmount.toUint128() /
                     apeTotalPosition;
+            } else {
+                compoundFee += apeShareAmount;
             }
             uint128 bakcTotalPosition = bakcPoolState.totalPosition;
             if (bakcTotalPosition != 0) {
                 bakcPoolState.accumulatedRewardsPerNft +=
                     (shareRewardAmount - apeShareAmount).toUint128() /
                     bakcTotalPosition;
+            } else {
+                compoundFee += (shareRewardAmount - apeShareAmount);
             }
             return (debtInterest, compoundFee);
         }

@@ -456,21 +456,27 @@ library ApeStakingPairPoolLogic {
         }
     }
 
-    function _claimPairNFT(
+    function calculatePendingReward(
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) internal {
+    )
+        public
+        view
+        returns (
+            address claimFor,
+            uint256 pendingReward,
+            uint128 accumulatedRewardsPerNft
+        )
+    {
         uint256 rewardShares;
-        address claimFor;
         uint256 arrayLength = apeTokenIds.length;
-        uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
+        accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         address nApe = isBAYC ? vars.nBayc : vars.nMayc;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 apeTokenId = apeTokenIds[index];
-            uint32 bakcTokenId = bakcTokenIds[index];
 
             //just need to check ape ntoken owner
             {
@@ -487,7 +493,7 @@ library ApeStakingPairPoolLogic {
                 IApeStakingVault.PairingStatus
                     memory localPairStatus = poolState.pairStatus[apeTokenId];
                 require(
-                    localPairStatus.tokenId == bakcTokenId &&
+                    localPairStatus.tokenId == bakcTokenIds[index] &&
                         localPairStatus.isPaired,
                     Errors.NOT_PAIRED_APE_AND_BAKC
                 );
@@ -496,16 +502,46 @@ library ApeStakingPairPoolLogic {
             //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
             rewardShares += (accumulatedRewardsPerNft -
                 poolState.tokenStatus[apeTokenId].rewardsDebt);
-            poolState
-                .tokenStatus[apeTokenId]
-                .rewardsDebt = accumulatedRewardsPerNft;
-
-            //emit event
-            emit PairNFTClaimed(isBAYC, apeTokenId, bakcTokenId);
         }
+        pendingReward = ICApe(vars.cApe).getPooledApeByShares(rewardShares);
 
-        if (rewardShares > 0) {
-            IERC20(vars.cApe).safeTransfer(claimFor, rewardShares);
+        return (claimFor, pendingReward, accumulatedRewardsPerNft);
+    }
+
+    function _claimPairNFT(
+        IParaApeStaking.PoolState storage poolState,
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        bool isBAYC,
+        uint32[] calldata apeTokenIds,
+        uint32[] calldata bakcTokenIds
+    ) internal {
+        (
+            address owner,
+            uint256 pendingReward,
+            uint128 accumulatedRewardsPerNft
+        ) = calculatePendingReward(
+                poolState,
+                vars,
+                isBAYC,
+                apeTokenIds,
+                bakcTokenIds
+            );
+
+        if (pendingReward > 0) {
+            uint256 arrayLength = apeTokenIds.length;
+            for (uint256 index = 0; index < arrayLength; index++) {
+                uint32 apeTokenId = apeTokenIds[index];
+                uint32 bakcTokenId = bakcTokenIds[index];
+
+                poolState
+                    .tokenStatus[apeTokenId]
+                    .rewardsDebt = accumulatedRewardsPerNft;
+
+                //emit event
+                emit PairNFTClaimed(isBAYC, apeTokenId, bakcTokenId);
+            }
+
+            IERC20(vars.cApe).safeTransfer(owner, pendingReward);
         }
     }
 }

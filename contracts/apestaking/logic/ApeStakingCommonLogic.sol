@@ -77,6 +77,8 @@ library ApeStakingCommonLogic {
                 poolState.accumulatedRewardsPerNft +=
                     shareRewardAmount.toUint128() /
                     currentTotalPosition;
+            } else {
+                compoundFee += shareRewardAmount;
             }
             return (debtInterest, compoundFee);
         }

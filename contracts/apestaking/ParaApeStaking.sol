@@ -402,6 +402,27 @@ contract ParaApeStaking is
         );
     }
 
+    function pairNFTPendingReward(
+        bool isBAYC,
+        uint32[] calldata apeTokenIds,
+        uint32[] calldata bakcTokenIds
+    ) external view returns (uint256) {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+            ? ApeStakingPairPoolLogic.BAYC_BAKC_PAIR_POOL_ID
+            : ApeStakingPairPoolLogic.MAYC_BAKC_PAIR_POOL_ID;
+        (, uint256 pendingReward, ) = ApeStakingPairPoolLogic
+            .calculatePendingReward(
+                vaultStorage.poolStates[poolId],
+                vars,
+                isBAYC,
+                apeTokenIds,
+                bakcTokenIds
+            );
+
+        return pendingReward;
+    }
+
     // to save gas we don't claim pending reward in ApeCoinStaking.
     function claimPairNFT(
         bool isBAYC,
@@ -534,6 +555,32 @@ contract ParaApeStaking is
             apeTokenIds,
             bakcTokenIds
         );
+    }
+
+    function nftPendingReward(address nft, uint32[] calldata tokenIds)
+        external
+        view
+        returns (uint256)
+    {
+        require(
+            nft == bayc || nft == mayc || nft == bakc,
+            Errors.NFT_NOT_ALLOWED
+        );
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = (nft == bayc)
+            ? ApeStakingPairPoolLogic.BAYC_SINGLE_POOL_ID
+            : (nft == mayc)
+            ? ApeStakingPairPoolLogic.MAYC_SINGLE_POOL_ID
+            : ApeStakingPairPoolLogic.BAKC_SINGLE_POOL_ID;
+        (, uint256 pendingReward, ) = ApeStakingSinglePoolLogic
+            .calculatePendingReward(
+                vaultStorage.poolStates[poolId],
+                vars,
+                nft,
+                tokenIds
+            );
+
+        return pendingReward;
     }
 
     function claimNFT(address nft, uint32[] calldata tokenIds)
