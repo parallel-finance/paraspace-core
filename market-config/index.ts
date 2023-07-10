@@ -340,6 +340,7 @@ export const PolygonConfig: IParaSpaceConfiguration = {
     AAVE: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
     BAL: "0x9a71012B13CA4d3D0Cdc72A177DF3ef03b0E76A3",
     CRV: "0x172370d5Cd63279eFa6d502DAB29171933a610AF",
+    UniswapV3: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
   },
   YogaLabs: {},
   Uniswap: {
