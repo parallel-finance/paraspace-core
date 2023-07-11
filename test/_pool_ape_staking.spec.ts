@@ -2663,12 +2663,6 @@ describe("APE Coin Staking Test", () => {
 
     await advanceTimeAndBlock(parseInt("86400"));
 
-    // bayc rewards
-    const pendingRewardsPool2 = await apeCoinStaking.pendingRewards(
-      2,
-      nMAYC.address,
-      "0"
-    );
     // bakc rewards
     const pendingRewardsPool3 = await apeCoinStaking.pendingRewards(
       3,
@@ -2759,12 +2753,6 @@ describe("APE Coin Staking Test", () => {
 
     await advanceTimeAndBlock(parseInt("86400"));
 
-    // bayc rewards
-    const pendingRewardsPool2 = await apeCoinStaking.pendingRewards(
-      2,
-      nMAYC.address,
-      "0"
-    );
     // bakc rewards
     const pendingRewardsPool3 = await apeCoinStaking.pendingRewards(
       3,
