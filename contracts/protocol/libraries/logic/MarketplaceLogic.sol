@@ -840,7 +840,11 @@ library MarketplaceLogic {
             memory tokenData = new DataTypes.ERC721SupplyParams[](
                 params.orderInfo.offer.length
             );
+        uint256[] memory tokenIds = new uint256[](
+            params.orderInfo.offer.length
+        );
         uint256 amountToSupply;
+        uint256 amountToCollateralize;
         address payer;
 
         for (uint256 i = 0; i < params.orderInfo.offer.length; i++) {
@@ -853,10 +857,10 @@ library MarketplaceLogic {
                 item.token == params.orderInfo.offer[0].token,
                 Errors.INVALID_MARKETPLACE_ORDER
             );
-            address owner = IERC721(vars.collectionToken).ownerOf(
-                item.identifierOrCriteria
-            );
             if (!vars.isCollectionListed) {
+                address owner = IERC721(vars.collectionToken).ownerOf(
+                    item.identifierOrCriteria
+                );
                 if (owner == address(this)) {
                     IERC721(vars.collectionToken).safeTransferFrom(
                         address(this),
@@ -882,16 +886,12 @@ library MarketplaceLogic {
                             Errors.INVALID_MARKETPLACE_ORDER
                         );
                     }
-                    uint256[] memory tokenIds = new uint256[](1);
-                    tokenIds[0] = item.identifierOrCriteria;
-                    SupplyLogic.executeCollateralizeERC721(
-                        ps._reserves,
-                        ps._usersConfig[buyer],
-                        vars.collectionToken,
-                        tokenIds,
-                        buyer
-                    );
+                    tokenIds[amountToCollateralize++] = item
+                        .identifierOrCriteria;
                 } else {
+                    address owner = IERC721(vars.collectionToken).ownerOf(
+                        item.identifierOrCriteria
+                    );
                     require(
                         owner == buyer || owner == address(this),
                         Errors.INVALID_MARKETPLACE_ORDER
@@ -926,6 +926,19 @@ library MarketplaceLogic {
                     payer: payer,
                     referralCode: 0
                 })
+            );
+        }
+
+        if (amountToCollateralize > 0) {
+            assembly {
+                mstore(tokenIds, amountToCollateralize)
+            }
+            SupplyLogic.executeCollateralizeERC721(
+                ps._reserves,
+                ps._usersConfig[buyer],
+                vars.collectionToken,
+                tokenIds,
+                buyer
             );
         }
     }
