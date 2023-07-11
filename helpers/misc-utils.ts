@@ -24,9 +24,13 @@ import {
   POLYGON_ZKEVM_GOERLI_CHAINID,
   ZKSYNC_CHAINID,
   ZKSYNC_GOERLI_CHAINID,
+  ETHERSCAN_NETWORKS,
+  ETHERSCAN_VERIFICATION_CONTRACTS,
+  ETHERSCAN_KEY,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
+import minimatch from "minimatch";
 
 dotenv.config();
 
@@ -99,12 +103,16 @@ export const isEthereum = (): boolean => {
 export const isPolygon = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
-    [POLYGON_CHAINID, POLYGON_ZKEVM_CHAINID].includes(
-      DRE.network.config.chainId!
-    ) ||
-    [eEthereumNetwork.polygon, eEthereumNetwork.polygonZkevm].includes(
-      FORK as eEthereumNetwork
-    )
+    [POLYGON_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.polygon].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isPolygonZkEVM = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [POLYGON_ZKEVM_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.polygonZkevm].includes(FORK as eEthereumNetwork)
   );
 };
 
@@ -117,7 +125,30 @@ export const isZkSync = (): boolean => {
 };
 
 export const isMainnet = (): boolean =>
-  isEthereum() || isMoonbeam() || isArbitrum() || isZkSync() || isPolygon();
+  isEthereum() ||
+  isMoonbeam() ||
+  isArbitrum() ||
+  isZkSync() ||
+  isPolygon() ||
+  isPolygonZkEVM();
+
+export const shouldVerifyContract = (contractId: string): boolean => {
+  if (!ETHERSCAN_NETWORKS.includes(DRE.network.name)) {
+    return false;
+  }
+
+  if (
+    ETHERSCAN_VERIFICATION_CONTRACTS?.every((p) => !minimatch(contractId, p))
+  ) {
+    return false;
+  }
+
+  if (!ETHERSCAN_KEY) {
+    throw Error("Missing ETHERSCAN_KEY.");
+  }
+
+  return true;
+};
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));

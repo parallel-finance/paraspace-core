@@ -113,6 +113,9 @@ import {
   COMPILER_VERSION,
   COMPILER_OPTIMIZER_RUNS,
   DEPLOY_MAX_RETRIES,
+  ETHERSCAN_KEY,
+  ETHERSCAN_APIS,
+  ETHERSCAN_VERIFICATION_PROVIDER,
 } from "./hardhat-constants";
 import {chunk, first, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
@@ -130,6 +133,7 @@ import {
   FlashbotsBundleTransaction,
 } from "@flashbots/ethers-provider-bundle";
 import {configureReservesByHelper, initReservesByHelper} from "./init-helpers";
+import shell from "shelljs";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -328,10 +332,6 @@ export const withSaveAndVerify = async (
       signatures
     );
 
-    if (verify) {
-      await verifyContract(id, instance, deployArgs, normalizedLibraries);
-    }
-
     if (proxy) {
       await waitForTx(
         await (
@@ -340,9 +340,15 @@ export const withSaveAndVerify = async (
       );
     }
 
-    if (VERBOSE) {
-      console.log(
-        `forge verify-contract ${instance.address} \
+    if (verify) {
+      if (ETHERSCAN_VERIFICATION_PROVIDER == "hardhat") {
+        await verifyContract(id, instance, deployArgs, normalizedLibraries);
+      } else if (ETHERSCAN_VERIFICATION_PROVIDER == "forge") {
+        const forgeVerifyContractCmd = `ETHERSCAN_API_KEY=${ETHERSCAN_KEY} ETH_RPC_URL=${
+          (DRE.network.config as HttpNetworkConfig).url
+        } VERIFIER_URL=${
+          ETHERSCAN_APIS[DRE.network.name || FORK]
+        } forge verify-contract ${instance.address} \
   --chain-id ${DRE.network.config.chainId} \
   --num-of-optimizations ${COMPILER_OPTIMIZER_RUNS} \
   --watch \
@@ -365,9 +371,12 @@ ${
     : ""
 } \
   --compiler-version v${COMPILER_VERSION}`;
+        if (VERBOSE) {
+          console.log(forgeVerifyContractCmd);
+        }
 
-    if (VERBOSE) {
-      console.log(forgeVerifyContractCmd);
+        shell.exec(forgeVerifyContractCmd);
+      }
     }
 
     return instance;

@@ -2,6 +2,7 @@ import {task} from "hardhat/config";
 import {
   DRE,
   isMainnet,
+  isPolygon,
   isPublicTestnet,
   setDRE,
 } from "../../helpers/misc-utils";
@@ -72,8 +73,12 @@ task(
     const feeData = await _DRE.ethers.provider.getFeeData();
     if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
       GLOBAL_OVERRIDES.type = 2;
-      GLOBAL_OVERRIDES.maxFeePerGas = feeData.maxFeePerGas;
-      GLOBAL_OVERRIDES.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      GLOBAL_OVERRIDES.maxFeePerGas = isPolygon()
+        ? feeData.maxFeePerGas.mul(2)
+        : feeData.maxFeePerGas;
+      GLOBAL_OVERRIDES.maxPriorityFeePerGas = isPolygon()
+        ? feeData.maxFeePerGas.mul(2)
+        : feeData.maxPriorityFeePerGas;
       console.log("  - Type:", GLOBAL_OVERRIDES.type);
       console.log(
         "  - MaxPriorityFeePerGas:",

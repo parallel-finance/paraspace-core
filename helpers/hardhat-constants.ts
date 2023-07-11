@@ -64,6 +64,8 @@ export const DB_PATH = process.env.DB_PATH ?? ":memory:";
 export const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
 export const ETHERSCAN_VERIFICATION =
   process.env.ETHERSCAN_VERIFICATION === "true" ? true : false;
+export const ETHERSCAN_VERIFICATION_PROVIDER =
+  process.env.ETHERSCAN_VERIFICATION_PROVIDER || "hardhat";
 export const ETHERSCAN_VERIFICATION_CONTRACTS =
   process.env.ETHERSCAN_VERIFICATION_CONTRACTS?.trim().split(/\s?,\s?/);
 export const ETHERSCAN_VERIFICATION_JOBS = parseInt(
@@ -78,6 +80,7 @@ export const ETHERSCAN_NETWORKS = [
   "localhost",
   "arbitrum",
   "polygon",
+  "matic",
   "polygonMumbai",
   "polygonZkevm",
   "polygonZkevmGoerli",
@@ -91,6 +94,7 @@ export const ETHERSCAN_APIS = {
   arbitrum: "https://api.arbiscan.io/api",
   arbitrumGoerli: "https://api-goerli.arbiscan.io/api",
   polygon: "https://api.polygonscan.com/api",
+  matic: "https://api.polygonscan.com/api",
   polygonMumbai: "https://api-mumbai.polygonscan.com/api",
   polygonZkevm: "https://api-zkevm.polygonscan.com/api",
   polygonZkevmGoerli: "https://api-testnet-zkevm.polygonscan.com/api",
@@ -106,6 +110,7 @@ export const BROWSER_URLS = {
   polygonZkevm: "https://zkevm.polygonscan.com",
   polygonZkevmGoerli: "https://testnet-zkevm.polygonscan.com",
   polygon: "https://polygonscan.com",
+  matic: "https://polygonscan.com",
   polygonMumbai: "https://mumbai.polygonscan.com",
   zksync: "https://zksync2-mainnet-explorer.zksync.io",
   zksyncGoerli: "https://zksync2-testnet-explorer.zksync.dev",

@@ -1,12 +1,9 @@
-import {DRE, getDb, sleep} from "./misc-utils";
+import {DRE, getDb, shouldVerifyContract, sleep} from "./misc-utils";
 import {ConstructorArgs, LibraryAddresses, tEthereumAddress} from "./types";
 import axios from "axios";
-import minimatch from "minimatch";
 import {
   ETHERSCAN_APIS,
   ETHERSCAN_KEY,
-  ETHERSCAN_NETWORKS,
-  ETHERSCAN_VERIFICATION_CONTRACTS,
   ETHERSCAN_VERIFICATION_MAX_RETRIES,
 } from "./hardhat-constants";
 
@@ -68,18 +65,8 @@ export const verifyEtherscanContract = async (
   constructorArguments: ConstructorArgs = [],
   libraries?: LibraryAddresses
 ) => {
-  if (!ETHERSCAN_NETWORKS.includes(DRE.network.name)) {
+  if (!shouldVerifyContract(contractId)) {
     return;
-  }
-
-  if (
-    ETHERSCAN_VERIFICATION_CONTRACTS?.every((p) => !minimatch(contractId, p))
-  ) {
-    return;
-  }
-
-  if (!ETHERSCAN_KEY) {
-    throw Error("Missing ETHERSCAN_KEY.");
   }
 
   let isVerified = await getIsVerified(contractId, address);
