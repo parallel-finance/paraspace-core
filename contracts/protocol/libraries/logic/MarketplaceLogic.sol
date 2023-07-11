@@ -237,6 +237,37 @@ library MarketplaceLogic {
         _acceptBidWithCredit(ps, params);
     }
 
+    function executeBatchAcceptBidWithCredit(
+        DataTypes.PoolStorage storage ps,
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        address onBehalfOf,
+        IPoolAddressesProvider poolAddressProvider
+    ) external {
+        require(
+            marketplaceIds.length == payloads.length &&
+                payloads.length == credits.length,
+            Errors.INCONSISTENT_PARAMS_LENGTH
+        );
+        DataTypes.ExecuteMarketplaceParams memory params = _initParams(
+            ps,
+            poolAddressProvider
+        );
+        for (uint256 i = 0; i < marketplaceIds.length; i++) {
+            _updateAcceptBidParams(
+                params,
+                poolAddressProvider,
+                marketplaceIds[i],
+                payloads[i],
+                credits[i],
+                onBehalfOf
+            );
+
+            _acceptBidWithCredit(ps, params);
+        }
+    }
+
     function executeAcceptOpenseaBid(
         DataTypes.PoolStorage storage ps,
         bytes32 marketplaceId,
@@ -267,34 +298,40 @@ library MarketplaceLogic {
         _acceptOpenseaBid(ps, params);
     }
 
-    function executeBatchAcceptBidWithCredit(
+    function executeBatchAcceptOpenseaBid(
         DataTypes.PoolStorage storage ps,
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
-        DataTypes.Credit[] calldata credits,
         address onBehalfOf,
         IPoolAddressesProvider poolAddressProvider
     ) external {
         require(
-            marketplaceIds.length == payloads.length &&
-                payloads.length == credits.length,
+            marketplaceIds.length == payloads.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
+        DataTypes.ExecuteMarketplaceParams memory params = _initParams(
+            ps,
+            poolAddressProvider
+        );
+
         for (uint256 i = 0; i < marketplaceIds.length; i++) {
-            DataTypes.ExecuteMarketplaceParams memory params = _initParams(
-                ps,
-                poolAddressProvider
-            );
             _updateAcceptBidParams(
                 params,
                 poolAddressProvider,
                 marketplaceIds[i],
                 payloads[i],
-                credits[i],
+                DataTypes.Credit(
+                    address(0),
+                    0,
+                    bytes(""),
+                    0,
+                    bytes32(""),
+                    bytes32("")
+                ),
                 onBehalfOf
             );
 
-            _acceptBidWithCredit(ps, params);
+            _acceptOpenseaBid(ps, params);
         }
     }
 

@@ -106,18 +106,6 @@ interface IPoolMarketplace {
     ) external;
 
     /**
-     * @notice Accepts an OpenSea bid
-     * @param marketplaceId The unique identifier of the marketplace where the bid is made
-     * @param payload The bytes data of the bid payload
-     * @param onBehalfOf The address of the account (the bidder, or the seller with the OpenSea account authorized) that will execute the transaction
-     */
-    function acceptOpenseaBid(
-        bytes32 marketplaceId,
-        bytes calldata payload,
-        address onBehalfOf
-    ) external;
-
-    /**
      * @notice Implements the batchAcceptBidWithCredit feature. AcceptBidWithCredit allows users to
      * accept a leveraged bid on ParaSpace NFT marketplace. Users can submit leveraged bid and pay
      * at most (1 - LTV) * $NFT
@@ -131,6 +119,30 @@ interface IPoolMarketplace {
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
+        address onBehalfOf
+    ) external;
+
+    /**
+     * @notice Accepts an OpenSea bid
+     * @param marketplaceId The unique identifier of the marketplace where the bid is made
+     * @param payload The bytes data of the bid payload
+     * @param onBehalfOf The address of the account (the bidder, or the seller with the OpenSea account authorized) that will execute the transaction
+     */
+    function acceptOpenseaBid(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        address onBehalfOf
+    ) external;
+
+    /**
+     * @notice Batch accepts OpenSea bids
+     * @param marketplaceIds The unique identifiers of the marketplace where the bid is made
+     * @param payloads The bytes data of the bid payloads
+     * @param onBehalfOf The address of the account (the bidder, or the seller with the OpenSea account authorized) that will execute the transaction
+     */
+    function batchAcceptOpenseaBid(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
         address onBehalfOf
     ) external;
 }

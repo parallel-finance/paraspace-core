@@ -144,6 +144,25 @@ contract PoolMarketplace is
     }
 
     /// @inheritdoc IPoolMarketplace
+    function batchAcceptBidWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        address onBehalfOf
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBatchAcceptBidWithCredit(
+            ps,
+            marketplaceIds,
+            payloads,
+            credits,
+            onBehalfOf,
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
     function acceptOpenseaBid(
         bytes32 marketplaceId,
         bytes calldata payload,
@@ -161,19 +180,17 @@ contract PoolMarketplace is
     }
 
     /// @inheritdoc IPoolMarketplace
-    function batchAcceptBidWithCredit(
+    function batchAcceptOpenseaBid(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
-        DataTypes.Credit[] calldata credits,
         address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        MarketplaceLogic.executeBatchAcceptBidWithCredit(
+        MarketplaceLogic.executeBatchAcceptOpenseaBid(
             ps,
             marketplaceIds,
             payloads,
-            credits,
             onBehalfOf,
             ADDRESSES_PROVIDER
         );
