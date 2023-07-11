@@ -534,8 +534,8 @@ library MarketplaceLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
         uint16 reserveId = reserve.id; // cache to reduce one storage read
 
-        bool willUpdateRateLater = (vars.listingToken == vars.creditToken ||
-            vars.isListingTokenPToken) && vars.creditAmount != 0;
+        bool willUpdateRateLater = (vars.isListingTokenPToken ||
+            vars.listingToken == vars.creditToken) && vars.creditAmount != 0;
         if (!willUpdateRateLater) {
             reserve.updateState(reserveCache);
             reserve.updateInterestRates(
