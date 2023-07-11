@@ -26,6 +26,8 @@ import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 import {Helpers} from "../../../protocol/libraries/helpers/Helpers.sol";
+import {MathUtils} from "../math/MathUtils.sol";
+import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 
 /**
  * @title Marketplace library
@@ -39,6 +41,7 @@ library MarketplaceLogic {
     using SafeERC20 for IERC20;
     using Math for uint256;
     using PercentageMath for uint256;
+    using WadRayMath for uint256;
 
     event ReserveUsedAsCollateralEnabled(
         address indexed reserve,
@@ -531,20 +534,27 @@ library MarketplaceLogic {
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
         uint16 reserveId = reserve.id; // cache to reduce one storage read
 
-        reserve.updateState(reserveCache);
-
-        bool willUpdateRateLater = vars.listingToken == vars.creditToken &&
-            vars.creditAmount != 0;
+        bool willUpdateRateLater = (vars.listingToken == vars.creditToken ||
+            vars.isListingTokenPToken) && vars.creditAmount != 0;
         if (!willUpdateRateLater) {
+            reserve.updateState(reserveCache);
             reserve.updateInterestRates(
                 reserveCache,
                 vars.listingToken,
                 vars.isListingTokenPToken ? 0 : vars.supplyAmount,
                 0
             );
+            vars.listingTokenNextLiquidityIndex = reserveCache
+                .nextLiquidityIndex;
+        } else {
+            uint256 cumulatedLiquidityInterest = MathUtils
+                .calculateLinearInterest(
+                    reserveCache.currLiquidityRate,
+                    reserveCache.reserveLastUpdateTimestamp
+                );
+            vars.listingTokenNextLiquidityIndex = cumulatedLiquidityInterest
+                .rayMul(reserveCache.currLiquidityIndex);
         }
-
-        vars.listingTokenNextLiquidityIndex = reserveCache.nextLiquidityIndex;
 
         bool isFirstSupply = IPToken(reserveCache.xTokenAddress).mint(
             msg.sender,
