@@ -939,6 +939,9 @@ library MarketplaceLogic {
         ConsiderationItem memory lastItem = params.orderInfo.consideration[
             size - 1
         ];
+        ItemType requiredItemType = vars.isListingTokenETH
+            ? ItemType.NATIVE
+            : ItemType.ERC20;
 
         if (lastItem.itemType == ItemType.ERC721) {
             require(
@@ -954,9 +957,7 @@ library MarketplaceLogic {
                 Errors.INVALID_MARKETPLACE_ORDER
             );
             require(
-                item.itemType == ItemType.ERC20 ||
-                    (vars.isListingTokenETH &&
-                        item.itemType == ItemType.NATIVE),
+                item.itemType == requiredItemType,
                 Errors.INVALID_ASSET_TYPE
             );
             require(
