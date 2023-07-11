@@ -7,6 +7,9 @@
     "artifacts",
     "types"
   ],
+  "resolutions": {
+    "ethereumjs-abi": "https://registry.npmjs.org/ethereumjs-abi/-/ethereumjs-abi-0.6.8.tgz"
+  },
   "scripts": {
     "postinstall": "husky install",
     "prepack": "pinst --disable",
