@@ -7,6 +7,7 @@ import "../dependencies/openzeppelin/upgradeability/ReentrancyGuardUpgradeable.s
 import "../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 import {IERC20, SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
+import "../dependencies/openzeppelin/contracts/Multicall.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../interfaces/IACLManager.sol";
 import "../interfaces/ICApe.sol";
@@ -22,6 +23,7 @@ contract ParaApeStaking is
     Initializable,
     ReentrancyGuardUpgradeable,
     PausableUpgradeable,
+    Multicall,
     IParaApeStaking
 {
     using SafeERC20 for IERC20;

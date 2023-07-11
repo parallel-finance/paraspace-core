@@ -1216,4 +1216,131 @@ describe("Para Ape Staking Test", () => {
       await paraApeStaking.connect(user2.signer).withdrawNFT(bakc.address, [1])
     );
   });
+
+  it("multicall test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+      mayc,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "4", user1, true);
+    await supplyAndValidate(mayc, "4", user1, true);
+    await supplyAndValidate(bakc, "4", user1, true);
+
+    let tx0 = paraApeStaking.interface.encodeFunctionData("depositPairNFT", [
+      true,
+      [0, 1],
+        [0, 1]
+    ]);
+    let tx1 = paraApeStaking.interface.encodeFunctionData("depositPairNFT", [
+      false,
+      [0, 1],
+      [2, 3]
+    ]);
+    let tx2 = paraApeStaking.interface.encodeFunctionData("depositNFT", [
+      bayc.address,
+        [2,3]
+    ]);
+    let tx3 = paraApeStaking.interface.encodeFunctionData("depositNFT", [
+      mayc.address,
+      [2,3]
+    ]);
+
+    await waitForTx(await paraApeStaking.connect(user1.signer).multicall([tx0, tx1, tx2, tx3]));
+
+    tx0 = paraApeStaking.interface.encodeFunctionData("stakingPairNFT", [
+      true,
+      [0, 1],
+      [0, 1]
+    ]);
+    tx1 = paraApeStaking.interface.encodeFunctionData("stakingPairNFT", [
+      false,
+      [0, 1],
+      [2, 3]
+    ]);
+    tx2 = paraApeStaking.interface.encodeFunctionData("stakingApe", [
+      true,
+      [2,3]
+    ]);
+    tx3 = paraApeStaking.interface.encodeFunctionData("stakingApe", [
+      false,
+      [2,3]
+    ]);
+
+    await waitForTx(await paraApeStaking.connect(user1.signer).multicall([tx0, tx1, tx2, tx3]));
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+        await paraApeStaking.connect(user4.signer).compoundPairNFT(true, [0, 1], [0, 1])
+    );
+    await waitForTx(
+        await paraApeStaking.connect(user4.signer).compoundPairNFT(false, [0, 1], [2, 3])
+    );
+    await waitForTx(
+        await paraApeStaking.connect(user4.signer).compoundApe(true, [2, 3])
+    );
+    await waitForTx(
+        await paraApeStaking.connect(user4.signer).compoundApe(false, [2, 3])
+    );
+    //
+    // tx0 = paraApeStaking.interface.encodeFunctionData("compoundPairNFT", [
+    //   true,
+    //   [0, 1],
+    //   [0, 1]
+    // ]);
+    // tx1 = paraApeStaking.interface.encodeFunctionData("compoundPairNFT", [
+    //   false,
+    //   [0, 1],
+    //   [2, 3]
+    // ]);
+    // tx2 = paraApeStaking.interface.encodeFunctionData("compoundApe", [
+    //   true,
+    //   [2,3]
+    // ]);
+    // tx3 = paraApeStaking.interface.encodeFunctionData("compoundApe", [
+    //   false,
+    //   [2,3]
+    // ]);
+    //
+    // await waitForTx(await paraApeStaking.connect(user4.signer).multicall([tx0, tx1, tx2, tx3]));
+
+    tx0 = paraApeStaking.interface.encodeFunctionData("claimPairNFT", [
+      true,
+      [0, 1],
+      [0, 1]
+    ]);
+    tx1 = paraApeStaking.interface.encodeFunctionData("claimPairNFT", [
+      false,
+      [0, 1],
+      [2, 3]
+    ]);
+    tx2 = paraApeStaking.interface.encodeFunctionData("claimNFT", [
+      bayc.address,
+      [2,3]
+    ]);
+    tx3 = paraApeStaking.interface.encodeFunctionData("claimNFT", [
+      mayc.address,
+      [2,3]
+    ]);
+
+    await waitForTx(await paraApeStaking.connect(user1.signer).multicall([tx0, tx1, tx2, tx3]));
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    await waitForTx(
+        await paraApeStaking.connect(user1.signer).withdrawPairNFT(true, [0, 1], [0, 1])
+    );
+    await waitForTx(
+        await paraApeStaking.connect(user1.signer).withdrawPairNFT(false, [0, 1], [2, 3])
+    );
+    await waitForTx(
+        await paraApeStaking.connect(user1.signer).withdrawNFT(bayc.address, [2, 3])
+    );
+    await waitForTx(
+        await paraApeStaking.connect(user1.signer).withdrawNFT(mayc.address, [2, 3])
+    );
+  });
 });

@@ -286,10 +286,11 @@ library ApeStakingPairPoolLogic {
 
         //update state
         poolState.totalPosition -= arrayLength.toUint64();
-        poolState.stakingPosition -= stakingPair;
 
         //withdraw from ApeCoinStaking and compound
         if (stakingPair > 0) {
+            poolState.stakingPosition -= stakingPair;
+
             {
                 assembly {
                     mstore(_nfts, stakingPair)

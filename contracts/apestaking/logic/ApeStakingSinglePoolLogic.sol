@@ -310,10 +310,7 @@ library ApeStakingSinglePoolLogic {
                 uint32 apeTokenId = apeTokenIds[index];
                 uint32 bakcTokenId = bakcTokenIds[index];
 
-                require(
-                    apePoolState.tokenStatus[apeTokenId].isInPool,
-                    Errors.NFT_NOT_IN_SINGLE_POOL
-                );
+                // we just need to check bakc is in the pool
                 require(
                     bakcPoolState.tokenStatus[bakcTokenId].isInPool,
                     Errors.NFT_NOT_IN_SINGLE_POOL
