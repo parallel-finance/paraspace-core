@@ -560,7 +560,7 @@ library MarketplaceLogic {
             msg.sender,
             seller,
             vars.supplyAmount,
-            reserveCache.nextLiquidityIndex
+            vars.listingTokenNextLiquidityIndex
         );
 
         if (isFirstSupply || !sellerConfig.isUsingAsCollateral(reserveId)) {
