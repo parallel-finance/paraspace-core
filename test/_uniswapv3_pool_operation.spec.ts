@@ -746,13 +746,11 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     expect(liquidatorBalance).to.eq(0);
 
     // try to start auction
-    await waitForTx(
-      await pool
+    await expect(
+      pool
         .connect(liquidator.signer)
         .startAuction(borrower.address, nftPositionManager.address, 1)
-    );
-
-    expect(await nUniswapV3.isAuctioned(1)).to.be.true;
+    ).to.be.reverted;
   });
 
   it("liquidation failed if underlying erc20 was not active [ @skip-on-coverage ]", async () => {
