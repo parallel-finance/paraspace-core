@@ -640,6 +640,10 @@ upgrade-timelock:
 upgrade-p2p-pair-staking:
 	make TASK_NAME=upgrade:p2p-pair-staking run-task
 
+.PHONY: upgrade-para-ape-staking
+upgrade-para-ape-staking:
+	make TASK_NAME=upgrade:para-ape-staking run-task
+
 .PHONY: upgrade-ntoken
 upgrade-ntoken:
 	make TASK_NAME=upgrade:ntoken run-task

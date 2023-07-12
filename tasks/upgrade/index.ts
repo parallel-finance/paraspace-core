@@ -1,5 +1,6 @@
 import {task} from "hardhat/config";
 import {ETHERSCAN_VERIFICATION} from "../../helpers/hardhat-constants";
+import {upgradeParaApeStaking} from "../../scripts/upgrade/para_ape_staking";
 
 task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
   const {upgradeAll} = await import("../../scripts/upgrade");
@@ -130,6 +131,18 @@ task("upgrade:p2p-pair-staking", "upgrade p2p pair staking")
     await upgradeP2PPairStaking(compoundFee, ETHERSCAN_VERIFICATION);
     console.timeEnd("upgrade p2p pair staking");
   });
+
+task("upgrade:para-ape-staking", "upgrade para ape staking").setAction(
+  async (_, DRE) => {
+    const {upgradeParaApeStaking} = await import(
+      "../../scripts/upgrade/para_ape_staking"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade para ape staking");
+    await upgradeParaApeStaking(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade para ape staking");
+  }
+);
 
 task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   const {upgradePToken} = await import("../../scripts/upgrade/ptoken");

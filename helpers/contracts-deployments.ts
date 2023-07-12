@@ -2787,10 +2787,7 @@ export const deployFakeParaApeStakingImpl = async (verify?: boolean) => {
   ) as Promise<ParaApeStaking>;
 };
 
-export const deployParaApeStakingImpl = async (
-  compoundFee: number,
-  verify?: boolean
-) => {
+export const deployParaApeStakingImpl = async (verify?: boolean) => {
   const poolProxy = await getPoolProxy();
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
@@ -2819,10 +2816,9 @@ export const deployParaApeStakingImpl = async (
     allTokens.cAPE.address,
     apeCoinStaking,
     aclManager.address,
-    compoundFee,
   ];
 
-  const libraries = await deployParaApeStakingLibraries();
+  const libraries = await deployParaApeStakingLibraries(verify);
 
   return withSaveAndVerify(
     new ParaApeStaking__factory(libraries, await getFirstSigner()),
@@ -2840,7 +2836,7 @@ export const deployParaApeStaking = async (
   if (fakeImplementation) {
     stakingImplementation = await deployFakeParaApeStakingImpl(verify);
   } else {
-    stakingImplementation = await deployParaApeStakingImpl(0, verify);
+    stakingImplementation = await deployParaApeStakingImpl(verify);
   }
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
