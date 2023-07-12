@@ -30,8 +30,24 @@ interface IApeStakingVault {
         uint256 cApeDebtShare;
     }
 
+    struct BAKCPoolState {
+        // accumulated cApe reward for per NFT position
+        uint128 accumulatedRewardsPerNft;
+        // total NFT position count
+        uint64 totalPosition;
+        // total staking position
+        uint64 baycStakingPosition;
+        uint64 maycStakingPosition;
+        //pool cape debt token share
+        uint256 baycCApeDebtShare;
+        uint256 maycCApeDebtShare;
+        //tokenId => reward debt position
+        mapping(uint256 => TokenStatus) tokenStatus;
+    }
+
     struct VaultStorage {
         mapping(uint256 => PoolState) poolStates;
+        BAKCPoolState bakcPoolState;
         uint128 baycPairStakingRewardRatio;
         uint128 maycPairStakingRewardRatio;
     }

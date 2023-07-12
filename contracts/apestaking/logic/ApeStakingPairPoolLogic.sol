@@ -28,7 +28,6 @@ library ApeStakingPairPoolLogic {
     uint256 public constant MAYC_BAKC_PAIR_POOL_ID = 2;
     uint256 public constant BAYC_SINGLE_POOL_ID = 3;
     uint256 public constant MAYC_SINGLE_POOL_ID = 4;
-    uint256 public constant BAKC_SINGLE_POOL_ID = 5;
 
     uint256 constant BAYC_POOL_ID = 1;
     uint256 constant MAYC_POOL_ID = 2;
@@ -189,7 +188,11 @@ library ApeStakingPairPoolLogic {
         // prepare Ape coin
         uint256 totalBorrow = (vars.positionCap + vars.bakcMatchedCap) *
             arrayLength;
-        ApeStakingCommonLogic.borrowCApeFromPool(poolState, vars, totalBorrow);
+        uint256 cApeDebtShare = ApeStakingCommonLogic.borrowCApeFromPool(
+            vars,
+            totalBorrow
+        );
+        poolState.cApeDebtShare += cApeDebtShare;
 
         //stake in ApeCoinStaking
         ApeCoinStaking.PairNftDepositWithAmount[]

@@ -51,23 +51,18 @@ library ApeStakingCommonLogic {
             cApeExchangeRate,
             latestBorrowIndex
         );
-        if (debtInterest >= vars.totalClaimedApe) {
-            cApeDebtShare -= vars
-                .totalClaimedApe
-                .rayDiv(latestBorrowIndex)
-                .rayDiv(cApeExchangeRate);
-            poolState.cApeDebtShare = cApeDebtShare;
-            return (vars.totalClaimedApe, 0);
-        } else {
-            //repay debt
-            cApeDebtShare -= debtInterest.rayDiv(latestBorrowIndex).rayDiv(
-                cApeExchangeRate
-            );
-            poolState.cApeDebtShare = cApeDebtShare;
-
+        uint256 repayAmount = (debtInterest >= vars.totalClaimedApe)
+        ? vars.totalClaimedApe
+        : debtInterest;
+        cApeDebtShare -= repayAmount.rayDiv(latestBorrowIndex).rayDiv(
+            cApeExchangeRate
+        );
+        poolState.cApeDebtShare = cApeDebtShare;
+        uint256 compoundFee = 0;
+        if (vars.totalClaimedApe > debtInterest) {
             uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
                 .rayDiv(cApeExchangeRate);
-            uint256 compoundFee = shareRewardAmount.percentMul(
+            compoundFee = shareRewardAmount.percentMul(
                 vars.compoundFee
             );
             shareRewardAmount = shareRewardAmount - compoundFee;
@@ -80,15 +75,15 @@ library ApeStakingCommonLogic {
             } else {
                 compoundFee += shareRewardAmount;
             }
-            return (debtInterest, compoundFee);
         }
+
+        return (repayAmount, compoundFee);
     }
 
     function borrowCApeFromPool(
-        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         uint256 totalBorrow
-    ) internal {
+    ) internal returns (uint256) {
         uint256 latestBorrowIndex = IPool(vars.pool).borrowPoolCApe(
             totalBorrow
         );
@@ -96,9 +91,7 @@ library ApeStakingCommonLogic {
         uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
             WadRayMath.RAY
         );
-        poolState.cApeDebtShare += totalBorrow.rayDiv(latestBorrowIndex).rayDiv(
-            cApeExchangeRate
-        );
+        return totalBorrow.rayDiv(latestBorrowIndex).rayDiv(cApeExchangeRate);
     }
 
     function calculateCurrentPositionDebtInterest(

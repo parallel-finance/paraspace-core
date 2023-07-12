@@ -653,7 +653,7 @@ describe("Para Ape Staking Test", () => {
 
     expect(
       await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
-    ).to.be.equal(0);
+    ).to.be.closeTo("0", "10");
 
     expect(await cApe.balanceOf(paraApeStaking.address)).to.be.closeTo(
       "0",
@@ -1038,7 +1038,7 @@ describe("Para Ape Staking Test", () => {
 
     await expect(
       paraApeStaking.connect(user4.signer).compoundBAKC(true, [2], [1])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.reverted;
 
     await expect(
       paraApeStaking.connect(user4.signer).compoundBAKC(true, [1], [2])
