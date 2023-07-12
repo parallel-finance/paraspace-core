@@ -52,19 +52,17 @@ library ApeStakingCommonLogic {
             latestBorrowIndex
         );
         uint256 repayAmount = (debtInterest >= vars.totalClaimedApe)
-        ? vars.totalClaimedApe
-        : debtInterest;
+            ? vars.totalClaimedApe
+            : debtInterest;
         cApeDebtShare -= repayAmount.rayDiv(latestBorrowIndex).rayDiv(
             cApeExchangeRate
         );
-        poolState.cApeDebtShare = cApeDebtShare;
+        poolState.cApeDebtShare = cApeDebtShare.toUint128();
         uint256 compoundFee = 0;
         if (vars.totalClaimedApe > debtInterest) {
             uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
                 .rayDiv(cApeExchangeRate);
-            compoundFee = shareRewardAmount.percentMul(
-                vars.compoundFee
-            );
+            compoundFee = shareRewardAmount.percentMul(vars.compoundFee);
             shareRewardAmount = shareRewardAmount - compoundFee;
             //update reward index
             uint128 currentTotalPosition = poolState.totalPosition;

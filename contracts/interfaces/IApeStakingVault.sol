@@ -16,31 +16,33 @@ interface IApeStakingVault {
         bool isInPool;
     }
     struct PoolState {
+        //pool cape debt token share
+        uint128 cApeDebtShare;
+        // total NFT position count
+        uint32 totalPosition;
+        // total staking position
+        uint32 stakingPosition;
         // accumulated cApe reward for per NFT position
         uint128 accumulatedRewardsPerNft;
-        // total NFT position count
-        uint64 totalPosition;
-        // total staking position
-        uint64 stakingPosition;
         //tokenId => reward debt position
         mapping(uint256 => TokenStatus) tokenStatus;
         //for pair pool, apeTokenId => PairingStatus
         mapping(uint256 => PairingStatus) pairStatus;
-        //pool cape debt token share
-        uint256 cApeDebtShare;
     }
 
     struct BAKCPoolState {
+        // total NFT position count
+        uint32 totalPosition;
+        //bayc pair cape debt token share
+        uint128 baycCApeDebtShare;
+        //bayc pair staking position
+        uint32 baycStakingPosition;
+        //mayc pair cape debt token share
+        uint128 maycCApeDebtShare;
+        //mayc pair staking position
+        uint32 maycStakingPosition;
         // accumulated cApe reward for per NFT position
         uint128 accumulatedRewardsPerNft;
-        // total NFT position count
-        uint64 totalPosition;
-        // total staking position
-        uint64 baycStakingPosition;
-        uint64 maycStakingPosition;
-        //pool cape debt token share
-        uint256 baycCApeDebtShare;
-        uint256 maycCApeDebtShare;
         //tokenId => reward debt position
         mapping(uint256 => TokenStatus) tokenStatus;
     }

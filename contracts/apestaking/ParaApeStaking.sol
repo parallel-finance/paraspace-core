@@ -557,27 +557,8 @@ contract ParaApeStaking is
             Errors.NFT_NOT_ALLOWED
         );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        vars.accumulatedRewardsPerNft = (nft == bakc)
-        ? vaultStorage.bakcPoolState.accumulatedRewardsPerNft
-        : (nft == bayc)
-        ? vaultStorage
-        .poolStates[ApeStakingSinglePoolLogic.BAYC_SINGLE_POOL_ID]
-        .accumulatedRewardsPerNft
-        : vaultStorage
-        .poolStates[ApeStakingSinglePoolLogic.MAYC_SINGLE_POOL_ID]
-        .accumulatedRewardsPerNft;
-        mapping(uint256 => IParaApeStaking.TokenStatus)
-            storage tokenStatus = (nft == bakc)
-                ? vaultStorage.bakcPoolState.tokenStatus
-                : (nft == bayc)
-                ? vaultStorage
-                    .poolStates[ApeStakingSinglePoolLogic.BAYC_SINGLE_POOL_ID]
-                    .tokenStatus
-                : vaultStorage
-                    .poolStates[ApeStakingSinglePoolLogic.MAYC_SINGLE_POOL_ID]
-                    .tokenStatus;
-        (, uint256 pendingReward) = ApeStakingSinglePoolLogic
-            .calculatePendingReward(tokenStatus, vars, nft, tokenIds);
+        uint256 pendingReward = ApeStakingSinglePoolLogic
+            .calculatePendingReward(vaultStorage, vars, nft, tokenIds);
 
         return pendingReward;
     }
@@ -591,26 +572,7 @@ contract ParaApeStaking is
             Errors.NFT_NOT_ALLOWED
         );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        vars.accumulatedRewardsPerNft = (nft == bakc)
-            ? vaultStorage.bakcPoolState.accumulatedRewardsPerNft
-            : (nft == bayc)
-            ? vaultStorage
-                .poolStates[ApeStakingSinglePoolLogic.BAYC_SINGLE_POOL_ID]
-                .accumulatedRewardsPerNft
-            : vaultStorage
-                .poolStates[ApeStakingSinglePoolLogic.MAYC_SINGLE_POOL_ID]
-                .accumulatedRewardsPerNft;
-        mapping(uint256 => IParaApeStaking.TokenStatus)
-            storage tokenStatus = (nft == bakc)
-                ? vaultStorage.bakcPoolState.tokenStatus
-                : (nft == bayc)
-                ? vaultStorage
-                    .poolStates[ApeStakingSinglePoolLogic.BAYC_SINGLE_POOL_ID]
-                    .tokenStatus
-                : vaultStorage
-                    .poolStates[ApeStakingSinglePoolLogic.MAYC_SINGLE_POOL_ID]
-                    .tokenStatus;
-        ApeStakingSinglePoolLogic.claimNFT(tokenStatus, vars, nft, tokenIds);
+        ApeStakingSinglePoolLogic.claimNFT(vaultStorage, vars, nft, tokenIds);
     }
 
     function withdrawNFT(address nft, uint32[] calldata tokenIds)
