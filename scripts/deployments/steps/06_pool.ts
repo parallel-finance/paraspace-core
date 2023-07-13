@@ -12,7 +12,6 @@ import {
   getAllTokens,
   getUniswapV3SwapRouter,
   getWETH,
-  recordByteCodeOnL1,
 } from "../../../helpers/contracts-getters";
 import {
   getContractAddressInDb,
@@ -20,7 +19,6 @@ import {
 } from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {
-  DRE,
   getParaSpaceConfig,
   isLocalTestnet,
   waitForTx,
@@ -45,10 +43,6 @@ export const step_06 = async (verify = false) => {
 
     const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
       await deployPoolParaProxyInterfaces(verify);
-
-    if (DRE.network.config.zksync) {
-      await recordByteCodeOnL1("ParaProxy");
-    }
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(

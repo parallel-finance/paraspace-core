@@ -302,7 +302,15 @@ export const retry = async (fn: any, retries = 0) => {
 };
 
 export const withSaveAndVerify = async (
-  {artifact, factory}: {artifact: Artifact; factory: ContractFactory},
+  {
+    artifact,
+    factory,
+    customData,
+  }: {
+    artifact: Artifact;
+    factory: ContractFactory;
+    customData: any;
+  },
   id: string,
   args: ConstructorArgs,
   verify = true,
@@ -322,7 +330,11 @@ export const withSaveAndVerify = async (
     const [impl, initData] = (
       proxy ? args.slice(args.length - 2) : []
     ) as string[];
+    if (customData) {
+      GLOBAL_OVERRIDES.customData = customData;
+    }
     const instance = await factory.deploy(...deployArgs, GLOBAL_OVERRIDES);
+    GLOBAL_OVERRIDES.customData = undefined;
     await waitForTx(instance.deployTransaction);
     await registerContractInDb(
       id,

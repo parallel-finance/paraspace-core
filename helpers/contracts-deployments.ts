@@ -284,6 +284,7 @@ export const deployAllLibraries = async (verify?: boolean) => {
   };
 
   fs.writeFileSync(ZK_LIBRARIES_PATH, JSON.stringify(libraries));
+  shell.exec("make build");
 };
 
 export const deployPoolAddressesProvider = async (

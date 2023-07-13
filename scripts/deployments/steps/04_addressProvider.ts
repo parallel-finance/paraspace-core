@@ -2,13 +2,9 @@ import {
   deployPoolAddressesProvider,
   deployPoolAddressesProviderRegistry,
 } from "../../../helpers/contracts-deployments";
-import {
-  getAllTokens,
-  getFirstSigner,
-  recordByteCodeOnL1,
-} from "../../../helpers/contracts-getters";
+import {getAllTokens, getFirstSigner} from "../../../helpers/contracts-getters";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
-import {DRE, getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
+import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 
 export const step_04 = async (verify = false) => {
   const deployer = await getFirstSigner();
@@ -26,11 +22,6 @@ export const step_04 = async (verify = false) => {
       deployerAddress,
       verify
     );
-    if (DRE.network.config.zksync) {
-      await recordByteCodeOnL1(
-        "InitializableImmutableAdminUpgradeabilityProxy"
-      );
-    }
     await waitForTx(
       await addressesProviderRegistry.registerAddressesProvider(
         addressesProvider.address,

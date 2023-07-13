@@ -9,6 +9,7 @@ import {
 import {
   getAllERC721Tokens,
   getAllTokens,
+  getFirstSigner,
   getPoolAddressesProvider,
   getPriceOracle,
 } from "../../../helpers/contracts-getters";
@@ -31,8 +32,8 @@ export const deployNftOracle = async (verify = false) => {
   const chainlinkConfig = paraSpaceConfig.Chainlink;
   // UniswapV3 should use price from `UniswapV3OracleWrapper` instead of NFTFloorOracle
   delete erc721Tokens[ERC721TokenContractId.UniswapV3];
-  const [deployer, oracle1, oracle2, oracle3] =
-    await getEthersSignersAddresses();
+  const deployer = await getFirstSigner();
+  const [, oracle1, oracle2, oracle3] = await getEthersSignersAddresses();
   //at launch phase we will only use 3 feeders for nft oracle in mainnet
   const feeders =
     oracleConfig.Nodes.length > 0
@@ -45,7 +46,7 @@ export const deployNftOracle = async (verify = false) => {
   const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
   await waitForTx(
     await nftFloorOracle.initialize(
-      deployer,
+      await deployer.getAddress(),
       feeders,
       projects,
       GLOBAL_OVERRIDES

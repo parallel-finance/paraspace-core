@@ -127,7 +127,7 @@ import {
 import {accounts} from "../wallets";
 import * as zk from "zksync-web3";
 import {Deployer} from "@matterlabs/hardhat-zksync-deploy";
-import {Artifact, HttpNetworkConfig} from "hardhat/types";
+import {HttpNetworkConfig} from "hardhat/types";
 import {ContractFactory, ethers} from "ethers";
 import {Libraries} from "hardhat-deploy/dist/types";
 import {ZERO_ADDRESS} from "./constants";
@@ -157,22 +157,11 @@ export const getContractFactory = async (
   name: string,
   libraries?: Libraries
 ) => {
-  let artifact: Artifact;
   const signer = await getFirstSigner();
   if (DRE.network.zksync) {
     const deployer = new Deployer(DRE, signer as zk.Wallet);
-    artifact = await deployer.loadArtifact(name);
-  } else {
-    artifact = await DRE.artifacts.readArtifact(name);
-    if (libraries) {
-      artifact.bytecode = linkLibraries(
-        artifact,
-        normalizeLibraryAddresses(libraries)
-      );
-    }
-  }
-
-  if (DRE.network.zksync) {
+    const artifact = await deployer.loadArtifact(name);
+    const factoryDeps = await deployer.extractFactoryDeps(artifact);
     return {
       artifact,
       factory: new zk.ContractFactory(
@@ -180,11 +169,23 @@ export const getContractFactory = async (
         artifact.bytecode,
         signer as zk.Signer
       ),
+      customData: {
+        factoryDeps,
+        feeToken: zk.utils.ETH_ADDRESS,
+      },
     };
   } else {
+    const artifact = await DRE.artifacts.readArtifact(name);
+    if (libraries) {
+      artifact.bytecode = linkLibraries(
+        artifact,
+        normalizeLibraryAddresses(libraries)
+      );
+    }
     return {
       artifact,
       factory: new ContractFactory(artifact.abi, artifact.bytecode, signer),
+      customData: undefined,
     };
   }
 };
