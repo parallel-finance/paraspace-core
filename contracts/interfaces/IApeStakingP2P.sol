@@ -5,8 +5,7 @@ interface IApeStakingP2P {
     enum StakingType {
         BAYCStaking,
         MAYCStaking,
-        BAYCPairStaking,
-        MAYCPairStaking
+        BAKCPairStaking
     }
 
     enum ListingOrderStatus {

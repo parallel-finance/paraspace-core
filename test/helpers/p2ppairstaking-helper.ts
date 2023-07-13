@@ -4,6 +4,7 @@ import {
   MintableERC20,
   MintableERC721,
   P2PPairStaking,
+  ParaApeStaking,
 } from "../../types";
 import {SignerWithAddress} from "./make-suite";
 import {convertSignatureToEIP2098} from "../../helpers/seaport-helpers/encoding";
@@ -23,7 +24,7 @@ export type ListingOrder = {
 };
 
 export async function getSignedListingOrder(
-  p2pPairStaking: P2PPairStaking,
+  p2pPairStaking: ParaApeStaking,
   stakingType: number,
   listingToken: MintableERC721 | MintableERC20 | AutoCompoundApe,
   tokenId: number,

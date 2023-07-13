@@ -73,7 +73,7 @@ describe("Para Ape Staking Test", () => {
         )
     );
 
-    // user4 deposit MINIMUM_LIQUIDITY to make test case easy
+    // user6 deposit MINIMUM_LIQUIDITY to make test case easy
     await mintAndValidate(ape, "1", user6);
     await waitForTx(
       await ape.connect(user6.signer).approve(cApe.address, MAX_UINT_AMOUNT)

@@ -12,6 +12,7 @@ import {SignatureChecker} from "../../dependencies/looksrare/contracts/libraries
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "./ApeStakingCommonLogic.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
+import "../../protocol/libraries/helpers/Errors.sol";
 
 /**
  * @title ApeStakingVaultLogic library
@@ -57,16 +58,16 @@ library ApeStakingP2PLogic {
         require(
             apeOrder.stakingType == IApeStakingP2P.StakingType.MAYCStaking ||
                 apeOrder.stakingType == IApeStakingP2P.StakingType.BAYCStaking,
-            "invalid stake type"
+            Errors.INVALID_STAKING_TYPE
         );
         require(
             apeOrder.stakingType == apeCoinOrder.stakingType,
-            "orders type match failed"
+            Errors.ORDER_TYPE_MATCH_FAILED
         );
         require(
             apeOrder.share + apeCoinOrder.share ==
                 PercentageMath.PERCENTAGE_FACTOR,
-            "orders share match failed"
+            Errors.ORDER_SHARE_MATCH_FAILED
         );
 
         //3 transfer token
@@ -110,7 +111,7 @@ library ApeStakingP2PLogic {
         return orderHash;
     }
 
-    function matchPairStakingList(
+    function matchBAKCPairStakingList(
         IApeStakingP2P.ListingOrder calldata apeOrder,
         IApeStakingP2P.ListingOrder calldata bakcOrder,
         IApeStakingP2P.ListingOrder calldata apeCoinOrder,
@@ -131,21 +132,18 @@ library ApeStakingP2PLogic {
 
         //2 check if orders can match
         require(
-            apeOrder.stakingType ==
-                IApeStakingP2P.StakingType.BAYCPairStaking ||
-                apeOrder.stakingType ==
-                IApeStakingP2P.StakingType.MAYCPairStaking,
-            "invalid stake type"
+            apeOrder.stakingType == IApeStakingP2P.StakingType.BAKCPairStaking,
+            Errors.INVALID_STAKING_TYPE
         );
         require(
             apeOrder.stakingType == bakcOrder.stakingType &&
                 apeOrder.stakingType == apeCoinOrder.stakingType,
-            "orders type match failed"
+            Errors.ORDER_TYPE_MATCH_FAILED
         );
         require(
             apeOrder.share + bakcOrder.share + apeCoinOrder.share ==
                 PercentageMath.PERCENTAGE_FACTOR,
-            "share match failed"
+            Errors.ORDER_SHARE_MATCH_FAILED
         );
 
         //3 transfer token
@@ -220,11 +218,9 @@ library ApeStakingP2PLogic {
             msg.sender == apeNTokenOwner ||
                 msg.sender == order.apeCoinOfferer ||
                 (msg.sender == nBakcOwner &&
-                    (order.stakingType ==
-                        IApeStakingP2P.StakingType.BAYCPairStaking ||
-                        order.stakingType ==
-                        IApeStakingP2P.StakingType.MAYCPairStaking)),
-            "no permission to break up"
+                    order.stakingType ==
+                    IApeStakingP2P.StakingType.BAKCPairStaking),
+            Errors.NO_BREAK_UP_PERMISSION
         );
 
         //2 claim pending reward and compound
@@ -290,10 +286,7 @@ library ApeStakingP2PLogic {
             order.apeCoinOfferer,
             order.apePrincipleAmount
         );
-        if (
-            order.stakingType == IApeStakingP2P.StakingType.BAYCPairStaking ||
-            order.stakingType == IApeStakingP2P.StakingType.MAYCPairStaking
-        ) {
+        if (order.stakingType == IApeStakingP2P.StakingType.BAKCPairStaking) {
             IERC721(vars.bakc).safeTransferFrom(
                 address(this),
                 vars.nBakc,
@@ -417,10 +410,7 @@ library ApeStakingP2PLogic {
             order.apeCoinOfferer,
             rewardShare.percentMul(order.apeCoinShare)
         );
-        if (
-            order.stakingType == IApeStakingP2P.StakingType.BAYCPairStaking ||
-            order.stakingType == IApeStakingP2P.StakingType.MAYCPairStaking
-        ) {
+        if (order.stakingType == IApeStakingP2P.StakingType.BAKCPairStaking) {
             ApeStakingCommonLogic.depositCApeShareForUser(
                 cApeShareBalance,
                 IERC721(vars.nBakc).ownerOf(order.bakcTokenId),
@@ -441,15 +431,15 @@ library ApeStakingP2PLogic {
     ) internal view returns (bytes32 orderHash) {
         require(
             listingOrder.startTime <= block.timestamp,
-            "ape order not start"
+            Errors.ORDER_NOT_STARTED
         );
-        require(listingOrder.endTime >= block.timestamp, "ape offer expired");
+        require(listingOrder.endTime >= block.timestamp, Errors.ORDER_EXPIRED);
 
         orderHash = getListingOrderHash(listingOrder);
         require(
             listingOrderStatus[orderHash] !=
                 IApeStakingP2P.ListingOrderStatus.Cancelled,
-            "order already cancelled"
+            Errors.ORDER_ALREADY_CANCELLED
         );
 
         if (msg.sender != listingOrder.offerer) {
@@ -462,7 +452,7 @@ library ApeStakingP2PLogic {
                     listingOrder.r,
                     listingOrder.s
                 ),
-                "invalid signature"
+                Errors.INVALID_SIGNATURE
             );
         }
     }
@@ -482,7 +472,7 @@ library ApeStakingP2PLogic {
         address nToken = _getApeNTokenAddress(vars, apeOrder.token);
         require(
             IERC721(nToken).ownerOf(apeOrder.tokenId) == apeOrder.offerer,
-            "ape order invalid NToken owner"
+            Errors.NOT_THE_OWNER
         );
     }
 
@@ -497,14 +487,11 @@ library ApeStakingP2PLogic {
             listingOrderStatus,
             apeCoinOrder
         );
-        require(
-            apeCoinOrder.token == vars.cApe,
-            "ape coin order invalid token"
-        );
+        require(apeCoinOrder.token == vars.cApe, Errors.INVALID_TOKEN);
         require(
             listingOrderStatus[orderHash] !=
                 IApeStakingP2P.ListingOrderStatus.Matched,
-            "ape coin order already matched"
+            Errors.ORDER_ALREADY_MATCHED
         );
     }
 
@@ -520,10 +507,10 @@ library ApeStakingP2PLogic {
             bakcOrder
         );
 
-        require(bakcOrder.token == vars.bakc, "bakc order invalid token");
+        require(bakcOrder.token == vars.bakc, Errors.INVALID_TOKEN);
         require(
             IERC721(vars.nBakc).ownerOf(bakcOrder.tokenId) == bakcOrder.offerer,
-            "bakc order invalid NToken owner"
+            Errors.NOT_THE_OWNER
         );
     }
 
@@ -568,7 +555,7 @@ library ApeStakingP2PLogic {
         } else if (apeToken == vars.mayc) {
             return vars.nMayc;
         } else {
-            revert("unsupported ape token");
+            revert(Errors.INVALID_TOKEN);
         }
     }
 

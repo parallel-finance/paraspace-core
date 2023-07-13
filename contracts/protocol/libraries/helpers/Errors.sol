@@ -144,4 +144,15 @@ library Errors {
     string public constant NOT_THE_SAME_OWNER = "176"; //not the same owner
     string public constant NFT_NOT_ALLOWED = "177"; //nft now allowed
     string public constant NFT_NOT_IN_SINGLE_POOL = "178"; //nft not in single pool
+
+    string public constant NOT_ORDER_OFFERER = "180"; //not order offerer
+    string public constant ORDER_ALREADY_CANCELLED = "181"; //order already cancelled
+    string public constant ORDER_NOT_STARTED = "182"; //order not started
+    string public constant ORDER_EXPIRED = "183"; //order expired
+    string public constant INVALID_TOKEN = "184"; //invalid token
+    string public constant ORDER_ALREADY_MATCHED = "185"; //order matched
+    string public constant INVALID_STAKING_TYPE = "186"; //invalid stake type
+    string public constant ORDER_TYPE_MATCH_FAILED = "187"; //orders type match failed
+    string public constant ORDER_SHARE_MATCH_FAILED = "188"; //orders share match failed
+    string public constant NO_BREAK_UP_PERMISSION = "189"; //no permission to break up
 }

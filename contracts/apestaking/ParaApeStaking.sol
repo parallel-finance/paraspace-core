@@ -207,13 +207,13 @@ contract ParaApeStaking is
         external
         nonReentrant
     {
-        require(msg.sender == listingOrder.offerer, "not order offerer");
+        require(msg.sender == listingOrder.offerer, Errors.NOT_ORDER_OFFERER);
         bytes32 orderHash = ApeStakingP2PLogic.getListingOrderHash(
             listingOrder
         );
         require(
             listingOrderStatus[orderHash] != ListingOrderStatus.Cancelled,
-            "order already cancelled"
+            Errors.ORDER_ALREADY_CANCELLED
         );
         listingOrderStatus[orderHash] = ListingOrderStatus.Cancelled;
 
@@ -247,7 +247,7 @@ contract ParaApeStaking is
     ) external nonReentrant whenNotPaused returns (bytes32 orderHash) {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.DOMAIN_SEPARATOR = DOMAIN_SEPARATOR;
-        orderHash = ApeStakingP2PLogic.matchPairStakingList(
+        orderHash = ApeStakingP2PLogic.matchBAKCPairStakingList(
             apeOrder,
             bakcOrder,
             apeCoinOrder,
@@ -268,6 +268,7 @@ contract ParaApeStaking is
         whenNotPaused
     {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        vars.compoundFee = compoundFee;
         ApeStakingP2PLogic.breakUpMatchedOrder(
             listingOrderStatus,
             matchedOrders,
@@ -287,6 +288,7 @@ contract ParaApeStaking is
         whenNotPaused
     {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        vars.compoundFee = compoundFee;
         ApeStakingP2PLogic.claimForMatchedOrdersAndCompound(
             matchedOrders,
             cApeShareBalance,
