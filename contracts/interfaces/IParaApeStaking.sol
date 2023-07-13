@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.10;
 
-import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "./IApeStakingVault.sol";
 import "./IApeStakingP2P.sol";
@@ -35,6 +34,8 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P {
         uint256 apeRewardRatio;
         uint256 totalRepay;
         uint256 totalCompoundFee;
+        uint256 cApeExchangeRate;
+        uint256 latestBorrowIndex;
         bool isPaired;
     }
 

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.10;
 
-import "../dependencies/openzeppelin/contracts/IERC20.sol";
-import "../dependencies/yoga-labs/ApeCoinStaking.sol";
-
 interface IApeStakingVault {
     struct PairingStatus {
         uint248 tokenId;

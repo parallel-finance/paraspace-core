@@ -352,7 +352,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused {
+    ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_BAKC_PAIR_POOL_ID
@@ -370,7 +370,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused {
+    ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_BAKC_PAIR_POOL_ID
@@ -388,7 +388,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused onlyApeStakingBot {
+    ) external onlyApeStakingBot {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         uint256 poolId = isBAYC
@@ -430,7 +430,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused {
+    ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_BAKC_PAIR_POOL_ID
@@ -448,7 +448,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused {
+    ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         uint256 poolId = isBAYC
@@ -467,6 +467,7 @@ contract ParaApeStaking is
     function depositNFT(address nft, uint32[] calldata tokenIds)
         external
         whenNotPaused
+        nonReentrant
     {
         require(
             nft == bayc || nft == mayc || nft == bakc,
@@ -479,6 +480,7 @@ contract ParaApeStaking is
     function stakingApe(bool isBAYC, uint32[] calldata tokenIds)
         external
         whenNotPaused
+        nonReentrant
     {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
@@ -496,7 +498,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused {
+    ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingPairPoolLogic.BAYC_SINGLE_POOL_ID
@@ -513,7 +515,6 @@ contract ParaApeStaking is
 
     function compoundApe(bool isBAYC, uint32[] calldata tokenIds)
         external
-        whenNotPaused
         onlyApeStakingBot
     {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
@@ -534,7 +535,7 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused onlyApeStakingBot {
+    ) external onlyApeStakingBot {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         ApeStakingSinglePoolLogic.compoundBAKC(
@@ -566,6 +567,7 @@ contract ParaApeStaking is
     function claimNFT(address nft, uint32[] calldata tokenIds)
         external
         whenNotPaused
+        nonReentrant
     {
         require(
             nft == bayc || nft == mayc || nft == bakc,
@@ -578,6 +580,7 @@ contract ParaApeStaking is
     function withdrawNFT(address nft, uint32[] calldata tokenIds)
         external
         whenNotPaused
+        nonReentrant
     {
         require(
             nft == bayc || nft == mayc || nft == bakc,

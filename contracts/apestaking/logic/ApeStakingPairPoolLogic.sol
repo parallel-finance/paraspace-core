@@ -294,13 +294,11 @@ library ApeStakingPairPoolLogic {
         if (stakingPair > 0) {
             poolState.stakingPosition -= stakingPair;
 
-            {
-                assembly {
-                    mstore(_nfts, stakingPair)
-                }
-                assembly {
-                    mstore(_nftPairs, stakingPair)
-                }
+            assembly {
+                mstore(_nfts, stakingPair)
+            }
+            assembly {
+                mstore(_nftPairs, stakingPair)
             }
 
             vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
@@ -323,6 +321,11 @@ library ApeStakingPairPoolLogic {
                     vars.totalClaimedApe
                 );
 
+                vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                    WadRayMath.RAY
+                );
+                vars.latestBorrowIndex = IPool(vars.pool)
+                    .getReserveNormalizedVariableDebt(vars.cApe);
                 (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
                     .calculateRepayAndCompound(
                         poolState,
@@ -444,6 +447,11 @@ library ApeStakingPairPoolLogic {
 
         //repay and compound
         vars.positionCap = isBAYC ? vars.baycMatchedCap : vars.maycMatchedCap;
+        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+            WadRayMath.RAY
+        );
+        vars.latestBorrowIndex = IPool(vars.pool)
+            .getReserveNormalizedVariableDebt(vars.cApe);
         (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
             .calculateRepayAndCompound(
                 poolState,

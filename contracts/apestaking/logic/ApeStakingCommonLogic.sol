@@ -2,12 +2,9 @@
 pragma solidity 0.8.10;
 
 import "../../interfaces/IParaApeStaking.sol";
-import {IERC20, SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
-import "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {PercentageMath} from "../../protocol/libraries/math/PercentageMath.sol";
 import "../../interfaces/IAutoCompoundApe.sol";
 import "../../interfaces/ICApe.sol";
-import {SignatureChecker} from "../../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
@@ -20,7 +17,6 @@ import {IPool} from "../../interfaces/IPool.sol";
 library ApeStakingCommonLogic {
     using PercentageMath for uint256;
     using SafeCast for uint256;
-    using SafeERC20 for IERC20;
     using WadRayMath for uint256;
 
     function depositCApeShareForUser(
@@ -38,30 +34,25 @@ library ApeStakingCommonLogic {
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         uint256 positionCap
     ) internal returns (uint256, uint256) {
-        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-            WadRayMath.RAY
-        );
-        uint256 latestBorrowIndex = IPool(vars.pool)
-            .getReserveNormalizedVariableDebt(vars.cApe);
         uint256 cApeDebtShare = poolState.cApeDebtShare;
         uint256 debtInterest = calculateCurrentPositionDebtInterest(
             cApeDebtShare,
             poolState.stakingPosition,
             positionCap,
-            cApeExchangeRate,
-            latestBorrowIndex
+            vars.cApeExchangeRate,
+            vars.latestBorrowIndex
         );
         uint256 repayAmount = (debtInterest >= vars.totalClaimedApe)
             ? vars.totalClaimedApe
             : debtInterest;
-        cApeDebtShare -= repayAmount.rayDiv(latestBorrowIndex).rayDiv(
-            cApeExchangeRate
+        cApeDebtShare -= repayAmount.rayDiv(vars.latestBorrowIndex).rayDiv(
+            vars.cApeExchangeRate
         );
         poolState.cApeDebtShare = cApeDebtShare.toUint128();
         uint256 compoundFee = 0;
         if (vars.totalClaimedApe > debtInterest) {
             uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
-                .rayDiv(cApeExchangeRate);
+                .rayDiv(vars.cApeExchangeRate);
             compoundFee = shareRewardAmount.percentMul(vars.compoundFee);
             shareRewardAmount = shareRewardAmount - compoundFee;
             //update reward index
