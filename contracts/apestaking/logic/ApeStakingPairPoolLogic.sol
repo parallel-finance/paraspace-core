@@ -334,7 +334,6 @@ library ApeStakingPairPoolLogic {
                     );
 
                 if (vars.totalRepay > 0) {
-                    IERC20(vars.cApe).safeApprove(vars.pool, vars.totalRepay);
                     IPool(vars.pool).repay(
                         vars.cApe,
                         vars.totalRepay,
@@ -460,7 +459,6 @@ library ApeStakingPairPoolLogic {
             );
 
         if (vars.totalRepay > 0) {
-            IERC20(vars.cApe).safeApprove(vars.pool, vars.totalRepay);
             IPool(vars.pool).repay(vars.cApe, vars.totalRepay, address(this));
         }
         if (vars.totalCompoundFee > 0) {

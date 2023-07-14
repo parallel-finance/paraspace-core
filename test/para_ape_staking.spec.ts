@@ -36,17 +36,7 @@ describe("Para Ape Staking Test", () => {
       poolAdmin,
     } = testEnv;
 
-    //upgrade to non-fake implementation
-    const paraApeStakingImpl = await deployParaApeStakingImpl(false);
     paraApeStaking = await getParaApeStaking();
-    const paraApeStakingProxy = await getInitializableAdminUpgradeabilityProxy(
-      paraApeStaking.address
-    );
-    await waitForTx(
-      await paraApeStakingProxy
-        .connect(user5.signer)
-        .upgradeTo(paraApeStakingImpl.address, GLOBAL_OVERRIDES)
-    );
 
     await waitForTx(
       await paraApeStaking

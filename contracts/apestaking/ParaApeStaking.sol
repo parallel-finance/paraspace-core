@@ -118,6 +118,8 @@ contract ParaApeStaking is
         IERC20(apeCoin).safeApprove(address(apeCoinStaking), type(uint256).max);
         //approve ApeCoin for cApe
         IERC20(apeCoin).safeApprove(cApe, type(uint256).max);
+        //approve cApe for pool
+        IERC20(cApe).safeApprove(pool, type(uint256).max);
     }
 
     /**

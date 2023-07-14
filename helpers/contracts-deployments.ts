@@ -2756,37 +2756,6 @@ export const deployParaApeStakingLibraries = async (
   };
 };
 
-export const deployFakeParaApeStakingImpl = async (verify?: boolean) => {
-  const allTokens = await getAllTokens();
-  const apeCoinStaking =
-    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
-    (await deployApeCoinStaking(verify)).address;
-
-  const args = [
-    zeroAddress(),
-    zeroAddress(),
-    zeroAddress(),
-    zeroAddress(),
-    zeroAddress(),
-    zeroAddress(),
-    zeroAddress(),
-    allTokens.APE.address,
-    allTokens.cAPE.address,
-    apeCoinStaking,
-    zeroAddress(),
-    0,
-  ];
-
-  const libraries = await deployParaApeStakingLibraries();
-
-  return withSaveAndVerify(
-    new ParaApeStaking__factory(libraries, await getFirstSigner()),
-    eContractid.ParaApeStakingImpl,
-    [...args],
-    verify
-  ) as Promise<ParaApeStaking>;
-};
-
 export const deployParaApeStakingImpl = async (verify?: boolean) => {
   const poolProxy = await getPoolProxy();
   const allTokens = await getAllTokens();
@@ -2832,33 +2801,26 @@ export const deployParaApeStaking = async (
   fakeImplementation: boolean,
   verify?: boolean
 ) => {
-  let stakingImplementation;
-  if (fakeImplementation) {
-    stakingImplementation = await deployFakeParaApeStakingImpl(verify);
-  } else {
-    stakingImplementation = await deployParaApeStakingImpl(verify);
-  }
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
-  const initData =
-    stakingImplementation.interface.encodeFunctionData("initialize");
-
   const proxyInstance = await withSaveAndVerify(
     new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
     eContractid.ParaApeStaking,
     [],
     verify
   );
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](
-      stakingImplementation.address,
-      deployerAddress,
-      initData,
-      GLOBAL_OVERRIDES
-    )
-  );
+  if (!fakeImplementation) {
+    const paraApeStakingImpl = await deployParaApeStakingImpl(verify);
+
+    const deployer = await getFirstSigner();
+    const deployerAddress = await deployer.getAddress();
+    const initData =
+      paraApeStakingImpl.interface.encodeFunctionData("initialize");
+
+    await waitForTx(
+      await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+        "initialize(address,address,bytes)"
+      ](paraApeStakingImpl.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+    );
+  }
 
   return await getParaApeStaking(proxyInstance.address);
 };
