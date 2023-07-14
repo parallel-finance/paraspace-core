@@ -6,15 +6,12 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
-  getInitializableAdminUpgradeabilityProxy,
   getParaApeStaking,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {parseEther} from "ethers/lib/utils";
-import {deployParaApeStakingImpl} from "../helpers/contracts-deployments";
-import {GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
 import {ProtocolErrors} from "../helpers/types";
 
 describe("Para Ape Staking Test", () => {
@@ -28,7 +25,7 @@ describe("Para Ape Staking Test", () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       ape,
-      users: [user1, , , user4, user5, user6],
+      users: [user1, , , user4, , user6],
       apeCoinStaking,
       pool,
       protocolDataProvider,

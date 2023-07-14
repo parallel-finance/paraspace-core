@@ -264,9 +264,9 @@ test-ape-staking:
 test-auto-compound-ape:
 	make TEST_TARGET=auto_compound_ape.spec.ts test
 
-.PHONY: test-p2p-pair-staking
-test-p2p-pair-staking:
-	make TEST_TARGET=p2p_pair_staking.spec.ts test
+.PHONY: test-para-ape-staking
+test-para-aper-staking:
+	make TEST_TARGET=para_ape_staking.spec.ts test
 
 .PHONY: test-sape-operation
 test-sape-operation:
@@ -384,9 +384,9 @@ deploy-blur-exchange:
 deploy-flashClaimRegistry:
 	make TASK_NAME=deploy:flash-claim-registry run-task
 
-.PHONY: deploy-p2p-pair-staking
-deploy-p2p-pair-staking:
-	make TASK_NAME=deploy:P2PPairStaking run-task
+.PHONY: deploy-para-ape-staking
+deploy-para-ape-staking:
+	make TASK_NAME=deploy:ParaApeStaking run-task
 
 .PHONY: deploy-timelock
 deploy-timelock:

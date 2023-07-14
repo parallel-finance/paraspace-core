@@ -3,7 +3,6 @@ import {
   AutoCompoundApe,
   MintableERC20,
   MintableERC721,
-  P2PPairStaking,
   ParaApeStaking,
 } from "../../types";
 import {SignerWithAddress} from "./make-suite";

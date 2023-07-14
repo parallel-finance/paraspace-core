@@ -1,6 +1,5 @@
 import {task} from "hardhat/config";
 import {ETHERSCAN_VERIFICATION} from "../../helpers/hardhat-constants";
-import {upgradeParaApeStaking} from "../../scripts/upgrade/para_ape_staking";
 
 task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
   const {upgradeAll} = await import("../../scripts/upgrade");

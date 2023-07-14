@@ -6,7 +6,6 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
-  getInitializableAdminUpgradeabilityProxy,
   getParaApeStaking,
 } from "../helpers/contracts-getters";
 import {MAX_UINT_AMOUNT} from "../helpers/constants";
@@ -14,8 +13,6 @@ import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {getSignedListingOrder} from "./helpers/p2ppairstaking-helper";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
-import {deployParaApeStakingImpl} from "../helpers/contracts-deployments";
-import {GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
 import {ProtocolErrors} from "../helpers/types";
 
 describe("P2P Pair Staking Test", () => {
@@ -28,22 +25,13 @@ describe("P2P Pair Staking Test", () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       ape,
-      users: [user1, user2, , user4, user5, user6],
+      users: [user1, user2, , user4, , user6],
       apeCoinStaking,
       poolAdmin,
     } = testEnv;
 
-    //upgrade to non-fake implementation
-    const paraApeStakingImpl = await deployParaApeStakingImpl(false);
     paraApeStaking = await getParaApeStaking();
-    const paraApeStakingProxy = await getInitializableAdminUpgradeabilityProxy(
-      paraApeStaking.address
-    );
-    await waitForTx(
-      await paraApeStakingProxy
-        .connect(user5.signer)
-        .upgradeTo(paraApeStakingImpl.address, GLOBAL_OVERRIDES)
-    );
+
     await waitForTx(
       await paraApeStaking
         .connect(poolAdmin.signer)
@@ -960,7 +948,7 @@ describe("P2P Pair Staking Test", () => {
 
   it("compound fee work as expected", async () => {
     const {
-      users: [user1, user2, user3, user4],
+      users: [user1, user2, user3],
       bayc,
       ape,
       poolAdmin,

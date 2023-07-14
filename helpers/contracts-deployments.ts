@@ -346,7 +346,6 @@ import {pick, upperFirst} from "lodash";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES} from "./hardhat-constants";
 import {parseEther} from "ethers/lib/utils";
-import {zeroAddress} from "ethereumjs-util";
 import {ParaApeStakingLibraryAddresses} from "../types/factories/contracts/apestaking/ParaApeStaking__factory";
 
 export const deployPoolAddressesProvider = async (
