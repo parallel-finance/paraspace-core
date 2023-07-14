@@ -196,6 +196,7 @@ import fs from "fs";
 import shell from "shelljs";
 
 export const deployAllLibraries = async (verify?: boolean) => {
+  shell.exec("make build");
   const supplyLogic = await deploySupplyLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
