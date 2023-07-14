@@ -1543,6 +1543,7 @@ __metadata:
     ts-node: ^10.9.1
     typechain: ^8.1.0
     typescript: 4.7.4
+    walkdir: ^0.4.1
     zksync-web3: ^0.14.3
   languageName: unknown
   linkType: soft
@@ -15585,6 +15586,13 @@ __metadata:
     core-util-is: 1.0.2
     extsprintf: ^1.2.0
   checksum: c431df0bedf2088b227a4e051e0ff4ca54df2c114096b0c01e1cbaadb021c30a04d7dd5b41ab277bcd51246ca135bf931d4c4c796ecae7a4fef6d744ecef36ea
+  languageName: node
+  linkType: hard
+
+"walkdir@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "walkdir@npm:0.4.1"
+  checksum: 71045c21dc19aae3321f897b6e9e507cf8039202665c35a0b908eecccaf25636aab769b31cbd61ef8267237fe22fc316923a691ecc2d9d38840a15c59c0f2594
   languageName: node
   linkType: hard
 
