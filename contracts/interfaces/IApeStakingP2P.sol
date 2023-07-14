@@ -40,12 +40,6 @@ interface IApeStakingP2P {
         bytes32 apeCoinListingOrderHash;
     }
 
-    struct VaultPosition {
-        StakingType stakingType;
-        uint32 mainTokenId;
-        uint32 bakcTokenId;
-    }
-
     /**
      * @dev Emit an event whenever an listing order is successfully cancelled.
      * @param orderHash The hash of the cancelled order.

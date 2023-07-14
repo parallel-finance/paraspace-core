@@ -54,7 +54,7 @@ library ApeStakingCommonLogic {
             uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
                 .rayDiv(vars.cApeExchangeRate);
             compoundFee = shareRewardAmount.percentMul(vars.compoundFee);
-            shareRewardAmount = shareRewardAmount - compoundFee;
+            shareRewardAmount -= compoundFee;
             //update reward index
             uint128 currentTotalPosition = poolState.totalPosition;
             if (currentTotalPosition != 0) {

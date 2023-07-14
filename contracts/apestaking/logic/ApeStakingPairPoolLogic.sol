@@ -307,42 +307,40 @@ library ApeStakingPairPoolLogic {
                     0
                 );
             if (isBAYC) {
-                vars.apeCoinStaking.withdrawBAYC(_nfts, address(this));
+                vars.apeCoinStaking.withdrawSelfBAYC(_nfts);
                 vars.apeCoinStaking.withdrawBAKC(_nftPairs, _otherPairs);
             } else {
-                vars.apeCoinStaking.withdrawMAYC(_nfts, address(this));
+                vars.apeCoinStaking.withdrawSelfMAYC(_nfts);
                 vars.apeCoinStaking.withdrawBAKC(_otherPairs, _nftPairs);
             }
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
             vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
-            if (vars.totalClaimedApe > 0) {
-                IAutoCompoundApe(vars.cApe).deposit(
-                    address(this),
-                    vars.totalClaimedApe
+            IAutoCompoundApe(vars.cApe).deposit(
+                address(this),
+                vars.totalClaimedApe
+            );
+
+            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                WadRayMath.RAY
+            );
+            vars.latestBorrowIndex = IPool(vars.pool)
+                .getReserveNormalizedVariableDebt(vars.cApe);
+            (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
+                .calculateRepayAndCompound(
+                    poolState,
+                    vars,
+                    vars.positionCap + vars.bakcMatchedCap
                 );
 
-                vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-                    WadRayMath.RAY
+            if (vars.totalRepay > 0) {
+                IPool(vars.pool).repay(
+                    vars.cApe,
+                    vars.totalRepay,
+                    address(this)
                 );
-                vars.latestBorrowIndex = IPool(vars.pool)
-                    .getReserveNormalizedVariableDebt(vars.cApe);
-                (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
-                    .calculateRepayAndCompound(
-                        poolState,
-                        vars,
-                        vars.positionCap + vars.bakcMatchedCap
-                    );
-
-                if (vars.totalRepay > 0) {
-                    IPool(vars.pool).repay(
-                        vars.cApe,
-                        vars.totalRepay,
-                        address(this)
-                    );
-                }
-                if (vars.totalCompoundFee > 0) {
-                    cApeShareBalance[address(this)] += vars.totalCompoundFee;
-                }
+            }
+            if (vars.totalCompoundFee > 0) {
+                cApeShareBalance[address(this)] += vars.totalCompoundFee;
             }
         }
 
