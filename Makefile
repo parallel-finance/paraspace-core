@@ -709,7 +709,6 @@ shutdown:
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
 	sudo rm -fr state.json || true
-	sudo rm -fr zk-libraries.json || true
 
 .PHONY: copy
 copy:
