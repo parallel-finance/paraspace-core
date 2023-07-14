@@ -575,8 +575,6 @@ export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
     FRAX: strategyFRAX,
     WETH: strategyWETH,
     WBTC: strategyWBTC,
-    stETH: strategySTETH,
-    wstETH: strategyWSTETH,
   },
   Mocks: MocksUSDConfig,
   Oracle: ZkSyncOracleConfig,
