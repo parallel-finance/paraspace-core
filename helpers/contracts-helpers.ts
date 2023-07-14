@@ -330,9 +330,8 @@ export const withSaveAndVerify = async (
     const [impl, initData] = (
       proxy ? args.slice(args.length - 2) : []
     ) as string[];
-    if (customData) {
-      GLOBAL_OVERRIDES.customData = customData;
-    }
+
+    GLOBAL_OVERRIDES.customData = customData;
     const instance = await factory.deploy(...deployArgs, GLOBAL_OVERRIDES);
     GLOBAL_OVERRIDES.customData = undefined;
     await waitForTx(instance.deployTransaction);
