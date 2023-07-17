@@ -153,6 +153,11 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
       accounts: DEPLOYER,
     },
+    moonbase: {
+      chainId: CHAINS_ID[eEthereumNetwork.moonbase],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbase],
+      accounts: DEPLOYER,
+    },
     hardhat: {
       hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
@@ -244,6 +249,8 @@ const hardhatConfig: HardhatUserConfig = {
       eEthereumNetwork.polygonZkevm,
       eEthereumNetwork.polygonMumbai,
       eEthereumNetwork.polygonZkevmGoerli,
+      eEthereumNetwork.moonbeam,
+      eEthereumNetwork.moonbase,
     ].map((network) => ({
       network,
       chainId: CHAINS_ID[network]!,

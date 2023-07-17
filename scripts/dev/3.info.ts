@@ -14,6 +14,7 @@ const info = async () => {
   const signer = await getFirstSigner();
   const signerAddress = await signer.getAddress();
 
+  console.log(DRE.network.name);
   console.log(await DRE.ethers.provider.getNetwork());
   console.log(await DRE.ethers.provider.getFeeData());
   console.log(envs);

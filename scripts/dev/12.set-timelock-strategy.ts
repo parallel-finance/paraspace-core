@@ -61,6 +61,10 @@ import {
   timeLockStrategyUNI,
   timeLockStrategyWMATIC,
   timeLockStrategySTMATIC,
+  timeLockStrategyXCUSDT,
+  timeLockStrategyUSDCWH,
+  timeLockStrategyWETHWH,
+  timeLockStrategyWBTCWH,
 } from "../../market-config/timeLockStrategies";
 
 const TIME_LOCK_STRATEGY = {
@@ -91,6 +95,10 @@ const TIME_LOCK_STRATEGY = {
   cAPE: timeLockStrategyCAPE,
   yAPE: timeLockStrategyYAPE,
   xcDOT: timeLockStrategyXCDOT,
+  xcUSDT: timeLockStrategyXCUSDT,
+  USDCWH: timeLockStrategyUSDCWH,
+  WETHWH: timeLockStrategyWETHWH,
+  WBTCWH: timeLockStrategyWBTCWH,
   WGLMR: timeLockStrategyWGLMR,
   BLUR: timeLockStrategyBLUR,
   ARB: timeLockStrategyARB,

@@ -26,6 +26,7 @@ export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1592;
 export const MOONBEAM_CHAINID = 1284;
+export const MOONBASE_CHAINID = 1287;
 export const ARBITRUM_ONE_CHAINID = 42161;
 export const ARBITRUM_GOERLI_CHAINID = 421613;
 export const POLYGON_CHAINID = 137;
@@ -101,6 +102,8 @@ export const ETHERSCAN_APIS = {
   zksync: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
   zksyncGoerli:
     "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
+  moonbeam: "https://api-moonbeam.moonscan.io/api",
+  moonbase: "https://api-moonbase.moonscan.io/api",
 };
 export const BROWSER_URLS = {
   localhost: "http://localhost:4000",
@@ -114,6 +117,8 @@ export const BROWSER_URLS = {
   polygonMumbai: "https://mumbai.polygonscan.com",
   zksync: "https://zksync2-mainnet-explorer.zksync.io",
   zksyncGoerli: "https://zksync2-testnet-explorer.zksync.dev",
+  moonbeam: "https://moonscan.io",
+  moonbase: "https://moonbase.moonscan.io",
 };
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");

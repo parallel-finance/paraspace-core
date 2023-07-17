@@ -38,12 +38,16 @@ import {
   rateStrategySTMATIC,
   rateStrategyUNI,
   rateStrategyUSDC,
+  rateStrategyUSDCWH,
   rateStrategyUSDT,
   rateStrategyWBTC,
+  rateStrategyWBTCWH,
   rateStrategyWETH,
+  rateStrategyWETHWH,
   rateStrategyWGLMR,
   rateStrategyWMATIC,
   rateStrategyXCDOT,
+  rateStrategyXCUSDT,
   rateStrategyXETH,
 } from "./rateStrategies";
 import {
@@ -99,6 +103,10 @@ import {
   timeLockStrategySTMATIC,
   timeLockStrategyCRV,
   timeLockStrategyWMATIC,
+  timeLockStrategyXCUSDT,
+  timeLockStrategyUSDCWH,
+  timeLockStrategyWETHWH,
+  timeLockStrategyWBTCWH,
 } from "./timeLockStrategies";
 
 export const strategyDAI: IReserveParams = {
@@ -271,6 +279,70 @@ export const strategyXCDOT: IReserveParams = {
   liquidationBonus: "10500",
   borrowingEnabled: true,
   reserveDecimals: "10",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyXCUSDT: IReserveParams = {
+  strategy: rateStrategyXCUSDT,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyXCUSDT,
+  baseLTVAsCollateral: "7500",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8000",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "10",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyUSDCWH: IReserveParams = {
+  strategy: rateStrategyUSDCWH,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyUSDCWH,
+  baseLTVAsCollateral: "8700",
+  liquidationThreshold: "8900",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10450",
+  borrowingEnabled: true,
+  reserveDecimals: "6",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyWETHWH: IReserveParams = {
+  strategy: rateStrategyWETHWH,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWETHWH,
+  baseLTVAsCollateral: "8250",
+  liquidationThreshold: "8600",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10450",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyWBTCWH: IReserveParams = {
+  strategy: rateStrategyWBTCWH,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWBTCWH,
+  baseLTVAsCollateral: "7200",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "8200",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "8",
   xTokenImpl: eContractid.PTokenImpl,
   reserveFactor: "1000",
   borrowCap: "0",

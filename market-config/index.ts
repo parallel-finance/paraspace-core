@@ -69,6 +69,10 @@ import {
   strategySTMATIC,
   strategyCRV,
   strategyWMATIC,
+  strategyXCUSDT,
+  strategyUSDCWH,
+  strategyWETHWH,
+  strategyWBTCWH,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -180,16 +184,26 @@ export const MoonbeamConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
-  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
-  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  EmergencyAdmins: [
+    "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+    "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
+    "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
+    "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
+    "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+    "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
+  ],
+  RiskAdmin: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  GatewayAdmin: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  ParaSpaceTeam: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  Treasury: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
   Tokens: {
     WGLMR: "0xAcc15dC74880C9944775448304B263D191c6077F",
     xcDOT: "0xFfFFfFff1FcaCBd218EDc0EbA20Fc2308C778080",
-    USDC: "0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b",
+    xcUSDT: "0xFFFFFFfFea09FB06d082fd1275CD48b191cbCD1d",
+    USDCWH: "0x931715fee2d06333043d11f658c8ce934ac61d0c",
+    WETHWH: "0xab3f0245b83feb11d15aaffefd7ad465a59817ed",
+    WBTCWH: "0xe57ebd2d67b462e9926e04a8e33f01cd0d64346d",
   },
   YogaLabs: {},
   Uniswap: {},
@@ -199,17 +213,56 @@ export const MoonbeamConfig: IParaSpaceConfiguration = {
   Chainlink: {
     WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
     xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
-    USDC: "0xA122591F60115D63421f66F752EF9f6e0bc73abC",
+    xcUSDT: "0xd925c5bf88bd0ca09312625d429240f811b437c6",
+    USDCWH: "0xa122591f60115d63421f66f752ef9f6e0bc73abc",
+    WETHWH: "0x9ce2388a1696e22f870341c3fc1e89710c7569b5",
+    WBTCWH: "0x8211b991d713ddae32326fd69e1e2510f4a653b0",
   },
   // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
   ReservesConfig: {
     xcDOT: strategyXCDOT,
+    xcUSDT: strategyXCUSDT,
     WGLMR: strategyWGLMR,
-    USDC: strategyUSDC,
+    USDCWH: strategyUSDCWH,
+    WETHWH: strategyWETHWH,
+    WBTCWH: strategyWBTCWH,
+  },
+  Mocks: undefined,
+  Oracle: MoonbeamOracleConfig,
+  Governance: {
+    Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+    Multisig: MULTI_SIG || "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  },
+};
+
+export const MoonbaseConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
+  ReservesConfig: {
+    xcDOT: strategyXCDOT,
+    xcUSDT: strategyXCUSDT,
+    WGLMR: strategyWGLMR,
+    USDCWH: strategyUSDCWH,
+    WETHWH: strategyWETHWH,
+    WBTCWH: strategyWBTCWH,
   },
   Oracle: MoonbeamOracleConfig,
 };
-
 export const GoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -855,6 +908,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.anvil]: HardhatConfig,
   [eEthereumNetwork.localhost]: HardhatConfig,
   [eEthereumNetwork.moonbeam]: MoonbeamConfig,
+  [eEthereumNetwork.moonbase]: MoonbaseConfig,
   [eEthereumNetwork.goerli]: GoerliConfig,
   [eEthereumNetwork.mainnet]: MainnetConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,

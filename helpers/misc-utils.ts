@@ -27,6 +27,7 @@ import {
   ETHERSCAN_NETWORKS,
   ETHERSCAN_VERIFICATION_CONTRACTS,
   ETHERSCAN_KEY,
+  MOONBASE_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -60,6 +61,7 @@ export const isPublicTestnet = (): boolean => {
       ZKSYNC_GOERLI_CHAINID,
       POLYGON_ZKEVM_GOERLI_CHAINID,
       POLYGON_MUMBAI_CHAINID,
+      MOONBASE_CHAINID,
     ].includes(DRE.network.config.chainId!) ||
     [
       eEthereumNetwork.goerli,
@@ -67,6 +69,7 @@ export const isPublicTestnet = (): boolean => {
       eEthereumNetwork.zksyncGoerli,
       eEthereumNetwork.polygonZkevmGoerli,
       eEthereumNetwork.polygonMumbai,
+      eEthereumNetwork.moonbase,
     ].includes(FORK as eEthereumNetwork)
   );
 };

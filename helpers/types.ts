@@ -76,6 +76,7 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
+  moonbase = "moonbase",
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
   polygon = "polygon",
@@ -445,6 +446,10 @@ export interface iAssetBase<T> {
   cETH: T;
   PUNK: T;
   xcDOT: T;
+  xcUSDT: T;
+  USDCWH: T;
+  WETHWH: T;
+  WBTCWH: T;
   WGLMR: T;
   BLUR: T;
   ARB: T;
@@ -504,6 +509,10 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "cETH"
   | "PUNK"
   | "xcDOT"
+  | "xcUSDT"
+  | "USDCWH"
+  | "WETHWH"
+  | "WBTCWH"
   | "WGLMR"
   | "BLUR"
   | "ARB"
@@ -562,6 +571,10 @@ export enum ERC20TokenContractId {
   cETH = "cETH",
   PUNK = "PUNK",
   xcDOT = "xcDOT",
+  xcUSDT = "xcUSDT",
+  USDCWH = "USDCWH",
+  WETHWH = "WETHWH",
+  WBTCWH = "WBTCWH",
   WGLMR = "WGLMR",
   BLUR = "BLUR",
   ARB = "ARB",
@@ -699,6 +712,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
+  [eEthereumNetwork.moonbase]: T;
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
   [eEthereumNetwork.polygon]: T;
@@ -752,6 +766,10 @@ export interface IChainlinkConfig {
   cAPE?: tEthereumAddress;
   yAPE?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
+  xcUSDT?: tEthereumAddress;
+  USDCWH?: tEthereumAddress;
+  WETHWH?: tEthereumAddress;
+  WBTCWH?: tEthereumAddress;
   WGLMR?: tEthereumAddress;
   ARB?: tEthereumAddress;
   GMX?: tEthereumAddress;
