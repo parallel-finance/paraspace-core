@@ -245,7 +245,9 @@ export const MoonbaseConfig: IParaSpaceConfiguration = {
   EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  Tokens: {},
+  Tokens: {
+    WGLMR: "0xD909178CC99d318e4D46e7E66a972955859670E1",
+  },
   YogaLabs: {},
   Uniswap: {},
   Marketplace: {},
