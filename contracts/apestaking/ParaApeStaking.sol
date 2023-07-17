@@ -50,14 +50,8 @@ contract ParaApeStaking is
     uint256 private immutable bakcMatchedCap;
     IACLManager private immutable aclManager;
 
-    bytes32 internal DOMAIN_SEPARATOR;
-    mapping(bytes32 => ListingOrderStatus) public listingOrderStatus;
-    mapping(bytes32 => MatchedOrder) public matchedOrders;
     mapping(address => mapping(uint32 => uint256)) private apeMatchedCount;
-    mapping(StakingType => mapping(uint32 => uint256))
-        private positionCApeShareDebt;
     mapping(address => uint256) private cApeShareBalance;
-
     address public apeStakingBot;
     uint64 public compoundFee;
 
@@ -210,6 +204,10 @@ contract ParaApeStaking is
     /*
      * P2P Pair Staking Logic
      */
+
+    bytes32 internal DOMAIN_SEPARATOR;
+    mapping(bytes32 => ListingOrderStatus) public listingOrderStatus;
+    mapping(bytes32 => MatchedOrder) public matchedOrders;
 
     /// @inheritdoc IApeStakingP2P
     function cancelListing(ListingOrder calldata listingOrder)
