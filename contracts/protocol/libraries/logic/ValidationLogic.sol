@@ -1098,7 +1098,6 @@ library ValidationLogic {
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal pure {
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
-        require(params.credit.amount == 0, Errors.INVALID_AMOUNT);
     }
 
     function verifyCreditSignature(
