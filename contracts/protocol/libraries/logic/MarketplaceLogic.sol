@@ -419,16 +419,13 @@ library MarketplaceLogic {
     ) internal returns (uint256 priceEth) {
         uint256 downpayment = vars.price - vars.creditAmount;
         if (!vars.isListingTokenETH) {
-            address transferToken = vars.isListingTokenPToken
-                ? vars.listingXTokenAddress
-                : vars.listingToken;
-            IERC20(transferToken).safeTransferFrom(
+            IERC20(params.orderInfo.consideration[0].token).safeTransferFrom(
                 params.orderInfo.taker,
                 address(this),
                 downpayment
             );
             Helpers.checkMaxAllowance(
-                transferToken,
+                params.orderInfo.consideration[0].token,
                 params.marketplace.operator
             );
         } else {
