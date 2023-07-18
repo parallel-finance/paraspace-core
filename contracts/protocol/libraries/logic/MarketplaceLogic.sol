@@ -21,7 +21,6 @@ import {ItemType} from "../../../dependencies/seaport/contracts/lib/Consideratio
 import {AdvancedOrder} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {IWETH} from "../../../misc/interfaces/IWETH.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
-import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
@@ -36,7 +35,6 @@ import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
  */
 library MarketplaceLogic {
     using UserConfiguration for DataTypes.UserConfigurationMap;
-    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using ReserveLogic for DataTypes.ReserveData;
     using SafeERC20 for IERC20;
     using Math for uint256;
