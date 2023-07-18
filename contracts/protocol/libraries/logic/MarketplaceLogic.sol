@@ -454,10 +454,10 @@ library MarketplaceLogic {
         }
 
         DataTypes.TimeLockParams memory timeLockParams;
-        vars.borrowAmount = vars.creditAmount;
         address transit = vars.isListingTokenPToken ? address(this) : to;
 
         if (vars.listingToken == vars.creditToken) {
+            vars.borrowAmount = vars.creditAmount;
             IPToken(vars.creditXTokenAddress).transferUnderlyingTo(
                 transit,
                 vars.creditAmount,
