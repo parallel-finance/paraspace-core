@@ -44,20 +44,24 @@ export const deployNftOracle = async (verify = false) => {
     .map(([, nft]) => nft.address)
     .filter((x) => x);
   const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
-  await waitForTx(
-    await nftFloorOracle.initialize(
-      await deployer.getAddress(),
-      feeders,
-      projects,
-      GLOBAL_OVERRIDES
-    )
-  );
-  await waitForTx(
-    await nftFloorOracle.setConfig(
-      oracleConfig.ExpirationPeriod,
-      oracleConfig.DeviationRate
-    )
-  );
+  try {
+    await waitForTx(
+      await nftFloorOracle.initialize(
+        await deployer.getAddress(),
+        feeders,
+        projects,
+        GLOBAL_OVERRIDES
+      )
+    );
+    await waitForTx(
+      await nftFloorOracle.setConfig(
+        oracleConfig.ExpirationPeriod,
+        oracleConfig.DeviationRate
+      )
+    );
+  } catch (e) {
+    //
+  }
   return nftFloorOracle;
 };
 
@@ -113,13 +117,16 @@ export const step_10 = async (verify = false) => {
       GLOBAL_OVERRIDES
     );
 
+    const networkPriceInUsdAggregator = (chainlinkConfig[
+      oracleConfig.BaseCurrency
+    ] ||
+      allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
+      allAggregatorsAddresses[ERC20TokenContractId.USDCWH] ||
+      allAggregatorsAddresses[ERC20TokenContractId.USDT] ||
+      allAggregatorsAddresses[ERC20TokenContractId.xcUSDT])!;
     await deployUiPoolDataProvider(
-      (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
-      (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
+      networkPriceInUsdAggregator,
+      networkPriceInUsdAggregator,
       verify
     );
     await deployWalletBalanceProvider(verify);

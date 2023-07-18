@@ -12,9 +12,9 @@ export const MainnetOracleConfig: IOracleConfig = {
 };
 
 export const MoonbeamOracleConfig: IOracleConfig = {
-  BaseCurrency: ERC20TokenContractId.USDC,
-  BaseCurrencyUnit: BigNumber.from("100000000"),
-  BaseCurrencyDecimals: 8,
+  BaseCurrency: ERC20TokenContractId.WGLMR,
+  BaseCurrencyUnit: constants.WeiPerEther,
+  BaseCurrencyDecimals: 18,
   ExpirationPeriod: 600,
   DeviationRate: 1000,
   Nodes: [],
