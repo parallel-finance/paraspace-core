@@ -121,9 +121,7 @@ export const step_10 = async (verify = false) => {
       oracleConfig.BaseCurrency
     ] ||
       allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
-      allAggregatorsAddresses[ERC20TokenContractId.USDCWH] ||
-      allAggregatorsAddresses[ERC20TokenContractId.USDT] ||
-      allAggregatorsAddresses[ERC20TokenContractId.xcUSDT])!;
+      allAggregatorsAddresses[ERC20TokenContractId.USDT])!;
     await deployUiPoolDataProvider(
       networkPriceInUsdAggregator,
       networkPriceInUsdAggregator,
