@@ -114,13 +114,13 @@ library ApeStakingSinglePoolLogic {
         if (nft == vars.bayc) {
             vaultStorage
                 .poolStates[BAYC_SINGLE_POOL_ID]
-                .totalPosition += arrayLength.toUint32();
+                .totalPosition += arrayLength.toUint24();
         } else if (nft == vars.mayc) {
             vaultStorage
                 .poolStates[MAYC_SINGLE_POOL_ID]
-                .totalPosition += arrayLength.toUint32();
+                .totalPosition += arrayLength.toUint24();
         } else {
-            vaultStorage.bakcPoolState.totalPosition += arrayLength.toUint32();
+            vaultStorage.bakcPoolState.totalPosition += arrayLength.toUint24();
         }
     }
 
@@ -162,7 +162,7 @@ library ApeStakingSinglePoolLogic {
             vars,
             totalBorrow
         );
-        poolState.cApeDebtShare += cApeDebtShare.toUint128();
+        poolState.cApeDebtShare += cApeDebtShare.toUint104();
 
         //stake in ApeCoinStaking
         if (isBAYC) {
@@ -171,7 +171,7 @@ library ApeStakingSinglePoolLogic {
             vars.apeCoinStaking.depositMAYC(_nfts);
         }
 
-        poolState.stakingPosition += arrayLength.toUint32();
+        poolState.stakingPosition += arrayLength.toUint24();
     }
 
     function stakingBAKC(
@@ -230,12 +230,12 @@ library ApeStakingSinglePoolLogic {
             );
         if (isBAYC) {
             vars.apeCoinStaking.depositBAKC(_nftPairs, _otherPairs);
-            bakcPoolState.baycStakingPosition += arrayLength.toUint32();
-            bakcPoolState.baycCApeDebtShare += cApeDebtShare.toUint128();
+            bakcPoolState.baycStakingPosition += arrayLength.toUint24();
+            bakcPoolState.baycCApeDebtShare += cApeDebtShare.toUint104();
         } else {
             vars.apeCoinStaking.depositBAKC(_otherPairs, _nftPairs);
-            bakcPoolState.maycStakingPosition += arrayLength.toUint32();
-            bakcPoolState.maycCApeDebtShare += cApeDebtShare.toUint128();
+            bakcPoolState.maycStakingPosition += arrayLength.toUint24();
+            bakcPoolState.maycCApeDebtShare += cApeDebtShare.toUint104();
         }
     }
 
@@ -393,8 +393,7 @@ library ApeStakingSinglePoolLogic {
         address nft,
         uint32[] calldata tokenIds
     ) external {
-        uint256 arrayLength = tokenIds.length;
-        require(arrayLength > 0, Errors.INVALID_PARAMETER);
+        ApeStakingCommonLogic.validateTokenIdArray(tokenIds);
 
         vars.accumulatedRewardsPerNft = _getPoolAccumulatedRewardsPerNft(
             vaultStorage,
@@ -477,7 +476,7 @@ library ApeStakingSinglePoolLogic {
             vars.apeRewardRatio = vaultStorage.maycPairStakingRewardRatio;
         }
 
-        apePoolState.totalPosition -= tokenIds.length.toUint32();
+        apePoolState.totalPosition -= tokenIds.length.toUint24();
 
         ApeCoinStaking.SingleNft[]
             memory _nfts = new ApeCoinStaking.SingleNft[](tokenIds.length);
@@ -485,8 +484,8 @@ library ApeStakingSinglePoolLogic {
             memory _nftPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                 tokenIds.length
             );
-        uint32 singleStakingCount;
-        uint32 pairStakingCount;
+        uint24 singleStakingCount;
+        uint24 pairStakingCount;
         for (uint256 index = 0; index < tokenIds.length; index++) {
             uint32 tokenId = tokenIds[index];
 
@@ -615,7 +614,7 @@ library ApeStakingSinglePoolLogic {
         uint256 arrayLength = tokenIds.length;
         IParaApeStaking.BAKCPoolState storage bakcPoolState = vaultStorage
             .bakcPoolState;
-        vaultStorage.bakcPoolState.totalPosition -= arrayLength.toUint32();
+        vaultStorage.bakcPoolState.totalPosition -= arrayLength.toUint24();
         ApeCoinStaking.PairNftWithdrawWithAmount[]
             memory baycPair = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                 arrayLength
@@ -624,8 +623,8 @@ library ApeStakingSinglePoolLogic {
             memory maycPair = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                 arrayLength
             );
-        uint32 baycPairCount;
-        uint32 maycPairCount;
+        uint24 baycPairCount;
+        uint24 maycPairCount;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = tokenIds[index];
 
@@ -861,9 +860,9 @@ library ApeStakingSinglePoolLogic {
             vars.cApeExchangeRate
         );
         if (isBAYC) {
-            bakcPoolState.baycCApeDebtShare = cApeDebtShare.toUint128();
+            bakcPoolState.baycCApeDebtShare = cApeDebtShare.toUint104();
         } else {
-            bakcPoolState.maycCApeDebtShare = cApeDebtShare.toUint128();
+            bakcPoolState.maycCApeDebtShare = cApeDebtShare.toUint104();
         }
 
         //calculate compound fee
@@ -878,19 +877,19 @@ library ApeStakingSinglePoolLogic {
                 vars.apeRewardRatio
             );
 
-            uint128 apeTotalPosition = apePoolState.totalPosition;
+            uint104 apeTotalPosition = apePoolState.totalPosition;
             if (apeTotalPosition != 0) {
                 apePoolState.accumulatedRewardsPerNft +=
-                    apeShareAmount.toUint128() /
+                    apeShareAmount.toUint104() /
                     apeTotalPosition;
             } else {
                 compoundFee += apeShareAmount;
             }
-            uint128 bakcTotalPosition = bakcPoolState.totalPosition;
+            uint104 bakcTotalPosition = bakcPoolState.totalPosition;
             shareRewardAmount -= apeShareAmount;
             if (bakcTotalPosition != 0) {
                 bakcPoolState.accumulatedRewardsPerNft +=
-                    shareRewardAmount.toUint128() /
+                    shareRewardAmount.toUint104() /
                     bakcTotalPosition;
             } else {
                 compoundFee += shareRewardAmount;

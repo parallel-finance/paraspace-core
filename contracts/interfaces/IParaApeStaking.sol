@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "./IApeStakingVault.sol";
 import "./IApeStakingP2P.sol";
+import "./IApeCoinPool.sol";
 
 interface IParaApeStaking is IApeStakingVault, IApeStakingP2P {
     struct ApeStakingVaultCacheVars {
@@ -37,6 +38,12 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P {
         uint256 cApeExchangeRate;
         uint256 latestBorrowIndex;
         bool isPaired;
+    }
+
+    struct ApeStatus {
+        uint32 matchedCount;
+        bool isInApeCoinPool;
+        bool isInApeCoinPairPool;
     }
 
     /**

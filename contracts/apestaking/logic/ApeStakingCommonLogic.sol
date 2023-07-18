@@ -8,6 +8,7 @@ import "../../interfaces/ICApe.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
+import "../../protocol/libraries/helpers/Errors.sol";
 
 /**
  * @title ApeStakingVaultLogic library
@@ -18,6 +19,19 @@ library ApeStakingCommonLogic {
     using PercentageMath for uint256;
     using SafeCast for uint256;
     using WadRayMath for uint256;
+
+    function validateTokenIdArray(uint32[] calldata tokenIds) internal pure {
+        uint256 arrayLength = tokenIds.length;
+        require(arrayLength > 0, Errors.INVALID_PARAMETER);
+        if (arrayLength >= 2) {
+            for (uint256 index = 1; index < arrayLength; index++) {
+                require(
+                    tokenIds[index] > tokenIds[index - 1],
+                    Errors.INVALID_PARAMETER
+                );
+            }
+        }
+    }
 
     function depositCApeShareForUser(
         mapping(address => uint256) storage cApeShareBalance,
@@ -48,7 +62,7 @@ library ApeStakingCommonLogic {
         cApeDebtShare -= repayAmount.rayDiv(vars.latestBorrowIndex).rayDiv(
             vars.cApeExchangeRate
         );
-        poolState.cApeDebtShare = cApeDebtShare.toUint128();
+        poolState.cApeDebtShare = cApeDebtShare.toUint104();
         uint256 compoundFee = 0;
         if (vars.totalClaimedApe > debtInterest) {
             uint256 shareRewardAmount = (vars.totalClaimedApe - debtInterest)
@@ -56,10 +70,10 @@ library ApeStakingCommonLogic {
             compoundFee = shareRewardAmount.percentMul(vars.compoundFee);
             shareRewardAmount -= compoundFee;
             //update reward index
-            uint128 currentTotalPosition = poolState.totalPosition;
+            uint104 currentTotalPosition = poolState.totalPosition;
             if (currentTotalPosition != 0) {
                 poolState.accumulatedRewardsPerNft +=
-                    shareRewardAmount.toUint128() /
+                    shareRewardAmount.toUint104() /
                     currentTotalPosition;
             } else {
                 compoundFee += shareRewardAmount;

@@ -71,7 +71,7 @@ library ApeStakingP2PLogic {
         );
 
         //3 transfer token
-        _handleApeTransfer(apeOrder, vars);
+        _handleApeTransfer(apeMatchedCount, apeOrder, vars);
         uint256 apeAmount = _handleCApeTransferAndConvert(apeCoinOrder, vars);
 
         //4 create match order
@@ -90,7 +90,6 @@ library ApeStakingP2PLogic {
             });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
-        apeMatchedCount[apeOrder.token][apeOrder.tokenId] += 1;
 
         //5 stake for ApeCoinStaking
         ApeCoinStaking.SingleNft[]
@@ -147,7 +146,7 @@ library ApeStakingP2PLogic {
         );
 
         //3 transfer token
-        _handleApeTransfer(apeOrder, vars);
+        _handleApeTransfer(apeMatchedCount, apeOrder, vars);
         IERC721(vars.bakc).safeTransferFrom(
             vars.nBakc,
             address(this),
@@ -171,7 +170,6 @@ library ApeStakingP2PLogic {
             });
         orderHash = getMatchedOrderHash(matchedOrder);
         matchedOrders[orderHash] = matchedOrder;
-        apeMatchedCount[apeOrder.token][apeOrder.tokenId] += 1;
 
         //5 stake for ApeCoinStaking
         ApeCoinStaking.PairNftDepositWithAmount[]
@@ -515,11 +513,12 @@ library ApeStakingP2PLogic {
     }
 
     function _handleApeTransfer(
+        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         IApeStakingP2P.ListingOrder calldata order,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars
     ) internal {
-        address currentOwner = IERC721(order.token).ownerOf(order.tokenId);
-        if (currentOwner != address(this)) {
+        uint256 currentMatchCount = apeMatchedCount[order.token][order.tokenId];
+        if (currentMatchCount == 0) {
             address nTokenAddress = _getApeNTokenAddress(vars, order.token);
             IERC721(order.token).safeTransferFrom(
                 nTokenAddress,
@@ -527,6 +526,7 @@ library ApeStakingP2PLogic {
                 order.tokenId
             );
         }
+        apeMatchedCount[order.token][order.tokenId] = currentMatchCount + 1;
     }
 
     function _handleCApeTransferAndConvert(

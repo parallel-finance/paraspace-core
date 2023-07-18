@@ -132,7 +132,7 @@ library ApeStakingPairPoolLogic {
             emit PairNFTDeposited(isBAYC, apeTokenId, bakcTokenId);
         }
 
-        poolState.totalPosition += arrayLength.toUint32();
+        poolState.totalPosition += arrayLength.toUint24();
     }
 
     function stakingPairNFT(
@@ -192,7 +192,7 @@ library ApeStakingPairPoolLogic {
             vars,
             totalBorrow
         );
-        poolState.cApeDebtShare += cApeDebtShare.toUint128();
+        poolState.cApeDebtShare += cApeDebtShare.toUint104();
 
         //stake in ApeCoinStaking
         ApeCoinStaking.PairNftDepositWithAmount[]
@@ -207,7 +207,7 @@ library ApeStakingPairPoolLogic {
             vars.apeCoinStaking.depositBAKC(_otherPairs, _nftPairs);
         }
 
-        poolState.stakingPosition += arrayLength.toUint32();
+        poolState.stakingPosition += arrayLength.toUint24();
     }
 
     function withdrawPairNFT(
@@ -243,7 +243,7 @@ library ApeStakingPairPoolLogic {
             memory _nftPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                 arrayLength
             );
-        uint32 stakingPair = 0;
+        uint24 stakingPair = 0;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 apeTokenId = apeTokenIds[index];
             uint32 bakcTokenId = bakcTokenIds[index];
@@ -288,7 +288,7 @@ library ApeStakingPairPoolLogic {
         }
 
         //update state
-        poolState.totalPosition -= arrayLength.toUint32();
+        poolState.totalPosition -= arrayLength.toUint24();
 
         //withdraw from ApeCoinStaking and compound
         if (stakingPair > 0) {
@@ -372,9 +372,9 @@ library ApeStakingPairPoolLogic {
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external {
-        uint256 arrayLength = apeTokenIds.length;
+        ApeStakingCommonLogic.validateTokenIdArray(apeTokenIds);
         require(
-            arrayLength == bakcTokenIds.length && arrayLength > 0,
+            apeTokenIds.length == bakcTokenIds.length,
             Errors.INVALID_PARAMETER
         );
 

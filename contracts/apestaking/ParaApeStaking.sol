@@ -50,8 +50,11 @@ contract ParaApeStaking is
     uint256 private immutable bakcMatchedCap;
     IACLManager private immutable aclManager;
 
+    //record Ape in P2P and ApeCoin pool
+    mapping(address => IApeCoinPool.ApeCoinPoolState) private apeCoinPoolStates;
     mapping(address => mapping(uint32 => uint256)) private apeMatchedCount;
     mapping(address => uint256) private cApeShareBalance;
+    mapping(address => uint256) private sApeBalance;
     address public apeStakingBot;
     uint64 public compoundFee;
 
@@ -200,6 +203,46 @@ contract ParaApeStaking is
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
     }
+
+    /*
+     *Ape Coin Staking Pool Logic
+     */
+
+    function depositApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {}
+
+    function depositApeCoinPairPool(
+        bool isBAYC,
+        uint32[] calldata apeTokenIds,
+        uint32[] calldata bakcTokenIds
+    ) external whenNotPaused nonReentrant {}
+
+    function CompoundApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {}
+
+    function CompoundApeCoinPairPool(
+        bool isBAYC,
+        uint32[] calldata apeTokenIds,
+        uint32[] calldata bakcTokenIds
+    ) external whenNotPaused nonReentrant {}
+
+    function WithdrawApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {}
+
+    function WithdrawApeCoinPairPool(
+        bool isBAYC,
+        uint32[] calldata apeTokenIds,
+        uint32[] calldata bakcTokenIds
+    ) external whenNotPaused nonReentrant {}
 
     /*
      * P2P Pair Staking Logic
