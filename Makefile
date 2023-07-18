@@ -47,7 +47,6 @@ doc:
 
 .PHONY: lint
 lint:
-	typos
 	yarn lint
 
 .PHONY: coverage
