@@ -263,6 +263,7 @@ export const MoonbaseConfig: IParaSpaceConfiguration = {
     WETHWH: strategyWETHWH,
     WBTCWH: strategyWBTCWH,
   },
+  Mocks: MocksUSDConfig,
   Oracle: MoonbeamOracleConfig,
 };
 export const GoerliConfig: IParaSpaceConfiguration = {
