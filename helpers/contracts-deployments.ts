@@ -1938,6 +1938,7 @@ export const deployNonfungibleTokenPositionDescriptor = async (
       factory: (
         await DRE.ethers.getContractFactoryFromArtifact(nFTDescriptor)
       ).connect(await getFirstSigner()),
+      customData: undefined,
     },
     eContractid.NFTDescriptor,
     [],
@@ -1958,6 +1959,7 @@ export const deployNonfungibleTokenPositionDescriptor = async (
           }
         )
       ).connect(await getFirstSigner()),
+      customData: undefined,
     },
     eContractid.NonfungibleTokenPositionDescriptor,
     [...args],
