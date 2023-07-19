@@ -102,7 +102,7 @@ library ApeStakingSinglePoolLogic {
             IERC721(nft).safeTransferFrom(nToken, address(this), tokenId);
 
             //update token status
-            tokenStatus[tokenId] = IApeStakingVault.TokenStatus({
+            tokenStatus[tokenId] = IParaApeStaking.TokenStatus({
                 rewardsDebt: accumulatedRewardsPerNft,
                 isInPool: true
             });

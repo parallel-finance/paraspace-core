@@ -105,13 +105,13 @@ library ApeStakingPairPoolLogic {
             }
 
             //update pair status
-            poolState.pairStatus[apeTokenId] = IApeStakingVault.PairingStatus({
+            poolState.pairStatus[apeTokenId] = IParaApeStaking.PairingStatus({
                 tokenId: bakcTokenId,
                 isPaired: true
             });
 
             //update token status
-            poolState.tokenStatus[apeTokenId] = IApeStakingVault.TokenStatus({
+            poolState.tokenStatus[apeTokenId] = IParaApeStaking.TokenStatus({
                 rewardsDebt: accumulatedRewardsPerNft,
                 isInPool: true
             });
@@ -161,8 +161,8 @@ library ApeStakingPairPoolLogic {
 
             // check pair status
             {
-                IApeStakingVault.PairingStatus
-                    memory localPairStatus = poolState.pairStatus[apeTokenId];
+                IParaApeStaking.PairingStatus memory localPairStatus = poolState
+                    .pairStatus[apeTokenId];
                 require(
                     localPairStatus.tokenId == bakcTokenId &&
                         localPairStatus.isPaired,
@@ -403,7 +403,7 @@ library ApeStakingPairPoolLogic {
             uint32 bakcTokenId = bakcTokenIds[index];
 
             // check pair status
-            IApeStakingVault.PairingStatus memory localPairStatus = poolState
+            IParaApeStaking.PairingStatus memory localPairStatus = poolState
                 .pairStatus[apeTokenId];
             require(
                 localPairStatus.tokenId == bakcTokenId &&
@@ -498,8 +498,8 @@ library ApeStakingPairPoolLogic {
 
             // check pair status
             {
-                IApeStakingVault.PairingStatus
-                    memory localPairStatus = poolState.pairStatus[apeTokenId];
+                IParaApeStaking.PairingStatus memory localPairStatus = poolState
+                    .pairStatus[apeTokenId];
                 require(
                     localPairStatus.tokenId == bakcTokenIds[index] &&
                         localPairStatus.isPaired,

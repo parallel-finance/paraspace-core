@@ -16,6 +16,7 @@ import {WadRayMath} from "../protocol/libraries/math/WadRayMath.sol";
 import "./logic/ApeStakingP2PLogic.sol";
 import "./logic/ApeStakingPairPoolLogic.sol";
 import "./logic/ApeStakingSinglePoolLogic.sol";
+import "./logic/ApeCoinPoolLogic.sol";
 import "./logic/ApeStakingCommonLogic.sol";
 import "../protocol/libraries/helpers/Errors.sol";
 
@@ -49,12 +50,13 @@ contract ParaApeStaking is
     uint256 private immutable maycMatchedCap;
     uint256 private immutable bakcMatchedCap;
     IACLManager private immutable aclManager;
+    uint16 private immutable sApeReserveId;
+    address private immutable psApe;
 
     //record Ape in P2P and ApeCoin pool
-    mapping(address => IApeCoinPool.ApeCoinPoolState) private apeCoinPoolStates;
     mapping(address => mapping(uint32 => uint256)) private apeMatchedCount;
     mapping(address => uint256) private cApeShareBalance;
-    mapping(address => uint256) private sApeBalance;
+    mapping(address => SApeBalance) private sApeBalance;
     address public apeStakingBot;
     uint64 public compoundFee;
 
@@ -93,6 +95,12 @@ contract ParaApeStaking is
         baycMatchedCap = baycPool.currentTimeRange.capPerPosition;
         maycMatchedCap = maycPool.currentTimeRange.capPerPosition;
         bakcMatchedCap = bakcPool.currentTimeRange.capPerPosition;
+
+        DataTypes.ReserveData memory sApeData = IPool(_pool).getReserveData(
+            DataTypes.SApeAddress
+        );
+        psApe = sApeData.xTokenAddress;
+        sApeReserveId = sApeData.id;
     }
 
     function initialize() public initializer {
@@ -207,42 +215,157 @@ contract ParaApeStaking is
     /*
      *Ape Coin Staking Pool Logic
      */
+    mapping(uint256 => ApeCoinPoolState) internal apeCoinPoolStates;
+
+    function isApeInApeCoinPool(bool isBAYC, uint32 tokenId) external view {}
+
+    function withdrawSApe(uint128 amount) external whenNotPaused nonReentrant {
+        ApeCoinPoolLogic.withdrawSApe(
+            sApeBalance,
+            pool,
+            apeCoin,
+            sApeReserveId,
+            msg.sender,
+            amount
+        );
+    }
 
     function depositApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
         external
         whenNotPaused
         nonReentrant
-    {}
-
-    function depositApeCoinPairPool(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds,
-        uint32[] calldata bakcTokenIds
-    ) external whenNotPaused nonReentrant {}
+    {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+            ? ApeCoinPoolLogic.BAYC_APECOIN_POOL_ID
+            : ApeCoinPoolLogic.MAYC_APECOIN_POOL_ID;
+        ApeCoinPoolLogic.depositApeCoinPool(
+            apeCoinPoolStates[poolId],
+            apeMatchedCount,
+            sApeBalance,
+            vars,
+            isBAYC,
+            tokenIds
+        );
+    }
 
     function CompoundApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
         external
         whenNotPaused
         nonReentrant
-    {}
+    {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        vars.compoundFee = compoundFee;
+        uint256 poolId = isBAYC
+            ? ApeCoinPoolLogic.BAYC_APECOIN_POOL_ID
+            : ApeCoinPoolLogic.MAYC_APECOIN_POOL_ID;
+        ApeCoinPoolLogic.compoundApeCoinPool(
+            apeCoinPoolStates[poolId],
+            cApeShareBalance,
+            vars,
+            isBAYC,
+            tokenIds
+        );
+    }
+
+    function claimApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+            ? ApeCoinPoolLogic.BAYC_APECOIN_POOL_ID
+            : ApeCoinPoolLogic.MAYC_APECOIN_POOL_ID;
+        ApeCoinPoolLogic.claimApeCoinPool(
+            apeCoinPoolStates[poolId],
+            vars,
+            isBAYC,
+            tokenIds
+        );
+    }
+
+    function withdrawApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+            ? ApeCoinPoolLogic.BAYC_APECOIN_POOL_ID
+            : ApeCoinPoolLogic.MAYC_APECOIN_POOL_ID;
+        ApeCoinPoolLogic.withdrawApeCoinPool(
+            apeCoinPoolStates[poolId],
+            cApeShareBalance,
+            apeMatchedCount,
+            sApeBalance,
+            vars,
+            isBAYC,
+            tokenIds
+        );
+    }
+
+    function depositApeCoinPairPool(
+        bool isBAYC,
+        uint32[] calldata apeTokenIds,
+        uint32[] calldata bakcTokenIds
+    ) external whenNotPaused nonReentrant {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+            ? ApeCoinPoolLogic.BAYC_BAKC_APECOIN_POOL_ID
+            : ApeCoinPoolLogic.MAYC_BAKC_APECOIN_POOL_ID;
+        ApeCoinPoolLogic.depositApeCoinPairPool(
+            apeCoinPoolStates[poolId],
+            apeMatchedCount,
+            sApeBalance,
+            vars,
+            isBAYC,
+            apeTokenIds,
+            bakcTokenIds
+        );
+    }
 
     function CompoundApeCoinPairPool(
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused nonReentrant {}
+    ) external whenNotPaused nonReentrant {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        vars.compoundFee = compoundFee;
+        uint256 poolId = isBAYC
+            ? ApeCoinPoolLogic.BAYC_BAKC_APECOIN_POOL_ID
+            : ApeCoinPoolLogic.MAYC_BAKC_APECOIN_POOL_ID;
+        ApeCoinPoolLogic.depositApeCoinPairPool(
+            apeCoinPoolStates[poolId],
+            apeMatchedCount,
+            sApeBalance,
+            vars,
+            isBAYC,
+            apeTokenIds,
+            bakcTokenIds
+        );
+    }
 
-    function WithdrawApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        whenNotPaused
-        nonReentrant
-    {}
-
-    function WithdrawApeCoinPairPool(
+    function withdrawApeCoinPairPool(
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) external whenNotPaused nonReentrant {}
+    ) external whenNotPaused nonReentrant {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        uint256 poolId = isBAYC
+            ? ApeCoinPoolLogic.BAYC_BAKC_APECOIN_POOL_ID
+            : ApeCoinPoolLogic.MAYC_BAKC_APECOIN_POOL_ID;
+        ApeCoinPoolLogic.withdrawApeCoinPairPool(
+            apeCoinPoolStates[poolId],
+            cApeShareBalance,
+            apeMatchedCount,
+            sApeBalance,
+            vars,
+            isBAYC,
+            apeTokenIds,
+            bakcTokenIds
+        );
+    }
 
     /*
      * P2P Pair Staking Logic

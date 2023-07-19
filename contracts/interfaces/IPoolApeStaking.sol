@@ -25,62 +25,6 @@ interface IPoolApeStaking {
     function borrowPoolCApe(uint256 amount) external returns (uint256);
 
     /**
-     * @notice Deposit ape coin to BAYC/MAYC pool or BAKC pool
-     * @param stakingInfo Detail info of the staking
-     * @param _nfts Array of BAYC/MAYC NFT's with staked amounts
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
-     * @param _openSApeCollateralFlag if true and when user current sApe collateral flag is false, we will open it. We don't close the flag here, user should call setUserUseERC20AsCollateral to turn off the flag.
-     * @dev Need check User health factor > 1.
-     */
-    function borrowApeAndStake(
-        StakingInfo calldata stakingInfo,
-        ApeCoinStaking.SingleNft[] calldata _nfts,
-        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs,
-        bool _openSApeCollateralFlag
-    ) external;
-
-    /**
-     * @notice Withdraw staked ApeCoin from the BAYC/MAYC pool
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param _nfts Array of BAYC/MAYC NFT's with staked amounts
-     * @dev Need check User health factor > 1.
-     */
-    function withdrawApeCoin(
-        address nftAsset,
-        ApeCoinStaking.SingleNft[] calldata _nfts
-    ) external;
-
-    /**
-     * @notice Claim rewards for array of tokenIds from the BAYC/MAYC pool
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param _nfts Array of NFTs owned and committed by the msg.sender
-     * @dev Need check User health factor > 1.
-     */
-    function claimApeCoin(address nftAsset, uint256[] calldata _nfts) external;
-
-    /**
-     * @notice Withdraw staked ApeCoin from the BAKC pool
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
-     * @dev Need check User health factor > 1.
-     */
-    function withdrawBAKC(
-        address nftAsset,
-        ApeCoinStaking.PairNftWithdrawWithAmount[] memory _nftPairs
-    ) external;
-
-    /**
-     * @notice Claim rewards for array of tokenIds from the BAYC/MAYC pool
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's
-     * @dev Need check User health factor > 1.
-     */
-    function claimBAKC(
-        address nftAsset,
-        ApeCoinStaking.PairNft[] calldata _nftPairs
-    ) external;
-
-    /**
      * @notice Unstake user Ape coin staking position and repay user debt
      * @param nftAsset Contract address of BAYC/MAYC
      * @param tokenId Token id of the ape staking position on
