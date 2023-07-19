@@ -253,6 +253,18 @@ export const timeLockStrategyXCDOT: ITimeLockStrategyParams = {
   period: "86400",
 };
 
+export const timeLockStrategySTDOT: ITimeLockStrategyParams = {
+  name: "timeLockStrategySTDOT",
+  minThreshold: parseUnits("1000", 10).toString(),
+  midThreshold: parseUnits("5000", 10).toString(),
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: parseUnits("50000", 10).toString(),
+  period: "86400",
+};
+
 export const timeLockStrategyXCUSDT: ITimeLockStrategyParams = {
   name: "timeLockStrategyXCUSDT",
   minThreshold: parseUnits("105000", 6).toString(),
@@ -710,5 +722,17 @@ export const timeLockStrategyBLOCKS: ITimeLockStrategyParams = {
   maxWaitTime: "21600",
   poolPeriodWaitTime: "600",
   poolPeriodLimit: "10",
+  period: "86400",
+};
+
+export const timeLockStrategyEXRP: ITimeLockStrategyParams = {
+  name: "timeLockStrategyEXRP",
+  minThreshold: "20",
+  midThreshold: "50",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "100",
   period: "86400",
 };

@@ -21,6 +21,7 @@ import {
   auctionStrategyVSL,
   auctionStrategyWPunks,
   auctionStrategyZero,
+  auctionStrategyEXRP,
 } from "./auctionStrategies";
 import {
   rateStrategyAAVE,
@@ -35,6 +36,7 @@ import {
   rateStrategyLINK,
   rateStrategyNFT,
   rateStrategyRDNT,
+  rateStrategySTDOT,
   rateStrategySTMATIC,
   rateStrategyUNI,
   rateStrategyUSDC,
@@ -107,6 +109,8 @@ import {
   timeLockStrategyUSDCWH,
   timeLockStrategyWETHWH,
   timeLockStrategyWBTCWH,
+  timeLockStrategySTDOT,
+  timeLockStrategyEXRP,
 } from "./timeLockStrategies";
 
 export const strategyDAI: IReserveParams = {
@@ -273,6 +277,22 @@ export const strategyXCDOT: IReserveParams = {
   strategy: rateStrategyXCDOT,
   auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyXCDOT,
+  baseLTVAsCollateral: "6000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "7000",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "10",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategySTDOT: IReserveParams = {
+  strategy: rateStrategySTDOT,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategySTDOT,
   baseLTVAsCollateral: "6000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "7000",
@@ -1039,4 +1059,20 @@ export const strategyBLOCKS: IReserveParams = {
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "0",
+};
+
+export const strategyEXRP: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyEXRP,
+  timeLockStrategy: timeLockStrategyEXRP,
+  baseLTVAsCollateral: "3000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "6500",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "1000",
 };

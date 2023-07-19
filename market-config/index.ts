@@ -73,6 +73,8 @@ import {
   strategyUSDCWH,
   strategyWETHWH,
   strategyWBTCWH,
+  strategySTDOT,
+  strategyEXRP,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -258,10 +260,12 @@ export const MoonbaseConfig: IParaSpaceConfiguration = {
   ReservesConfig: {
     xcDOT: strategyXCDOT,
     xcUSDT: strategyXCUSDT,
+    stDOT: strategySTDOT,
     WGLMR: strategyWGLMR,
     USDC: strategyUSDCWH,
     WETH: strategyWETHWH,
     WBTC: strategyWBTCWH,
+    EXRP: strategyEXRP,
   },
   Mocks: MocksUSDConfig,
   Oracle: MoonbeamOracleConfig,

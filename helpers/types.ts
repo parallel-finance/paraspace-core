@@ -266,6 +266,7 @@ export enum eContractid {
   VSL = "VSL",
   KODA = "KODA",
   BLOCKS = "BLOCKS",
+  EXRP = "EXRP",
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
@@ -447,6 +448,7 @@ export interface iAssetBase<T> {
   PUNK: T;
   xcDOT: T;
   xcUSDT: T;
+  stDOT: T;
   USDCWH: T;
   WETHWH: T;
   WBTCWH: T;
@@ -480,6 +482,7 @@ export interface iAssetBase<T> {
   VSL: T;
   KODA: T;
   BLOCKS: T;
+  EXRP: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -510,6 +513,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "PUNK"
   | "xcDOT"
   | "xcUSDT"
+  | "stDOT"
   | "USDCWH"
   | "WETHWH"
   | "WBTCWH"
@@ -543,6 +547,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "VSL"
   | "KODA"
   | "BLOCKS"
+  | "EXRP"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -572,6 +577,7 @@ export enum ERC20TokenContractId {
   PUNK = "PUNK",
   xcDOT = "xcDOT",
   xcUSDT = "xcUSDT",
+  stDOT = "stDOT",
   USDCWH = "USDCWH",
   WETHWH = "WETHWH",
   WBTCWH = "WBTCWH",
@@ -612,6 +618,7 @@ export enum ERC721TokenContractId {
   VSL = "VSL",
   KODA = "KODA",
   BLOCKS = "BLOCKS",
+  EXRP = "EXRP",
 }
 
 export enum NTokenContractId {
@@ -627,6 +634,7 @@ export enum NTokenContractId {
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
   nBLOCKS = "nBLOCKS",
+  nEXRP = "nEXRP",
 }
 
 export enum PTokenContractId {
@@ -767,6 +775,7 @@ export interface IChainlinkConfig {
   yAPE?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
   xcUSDT?: tEthereumAddress;
+  stDOT?: tEthereumAddress;
   USDCWH?: tEthereumAddress;
   WETHWH?: tEthereumAddress;
   WBTCWH?: tEthereumAddress;
@@ -798,6 +807,7 @@ export interface IChainlinkConfig {
   VSL?: tEthereumAddress;
   KODA?: tEthereumAddress;
   BLOCKS?: tEthereumAddress;
+  EXRP?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
