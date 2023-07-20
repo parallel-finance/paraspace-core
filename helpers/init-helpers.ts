@@ -430,20 +430,8 @@ export const initReservesByHelper = async (
           variableDebtTokenToUse = astETHVariableDebtTokenImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.sAPE) {
           if (!pTokenSApeImplementationAddress) {
-            const protocolDataProvider = await getProtocolDataProvider();
-            const allTokens = await protocolDataProvider.getAllXTokens();
-            const nBAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nBAYC
-              )!.tokenAddress;
-            const nMAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nMAYC
-              )!.tokenAddress;
             pTokenSApeImplementationAddress = (
-              await deployPTokenSApe(pool.address, nBAYC, nMAYC, verify)
+              await deployPTokenSApe(pool.address, verify)
             ).address;
           }
           xTokenToUse = pTokenSApeImplementationAddress;
@@ -536,27 +524,9 @@ export const initReservesByHelper = async (
           xTokenToUse = nTokenMAYCImplementationAddress;
         } else if (reserveSymbol === ERC721TokenContractId.BAKC) {
           if (!nTokenBAKCImplementationAddress) {
-            const apeCoinStaking =
-              (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
-              (await deployApeCoinStaking(verify)).address;
-            const protocolDataProvider = await getProtocolDataProvider();
-            const allTokens = await protocolDataProvider.getAllXTokens();
-            const nBAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nBAYC
-              )!.tokenAddress;
-            const nMAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nMAYC
-              )!.tokenAddress;
             nTokenBAKCImplementationAddress = (
               await deployNTokenBAKCImpl(
                 pool.address,
-                apeCoinStaking,
-                nBAYC,
-                nMAYC,
                 delegationRegistryAddress,
                 verify
               )

@@ -9,76 +9,7 @@ import "../dependencies/yoga-labs/ApeCoinStaking.sol";
  * @notice Defines the basic interface for an ParaSpace Ape Staking Pool.
  **/
 interface IPoolApeStaking {
-    struct StakingInfo {
-        // Contract address of BAYC/MAYC
-        address nftAsset;
-        // address of borrowing asset, can be Ape or cApe
-        address borrowAsset;
-        // Borrow amount of Ape from lending pool
-        uint256 borrowAmount;
-        // Cash amount of Ape from user wallet
-        uint256 cashAmount;
-    }
-
     function paraApeStaking() external view returns (address);
 
     function borrowPoolCApe(uint256 amount) external returns (uint256);
-
-    /**
-     * @notice Unstake user Ape coin staking position and repay user debt
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param tokenId Token id of the ape staking position on
-     * @dev Need check User health factor > 1.
-     */
-    function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
-        external;
-
-    /**
-     * @notice repay asset and supply asset for user
-     * @param underlyingAsset Contract address of BAYC/MAYC
-     * @param onBehalfOf The beneficiary of the repay and supply
-     * @dev Convenient callback function for unstakeApePositionAndRepay. Only NToken of BAYC/MAYC can call this.
-     */
-    function repayAndSupply(
-        address underlyingAsset,
-        address onBehalfOf,
-        uint256 totalAmount
-    ) external;
-
-    /**
-     * @notice Claim user Ape coin reward and deposit to ape compound to get cApe, then deposit cApe to Lending pool for user
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param users array of user address
-     * @param tokenIds array of user tokenId array
-     * @param minUsdcApePrice minimum usdc ape relative price
-     * @param minWethApePrice minimum weth ape relative price
-     */
-    function claimApeAndCompound(
-        address nftAsset,
-        address[] calldata users,
-        uint256[][] calldata tokenIds,
-        uint256 minUsdcApePrice,
-        uint256 minWethApePrice
-    ) external;
-
-    /**
-     * @notice Claim user BAKC paired Ape coin reward and deposit to ape compound to get cApe, then deposit cApe to Lending pool for user
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param users array of user address
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's
-     * @param minUsdcApePrice minimum usdc ape relative price
-     * @param minWethApePrice minimum weth ape relative price
-     */
-    function claimPairedApeAndCompound(
-        address nftAsset,
-        address[] calldata users,
-        ApeCoinStaking.PairNft[][] calldata _nftPairs,
-        uint256 minUsdcApePrice,
-        uint256 minWethApePrice
-    ) external;
-
-    /**
-     * @notice get current incentive fee rate for claiming ape position reward to compound
-     */
-    function getApeCompoundFeeRate() external returns (uint256);
 }

@@ -38,6 +38,8 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
         uint256 cApeExchangeRate;
         uint256 latestBorrowIndex;
         bool isPaired;
+        uint16 sApeReserveId;
+        address nApeOwner;
     }
 
     struct ApeStatus {
@@ -47,19 +49,21 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
     }
 
     struct SApeBalance {
-        uint128 freeBalance;
+        //cApe share
+        uint128 freeShareBalance;
+        //staked ape coin
         uint128 stakedBalance;
     }
 
-    struct PairingStatus {
-        uint248 tokenId;
-        bool isPaired;
-    }
     struct TokenStatus {
         //record tokenId reward debt position
         uint128 rewardsDebt;
         // identify if tokenId is in pool
         bool isInPool;
+        // pair bakc token
+        uint32 bakcTokenId;
+        // is paird with bakc
+        bool isPaired;
     }
 
     struct PoolState {
@@ -73,8 +77,6 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
         uint24 stakingPosition;
         //tokenId => reward debt position
         mapping(uint256 => TokenStatus) tokenStatus;
-        //for pair pool, apeTokenId => PairingStatus
-        mapping(uint256 => PairingStatus) pairStatus;
     }
 
     struct BAKCPoolState {
@@ -110,6 +112,21 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
         uint128 maycPairStakingRewardRatio;
     }
 
+    struct ApeCoinActionInfo {
+        address cashToken;
+        uint256 cashAmount;
+        bool isBAYC;
+        uint32[] tokenIds;
+    }
+
+    struct ApeCoinPairActionInfo {
+        address cashToken;
+        uint256 cashAmount;
+        bool isBAYC;
+        uint32[] apeTokenIds;
+        uint32[] bakcTokenIds;
+    }
+
     /**
      * @dev Emitted during setApeStakingBot()
      * @param oldBot The address of the old compound bot
@@ -118,4 +135,18 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
     event ApeStakingBotUpdated(address oldBot, address newBot);
 
     event CompoundFeeUpdated(uint64 oldValue, uint64 newValue);
+
+    function stakedSApeBalance(address user) external view returns (uint256);
+
+    function freeSApeBalance(address user) external view returns (uint256);
+
+    function totalSApeBalance(address user) external view returns (uint256);
+
+    function transferSApeBalance(
+        address from,
+        address to,
+        uint256 amount
+    ) external;
+
+    function withdrawFreeSApe(address receiver, uint128 amount) external;
 }

@@ -10,8 +10,6 @@ import {
   ACLManager,
   ACLManager__factory,
   ApeCoinStaking__factory,
-  ApeStakingLogic,
-  ApeStakingLogic__factory,
   ATokenDebtToken,
   ATokenDebtToken__factory,
   AuctionLogic,
@@ -298,7 +296,7 @@ import {
   ApeStakingPairPoolLogic__factory,
   ApeStakingPairPoolLogic,
   ApeStakingSinglePoolLogic__factory,
-  ApeStakingSinglePoolLogic,
+  ApeStakingSinglePoolLogic, ApeCoinPoolLogic__factory, ApeCoinPoolLogic,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -834,13 +832,9 @@ export const deployPoolComponents = async (
 
   const apeStakingLibraries = pick(coreLibraries, [
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
 
   const allTokens = await getAllTokens();
-
-  const APE_WETH_FEE = 3000;
-  const WETH_USDC_FEE = 500;
 
   const {
     poolCoreSelectors,
@@ -895,12 +889,6 @@ export const deployPoolComponents = async (
         [
           provider,
           (await getAutoCompoundApe()).address,
-          allTokens.APE.address,
-          allTokens.USDC.address,
-          (await getUniswapV3SwapRouter()).address,
-          allTokens.WETH.address,
-          APE_WETH_FEE,
-          WETH_USDC_FEE,
           (await getParaApeStaking()).address,
         ],
         verify,
@@ -2201,14 +2189,12 @@ export const deployPTokenAStETH = async (
 
 export const deployPTokenSApe = async (
   poolAddress: tEthereumAddress,
-  nBAYC: tEthereumAddress,
-  nMAYC: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     new PTokenSApe__factory(await getFirstSigner()),
     eContractid.PTokenSApeImpl,
-    [poolAddress, nBAYC, nMAYC],
+    [poolAddress],
     verify
   ) as Promise<PTokenSApe>;
 
@@ -2363,31 +2349,17 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
   return apeCoinStaking;
 };
 
-export const deployApeStakingLogic = async (verify?: boolean) => {
-  return withSaveAndVerify(
-    new ApeStakingLogic__factory(await getFirstSigner()),
-    eContractid.ApeStakingLogic,
-    [],
-    verify
-  ) as Promise<ApeStakingLogic>;
-};
-
 export const deployNTokenBAYCImpl = async (
   apeCoinStaking: tEthereumAddress,
   poolAddress: tEthereumAddress,
   delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
-  const apeStakingLogic =
-    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
-    (await deployApeStakingLogic(verify)).address;
   const mintableERC721Logic =
     (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
     (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
-    ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic,
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
       mintableERC721Logic,
   };
@@ -2395,7 +2367,7 @@ export const deployNTokenBAYCImpl = async (
   return withSaveAndVerify(
     new NTokenBAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenBAYCImpl,
-    [poolAddress, apeCoinStaking, delegationRegistry],
+    [poolAddress, delegationRegistry],
     verify,
     false,
     libraries
@@ -2408,23 +2380,18 @@ export const deployNTokenMAYCImpl = async (
   delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
-  const apeStakingLogic =
-    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
-    (await deployApeStakingLogic(verify)).address;
   const mintableERC721Logic =
     (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
     (await deployMintableERC721Logic(verify)).address;
 
   const libraries = {
-    ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic,
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
       mintableERC721Logic,
   };
   return withSaveAndVerify(
     new NTokenMAYC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenMAYCImpl,
-    [poolAddress, apeCoinStaking, delegationRegistry],
+    [poolAddress, delegationRegistry],
     verify,
     false,
     libraries
@@ -2433,9 +2400,6 @@ export const deployNTokenMAYCImpl = async (
 
 export const deployNTokenBAKCImpl = async (
   poolAddress: tEthereumAddress,
-  apeCoinStaking: tEthereumAddress,
-  nBAYC: tEthereumAddress,
-  nMAYC: tEthereumAddress,
   delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
@@ -2449,7 +2413,7 @@ export const deployNTokenBAKCImpl = async (
   return withSaveAndVerify(
     new NTokenBAKC__factory(libraries, await getFirstSigner()),
     eContractid.NTokenBAKCImpl,
-    [poolAddress, apeCoinStaking, nBAYC, nMAYC, delegationRegistry],
+    [poolAddress, delegationRegistry],
     verify,
     false,
     libraries
@@ -2738,12 +2702,21 @@ export const deployApeStakingSinglePoolLogic = async (verify?: boolean) =>
     verify
   ) as Promise<ApeStakingSinglePoolLogic>;
 
+export const deployApeStakingApeCoinPoolLogic = async (verify?: boolean) =>
+    withSaveAndVerify(
+        new ApeCoinPoolLogic__factory(await getFirstSigner()),
+        eContractid.ApeStakingApeCoinPoolLogic,
+        [],
+        verify
+    ) as Promise<ApeCoinPoolLogic>;
+
 export const deployParaApeStakingLibraries = async (
   verify?: boolean
 ): Promise<ParaApeStakingLibraryAddresses> => {
   const p2pLogic = await deployApeStakingP2PLogic(verify);
   const pairPoolLogic = await deployApeStakingPairPoolLogic(verify);
   const singlePoolLogic = await deployApeStakingSinglePoolLogic(verify);
+  const apeCoinPoolLogic = await deployApeStakingApeCoinPoolLogic(verify);
 
   return {
     ["contracts/apestaking/logic/ApeStakingP2PLogic.sol:ApeStakingP2PLogic"]:
@@ -2752,6 +2725,8 @@ export const deployParaApeStakingLibraries = async (
       pairPoolLogic.address,
     ["contracts/apestaking/logic/ApeStakingSinglePoolLogic.sol:ApeStakingSinglePoolLogic"]:
       singlePoolLogic.address,
+    ["contracts/apestaking/logic/ApeCoinPoolLogic.sol:ApeCoinPoolLogic"]:
+    apeCoinPoolLogic.address,
   };
 };
 

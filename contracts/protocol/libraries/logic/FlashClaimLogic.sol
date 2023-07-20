@@ -7,7 +7,6 @@ import {INToken} from "../../../interfaces/INToken.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
-import "../../../interfaces/INTokenApeStaking.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";

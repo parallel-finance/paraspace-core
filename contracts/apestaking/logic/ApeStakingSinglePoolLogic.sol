@@ -104,7 +104,9 @@ library ApeStakingSinglePoolLogic {
             //update token status
             tokenStatus[tokenId] = IParaApeStaking.TokenStatus({
                 rewardsDebt: accumulatedRewardsPerNft,
-                isInPool: true
+                isInPool: true,
+                bakcTokenId: 0,
+                isPaired: false
             });
 
             //emit event
@@ -425,7 +427,7 @@ library ApeStakingSinglePoolLogic {
             storage tokenStatus = _getPoolTokenStatus(vaultStorage, vars, nft);
 
         //claim pending reward
-        _claimNFT(tokenStatus, vars, nft, tokenIds);
+        address nApeOwner = _claimNFT(tokenStatus, vars, nft, tokenIds);
 
         address nToken;
         if (nft == vars.bayc) {
@@ -440,12 +442,9 @@ library ApeStakingSinglePoolLogic {
         }
 
         //transfer nft back to nToken
-        address msgSender = msg.sender;
+        require(msg.sender == nApeOwner, Errors.NOT_THE_OWNER);
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = tokenIds[index];
-
-            address nTokenOwner = IERC721(nToken).ownerOf(tokenId);
-            require(msgSender == nTokenOwner, Errors.NOT_THE_OWNER);
 
             delete tokenStatus[tokenId];
 
@@ -801,7 +800,7 @@ library ApeStakingSinglePoolLogic {
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         address nft,
         uint32[] calldata tokenIds
-    ) internal {
+    ) internal returns (address) {
         address nToken = (nft == vars.bayc) ? vars.nBayc : (nft == vars.mayc)
             ? vars.nMayc
             : vars.nBakc;
@@ -826,6 +825,8 @@ library ApeStakingSinglePoolLogic {
 
             IERC20(vars.cApe).safeTransfer(owner, pendingReward);
         }
+
+        return owner;
     }
 
     function _calculateRepayAndCompoundBAKC(

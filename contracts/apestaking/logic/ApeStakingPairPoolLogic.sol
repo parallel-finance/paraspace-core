@@ -104,16 +104,12 @@ library ApeStakingPairPoolLogic {
                 require(!isPaired, Errors.PAIR_POSITION_EXISTED);
             }
 
-            //update pair status
-            poolState.pairStatus[apeTokenId] = IParaApeStaking.PairingStatus({
-                tokenId: bakcTokenId,
-                isPaired: true
-            });
-
             //update token status
             poolState.tokenStatus[apeTokenId] = IParaApeStaking.TokenStatus({
                 rewardsDebt: accumulatedRewardsPerNft,
-                isInPool: true
+                isInPool: true,
+                bakcTokenId: bakcTokenId,
+                isPaired: true
             });
 
             //transfer ape and BAKC
@@ -161,11 +157,11 @@ library ApeStakingPairPoolLogic {
 
             // check pair status
             {
-                IParaApeStaking.PairingStatus memory localPairStatus = poolState
-                    .pairStatus[apeTokenId];
+                IParaApeStaking.TokenStatus memory localTokenStatus = poolState
+                    .tokenStatus[apeTokenId];
                 require(
-                    localPairStatus.tokenId == bakcTokenId &&
-                        localPairStatus.isPaired,
+                    localTokenStatus.bakcTokenId == bakcTokenId &&
+                        localTokenStatus.isPaired,
                     Errors.NOT_PAIRED_APE_AND_BAKC
                 );
             }
@@ -224,7 +220,13 @@ library ApeStakingPairPoolLogic {
             Errors.INVALID_PARAMETER
         );
 
-        _claimPairNFT(poolState, vars, isBAYC, apeTokenIds, bakcTokenIds);
+        vars.nApeOwner = _claimPairNFT(
+            poolState,
+            vars,
+            isBAYC,
+            apeTokenIds,
+            bakcTokenIds
+        );
 
         if (isBAYC) {
             vars.apeStakingPoolId = BAYC_POOL_ID;
@@ -252,17 +254,16 @@ library ApeStakingPairPoolLogic {
 
             //check ntoken owner
             {
-                address nApeOwner = IERC721(vars.nApe).ownerOf(apeTokenId);
-                address nBakcOwner = IERC721(vars.nBakc).ownerOf(bakcTokenId);
                 address msgSender = msg.sender;
-                require(
-                    msgSender == nApeOwner || msgSender == nBakcOwner,
-                    Errors.NOT_THE_OWNER
-                );
+                if (vars.nApeOwner != msgSender) {
+                    address nBakcOwner = IERC721(vars.nBakc).ownerOf(
+                        bakcTokenId
+                    );
+                    require(msgSender == nBakcOwner, Errors.NOT_THE_OWNER);
+                }
             }
 
             // update pair status
-            delete poolState.pairStatus[apeTokenId];
             delete poolState.tokenStatus[apeTokenId];
 
             // we only need to check pair staking position
@@ -403,11 +404,11 @@ library ApeStakingPairPoolLogic {
             uint32 bakcTokenId = bakcTokenIds[index];
 
             // check pair status
-            IParaApeStaking.PairingStatus memory localPairStatus = poolState
-                .pairStatus[apeTokenId];
+            IParaApeStaking.TokenStatus memory localTokenStatus = poolState
+                .tokenStatus[apeTokenId];
             require(
-                localPairStatus.tokenId == bakcTokenId &&
-                    localPairStatus.isPaired,
+                localTokenStatus.bakcTokenId == bakcTokenId &&
+                    localTokenStatus.isPaired,
                 Errors.NOT_PAIRED_APE_AND_BAKC
             );
 
@@ -498,11 +499,11 @@ library ApeStakingPairPoolLogic {
 
             // check pair status
             {
-                IParaApeStaking.PairingStatus memory localPairStatus = poolState
-                    .pairStatus[apeTokenId];
+                IParaApeStaking.TokenStatus memory localTokenStatus = poolState
+                    .tokenStatus[apeTokenId];
                 require(
-                    localPairStatus.tokenId == bakcTokenIds[index] &&
-                        localPairStatus.isPaired,
+                    localTokenStatus.bakcTokenId == bakcTokenIds[index] &&
+                        localTokenStatus.isPaired,
                     Errors.NOT_PAIRED_APE_AND_BAKC
                 );
             }
@@ -522,7 +523,7 @@ library ApeStakingPairPoolLogic {
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
-    ) internal {
+    ) internal returns (address) {
         (
             address owner,
             uint256 pendingReward,
@@ -551,5 +552,7 @@ library ApeStakingPairPoolLogic {
 
             IERC20(vars.cApe).safeTransfer(owner, pendingReward);
         }
+
+        return owner;
     }
 }

@@ -3,7 +3,6 @@ pragma solidity 0.8.10;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
-import {INTokenApeStaking} from "../../interfaces/INTokenApeStaking.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
@@ -13,6 +12,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {IParaApeStaking} from "../../interfaces/IParaApeStaking.sol";
 
 /**
  * @title sApe PToken
@@ -22,17 +22,10 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 contract PTokenSApe is PToken {
     using WadRayMath for uint256;
 
-    INTokenApeStaking immutable nBAYC;
-    INTokenApeStaking immutable nMAYC;
+    IParaApeStaking immutable paraApeStaking;
 
-    constructor(
-        IPool pool,
-        address _nBAYC,
-        address _nMAYC
-    ) PToken(pool) {
-        require(_nBAYC != address(0) && _nMAYC != address(0));
-        nBAYC = INTokenApeStaking(_nBAYC);
-        nMAYC = INTokenApeStaking(_nMAYC);
+    constructor(IPool pool) PToken(pool) {
+        paraApeStaking = IParaApeStaking(pool.paraApeStaking());
     }
 
     function mint(
@@ -55,9 +48,7 @@ contract PTokenSApe is PToken {
     }
 
     function balanceOf(address user) public view override returns (uint256) {
-        uint256 totalStakedAPE = nBAYC.getUserApeStakingAmount(user) +
-            nMAYC.getUserApeStakingAmount(user);
-        return totalStakedAPE;
+        return paraApeStaking.totalSApeBalance(user);
     }
 
     function scaledBalanceOf(address user)
@@ -78,11 +69,11 @@ contract PTokenSApe is PToken {
     }
 
     function transferOnLiquidation(
-        address,
-        address,
-        uint256
-    ) external view override onlyPool {
-        revert("not allowed");
+        address from,
+        address to,
+        uint256 value
+    ) external override onlyPool {
+        return paraApeStaking.transferSApeBalance(from, to, value);
     }
 
     function _transfer(

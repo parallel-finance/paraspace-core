@@ -86,18 +86,8 @@ export const upgradePToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.PTokenSApe) {
       if (!pTokenSApeImplementationAddress) {
         console.log("deploy PTokenSApe implementation");
-        const nBAYC =
-          // eslint-disable-next-line
-          allXTokens.find(
-            (x) => x.symbol == NTokenContractId.nBAYC
-          )!.tokenAddress;
-        const nMAYC =
-          // eslint-disable-next-line
-          allXTokens.find(
-            (x) => x.symbol == NTokenContractId.nMAYC
-          )!.tokenAddress;
         pTokenSApeImplementationAddress = (
-          await deployPTokenSApe(poolAddress, nBAYC, nMAYC, verify)
+          await deployPTokenSApe(poolAddress, verify)
         ).address;
       }
       newImpl = pTokenSApeImplementationAddress;
