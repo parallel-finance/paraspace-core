@@ -267,6 +267,7 @@ export enum eContractid {
   KODA = "KODA",
   BLOCKS = "BLOCKS",
   EXRP = "EXRP",
+  WGLMR = "WGLMR",
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
