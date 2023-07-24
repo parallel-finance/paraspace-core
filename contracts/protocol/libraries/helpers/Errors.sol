@@ -143,8 +143,8 @@ library Errors {
     string public constant NOT_APE_STAKING_BOT = "175"; //not ape staking bot
     string public constant NOT_THE_SAME_OWNER = "176"; //not the same owner
     string public constant NFT_NOT_ALLOWED = "177"; //nft now allowed
-    string public constant NFT_NOT_IN_SINGLE_POOL = "178"; //nft not in single pool
-
+    string public constant NFT_NOT_IN_POOL = "178"; //nft not in the pool
+    string public constant SAPE_FREE_BALANCE_NOT_ENOUGH = "179"; //sape free balance not enough
     string public constant NOT_ORDER_OFFERER = "180"; //not order offerer
     string public constant ORDER_ALREADY_CANCELLED = "181"; //order already cancelled
     string public constant ORDER_NOT_STARTED = "182"; //order not started
@@ -155,4 +155,5 @@ library Errors {
     string public constant ORDER_TYPE_MATCH_FAILED = "187"; //orders type match failed
     string public constant ORDER_SHARE_MATCH_FAILED = "188"; //orders share match failed
     string public constant NO_BREAK_UP_PERMISSION = "189"; //no permission to break up
+    string public constant INVALID_CASH_AMOUNT = "190"; //invalid cash amount
 }

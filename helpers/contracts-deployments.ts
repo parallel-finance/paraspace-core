@@ -296,7 +296,9 @@ import {
   ApeStakingPairPoolLogic__factory,
   ApeStakingPairPoolLogic,
   ApeStakingSinglePoolLogic__factory,
-  ApeStakingSinglePoolLogic, ApeCoinPoolLogic__factory, ApeCoinPoolLogic,
+  ApeStakingSinglePoolLogic,
+  ApeCoinPoolLogic__factory,
+  ApeCoinPoolLogic,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -2703,12 +2705,12 @@ export const deployApeStakingSinglePoolLogic = async (verify?: boolean) =>
   ) as Promise<ApeStakingSinglePoolLogic>;
 
 export const deployApeStakingApeCoinPoolLogic = async (verify?: boolean) =>
-    withSaveAndVerify(
-        new ApeCoinPoolLogic__factory(await getFirstSigner()),
-        eContractid.ApeStakingApeCoinPoolLogic,
-        [],
-        verify
-    ) as Promise<ApeCoinPoolLogic>;
+  withSaveAndVerify(
+    new ApeCoinPoolLogic__factory(await getFirstSigner()),
+    eContractid.ApeStakingApeCoinPoolLogic,
+    [],
+    verify
+  ) as Promise<ApeCoinPoolLogic>;
 
 export const deployParaApeStakingLibraries = async (
   verify?: boolean
@@ -2726,7 +2728,7 @@ export const deployParaApeStakingLibraries = async (
     ["contracts/apestaking/logic/ApeStakingSinglePoolLogic.sol:ApeStakingSinglePoolLogic"]:
       singlePoolLogic.address,
     ["contracts/apestaking/logic/ApeCoinPoolLogic.sol:ApeCoinPoolLogic"]:
-    apeCoinPoolLogic.address,
+      apeCoinPoolLogic.address,
   };
 };
 

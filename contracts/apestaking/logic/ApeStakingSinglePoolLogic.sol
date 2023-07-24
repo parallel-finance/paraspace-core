@@ -145,7 +145,7 @@ library ApeStakingSinglePoolLogic {
 
             require(
                 poolState.tokenStatus[tokenId].isInPool,
-                Errors.NFT_NOT_IN_SINGLE_POOL
+                Errors.NFT_NOT_IN_POOL
             );
 
             // construct staking data
@@ -200,11 +200,11 @@ library ApeStakingSinglePoolLogic {
 
             require(
                 apePoolState.tokenStatus[apeTokenId].isInPool,
-                Errors.NFT_NOT_IN_SINGLE_POOL
+                Errors.NFT_NOT_IN_POOL
             );
             require(
                 bakcPoolState.tokenStatus[bakcTokenId].isInPool,
-                Errors.NFT_NOT_IN_SINGLE_POOL
+                Errors.NFT_NOT_IN_POOL
             );
 
             // construct staking data
@@ -257,7 +257,7 @@ library ApeStakingSinglePoolLogic {
 
             require(
                 poolState.tokenStatus[tokenId].isInPool,
-                Errors.NFT_NOT_IN_SINGLE_POOL
+                Errors.NFT_NOT_IN_POOL
             );
 
             // construct staking data
@@ -335,7 +335,7 @@ library ApeStakingSinglePoolLogic {
                 // we just need to check bakc is in the pool
                 require(
                     bakcPoolState.tokenStatus[bakcTokenId].isInPool,
-                    Errors.NFT_NOT_IN_SINGLE_POOL
+                    Errors.NFT_NOT_IN_POOL
                 );
 
                 // construct staking data
@@ -781,10 +781,7 @@ library ApeStakingSinglePoolLogic {
                 }
             }
 
-            require(
-                tokenStatus[tokenId].isInPool,
-                Errors.NFT_NOT_IN_SINGLE_POOL
-            );
+            require(tokenStatus[tokenId].isInPool, Errors.NFT_NOT_IN_POOL);
 
             //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
             rewardShares += (accumulatedRewardsPerNft -

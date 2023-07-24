@@ -423,8 +423,8 @@ export enum ProtocolErrors {
   NOT_PAIRED_APE_AND_BAKC = "174", //not paired ape and bakc
   NOT_APE_STAKING_BOT = "175", //not ape staking bot
   NOT_THE_SAME_OWNER = "176", //not the same owner
-  NFT_NOT_IN_SINGLE_POOL = "178", //nft not in single pool
-
+  NFT_NOT_IN_POOL = "178", //nft not in single pool
+  SAPE_FREE_BALANCE_NOT_ENOUGH = "179", //sape free balance not enough
   NOT_ORDER_OFFERER = "180", //not order offerer
   ORDER_ALREADY_CANCELLED = "181", //order already cancelled
   ORDER_NOT_STARTED = "182", //order not started
@@ -435,6 +435,7 @@ export enum ProtocolErrors {
   ORDER_TYPE_MATCH_FAILED = "187", //orders type match failed
   ORDER_SHARE_MATCH_FAILED = "188", //orders share match failed
   NO_BREAK_UP_PERMISSION = "189", //no permission to break up
+  INVALID_CASH_AMOUNT = "190", //invalid cash amount
 
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",

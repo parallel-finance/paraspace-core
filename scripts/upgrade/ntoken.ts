@@ -105,11 +105,7 @@ export const upgradeNToken = async (verify = false) => {
       if (!nTokenBAKCImplementationAddress) {
         console.log("deploy NTokenBAKC implementation");
         nTokenBAKCImplementationAddress = (
-          await deployNTokenBAKCImpl(
-            pool.address,
-            delegationRegistry,
-            verify
-          )
+          await deployNTokenBAKCImpl(pool.address, delegationRegistry, verify)
         ).address;
       }
       newImpl = nTokenBAKCImplementationAddress;

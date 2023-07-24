@@ -922,7 +922,7 @@ describe("Para Ape Staking Test", () => {
 
     await expect(
       paraApeStaking.connect(user4.signer).stakingApe(true, [2])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).stakingApe(true, [0, 1])
@@ -952,11 +952,11 @@ describe("Para Ape Staking Test", () => {
 
     await expect(
       paraApeStaking.connect(user4.signer).stakingBAKC(true, [2], [0])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await expect(
       paraApeStaking.connect(user4.signer).stakingBAKC(true, [0], [2])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
       await paraApeStaking
@@ -987,7 +987,7 @@ describe("Para Ape Staking Test", () => {
 
     await expect(
       paraApeStaking.connect(user4.signer).compoundApe(true, [2])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
       await paraApeStaking.connect(user4.signer).compoundApe(true, [0, 1])
@@ -1029,7 +1029,7 @@ describe("Para Ape Staking Test", () => {
 
     await expect(
       paraApeStaking.connect(user4.signer).compoundBAKC(true, [1], [2])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
       await paraApeStaking
@@ -1100,7 +1100,7 @@ describe("Para Ape Staking Test", () => {
 
     await expect(
       paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [2])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await expect(
       paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [0, 1])
@@ -1108,7 +1108,7 @@ describe("Para Ape Staking Test", () => {
 
     await expect(
       paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [2])
-    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_SINGLE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [0])

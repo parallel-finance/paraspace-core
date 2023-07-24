@@ -76,7 +76,7 @@ library ApeCoinPoolLogic {
         uint256 shareAmount = ICApe(cApe).getShareByPooledApe(amount);
         require(
             sApeBalanceCache.freeShareBalance >= shareAmount,
-            "balance not enough"
+            Errors.SAPE_FREE_BALANCE_NOT_ENOUGH
         );
         sApeBalanceCache.freeShareBalance -= shareAmount.toUint128();
 
@@ -116,15 +116,12 @@ library ApeCoinPoolLogic {
                 Errors.NOT_THE_OWNER
             );
 
-            uint256 currentMatchCount = apeMatchedCount[vars.apeToken][tokenId];
-            if (currentMatchCount == 0) {
-                IERC721(vars.apeToken).safeTransferFrom(
-                    vars.nApe,
-                    address(this),
-                    tokenId
-                );
-            }
-            apeMatchedCount[vars.apeToken][tokenId] = currentMatchCount + 1;
+            _handleApeTransferIn(
+                apeMatchedCount,
+                vars.apeToken,
+                vars.nApe,
+                tokenId
+            );
 
             //update status
             poolState
@@ -179,7 +176,7 @@ library ApeCoinPoolLogic {
 
             require(
                 poolState.tokenStatus[tokenId].isInPool,
-                "not in ape coin pool"
+                Errors.NFT_NOT_IN_POOL
             );
 
             // construct staking data
@@ -246,26 +243,17 @@ library ApeCoinPoolLogic {
             vars.positionCap = vars.maycMatchedCap;
         }
         address msgSender = msg.sender;
-        require(msgSender == nApeOwner, Errors.NOT_THE_OWNER);
+        require(
+            msgSender == nApeOwner || msgSender == vars.nApe,
+            Errors.NOT_THE_OWNER
+        );
         ApeCoinStaking.SingleNft[]
             memory _nfts = new ApeCoinStaking.SingleNft[](arrayLength);
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = withdrawInfo.tokenIds[index];
 
-            require(
-                poolState.tokenStatus[tokenId].isInPool,
-                "not in ape coin pool"
-            );
+            // we don't need check pair is in pool here again
 
-            uint256 matchedCount = apeMatchedCount[vars.apeToken][tokenId];
-            if (matchedCount == 1) {
-                IERC721(vars.apeToken).safeTransferFrom(
-                    address(this),
-                    vars.nApe,
-                    tokenId
-                );
-            }
-            apeMatchedCount[vars.apeToken][tokenId] = matchedCount - 1;
             delete poolState.tokenStatus[tokenId];
 
             // construct staking data
@@ -273,9 +261,6 @@ library ApeCoinPoolLogic {
                 tokenId: tokenId,
                 amount: vars.positionCap.toUint224()
             });
-
-            //emit event
-            emit ApeCoinPoolWithdrew(withdrawInfo.isBAYC, tokenId);
         }
 
         //withdraw from ApeCoinStaking
@@ -288,7 +273,7 @@ library ApeCoinPoolLogic {
         vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
         vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
 
-        uint128 totalApeCoinAmount = (vars.bakcMatchedCap * arrayLength)
+        uint128 totalApeCoinAmount = (vars.positionCap * arrayLength)
             .toUint128();
         _handleApeCoin(
             sApeBalance,
@@ -296,7 +281,7 @@ library ApeCoinPoolLogic {
             totalApeCoinAmount,
             withdrawInfo.cashToken,
             withdrawInfo.cashAmount,
-            msgSender
+            nApeOwner
         );
 
         //distribute reward
@@ -312,6 +297,21 @@ library ApeCoinPoolLogic {
             );
         }
         poolState.totalPosition = totalPosition;
+
+        //transfer ape and BAKC back to nToken
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = withdrawInfo.tokenIds[index];
+
+            _handleApeTransferOut(
+                apeMatchedCount,
+                vars.apeToken,
+                vars.nApe,
+                tokenId
+            );
+
+            //emit event
+            emit ApeCoinPoolWithdrew(withdrawInfo.isBAYC, tokenId);
+        }
     }
 
     function depositApeCoinPairPool(
@@ -353,29 +353,23 @@ library ApeCoinPoolLogic {
                 );
             }
 
-            uint256 currentMatchCount = apeMatchedCount[vars.apeToken][
+            _handleApeTransferIn(
+                apeMatchedCount,
+                vars.apeToken,
+                vars.nApe,
                 apeTokenId
-            ];
-            if (currentMatchCount == 0) {
-                IERC721(vars.apeToken).safeTransferFrom(
-                    vars.nApe,
-                    address(this),
-                    apeTokenId
-                );
-            }
-            apeMatchedCount[vars.apeToken][apeTokenId] = currentMatchCount + 1;
+            );
+            IERC721(vars.bakc).safeTransferFrom(
+                vars.nBakc,
+                address(this),
+                bakcTokenId
+            );
 
             //update status
             poolState.tokenStatus[apeTokenId].rewardsDebt = vars
                 .accumulatedRewardsPerNft;
             poolState.tokenStatus[apeTokenId].isInPool = true;
             poolState.tokenStatus[apeTokenId].bakcTokenId = bakcTokenId;
-
-            IERC721(vars.bakc).safeTransferFrom(
-                vars.nBakc,
-                address(this),
-                bakcTokenId
-            );
 
             // construct staking data
             _nftPairs[index] = ApeCoinStaking.PairNftDepositWithAmount({
@@ -439,7 +433,7 @@ library ApeCoinPoolLogic {
 
             require(
                 poolState.tokenStatus[apeTokenId].isInPool,
-                "not in ape coin pool"
+                Errors.NFT_NOT_IN_POOL
             );
 
             // construct staking data
@@ -530,30 +524,7 @@ library ApeCoinPoolLogic {
                 }
             }
 
-            require(
-                poolState.tokenStatus[apeTokenId].isInPool,
-                "not in ape coin pool"
-            );
-
-            //transfer nft
-            {
-                uint256 matchedCount = apeMatchedCount[vars.apeToken][
-                    apeTokenId
-                ];
-                if (matchedCount == 1) {
-                    IERC721(vars.apeToken).safeTransferFrom(
-                        address(this),
-                        vars.apeToken,
-                        apeTokenId
-                    );
-                }
-                apeMatchedCount[vars.apeToken][apeTokenId] = matchedCount - 1;
-                IERC721(vars.bakc).safeTransferFrom(
-                    address(this),
-                    vars.nBakc,
-                    bakcTokenId
-                );
-            }
+            // we don't need check pair is in pool here again
 
             delete poolState.tokenStatus[apeTokenId];
 
@@ -564,13 +535,6 @@ library ApeCoinPoolLogic {
                 amount: vars.bakcMatchedCap.toUint184(),
                 isUncommit: true
             });
-
-            //emit event
-            emit ApeCoinPairPoolWithdrew(
-                withdrawInfo.isBAYC,
-                apeTokenId,
-                bakcTokenId
-            );
         }
 
         //withdraw from ApeCoinStaking
@@ -597,7 +561,7 @@ library ApeCoinPoolLogic {
             totalApeCoinAmount,
             withdrawInfo.cashToken,
             withdrawInfo.cashAmount,
-            msg.sender
+            nApeOwner
         );
 
         //distribute reward
@@ -613,6 +577,31 @@ library ApeCoinPoolLogic {
             );
         }
         poolState.totalPosition = totalPosition;
+
+        //transfer ape and BAKC back to nToken
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 apeTokenId = withdrawInfo.apeTokenIds[index];
+            uint32 bakcTokenId = withdrawInfo.bakcTokenIds[index];
+
+            _handleApeTransferOut(
+                apeMatchedCount,
+                vars.apeToken,
+                vars.nApe,
+                apeTokenId
+            );
+            IERC721(vars.bakc).safeTransferFrom(
+                address(this),
+                vars.nBakc,
+                bakcTokenId
+            );
+
+            //emit event
+            emit ApeCoinPairPoolWithdrew(
+                withdrawInfo.isBAYC,
+                apeTokenId,
+                bakcTokenId
+            );
+        }
     }
 
     function tryUnstakeApeCoinPoolPosition(
@@ -742,7 +731,7 @@ library ApeCoinPoolLogic {
             //check is in pool
             require(
                 poolState.tokenStatus[tokenId].isInPool,
-                "not in ape coin pool"
+                Errors.NFT_NOT_IN_POOL
             );
 
             //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
@@ -754,6 +743,33 @@ library ApeCoinPoolLogic {
         return (claimFor, pendingReward, accumulatedRewardsPerNft);
     }
 
+    function _handleApeTransferIn(
+        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
+        address ape,
+        address nApe,
+        uint32 tokenId
+    ) internal {
+        uint256 currentMatchCount = apeMatchedCount[ape][tokenId];
+        if (currentMatchCount == 0) {
+            IERC721(ape).safeTransferFrom(nApe, address(this), tokenId);
+        }
+        apeMatchedCount[ape][tokenId] = currentMatchCount + 1;
+    }
+
+    function _handleApeTransferOut(
+        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
+        address ape,
+        address nApe,
+        uint32 tokenId
+    ) internal {
+        uint256 matchedCount = apeMatchedCount[ape][tokenId];
+        matchedCount -= 1;
+        if (matchedCount == 0) {
+            IERC721(ape).safeTransferFrom(address(this), nApe, tokenId);
+        }
+        apeMatchedCount[ape][tokenId] = matchedCount;
+    }
+
     function _prepareApeCoin(
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
@@ -762,8 +778,11 @@ library ApeCoinPoolLogic {
         uint256 cashAmount,
         address user
     ) internal {
-        require(cashToken == vars.cApe || cashToken == vars.apeCoin, "");
-        require(cashAmount <= totalApeCoinNeeded, "");
+        require(
+            cashToken == vars.cApe || cashToken == vars.apeCoin,
+            Errors.INVALID_TOKEN
+        );
+        require(cashAmount <= totalApeCoinNeeded, Errors.INVALID_CASH_AMOUNT);
 
         if (cashAmount != 0) {
             IERC20(cashToken).safeTransferFrom(user, address(this), cashAmount);
@@ -779,7 +798,7 @@ library ApeCoinPoolLogic {
                 .getShareByPooledApe(freeSApeBalanceNeeded);
             require(
                 sApeBalanceCache.freeShareBalance >= freeShareBalanceNeeded,
-                "free balance not enough"
+                Errors.SAPE_FREE_BALANCE_NOT_ENOUGH
             );
             sApeBalanceCache.freeShareBalance -= freeShareBalanceNeeded
                 .toUint128();
@@ -802,12 +821,11 @@ library ApeCoinPoolLogic {
         uint256 cashAmount,
         address user
     ) internal {
-        require(cashToken == vars.cApe || cashToken == vars.apeCoin, "");
-        require(cashAmount <= totalApeCoinWithdrew, "");
-
-        if (cashAmount != 0) {
-            IERC20(cashToken).safeTransfer(user, cashAmount);
-        }
+        require(
+            cashToken == vars.cApe || cashToken == vars.apeCoin,
+            Errors.INVALID_TOKEN
+        );
+        require(cashAmount <= totalApeCoinWithdrew, Errors.INVALID_CASH_AMOUNT);
 
         uint256 cApeDepositAmount = (cashToken == vars.apeCoin)
             ? 0
@@ -826,6 +844,7 @@ library ApeCoinPoolLogic {
 
         if (cashAmount > 0) {
             _validateDropSApeBalance(vars.pool, vars.sApeReserveId, user);
+            IERC20(cashToken).safeTransfer(user, cashAmount);
         }
 
         if (cApeDepositAmount > 0) {
@@ -881,11 +900,14 @@ library ApeCoinPoolLogic {
         IAutoCompoundApe(vars.cApe).deposit(address(this), rewardAmount);
 
         uint256 cApeShare = ICApe(vars.cApe).getShareByPooledApe(rewardAmount);
-        uint256 compoundFee = cApeShare.percentMul(vars.compoundFee);
-        cApeShare -= compoundFee;
-        poolState.accumulatedRewardsPerNft +=
-            cApeShare.toUint128() /
-            totalPosition;
+        uint256 compoundFee = cApeShare;
+        if (totalPosition != 0) {
+            compoundFee = cApeShare.percentMul(vars.compoundFee);
+            cApeShare -= compoundFee;
+            poolState.accumulatedRewardsPerNft +=
+                cApeShare.toUint128() /
+                totalPosition;
+        }
 
         if (compoundFee > 0) {
             cApeShareBalance[address(this)] += compoundFee;
