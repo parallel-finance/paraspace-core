@@ -24,6 +24,7 @@ import {
   getParaSpaceConfig,
   isFork,
   sleep,
+  isMoonbeam,
 } from "./misc-utils";
 import {
   iFunctionSignature,
@@ -1007,9 +1008,9 @@ export const proposeSafeTransaction = async (
     safeAddress: MULTI_SIG,
   });
   const safeService = new SafeServiceClient({
-    txServiceUrl: `https://safe-transaction-${
-      FORK || DRE.network.name
-    }.safe.global`,
+    txServiceUrl: isMoonbeam()
+      ? `https://transaction.multisig.moonbeam.network`
+      : `https://safe-transaction-${FORK || DRE.network.name}.safe.global`,
     ethAdapter,
   });
 

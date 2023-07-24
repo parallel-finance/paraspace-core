@@ -5,6 +5,7 @@ import {decodeMulti, MetaTransaction} from "ethers-multisend";
 import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
+import {isMoonbeam} from "../../helpers/misc-utils";
 
 task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
@@ -22,9 +23,9 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   const paraSpaceConfig = getParaSpaceConfig();
 
   const safeService = new SafeServiceClient({
-    txServiceUrl: `https://safe-transaction-${
-      FORK || DRE.network.name
-    }.safe.global`,
+    txServiceUrl: isMoonbeam()
+      ? `https://transaction.multisig.moonbeam.network`
+      : `https://safe-transaction-${FORK || DRE.network.name}.safe.global`,
     ethAdapter,
   });
   const res = (
