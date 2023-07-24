@@ -113,6 +113,7 @@ import {
   PTokenCApe,
   PTokenSApe,
   PTokenStETH,
+  PTokenStKSM,
   PYieldToken,
   ReservesSetupHelper,
   RoyaltyFeeManager,
@@ -125,6 +126,7 @@ import {
   StandardPolicyERC721,
   StETHDebtToken,
   StETHMocked,
+  StKSMDebtToken,
   StrategyStandardSaleForFixedPrice,
   SupplyLogic,
   TimeLock,
@@ -2103,6 +2105,17 @@ export const deployPTokenStETH = async (
     verify
   ) as Promise<PTokenStETH>;
 
+export const deployPTokenStKSM = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("PTokenStKSM"),
+    eContractid.PTokenStKSMImpl,
+    [poolAddress],
+    verify
+  ) as Promise<PTokenStKSM>;
+
 export const deployPTokenAStETH = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
@@ -2387,6 +2400,17 @@ export const deployStETHDebtToken = async (
     [poolAddress],
     verify
   ) as Promise<StETHDebtToken>;
+
+export const deployStKSMDebtToken = async (
+  poolAddress: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("StKSMDebtToken"),
+    eContractid.StKSMDebtToken,
+    [poolAddress],
+    verify
+  ) as Promise<StKSMDebtToken>;
 
 export const deployAStETHDebtToken = async (
   poolAddress: tEthereumAddress,

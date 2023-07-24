@@ -26,6 +26,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   PUNK: parseEther("140").toString(),
   xcDOT: parseEther("0.0038333333333").toString(),
   xcUSDT: parseEther("0.000915952223931999").toString(),
+  stDOT: parseEther("0.0038333333333").toString(),
   WGLMR: parseEther("0.00027291666666").toString(),
   USDCWH: parseEther("0.000915952223931999").toString(),
   WETHWH: parseEther("1").toString(),
@@ -62,6 +63,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   VSL: parseEther("0.373").toString(),
   KODA: parseEther("9.5").toString(),
   BLOCKS: parseEther("9.54").toString(),
+  EXRP: parseEther("0.2").toString(),
 };
 
 export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
@@ -88,6 +90,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
   PUNK: parseUnits("140", 8).toString(),
   xcDOT: parseUnits("5.75", 8).toString(),
   xcUSDT: parseUnits("1", 8).toString(),
+  stDOT: parseUnits("5.75", 8).toString(),
   WGLMR: parseUnits("0.33", 8).toString(),
   USDCWH: parseUnits("1", 8).toString(),
   WETHWH: parseUnits("1896", 8).toString(),
@@ -124,6 +127,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
   VSL: parseUnits("568", 8).toString(),
   KODA: parseUnits("14154", 8).toString(),
   BLOCKS: parseUnits("10800", 8).toString(),
+  EXRP: parseUnits("170", 8).toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {

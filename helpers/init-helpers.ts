@@ -51,6 +51,8 @@ import {
   deployChromieSquiggleNTokenImpl,
   deployAutoYieldApeImplAndAssignItToProxy,
   deployAutoCompoundApeImplAndAssignItToProxy,
+  deployPTokenStKSM,
+  deployStKSMDebtToken,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -117,6 +119,7 @@ export const initReservesByHelper = async (
     genericDelegationAwarePTokenImplAddress;
   let pTokenImplementationAddress = genericPTokenImplAddress;
   let pTokenStETHImplementationAddress = "";
+  let pTokenStKSMImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
   let pTokenAStETHImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
@@ -129,6 +132,7 @@ export const initReservesByHelper = async (
   let nTokenMAYCImplementationAddress = "";
   let variableDebtTokenImplementationAddress = genericVariableDebtTokenAddress;
   let stETHVariableDebtTokenImplementationAddress = "";
+  let stKSMVariableDebtTokenImplementationAddress = "";
   let astETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
   let psApeVariableDebtTokenImplementationAddress = "";
@@ -399,6 +403,19 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = stETHVariableDebtTokenImplementationAddress;
+        } else if (reserveSymbol === ERC20TokenContractId.stDOT) {
+          if (!pTokenStKSMImplementationAddress) {
+            pTokenStKSMImplementationAddress = (
+              await deployPTokenStKSM(pool.address, verify)
+            ).address;
+          }
+          xTokenToUse = pTokenStKSMImplementationAddress;
+          if (!stKSMVariableDebtTokenImplementationAddress) {
+            stKSMVariableDebtTokenImplementationAddress = (
+              await deployStKSMDebtToken(pool.address, verify)
+            ).address;
+          }
+          variableDebtTokenToUse = stKSMVariableDebtTokenImplementationAddress;
         } else if (
           reserveSymbol === ERC20TokenContractId.aWETH ||
           reserveSymbol === ERC20TokenContractId.awstETH

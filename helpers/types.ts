@@ -50,6 +50,17 @@ export enum XTokenType {
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
   NTokenChromieSquiggle = 17,
+  PhantomData1 = 18,
+  PhantomData2 = 19,
+  PhantomData3 = 20,
+  PhantomData4 = 21,
+  PhantomData5 = 22,
+  PhantomData6 = 23,
+  PhantomData7 = 24,
+  PhantomData8 = 25,
+  PhantomData9 = 26,
+  PhantomData10 = 27,
+  PTokenStKSM = 28,
 }
 
 export type ConstructorArgs = (
@@ -118,6 +129,7 @@ export enum eContractid {
   PTokenSApeImpl = "PTokenSApeImpl",
   PTokenATokenImpl = "PTokenATokenImpl",
   PTokenStETHImpl = "PTokenStETHImpl",
+  PTokenStKSMImpl = "PTokenStKSMImpl",
   PTokenAStETHImpl = "PTokenAStETHImpl",
   PTokenCApeImpl = "PTokenCApeImpl",
   PYieldTokenImpl = "PYieldTokenImpl",
@@ -220,6 +232,7 @@ export enum eContractid {
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
+  StKSMDebtToken = "StKSMDebtToken",
   CApeDebtToken = "CApeDebtToken",
   AStETHDebtToken = "AStETHDebtToken",
   ApeStakingLogic = "ApeStakingLogic",

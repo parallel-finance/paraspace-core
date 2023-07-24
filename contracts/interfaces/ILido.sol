@@ -9,7 +9,17 @@ interface ILido is IERC20Detailed {
         view
         returns (uint256);
 
+    function getPooledKSMByShares(uint256 _sharesAmount)
+        external
+        view
+        returns (uint256);
+
     function getSharesByPooledEth(uint256 _pooledEth)
+        external
+        view
+        returns (uint256);
+
+    function getSharesByPooledKSM(uint256 _pooledEth)
         external
         view
         returns (uint256);
