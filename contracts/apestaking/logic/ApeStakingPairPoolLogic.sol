@@ -223,6 +223,7 @@ library ApeStakingPairPoolLogic {
         vars.nApeOwner = _claimPairNFT(
             poolState,
             vars,
+            false,
             isBAYC,
             apeTokenIds,
             bakcTokenIds
@@ -254,12 +255,11 @@ library ApeStakingPairPoolLogic {
 
             //check ntoken owner
             {
-                address msgSender = msg.sender;
-                if (vars.nApeOwner != msgSender) {
+                if (vars.nApeOwner != msg.sender) {
                     address nBakcOwner = IERC721(vars.nBakc).ownerOf(
                         bakcTokenId
                     );
-                    require(msgSender == nBakcOwner, Errors.NOT_THE_OWNER);
+                    require(msg.sender == nBakcOwner, Errors.NOT_THE_OWNER);
                 }
             }
 
@@ -379,7 +379,7 @@ library ApeStakingPairPoolLogic {
             Errors.INVALID_PARAMETER
         );
 
-        _claimPairNFT(poolState, vars, isBAYC, apeTokenIds, bakcTokenIds);
+        _claimPairNFT(poolState, vars, true, isBAYC, apeTokenIds, bakcTokenIds);
     }
 
     function compoundPairNFT(
@@ -520,6 +520,7 @@ library ApeStakingPairPoolLogic {
     function _claimPairNFT(
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        bool needUpdateStatus,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
@@ -537,14 +538,15 @@ library ApeStakingPairPoolLogic {
             );
 
         if (pendingReward > 0) {
-            uint256 arrayLength = apeTokenIds.length;
-            for (uint256 index = 0; index < arrayLength; index++) {
+            for (uint256 index = 0; index < apeTokenIds.length; index++) {
                 uint32 apeTokenId = apeTokenIds[index];
                 uint32 bakcTokenId = bakcTokenIds[index];
 
-                poolState
-                    .tokenStatus[apeTokenId]
-                    .rewardsDebt = accumulatedRewardsPerNft;
+                if (needUpdateStatus) {
+                    poolState
+                        .tokenStatus[apeTokenId]
+                        .rewardsDebt = accumulatedRewardsPerNft;
+                }
 
                 //emit event
                 emit PairNFTClaimed(isBAYC, apeTokenId, bakcTokenId);

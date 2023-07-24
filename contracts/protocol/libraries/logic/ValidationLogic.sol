@@ -401,15 +401,6 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
 
-        uint256 variableDebtPreviousIndex = IScaledBalanceToken(
-            reserveCache.variableDebtTokenAddress
-        ).getPreviousIndex(onBehalfOf);
-
-        require(
-            (variableDebtPreviousIndex < reserveCache.nextVariableBorrowIndex),
-            Errors.SAME_BLOCK_BORROW_REPAY
-        );
-
         require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
     }
 

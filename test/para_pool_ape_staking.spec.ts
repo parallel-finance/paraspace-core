@@ -258,6 +258,16 @@ describe("Para Ape staking ape coin pool test", () => {
     expect(user1Balance).to.be.closeTo(user1PendingReward, parseEther("1"));
     expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("1"));
 
+    user1PendingReward = await paraApeStaking.apeCoinPoolPendingReward(
+      true,
+      [0, 1]
+    );
+    user2PendingReward = await paraApeStaking.apeCoinPoolPendingReward(true, [
+      2,
+    ]);
+    expect(user1PendingReward).to.be.equal(0);
+    expect(user2PendingReward).to.be.equal(0);
+
     await waitForTx(
       await paraApeStaking
         .connect(user4.signer)
@@ -303,6 +313,17 @@ describe("Para Ape staking ape coin pool test", () => {
       user2PendingReward.mul(2),
       parseEther("1")
     );
+
+    user1PendingReward = await paraApeStaking.apeCoinPairPoolPendingReward(
+      true,
+      [0, 1]
+    );
+    user2PendingReward = await paraApeStaking.apeCoinPairPoolPendingReward(
+      true,
+      [2]
+    );
+    expect(user1PendingReward).to.be.equal(0);
+    expect(user2PendingReward).to.be.equal(0);
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -511,6 +532,16 @@ describe("Para Ape staking ape coin pool test", () => {
     expect(user1Balance).to.be.closeTo(user1PendingReward, parseEther("1"));
     expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("1"));
 
+    user1PendingReward = await paraApeStaking.apeCoinPoolPendingReward(
+        false,
+      [0, 1]
+    );
+    user2PendingReward = await paraApeStaking.apeCoinPoolPendingReward(false, [
+      2,
+    ]);
+    expect(user1PendingReward).to.be.equal(0);
+    expect(user2PendingReward).to.be.equal(0);
+
     await waitForTx(
       await paraApeStaking
         .connect(user4.signer)
@@ -558,6 +589,17 @@ describe("Para Ape staking ape coin pool test", () => {
       user2PendingReward.mul(2),
       parseEther("1")
     );
+
+    user1PendingReward = await paraApeStaking.apeCoinPairPoolPendingReward(
+      false,
+      [0, 1]
+    );
+    user2PendingReward = await paraApeStaking.apeCoinPairPoolPendingReward(
+        false,
+      [2]
+    );
+    expect(user1PendingReward).to.be.equal(0);
+    expect(user2PendingReward).to.be.equal(0);
 
     await advanceTimeAndBlock(parseInt("3600"));
 

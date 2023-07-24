@@ -211,7 +211,7 @@ library ApeCoinPoolLogic {
     ) external {
         ApeStakingCommonLogic.validateTokenIdArray(tokenIds);
 
-        _claimApeCoinPool(poolState, vars, isBAYC, true, tokenIds);
+        _claimApeCoinPool(poolState, vars, isBAYC, true, true, tokenIds);
     }
 
     function withdrawApeCoinPool(
@@ -230,6 +230,7 @@ library ApeCoinPoolLogic {
             vars,
             withdrawInfo.isBAYC,
             true,
+            false,
             withdrawInfo.tokenIds
         );
 
@@ -473,7 +474,7 @@ library ApeCoinPoolLogic {
     ) external {
         ApeStakingCommonLogic.validateTokenIdArray(tokenIds);
 
-        _claimApeCoinPool(poolState, vars, isBAYC, false, tokenIds);
+        _claimApeCoinPool(poolState, vars, isBAYC, false, true, tokenIds);
     }
 
     function withdrawApeCoinPairPool(
@@ -494,6 +495,7 @@ library ApeCoinPoolLogic {
             poolState,
             vars,
             withdrawInfo.isBAYC,
+            false,
             false,
             withdrawInfo.apeTokenIds
         );
@@ -860,6 +862,7 @@ library ApeCoinPoolLogic {
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         bool isSinglePool,
+        bool needUpdateStatus,
         uint32[] memory apeTokenIds
     ) internal returns (address) {
         (
@@ -873,9 +876,11 @@ library ApeCoinPoolLogic {
             for (uint256 index = 0; index < arrayLength; index++) {
                 uint32 apeTokenId = apeTokenIds[index];
 
-                poolState
-                    .tokenStatus[apeTokenId]
-                    .rewardsDebt = accumulatedRewardsPerNft;
+                if (needUpdateStatus) {
+                    poolState
+                        .tokenStatus[apeTokenId]
+                        .rewardsDebt = accumulatedRewardsPerNft;
+                }
 
                 //emit event
                 if (isSinglePool) {

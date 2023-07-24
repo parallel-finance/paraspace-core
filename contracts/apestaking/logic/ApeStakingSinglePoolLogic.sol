@@ -68,7 +68,7 @@ library ApeStakingSinglePoolLogic {
             apeStakingPoolId = MAYC_POOL_ID;
         } else {
             nToken = vars.nBakc;
-            apeStakingPoolId = 0;
+            apeStakingPoolId = BAKC_POOL_ID;
         }
         address msgSender = msg.sender;
         for (uint256 index = 0; index < arrayLength; index++) {
@@ -79,19 +79,12 @@ library ApeStakingSinglePoolLogic {
                 Errors.NOT_THE_OWNER
             );
 
-            if (nft == vars.bakc) {
-                (uint256 stakedAmount, ) = vars.apeCoinStaking.nftPosition(
-                    BAKC_POOL_ID,
-                    tokenId
-                );
-                require(stakedAmount == 0, Errors.APE_POSITION_EXISTED);
-            } else {
-                (uint256 stakedAmount, ) = vars.apeCoinStaking.nftPosition(
-                    apeStakingPoolId,
-                    tokenId
-                );
-                require(stakedAmount == 0, Errors.APE_POSITION_EXISTED);
-
+            (uint256 stakedAmount, ) = vars.apeCoinStaking.nftPosition(
+                apeStakingPoolId,
+                tokenId
+            );
+            require(stakedAmount == 0, Errors.APE_POSITION_EXISTED);
+            if (nft != vars.bakc) {
                 (, bool isPaired) = vars.apeCoinStaking.mainToBakc(
                     apeStakingPoolId,
                     tokenId
@@ -113,6 +106,7 @@ library ApeStakingSinglePoolLogic {
             emit NFTDeposited(nft, tokenId);
         }
 
+        //update state
         if (nft == vars.bayc) {
             vaultStorage
                 .poolStates[BAYC_SINGLE_POOL_ID]
@@ -405,7 +399,7 @@ library ApeStakingSinglePoolLogic {
         mapping(uint256 => IParaApeStaking.TokenStatus)
             storage tokenStatus = _getPoolTokenStatus(vaultStorage, vars, nft);
 
-        _claimNFT(tokenStatus, vars, nft, tokenIds);
+        _claimNFT(tokenStatus, vars, true, nft, tokenIds);
     }
 
     function withdrawNFT(
@@ -427,7 +421,7 @@ library ApeStakingSinglePoolLogic {
             storage tokenStatus = _getPoolTokenStatus(vaultStorage, vars, nft);
 
         //claim pending reward
-        address nApeOwner = _claimNFT(tokenStatus, vars, nft, tokenIds);
+        address nApeOwner = _claimNFT(tokenStatus, vars, false, nft, tokenIds);
 
         address nToken;
         if (nft == vars.bayc) {
@@ -795,6 +789,7 @@ library ApeStakingSinglePoolLogic {
     function _claimNFT(
         mapping(uint256 => IParaApeStaking.TokenStatus) storage tokenStatus,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        bool needUpdateStatus,
         address nft,
         uint32[] calldata tokenIds
     ) internal returns (address) {
@@ -813,8 +808,10 @@ library ApeStakingSinglePoolLogic {
             for (uint256 index = 0; index < arrayLength; index++) {
                 uint32 tokenId = tokenIds[index];
 
-                tokenStatus[tokenId].rewardsDebt = vars
-                    .accumulatedRewardsPerNft;
+                if (needUpdateStatus) {
+                    tokenStatus[tokenId].rewardsDebt = vars
+                        .accumulatedRewardsPerNft;
+                }
 
                 //emit event
                 emit NFTClaimed(nft, tokenId);
