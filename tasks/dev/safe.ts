@@ -6,15 +6,21 @@ import EthersAdapter from "@safe-global/safe-ethers-lib";
 import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
 import {isMoonbeam} from "../../helpers/misc-utils";
+import {eContractid} from "../../helpers/types";
 
 task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
   const {getFirstSigner, getTimeLockExecutor} = await import(
     "../../helpers/contracts-getters"
   );
+  const {getContractAddressInDb} = await import(
+    "../../helpers/contracts-helpers"
+  );
   const {getParaSpaceConfig} = await import("../../helpers/misc-utils");
   const {decodeInputData} = await import("../../helpers/contracts-helpers");
-  const timeLock = await getTimeLockExecutor();
+  const timeLock = (await getContractAddressInDb(eContractid.TimeLockExecutor))
+    ? await getTimeLockExecutor()
+    : undefined;
   const signer = await getFirstSigner();
   const ethAdapter = new EthersAdapter({
     ethers,
@@ -54,7 +60,7 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
           ? decodeMulti(cur.data).map((x) => ({to: x.to, data: x.data}))
           : [{to: cur.to, data: cur.data}]
       ).map(({to, data}) => {
-        if (to != timeLock.address) {
+        if (to != timeLock?.address) {
           return {to, data};
         }
 
