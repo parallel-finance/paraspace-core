@@ -13,11 +13,7 @@ import {
   getProtocolDataProvider,
   getPToken,
 } from "../../helpers/contracts-getters";
-import {
-  NTokenContractId,
-  PTokenContractId,
-  XTokenType,
-} from "../../helpers/types";
+import {PTokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";

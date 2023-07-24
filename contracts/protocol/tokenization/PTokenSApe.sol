@@ -73,7 +73,7 @@ contract PTokenSApe is PToken {
         address to,
         uint256 value
     ) external override onlyPool {
-        return paraApeStaking.transferSApeBalance(from, to, value);
+        return paraApeStaking.transferFreeSApeBalance(from, to, value);
     }
 
     function _transfer(

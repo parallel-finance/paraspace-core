@@ -13,6 +13,7 @@ import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/prot
 import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
 import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
 import {PoolPositionMoverLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolPositionMover__factory";
+import {PoolApeStakingLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolApeStaking__factory";
 
 export enum AssetType {
   ERC20 = 0,
@@ -82,6 +83,7 @@ export type ParaSpaceLibraryAddresses =
   | PoolMarketplaceLibraryAddresses
   | PoolParametersLibraryAddresses
   | PoolConfiguratorLibraryAddresses
+  | PoolApeStakingLibraryAddresses
   | BlurExchangeLibraryAddresses
   | NTokenBAYCLibraryAddresses
   | NTokenMAYCLibraryAddresses
@@ -415,6 +417,8 @@ export enum ProtocolErrors {
   INVALID_STATE = "134", //invalid token status
 
   INVALID_TOKEN_ID = "135", //invalid token id
+
+  CALLER_NOT_ALLOWED = "141", //The caller of the function is not allowed
 
   INVALID_PARAMETER = "170", //invalid parameter
   APE_POSITION_EXISTED = "171", //ape staking position already existed

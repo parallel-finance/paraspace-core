@@ -3,7 +3,6 @@ import {
   ERC20TokenContractId,
   ERC721TokenContractId,
   IReserveParams,
-  NTokenContractId,
   tEthereumAddress,
 } from "./types";
 import {chunk, waitForTx} from "./misc-utils";

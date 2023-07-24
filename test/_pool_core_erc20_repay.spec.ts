@@ -6,7 +6,6 @@ import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   advanceTimeAndBlock,
   setAutomine,
-  setAutomineEvm,
   waitForTx,
 } from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
@@ -22,7 +21,7 @@ import {almostEqual} from "./helpers/uniswapv3-helper";
 import {utils} from "ethers";
 import {getVariableDebtToken} from "../helpers/contracts-getters";
 
-const {RESERVE_INACTIVE, SAME_BLOCK_BORROW_REPAY} = ProtocolErrors;
+const {RESERVE_INACTIVE} = ProtocolErrors;
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);

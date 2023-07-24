@@ -74,7 +74,6 @@ import {
   AutoCompoundApe__factory,
   InitializableAdminUpgradeabilityProxy__factory,
   StETHDebtToken__factory,
-  ApeStakingLogic__factory,
   MintableERC721Logic__factory,
   NTokenBAKC__factory,
   P2PPairStaking__factory,
@@ -955,17 +954,6 @@ export const getApeCoinStaking = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.ApeCoinStaking}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getApeStakingLogic = async (address?: tEthereumAddress) =>
-  await ApeStakingLogic__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.ApeStakingLogic}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

@@ -234,7 +234,7 @@ contract ParaApeStaking is
             cache.stakedBalance;
     }
 
-    function transferSApeBalance(
+    function transferFreeSApeBalance(
         address from,
         address to,
         uint256 amount

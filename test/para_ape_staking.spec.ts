@@ -564,15 +564,15 @@ describe("Para Ape Staking Test", () => {
     );
     expect(compoundFee).to.be.closeTo(parseEther("1080"), parseEther("10"));
 
-    let user1PendingReward = await paraApeStaking.nftPendingReward(
+    const user1PendingReward = await paraApeStaking.nftPendingReward(
       bayc.address,
       [0, 1, 2]
     );
-    let user2PendingReward = await paraApeStaking.nftPendingReward(
+    const user2PendingReward = await paraApeStaking.nftPendingReward(
       mayc.address,
       [0, 1, 2]
     );
-    let user3PendingReward = await paraApeStaking.nftPendingReward(
+    const user3PendingReward = await paraApeStaking.nftPendingReward(
       bakc.address,
       [0, 1, 2]
     );
@@ -614,15 +614,15 @@ describe("Para Ape Staking Test", () => {
     expect(user1Balance).to.be.closeTo(user2Balance, parseEther("50"));
     expect(user1Balance).to.be.closeTo(user3Balance, parseEther("50"));
 
-    let newUser1PendingReward = await paraApeStaking.nftPendingReward(
+    const newUser1PendingReward = await paraApeStaking.nftPendingReward(
       bayc.address,
       [0, 1, 2]
     );
-    let newUser2PendingReward = await paraApeStaking.nftPendingReward(
+    const newUser2PendingReward = await paraApeStaking.nftPendingReward(
       mayc.address,
       [0, 1, 2]
     );
-    let newUser3PendingReward = await paraApeStaking.nftPendingReward(
+    const newUser3PendingReward = await paraApeStaking.nftPendingReward(
       bakc.address,
       [0, 1, 2]
     );

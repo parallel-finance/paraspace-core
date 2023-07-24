@@ -142,7 +142,7 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
 
     function totalSApeBalance(address user) external view returns (uint256);
 
-    function transferSApeBalance(
+    function transferFreeSApeBalance(
         address from,
         address to,
         uint256 amount

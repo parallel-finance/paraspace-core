@@ -6,19 +6,16 @@ import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {ProtocolErrors} from "../helpers/types";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {
-  changePriceAndValidate,
-  mintAndValidate,
-  supplyAndValidate,
-} from "./helpers/validated-steps";
-import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
-import {PTokenSApe} from "../types";
-import {getPTokenSApe} from "../helpers/contracts-getters";
+import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {ParaApeStaking, PTokenSApe} from "../types";
+import {getParaApeStaking, getPTokenSApe} from "../helpers/contracts-getters";
+import {parseEther} from "ethers/lib/utils";
 
 describe("SApe Pool Operation Test", () => {
   let testEnv: TestEnv;
   const sApeAddress = ONE_ADDRESS;
   let pSApeCoin: PTokenSApe;
+  let paraApeStaking: ParaApeStaking;
 
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -29,6 +26,8 @@ describe("SApe Pool Operation Test", () => {
       protocolDataProvider,
       pool,
     } = testEnv;
+
+    paraApeStaking = await getParaApeStaking();
 
     const {xTokenAddress: pSApeCoinAddress} =
       await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
@@ -65,21 +64,21 @@ describe("SApe Pool Operation Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
-    await mintAndValidate(ape, "10000", user1);
+    await mintAndValidate(ape, "100000", user1);
 
-    const amount = await convertToCurrencyDecimals(ape.address, "5000");
-    expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
-        {
-          nftAsset: mayc.address,
-          borrowAsset: ape.address,
-          borrowAmount: amount,
-          cashAmount: 0,
-        },
-        [{tokenId: 0, amount: amount}],
-        [],
-        true
-      )
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        cashToken: ape.address,
+        cashAmount: parseEther("100000"),
+        isBAYC: false,
+        tokenIds: [0],
+      })
     );
 
     const balance = await pSApeCoin.balanceOf(user1.address);
@@ -105,93 +104,4 @@ describe("SApe Pool Operation Test", () => {
       })
     ).to.be.revertedWith(ProtocolErrors.BORROWING_NOT_ENABLED);
   });
-
-  it("liquidate sApe is not allowed", async () => {
-    const {
-      users: [user1, liquidator],
-      ape,
-      mayc,
-      pool,
-      weth,
-    } = await loadFixture(fixture);
-
-    await supplyAndValidate(mayc, "1", user1, true);
-    await mintAndValidate(ape, "10000", user1);
-
-    const amount = await convertToCurrencyDecimals(ape.address, "5000");
-    expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
-        {
-          nftAsset: mayc.address,
-          borrowAsset: ape.address,
-          borrowAmount: amount,
-          cashAmount: 0,
-        },
-        [{tokenId: 0, amount: amount}],
-        [],
-        true
-      )
-    );
-
-    await supplyAndValidate(weth, "100", liquidator, true, "200000");
-
-    // BorrowLimit: (51 * 0.325 + 5000 *  0.0036906841286 * 0.2 - 5000 * 0.0036906841286) = 1.8122634856
-    const borrowAmount = await convertToCurrencyDecimals(weth.address, "1");
-    expect(
-      await pool
-        .connect(user1.signer)
-        .borrow(weth.address, borrowAmount, 0, user1.address)
-    );
-
-    // drop HF and ERC-721_HF below 1
-    await changePriceAndValidate(mayc, "5");
-
-    await expect(
-      pool
-        .connect(liquidator.signer)
-        .liquidateERC20(
-          weth.address,
-          sApeAddress,
-          user1.address,
-          amount,
-          false,
-          {gasLimit: 5000000}
-        )
-    ).to.be.revertedWith(ProtocolErrors.SAPE_NOT_ALLOWED);
-  });
-
-  // it("set sApe not as collateral is not allowed", async () => {
-  //   const {
-  //     users: [user1],
-  //     ape,
-  //     mayc,
-  //     pool,
-  //   } = await loadFixture(fixture);
-  //
-  //   await supplyAndValidate(mayc, "1", user1, true);
-  //   await mintAndValidate(ape, "10000", user1);
-  //
-  //   const amount = await convertToCurrencyDecimals(ape.address, "5000");
-  //   expect(
-  //     await pool.connect(user1.signer).borrowApeAndStake(
-  //       {
-  //         nftAsset: mayc.address,
-  //         borrowAsset: ape.address,
-  //         borrowAmount: amount,
-  //         cashAmount: 0,
-  //       },
-  //       [{tokenId: 0, amount: amount}],
-  //       [],
-  //       true
-  //     )
-  //   );
-  //
-  //   await expect(
-  //     pool
-  //       .connect(user1.signer)
-  //       .setUserUseERC20AsCollateral(sApeAddress, false, {
-  //         gasLimit: 12_450_000,
-  //       })
-  //   ).to.be.revertedWith(ProtocolErrors.SAPE_NOT_ALLOWED);
-  // });
 });

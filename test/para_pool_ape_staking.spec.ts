@@ -533,7 +533,7 @@ describe("Para Ape staking ape coin pool test", () => {
     expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("1"));
 
     user1PendingReward = await paraApeStaking.apeCoinPoolPendingReward(
-        false,
+      false,
       [0, 1]
     );
     user2PendingReward = await paraApeStaking.apeCoinPoolPendingReward(false, [
@@ -595,7 +595,7 @@ describe("Para Ape staking ape coin pool test", () => {
       [0, 1]
     );
     user2PendingReward = await paraApeStaking.apeCoinPairPoolPendingReward(
-        false,
+      false,
       [2]
     );
     expect(user1PendingReward).to.be.equal(0);
@@ -1255,5 +1255,147 @@ describe("Para Ape staking ape coin pool test", () => {
         bakcTokenIds: [0],
       })
     ).to.be.revertedWith(ProtocolErrors.INVALID_CASH_AMOUNT);
+  });
+
+  it("sApe revert test", async () => {
+    const {
+      users: [user1, user2, liquidator],
+      ape,
+      weth,
+      bayc,
+      pool,
+      nBAYC,
+    } = await loadFixture(fixture);
+
+    await changePriceAndValidate(bayc, "100");
+    await changePriceAndValidate(ape, "0.00001");
+
+    //user1 collateral 200eth
+    await supplyAndValidate(bayc, "1", user1, true);
+
+    await supplyAndValidate(ape, "2000000", user2, true);
+
+    //user1 borrow value 0.00001 * 2000000 = 20eth
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .borrow(ape.address, parseEther("2000000"), 0, user1.address)
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        cashToken: ape.address,
+        cashAmount: parseEther("200000"),
+        isBAYC: true,
+        tokenIds: [0],
+      })
+    );
+    expect(await pSApeCoin.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("200000"),
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user1.address)).to.be.equal(
+      parseEther("200000")
+    );
+    expect(await paraApeStaking.freeSApeBalance(user1.address)).to.be.equal(
+      parseEther("0")
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC20AsCollateral(sApeAddress, true)
+    );
+
+    //user1 borrow value = 2000 eth, collateral value = 100 + 200 = 300
+    await changePriceAndValidate(ape, "0.001");
+    await changeSApePriceAndValidate(sApeAddress, "0.001");
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .setUserUseERC20AsCollateral(sApeAddress, true)
+    );
+
+    await expect(
+      paraApeStaking
+        .connect(user1.signer)
+        .withdrawFreeSApe(user1.address, parseEther("200000"))
+    ).to.be.revertedWith(ProtocolErrors.SAPE_FREE_BALANCE_NOT_ENOUGH);
+
+    await mintAndValidate(weth, "200", liquidator);
+    await waitForTx(
+      await weth
+        .connect(liquidator.signer)
+        .approve(pool.address, MAX_UINT_AMOUNT)
+    );
+
+    // start auction
+    await waitForTx(
+      await pool
+        .connect(liquidator.signer)
+        .startAuction(user1.address, bayc.address, 0)
+    );
+    const auctionData = await pool.getAuctionData(nBAYC.address, 0);
+    await advanceBlock(
+      auctionData.startTime
+        .add(auctionData.tickLength.mul(BigNumber.from(40)))
+        .toNumber()
+    );
+
+    // try to liquidate the NFT
+    expect(
+      await pool
+        .connect(liquidator.signer)
+        .liquidateERC721(
+          bayc.address,
+          user1.address,
+          0,
+          parseEther("100"),
+          false,
+          {gasLimit: 5000000}
+        )
+    );
+    expect(await pSApeCoin.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("200000"),
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user1.address)).to.be.eq(0);
+    expect(await paraApeStaking.freeSApeBalance(user1.address)).to.be.closeTo(
+      parseEther("200000"),
+      parseEther("1")
+    );
+
+    await expect(
+      paraApeStaking
+        .connect(user1.signer)
+        .withdrawFreeSApe(user1.address, parseEther("200000"))
+    ).to.be.revertedWith(
+      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
+    );
+
+    await expect(
+      paraApeStaking
+        .connect(user1.signer)
+        .transferFreeSApeBalance(
+          user1.address,
+          user2.address,
+          parseEther("200000")
+        )
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ALLOWED);
+
+    await changePriceAndValidate(ape, "0.00001");
+    await changeSApePriceAndValidate(sApeAddress, "0.00001");
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawFreeSApe(user1.address, parseEther("200000"))
+    );
+
+    expect(await cApe.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("200000"),
+      parseEther("1")
+    );
   });
 });
